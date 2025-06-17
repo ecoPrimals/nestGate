@@ -1,0 +1,26 @@
+[package]
+name = "nestgate-bin"
+version = "0.9.2"
+edition = "2021"
+description = "Main binary for NestGate system"
+
+[[bin]]
+name = "nestgate"
+path = "src/main.rs"
+
+[dependencies]
+nestgate-core = { path = "../nestgate-core" }
+nestgate-network = { path = "../nestgate-network" }
+nestgate-mcp = { path = "../nestgate-mcp" }
+
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+axum = { workspace = true }
+
+# Orchestrator dependency
+nestgate-orchestrator = { path = "../nestgate-orchestrator" }
+
+[dev-dependencies]
+tokio-test = { workspace = true } 

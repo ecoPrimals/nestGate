@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NestGate Dashboard Test</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f9fc;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .connection-status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .connected {
+            background-color: #e3f9e5;
+            color: #0d8921;
+        }
+        
+        .disconnected {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        
+        .section h2 {
+            margin-top: 0;
+            color: #333;
+            font-size: 18px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .card {
+            background: #fafafa;
+            border-radius: 6px;
+            padding: 15px;
+            border: 1px solid #eee;
+        }
+        
+        .card-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .card-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .progress-wrapper {
+            margin-top: 10px;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-value {
+            height: 100%;
+            border-radius: 4px;
+        }
+        
+        .log-container {
+            background: #272822;
+            color: #f8f8f2;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: monospace;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+        
+        .timestamp {
+            color: #a6e22e;
+        }
+        
+        .log-type {
+            color: #66d9ef;
+            margin-right: 8px;
+        }
+        
+        .refresh-button {
+            background: #4a6cf7;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .refresh-button:hover {
+            background: #3a5ce5;
+        }
+        
+        .pool-card {
+            border-left: 4px solid #4a6cf7;
+        }
+        
+        .pool-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .pool-status {
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 10px;
+        }
+        
+        .status-online {
+            background-color: #e3f9e5;
+            color: #0d8921;
+        }
+        
+        .status-degraded {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
+        
+        .status-offline {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>NestGate Dashboard Test</h1>
+            <div id="connectionStatus" class="connection-status disconnected">Disconnected</div>
+        </div>
+        
+        <div class="section">
+            <div class="section-header">
+                <h2>System Status</h2>
+                <button id="refreshSystem" class="refresh-button">Refresh</button>
+            </div>
+            <div class="grid" id="systemGrid">
+                <div class="card">
+                    <div class="card-title">CPU Usage</div>
+                    <div class="card-value" id="cpuUsage">--</div>
+                    <div class="progress-wrapper">
+                        <div class="progress-bar">
+                            <div class="progress-value" id="cpuProgressBar" style="width: 0%; background-color: #4caf50;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Memory Usage</div>
+                    <div class="card-value" id="memoryUsage">--</div>
+                    <div class="progress-wrapper">
+                        <div class="progress-bar">
+                            <div class="progress-value" id="memoryProgressBar" style="width: 0%; background-color: #2196f3;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Uptime</div>
+                    <div class="card-value" id="uptime">--</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Status</div>
+                    <div class="card-value" id="status">--</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-header">
+                <h2>ZFS Pools</h2>
+                <button id="refreshPools" class="refresh-button">Refresh</button>
+            </div>
+            <div id="poolsContainer"></div>
+        </div>
+        
+        <div class="section">
+            <div class="section-header">
+                <h2>Performance</h2>
+                <button id="refreshPerformance" class="refresh-button">Refresh</button>
+            </div>
+            <div class="grid" id="performanceGrid">
+                <div class="card">
+                    <div class="card-title">Read Throughput</div>
+                    <div class="card-value" id="readThroughput">--</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Write Throughput</div>
+                    <div class="card-value" id="writeThroughput">--</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">IOPS</div>
+                    <div class="card-value" id="iops">--</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Latency</div>
+                    <div class="card-value" id="latency">--</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>WebSocket Log</h2>
+            <div class="log-container" id="logContainer"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Helper function to format bytes
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+            
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+        
+        // Add log entry to log container
+        function logMessage(type, message) {
+            const logContainer = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `<span class="timestamp">[${timestamp}]</span> <span class="log-type">${type}:</span> ${JSON.stringify(message)}`;
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        // Update system status display
+        function updateSystemStatus(data) {
+            document.getElementById('cpuUsage').textContent = `${data.cpu_usage}%`;
+            document.getElementById('cpuProgressBar').style.width = `${data.cpu_usage}%`;
+            
+            document.getElementById('memoryUsage').textContent = `${data.memory_usage}%`;
+            document.getElementById('memoryProgressBar').style.width = `${data.memory_usage}%`;
+            
+            document.getElementById('uptime').textContent = data.uptime;
+            document.getElementById('status').textContent = data.status;
+            
+            // Set CPU color based on usage
+            const cpuProgressBar = document.getElementById('cpuProgressBar');
+            if (data.cpu_usage < 50) {
+                cpuProgressBar.style.backgroundColor = '#4caf50'; // green
+            } else if (data.cpu_usage < 80) {
+                cpuProgressBar.style.backgroundColor = '#ff9800'; // orange
+            } else {
+                cpuProgressBar.style.backgroundColor = '#f44336'; // red
+            }
+            
+            // Set memory color based on usage
+            const memoryProgressBar = document.getElementById('memoryProgressBar');
+            if (data.memory_usage < 50) {
+                memoryProgressBar.style.backgroundColor = '#2196f3'; // blue
+            } else if (data.memory_usage < 80) {
+                memoryProgressBar.style.backgroundColor = '#ff9800'; // orange
+            } else {
+                memoryProgressBar.style.backgroundColor = '#f44336'; // red
+            }
+        }
+        
+        // Update pools display
+        function updatePoolsDisplay(pools) {
+            const poolsContainer = document.getElementById('poolsContainer');
+            poolsContainer.innerHTML = '';
+            
+            pools.forEach(pool => {
+                const poolElement = document.createElement('div');
+                poolElement.className = 'card pool-card';
+                poolElement.style.marginBottom = '15px';
+                
+                const usedPercentage = Math.round((pool.allocated / pool.size) * 100);
+                let statusClass = 'status-online';
+                
+                if (pool.health !== 'ONLINE') {
+                    statusClass = pool.health === 'DEGRADED' ? 'status-degraded' : 'status-offline';
+                }
+                
+                poolElement.innerHTML = `
+                    <div class="pool-header">
+                        <h3 style="margin: 0;">${pool.name}</h3>
+                        <span class="pool-status ${statusClass}">${pool.health}</span>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <div style="margin-bottom: 5px;">
+                            ${formatBytes(pool.allocated)} used of ${formatBytes(pool.size)}
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-value" style="width: ${usedPercentage}%; background-color: ${usedPercentage > 80 ? '#f44336' : '#2196f3'};"></div>
+                        </div>
+                    </div>
+                    <div style="font-size: 14px; color: #666;">
+                        Free: ${formatBytes(pool.free)} (${pool.capacity}% used)
+                    </div>
+                `;
+                
+                poolsContainer.appendChild(poolElement);
+            });
+        }
+        
+        // Update performance metrics
+        function updatePerformanceMetrics(data) {
+            document.getElementById('readThroughput').textContent = `${data.readThroughput} MB/s`;
+            document.getElementById('writeThroughput').textContent = `${data.writeThroughput} MB/s`;
+            document.getElementById('iops').textContent = data.iops;
+            document.getElementById('latency').textContent = `${data.latency} ms`;
+        }
+        
+        // Connect to WebSocket
+        let socket;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        let reconnectDelay = 1000;
+        
+        function connectWebSocket() {
+            const connectionStatus = document.getElementById('connectionStatus');
+            
+            socket = new WebSocket('ws://localhost:3000/ws');
+            
+            socket.onopen = function() {
+                connectionStatus.textContent = 'Connected';
+                connectionStatus.className = 'connection-status connected';
+                reconnectAttempts = 0;
+                reconnectDelay = 1000;
+                
+                logMessage('CONNECT', 'WebSocket connection established');
+                
+                // Request initial data
+                requestSystemStatus();
+                requestPoolsData();
+                requestPerformanceData();
+            };
+            
+            socket.onmessage = function(event) {
+                try {
+                    const message = JSON.parse(event.data);
+                    
+                    logMessage('RECEIVE', message);
+                    
+                    // Handle different message types
+                    if (message.type === 'systemUpdate') {
+                        updateSystemStatus(message.data);
+                    } else if (message.type === 'poolsUpdate') {
+                        updatePoolsDisplay(message.data);
+                    } else if (message.type === 'performanceUpdate') {
+                        updatePerformanceMetrics(message.data);
+                    } else if (message.type === 'error') {
+                        logMessage('ERROR', message.message);
+                    } else if (message.type === 'pong') {
+                        logMessage('PONG', `Latency: ${message.timestamp - message.originalTimestamp}ms`);
+                    }
+                } catch (error) {
+                    logMessage('ERROR', `Failed to parse message: ${error.message}`);
+                }
+            };
+            
+            socket.onclose = function() {
+                connectionStatus.textContent = 'Disconnected';
+                connectionStatus.className = 'connection-status disconnected';
+                
+                logMessage('DISCONNECT', 'WebSocket connection closed');
+                
+                // Attempt to reconnect
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    reconnectAttempts++;
+                    const delay = Math.min(30000, reconnectDelay * Math.pow(2, reconnectAttempts - 1));
+                    
+                    logMessage('RECONNECT', `Attempting to reconnect in ${delay}ms (attempt ${reconnectAttempts})`);
+                    
+                    setTimeout(connectWebSocket, delay);
+                } else {
+                    logMessage('ERROR', 'Max reconnection attempts reached');
+                }
+            };
+            
+            socket.onerror = function(error) {
+                logMessage('ERROR', 'WebSocket error');
+            };
+        }
+        
+        // Request data functions
+        function requestSystemStatus() {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'request',
+                    target: 'system'
+                }));
+                
+                logMessage('SEND', { type: 'request', target: 'system' });
+            }
+        }
+        
+        function requestPoolsData() {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'request',
+                    target: 'pools'
+                }));
+                
+                logMessage('SEND', { type: 'request', target: 'pools' });
+            }
+        }
+        
+        function requestPerformanceData() {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'request',
+                    target: 'performance'
+                }));
+                
+                logMessage('SEND', { type: 'request', target: 'performance' });
+            }
+        }
+        
+        // Send ping to check connection
+        function sendPing() {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                const timestamp = Date.now();
+                socket.send(JSON.stringify({
+                    type: 'ping',
+                    timestamp: timestamp
+                }));
+                
+                logMessage('PING', { timestamp });
+            }
+        }
+        
+        // Set up event listeners
+        document.getElementById('refreshSystem').addEventListener('click', requestSystemStatus);
+        document.getElementById('refreshPools').addEventListener('click', requestPoolsData);
+        document.getElementById('refreshPerformance').addEventListener('click', requestPerformanceData);
+        
+        // Initialize connection
+        connectWebSocket();
+        
+        // Set up ping interval (every 30 seconds)
+        setInterval(sendPing, 30000);
+        
+        // Fallback to API if WebSocket fails
+        async function loadSystemStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    logMessage('API', 'Loaded system status from API');
+                    updateSystemStatus(data.data);
+                }
+            } catch (error) {
+                logMessage('ERROR', `API error: ${error.message}`);
+            }
+        }
+        
+        async function loadPoolsData() {
+            try {
+                const response = await fetch('/api/pools');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    logMessage('API', 'Loaded pools data from API');
+                    updatePoolsDisplay(data.data);
+                }
+            } catch (error) {
+                logMessage('ERROR', `API error: ${error.message}`);
+            }
+        }
+        
+        async function loadPerformanceData() {
+            try {
+                const response = await fetch('/api/performance');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    logMessage('API', 'Loaded performance data from API');
+                    updatePerformanceMetrics(data.data);
+                }
+            } catch (error) {
+                logMessage('ERROR', `API error: ${error.message}`);
+            }
+        }
+        
+        // Load initial data from API as fallback
+        setTimeout(() => {
+            if (socket.readyState !== WebSocket.OPEN) {
+                loadSystemStatus();
+                loadPoolsData();
+                loadPerformanceData();
+            }
+        }, 2000);
+    </script>
+</body>
+</html> 

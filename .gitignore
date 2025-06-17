@@ -1,0 +1,129 @@
+# Rust build artifacts
+/target/
+**/target/
+Cargo.lock
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node.js (for any web components)
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+**/package-lock.json
+
+# Build and dist directories
+/dist/
+/build/
+/.build/
+**/dist/
+**/build/
+
+# Log files
+*.log
+logs/
+pids/
+*.pid
+*.pid.lock
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Test coverage
+/coverage/
+
+# Temporary files
+/tmp/
+*.tmp
+*.temp
+
+# ZFS and storage artifacts
+*.zfs
+*.snapshot
+
+# NestGate specific
+/data/
+/test-data/
+/dev-data/
+/backups/
+/backup/
+
+# Old v1 repository (exclude from v2)
+/nestgate-gitclone/
+
+# Archive directory (moved root files)
+/archive/
+
+# Large archives and packages (GitHub file size limits)
+*.tar.gz
+*.zip
+*.7z
+*.rar
+nestgate-port-manager-*.tar.gz
+
+# Generated documentation
+/docs/book/
+/target/doc/
+
+# Criterion benchmark results
+/target/criterion/
+
+# Test reports
+/test-reports/
+/tests/reports/
+
+# Development artifacts
+.port-manager.pid
+*.md5
+*.sha256
+
+# Stress test results
+/stress-test-results/
+/stress-session-*/
+
+# Deprecated scripts
+/.deprecated-scripts/
+
+# State files
+/.state/
+
+# Configuration backups
+*.backup
+*.bak
+
+# IDE specific
+.cargo/
+.rustfmt.toml.bak
+
+# Local development
+/local/
+/sandbox/
+
+# Large binary files and caches
+**/.cache/
+**/deps/
+*.pack
+
+# Exclude any large binaries
+**/target/debug/deps/
+**/target/release/deps/ 

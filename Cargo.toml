@@ -1,0 +1,54 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "code/crates/nestgate-core",
+    "code/crates/nestgate-mcp",
+    "code/crates/nestgate-network",
+    "code/crates/nestgate-ui",
+    "code/crates/nestgate-bin",
+    "code/crates/nestgate-orchestrator",
+    "code/crates/nestgate-fsmonitor",
+    "code/crates/nestgate-zfs",
+    "code/crates/nestgate-nas",
+    "code/crates/nestgate-ai-mock",
+    "code/crates/nestgate-ai-models",
+    "code/crates/nestgate-middleware"
+]
+
+[workspace.dependencies]
+# Runtime and Async
+tokio = { version = "1.36", features = ["full"] }
+async-trait = "0.1"
+futures = "0.3"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+
+# Logging and Tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Web Framework
+axum = { version = "0.7", features = ["ws"] }
+warp = "0.3"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+# Utilities
+uuid = { version = "1.6", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+dashmap = "5.5"
+
+# Error Handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Network
+reqwest = { version = "0.11", features = ["json"] }
+ipnetwork = "0.20"
+
+# Testing
+tokio-test = "0.4"

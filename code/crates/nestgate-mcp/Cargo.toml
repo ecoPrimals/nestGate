@@ -1,0 +1,25 @@
+[package]
+name = "nestgate-mcp"
+version = "0.9.2"
+edition = "2021"
+description = "MCP protocol integration adapter for NestGate"
+
+[dependencies]
+nestgate-core = { path = "../nestgate-core" }
+nestgate-network = { path = "../nestgate-network" }
+
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+async-trait = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Web Framework
+axum = { workspace = true }
+
+[dev-dependencies]
+tokio-test = { workspace = true } 

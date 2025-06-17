@@ -1,0 +1,54 @@
+.system-monitor-card {
+  margin-bottom: 24px;
+}
+
+.system-monitor-card .ant-progress {
+  margin-bottom: 8px;
+}
+
+.metric-card {
+  height: 100%;
+  transition: all 0.3s;
+}
+
+.metric-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+}
+
+.sub-metrics {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.network-metrics {
+  text-align: center;
+}
+
+.uptime-card {
+  text-align: center;
+  background-color: #f0f5ff;
+}
+
+/* Animation for value changes */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.ant-statistic-content-value {
+  transition: color 0.3s;
+}
+
+.ant-statistic-content-value.ant-statistic-content-value-change {
+  animation: pulse 0.3s;
+  color: #1890ff;
+} 
