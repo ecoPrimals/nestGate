@@ -1,0 +1,122 @@
+.event-stream {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 400px;
+}
+
+.event-stream__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.event-stream__list-container {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid #f0f0f0;
+  border-radius: 4px;
+  background-color: #fafafa;
+  height: 400px;
+  max-height: 400px;
+}
+
+.event-stream__list {
+  padding: 8px;
+}
+
+.event-stream__item {
+  padding: 8px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.3s;
+}
+
+.event-stream__item:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.event-stream__path {
+  max-width: 400px;
+  font-family: monospace;
+}
+
+.event-stream__time {
+  font-size: 12px;
+  min-width: 80px;
+}
+
+.event-stream__loading,
+.event-stream__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 16px;
+  padding: 40px 0;
+}
+
+.event-stream__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  margin-top: 8px;
+}
+
+.event-stream__filter-panel {
+  margin-bottom: 16px;
+}
+
+.event-stream__filter-group {
+  margin-bottom: 16px;
+}
+
+.event-stream__filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* Animation for new events */
+@keyframes highlight {
+  0% {
+    background-color: rgba(24, 144, 255, 0.2);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.event-stream__item--new {
+  animation: highlight 2s ease-out;
+}
+
+/* Dark theme support */
+.event-stream.dark .event-stream__list-container {
+  background-color: #141414;
+  border-color: #303030;
+}
+
+.event-stream.dark .event-stream__item {
+  border-bottom-color: #303030;
+}
+
+.event-stream.dark .event-stream__item:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .event-stream__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .event-stream__path {
+    max-width: 200px;
+  }
+} 

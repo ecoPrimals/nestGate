@@ -1,0 +1,68 @@
+# NestGate Port Manager Configuration
+
+# Server configuration
+server:
+  host: 127.0.0.1
+  port: 9000
+  cors_enabled: true
+  api_key: null  # Set to enable API key authentication
+
+# Port range configuration by service type
+port_ranges:
+  UI:
+    start: 3000
+    end: 3999
+  API:
+    start: 4000
+    end: 4999
+  WebSocket:
+    start: 5000
+    end: 5999
+  Database:
+    start: 6000
+    end: 6999
+  Metrics:
+    start: 7000
+    end: 7999
+  Admin:
+    start: 8000
+    end: 8999
+
+# Predefined services
+services:
+  nestgate-ui:
+    service_type: UI
+    startup_command: "cd ../nestgate-ui && npm run start"
+    shutdown_command: null
+    dependencies: ["nestgate-websocket"]
+    preferred_port: 3000
+    environment:
+      REACT_APP_WEBSOCKET_URL: "ws://localhost:{NESTGATE_WEBSOCKET_PORT}/ws"
+      PORT: "{PORT}"
+    working_directory: null
+    auto_restart: true
+    max_restart_attempts: 5
+  
+  nestgate-websocket:
+    service_type: WebSocket
+    startup_command: "cd ../server && node server.js"
+    shutdown_command: null
+    dependencies: []
+    preferred_port: 3002
+    environment:
+      PORT: "{PORT}"
+    working_directory: null
+    auto_restart: true
+    max_restart_attempts: 5
+
+# Persistence configuration
+persistence:
+  enabled: true
+  path: ./data/port-manager-state.json
+  auto_save_interval_secs: 60
+
+# Logging configuration
+logging:
+  level: info
+  file_logging_enabled: false
+  log_file: null 

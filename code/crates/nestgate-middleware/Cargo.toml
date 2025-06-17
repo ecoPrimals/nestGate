@@ -1,0 +1,32 @@
+[package]
+name = "nestgate-middleware"
+version = "0.9.2"
+edition = "2021"
+authors = ["DataScienceBioLab"]
+description = "Middleware components for NestGate NAS system"
+license = "MIT"
+repository = "https://github.com/DataScienceBioLab/nestgate"
+keywords = ["middleware", "nas", "storage"]
+
+[dependencies]
+# Internal crates
+nestgate-core = { path = "../nestgate-core" }
+
+# Async runtime
+tokio = { workspace = true }
+async-trait = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Logging and tracing
+tracing = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+tokio-test = { workspace = true }
+mockall = "0.11" 

@@ -1,0 +1,21 @@
+[package]
+name = "nestgate-ui"
+version = "0.9.2"
+edition = "2021"
+authors = ["DataScienceBioLab"]
+description = "Tauri-React user interface for NestGate"
+license = "MIT"
+repository = "https://github.com/DataScienceBioLab/nestgate"
+keywords = ["ui", "nas", "tauri", "frontend"]
+
+[dependencies]
+# Internal crates
+nestgate-core = { path = "../nestgate-core" }
+nestgate-network = { path = "../nestgate-network" }
+
+# Tauri dependencies (we'll add these later when we implement the UI)
+# tauri = { version = "1.5", features = ["api-all"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+mockall = "0.11" 

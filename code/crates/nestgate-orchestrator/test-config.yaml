@@ -1,0 +1,100 @@
+# Minimal test config for port manager
+server:
+  host: "127.0.0.1"
+  port: 9000
+  max_connections: 1000
+  request_timeout: 30
+  graceful_shutdown: true
+  shutdown_timeout: 10
+
+port_ranges:
+  UI:
+    start: 3000
+    end: 3050
+  API:
+    start: 3051
+    end: 3100
+  WebSocket:
+    start: 3101
+    end: 3150
+
+health:
+  enabled: true
+  default_interval: 30
+  default_timeout: 10
+  default_failure_threshold: 3
+  default_success_threshold: 2
+  detailed_reports: true
+  history_retention_hours: 24
+
+security:
+  api_keys: []
+  rate_limiting:
+    enabled: false
+    requests_per_minute: 100
+  ssl:
+    enabled: false
+    cert_file: ""
+    key_file: ""
+  ip_whitelist: []
+
+metrics:
+  enabled: true
+  collection_interval: 30
+  retention_hours: 24
+  prometheus_enabled: false
+  prometheus_port: 9001
+  detailed_service_metrics: true
+  performance_metrics: true
+
+network:
+  reverse_proxy_enabled: false
+  reverse_proxy_port: 8080
+  ssl_termination: false
+  ssl_cert_path: null
+  ssl_key_path: null
+  https_redirect: false
+  cors_enabled: true
+  cors_origins: ["*"]
+  rate_limiting: false
+  rate_limit_rpm: 1000
+  load_balancing: false
+  load_balancer_strategy: "RoundRobin"
+  bind_interfaces: ["0.0.0.0"]
+  websocket_proxy: false
+  timeouts:
+    connect_timeout: 30
+    request_timeout: 300
+    keepalive_timeout: 60
+    websocket_timeout: 3600
+  proxy_type: "nginx"
+  auto_configure: false
+  domain_config:
+    domain: ""
+    auto_ssl: false
+    ca_provider: ""
+    hsts_enabled: false
+    hsts_max_age: 31536000
+    subdomains: {}
+
+storage:
+  data_dir: "/tmp/.nestgate-test"
+  config_file: "config.yaml"
+  registry_file: "services.json"
+  backup:
+    enabled: false
+    interval_hours: 24
+    retention_count: 7
+    backup_dir: "backups"
+    compress: false
+
+logging:
+  level: "debug"
+  format: "Human"
+  outputs: ["Stdout"]
+  json: false
+  rotation:
+    enabled: false
+    max_size_mb: 100
+    max_files: 5
+    strategy: "Size" 
