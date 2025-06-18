@@ -71,7 +71,11 @@ interface ScrubStatus {
   errors: number;
 }
 
-const PoolManagementDashboard: React.FC = () => {
+interface PoolManagementDashboardProps {
+  onPoolSelect?: (poolName: string) => void;
+}
+
+const PoolManagementDashboard: React.FC<PoolManagementDashboardProps> = ({ onPoolSelect }) => {
   // State
   const [createWizardOpen, setCreateWizardOpen] = useState(false);
   const [selectedPool, setSelectedPool] = useState<ZfsPool | null>(null);
@@ -276,7 +280,10 @@ const PoolManagementDashboard: React.FC = () => {
             
             return (
               <Grid item xs={12} md={6} lg={4} key={pool.name}>
-                <Card>
+                <Card 
+                  sx={{ cursor: 'pointer' }}
+                  onClick={() => onPoolSelect?.(pool.name)}
+                >
                   <CardHeader
                     avatar={getPoolStatusIcon(pool.status)}
                     title={pool.name}
