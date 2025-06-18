@@ -9,7 +9,9 @@ export interface ZfsPool {
   id: string;
   name: string;
   health: string;
+  status: string; // ONLINE, DEGRADED, FAULTED, etc.
   size: number;
+  allocated: number; // alias for used
   used: number;
   free: number;
   fragmentation?: number;
@@ -90,7 +92,9 @@ export class ZfsPoolService {
         id: 'placeholder',
         name: 'To be added',
         health: 'UNAVAIL',
+        status: 'UNAVAIL',
         size: 0,
+        allocated: 0,
         used: 0,
         free: 0,
         dataSource: DataSourceType.PLACEHOLDER
@@ -117,7 +121,9 @@ export class ZfsPoolService {
         id: name || 'placeholder',
         name: name || 'To be added',
         health: 'UNAVAIL',
+        status: 'UNAVAIL',
         size: 0,
+        allocated: 0,
         used: 0,
         free: 0,
         dataSource: DataSourceType.PLACEHOLDER
@@ -232,6 +238,55 @@ export class ZfsPoolService {
     } catch (error) {
       console.error(`Error updating record size for dataset '${datasetName}':`, error);
       throw new Error('Failed to update dataset record size. Live data required in strict mode.');
+    }
+  }
+
+  /**
+   * Create a ZFS pool with advanced configuration
+   */
+  public static async createPool(config: {
+    name: string;
+    devices: string[];
+    vdevType?: string;
+    properties?: Record<string, any>;
+  }): Promise<ZfsPool> {
+    this.logServiceStatus(`Creating ZFS pool with config: ${config.name}`);
+    try {
+      const response = await axios.post<ZfsPool>(this.API_URL, config);
+      return {
+        ...response.data,
+        dataSource: DataSourceType.LIVE
+      };
+    } catch (error) {
+      console.error(`Error creating ZFS pool '${config.name}':`, error);
+      throw new Error('Failed to create pool. Live data required in strict mode.');
+    }
+  }
+
+  /**
+   * Destroy a ZFS pool
+   */
+  public static async destroyPool(name: string): Promise<void> {
+    this.logServiceStatus(`Destroying ZFS pool: ${name}`);
+    try {
+      await axios.delete(`${this.API_URL}/${name}`);
+    } catch (error) {
+      console.error(`Error destroying ZFS pool '${name}':`, error);
+      throw new Error('Failed to destroy pool. Live data required in strict mode.');
+    }
+  }
+
+  /**
+   * Get pool status information
+   */
+  public static async getPoolStatus(name: string): Promise<string> {
+    this.logServiceStatus(`Getting pool status: ${name}`);
+    try {
+      const response = await axios.get<{ status: string }>(`${this.API_URL}/${name}/status`);
+      return response.data.status;
+    } catch (error) {
+      console.error(`Error getting pool status for '${name}':`, error);
+      return 'UNAVAIL';
     }
   }
 } 

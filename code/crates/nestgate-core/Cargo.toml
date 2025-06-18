@@ -10,17 +10,22 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
 thiserror = { workspace = true }
 anyhow = { workspace = true }
 
+# Enhanced dependencies for advanced integration capabilities
+config = "0.14"
+fastrand = "2.0"
+num_cpus = "1.16"
+gethostname = "0.4"
+
 # Additional dependencies needed by the existing code
 axum = { workspace = true }
 rand = "0.8"
 procfs = "0.16"
-gethostname = "0.4"
-num_cpus = "1.16"
 
 # ZFS integration (optional since not all systems have ZFS)
 libzfs = { version = "0.6", optional = true }
@@ -32,4 +37,5 @@ zfs = ["libzfs", "nix"]
 
 [dev-dependencies]
 tokio-test = { workspace = true }
+tempfile = "3.8"
  

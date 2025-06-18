@@ -8,10 +8,10 @@ use std::sync::Arc;
 use tokio::signal;
 use tracing::{info, error};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use anyhow::Result;
 
-// Use the port manager crate
-use nestgate_core::{Config, Result};
-use nestgate_orchestrator::{Orchestrator, OrchestratorConfig, FederationMode};
+// Use the orchestrator crate with correct imports
+use nestgate_orchestrator::{Orchestrator, OrchestratorConfig};
 use nestgate_network::NetworkApi;
 
 #[tokio::main]
@@ -30,13 +30,11 @@ async fn main() -> Result<()> {
     // Create orchestrator configuration
     let orchestrator_config = OrchestratorConfig {
         bind_address: "0.0.0.0:8080".to_string(),
-        federation_mode: FederationMode::Standalone,
-        local_services: vec![
-            "nestgate-core".to_string(),
-            "nestgate-network".to_string(),
-            "nestgate-zfs".to_string(),
-        ],
-        health_check_interval: 30,
+        mcp_config: None,
+        federation_config: None,
+        load_balancer_config: Default::default(),
+        health_config: Default::default(),
+        metrics_config: Default::default(),
     };
 
     // Create and start the orchestrator
@@ -69,7 +67,7 @@ async fn main() -> Result<()> {
     }
 
     // Stop the orchestrator
-    orchestrator.stop().await?;
+    orchestrator.shutdown().await?;
     info!("NestGate system stopped");
 
     Ok(())
