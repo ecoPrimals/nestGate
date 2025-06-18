@@ -11,6 +11,7 @@ keywords = ["orchestrator", "connectivity", "nas", "storage"]
 [dependencies]
 # Internal crates
 nestgate-core = { path = "../nestgate-core" }
+nestgate-mcp = { path = "../nestgate-mcp" }
 
 # Async runtime
 tokio = { workspace = true }
@@ -39,6 +40,13 @@ tower-http = { workspace = true }
 # Utilities
 uuid = { workspace = true }
 dashmap = { workspace = true }
+
+# Graph processing for service dependencies
+petgraph = "0.6"
+
+# Additional dependencies for orchestrator functionality
+indexmap = { workspace = true }
+gethostname = "0.4"
 
 [dev-dependencies]
 tokio-test = { workspace = true }

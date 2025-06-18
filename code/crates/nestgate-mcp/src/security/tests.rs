@@ -1,0 +1,140 @@
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+    use std::time::Duration;
+    use tokio::time::sleep;
+    use tempfile::TempDir;
+
+    fn create_test_certs() -> (TempDir, TlsConfig) {
+        let temp_dir = TempDir::new().unwrap();
+        let ca_cert = temp_dir.path().join("ca.pem");
+        let client_cert = temp_dir.path().join("client.pem");
+        let client_key = temp_dir.path().join("key.pem");
+
+        // Create dummy cert files
+        std::fs::write(&ca_cert, "-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgAwIBAgIJAJC1\n-----END CERTIFICATE-----").unwrap();
+        std::fs::write(&client_cert, "-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgAwIBAgIJAJC1\n-----END CERTIFICATE-----").unwrap();
+        std::fs::write(&client_key, "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC\n-----END PRIVATE KEY-----").unwrap();
+
+        let config = TlsConfig {
+            ca_cert,
+            client_cert,
+            client_key,
+            skip_verify: false,
+        };
+
+        (temp_dir, config)
+    }
+
+    #[test]
+    fn test_security_manager_creation() {
+        let (_temp_dir, tls_config) = create_test_certs();
+        let manager = SecurityManager::new(Some(tls_config), "test-token".to_string());
+
+        assert_eq!(manager.get_current_token(), "test-token");
+        assert_eq!(manager.token_rotation_interval, Duration::from_secs(12 * 60 * 60));
+        assert!(!manager.needs_rotation());
+    }
+
+    #[tokio::test]
+    async fn test_token_rotation() {
+        let (_temp_dir, tls_config) = create_test_certs();
+        let mut manager = SecurityManager::new(Some(tls_config), "test-token".to_string());
+        let initial_token = manager.get_current_token().to_string();
+
+        manager.rotate_token().await;
+        let new_token = manager.get_current_token().to_string();
+
+        assert_ne!(initial_token, new_token);
+        assert!(!manager.needs_rotation());
+    }
+
+    #[tokio::test]
+    async fn test_token_rotation_interval() {
+        let (_temp_dir, tls_config) = create_test_certs();
+        let mut manager = SecurityManager::new(Some(tls_config), "test-token".to_string());
+        
+        // Override rotation interval for testing
+        manager.token_rotation_interval = Duration::from_millis(100);
+        manager.last_rotation = SystemTime::now() - Duration::from_secs(1);
+
+        assert!(manager.needs_rotation());
+        manager.rotate_token().await;
+        assert!(!manager.needs_rotation());
+    }
+
+    #[test]
+    fn test_tls_config_validation() {
+        let (_temp_dir, tls_config) = create_test_certs();
+        let manager = SecurityManager::new(Some(tls_config), "test-token".to_string());
+
+        let result = manager.configure_tls();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_tls_config_missing() {
+        let manager = SecurityManager::new(None, "test-token".to_string());
+        let result = manager.configure_tls();
+        assert!(result.is_err());
+        match result {
+            Err(Error::ConfigError(msg)) => assert!(msg.contains("TLS configuration not provided")),
+            _ => panic!("Expected ConfigError"),
+        }
+    }
+
+    #[test]
+    fn test_tls_config_invalid_paths() {
+        let config = TlsConfig {
+            ca_cert: PathBuf::from("/nonexistent/ca.pem"),
+            client_cert: PathBuf::from("/nonexistent/client.pem"),
+            client_key: PathBuf::from("/nonexistent/key.pem"),
+            skip_verify: false,
+        };
+
+        let manager = SecurityManager::new(Some(config), "test-token".to_string());
+        let result = manager.configure_tls();
+        assert!(result.is_err());
+        match result {
+            Err(Error::ConfigError(msg)) => assert!(msg.contains("Failed to open CA cert")),
+            _ => panic!("Expected ConfigError"),
+        }
+    }
+
+    #[test]
+    fn test_tls_config_skip_verify() {
+        let (_temp_dir, mut tls_config) = create_test_certs();
+        tls_config.skip_verify = true;
+
+        let manager = SecurityManager::new(Some(tls_config), "test-token".to_string());
+        let result = manager.configure_tls();
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_token_rotation_service() {
+        let (_temp_dir, tls_config) = create_test_certs();
+        let mut manager = SecurityManager::new(Some(tls_config), "test-token".to_string());
+        
+        // Override rotation interval for testing
+        manager.token_rotation_interval = Duration::from_millis(100);
+        let initial_token = manager.get_current_token().to_string();
+
+        manager.start_token_rotation().await;
+        sleep(Duration::from_millis(200)).await;
+
+        let new_token = manager.get_current_token().to_string();
+        assert_ne!(initial_token, new_token);
+    }
+
+    #[test]
+    fn test_token_generation() {
+        let (_temp_dir, tls_config) = create_test_certs();
+        let manager = SecurityManager::new(Some(tls_config), "test-token".to_string());
+        
+        // Verify token is valid base64
+        let token = manager.get_current_token();
+        assert!(BASE64.decode(token).is_ok());
+    }
+} 

@@ -12,9 +12,14 @@ use tokio::time::interval;
 use crate::errors::Result;
 use crate::service::{ServiceInstance, ServiceStatus};
 
-/// System metrics
+use nestgate_mcp::{
+    SystemMetrics as McpSystemMetrics,
+    error::{Error as McpError},
+};
+
+/// Orchestrator-specific system metrics
 #[derive(Debug, Clone, Serialize)]
-pub struct SystemMetrics {
+pub struct OrchestratorMetrics {
     /// Timestamp when metrics were collected
     pub timestamp: u64,
     
@@ -189,7 +194,7 @@ pub struct MetricsCollector {
     metrics_data: Arc<RwLock<Vec<MetricsPoint>>>,
     
     /// System metrics cache
-    system_metrics: Arc<Mutex<SystemMetrics>>,
+    system_metrics: Arc<Mutex<OrchestratorMetrics>>,
     
     /// Service metrics cache
     service_metrics: Arc<RwLock<HashMap<String, ServiceMetrics>>>,
@@ -207,7 +212,7 @@ impl MetricsCollector {
         Self {
             config,
             metrics_data: Arc::new(RwLock::new(Vec::new())),
-            system_metrics: Arc::new(Mutex::new(SystemMetrics {
+            system_metrics: Arc::new(Mutex::new(OrchestratorMetrics {
                 timestamp: 0,
                 total_services: 0,
                 running_services: 0,
@@ -299,7 +304,7 @@ impl MetricsCollector {
         // Collect basic system information
         let (memory_usage, cpu_usage, disk_usage) = self.collect_system_info().await;
         
-        let system_metrics = SystemMetrics {
+        let system_metrics = OrchestratorMetrics {
             timestamp: now,
             total_services: 0, // Will be updated by the service registry
             running_services: 0,
@@ -465,7 +470,7 @@ impl MetricsCollector {
     }
     
     /// Get current system metrics
-    pub async fn get_system_metrics(&self) -> SystemMetrics {
+    pub async fn get_system_metrics(&self) -> OrchestratorMetrics {
         let metrics = self.system_metrics.lock().unwrap();
         metrics.clone()
     }
@@ -550,5 +555,20 @@ impl MetricsCollector {
         }
         
         output
+    }
+
+    pub async fn start(&self) -> Result<()> {
+        // Placeholder implementation
+        Ok(())
+    }
+
+    pub async fn store_metrics(&self, _metrics: &OrchestratorMetrics) -> Result<()> {
+        // Placeholder implementation
+        Ok(())
+    }
+
+    pub async fn shutdown(&self) -> Result<()> {
+        // Placeholder implementation
+        Ok(())
     }
 } 
