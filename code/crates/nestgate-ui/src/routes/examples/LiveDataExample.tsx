@@ -40,13 +40,13 @@ const LiveDataExample: React.FC = () => {
         Data source indicators show the origin of data being displayed:
       </Typography>
       
-      <Stack direction="row" spacing={4} sx={{ marginBottom: 3 }}>
-        <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" sx={{ marginBottom: 3 }}>
+        <Stack direction="row" alignItems="center">
           <DataSourceIndicator dataSource={DataSourceType.LIVE} />
           <Typography variant="body2">Live data from real system</Typography>
         </Stack>
         
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" alignItems="center">
           <DataSourceIndicator dataSource={DataSourceType.PLACEHOLDER} />
           <Typography variant="body2">Feature under development</Typography>
         </Stack>

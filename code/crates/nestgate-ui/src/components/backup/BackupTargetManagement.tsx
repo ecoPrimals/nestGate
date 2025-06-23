@@ -420,7 +420,7 @@ const BackupTargetManagement: React.FC = () => {
 
   const renderFormFields = () => {
     return (
-      <Stack spacing={3}>
+      <Stack>
         <TextField
           label="Name"
           value={formData.name}
@@ -629,7 +629,7 @@ const BackupTargetManagement: React.FC = () => {
                         <TableCell>{getLocationDisplay(target.targetType)}</TableCell>
                         <TableCell>{target.description || '-'}</TableCell>
                         <TableCell>
-                          <Stack direction="row" spacing={1}>
+                          <Stack direction="row">
                             <IconButton
                               size="small"
                               color="primary"

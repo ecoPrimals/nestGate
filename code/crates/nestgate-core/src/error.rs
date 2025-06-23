@@ -1,51 +1,96 @@
 //! Error types for NestGate Core
+//! 
+//! Enhanced error handling with enhanced NestGate capabilities
 
 use thiserror::Error;
 
-/// Result type for NestGate operations
-pub type Result<T> = std::result::Result<T, NestGateError>;
-
-/// Main error type for NestGate
+/// Main error type for NestGate operations
 #[derive(Error, Debug)]
 pub enum NestGateError {
-    #[error("IO error: {0}")]
-    Io(#[from] std::io::Error),
-    
-    #[error("Serialization error: {0}")]
-    Serialization(#[from] serde_json::Error),
-    
-    #[error("Configuration error: {0}")]
-    Config(String),
-    
-    #[error("Network error: {0}")]
-    Network(String),
-    
-    #[error("Storage error: {0}")]
-    Storage(String),
-    
-    #[error("Security error: {0}")]
-    Security(String),
-    
-    #[error("Invalid input: {0}")]
-    InvalidInput(String),
-    
-    #[error("Operation failed: {0}")]
-    OperationFailed(String),
-    
+    /// Generic internal error
     #[error("Internal error: {0}")]
     Internal(String),
-    
-    #[error("JSON error: {0}")]
-    Json(String),
-    
-    #[error("YAML error: {0}")]
-    Yaml(String),
-    
+
+    /// Invalid input provided
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
+
+    /// Network-related error
+    #[error("Network error: {0}")]
+    Network(String),
+
+    /// Database error
+    #[error("Database error: {0}")]
+    Database(String),
+
+    /// Authentication error
+    #[error("Authentication error: {0}")]
+    Authentication(String),
+
+    /// Authorization error
+    #[error("Authorization error: {0}")]
+    Authorization(String),
+
+    /// Configuration error with enhanced handling
+    #[error("Configuration error: {0}")]
+    Configuration(String),
+
+    /// Validation error with enhanced handling
+    #[error("Validation error: {0}")]
+    Validation(String),
+
+    /// System error with enhanced handling
+    #[error("System error: {0}")]
+    SystemError(String),
+
+    /// File system error with enhanced handling
+    #[error("File system error: {0}")]
+    FileSystem(String),
+
+    /// Serialization error with enhanced handling
+    #[error("Serialization error: {0}")]
+    Serialization(String),
+
+    /// Not found error (used in diagnostics)
     #[error("Not found: {0}")]
     NotFound(String),
-    
+
+    /// Timeout error
+    #[error("Operation timed out: {0}")]
+    Timeout(String),
+
+    /// I/O error wrapper
+    #[error("I/O error: {0}")]
+    Io(#[from] std::io::Error),
+
+    /// Resource exhausted error
+    #[error("Resource exhausted: {0}")]
+    ResourceExhausted(String),
+
+    /// External service error
+    #[error("External service error: {0}")]
+    ExternalService(String),
+
+    /// Cache error
     #[error("Cache error: {0}")]
     Cache(String),
+
+    /// Storage error
+    #[error("Storage error: {0}")]
+    Storage(String),
+
+    /// Compute error
+    #[error("Compute error: {0}")]
+    Compute(String),
+
+    /// Federation error
+    #[error("Federation error: {0}")]
+    Federation(String),
+
+    /// MCP error
+    #[error("MCP error: {0}")]
+    Mcp(String),
 }
 
-// Additional NestGate-specific error types can go here if needed 
+/// Result type alias for NestGate operations
+pub type Result<T> = std::result::Result<T, NestGateError>; 

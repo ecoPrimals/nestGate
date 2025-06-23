@@ -181,7 +181,7 @@ export const SessionManager: React.FC<SessionProps> = ({
         </DialogTitle>
         
         <DialogContent>
-          <Stack spacing={3} sx={{ paddingY: 2 }}>
+          <Stack sx={{ paddingY: 2 }}>
             <Box sx={{ textAlign: 'center' }}>
               <ExclamationCircleIcon sx={{ fontSize: 48, color: 'warning.main', marginBottom: 2 }} />
               <Typography variant="h6">

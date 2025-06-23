@@ -1,207 +1,143 @@
 /**
- * Configuration Service - Fetches dynamic configuration from Port Manager
+ * Configuration Service
+ * 
+ * Manages dynamic configuration by connecting to the NestGate orchestrator
  */
 
-export interface ServiceEndpoint {
-  name: string;
-  service_type: string;
-  port: number;
-  status: string;
-  base_url: string;
-  websocket_url: string;
-  api_path?: string;
-}
+import { DynamicConfig, ClientConfig } from '../types/config';
 
-export interface PortManagerEndpoint {
+interface OrchestratorDiscovery {
+  orchestrator: {
   host: string;
   port: number;
-  base_url: string;
-}
-
-export interface ClientConfig {
-  port_manager: PortManagerEndpoint;
-  services: Record<string, ServiceEndpoint>;
-  api_port?: number;
-  ui_port?: number;
-  websocket_port?: number;
-}
-
-export interface DynamicConfig {
-  apiBaseUrl: string;
-  websocketUrl: string;
-  portManagerUrl: string;
-  services: Record<string, ServiceEndpoint>;
+    health_endpoint: string;
+    services_endpoint: string;
+    config_endpoint: string;
+  };
+  version: string;
+  discovery_method: string;
 }
 
 class ConfigService {
   private config: DynamicConfig | null = null;
-  private portManagerUrl: string | null = null;
+  private orchestratorUrl: string | null = null;
 
   constructor() {
-    // Port Manager URL will be discovered dynamically
-    this.portManagerUrl = null;
+    // Orchestrator URL will be discovered dynamically
+    this.orchestratorUrl = null;
   }
 
   /**
-   * Discover Port Manager location from discovery file or environment
+   * Discover NestGate Orchestrator location
    */
-  private async discoverPortManager(): Promise<string> {
+  private async discoverOrchestrator(): Promise<string> {
     // First try environment variable if provided
-    if (process.env.REACT_APP_PORT_MANAGER_URL) {
-      return process.env.REACT_APP_PORT_MANAGER_URL;
+    if (process.env.REACT_APP_ORCHESTRATOR_URL) {
+      return process.env.REACT_APP_ORCHESTRATOR_URL;
     }
 
     try {
-      // Try to read discovery file (this would work in development when both UI and Port Manager are local)
-      const discoveryResponse = await fetch('/api/port-manager-discovery');
-      if (discoveryResponse.ok) {
-        const discoveryData = await discoveryResponse.json();
-        if (discoveryData.port_manager) {
-          return discoveryData.port_manager.url;
-        }
+      // Try to read discovery file
+      const response = await fetch('/nestgate-discovery.json');
+      if (response.ok) {
+        const discovery: OrchestratorDiscovery = await response.json();
+        const orchestratorUrl = `http://${discovery.orchestrator.host}:${discovery.orchestrator.port}`;
+        console.log('🔍 Found orchestrator via discovery file:', orchestratorUrl);
+        return orchestratorUrl;
       }
     } catch (error) {
-      console.log('Could not read discovery file, trying fallback ports...');
+      console.warn('Could not read discovery file, trying default location...');
     }
 
-    // Fallback: try common ports to discover running Port Manager
-    const commonPorts = [8080, 8081, 8082, 9000, 9001, 9002];
-    
-    for (const port of commonPorts) {
-      try {
-        const testUrl = `http://localhost:${port}`;
-        const response = await fetch(`${testUrl}/health`, {
-          method: 'GET',
-          timeout: 2000,
-        } as RequestInit);
-        
-        if (response.ok) {
-          const healthData = await response.json();
-          // Verify this is actually the Port Manager by checking the health response
-          if (healthData.status === 'healthy') {
-            console.log(`🔍 Port Manager discovered at: ${testUrl}`);
-            return testUrl;
-          }
-        }
-      } catch (error) {
-        // Port not available or not Port Manager, continue searching
-        continue;
-      }
-    }
-    
-    throw new Error('Port Manager not found. Please ensure the Port Manager is running and accessible.');
+    // Fallback to default orchestrator location
+    const defaultUrl = 'http://localhost:8090';
+    console.log('🔧 Using default orchestrator URL:', defaultUrl);
+    return defaultUrl;
   }
 
   /**
-   * Fetch configuration from port manager
+   * Fetch configuration from orchestrator
    */
-  async fetchConfig(): Promise<DynamicConfig> {
+  public async fetchConfig(): Promise<DynamicConfig> {
     try {
-      // Discover Port Manager if not already known
-      if (!this.portManagerUrl) {
-        this.portManagerUrl = await this.discoverPortManager();
+      if (!this.orchestratorUrl) {
+        this.orchestratorUrl = await this.discoverOrchestrator();
       }
 
-      const response = await fetch(`${this.portManagerUrl}/client-config`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch config: ${response.status} ${response.statusText}`);
+      // Test orchestrator health
+      const healthResponse = await fetch(`${this.orchestratorUrl}/health`);
+      if (!healthResponse.ok) {
+        throw new Error(`Orchestrator health check failed: ${healthResponse.status}`);
       }
 
-      const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(`Config API error: ${result.error || 'Unknown error'}`);
+      // Fetch configuration from orchestrator
+      const configResponse = await fetch(`${this.orchestratorUrl}/api/config`);
+      if (!configResponse.ok) {
+        throw new Error(`Failed to fetch config: ${configResponse.status}`);
       }
 
-      const clientConfig: ClientConfig = result.data;
+      const orchestratorConfig = await configResponse.json();
       
-      // Transform to our internal format - NO HARDCODED FALLBACKS
-      if (!clientConfig.api_port) {
-        throw new Error('No API port available from port manager');
-      }
-      
-      this.config = {
-        apiBaseUrl: `http://localhost:${clientConfig.api_port}/api`,
-        websocketUrl: this.determineWebSocketUrl(clientConfig),
-        portManagerUrl: clientConfig.port_manager.base_url,
-        services: clientConfig.services,
+      // Build dynamic configuration
+      const config: DynamicConfig = {
+        apiBaseUrl: orchestratorConfig.services.api || `${this.orchestratorUrl}/api`,
+        websocketUrl: orchestratorConfig.websocket_url || `ws://localhost:8090/ws`,
+        orchestratorUrl: this.orchestratorUrl,
+        services: orchestratorConfig.services || {}
       };
 
-      console.log('🔧 Dynamic configuration loaded:', this.config);
-      return this.config;
+      this.config = config;
+      console.log('✅ Configuration loaded from orchestrator:', config);
+      return config;
       
     } catch (error) {
       console.error('❌ Failed to fetch dynamic configuration:', error);
-      // Reset Port Manager URL to force rediscovery on next attempt
-      this.portManagerUrl = null;
-      throw error;
+      throw new Error(`Orchestrator not found. Please ensure the NestGate orchestrator is running and accessible.`);
     }
   }
 
   /**
-   * Get current configuration (fetch if not loaded)
+   * Get cached configuration or fetch if not available
    */
-  async getConfig(): Promise<DynamicConfig> {
-    if (!this.config) {
-      await this.fetchConfig();
+  public async getConfig(): Promise<DynamicConfig> {
+    if (this.config) {
+      return this.config;
     }
-    return this.config!;
+    return this.fetchConfig();
   }
 
   /**
-   * Get API base URL
+   * Get WebSocket URL from configuration
    */
-  async getApiBaseUrl(): Promise<string> {
-    const config = await this.getConfig();
-    return config.apiBaseUrl;
-  }
-
-  /**
-   * Get WebSocket URL
-   */
-  async getWebSocketUrl(): Promise<string> {
+  public async getWebSocketUrl(): Promise<string> {
     const config = await this.getConfig();
     return config.websocketUrl;
   }
 
   /**
-   * Get service endpoint by ID
+   * Get API base URL from configuration
    */
-  async getServiceEndpoint(serviceId: string): Promise<ServiceEndpoint | null> {
+  public async getApiBaseUrl(): Promise<string> {
     const config = await this.getConfig();
-    return config.services[serviceId] || null;
+    return config.apiBaseUrl;
   }
 
   /**
-   * Get all services
+   * Get service endpoint by type
    */
-  async getServices(): Promise<Record<string, ServiceEndpoint>> {
+  public async getServiceEndpoint(serviceType: string): Promise<string | null> {
     const config = await this.getConfig();
-    return config.services;
+    return config.services[serviceType] || null;
   }
 
   /**
-   * Refresh configuration from port manager
+   * Clear cached configuration (force refresh)
    */
-  async refresh(): Promise<DynamicConfig> {
+  public clearCache(): void {
     this.config = null;
-    return this.fetchConfig();
-  }
-
-  private determineWebSocketUrl(clientConfig: ClientConfig): string {
-    // Use websocket_port if available, otherwise use api_port for combined service
-    if (clientConfig.websocket_port) {
-      return `ws://localhost:${clientConfig.websocket_port}`;
-    } else if (clientConfig.api_port) {
-      // WebSocket is on the same port as API at /ws endpoint
-      return `ws://localhost:${clientConfig.api_port}/ws`;
-    } else {
-      throw new Error('No WebSocket or API port available from port manager');
-    }
+    this.orchestratorUrl = null;
   }
 }
 
 // Export singleton instance
 export const configService = new ConfigService();
-export default configService; 

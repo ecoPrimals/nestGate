@@ -18,7 +18,7 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import Grid2 from '@mui/material/Unstable_Grid2';
+
 import {
   PlayArrow,
   Stop,
@@ -135,8 +135,8 @@ const SystemDashboard: React.FC = () => {
       {systemMetrics && (
         <>
           {/* System Overview Cards */}
-          <Grid2 container spacing={3} sx={{ mb: 4 }}>
-            <Grid2 xs={12} sm={6} md={3}>
+          <Box sx={{ mb: 4 }}>
+            <Box>
               <Card>
                 <CardContent>
                   <Box display="flex" alignItems="center" gap={2}>
@@ -152,9 +152,9 @@ const SystemDashboard: React.FC = () => {
                   </Box>
                 </CardContent>
               </Card>
-            </Grid2>
+            </Box>
 
-            <Grid2 xs={12} sm={6} md={3}>
+            <Box>
               <Card>
                 <CardContent>
                   <Box display="flex" alignItems="center" gap={2}>
@@ -170,9 +170,9 @@ const SystemDashboard: React.FC = () => {
                   </Box>
                 </CardContent>
               </Card>
-            </Grid2>
+            </Box>
 
-            <Grid2 xs={12} sm={6} md={3}>
+            <Box>
               <Card>
                 <CardContent>
                   <Box display="flex" alignItems="center" gap={2}>
@@ -188,9 +188,9 @@ const SystemDashboard: React.FC = () => {
                   </Box>
                 </CardContent>
               </Card>
-            </Grid2>
+            </Box>
 
-            <Grid2 xs={12} sm={6} md={3}>
+            <Box>
               <Card>
                 <CardContent>
                   <Box display="flex" alignItems="center" gap={2}>
@@ -206,12 +206,12 @@ const SystemDashboard: React.FC = () => {
                   </Box>
                 </CardContent>
               </Card>
-            </Grid2>
-          </Grid2>
+            </Box>
+          </Box>
 
           {/* System Metrics */}
-          <Grid2 container spacing={3} sx={{ mb: 4 }}>
-            <Grid2 xs={12} md={6}>
+          <Box sx={{ mb: 4 }}>
+            <Box>
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
@@ -269,48 +269,48 @@ const SystemDashboard: React.FC = () => {
                   )}
                 </CardContent>
               </Card>
-            </Grid2>
+            </Box>
 
-            <Grid2 xs={12} md={6}>
+            <Box>
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
                     Network Statistics
                   </Typography>
                   {connectionStats && (
-                    <Grid2 container spacing={2}>
-                      <Grid2 xs={6}>
+                    <Box>
+                      <Box>
                         <Typography variant="body2" color="text.secondary">
                           Total Connections
                         </Typography>
                         <Typography variant="h6">{connectionStats.total_connections}</Typography>
-                      </Grid2>
-                      <Grid2 xs={6}>
+                      </Box>
+                      <Box>
                         <Typography variant="body2" color="text.secondary">
                           Active Connections
                         </Typography>
                         <Typography variant="h6">{connectionStats.active_connections}</Typography>
-                      </Grid2>
-                      <Grid2 xs={6}>
+                      </Box>
+                      <Box>
                         <Typography variant="body2" color="text.secondary">
                           Bytes Transferred
                         </Typography>
                         <Typography variant="h6">
                           {(connectionStats.bytes_transferred / (1024 * 1024)).toFixed(1)} MB
                         </Typography>
-                      </Grid2>
-                      <Grid2 xs={6}>
+                      </Box>
+                      <Box>
                         <Typography variant="body2" color="text.secondary">
                           Avg Response Time
                         </Typography>
                         <Typography variant="h6">{connectionStats.avg_response_time.toFixed(1)}ms</Typography>
-                      </Grid2>
-                    </Grid2>
+                      </Box>
+                    </Box>
                   )}
                 </CardContent>
               </Card>
-            </Grid2>
-          </Grid2>
+            </Box>
+          </Box>
 
           {/* Services Table */}
           <Card>
