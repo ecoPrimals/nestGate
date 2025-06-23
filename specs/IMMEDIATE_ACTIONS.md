@@ -236,3 +236,42 @@ The **ZFS Day 2 success** represents a major milestone in NestGate development, 
 **Objective**: Implement ZFS advanced features leveraging Day 2 success foundation
 **Timeline**: 4 weeks for complete enterprise-grade storage system
 **Expected Impact**: Transform NestGate into production-ready storage solution
+
+# NestGate Immediate Actions
+
+## **🚨 CRITICAL: Songbird Integration (Week 1 Priority)**
+
+**READ FIRST**: [SONGBIRD_ORCHESTRATOR_HANDOFF.md](./SONGBIRD_ORCHESTRATOR_HANDOFF.md)
+
+### **Immediate Tasks (This Week)**
+
+1. **🔥 Fix Identity Crisis**
+   ```bash
+   # nestgate/Cargo.toml - WRONG NAME
+   name = "songbird-orchestrator"  # ❌ REMOVE THIS
+   
+   # Should be:
+   name = "nestgate"               # ✅ CORRECT
+   ```
+
+2. **🔥 Add Songbird Dependency**
+   ```toml
+   [dependencies]
+   songbird-orchestrator = { path = "../songbird" }
+   ```
+
+3. **🔥 Audit Duplicate Code**
+   ```bash
+   # These files are duplicating Songbird functionality:
+   src/orchestrator/       # DELETE - use Songbird
+   src/service_registry.rs # DELETE - use Songbird
+   src/connection_proxy.rs # DELETE - use Songbird
+   src/health_monitor.rs   # DELETE - use Songbird
+   ```
+
+### **Integration Branch**
+```bash
+git checkout -b songbird-integration
+git add .
+git commit -m "Start Songbird orchestrator integration"
+```

@@ -2,6 +2,10 @@
 
 This document provides an index of all specification documents in the NestGate project.
 
+## **🚨 CRITICAL: Songbird Orchestrator Handoff (Current Priority)**
+
+- [SONGBIRD_ORCHESTRATOR_HANDOFF.md](./SONGBIRD_ORCHESTRATOR_HANDOFF.md) - **🔥 IMMEDIATE ACTION REQUIRED** - Songbird team handoff for architectural consolidation
+
 ## **🎉 v2 Sovereign Architecture with Real ZFS Integration (Current)**
 
 - [NESTGATE_V2_SOVEREIGN_REBUILD.md](./NESTGATE_V2_SOVEREIGN_REBUILD.md) - **Master v2 specification**
