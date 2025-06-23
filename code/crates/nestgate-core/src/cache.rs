@@ -6,11 +6,19 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use serde::{Deserialize, Serialize};
+use chrono;
 
 use crate::error::{NestGateError, Result};
-use crate::StorageTier;
+
+/// Storage tier for caching
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum StorageTier {
+    Hot,    // Fast access, limited capacity
+    Warm,   // Moderate access, larger capacity  
+    Cold,   // Slow access, unlimited capacity
+}
 
 /// Cache policy
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -48,38 +56,26 @@ impl Default for CachePolicy {
 /// Cache configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheConfig {
-    /// Cache policy
-    pub policy: CachePolicy,
-    
-    /// Cache storage tier
-    pub tier: StorageTier,
-    
-    /// Cache size limit in bytes (0 = unlimited)
-    pub size_limit: u64,
-    
-    /// Time-to-live for cached items in seconds (0 = unlimited)
+    /// Maximum size in bytes
+    pub max_size: u64,
+    /// Maximum number of items
+    pub max_items: u64,
+    /// Time-to-live in seconds
     pub ttl: u64,
-    
-    /// Whether to cache metadata
-    pub cache_metadata: bool,
-    
-    /// Path to cache directory
+    /// Storage tier
+    pub tier: StorageTier,
+    /// Cache directory
     pub cache_dir: PathBuf,
-    
-    /// Flush interval for write-back cache in seconds
-    pub flush_interval: u64,
 }
 
 impl Default for CacheConfig {
     fn default() -> Self {
         Self {
-            policy: CachePolicy::default(),
-            tier: StorageTier::Warm,
-            size_limit: 1024 * 1024 * 1024, // 1 GB
+            max_size: 1024 * 1024 * 100, // 100MB
+            max_items: 1000,
             ttl: 3600, // 1 hour
-            cache_metadata: true,
-            cache_dir: PathBuf::from("/var/cache/nestgate"),
-            flush_interval: 60, // 1 minute
+            tier: StorageTier::Hot,
+            cache_dir: std::env::temp_dir().join("nestgate-cache"),
         }
     }
 }
@@ -114,31 +110,30 @@ pub struct CacheStats {
 
 /// Cached item
 #[derive(Debug)]
+#[allow(dead_code)] // Fields are part of the design for future use
 struct CachedItem {
     /// Creation time
-    created_at: Instant,
-    
-    /// Last accessed time
-    accessed_at: Instant,
-    
+    created_at: chrono::DateTime<chrono::Utc>,
+    /// Last access time
+    accessed_at: chrono::DateTime<chrono::Utc>,
+    /// Access count
+    access_count: u64,
     /// Size in bytes
     size: u64,
-    
     /// Storage tier
     tier: StorageTier,
-    
+    /// Data
+    data: Vec<u8>,
+    /// Original file path
+    original_path: PathBuf,
     /// Path to cached file
     path: PathBuf,
-    
-    /// Path in original storage
-    original_path: PathBuf,
-    
     /// Whether the item is dirty (needs to be flushed)
     dirty: bool,
 }
 
 /// Cache manager for handling caching across storage tiers
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CacheManager {
     /// Configuration
     config: CacheConfig,
@@ -178,11 +173,11 @@ impl CacheManager {
         };
         
         if let Some(item) = items.get_mut(key) {
-            // Check if item has expired
+            // Check TTL
             if self.config.ttl > 0 {
-                let age = item.created_at.elapsed().as_secs();
+                let age = (chrono::Utc::now() - item.created_at).num_seconds() as u64;
                 if age > self.config.ttl {
-                    // Item has expired, remove it
+                    // Item expired, remove it
                     items.remove(key);
                     stats.evictions += 1;
                     return Ok(None);
@@ -190,7 +185,7 @@ impl CacheManager {
             }
             
             // Update access time
-            item.accessed_at = Instant::now();
+            item.accessed_at = chrono::Utc::now();
             
             // Increment hits
             stats.hits += 1;
@@ -207,50 +202,47 @@ impl CacheManager {
     }
     
     /// Put an item in the cache
-    pub fn put(&self, key: &str, path: PathBuf, size: u64, original_path: PathBuf) -> Result<()> {
-        // If cache policy is None, don't cache
-        if self.config.policy == CachePolicy::None {
-            return Ok(());
-        }
-        
+    pub fn put(&self, key: &str, path: PathBuf, size: u64, _original_path: PathBuf) -> Result<()> {
         let mut items = match self.items.write() {
             Ok(items) => items,
             Err(_) => return Err(NestGateError::Internal("Cache lock poisoned".to_string())),
         };
-        
+
         let mut stats = match self.stats.write() {
             Ok(stats) => stats,
             Err(_) => return Err(NestGateError::Internal("Stats lock poisoned".to_string())),
         };
-        
+
         // Check if we need to evict items to make room
-        if self.config.size_limit > 0 {
+        if self.config.max_size > 0 {
             let current_size: u64 = items.values().map(|item| item.size).sum();
-            if current_size + size > self.config.size_limit {
-                self.evict_items(current_size + size - self.config.size_limit)?;
+            if current_size + size > self.config.max_size {
+                self.evict_items(current_size + size - self.config.max_size)?;
             }
         }
-        
+
         // Add the new item
         let item = CachedItem {
-            created_at: Instant::now(),
-            accessed_at: Instant::now(),
+            created_at: chrono::Utc::now(),
+            accessed_at: chrono::Utc::now(),
+            access_count: 0,
             size,
             tier: self.config.tier.clone(),
-            path,
-            original_path,
+            data: Vec::new(), // Will be populated by actual implementation
+            original_path: path.to_path_buf(),
+            path: self.config.cache_dir.join(key),
             dirty: false,
         };
-        
+
         items.insert(key.to_string(), item);
-        
+
         // Update stats
         stats.writes += 1;
         stats.current_size += size;
         if stats.current_size > stats.max_size {
             stats.max_size = stats.current_size;
         }
-        
+
         Ok(())
     }
     
@@ -279,16 +271,11 @@ impl CacheManager {
     
     /// Mark an item as dirty (needs to be flushed)
     pub fn mark_dirty(&self, key: &str) -> Result<bool> {
-        // Only applicable for write-back cache
-        if self.config.policy != CachePolicy::WriteBack {
-            return Ok(false);
-        }
-        
         let mut items = match self.items.write() {
             Ok(items) => items,
             Err(_) => return Err(NestGateError::Internal("Cache lock poisoned".to_string())),
         };
-        
+
         if let Some(item) = items.get_mut(key) {
             item.dirty = true;
             Ok(true)
@@ -299,23 +286,18 @@ impl CacheManager {
     
     /// Flush dirty items to backing store
     pub fn flush(&self) -> Result<u64> {
-        // Only applicable for write-back cache
-        if self.config.policy != CachePolicy::WriteBack {
-            return Ok(0);
-        }
-        
         let mut items = match self.items.write() {
             Ok(items) => items,
             Err(_) => return Err(NestGateError::Internal("Cache lock poisoned".to_string())),
         };
-        
+
         let mut stats = match self.stats.write() {
             Ok(stats) => stats,
             Err(_) => return Err(NestGateError::Internal("Stats lock poisoned".to_string())),
         };
-        
+
         let mut flushed = 0;
-        
+
         for item in items.values_mut() {
             if item.dirty {
                 // In a real implementation, this would copy the cached file
@@ -324,10 +306,10 @@ impl CacheManager {
                 flushed += 1;
             }
         }
-        
+
         // Update stats
         stats.flushes += 1;
-        
+
         Ok(flushed)
     }
     
@@ -400,7 +382,7 @@ impl CacheManager {
         };
         
         // Build a list of items sorted by access time (LRU)
-        let mut item_keys: Vec<(String, Instant)> = items
+        let mut item_keys: Vec<(String, chrono::DateTime<chrono::Utc>)> = items
             .iter()
             .map(|(key, item)| (key.clone(), item.accessed_at))
             .collect();
@@ -441,6 +423,7 @@ impl Default for CacheManager {
 ///
 /// Manages multiple cache tiers (hot, warm, cold) with automatic promotion/demotion
 #[derive(Debug)]
+#[allow(dead_code)] // Fields are part of the design for future use
 pub struct MultiTierCache {
     /// Hot tier cache (fastest, smallest)
     hot: CacheManager,
@@ -467,7 +450,8 @@ impl MultiTierCache {
         // Create hot tier config
         let hot_config = CacheConfig {
             tier: StorageTier::Hot,
-            size_limit: 256 * 1024 * 1024, // 256 MB
+            max_size: 256 * 1024 * 1024, // 256 MB
+            max_items: 1000,
             ttl: 3600, // 1 hour
             ..Default::default()
         };
@@ -475,7 +459,8 @@ impl MultiTierCache {
         // Create warm tier config
         let warm_config = CacheConfig {
             tier: StorageTier::Warm,
-            size_limit: 1024 * 1024 * 1024, // 1 GB
+            max_size: 1024 * 1024 * 1024, // 1 GB
+            max_items: 1000,
             ttl: 86400, // 24 hours
             ..Default::default()
         };
@@ -483,7 +468,8 @@ impl MultiTierCache {
         // Create cold tier config
         let cold_config = CacheConfig {
             tier: StorageTier::Cold,
-            size_limit: 10 * 1024 * 1024 * 1024, // 10 GB
+            max_size: 10 * 1024 * 1024 * 1024, // 10 GB
+            max_items: 1000,
             ttl: 7 * 86400, // 7 days
             ..Default::default()
         };
@@ -540,7 +526,6 @@ impl MultiTierCache {
             StorageTier::Hot => self.hot.put(key, path, size, original_path),
             StorageTier::Warm => self.warm.put(key, path, size, original_path),
             StorageTier::Cold => self.cold.put(key, path, size, original_path),
-            StorageTier::Cache => self.hot.put(key, path, size, original_path),
         }
     }
     

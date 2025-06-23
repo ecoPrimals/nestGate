@@ -1,6 +1,6 @@
 ---
 title: MCP Protocol Integration Specification
-description: Detailed specification for integrating GitClone MCP protocol into v2 orchestrator-centric architecture
+description: Detailed specification for integrating advanced MCP protocol into v2 orchestrator-centric architecture
 version: 2.0.0
 date: 2025-01-26
 status: Integration Specification

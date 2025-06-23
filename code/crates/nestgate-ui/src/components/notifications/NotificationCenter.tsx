@@ -283,7 +283,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
       <Typography variant="h6" gutterBottom>
         Notification Settings
       </Typography>
-      <Stack spacing={2} sx={{ marginBottom: 2 }}>
+      <Stack sx={{ marginBottom: 2 }}>
         <FormControlLabel
           control={
             <Switch
@@ -341,7 +341,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
     <Box sx={{ padding: 2 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
         <Typography variant="h5">Notifications</Typography>
-        <Stack direction="row" spacing={1}>
+        <Stack direction="row">
           <Tooltip title="Mark all as read">
             <IconButton 
             size="small" 

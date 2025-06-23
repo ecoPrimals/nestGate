@@ -61,7 +61,7 @@ const PoolStatusCard: React.FC<PoolStatusCardProps> = ({ pool }) => {
         }
       />
       <CardContent>
-        <Stack spacing={2}>
+        <Stack>
           <Box>
             <Typography variant="body2" color="text.secondary" gutterBottom>
               Usage:
@@ -80,7 +80,7 @@ const PoolStatusCard: React.FC<PoolStatusCardProps> = ({ pool }) => {
             </Typography>
           </Box>
           
-          <Stack spacing={1}>
+          <Stack>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="body2">Total Size:</Typography>
               <Typography variant="body2" sx={{ fontWeight: 600 }}>

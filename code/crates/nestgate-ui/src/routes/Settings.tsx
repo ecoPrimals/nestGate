@@ -407,7 +407,7 @@ const Settings: React.FC = () => {
         <Card>
           <CardHeader title="General Settings" />
           <CardContent>
-            <Stack spacing={3}>
+            <Stack>
               <Typography variant="h6">System Configuration</Typography>
               
               <TextField
@@ -501,7 +501,7 @@ const Settings: React.FC = () => {
                 </FormControl>
               )}
               
-              <Stack direction="row" spacing={2}>
+              <Stack direction="row">
                 <Button
                   variant="contained"
                   startIcon={isLoading ? <CircularProgress size={20} /> : <SaveIcon />}
@@ -529,7 +529,7 @@ const Settings: React.FC = () => {
           <Card>
           <CardHeader title="Network Configuration" />
           <CardContent>
-            <Stack spacing={3}>
+            <Stack>
               <Typography variant="h6">Network Configuration</Typography>
               
               <TextField
@@ -562,7 +562,7 @@ const Settings: React.FC = () => {
               </FormControl>
               
               {networkForm.ipConfiguration === 'static' && (
-                <Stack spacing={2}>
+                <Stack>
                   <TextField
                         label="IP Address"
                     value={networkForm.ipAddress}
@@ -668,7 +668,7 @@ const Settings: React.FC = () => {
                 />
               )}
               
-              <Stack direction="row" spacing={2}>
+              <Stack direction="row">
                 <Button
                   variant="contained"
                   startIcon={isLoading ? <CircularProgress size={20} /> : <SaveIcon />}
@@ -696,7 +696,7 @@ const Settings: React.FC = () => {
           <Card>
           <CardHeader title="Backup & Replication" />
           <CardContent>
-            <Stack spacing={3}>
+            <Stack>
               <Typography variant="h6">Automated Snapshots</Typography>
               
               <FormControlLabel
@@ -710,7 +710,7 @@ const Settings: React.FC = () => {
               />
               
               {backupForm.enableAutoSnapshots && (
-                <Stack spacing={2}>
+                <Stack>
                   <FormControl fullWidth>
                     <InputLabel>Snapshot Frequency</InputLabel>
                     <Select
@@ -792,7 +792,7 @@ const Settings: React.FC = () => {
               />
               
               {backupForm.enableReplication && (
-                <Stack spacing={2}>
+                <Stack>
                   <FormControl fullWidth>
                     <InputLabel>Replication Type</InputLabel>
                     <Select
@@ -844,7 +844,7 @@ const Settings: React.FC = () => {
                 </Stack>
               )}
               
-              <Stack direction="row" spacing={2}>
+              <Stack direction="row">
                 <Button
                   variant="contained"
                   startIcon={isLoading ? <CircularProgress size={20} /> : <SaveIcon />}
@@ -872,7 +872,7 @@ const Settings: React.FC = () => {
           <Card>
           <CardHeader title="User Management" />
           <CardContent>
-            <Stack spacing={3}>
+            <Stack>
               <Typography variant="h6">Admin Account</Typography>
               
               <TextField
@@ -994,7 +994,7 @@ const Settings: React.FC = () => {
                 </FormGroup>
               )}
               
-              <Stack direction="row" spacing={2}>
+              <Stack direction="row">
                 <Button
                   variant="contained"
                   startIcon={isLoading ? <CircularProgress size={20} /> : <SaveIcon />}

@@ -1,0 +1,963 @@
+//! ZFS Performance Monitoring
+//!
+//! Real-time performance monitoring, metrics collection, and alerting
+//! for ZFS storage tiers with integration to orchestrator and AI systems.
+
+use std::collections::{HashMap, VecDeque};
+use std::sync::Arc;
+use std::time::{Duration, Instant, SystemTime};
+use tokio::sync::{RwLock, mpsc};
+use tokio::time::interval;
+use tracing::{debug, error, info, warn};
+use serde::{Serialize, Deserialize};
+
+use nestgate_core::{Result as CoreResult, StorageTier};
+use crate::{
+    pool::ZfsPoolManager,
+    dataset::ZfsDatasetManager,
+    types::CompressionAlgorithm,
+    error::ZfsError,
+};
+
+/// ZFS performance monitor
+#[derive(Debug)]
+pub struct ZfsPerformanceMonitor {
+    config: PerformanceConfig,
+    pool_manager: Arc<ZfsPoolManager>,
+    dataset_manager: Arc<ZfsDatasetManager>,
+    
+    /// Real-time metrics
+    current_metrics: Arc<RwLock<CurrentPerformanceMetrics>>,
+    /// Historical metrics
+    metrics_history: Arc<RwLock<VecDeque<PerformanceSnapshot>>>,
+    /// Tier-specific metrics
+    tier_metrics: Arc<RwLock<HashMap<StorageTier, TierPerformanceData>>>,
+    /// Alert conditions
+    alert_conditions: Arc<RwLock<Vec<AlertCondition>>>,
+    /// Active alerts
+    active_alerts: Arc<RwLock<Vec<ActiveAlert>>>,
+    
+    /// Background tasks
+    collection_task: Option<tokio::task::JoinHandle<()>>,
+    analysis_task: Option<tokio::task::JoinHandle<()>>,
+    alert_task: Option<tokio::task::JoinHandle<()>>,
+    
+    /// Alert notification channel
+    alert_sender: Option<mpsc::Sender<Alert>>,
+}
+
+/// Performance monitoring configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PerformanceConfig {
+    /// Metrics collection interval in seconds
+    pub collection_interval: u64,
+    /// Analysis interval in seconds
+    pub analysis_interval: u64,
+    /// Alert check interval in seconds
+    pub alert_interval: u64,
+    /// History retention period in hours
+    pub history_retention_hours: u64,
+    /// Maximum history entries to keep
+    pub max_history_entries: usize,
+    /// Enable real-time alerting
+    pub enable_alerting: bool,
+    /// Enable trend analysis
+    pub enable_trend_analysis: bool,
+    /// Prometheus metrics endpoint
+    pub prometheus_endpoint: Option<String>,
+}
+
+impl Default for PerformanceConfig {
+    fn default() -> Self {
+        Self {
+            collection_interval: 30,     // 30 seconds
+            analysis_interval: 300,      // 5 minutes
+            alert_interval: 60,          // 1 minute
+            history_retention_hours: 24, // 24 hours
+            max_history_entries: 2880,   // 24 hours at 30-second intervals
+            enable_alerting: true,
+            enable_trend_analysis: true,
+            prometheus_endpoint: Some("http://localhost:9090".to_string()),
+        }
+    }
+}
+
+/// Current performance metrics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CurrentPerformanceMetrics {
+    /// Timestamp of last update
+    pub timestamp: SystemTime,
+    /// Pool-wide metrics
+    pub pool_metrics: PoolPerformanceMetrics,
+    /// Tier-specific metrics
+    pub tier_metrics: HashMap<StorageTier, TierMetrics>,
+    /// System resource metrics
+    pub system_metrics: SystemResourceMetrics,
+    /// I/O statistics
+    pub io_stats: IoStatistics,
+}
+
+/// Pool-wide performance metrics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PoolPerformanceMetrics {
+    /// Total IOPS across all pools
+    pub total_iops: f64,
+    /// Total throughput in MB/s
+    pub total_throughput_mbs: f64,
+    /// Average latency in milliseconds
+    pub avg_latency_ms: f64,
+    /// Pool utilization percentage
+    pub utilization_percent: f64,
+    /// Fragmentation percentage
+    pub fragmentation_percent: f64,
+    /// Compression ratio
+    pub compression_ratio: f64,
+    /// Deduplication ratio
+    pub dedup_ratio: f64,
+}
+
+/// Tier-specific performance metrics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TierMetrics {
+    /// Tier identifier
+    pub tier: StorageTier,
+    /// Read IOPS
+    pub read_iops: f64,
+    /// Write IOPS
+    pub write_iops: f64,
+    /// Read throughput in MB/s
+    pub read_throughput_mbs: f64,
+    /// Write throughput in MB/s
+    pub write_throughput_mbs: f64,
+    /// Average read latency in milliseconds
+    pub avg_read_latency_ms: f64,
+    /// Average write latency in milliseconds
+    pub avg_write_latency_ms: f64,
+    /// Cache hit ratio
+    pub cache_hit_ratio: f64,
+    /// Queue depth
+    pub queue_depth: u32,
+    /// Utilization percentage
+    pub utilization_percent: f64,
+    /// Error rate (errors per operation)
+    pub error_rate: f64,
+}
+
+/// System resource metrics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SystemResourceMetrics {
+    /// CPU utilization percentage
+    pub cpu_utilization_percent: f64,
+    /// Memory usage in bytes
+    pub memory_usage_bytes: u64,
+    /// Available memory in bytes
+    pub available_memory_bytes: u64,
+    /// Network I/O in MB/s
+    pub network_io_mbs: f64,
+    /// Disk I/O wait percentage
+    pub io_wait_percent: f64,
+    /// Load average (1 minute)
+    pub load_average_1m: f64,
+}
+
+/// I/O statistics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IoStatistics {
+    /// Total read operations
+    pub total_reads: u64,
+    /// Total write operations
+    pub total_writes: u64,
+    /// Total bytes read
+    pub total_bytes_read: u64,
+    /// Total bytes written
+    pub total_bytes_written: u64,
+    /// Average I/O size in bytes
+    pub avg_io_size_bytes: u64,
+    /// Read/write ratio
+    pub read_write_ratio: f64,
+}
+
+/// Performance snapshot for historical analysis
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PerformanceSnapshot {
+    /// Snapshot timestamp
+    pub timestamp: SystemTime,
+    /// Performance metrics at this point
+    pub metrics: CurrentPerformanceMetrics,
+    /// Calculated trends
+    pub trends: Option<PerformanceTrends>,
+}
+
+/// Performance trends analysis
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PerformanceTrends {
+    /// IOPS trend (positive = increasing)
+    pub iops_trend: f64,
+    /// Throughput trend (positive = increasing)
+    pub throughput_trend: f64,
+    /// Latency trend (positive = increasing)
+    pub latency_trend: f64,
+    /// Utilization trend (positive = increasing)
+    pub utilization_trend: f64,
+    /// Error rate trend (positive = increasing)
+    pub error_rate_trend: f64,
+}
+
+/// Tier-specific performance data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TierPerformanceData {
+    /// Current metrics
+    pub current: TierMetrics,
+    /// Historical data points
+    pub history: VecDeque<TierMetrics>,
+    /// Performance targets
+    pub targets: TierPerformanceTargets,
+    /// SLA compliance
+    pub sla_compliance: SlaCompliance,
+}
+
+/// Performance targets for a tier
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TierPerformanceTargets {
+    /// Target latency in milliseconds
+    pub target_latency_ms: f64,
+    /// Target throughput in MB/s
+    pub target_throughput_mbs: f64,
+    /// Target IOPS
+    pub target_iops: f64,
+    /// Target utilization percentage
+    pub target_utilization_percent: f64,
+    /// Maximum acceptable error rate
+    pub max_error_rate: f64,
+}
+
+/// SLA compliance metrics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SlaCompliance {
+    /// Latency SLA compliance percentage
+    pub latency_compliance: f64,
+    /// Throughput SLA compliance percentage
+    pub throughput_compliance: f64,
+    /// Availability percentage
+    pub availability_percent: f64,
+    /// Error rate compliance
+    pub error_rate_compliance: f64,
+}
+
+/// Alert condition definition
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AlertCondition {
+    /// Unique alert ID
+    pub id: String,
+    /// Alert name
+    pub name: String,
+    /// Alert description
+    pub description: String,
+    /// Metric to monitor
+    pub metric: AlertMetric,
+    /// Comparison operator
+    pub operator: AlertOperator,
+    /// Threshold value
+    pub threshold: f64,
+    /// Duration threshold must be exceeded
+    pub duration: Duration,
+    /// Alert severity
+    pub severity: AlertSeverity,
+    /// Whether alert is enabled
+    pub enabled: bool,
+}
+
+/// Metrics that can trigger alerts
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum AlertMetric {
+    /// Latency in milliseconds
+    Latency,
+    /// Throughput in MB/s
+    Throughput,
+    /// IOPS
+    Iops,
+    /// Utilization percentage
+    Utilization,
+    /// Error rate
+    ErrorRate,
+    /// Cache hit ratio
+    CacheHitRatio,
+    /// Memory usage
+    MemoryUsage,
+    /// CPU utilization
+    CpuUtilization,
+}
+
+/// Alert comparison operators
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum AlertOperator {
+    /// Greater than threshold
+    GreaterThan,
+    /// Less than threshold
+    LessThan,
+    /// Equal to threshold
+    EqualTo,
+    /// Greater than or equal to threshold
+    GreaterThanOrEqual,
+    /// Less than or equal to threshold
+    LessThanOrEqual,
+}
+
+/// Alert severity levels
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum AlertSeverity {
+    /// Informational alert
+    Info,
+    /// Warning alert
+    Warning,
+    /// Critical alert
+    Critical,
+    /// Emergency alert
+    Emergency,
+}
+
+/// Active alert
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ActiveAlert {
+    /// Alert condition ID
+    pub condition_id: String,
+    /// Alert name
+    pub name: String,
+    /// Alert message
+    pub message: String,
+    /// Severity level
+    pub severity: AlertSeverity,
+    /// Timestamp when alert was triggered
+    pub triggered_at: SystemTime,
+    /// Current metric value
+    pub current_value: f64,
+    /// Threshold value
+    pub threshold_value: f64,
+    /// Affected tier (if applicable)
+    pub affected_tier: Option<StorageTier>,
+}
+
+/// Alert notification
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Alert {
+    /// Alert type
+    pub alert_type: AlertType,
+    /// Alert data
+    pub alert: ActiveAlert,
+}
+
+/// Types of alert notifications
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum AlertType {
+    /// New alert triggered
+    Triggered,
+    /// Alert resolved
+    Resolved,
+    /// Alert escalated
+    Escalated,
+}
+
+impl ZfsPerformanceMonitor {
+    /// Create a new performance monitor
+    pub fn new(
+        config: PerformanceConfig,
+        pool_manager: Arc<ZfsPoolManager>,
+        dataset_manager: Arc<ZfsDatasetManager>,
+    ) -> Self {
+        Self {
+            config,
+            pool_manager,
+            dataset_manager,
+            current_metrics: Arc::new(RwLock::new(CurrentPerformanceMetrics::default())),
+            metrics_history: Arc::new(RwLock::new(VecDeque::new())),
+            tier_metrics: Arc::new(RwLock::new(HashMap::new())),
+            alert_conditions: Arc::new(RwLock::new(Vec::new())),
+            active_alerts: Arc::new(RwLock::new(Vec::new())),
+            collection_task: None,
+            analysis_task: None,
+            alert_task: None,
+            alert_sender: None,
+        }
+    }
+    
+    /// Start performance monitoring
+    pub async fn start(&mut self) -> CoreResult<()> {
+        info!("Starting ZFS performance monitoring");
+        
+        // Create alert notification channel
+        let (alert_sender, mut alert_receiver) = mpsc::channel(100);
+        self.alert_sender = Some(alert_sender);
+        
+        // Load default alert conditions
+        self.load_default_alert_conditions().await?;
+        
+        // Initialize tier performance targets
+        self.initialize_tier_targets().await?;
+        
+        // Start metrics collection task
+        self.start_collection_task().await?;
+        
+        // Start analysis task
+        if self.config.enable_trend_analysis {
+            self.start_analysis_task().await?;
+        }
+        
+        // Start alerting task
+        if self.config.enable_alerting {
+            self.start_alert_task().await?;
+        }
+        
+        // Start alert handler
+        tokio::spawn(async move {
+            while let Some(alert) = alert_receiver.recv().await {
+                Self::handle_alert_notification(alert).await;
+            }
+        });
+        
+        info!("ZFS performance monitoring started successfully");
+        Ok(())
+    }
+    
+    /// Stop performance monitoring
+    pub async fn stop(&mut self) -> CoreResult<()> {
+        info!("Stopping ZFS performance monitoring");
+        
+        // Stop background tasks
+        if let Some(task) = self.collection_task.take() {
+            task.abort();
+        }
+        
+        if let Some(task) = self.analysis_task.take() {
+            task.abort();
+        }
+        
+        if let Some(task) = self.alert_task.take() {
+            task.abort();
+        }
+        
+        info!("ZFS performance monitoring stopped");
+        Ok(())
+    }
+    
+    /// Load default alert conditions
+    async fn load_default_alert_conditions(&self) -> CoreResult<()> {
+        let mut conditions = self.alert_conditions.write().await;
+        
+        // High latency alert
+        conditions.push(AlertCondition {
+            id: "high-latency".to_string(),
+            name: "High Latency".to_string(),
+            description: "Average latency exceeds threshold".to_string(),
+            metric: AlertMetric::Latency,
+            operator: AlertOperator::GreaterThan,
+            threshold: 100.0, // 100ms
+            duration: Duration::from_secs(300), // 5 minutes
+            severity: AlertSeverity::Warning,
+            enabled: true,
+        });
+        
+        // Low throughput alert
+        conditions.push(AlertCondition {
+            id: "low-throughput".to_string(),
+            name: "Low Throughput".to_string(),
+            description: "Throughput falls below threshold".to_string(),
+            metric: AlertMetric::Throughput,
+            operator: AlertOperator::LessThan,
+            threshold: 100.0, // 100 MB/s
+            duration: Duration::from_secs(300), // 5 minutes
+            severity: AlertSeverity::Warning,
+            enabled: true,
+        });
+        
+        // High utilization alert
+        conditions.push(AlertCondition {
+            id: "high-utilization".to_string(),
+            name: "High Utilization".to_string(),
+            description: "Storage utilization exceeds threshold".to_string(),
+            metric: AlertMetric::Utilization,
+            operator: AlertOperator::GreaterThan,
+            threshold: 85.0, // 85%
+            duration: Duration::from_secs(600), // 10 minutes
+            severity: AlertSeverity::Critical,
+            enabled: true,
+        });
+        
+        // High error rate alert
+        conditions.push(AlertCondition {
+            id: "high-error-rate".to_string(),
+            name: "High Error Rate".to_string(),
+            description: "Error rate exceeds threshold".to_string(),
+            metric: AlertMetric::ErrorRate,
+            operator: AlertOperator::GreaterThan,
+            threshold: 0.01, // 1%
+            duration: Duration::from_secs(180), // 3 minutes
+            severity: AlertSeverity::Critical,
+            enabled: true,
+        });
+        
+        info!("Loaded {} default alert conditions", conditions.len());
+        Ok(())
+    }
+    
+    /// Initialize tier performance targets
+    async fn initialize_tier_targets(&self) -> CoreResult<()> {
+        let mut tier_metrics = self.tier_metrics.write().await;
+        
+        // Hot tier targets
+        tier_metrics.insert(StorageTier::Hot, TierPerformanceData {
+            current: TierMetrics::default_for_tier(StorageTier::Hot),
+            history: VecDeque::new(),
+            targets: TierPerformanceTargets {
+                target_latency_ms: 1.0,      // 1ms
+                target_throughput_mbs: 1000.0, // 1 GB/s
+                target_iops: 100000.0,       // 100K IOPS
+                target_utilization_percent: 80.0, // 80%
+                max_error_rate: 0.001,       // 0.1%
+            },
+            sla_compliance: SlaCompliance::default(),
+        });
+        
+        // Warm tier targets
+        tier_metrics.insert(StorageTier::Warm, TierPerformanceData {
+            current: TierMetrics::default_for_tier(StorageTier::Warm),
+            history: VecDeque::new(),
+            targets: TierPerformanceTargets {
+                target_latency_ms: 10.0,     // 10ms
+                target_throughput_mbs: 500.0, // 500 MB/s
+                target_iops: 10000.0,        // 10K IOPS
+                target_utilization_percent: 85.0, // 85%
+                max_error_rate: 0.005,       // 0.5%
+            },
+            sla_compliance: SlaCompliance::default(),
+        });
+        
+        // Cold tier targets
+        tier_metrics.insert(StorageTier::Cold, TierPerformanceData {
+            current: TierMetrics::default_for_tier(StorageTier::Cold),
+            history: VecDeque::new(),
+            targets: TierPerformanceTargets {
+                target_latency_ms: 50.0,     // 50ms
+                target_throughput_mbs: 200.0, // 200 MB/s
+                target_iops: 2000.0,         // 2K IOPS
+                target_utilization_percent: 90.0, // 90%
+                max_error_rate: 0.01,        // 1%
+            },
+            sla_compliance: SlaCompliance::default(),
+        });
+        
+        info!("Initialized performance targets for all tiers");
+        Ok(())
+    }
+    
+    /// Start metrics collection task
+    async fn start_collection_task(&mut self) -> CoreResult<()> {
+        let pool_manager = Arc::clone(&self.pool_manager);
+        let dataset_manager = Arc::clone(&self.dataset_manager);
+        let current_metrics = Arc::clone(&self.current_metrics);
+        let tier_metrics = Arc::clone(&self.tier_metrics);
+        let config = self.config.clone();
+        
+        let task = tokio::spawn(async move {
+            let mut interval = interval(Duration::from_secs(config.collection_interval));
+            
+            loop {
+                interval.tick().await;
+                
+                if let Err(e) = Self::collect_metrics(
+                    &pool_manager,
+                    &dataset_manager,
+                    &current_metrics,
+                    &tier_metrics,
+                ).await {
+                    error!("Metrics collection failed: {}", e);
+                }
+            }
+        });
+        
+        self.collection_task = Some(task);
+        Ok(())
+    }
+    
+    /// Collect performance metrics
+    async fn collect_metrics(
+        pool_manager: &Arc<ZfsPoolManager>,
+        dataset_manager: &Arc<ZfsDatasetManager>,
+        current_metrics: &Arc<RwLock<CurrentPerformanceMetrics>>,
+        tier_metrics: &Arc<RwLock<HashMap<StorageTier, TierPerformanceData>>>,
+    ) -> CoreResult<()> {
+        debug!("Collecting performance metrics");
+        
+        // TODO: Implement actual metrics collection from ZFS
+        // This would include:
+        // 1. Reading ZFS pool statistics
+        // 2. Collecting tier-specific metrics
+        // 3. Gathering system resource metrics
+        // 4. Computing I/O statistics
+        
+        // For now, simulate metrics collection
+        let metrics = CurrentPerformanceMetrics::mock_data();
+        
+        // Update current metrics
+        {
+            let mut current = current_metrics.write().await;
+            *current = metrics.clone();
+        }
+        
+        // Update tier-specific metrics
+        {
+            let mut tier_data = tier_metrics.write().await;
+            for (tier, tier_metric) in metrics.tier_metrics {
+                if let Some(data) = tier_data.get_mut(&tier) {
+                    data.current = tier_metric.clone();
+                    data.history.push_back(tier_metric);
+                    
+                    // Limit history size
+                    if data.history.len() > 100 {
+                        data.history.pop_front();
+                    }
+                }
+            }
+        }
+        
+        Ok(())
+    }
+    
+    /// Start analysis task
+    async fn start_analysis_task(&mut self) -> CoreResult<()> {
+        let metrics_history = Arc::clone(&self.metrics_history);
+        let current_metrics = Arc::clone(&self.current_metrics);
+        let config = self.config.clone();
+        
+        let task = tokio::spawn(async move {
+            let mut interval = interval(Duration::from_secs(config.analysis_interval));
+            
+            loop {
+                interval.tick().await;
+                
+                if let Err(e) = Self::analyze_trends(
+                    &current_metrics,
+                    &metrics_history,
+                    &config,
+                ).await {
+                    error!("Trend analysis failed: {}", e);
+                }
+            }
+        });
+        
+        self.analysis_task = Some(task);
+        Ok(())
+    }
+    
+    /// Analyze performance trends
+    async fn analyze_trends(
+        current_metrics: &Arc<RwLock<CurrentPerformanceMetrics>>,
+        metrics_history: &Arc<RwLock<VecDeque<PerformanceSnapshot>>>,
+        config: &PerformanceConfig,
+    ) -> CoreResult<()> {
+        debug!("Analyzing performance trends");
+        
+        // Create snapshot with current metrics
+        let current = current_metrics.read().await;
+        let snapshot = PerformanceSnapshot {
+            timestamp: SystemTime::now(),
+            metrics: current.clone(),
+            trends: None, // TODO: Calculate trends
+        };
+        
+        // Add to history
+        {
+            let mut history = metrics_history.write().await;
+            history.push_back(snapshot);
+            
+            // Limit history size
+            if history.len() > config.max_history_entries {
+                history.pop_front();
+            }
+        }
+        
+        Ok(())
+    }
+    
+    /// Start alert task
+    async fn start_alert_task(&mut self) -> CoreResult<()> {
+        let current_metrics = Arc::clone(&self.current_metrics);
+        let alert_conditions = Arc::clone(&self.alert_conditions);
+        let active_alerts = Arc::clone(&self.active_alerts);
+        let alert_sender = self.alert_sender.clone();
+        let config = self.config.clone();
+        
+        let task = tokio::spawn(async move {
+            let mut interval = interval(Duration::from_secs(config.alert_interval));
+            
+            loop {
+                interval.tick().await;
+                
+                if let Some(sender) = &alert_sender {
+                    if let Err(e) = Self::check_alert_conditions(
+                        &current_metrics,
+                        &alert_conditions,
+                        &active_alerts,
+                        sender,
+                    ).await {
+                        error!("Alert checking failed: {}", e);
+                    }
+                }
+            }
+        });
+        
+        self.alert_task = Some(task);
+        Ok(())
+    }
+    
+    /// Check alert conditions
+    async fn check_alert_conditions(
+        current_metrics: &Arc<RwLock<CurrentPerformanceMetrics>>,
+        alert_conditions: &Arc<RwLock<Vec<AlertCondition>>>,
+        active_alerts: &Arc<RwLock<Vec<ActiveAlert>>>,
+        alert_sender: &mpsc::Sender<Alert>,
+    ) -> CoreResult<()> {
+        debug!("Checking alert conditions");
+        
+        // TODO: Implement actual alert condition checking
+        // This would include:
+        // 1. Evaluating each alert condition against current metrics
+        // 2. Triggering new alerts when thresholds are exceeded
+        // 3. Resolving alerts when conditions return to normal
+        // 4. Sending alert notifications
+        
+        Ok(())
+    }
+    
+    /// Handle alert notification
+    async fn handle_alert_notification(alert: Alert) {
+        match alert.alert_type {
+            AlertType::Triggered => {
+                warn!("Alert triggered: {} - {}", alert.alert.name, alert.alert.message);
+            }
+            AlertType::Resolved => {
+                info!("Alert resolved: {} - {}", alert.alert.name, alert.alert.message);
+            }
+            AlertType::Escalated => {
+                error!("Alert escalated: {} - {}", alert.alert.name, alert.alert.message);
+            }
+        }
+    }
+    
+    /// Get current performance metrics
+    pub async fn get_current_metrics(&self) -> CurrentPerformanceMetrics {
+        self.current_metrics.read().await.clone()
+    }
+    
+    /// Get tier performance data
+    pub async fn get_tier_metrics(&self, tier: &StorageTier) -> Option<TierPerformanceData> {
+        self.tier_metrics.read().await.get(tier).cloned()
+    }
+    
+    /// Get active alerts
+    pub async fn get_active_alerts(&self) -> Vec<ActiveAlert> {
+        self.active_alerts.read().await.clone()
+    }
+    
+    /// Get performance history
+    pub async fn get_performance_history(&self, limit: Option<usize>) -> Vec<PerformanceSnapshot> {
+        let history = self.metrics_history.read().await;
+        if let Some(limit) = limit {
+            history.iter().rev().take(limit).cloned().collect()
+        } else {
+            history.iter().cloned().collect()
+        }
+    }
+}
+
+impl Default for CurrentPerformanceMetrics {
+    fn default() -> Self {
+        Self {
+            timestamp: SystemTime::now(),
+            pool_metrics: PoolPerformanceMetrics::default(),
+            tier_metrics: HashMap::new(),
+            system_metrics: SystemResourceMetrics::default(),
+            io_stats: IoStatistics::default(),
+        }
+    }
+}
+
+impl CurrentPerformanceMetrics {
+    /// Create mock data for testing
+    fn mock_data() -> Self {
+        let mut tier_metrics = HashMap::new();
+        tier_metrics.insert(StorageTier::Hot, TierMetrics::default_for_tier(StorageTier::Hot));
+        tier_metrics.insert(StorageTier::Warm, TierMetrics::default_for_tier(StorageTier::Warm));
+        tier_metrics.insert(StorageTier::Cold, TierMetrics::default_for_tier(StorageTier::Cold));
+        
+        Self {
+            timestamp: SystemTime::now(),
+            pool_metrics: PoolPerformanceMetrics::default(),
+            tier_metrics,
+            system_metrics: SystemResourceMetrics::default(),
+            io_stats: IoStatistics::default(),
+        }
+    }
+}
+
+impl TierMetrics {
+    /// Create default metrics for a specific tier
+    pub fn default_for_tier(tier: StorageTier) -> Self {
+        match tier {
+            StorageTier::Cache => Self {
+                tier,
+                read_iops: 100000.0,
+                write_iops: 80000.0,
+                read_throughput_mbs: 10000.0,
+                write_throughput_mbs: 8000.0,
+                avg_read_latency_ms: 0.1,
+                avg_write_latency_ms: 0.2,
+                cache_hit_ratio: 0.99,
+                queue_depth: 32,
+                utilization_percent: 50.0,
+                error_rate: 0.001,
+            },
+            StorageTier::Hot => Self {
+                tier,
+                read_iops: 50000.0,
+                write_iops: 40000.0,
+                read_throughput_mbs: 5000.0,
+                write_throughput_mbs: 4000.0,
+                avg_read_latency_ms: 1.0,
+                avg_write_latency_ms: 2.0,
+                cache_hit_ratio: 0.95,
+                queue_depth: 16,
+                utilization_percent: 60.0,
+                error_rate: 0.002,
+            },
+            StorageTier::Warm => Self {
+                tier,
+                read_iops: 10000.0,
+                write_iops: 8000.0,
+                read_throughput_mbs: 2000.0,
+                write_throughput_mbs: 1500.0,
+                avg_read_latency_ms: 10.0,
+                avg_write_latency_ms: 15.0,
+                cache_hit_ratio: 0.85,
+                queue_depth: 8,
+                utilization_percent: 70.0,
+                error_rate: 0.005,
+            },
+            StorageTier::Cold => Self {
+                tier,
+                read_iops: 2000.0,
+                write_iops: 1500.0,
+                read_throughput_mbs: 500.0,
+                write_throughput_mbs: 300.0,
+                avg_read_latency_ms: 50.0,
+                avg_write_latency_ms: 80.0,
+                cache_hit_ratio: 0.70,
+                queue_depth: 4,
+                utilization_percent: 80.0,
+                error_rate: 0.01,
+            },
+        }
+    }
+}
+
+impl Default for PoolPerformanceMetrics {
+    fn default() -> Self {
+        Self {
+            total_iops: 80000.0,
+            total_throughput_mbs: 1200.0,
+            avg_latency_ms: 2.5,
+            utilization_percent: 70.0,
+            fragmentation_percent: 15.0,
+            compression_ratio: 2.1,
+            dedup_ratio: 1.3,
+        }
+    }
+}
+
+impl Default for SystemResourceMetrics {
+    fn default() -> Self {
+        Self {
+            cpu_utilization_percent: 25.0,
+            memory_usage_bytes: 8 * 1024 * 1024 * 1024, // 8GB
+            available_memory_bytes: 24 * 1024 * 1024 * 1024, // 24GB available
+            network_io_mbs: 150.0,
+            io_wait_percent: 5.0,
+            load_average_1m: 1.2,
+        }
+    }
+}
+
+impl Default for IoStatistics {
+    fn default() -> Self {
+        Self {
+            total_reads: 1000000,
+            total_writes: 500000,
+            total_bytes_read: 100 * 1024 * 1024 * 1024, // 100GB
+            total_bytes_written: 50 * 1024 * 1024 * 1024, // 50GB
+            avg_io_size_bytes: 64 * 1024, // 64KB
+            read_write_ratio: 2.0,
+        }
+    }
+}
+
+impl Default for SlaCompliance {
+    fn default() -> Self {
+        Self {
+            latency_compliance: 98.5,
+            throughput_compliance: 99.2,
+            availability_percent: 99.95,
+            error_rate_compliance: 99.9,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_performance_config_default() {
+        let config = PerformanceConfig::default();
+        
+        assert_eq!(config.collection_interval, 30);
+        assert_eq!(config.analysis_interval, 300);
+        assert_eq!(config.alert_interval, 60);
+        assert_eq!(config.history_retention_hours, 24);
+        assert_eq!(config.max_history_entries, 2880);
+        assert!(config.enable_alerting);
+        assert!(config.enable_trend_analysis);
+    }
+    
+    #[test]
+    fn test_tier_metrics_default() {
+        let hot_metrics = TierMetrics::default_for_tier(StorageTier::Hot);
+        let warm_metrics = TierMetrics::default_for_tier(StorageTier::Warm);
+        let cold_metrics = TierMetrics::default_for_tier(StorageTier::Cold);
+        
+        // Hot tier should have highest performance
+        assert!(hot_metrics.read_iops > warm_metrics.read_iops);
+        assert!(warm_metrics.read_iops > cold_metrics.read_iops);
+        
+        // Latency should increase from hot to cold
+        assert!(hot_metrics.avg_read_latency_ms < warm_metrics.avg_read_latency_ms);
+        assert!(warm_metrics.avg_read_latency_ms < cold_metrics.avg_read_latency_ms);
+    }
+    
+    #[test]
+    fn test_alert_condition_creation() {
+        let condition = AlertCondition {
+            id: "test-alert".to_string(),
+            name: "Test Alert".to_string(),
+            description: "Test alert condition".to_string(),
+            metric: AlertMetric::Latency,
+            operator: AlertOperator::GreaterThan,
+            threshold: 100.0,
+            duration: Duration::from_secs(300),
+            severity: AlertSeverity::Warning,
+            enabled: true,
+        };
+        
+        assert_eq!(condition.threshold, 100.0);
+        assert!(condition.enabled);
+        assert!(matches!(condition.severity, AlertSeverity::Warning));
+    }
+} 

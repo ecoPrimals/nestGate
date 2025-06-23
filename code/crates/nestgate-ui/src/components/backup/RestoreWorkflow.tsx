@@ -437,7 +437,7 @@ const RestoreWorkflow: React.FC = () => {
           >
             <DialogTitle>Configure Restore</DialogTitle>
             <DialogContent>
-              <Stack spacing={3} sx={{ paddingTop: 1 }}>
+              <Stack sx={{ paddingTop: 1 }}>
                 <TextField
                 label="Destination Path"
                   value={formData.destination}
@@ -619,7 +619,7 @@ const RestoreWorkflow: React.FC = () => {
                           {job.endTime ? new Date(job.endTime).toLocaleString() : '-'}
                         </TableCell>
                         <TableCell>
-                          <Stack direction="row" spacing={1}>
+                          <Stack direction="row">
                             {job.status === 'idle' && (
                               <IconButton
                                 size="small"
@@ -760,7 +760,7 @@ const RestoreWorkflow: React.FC = () => {
         {steps[currentStep].content}
         </Box>
       
-        <Stack direction="row" spacing={1}>
+        <Stack direction="row">
         {currentStep > 0 && (
             <Button variant="outlined" onClick={handlePreviousStep}>
             Previous

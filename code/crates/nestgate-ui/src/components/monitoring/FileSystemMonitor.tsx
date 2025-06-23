@@ -173,7 +173,7 @@ const FileSystemMonitor: React.FC<FileSystemMonitorProps> = ({
     <Card>
       <CardHeader
         title={
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" alignItems="center">
             <FolderIcon />
             <Typography variant="h6">File System Monitor</Typography>
             {allocatedPort && (
@@ -190,7 +190,7 @@ const FileSystemMonitor: React.FC<FileSystemMonitorProps> = ({
           </Stack>
         }
         action={
-          <Stack direction="row" spacing={1}>
+          <Stack direction="row">
             <Button 
               startIcon={<RefreshIcon />} 
               onClick={handleClearEvents} 
@@ -223,7 +223,7 @@ const FileSystemMonitor: React.FC<FileSystemMonitorProps> = ({
         )}
 
         <Box sx={{ mb: 3 }}>
-          <Stack spacing={2}>
+          <Stack>
             <TextField
               fullWidth
               label="Enter directory path to monitor"
@@ -244,7 +244,7 @@ const FileSystemMonitor: React.FC<FileSystemMonitorProps> = ({
                 ),
               }}
             />
-            <Stack direction="row" spacing={2}>
+            <Stack direction="row">
               <FormControlLabel
                 control={
                   <Switch 

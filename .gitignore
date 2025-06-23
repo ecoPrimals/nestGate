@@ -69,7 +69,7 @@ pids/
 /backup/
 
 # Old v1 repository (exclude from v2)
-/nestgate-gitclone/
+
 
 # Archive directory (moved root files)
 /archive/

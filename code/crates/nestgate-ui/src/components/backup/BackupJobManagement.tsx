@@ -424,7 +424,7 @@ const BackupJobManagement: React.FC = () => {
                           {job.lastRun ? new Date(job.lastRun).toLocaleString() : 'Never'}
                         </TableCell>
                         <TableCell>
-                          <Stack direction="row" spacing={1}>
+                          <Stack direction="row">
                             <IconButton
                               size="small"
                               color="success"
@@ -490,7 +490,7 @@ const BackupJobManagement: React.FC = () => {
         </DialogTitle>
         <DialogContent>
           <Box sx={{ paddingTop: 1 }}>
-            <Stack spacing={3}>
+            <Stack>
               <TextField
             label="Job Name"
                 value={formData.name}

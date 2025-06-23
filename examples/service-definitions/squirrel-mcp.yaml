@@ -1,0 +1,511 @@
+# Squirrel MCP Service Definitions
+# Example showing MCP-focused deployment with federation and coordination
+
+services:
+  # MCP Core Server
+  - name: "mcp-server"
+    service_type: "Coordination"
+    version: "1.0.0"
+    description: "Squirrel MCP coordination server"
+    
+    command:
+      binary:
+        path: "/usr/local/bin/squirrel-mcp"
+        args: ["server", "--config", "/etc/squirrel/mcp.yaml"]
+        env_file: "/etc/squirrel/mcp.env"
+    
+    working_directory: "/var/lib/squirrel/mcp"
+    user: "squirrel"
+    group: "mcp"
+    
+    # MCP coordination requires reliable resources
+    resources:
+      cpu:
+        min_cores: 1.0
+        max_cores: 4.0
+        priority: 5  # Medium-high priority
+      memory:
+        min_memory: 1073741824  # 1GB
+        max_memory: 8589934592  # 8GB
+      network:
+        bandwidth_min: 104857600   # 100Mbps
+        bandwidth_max: 1073741824  # 1Gbps
+        latency_max: "10ms"
+        packet_loss_max: 0.1  # 0.1% max packet loss
+    
+    # MCP protocol networking
+    networking:
+      ports:
+        - container_port: 8080
+          host_port: 8080
+          protocol: "HTTP"
+          expose_externally: true
+          load_balance: true
+        - container_port: 8081
+          host_port: 8081
+          protocol: "WebSocket"
+          expose_externally: true
+          load_balance: false  # WebSocket needs sticky sessions
+        - container_port: 9090
+          host_port: 9090
+          protocol: "GRPC"
+          expose_externally: true
+          load_balance: true
+      load_balancing:
+        algorithm: "IpHash"  # For session affinity
+        health_check: true
+        sticky_sessions: true
+    
+    # Comprehensive MCP health checks
+    health_check:
+      startup_probe:
+        http:
+          endpoint: "http://localhost:8080/mcp/health/startup"
+          expected_status: 200
+          timeout: "30s"
+      liveness_probe:
+        http:
+          endpoint: "http://localhost:8080/mcp/health/live"
+          expected_status: 200
+          timeout: "10s"
+      readiness_probe:
+        http:
+          endpoint: "http://localhost:8080/mcp/health/ready"
+          expected_status: 200
+          timeout: "15s"
+      failure_threshold: 5
+      success_threshold: 1
+      timeout: "30s"
+      interval: "10s"
+      initial_delay: "15s"
+    
+    dependencies: []  # MCP server is foundational
+    
+    # Resilient restart policy for coordination
+    restart_policy:
+      policy_type: "Always"
+      max_attempts: 10
+      backoff_strategy:
+        initial_delay: "2s"
+        max_delay: "120s"
+        multiplier: 1.5
+        jitter: true
+      restart_window: "600s"
+    
+    # MCP can scale for high coordination loads
+    scaling:
+      min_instances: 1
+      max_instances: 5
+      scaling_metrics:
+        - metric_type: "RequestRate"
+          target_value: 500.0
+          comparison: "GreaterThan"
+        - metric_type: "ResponseTime"
+          target_value: 100.0  # 100ms
+          comparison: "GreaterThan"
+        - metric_type: "CpuUtilization"
+          target_value: 70.0
+          comparison: "GreaterThan"
+    
+    # Federation configuration for MCP clustering
+    federation:
+      federation_role: "Coordinator"
+      cluster_membership:
+        cluster_name: "squirrel-mcp-cluster"
+        node_role: "coordinator"
+        voting_member: true
+      consensus_participation: true
+      capability_sharing: ["mcp-protocol", "tool-federation", "coordination"]
+      data_replication:
+        replication_factor: 3
+        consistency_level: "Quorum"
+        cross_zone: true
+      load_balancing:
+        cross_cluster: true
+        locality_preference: "SameZone"
+        failover_strategy: "Graceful"
+    
+    # MCP protocol support
+    protocol_support: ["McpNative", "McpHttp", "McpWebSocket", "HTTP", "HTTPS", "GRPC"]
+    
+    labels:
+      tier: "coordination"
+      criticality: "high"
+      cluster_role: "coordinator"
+    
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8080"
+      prometheus.io/path: "/mcp/metrics"
+
+  # MCP Discovery Service
+  - name: "mcp-discovery"
+    service_type: "Discovery"
+    version: "1.0.0"
+    description: "MCP peer discovery and registry"
+    
+    command:
+      binary:
+        path: "/usr/local/bin/squirrel-discovery"
+        args: ["--mcp-server", "mcp-server:8080"]
+    
+    resources:
+      cpu:
+        min_cores: 0.5
+        max_cores: 2.0
+      memory:
+        min_memory: 536870912   # 512MB
+        max_memory: 2147483648  # 2GB
+      network:
+        bandwidth_min: 52428800   # 50Mbps
+        latency_max: "5ms"
+    
+    networking:
+      ports:
+        - container_port: 5353
+          host_port: 5353
+          protocol: "UDP"
+          expose_externally: true
+          load_balance: false  # mDNS discovery
+        - container_port: 8082
+          host_port: 8082
+          protocol: "HTTP"
+          expose_externally: true
+          load_balance: true
+    
+    health_check:
+      checks:
+        - http:
+            endpoint: "http://localhost:8082/discovery/health"
+            expected_status: 200
+            timeout: "10s"
+        - command:
+            command: ["dig", "@localhost", "-p", "5353", "_mcp._tcp.local", "PTR"]
+            expected_exit_code: 0
+            timeout: "15s"
+      interval: "30s"
+      timeout: "15s"
+    
+    dependencies:
+      - service_name: "mcp-server"
+        dependency_type: "HealthyBefore"
+        condition: "Ready"
+        timeout: "60s"
+        optional: false
+    
+    restart_policy:
+      policy_type: "OnFailure"
+      max_attempts: 5
+      backoff_strategy:
+        initial_delay: "5s"
+        max_delay: "60s"
+        multiplier: 2.0
+        jitter: true
+    
+    # Discovery federation
+    federation:
+      federation_role: "Observer"
+      cluster_membership:
+        cluster_name: "squirrel-mcp-cluster"
+        node_role: "discovery"
+        voting_member: false
+      consensus_participation: false
+      capability_sharing: ["peer-discovery", "service-registry"]
+    
+    protocol_support: ["McpNative", "HTTP"]
+    
+    labels:
+      tier: "discovery"
+      component: "mdns"
+
+  # MCP Tool Federation Service
+  - name: "tool-federation"
+    service_type: "Federation"
+    version: "1.0.0"
+    description: "MCP tool and capability federation"
+    
+    command:
+      container:
+        image: "squirrel/tool-federation"
+        tag: "1.0.0"
+        command: ["--mcp-endpoint", "http://mcp-server:8080"]
+        networks: ["squirrel-internal"]
+    
+    resources:
+      cpu:
+        min_cores: 1.0
+        max_cores: 3.0
+      memory:
+        min_memory: 1073741824  # 1GB
+        max_memory: 4294967296  # 4GB
+      network:
+        bandwidth_min: 104857600  # 100Mbps
+        latency_max: "10ms"
+    
+    networking:
+      ports:
+        - container_port: 8083
+          host_port: 8083
+          protocol: "HTTP"
+          expose_externally: true
+          load_balance: true
+        - container_port: 8084
+          host_port: 8084
+          protocol: "GRPC"
+          expose_externally: true
+          load_balance: true
+    
+    health_check:
+      checks:
+        - http:
+            endpoint: "http://localhost:8083/federation/health"
+            expected_status: 200
+            timeout: "10s"
+        - http:
+            endpoint: "http://localhost:8083/federation/tools"
+            expected_status: 200
+            timeout: "15s"
+      interval: "30s"
+    
+    dependencies:
+      - service_name: "mcp-server"
+        dependency_type: "HealthyBefore"
+        condition: "Ready"
+        timeout: "90s"
+        optional: false
+      - service_name: "mcp-discovery"
+        dependency_type: "Available"
+        condition: "Started"
+        timeout: "30s"
+        optional: true
+    
+    scaling:
+      min_instances: 1
+      max_instances: 3
+      scaling_metrics:
+        - metric_type: "RequestRate"
+          target_value: 200.0
+          comparison: "GreaterThan"
+    
+    # Core federation configuration
+    federation:
+      federation_role: "Coordinator"
+      cluster_membership:
+        cluster_name: "squirrel-mcp-cluster"
+        node_role: "federation"
+        voting_member: true
+      consensus_participation: true
+      capability_sharing: ["tool-sharing", "capability-federation", "cross-cluster-tools"]
+      data_replication:
+        replication_factor: 2
+        consistency_level: "LocalQuorum"
+        cross_zone: false
+      load_balancing:
+        cross_cluster: true
+        locality_preference: "SameNode"
+        failover_strategy: "Immediate"
+    
+    protocol_support: ["McpNative", "McpHttp", "GRPC"]
+    
+    labels:
+      tier: "federation"
+      component: "tools"
+
+  # MCP Consensus Manager
+  - name: "consensus-manager"
+    service_type: "Consensus"
+    version: "1.0.0"
+    description: "Raft consensus for MCP cluster coordination"
+    
+    command:
+      binary:
+        path: "/usr/local/bin/squirrel-consensus"
+        args: ["--cluster-id", "squirrel-mcp-cluster", "--node-id", "${NODE_ID}"]
+        env_file: "/etc/squirrel/consensus.env"
+    
+    environment:
+      NODE_ID: "${HOSTNAME}"
+      CLUSTER_SIZE: "3"
+      ELECTION_TIMEOUT: "5000"
+      HEARTBEAT_INTERVAL: "1000"
+    
+    resources:
+      cpu:
+        min_cores: 1.0
+        max_cores: 2.0
+        priority: 8  # High priority for consensus
+      memory:
+        min_memory: 1073741824  # 1GB
+        max_memory: 4294967296  # 4GB
+      storage:
+        - mount_path: "/var/lib/consensus"
+          size: 10737418240  # 10GB
+          storage_class: "Hot"
+          access_mode: "ReadWrite"
+      network:
+        bandwidth_min: 104857600  # 100Mbps
+        latency_max: "5ms"  # Low latency for consensus
+        packet_loss_max: 0.01  # 0.01% max
+    
+    networking:
+      ports:
+        - container_port: 9000
+          host_port: 9000
+          protocol: "TCP"
+          expose_externally: false  # Internal cluster communication
+          load_balance: false
+        - container_port: 9001
+          host_port: 9001
+          protocol: "HTTP"
+          expose_externally: true
+          load_balance: false
+    
+    health_check:
+      checks:
+        - http:
+            endpoint: "http://localhost:9001/consensus/health"
+            expected_status: 200
+            timeout: "5s"
+        - tcp:
+            address: "localhost:9000"
+            timeout: "5s"
+      interval: "15s"
+      timeout: "10s"
+      failure_threshold: 2  # Quick failure detection for consensus
+    
+    dependencies:
+      - service_name: "mcp-server"
+        dependency_type: "Available"
+        condition: "Started"
+        timeout: "30s"
+        optional: false
+    
+    # Consensus requires careful restart handling
+    restart_policy:
+      policy_type: "OnFailure"
+      max_attempts: 3
+      backoff_strategy:
+        initial_delay: "10s"
+        max_delay: "60s"
+        multiplier: 2.0
+        jitter: false  # Deterministic for consensus
+      restart_window: "300s"
+    
+    # Consensus doesn't scale - it's a fixed cluster size
+    scaling:
+      min_instances: 1
+      max_instances: 1
+    
+    # Data locality for consensus logs
+    data_locality:
+      data_gravity: "PerformanceAffinity"
+      replication_strategy: "NetworkTopologyStrategy"
+      consistency_level: "All"
+    
+    federation:
+      federation_role: "Leader"  # Can become cluster leader
+      cluster_membership:
+        cluster_name: "squirrel-mcp-cluster"
+        node_role: "consensus"
+        voting_member: true
+      consensus_participation: true
+    
+    protocol_support: ["Custom"]  # Raft protocol
+    
+    labels:
+      tier: "consensus"
+      component: "raft"
+      cluster_critical: "true"
+
+  # MCP Metrics Collector (optional)
+  - name: "metrics-collector"
+    service_type: "Monitoring"
+    version: "1.0.0"
+    description: "Collect and aggregate MCP cluster metrics"
+    
+    command:
+      container:
+        image: "squirrel/metrics-collector"
+        tag: "1.0.0"
+        volumes:
+          - host_path: "/var/lib/squirrel/metrics"
+            container_path: "/data"
+            read_only: false
+    
+    resources:
+      cpu:
+        min_cores: 0.5
+        max_cores: 1.0
+      memory:
+        min_memory: 536870912   # 512MB
+        max_memory: 2147483648  # 2GB
+      storage:
+        - mount_path: "/data"
+          size: 53687091200  # 50GB
+          storage_class: "Warm"
+          access_mode: "ReadWrite"
+    
+    networking:
+      ports:
+        - container_port: 9090
+          host_port: 9091  # Different from orchestrator metrics
+          protocol: "HTTP"
+          expose_externally: true
+          load_balance: true
+    
+    health_check:
+      checks:
+        - http:
+            endpoint: "http://localhost:9090/metrics"
+            expected_status: 200
+            timeout: "10s"
+      interval: "60s"
+    
+    dependencies:
+      - service_name: "mcp-server"
+        dependency_type: "Available"
+        condition: "Ready"
+        timeout: "60s"
+        optional: true  # Metrics are optional
+    
+    restart_policy:
+      policy_type: "OnFailure"
+      max_attempts: 3
+    
+    protocol_support: ["HTTP", "HTTPS"]
+    
+    labels:
+      tier: "monitoring"
+      component: "metrics"
+      optional: "true"
+
+# Global orchestrator configuration for MCP deployment
+orchestrator:
+  name: "squirrel-mcp"
+  version: "1.0.0"
+  
+  # MCP-optimized settings
+  max_concurrent_operations: 50
+  service_startup_timeout: "120s"
+  service_shutdown_timeout: "30s"
+  
+  # Federation is core to MCP
+  federation:
+    enabled: true
+    cluster_name: "squirrel-mcp-cluster"
+    discovery_method: "mdns"
+    consensus_algorithm: "raft"
+    heartbeat_interval: "10s"
+    election_timeout: "5s"
+    
+  # Monitoring for MCP coordination
+  monitoring:
+    prometheus_enabled: true
+    metrics_port: 9090
+    health_check_interval: "10s"
+    
+  # Security for MCP communication
+  security:
+    tls_enabled: true
+    mutual_tls: true
+    rbac_enabled: false  # Simplified for MCP 

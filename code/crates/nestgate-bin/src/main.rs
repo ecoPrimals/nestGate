@@ -1,76 +1,82 @@
 /*!
  * NestGate Main Binary
  * 
- * This is a thin wrapper around the port manager crate
+ * Single entry point for the entire NestGate system via orchestrator
+ * Services are handed to the orchestrator for proper lifecycle management
  */
 
 use std::sync::Arc;
 use tokio::signal;
 use tracing::{info, error};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use anyhow::Result;
+use std::env;
 
-// Use the port manager crate
-use nestgate_core::{Config, Result};
-use nestgate_orchestrator::{Orchestrator, OrchestratorConfig, FederationMode};
-use nestgate_network::NetworkApi;
+// Use the orchestrator crate with service management
+use nestgate_orchestrator::{
+    Orchestrator, OrchestratorConfig,
+    ZfsService, ApiService, NetworkService, McpService, TowerFederationService
+};
+use nestgate_core::config::{NetworkConfig, EnvironmentConfig};
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize tracing
-    tracing_subscriber::registry()
-        .with(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "nestgate=info".into()),
-        )
-        .with(tracing_subscriber::fmt::layer())
-        .init();
+    tracing_subscriber::fmt::init();
 
-    info!("Starting NestGate system...");
-    
+    info!("Starting NestGate Orchestrator");
+
     // Create orchestrator configuration
-    let orchestrator_config = OrchestratorConfig {
-        bind_address: "0.0.0.0:8080".to_string(),
-        federation_mode: FederationMode::Standalone,
-        local_services: vec![
-            "nestgate-core".to_string(),
-            "nestgate-network".to_string(),
-            "nestgate-zfs".to_string(),
-        ],
-        health_check_interval: 30,
-    };
+    let config = OrchestratorConfig::default();
 
-    // Create and start the orchestrator
-    let orchestrator = Arc::new(Orchestrator::new(orchestrator_config).await?);
-    
+    // Create orchestrator
+    let orchestrator = Orchestrator::new(config).await?;
+
+    // Create and start services
+    let zfs_service = Box::new(ZfsService::new());
+    let api_service = Box::new(ApiService::new());
+    let network_service = Box::new(NetworkService::new());
+    let mcp_service = Box::new(McpService::new());
+    let federation_service = Box::new(TowerFederationService::new("main-tower".to_string(), None));
+
+    // Start services
+    orchestrator.start_service(zfs_service).await?;
+    orchestrator.start_service(api_service).await?;
+    orchestrator.start_service(network_service).await?;
+    orchestrator.start_service(mcp_service).await?;
+    orchestrator.start_service(federation_service).await?;
+
     // Start the orchestrator
     orchestrator.start().await?;
-    info!("Orchestrator started successfully");
 
-    // Create and start the network API
-    let network_api = NetworkApi::new();
-    let api_router = network_api.create_router();
+    info!("NestGate Orchestrator started successfully");
 
-    // Start the API server
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8081").await?;
-    info!("Network API server listening on 0.0.0.0:8081");
-    
-    let api_server = axum::serve(listener, api_router);
-    
-    // Handle shutdown gracefully
-    tokio::select! {
-        result = api_server => {
-            if let Err(e) = result {
-                error!("API server error: {}", e);
-            }
-        }
-        _ = signal::ctrl_c() => {
-            info!("Received shutdown signal");
-        }
-    }
+    // Wait for shutdown signal
+    signal::ctrl_c().await?;
+    info!("Shutdown signal received");
 
-    // Stop the orchestrator
-    orchestrator.stop().await?;
-    info!("NestGate system stopped");
+    // Graceful shutdown
+    orchestrator.shutdown().await?;
+    info!("NestGate Orchestrator shutdown complete");
 
     Ok(())
+}
+
+fn print_help() {
+    println!("NestGate v2 Orchestrator");
+    println!();
+    println!("USAGE:");
+    println!("    nestgate [OPTIONS]");
+    println!();
+    println!("OPTIONS:");
+    println!("    --mock-tower    Start a mock tower for federation testing");
+    println!("    -h, --help      Print this help message");
+    println!();
+    println!("EXAMPLES:");
+    println!("    nestgate                 # Start the main orchestrator");
+    println!("    nestgate --mock-tower    # Start a mock tower for testing");
+    println!();
+    println!("ENVIRONMENT VARIABLES:");
+    println!("    RUST_LOG=debug          # Enable debug logging");
+    println!("    RUST_LOG=info           # Enable info logging (default)");
 } 

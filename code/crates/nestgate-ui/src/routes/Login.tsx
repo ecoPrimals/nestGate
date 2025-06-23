@@ -90,7 +90,7 @@ const Login: React.FC = () => {
         }}
       >
         <CardContent sx={{ padding: 4 }}>
-          <Stack spacing={1} alignItems="center" sx={{ marginBottom: 4 }}>
+          <Stack alignItems="center" sx={{ marginBottom: 4 }}>
             <SafetyIcon sx={{ fontSize: 48, color: 'primary.main' }} />
             <Typography variant="h4" component="h1">
               NestGate
@@ -167,7 +167,7 @@ const Login: React.FC = () => {
 
           <Divider sx={{ marginY: 3 }} />
           
-          <Stack spacing={1} alignItems="center">
+          <Stack alignItems="center">
             <Typography variant="body2" color="text.secondary">
               Default credentials for testing:
             </Typography>

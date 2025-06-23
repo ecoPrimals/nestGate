@@ -343,7 +343,7 @@ const SettingsNew: React.FC = () => {
           <Card>
           <CardHeader title="General Settings" />
           <CardContent>
-            <Stack spacing={3}>
+            <Stack>
               <Typography variant="h6">System Configuration</Typography>
               
               <TextField
@@ -437,7 +437,7 @@ const SettingsNew: React.FC = () => {
                 </FormControl>
               )}
               
-              <Stack direction="row" spacing={2}>
+              <Stack direction="row">
                 <Button
                   variant="contained"
                   startIcon={isLoading ? <CircularProgress size={20} /> : <SaveIcon />}

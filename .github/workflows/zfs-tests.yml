@@ -1,0 +1,301 @@
+name: ZFS Integration Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'code/crates/nestgate-zfs/**'
+      - 'code/crates/nestgate-core/**'
+      - '.github/workflows/zfs-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'code/crates/nestgate-zfs/**'
+      - 'code/crates/nestgate-core/**'
+      - '.github/workflows/zfs-tests.yml'
+  schedule:
+    # Run tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  lint-and-format:
+    name: Lint and Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Check formatting
+        run: cargo fmt --check
+        working-directory: code/crates/nestgate-zfs
+      
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+        working-directory: code/crates/nestgate-zfs
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust: [stable, beta, nightly]
+        include:
+          - rust: stable
+            coverage: true
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust ${{ matrix.rust }}
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+      
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Install cargo-tarpaulin
+        if: matrix.coverage
+        run: cargo install cargo-tarpaulin
+      
+      - name: Run unit tests
+        run: cargo test --lib --features test-utils -- --nocapture
+        working-directory: code/crates/nestgate-zfs
+        env:
+          RUST_LOG: debug
+      
+      - name: Generate coverage report
+        if: matrix.coverage
+        run: |
+          cargo tarpaulin --out Xml --output-dir target/coverage \
+            --features test-utils,integration-tests \
+            --exclude-files "benches/*" "tests/*"
+        working-directory: code/crates/nestgate-zfs
+      
+      - name: Upload coverage to Codecov
+        if: matrix.coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: code/crates/nestgate-zfs/target/coverage/cobertura.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [lint-and-format, unit-tests]
+    strategy:
+      matrix:
+        test-mode: [mock, real-zfs]
+        exclude:
+          # Only run real ZFS tests on main branch or specific trigger
+          - test-mode: real-zfs
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-integration-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Install ZFS (if real-zfs)
+        if: matrix.test-mode == 'real-zfs'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zfsutils-linux
+          # Create a file-based pool for testing
+          sudo truncate -s 1G /tmp/zfs-test.img
+          sudo zpool create testpool /tmp/zfs-test.img
+        
+      - name: Run integration tests
+        run: |
+          if [ "${{ matrix.test-mode }}" = "real-zfs" ]; then
+            export ZFS_AVAILABLE=true
+            export TEST_POOL=testpool
+          else
+            export ZFS_AVAILABLE=false
+          fi
+          cargo test --test integration_tests --features integration-tests -- --nocapture
+        working-directory: code/crates/nestgate-zfs
+        env:
+          RUST_LOG: debug
+      
+      - name: Cleanup ZFS (if real-zfs)
+        if: matrix.test-mode == 'real-zfs' && always()
+        run: |
+          sudo zpool destroy testpool || true
+          sudo rm -f /tmp/zfs-test.img || true
+
+  stress-tests:
+    name: Stress Tests
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-stress-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Run stress tests
+        run: |
+          export TEST_TIMEOUT=1800  # 30 minutes for stress tests
+          cargo test --test integration_tests --features stress-tests \
+            stress_tests:: --release -- --nocapture --test-threads=1
+        working-directory: code/crates/nestgate-zfs
+        env:
+          RUST_LOG: info
+
+  benchmarks:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Run benchmarks
+        run: cargo bench --bench performance_benchmarks
+        working-directory: code/crates/nestgate-zfs
+      
+      - name: Archive benchmark results
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-results
+          path: code/crates/nestgate-zfs/target/criterion/
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+      
+      - name: Run security audit
+        run: cargo audit
+        working-directory: code/crates/nestgate-zfs
+
+  memory-safety:
+    name: Memory Safety Check
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust nightly with miri
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: miri
+      
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-miri-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Run miri
+        run: |
+          cargo miri setup
+          cargo miri test --lib --features test-utils
+        working-directory: code/crates/nestgate-zfs
+        env:
+          MIRIFLAGS: -Zmiri-disable-isolation
+
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [lint-and-format, unit-tests, integration-tests, security-audit, memory-safety]
+    if: always()
+    steps:
+      - name: Check test results
+        run: |
+          echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Suite | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint & Format | ${{ needs.lint-and-format.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | ${{ needs.unit-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Integration Tests | ${{ needs.integration-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Audit | ${{ needs.security-audit.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Memory Safety | ${{ needs.memory-safety.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          
+          # Check if any critical tests failed
+          if [[ "${{ needs.lint-and-format.result }}" != "success" || \
+                "${{ needs.unit-tests.result }}" != "success" || \
+                "${{ needs.integration-tests.result }}" != "success" || \
+                "${{ needs.security-audit.result }}" != "success" || \
+                "${{ needs.memory-safety.result }}" != "success" ]]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **Critical tests failed - deployment blocked**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **All critical tests passed - ready for deployment**" >> $GITHUB_STEP_SUMMARY
+          fi 

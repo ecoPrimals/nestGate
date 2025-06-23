@@ -10,7 +10,7 @@ const path = require('path');
 const { exec } = require('child_process');
 const os = require('os');
 const fs = require('fs/promises');
-const WebSocketManager = require('./server/websocket');
+const WebSocketManager = require('./websocket');
 
 // Initialize Express application
 const app = express();

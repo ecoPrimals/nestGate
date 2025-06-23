@@ -221,7 +221,7 @@ const UserProfile: React.FC = () => {
           title="User Profile"
         />
         <CardContent>
-          <Stack direction="row" spacing={2} sx={{ marginBottom: 3 }}>
+          <Stack direction="row" sx={{ marginBottom: 3 }}>
             <Avatar sx={{ width: 64, height: 64 }}>
               <UserIcon />
             </Avatar>
@@ -245,7 +245,7 @@ const UserProfile: React.FC = () => {
           </Box>
 
           <TabPanel value={activeTab} index={0}>
-            <Stack spacing={3}>
+            <Stack>
               <Typography variant="h6">Profile Information</Typography>
               
               <TextField
@@ -275,7 +275,7 @@ const UserProfile: React.FC = () => {
           </TabPanel>
 
           <TabPanel value={activeTab} index={1}>
-            <Stack spacing={3}>
+            <Stack>
               <Typography variant="h6">Change Password</Typography>
               
               {passwordErrors.length > 0 && (
@@ -380,7 +380,7 @@ const UserProfile: React.FC = () => {
           </TabPanel>
 
           <TabPanel value={activeTab} index={2}>
-            <Stack spacing={3}>
+            <Stack>
               <Typography variant="h6">User Preferences</Typography>
               
               <FormControl fullWidth>

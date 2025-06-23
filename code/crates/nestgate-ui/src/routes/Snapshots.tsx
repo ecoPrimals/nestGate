@@ -293,7 +293,7 @@ const SnapshotsPage: React.FC = () => {
         <Typography variant="h4" component="h1">
           ZFS Snapshots
         </Typography>
-        <Stack direction="row" spacing={1}>
+        <Stack direction="row">
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
@@ -366,7 +366,7 @@ const SnapshotsPage: React.FC = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    <Stack direction="row" spacing={1}>
+                    <Stack direction="row">
                       <Tooltip title="Rollback to this snapshot">
                         <IconButton 
                           size="small"
@@ -412,7 +412,7 @@ const SnapshotsPage: React.FC = () => {
       >
         <DialogTitle>Create New Snapshot</DialogTitle>
         <DialogContent>
-          <Stack spacing={3} sx={{ paddingTop: 1 }}>
+          <Stack sx={{ paddingTop: 1 }}>
             <FormControl fullWidth required>
               <InputLabel>Dataset</InputLabel>
               <Select
@@ -480,7 +480,7 @@ const SnapshotsPage: React.FC = () => {
       >
         <DialogTitle>Rollback to Snapshot</DialogTitle>
         <DialogContent>
-          <Stack spacing={2}>
+          <Stack>
             <Typography variant="body1">
             You are about to roll back to snapshot: <strong>{selectedSnapshot?.name}</strong> from dataset <strong>{selectedSnapshot?.dataset}</strong>
             </Typography>

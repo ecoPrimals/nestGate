@@ -563,4 +563,12 @@ impl ServiceRegistry {
         
         Ok(dependent_services)
     }
+}
+
+/// Service Module
+/// 
+/// Service-related types and functionality
+pub struct Service {
+    pub id: String,
+    pub name: String,
 } 

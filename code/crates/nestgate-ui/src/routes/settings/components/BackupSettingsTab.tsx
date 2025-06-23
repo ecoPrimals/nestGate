@@ -117,7 +117,7 @@ const BackupSettingsTab: React.FC<SettingsFormProps<BackupSettings> & {
             fullWidth
           />
 
-          <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+          <Stack direction="row" flexWrap="wrap" useFlexGap>
             <Button
               variant="contained"
               startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}

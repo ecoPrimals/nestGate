@@ -1,0 +1,49 @@
+[package]
+name = "nestgate-api"
+version = "0.1.0"
+edition = "2021"
+authors = ["DataScienceBioLab"]
+description = "API server and interface definitions for NestGate with enhanced capabilities"
+license = "MIT"
+repository = "https://github.com/DataScienceBioLab/NestGateV2"
+keywords = ["api", "kubernetes", "network", "gateway", "service-mesh"]
+categories = ["network-programming", "api-bindings", "web-programming"]
+
+[dependencies]
+# Web framework
+axum = { version = "0.7", features = ["json", "query", "multipart"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace", "timeout", "limit"] }
+tokio = { version = "1.0", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# NestGate dependencies
+nestgate-core = { path = "../nestgate-core" }
+nestgate-zfs = { path = "../nestgate-zfs" }
+
+[dev-dependencies]
+# Testing framework
+axum-test = "15.0"
+tokio-test = "0.4"
+mockall = "0.12"
+rstest = "0.18"
+
+# HTTP client for testing
+reqwest = { version = "0.11", features = ["json"] }
+
+# Test utilities
+tempfile = "3.8"
+uuid = { version = "1.0", features = ["v4"] }
+
+[lints]
+workspace = true 

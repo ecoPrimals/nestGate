@@ -2,24 +2,77 @@
 name = "nestgate-zfs"
 version = "0.9.2"
 edition = "2021"
-description = "ZFS integration for NestGate"
+description = "ZFS integration for NestGate with orchestrator support and tiered storage"
 
 [dependencies]
+# Core NestGate dependencies
 nestgate-core = { path = "../nestgate-core" }
+nestgate-orchestrator = { path = "../nestgate-orchestrator", optional = true }
 
+# Core async runtime and serialization
 tokio = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = "0.9"
 tracing = { workspace = true }
 thiserror = { workspace = true }
 anyhow = { workspace = true }
+async-trait = { workspace = true }
 
-# ZFS specific dependencies (optional)
+# Enhanced features from advanced integration capabilities
+uuid = { workspace = true }
+chrono = { workspace = true }
+dashmap = "5.5"
+rand = "0.8"
+
+# ZFS integration (optional for systems without ZFS)
 libzfs = { version = "0.6", optional = true }
-nix = { version = "0.28", optional = true }
 
-[features]
-default = []
-zfs = ["libzfs", "nix"]
+# HTTP client for orchestrator communication
+reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
+
+# URL parsing for configuration validation
+url = "2.4"
+
+# Futures utilities
+futures = "0.3"
 
 [dev-dependencies]
-tokio-test = { workspace = true } 
+# Testing framework
+tokio-test = "0.4"
+tempfile = "3.8"
+futures = "0.3"
+
+# Property-based testing
+proptest = "1.4"
+quickcheck = "1.0"
+
+# Test utilities
+serial_test = "3.0"
+rstest = "0.18"
+
+# Mocking
+mockall = "0.12"
+
+# Benchmarking
+criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
+
+# Memory profiling for tests
+dhat = "0.3"
+
+[features]
+default = ["storage", "snapshots"]
+storage = []
+snapshots = []
+monitoring = []
+orchestrator = ["nestgate-orchestrator"]
+libzfs = ["dep:libzfs"]
+
+# Testing features
+test-utils = []
+integration-tests = []
+stress-tests = []
+
+[[bench]]
+name = "performance_benchmarks"
+harness = false 

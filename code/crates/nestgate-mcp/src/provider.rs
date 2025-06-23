@@ -1,44 +1,48 @@
-//! MCP Storage Provider Implementation
+//! MCP Provider Management
 //! 
-//! Provides storage services to MCP AI nodes
+//! Provider management for MCP integration
 
-use nestgate_core::{Result, Error};
-use serde::{Deserialize, Serialize};
+use crate::{Result, Error, types::StorageTier};
 
-/// Storage provider for MCP integration
+/// Provider information
 #[derive(Debug, Clone)]
-pub struct StorageProvider {
-    // TODO: Implement storage provider
-}
-
-impl StorageProvider {
-    /// Create a new storage provider
-    pub fn new() -> Self {
-        Self {}
-    }
-    
-    /// Initialize the storage provider
-    pub async fn initialize(&self) -> Result<()> {
-        // TODO: Implement initialization
-        Ok(())
-    }
-}
-
-/// Storage tier types
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum StorageTier {
-    Hot,
-    Warm,
-    Cold,
-}
-
-/// Storage volume information
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct StorageVolume {
+pub struct ProviderInfo {
     pub id: String,
     pub name: String,
     pub tier: StorageTier,
-    pub size: u64,
-    pub used: u64,
+    pub capacity: u64,
     pub available: u64,
+}
+
+/// Provider manager for MCP integration
+#[derive(Debug, Clone)]
+pub struct ProviderManager {
+    // Internal provider state
+}
+
+impl ProviderManager {
+    /// Create a new provider manager
+    pub fn new() -> Self {
+        Self {
+            // Initialize provider state
+        }
+    }
+    
+    /// Initialize the provider manager
+    pub async fn initialize(&self) -> Result<()> {
+        // TODO: Implement provider initialization
+        Ok(())
+    }
+    
+    /// Get provider information
+    pub async fn get_provider_info(&self, id: &str) -> Result<ProviderInfo> {
+        // TODO: Implement provider info retrieval
+        Ok(ProviderInfo {
+            id: id.to_string(),
+            name: format!("Provider {}", id),
+            tier: StorageTier::Hot,
+            capacity: 1000000000, // 1GB
+            available: 500000000,  // 500MB
+        })
+    }
 } 

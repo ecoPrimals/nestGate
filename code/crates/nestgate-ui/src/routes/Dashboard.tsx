@@ -224,7 +224,7 @@ const Dashboard: React.FC = () => {
                             <Typography variant="subtitle1" gutterBottom>
                               {disk.model}
                             </Typography>
-                            <Stack spacing={1}>
+                            <Stack>
                               <Box>
                                 <Typography variant="body2" color="text.secondary">
                                   Temperature
