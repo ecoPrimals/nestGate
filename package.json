@@ -1,0 +1,20 @@
+{
+  "scripts": {
+    "start": "FAST_REFRESH=false REACT_APP_STRICT_DATA_MODE=true react-scripts start",
+    "start:ui-only": "FAST_REFRESH=false REACT_APP_STRICT_DATA_MODE=true react-scripts start",
+    "build": "REACT_APP_STRICT_DATA_MODE=true react-scripts build",
+    "test": "react-scripts test --transformIgnorePatterns \"node_modules/(?!@codemirror)/\"",
+    "test:watch": "react-scripts test --transformIgnorePatterns \"node_modules/(?!@tanstack)/\" --watchAll",
+    "eject": "react-scripts eject",
+    "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'",
+    "format": "prettier --write 'src/**/*.{js,jsx,ts,tsx,css,scss}'",
+    "demo": "BROWSER=none DISABLE_ESLINT_PLUGIN=true GENERATE_SOURCEMAP=false WDS_SOCKET_PORT=0 FAST_REFRESH=false REACT_APP_STRICT_DATA_MODE=true react-scripts start",
+    "static-demo": "npx serve -s build",
+    "simple-demo": "node serve-demo.js",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "desktop": "tauri dev",
+    "desktop:build": "tauri build"
+  }
+} 

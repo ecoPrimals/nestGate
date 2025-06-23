@@ -1,0 +1,196 @@
+//! Common Test Infrastructure for Songbird Orchestrator
+//! 
+//! Provides shared utilities, mock services, and test helpers
+
+use async_trait::async_trait;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::RwLock;
+
+use songbird_orchestrator::prelude::*;
+
+/// Mock service for testing
+pub struct MockService {
+    pub id: String,
+    pub config: Option<MockConfig>,
+    pub started: Arc<RwLock<bool>>,
+    pub request_count: Arc<RwLock<u64>>,
+    pub error_rate: Arc<RwLock<f64>>,
+    pub health_status: Arc<RwLock<MockHealth>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MockConfig {
+    pub name: String,
+    pub port: u16,
+    pub enable_errors: bool,
+    pub response_delay_ms: u64,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct MockHealth {
+    pub status: String,
+    pub requests_handled: u64,
+    pub uptime_seconds: u64,
+    pub memory_usage_bytes: u64,
+}
+
+impl Default for MockConfig {
+    fn default() -> Self {
+        Self {
+            name: "mock-service".to_string(),
+            port: 8080,
+            enable_errors: false,
+            response_delay_ms: 10,
+        }
+    }
+}
+
+impl Default for MockHealth {
+    fn default() -> Self {
+        Self {
+            status: "healthy".to_string(),
+            requests_handled: 0,
+            uptime_seconds: 0,
+            memory_usage_bytes: 1024 * 1024, // 1MB
+        }
+    }
+}
+
+impl MockService {
+    pub fn new(id: impl Into<String>) -> Self {
+        Self {
+            id: id.into(),
+            config: None,
+            started: Arc::new(RwLock::new(false)),
+            request_count: Arc::new(RwLock::new(0)),
+            error_rate: Arc::new(RwLock::new(0.0)),
+            health_status: Arc::new(RwLock::new(MockHealth::default())),
+        }
+    }
+    
+    pub async fn set_error_rate(&self, rate: f64) {
+        *self.error_rate.write().await = rate;
+    }
+    
+    pub async fn get_request_count(&self) -> u64 {
+        *self.request_count.read().await
+    }
+    
+    pub async fn is_started(&self) -> bool {
+        *self.started.read().await
+    }
+}
+
+#[async_trait]
+impl UniversalService for MockService {
+    type Config = MockConfig;
+    type Health = MockHealth;
+    type Error = Box<dyn std::error::Error + Send + Sync>;
+    
+    async fn initialize(&mut self, config: Self::Config) -> std::result::Result<(), Self::Error> {
+        self.config = Some(config);
+        Ok(())
+    }
+    
+    async fn start(&mut self) -> std::result::Result<(), Self::Error> {
+        *self.started.write().await = true;
+        Ok(())
+    }
+    
+    async fn stop(&mut self) -> std::result::Result<(), Self::Error> {
+        *self.started.write().await = false;
+        Ok(())
+    }
+    
+    async fn health_check(&self) -> std::result::Result<Self::Health, Self::Error> {
+        let mut health = self.health_status.write().await;
+        health.requests_handled = *self.request_count.read().await;
+        Ok(health.clone())
+    }
+    
+    async fn handle_request(&self, request: ServiceRequest) -> std::result::Result<ServiceResponse, Self::Error> {
+        *self.request_count.write().await += 1;
+        
+        // Simulate response delay
+        if let Some(config) = &self.config {
+            if config.response_delay_ms > 0 {
+                tokio::time::sleep(Duration::from_millis(config.response_delay_ms)).await;
+            }
+        }
+        
+        // Simulate errors based on error rate
+        let error_rate = *self.error_rate.read().await;
+        if error_rate > 0.0 && rand::random::<f64>() < error_rate {
+            return Ok(ServiceResponse::error(request.id, 500, "Simulated error"));
+        }
+        
+        Ok(ServiceResponse::success(
+            request.id,
+            serde_json::json!({
+                "service_id": self.id,
+                "method": request.method,
+                "path": request.path,
+                "timestamp": chrono::Utc::now(),
+                "request_count": *self.request_count.read().await
+            })
+        ))
+    }
+    
+    async fn update_config(&mut self, config: Self::Config) -> std::result::Result<(), Self::Error> {
+        self.config = Some(config);
+        Ok(())
+    }
+    
+    async fn get_metrics(&self) -> std::result::Result<ServiceMetrics, Self::Error> {
+        Ok(ServiceMetrics {
+            request_count: *self.request_count.read().await,
+            error_count: 0,
+            avg_response_time_ms: 10.0,
+            p95_response_time_ms: 15.0,
+            p99_response_time_ms: 20.0,
+            cpu_usage: 0.1,
+            memory_usage: 1024 * 1024,
+            active_connections: 5,
+            queue_depth: 0,
+            throughput_rps: 100.0,
+            error_rate: *self.error_rate.read().await,
+            uptime_seconds: 3600,
+            last_updated: chrono::Utc::now(),
+            custom_metrics: HashMap::new(),
+        })
+    }
+    
+    fn service_info(&self) -> ServiceInfo {
+        ServiceInfo {
+            id: self.id.clone(),
+            name: format!("Mock Service {}", self.id),
+            version: "1.0.0".to_string(),
+            service_type: "mock".to_string(),
+            description: "Mock service for testing".to_string(),
+            endpoints: vec![],
+            capabilities: vec!["http".to_string(), "testing".to_string()],
+            tags: HashMap::new(),
+            metadata: HashMap::new(),
+        }
+    }
+    
+    async fn can_handle_load(&self) -> std::result::Result<bool, Self::Error> {
+        Ok(*self.started.read().await)
+    }
+    
+    async fn get_load_factor(&self) -> std::result::Result<f64, Self::Error> {
+        let request_count = *self.request_count.read().await;
+        // Simulate increasing load factor based on request count
+        Ok((request_count as f64 / 1000.0).min(1.0))
+    }
+}
+
+/// Create multiple mock services for testing
+pub fn create_mock_services(count: usize) -> Vec<MockService> {
+    (0..count)
+        .map(|i| MockService::new(format!("mock-service-{}", i)))
+        .collect()
+} 

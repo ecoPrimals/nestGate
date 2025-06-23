@@ -1,81 +1,87 @@
-/*!
- * Error types for the Port Manager
- */
+//! Error types for the orchestrator
 
-use std::io;
 use thiserror::Error;
 
-/// Custom result type for the Port Manager
-pub type Result<T, E = Error> = std::result::Result<T, E>;
-
-/// Error enum for the Port Manager
-#[derive(Error, Debug)]
-pub enum Error {
-    /// Error during port allocation
-    #[error("Port allocation error: {0}")]
-    PortAllocation(String),
+/// Orchestrator error types
+#[derive(Debug, Error)]
+pub enum OrchestratorError {
+    #[error("Service error: {0}")]
+    ServiceError(String),
     
-    /// No available ports in range
-    #[error("No available ports in range {start}-{end}")]
-    NoAvailablePorts { start: u16, end: u16 },
+    #[error("Configuration error: {0}")]
+    ConfigurationError(String),
     
-    /// Service not found
+    #[error("Network error: {0}")]
+    NetworkError(String),
+    
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
+    
+    #[error("Serialization error: {0}")]
+    SerializationError(#[from] serde_json::Error),
+    
     #[error("Service not found: {0}")]
     ServiceNotFound(String),
     
-    /// Service already exists
-    #[error("Service already registered: {0}")]
+    #[error("Service already exists: {0}")]
     ServiceAlreadyExists(String),
     
-    /// Process error
-    #[error("Process error: {0}")]
-    Process(String),
+    #[error("Port allocation error: {0}")]
+    PortAllocationError(String),
     
-    /// Process termination error
-    #[error("Process termination error: {0}")]
-    ProcessTermination(String),
+    #[error("Health check failed: {0}")]
+    HealthCheckFailed(String),
     
-    /// IO error
-    #[error("IO error: {0}")]
-    Io(#[from] io::Error),
+    #[error("Timeout error: {0}")]
+    TimeoutError(String),
     
-    /// JSON serialization/deserialization error
-    #[error("JSON error: {0}")]
-    Json(#[from] serde_json::Error),
+    #[error("Circuit breaker open")]
+    CircuitBreakerOpen,
     
-    /// YAML serialization/deserialization error
-    #[error("YAML error: {0}")]
-    Yaml(#[from] serde_yaml::Error),
+    #[error("Rate limit exceeded")]
+    RateLimitExceeded,
     
-    /// Configuration error
-    #[error("Configuration error: {0}")]
-    Config(String),
+    #[error("Security error: {0}")]
+    SecurityError(#[from] crate::security::SecurityError),
+}
+
+/// Result type for orchestrator operations
+pub type Result<T> = std::result::Result<T, OrchestratorError>;
+
+/// Service error types
+#[derive(Debug, Error)]
+pub enum ServiceError {
+    #[error("Service startup failed: {0}")]
+    StartupFailed(String),
     
-    /// API error
-    #[error("API error: {0}")]
-    Api(String),
+    #[error("Service shutdown failed: {0}")]
+    ShutdownFailed(String),
     
-    /// Dependency cycle detected
-    #[error("Dependency cycle detected: {0}")]
-    DependencyCycle(String),
+    #[error("Service unhealthy: {0}")]
+    Unhealthy(String),
     
-    /// Service startup error
-    #[error("Service startup error: {0}")]
-    ServiceStartup(String),
+    #[error("Service dependency missing: {0}")]
+    DependencyMissing(String),
     
-    /// Service shutdown error
-    #[error("Service shutdown error: {0}")]
-    ServiceShutdown(String),
+    #[error("Service configuration invalid: {0}")]
+    InvalidConfiguration(String),
+}
+
+/// Communication error types
+#[derive(Debug, Error)]
+pub enum CommunicationError {
+    #[error("WebSocket connection failed: {0}")]
+    WebSocketConnectionFailed(String),
     
-    /// Health check error
-    #[error("Health check error: {0}")]
-    HealthCheck(String),
+    #[error("Message serialization failed: {0}")]
+    MessageSerializationFailed(String),
     
-    /// Permission error
-    #[error("Permission error: {0}")]
-    Permission(String),
+    #[error("Protocol error: {0}")]
+    ProtocolError(String),
     
-    /// General error
-    #[error("{0}")]
-    General(String),
+    #[error("Connection timeout")]
+    ConnectionTimeout,
+    
+    #[error("Authentication failed")]
+    AuthenticationFailed,
 } 

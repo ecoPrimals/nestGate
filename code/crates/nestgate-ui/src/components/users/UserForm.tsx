@@ -217,7 +217,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onSave, onCancel }) =>
             Basic Information
           </Typography>
         
-          <Stack spacing={3} sx={{ marginBottom: 3 }}>
+          <Stack sx={{ marginBottom: 3 }}>
             <TextField
               fullWidth
           label="Username"
@@ -301,7 +301,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onSave, onCancel }) =>
             Role and Permissions
           </Typography>
           
-          <Stack spacing={3} sx={{ marginBottom: 3 }}>
+          <Stack sx={{ marginBottom: 3 }}>
             <FormControl fullWidth required>
               <InputLabel>Role</InputLabel>
               <Select
@@ -346,7 +346,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onSave, onCancel }) =>
                   Custom Permissions
                 </Typography>
                 <Box sx={{ maxHeight: '300px', overflowY: 'auto' }}>
-                  <Stack spacing={2}>
+                  <Stack>
                     <div>
                       <Typography variant="subtitle2" gutterBottom>
                         System Permissions

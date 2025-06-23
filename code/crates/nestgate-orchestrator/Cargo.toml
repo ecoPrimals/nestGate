@@ -1,45 +1,52 @@
 [package]
 name = "nestgate-orchestrator"
-version = "0.9.2"
+version = "0.2.0"
 edition = "2021"
-authors = ["DataScienceBioLab"]
-description = "Central connectivity hub and service orchestrator for NestGate NAS system"
+description = "NestGate service orchestrator with WebSocket support"
 license = "MIT"
-repository = "https://github.com/DataScienceBioLab/nestgate"
-keywords = ["orchestrator", "connectivity", "nas", "storage"]
 
 [dependencies]
-# Internal crates
+# Core NestGate dependencies
 nestgate-core = { path = "../nestgate-core" }
+# nestgate-mcp = { path = "../nestgate-mcp" }
 
-# Async runtime
-tokio = { workspace = true }
-async-trait = { workspace = true }
+# Async runtime and utilities
+tokio = { version = "1.0", features = ["full"] }
+tokio-tungstenite = "0.21"
+async-trait = "0.1"
+futures-util = "0.3"
 
-# Error handling
-thiserror = { workspace = true }
-anyhow = { workspace = true }
+# Web framework and HTTP
+axum = { version = "0.7", features = ["ws", "macros"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+hyper = "1.0"
+
+# Serialization and data structures
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+dashmap = "5.5"
+uuid = { version = "1.0", features = ["v4", "serde"] }
 
 # Logging and tracing
-tracing = { workspace = true }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
-# Serialization
-serde = { workspace = true }
-serde_json = { workspace = true }
-serde_yaml = { workspace = true }
+# Configuration and error handling
+config = "0.14"
+thiserror = "1.0"
+anyhow = "1.0"
 
-# Time handling
-chrono = { workspace = true }
+# Time and date handling
+chrono = { version = "0.4", features = ["serde"] }
 
-# Network
-reqwest = { workspace = true }
-tower = { workspace = true }
-tower-http = { workspace = true }
-
-# Utilities
-uuid = { workspace = true }
-dashmap = { workspace = true }
+# Concurrency and synchronization
+parking_lot = "0.12"
 
 [dev-dependencies]
-tokio-test = { workspace = true }
-mockall = "0.11"
+tokio-test = "0.4"
+tracing-test = "0.2"
+
+[features]
+default = []
+testing = [] 

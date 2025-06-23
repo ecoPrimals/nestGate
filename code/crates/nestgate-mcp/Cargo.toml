@@ -1,25 +1,62 @@
 [package]
 name = "nestgate-mcp"
-version = "0.9.2"
+version = "0.1.0"
 edition = "2021"
-description = "MCP protocol integration adapter for NestGate"
+authors = ["NestGate Team"]
+description = "Enhanced MCP protocol integration for NestGate v2 with enhanced NestGate capabilities"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/DataScienceBioLab/NestGateV2"
 
 [dependencies]
-nestgate-core = { path = "../nestgate-core" }
-nestgate-network = { path = "../nestgate-network" }
-
-tokio = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-tracing = { workspace = true }
+# Async runtime and utilities
+tokio = { workspace = true, features = ["full"] }
+futures = { workspace = true }
 async-trait = { workspace = true }
-uuid = { workspace = true }
-chrono = { workspace = true }
+
+# Serialization and data handling
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+
+# Logging and tracing
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+
+# UUID generation
+uuid = { workspace = true, features = ["v4", "serde"] }
+
+# Time handling
+chrono = { workspace = true, features = ["serde"] }
+
+# Error handling
 thiserror = { workspace = true }
 anyhow = { workspace = true }
 
-# Web Framework
-axum = { workspace = true }
+# NestGate dependencies
+nestgate-core = { path = "../nestgate-core" }
+
+# Collections and utilities
+indexmap = { workspace = true }
+
+# System information
+gethostname = "0.4"
+
+# Random number generation
+fastrand = "2.0"
+
+# HTTP client
+reqwest = { workspace = true, features = ["json"] }
+
+# Configuration
+config = { workspace = true }
+
+# Optional features for different protocols
+[features]
+default = []
+metrics = []
+security = []
+federation = []
+full = ["metrics", "security", "federation"]
 
 [dev-dependencies]
-tokio-test = { workspace = true } 
+tokio-test = "0.4" 

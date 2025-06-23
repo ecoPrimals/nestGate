@@ -107,7 +107,7 @@ const SystemMonitor: React.FC = () => {
     <Card sx={{ mb: 3 }}>
       <CardHeader
         title={
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" alignItems="center">
             <DashboardIcon />
             <Typography variant="h6">System Health</Typography>
             {connected ? (
@@ -133,7 +133,7 @@ const SystemMonitor: React.FC = () => {
                 }
               }}
             >
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+              <Stack direction="row" alignItems="center" sx={{ mb: 1 }}>
                 <SpeedIcon color="primary" />
                 <Typography variant="subtitle1">CPU</Typography>
               </Stack>
@@ -173,7 +173,7 @@ const SystemMonitor: React.FC = () => {
                 }
               }}
             >
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+              <Stack direction="row" alignItems="center" sx={{ mb: 1 }}>
                 <MemoryIcon color="primary" />
                 <Typography variant="subtitle1">Memory</Typography>
               </Stack>
@@ -213,7 +213,7 @@ const SystemMonitor: React.FC = () => {
                 }
               }}
             >
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+              <Stack direction="row" alignItems="center" sx={{ mb: 1 }}>
                 <StorageIcon color="primary" />
                 <Typography variant="subtitle1">Disk</Typography>
               </Stack>
@@ -273,7 +273,7 @@ const SystemMonitor: React.FC = () => {
                 }
               }}
             >
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+              <Stack direction="row" alignItems="center" sx={{ mb: 1 }}>
                 <NetworkIcon color="primary" />
                 <Typography variant="subtitle1">Network</Typography>
               </Stack>
@@ -320,7 +320,7 @@ const SystemMonitor: React.FC = () => {
                 backgroundColor: 'rgba(25, 118, 210, 0.08)'
               }}
             >
-              <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+              <Stack direction="row" alignItems="center" justifyContent="center">
                 <ClockIcon color="primary" />
                 <Typography>System Uptime: {formatUptime(metrics.uptime)}</Typography>
               </Stack>

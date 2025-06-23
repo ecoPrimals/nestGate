@@ -62,7 +62,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
               Something went wrong
             </Typography>
             
-            <Stack spacing={2}>
+            <Stack>
               <Typography variant="body2">
                 An error occurred in this component. Please try refreshing the page or contact support if the issue persists.
               </Typography>
