@@ -35,7 +35,7 @@ const PlaceholderContent: React.FC<PlaceholderContentProps> = ({
         padding: 3,
       }}
     >
-      <Stack spacing={2} alignItems="center">
+      <Stack alignItems="center">
         <DataSourceIndicator dataSource={DataSourceType.PLACEHOLDER} />
         
         <Typography variant="h5" component="h4" sx={{ marginTop: 2 }}>

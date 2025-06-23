@@ -28,6 +28,9 @@ import {
   RadioGroup,
   Radio,
   Slider,
+  CircularProgress,
+  FormHelperText,
+  IconButton,
 } from '@mui/material';
 import {
   Storage as StorageIcon,
@@ -320,8 +323,8 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
       case 0:
         return (
           <Box sx={{ mt: 2 }}>
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
+            <Box display="flex" flexWrap="wrap">
+              <Box>
                 <TextField
                   fullWidth
                   label="Dataset Name"
@@ -330,9 +333,9 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
                   error={!!validationErrors.name}
                   helperText={validationErrors.name || 'Enter a unique name for your dataset'}
                 />
-              </Grid>
+              </Box>
               
-              <Grid item xs={12} md={6}>
+              <Box>
                 <FormControl fullWidth error={!!validationErrors.pool}>
                   <InputLabel>Pool</InputLabel>
                   <Select
@@ -345,9 +348,9 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
                     ))}
                   </Select>
                 </FormControl>
-              </Grid>
+              </Box>
               
-              <Grid item xs={12} md={6}>
+              <Box>
                 <FormControl fullWidth>
                   <InputLabel>Parent Dataset (Optional)</InputLabel>
                   <Select
@@ -363,16 +366,16 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
                       ))}
                   </Select>
                 </FormControl>
-              </Grid>
+              </Box>
               
-              <Grid item xs={12}>
+              <Box>
                 <Alert severity="info">
                   <Typography variant="body2">
                     <strong>Full Dataset Path:</strong> {config.parent ? `${config.parent}/${config.name}` : `${config.pool}/${config.name || '<name>'}`}
                   </Typography>
                 </Alert>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           </Box>
         );
         
@@ -415,9 +418,9 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
             <Divider sx={{ my: 3 }} />
             
             <Typography variant="h6" gutterBottom>Storage Tier</Typography>
-            <Grid container spacing={2}>
+            <Box display="flex" flexWrap="wrap">
               {Object.values(StorageTier).map(tier => (
-                <Grid item xs={12} md={4} key={tier}>
+                <Box>
                   <Card
                     sx={{
                       cursor: 'pointer',
@@ -438,9 +441,9 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
                       </Typography>
                     </CardContent>
                   </Card>
-                </Grid>
+                </Box>
               ))}
-            </Grid>
+            </Box>
             
             {config.type === 'filesystem' && (
               <Box sx={{ mt: 3 }}>
@@ -459,8 +462,8 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
       case 2:
         return (
           <Box sx={{ mt: 2 }}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+            <Box display="flex" flexWrap="wrap">
+              <Box>
                 <FormControl fullWidth>
                   <InputLabel>Compression</InputLabel>
                   <Select
@@ -477,9 +480,9 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
                     <MenuItem value="gzip">GZIP (High Compression)</MenuItem>
                   </Select>
                 </FormControl>
-              </Grid>
+              </Box>
               
-              <Grid item xs={12} md={6}>
+              <Box>
                 <FormControl fullWidth>
                   <InputLabel>Record Size</InputLabel>
                   <Select
@@ -495,9 +498,9 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
                     <MenuItem value="16M">16M (Large Files)</MenuItem>
                   </Select>
                 </FormControl>
-              </Grid>
+              </Box>
               
-              <Grid item xs={12} md={6}>
+              <Box>
                 <TextField
                   fullWidth
                   label="Quota (0 = No Limit)"
@@ -511,9 +514,9 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
                     }));
                   }}
                 />
-              </Grid>
+              </Box>
               
-              <Grid item xs={12} md={6}>
+              <Box>
                 <TextField
                   fullWidth
                   label="Reservation (0 = No Reservation)"
@@ -528,9 +531,9 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
                     }));
                   }}
                 />
-              </Grid>
+              </Box>
               
-              <Grid item xs={12}>
+              <Box>
                 <Typography variant="subtitle2" gutterBottom>Dataset Options</Typography>
                 <FormControlLabel
                   control={
@@ -580,10 +583,10 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
                   }
                   label="Enable deduplication"
                 />
-              </Grid>
+              </Box>
               
               {config.properties.encryption && (
-                <Grid item xs={12}>
+                <Box>
                   <TextField
                     fullWidth
                     type="password"
@@ -596,9 +599,9 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
                     error={!!validationErrors.encryptionKey}
                     helperText={validationErrors.encryptionKey || 'Enter a strong encryption key'}
                   />
-                </Grid>
+                </Box>
               )}
-            </Grid>
+            </Box>
           </Box>
         );
         
@@ -611,8 +614,8 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
               </Typography>
             </Alert>
             
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+            <Box display="flex" flexWrap="wrap">
+              <Box>
                 <Typography gutterBottom>Copies: {config.advanced.copies}</Typography>
                 <Slider
                   value={config.advanced.copies}
@@ -625,9 +628,9 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
                   marks
                   step={1}
                 />
-              </Grid>
+              </Box>
               
-              <Grid item xs={12} md={6}>
+              <Box>
                 <FormControl fullWidth>
                   <InputLabel>Primary Cache</InputLabel>
                   <Select
@@ -643,9 +646,9 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
                     <MenuItem value="metadata">Metadata Only</MenuItem>
                   </Select>
                 </FormControl>
-              </Grid>
+              </Box>
               
-              <Grid item xs={12} md={6}>
+              <Box>
                 <FormControl fullWidth>
                   <InputLabel>Secondary Cache</InputLabel>
                   <Select
@@ -661,9 +664,9 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
                     <MenuItem value="metadata">Metadata Only</MenuItem>
                   </Select>
                 </FormControl>
-              </Grid>
+              </Box>
               
-              <Grid item xs={12} md={6}>
+              <Box>
                 <FormControl fullWidth>
                   <InputLabel>Sync</InputLabel>
                   <Select
@@ -679,8 +682,8 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
                     <MenuItem value="disabled">Disabled</MenuItem>
                   </Select>
                 </FormControl>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           </Box>
         );
         
@@ -689,8 +692,8 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
           <Box sx={{ mt: 2 }}>
             <Typography variant="h6" gutterBottom>Review Dataset Configuration</Typography>
             
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
+            <Box display="flex" flexWrap="wrap">
+              <Box>
                 <Card>
                   <CardContent>
                     <Typography variant="subtitle1" gutterBottom>
@@ -709,9 +712,9 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
                     </Typography>
                   </CardContent>
                 </Card>
-              </Grid>
+              </Box>
               
-              <Grid item xs={12} md={6}>
+              <Box>
                 <Card>
                   <CardContent>
                     <Typography variant="subtitle1" gutterBottom>
@@ -734,9 +737,9 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
                     </Typography>
                   </CardContent>
                 </Card>
-              </Grid>
+              </Box>
               
-              <Grid item xs={12}>
+              <Box>
                 <Card>
                   <CardContent>
                     <Typography variant="subtitle1" gutterBottom>Features</Typography>
@@ -749,8 +752,8 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
                     </Box>
                   </CardContent>
                 </Card>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
             
             <Alert severity="warning" sx={{ mt: 2 }}>
               <Typography variant="body2">
@@ -820,7 +823,7 @@ const DatasetCreationWizard: React.FC<DatasetCreationWizardProps> = ({
             variant="contained"
             onClick={handleCreateDataset}
             disabled={loading}
-            startIcon={loading ? <LinearProgress size={20} /> : <CheckCircleIcon />}
+            startIcon={loading ? <CircularProgress size={20} /> : <CheckCircleIcon />}
           >
             {loading ? 'Creating...' : 'Create Dataset'}
           </Button>

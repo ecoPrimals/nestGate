@@ -55,9 +55,41 @@ pub enum NestGateError {
     #[error("Not found: {0}")]
     NotFound(String),
 
+    /// Timeout error
+    #[error("Operation timed out: {0}")]
+    Timeout(String),
+
     /// I/O error wrapper
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
+
+    /// Resource exhausted error
+    #[error("Resource exhausted: {0}")]
+    ResourceExhausted(String),
+
+    /// External service error
+    #[error("External service error: {0}")]
+    ExternalService(String),
+
+    /// Cache error
+    #[error("Cache error: {0}")]
+    Cache(String),
+
+    /// Storage error
+    #[error("Storage error: {0}")]
+    Storage(String),
+
+    /// Compute error
+    #[error("Compute error: {0}")]
+    Compute(String),
+
+    /// Federation error
+    #[error("Federation error: {0}")]
+    Federation(String),
+
+    /// MCP error
+    #[error("MCP error: {0}")]
+    Mcp(String),
 }
 
 /// Result type alias for NestGate operations

@@ -30,6 +30,7 @@ import {
   Grid,
   Divider,
   Tooltip,
+  CircularProgress,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -404,8 +405,8 @@ const PoolCreationWizard: React.FC<PoolCreationWizardProps> = ({
               Pool Properties
             </Typography>
             
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
+            <Box display="flex" flexWrap="wrap">
+              <Box>
                 <FormControl fullWidth sx={{ mb: 2 }}>
                   <InputLabel>Compression</InputLabel>
                   <Select
@@ -422,9 +423,9 @@ const PoolCreationWizard: React.FC<PoolCreationWizardProps> = ({
                     <MenuItem value="gzip">GZIP</MenuItem>
                   </Select>
                 </FormControl>
-              </Grid>
+              </Box>
               
-              <Grid item xs={12} md={6}>
+              <Box>
                 <FormControl fullWidth sx={{ mb: 2 }}>
                   <InputLabel>Record Size</InputLabel>
                   <Select
@@ -440,8 +441,8 @@ const PoolCreationWizard: React.FC<PoolCreationWizardProps> = ({
                     <MenuItem value="16M">16M (Large Files)</MenuItem>
                   </Select>
                 </FormControl>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
             
             <Divider sx={{ my: 2 }} />
             
@@ -622,12 +623,15 @@ const PoolCreationWizard: React.FC<PoolCreationWizardProps> = ({
         
         {activeStep === steps.length - 1 ? (
           <Button
+            type="submit"
             variant="contained"
-            onClick={handleCreatePool}
+            color="primary"
             disabled={loading}
-            startIcon={loading ? <LinearProgress size={20} /> : <CheckCircleIcon />}
+            startIcon={loading ? <CircularProgress size={20} /> : <CheckCircleIcon />}
+            sx={{ mt: 2 }}
+            onClick={handleCreatePool}
           >
-            {loading ? 'Creating...' : 'Create Pool'}
+            {loading ? 'Creating Pool...' : 'Create Pool'}
           </Button>
         ) : (
           <Button

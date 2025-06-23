@@ -1,0 +1,531 @@
+# Generic Web Application Stack
+# Example showing how the orchestrator handles any application
+
+services:
+  # Database Layer
+  - name: "postgres-db"
+    service_type: "Database"
+    version: "15.0"
+    description: "PostgreSQL database"
+    
+    command:
+      container:
+        image: "postgres"
+        tag: "15-alpine"
+        volumes:
+          - host_path: "/var/lib/postgresql/data"
+            container_path: "/var/lib/postgresql/data"
+            read_only: false
+        networks: ["app-internal"]
+    
+    environment:
+      POSTGRES_DB: "myapp"
+      POSTGRES_USER: "appuser"
+      POSTGRES_PASSWORD: "secretpassword"
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    
+    resources:
+      cpu:
+        min_cores: 1.0
+        max_cores: 4.0
+      memory:
+        min_memory: 1073741824  # 1GB
+        max_memory: 8589934592  # 8GB
+      storage:
+        - mount_path: "/var/lib/postgresql/data"
+          size: 53687091200  # 50GB
+          storage_class: "Warm"
+          access_mode: "ReadWrite"
+          backup_policy: "daily"
+    
+    networking:
+      ports:
+        - container_port: 5432
+          host_port: 5432
+          protocol: "TCP"
+          expose_externally: false  # Internal only
+          load_balance: false
+    
+    health_check:
+      startup_probe:
+        command:
+          command: ["pg_isready", "-U", "appuser", "-d", "myapp"]
+          expected_exit_code: 0
+          timeout: "30s"
+      liveness_probe:
+        command:
+          command: ["pg_isready", "-U", "appuser", "-d", "myapp"]
+          expected_exit_code: 0
+          timeout: "10s"
+      readiness_probe:
+        tcp:
+          address: "localhost:5432"
+          timeout: "5s"
+      interval: "30s"
+      initial_delay: "30s"
+    
+    dependencies: []  # Database is foundational
+    
+    restart_policy:
+      policy_type: "Always"
+      max_attempts: 5
+      backoff_strategy:
+        initial_delay: "10s"
+        max_delay: "300s"
+        multiplier: 2.0
+        jitter: true
+    
+    # Database typically doesn't scale horizontally
+    scaling:
+      min_instances: 1
+      max_instances: 1
+    
+    # Data locality for database
+    data_locality:
+      data_gravity: "PerformanceAffinity"
+      replication_strategy: "SimpleStrategy"
+      consistency_level: "All"
+    
+    protocol_support: ["TCP"]
+    
+    labels:
+      tier: "database"
+      component: "postgres"
+      backup: "required"
+
+  # Cache Layer
+  - name: "redis-cache"
+    service_type: "Database"
+    version: "7.0"
+    description: "Redis cache"
+    
+    command:
+      container:
+        image: "redis"
+        tag: "7-alpine"
+        command: ["redis-server", "--appendonly", "yes"]
+        volumes:
+          - host_path: "/var/lib/redis"
+            container_path: "/data"
+            read_only: false
+    
+    resources:
+      cpu:
+        min_cores: 0.5
+        max_cores: 2.0
+      memory:
+        min_memory: 536870912   # 512MB
+        max_memory: 4294967296  # 4GB
+      storage:
+        - mount_path: "/data"
+          size: 10737418240  # 10GB
+          storage_class: "Hot"
+          access_mode: "ReadWrite"
+    
+    networking:
+      ports:
+        - container_port: 6379
+          host_port: 6379
+          protocol: "TCP"
+          expose_externally: false
+          load_balance: false
+    
+    health_check:
+      checks:
+        - tcp:
+            address: "localhost:6379"
+            timeout: "5s"
+        - command:
+            command: ["redis-cli", "ping"]
+            expected_exit_code: 0
+            timeout: "5s"
+      interval: "15s"
+    
+    dependencies: []  # Cache is independent
+    
+    restart_policy:
+      policy_type: "OnFailure"
+      max_attempts: 3
+    
+    protocol_support: ["TCP"]
+    
+    labels:
+      tier: "cache"
+      component: "redis"
+      optional: "true"
+
+  # Application Backend
+  - name: "app-backend"
+    service_type: "Application"
+    version: "1.0.0"
+    description: "Node.js application backend"
+    
+    command:
+      binary:
+        path: "/usr/local/bin/node"
+        args: ["server.js"]
+        env_file: "/app/.env"
+    
+    working_directory: "/app"
+    user: "node"
+    
+    environment:
+      NODE_ENV: "production"
+      PORT: "3000"
+      DATABASE_URL: "postgresql://appuser:secretpassword@postgres-db:5432/myapp"
+      REDIS_URL: "redis://redis-cache:6379"
+      JWT_SECRET: "supersecretjwtkey"
+      LOG_LEVEL: "info"
+    
+    resources:
+      cpu:
+        min_cores: 0.5
+        max_cores: 4.0
+      memory:
+        min_memory: 536870912   # 512MB
+        max_memory: 4294967296  # 4GB
+      network:
+        bandwidth_min: 104857600  # 100Mbps
+        latency_max: "50ms"
+    
+    networking:
+      ports:
+        - container_port: 3000
+          host_port: 3000
+          protocol: "HTTP"
+          expose_externally: false  # Behind load balancer
+          load_balance: true
+    
+    health_check:
+      startup_probe:
+        http:
+          endpoint: "http://localhost:3000/health/startup"
+          expected_status: 200
+          timeout: "60s"
+      liveness_probe:
+        http:
+          endpoint: "http://localhost:3000/health/live"
+          expected_status: 200
+          timeout: "10s"
+      readiness_probe:
+        http:
+          endpoint: "http://localhost:3000/health/ready"
+          expected_status: 200
+          timeout: "15s"
+      interval: "30s"
+      initial_delay: "15s"
+    
+    dependencies:
+      - service_name: "postgres-db"
+        dependency_type: "HealthyBefore"
+        condition: "Ready"
+        timeout: "120s"
+        optional: false
+      - service_name: "redis-cache"
+        dependency_type: "Available"
+        condition: "Ready"
+        timeout: "30s"
+        optional: true  # Can work without cache
+    
+    restart_policy:
+      policy_type: "OnFailure"
+      max_attempts: 3
+      backoff_strategy:
+        initial_delay: "5s"
+        max_delay: "60s"
+        multiplier: 2.0
+        jitter: true
+    
+    # Application can scale horizontally
+    scaling:
+      min_instances: 2
+      max_instances: 10
+      scaling_metrics:
+        - metric_type: "CpuUtilization"
+          target_value: 70.0
+          comparison: "GreaterThan"
+        - metric_type: "MemoryUtilization"
+          target_value: 80.0
+          comparison: "GreaterThan"
+        - metric_type: "RequestRate"
+          target_value: 1000.0
+          comparison: "GreaterThan"
+        - metric_type: "ResponseTime"
+          target_value: 500.0  # 500ms
+          comparison: "GreaterThan"
+      scale_up_policy:
+        scale_increment: 2
+        cooldown_period: "60s"
+        evaluation_periods: 2
+      scale_down_policy:
+        scale_increment: 1
+        cooldown_period: "300s"
+        evaluation_periods: 5
+    
+    protocol_support: ["HTTP", "HTTPS"]
+    
+    labels:
+      tier: "backend"
+      component: "nodejs"
+      language: "javascript"
+
+  # Load Balancer / Reverse Proxy
+  - name: "nginx-proxy"
+    service_type: "WebServer"
+    version: "1.24"
+    description: "Nginx reverse proxy and load balancer"
+    
+    command:
+      container:
+        image: "nginx"
+        tag: "1.24-alpine"
+        volumes:
+          - host_path: "/etc/nginx/nginx.conf"
+            container_path: "/etc/nginx/nginx.conf"
+            read_only: true
+          - host_path: "/etc/ssl/certs"
+            container_path: "/etc/ssl/certs"
+            read_only: true
+    
+    resources:
+      cpu:
+        min_cores: 0.5
+        max_cores: 2.0
+      memory:
+        min_memory: 268435456   # 256MB
+        max_memory: 1073741824  # 1GB
+      network:
+        bandwidth_min: 1073741824  # 1Gbps
+        latency_max: "10ms"
+    
+    networking:
+      ports:
+        - container_port: 80
+          host_port: 80
+          protocol: "HTTP"
+          expose_externally: true
+          load_balance: false
+        - container_port: 443
+          host_port: 443
+          protocol: "HTTPS"
+          expose_externally: true
+          load_balance: false
+      ssl_termination:
+        cert_path: "/etc/ssl/certs/app.crt"
+        key_path: "/etc/ssl/private/app.key"
+        protocols: ["TLSv1.2", "TLSv1.3"]
+      bandwidth_limits:
+        ingress: 10737418240  # 10Gbps
+        egress: 10737418240   # 10Gbps
+    
+    health_check:
+      checks:
+        - http:
+            endpoint: "http://localhost:80/health"
+            expected_status: 200
+            timeout: "10s"
+        - tcp:
+            address: "localhost:443"
+            timeout: "5s"
+      interval: "30s"
+    
+    dependencies:
+      - service_name: "app-backend"
+        dependency_type: "Available"
+        condition: "Ready"
+        timeout: "60s"
+        optional: false
+    
+    restart_policy:
+      policy_type: "Always"
+      max_attempts: 3
+    
+    # Load balancer can scale for high traffic
+    scaling:
+      min_instances: 1
+      max_instances: 3
+      scaling_metrics:
+        - metric_type: "NetworkThroughput"
+          target_value: 8589934592.0  # 8Gbps
+          comparison: "GreaterThan"
+        - metric_type: "RequestRate"
+          target_value: 5000.0
+          comparison: "GreaterThan"
+    
+    protocol_support: ["HTTP", "HTTPS"]
+    
+    labels:
+      tier: "frontend"
+      component: "nginx"
+      role: "proxy"
+
+  # Background Worker
+  - name: "task-worker"
+    service_type: "Application"
+    version: "1.0.0"
+    description: "Background task processor"
+    
+    command:
+      binary:
+        path: "/usr/local/bin/node"
+        args: ["worker.js"]
+    
+    working_directory: "/app"
+    user: "node"
+    
+    environment:
+      NODE_ENV: "production"
+      DATABASE_URL: "postgresql://appuser:secretpassword@postgres-db:5432/myapp"
+      REDIS_URL: "redis://redis-cache:6379"
+      WORKER_CONCURRENCY: "5"
+      QUEUE_NAME: "default"
+    
+    resources:
+      cpu:
+        min_cores: 0.5
+        max_cores: 2.0
+      memory:
+        min_memory: 268435456   # 256MB
+        max_memory: 2147483648  # 2GB
+    
+    # Workers don't need external networking
+    networking:
+      ports: []
+    
+    health_check:
+      checks:
+        - file:
+            path: "/tmp/worker-health"
+            must_exist: true
+            max_age: "120s"
+      interval: "60s"
+    
+    dependencies:
+      - service_name: "postgres-db"
+        dependency_type: "HealthyBefore"
+        condition: "Ready"
+        timeout: "120s"
+        optional: false
+      - service_name: "redis-cache"
+        dependency_type: "HealthyBefore"
+        condition: "Ready"
+        timeout: "60s"
+        optional: false
+    
+    restart_policy:
+      policy_type: "OnFailure"
+      max_attempts: 5
+    
+    # Workers scale based on queue length
+    scaling:
+      min_instances: 1
+      max_instances: 5
+      scaling_metrics:
+        - metric_type: "QueueLength"
+          target_value: 100.0
+          comparison: "GreaterThan"
+        - metric_type: "CpuUtilization"
+          target_value: 80.0
+          comparison: "GreaterThan"
+    
+    labels:
+      tier: "worker"
+      component: "nodejs"
+      role: "background"
+
+  # Monitoring
+  - name: "prometheus"
+    service_type: "Monitoring"
+    version: "2.40"
+    description: "Prometheus metrics collection"
+    
+    command:
+      container:
+        image: "prom/prometheus"
+        tag: "v2.40.0"
+        volumes:
+          - host_path: "/etc/prometheus"
+            container_path: "/etc/prometheus"
+            read_only: true
+          - host_path: "/var/lib/prometheus"
+            container_path: "/prometheus"
+            read_only: false
+    
+    resources:
+      cpu:
+        min_cores: 0.5
+        max_cores: 2.0
+      memory:
+        min_memory: 1073741824  # 1GB
+        max_memory: 4294967296  # 4GB
+      storage:
+        - mount_path: "/prometheus"
+          size: 107374182400  # 100GB
+          storage_class: "Warm"
+          access_mode: "ReadWrite"
+    
+    networking:
+      ports:
+        - container_port: 9090
+          host_port: 9090
+          protocol: "HTTP"
+          expose_externally: true
+          load_balance: false
+    
+    health_check:
+      checks:
+        - http:
+            endpoint: "http://localhost:9090/-/healthy"
+            expected_status: 200
+            timeout: "10s"
+      interval: "30s"
+    
+    dependencies:
+      - service_name: "app-backend"
+        dependency_type: "Available"
+        condition: "Started"
+        timeout: "60s"
+        optional: true
+    
+    restart_policy:
+      policy_type: "OnFailure"
+      max_attempts: 3
+    
+    protocol_support: ["HTTP"]
+    
+    labels:
+      tier: "monitoring"
+      component: "prometheus"
+      optional: "true"
+
+# Global orchestrator configuration for generic web app
+orchestrator:
+  name: "generic-webapp"
+  version: "1.0.0"
+  
+  # Standard web application settings
+  max_concurrent_operations: 50
+  service_startup_timeout: "120s"
+  service_shutdown_timeout: "30s"
+  
+  # No federation needed for single-node app
+  federation:
+    enabled: false
+    
+  # Basic monitoring
+  monitoring:
+    prometheus_enabled: true
+    metrics_port: 9090
+    health_check_interval: "30s"
+    
+  # Basic security
+  security:
+    tls_enabled: true
+    mutual_tls: false
+    rbac_enabled: false
+    
+  # Resource management for web workloads
+  resources:
+    cpu_over_commit_ratio: 2.0
+    memory_over_commit_ratio: 1.5
+    storage_over_commit_ratio: 1.2 

@@ -1,0 +1,651 @@
+# Secure Microservices with Advanced Inter-Service Security
+# Example showing comprehensive encryption, RBAC, and service mesh security
+
+services:
+  # === IDENTITY AND CERTIFICATE AUTHORITY ===
+  
+  # Certificate Authority Service
+  - name: "certificate-authority"
+    service_type: "Security"
+    version: "1.0.0"
+    description: "Internal CA for service identity and mTLS"
+    
+    command:
+      binary:
+        path: "/usr/local/bin/internal-ca"
+        args: ["--config", "/etc/ca/config.yaml"]
+    
+    working_directory: "/var/lib/ca"
+    user: "ca-service"
+    
+    # Service identity for CA
+    service_identity:
+      service_id: "certificate-authority"
+      service_account: "ca-service-account"
+      certificate:
+        source: "SelfSigned"  # CA self-signs its own cert
+        rotation:
+          enabled: true
+          rotation_interval: "8760h"  # 1 year
+          renewal_threshold: "720h"   # 30 days
+        validation:
+          verify_chain: false  # Root CA
+          verify_hostname: true
+          allowed_uses: ["DigitalSignature", "KeyEncipherment"]
+      secrets:
+        - name: "ca-root-key"
+          secret_type: "TlsCertificate"
+          mount_path: "/etc/ca/private"
+          rotation:
+            enabled: true
+            rotation_interval: "8760h"
+            rotation_strategy: "BlueGreen"
+    
+    resources:
+      cpu:
+        min_cores: 1.0
+        max_cores: 2.0
+        priority: 10  # High priority for security service
+      memory:
+        min_memory: 1073741824  # 1GB
+        max_memory: 4294967296  # 4GB
+      storage:
+        - mount_path: "/var/lib/ca"
+          size: 10737418240  # 10GB
+          storage_class: "Hot"
+          access_mode: "ReadWrite"
+          encryption:
+            algorithm: "aes-256-gcm"
+            key_source:
+              hardware: true  # HSM
+            encrypt_at_rest: true
+            encrypt_in_transit: true
+    
+    # Advanced security configuration
+    security:
+      encryption:
+        at_rest:
+          enabled: true
+          algorithm: "Aes256Gcm"
+          key_management:
+            provider: "Hardware"
+            key_rotation_interval: "2160h"  # 90 days
+            hardware_security_module:
+              provider: "Thales"
+              slot_id: 1
+              pin:
+                name: "hsm-pin"
+                secret_type: "Generic"
+          data_types: ["Secrets", "Configuration", "SystemData"]
+        in_transit:
+          enabled: true
+          tls_version:
+            min_version: "Tls12"
+            max_version: "Tls13"
+          cipher_suites: ["TLS_AES_256_GCM_SHA384", "TLS_CHACHA20_POLY1305_SHA256"]
+      rbac:
+        enabled: true
+        permission_model: "Rbac"
+        roles:
+          - name: "ca-admin"
+            permissions: ["SecurityAdmin", "DataAdmin"]
+            scope: "Service"
+            conditions: []
+          - name: "cert-requester"
+            permissions: ["SecurityRead", "DataRead"]
+            scope: "Service"
+            conditions:
+              - condition_type: "SourceIp"
+                value: "10.0.0.0/8"
+                operator: "Equal"
+        role_bindings:
+          - role_name: "ca-admin"
+            subjects: ["ServiceAccount:ca-service-account"]
+            conditions: []
+    
+    # Encryption policies
+    encryption_policies:
+      - name: "ca-data-protection"
+        data_classification: "TopSecret"
+        encryption_requirements:
+          algorithm: "Aes256Gcm"
+          key_size: 256
+          mode: "Gcm"
+          integrity_protection: true
+        key_management:
+          provider: "Hardware"
+          key_rotation_interval: "2160h"
+          key_derivation:
+            algorithm: "Pbkdf2"
+            iterations: 100000
+            salt_length: 32
+        scope:
+          data_types: ["Secrets", "Configuration"]
+          network_traffic: true
+          storage: true
+          memory: true
+        compliance:
+          - standard: "FedRamp"
+            controls: ["SC-8", "SC-13", "SC-28"]
+            audit_requirements:
+              log_level: "Comprehensive"
+              retention_period: "2160h"
+              destinations: ["LocalFile:/var/log/ca-audit.log"]
+    
+    networking:
+      ports:
+        - container_port: 8443
+          host_port: 8443
+          protocol: "HTTPS"
+          expose_externally: false  # Internal CA only
+          load_balance: false
+    
+    health_check:
+      checks:
+        - http:
+            endpoint: "https://localhost:8443/health"
+            expected_status: 200
+            timeout: "10s"
+      interval: "30s"
+    
+    labels:
+      tier: "security"
+      component: "certificate-authority"
+      criticality: "critical"
+
+  # === SECURE DATABASE SERVICE ===
+  
+  # Database with field-level encryption
+  - name: "secure-database"
+    service_type: "Database"
+    version: "1.0.0"
+    description: "PostgreSQL with advanced encryption and RBAC"
+    
+    command:
+      container:
+        image: "postgres-secure"
+        tag: "15-encrypted"
+        volumes:
+          - host_path: "/var/lib/postgresql/secure"
+            container_path: "/var/lib/postgresql/data"
+            read_only: false
+    
+    # Service identity with mTLS
+    service_identity:
+      service_id: "secure-database"
+      service_account: "db-service-account"
+      certificate:
+        source:
+          certificate_authority: "certificate-authority"
+        rotation:
+          enabled: true
+          rotation_interval: "2160h"  # 90 days
+          renewal_threshold: "168h"  # 7 days
+        validation:
+          verify_chain: true
+          verify_hostname: true
+          allowed_uses: ["ServerAuth", "ClientAuth"]
+      secrets:
+        - name: "db-tls-cert"
+          secret_type: "TlsCertificate"
+          mount_path: "/etc/ssl/certs"
+        - name: "db-encryption-key"
+          secret_type: "Generic"
+          env_var: "DB_ENCRYPTION_KEY"
+          rotation:
+            enabled: true
+            rotation_interval: "720h"  # 30 days
+            rotation_strategy: "Rolling"
+    
+    # Inter-service security configuration
+    inter_service_security:
+      mtls:
+        enabled: true
+        ca_config:
+          ca_cert: "/etc/ssl/ca/ca.crt"
+          ca_key: "/etc/ssl/ca/ca.key"
+        client_cert:
+          source:
+            certificate_authority: "certificate-authority"
+        server_cert:
+          source:
+            certificate_authority: "certificate-authority"
+        tls_version:
+          min_version: "Tls12"
+          max_version: "Tls13"
+        cipher_suites: ["TLS_AES_256_GCM_SHA384"]
+      
+      service_auth:
+        methods: ["MutualTls", "Jwt"]
+        token_validation:
+          issuer_validation: true
+          audience_validation: true
+          expiration_validation: true
+          signature_validation: true
+        service_accounts:
+          - name: "api-service-account"
+            automount_token: true
+            secrets:
+              - name: "api-db-access-token"
+                secret_type: "Token"
+        caching:
+          enabled: true
+          ttl: "300s"  # 5 minutes
+          max_entries: 1000
+          cache_negative_results: false
+      
+      authorization_policies:
+        - name: "api-service-access"
+          source:
+            name: "api-service"
+            labels:
+              tier: "application"
+          target:
+            name: "secure-database"
+          http_methods: ["GET", "POST", "PUT"]
+          paths:
+            - path: "/api/v1/users"
+              match_type: "Prefix"
+            - path: "/api/v1/orders"
+              match_type: "Prefix"
+          action: "Allow"
+        
+        - name: "analytics-readonly-access"
+          source:
+            name: "analytics-service"
+            labels:
+              tier: "analytics"
+          target:
+            name: "secure-database"
+          http_methods: ["GET"]
+          paths:
+            - path: "/api/v1/reports"
+              match_type: "Exact"
+          action: "Allow"
+        
+        - name: "deny-external-access"
+          source:
+            labels:
+              external: "true"
+          target:
+            name: "secure-database"
+          http_methods: ["*"]
+          paths:
+            - path: "/*"
+              match_type: "Prefix"
+          action: "Deny"
+      
+      traffic_encryption:
+        mode: "Strict"
+        algorithms: ["Aes256Gcm", "ChaCha20Poly1305"]
+        key_exchange: "Ecdh"
+        perfect_forward_secrecy: true
+    
+    # Database-specific RBAC policies
+    rbac_policies:
+      - name: "database-access-control"
+        source:
+          labels:
+            tier: "application"
+        target:
+          name: "secure-database"
+        operations:
+          - method: "SELECT"
+            resource: "users"
+            scope: "Read"
+          - method: "INSERT"
+            resource: "orders"
+            scope: "Write"
+          - method: "UPDATE"
+            resource: "orders"
+            scope: "Write"
+        conditions:
+          - condition_type: "TimeOfDay"
+            value: "09:00-17:00"
+            operator: "Equal"
+        priority: 100
+        time_restrictions:
+          allowed_hours: [9, 10, 11, 12, 13, 14, 15, 16, 17]
+          allowed_days: [1, 2, 3, 4, 5]  # Monday-Friday
+          timezone: "UTC"
+      
+      - name: "analytics-readonly-policy"
+        source:
+          name: "analytics-service"
+        target:
+          name: "secure-database"
+        operations:
+          - method: "SELECT"
+            resource: "*"
+            scope: "Read"
+        conditions: []
+        priority: 50
+    
+    # Advanced security configuration
+    security:
+      encryption:
+        at_rest:
+          enabled: true
+          algorithm: "Aes256Gcm"
+          key_management:
+            provider: "Vault"
+            key_rotation_interval: "720h"  # 30 days
+          data_types: ["UserData", "SystemData", "Logs"]
+        application_level:
+          field_level_encryption:
+            - field_path: "users.email"
+              algorithm: "Aes256Gcm"
+              key_reference:
+                name: "user-pii-key"
+                secret_type: "Generic"
+            - field_path: "users.ssn"
+              algorithm: "Aes256Gcm"
+              key_reference:
+                name: "user-sensitive-key"
+                secret_type: "Generic"
+            - field_path: "orders.payment_info"
+              algorithm: "Aes256Gcm"
+              key_reference:
+                name: "payment-key"
+                secret_type: "Generic"
+          database_encryption:
+            transparent_data_encryption: true
+            column_encryption:
+              - column_name: "credit_card_number"
+                algorithm: "Aes256Gcm"
+                key_reference:
+                  name: "payment-encryption-key"
+                  secret_type: "Generic"
+            backup_encryption: true
+      
+      rbac:
+        enabled: true
+        permission_model: "Abac"  # Attribute-based for fine-grained control
+        external_authz:
+          service: "policy-engine"
+          endpoint: "http://policy-engine:8080/authorize"
+          timeout: "5s"
+          failure_mode: "Deny"
+      
+      network_policies:
+        - name: "database-ingress"
+          ingress:
+            - from:
+                - service: "api-service"
+                  namespace: "default"
+                  labels:
+                    tier: "application"
+              ports:
+                - port: 5432
+                  protocol: "TCP"
+          egress: []
+          enforcement_mode: "Enforce"
+    
+    resources:
+      cpu:
+        min_cores: 2.0
+        max_cores: 8.0
+      memory:
+        min_memory: 4294967296   # 4GB
+        max_memory: 17179869184  # 16GB
+      storage:
+        - mount_path: "/var/lib/postgresql/data"
+          size: 107374182400  # 100GB
+          storage_class: "Hot"
+          access_mode: "ReadWrite"
+          encryption:
+            algorithm: "aes-256-gcm"
+            key_source:
+              vault: "database-storage-key"
+            encrypt_at_rest: true
+    
+    dependencies:
+      - service_name: "certificate-authority"
+        dependency_type: "HealthyBefore"
+        condition: "Ready"
+        timeout: "120s"
+        optional: false
+    
+    labels:
+      tier: "data"
+      component: "database"
+      security_level: "high"
+      data_classification: "confidential"
+
+  # === SECURE API SERVICE ===
+  
+  # API service with service mesh integration
+  - name: "api-service"
+    service_type: "Application"
+    version: "1.0.0"
+    description: "API service with comprehensive security"
+    
+    command:
+      binary:
+        path: "/usr/local/bin/secure-api"
+        args: ["--config", "/etc/api/config.yaml"]
+    
+    # Service identity with JWT
+    service_identity:
+      service_id: "api-service"
+      service_account: "api-service-account"
+      jwt_config:
+        issuer: "https://auth.internal.company.com"
+        audience: ["api-service", "secure-database"]
+        algorithm: "Rs256"
+        expiration: "3600s"  # 1 hour
+        claims:
+          standard_claims: ["Issuer", "Subject", "Audience", "Expiration"]
+          custom_claims:
+            service_tier: "String"
+            access_level: "String"
+            data_classification: "Array"
+      certificate:
+        source:
+          certificate_authority: "certificate-authority"
+        rotation:
+          enabled: true
+          rotation_interval: "720h"  # 30 days
+          renewal_threshold: "72h"  # 3 days
+    
+    # Service mesh integration
+    inter_service_security:
+      service_mesh_integration:
+        provider: "Istio"
+        mode: "Sidecar"
+        config_overrides:
+          "proxy.istio.io/config": |
+            proxyStatsMatcher:
+              inclusionRegexps:
+              - ".*circuit_breakers.*"
+              - ".*upstream_rq_retry.*"
+        features: ["TrafficManagement", "Security", "Observability"]
+      
+      mtls:
+        enabled: true
+        ca_config:
+          ca_cert: "/etc/ssl/ca/ca.crt"
+        tls_version:
+          min_version: "Tls12"
+          max_version: "Tls13"
+      
+      authorization_policies:
+        - name: "frontend-to-api"
+          source:
+            name: "frontend-service"
+            labels:
+              app: "frontend"
+          target:
+            name: "api-service"
+          http_methods: ["GET", "POST", "PUT", "DELETE"]
+          paths:
+            - path: "/api/v1/*"
+              match_type: "Prefix"
+          headers:
+            "Authorization": "Bearer *"
+            "Content-Type": "application/json"
+          action: "Allow"
+        
+        - name: "rate-limit-external"
+          source:
+            labels:
+              external: "true"
+          target:
+            name: "api-service"
+          http_methods: ["*"]
+          paths:
+            - path: "/*"
+              match_type: "Prefix"
+          action: "RateLimit:100"  # 100 requests per window
+    
+    # Service-specific RBAC
+    rbac_policies:
+      - name: "api-data-access"
+        source:
+          name: "api-service"
+        target:
+          name: "secure-database"
+        operations:
+          - method: "SELECT"
+            resource: "users"
+            scope: "Read"
+          - method: "INSERT"
+            resource: "users"
+            scope: "Write"
+          - method: "UPDATE"
+            resource: "users"
+            scope: "Write"
+          - method: "SELECT"
+            resource: "orders"
+            scope: "Read"
+          - method: "INSERT"
+            resource: "orders"
+            scope: "Write"
+        conditions:
+          - condition_type: "SourceIp"
+            value: "10.0.0.0/8"
+            operator: "Equal"
+        priority: 200
+    
+    # Encryption policies for API data
+    encryption_policies:
+      - name: "api-data-in-transit"
+        data_classification: "Confidential"
+        encryption_requirements:
+          algorithm: "Aes256Gcm"
+          key_size: 256
+          mode: "Gcm"
+          integrity_protection: true
+        key_management:
+          provider: "Vault"
+          key_rotation_interval: "720h"
+        scope:
+          data_types: ["UserData", "Configuration"]
+          network_traffic: true
+          storage: false
+          memory: false
+        compliance:
+          - standard: "Gdpr"
+            controls: ["Article 32", "Article 25"]
+            audit_requirements:
+              log_level: "Standard"
+              retention_period: "720h"
+              destinations: ["Syslog:security-logs.company.com"]
+    
+    security:
+      service_mesh:
+        mesh_type: "Istio"
+        sidecar_config:
+          image: "istio/proxyv2:1.19.0"
+          resources:
+            cpu:
+              min_cores: 0.1
+              max_cores: 0.5
+            memory:
+              min_memory: 134217728   # 128MB
+              max_memory: 536870912   # 512MB
+        security_policies:
+          - name: "strict-mtls"
+            source:
+              labels:
+                security.istio.io/tlsMode: "istio"
+            target:
+              name: "api-service"
+            rules:
+              - name: "require-mtls"
+                action: "Allow"
+                conditions:
+                  - condition_type: "SourceService"
+                    value: "*"
+                    operator: "Equal"
+      
+      encryption:
+        in_transit:
+          enabled: true
+          tls_version:
+            min_version: "Tls12"
+            max_version: "Tls13"
+          cipher_suites: ["TLS_AES_256_GCM_SHA384", "TLS_CHACHA20_POLY1305_SHA256"]
+        application_level:
+          api_encryption:
+            request_encryption: true
+            response_encryption: true
+            header_encryption: ["Authorization", "X-API-Key"]
+    
+    dependencies:
+      - service_name: "certificate-authority"
+        dependency_type: "HealthyBefore"
+        condition: "Ready"
+        timeout: "60s"
+        optional: false
+      - service_name: "secure-database"
+        dependency_type: "HealthyBefore"
+        condition: "Ready"
+        timeout: "120s"
+        optional: false
+    
+    scaling:
+      min_instances: 2
+      max_instances: 10
+      scaling_metrics:
+        - metric_type: "RequestRate"
+          target_value: 1000.0
+          comparison: "GreaterThan"
+    
+    labels:
+      tier: "application"
+      component: "api"
+      security_level: "high"
+      istio_injection: "enabled"
+
+# Global orchestrator configuration for secure deployment
+orchestrator:
+  name: "secure-microservices"
+  version: "1.0.0"
+  
+  # Security-focused settings
+  max_concurrent_operations: 25  # Conservative for security
+  service_startup_timeout: "300s"
+  service_shutdown_timeout: "60s"
+  
+  # No federation - security-focused single cluster
+  federation:
+    enabled: false
+    
+  # Comprehensive monitoring for security
+  monitoring:
+    prometheus_enabled: true
+    metrics_port: 9090
+    health_check_interval: "15s"
+    
+  # Strict security settings
+  security:
+    tls_enabled: true
+    mutual_tls: true
+    rbac_enabled: true
+    
+  # Conservative resource management
+  resources:
+    cpu_over_commit_ratio: 1.0  # No overcommit for security
+    memory_over_commit_ratio: 1.0
+    storage_over_commit_ratio: 1.0 
