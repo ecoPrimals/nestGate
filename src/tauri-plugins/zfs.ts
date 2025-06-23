@@ -1,47 +1,51 @@
-// Replace the import from @tauri-apps/api/tauri with either a custom implementation or use a mock
-// import { invoke } from '@tauri-apps/api/tauri';
-import { ZfsPool, ZfsDataset } from '../services/zfs-pool.service';
+import { invoke } from '@tauri-apps/api/tauri';
 
-// Create a mock invoke function for development
-const invoke = async (command: string, args?: Record<string, any>): Promise<any> => {
-  // Check if we're in a Tauri environment with the real invoke function
-  if (window.__TAURI__?.invoke) {
-    return window.__TAURI__.invoke(command, args);
-  }
-  
-  // If not, throw an error to indicate the need to use the shim
-  throw new Error('Tauri invoke not available, make sure the tauri-plugin-zfs.js shim is loaded');
-};
+// Define ZFS types
+export interface ZfsPool {
+  id: string;
+  name: string;
+  health: string;
+  status: string;
+  size: number;
+  allocated: number;
+  free: number;
+  used: number;
+  isMock?: boolean;
+}
 
-// Add window.__TAURI__ type definition
-declare global {
-  interface Window {
-    __TAURI__?: {
-      invoke: (command: string, args?: Record<string, any>) => Promise<any>;
-      process?: {
-        exit: (code?: number) => void;
-      };
-    };
-  }
+export interface ZfsDataset {
+  id: string;
+  name: string;
+  pool: string;
+  type: string;
+  used: number;
+  available: number;
+  referenced: number;
+  recordsize: string;
+  compression: string;
+  compressratio: number;
+  mounted: boolean;
+  mountpoint: string;
+  quota: number;
+  reservation: number;
+  readonly: boolean;
+  isMock?: boolean;
 }
 
 /**
- * Tauri plugin for ZFS integration
- * 
- * This plugin provides a bridge between the UI and the ZFS functionality
- * in the Rust backend. It uses Tauri's invoke mechanism to call Rust functions.
+ * ZFS Plugin for Tauri integration
+ * Provides ZFS pool and dataset management through Tauri backend
  */
 export class ZfsPlugin {
+
   /**
-   * Check if the ZFS plugin is available
+   * Check if ZFS is available on the system
    */
   static async isAvailable(): Promise<boolean> {
     try {
-      const available = await invoke('plugin:zfs|is_available');
-      console.log('ZFS plugin available:', available);
-      return !!available;
+      return await invoke('plugin:zfs|is_available');
     } catch (error) {
-      console.log('ZFS plugin not available:', error);
+      console.error('Error checking ZFS availability via Tauri:', error);
       return false;
     }
   }
@@ -59,7 +63,9 @@ export class ZfsPlugin {
         id: pool.id || pool.name || '', // Use id or name as ID
         name: pool.name || '',
         health: pool.health || 'UNKNOWN',
+        status: pool.status || 'ONLINE', // Add missing status
         size: pool.size || pool.capacity || 0,
+        allocated: pool.used || 0, // Add missing allocated (use used as fallback)
         free: pool.free || pool.available || 0,
         used: pool.used || 0,
         isMock: true // Add mock flag for development testing
@@ -146,28 +152,4 @@ export class ZfsPlugin {
       throw error;
     }
   }
-
-  /**
-   * Terminate the Tauri process gracefully
-   */
-  static terminate(exitCode: number = 0): void {
-    console.log(`Terminating Tauri process with exit code ${exitCode}`);
-    if (window.__TAURI__?.process?.exit) {
-      window.__TAURI__.process.exit(exitCode);
-    }
-  }
-}
-
-// Set up an event listener for the beforeunload event to clean up resources
-window.addEventListener('beforeunload', () => {
-  console.log('Window unloading, terminating process');
-  try {
-    // Attempt to gracefully shut down
-    ZfsPlugin.terminate();
-  } catch (error) {
-    console.error('Error during termination:', error);
-  }
-});
-
-// Export the plugin as default
-export default ZfsPlugin; 
+} 

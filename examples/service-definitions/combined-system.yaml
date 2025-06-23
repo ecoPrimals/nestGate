@@ -1,0 +1,510 @@
+# Combined NestGate NAS + Squirrel MCP System
+# Example showing how the orchestrator handles hybrid deployments
+
+services:
+  # === STORAGE LAYER (NestGate NAS) ===
+  
+  # ZFS Storage Foundation
+  - name: "zfs-storage"
+    service_type: "Storage"
+    version: "2.0.0"
+    description: "ZFS storage with MCP integration"
+    
+    command:
+      binary:
+        path: "/usr/local/bin/nestgate-zfs"
+        args: ["--config", "/etc/nestgate/zfs.yaml", "--mcp-endpoint", "http://mcp-server:8080"]
+    
+    working_directory: "/var/lib/nestgate/zfs"
+    user: "root"
+    
+    resources:
+      cpu:
+        min_cores: 2.0
+        max_cores: 8.0
+        cpu_affinity: [0, 1, 2, 3]
+      memory:
+        min_memory: 4294967296  # 4GB
+        max_memory: 17179869184 # 16GB
+      storage:
+        - mount_path: "/var/lib/zfs"
+          size: 107374182400  # 100GB
+          storage_class: "Hot"
+          access_mode: "ReadWrite"
+      network:
+        bandwidth_min: 1073741824  # 1Gbps
+        bandwidth_max: 10737418240 # 10Gbps
+    
+    networking:
+      ports:
+        - container_port: 8080
+          host_port: 8080
+          protocol: "HTTP"
+          expose_externally: true
+          load_balance: true
+    
+    health_check:
+      startup_probe:
+        http:
+          endpoint: "http://localhost:8080/health/startup"
+          timeout: "30s"
+      liveness_probe:
+        http:
+          endpoint: "http://localhost:8080/health/live"
+          timeout: "5s"
+      readiness_probe:
+        http:
+          endpoint: "http://localhost:8080/health/ready"
+          timeout: "10s"
+      interval: "15s"
+    
+    dependencies: []  # Storage is foundational
+    
+    restart_policy:
+      policy_type: "Always"
+      max_attempts: 5
+      backoff_strategy:
+        initial_delay: "5s"
+        max_delay: "300s"
+        multiplier: 2.0
+        jitter: true
+    
+    # Storage participates in federation for data replication
+    federation:
+      federation_role: "Follower"
+      cluster_membership:
+        cluster_name: "hybrid-cluster"
+        node_role: "storage"
+        voting_member: false
+      consensus_participation: false
+      capability_sharing: ["storage", "zfs", "backup"]
+    
+    protocol_support: ["NFS", "SMB", "HTTP", "HTTPS"]
+    
+    labels:
+      tier: "storage"
+      system: "nestgate"
+      criticality: "high"
+
+  # === COORDINATION LAYER (Squirrel MCP) ===
+  
+  # MCP Coordination Server
+  - name: "mcp-server"
+    service_type: "Coordination"
+    version: "1.0.0"
+    description: "MCP server coordinating hybrid system"
+    
+    command:
+      binary:
+        path: "/usr/local/bin/squirrel-mcp"
+        args: ["server", "--config", "/etc/squirrel/mcp.yaml", "--nas-integration"]
+    
+    working_directory: "/var/lib/squirrel/mcp"
+    user: "squirrel"
+    
+    resources:
+      cpu:
+        min_cores: 1.0
+        max_cores: 4.0
+        priority: 5
+      memory:
+        min_memory: 1073741824  # 1GB
+        max_memory: 8589934592  # 8GB
+      network:
+        bandwidth_min: 104857600   # 100Mbps
+        bandwidth_max: 1073741824  # 1Gbps
+        latency_max: "10ms"
+    
+    networking:
+      ports:
+        - container_port: 8081
+          host_port: 8081
+          protocol: "HTTP"
+          expose_externally: true
+          load_balance: true
+        - container_port: 8082
+          host_port: 8082
+          protocol: "WebSocket"
+          expose_externally: true
+          load_balance: false
+    
+    health_check:
+      startup_probe:
+        http:
+          endpoint: "http://localhost:8081/mcp/health/startup"
+          timeout: "30s"
+      liveness_probe:
+        http:
+          endpoint: "http://localhost:8081/mcp/health/live"
+          timeout: "10s"
+      readiness_probe:
+        http:
+          endpoint: "http://localhost:8081/mcp/health/ready"
+          timeout: "15s"
+      interval: "10s"
+    
+    dependencies: []  # MCP is also foundational
+    
+    restart_policy:
+      policy_type: "Always"
+      max_attempts: 10
+      backoff_strategy:
+        initial_delay: "2s"
+        max_delay: "120s"
+        multiplier: 1.5
+        jitter: true
+    
+    scaling:
+      min_instances: 1
+      max_instances: 3
+      scaling_metrics:
+        - metric_type: "RequestRate"
+          target_value: 300.0
+          comparison: "GreaterThan"
+    
+    # MCP leads coordination
+    federation:
+      federation_role: "Coordinator"
+      cluster_membership:
+        cluster_name: "hybrid-cluster"
+        node_role: "coordinator"
+        voting_member: true
+      consensus_participation: true
+      capability_sharing: ["coordination", "tool-federation", "nas-integration"]
+      data_replication:
+        replication_factor: 2
+        consistency_level: "Quorum"
+    
+    protocol_support: ["McpNative", "McpHttp", "McpWebSocket", "HTTP"]
+    
+    labels:
+      tier: "coordination"
+      system: "squirrel"
+      criticality: "high"
+
+  # === PROTOCOL LAYER (NAS Services) ===
+  
+  # NFS Gateway with MCP awareness
+  - name: "nfs-gateway"
+    service_type: "ProtocolGateway"
+    version: "2.0.0"
+    description: "NFS gateway coordinated by MCP"
+    
+    command:
+      binary:
+        path: "/usr/local/bin/nestgate-nfs"
+        args: ["--storage-backend", "zfs-storage", "--mcp-coordinator", "mcp-server:8081"]
+    
+    resources:
+      cpu:
+        min_cores: 1.0
+        max_cores: 4.0
+      memory:
+        min_memory: 1073741824  # 1GB
+        max_memory: 4294967296  # 4GB
+    
+    networking:
+      ports:
+        - container_port: 2049
+          host_port: 2049
+          protocol: "TCP"
+          expose_externally: true
+          load_balance: false
+    
+    health_check:
+      checks:
+        - tcp:
+            address: "localhost:2049"
+            timeout: "5s"
+        - command:
+            command: ["showmount", "-e", "localhost"]
+            expected_exit_code: 0
+            timeout: "10s"
+      interval: "30s"
+    
+    dependencies:
+      - service_name: "zfs-storage"
+        dependency_type: "HealthyBefore"
+        condition: "Ready"
+        timeout: "60s"
+        optional: false
+      - service_name: "mcp-server"
+        dependency_type: "Available"
+        condition: "Ready"
+        timeout: "30s"
+        optional: true  # Can operate without MCP
+    
+    restart_policy:
+      policy_type: "OnFailure"
+      max_attempts: 3
+    
+    # Participates in federation for load balancing
+    federation:
+      federation_role: "Follower"
+      cluster_membership:
+        cluster_name: "hybrid-cluster"
+        node_role: "protocol"
+        voting_member: false
+      capability_sharing: ["nfs", "file-sharing"]
+    
+    protocol_support: ["NFS"]
+    
+    labels:
+      tier: "protocol"
+      system: "nestgate"
+      protocol: "nfs"
+
+  # === FEDERATION LAYER ===
+  
+  # Cross-system Federation Service
+  - name: "hybrid-federation"
+    service_type: "Federation"
+    version: "1.0.0"
+    description: "Federation bridge between NAS and MCP"
+    
+    command:
+      binary:
+        path: "/usr/local/bin/hybrid-federation"
+        args: ["--nas-endpoint", "http://zfs-storage:8080", "--mcp-endpoint", "http://mcp-server:8081"]
+    
+    resources:
+      cpu:
+        min_cores: 1.0
+        max_cores: 2.0
+      memory:
+        min_memory: 1073741824  # 1GB
+        max_memory: 4294967296  # 4GB
+    
+    networking:
+      ports:
+        - container_port: 8083
+          host_port: 8083
+          protocol: "HTTP"
+          expose_externally: true
+          load_balance: true
+    
+    health_check:
+      checks:
+        - http:
+            endpoint: "http://localhost:8083/federation/health"
+            timeout: "10s"
+        - http:
+            endpoint: "http://localhost:8083/federation/bridge/status"
+            timeout: "15s"
+      interval: "30s"
+    
+    dependencies:
+      - service_name: "zfs-storage"
+        dependency_type: "Available"
+        condition: "Ready"
+        timeout: "60s"
+        optional: false
+      - service_name: "mcp-server"
+        dependency_type: "Available"
+        condition: "Ready"
+        timeout: "60s"
+        optional: false
+    
+    scaling:
+      min_instances: 1
+      max_instances: 2
+    
+    # Central federation role
+    federation:
+      federation_role: "Coordinator"
+      cluster_membership:
+        cluster_name: "hybrid-cluster"
+        node_role: "federation-bridge"
+        voting_member: true
+      consensus_participation: true
+      capability_sharing: ["cross-system-federation", "nas-mcp-bridge"]
+      load_balancing:
+        cross_cluster: true
+        locality_preference: "SameNode"
+        failover_strategy: "Graceful"
+    
+    protocol_support: ["HTTP", "HTTPS", "McpNative"]
+    
+    labels:
+      tier: "federation"
+      system: "hybrid"
+      component: "bridge"
+
+  # === APPLICATION LAYER ===
+  
+  # Web Management Interface (unified)
+  - name: "unified-web-ui"
+    service_type: "WebServer"
+    version: "2.0.0"
+    description: "Unified web interface for NAS + MCP"
+    
+    command:
+      binary:
+        path: "/usr/local/bin/unified-ui"
+        args: ["--nas-api", "http://zfs-storage:8080", "--mcp-api", "http://mcp-server:8081"]
+    
+    resources:
+      cpu:
+        min_cores: 0.5
+        max_cores: 2.0
+      memory:
+        min_memory: 536870912   # 512MB
+        max_memory: 2147483648  # 2GB
+    
+    networking:
+      ports:
+        - container_port: 8090
+          host_port: 8090
+          protocol: "HTTP"
+          expose_externally: true
+          load_balance: true
+      ssl_termination:
+        cert_path: "/etc/ssl/certs/hybrid.crt"
+        key_path: "/etc/ssl/private/hybrid.key"
+        protocols: ["TLSv1.2", "TLSv1.3"]
+    
+    health_check:
+      checks:
+        - http:
+            endpoint: "http://localhost:8090/health"
+            expected_status: 200
+            timeout: "10s"
+      interval: "30s"
+    
+    dependencies:
+      - service_name: "zfs-storage"
+        dependency_type: "Available"
+        condition: "Ready"
+        timeout: "30s"
+        optional: false
+      - service_name: "mcp-server"
+        dependency_type: "Available"
+        condition: "Ready"
+        timeout: "30s"
+        optional: false
+      - service_name: "hybrid-federation"
+        dependency_type: "Available"
+        condition: "Ready"
+        timeout: "30s"
+        optional: true
+    
+    scaling:
+      min_instances: 1
+      max_instances: 3
+      scaling_metrics:
+        - metric_type: "RequestRate"
+          target_value: 500.0
+          comparison: "GreaterThan"
+    
+    protocol_support: ["HTTP", "HTTPS", "WebSocket"]
+    
+    labels:
+      tier: "frontend"
+      system: "hybrid"
+      component: "ui"
+
+  # === MONITORING LAYER ===
+  
+  # Unified Monitoring
+  - name: "system-monitor"
+    service_type: "Monitoring"
+    version: "1.0.0"
+    description: "Monitor both NAS and MCP components"
+    
+    command:
+      container:
+        image: "hybrid/system-monitor"
+        tag: "1.0.0"
+        volumes:
+          - host_path: "/var/lib/monitoring"
+            container_path: "/data"
+            read_only: false
+    
+    resources:
+      cpu:
+        min_cores: 0.5
+        max_cores: 1.0
+      memory:
+        min_memory: 536870912   # 512MB
+        max_memory: 2147483648  # 2GB
+      storage:
+        - mount_path: "/data"
+          size: 53687091200  # 50GB
+          storage_class: "Warm"
+          access_mode: "ReadWrite"
+    
+    networking:
+      ports:
+        - container_port: 9090
+          host_port: 9091
+          protocol: "HTTP"
+          expose_externally: true
+          load_balance: true
+    
+    health_check:
+      checks:
+        - http:
+            endpoint: "http://localhost:9090/metrics"
+            expected_status: 200
+            timeout: "10s"
+      interval: "60s"
+    
+    dependencies:
+      - service_name: "zfs-storage"
+        dependency_type: "Available"
+        condition: "Ready"
+        timeout: "60s"
+        optional: true
+      - service_name: "mcp-server"
+        dependency_type: "Available"
+        condition: "Ready"
+        timeout: "60s"
+        optional: true
+    
+    restart_policy:
+      policy_type: "OnFailure"
+      max_attempts: 3
+    
+    protocol_support: ["HTTP", "HTTPS"]
+    
+    labels:
+      tier: "monitoring"
+      system: "hybrid"
+      optional: "true"
+
+# Global orchestrator configuration for hybrid system
+orchestrator:
+  name: "hybrid-nas-mcp"
+  version: "2.0.0"
+  
+  # Balanced settings for hybrid workload
+  max_concurrent_operations: 75
+  service_startup_timeout: "180s"
+  service_shutdown_timeout: "45s"
+  
+  # Federation coordinates both systems
+  federation:
+    enabled: true
+    cluster_name: "hybrid-cluster"
+    discovery_method: "mdns"
+    consensus_algorithm: "raft"
+    heartbeat_interval: "15s"
+    election_timeout: "7s"
+    
+  # Comprehensive monitoring
+  monitoring:
+    prometheus_enabled: true
+    metrics_port: 9090
+    health_check_interval: "15s"
+    
+  # Security for hybrid communication
+  security:
+    tls_enabled: true
+    mutual_tls: true
+    rbac_enabled: true
+    
+  # Resource management for mixed workloads
+  resources:
+    cpu_over_commit_ratio: 1.5
+    memory_over_commit_ratio: 1.2
+    storage_over_commit_ratio: 2.0 

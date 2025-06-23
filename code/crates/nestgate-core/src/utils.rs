@@ -265,14 +265,10 @@ pub mod sys {
         {
             match stdfs::read_to_string("/proc/meminfo") {
                 Ok(content) => {
-                    for line in content.lines() {
-                        if line.starts_with("MemTotal:") {
-                            let parts: Vec<&str> = line.split_whitespace().collect();
-                            if parts.len() >= 2 {
-                                if let Ok(kb) = parts[1].parse::<u64>() {
-                                    return Ok(kb * 1024); // Convert KB to bytes
-                                }
-                            }
+                    let parts: Vec<&str> = content.split_whitespace().collect();
+                    if parts.len() >= 2 {
+                        if let Ok(kb) = parts[1].parse::<u64>() {
+                            return Ok(kb * 1024); // Convert KB to bytes
                         }
                     }
                     Err(NestGateError::SystemError("Failed to parse /proc/meminfo".to_string()))
@@ -293,14 +289,10 @@ pub mod sys {
         {
             match stdfs::read_to_string("/proc/meminfo") {
                 Ok(content) => {
-                    for line in content.lines() {
-                        if line.starts_with("MemAvailable:") {
-                            let parts: Vec<&str> = line.split_whitespace().collect();
-                            if parts.len() >= 2 {
-                                if let Ok(kb) = parts[1].parse::<u64>() {
-                                    return Ok(kb * 1024); // Convert KB to bytes
-                                }
-                            }
+                    let parts: Vec<&str> = content.split_whitespace().collect();
+                    if parts.len() >= 2 {
+                        if let Ok(kb) = parts[1].parse::<u64>() {
+                            return Ok(kb * 1024); // Convert KB to bytes
                         }
                     }
                     Err(NestGateError::SystemError("Failed to parse /proc/meminfo".to_string()))
@@ -337,7 +329,7 @@ pub mod sys {
         {
             match stdfs::read_to_string("/proc/uptime") {
                 Ok(content) => {
-                    let parts: Vec<&str> = content.trim().split_whitespace().collect();
+                    let parts: Vec<&str> = content.split_whitespace().collect();
                     if !parts.is_empty() {
                         if let Ok(seconds) = parts[0].parse::<f64>() {
                             return Ok(Duration::from_secs_f64(seconds));
@@ -536,10 +528,7 @@ pub mod network {
     /// Check if a port is available
     pub async fn is_port_available(port: u16) -> bool {
         let addr = format!("127.0.0.1:{}", port);
-        match tokio::net::TcpListener::bind(&addr).await {
-            Ok(_) => true,
-            Err(_) => false,
-        }
+        (tokio::net::TcpListener::bind(&addr).await).is_ok()
     }
 }
 

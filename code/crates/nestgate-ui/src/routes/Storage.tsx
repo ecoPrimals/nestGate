@@ -312,8 +312,8 @@ const StoragePage: React.FC = () => {
 
       {/* Storage Pools Tab */}
       <TabPanel value={activeTab} index={0}>
-        <Stack spacing={2}>
-          <Stack direction="row" spacing={2}>
+        <Stack>
+          <Stack direction="row">
               <Button 
               variant="outlined"
               startIcon={isPoolsLoading ? <CircularProgress size={20} /> : <ReloadIcon />}
@@ -384,7 +384,7 @@ const StoragePage: React.FC = () => {
                           </TableCell>
                           <TableCell>{formatCapacity(pool.size)}</TableCell>
                           <TableCell>
-                            <Stack direction="row" spacing={1} alignItems="center">
+                            <Stack direction="row" alignItems="center">
                               <Typography variant="body2">
                                 {formatCapacity(pool.used)} ({usagePercentage}%)
                               </Typography>
@@ -398,7 +398,7 @@ const StoragePage: React.FC = () => {
                           </TableCell>
                           <TableCell>{formatCapacity(pool.free)}</TableCell>
                           <TableCell>
-                            <Stack direction="row" spacing={1}>
+                            <Stack direction="row">
                               <Button
                                 size="small"
                                 variant="contained"
@@ -430,8 +430,8 @@ const StoragePage: React.FC = () => {
 
       {/* Datasets Tab */}
       <TabPanel value={activeTab} index={1}>
-        <Stack spacing={2}>
-          <Stack direction="row" spacing={2} alignItems="center">
+        <Stack>
+          <Stack direction="row" alignItems="center">
             <FormControl sx={{ minWidth: 200 }}>
               <InputLabel>Select a pool</InputLabel>
             <Select
@@ -551,7 +551,7 @@ const StoragePage: React.FC = () => {
       >
         <DialogTitle>Create Storage Pool</DialogTitle>
         <DialogContent>
-          <Stack spacing={3} sx={{ paddingTop: 1 }}>
+          <Stack sx={{ paddingTop: 1 }}>
             <TextField
             label="Pool Name"
               value={createPoolForm.name}
@@ -628,7 +628,7 @@ const StoragePage: React.FC = () => {
       >
         <DialogTitle>Create Dataset in {selectedPool?.name || 'pool'}</DialogTitle>
         <DialogContent>
-          <Stack spacing={3} sx={{ paddingTop: 1 }}>
+          <Stack sx={{ paddingTop: 1 }}>
             <TextField
             label="Dataset Name"
               value={createDatasetForm.name}
@@ -705,7 +705,7 @@ const StoragePage: React.FC = () => {
       >
         <DialogTitle>Import Pool</DialogTitle>
         <DialogContent>
-          <Stack spacing={2} sx={{ paddingTop: 1 }}>
+          <Stack sx={{ paddingTop: 1 }}>
             <TextField
               label="Pool Name"
               value={poolNameToImport}

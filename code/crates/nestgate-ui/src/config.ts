@@ -1,207 +1,107 @@
 /**
- * Configuration module for NestGate
+ * NestGate UI Configuration
  * 
- * Centralizes configuration settings and environment variable handling
+ * Updated to work with the orchestrator-based architecture.
+ * All configuration is now fetched from the orchestrator service registry.
  */
 
-import { DataSourceType } from './utils/env';
 import { configService } from './services/config.service';
 
-/**
- * Configuration options for the application
- */
+// Application configuration interface
 export interface AppConfig {
-  /**
-   * Base URI for API requests
-   */
+  // API Configuration - fetched from orchestrator
   API_URI: string;
-  
-  /**
-   * Refresh interval for data (in milliseconds)
-   */
-  REFRESH_INTERVAL: number;
-  
-  /**
-   * Whether strict live mode is enabled
-   */
-  STRICT_DATA_MODE: boolean;
-  
-  /**
-   * Whether to use real disk data
-   */
-  USE_REAL_DISKS: boolean;
-  
-  /**
-   * API base URL
-   */
   API_BASE_URL: string;
   
-  /**
-   * WebSocket base URL
-   */
+  // WebSocket Configuration - fetched from orchestrator  
   WS_BASE_URL: string;
   
-  /**
-   * File monitor URL
-   */
-  FILE_MONITOR_URL: string;
+  // Orchestrator Configuration
+  ORCHESTRATOR_URL: string;
   
-  /**
-   * Port manager URL
-   */
-  PORT_MANAGER_URL: string;
-  
-  /**
-   * UI port
-   */
+  // UI Configuration
+  APP_NAME: string;
+  APP_VERSION: string;
+  SERVER_PORT: string;
+  API_PORT: string;
   UI_PORT: string;
   
-  /**
-   * API port
-   */
-  API_PORT: string;
-  
-  /**
-   * Server port
-   */
-  SERVER_PORT: string;
-  
-  /**
-   * Whether strict mode is enabled
-   */
-  STRICT_MODE: boolean;
-  
-  /**
-   * Whether to use mock data
-   */
-  USE_MOCK_DATA: boolean;
-  
-  /**
-   * Whether to show mock indicator
-   */
-  SHOW_MOCK_INDICATOR: boolean;
+  // Feature flags
+  ENABLE_DEBUG: boolean;
+  ENABLE_MOCK_DATA: boolean;
+  STRICT_DATA_MODE: boolean;
 }
 
-// No hardcoded endpoints - everything comes from dynamic discovery
-// Port Manager will be discovered via service discovery mechanism
-export const PORT_MANAGER_URL = ""; // Will be discovered dynamically
-
-// Static configuration ONLY contains port manager URL - everything else is dynamic
-export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || ""; // Will be set by port manager
-export const WS_BASE_URL = process.env.REACT_APP_WS_URL || ""; // Must come from port manager
-export const FILE_MONITOR_URL = process.env.REACT_APP_FILE_MONITOR_URL || ""; // Must come from port manager
-
-// Port information - will be overridden by port manager
-export const UI_PORT = process.env.PORT || '3000';
-export const API_PORT = ""; // Must come from port manager
-export const SERVER_PORT = ""; // Must come from port manager
-
-/**
- * Get a typed environment variable
- * 
- * @param name - The environment variable name
- * @param defaultValue - Default value if not found
- * @returns The typed environment variable value
- */
-function getEnvVariable<T>(name: string, defaultValue: T): T {
-  const envValue = process.env[name] || (typeof window !== 'undefined' && window.ENV && window.ENV[name]);
+// Default configuration (will be updated by orchestrator)
+export const APP_CONFIG: AppConfig = {
+  // These will be populated from orchestrator service registry
+  API_URI: '',
+  API_BASE_URL: '',
+  WS_BASE_URL: '',
+  ORCHESTRATOR_URL: '',
   
-  if (envValue === undefined) {
-    return defaultValue;
-  }
+  // Static configuration
+  APP_NAME: 'NestGate',
+  APP_VERSION: '2.0.0',
+  SERVER_PORT: '3000',
+  API_PORT: '8092',
+  UI_PORT: '3000',
   
-  try {
-    // Try to parse as JSON if it's a string
-    if (typeof envValue === 'string') {
-      if (envValue.toLowerCase() === 'true') return true as unknown as T;
-      if (envValue.toLowerCase() === 'false') return false as unknown as T;
-      if (!isNaN(Number(envValue))) return Number(envValue) as unknown as T;
-      try {
-        return JSON.parse(envValue) as T;
-      } catch (e) {
-        return envValue as unknown as T;
-      }
-    }
-    return envValue as unknown as T;
-  } catch (error) {
-    console.warn(`Error parsing environment variable ${name}:`, error);
-    return defaultValue;
-  }
-}
-
-/**
- * Unified app configuration (static - will be enhanced with dynamic config)
- */
-const APP_CONFIG: AppConfig = {
-  // Legacy config
-  API_URI: getEnvVariable('API_URI', API_BASE_URL),
-  REFRESH_INTERVAL: getEnvVariable('REFRESH_INTERVAL', 5000),
-  STRICT_DATA_MODE: getEnvVariable('STRICT_DATA_MODE', true),
-  USE_REAL_DISKS: getEnvVariable('USE_REAL_DISKS', true),
-  
-  // New config
-  API_BASE_URL,
-  WS_BASE_URL,
-  FILE_MONITOR_URL,
-  PORT_MANAGER_URL,
-  UI_PORT,
-  API_PORT,
-  SERVER_PORT,
-  STRICT_MODE: process.env.REACT_APP_STRICT_DATA_MODE === 'true',
-  USE_MOCK_DATA: process.env.REACT_APP_USE_MOCK_ALL === 'true',
-  SHOW_MOCK_INDICATOR: process.env.REACT_APP_SHOW_MOCK_INDICATOR === 'true',
+  // Feature flags from environment
+  ENABLE_DEBUG: process.env.NODE_ENV === 'development',
+  ENABLE_MOCK_DATA: process.env.REACT_APP_ENABLE_MOCK_DATA === 'true',
+  STRICT_DATA_MODE: process.env.REACT_APP_STRICT_DATA_MODE === 'true',
 };
 
-/**
- * Check if strict live mode is enabled
- * 
- * @returns True if strict live mode is enabled
- */
-export function isStrictLiveMode(): boolean {
-  return APP_CONFIG.STRICT_DATA_MODE === true;
-}
+// Export individual config values for backward compatibility
+export let API_BASE_URL = '';
+export let WS_BASE_URL = '';
+
+// No hardcoded endpoints - everything comes from orchestrator discovery
+export const ORCHESTRATOR_URL = "";
 
 /**
- * Get the current data source type
- * 
- * @returns The data source type (always LIVE in strict mode)
+ * Get configuration object (backward compatibility)
  */
-export function getDataSourceType(): DataSourceType {
-  return DataSourceType.LIVE;
-}
+export const getConfig = () => APP_CONFIG;
 
 /**
- * Get the application configuration
- * 
- * @returns The application configuration
- */
-export function getConfig(): AppConfig {
-  return { ...APP_CONFIG };
-}
-
-/**
- * Get the WebSocket URL (dynamic)
- * @returns Full WebSocket URL from port manager or fallback
- */
-export const getWebSocketUrl = async (): Promise<string> => {
-  try {
-    return await configService.getWebSocketUrl();
-  } catch (error) {
-    console.warn('Using fallback WebSocket URL:', WS_BASE_URL);
-  return WS_BASE_URL;
-  }
-};
-
-/**
- * Get the API base URL (dynamic)
- * @returns API base URL from port manager or fallback
+ * Get API base URL from orchestrator
  */
 export const getApiBaseUrl = async (): Promise<string> => {
   try {
-    return await configService.getApiBaseUrl();
+    const config = await configService.getConfig();
+    return config.apiBaseUrl;
   } catch (error) {
-    console.warn('Using fallback API URL:', API_BASE_URL);
-    return API_BASE_URL;
+    console.error('Failed to get API URL from orchestrator:', error);
+    throw new Error('Cannot connect to NestGate orchestrator. Please ensure the orchestrator is running.');
+  }
+};
+
+/**
+ * Get WebSocket URL from orchestrator
+ */
+export const getWebSocketUrl = async (): Promise<string> => {
+  try {
+    const config = await configService.getConfig();
+    return config.websocketUrl;
+  } catch (error) {
+    console.error('Failed to get WebSocket URL from orchestrator:', error);
+    // Return a placeholder that will fail gracefully
+    return 'ws://localhost:3000/';
+  }
+};
+
+/**
+ * Get orchestrator URL
+ */
+export const getOrchestratorUrl = async (): Promise<string> => {
+  try {
+    const config = await configService.getConfig();
+    return config.orchestratorUrl;
+  } catch (error) {
+    console.error('Failed to get orchestrator URL:', error);
+    throw new Error('Orchestrator not accessible');
   }
 };
 
@@ -218,25 +118,82 @@ export const initializeConfig = async (): Promise<void> => {
     APP_CONFIG.API_URI = dynamicConfig.apiBaseUrl;
     APP_CONFIG.API_BASE_URL = dynamicConfig.apiBaseUrl;
     APP_CONFIG.WS_BASE_URL = dynamicConfig.websocketUrl;
-    APP_CONFIG.PORT_MANAGER_URL = dynamicConfig.portManagerUrl;
+    APP_CONFIG.ORCHESTRATOR_URL = dynamicConfig.orchestratorUrl;
+    
+    // Update exported constants for backward compatibility
+    API_BASE_URL = dynamicConfig.apiBaseUrl;
+    WS_BASE_URL = dynamicConfig.websocketUrl;
     
     console.log('✅ Dynamic configuration initialized:', {
       apiBaseUrl: APP_CONFIG.API_URI,
       websocketUrl: APP_CONFIG.WS_BASE_URL,
-      portManagerUrl: APP_CONFIG.PORT_MANAGER_URL
+      orchestratorUrl: APP_CONFIG.ORCHESTRATOR_URL
     });
   } catch (error) {
-    console.error('❌ Dynamic configuration failed - Port manager required:', error);
-    throw new Error('NestGate requires the port manager to be running. Please start the port manager first.');
+    console.error('❌ Dynamic configuration failed - Orchestrator required:', error);
+    throw new Error('NestGate requires the orchestrator to be running. Please start the orchestrator first.');
   }
 };
 
-// Make the ENV object available for TypeScript in browser
-declare global {
-  interface Window {
-    ENV?: Record<string, any>;
+/**
+ * Validate configuration
+ */
+export const validateConfig = (): boolean => {
+  const required = [
+    'API_URI',
+    'API_BASE_URL', 
+    'WS_BASE_URL',
+    'ORCHESTRATOR_URL'
+  ];
+  
+  for (const key of required) {
+    if (!APP_CONFIG[key as keyof AppConfig]) {
+      console.error(`Missing required configuration: ${key}`);
+      return false;
+    }
   }
-}
+  
+  return true;
+};
 
-// Export the unified configuration - default export
+/**
+ * Get service information from orchestrator
+ */
+export const getServiceInfo = async (serviceId: string) => {
+  try {
+    return await configService.getServiceEndpoint(serviceId);
+  } catch (error) {
+    console.error(`Failed to get service info for ${serviceId}:`, error);
+    return null;
+  }
+};
+
+/**
+ * Get all services from orchestrator
+ */
+export const getAllServices = async () => {
+  try {
+    const config = await configService.getConfig();
+    return config.services;
+  } catch (error) {
+    console.error('Failed to get services from orchestrator:', error);
+    return {};
+  }
+};
+
+/**
+ * Refresh configuration from orchestrator
+ */
+export const refreshConfig = async (): Promise<void> => {
+  try {
+    console.log('🔄 Refreshing configuration from orchestrator...');
+    configService.clearCache();
+    await initializeConfig();
+    console.log('✅ Configuration refreshed successfully');
+  } catch (error) {
+    console.error('❌ Failed to refresh configuration:', error);
+    throw error;
+  }
+};
+
 export default APP_CONFIG; 

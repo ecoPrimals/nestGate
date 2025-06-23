@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
-use std::time::{Duration, Instant, SystemTime};
+use std::time::{Duration, SystemTime};
 use serde::{Deserialize, Serialize};
 use tokio::sync::broadcast;
 

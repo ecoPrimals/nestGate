@@ -2,7 +2,7 @@ use std::time::Duration;
 use tokio::time::timeout;
 use nestgate_core::Result;
 use nestgate_zfs::{ZfsPoolManager, ZfsConfig};
-use nestgate_orchestrator::{Orchestrator, OrchestratorConfig, FederationMode};
+use nestgate_orchestrator::{Orchestrator, OrchestratorConfig, NetworkConfig, EnvironmentConfig};
 use nestgate_mcp::{EnhancedMcpService, McpConfig};
 
 /// Integration test suite for NestGate system components
@@ -46,13 +46,16 @@ mod integration_tests {
         
         // Create orchestrator configuration
         let config = OrchestratorConfig {
-            bind_address: "127.0.0.1:8080".to_string(),
-            federation_mode: FederationMode::Standalone,
-            health_check_interval: Duration::from_secs(30),
-            local_services: vec![
-                "nestgate-zfs".to_string(),
-                "nestgate-core".to_string(),
-            ],
+            network: NetworkConfig {
+                bind_address: "127.0.0.1:8080".to_string(),
+                port_range: (8080, 8090),
+                allow_external_access: false,
+            },
+            environment: EnvironmentConfig {
+                mode: "test".to_string(),
+                debug: true,
+            },
+            ..Default::default()
         };
         
         // Initialize orchestrator
@@ -126,10 +129,16 @@ mod integration_tests {
         
         // 2. Initialize Orchestrator
         let orchestrator_config = OrchestratorConfig {
-            bind_address: "127.0.0.1:8082".to_string(),
-            federation_mode: FederationMode::Standalone,
-            health_check_interval: Duration::from_secs(60),
-            local_services: vec!["nestgate-zfs".to_string()],
+            network: NetworkConfig {
+                bind_address: "127.0.0.1:8082".to_string(),
+                port_range: (8082, 8092),
+                allow_external_access: false,
+            },
+            environment: EnvironmentConfig {
+                mode: "test".to_string(),
+                debug: true,
+            },
+            ..Default::default()
         };
         let orchestrator = Orchestrator::new(orchestrator_config).await?;
         

@@ -51,7 +51,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import PoolCreationWizard from './PoolCreationWizard';
 import ZFSPoolMonitor from '../monitoring/ZFSPoolMonitor';
 import { ZfsPoolService, ZfsPool } from '../../services/zfs-pool.service';
-import { formatBytes, formatPercent } from '../../utils/format.utils';
+import { formatBytes } from '../../utils/format.utils';
 
 interface PoolAction {
   id: string;
@@ -203,30 +203,21 @@ const PoolManagementDashboard: React.FC<PoolManagementDashboardProps> = ({ onPoo
   };
 
   const getPoolStatusColor = (status: string) => {
-    switch (status.toUpperCase()) {
-      case 'ONLINE':
-        return 'success';
-      case 'DEGRADED':
-        return 'warning';
-      case 'FAULTED':
-      case 'OFFLINE':
-        return 'error';
-      default:
-        return 'default';
+    switch (status) {
+      case 'ONLINE': return 'success';
+      case 'DEGRADED': return 'warning';
+      case 'FAULTED': return 'error';
+      case 'OFFLINE': return 'default';
+      default: return 'default';
     }
   };
 
   const getPoolStatusIcon = (status: string) => {
-    switch (status.toUpperCase()) {
-      case 'ONLINE':
-        return <CheckCircleIcon color="success" />;
-      case 'DEGRADED':
-        return <WarningIcon color="warning" />;
-      case 'FAULTED':
-      case 'OFFLINE':
-        return <ErrorIcon color="error" />;
-      default:
-        return <StorageIcon />;
+    switch (status) {
+      case 'ONLINE': return <CheckCircleIcon color="success" />;
+      case 'DEGRADED': return <WarningIcon color="warning" />;
+      case 'FAULTED': return <ErrorIcon color="error" />;
+      default: return <WarningIcon />;
     }
   };
 
@@ -239,10 +230,10 @@ const PoolManagementDashboard: React.FC<PoolManagementDashboardProps> = ({ onPoo
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box>
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" component="h1">
+        <Typography variant="h5" component="h2">
           ZFS Pool Management
         </Typography>
         <Box display="flex" gap={1}>
@@ -273,13 +264,13 @@ const PoolManagementDashboard: React.FC<PoolManagementDashboardProps> = ({ onPoo
 
       {/* Pools Overview Cards */}
       {!isLoading && pools.length > 0 && (
-        <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Box display="flex" flexWrap="wrap" sx={{ mb: 4 }}>
           {pools.map((pool) => {
             const usagePercent = (pool.allocated / pool.size) * 100;
             const scrubStatus = scrubStatuses.get(pool.name);
             
             return (
-              <Grid item xs={12} md={6} lg={4} key={pool.name}>
+              <Box>
                 <Card 
                   sx={{ cursor: 'pointer' }}
                   onClick={() => onPoolSelect?.(pool.name)}
@@ -320,7 +311,7 @@ const PoolManagementDashboard: React.FC<PoolManagementDashboardProps> = ({ onPoo
                         sx={{ height: 8, borderRadius: 1 }}
                       />
                       <Typography variant="caption" color="text.secondary">
-                        {formatPercent(usagePercent)} used
+                        {usagePercent.toFixed(1)}% used
                       </Typography>
                     </Box>
 
@@ -352,10 +343,10 @@ const PoolManagementDashboard: React.FC<PoolManagementDashboardProps> = ({ onPoo
                     </Box>
                   </CardContent>
                 </Card>
-              </Grid>
+              </Box>
             );
           })}
-        </Grid>
+        </Box>
       )}
 
       {/* Detailed Pool Table */}
@@ -457,6 +448,16 @@ const PoolManagementDashboard: React.FC<PoolManagementDashboardProps> = ({ onPoo
         </Box>
       )}
 
+      {/* Pool Creation Wizard */}
+      <PoolCreationWizard
+        open={createWizardOpen}
+        onClose={() => setCreateWizardOpen(false)}
+        onPoolCreated={(poolName) => {
+          console.log('Pool created:', poolName);
+          refetch(); // Refresh pools list
+        }}
+      />
+
       {/* Action Menu */}
       <Menu
         anchorEl={actionMenuAnchor}
@@ -500,16 +501,6 @@ const PoolManagementDashboard: React.FC<PoolManagementDashboardProps> = ({ onPoo
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Pool Creation Wizard */}
-      <PoolCreationWizard
-        open={createWizardOpen}
-        onClose={() => setCreateWizardOpen(false)}
-        onPoolCreated={(poolName) => {
-          console.log('Pool created:', poolName);
-          refetch();
-        }}
-      />
     </Box>
   );
 };

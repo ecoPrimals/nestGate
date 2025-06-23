@@ -27,8 +27,7 @@ import {
   MenuItem,
   Tooltip,
   Alert,
-  TreeView,
-  TreeItem,
+
   Menu,
   Divider,
   Grid,
@@ -36,6 +35,8 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
+import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
+import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import {
   Add as AddIcon,
   Refresh as RefreshIcon,
@@ -499,24 +500,24 @@ const DatasetManager: React.FC<DatasetManagerProps> = ({
             subheader={`Type: ${selectedDataset.type} • Tier: ${selectedDataset.properties.tier}`}
           />
           <CardContent>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
+            <Box display="flex" flexWrap="wrap">
+              <Box>
                 <Typography variant="subtitle2" gutterBottom>Storage Usage</Typography>
                 <Typography variant="body2">
                   <strong>Used:</strong> {formatBytes(selectedDataset.properties.used)}<br/>
                   <strong>Available:</strong> {formatBytes(selectedDataset.properties.available)}<br/>
                   <strong>Referenced:</strong> {formatBytes(selectedDataset.properties.referenced)}
                 </Typography>
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <Typography variant="subtitle2" gutterBottom>Properties</Typography>
                 <Typography variant="body2">
                   <strong>Compression:</strong> {selectedDataset.properties.compression}<br/>
                   <strong>Record Size:</strong> {selectedDataset.properties.recordsize}<br/>
                   <strong>Mountpoint:</strong> {selectedDataset.mountpoint}
                 </Typography>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           </CardContent>
         </Card>
       )}

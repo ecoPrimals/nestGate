@@ -6,6 +6,10 @@
 use std::sync::Arc;
 use std::collections::HashMap;
 use tokio::sync::Mutex;
+use std::time::{Duration, SystemTime};
+
+use serde::{Deserialize, Serialize};
+use tokio::time::sleep;
 
 // Model type enumeration
 #[derive(Debug, Clone, PartialEq)]
@@ -41,15 +45,28 @@ pub enum DeploymentStatus {
 }
 
 // Model configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelConfig {
+    /// Unique identifier for the model
     pub id: String,
+    /// Display name for the model
     pub name: String,
-    pub model_type: ModelType,
-    pub format: ModelFormat,
+    /// File path to the model
     pub path: String,
-    pub version: String,
-    pub optimization_target: OptimizationTarget,
+    /// Model format (ONNX, PyTorch, etc.)
+    pub format: ModelFormat,
+    /// Target device for inference
+    pub device: DeviceType,
+    /// Model input dimensions
+    pub input_shape: Vec<usize>,
+    /// Model output dimensions
+    pub output_shape: Vec<usize>,
+    /// Expected inference latency in milliseconds
+    pub expected_latency_ms: u64,
+    /// Model accuracy metrics
+    pub accuracy: f64,
+    /// Memory requirements in bytes
+    pub memory_requirements: usize,
 }
 
 // Model deployment information
@@ -187,6 +204,12 @@ impl MockModelRegistry {
             .filter(|m| m.config.model_type == model_type && m.status == DeploymentStatus::Ready)
             .cloned()
             .collect()
+    }
+}
+
+impl Default for MockModelRegistry {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -391,6 +414,93 @@ impl MockModelExecutor {
         }
         
         Ok(output)
+    }
+}
+
+/// Device types for model execution
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum DeviceType {
+    CPU,
+    GPU,
+    NPU,
+    FPGA,
+}
+
+/// Model performance metrics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ModelMetrics {
+    /// Inference latency in milliseconds
+    pub latency_ms: f64,
+    /// Throughput in inferences per second
+    pub throughput_ips: f64,
+    /// Memory usage in bytes
+    pub memory_usage: usize,
+    /// CPU utilization percentage
+    pub cpu_usage: f64,
+    /// GPU utilization percentage (if applicable)
+    pub gpu_usage: Option<f64>,
+    /// Model accuracy on test data
+    pub accuracy: f64,
+    /// Number of successful inferences
+    pub successful_inferences: u64,
+    /// Number of failed inferences
+    pub failed_inferences: u64,
+    /// Last updated timestamp
+    pub last_updated: SystemTime,
+}
+
+/// Error types for AI operations
+#[derive(Debug, thiserror::Error)]
+pub enum AiError {
+    #[error("Model not found: {0}")]
+    ModelNotFound(String),
+    #[error("Invalid model format: {0}")]
+    InvalidModelFormat(String),
+    #[error("Device not available: {0:?}")]
+    DeviceNotAvailable(DeviceType),
+    #[error("Inference failed: {0}")]
+    InferenceFailed(String),
+    #[error("Optimization failed: {0}")]
+    OptimizationFailed(String),
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
+}
+
+pub type Result<T> = std::result::Result<T, AiError>;
+
+/// Comprehensive mock AI service
+#[derive(Debug)]
+pub struct MockAiService {
+    registry: MockModelRegistry,
+    optimizer: MockModelOptimizer,
+    inference: MockInferenceService,
+}
+
+impl MockAiService {
+    pub fn new() -> Self {
+        Self {
+            registry: MockModelRegistry::new(),
+            optimizer: MockModelOptimizer::new(),
+            inference: MockInferenceService::new(),
+        }
+    }
+
+    pub fn registry(&self) -> &MockModelRegistry {
+        &self.registry
+    }
+
+    pub fn optimizer(&self) -> &MockModelOptimizer {
+        &self.optimizer
+    }
+
+    pub fn inference(&self) -> &MockInferenceService {
+        &self.inference
+    }
+}
+
+impl Default for MockAiService {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

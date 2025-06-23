@@ -1,24 +1,92 @@
 # NestGate v2 Workspace Configuration
 # Enhanced orchestrator-centric architecture with advanced capabilities
 
-[workspace]
-resolver = "2"
+[package]
+name = "songbird-orchestrator"
+version = "0.1.0"
+edition = "2021"
+description = "Universal service orchestration platform for Rust projects"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/strandgate/songbird-orchestrator"
+documentation = "https://docs.rs/songbird-orchestrator"
+keywords = ["orchestrator", "microservices", "service-mesh", "universal"]
+categories = ["web-programming", "development-tools"]
 
-members = [
-    "code/crates/nestgate-core",
-    "code/crates/nestgate-mcp",
-    "code/crates/nestgate-network",
-    "code/crates/nestgate-ui",
-    "code/crates/nestgate-bin",
-    "code/crates/nestgate-orchestrator",
-    "code/crates/nestgate-fsmonitor",
-    "code/crates/nestgate-zfs",
-    "code/crates/nestgate-nas",
-    "code/crates/nestgate-ai-mock",
-    "code/crates/nestgate-ai-models",
-    "code/crates/nestgate-middleware",
-    "code/crates/nestgate-api"
-]
+# Empty workspace to prevent conflicts
+[workspace]
+
+[dependencies]
+# Async runtime and utilities
+tokio = { version = "1.0", features = ["full"] }
+tokio-tungstenite = "0.21"
+async-trait = "0.1"
+futures-util = "0.3"
+
+# Web framework and HTTP
+axum = { version = "0.7", features = ["ws", "macros"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+hyper = "1.0"
+
+# Serialization and data structures
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+toml = "0.8"
+dashmap = "5.5"
+uuid = { version = "1.0", features = ["v4", "serde"] }
+
+# Logging and tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Configuration and error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Time and date handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# Concurrency and synchronization
+parking_lot = "0.12"
+
+# Core dependencies
+rand = "0.8"
+
+# Optional dependencies for features
+consul = { version = "0.4", optional = true }
+kube = { version = "0.87.2", features = ["runtime", "derive", "client"], default-features = false, optional = true }
+tonic = { version = "0.10", optional = true }
+
+[dev-dependencies]
+tokio-test = "0.4"
+tracing-test = "0.2"
+
+# Testing framework
+mockall = "0.12"
+proptest = "1.0"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+# Additional test utilities  
+futures = "0.3"
+serde_json = "1.0"
+tempfile = "3.0"
+
+# Load testing
+http = "1.0"
+hyper = { version = "1.0", features = ["full"] }
+
+# Kubernetes dev dependency (required for library crates)
+k8s-openapi = { version = "0.20.0", features = ["v1_27"] }
+
+[features]
+default = []
+testing = []
+
+# Optional feature backends
+consul = ["dep:consul"]
+kubernetes = ["dep:kube"]
+grpc = ["dep:tonic"]
 
 # Dependency Audit - Enhanced with proven patterns
 # This section documents our dependency management strategy and known issues
@@ -98,8 +166,6 @@ argon2 = "0.5"
 jwt = "0.16"
 
 # Kubernetes Integration - Enhanced capabilities
-k8s-openapi = { version = "0.20.0", features = ["v1_27"] }
-kube = { version = "0.87.2", features = ["runtime", "derive", "client"], default-features = false }
 schemars = { version = "0.8.22", features = ["derive"] }
 
 # Testing - Enhanced with proven patterns
