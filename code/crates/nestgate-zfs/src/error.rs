@@ -63,6 +63,22 @@ pub enum ZfsError {
     /// Generic internal errors
     #[error("Internal error: {0}")]
     Internal(String),
+    
+    /// Command execution errors
+    #[error("Command execution failed: {0}")]
+    CommandExecution(String),
+    
+    /// Feature not yet implemented
+    #[error("Feature not implemented: {0}")]
+    Unimplemented(String),
+    
+    /// Invalid schedule configuration
+    #[error("Invalid schedule: {0}")]
+    InvalidSchedule(String),
+    
+    /// Parse error
+    #[error("Parse error: {0}")]
+    ParseError(String),
 }
 
 /// Pool-specific errors
@@ -133,17 +149,32 @@ pub enum SnapshotError {
     #[error("Snapshot already exists: {snapshot_name}")]
     AlreadyExists { snapshot_name: String },
     
-    #[error("Snapshot creation failed: {reason}")]
-    CreationFailed { reason: String },
+    #[error("Snapshot creation failed for {dataset}@{snapshot}: {reason}")]
+    CreationFailed { dataset: String, snapshot: String, reason: String },
     
-    #[error("Snapshot deletion failed: {reason}")]
-    DeletionFailed { reason: String },
+    #[error("Snapshot deletion failed for {dataset}@{snapshot}: {reason}")]
+    DeletionFailed { dataset: String, snapshot: String, reason: String },
     
-    #[error("Snapshot rollback failed: {reason}")]
-    RollbackFailed { reason: String },
+    #[error("Snapshot rollback failed for {dataset}@{snapshot}: {reason}")]
+    RollbackFailed { dataset: String, snapshot: String, reason: String },
     
-    #[error("Snapshot clone failed: {reason}")]
-    CloneFailed { reason: String },
+    #[error("Snapshot clone failed from {snapshot} to {clone_name}: {reason}")]
+    CloneFailed { snapshot: String, clone_name: String, reason: String },
+    
+    #[error("Snapshot send failed from {snapshot} to {destination}: {reason}")]
+    SendFailed { snapshot: String, destination: String, reason: String },
+    
+    #[error("Snapshot receive failed to {destination}: {reason}")]
+    ReceiveFailed { destination: String, reason: String },
+    
+    #[error("Invalid parameters for {operation}: {reason}")]
+    InvalidParameters { operation: String, reason: String },
+    
+    #[error("Policy execution failed: {reason}")]
+    PolicyExecutionFailed { reason: String },
+    
+    #[error("Schedule parsing failed: {reason}")]
+    ScheduleParsingFailed { reason: String },
 }
 
 /// Migration-specific errors

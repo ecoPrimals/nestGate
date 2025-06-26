@@ -646,20 +646,16 @@ pub mod string {
     }
 
     /// Convert string to snake_case
-    pub fn to_snake_case(s: &str) -> String {
+    pub fn to_snake_case(input: &str) -> String {
         let mut result = String::new();
-        let mut prev_was_upper = false;
+        let mut chars = input.chars().peekable();
         
-        for (i, c) in s.chars().enumerate() {
-            if c.is_uppercase() {
-                if i > 0 && !prev_was_upper {
-                    result.push('_');
-                }
-                result.push(c.to_lowercase().next().unwrap());
-                prev_was_upper = true;
-            } else {
-                result.push(c);
-                prev_was_upper = false;
+        while let Some(c) = chars.next() {
+            if c.is_uppercase() && !result.is_empty() {
+                result.push('_');
+            }
+            if let Some(lowercase_char) = c.to_lowercase().next() {
+                result.push(lowercase_char);
             }
         }
         
@@ -667,20 +663,22 @@ pub mod string {
     }
 
     /// Convert string to camelCase
-    pub fn to_camel_case(s: &str) -> String {
+    pub fn to_camel_case(input: &str) -> String {
         let mut result = String::new();
         let mut capitalize_next = false;
         
-        for (i, c) in s.chars().enumerate() {
-            if c == '_' || c == '-' || c == ' ' {
+        for c in input.chars() {
+            if c == '_' || c == '-' {
                 capitalize_next = true;
-            } else if i == 0 {
-                result.push(c.to_lowercase().next().unwrap());
             } else if capitalize_next {
-                result.push(c.to_uppercase().next().unwrap());
+                if let Some(uppercase_char) = c.to_uppercase().next() {
+                    result.push(uppercase_char);
+                }
                 capitalize_next = false;
             } else {
-                result.push(c);
+                if let Some(lowercase_char) = c.to_lowercase().next() {
+                    result.push(lowercase_char);
+                }
             }
         }
         
@@ -806,29 +804,31 @@ mod tests {
     use std::io::Write;
     use tempfile::tempdir;
 
-    #[test]
-    fn test_fs_operations() {
-        let dir = tempdir().unwrap();
+    #[tokio::test]
+    async fn test_filesystem_operations() {
+        let dir = tempdir().expect("Failed to create temporary directory for filesystem test");
         let file_path = dir.path().join("test.txt");
+        let dir_path = dir.path().join("subdir");
 
-        // Test path_exists
-        assert!(!fs::exists(&file_path));
+        // Test file creation and size
+        stdfs::File::create(&file_path)
+            .expect("Failed to create test file")
+            .write_all(b"test")
+            .expect("Failed to write test data to file");
+        
+        assert_eq!(fs::get_file_size(&file_path).expect("Failed to get file size"), 4);
 
-        // Test file operations
-        stdfs::File::create(&file_path).unwrap().write_all(b"test").unwrap();
-        assert!(fs::exists(&file_path));
-        assert_eq!(fs::get_file_size(&file_path).unwrap(), 4);
+        // Test directory creation
+        fs::ensure_dir(&dir_path).expect("Failed to create test directory");
+        assert!(dir_path.exists());
 
-        // Test directory operations
-        let dir_path = dir.path().join("test_dir");
-        fs::ensure_dir(&dir_path).unwrap();
-        assert!(fs::exists(&dir_path));
+        // Test file removal
+        fs::remove_path(&file_path).expect("Failed to remove test file");
+        assert!(!file_path.exists());
 
-        // Test removal
-        fs::remove_path(&file_path).unwrap();
-        assert!(!fs::exists(&file_path));
-        fs::remove_path(&dir_path).unwrap();
-        assert!(!fs::exists(&dir_path));
+        // Test directory removal
+        fs::remove_path(&dir_path).expect("Failed to remove test directory");
+        assert!(!dir_path.exists());
     }
 
     #[test]

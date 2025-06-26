@@ -12,6 +12,8 @@ serde = { workspace = true }
 tracing = { workspace = true }
 thiserror = { workspace = true }
 anyhow = { workspace = true }
+notify = "6.1"
+futures = "0.3"
 
 [dev-dependencies]
 tokio-test = { workspace = true } 

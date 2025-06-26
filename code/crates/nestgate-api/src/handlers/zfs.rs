@@ -14,13 +14,13 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use tracing::{debug, error, info, warn};
+use uuid::Uuid;
 
 use nestgate_core::StorageTier;
 use nestgate_zfs::{
-    ZfsManager,
-    manager::EnhancedServiceStatus,
-    pool::PoolInfo,
-    dataset::DatasetInfo,
+    manager::{ZfsManager, EnhancedServiceStatus},
+    pool::{PoolInfo},
+    dataset::{DatasetInfo},
     snapshot::SnapshotInfo,
 };
 
@@ -193,26 +193,37 @@ pub fn create_zfs_routes() -> Router<ZfsApiState> {
 /// Get ZFS system health
 pub async fn get_zfs_health(
     State(state): State<ZfsApiState>,
-) -> Result<Json<EnhancedServiceStatus>, StatusCode> {
+) -> Result<Json<ApiResponse<EnhancedServiceStatus>>, StatusCode> {
     debug!("Getting ZFS health status");
     
     match state.zfs_manager.get_zfs_health().await {
         Ok(health) => {
             info!("ZFS health check successful");
-            Ok(Json(health))
+            Ok(Json(ApiResponse::success(health)))
         }
         Err(e) => {
-            error!("Failed to get ZFS health: {}", e);
+            error!("ZFS health check failed: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
 }
 
-/// Get ZFS system status (alias for health)
+/// Get ZFS system status
 pub async fn get_zfs_status(
     State(state): State<ZfsApiState>,
-) -> Result<Json<EnhancedServiceStatus>, StatusCode> {
-    get_zfs_health(State(state)).await
+) -> Result<Json<ApiResponse<EnhancedServiceStatus>>, StatusCode> {
+    debug!("Getting ZFS system status");
+    
+    match state.zfs_manager.get_service_status().await {
+        Ok(status) => {
+            info!("ZFS status retrieval successful");
+            Ok(Json(ApiResponse::success(status)))
+        }
+        Err(e) => {
+            error!("ZFS status retrieval failed: {}", e);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
 }
 
 // Pool Management Endpoints
@@ -220,13 +231,19 @@ pub async fn get_zfs_status(
 /// List all ZFS pools
 pub async fn list_pools(
     State(state): State<ZfsApiState>,
-) -> Result<Json<Vec<PoolInfo>>, StatusCode> {
-    debug!("Listing ZFS pools");
+    Query(query): Query<ListQuery>,
+) -> Result<Json<ApiResponse<Vec<PoolInfo>>>, StatusCode> {
+    debug!("Listing ZFS pools with query: {:?}", query);
     
     match state.zfs_manager.pool_manager.list_pools().await {
-        Ok(pools) => {
-            info!("Successfully listed {} pools", pools.len());
-            Ok(Json(pools))
+        Ok(mut pools) => {
+            // Apply query filters
+            if let Some(limit) = query.limit {
+                pools.truncate(limit);
+            }
+            
+            info!("Listed {} ZFS pools", pools.len());
+            Ok(Json(ApiResponse::success(pools)))
         }
         Err(e) => {
             error!("Failed to list pools: {}", e);
@@ -239,13 +256,13 @@ pub async fn list_pools(
 pub async fn create_pool(
     State(state): State<ZfsApiState>,
     Json(request): Json<CreatePoolRequest>,
-) -> Result<Json<PoolInfo>, StatusCode> {
-    info!("Creating ZFS pool: {} with devices: {:?}", request.name, request.devices);
+) -> Result<Json<ApiResponse<PoolInfo>>, StatusCode> {
+    debug!("Creating ZFS pool: {:?}", request);
     
     match state.zfs_manager.pool_manager.create_pool(&request.name, &request.devices).await {
         Ok(pool_info) => {
-            info!("Successfully created pool: {}", request.name);
-            Ok(Json(pool_info))
+            info!("Successfully created ZFS pool: {}", request.name);
+            Ok(Json(ApiResponse::success(pool_info)))
         }
         Err(e) => {
             error!("Failed to create pool {}: {}", request.name, e);
@@ -258,13 +275,13 @@ pub async fn create_pool(
 pub async fn get_pool_info(
     State(state): State<ZfsApiState>,
     Path(name): Path<String>,
-) -> Result<Json<PoolInfo>, StatusCode> {
-    debug!("Getting pool info for: {}", name);
+) -> Result<Json<ApiResponse<PoolInfo>>, StatusCode> {
+    debug!("Getting info for pool: {}", name);
     
     match state.zfs_manager.pool_manager.get_pool_info(&name).await {
         Ok(pool_info) => {
-            info!("Successfully retrieved pool info for: {}", name);
-            Ok(Json(pool_info))
+            info!("Retrieved info for pool: {}", name);
+            Ok(Json(ApiResponse::success(pool_info)))
         }
         Err(e) => {
             error!("Failed to get pool info for {}: {}", name, e);
@@ -277,13 +294,13 @@ pub async fn get_pool_info(
 pub async fn destroy_pool(
     State(state): State<ZfsApiState>,
     Path(name): Path<String>,
-) -> Result<StatusCode, StatusCode> {
-    warn!("Destroying ZFS pool: {}", name);
+) -> Result<Json<ApiResponse<()>>, StatusCode> {
+    debug!("Destroying pool: {}", name);
     
-    match state.zfs_manager.destroy_pool(&name).await {
-        Ok(_) => {
+    match state.zfs_manager.pool_manager.destroy_pool(&name).await {
+        Ok(()) => {
             info!("Successfully destroyed pool: {}", name);
-            Ok(StatusCode::NO_CONTENT)
+            Ok(Json(ApiResponse::success(())))
         }
         Err(e) => {
             error!("Failed to destroy pool {}: {}", name, e);
@@ -335,13 +352,24 @@ pub async fn scrub_pool(
 /// List all datasets
 pub async fn list_datasets(
     State(state): State<ZfsApiState>,
-) -> Result<Json<Vec<DatasetInfo>>, StatusCode> {
-    debug!("Listing all datasets");
+    Query(query): Query<ListQuery>,
+) -> Result<Json<ApiResponse<Vec<DatasetInfo>>>, StatusCode> {
+    debug!("Listing datasets with query: {:?}", query);
     
     match state.zfs_manager.dataset_manager.list_datasets().await {
-        Ok(datasets) => {
-            info!("Successfully listed {} datasets", datasets.len());
-            Ok(Json(datasets))
+        Ok(mut datasets) => {
+            // Apply tier filter if specified
+            if let Some(tier) = query.tier {
+                datasets.retain(|d| d.tier == tier);
+            }
+            
+            // Apply limit
+            if let Some(limit) = query.limit {
+                datasets.truncate(limit);
+            }
+            
+            info!("Listed {} datasets", datasets.len());
+            Ok(Json(ApiResponse::success(datasets)))
         }
         Err(e) => {
             error!("Failed to list datasets: {}", e);
@@ -354,17 +382,20 @@ pub async fn list_datasets(
 pub async fn create_dataset(
     State(state): State<ZfsApiState>,
     Json(request): Json<CreateDatasetRequest>,
-) -> Result<Json<DatasetInfo>, StatusCode> {
-    info!("Creating dataset: {} under parent: {} with tier: {:?}", 
-          request.name, request.parent, request.tier);
+) -> Result<Json<ApiResponse<DatasetInfo>>, StatusCode> {
+    debug!("Creating dataset: {:?}", request);
     
-    match state.zfs_manager.dataset_manager.create_dataset(&request.name, &request.parent, request.tier).await {
+    match state.zfs_manager.dataset_manager.create_dataset(
+        &request.name,
+        &request.parent,
+        request.tier
+    ).await {
         Ok(dataset_info) => {
-            info!("Successfully created dataset: {}", request.name);
-            Ok(Json(dataset_info))
+            info!("Successfully created dataset: {}/{}", request.parent, request.name);
+            Ok(Json(ApiResponse::success(dataset_info)))
         }
         Err(e) => {
-            error!("Failed to create dataset {}: {}", request.name, e);
+            error!("Failed to create dataset {}/{}: {}", request.parent, request.name, e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -374,13 +405,13 @@ pub async fn create_dataset(
 pub async fn get_dataset_info(
     State(state): State<ZfsApiState>,
     Path(name): Path<String>,
-) -> Result<Json<DatasetInfo>, StatusCode> {
-    debug!("Getting dataset info for: {}", name);
+) -> Result<Json<ApiResponse<DatasetInfo>>, StatusCode> {
+    debug!("Getting dataset info: {}", name);
     
-    match state.zfs_manager.dataset_manager.get_dataset_info(&name).await {
+    match state.zfs_manager.dataset_manager.get_dataset_info_with_fallback(&name).await {
         Ok(dataset_info) => {
-            info!("Successfully retrieved dataset info for: {}", name);
-            Ok(Json(dataset_info))
+            info!("Retrieved dataset info: {}", name);
+            Ok(Json(ApiResponse::success(dataset_info)))
         }
         Err(e) => {
             error!("Failed to get dataset info for {}: {}", name, e);
@@ -393,13 +424,13 @@ pub async fn get_dataset_info(
 pub async fn destroy_dataset(
     State(state): State<ZfsApiState>,
     Path(name): Path<String>,
-) -> Result<StatusCode, StatusCode> {
-    warn!("Destroying dataset: {}", name);
+) -> Result<Json<ApiResponse<()>>, StatusCode> {
+    debug!("Destroying dataset: {}", name);
     
-    match state.zfs_manager.destroy_dataset(&name).await {
-        Ok(_) => {
+    match state.zfs_manager.dataset_manager.destroy_dataset(&name).await {
+        Ok(()) => {
             info!("Successfully destroyed dataset: {}", name);
-            Ok(StatusCode::NO_CONTENT)
+            Ok(Json(ApiResponse::success(())))
         }
         Err(e) => {
             error!("Failed to destroy dataset {}: {}", name, e);
@@ -412,13 +443,13 @@ pub async fn destroy_dataset(
 pub async fn get_dataset_properties(
     State(state): State<ZfsApiState>,
     Path(name): Path<String>,
-) -> Result<Json<HashMap<String, String>>, StatusCode> {
+) -> Result<Json<ApiResponse<HashMap<String, String>>>, StatusCode> {
     debug!("Getting properties for dataset: {}", name);
     
     match state.zfs_manager.dataset_manager.get_dataset_properties(&name).await {
         Ok(properties) => {
-            info!("Successfully retrieved properties for dataset: {}", name);
-            Ok(Json(properties))
+            info!("Retrieved {} properties for dataset: {}", properties.len(), name);
+            Ok(Json(ApiResponse::success(properties)))
         }
         Err(e) => {
             error!("Failed to get properties for dataset {}: {}", name, e);
@@ -432,13 +463,13 @@ pub async fn set_dataset_properties(
     State(state): State<ZfsApiState>,
     Path(name): Path<String>,
     Json(properties): Json<HashMap<String, String>>,
-) -> Result<StatusCode, StatusCode> {
-    info!("Setting properties for dataset: {}", name);
+) -> Result<Json<ApiResponse<()>>, StatusCode> {
+    debug!("Setting {} properties for dataset: {}", properties.len(), name);
     
     match state.zfs_manager.dataset_manager.set_dataset_properties(&name, &properties).await {
-        Ok(_) => {
+        Ok(()) => {
             info!("Successfully set properties for dataset: {}", name);
-            Ok(StatusCode::NO_CONTENT)
+            Ok(Json(ApiResponse::success(())))
         }
         Err(e) => {
             error!("Failed to set properties for dataset {}: {}", name, e);
@@ -453,13 +484,13 @@ pub async fn set_dataset_properties(
 pub async fn list_snapshots(
     State(state): State<ZfsApiState>,
     Path(name): Path<String>,
-) -> Result<Json<Vec<SnapshotInfo>>, StatusCode> {
+) -> Result<Json<ApiResponse<Vec<SnapshotInfo>>>, StatusCode> {
     debug!("Listing snapshots for dataset: {}", name);
     
     match state.zfs_manager.list_snapshots(&name).await {
         Ok(snapshots) => {
-            info!("Successfully listed {} snapshots for dataset: {}", snapshots.len(), name);
-            Ok(Json(snapshots))
+            info!("Listed {} snapshots for dataset: {}", snapshots.len(), name);
+            Ok(Json(ApiResponse::success(snapshots)))
         }
         Err(e) => {
             error!("Failed to list snapshots for dataset {}: {}", name, e);
@@ -468,20 +499,23 @@ pub async fn list_snapshots(
     }
 }
 
-/// Create snapshot request
+/// Create a snapshot
 pub async fn create_snapshot(
     State(state): State<ZfsApiState>,
     Path(dataset): Path<String>,
     Json(request): Json<CreateSnapshotRequest>,
-) -> Result<Json<SnapshotOperationResponse>, StatusCode> {
-    info!("Creating snapshot: {}@{}", dataset, request.name);
+) -> Result<Json<ApiResponse<SnapshotOperationResponse>>, StatusCode> {
+    debug!("Creating snapshot {} for dataset: {}", request.name, dataset);
     
     let recursive = request.recursive.unwrap_or(false);
     
     match state.zfs_manager.snapshot_manager.create_snapshot(&dataset, &request.name, recursive).await {
         Ok(operation_id) => {
-            info!("Successfully queued snapshot creation: {}@{}", dataset, request.name);
-            Ok(Json(SnapshotOperationResponse { operation_id }))
+            info!("Successfully created snapshot: {}@{}", dataset, request.name);
+            let response = SnapshotOperationResponse {
+                operation_id,
+            };
+            Ok(Json(ApiResponse::success(response)))
         }
         Err(e) => {
             error!("Failed to create snapshot {}@{}: {}", dataset, request.name, e);
@@ -494,13 +528,16 @@ pub async fn create_snapshot(
 pub async fn delete_snapshot(
     State(state): State<ZfsApiState>,
     Path((dataset, snapshot)): Path<(String, String)>,
-) -> Result<Json<SnapshotOperationResponse>, StatusCode> {
-    warn!("Deleting snapshot: {}@{}", dataset, snapshot);
+) -> Result<Json<ApiResponse<SnapshotOperationResponse>>, StatusCode> {
+    debug!("Deleting snapshot {} from dataset: {}", snapshot, dataset);
     
     match state.zfs_manager.snapshot_manager.delete_snapshot(&dataset, &snapshot).await {
         Ok(operation_id) => {
-            info!("Successfully queued snapshot deletion: {}@{}", dataset, snapshot);
-            Ok(Json(SnapshotOperationResponse { operation_id }))
+            info!("Successfully deleted snapshot: {}@{}", dataset, snapshot);
+            let response = SnapshotOperationResponse {
+                operation_id,
+            };
+            Ok(Json(ApiResponse::success(response)))
         }
         Err(e) => {
             error!("Failed to delete snapshot {}@{}: {}", dataset, snapshot, e);
@@ -521,16 +558,16 @@ pub struct TierPredictionRequest {
 pub async fn get_tier_prediction(
     State(state): State<ZfsApiState>,
     Json(request): Json<TierPredictionRequest>,
-) -> Result<Json<Option<nestgate_zfs::ai_integration::TierPrediction>>, StatusCode> {
+) -> Result<Json<ApiResponse<Option<nestgate_zfs::ai_integration::TierPrediction>>>, StatusCode> {
     debug!("Getting tier prediction for file: {}", request.file_path);
     
     match state.zfs_manager.get_ai_tier_recommendation(&request.file_path).await {
         Ok(prediction) => {
-            info!("Successfully got tier prediction for file: {}", request.file_path);
-            Ok(Json(prediction))
+            info!("Retrieved tier prediction for file: {}", request.file_path);
+            Ok(Json(ApiResponse::success(prediction)))
         }
         Err(e) => {
-            error!("Failed to get tier prediction for file {}: {}", request.file_path, e);
+            error!("Failed to get tier prediction for {}: {}", request.file_path, e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -539,13 +576,13 @@ pub async fn get_tier_prediction(
 /// Get performance analytics
 pub async fn get_performance_analytics(
     State(state): State<ZfsApiState>,
-) -> Result<Json<nestgate_zfs::manager::PerformanceAnalytics>, StatusCode> {
+) -> Result<Json<ApiResponse<nestgate_zfs::manager::PerformanceAnalytics>>, StatusCode> {
     debug!("Getting performance analytics");
     
     match state.zfs_manager.get_performance_analytics().await {
         Ok(analytics) => {
-            info!("Successfully retrieved performance analytics");
-            Ok(Json(analytics))
+            info!("Retrieved performance analytics");
+            Ok(Json(ApiResponse::success(analytics)))
         }
         Err(e) => {
             error!("Failed to get performance analytics: {}", e);
@@ -557,13 +594,13 @@ pub async fn get_performance_analytics(
 /// Trigger optimization
 pub async fn trigger_optimization(
     State(state): State<ZfsApiState>,
-) -> Result<Json<nestgate_zfs::manager::OptimizationResult>, StatusCode> {
-    info!("Triggering ZFS optimization");
+) -> Result<Json<ApiResponse<nestgate_zfs::manager::OptimizationResult>>, StatusCode> {
+    debug!("Triggering optimization");
     
     match state.zfs_manager.trigger_optimization().await {
         Ok(result) => {
-            info!("Successfully triggered optimization");
-            Ok(Json(result))
+            info!("Optimization triggered successfully");
+            Ok(Json(ApiResponse::success(result)))
         }
         Err(e) => {
             error!("Failed to trigger optimization: {}", e);

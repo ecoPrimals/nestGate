@@ -90,7 +90,17 @@ pub enum NestGateError {
     /// MCP error
     #[error("MCP error: {0}")]
     Mcp(String),
+
+    /// Parse error
+    #[error("Parse error: {0}")]
+    Parse(String),
 }
 
 /// Result type alias for NestGate operations
-pub type Result<T> = std::result::Result<T, NestGateError>; 
+pub type Result<T> = std::result::Result<T, NestGateError>;
+
+impl From<std::num::ParseIntError> for NestGateError {
+    fn from(err: std::num::ParseIntError) -> Self {
+        NestGateError::Parse(err.to_string())
+    }
+} 

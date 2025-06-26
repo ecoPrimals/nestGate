@@ -43,9 +43,13 @@ gethostname = "0.4"
 
 # Random number generation
 fastrand = "2.0"
+rand = "0.8"
 
 # HTTP client
 reqwest = { workspace = true, features = ["json"] }
+
+# Cryptography
+sha2 = "0.10"
 
 # Configuration
 config = { workspace = true }
