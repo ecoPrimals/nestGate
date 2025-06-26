@@ -1,0 +1,15 @@
+# Mock configuration for fast testing without real ZFS
+[zfs]
+use_real_zfs = false
+default_pool = "mockpool"
+test_timeout_seconds = 5
+
+[health_monitoring]
+enabled = true
+check_interval_seconds = 1
+
+[metrics]
+enabled = false
+
+[migration]
+background_migration = false

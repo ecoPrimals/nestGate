@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use config::{Config as ConfigBuilder, File, Environment as ConfigEnvironment};
 use std::collections::HashMap;
+use uuid;
 
 // Re-export from existing error module
 use crate::error::{Result, NestGateError};
@@ -559,12 +560,31 @@ pub struct NetworkConfig {
 
 impl Default for NetworkConfig {
     fn default() -> Self {
-        Self {
-            bind_interface: DEFAULT_LOCALHOST.to_string(),
-            port: 0, // Auto-assign
-            ipv6_enabled: false,
-            localhost_only: true, // Secure by default
-            custom_host: None,
+        // Check if we're in Songbird mode or standalone mode
+        let songbird_mode = std::env::var("SONGBIRD_URL").is_ok();
+        
+        if songbird_mode {
+            // Songbird-enhanced mode: use service names
+            Self {
+                bind_interface: std::env::var("SONGBIRD_SERVICE_NAME")
+                    .unwrap_or_else(|_| "nestgate-service".to_string()),
+                port: 0, // Let Songbird allocate
+                ipv6_enabled: false,
+                localhost_only: false, // Songbird handles security
+                custom_host: None,
+            }
+        } else {
+            // Standalone mode: use localhost binding
+            Self {
+                bind_interface: "127.0.0.1".to_string(), // ✅ LOCALHOST FOR STANDALONE
+                port: std::env::var("NESTGATE_PORT")
+                    .unwrap_or_else(|_| "8080".to_string())
+                    .parse()
+                    .unwrap_or(8080),
+                ipv6_enabled: false,
+                localhost_only: true, // ✅ SECURE BY DEFAULT
+                custom_host: None,
+            }
         }
     }
 }
@@ -665,18 +685,45 @@ impl Default for EnvironmentConfig {
 }
 
 impl EnvironmentConfig {
-    /// Get default network config for this environment
+    /// Get default network configuration for this environment
     pub fn default_network_config(&self, service_port: u16) -> NetworkConfig {
-        match (&self.environment, self.allow_external_access) {
-            (RuntimeEnvironment::Development, false) => NetworkConfig::localhost(service_port),
-            (RuntimeEnvironment::Testing, _) => NetworkConfig::localhost(service_port),
-            (RuntimeEnvironment::Production, true) => NetworkConfig::all_interfaces(service_port),
-            (RuntimeEnvironment::Production, false) => NetworkConfig::localhost(service_port),
-            (RuntimeEnvironment::Staging, true) => NetworkConfig::all_interfaces(service_port),
-            (RuntimeEnvironment::Staging, false) => NetworkConfig::localhost(service_port),
-            (RuntimeEnvironment::Development, true) => {
-                // Allow external access in development if explicitly requested
-                NetworkConfig::all_interfaces(service_port)
+        // Check if we're in Songbird mode
+        let songbird_mode = std::env::var("SONGBIRD_URL").is_ok();
+        
+        if songbird_mode {
+            // Songbird-enhanced mode: service-based addressing
+            NetworkConfig {
+                bind_interface: std::env::var("SONGBIRD_SERVICE_NAME")
+                    .unwrap_or_else(|_| format!("nestgate-{}", uuid::Uuid::new_v4().to_string()[..8].to_string())),
+                port: 0, // Always let Songbird allocate
+                ipv6_enabled: false,
+                localhost_only: false, // Songbird handles security
+                custom_host: None,
+            }
+        } else {
+            // Standalone mode: environment-appropriate binding
+            match (&self.environment, self.allow_external_access) {
+                (RuntimeEnvironment::Development, false) => NetworkConfig {
+                    bind_interface: "127.0.0.1".to_string(),
+                    port: service_port,
+                    ipv6_enabled: false,
+                    localhost_only: true,
+                    custom_host: None,
+                },
+                (RuntimeEnvironment::Production, true) => NetworkConfig {
+                    bind_interface: "0.0.0.0".to_string(), // Allow external in production
+                    port: service_port,
+                    ipv6_enabled: false,
+                    localhost_only: false,
+                    custom_host: None,
+                },
+                _ => NetworkConfig {
+                    bind_interface: "127.0.0.1".to_string(), // Default to secure
+                    port: service_port,
+                    ipv6_enabled: false,
+                    localhost_only: true,
+                    custom_host: None,
+                },
             }
         }
     }
@@ -764,6 +811,17 @@ impl Config {
             }
         }
 
+        Ok(())
+    }
+
+    /// Save configuration to a file
+    pub async fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        let serialized = toml::to_string_pretty(self)
+            .map_err(|e| NestGateError::Configuration(format!("Failed to serialize config: {}", e)))?;
+        
+        tokio::fs::write(path, serialized).await
+            .map_err(|e| NestGateError::Configuration(format!("Failed to write config file: {}", e)))?;
+        
         Ok(())
     }
 
@@ -915,8 +973,11 @@ mod tests {
     #[test]
     fn test_config_serialization() {
         let config = Config::default();
-        let serialized = serde_yaml::to_string(&config).unwrap();
-        let deserialized: Config = serde_yaml::from_str(&serialized).unwrap();
+        let serialized = serde_yaml::to_string(&config)
+            .expect("Failed to serialize config - this should never fail with default config");
+        let deserialized: Config = serde_yaml::from_str(&serialized)
+            .expect("Failed to deserialize config - serialization format may be corrupted");
+        
         assert_eq!(config.system.log_level, deserialized.system.log_level);
     }
 
@@ -1020,5 +1081,30 @@ federation:
         
         // Clean up
         std::fs::remove_file(&temp_path).unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_config_file_operations() {
+        let config = Config::default();
+        let temp_file = NamedTempFile::new()
+            .expect("Failed to create temporary file for config test");
+        
+        // Test saving config
+        config.save(temp_file.path()).await
+            .expect("Failed to save config to temporary file");
+
+        // Create a permanent temp path for loading test
+        let temp_path = temp_file.path().with_extension("test.toml");
+        std::fs::copy(temp_file.path(), &temp_path)
+            .expect("Failed to copy temp file for loading test");
+        
+        let loaded_config = Config::load(&temp_path)
+            .expect("Failed to load config from temporary file");
+        
+        assert_eq!(config.system.log_level, loaded_config.system.log_level);
+
+        // Cleanup
+        std::fs::remove_file(&temp_path)
+            .expect("Failed to cleanup temporary config file");
     }
 } 

@@ -230,7 +230,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_model_manager_creation() {
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Failed to create temporary directory for model manager test");
         let manager = ModelManager::new(
             1024 * 1024 * 1024, // 1GB
             7.5, // RTX 2070 compute capability
