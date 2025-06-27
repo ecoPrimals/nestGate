@@ -3,6 +3,7 @@ name = "nestgate-bin"
 version = "2.0.0"
 edition = "2021"
 description = "Main binary for NestGate NAS system - standalone distributed service"
+license = "AGPL-3.0-or-later"
 
 [[bin]]
 name = "nestgate"

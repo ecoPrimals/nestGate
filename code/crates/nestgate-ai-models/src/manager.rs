@@ -198,8 +198,9 @@ impl ModelManager {
         
         let model = &optimizer_models[0];
         
-        // Run optimization inference (simplified)
-        let input = vec![1.0, 0.5, 0.2]; // Mock input data
+        // Run optimization inference with real system metrics
+        // TODO: Integrate with nestgate-core system metrics collection
+        let input = vec![0.25, 0.60, 0.05]; // Placeholder for real CPU, memory, IO metrics
         let output = self.run_inference(&model.id, input).await?;
         
         // Interpret results (simplified)

@@ -81,7 +81,7 @@ impl NasServer {
         // Ensure share root directory exists
         if !self.config.share_root.exists() {
             tokio::fs::create_dir_all(&self.config.share_root).await
-                .map_err(|e| nestgate_core::NestGateError::Io(e))?;
+                .map_err(|e| nestgate_core::NestGateError::Io(e.to_string()))?;
             info!("📁 Created share root directory: {:?}", self.config.share_root);
         }
         
@@ -140,7 +140,7 @@ impl NasServer {
         // Validate share path exists
         if !share.path.exists() {
             tokio::fs::create_dir_all(&share.path).await
-                .map_err(|e| nestgate_core::NestGateError::Io(e))?;
+                .map_err(|e| nestgate_core::NestGateError::Io(e.to_string()))?;
             info!("📁 Created share directory: {:?}", share.path);
         }
         
@@ -189,7 +189,7 @@ impl SmbServer {
     async fn start(&mut self) -> nestgate_core::Result<()> {
         let bind_addr = format!("{}:{}", self.config.bind_address, self.config.smb_port);
         self.listener = Some(TcpListener::bind(&bind_addr).await
-            .map_err(|e| nestgate_core::NestGateError::Io(e))?);
+            .map_err(|e| nestgate_core::NestGateError::Io(e.to_string()))?);
         info!("📁 SMB server listening on {}", bind_addr);
         
         // Start accepting connections in background
@@ -249,7 +249,7 @@ impl HttpServer {
     async fn start(&mut self) -> nestgate_core::Result<()> {
         let bind_addr = format!("{}:{}", self.config.bind_address, self.config.http_port);
         self.listener = Some(TcpListener::bind(&bind_addr).await
-            .map_err(|e| nestgate_core::NestGateError::Io(e))?);
+            .map_err(|e| nestgate_core::NestGateError::Io(e.to_string()))?);
         info!("🌐 HTTP server listening on {}", bind_addr);
         
         // Start HTTP service in background

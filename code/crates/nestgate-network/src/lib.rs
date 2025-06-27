@@ -1,10 +1,8 @@
-//! NestGate Network Layer with Songbird Integration
+//! NestGate Network Layer
 //! 
 //! This crate provides network protocol implementations and API services
-//! for the NestGate system, with full Songbird orchestrator integration.
-//! 
-//! ⚠️ IMPORTANT: ALL CONNECTIONS MUST GO THROUGH SONGBIRD
-//! No direct network connections are allowed.
+//! for the NestGate system. Supports both standalone operation and optional
+//! ecosystem integration.
 
 pub mod api;
 pub mod nfs;

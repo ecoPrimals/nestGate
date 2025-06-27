@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "NestGate Installation and Configuration Tool"
 authors = ["NestGate Team"]
+license = "AGPL-3.0-or-later"
 
 [[bin]]
 name = "nestgate-installer"
