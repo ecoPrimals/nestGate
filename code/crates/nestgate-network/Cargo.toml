@@ -3,6 +3,7 @@ name = "nestgate-network"
 version = "0.9.2"
 edition = "2021"
 description = "Network protocols and communication for NestGate"
+license = "AGPL-3.0-or-later"
 
 [dependencies]
 nestgate-core = { path = "../nestgate-core" }

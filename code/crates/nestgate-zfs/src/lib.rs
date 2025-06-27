@@ -1,100 +1,99 @@
-//! NestGate ZFS Integration
+//! NestGate ZFS Storage Management
 //! 
-//! Enhanced ZFS integration with orchestrator support, AI optimization,
-//! and comprehensive performance monitoring for tiered storage
+//! Advanced ZFS pool, dataset, and tier management with AI-driven optimization
 
-pub mod manager;
+// Core modules
 pub mod config;
-pub mod error;
-pub mod pool;
+pub mod command;
 pub mod dataset;
+pub mod error;
+pub mod manager;
+pub mod pool;
 pub mod snapshot;
-pub mod tier;
 pub mod health;
-pub mod metrics;
-pub mod automation;
+pub mod tier;
 pub mod migration;
 pub mod ai_integration;
 pub mod performance;
-pub mod types;
-pub mod orchestrator_integration;
 pub mod mcp_integration;
+pub mod advanced_features;
+pub mod pool_setup;
+pub mod automation;
+pub mod types;
+pub mod performance_engine;
+pub mod orchestrator_integration;
+pub mod metrics;
 
 #[cfg(feature = "orchestrator")]
 pub mod orchestrator;
 
-pub use automation::{
-    DatasetAnalyzer, FileCharacteristics, TierRecommendation, 
-    AccessPattern, TierThresholds, PerformanceExpectation,
-    AutomatedDatasetCreator, TierStatistics
+// Type exports
+pub use config::{ZfsConfig, TierConfig, TierConfigurations};
+pub use command::{ZfsCommand, ZfsOperations, CommandResult, ZfsPool, ZfsDataset, ZfsSnapshot, PoolStatus};
+pub use dataset::{ZfsDatasetManager, DatasetInfo};
+pub use error::{ZfsError, ZfsResult as Result};
+pub use manager::ZfsManager;
+pub use pool::{ZfsPoolManager, PoolInfo};
+pub use snapshot::{ZfsSnapshotManager, SnapshotInfo};
+pub use health::ZfsHealthMonitor;
+pub use tier::TierManager as ZfsTierManager;
+pub use migration::MigrationEngine as ZfsMigrationEngine;
+pub use ai_integration::ZfsAiIntegration;
+pub use performance::ZfsPerformanceMonitor;
+pub use mcp_integration::{ZfsMcpStorageProvider, ZfsMcpConfig};
+pub use pool_setup::{
+    ZfsPoolSetup, 
+    StorageDevice, 
+    DeviceType, 
+    SpeedClass, 
+    PoolSetupConfig, 
+    PoolSetupResult, 
+    SystemReport, 
+    setup_production_zfs,
+    // New configuration types
+    PoolSetupConfiguration,
+    PoolPropertyConfig,
+    DeviceDetectionConfig,
+    SafetyConfig,
+    PerformanceConfig,
+    CacheThresholds,
+    IoThresholds,
+    MemoryLimits,
+    OptimizationIntervals,
+    TierSetupConfig,
+    TierProperties,
+    MigrationThresholds,
+    TierLimits,
+    L2ArcLimits,
+    // Enhanced error handling
+    PoolSetupError,
+    ValidationResult,
 };
-
-pub use migration::{
-    MigrationEngine, MigrationJob, MigrationStatus, MigrationPriority,
-    MigrationConfig, MigrationStatistics
+pub use automation::IntelligentDatasetManager;
+pub use advanced_features::{
+    PredictiveAnalyticsEngine,
+    IntelligentReplicationManager, 
+    AdvancedSnapshotManager,
 };
-
-pub use ai_integration::{
-    ZfsAiIntegration, ZfsAiConfig, TierPrediction, OptimizationOpportunity,
-    PerformanceSnapshot as AiPerformanceSnapshot, TierAnalytics,
-    OptimizationType, OptimizationComplexity
-};
-
-pub use performance::{
-    ZfsPerformanceMonitor, PerformanceConfig, CurrentPerformanceMetrics,
-    TierMetrics, AlertCondition, ActiveAlert, Alert, AlertSeverity,
-    PerformanceSnapshot, TierPerformanceData
-};
-
-pub use manager::{
-    ZfsManager, EnhancedServiceStatus, AiIntegrationStatus,
-    PerformanceAnalytics, OptimizationResult
-};
-
-pub use config::ZfsConfig;
-pub use error::{ZfsError, PoolError, DatasetError, SnapshotError, MigrationError};
-pub use types::{StorageTier, CompressionAlgorithm, DatasetProperty};
-
-// Re-export core types for convenience
-pub use nestgate_core::{Result, NestGateError, StorageTier as CoreStorageTier};
-
-// Re-export main types
-pub use config::*;
-pub use manager::*;
-pub use orchestrator_integration::*;
+pub use performance_engine::{PerformanceOptimizationEngine, AccessPattern};
 pub use types::*;
-pub use error::*;
+pub use orchestrator_integration::*;
 
-/// Initialize ZFS system with default configuration
-pub async fn initialize_zfs() -> Result<ZfsManager> {
-    let config = ZfsConfig::default();
-    ZfsManager::new(config).await
-}
+// Re-export Songbird integration
+#[cfg(feature = "orchestrator")]
+pub use orchestrator_integration::{
+    NestGateZfsService, ZfsServiceConfig, ZfsHealthStatus
+};
 
-/// Initialize ZFS system with custom configuration
-pub async fn initialize_zfs_with_config(config: ZfsConfig) -> Result<ZfsManager> {
-    // Validate configuration before initialization
-    config.validate()?;
-    ZfsManager::new(config).await
-}
-
-/// Load ZFS configuration from file
-pub async fn load_config_from_file(path: &std::path::Path) -> Result<ZfsConfig> {
-    ZfsConfig::load_from_file(path).await
-}
-
-/// Create a default ZFS configuration with tier setup
-pub fn create_default_config() -> ZfsConfig {
-    ZfsConfig::default()
-}
+// Re-export main types for convenience
+pub use nestgate_core::NestGateError;
 
 /// Utility function to check if ZFS is available on the system
 pub async fn is_zfs_available() -> bool {
     #[cfg(feature = "zfs")]
     {
-        // TODO: Implement actual ZFS availability check
-        // For now, assume ZFS is available if the feature is enabled
-        true
+        // Use our command framework to check ZFS availability
+        command::ZfsCommand::check_zfs_available().await.unwrap_or(false)
     }
     
     #[cfg(not(feature = "zfs"))]
@@ -138,7 +137,6 @@ fn get_enabled_features() -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::tempdir;
     
     #[test]
     fn test_zfs_config_creation() {
@@ -147,15 +145,15 @@ mod tests {
         // Test default tier configurations
         let hot_tier = config.get_tier_config(&nestgate_core::StorageTier::Hot);
         assert_eq!(hot_tier.name, "hot");
-        assert_eq!(hot_tier.properties.get("compression").unwrap(), "lz4");
+        assert_eq!(hot_tier.properties.get("compression").expect("Hot tier should have compression property"), "lz4");
         
         let warm_tier = config.get_tier_config(&nestgate_core::StorageTier::Warm);
         assert_eq!(warm_tier.name, "warm");
-        assert_eq!(warm_tier.properties.get("compression").unwrap(), "zstd");
+        assert_eq!(warm_tier.properties.get("compression").expect("Warm tier should have compression property"), "zstd");
         
         let cold_tier = config.get_tier_config(&nestgate_core::StorageTier::Cold);
         assert_eq!(cold_tier.name, "cold");
-        assert_eq!(cold_tier.properties.get("compression").unwrap(), "gzip-9");
+        assert_eq!(cold_tier.properties.get("compression").expect("Cold tier should have compression property"), "gzip-9");
     }
     
     #[tokio::test]
@@ -174,7 +172,9 @@ mod tests {
                 }
                 
                 // Verify performance monitoring is available
-                assert!(manager.performance_monitor.get_current_metrics().await.timestamp > std::time::SystemTime::UNIX_EPOCH);
+                let monitor = manager.performance_monitor.read().await;
+                let current_metrics = monitor.get_current_metrics().await;
+                assert!(current_metrics.timestamp > std::time::SystemTime::UNIX_EPOCH);
             }
             Err(e) => {
                 // Expected in test environments without ZFS
@@ -225,33 +225,5 @@ mod tests {
         // Latency should be inverse: Hot < Warm < Cold
         assert!(hot_metrics.avg_read_latency_ms < warm_metrics.avg_read_latency_ms);
         assert!(warm_metrics.avg_read_latency_ms < cold_metrics.avg_read_latency_ms);
-    }
-    
-    #[test]
-    fn test_optimization_opportunity_sorting() {
-        let mut opportunities = vec![
-            crate::ai_integration::OptimizationOpportunity {
-                optimization_type: crate::ai_integration::OptimizationType::TierMigration,
-                description: "Low impact optimization".to_string(),
-                expected_impact: 5.0,
-                confidence: 0.9,
-                complexity: crate::ai_integration::OptimizationComplexity::Low,
-                implementation_time: std::time::Duration::from_secs(60),
-            },
-            crate::ai_integration::OptimizationOpportunity {
-                optimization_type: crate::ai_integration::OptimizationType::CompressionOptimization,
-                description: "High impact optimization".to_string(),
-                expected_impact: 25.0,
-                confidence: 0.8,
-                complexity: crate::ai_integration::OptimizationComplexity::Medium,
-                implementation_time: std::time::Duration::from_secs(300),
-            },
-        ];
-        
-        // Sort by expected impact (descending)
-        opportunities.sort_by(|a, b| b.expected_impact.partial_cmp(&a.expected_impact).unwrap_or(std::cmp::Ordering::Equal));
-        
-        assert_eq!(opportunities[0].expected_impact, 25.0);
-        assert_eq!(opportunities[1].expected_impact, 5.0);
     }
 } 

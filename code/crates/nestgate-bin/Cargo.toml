@@ -1,8 +1,9 @@
 [package]
 name = "nestgate-bin"
-version = "0.9.2"
+version = "2.0.0"
 edition = "2021"
-description = "Main binary for NestGate system"
+description = "Main binary for NestGate NAS system - standalone distributed service"
+license = "AGPL-3.0-or-later"
 
 [[bin]]
 name = "nestgate"
@@ -13,25 +14,37 @@ name = "nestgate-client"
 path = "src/bin/nestgate-client.rs"
 
 [dependencies]
+# NestGate crates
 nestgate-core = { path = "../nestgate-core" }
+nestgate-zfs = { path = "../nestgate-zfs" }
 nestgate-network = { path = "../nestgate-network" }
+nestgate-api = { path = "../nestgate-api" }
 nestgate-mcp = { path = "../nestgate-mcp" }
+nestgate-ui = { path = "../nestgate-ui" }
 
+# Root NestGate library with network-based Songbird integration
+nestgate = { path = "../../../" }
+
+# Note: Songbird runs as separate service - no compilation dependency needed
+
+# Core dependencies
 tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 anyhow = { workspace = true }
 axum = { workspace = true }
 tower-http = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
 
 # CLI and serialization dependencies
 clap = { version = "4.4", features = ["derive"] }
-chrono = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 
-# Orchestrator dependency
-nestgate-orchestrator = { path = "../nestgate-orchestrator" }
-
 [dev-dependencies]
 tokio-test = { workspace = true } 
+# UI binary
+[[bin]]
+name = "nestgate-ui"
+path = "src/bin/nestgate-ui.rs"

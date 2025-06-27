@@ -1,0 +1,63 @@
+[package]
+name = "nestgate-installer"
+version = "0.1.0"
+edition = "2021"
+description = "NestGate Installation and Configuration Tool"
+authors = ["NestGate Team"]
+license = "AGPL-3.0-or-later"
+
+[[bin]]
+name = "nestgate-installer"
+path = "src/main.rs"
+
+[dependencies]
+# Core dependencies
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+clap = { version = "4.0", features = ["derive"] }
+anyhow = "1.0"
+thiserror = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.0", features = ["v4"] }
+
+# File system and OS integration
+dirs = "5.0"
+tempfile = "3.0"
+tar = "0.4"
+flate2 = "1.0"
+zip = "0.6"
+
+# HTTP client for downloads
+reqwest = { version = "0.11", features = ["json", "stream"] }
+
+# System integration
+sysinfo = "0.30"
+
+# Terminal UI
+dialoguer = { version = "0.11", features = ["completion"] }
+console = "0.15"
+indicatif = "0.17"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Iced GUI preparation (feature-gated for now)
+iced = { version = "0.12", optional = true, features = ["tokio", "debug", "image", "svg"] }
+
+# Platform-specific dependencies
+[target.'cfg(windows)'.dependencies]
+winreg = "0.52"
+windows-service = "0.6"
+winapi = { version = "0.3", features = ["winuser", "winsvc"] }
+
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.27", features = ["user"] }
+
+# Features
+[features]
+default = ["cli"]
+cli = []
+gui = ["iced"] 

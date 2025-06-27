@@ -30,6 +30,8 @@ pub struct ZfsConfig {
     pub security: SecurityConfig,
     /// Enable AI integration features
     pub enable_ai_integration: Option<bool>,
+    /// Health monitoring interval in seconds
+    pub monitoring_interval: u64,
 }
 
 /// Tier-specific configurations for hot/warm/cold storage
@@ -201,7 +203,7 @@ pub enum MetricsFormat {
 impl Default for ZfsConfig {
     fn default() -> Self {
         Self {
-            api_endpoint: "http://127.0.0.1:8081".to_string(),
+            api_endpoint: "http://localhost:8080".to_string(),
             default_pool: "nestpool".to_string(),
             use_real_zfs: true,
             tiers: TierConfigurations::default(),
@@ -210,7 +212,8 @@ impl Default for ZfsConfig {
             metrics: MetricsConfig::default(),
             migration: MigrationConfig::default(),
             security: SecurityConfig::default(),
-            enable_ai_integration: None,
+            enable_ai_integration: Some(true),
+            monitoring_interval: 300, // 5 minutes
         }
     }
 }
@@ -284,6 +287,92 @@ impl TierConfig {
             migration_rules: MigrationRules::cold_tier_defaults(),
             capacity_limits: CapacityLimits::cold_tier_defaults(),
         }
+    }
+
+    /// Create production-optimized hot tier configuration
+    pub fn hot_tier_production() -> Self {
+        let mut config = Self::hot_tier_default();
+        config.pool_name = "nestpool-prod".to_string();
+        
+        // Production-optimized properties for NVMe
+        config.properties.insert("recordsize".to_string(), "128K".to_string());
+        config.properties.insert("compression".to_string(), "lz4".to_string());
+        config.properties.insert("primarycache".to_string(), "all".to_string());
+        config.properties.insert("secondarycache".to_string(), "all".to_string());
+        config.properties.insert("logbias".to_string(), "throughput".to_string());
+        config.properties.insert("sync".to_string(), "standard".to_string());
+        
+        // Aggressive migration rules for hot tier
+        config.migration_rules.age_threshold_days = 7;
+        config.migration_rules.access_frequency_threshold = 10.0;
+        config.migration_rules.auto_migration_enabled = true;
+        
+        config
+    }
+    
+    /// Create production-optimized warm tier configuration
+    pub fn warm_tier_production() -> Self {
+        let mut config = Self::warm_tier_default();
+        config.pool_name = "nestpool-prod".to_string();
+        
+        // Balanced properties for warm tier
+        config.properties.insert("recordsize".to_string(), "1M".to_string());
+        config.properties.insert("compression".to_string(), "gzip-6".to_string());
+        config.properties.insert("primarycache".to_string(), "all".to_string());
+        config.properties.insert("secondarycache".to_string(), "metadata".to_string());
+        config.properties.insert("logbias".to_string(), "latency".to_string());
+        
+        // Moderate migration rules
+        config.migration_rules.age_threshold_days = 30;
+        config.migration_rules.access_frequency_threshold = 1.0;
+        config.migration_rules.auto_migration_enabled = true;
+        
+        config
+    }
+    
+    /// Create production-optimized cold tier configuration
+    pub fn cold_tier_production() -> Self {
+        let mut config = Self::cold_tier_default();
+        config.pool_name = "nestpool-prod".to_string();
+        
+        // Space-optimized properties for cold tier
+        config.properties.insert("recordsize".to_string(), "1M".to_string());
+        config.properties.insert("compression".to_string(), "gzip-9".to_string());
+        config.properties.insert("primarycache".to_string(), "metadata".to_string());
+        config.properties.insert("secondarycache".to_string(), "none".to_string());
+        config.properties.insert("logbias".to_string(), "throughput".to_string());
+        config.properties.insert("dedup".to_string(), "on".to_string());
+        
+        // Conservative migration rules
+        config.migration_rules.age_threshold_days = 90;
+        config.migration_rules.access_frequency_threshold = 0.1;
+        config.migration_rules.auto_migration_enabled = true;
+        
+        config
+    }
+    
+    /// Auto-detect hot tier configuration for any pool
+    pub fn auto_detect_hot(pool_name: &str) -> Self {
+        let mut config = Self::hot_tier_default();
+        config.pool_name = pool_name.to_string();
+        config.dataset_prefix = format!("{}/hot", pool_name);
+        config
+    }
+    
+    /// Auto-detect warm tier configuration for any pool
+    pub fn auto_detect_warm(pool_name: &str) -> Self {
+        let mut config = Self::warm_tier_default();
+        config.pool_name = pool_name.to_string();
+        config.dataset_prefix = format!("{}/warm", pool_name);
+        config
+    }
+    
+    /// Auto-detect cold tier configuration for any pool
+    pub fn auto_detect_cold(pool_name: &str) -> Self {
+        let mut config = Self::cold_tier_default();
+        config.pool_name = pool_name.to_string();
+        config.dataset_prefix = format!("{}/cold", pool_name);
+        config
     }
 }
 
@@ -489,6 +578,109 @@ impl ZfsConfig {
         
         Ok(())
     }
+
+    /// Create a production configuration with auto-detected pools
+    pub async fn production_config() -> Result<Self> {
+        let mut config = Self::default();
+        
+        // Auto-detect available ZFS pools
+        let available_pools = Self::detect_available_pools().await?;
+        
+        // Prefer production pool if available
+        if available_pools.contains(&"nestpool-prod".to_string()) {
+            config.default_pool = "nestpool-prod".to_string();
+            config.tiers = TierConfigurations::production_tiers();
+        } else if available_pools.contains(&"nestpool".to_string()) {
+            config.default_pool = "nestpool".to_string();
+            config.tiers = TierConfigurations::default();
+        } else if !available_pools.is_empty() {
+            // Use first available pool
+            config.default_pool = available_pools[0].clone();
+            config.tiers = TierConfigurations::auto_detect_tiers(&config.default_pool);
+        }
+        
+        // Enable production-optimized settings
+        config.use_real_zfs = true;
+        config.health_monitoring.enabled = true;
+        config.metrics.enabled = true;
+        config.migration.background_migration = true;
+        
+        Ok(config)
+    }
+    
+    /// Detect available ZFS pools on the system
+    async fn detect_available_pools() -> Result<Vec<String>> {
+        let output = tokio::process::Command::new("zpool")
+            .args(&["list", "-H", "-o", "name"])
+            .output()
+            .await
+            .map_err(|e| NestGateError::Internal(format!("Failed to list ZFS pools: {}", e)))?;
+        
+        if !output.status.success() {
+            return Ok(Vec::new());
+        }
+        
+        let pools: Vec<String> = String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .map(|line| line.trim().to_string())
+            .filter(|line| !line.is_empty())
+            .collect();
+        
+        Ok(pools)
+    }
+    
+    /// Check if a pool has the expected tier structure
+    pub async fn validate_pool_structure(&self, pool_name: &str) -> Result<bool> {
+        let output = tokio::process::Command::new("zfs")
+            .args(&["list", "-H", "-o", "name", "-r", pool_name])
+            .output()
+            .await
+            .map_err(|e| NestGateError::Internal(format!("Failed to list pool datasets: {}", e)))?;
+        
+        if !output.status.success() {
+            return Ok(false);
+        }
+        
+        let datasets: Vec<String> = String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .map(|line| line.trim().to_string())
+            .filter(|line| !line.is_empty())
+            .collect();
+        
+        // Check for expected tier datasets
+        let expected_tiers = vec![
+            format!("{}/hot", pool_name),
+            format!("{}/warm", pool_name),
+            format!("{}/cold", pool_name),
+        ];
+        
+        for tier in expected_tiers {
+            if !datasets.contains(&tier) {
+                return Ok(false);
+            }
+        }
+        
+        Ok(true)
+    }
+    
+    /// Get the best available pool for NestGate operations
+    pub async fn get_best_pool() -> Result<String> {
+        let available_pools = Self::detect_available_pools().await?;
+        
+        // Priority order: production pool > test pool > any other pool
+        let preferred_pools = vec!["nestpool-prod", "nestpool"];
+        
+        for preferred in preferred_pools {
+            if available_pools.contains(&preferred.to_string()) {
+                return Ok(preferred.to_string());
+            }
+        }
+        
+        // Return first available pool if no preferred pools found
+        available_pools.first()
+            .cloned()
+            .ok_or_else(|| NestGateError::Internal("No ZFS pools found".to_string()))
+    }
 }
 
 impl TierConfig {
@@ -512,5 +704,25 @@ impl TierConfig {
         }
         
         Ok(())
+    }
+}
+
+impl TierConfigurations {
+    /// Create production-optimized tier configurations
+    pub fn production_tiers() -> Self {
+        Self {
+            hot: TierConfig::hot_tier_production(),
+            warm: TierConfig::warm_tier_production(),
+            cold: TierConfig::cold_tier_production(),
+        }
+    }
+    
+    /// Auto-detect tier configurations for a given pool
+    pub fn auto_detect_tiers(pool_name: &str) -> Self {
+        Self {
+            hot: TierConfig::auto_detect_hot(pool_name),
+            warm: TierConfig::auto_detect_warm(pool_name),
+            cold: TierConfig::auto_detect_cold(pool_name),
+        }
     }
 } 

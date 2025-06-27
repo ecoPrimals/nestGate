@@ -10,7 +10,7 @@ use tower_http::{
     trace::TraceLayer,
 };
 use tracing::{info, error};
-use nestgate_zfs::ZfsManager;
+use nestgate_zfs::manager::ZfsManager;
 
 mod routes;
 pub mod handlers;
@@ -35,8 +35,22 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
+        // Check if we're in Songbird mode or standalone mode
+        let songbird_mode = std::env::var("SONGBIRD_URL").is_ok();
+        
+        let bind_addr = if songbird_mode {
+            // Songbird-enhanced mode: use service name with auto port
+            std::env::var("NESTGATE_API_BIND")
+                .unwrap_or_else(|_| "nestgate-api:0".to_string())
+        } else {
+            // Standalone mode: use localhost with configurable port
+            let port = std::env::var("NESTGATE_PORT")
+                .unwrap_or_else(|_| "8080".to_string());
+            format!("127.0.0.1:{}", port)
+        };
+        
         Self {
-            bind_addr: "127.0.0.1:3000".to_string(),
+            bind_addr,
             cors: None,
             enable_zfs_api: true,
             request_timeout: 30,
