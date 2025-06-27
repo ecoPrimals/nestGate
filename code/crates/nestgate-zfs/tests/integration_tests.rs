@@ -11,9 +11,10 @@ use serial_test::serial;
 
 use nestgate_core::{Result, StorageTier as CoreStorageTier, NestGateError};
 use nestgate_zfs::{
-    config::{ZfsConfig, PerformanceConfig}, 
+    config::ZfsConfig,
+    performance::PerformanceConfig, 
     manager::ZfsManager,
-    pool::{ZfsPoolManager, PoolConfig},
+    pool::ZfsPoolManager,
     dataset::{ZfsDatasetManager, DatasetConfig},
     migration::{MigrationJob, MigrationPriority, MigrationStatus},
     performance::{ZfsPerformanceMonitor, TierMetrics},
@@ -109,17 +110,20 @@ mod pool_tests {
         fixture.init_manager().await.expect("Failed to initialize manager");
         
         let manager = fixture.manager();
-        let pools = manager.get_pool_status().await;
+        let pool_list = manager.list_pools().await?;
+        let status = if !pool_list.is_empty() {
+            manager.get_pool_status(&pool_list[0]).await?
+        } else {
+            "No pools available".to_string()
+        };
         
-        match pools {
-            Ok(status) => {
-                println!("✅ Pool discovery successful: {} total pools", status.pools_total);
-                assert!(status.pools_total >= 0);
-            }
-            Err(e) => {
-                println!("Pool discovery failed (expected without ZFS): {}", e);
-                // This is expected in test environments without ZFS
-            }
+        if pool_list.is_empty() {
+            println!("⚠️  No pools found (expected in CI environments without ZFS)");
+            assert!(status.contains("No pools"));
+        } else {
+            println!("✅ Pool discovery successful: {} pools found", pool_list.len());
+            println!("Pool status: {}", status);
+            assert!(!status.is_empty());
         }
         
         fixture.cleanup().await.expect("Failed to cleanup");
@@ -136,7 +140,7 @@ mod dataset_tests {
         
         // Create dataset manager directly for testing
         let pool_manager = Arc::new(ZfsPoolManager::new(&fixture.zfs_config).await.unwrap_or_else(|_| {
-            ZfsPoolManager::new_mock()
+            ZfsPoolManager::new_for_testing()
         }));
         let dataset_manager = ZfsDatasetManager::new(fixture.zfs_config.clone(), pool_manager);
         
@@ -167,7 +171,7 @@ mod performance_tests {
     async fn test_performance_metrics_collection() {
         let config = PerformanceConfig::default();
         let pool_manager = Arc::new(ZfsPoolManager::new(&ZfsConfig::default()).await.unwrap_or_else(|_| {
-            ZfsPoolManager::new_mock()
+            ZfsPoolManager::new_for_testing()
         }));
         let dataset_manager = Arc::new(ZfsDatasetManager::new(ZfsConfig::default(), pool_manager.clone()));
         

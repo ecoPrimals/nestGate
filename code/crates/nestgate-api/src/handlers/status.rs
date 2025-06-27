@@ -1,15 +1,9 @@
 //! System status endpoint handler
 
-use axum::{
-    response::IntoResponse,
-    Json,
-    extract::State,
-};
+use axum::Json;
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::info;
-
-use crate::AppState;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SystemStatus {
@@ -26,7 +20,7 @@ pub fn initialize_uptime() {
 }
 
 /// Get system status handler
-pub async fn get_status(State(_state): State<AppState>) -> Json<SystemStatus> {
+pub async fn get_status() -> Json<SystemStatus> {
     info!("Status endpoint called");
     
     let start_time = START_TIME.get().copied().unwrap_or_else(SystemTime::now);

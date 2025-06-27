@@ -967,22 +967,18 @@ mod tests {
     fn test_optimization_opportunity_creation() {
         let opportunity = OptimizationOpportunity {
             id: "test-opt".to_string(),
-            opportunity_type: OptimizationType::TierMigration,
+            opportunity_type: "TierMigration".to_string(),
             description: "Move frequently accessed files to hot tier".to_string(),
-            potential_benefit: OptimizationBenefit {
-                performance_improvement: 25.0,
-                storage_savings: 1024 * 1024 * 1024,
-                cost_reduction: 100.0,
-            },
+            potential_benefit: "25% performance improvement".to_string(),
             confidence_score: 0.85,
-            estimated_effort: OptimizationEffort::Low,
-            affected_datasets: vec!["test-dataset".to_string()],
-            recommended_actions: vec!["Move to hot tier".to_string()],
-            expected_impact: 25.0,
+            implementation_effort: "Low".to_string(),
+            priority: "High".to_string(),
+            estimated_impact: "25% improvement".to_string(),
+            prerequisites: vec!["Hot tier available".to_string()],
         };
         
-        assert_eq!(opportunity.expected_impact, 25.0);
+        assert_eq!(opportunity.estimated_impact, "25% improvement");
         assert_eq!(opportunity.confidence_score, 0.85);
-        assert!(matches!(opportunity.estimated_effort, OptimizationEffort::Low));
+        assert_eq!(opportunity.implementation_effort, "Low");
     }
 } 

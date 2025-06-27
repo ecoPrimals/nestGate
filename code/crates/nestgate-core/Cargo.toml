@@ -3,6 +3,7 @@ name = "nestgate-core"
 version = "0.9.2"
 edition = "2021"
 description = "Core functionality and utilities for NestGate"
+license = "AGPL-3.0-or-later"
 
 [dependencies]
 tokio = { workspace = true }

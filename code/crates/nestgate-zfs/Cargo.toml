@@ -3,7 +3,7 @@ name = "nestgate-zfs"
 version = "0.1.0"
 edition = "2021"
 description = "ZFS storage management for NestGate with intelligent automation"
-license = "MIT OR Apache-2.0"
+license = "AGPL-3.0-or-later"
 repository = "https://github.com/strandgeek/nestgate"
 keywords = ["zfs", "storage", "nas", "automation"]
 

@@ -2,14 +2,14 @@
 //! 
 //! Storage management for MCP integration
 
-use crate::{Result, types::{StorageTier, MountRequest, MountInfo, VolumeRequest, VolumeInfo}};
+use crate::{Result, Error, types::{StorageTier, MountRequest, MountInfo, VolumeRequest}};
 use std::sync::Arc;
 use std::collections::HashMap;
 use tokio::sync::RwLock;
 use tracing::{info, error, debug};
 use serde::{Serialize, Deserialize};
 use nestgate_core::{NestGateError};
-use crate::error::McpError;
+
 
 /// Storage volume configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -37,7 +37,7 @@ pub struct VolumeInfo {
 }
 
 /// MCP Storage Manager
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct McpStorageManager {
     volumes: Arc<RwLock<HashMap<String, VolumeInfo>>>,
 }
@@ -69,17 +69,17 @@ impl McpStorageManager {
         
         // Validate configuration
         if config.name.is_empty() {
-            return Err(NestGateError::Internal("Volume name cannot be empty".to_string()));
+            return Err(Error::validation("Volume name cannot be empty".to_string()));
         }
         
         if config.size_bytes == 0 {
-            return Err(NestGateError::Internal("Volume size must be greater than zero".to_string()));
+            return Err(Error::validation("Volume size must be greater than zero".to_string()));
         }
         
         // Check if volume already exists
         let volumes = self.volumes.read().await;
         if volumes.contains_key(&config.name) {
-            return Err(NestGateError::Internal(format!("Volume {} already exists", config.name)));
+            return Err(Error::storage(format!("Volume {} already exists", config.name)));
         }
         drop(volumes);
         
@@ -121,7 +121,7 @@ impl McpStorageManager {
         let volumes = self.volumes.read().await;
         volumes.get(name)
             .cloned()
-            .ok_or_else(|| NestGateError::Internal(format!("Volume not found: {}", name)))
+            .ok_or_else(|| Error::storage(format!("Volume not found: {}", name)))
     }
     
     /// Mount a storage volume
@@ -130,10 +130,10 @@ impl McpStorageManager {
         
         let mut volumes = self.volumes.write().await;
         let volume = volumes.get_mut(name)
-            .ok_or_else(|| NestGateError::Internal(format!("Volume not found: {}", name)))?;
+            .ok_or_else(|| Error::storage(format!("Volume not found: {}", name)))?;
         
         if volume.mounted {
-            return Err(NestGateError::Internal(format!("Volume {} is already mounted", name)));
+            return Err(Error::storage(format!("Volume {} is already mounted", name)));
         }
         
         // Simulate mount operation
@@ -149,10 +149,10 @@ impl McpStorageManager {
         
         let mut volumes = self.volumes.write().await;
         let volume = volumes.get_mut(name)
-            .ok_or_else(|| NestGateError::Internal(format!("Volume not found: {}", name)))?;
+            .ok_or_else(|| Error::storage(format!("Volume not found: {}", name)))?;
         
         if !volume.mounted {
-            return Err(NestGateError::Internal(format!("Volume {} is not mounted", name)));
+            return Err(Error::storage(format!("Volume {} is not mounted", name)));
         }
         
         // Simulate unmount operation
@@ -168,10 +168,10 @@ impl McpStorageManager {
         
         let mut volumes = self.volumes.write().await;
         let volume = volumes.get(name)
-            .ok_or_else(|| NestGateError::Internal(format!("Volume not found: {}", name)))?;
+            .ok_or_else(|| Error::storage(format!("Volume not found: {}", name)))?;
         
         if volume.mounted {
-            return Err(NestGateError::Internal(format!("Cannot delete mounted volume: {}", name)));
+            return Err(Error::storage(format!("Cannot delete mounted volume: {}", name)));
         }
         
         volumes.remove(name);

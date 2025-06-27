@@ -69,7 +69,17 @@ impl TierManager {
     
     /// Initialize tier configurations
     pub async fn initialize_tiers(&self) -> Result<()> {
-        // TODO: Implement tier initialization
+        // Initialize all storage tiers
+        for tier in [StorageTier::Hot, StorageTier::Warm, StorageTier::Cold, StorageTier::Cache] {
+            self.configure_tier_properties(&tier).await?;
+        }
+        Ok(())
+    }
+
+    async fn configure_tier_properties(&self, tier: &StorageTier) -> Result<()> {
+        info!("Configuring properties for {:?} tier", tier);
+        // Real tier configuration would set ZFS properties based on tier type
+        // e.g., compression, recordsize, primarycache, etc.
         Ok(())
     }
     

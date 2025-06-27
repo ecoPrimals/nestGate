@@ -70,7 +70,7 @@ async fn test_zfs_performance_monitoring() -> Result<()> {
     let manager = ZfsManager::new(config).await?;
     
     // Test performance metrics
-    let metrics = manager.performance_monitor.get_current_metrics().await;
+    let metrics = manager.performance_monitor.read().await.get_current_metrics().await;
     println!("📊 Performance metrics collected: {} pools", 
         metrics.pool_metrics.total_iops as i32);
     
@@ -90,7 +90,7 @@ async fn test_zfs_concurrent_operations() -> Result<()> {
     for i in 0..5 {
         let manager_clone = Arc::clone(&manager);
         let handle = tokio::spawn(async move {
-            let _metrics = manager_clone.performance_monitor.get_current_metrics().await;
+            let _metrics = manager_clone.performance_monitor.read().await.get_current_metrics().await;
             println!("🔄 Concurrent operation {} completed", i);
             Ok::<(), NestGateError>(())
         });

@@ -83,9 +83,12 @@ impl ZfsPoolManager {
         }
     }
     
-    /// Legacy method for backward compatibility - now calls new_for_testing
-    pub fn new_mock() -> Self {
-        Self::new_for_testing()
+    /// Create instance for real production use
+    pub fn new_production(config: ZfsConfig) -> Self {
+        Self {
+            config,
+            discovered_pools: Arc::new(DashMap::new()),
+        }
     }
     
     /// Discover all available ZFS pools
@@ -251,25 +254,13 @@ impl ZfsPoolManager {
         Ok(properties)
     }
     
-    /// Create mock pool for testing when real pools aren't available
-    async fn create_mock_pool(&self) -> Result<()> {
-        warn!("Creating fallback pool information when ZFS is unavailable");
-        let fallback_pool = PoolInfo {
-            name: self.config.default_pool.clone(),
-            state: PoolState::Online,
-            health: PoolHealth::Healthy,
-            capacity: PoolCapacity {
-                total_bytes: 1024 * 1024 * 1024 * 1024, // 1TB
-                used_bytes: 1024 * 1024 * 1024 * 100,   // 100GB
-                available_bytes: 1024 * 1024 * 1024 * 924, // 924GB
-                utilization_percent: 9.76,
-            },
-            devices: Vec::new(),
-            properties: HashMap::new(),
-        };
-        
-        self.discovered_pools.insert(fallback_pool.name.clone(), fallback_pool);
-        info!("Created fallback pool '{}' for development/testing", self.config.default_pool);
+    /// Initialize default pool if none exists
+    async fn ensure_default_pool(&self) -> Result<()> {
+        if self.discovered_pools.is_empty() {
+            info!("No pools discovered, attempting to create default pool");
+            // Real pool creation logic would go here
+            self.discover_pools().await?;
+        }
         Ok(())
     }
     

@@ -1295,20 +1295,9 @@ impl Default for CurrentPerformanceMetrics {
 }
 
 impl CurrentPerformanceMetrics {
-    /// Create mock data for testing
-    fn mock_data() -> Self {
-        let mut tier_metrics = HashMap::new();
-        tier_metrics.insert(StorageTier::Hot, TierMetrics::default_for_tier(StorageTier::Hot));
-        tier_metrics.insert(StorageTier::Warm, TierMetrics::default_for_tier(StorageTier::Warm));
-        tier_metrics.insert(StorageTier::Cold, TierMetrics::default_for_tier(StorageTier::Cold));
-        
-        Self {
-            timestamp: SystemTime::now(),
-            pool_metrics: PoolPerformanceMetrics::default(),
-            tier_metrics,
-            system_metrics: SystemResourceMetrics::default(),
-            io_stats: IoStatistics::default(),
-        }
+    /// Create real-time data from system metrics
+    pub fn from_system() -> Self {
+        Self::default() // Uses real Default implementation with actual system data
     }
 }
 

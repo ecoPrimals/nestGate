@@ -1,18 +1,16 @@
 //! NestGate - Sovereign NAS System
 //! 
 //! A modern, ZFS-based Network Attached Storage system with tiered storage,
-//! AI integration, and network-based Songbird orchestration.
+//! AI integration, and modular ecosystem integration capabilities.
 //!
-//! NestGate runs as a standalone distributed service that can optionally
-//! communicate with Songbird orchestrator over HTTP.
+//! NestGate runs as a truly sovereign system with optional ecosystem
+//! integration available through feature flags and plugins.
 
 // Core NAS modules
 pub mod error;
-pub mod songbird_integration;
 
 // Re-export main types for easy access
 pub use error::{NestGateError, Result};
-pub use songbird_integration::*;
 
 /// Current version of NestGate
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

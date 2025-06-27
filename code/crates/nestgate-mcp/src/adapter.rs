@@ -8,7 +8,7 @@ use tracing::{info, error, warn};
 use serde::{Serialize, Deserialize};
 
 use nestgate_core::{Result, NestGateError};
-use crate::error::McpError;
+
 
 /// MCP Adapter Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
