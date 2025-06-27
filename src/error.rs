@@ -1,93 +1,107 @@
-//! Error types for the orchestrator
+//! NestGate error types
+//!
+//! Comprehensive error handling for NAS operations, ZFS management,
+//! storage protocols, and Songbird integration.
 
-use thiserror::Error;
+use std::fmt;
 
-/// Main error type for orchestrator operations
-#[derive(Debug, Error)]
-pub enum OrchestratorError {
-    #[error("Service error: {0}")]
-    ServiceError(String),
+/// Main error type for NestGate operations
+#[derive(Debug, Clone)]
+pub enum NestGateError {
+    /// ZFS related errors
+    ZfsError(String),
     
-    #[error("Configuration error: {0}")]
+    /// Invalid ZFS pool name
+    InvalidPoolName(String),
+    
+    /// Storage protocol errors (NFS, SMB, iSCSI, etc.)
+    StorageProtocolError(String),
+    
+    /// Tier management errors
+    TierManagementError(String),
+    
+    /// Configuration errors
     ConfigurationError(String),
     
-    #[error("Network error: {0}")]
-    Network(String),
+    /// Songbird integration errors
+    OrchestrationError(String),
     
-    #[error("Internal error: {0}")]
-    Internal(String),
+    /// I/O errors
+    IoError(String),
     
-    #[error("Not found: {0}")]
-    NotFound(String),
+    /// Network errors
+    NetworkError(String),
     
-    #[error("Timeout: {0}")]
-    Timeout(String),
+    /// Permission/authentication errors
+    PermissionError(String),
     
-    #[error("Serialization error: {0}")]
-    Serialization(String),
-    
-    #[error("Validation error: {0}")]
-    Validation(String),
-    
-    #[error("IO error: {0}")]
-    IoError(#[from] std::io::Error),
-    
-    #[error("JSON serialization error: {0}")]
-    JsonError(#[from] serde_json::Error),
-    
-    #[error("Service already exists: {0}")]
-    ServiceAlreadyExists(String),
-    
-    #[error("Port allocation error: {0}")]
-    PortAllocationError(String),
-    
-    #[error("Health check failed: {0}")]
-    HealthCheckFailed(String),
-    
-    #[error("Circuit breaker open")]
-    CircuitBreakerOpen,
-    
-    #[error("Rate limit exceeded")]
-    RateLimitExceeded,
+    /// General system errors
+    SystemError(String),
 }
 
-/// Result type for orchestrator operations
-pub type Result<T> = std::result::Result<T, OrchestratorError>;
-
-/// Service-specific error types
-#[derive(Debug, Error)]
-pub enum ServiceError {
-    #[error("Service startup failed: {0}")]
-    StartupFailed(String),
-    
-    #[error("Service shutdown failed: {0}")]
-    ShutdownFailed(String),
-    
-    #[error("Service unhealthy: {0}")]
-    Unhealthy(String),
-    
-    #[error("Service dependency missing: {0}")]
-    DependencyMissing(String),
-    
-    #[error("Service configuration invalid: {0}")]
-    InvalidConfiguration(String),
+impl fmt::Display for NestGateError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::ZfsError(msg) => write!(f, "ZFS error: {msg}"),
+            Self::InvalidPoolName(msg) => write!(f, "Invalid pool name: {msg}"),
+            Self::StorageProtocolError(msg) => write!(f, "Storage protocol error: {msg}"),
+            Self::TierManagementError(msg) => write!(f, "Tier management error: {msg}"),
+            Self::ConfigurationError(msg) => write!(f, "Configuration error: {msg}"),
+            Self::OrchestrationError(msg) => write!(f, "Orchestration error: {msg}"),
+            Self::IoError(msg) => write!(f, "I/O error: {msg}"),
+            Self::NetworkError(msg) => write!(f, "Network error: {msg}"),
+            Self::PermissionError(msg) => write!(f, "Permission error: {msg}"),
+            Self::SystemError(msg) => write!(f, "System error: {msg}"),
+        }
+    }
 }
 
-/// Communication error types
-#[derive(Debug, Error)]
-pub enum CommunicationError {
-    #[error("WebSocket connection failed: {0}")]
-    WebSocketConnectionFailed(String),
-    
-    #[error("Message serialization failed: {0}")]
-    MessageSerializationFailed(String),
-    
-    #[error("Protocol error: {0}")]
-    ProtocolError(String),
-    
-    #[error("Connection timeout")]
-    ConnectionTimeout,
-    
-    #[error("Authentication failed")]
-    AuthenticationFailed,
+impl std::error::Error for NestGateError {}
+
+impl From<std::io::Error> for NestGateError {
+    fn from(error: std::io::Error) -> Self {
+        Self::IoError(error.to_string())
+    }
+}
+
+impl From<serde_json::Error> for NestGateError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::ConfigurationError(format!("JSON serialization error: {error}"))
+    }
+}
+
+/// Result type for NestGate operations
+pub type Result<T> = std::result::Result<T, NestGateError>;
+
+/// Helper macro for creating ZFS errors
+#[macro_export]
+macro_rules! zfs_error {
+    ($msg:expr) => {
+        $crate::error::NestGateError::ZfsError($msg.to_string())
+    };
+    ($fmt:expr, $($arg:tt)*) => {
+        $crate::error::NestGateError::ZfsError(format!($fmt, $($arg)*))
+    };
+}
+
+/// Helper macro for creating storage protocol errors
+#[macro_export]
+macro_rules! protocol_error {
+    ($msg:expr) => {
+        $crate::error::NestGateError::StorageProtocolError($msg.to_string())
+    };
+    ($fmt:expr, $($arg:tt)*) => {
+        $crate::error::NestGateError::StorageProtocolError(format!($fmt, $($arg)*))
+    };
+}
+
+/// Helper macro for creating tier management errors
+#[macro_export]
+macro_rules! tier_error {
+    ($msg:expr) => {
+        $crate::error::NestGateError::TierManagementError($msg.to_string())
+    };
+    ($fmt:expr, $($arg:tt)*) => {
+        $crate::error::NestGateError::TierManagementError(format!($fmt, $($arg)*))
+    };
 } 

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 authors = ["DataScienceBioLab"]
 description = "AI model management for NestGate storage optimization"
-license = "MIT"
+license = "AGPL-3.0-or-later"
 repository = "https://github.com/DataScienceBioLab/nestgate"
 keywords = ["ai", "nas", "storage"]
 

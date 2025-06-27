@@ -1,66 +1,108 @@
-//! ZFS Metrics - Performance metrics collection
+//! ZFS Metrics Collection
 //! 
-//! This module will be fully implemented in Week 2
+//! Provides metrics collection and aggregation for ZFS operations
 
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use nestgate_core::Result;
-use crate::manager::CurrentMetrics;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::SystemTime;
+use serde::{Serialize, Deserialize};
 
-/// ZFS Metrics collector
+/// ZFS metrics collector
 #[derive(Debug)]
 pub struct ZfsMetrics {
-    /// Operation counters
-    operation_counts: Arc<RwLock<HashMap<String, u64>>>,
+    /// Total operations counter
+    total_operations: AtomicU64,
+    /// Total bytes processed
+    total_bytes: AtomicU64,
+    /// Error counter
+    error_count: AtomicU64,
+    /// Average latency (milliseconds) stored as u64 bits
+    avg_latency_bits: AtomicU64,
+    /// Start time for metrics collection
+    start_time: SystemTime,
+}
+
+/// Current metrics snapshot
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MetricsSnapshot {
+    pub operations_per_second: f64,
+    pub throughput_bytes_per_second: u64,
+    pub average_latency_ms: f64,
+    pub error_rate: f64,
+    pub total_operations: u64,
+    pub total_bytes: u64,
+    pub uptime_seconds: u64,
+    pub timestamp: SystemTime,
 }
 
 impl ZfsMetrics {
     /// Create a new metrics collector
     pub fn new() -> Self {
         Self {
-            operation_counts: Arc::new(RwLock::new(HashMap::new())),
+            total_operations: AtomicU64::new(0),
+            total_bytes: AtomicU64::new(0),
+            error_count: AtomicU64::new(0),
+            avg_latency_bits: AtomicU64::new(0),
+            start_time: SystemTime::now(),
         }
     }
     
-    /// Start metrics collection
-    pub async fn start_collection(&self) -> Result<()> {
-        // TODO: Implement metrics collection
-        Ok(())
+    /// Record a successful operation
+    pub fn record_operation(&self, bytes_processed: u64, latency_ms: f64) {
+        self.total_operations.fetch_add(1, Ordering::Relaxed);
+        self.total_bytes.fetch_add(bytes_processed, Ordering::Relaxed);
+        
+        // Simple moving average for latency using atomic operations
+        let current_bits = self.avg_latency_bits.load(Ordering::Relaxed);
+        let current_avg = f64::from_bits(current_bits);
+        let new_avg = (current_avg * 0.9) + (latency_ms * 0.1);
+        self.avg_latency_bits.store(new_avg.to_bits(), Ordering::Relaxed);
     }
     
-    /// Stop metrics collection
-    pub async fn stop_collection(&self) -> Result<()> {
-        // TODO: Implement stop collection
-        Ok(())
+    /// Record an error
+    pub fn record_error(&self) {
+        self.error_count.fetch_add(1, Ordering::Relaxed);
     }
 
-    /// Increment operation counter
-    pub async fn increment_operation(&self, operation: &str) {
-        let mut counts = self.operation_counts.write().await;
-        *counts.entry(operation.to_string()).or_insert(0) += 1;
-    }
-
-    /// Get operation count
-    pub async fn get_operation_count(&self, operation: &str) -> u64 {
-        let counts = self.operation_counts.read().await;
-        counts.get(operation).copied().unwrap_or(0)
-    }
-
-    /// Get all operation counts
-    pub async fn get_all_operation_counts(&self) -> HashMap<String, u64> {
-        let counts = self.operation_counts.read().await;
-        counts.clone()
+    /// Get current metrics snapshot
+    pub async fn get_current_metrics(&self) -> MetricsSnapshot {
+        let now = SystemTime::now();
+        let uptime = now.duration_since(self.start_time)
+            .unwrap_or_default()
+            .as_secs();
+        
+        let total_ops = self.total_operations.load(Ordering::Relaxed);
+        let total_bytes = self.total_bytes.load(Ordering::Relaxed);
+        let errors = self.error_count.load(Ordering::Relaxed);
+        
+        let ops_per_second = if uptime > 0 { total_ops as f64 / uptime as f64 } else { 0.0 };
+        let throughput_bps = if uptime > 0 { total_bytes / uptime } else { 0 };
+        let error_rate = if total_ops > 0 { errors as f64 / total_ops as f64 } else { 0.0 };
+        
+        let avg_latency = f64::from_bits(self.avg_latency_bits.load(Ordering::Relaxed));
+        
+        MetricsSnapshot {
+            operations_per_second: ops_per_second,
+            throughput_bytes_per_second: throughput_bps,
+            average_latency_ms: avg_latency,
+            error_rate,
+            total_operations: total_ops,
+            total_bytes,
+            uptime_seconds: uptime,
+            timestamp: now,
+        }
     }
     
-    /// Get current metrics
-    pub async fn get_current_metrics(&self) -> Result<CurrentMetrics> {
-        // TODO: Implement real metrics
-        Ok(CurrentMetrics {
-            operations_per_second: 100.0,
-            throughput_bytes_per_second: 1024 * 1024 * 10, // 10MB/s
-            average_latency_ms: 5.0,
-            error_rate: 0.01,
-        })
+    /// Reset all metrics
+    pub fn reset(&self) {
+        self.total_operations.store(0, Ordering::Relaxed);
+        self.total_bytes.store(0, Ordering::Relaxed);
+        self.error_count.store(0, Ordering::Relaxed);
+        self.avg_latency_bits.store(0, Ordering::Relaxed);
+    }
+}
+
+impl Default for ZfsMetrics {
+    fn default() -> Self {
+        Self::new()
     }
 } 

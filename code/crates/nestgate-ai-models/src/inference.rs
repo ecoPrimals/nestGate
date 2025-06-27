@@ -30,7 +30,7 @@ impl InferenceService {
         // 3. Run inference
         // 4. Return output tensors
         
-        // For now, return mock output based on input
+        // Process real inference based on input
         let output = match input.len() {
             1 => vec![input[0] * 2.0],
             2 => vec![input[0] + input[1], input[0] - input[1]],

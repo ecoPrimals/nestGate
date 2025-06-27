@@ -3,23 +3,20 @@
 //! Comprehensive snapshot lifecycle management with automated policies,
 //! retention rules, and backup integration for production-ready ZFS systems.
 
-use std::collections::{HashMap, BTreeMap};
-use std::path::{Path, PathBuf};
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::sync::{RwLock, mpsc};
-use tokio::time::{interval, sleep};
+use tokio::time::interval;
 use tracing::{debug, error, info, warn};
 use serde::{Serialize, Deserialize};
-use chrono::{Datelike, Timelike, Utc};
+use chrono::{Datelike, Timelike};
 
-use nestgate_core::Result as CoreResult;
+use nestgate_core::{Result as CoreResult, StorageTier, NestGateError};
 use crate::{
-    config::ZfsConfig,
-    pool::ZfsPoolManager,
-    dataset::ZfsDatasetManager,
-    types::StorageTier,
-    error::SnapshotError,
+    ZfsPoolManager, ZfsDatasetManager, ZfsConfig,
+    error::{ZfsError, SnapshotError},
+    advanced_features::SnapshotSchedule,
 };
 
 /// Snapshot retention policy
@@ -369,7 +366,7 @@ impl ZfsSnapshotManager {
         &self,
         dataset: &str,
         name: &str,
-        recursive: bool,
+        _recursive: bool,
     ) -> CoreResult<String> {
         info!("Creating snapshot: {}@{}", dataset, name);
         
@@ -557,15 +554,13 @@ impl ZfsSnapshotManager {
         let now = chrono::Utc::now();
         
         match &policy.frequency {
-            ScheduleFrequency::Minutes(minutes) => {
-                // Check if enough minutes have passed since last execution
-                // TODO: Track last execution time
-                true
+            ScheduleFrequency::Minutes(_minutes) => {
+                // TODO: Implement minute-based scheduling
+                false
             }
-            ScheduleFrequency::Hours(hours) => {
-                // Check if enough hours have passed
-                // TODO: Track last execution time
-                true
+            ScheduleFrequency::Hours(_hours) => {
+                // TODO: Implement hour-based scheduling
+                false
             }
             ScheduleFrequency::Daily(hour) => {
                 now.hour() == *hour as u32 && now.minute() < 5 // 5-minute window
@@ -588,9 +583,9 @@ impl ZfsSnapshotManager {
     /// Execute a snapshot policy
     async fn execute_policy(
         policy: &SnapshotPolicy,
-        operation_queue: &Arc<RwLock<Vec<SnapshotOperation>>>,
-        pool_manager: &Arc<ZfsPoolManager>,
-        dataset_manager: &Arc<ZfsDatasetManager>,
+        _operation_queue: &Arc<RwLock<Vec<SnapshotOperation>>>,
+        _pool_manager: &Arc<ZfsPoolManager>,
+        _dataset_manager: &Arc<ZfsDatasetManager>,
     ) -> CoreResult<()> {
         debug!("Executing snapshot policy: {}", policy.name);
         
@@ -634,9 +629,9 @@ impl ZfsSnapshotManager {
     /// Process snapshot operations
     async fn process_operations(
         operation_queue: &Arc<RwLock<Vec<SnapshotOperation>>>,
-        statistics: &Arc<RwLock<SnapshotStatistics>>,
-        pool_manager: &Arc<ZfsPoolManager>,
-        dataset_manager: &Arc<ZfsDatasetManager>,
+        _statistics: &Arc<RwLock<SnapshotStatistics>>,
+        _pool_manager: &Arc<ZfsPoolManager>,
+        _dataset_manager: &Arc<ZfsDatasetManager>,
     ) -> CoreResult<()> {
         let mut queue = operation_queue.write().await;
         let mut completed_indices = Vec::new();
@@ -646,7 +641,11 @@ impl ZfsSnapshotManager {
                 operation.status = SnapshotOperationStatus::Running;
                 operation.started_at = Some(SystemTime::now());
                 
-                let result = Self::execute_operation(operation, pool_manager, dataset_manager).await;
+                let result = Self::execute_operation(
+                    &operation,
+                    _pool_manager,
+                    _dataset_manager,
+                ).await;
                 
                 match result {
                     Ok(_) => {
@@ -674,29 +673,275 @@ impl ZfsSnapshotManager {
     /// Execute a single snapshot operation
     async fn execute_operation(
         operation: &SnapshotOperation,
-        pool_manager: &Arc<ZfsPoolManager>,
-        dataset_manager: &Arc<ZfsDatasetManager>,
+        _pool_manager: &Arc<ZfsPoolManager>,
+        _dataset_manager: &Arc<ZfsDatasetManager>,
     ) -> CoreResult<()> {
+        debug!("Executing snapshot operation: {:?}", operation.operation_type);
+        
         match operation.operation_type {
             SnapshotOperationType::Create => {
-                if let Some(snapshot_name) = &operation.snapshot_name {
-                    info!("Creating snapshot: {}@{}", operation.dataset, snapshot_name);
-                    // TODO: Implement actual snapshot creation
-                    tokio::time::sleep(Duration::from_millis(100)).await;
-                }
+                Self::execute_create_operation(operation).await?;
             }
             SnapshotOperationType::Delete => {
-                if let Some(snapshot_name) = &operation.snapshot_name {
-                    info!("Deleting snapshot: {}@{}", operation.dataset, snapshot_name);
-                    // TODO: Implement actual snapshot deletion
-                    tokio::time::sleep(Duration::from_millis(50)).await;
-                }
+                Self::execute_delete_operation(operation).await?;
             }
-            _ => {
-                // TODO: Implement other operation types
+            SnapshotOperationType::Rollback => {
+                Self::execute_rollback_operation(operation).await?;
+            }
+            SnapshotOperationType::Clone => {
+                Self::execute_clone_operation(operation).await?;
+            }
+            SnapshotOperationType::Send => {
+                Self::execute_send_operation(operation).await?;
+            }
+            SnapshotOperationType::Receive => {
+                Self::execute_receive_operation(operation).await?;
             }
         }
         
+        Ok(())
+    }
+    
+    /// Execute snapshot creation operation
+    async fn execute_create_operation(operation: &SnapshotOperation) -> CoreResult<()> {
+        let snapshot_name = operation.snapshot_name.as_ref()
+            .ok_or_else(|| {
+                let zfs_error = ZfsError::SnapshotError(SnapshotError::InvalidParameters {
+                    operation: "create".to_string(),
+                    reason: "Missing snapshot name".to_string(),
+                });
+                NestGateError::from(zfs_error)
+            })?;
+            
+        info!("Creating snapshot: {}", snapshot_name);
+        
+        // Build ZFS snapshot command
+        let snapshot_full_name = format!("{}@{}", operation.dataset, snapshot_name);
+        
+        // Execute zfs snapshot command
+        let output = tokio::process::Command::new("zfs")
+            .args(&["snapshot", &snapshot_full_name])
+            .output()
+            .await
+            .map_err(|e| NestGateError::from(ZfsError::CommandExecution(format!("Failed to execute zfs snapshot: {}", e))))?;
+        
+        if !output.status.success() {
+            let error_msg = String::from_utf8_lossy(&output.stderr);
+            return Err(NestGateError::from(ZfsError::SnapshotError(SnapshotError::CreationFailed {
+                dataset: operation.dataset.clone(),
+                snapshot: snapshot_name.clone(),
+                reason: error_msg.to_string(),
+            })));
+        }
+        
+        // Verify snapshot was created
+        let verify_output = tokio::process::Command::new("zfs")
+            .args(&["list", "-t", "snapshot", &snapshot_full_name])
+            .output()
+            .await
+            .map_err(|e| NestGateError::from(ZfsError::CommandExecution(format!("Failed to verify snapshot: {}", e))))?;
+        
+        if !verify_output.status.success() {
+            return Err(NestGateError::from(ZfsError::SnapshotError(SnapshotError::CreationFailed {
+                dataset: operation.dataset.clone(),
+                snapshot: snapshot_name.clone(),
+                reason: "Snapshot verification failed".to_string(),
+            })));
+        }
+        
+        info!("Successfully created snapshot: {}", snapshot_full_name);
+        Ok(())
+    }
+    
+    /// Execute snapshot deletion operation
+    async fn execute_delete_operation(operation: &SnapshotOperation) -> CoreResult<()> {
+        let snapshot_name = operation.snapshot_name.as_ref()
+            .ok_or_else(|| {
+                let zfs_error = ZfsError::SnapshotError(SnapshotError::InvalidParameters {
+                    operation: "delete".to_string(),
+                    reason: "Missing snapshot name".to_string(),
+                });
+                NestGateError::from(zfs_error)
+            })?;
+            
+        info!("Deleting snapshot: {}", snapshot_name);
+        
+        let snapshot_full_name = format!("{}@{}", operation.dataset, snapshot_name);
+        
+        // Check if snapshot exists before attempting deletion
+        let list_output = tokio::process::Command::new("zfs")
+            .args(&["list", "-t", "snapshot", &snapshot_full_name])
+            .output()
+            .await
+            .map_err(|e| NestGateError::from(ZfsError::CommandExecution(format!("Failed to check snapshot existence: {}", e))))?;
+        
+        if !list_output.status.success() {
+            warn!("Snapshot {} does not exist, skipping deletion", snapshot_full_name);
+            return Ok(());
+        }
+        
+        // Execute zfs destroy command
+        let output = tokio::process::Command::new("zfs")
+            .args(&["destroy", &snapshot_full_name])
+            .output()
+            .await
+            .map_err(|e| NestGateError::from(ZfsError::CommandExecution(format!("Failed to execute zfs destroy: {}", e))))?;
+        
+        if !output.status.success() {
+            let error_msg = String::from_utf8_lossy(&output.stderr);
+            return Err(NestGateError::from(ZfsError::SnapshotError(SnapshotError::DeletionFailed {
+                dataset: operation.dataset.clone(),
+                snapshot: snapshot_name.clone(),
+                reason: error_msg.to_string(),
+            })));
+        }
+        
+        info!("Successfully deleted snapshot: {}", snapshot_full_name);
+        Ok(())
+    }
+    
+    /// Execute snapshot rollback operation
+    async fn execute_rollback_operation(operation: &SnapshotOperation) -> CoreResult<()> {
+        let snapshot_name = operation.snapshot_name.as_ref()
+            .ok_or_else(|| {
+                let zfs_error = ZfsError::SnapshotError(SnapshotError::InvalidParameters {
+                    operation: "rollback".to_string(),
+                    reason: "Missing snapshot name".to_string(),
+                });
+                NestGateError::from(zfs_error)
+            })?;
+            
+        info!("Rolling back to snapshot: {}", snapshot_name);
+        
+        let snapshot_full_name = format!("{}@{}", operation.dataset, snapshot_name);
+        
+        // Execute zfs rollback command
+        let output = tokio::process::Command::new("zfs")
+            .args(&["rollback", "-r", &snapshot_full_name])
+            .output()
+            .await
+            .map_err(|e| NestGateError::from(ZfsError::CommandExecution(format!("Failed to execute zfs rollback: {}", e))))?;
+        
+        if !output.status.success() {
+            let error_msg = String::from_utf8_lossy(&output.stderr);
+            return Err(NestGateError::from(ZfsError::SnapshotError(SnapshotError::RollbackFailed {
+                dataset: operation.dataset.clone(),
+                snapshot: snapshot_name.clone(),
+                reason: error_msg.to_string(),
+            })));
+        }
+        
+        info!("Successfully rolled back to snapshot: {}", snapshot_full_name);
+        Ok(())
+    }
+    
+    /// Execute snapshot clone operation
+    async fn execute_clone_operation(operation: &SnapshotOperation) -> CoreResult<()> {
+        let snapshot_name = operation.snapshot_name.as_ref()
+            .ok_or_else(|| {
+                let zfs_error = ZfsError::SnapshotError(SnapshotError::InvalidParameters {
+                    operation: "clone".to_string(),
+                    reason: "Missing snapshot name".to_string(),
+                });
+                NestGateError::from(zfs_error)
+            })?;
+            
+        info!("Cloning snapshot: {}", snapshot_name);
+        
+        let snapshot_full_name = format!("{}@{}", operation.dataset, snapshot_name);
+        
+        // For now, we'll use a simple clone name generation
+        // In a real implementation, this would come from operation parameters
+        let clone_name = format!("{}_clone_{}", operation.dataset, snapshot_name);
+        
+        // Execute zfs clone command
+        let output = tokio::process::Command::new("zfs")
+            .args(&["clone", &snapshot_full_name, &clone_name])
+            .output()
+            .await
+            .map_err(|e| NestGateError::from(ZfsError::CommandExecution(format!("Failed to execute zfs clone: {}", e))))?;
+        
+        if !output.status.success() {
+            let error_msg = String::from_utf8_lossy(&output.stderr);
+            return Err(NestGateError::from(ZfsError::SnapshotError(SnapshotError::CloneFailed {
+                snapshot: snapshot_full_name,
+                clone_name: clone_name.clone(),
+                reason: error_msg.to_string(),
+            })));
+        }
+        
+        info!("Successfully cloned snapshot {} to {}", snapshot_full_name, clone_name);
+        Ok(())
+    }
+    
+    /// Execute snapshot send operation
+    async fn execute_send_operation(operation: &SnapshotOperation) -> CoreResult<()> {
+        let snapshot_name = operation.snapshot_name.as_ref()
+            .ok_or_else(|| {
+                let zfs_error = ZfsError::SnapshotError(SnapshotError::InvalidParameters {
+                    operation: "send".to_string(),
+                    reason: "Missing snapshot name".to_string(),
+                });
+                NestGateError::from(zfs_error)
+            })?;
+            
+        info!("Sending snapshot: {}", snapshot_name);
+        
+        let snapshot_full_name = format!("{}@{}", operation.dataset, snapshot_name);
+        let destination = "backup"; // Simplified destination
+        
+        // Execute zfs send command (this is a simplified version)
+        let output = tokio::process::Command::new("zfs")
+            .args(&["send", &snapshot_full_name])
+            .output()
+            .await
+            .map_err(|e| NestGateError::from(ZfsError::CommandExecution(format!("Failed to execute zfs send: {}", e))))?;
+        
+        if !output.status.success() {
+            let error_msg = String::from_utf8_lossy(&output.stderr);
+            return Err(NestGateError::from(ZfsError::SnapshotError(SnapshotError::SendFailed {
+                snapshot: snapshot_full_name,
+                destination: destination.to_string(),
+                reason: error_msg.to_string(),
+            })));
+        }
+        
+        info!("Successfully sent snapshot {} to {}", snapshot_full_name, destination);
+        Ok(())
+    }
+    
+    /// Execute snapshot receive operation
+    async fn execute_receive_operation(operation: &SnapshotOperation) -> CoreResult<()> {
+        let snapshot_name = operation.snapshot_name.as_ref()
+            .ok_or_else(|| {
+                let zfs_error = ZfsError::SnapshotError(SnapshotError::InvalidParameters {
+                    operation: "receive".to_string(),
+                    reason: "Missing snapshot name".to_string(),
+                });
+                NestGateError::from(zfs_error)
+            })?;
+            
+        info!("Receiving snapshot: {}", snapshot_name);
+        
+        let destination_dataset = format!("{}_received", operation.dataset);
+        
+        // This is a simplified receive operation
+        // In practice, this would involve reading from a stream or file
+        let output = tokio::process::Command::new("zfs")
+            .args(&["receive", &destination_dataset])
+            .output()
+            .await
+            .map_err(|e| NestGateError::from(ZfsError::CommandExecution(format!("Failed to execute zfs receive: {}", e))))?;
+        
+        if !output.status.success() {
+            let error_msg = String::from_utf8_lossy(&output.stderr);
+            return Err(NestGateError::from(ZfsError::SnapshotError(SnapshotError::ReceiveFailed {
+                destination: destination_dataset.clone(),
+                reason: error_msg.to_string(),
+            })));
+        }
+        
+        info!("Successfully received snapshot to {}", destination_dataset);
         Ok(())
     }
 
@@ -727,9 +972,9 @@ impl ZfsSnapshotManager {
 
     /// Update the snapshot cache
     async fn update_cache(
-        snapshot_cache: &Arc<RwLock<HashMap<String, SnapshotInfo>>>,
-        statistics: &Arc<RwLock<SnapshotStatistics>>,
-        pool_manager: &Arc<ZfsPoolManager>,
+        _snapshot_cache: &Arc<RwLock<HashMap<String, SnapshotInfo>>>,
+        _statistics: &Arc<RwLock<SnapshotStatistics>>,
+        _pool_manager: &Arc<ZfsPoolManager>,
     ) -> CoreResult<()> {
         debug!("Updating snapshot cache");
         
@@ -749,6 +994,138 @@ impl ZfsSnapshotManager {
                 .unwrap_or_default().as_millis(),
             rand::random::<u32>()
         )
+    }
+
+    /// Parse schedule configuration and create timer
+    pub fn parse_schedule(&self, schedule: &ScheduleFrequency) -> CoreResult<Duration> {
+        match schedule {
+            ScheduleFrequency::Hours(hours) => Ok(Duration::from_secs(*hours as u64 * 3600)),
+            ScheduleFrequency::Minutes(minutes) => Ok(Duration::from_secs(*minutes as u64 * 60)),
+            ScheduleFrequency::Daily(_hour) => Ok(Duration::from_secs(86400)),
+            ScheduleFrequency::Weekly { .. } => Ok(Duration::from_secs(604800)),
+            ScheduleFrequency::Monthly { .. } => Ok(Duration::from_secs(2592000)), // Approximate
+            ScheduleFrequency::Cron(cron_expr) => self.parse_cron_expression(cron_expr),
+        }
+    }
+    
+    /// Parse cron expression (simplified implementation)
+    fn parse_cron_expression(&self, cron_expr: &str) -> CoreResult<Duration> {
+        // Simple cron parsing - in production, use a proper cron library
+        match cron_expr {
+            "0 */6 * * *" => Ok(Duration::from_secs(6 * 3600)), // Every 6 hours
+            "0 0 * * *" => Ok(Duration::from_secs(86400)),       // Daily at midnight
+            "0 0 * * 0" => Ok(Duration::from_secs(604800)),      // Weekly on Sunday
+            _ => {
+                // Default to daily if we can't parse
+                warn!("Could not parse cron expression '{}', defaulting to daily", cron_expr);
+                Ok(Duration::from_secs(86400))
+            }
+        }
+    }
+
+    /// Apply retention policy to remove old snapshots
+    async fn apply_retention_policy(&self, dataset: &str, retention: &RetentionPolicy) -> CoreResult<()> {
+        let snapshots = self.list_snapshots(dataset).await?;
+        
+        // Filter to get only automatic snapshots (those with "auto-" prefix)
+        let mut auto_snapshots: Vec<_> = snapshots.iter()
+            .filter(|s| s.name.starts_with("auto-"))
+            .collect();
+        
+        // Sort by creation time (oldest first)
+        auto_snapshots.sort_by_key(|s| s.created_at);
+
+        match retention {
+            RetentionPolicy::Count(max_snapshots) => {
+                let max_snapshots_usize = *max_snapshots as usize;
+                if auto_snapshots.len() > max_snapshots_usize {
+                    let to_delete = auto_snapshots.len() - max_snapshots_usize;
+                    for snapshot in auto_snapshots.iter().take(to_delete) {
+                        self.delete_snapshot(dataset, &snapshot.name).await?;
+                    }
+                }
+            }
+            RetentionPolicy::Duration(max_duration) => {
+                let cutoff_time = SystemTime::now() - *max_duration;
+                for snapshot in auto_snapshots.iter() {
+                    if snapshot.created_at < cutoff_time {
+                        self.delete_snapshot(dataset, &snapshot.name).await?;
+                    }
+                }
+            }
+            RetentionPolicy::Custom { 
+                hourly_hours, 
+                daily_days, 
+                weekly_weeks, 
+                monthly_months, 
+                yearly_years 
+            } => {
+                // Implement custom retention logic
+                let now = SystemTime::now();
+                let one_hour = Duration::from_secs(3600);
+                let one_day = Duration::from_secs(24 * 3600);
+                let one_week = Duration::from_secs(7 * 24 * 3600);
+                let one_month = Duration::from_secs(30 * 24 * 3600); // Approximate
+                let one_year = Duration::from_secs(365 * 24 * 3600); // Approximate
+                
+                for snapshot in auto_snapshots.iter() {
+                    let age = now.duration_since(snapshot.created_at).unwrap_or_default();
+                    
+                    // Determine if snapshot should be kept based on age and frequency
+                    let should_delete = if age < one_hour * (*hourly_hours as u32) {
+                        false // Keep hourly snapshots
+                    } else if age < one_day * (*daily_days as u32) {
+                        false // Keep daily snapshots
+                    } else if age < one_week * (*weekly_weeks as u32) {
+                        false // Keep weekly snapshots
+                    } else if age < one_month * (*monthly_months as u32) {
+                        false // Keep monthly snapshots
+                    } else if age < one_year * (*yearly_years as u32) {
+                        false // Keep yearly snapshots
+                    } else {
+                        true // Delete older snapshots
+                    };
+                    
+                    if should_delete {
+                        self.delete_snapshot(dataset, &snapshot.name).await?;
+                    }
+                }
+            }
+        }
+        
+        Ok(())
+    }
+
+    /// Update policy cache
+    async fn update_policy_cache(&self) -> CoreResult<()> {
+        // Update the snapshot cache with current policies
+        let mut cache = self.snapshot_cache.write().await;
+        cache.clear();
+        
+        let policies = self.policies.read().await;
+        for (_, policy) in policies.iter() {
+            if policy.enabled {
+                // Create a dummy SnapshotInfo for the policy (this should be improved)
+                let snapshot_info = SnapshotInfo {
+                    name: policy.name.clone(),
+                    full_name: format!("policy/{}", policy.name),
+                    dataset: "policy".to_string(),
+                    created_at: SystemTime::now(),
+                    size: 0,
+                    referenced_size: 0,
+                    written_size: 0,
+                    compression_ratio: 1.0,
+                    properties: HashMap::new(),
+                    policy: Some(policy.name.clone()),
+                    tier: StorageTier::Warm, // Default tier
+                    protected: false,
+                    tags: vec![],
+                };
+                cache.insert(policy.name.clone(), snapshot_info);
+            }
+        }
+        
+        Ok(())
     }
 }
 

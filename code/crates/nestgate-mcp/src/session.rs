@@ -235,7 +235,7 @@ mod tests {
         assert_eq!(session.state, SessionState::Establishing);
         assert_eq!(session.auth_level, AuthLevel::None);
         
-        let retrieved = manager.get_session(&session.id).unwrap();
+        let retrieved = manager.get_session(&session.id).expect("Session should exist after creation");
         assert_eq!(retrieved.id, session.id);
     }
     

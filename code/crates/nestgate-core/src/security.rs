@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
+use std::time::{Instant, SystemTime, Duration};
 use axum::http::{HeaderMap, StatusCode};
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
@@ -367,6 +367,38 @@ impl SecurityManager {
             .find(|api_key| api_key.key == key)
             .map(|api_key| api_key.permissions.clone())
             .unwrap_or_default()
+    }
+
+    /// Check if rate limit is exceeded for a given key
+    pub fn is_rate_limited(&self, key: &str) -> bool {
+        let mut rate_limits = match self.rate_limits.lock() {
+            Ok(guard) => guard,
+            Err(poisoned) => {
+                // If the mutex is poisoned, we can still access the data
+                // but we should log this as it indicates a panic occurred while holding the lock
+                tracing::warn!("Rate limiter mutex was poisoned, recovering");
+                poisoned.into_inner()
+            }
+        };
+
+        let now = Instant::now();
+        let window_duration = Duration::from_secs(self.config.rate_limiting.requests_per_minute as u64 * 60);
+        
+        let entry = rate_limits.entry(key.to_string()).or_insert_with(|| RateLimit {
+            max_requests: self.config.rate_limiting.requests_per_minute,
+            window_seconds: 60,
+            current_count: 0,
+            window_start: now,
+        });
+
+        // Reset window if expired
+        if now.duration_since(entry.window_start) >= window_duration {
+            entry.current_count = 0;
+            entry.window_start = now;
+        }
+
+        entry.current_count += 1;
+        entry.current_count > entry.max_requests
     }
 }
 

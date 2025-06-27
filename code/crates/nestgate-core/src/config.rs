@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use config::{Config as ConfigBuilder, File, Environment as ConfigEnvironment};
 use std::collections::HashMap;
+use uuid;
 
 // Re-export from existing error module
 use crate::error::{Result, NestGateError};
@@ -15,9 +16,6 @@ use crate::error::{Result, NestGateError};
 pub struct Config {
     /// System-wide settings
     pub system: SystemConfig,
-    
-    /// Orchestrator configuration (v2 specific)
-    pub orchestrator: OrchestratorConfig,
     
     /// Storage configuration
     pub storage: StorageConfig,
@@ -57,63 +55,8 @@ pub struct SystemConfig {
     pub environment: String,
 }
 
-/// Orchestrator configuration (v2 specific)
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OrchestratorConfig {
-    /// Orchestrator bind address
-    pub bind_address: String,
-    
-    /// Orchestrator port
-    pub port: u16,
-    
-    /// Service registry configuration
-    pub service_registry: ServiceRegistryConfig,
-    
-    /// Load balancer configuration
-    pub load_balancer: LoadBalancerConfig,
-    
-    /// Health monitoring configuration
-    pub health_monitor: HealthMonitorConfig,
-}
-
-/// Service registry configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ServiceRegistryConfig {
-    /// Registry type (memory, redis, consul)
-    pub registry_type: String,
-    
-    /// Registry connection string
-    pub connection_string: Option<String>,
-    
-    /// Service timeout in seconds
-    pub service_timeout: u64,
-}
-
-/// Load balancer configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LoadBalancerConfig {
-    /// Load balancing algorithm
-    pub algorithm: String,
-    
-    /// Health check interval in seconds
-    pub health_check_interval: u64,
-    
-    /// Connection timeout in seconds
-    pub connection_timeout: u64,
-}
-
-/// Health monitor configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HealthMonitorConfig {
-    /// Check interval in seconds
-    pub check_interval: u64,
-    
-    /// Timeout for health checks in seconds
-    pub timeout: u64,
-    
-    /// Number of retries before marking unhealthy
-    pub retries: u32,
-}
+// Orchestrator configuration moved to nestgate-integration crate
+// These are ecosystem responsibilities, not core NestGate functionality
 
 /// Storage configuration settings with enhanced capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -531,15 +474,14 @@ pub const DEFAULT_IPV6_LOCALHOST: &str = "::1";
 pub const DEFAULT_IPV6_ALL_INTERFACES: &str = "::";
 
 // Default ports for different services
+// NOTE: All hardcoded ports removed - Songbird manages port allocation
+// These are only used as fallbacks in standalone mode
 pub mod default_ports {
-    pub const ORCHESTRATOR: u16 = 8090;
-    pub const API: u16 = 8080;
-    pub const MCP: u16 = 8081;
-    pub const WEBSOCKET: u16 = 8082;
-    pub const METRICS: u16 = 8083;
-    pub const HEALTH: u16 = 8084;
-    pub const ZFS_API: u16 = 8085;
-    pub const NETWORK_SERVICE: u16 = 8086;
+    // All ports set to 0 - let OS assign in standalone mode
+    // In ecosystem mode, Songbird manages all port allocation
+    pub const API_FALLBACK: u16 = 0;
+    pub const HEALTH_FALLBACK: u16 = 0;
+    pub const METRICS_FALLBACK: u16 = 0;
 }
 
 /// Network binding configuration
@@ -559,12 +501,31 @@ pub struct NetworkConfig {
 
 impl Default for NetworkConfig {
     fn default() -> Self {
-        Self {
-            bind_interface: DEFAULT_LOCALHOST.to_string(),
-            port: 0, // Auto-assign
-            ipv6_enabled: false,
-            localhost_only: true, // Secure by default
-            custom_host: None,
+        // Check if we're in Songbird mode or standalone mode
+        let songbird_mode = std::env::var("SONGBIRD_URL").is_ok();
+        
+        if songbird_mode {
+            // Songbird-enhanced mode: use service names
+            Self {
+                bind_interface: std::env::var("SONGBIRD_SERVICE_NAME")
+                    .unwrap_or_else(|_| "nestgate-service".to_string()),
+                port: 0, // Let Songbird allocate
+                ipv6_enabled: false,
+                localhost_only: false, // Songbird handles security
+                custom_host: None,
+            }
+        } else {
+            // Standalone mode: use localhost binding
+            Self {
+                bind_interface: "127.0.0.1".to_string(), // ✅ LOCALHOST FOR STANDALONE
+                port: std::env::var("NESTGATE_PORT")
+                    .unwrap_or_else(|_| "8080".to_string())
+                    .parse()
+                    .unwrap_or(8080),
+                ipv6_enabled: false,
+                localhost_only: true, // ✅ SECURE BY DEFAULT
+                custom_host: None,
+            }
         }
     }
 }
@@ -665,18 +626,45 @@ impl Default for EnvironmentConfig {
 }
 
 impl EnvironmentConfig {
-    /// Get default network config for this environment
+    /// Get default network configuration for this environment
     pub fn default_network_config(&self, service_port: u16) -> NetworkConfig {
-        match (&self.environment, self.allow_external_access) {
-            (RuntimeEnvironment::Development, false) => NetworkConfig::localhost(service_port),
-            (RuntimeEnvironment::Testing, _) => NetworkConfig::localhost(service_port),
-            (RuntimeEnvironment::Production, true) => NetworkConfig::all_interfaces(service_port),
-            (RuntimeEnvironment::Production, false) => NetworkConfig::localhost(service_port),
-            (RuntimeEnvironment::Staging, true) => NetworkConfig::all_interfaces(service_port),
-            (RuntimeEnvironment::Staging, false) => NetworkConfig::localhost(service_port),
-            (RuntimeEnvironment::Development, true) => {
-                // Allow external access in development if explicitly requested
-                NetworkConfig::all_interfaces(service_port)
+        // Check if we're in Songbird mode
+        let songbird_mode = std::env::var("SONGBIRD_URL").is_ok();
+        
+        if songbird_mode {
+            // Songbird-enhanced mode: service-based addressing
+            NetworkConfig {
+                bind_interface: std::env::var("SONGBIRD_SERVICE_NAME")
+                    .unwrap_or_else(|_| format!("nestgate-{}", uuid::Uuid::new_v4().to_string()[..8].to_string())),
+                port: 0, // Always let Songbird allocate
+                ipv6_enabled: false,
+                localhost_only: false, // Songbird handles security
+                custom_host: None,
+            }
+        } else {
+            // Standalone mode: environment-appropriate binding
+            match (&self.environment, self.allow_external_access) {
+                (RuntimeEnvironment::Development, false) => NetworkConfig {
+                    bind_interface: "127.0.0.1".to_string(),
+                    port: service_port,
+                    ipv6_enabled: false,
+                    localhost_only: true,
+                    custom_host: None,
+                },
+                (RuntimeEnvironment::Production, true) => NetworkConfig {
+                    bind_interface: "0.0.0.0".to_string(), // Allow external in production
+                    port: service_port,
+                    ipv6_enabled: false,
+                    localhost_only: false,
+                    custom_host: None,
+                },
+                _ => NetworkConfig {
+                    bind_interface: "127.0.0.1".to_string(), // Default to secure
+                    port: service_port,
+                    ipv6_enabled: false,
+                    localhost_only: true,
+                    custom_host: None,
+                },
             }
         }
     }
@@ -730,10 +718,7 @@ impl Config {
             return Err(NestGateError::Validation("max_concurrent_ops must be greater than 0".to_string()));
         }
 
-        // Validate orchestrator config
-        if self.orchestrator.port == 0 {
-            return Err(NestGateError::Validation("orchestrator port must be greater than 0".to_string()));
-        }
+        // Orchestrator validation removed - this is Songbird's responsibility
 
         // Validate storage config
         if self.storage.cache_size == 0 {
@@ -767,6 +752,17 @@ impl Config {
         Ok(())
     }
 
+    /// Save configuration to a file
+    pub async fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        let serialized = toml::to_string_pretty(self)
+            .map_err(|e| NestGateError::Configuration(format!("Failed to serialize config: {}", e)))?;
+        
+        tokio::fs::write(path, serialized).await
+            .map_err(|e| NestGateError::Configuration(format!("Failed to write config file: {}", e)))?;
+        
+        Ok(())
+    }
+
     /// Gets the configuration for a specific environment
     pub fn for_environment(env: &str) -> Result<Self> {
         let env_config = format!("config/{}", env);
@@ -782,34 +778,20 @@ impl Config {
 
 impl Default for Config {
     fn default() -> Self {
+        // Generate dynamic node ID instead of hardcoding
+        let node_id = format!("nestgate-{}", uuid::Uuid::new_v4().simple().to_string()[..8].to_string());
+        
         Self {
             system: SystemConfig {
                 log_level: "info".to_string(),
-                data_dir: "/var/lib/nestgate".to_string(),
-                temp_dir: "/tmp/nestgate".to_string(),
+                // Use relative paths - Songbird manages absolute paths
+                data_dir: "./data".to_string(),
+                temp_dir: "./tmp".to_string(),
                 max_concurrent_ops: 1000,
-                node_id: "nestgate-node-1".to_string(),
+                node_id: node_id.clone(),
                 environment: "development".to_string(),
             },
-            orchestrator: OrchestratorConfig {
-                bind_address: "0.0.0.0".to_string(),
-                port: 8090,
-                service_registry: ServiceRegistryConfig {
-                    registry_type: "memory".to_string(),
-                    connection_string: None,
-                    service_timeout: 30,
-                },
-                load_balancer: LoadBalancerConfig {
-                    algorithm: "round_robin".to_string(),
-                    health_check_interval: 30,
-                    connection_timeout: 10,
-                },
-                health_monitor: HealthMonitorConfig {
-                    check_interval: 30,
-                    timeout: 5,
-                    retries: 3,
-                },
-            },
+            // Orchestrator config removed - this is Songbird's responsibility
             storage: StorageConfig {
                 cache_size: 1024 * 1024 * 1024, // 1GB
                 max_file_size: 1024 * 1024 * 1024 * 100, // 100GB
@@ -837,12 +819,13 @@ impl Default for Config {
             monitoring: MonitoringConfig {
                 metrics_interval: 30,
                 log_level: "info".to_string(),
-                log_file: "/var/log/nestgate.log".to_string(),
+                // Use relative path - Songbird manages absolute paths
+                log_file: "./logs/nestgate.log".to_string(),
                 log_rotation_size: 1024 * 1024, // 1MB
                 log_retention_days: 30,
                 prometheus: Some(PrometheusConfig {
                     enabled: true,
-                    port: 9090,
+                    port: 0, // Let OS assign port - Songbird manages routing
                     path: "/metrics".to_string(),
                 }),
                 alerts: AlertConfig {
@@ -862,9 +845,9 @@ impl Default for Config {
                 },
             },
             mcp: Some(McpConfig {
-                enabled: true,
-                cluster_endpoint: "localhost:8080".to_string(),
-                node_id: "nestgate-node-1".to_string(),
+                enabled: false, // Disabled by default - Songbird manages MCP
+                cluster_endpoint: "".to_string(), // Empty - Songbird provides endpoint
+                node_id: node_id.clone(),
                 federation_enabled: false,
                 capabilities: McpCapabilitiesConfig {
                     storage_protocols: vec!["nfs".to_string(), "smb".to_string(), "s3".to_string()],
@@ -874,10 +857,10 @@ impl Default for Config {
                 },
             }),
             federation: Some(FederationConfig {
-                enabled: false,
-                cluster_name: "nestgate-cluster".to_string(),
-                mode: "follower".to_string(),
-                peers: vec![],
+                enabled: false, // Disabled by default - Songbird manages federation
+                cluster_name: "".to_string(), // Empty - Songbird provides cluster name
+                mode: "standalone".to_string(), // Default to standalone
+                peers: vec![], // Empty - Songbird discovers peers
                 heartbeat_interval: 30,
             }),
         }
@@ -894,7 +877,7 @@ mod tests {
     fn test_default_config() {
         let config = Config::default();
         assert_eq!(config.system.log_level, "info");
-        assert_eq!(config.orchestrator.port, 8090);
+        // Orchestrator port removed - this is Songbird's responsibility
         assert!(config.validate().is_ok());
     }
 
@@ -906,17 +889,19 @@ mod tests {
         config.system.max_concurrent_ops = 0;
         assert!(config.validate().is_err());
         
-        // Reset and test invalid port
+        // Reset and test valid config
         config = Config::default();
-        config.orchestrator.port = 0;
-        assert!(config.validate().is_err());
+        assert!(config.validate().is_ok());
     }
 
     #[test]
     fn test_config_serialization() {
         let config = Config::default();
-        let serialized = serde_yaml::to_string(&config).unwrap();
-        let deserialized: Config = serde_yaml::from_str(&serialized).unwrap();
+        let serialized = serde_yaml::to_string(&config)
+            .expect("Failed to serialize config - this should never fail with default config");
+        let deserialized: Config = serde_yaml::from_str(&serialized)
+            .expect("Failed to deserialize config - serialization format may be corrupted");
+        
         assert_eq!(config.system.log_level, deserialized.system.log_level);
     }
 
@@ -934,20 +919,7 @@ system:
   max_concurrent_ops: 500
   node_id: "test-node"
   environment: "test"
-orchestrator:
-  bind_address: "127.0.0.1"
-  port: 9090
-  service_registry:
-    registry_type: "memory"
-    service_timeout: 60
-  load_balancer:
-    algorithm: "least_connections"
-    health_check_interval: 15
-    connection_timeout: 5
-  health_monitor:
-    check_interval: 15
-    timeout: 3
-    retries: 2
+# orchestrator config removed - this is Songbird's responsibility
 storage:
   cache_size: 2147483648
   max_file_size: 107374182400
@@ -1014,11 +986,36 @@ federation:
         
         let config = Config::load(&temp_path).unwrap();
         assert_eq!(config.system.log_level, "debug");
-        assert_eq!(config.orchestrator.port, 9090);
+        // Orchestrator port removed - this is Songbird's responsibility
         assert_eq!(config.system.max_concurrent_ops, 500);
         assert!(config.validate().is_ok());
         
         // Clean up
         std::fs::remove_file(&temp_path).unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_config_file_operations() {
+        let config = Config::default();
+        let temp_file = NamedTempFile::new()
+            .expect("Failed to create temporary file for config test");
+        
+        // Test saving config
+        config.save(temp_file.path()).await
+            .expect("Failed to save config to temporary file");
+
+        // Create a permanent temp path for loading test
+        let temp_path = temp_file.path().with_extension("test.toml");
+        std::fs::copy(temp_file.path(), &temp_path)
+            .expect("Failed to copy temp file for loading test");
+        
+        let loaded_config = Config::load(&temp_path)
+            .expect("Failed to load config from temporary file");
+        
+        assert_eq!(config.system.log_level, loaded_config.system.log_level);
+
+        // Cleanup
+        std::fs::remove_file(&temp_path)
+            .expect("Failed to cleanup temporary config file");
     }
 } 

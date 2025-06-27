@@ -65,6 +65,8 @@ pub enum StorageTier {
     Warm,
     /// Cold storage for infrequently accessed data
     Cold,
+    /// Cache storage for ultra-fast access
+    Cache,
 }
 
 impl Default for StorageTier {
@@ -79,6 +81,100 @@ impl std::fmt::Display for StorageTier {
             Self::Hot => write!(f, "hot"),
             Self::Warm => write!(f, "warm"),
             Self::Cold => write!(f, "cold"),
+            Self::Cache => write!(f, "cache"),
+        }
+    }
+}
+
+/// ZFS capabilities and feature support
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ZfsCapabilities {
+    /// Supported compression algorithms
+    pub compression_algorithms: Vec<CompressionAlgorithm>,
+    /// Deduplication support
+    pub deduplication_support: bool,
+    /// Encryption support
+    pub encryption_support: bool,
+    /// Snapshot support
+    pub snapshot_support: bool,
+    /// Replication support
+    pub replication_support: bool,
+    /// Maximum pool size in bytes
+    pub max_pool_size: u64,
+    /// Maximum dataset count per pool
+    pub max_datasets_per_pool: u32,
+    /// ZFS version
+    pub zfs_version: String,
+}
+
+/// Performance target for a storage tier
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TierPerformanceTarget {
+    /// Target IOPS
+    pub target_iops: u32,
+    /// Target bandwidth in MB/s
+    pub target_bandwidth_mbps: f64,
+    /// Target latency in milliseconds
+    pub target_latency_ms: f64,
+    /// Target availability percentage
+    pub target_availability: f64,
+    /// Target durability (number of 9s)
+    pub target_durability_nines: u32,
+    /// Storage tier this target applies to
+    pub tier: StorageTier,
+}
+
+impl Default for ZfsCapabilities {
+    fn default() -> Self {
+        Self {
+            compression_algorithms: vec![
+                CompressionAlgorithm::Lz4,
+                CompressionAlgorithm::Zstd,
+                CompressionAlgorithm::Gzip,
+            ],
+            deduplication_support: true,
+            encryption_support: true,
+            snapshot_support: true,
+            replication_support: true,
+            max_pool_size: 256 * 1024 * 1024 * 1024 * 1024, // 256TB
+            max_datasets_per_pool: 1000,
+            zfs_version: "2.1.0".to_string(),
+        }
+    }
+}
+
+impl Default for TierPerformanceTarget {
+    fn default() -> Self {
+        Self {
+            target_iops: 1000,
+            target_bandwidth_mbps: 100.0,
+            target_latency_ms: 10.0,
+            target_availability: 99.9,
+            target_durability_nines: 11,
+            tier: StorageTier::Hot,
+        }
+    }
+}
+
+// Conversion between nestgate-core::StorageTier and crate::types::StorageTier
+impl From<nestgate_core::StorageTier> for StorageTier {
+    fn from(tier: nestgate_core::StorageTier) -> Self {
+        match tier {
+            nestgate_core::StorageTier::Hot => Self::Hot,
+            nestgate_core::StorageTier::Warm => Self::Warm,
+            nestgate_core::StorageTier::Cold => Self::Cold,
+            nestgate_core::StorageTier::Cache => Self::Cache,
+        }
+    }
+}
+
+impl From<StorageTier> for nestgate_core::StorageTier {
+    fn from(tier: StorageTier) -> Self {
+        match tier {
+            StorageTier::Hot => Self::Hot,
+            StorageTier::Warm => Self::Warm,
+            StorageTier::Cold => Self::Cold,
+            StorageTier::Cache => Self::Cache,
         }
     }
 } 

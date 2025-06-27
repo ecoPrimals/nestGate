@@ -5,7 +5,7 @@
 use thiserror::Error;
 
 /// Main error type for NestGate operations
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Clone)]
 pub enum NestGateError {
     /// Generic internal error
     #[error("Internal error: {0}")]
@@ -61,7 +61,7 @@ pub enum NestGateError {
 
     /// I/O error wrapper
     #[error("I/O error: {0}")]
-    Io(#[from] std::io::Error),
+    Io(String),
 
     /// Resource exhausted error
     #[error("Resource exhausted: {0}")]
@@ -90,7 +90,23 @@ pub enum NestGateError {
     /// MCP error
     #[error("MCP error: {0}")]
     Mcp(String),
+
+    /// Parse error
+    #[error("Parse error: {0}")]
+    Parse(String),
 }
 
 /// Result type alias for NestGate operations
-pub type Result<T> = std::result::Result<T, NestGateError>; 
+pub type Result<T> = std::result::Result<T, NestGateError>;
+
+impl From<std::num::ParseIntError> for NestGateError {
+    fn from(err: std::num::ParseIntError) -> Self {
+        NestGateError::Parse(err.to_string())
+    }
+}
+
+impl From<std::io::Error> for NestGateError {
+    fn from(err: std::io::Error) -> Self {
+        NestGateError::Io(err.to_string())
+    }
+} 

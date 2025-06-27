@@ -137,6 +137,7 @@ impl Error {
                 | ErrorType::Timeout
                 | ErrorType::ServiceUnavailable
                 | ErrorType::Connection
+                | ErrorType::InternalError  // Internal errors can be retryable (e.g., temporary resource issues)
         )
     }
 
@@ -230,7 +231,7 @@ impl ErrorType {
             ErrorType::Volume => ErrorSeverity::High,
             ErrorType::Filesystem => ErrorSeverity::High,
             ErrorType::Permission => ErrorSeverity::High,
-            ErrorType::Validation => ErrorSeverity::Medium,
+            ErrorType::Validation => ErrorSeverity::Low,
             ErrorType::Parsing => ErrorSeverity::Medium,
             ErrorType::Serialization => ErrorSeverity::Medium,
         }
