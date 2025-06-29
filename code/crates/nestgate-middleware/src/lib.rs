@@ -1,4 +1,4 @@
-/*! 
+/*!
 NestGate Middleware Components
 
 This crate provides middleware functionality for the NestGate NAS system.
@@ -10,4 +10,4 @@ mod tests {
     fn it_works() {
         assert_eq!(2 + 2, 4);
     }
-} 
+}

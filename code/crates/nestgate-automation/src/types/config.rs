@@ -10,7 +10,7 @@ pub struct AutomationConfig {
     pub optimization_interval_hours: u64,
     pub prediction_cache_ttl_hours: u64,
     pub min_confidence_threshold: f64,
-    
+
     // Ecosystem service URLs (only available with network-integration feature)
     #[cfg(feature = "network-integration")]
     pub songbird_url: String,
@@ -28,7 +28,7 @@ impl Default for AutomationConfig {
             optimization_interval_hours: 1,
             prediction_cache_ttl_hours: 1,
             min_confidence_threshold: 0.7,
-            
+
             #[cfg(feature = "network-integration")]
             songbird_url: "http://localhost:8080".to_string(),
             #[cfg(feature = "network-integration")]
@@ -65,4 +65,4 @@ impl DiscoveryConfig {
             mdns_enabled: true,
         }
     }
-} 
+}

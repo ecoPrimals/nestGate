@@ -3,14 +3,14 @@
 //! This module provides comprehensive integration with the Songbird orchestrator,
 //! handling service registration, port management, and network coordination.
 
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 use tracing::{debug, error, info, warn};
 use uuid;
 
-use crate::{Result, SongbirdClient, ServiceInstance, ServiceStatus};
+use crate::{Result, ServiceInstance, ServiceStatus, SongbirdClient};
 
 /// Songbird integration configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -128,7 +128,7 @@ impl SongbirdIntegration {
     /// Create a new Songbird integration
     pub fn new(config: SongbirdConfig) -> Self {
         let client = SongbirdClient::new(config.orchestrator_url.clone());
-        
+
         Self {
             config,
             client,
@@ -233,9 +233,8 @@ impl SongbirdIntegration {
         let interval = self.config.health_check_interval;
 
         tokio::spawn(async move {
-            let mut interval_timer = tokio::time::interval(
-                tokio::time::Duration::from_secs(interval)
-            );
+            let mut interval_timer =
+                tokio::time::interval(tokio::time::Duration::from_secs(interval));
 
             loop {
                 interval_timer.tick().await;
@@ -256,20 +255,22 @@ impl SongbirdIntegration {
         let interval = self.config.discovery_interval;
 
         tokio::spawn(async move {
-            let mut interval_timer = tokio::time::interval(
-                tokio::time::Duration::from_secs(interval)
-            );
+            let mut interval_timer =
+                tokio::time::interval(tokio::time::Duration::from_secs(interval));
 
             loop {
                 interval_timer.tick().await;
 
                 debug!("🔍 Discovering services from Songbird...");
-                
+
                 // Implement service discovery from Songbird
                 SongbirdIntegration::discover_services(&discovered_services).await;
                 // For now, just log the discovery attempt
                 let mut services = discovered_services.write().await;
-                debug!("📊 Currently tracking {} discovered services", services.len());
+                debug!(
+                    "📊 Currently tracking {} discovered services",
+                    services.len()
+                );
             }
         })
     }
@@ -309,7 +310,10 @@ impl SongbirdIntegration {
         let allocated = self.allocated_ports.read().await;
         for (service_name, port) in allocated.iter() {
             if let Err(e) = self.client.release_port(service_name, *port).await {
-                warn!("⚠️ Failed to release port {} for {}: {}", port, service_name, e);
+                warn!(
+                    "⚠️ Failed to release port {} for {}: {}",
+                    port, service_name, e
+                );
             }
         }
 
@@ -321,7 +325,7 @@ impl SongbirdIntegration {
     async fn perform_health_check() -> ServiceStatus {
         // Check system health indicators
         let mut healthy = true;
-        
+
         // Check disk space
         if let Ok(metadata) = std::fs::metadata("/") {
             // Basic disk space check - this is a simplified example
@@ -329,14 +333,14 @@ impl SongbirdIntegration {
         } else {
             healthy = false;
         }
-        
+
         // Check memory usage
         if let Ok(_meminfo) = std::fs::read_to_string("/proc/meminfo") {
             debug!("🔍 Checking memory usage...");
         } else {
             healthy = false;
         }
-        
+
         // Check if critical services are running
         if healthy {
             ServiceStatus::Running
@@ -344,16 +348,18 @@ impl SongbirdIntegration {
             ServiceStatus::Failed
         }
     }
-    
+
     /// Discover services from Songbird
-    async fn discover_services(discovered_services: &Arc<RwLock<HashMap<String, ServiceInstance>>>) {
+    async fn discover_services(
+        discovered_services: &Arc<RwLock<HashMap<String, ServiceInstance>>>,
+    ) {
         debug!("🔍 Discovering services from Songbird orchestrator...");
-        
+
         // In a real implementation, this would query the Songbird orchestrator
         // For now, we'll simulate discovery
-        
+
         let mut services = discovered_services.write().await;
-        
+
         // Example discovered service
         let example_service = ServiceInstance {
             id: "example-nestgate-1".to_string(),
@@ -364,10 +370,13 @@ impl SongbirdIntegration {
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
         };
-        
+
         services.insert("example-nestgate-1".to_string(), example_service);
-        
-        debug!("📊 Service discovery completed, found {} services", services.len());
+
+        debug!(
+            "📊 Service discovery completed, found {} services",
+            services.len()
+        );
     }
 }
 
@@ -377,4 +386,4 @@ impl Drop for SongbirdIntegration {
         // The shutdown method should be called explicitly before dropping
         debug!("🗑️ SongbirdIntegration dropped");
     }
-} 
+}

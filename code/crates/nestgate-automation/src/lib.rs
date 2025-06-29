@@ -8,24 +8,24 @@
 //! - Performance monitoring and optimization
 //! - File analysis and access pattern tracking
 
-pub mod types;
-pub mod manager;
-pub mod discovery;
-pub mod connections;
 pub mod ai;
 pub mod analysis;
-pub mod prediction;
+pub mod connections;
+pub mod discovery;
 pub mod lifecycle;
+pub mod manager;
+pub mod prediction;
+pub mod types;
 
 // Re-export main types and interfaces
-pub use manager::IntelligentDatasetManager;
-pub use types::*;
-pub use discovery::EcosystemDiscovery;
-pub use connections::{ServiceConnectionPool, SquirrelConnection};
-pub use ai::*;
+pub use ai::AiAutomationCoordinator;
 pub use analysis::*;
-pub use prediction::TierPredictor;
+pub use connections::{ServiceConnectionPool, SquirrelConnection};
+pub use discovery::EcosystemDiscovery;
 pub use lifecycle::DatasetLifecycleManager;
+pub use manager::IntelligentDatasetManager;
+pub use prediction::TierPredictor;
+pub use types::*;
 
 // Result type alias for convenience
 pub type Result<T> = std::result::Result<T, crate::types::AutomationError>;
@@ -50,9 +50,7 @@ pub async fn initialize_automation_with_config(
 #[cfg(feature = "network-integration")]
 pub async fn check_ecosystem_availability() -> bool {
     match discovery::EcosystemDiscovery::new(&AutomationConfig::default()) {
-        Ok(discovery) => {
-            discovery.discover_songbirds().await.is_ok()
-        }
+        Ok(discovery) => discovery.discover_songbirds().await.is_ok(),
         Err(_) => false,
     }
 }
@@ -60,4 +58,4 @@ pub async fn check_ecosystem_availability() -> bool {
 #[cfg(not(feature = "network-integration"))]
 pub async fn check_ecosystem_availability() -> bool {
     false
-} 
+}

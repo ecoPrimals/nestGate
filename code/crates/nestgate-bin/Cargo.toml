@@ -46,5 +46,5 @@ serde_json = { workspace = true }
 tokio-test = { workspace = true } 
 # UI binary
 [[bin]]
-name = "nestgate-ui"
+name = "nestgate-gui"
 path = "src/bin/nestgate-ui.rs"

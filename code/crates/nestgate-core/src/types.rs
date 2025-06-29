@@ -1,5 +1,5 @@
 //! Core types and data structures for NestGate
-//! 
+//!
 //! This module contains fundamental data types used throughout the system.
 
 use serde::{Deserialize, Serialize};
@@ -39,7 +39,7 @@ impl StorageTier {
             StorageTier::Cache,
         ]
     }
-    
+
     /// Get the priority order of tiers (Hot = highest priority)
     pub fn priority(&self) -> u8 {
         match self {
@@ -49,7 +49,7 @@ impl StorageTier {
             StorageTier::Cache => 0, // Special case - cache has unique priority
         }
     }
-    
+
     /// Check if this tier is suitable for caching
     pub fn is_cache_tier(&self) -> bool {
         matches!(self, StorageTier::Cache | StorageTier::Hot)
@@ -102,7 +102,7 @@ impl Default for SystemInfo {
             os_type: "Linux".to_string(),
             os_version: "6.0".to_string(),
             architecture: "x86_64".to_string(),
-            total_memory: 8_589_934_592, // 8GB
+            total_memory: 8_589_934_592,     // 8GB
             available_memory: 4_294_967_296, // 4GB
             cpu_cores: 4,
             uptime_seconds: 86400, // 1 day
@@ -153,17 +153,17 @@ mod tests {
         assert!(all_tiers.contains(&StorageTier::Warm));
         assert!(all_tiers.contains(&StorageTier::Cold));
         assert!(all_tiers.contains(&StorageTier::Cache));
-        
+
         // Test priority ordering
         assert!(StorageTier::Hot.priority() < StorageTier::Warm.priority());
         assert!(StorageTier::Warm.priority() < StorageTier::Cold.priority());
-        
+
         // Test cache tier identification
         assert!(StorageTier::Hot.is_cache_tier());
         assert!(StorageTier::Cache.is_cache_tier());
         assert!(!StorageTier::Cold.is_cache_tier());
     }
-    
+
     #[test]
     fn test_storage_tier_display() {
         assert_eq!(StorageTier::Hot.to_string(), "Hot");
@@ -171,7 +171,7 @@ mod tests {
         assert_eq!(StorageTier::Cold.to_string(), "Cold");
         assert_eq!(StorageTier::Cache.to_string(), "Cache");
     }
-    
+
     #[test]
     fn test_storage_tier_serialization() {
         for tier in StorageTier::all() {
@@ -180,43 +180,43 @@ mod tests {
             assert_eq!(tier, deserialized);
         }
     }
-    
+
     #[test]
     fn test_health_status() {
         let health = HealthStatus::default();
         assert!(health.overall_healthy);
         assert!(!health.services_running.is_empty());
-        
+
         // Test serialization
         let serialized = serde_json::to_string(&health).unwrap();
         let deserialized: HealthStatus = serde_json::from_str(&serialized).unwrap();
         assert_eq!(health.overall_healthy, deserialized.overall_healthy);
     }
-    
+
     #[test]
     fn test_system_info() {
         let info = SystemInfo::default();
         assert!(!info.hostname.is_empty());
         assert!(info.total_memory > 0);
         assert!(info.cpu_cores > 0);
-        
+
         // Test serialization
         let serialized = serde_json::to_string(&info).unwrap();
         let deserialized: SystemInfo = serde_json::from_str(&serialized).unwrap();
         assert_eq!(info.hostname, deserialized.hostname);
     }
-    
+
     #[test]
     fn test_priority_ordering() {
         assert!(Priority::Low < Priority::Medium);
         assert!(Priority::Medium < Priority::High);
         assert!(Priority::High < Priority::Critical);
-        
+
         // Test display
         assert_eq!(Priority::Critical.to_string(), "Critical");
         assert_eq!(Priority::Low.to_string(), "Low");
     }
-    
+
     #[test]
     fn test_access_pattern_serialization() {
         let patterns = vec![
@@ -226,7 +226,7 @@ mod tests {
             AccessPattern::Read,
             AccessPattern::Mixed,
         ];
-        
+
         for pattern in patterns {
             let serialized = serde_json::to_string(&pattern).unwrap();
             let deserialized: AccessPattern = serde_json::from_str(&serialized).unwrap();
@@ -235,4 +235,4 @@ mod tests {
             assert!(!serialized.is_empty());
         }
     }
-} 
+}

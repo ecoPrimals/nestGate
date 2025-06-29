@@ -1,5 +1,5 @@
 //! NestGate - Sovereign NAS System
-//! 
+//!
 //! A modern, ZFS-based Network Attached Storage system with tiered storage,
 //! AI integration, and modular ecosystem integration capabilities.
 //!
@@ -23,14 +23,14 @@ pub fn health_check() -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_health_check() {
         assert!(health_check().is_ok());
     }
-    
+
     #[test]
     fn test_version() {
         assert!(!VERSION.is_empty());
     }
-} 
+}

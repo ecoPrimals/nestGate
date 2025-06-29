@@ -3,15 +3,15 @@
 //! This test suite validates individual API components, handlers, and utilities
 //! in isolation using mocks and test doubles.
 
-use std::collections::HashMap;
-use nestgate_core::StorageTier;
 use nestgate_api::handlers::zfs::*;
+use nestgate_core::StorageTier;
+use std::collections::HashMap;
 
 /// Test the API response structure
 #[test]
 fn test_api_response_success() {
     let response = ApiResponse::success("test data".to_string());
-    
+
     assert_eq!(response.success, true);
     assert_eq!(response.data, Some("test data".to_string()));
     assert!(response.error.is_none());
@@ -21,7 +21,7 @@ fn test_api_response_success() {
 #[test]
 fn test_api_response_error() {
     let response = ApiResponse::<()>::error_empty("Test error message".to_string());
-    
+
     assert_eq!(response.success, false);
     assert!(response.data.is_none());
     assert_eq!(response.error, Some("Test error message".to_string()));
@@ -48,7 +48,7 @@ fn test_create_pool_request_serialization() {
     assert_eq!(parsed.name, "test_pool");
     assert_eq!(parsed.devices.len(), 2);
     assert!(parsed.config.is_some());
-    
+
     let config = parsed.config.unwrap();
     assert_eq!(config.raid_level, Some("mirror".to_string()));
     assert_eq!(config.compression, Some("lz4".to_string()));
@@ -71,13 +71,14 @@ fn test_create_dataset_request_serialization() {
     };
 
     let json_str = serde_json::to_string(&request).expect("Failed to serialize");
-    let parsed: CreateDatasetRequest = serde_json::from_str(&json_str).expect("Failed to deserialize");
+    let parsed: CreateDatasetRequest =
+        serde_json::from_str(&json_str).expect("Failed to deserialize");
 
     assert_eq!(parsed.name, "test_dataset");
     assert_eq!(parsed.parent, "test_pool");
     assert_eq!(parsed.tier, StorageTier::Warm);
     assert!(parsed.properties.is_some());
-    
+
     let props = parsed.properties.unwrap();
     assert_eq!(props.get("compression"), Some(&"lz4".to_string()));
     assert_eq!(props.get("recordsize"), Some(&"128K".to_string()));
@@ -97,7 +98,8 @@ fn test_create_snapshot_request_serialization() {
     };
 
     let json_str = serde_json::to_string(&request).expect("Failed to serialize");
-    let parsed: CreateSnapshotRequest = serde_json::from_str(&json_str).expect("Failed to deserialize");
+    let parsed: CreateSnapshotRequest =
+        serde_json::from_str(&json_str).expect("Failed to deserialize");
 
     assert_eq!(parsed.name, "test_snapshot");
     assert_eq!(parsed.dataset, "test_dataset");
@@ -116,7 +118,8 @@ fn test_tier_migration_request_serialization() {
     };
 
     let json_str = serde_json::to_string(&request).expect("Failed to serialize");
-    let parsed: TierMigrationRequest = serde_json::from_str(&json_str).expect("Failed to deserialize");
+    let parsed: TierMigrationRequest =
+        serde_json::from_str(&json_str).expect("Failed to deserialize");
 
     assert_eq!(parsed.dataset_path, "/test/dataset");
     assert_eq!(parsed.source_tier, StorageTier::Hot);
@@ -150,7 +153,8 @@ fn test_tier_prediction_request_serialization() {
     };
 
     let json_str = serde_json::to_string(&request).expect("Failed to serialize");
-    let parsed: TierPredictionRequest = serde_json::from_str(&json_str).expect("Failed to deserialize");
+    let parsed: TierPredictionRequest =
+        serde_json::from_str(&json_str).expect("Failed to deserialize");
 
     assert_eq!(parsed.file_path, "/test/file.txt");
 }
@@ -162,7 +166,7 @@ fn test_invalid_json_handling() {
     let invalid_json = r#"{"name": "test", "parent": "pool", "tier": "InvalidTier"}"#;
     let result: Result<CreateDatasetRequest, _> = serde_json::from_str(invalid_json);
     assert!(result.is_err());
-    
+
     // Test missing required fields
     let incomplete_json = r#"{"name": "test"}"#;
     let result: Result<CreateDatasetRequest, _> = serde_json::from_str(incomplete_json);
@@ -181,7 +185,8 @@ fn test_storage_tier_serialization() {
 
     for tier in tiers {
         let json_str = serde_json::to_string(&tier).expect("Failed to serialize tier");
-        let parsed: StorageTier = serde_json::from_str(&json_str).expect("Failed to deserialize tier");
+        let parsed: StorageTier =
+            serde_json::from_str(&json_str).expect("Failed to deserialize tier");
         assert_eq!(parsed, tier);
     }
 }
@@ -191,16 +196,18 @@ fn test_storage_tier_serialization() {
 fn test_optional_fields_handling() {
     // Test CreatePoolRequest with minimal fields
     let minimal_json = r#"{"name": "test_pool", "devices": ["/dev/sda"]}"#;
-    let parsed: CreatePoolRequest = serde_json::from_str(minimal_json).expect("Failed to parse minimal request");
-    
+    let parsed: CreatePoolRequest =
+        serde_json::from_str(minimal_json).expect("Failed to parse minimal request");
+
     assert_eq!(parsed.name, "test_pool");
     assert_eq!(parsed.devices.len(), 1);
     assert!(parsed.config.is_none());
-    
+
     // Test CreateDatasetRequest with minimal fields
     let minimal_json = r#"{"name": "test_dataset", "parent": "test_pool", "tier": "Warm"}"#;
-    let parsed: CreateDatasetRequest = serde_json::from_str(minimal_json).expect("Failed to parse minimal request");
-    
+    let parsed: CreateDatasetRequest =
+        serde_json::from_str(minimal_json).expect("Failed to parse minimal request");
+
     assert_eq!(parsed.name, "test_dataset");
     assert_eq!(parsed.parent, "test_pool");
     assert_eq!(parsed.tier, StorageTier::Warm);
@@ -211,14 +218,15 @@ fn test_optional_fields_handling() {
 #[test]
 fn test_api_response_timestamp_format() {
     let response = ApiResponse::success("test".to_string());
-    
+
     // Timestamp should be a valid DateTime
     let timestamp_str = response.timestamp.to_rfc3339();
     assert!(timestamp_str.contains('T'));
     assert!(timestamp_str.contains('Z') || timestamp_str.contains('+'));
-    
+
     // Should be parseable as DateTime
-    let _parsed_time: chrono::DateTime<chrono::Utc> = timestamp_str.parse()
+    let _parsed_time: chrono::DateTime<chrono::Utc> = timestamp_str
+        .parse()
         .expect("Timestamp should be valid ISO 8601");
 }
 
@@ -231,11 +239,11 @@ fn test_edge_cases() {
         devices: vec![],
         config: None,
     };
-    
+
     let json_str = serde_json::to_string(&request).expect("Failed to serialize");
     let parsed: CreatePoolRequest = serde_json::from_str(&json_str).expect("Failed to deserialize");
     assert!(parsed.devices.is_empty());
-    
+
     // Test very long names
     let long_name = "a".repeat(1000);
     let request = CreatePoolRequest {
@@ -243,7 +251,7 @@ fn test_edge_cases() {
         devices: vec!["/dev/sda".to_string()],
         config: None,
     };
-    
+
     let json_str = serde_json::to_string(&request).expect("Failed to serialize");
     let parsed: CreatePoolRequest = serde_json::from_str(&json_str).expect("Failed to deserialize");
     assert_eq!(parsed.name, long_name);
@@ -263,11 +271,11 @@ fn test_data_structure_consistency() {
             encryption: Some(false),
         }),
     };
-    
+
     let json = serde_json::to_string(&pool_request).unwrap();
     let parsed: CreatePoolRequest = serde_json::from_str(&json).unwrap();
     let json2 = serde_json::to_string(&parsed).unwrap();
-    
+
     // Should be identical after round-trip
     assert_eq!(json, json2);
 }
@@ -278,13 +286,13 @@ fn test_zfs_api_state_structure() {
     // This test validates that ZfsApiState can be constructed
     // We can't easily test it without a real ZfsManager, but we can
     // verify the structure exists and has the expected fields
-    
+
     // The struct should be cloneable and debuggable
     use std::fmt::Debug;
-    
+
     fn assert_clone<T: Clone>() {}
     fn assert_debug<T: Debug>() {}
-    
+
     assert_clone::<ZfsApiState>();
     assert_debug::<ZfsApiState>();
 }
@@ -305,16 +313,25 @@ fn test_serialization_performance() {
             props
         }),
     };
-    
+
     let start = std::time::Instant::now();
     let json_str = serde_json::to_string(&large_request).expect("Failed to serialize");
     let serialize_time = start.elapsed();
-    
+
     let start = std::time::Instant::now();
-    let _parsed: CreateDatasetRequest = serde_json::from_str(&json_str).expect("Failed to deserialize");
+    let _parsed: CreateDatasetRequest =
+        serde_json::from_str(&json_str).expect("Failed to deserialize");
     let deserialize_time = start.elapsed();
-    
+
     // Serialization should be reasonably fast (less than 10ms for 1000 properties)
-    assert!(serialize_time.as_millis() < 10, "Serialization took too long: {:?}", serialize_time);
-    assert!(deserialize_time.as_millis() < 10, "Deserialization took too long: {:?}", deserialize_time);
-} 
+    assert!(
+        serialize_time.as_millis() < 10,
+        "Serialization took too long: {:?}",
+        serialize_time
+    );
+    assert!(
+        deserialize_time.as_millis() < 10,
+        "Deserialization took too long: {:?}",
+        deserialize_time
+    );
+}

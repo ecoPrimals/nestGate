@@ -1,36 +1,35 @@
 //! NestGate v2 MCP Integration
-//! 
+//!
 //! Enhanced MCP protocol integration adapter for NestGate v2
 //! Integrates mature v1 capabilities with v2 orchestrator-centric architecture
 
-use std::sync::Arc;
-use std::collections::HashMap;
-use std::time::SystemTime;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::Arc;
+use std::time::SystemTime;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
 
 // Internal modules
-pub mod types;
-pub mod protocol;
-pub mod error;
-pub mod provider;
 pub mod adapter;
+pub mod error;
+pub mod protocol;
+pub mod provider;
+pub mod security;
 pub mod session;
 pub mod storage;
-pub mod security;
+pub mod types;
 
 // Re-export types for convenience
 pub use types::{
-    EnhancedSystemMetrics as SystemMetrics, 
-    EnhancedProviderCapabilities as ProviderCapabilities,
-    MountRequest, MountInfo, VolumeRequest, VolumeInfo,
-    AuthConfig, TlsConfig, ProviderConfig,
+    AuthConfig, EnhancedProviderCapabilities as ProviderCapabilities,
+    EnhancedSystemMetrics as SystemMetrics, MountInfo, MountRequest, ProviderConfig, TlsConfig,
+    VolumeInfo, VolumeRequest,
 };
 
 // Use specific Result type to avoid ambiguity
-pub use error::{Error, ErrorType, ErrorSeverity};
+pub use error::{Error, ErrorSeverity, ErrorType};
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Enhanced MCP Configuration for v2 with advanced capabilities
@@ -171,20 +170,20 @@ impl EnhancedMcpService {
 
     /// Collect enhanced system metrics
     pub async fn collect_metrics(&self) -> Result<SystemMetrics> {
-        let metrics = SystemMetrics::collect().await.map_err(|e| {
-            Error::internal(format!("Failed to collect metrics: {}", e))
-        })?;
-        
+        let metrics = SystemMetrics::collect()
+            .await
+            .map_err(|e| Error::internal(format!("Failed to collect metrics: {}", e)))?;
+
         // Update internal metrics
         *self.metrics.write().await = metrics.clone();
-        
+
         Ok(metrics)
     }
 
     /// Register capabilities with orchestrator
     pub async fn register_capabilities(&self, capabilities: ProviderCapabilities) -> Result<()> {
         *self.capabilities.write().await = capabilities.clone();
-        
+
         let service_info = protocol::ServiceInfo {
             service_id: self.config.node_id.clone(),
             service_name: "enhanced-mcp-service".to_string(),
@@ -194,8 +193,10 @@ impl EnhancedMcpService {
             capabilities: vec!["mcp".to_string(), "storage".to_string()],
             metadata: HashMap::new(),
         };
-        
-        self.orchestrator_client.register_service(service_info).await?;
+
+        self.orchestrator_client
+            .register_service(service_info)
+            .await?;
         info!("Capabilities registered with orchestrator");
         Ok(())
     }
@@ -203,7 +204,7 @@ impl EnhancedMcpService {
     /// Handle MCP message through orchestrator routing
     pub async fn handle_message(&self, message: protocol::Message) -> Result<protocol::Response> {
         debug!("Handling MCP message: {:?}", message);
-        
+
         // Route through orchestrator for v2 integration
         self.orchestrator_client.route_message(message).await
     }
@@ -211,7 +212,7 @@ impl EnhancedMcpService {
     /// Handle mount request through orchestrator
     pub async fn handle_mount_request(&self, request: MountRequest) -> Result<MountInfo> {
         debug!("Handling mount request: {:?}", request);
-        
+
         // Use storage adapter for actual mounting
         self.storage_adapter.mount_volume(&request).await
     }
@@ -219,17 +220,17 @@ impl EnhancedMcpService {
     /// Start the enhanced MCP service
     pub async fn start(&self) -> Result<()> {
         info!("Starting Enhanced MCP Service");
-        
+
         // Register with orchestrator
         let capabilities = self.capabilities.read().await.clone();
         self.register_capabilities(capabilities).await?;
-        
+
         // Start metrics collection
         self.start_metrics_collection().await?;
-        
+
         // Start health monitoring
         self.start_health_monitoring().await?;
-        
+
         info!("Enhanced MCP Service started successfully");
         Ok(())
     }
@@ -239,20 +240,19 @@ impl EnhancedMcpService {
         let metrics_interval = self.config.metrics_collection_interval;
         let orchestrator_client = self.orchestrator_client.clone();
         let metrics = self.metrics.clone();
-        
+
         tokio::spawn(async move {
-            let mut interval = tokio::time::interval(
-                std::time::Duration::from_secs(metrics_interval)
-            );
-            
+            let mut interval =
+                tokio::time::interval(std::time::Duration::from_secs(metrics_interval));
+
             loop {
                 interval.tick().await;
-                
+
                 // Handle metrics collection with proper error handling
                 match SystemMetrics::collect().await {
                     Ok(current_metrics) => {
                         *metrics.write().await = current_metrics.clone();
-                        
+
                         if let Err(e) = orchestrator_client.send_metrics(&current_metrics).await {
                             tracing::error!("Failed to send metrics to orchestrator: {}", e);
                         }
@@ -263,26 +263,25 @@ impl EnhancedMcpService {
                 }
             }
         });
-        
+
         Ok(())
     }
 
     /// Start health monitoring
     async fn start_health_monitoring(&self) -> Result<()> {
         let health_interval = self.config.health_check_interval;
-        
+
         tokio::spawn(async move {
-            let mut interval = tokio::time::interval(
-                std::time::Duration::from_secs(health_interval)
-            );
-            
+            let mut interval =
+                tokio::time::interval(std::time::Duration::from_secs(health_interval));
+
             loop {
                 interval.tick().await;
                 // Perform health checks
                 debug!("Performing health check");
             }
         });
-        
+
         Ok(())
     }
 }
@@ -302,7 +301,7 @@ mod tests {
             orchestrator_endpoint: "localhost:9090".to_string(),
             federation_enabled: true,
         };
-        
+
         assert_eq!(config.node_id, "test-node");
         assert_eq!(config.cluster_endpoint, "localhost:8080");
     }
@@ -312,4 +311,4 @@ mod tests {
         let capabilities = ProviderCapabilities::default();
         assert!(capabilities.supported_protocols.len() >= 0);
     }
-} 
+}

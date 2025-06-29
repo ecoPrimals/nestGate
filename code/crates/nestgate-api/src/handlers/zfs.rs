@@ -3,24 +3,24 @@
 //! Provides HTTP endpoints for ZFS pool management, dataset operations,
 //! snapshot management, and tier optimization.
 
-use std::sync::Arc;
-use std::collections::HashMap;
 use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
     response::Json,
-    routing::{get, post, put, delete},
+    routing::{delete, get, post, put},
     Router,
 };
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::Arc;
 use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
 use nestgate_core::StorageTier;
 use nestgate_zfs::{
-    manager::{ZfsManager, EnhancedServiceStatus},
-    pool::{PoolInfo},
-    dataset::{DatasetInfo},
+    dataset::DatasetInfo,
+    manager::{EnhancedServiceStatus, ZfsManager},
+    pool::PoolInfo,
     snapshot::SnapshotInfo,
 };
 
@@ -142,7 +142,7 @@ impl<T> ApiResponse<T> {
             timestamp: chrono::Utc::now(),
         }
     }
-    
+
     /// Create an error response with no data (alias for error)
     pub fn error_empty(message: String) -> ApiResponse<()> {
         ApiResponse {
@@ -160,7 +160,7 @@ pub fn create_zfs_routes() -> Router<ZfsApiState> {
         // Health and status endpoints
         .route("/health", get(get_zfs_health))
         .route("/status", get(get_zfs_status))
-        
+
         // Pool management endpoints
         .route("/pools", get(list_pools))
         .route("/pools", post(create_pool))
@@ -168,7 +168,7 @@ pub fn create_zfs_routes() -> Router<ZfsApiState> {
         .route("/pools/:name", delete(destroy_pool))
         .route("/pools/:name/status", get(get_pool_status))
         .route("/pools/:name/scrub", post(scrub_pool))
-        
+
         // Dataset management endpoints
         .route("/datasets", get(list_datasets))
         .route("/datasets", post(create_dataset))
@@ -176,12 +176,12 @@ pub fn create_zfs_routes() -> Router<ZfsApiState> {
         .route("/datasets/:name", delete(destroy_dataset))
         .route("/datasets/:name/properties", get(get_dataset_properties))
         .route("/datasets/:name/properties", put(set_dataset_properties))
-        
+
         // Snapshot management endpoints
         .route("/datasets/:name/snapshots", get(list_snapshots))
         .route("/datasets/:name/snapshots", post(create_snapshot))
         .route("/datasets/:name/snapshots/:snapshot", delete(delete_snapshot))
-        
+
         // AI and optimization endpoints
         .route("/ai/tier-prediction", post(get_tier_prediction))
         .route("/optimization/analytics", get(get_performance_analytics))
@@ -195,7 +195,7 @@ pub async fn get_zfs_health(
     State(state): State<ZfsApiState>,
 ) -> Result<Json<ApiResponse<EnhancedServiceStatus>>, StatusCode> {
     debug!("Getting ZFS health status");
-    
+
     match state.zfs_manager.get_zfs_health().await {
         Ok(health) => {
             info!("ZFS health check successful");
@@ -213,7 +213,7 @@ pub async fn get_zfs_status(
     State(state): State<ZfsApiState>,
 ) -> Result<Json<ApiResponse<EnhancedServiceStatus>>, StatusCode> {
     debug!("Getting ZFS system status");
-    
+
     match state.zfs_manager.get_service_status().await {
         Ok(status) => {
             info!("ZFS status retrieval successful");
@@ -234,14 +234,14 @@ pub async fn list_pools(
     Query(query): Query<ListQuery>,
 ) -> Result<Json<ApiResponse<Vec<PoolInfo>>>, StatusCode> {
     debug!("Listing ZFS pools with query: {:?}", query);
-    
+
     match state.zfs_manager.pool_manager.list_pools().await {
         Ok(mut pools) => {
             // Apply query filters
             if let Some(limit) = query.limit {
                 pools.truncate(limit);
             }
-            
+
             info!("Listed {} ZFS pools", pools.len());
             Ok(Json(ApiResponse::success(pools)))
         }
@@ -258,8 +258,13 @@ pub async fn create_pool(
     Json(request): Json<CreatePoolRequest>,
 ) -> Result<Json<ApiResponse<PoolInfo>>, StatusCode> {
     debug!("Creating ZFS pool: {:?}", request);
-    
-    match state.zfs_manager.pool_manager.create_pool(&request.name, &request.devices).await {
+
+    match state
+        .zfs_manager
+        .pool_manager
+        .create_pool(&request.name, &request.devices)
+        .await
+    {
         Ok(pool_info) => {
             info!("Successfully created ZFS pool: {}", request.name);
             Ok(Json(ApiResponse::success(pool_info)))
@@ -277,7 +282,7 @@ pub async fn get_pool_info(
     Path(name): Path<String>,
 ) -> Result<Json<ApiResponse<PoolInfo>>, StatusCode> {
     debug!("Getting info for pool: {}", name);
-    
+
     match state.zfs_manager.pool_manager.get_pool_info(&name).await {
         Ok(pool_info) => {
             info!("Retrieved info for pool: {}", name);
@@ -296,7 +301,7 @@ pub async fn destroy_pool(
     Path(name): Path<String>,
 ) -> Result<Json<ApiResponse<()>>, StatusCode> {
     debug!("Destroying pool: {}", name);
-    
+
     match state.zfs_manager.pool_manager.destroy_pool(&name).await {
         Ok(()) => {
             info!("Successfully destroyed pool: {}", name);
@@ -315,7 +320,7 @@ pub async fn get_pool_status(
     Path(name): Path<String>,
 ) -> Result<Json<PoolStatusResponse>, StatusCode> {
     debug!("Getting pool status for: {}", name);
-    
+
     match state.zfs_manager.get_pool_status(&name).await {
         Ok(status) => {
             info!("Successfully retrieved pool status for: {}", name);
@@ -334,7 +339,7 @@ pub async fn scrub_pool(
     Path(name): Path<String>,
 ) -> Result<StatusCode, StatusCode> {
     info!("Starting scrub for pool: {}", name);
-    
+
     match state.zfs_manager.scrub_pool(&name).await {
         Ok(_) => {
             info!("Successfully started scrub for pool: {}", name);
@@ -355,19 +360,19 @@ pub async fn list_datasets(
     Query(query): Query<ListQuery>,
 ) -> Result<Json<ApiResponse<Vec<DatasetInfo>>>, StatusCode> {
     debug!("Listing datasets with query: {:?}", query);
-    
+
     match state.zfs_manager.dataset_manager.list_datasets().await {
         Ok(mut datasets) => {
             // Apply tier filter if specified
             if let Some(tier) = query.tier {
                 datasets.retain(|d| d.tier == tier);
             }
-            
+
             // Apply limit
             if let Some(limit) = query.limit {
                 datasets.truncate(limit);
             }
-            
+
             info!("Listed {} datasets", datasets.len());
             Ok(Json(ApiResponse::success(datasets)))
         }
@@ -384,18 +389,25 @@ pub async fn create_dataset(
     Json(request): Json<CreateDatasetRequest>,
 ) -> Result<Json<ApiResponse<DatasetInfo>>, StatusCode> {
     debug!("Creating dataset: {:?}", request);
-    
-    match state.zfs_manager.dataset_manager.create_dataset(
-        &request.name,
-        &request.parent,
-        request.tier
-    ).await {
+
+    match state
+        .zfs_manager
+        .dataset_manager
+        .create_dataset(&request.name, &request.parent, request.tier)
+        .await
+    {
         Ok(dataset_info) => {
-            info!("Successfully created dataset: {}/{}", request.parent, request.name);
+            info!(
+                "Successfully created dataset: {}/{}",
+                request.parent, request.name
+            );
             Ok(Json(ApiResponse::success(dataset_info)))
         }
         Err(e) => {
-            error!("Failed to create dataset {}/{}: {}", request.parent, request.name, e);
+            error!(
+                "Failed to create dataset {}/{}: {}",
+                request.parent, request.name, e
+            );
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -407,8 +419,13 @@ pub async fn get_dataset_info(
     Path(name): Path<String>,
 ) -> Result<Json<ApiResponse<DatasetInfo>>, StatusCode> {
     debug!("Getting dataset info: {}", name);
-    
-    match state.zfs_manager.dataset_manager.get_dataset_info_with_fallback(&name).await {
+
+    match state
+        .zfs_manager
+        .dataset_manager
+        .get_dataset_info_with_fallback(&name)
+        .await
+    {
         Ok(dataset_info) => {
             info!("Retrieved dataset info: {}", name);
             Ok(Json(ApiResponse::success(dataset_info)))
@@ -426,8 +443,13 @@ pub async fn destroy_dataset(
     Path(name): Path<String>,
 ) -> Result<Json<ApiResponse<()>>, StatusCode> {
     debug!("Destroying dataset: {}", name);
-    
-    match state.zfs_manager.dataset_manager.destroy_dataset(&name).await {
+
+    match state
+        .zfs_manager
+        .dataset_manager
+        .destroy_dataset(&name)
+        .await
+    {
         Ok(()) => {
             info!("Successfully destroyed dataset: {}", name);
             Ok(Json(ApiResponse::success(())))
@@ -445,10 +467,19 @@ pub async fn get_dataset_properties(
     Path(name): Path<String>,
 ) -> Result<Json<ApiResponse<HashMap<String, String>>>, StatusCode> {
     debug!("Getting properties for dataset: {}", name);
-    
-    match state.zfs_manager.dataset_manager.get_dataset_properties(&name).await {
+
+    match state
+        .zfs_manager
+        .dataset_manager
+        .get_dataset_properties(&name)
+        .await
+    {
         Ok(properties) => {
-            info!("Retrieved {} properties for dataset: {}", properties.len(), name);
+            info!(
+                "Retrieved {} properties for dataset: {}",
+                properties.len(),
+                name
+            );
             Ok(Json(ApiResponse::success(properties)))
         }
         Err(e) => {
@@ -464,9 +495,18 @@ pub async fn set_dataset_properties(
     Path(name): Path<String>,
     Json(properties): Json<HashMap<String, String>>,
 ) -> Result<Json<ApiResponse<()>>, StatusCode> {
-    debug!("Setting {} properties for dataset: {}", properties.len(), name);
-    
-    match state.zfs_manager.dataset_manager.set_dataset_properties(&name, &properties).await {
+    debug!(
+        "Setting {} properties for dataset: {}",
+        properties.len(),
+        name
+    );
+
+    match state
+        .zfs_manager
+        .dataset_manager
+        .set_dataset_properties(&name, &properties)
+        .await
+    {
         Ok(()) => {
             info!("Successfully set properties for dataset: {}", name);
             Ok(Json(ApiResponse::success(())))
@@ -486,7 +526,7 @@ pub async fn list_snapshots(
     Path(name): Path<String>,
 ) -> Result<Json<ApiResponse<Vec<SnapshotInfo>>>, StatusCode> {
     debug!("Listing snapshots for dataset: {}", name);
-    
+
     match state.zfs_manager.list_snapshots(&name).await {
         Ok(snapshots) => {
             info!("Listed {} snapshots for dataset: {}", snapshots.len(), name);
@@ -505,20 +545,32 @@ pub async fn create_snapshot(
     Path(dataset): Path<String>,
     Json(request): Json<CreateSnapshotRequest>,
 ) -> Result<Json<ApiResponse<SnapshotOperationResponse>>, StatusCode> {
-    debug!("Creating snapshot {} for dataset: {}", request.name, dataset);
-    
+    debug!(
+        "Creating snapshot {} for dataset: {}",
+        request.name, dataset
+    );
+
     let recursive = request.recursive.unwrap_or(false);
-    
-    match state.zfs_manager.snapshot_manager.create_snapshot(&dataset, &request.name, recursive).await {
+
+    match state
+        .zfs_manager
+        .snapshot_manager
+        .create_snapshot(&dataset, &request.name, recursive)
+        .await
+    {
         Ok(operation_id) => {
-            info!("Successfully created snapshot: {}@{}", dataset, request.name);
-            let response = SnapshotOperationResponse {
-                operation_id,
-            };
+            info!(
+                "Successfully created snapshot: {}@{}",
+                dataset, request.name
+            );
+            let response = SnapshotOperationResponse { operation_id };
             Ok(Json(ApiResponse::success(response)))
         }
         Err(e) => {
-            error!("Failed to create snapshot {}@{}: {}", dataset, request.name, e);
+            error!(
+                "Failed to create snapshot {}@{}: {}",
+                dataset, request.name, e
+            );
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -530,13 +582,16 @@ pub async fn delete_snapshot(
     Path((dataset, snapshot)): Path<(String, String)>,
 ) -> Result<Json<ApiResponse<SnapshotOperationResponse>>, StatusCode> {
     debug!("Deleting snapshot {} from dataset: {}", snapshot, dataset);
-    
-    match state.zfs_manager.snapshot_manager.delete_snapshot(&dataset, &snapshot).await {
+
+    match state
+        .zfs_manager
+        .snapshot_manager
+        .delete_snapshot(&dataset, &snapshot)
+        .await
+    {
         Ok(operation_id) => {
             info!("Successfully deleted snapshot: {}@{}", dataset, snapshot);
-            let response = SnapshotOperationResponse {
-                operation_id,
-            };
+            let response = SnapshotOperationResponse { operation_id };
             Ok(Json(ApiResponse::success(response)))
         }
         Err(e) => {
@@ -560,14 +615,21 @@ pub async fn get_tier_prediction(
     Json(request): Json<TierPredictionRequest>,
 ) -> Result<Json<ApiResponse<Option<nestgate_zfs::ai_integration::TierPrediction>>>, StatusCode> {
     debug!("Getting tier prediction for file: {}", request.file_path);
-    
-    match state.zfs_manager.get_ai_tier_recommendation(&request.file_path).await {
+
+    match state
+        .zfs_manager
+        .get_ai_tier_recommendation(&request.file_path)
+        .await
+    {
         Ok(prediction) => {
             info!("Retrieved tier prediction for file: {}", request.file_path);
             Ok(Json(ApiResponse::success(prediction)))
         }
         Err(e) => {
-            error!("Failed to get tier prediction for {}: {}", request.file_path, e);
+            error!(
+                "Failed to get tier prediction for {}: {}",
+                request.file_path, e
+            );
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -578,7 +640,7 @@ pub async fn get_performance_analytics(
     State(state): State<ZfsApiState>,
 ) -> Result<Json<ApiResponse<nestgate_zfs::manager::PerformanceAnalytics>>, StatusCode> {
     debug!("Getting performance analytics");
-    
+
     match state.zfs_manager.get_performance_analytics().await {
         Ok(analytics) => {
             info!("Retrieved performance analytics");
@@ -596,7 +658,7 @@ pub async fn trigger_optimization(
     State(state): State<ZfsApiState>,
 ) -> Result<Json<ApiResponse<nestgate_zfs::manager::OptimizationResult>>, StatusCode> {
     debug!("Triggering optimization");
-    
+
     match state.zfs_manager.trigger_optimization().await {
         Ok(result) => {
             info!("Optimization triggered successfully");
@@ -621,4 +683,4 @@ pub struct PoolStatusResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SnapshotOperationResponse {
     pub operation_id: String,
-} 
+}

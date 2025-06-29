@@ -1,3 +1,97 @@
+# NestGate - Sovereign ZFS NAS System
+
+## Architecture Principles
+
+### 🏗️ **Separation of Concerns**
+
+NestGate follows a clean architectural separation:
+
+- **NestGate** = **Storage Layer**
+  - ZFS pool management and operations
+  - File system operations and replication  
+  - Network protocols (NFS, SMB, HTTP)
+  - **Zero encryption capabilities**
+  - **Zero key management**
+  - **Encryption-agnostic storage**
+
+- **BearDog** = **Security Layer** *(external project)*
+  - Encryption and decryption operations
+  - Key management and HSM integration
+  - Certificate and authentication services
+  - **Storage-agnostic security**
+  - **Can use NestGate for storage**
+
+### 🔐 **Encryption Philosophy**
+
+**NestGate is intentionally encryption-agnostic:**
+
+```
+┌─────────────────────────────────────────┐
+│ APPLICATION LAYER                       │
+│ - User interfaces and applications      │
+└─────────────────┬───────────────────────┘
+                  │
+┌─────────────────▼───────────────────────┐
+│ BEARDOG (Security Layer)                │
+│ - Encryption/decryption                 │
+│ - Key management                        │
+│ - Authentication                        │
+│ - Can use NestGate for key storage      │
+└─────────────────┬───────────────────────┘
+                  │
+┌─────────────────▼───────────────────────┐
+│ NESTGATE (Storage Layer)                │
+│ - ZFS operations                        │
+│ - File system management                │
+│ - Network protocols                     │
+│ - Replication and backup                │
+│ - NO encryption capabilities            │
+└─────────────────────────────────────────┘
+```
+
+### 🎯 **Use Cases**
+
+1. **Standalone NestGate**: Pure storage system with no encryption
+2. **BearDog + NestGate**: BearDog handles encryption, uses NestGate for storage
+3. **University BearDog**: Large BearDog deployment storing key records on NestGate
+4. **Embedded BearDog**: Small BearDog instance embedded with NestGate system
+5. **Federation**: Multiple NestGate systems with shared BearDog security layer
+
+### 🚀 **Key Benefits**
+
+- **Security**: Each system focuses on its core competency
+- **Flexibility**: Mix and match storage and security providers
+- **Maintainability**: Clear boundaries reduce complexity
+- **Scalability**: BearDog can scale keys, NestGate can scale storage independently
+- **Sovereignty**: Each component can operate independently
+
+## Quick Start
+
+```bash
+# Pure storage mode (default)
+nestgate server start
+
+# With BearDog integration (external authentication)
+BEARDOG_URL=https://beardog.local:8443 nestgate server start
+
+# With SongBird orchestration
+SONGBIRD_URL=https://songbird.local:8080 nestgate server start
+```
+
+## Architecture
+
+- **nestgate-core**: Core configuration and utilities
+- **nestgate-zfs**: ZFS management and advanced features  
+- **nestgate-api**: REST API endpoints
+- **nestgate-network**: Protocol support (NFS, SMB, HTTP)
+- **nestgate-ui**: User interface
+- **nestgate-automation**: AI-driven optimization
+
+## License
+
+- Core NestGate: AGPL-3.0-or-later (100% open source)
+- External integrations: May require BearDog certificates for enterprise features
+
 # NestGate - Sovereign ZFS NAS Storage System
 
 **Production-Ready ZFS Storage Management - Standalone & Ecosystem Ready**

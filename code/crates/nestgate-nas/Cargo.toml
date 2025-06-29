@@ -9,11 +9,13 @@ license = "AGPL-3.0-or-later"
 nestgate-core = { path = "../nestgate-core" }
 nestgate-network = { path = "../nestgate-network" }
 
-tokio = { workspace = true }
-serde = { workspace = true }
-tracing = { workspace = true }
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+tracing = "0.1"
+serde_json = "1.0"
 thiserror = { workspace = true }
 anyhow = { workspace = true }
 
 [dev-dependencies]
-tokio-test = { workspace = true } 
+tokio-test = "0.4"
+tempfile = "3.0" 

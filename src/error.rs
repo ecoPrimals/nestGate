@@ -10,33 +10,42 @@ use std::fmt;
 pub enum NestGateError {
     /// ZFS related errors
     ZfsError(String),
-    
+
     /// Invalid ZFS pool name
     InvalidPoolName(String),
-    
+
     /// Storage protocol errors (NFS, SMB, iSCSI, etc.)
     StorageProtocolError(String),
-    
+
     /// Tier management errors
     TierManagementError(String),
-    
+
     /// Configuration errors
     ConfigurationError(String),
-    
+
     /// Songbird integration errors
     OrchestrationError(String),
-    
+
     /// I/O errors
     IoError(String),
-    
+
     /// Network errors
     NetworkError(String),
-    
+
     /// Permission/authentication errors
     PermissionError(String),
-    
+
     /// General system errors
     SystemError(String),
+
+    /// Serialization errors
+    SerializationError(String),
+
+    /// Storage-related errors
+    Storage { message: String },
+
+    /// Unimplemented functionality
+    Unimplemented(String),
 }
 
 impl fmt::Display for NestGateError {
@@ -52,6 +61,9 @@ impl fmt::Display for NestGateError {
             Self::NetworkError(msg) => write!(f, "Network error: {msg}"),
             Self::PermissionError(msg) => write!(f, "Permission error: {msg}"),
             Self::SystemError(msg) => write!(f, "System error: {msg}"),
+            Self::SerializationError(msg) => write!(f, "Serialization error: {msg}"),
+            Self::Storage { message } => write!(f, "Storage error: {message}"),
+            Self::Unimplemented(feature) => write!(f, "Not implemented: {feature}"),
         }
     }
 }
@@ -104,4 +116,4 @@ macro_rules! tier_error {
     ($fmt:expr, $($arg:tt)*) => {
         $crate::error::NestGateError::TierManagementError(format!($fmt, $($arg)*))
     };
-} 
+}

@@ -1,34 +1,33 @@
 //! ZFS Manager - Main orchestrator for ZFS operations
-//! 
+//!
 //! Integrates advanced integration patterns with v2 orchestrator architecture
 //! Enhanced with AI integration and performance monitoring
 
-use std::sync::Arc;
-use std::collections::HashMap;
-use std::time::{Duration, SystemTime};
-use tokio::sync::RwLock;
 use serde::{Deserialize, Serialize};
-use tracing::{info, error, debug, warn};
-use uuid::Uuid;
+use std::sync::Arc;
+use std::time::SystemTime;
+use tokio::sync::RwLock;
+use tracing::{debug, error, info, warn};
 
-use nestgate_core::{Result, NestGateError, StorageTier};
-use nestgate_automation::{DatasetAnalyzer, AccessPattern};
 use crate::{
+    ai_integration::{TierPrediction, ZfsAiConfig, ZfsAiIntegration},
+    automation::DatasetAutomation,
     config::ZfsConfig,
-    error::{ZfsError, ZfsResult},
-    pool::{ZfsPoolManager, PoolInfo},
-    dataset::{ZfsDatasetManager, DatasetInfo},
-    snapshot::{ZfsSnapshotManager, SnapshotInfo},
-    migration::{MigrationEngine, MigrationConfig},
-    performance::{ZfsPerformanceMonitor, PerformanceConfig, CurrentPerformanceMetrics},
-    ai_integration::{ZfsAiIntegration, ZfsAiConfig, TierPrediction, OptimizationOpportunity},
-    tier::{TierManager},
-    health::{ZfsHealthMonitor, HealthStatus},
-    metrics::{ZfsMetrics},
+    dataset::ZfsDatasetManager,
+    error::ZfsError,
+    health::ZfsHealthMonitor,
+    metrics::ZfsMetrics,
+    migration::MigrationEngine,
+    performance::{PerformanceConfig, ZfsPerformanceMonitor},
+    pool::ZfsPoolManager,
+    snapshot::ZfsSnapshotManager,
+    tier::TierManager,
 };
+use nestgate_automation::DatasetAnalyzer;
+use nestgate_core::{Result, StorageTier};
 
 #[cfg(feature = "orchestrator")]
-use crate::orchestrator::{OrchestratorClient};
+use crate::orchestrator::OrchestratorClient;
 
 /// Enhanced ZFS Manager integrating AI and performance monitoring
 #[derive(Debug)]
@@ -53,6 +52,8 @@ pub struct ZfsManager {
     pub health_monitor: Option<Arc<RwLock<ZfsHealthMonitor>>>,
     /// Performance metrics collection
     pub metrics: Arc<ZfsMetrics>,
+    /// Dataset automation engine
+    pub dataset_automation: Option<Arc<DatasetAutomation>>,
     /// Configuration management
     pub config: ZfsConfig,
     /// Optional orchestrator client
@@ -119,54 +120,47 @@ impl ZfsManager {
     /// Create a new enhanced ZFS manager with AI and performance monitoring
     pub async fn new(config: ZfsConfig) -> Result<Self> {
         info!("Initializing Enhanced ZFS Manager with AI integration");
-        
+
         // Initialize pool manager first (foundation for everything else)
-        let pool_manager = Arc::new(
-            ZfsPoolManager::new(&config)
-                .await
-                .map_err(|e| {
-                    error!("Failed to initialize ZFS pool manager: {}", e);
-                    NestGateError::Internal(format!("Pool manager: {}", e))
-                })?
-        );
-        
+        let pool_manager = Arc::new(ZfsPoolManager::new(&config).await.map_err(|e| {
+            error!("Failed to initialize ZFS pool manager: {}", e);
+            ZfsError::Internal {
+                message: format!("Pool manager: {}", e),
+            }
+        })?);
+
         // Initialize dataset manager
-        let dataset_manager = Arc::new(
-            ZfsDatasetManager::new(config.clone(), pool_manager.clone())
-        );
-        
+        let dataset_manager =
+            Arc::new(ZfsDatasetManager::new(config.clone(), pool_manager.clone()));
+
         // Initialize dataset analyzer
-        let dataset_analyzer = Arc::new(
-            DatasetAnalyzer::new()
-        );
-        
+        let dataset_analyzer = Arc::new(DatasetAnalyzer::new());
+
         // Initialize migration engine with RwLock
         let migration_config = crate::migration::MigrationConfig::default();
-        let migration_engine = Arc::new(RwLock::new(
-            MigrationEngine::new(
-                migration_config,
-                config.clone(),
-                pool_manager.clone(),
-                dataset_manager.clone(),
-                dataset_analyzer.clone(),
-            )
-        ));
-        
+        let migration_engine = Arc::new(RwLock::new(MigrationEngine::new(
+            migration_config,
+            config.clone(),
+            pool_manager.clone(),
+            dataset_manager.clone(),
+            dataset_analyzer.clone(),
+        )));
+
         // Initialize snapshot manager
-        let snapshot_manager = Arc::new(
-            ZfsSnapshotManager::new(config.clone(), pool_manager.clone(), dataset_manager.clone())
-        );
-        
+        let snapshot_manager = Arc::new(ZfsSnapshotManager::new(
+            config.clone(),
+            pool_manager.clone(),
+            dataset_manager.clone(),
+        ));
+
         // Initialize performance monitor with RwLock
         let performance_config = PerformanceConfig::default();
-        let performance_monitor = Arc::new(RwLock::new(
-            ZfsPerformanceMonitor::new(
-                performance_config,
-                pool_manager.clone(),
-                dataset_manager.clone(),
-            )
-        ));
-        
+        let performance_monitor = Arc::new(RwLock::new(ZfsPerformanceMonitor::new(
+            performance_config,
+            pool_manager.clone(),
+            dataset_manager.clone(),
+        )));
+
         // Initialize AI integration (optional, based on configuration) with RwLock
         let ai_integration = if config.enable_ai_integration.unwrap_or(true) {
             let ai_config = ZfsAiConfig::default();
@@ -177,13 +171,18 @@ impl ZfsManager {
                 performance_monitor.clone(),
                 migration_engine.clone(),
                 dataset_analyzer.clone(),
-            ).await {
+            )
+            .await
+            {
                 Ok(ai) => {
                     info!("AI integration initialized successfully");
                     Some(Arc::new(RwLock::new(ai)))
                 }
                 Err(e) => {
-                    warn!("Failed to initialize AI integration: {}, continuing without AI features", e);
+                    warn!(
+                        "Failed to initialize AI integration: {}, continuing without AI features",
+                        e
+                    );
                     None
                 }
             }
@@ -191,32 +190,67 @@ impl ZfsManager {
             info!("AI integration disabled by configuration");
             None
         };
-        
+
         // Initialize tier manager for hot/warm/cold storage
         let tier_manager = Arc::new(
             TierManager::new(&config, pool_manager.clone(), dataset_manager.clone())
                 .await
                 .map_err(|e| {
                     error!("Failed to initialize tier manager: {}", e);
-                    NestGateError::Internal(format!("Tier manager: {}", e))
-                })?
+                    ZfsError::Internal {
+                        message: format!("Tier manager: {}", e),
+                    }
+                })?,
         );
-        
+
         // Initialize health monitoring with RwLock
         let health_monitor = Arc::new(RwLock::new(
             ZfsHealthMonitor::new(pool_manager.clone(), dataset_manager.clone())
                 .await
                 .map_err(|e| {
                     error!("Failed to initialize ZFS health monitor: {}", e);
-                    NestGateError::Internal(format!("Health monitor: {}", e))
-                })?
+                    ZfsError::Internal {
+                        message: format!("Health monitor: {}", e),
+                    }
+                })?,
         ));
-        
+
         // Initialize metrics collection
         let metrics = Arc::new(ZfsMetrics::new());
-        
+
+        // Initialize dataset automation if enabled
+        let dataset_automation = if config
+            .automation
+            .as_ref()
+            .map(|a| a.enabled)
+            .unwrap_or(true)
+        {
+            let automation_config = config.automation.clone().unwrap_or_default();
+            match DatasetAutomation::new(
+                pool_manager.clone(),
+                dataset_manager.clone(),
+                migration_engine.clone(),
+                ai_integration.clone(),
+                automation_config,
+            )
+            .await
+            {
+                Ok(automation) => {
+                    info!("Dataset automation initialized successfully");
+                    Some(Arc::new(automation))
+                }
+                Err(e) => {
+                    warn!("Failed to initialize dataset automation: {}, continuing without automation", e);
+                    None
+                }
+            }
+        } else {
+            info!("Dataset automation disabled by configuration");
+            None
+        };
+
         info!("Enhanced ZFS Manager initialization complete");
-        
+
         Ok(Self {
             pool_manager,
             dataset_manager,
@@ -228,92 +262,120 @@ impl ZfsManager {
             tier_manager,
             health_monitor: Some(health_monitor),
             metrics,
+            dataset_automation,
             config,
             #[cfg(feature = "orchestrator")]
             orchestrator_client: None,
         })
     }
-    
+
     /// Start all ZFS services
     pub async fn start(&mut self) -> Result<()> {
         info!("Starting Enhanced ZFS Manager services");
-        
+
         // Start performance monitoring first
         {
             let mut perf_monitor = self.performance_monitor.write().await;
             perf_monitor.start().await?;
         }
-        
+
         // Start AI integration if available
         if let Some(ai_integration) = &self.ai_integration {
             let mut ai = ai_integration.write().await;
             ai.start_ai_services().await?;
         }
-        
+
         // Start migration engine
         {
             let mut migration = self.migration_engine.write().await;
             migration.start().await?;
         }
-        
+
         // Start health monitoring if created
         if let Some(ref mut health_monitor) = self.health_monitor {
-            health_monitor.write().await.start_monitoring().await.map_err(|e| {
-                warn!("Failed to start health monitoring: {}", e);
-                ZfsError::Internal(format!("Health monitoring start failed: {}", e))
-            })?;
+            health_monitor
+                .write()
+                .await
+                .start_monitoring()
+                .await
+                .map_err(|e| {
+                    warn!("Failed to start health monitoring: {}", e);
+                    ZfsError::Internal {
+                        message: format!("Health monitoring start failed: {}", e),
+                    }
+                })?;
         }
-        
+
+        // Start dataset automation
+        if let Some(automation) = &self.dataset_automation {
+            if let Err(e) = automation.start().await {
+                warn!("Failed to start dataset automation: {}", e);
+            }
+        }
+
         info!("All ZFS services started successfully");
         Ok(())
     }
-    
+
     /// Stop all ZFS services
     pub async fn stop(&mut self) -> Result<()> {
         info!("Stopping Enhanced ZFS Manager services");
-        
+
         // Stop AI integration
         if let Some(ai_integration) = &self.ai_integration {
             let mut ai = ai_integration.write().await;
             ai.stop_ai_services().await?;
         }
-        
+
         // Stop migration engine
         {
             let mut migration = self.migration_engine.write().await;
             migration.stop().await?;
         }
-        
+
         // Stop performance monitoring
         {
             let mut perf_monitor = self.performance_monitor.write().await;
             perf_monitor.stop().await?;
         }
-        
+
         // Stop health monitoring
         if let Some(ref health_monitor) = self.health_monitor {
-            health_monitor.write().await.stop_monitoring().await.map_err(|e| {
-                warn!("Failed to stop health monitoring: {}", e);
-                ZfsError::Internal(format!("Health monitoring stop failed: {}", e))
-            })?;
+            health_monitor
+                .write()
+                .await
+                .stop_monitoring()
+                .await
+                .map_err(|e| {
+                    warn!("Failed to stop health monitoring: {}", e);
+                    ZfsError::Internal {
+                        message: format!("Health monitoring stop failed: {}", e),
+                    }
+                })?;
         }
-        
+
         info!("All ZFS services stopped successfully");
         Ok(())
     }
-    
+
     /// Register enhanced ZFS service with orchestrator
     #[cfg(feature = "orchestrator")]
-    pub async fn register_with_orchestrator(&mut self, orchestrator_endpoint: String) -> Result<()> {
-        info!("Registering Enhanced ZFS service with orchestrator at: {}", orchestrator_endpoint);
-        
+    pub async fn register_with_orchestrator(
+        &mut self,
+        orchestrator_endpoint: String,
+    ) -> Result<()> {
+        info!(
+            "Registering Enhanced ZFS service with orchestrator at: {}",
+            orchestrator_endpoint
+        );
+
         let client = OrchestratorClient::new(orchestrator_endpoint)
             .await
             .map_err(|e| {
                 error!("Failed to create orchestrator client: {}", e);
-                NestGateError::Network(format!("Orchestrator: {}", e))
+                ZfsError::Network(format!("Orchestrator: {}", e))
             })?;
-        
+
         // Prepare enhanced service information
         let service_info = ServiceInfo {
             name: "nestgate-zfs-enhanced".to_string(),
@@ -353,45 +415,57 @@ impl ZfsManager {
                 metadata.insert("version".to_string(), env!("CARGO_PKG_VERSION").to_string());
                 metadata.insert("tier_count".to_string(), "3".to_string()); // hot, warm, cold
                 metadata.insert("zfs_enabled".to_string(), cfg!(feature = "zfs").to_string());
-                metadata.insert("ai_enabled".to_string(), self.ai_integration.is_some().to_string());
+                metadata.insert(
+                    "ai_enabled".to_string(),
+                    self.ai_integration.is_some().to_string(),
+                );
                 metadata.insert("performance_monitoring".to_string(), "enabled".to_string());
                 metadata.insert("migration_engine".to_string(), "enabled".to_string());
                 metadata.insert("snapshot_automation".to_string(), "enabled".to_string());
                 metadata
             },
         };
-        
+
         // Register with orchestrator
-        client.register_service(service_info)
-            .await
-            .map_err(|e| {
-                error!("Failed to register with orchestrator: {}", e);
-                NestGateError::Network(format!("Service registration: {}", e))
-            })?;
-        
+        client.register_service(service_info).await.map_err(|e| {
+            error!("Failed to register with orchestrator: {}", e);
+            ZfsError::Network(format!("Service registration: {}", e))
+        })?;
+
         self.orchestrator_client = Some(Arc::new(client));
-        
+
         info!("Successfully registered Enhanced ZFS service with orchestrator");
         Ok(())
     }
-    
+
     /// Get comprehensive service status including AI and performance metrics
     pub async fn get_service_status(&self) -> Result<EnhancedServiceStatus> {
         debug!("Getting comprehensive service status");
-        
+
         // Get health status from health monitor - using a simple default for now
         // Get real health state from ZFS
         let health_state = self.get_real_health_state().await?;
-        
+
         // Get pool status from pool manager
         let pools = self.pool_manager.list_pools().await?;
         let pool_status = PoolOverallStatus {
-            pools_online: pools.iter().filter(|p| matches!(p.health, crate::pool::PoolHealth::Healthy)).count(),
-            pools_degraded: pools.iter().filter(|p| matches!(p.health, crate::pool::PoolHealth::Warning | crate::pool::PoolHealth::Critical)).count(),
+            pools_online: pools
+                .iter()
+                .filter(|p| matches!(p.health, crate::pool::PoolHealth::Healthy))
+                .count(),
+            pools_degraded: pools
+                .iter()
+                .filter(|p| {
+                    matches!(
+                        p.health,
+                        crate::pool::PoolHealth::Warning | crate::pool::PoolHealth::Critical
+                    )
+                })
+                .count(),
             total_capacity: pools.iter().map(|p| p.capacity.total_bytes).sum(),
             available_capacity: pools.iter().map(|p| p.capacity.available_bytes).sum(),
         };
-        
+
         // Get tier status
         let tier_status = TierOverallStatus {
             hot_utilization: self.get_real_tier_utilization("hot").await.unwrap_or(0.0),
@@ -399,10 +473,15 @@ impl ZfsManager {
             cold_utilization: 0.25,
             migration_queue_size: 5,
         };
-        
+
         // Get performance metrics
-        let perf_metrics = self.performance_monitor.read().await.get_current_metrics().await;
-        
+        let perf_metrics = self
+            .performance_monitor
+            .read()
+            .await
+            .get_current_metrics()
+            .await;
+
         // Get metrics from metrics collector
         let metrics_snapshot = self.metrics.get_current_metrics().await;
         let metrics = CurrentMetrics {
@@ -411,7 +490,7 @@ impl ZfsManager {
             average_latency_ms: metrics_snapshot.average_latency_ms,
             error_rate: metrics_snapshot.error_rate,
         };
-        
+
         // Get AI integration status
         let ai_status = if let Some(_ai) = &self.ai_integration {
             Some(AiIntegrationStatus {
@@ -424,7 +503,7 @@ impl ZfsManager {
         } else {
             None
         };
-        
+
         // Get migration status
         let migration_status = MigrationStatus {
             active_jobs: self.get_active_migration_jobs().await.unwrap_or(0),
@@ -433,7 +512,7 @@ impl ZfsManager {
             failed_jobs: 3,
             total_bytes_migrated: 1024 * 1024 * 1024 * 50, // 50GB
         };
-        
+
         // Get snapshot status
         let snapshot_status = SnapshotStatus {
             total_snapshots: self.get_total_snapshots().await.unwrap_or(0) as u64,
@@ -441,7 +520,7 @@ impl ZfsManager {
             pending_operations: 2,
             recent_failures: 0,
         };
-        
+
         Ok(EnhancedServiceStatus {
             overall_health: health_state,
             pool_status,
@@ -454,90 +533,114 @@ impl ZfsManager {
             timestamp: chrono::Utc::now(),
         })
     }
-    
+
     /// Initialize ZFS system
     pub async fn initialize_system(&self) -> Result<()> {
         info!("Initializing ZFS system");
-        
+
         // Verify ZFS is available
         if !crate::is_zfs_available().await {
-            return Err(NestGateError::Internal("ZFS is not available on this system".to_string()));
+            return Err(ZfsError::Internal {
+                message: "ZFS is not available on this system".to_string(),
+            }
+            .into());
         }
-        
+
         // Start metrics collection
         // No longer needed - metrics are always collecting
-        
+
         info!("ZFS system initialized successfully");
         Ok(())
     }
-    
+
     /// Get AI tier recommendation for a file
-    pub async fn get_ai_tier_recommendation(&self, file_path: &str) -> Result<Option<crate::ai_integration::TierPrediction>> {
+    pub async fn get_ai_tier_recommendation(
+        &self,
+        file_path: &str,
+    ) -> Result<Option<crate::ai_integration::TierPrediction>> {
         if let Some(ai_integration) = &self.ai_integration {
             let file_analysis = self.analyze_file_for_ai_prediction(file_path).await?;
-            
+
             // Use AI integration to predict optimal tier
-            let prediction = ai_integration.read().await.predict_optimal_tier(
-                file_path,
-                Some(file_analysis.file_size),
-                None, // No access pattern available
-            ).await.map_err(|e| NestGateError::Storage(format!("AI prediction failed: {}", e)))?;
-            
+            let prediction = ai_integration
+                .read()
+                .await
+                .predict_optimal_tier(
+                    file_path,
+                    Some(file_analysis.file_size),
+                    None, // No access pattern available
+                )
+                .await
+                .map_err(|e| ZfsError::Storage {
+                    message: format!("AI prediction failed: {}", e),
+                })?;
+
             Ok(Some(prediction))
         } else {
             // Fallback to heuristic prediction if AI is not available
             let file_analysis = self.analyze_file_for_ai_prediction(file_path).await?;
             let recommended_tier = self.get_heuristic_tier_recommendation(&file_analysis);
             let confidence = 0.7; // Heuristic confidence
-            
+
             Ok(Some(TierPrediction {
                 file_path: file_path.to_string(),
                 current_tier: crate::types::StorageTier::Warm.into(),
                 predicted_tier: recommended_tier.into(),
                 confidence,
-                reasoning: format!("Heuristic prediction with {:.2}% confidence", confidence * 100.0),
+                reasoning: format!(
+                    "Heuristic prediction with {:.2}% confidence",
+                    confidence * 100.0
+                ),
                 expected_improvement: confidence * 20.0,
                 timestamp: SystemTime::now(),
             }))
         }
     }
-    
+
     /// Analyze file for AI tier prediction
     async fn analyze_file_for_ai_prediction(&self, file_path: &str) -> Result<FileAnalysisData> {
         use std::fs::metadata;
         use std::time::{SystemTime, UNIX_EPOCH};
-        
+
         // Get file metadata
-        let metadata = metadata(file_path)
-            .map_err(|e| crate::error::ZfsError::Internal(format!("Failed to read file metadata: {}", e)))?;
-        
+        let metadata = metadata(file_path).map_err(|e| ZfsError::Internal {
+            message: format!("Failed to read file metadata: {}", e),
+        })?;
+
         let file_size = metadata.len();
-        let modified_time = metadata.modified()
+        let modified_time = metadata
+            .modified()
             .unwrap_or(SystemTime::now())
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
-            
-        let accessed_time = metadata.accessed()
+
+        let accessed_time = metadata
+            .accessed()
             .unwrap_or(SystemTime::now())
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
-        
+
         // Determine file type from extension
         let file_extension = std::path::Path::new(file_path)
             .extension()
             .and_then(|ext| ext.to_str())
             .unwrap_or("")
             .to_lowercase();
-            
+
         let file_type = self.classify_file_type(&file_extension);
-        
+
         // Calculate access frequency (estimate based on timestamps)
-        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_err(|e| ZfsError::Internal {
+                message: format!("System time error: {}", e),
+            })?
+            .as_secs();
         let days_since_access = (now - accessed_time) / (24 * 3600);
-        let days_since_modified = (now - modified_time) / (24 * 3600);
-        
+        let _days_since_modified = (now - modified_time) / (24 * 3600);
+
         // Estimate access frequency based on how recent the access was
         let access_frequency = if days_since_access == 0 {
             "high"
@@ -548,11 +651,11 @@ impl ZfsManager {
         } else {
             "very_low"
         };
-        
+
         // Check if file is in a frequently accessed directory
         let is_system_critical = self.is_system_critical_path(file_path);
         let is_frequently_accessed_dir = self.is_frequently_accessed_directory(file_path);
-        
+
         Ok(FileAnalysisData {
             file_size,
             file_type: file_type.clone(),
@@ -564,61 +667,76 @@ impl ZfsManager {
             estimated_access_pattern: self.estimate_access_pattern(file_path, &file_type).await,
         })
     }
-    
+
     /// Classify file type based on extension
     fn classify_file_type(&self, extension: &str) -> String {
         match extension {
             // Databases and frequently accessed files
             "db" | "sqlite" | "mysql" | "postgres" => "database".to_string(),
-            
+
             // Virtual machine and container images
             "qcow2" | "vmdk" | "vdi" | "img" | "iso" => "vm_image".to_string(),
-            
+
             // Media files
             "mp4" | "avi" | "mkv" | "mov" | "mp3" | "flac" | "wav" => "media".to_string(),
-            
+
             // Documents
             "pdf" | "doc" | "docx" | "xls" | "xlsx" | "ppt" | "pptx" => "document".to_string(),
-            
+
             // Source code
             "rs" | "py" | "js" | "ts" | "cpp" | "c" | "h" | "java" => "source_code".to_string(),
-            
+
             // Configuration files
             "conf" | "cfg" | "ini" | "yaml" | "yml" | "json" | "toml" => "config".to_string(),
-            
+
             // Log files
             "log" | "out" | "err" => "log".to_string(),
-            
+
             // Archives
             "zip" | "tar" | "gz" | "bz2" | "xz" | "7z" => "archive".to_string(),
-            
+
             // Backup files
             "bak" | "backup" | "old" => "backup".to_string(),
-            
+
             _ => "unknown".to_string(),
         }
     }
-    
+
     /// Check if path is system critical
     fn is_system_critical_path(&self, file_path: &str) -> bool {
         let critical_paths = [
-            "/boot", "/etc", "/usr/bin", "/usr/sbin", "/lib", "/lib64",
-            "/var/log", "/var/cache", "/var/spool", "/var/run",
+            "/boot",
+            "/etc",
+            "/usr/bin",
+            "/usr/sbin",
+            "/lib",
+            "/lib64",
+            "/var/log",
+            "/var/cache",
+            "/var/spool",
+            "/var/run",
         ];
-        
-        critical_paths.iter().any(|&path| file_path.starts_with(path))
+
+        critical_paths
+            .iter()
+            .any(|&path| file_path.starts_with(path))
     }
-    
+
     /// Check if directory is frequently accessed
     fn is_frequently_accessed_directory(&self, file_path: &str) -> bool {
         let frequent_dirs = [
-            "/home", "/var/www", "/opt", "/srv", "/tmp",
-            "/var/cache", "/var/spool",
+            "/home",
+            "/var/www",
+            "/opt",
+            "/srv",
+            "/tmp",
+            "/var/cache",
+            "/var/spool",
         ];
-        
+
         frequent_dirs.iter().any(|&dir| file_path.starts_with(dir))
     }
-    
+
     /// Estimate access pattern for file
     async fn estimate_access_pattern(&self, file_path: &str, file_type: &str) -> String {
         // Use file type and location to estimate access pattern
@@ -646,9 +764,12 @@ impl ZfsManager {
             }
         }
     }
-    
+
     /// Simple heuristic tier recommendation
-    fn get_heuristic_tier_recommendation(&self, file_analysis: &FileAnalysisData) -> crate::types::StorageTier {
+    fn get_heuristic_tier_recommendation(
+        &self,
+        file_analysis: &FileAnalysisData,
+    ) -> crate::types::StorageTier {
         match (
             file_analysis.file_type.as_str(),
             file_analysis.access_frequency.as_str(),
@@ -657,28 +778,29 @@ impl ZfsManager {
             // System critical files or frequently accessed files go to hot tier
             (_, _, true) => crate::types::StorageTier::Hot,
             (_, "high", _) => crate::types::StorageTier::Hot,
-            
+
             // Databases and VM images generally need hot tier for performance
             ("database", _, _) => crate::types::StorageTier::Hot,
             ("vm_image", _, _) => crate::types::StorageTier::Hot,
-            
+
             // Medium access files go to warm tier
             (_, "medium", _) => crate::types::StorageTier::Warm,
             ("media", _, _) => crate::types::StorageTier::Warm,
             ("document", _, _) => crate::types::StorageTier::Warm,
-            
+
             // Low access files go to cold tier
             (_, "low" | "very_low", _) => crate::types::StorageTier::Cold,
             ("archive", _, _) => crate::types::StorageTier::Cold,
             ("backup", _, _) => crate::types::StorageTier::Cold,
             ("log", _, _) => crate::types::StorageTier::Cold,
-            
+
             // Default to warm tier
             _ => crate::types::StorageTier::Warm,
         }
     }
-    
+
     /// Estimate benefits of placing file in recommended tier
+    #[allow(dead_code)] // Helper method for tier analysis
     fn estimate_tier_benefits(&self, tier: crate::types::StorageTier) -> TierBenefits {
         match tier {
             crate::types::StorageTier::Hot => TierBenefits {
@@ -693,33 +815,37 @@ impl ZfsManager {
             },
             crate::types::StorageTier::Cold => TierBenefits {
                 performance_improvement: -5.0, // Slower
-                cost_savings: 30.0, // Much cheaper
+                cost_savings: 30.0,            // Much cheaper
                 storage_efficiency: 40.0,
             },
             crate::types::StorageTier::Cache => TierBenefits {
                 performance_improvement: 50.0, // Fastest
-                cost_savings: -20.0, // Most expensive
+                cost_savings: -20.0,           // Most expensive
                 storage_efficiency: 5.0,
             },
         }
     }
-    
+
     /// Get ZFS health status
     pub async fn get_zfs_health(&self) -> Result<EnhancedServiceStatus> {
         self.get_service_status().await
     }
 
     /// Create a new ZFS pool
-    pub async fn create_pool(&self, name: &str, devices: &[String]) -> Result<crate::pool::PoolInfo> {
+    pub async fn create_pool(
+        &self,
+        name: &str,
+        devices: &[String],
+    ) -> Result<crate::pool::PoolInfo> {
         let start_time = std::time::Instant::now();
         let result = self.pool_manager.create_pool(name, devices).await;
         let latency = start_time.elapsed().as_millis() as f64;
-        
+
         match &result {
             Ok(_) => self.metrics.record_operation(0, latency),
             Err(_) => self.metrics.record_error(),
         }
-        
+
         result
     }
 
@@ -728,12 +854,12 @@ impl ZfsManager {
         let start_time = std::time::Instant::now();
         let result = self.pool_manager.destroy_pool(name).await;
         let latency = start_time.elapsed().as_millis() as f64;
-        
+
         match &result {
             Ok(_) => self.metrics.record_operation(0, latency),
             Err(_) => self.metrics.record_error(),
         }
-        
+
         result
     }
 
@@ -747,26 +873,34 @@ impl ZfsManager {
         let start_time = std::time::Instant::now();
         let result = self.pool_manager.scrub_pool(name).await;
         let latency = start_time.elapsed().as_millis() as f64;
-        
+
         match &result {
             Ok(_) => self.metrics.record_operation(0, latency),
             Err(_) => self.metrics.record_error(),
         }
-        
+
         result
     }
 
     /// Create a new dataset
-    pub async fn create_dataset(&self, name: &str, parent: &str, tier: StorageTier) -> Result<crate::dataset::DatasetInfo> {
+    pub async fn create_dataset(
+        &self,
+        name: &str,
+        parent: &str,
+        tier: StorageTier,
+    ) -> Result<crate::dataset::DatasetInfo> {
         let start_time = std::time::Instant::now();
-        let result = self.dataset_manager.create_dataset(name, parent, tier).await;
+        let result = self
+            .dataset_manager
+            .create_dataset(name, parent, tier)
+            .await;
         let latency = start_time.elapsed().as_millis() as f64;
-        
+
         match &result {
             Ok(_) => self.metrics.record_operation(0, latency),
             Err(_) => self.metrics.record_error(),
         }
-        
+
         result
     }
 
@@ -775,35 +909,59 @@ impl ZfsManager {
         let start_time = std::time::Instant::now();
         let result = self.dataset_manager.destroy_dataset(name).await;
         let latency = start_time.elapsed().as_millis() as f64;
-        
+
         match &result {
             Ok(_) => self.metrics.record_operation(0, latency),
             Err(_) => self.metrics.record_error(),
         }
-        
+
         result
     }
 
     /// List snapshots for a dataset
-    pub async fn list_snapshots(&self, dataset: &str) -> Result<Vec<crate::snapshot::SnapshotInfo>> {
+    pub async fn list_snapshots(
+        &self,
+        dataset: &str,
+    ) -> Result<Vec<crate::snapshot::SnapshotInfo>> {
         debug!("Listing snapshots for dataset: {}", dataset);
         self.snapshot_manager.list_snapshots(dataset).await
     }
 
     /// Get performance analytics
     pub async fn get_performance_analytics(&self) -> Result<PerformanceAnalytics> {
-        let current_metrics = self.performance_monitor.read().await.get_current_metrics().await;
-        let history = self.performance_monitor.read().await.get_performance_history(Some(100)).await;
-        let active_alerts = self.performance_monitor.read().await.get_active_alerts().await;
-        
+        let current_metrics = self
+            .performance_monitor
+            .read()
+            .await
+            .get_current_metrics()
+            .await;
+        let history = self
+            .performance_monitor
+            .read()
+            .await
+            .get_performance_history(Some(100))
+            .await;
+        let active_alerts = self
+            .performance_monitor
+            .read()
+            .await
+            .get_active_alerts()
+            .await;
+
         // Get tier-specific analytics
         let mut tier_analytics = std::collections::HashMap::new();
         for tier in [StorageTier::Hot, StorageTier::Warm, StorageTier::Cold] {
-            if let Some(tier_data) = self.performance_monitor.read().await.get_tier_metrics(&tier).await {
+            if let Some(tier_data) = self
+                .performance_monitor
+                .read()
+                .await
+                .get_tier_metrics(&tier)
+                .await
+            {
                 tier_analytics.insert(tier, tier_data);
             }
         }
-        
+
         Ok(PerformanceAnalytics {
             current_metrics,
             history,
@@ -811,63 +969,77 @@ impl ZfsManager {
             tier_analytics,
         })
     }
-    
+
     /// Trigger manual optimization
     pub async fn trigger_optimization(&self) -> Result<OptimizationResult> {
         info!("Triggering manual ZFS optimization");
-        
+
         let mut results = Vec::new();
-        
+
         // Run AI optimization if available
         if let Some(ai) = &self.ai_integration {
             match ai.read().await.detect_optimization_opportunities().await {
                 Ok(opps) => {
                     results.push(format!("Found {} optimization opportunities", opps.len()));
                     for opp in opps.iter().take(3) {
-                        results.push(format!("  • {}: {:.1}% improvement", opp.description, opp.confidence_score * 100.0));
+                        results.push(format!(
+                            "  • {}: {:.1}% improvement",
+                            opp.description,
+                            opp.confidence_score * 100.0
+                        ));
                     }
                 }
                 Err(e) => {
-                    results.push(format!("Failed to detect optimization opportunities: {}", e));
+                    results.push(format!(
+                        "Failed to detect optimization opportunities: {}",
+                        e
+                    ));
                 }
             }
         }
-        
+
         // Run migration optimization
         let migration_stats = self.migration_engine.read().await.get_statistics().await;
-        results.push(format!("Migration engine: {} active, {} queued", 
-                            migration_stats.active_migrations, migration_stats.queued_migrations));
-        
+        results.push(format!(
+            "Migration engine: {} active, {} queued",
+            migration_stats.active_migrations, migration_stats.queued_migrations
+        ));
+
         // Run snapshot optimization
         let snapshot_stats = self.snapshot_manager.list_snapshots("").await?;
-        results.push(format!("Snapshot management: {} total snapshots, {} active policies",
-                            snapshot_stats.len(), 0));
-        
+        results.push(format!(
+            "Snapshot management: {} total snapshots, {} active policies",
+            snapshot_stats.len(),
+            0
+        ));
+
         Ok(OptimizationResult {
             timestamp: std::time::SystemTime::now(),
             results,
             success: true,
         })
     }
-    
+
     /// Graceful shutdown of enhanced ZFS manager
     pub async fn shutdown(&self) -> Result<()> {
         info!("Shutting down Enhanced ZFS Manager");
-        
+
         // The actual shutdown is handled by the stop method
         // This method is for external cleanup if needed
-        
+
         info!("Enhanced ZFS Manager shutdown complete");
         Ok(())
     }
-    
+
     /// Get real health state from ZFS pools
     pub async fn get_real_health_state(&self) -> Result<HealthState> {
         use crate::command::ZfsOperations;
-        
+
         let ops = ZfsOperations::new();
-        let pools = ops.list_pools().await.map_err(|e| nestgate_core::NestGateError::Storage(e.to_string()))?;
-        
+        let pools = ops.list_pools().await.map_err(|e| ZfsError::Storage {
+            message: e.to_string(),
+        })?;
+
         // Check if any pools are unhealthy
         for pool in pools {
             match pool.health.as_str() {
@@ -876,59 +1048,67 @@ impl ZfsManager {
                 _ => return Ok(HealthState::Critical),
             }
         }
-        
+
         Ok(HealthState::Healthy)
     }
-    
+
     /// Get real tier utilization from ZFS
     async fn get_real_tier_utilization(&self, tier: &str) -> Result<f64> {
         use crate::command::ZfsOperations;
-        
+
         let ops = ZfsOperations::new();
-        let datasets = ops.list_datasets(None).await.map_err(|e| nestgate_core::NestGateError::Storage(e.to_string()))?;
-        
+        let datasets = ops
+            .list_datasets(None)
+            .await
+            .map_err(|e| ZfsError::Storage {
+                message: e.to_string(),
+            })?;
+
         // Filter datasets by tier and calculate utilization
-        let tier_datasets: Vec<_> = datasets.iter()
-            .filter(|d| d.name.contains(tier))
-            .collect();
-            
+        let tier_datasets: Vec<_> = datasets.iter().filter(|d| d.name.contains(tier)).collect();
+
         if tier_datasets.is_empty() {
             return Ok(0.0);
         }
-        
+
         // Simple utilization calculation based on used space
         // In a real implementation, this would be more sophisticated
         let utilization = match tier {
-            "hot" => 0.65,   // High utilization for hot tier
-            "warm" => 0.45,  // Medium utilization for warm tier
-            "cold" => 0.25,  // Low utilization for cold tier
+            "hot" => 0.65,  // High utilization for hot tier
+            "warm" => 0.45, // Medium utilization for warm tier
+            "cold" => 0.25, // Low utilization for cold tier
             _ => 0.0,
         };
-        
+
         Ok(utilization)
     }
-    
+
     /// Get count of deployed AI models
     async fn get_deployed_models_count(&self) -> Result<u32> {
         // In a real implementation, this would query the AI integration
         // For now, return a realistic count based on system state
         Ok(if self.ai_integration.is_some() { 2 } else { 0 })
     }
-    
+
     /// Get active migration jobs count
     async fn get_active_migration_jobs(&self) -> Result<u32> {
         // In a real implementation, this would query the migration engine
         // For now, return a count based on system activity
         Ok(1) // Typically 0-2 active jobs
     }
-    
+
     /// Get total snapshots count
     async fn get_total_snapshots(&self) -> Result<u32> {
         use crate::command::ZfsOperations;
-        
+
         let ops = ZfsOperations::new();
-        let snapshots = ops.list_snapshots(None).await.map_err(|e| nestgate_core::NestGateError::Storage(e.to_string()))?;
-        
+        let snapshots = ops
+            .list_snapshots(None)
+            .await
+            .map_err(|e| ZfsError::Storage {
+                message: e.to_string(),
+            })?;
+
         Ok(snapshots.len() as u32)
     }
 }
@@ -967,7 +1147,6 @@ pub struct MigrationStatus {
     pub total_bytes_migrated: u64,
 }
 
-
 /// Snapshot status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SnapshotStatus {
@@ -994,7 +1173,8 @@ pub struct PerformanceAnalytics {
     pub current_metrics: crate::performance::CurrentPerformanceMetrics,
     pub history: Vec<crate::performance::PerformanceSnapshot>,
     pub active_alerts: Vec<crate::performance::ActiveAlert>,
-    pub tier_analytics: std::collections::HashMap<StorageTier, crate::performance::TierPerformanceData>,
+    pub tier_analytics:
+        std::collections::HashMap<StorageTier, crate::performance::TierPerformanceData>,
 }
 
 /// Optimization result

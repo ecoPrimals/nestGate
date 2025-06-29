@@ -2,10 +2,10 @@
 //!
 //! This module provides common protocol definitions and utilities
 
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use async_trait::async_trait;
 
 // Use nestgate_core for error handling
 use nestgate_core::{NestGateError, Result};
@@ -115,7 +115,7 @@ pub struct MountResponse {
     /// Mount point path
     pub mount_point: PathBuf,
 }
-    
+
 /// Authentication credentials
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Credentials {
@@ -132,18 +132,22 @@ pub struct Credentials {
 pub trait ProtocolHandler: Send + Sync + std::fmt::Debug {
     /// Get the protocol type this handler supports
     fn protocol_type(&self) -> Protocol;
-    
+
     /// Mount a remote resource
     async fn mount(&self, request: MountRequest) -> Result<MountResponse>;
-    
+
     /// Unmount a resource by mount ID
     async fn unmount(&self, mount_id: &str) -> Result<bool>;
-    
+
     /// Get status of a mount
     async fn get_status(&self, mount_id: &str) -> Result<MountStatus>;
-    
+
     /// Test connection to a remote server
-    async fn test_connection(&self, server: &str, credentials: Option<&Credentials>) -> Result<bool>;
+    async fn test_connection(
+        &self,
+        server: &str,
+        credentials: Option<&Credentials>,
+    ) -> Result<bool>;
 }
 
 /// Mount status information
@@ -187,42 +191,45 @@ impl ProtocolManager {
             handlers: HashMap::new(),
         }
     }
-    
+
     /// Register a protocol handler
     pub fn register_handler(&mut self, handler: Box<dyn ProtocolHandler>) {
         let protocol = handler.protocol_type();
         self.handlers.insert(protocol, handler);
     }
-    
+
     /// Get a handler for a specific protocol
     pub fn get_handler(&self, protocol: Protocol) -> Option<&dyn ProtocolHandler> {
         self.handlers.get(&protocol).map(|h| h.as_ref())
-}
+    }
 
     /// Mount using the appropriate protocol handler
     pub async fn mount(&self, request: MountRequest) -> Result<MountResponse> {
-        let handler = self.get_handler(request.protocol)
-            .ok_or_else(|| NestGateError::InvalidInput(format!("No handler for protocol: {}", request.protocol)))?;
-        
+        let handler = self.get_handler(request.protocol).ok_or_else(|| {
+            NestGateError::InvalidInput(format!("No handler for protocol: {}", request.protocol))
+        })?;
+
         handler.mount(request).await
     }
-    
+
     /// Unmount using the appropriate protocol handler
     pub async fn unmount(&self, protocol: Protocol, mount_id: &str) -> Result<bool> {
-        let handler = self.get_handler(protocol)
-            .ok_or_else(|| NestGateError::InvalidInput(format!("No handler for protocol: {}", protocol)))?;
-        
+        let handler = self.get_handler(protocol).ok_or_else(|| {
+            NestGateError::InvalidInput(format!("No handler for protocol: {}", protocol))
+        })?;
+
         handler.unmount(mount_id).await
     }
-    
+
     /// Get status using the appropriate protocol handler
     pub async fn get_status(&self, protocol: Protocol, mount_id: &str) -> Result<MountStatus> {
-        let handler = self.get_handler(protocol)
-            .ok_or_else(|| NestGateError::InvalidInput(format!("No handler for protocol: {}", protocol)))?;
-        
+        let handler = self.get_handler(protocol).ok_or_else(|| {
+            NestGateError::InvalidInput(format!("No handler for protocol: {}", protocol))
+        })?;
+
         handler.get_status(mount_id).await
     }
-    
+
     /// List all supported protocols
     pub fn supported_protocols(&self) -> Vec<Protocol> {
         self.handlers.keys().copied().collect()
@@ -233,4 +240,4 @@ impl Default for ProtocolManager {
     fn default() -> Self {
         Self::new()
     }
-} 
+}
