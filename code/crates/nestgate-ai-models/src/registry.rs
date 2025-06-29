@@ -41,7 +41,8 @@ impl ModelRegistry {
     /// Get a model
     pub async fn get_model(&self, id: &str) -> Result<ModelDeployment> {
         let models = self.models.read().await;
-        models.get(id)
+        models
+            .get(id)
             .cloned()
             .ok_or_else(|| format!("Model {} not found", id).into())
     }
@@ -62,4 +63,4 @@ impl ModelRegistry {
         let models = self.models.read().await;
         Ok(models.values().cloned().collect())
     }
-} 
+}

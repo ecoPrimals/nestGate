@@ -11,13 +11,13 @@ categories = ["network-programming", "api-bindings", "web-programming"]
 
 [dependencies]
 # Web framework
-axum = { version = "0.7", features = ["json", "query", "multipart"], workspace = true }
+axum = { workspace = true, features = ["json", "query", "multipart"] }
 tower = { workspace = true }
-tower-http = { version = "0.5", features = ["cors", "trace", "timeout", "limit"], workspace = true }
-tokio = { version = "1.0", features = ["full"], workspace = true }
+tower-http = { workspace = true, features = ["cors", "trace", "timeout", "limit"] }
+tokio = { workspace = true, features = ["full"] }
 
 # Serialization
-serde = { version = "1.0", features = ["derive"], workspace = true }
+serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 
 # Logging
@@ -25,7 +25,7 @@ tracing = { workspace = true }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Time handling
-chrono = { version = "0.4", features = ["serde"], workspace = true }
+chrono = { workspace = true, features = ["serde"] }
 
 # NestGate dependencies
 nestgate-core = { path = "../nestgate-core" }

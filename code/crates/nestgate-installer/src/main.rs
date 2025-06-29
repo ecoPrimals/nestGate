@@ -2,10 +2,10 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use tracing::info;
 
-mod installer;
 mod config;
-mod platform;
 mod download;
+mod installer;
+mod platform;
 mod wizard;
 
 #[cfg(feature = "gui")]
@@ -20,15 +20,15 @@ use installer::NestGateInstaller;
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
-    
+
     /// Enable verbose logging
     #[arg(short, long)]
     verbose: bool,
-    
+
     /// Installation directory (defaults to system appropriate location)
     #[arg(long)]
     install_dir: Option<std::path::PathBuf>,
-    
+
     /// Skip confirmation prompts
     #[arg(short, long)]
     yes: bool,
@@ -41,48 +41,48 @@ enum Commands {
         /// Force reinstallation even if already installed
         #[arg(long)]
         force: bool,
-        
+
         /// Install as system service
         #[arg(long)]
         service: bool,
-        
+
         /// Skip ZFS setup
         #[arg(long)]
         skip_zfs: bool,
     },
-    
+
     /// Uninstall NestGate
     Uninstall {
         /// Remove configuration files
         #[arg(long)]
         remove_config: bool,
-        
+
         /// Remove data files
         #[arg(long)]
         remove_data: bool,
     },
-    
+
     /// Update existing installation
     Update {
         /// Update to specific version
         #[arg(long)]
         version: Option<String>,
     },
-    
+
     /// Configure existing installation
     Configure {
         /// Configuration file path
         #[arg(long)]
         config: Option<std::path::PathBuf>,
-        
+
         /// Run configuration wizard
         #[arg(long)]
         wizard: bool,
     },
-    
+
     /// Check system requirements
     Doctor,
-    
+
     /// Launch GUI installer (requires 'gui' feature)
     #[cfg(feature = "gui")]
     Gui,
@@ -90,68 +90,77 @@ enum Commands {
 
 fn setup_logging(verbose: bool) -> Result<()> {
     let log_level = if verbose { "debug" } else { "info" };
-    
+
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new(log_level))
+                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new(log_level)),
         )
         .with_target(false)
         .with_thread_ids(false)
         .with_file(false)
         .with_line_number(false)
         .init();
-    
+
     Ok(())
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-    
+
     setup_logging(cli.verbose)?;
-    
+
     info!("NestGate Installer starting...");
-    
+
     let mut installer = NestGateInstaller::new(cli.install_dir.clone())?;
-    
+
     match cli.command {
-        Some(Commands::Install { force, service, skip_zfs }) => {
+        Some(Commands::Install {
+            force,
+            service,
+            skip_zfs,
+        }) => {
             installer.install(force, service, skip_zfs, cli.yes).await?;
-        },
-        
-        Some(Commands::Uninstall { remove_config, remove_data }) => {
-            installer.uninstall(remove_config, remove_data, cli.yes).await?;
-        },
-        
+        }
+
+        Some(Commands::Uninstall {
+            remove_config,
+            remove_data,
+        }) => {
+            installer
+                .uninstall(remove_config, remove_data, cli.yes)
+                .await?;
+        }
+
         Some(Commands::Update { version }) => {
             installer.update(version, cli.yes).await?;
-        },
-        
+        }
+
         Some(Commands::Configure { config, wizard }) => {
             if wizard {
                 installer.run_configuration_wizard().await?;
             } else {
                 installer.configure(config).await?;
             }
-        },
-        
+        }
+
         Some(Commands::Doctor) => {
             installer.doctor().await?;
-        },
-        
+        }
+
         #[cfg(feature = "gui")]
         Some(Commands::Gui) => {
             info!("Launching GUI installer...");
             gui::run_gui_installer().await?;
-        },
-        
+        }
+
         None => {
             // Default: run installation wizard
             info!("No command specified, running installation wizard...");
             installer.install(false, false, false, cli.yes).await?;
         }
     }
-    
+
     Ok(())
-} 
+}

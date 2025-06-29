@@ -1,12 +1,12 @@
 //! Dataset Lifecycle Management
-//! 
+//!
 //! Automated dataset lifecycle management and optimization scheduling
 
 use crate::types::*;
 use crate::Result;
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
-use tokio::sync::{RwLock, mpsc};
+use tokio::sync::{mpsc, RwLock};
 use tracing::{debug, info, warn};
 
 /// Lifecycle stage for datasets
@@ -182,6 +182,12 @@ pub struct LifecycleStats {
     pub average_evaluation_duration: Duration,
 }
 
+impl Default for DatasetLifecycleManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DatasetLifecycleManager {
     pub fn new() -> Self {
         Self::with_config(LifecycleConfig::default())
@@ -246,7 +252,10 @@ impl DatasetLifecycleManager {
             metrics: HashMap::new(),
         };
 
-        self.dataset_states.write().await.insert(dataset_name.to_string(), state);
+        self.dataset_states
+            .write()
+            .await
+            .insert(dataset_name.to_string(), state);
 
         // Trigger initial evaluation
         self.evaluate_dataset(dataset_name).await?;
@@ -256,7 +265,10 @@ impl DatasetLifecycleManager {
 
     /// Remove a dataset from lifecycle management
     pub async fn remove_dataset(&self, dataset_name: &str) -> Result<()> {
-        info!("Removing dataset {} from lifecycle management", dataset_name);
+        info!(
+            "Removing dataset {} from lifecycle management",
+            dataset_name
+        );
         self.dataset_states.write().await.remove(dataset_name);
         Ok(())
     }
@@ -266,24 +278,30 @@ impl DatasetLifecycleManager {
         debug!("Evaluating lifecycle for dataset: {}", dataset_name);
 
         let start_time = SystemTime::now();
-        
+
         // Get current state
         let current_state = {
             let states = self.dataset_states.read().await;
-            states.get(dataset_name).cloned()
-                .ok_or_else(|| AutomationError::Internal(format!("Dataset {} not found in lifecycle management", dataset_name)))?
+            states.get(dataset_name).cloned().ok_or_else(|| {
+                AutomationError::Internal(format!(
+                    "Dataset {} not found in lifecycle management",
+                    dataset_name
+                ))
+            })?
         };
 
         // Get applicable policies
         let policies = self.get_applicable_policies(&current_state).await;
 
         // Evaluate transitions
-        let (recommended_stage, recommended_actions) = self.evaluate_transitions(&current_state, &policies).await?;
+        let (recommended_stage, recommended_actions) =
+            self.evaluate_transitions(&current_state, &policies).await?;
 
         // Update state if stage changed
         if let Some(new_stage) = &recommended_stage {
             if *new_stage != current_state.current_stage {
-                self.update_dataset_stage(dataset_name, new_stage.clone()).await?;
+                self.update_dataset_stage(dataset_name, new_stage.clone())
+                    .await?;
             }
         }
 
@@ -300,13 +318,19 @@ impl DatasetLifecycleManager {
             next_evaluation: SystemTime::now() + self.config.evaluation_interval,
         };
 
-        debug!("Lifecycle evaluation completed for {}: {:?}", dataset_name, evaluation);
+        debug!(
+            "Lifecycle evaluation completed for {}: {:?}",
+            dataset_name, evaluation
+        );
         Ok(evaluation)
     }
 
     /// Execute a lifecycle action
     pub async fn execute_action(&self, dataset_name: &str, action: LifecycleAction) -> Result<()> {
-        info!("Executing lifecycle action for {}: {:?}", dataset_name, action);
+        info!(
+            "Executing lifecycle action for {}: {:?}",
+            dataset_name, action
+        );
 
         match action {
             LifecycleAction::ChangeTier(tier) => {
@@ -375,13 +399,17 @@ impl DatasetLifecycleManager {
         // Spawn scheduler task
         let scheduler_tx = tx.clone();
         let evaluation_interval = self.config.evaluation_interval;
-        
+
         tokio::spawn(async move {
             let mut interval = tokio::time::interval(evaluation_interval);
-            
+
             loop {
                 interval.tick().await;
-                if scheduler_tx.send(ScheduledTask::PolicyUpdate).await.is_err() {
+                if scheduler_tx
+                    .send(ScheduledTask::PolicyUpdate)
+                    .await
+                    .is_err()
+                {
                     break; // Channel closed
                 }
             }
@@ -451,16 +479,25 @@ impl DatasetLifecycleManager {
             ],
             stage_actions: {
                 let mut actions = HashMap::new();
-                actions.insert(LifecycleStage::Active, vec![LifecycleAction::ChangeTier(nestgate_core::StorageTier::Hot)]);
-                actions.insert(LifecycleStage::Aging, vec![
-                    LifecycleAction::ChangeTier(nestgate_core::StorageTier::Warm),
-                    LifecycleAction::EnableCompression,
-                ]);
-                actions.insert(LifecycleStage::Archived, vec![
-                    LifecycleAction::ChangeTier(nestgate_core::StorageTier::Cold),
-                    LifecycleAction::EnableCompression,
-                    LifecycleAction::EnableDeduplication,
-                ]);
+                actions.insert(
+                    LifecycleStage::Active,
+                    vec![LifecycleAction::ChangeTier(nestgate_core::StorageTier::Hot)],
+                );
+                actions.insert(
+                    LifecycleStage::Aging,
+                    vec![
+                        LifecycleAction::ChangeTier(nestgate_core::StorageTier::Warm),
+                        LifecycleAction::EnableCompression,
+                    ],
+                );
+                actions.insert(
+                    LifecycleStage::Archived,
+                    vec![
+                        LifecycleAction::ChangeTier(nestgate_core::StorageTier::Cold),
+                        LifecycleAction::EnableCompression,
+                        LifecycleAction::EnableDeduplication,
+                    ],
+                );
                 actions
             },
             priority: 100,
@@ -473,22 +510,23 @@ impl DatasetLifecycleManager {
         let backup_policy = LifecyclePolicy {
             name: "backup".to_string(),
             description: "Lifecycle policy for backup datasets".to_string(),
-            transitions: vec![
-                LifecycleTransition {
-                    from_stage: LifecycleStage::Created,
-                    to_stage: LifecycleStage::Archived,
-                    conditions: vec![TransitionCondition::AgeExceeds(Duration::from_secs(3600))], // 1 hour
-                    min_stage_duration: Duration::from_secs(60),
-                    requires_approval: false,
-                },
-            ],
+            transitions: vec![LifecycleTransition {
+                from_stage: LifecycleStage::Created,
+                to_stage: LifecycleStage::Archived,
+                conditions: vec![TransitionCondition::AgeExceeds(Duration::from_secs(3600))], // 1 hour
+                min_stage_duration: Duration::from_secs(60),
+                requires_approval: false,
+            }],
             stage_actions: {
                 let mut actions = HashMap::new();
-                actions.insert(LifecycleStage::Archived, vec![
-                    LifecycleAction::ChangeTier(nestgate_core::StorageTier::Cold),
-                    LifecycleAction::EnableCompression,
-                    LifecycleAction::EnableDeduplication,
-                ]);
+                actions.insert(
+                    LifecycleStage::Archived,
+                    vec![
+                        LifecycleAction::ChangeTier(nestgate_core::StorageTier::Cold),
+                        LifecycleAction::EnableCompression,
+                        LifecycleAction::EnableDeduplication,
+                    ],
+                );
                 actions
             },
             priority: 200,
@@ -503,14 +541,19 @@ impl DatasetLifecycleManager {
     /// Get applicable policies for a dataset
     async fn get_applicable_policies(&self, state: &DatasetLifecycleState) -> Vec<LifecyclePolicy> {
         let policies = self.policies.read().await;
-        policies.iter()
+        policies
+            .iter()
             .filter(|p| p.enabled && state.applied_policies.contains(&p.name))
             .cloned()
             .collect()
     }
 
     /// Evaluate stage transitions for a dataset
-    async fn evaluate_transitions(&self, state: &DatasetLifecycleState, policies: &[LifecyclePolicy]) -> Result<(Option<LifecycleStage>, Vec<LifecycleAction>)> {
+    async fn evaluate_transitions(
+        &self,
+        state: &DatasetLifecycleState,
+        policies: &[LifecyclePolicy],
+    ) -> Result<(Option<LifecycleStage>, Vec<LifecycleAction>)> {
         let mut recommended_stage = None;
         let mut recommended_actions = Vec::new();
 
@@ -518,20 +561,25 @@ impl DatasetLifecycleManager {
             for transition in &policy.transitions {
                 if transition.from_stage == state.current_stage {
                     // Check if minimum stage duration has passed
-                    let stage_duration = SystemTime::now().duration_since(state.stage_entered_at).unwrap_or_default();
+                    let stage_duration = SystemTime::now()
+                        .duration_since(state.stage_entered_at)
+                        .unwrap_or_default();
                     if stage_duration < transition.min_stage_duration {
                         continue;
                     }
 
                     // Check all conditions
-                    if self.evaluate_conditions(&transition.conditions, state).await {
+                    if self
+                        .evaluate_conditions(&transition.conditions, state)
+                        .await
+                    {
                         recommended_stage = Some(transition.to_stage.clone());
-                        
+
                         // Get actions for the new stage
                         if let Some(actions) = policy.stage_actions.get(&transition.to_stage) {
                             recommended_actions.extend(actions.clone());
                         }
-                        
+
                         break; // Use first matching transition
                     }
                 }
@@ -542,7 +590,11 @@ impl DatasetLifecycleManager {
     }
 
     /// Evaluate transition conditions
-    async fn evaluate_conditions(&self, conditions: &[TransitionCondition], state: &DatasetLifecycleState) -> bool {
+    async fn evaluate_conditions(
+        &self,
+        conditions: &[TransitionCondition],
+        state: &DatasetLifecycleState,
+    ) -> bool {
         for condition in conditions {
             if !self.evaluate_single_condition(condition, state).await {
                 return false; // All conditions must be true
@@ -552,10 +604,16 @@ impl DatasetLifecycleManager {
     }
 
     /// Evaluate a single transition condition
-    async fn evaluate_single_condition(&self, condition: &TransitionCondition, state: &DatasetLifecycleState) -> bool {
+    async fn evaluate_single_condition(
+        &self,
+        condition: &TransitionCondition,
+        state: &DatasetLifecycleState,
+    ) -> bool {
         match condition {
             TransitionCondition::AgeExceeds(threshold) => {
-                let age = SystemTime::now().duration_since(state.stage_entered_at).unwrap_or_default();
+                let age = SystemTime::now()
+                    .duration_since(state.stage_entered_at)
+                    .unwrap_or_default();
                 age > *threshold
             }
             TransitionCondition::AccessBelowThreshold(threshold) => {
@@ -588,13 +646,20 @@ impl DatasetLifecycleManager {
     }
 
     /// Update dataset stage
-    async fn update_dataset_stage(&self, dataset_name: &str, new_stage: LifecycleStage) -> Result<()> {
+    async fn update_dataset_stage(
+        &self,
+        dataset_name: &str,
+        new_stage: LifecycleStage,
+    ) -> Result<()> {
         let mut states = self.dataset_states.write().await;
         if let Some(state) = states.get_mut(dataset_name) {
-            info!("Transitioning dataset {} from {:?} to {:?}", dataset_name, state.current_stage, new_stage);
+            info!(
+                "Transitioning dataset {} from {:?} to {:?}",
+                dataset_name, state.current_stage, new_stage
+            );
             state.current_stage = new_stage;
             state.stage_entered_at = SystemTime::now();
-            
+
             // Update statistics
             let mut stats = self.stats.write().await;
             stats.total_transitions += 1;
@@ -605,11 +670,13 @@ impl DatasetLifecycleManager {
     /// Update evaluation statistics
     async fn update_evaluation_stats(&self, start_time: SystemTime) {
         let mut stats = self.stats.write().await;
-        let duration = SystemTime::now().duration_since(start_time).unwrap_or_default();
-        
+        let duration = SystemTime::now()
+            .duration_since(start_time)
+            .unwrap_or_default();
+
         stats.last_evaluation_time = Some(SystemTime::now());
         stats.average_evaluation_duration = Duration::from_millis(
-            ((stats.average_evaluation_duration.as_millis() + duration.as_millis()) / 2) as u64
+            ((stats.average_evaluation_duration.as_millis() + duration.as_millis()) / 2) as u64,
         );
     }
-} 
+}

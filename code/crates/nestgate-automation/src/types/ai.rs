@@ -52,4 +52,4 @@ pub struct TrainingMetrics {
     pub f1_score: f64,
     pub training_samples: u64,
     pub validation_samples: u64,
-} 
+}

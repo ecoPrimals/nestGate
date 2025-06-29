@@ -1,6 +1,6 @@
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use anyhow::Result;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstallerConfig {
@@ -34,14 +34,17 @@ impl InstallerConfig {
         if self.api_port < 1024 && !is_privileged() {
             anyhow::bail!("Port {} requires administrator privileges", self.api_port);
         }
-        
+
         if !self.install_path.parent().map_or(false, |p| p.exists()) {
-            anyhow::bail!("Installation directory parent does not exist: {:?}", self.install_path.parent());
+            anyhow::bail!(
+                "Installation directory parent does not exist: {:?}",
+                self.install_path.parent()
+            );
         }
-        
+
         Ok(())
     }
-    
+
     pub fn to_nestgate_config(&self) -> String {
         format!(
             r#"# NestGate Configuration
@@ -80,7 +83,7 @@ fn default_install_path() -> PathBuf {
     {
         PathBuf::from("C:\\Program Files\\NestGate")
     }
-    
+
     #[cfg(unix)]
     {
         if is_privileged() {
@@ -98,7 +101,7 @@ fn is_privileged() -> bool {
     {
         nix::unistd::geteuid().is_root()
     }
-    
+
     #[cfg(windows)]
     {
         // Simple check - in production this should be more robust
@@ -106,4 +109,4 @@ fn is_privileged() -> bool {
             .map(|p| p.contains("Administrator"))
             .unwrap_or(false)
     }
-} 
+}

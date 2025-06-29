@@ -1,20 +1,17 @@
 //! NestGate API Server
-//! 
+//!
 //! This crate provides the HTTP/REST API interface for NestGate,
 //! allowing external systems to interact with and manage the gateway.
 
-use std::sync::Arc;
 use axum::Router;
-use tower_http::{
-    cors::CorsLayer,
-    trace::TraceLayer,
-};
-use tracing::{info, error};
 use nestgate_zfs::manager::ZfsManager;
+use std::sync::Arc;
+use tower_http::{cors::CorsLayer, trace::TraceLayer};
+use tracing::{error, info};
 
-mod routes;
 pub mod handlers;
 mod models;
+mod routes;
 
 pub use handlers::zfs::ZfsApiState;
 
@@ -37,18 +34,16 @@ impl Default for Config {
     fn default() -> Self {
         // Check if we're in Songbird mode or standalone mode
         let songbird_mode = std::env::var("SONGBIRD_URL").is_ok();
-        
+
         let bind_addr = if songbird_mode {
             // Songbird-enhanced mode: use service name with auto port
-            std::env::var("NESTGATE_API_BIND")
-                .unwrap_or_else(|_| "nestgate-api:0".to_string())
+            std::env::var("NESTGATE_API_BIND").unwrap_or_else(|_| "nestgate-api:0".to_string())
         } else {
             // Standalone mode: use localhost with configurable port
-            let port = std::env::var("NESTGATE_PORT")
-                .unwrap_or_else(|_| "8080".to_string());
+            let port = std::env::var("NESTGATE_PORT").unwrap_or_else(|_| "8080".to_string());
             format!("127.0.0.1:{}", port)
         };
-        
+
         Self {
             bind_addr,
             cors: None,
@@ -60,10 +55,11 @@ impl Default for Config {
 }
 
 /// Initialize and start the API server with ZFS integration
-pub async fn serve_with_zfs(config: Config, zfs_manager: Arc<ZfsManager>) -> Result<(), Box<dyn std::error::Error>> {
-    let zfs_state = ZfsApiState {
-        zfs_manager,
-    };
+pub async fn serve_with_zfs(
+    config: Config,
+    zfs_manager: Arc<ZfsManager>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let zfs_state = ZfsApiState { zfs_manager };
 
     let app = routes::create_combined_router()
         .with_state(zfs_state)
@@ -72,7 +68,10 @@ pub async fn serve_with_zfs(config: Config, zfs_manager: Arc<ZfsManager>) -> Res
             CorsLayer::permissive() // Default to permissive CORS in development
         }));
 
-    info!("Starting NestGate API server on {} with ZFS integration", config.bind_addr);
+    info!(
+        "Starting NestGate API server on {} with ZFS integration",
+        config.bind_addr
+    );
     let listener = tokio::net::TcpListener::bind(&config.bind_addr).await?;
     axum::serve(listener, app).await?;
 
@@ -96,9 +95,7 @@ pub async fn serve(config: Config) -> Result<(), Box<dyn std::error::Error>> {
 
 /// Create a configured API router with ZFS integration
 pub fn create_api_router(zfs_manager: Arc<ZfsManager>) -> Router {
-    let zfs_state = ZfsApiState {
-        zfs_manager,
-    };
+    let zfs_state = ZfsApiState { zfs_manager };
 
     routes::create_combined_router()
         .with_state(zfs_state)
@@ -111,4 +108,4 @@ pub fn create_basic_router() -> Router {
     routes::create_router()
         .layer(TraceLayer::new_for_http())
         .layer(CorsLayer::permissive())
-} 
+}

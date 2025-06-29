@@ -1,9 +1,9 @@
+use anyhow::Result;
 #[cfg(feature = "gui")]
 use iced::{
-    widget::{button, column, container, row, text, progress_bar, scrollable},
+    widget::{button, column, container, progress_bar, row, scrollable, text},
     Application, Command, Element, Length, Settings, Theme,
 };
-use anyhow::Result;
 
 #[cfg(feature = "gui")]
 pub async fn run_gui_installer() -> Result<()> {
@@ -15,7 +15,7 @@ pub async fn run_gui_installer() -> Result<()> {
         },
         ..Default::default()
     };
-    
+
     NestGateInstallerGui::run(settings)?;
     Ok(())
 }
@@ -32,17 +32,17 @@ pub enum Message {
     NextStep,
     PreviousStep,
     Cancel,
-    
+
     // Installation options
     ToggleService(bool),
     ToggleZfs(bool),
     SetInstallPath(String),
-    
+
     // Configuration
     SetApiPort(String),
     SetSongbirdUrl(String),
     ToggleAiFeatures(bool),
-    
+
     // Actions
     StartInstallation,
     InstallationProgress(f32),
@@ -65,22 +65,22 @@ pub enum InstallationStep {
 #[derive(Debug)]
 pub struct NestGateInstallerGui {
     current_step: InstallationStep,
-    
+
     // Installation options
     install_as_service: bool,
     enable_zfs: bool,
     install_path: String,
-    
+
     // Configuration
     api_port: String,
     songbird_url: String,
     enable_ai: bool,
-    
+
     // Installation state
     installation_progress: f32,
     installation_message: String,
     error_message: Option<String>,
-    
+
     // System check results
     system_checks: Vec<SystemCheck>,
 }
@@ -144,7 +144,7 @@ impl Application for NestGateInstallerGui {
                 },
             ],
         };
-        
+
         (installer, Command::none())
     }
 
@@ -170,15 +170,14 @@ impl Application for NestGateInstallerGui {
                     InstallationStep::Installation => InstallationStep::Complete,
                     InstallationStep::Complete => InstallationStep::Complete,
                 };
-                
+
                 if self.current_step == InstallationStep::Installation {
-                    return Command::perform(
-                        simulate_installation(),
-                        |progress| Message::InstallationProgress(progress)
-                    );
+                    return Command::perform(simulate_installation(), |progress| {
+                        Message::InstallationProgress(progress)
+                    });
                 }
-            },
-            
+            }
+
             Message::PreviousStep => {
                 self.current_step = match self.current_step {
                     InstallationStep::Welcome => InstallationStep::Welcome,
@@ -188,50 +187,50 @@ impl Application for NestGateInstallerGui {
                     InstallationStep::Installation => InstallationStep::Configuration,
                     InstallationStep::Complete => InstallationStep::Complete,
                 };
-            },
-            
+            }
+
             Message::ToggleService(enabled) => {
                 self.install_as_service = enabled;
-            },
-            
+            }
+
             Message::ToggleZfs(enabled) => {
                 self.enable_zfs = enabled;
-            },
-            
+            }
+
             Message::SetInstallPath(path) => {
                 self.install_path = path;
-            },
-            
+            }
+
             Message::SetApiPort(port) => {
                 self.api_port = port;
-            },
-            
+            }
+
             Message::SetSongbirdUrl(url) => {
                 self.songbird_url = url;
-            },
-            
+            }
+
             Message::ToggleAiFeatures(enabled) => {
                 self.enable_ai = enabled;
-            },
-            
+            }
+
             Message::InstallationProgress(progress) => {
                 self.installation_progress = progress;
                 if progress >= 100.0 {
                     self.current_step = InstallationStep::Complete;
                 }
-            },
-            
+            }
+
             Message::InstallationComplete => {
                 self.current_step = InstallationStep::Complete;
-            },
-            
+            }
+
             Message::InstallationError(error) => {
                 self.error_message = Some(error);
-            },
-            
+            }
+
             _ => {}
         }
-        
+
         Command::none()
     }
 
@@ -244,7 +243,7 @@ impl Application for NestGateInstallerGui {
             InstallationStep::Installation => self.installation_view(),
             InstallationStep::Complete => self.complete_view(),
         };
-        
+
         container(content)
             .width(Length::Fill)
             .height(Length::Fill)
@@ -263,14 +262,12 @@ impl NestGateInstallerGui {
         column![
             text("Welcome to NestGate")
                 .size(32)
-                .style(iced::theme::Text::Color(iced::Color::from_rgb(0.2, 0.8, 1.0))),
-            
-            text("The next-generation storage management platform")
-                .size(18),
-            
+                .style(iced::theme::Text::Color(iced::Color::from_rgb(
+                    0.2, 0.8, 1.0
+                ))),
+            text("The next-generation storage management platform").size(18),
             text("This installer will guide you through setting up NestGate on your system.")
                 .size(14),
-            
             column![
                 text("Features:"),
                 text("  • ZFS storage management"),
@@ -278,8 +275,8 @@ impl NestGateInstallerGui {
                 text("  • Songbird network orchestration"),
                 text("  • MCP protocol support"),
                 text("  • Web-based management interface"),
-            ].spacing(5),
-            
+            ]
+            .spacing(5),
             row![
                 button("Cancel").on_press(Message::Cancel),
                 button("Next").on_press(Message::NextStep),
@@ -290,9 +287,10 @@ impl NestGateInstallerGui {
         .spacing(20)
         .into()
     }
-    
+
     fn system_check_view(&self) -> Element<Message> {
-        let checks = self.system_checks
+        let checks = self
+            .system_checks
             .iter()
             .map(|check| {
                 let status_text = match check.status {
@@ -301,25 +299,19 @@ impl NestGateInstallerGui {
                     CheckStatus::Warning => "⚠️",
                     CheckStatus::Error => "❌",
                 };
-                
+
                 row![
                     text(status_text).size(20),
-                    column![
-                        text(&check.name).size(16),
-                        text(&check.message).size(12),
-                    ].spacing(2),
+                    column![text(&check.name).size(16), text(&check.message).size(12),].spacing(2),
                 ]
                 .spacing(10)
                 .into()
             })
             .collect::<Vec<_>>();
-        
+
         column![
-            text("System Requirements Check")
-                .size(24),
-            
+            text("System Requirements Check").size(24),
             column(checks).spacing(10),
-            
             row![
                 button("Back").on_press(Message::PreviousStep),
                 button("Next").on_press(Message::NextStep),
@@ -330,19 +322,15 @@ impl NestGateInstallerGui {
         .spacing(20)
         .into()
     }
-    
+
     fn install_options_view(&self) -> Element<Message> {
         column![
-            text("Installation Options")
-                .size(24),
-            
+            text("Installation Options").size(24),
             // TODO: Add checkboxes and input fields for installation options
             text("Configure how NestGate should be installed:"),
-            
             text(format!("Install as service: {}", self.install_as_service)),
             text(format!("Enable ZFS: {}", self.enable_zfs)),
             text(format!("Install path: {}", self.install_path)),
-            
             row![
                 button("Back").on_press(Message::PreviousStep),
                 button("Next").on_press(Message::NextStep),
@@ -353,18 +341,14 @@ impl NestGateInstallerGui {
         .spacing(20)
         .into()
     }
-    
+
     fn configuration_view(&self) -> Element<Message> {
         column![
-            text("Configuration")
-                .size(24),
-            
+            text("Configuration").size(24),
             text("Configure NestGate settings:"),
-            
             text(format!("API Port: {}", self.api_port)),
             text(format!("Songbird URL: {}", self.songbird_url)),
             text(format!("Enable AI: {}", self.enable_ai)),
-            
             row![
                 button("Back").on_press(Message::PreviousStep),
                 button("Install").on_press(Message::NextStep),
@@ -375,18 +359,16 @@ impl NestGateInstallerGui {
         .spacing(20)
         .into()
     }
-    
+
     fn installation_view(&self) -> Element<Message> {
         column![
-            text("Installing NestGate...")
-                .size(24),
-            
+            text("Installing NestGate...").size(24),
             progress_bar(0.0..=100.0, self.installation_progress),
-            
             text(&self.installation_message),
-            
             if let Some(error) = &self.error_message {
-                text(error).style(iced::theme::Text::Color(iced::Color::from_rgb(1.0, 0.2, 0.2)))
+                text(error).style(iced::theme::Text::Color(iced::Color::from_rgb(
+                    1.0, 0.2, 0.2,
+                )))
             } else {
                 text("")
             }
@@ -394,22 +376,22 @@ impl NestGateInstallerGui {
         .spacing(20)
         .into()
     }
-    
+
     fn complete_view(&self) -> Element<Message> {
         column![
             text("Installation Complete!")
                 .size(32)
-                .style(iced::theme::Text::Color(iced::Color::from_rgb(0.2, 1.0, 0.2))),
-            
+                .style(iced::theme::Text::Color(iced::Color::from_rgb(
+                    0.2, 1.0, 0.2
+                ))),
             text("NestGate has been successfully installed on your system."),
-            
             column![
                 text("Next steps:"),
                 text("  • Run 'nestgate --help' to see available commands"),
                 text("  • Visit http://localhost:8080 for the web interface"),
                 text("  • Check the documentation for advanced configuration"),
-            ].spacing(5),
-            
+            ]
+            .spacing(5),
             button("Finish").on_press(Message::Cancel),
         ]
         .spacing(20)
@@ -420,7 +402,7 @@ impl NestGateInstallerGui {
 #[cfg(feature = "gui")]
 async fn simulate_installation() -> f32 {
     use tokio::time::{sleep, Duration};
-    
+
     for i in 0..=100 {
         sleep(Duration::from_millis(50)).await;
         if i == 100 {
@@ -428,4 +410,4 @@ async fn simulate_installation() -> f32 {
         }
     }
     100.0
-} 
+}

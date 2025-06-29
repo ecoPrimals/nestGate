@@ -1,20 +1,20 @@
 /*!
  * NestGate Main Binary
- * 
+ *
  * NestGate NAS system - runs as standalone service with optional Songbird enhancement
  * 🔧 STANDALONE: Full local functionality with direct network access
  * 🎼 SONGBIRD-ENHANCED: Extended functionality with orchestrated networking
  */
 
+use std::sync::Arc;
 use tracing::{info, warn};
 use tracing_subscriber;
-use std::sync::Arc;
 use uuid;
 
 // Core NestGate services
+use nestgate_api;
 use nestgate_core::config::Config as NestGateConfig;
 use nestgate_zfs::manager::ZfsManager;
-use nestgate_api;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -23,11 +23,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_env_filter("info,nestgate=debug")
         .init();
 
-    info!("🏠 NestGate v{} - Sovereign NAS System", env!("CARGO_PKG_VERSION"));
+    info!(
+        "🏠 NestGate v{} - Sovereign NAS System",
+        env!("CARGO_PKG_VERSION")
+    );
 
     // Parse command line arguments
     let args: Vec<String> = std::env::args().collect();
-    
+
     if args.len() > 1 && (args[1] == "-h" || args[1] == "--help") {
         print_help();
         return Ok(());
@@ -35,7 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Check for ecosystem integration (OPTIONAL)
     let ecosystem_mode = detect_ecosystem_integration();
-    
+
     match &ecosystem_mode {
         EcosystemMode::Standalone => {
             info!("🔧 STANDALONE MODE: Full sovereign operation");
@@ -43,7 +46,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             info!("   ✅ Local web UI and direct network access");
             info!("   💡 Set SONGBIRD_URL to enable distributed features");
         }
-        EcosystemMode::Distributed { songbird_url, beardog_available } => {
+        EcosystemMode::Distributed {
+            songbird_url,
+            beardog_available,
+        } => {
             info!("🌐 ECOSYSTEM MODE: Enhanced distributed operation");
             info!("   ✅ Songbird orchestration: {}", songbird_url);
             if *beardog_available {
@@ -54,18 +60,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Generate service identifier
-    let service_name = std::env::var("NESTGATE_SERVICE_NAME")
-        .unwrap_or_else(|_| format!("nestgate-{}", uuid::Uuid::new_v4().simple().to_string()[..8].to_string()));
+    let service_name = std::env::var("NESTGATE_SERVICE_NAME").unwrap_or_else(|_| {
+        format!(
+            "nestgate-{}",
+            uuid::Uuid::new_v4().simple().to_string()[..8].to_string()
+        )
+    });
 
     info!("🏷️ Service identifier: {}", service_name);
 
     // Initialize NestGate core (always works standalone)
     let _nestgate_config = NestGateConfig::default();
-    
+
     info!("💾 Initializing ZFS manager...");
-    let zfs_manager = Arc::new(
-        ZfsManager::new(nestgate_zfs::config::ZfsConfig::default()).await?
-    );
+    let zfs_manager = Arc::new(ZfsManager::new(nestgate_zfs::config::ZfsConfig::default()).await?);
 
     // Initialize networking (standalone-first, ecosystem-enhanced)
     let network_config = initialize_networking(&service_name, &ecosystem_mode).await?;
@@ -108,9 +116,11 @@ fn detect_ecosystem_integration() -> EcosystemMode {
     // Check for Songbird orchestrator
     if let Ok(songbird_url) = std::env::var("SONGBIRD_URL") {
         // Check for BearDog security
-        let beardog_available = std::env::var("BEARDOG_URL").is_ok() || 
-                               std::env::var("BEARDOG_ENABLED").map(|v| v == "true").unwrap_or(false);
-        
+        let beardog_available = std::env::var("BEARDOG_URL").is_ok()
+            || std::env::var("BEARDOG_ENABLED")
+                .map(|v| v == "true")
+                .unwrap_or(false);
+
         EcosystemMode::Distributed {
             songbird_url,
             beardog_available,
@@ -120,32 +130,38 @@ fn detect_ecosystem_integration() -> EcosystemMode {
     }
 }
 
-async fn initialize_networking(service_name: &str, ecosystem_mode: &EcosystemMode) -> Result<NetworkConfig, Box<dyn std::error::Error>> {
+async fn initialize_networking(
+    service_name: &str,
+    ecosystem_mode: &EcosystemMode,
+) -> Result<NetworkConfig, Box<dyn std::error::Error>> {
     match ecosystem_mode {
         EcosystemMode::Standalone => {
             info!("🔧 Initializing standalone networking...");
-            
+
             // Use configurable port for standalone mode
             let api_port = std::env::var("NESTGATE_PORT")
                 .unwrap_or_else(|_| "8080".to_string())
                 .parse::<u16>()
                 .unwrap_or(8080);
-            
+
             let bind_addr = format!("0.0.0.0:{}", api_port);
-            
+
             info!("✅ Standalone networking ready:");
             info!("   - Local access: http://localhost:{}", api_port);
             info!("   - Network access: http://<your-ip>:{}", api_port);
             info!("   - Direct NFS/SMB/HTTP protocols available");
-            
+
             Ok(NetworkConfig {
                 api_bind_addr: bind_addr,
                 description: "Standalone operation with direct network access".to_string(),
             })
         }
-        EcosystemMode::Distributed { songbird_url, beardog_available } => {
+        EcosystemMode::Distributed {
+            songbird_url,
+            beardog_available,
+        } => {
             info!("🌐 Initializing ecosystem networking...");
-            
+
             // Try ecosystem integration with graceful fallback
             match try_ecosystem_integration(service_name, songbird_url, *beardog_available).await {
                 Ok(config) => {
@@ -155,11 +171,11 @@ async fn initialize_networking(service_name: &str, ecosystem_mode: &EcosystemMod
                 Err(e) => {
                     warn!("⚠️ Ecosystem integration failed: {}", e);
                     warn!("🔄 Gracefully falling back to standalone mode");
-                    
+
                     // Fallback to standalone
                     let api_port = 8080;
                     let bind_addr = format!("0.0.0.0:{}", api_port);
-                    
+
                     Ok(NetworkConfig {
                         api_bind_addr: bind_addr,
                         description: "Standalone fallback (ecosystem unavailable)".to_string(),
@@ -171,25 +187,28 @@ async fn initialize_networking(service_name: &str, ecosystem_mode: &EcosystemMod
 }
 
 async fn try_ecosystem_integration(
-    _service_name: &str, 
-    _songbird_url: &str, 
-    _beardog_available: bool
+    _service_name: &str,
+    _songbird_url: &str,
+    _beardog_available: bool,
 ) -> Result<NetworkConfig, Box<dyn std::error::Error>> {
     // This is where ecosystem integration would go
     // For now, we'll implement a placeholder that demonstrates the pattern
-    
+
     info!("🎼 Attempting Songbird connection...");
-    
+
     // Simulate ecosystem check (in real implementation, this would be actual network calls)
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-    
+
     // For now, return an error to demonstrate fallback
     // In real implementation, this would do actual Songbird/BearDog integration
     Err("Ecosystem integration not yet implemented - using standalone mode".into())
 }
 
 fn print_help() {
-    println!("NestGate v{} - Sovereign NAS System", env!("CARGO_PKG_VERSION"));
+    println!(
+        "NestGate v{} - Sovereign NAS System",
+        env!("CARGO_PKG_VERSION")
+    );
     println!();
     println!("🏠 STANDALONE MODE: Complete ZFS NAS with local management");
     println!("🌐 ECOSYSTEM MODE: Enhanced with distributed coordination and encryption");
@@ -228,4 +247,4 @@ fn print_help() {
     println!("    🌐 Distributed coordination (with Songbird)");
     println!("    🔐 Encrypted federation (with BearDog)");
     println!();
-} 
+}

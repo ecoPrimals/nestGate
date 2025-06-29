@@ -1,5 +1,5 @@
 //! NestGate File System Monitor
-//! 
+//!
 //! File system monitoring and event handling for NestGate
 
 use std::collections::HashMap;
@@ -10,10 +10,10 @@ use std::time::{Duration, SystemTime};
 use futures::channel::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use serde::{Deserialize, Serialize};
-use tokio::sync::{RwLock, Mutex};
+use tokio::sync::{Mutex, RwLock};
 use tracing::{debug, error, info};
 
-use nestgate_core::{Result, NestGateError};
+use nestgate_core::{NestGateError, Result};
 
 /// File system event types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -97,7 +97,10 @@ impl Default for FsMonitorConfig {
 /// Event handler trait
 pub trait FsEventHandler: Send + Sync + std::fmt::Debug {
     /// Handle a file system event
-    fn handle_event(&self, event: FsEvent) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<()>> + Send + '_>>;
+    fn handle_event(
+        &self,
+        event: FsEvent,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<()>> + Send + '_>>;
 }
 
 /// File system monitor statistics
@@ -139,7 +142,7 @@ impl FsMonitor {
     /// Create a new file system monitor
     pub fn new(config: FsMonitorConfig) -> Self {
         let (event_sender, event_receiver) = mpsc::unbounded();
-        
+
         Self {
             config,
             watcher: None,
@@ -161,66 +164,68 @@ impl FsMonitor {
             start_time: SystemTime::now(),
         }
     }
-    
+
     /// Create with default configuration
     pub fn with_defaults() -> Self {
         Self::new(FsMonitorConfig::default())
     }
-    
+
     /// Initialize the monitor
     pub async fn initialize(&mut self) -> Result<()> {
         info!("Initializing file system monitor");
-        
+
         // Create the notify watcher
         let (tx, rx) = std::sync::mpsc::channel();
-        
+
         let watcher = notify::recommended_watcher(move |res: notify::Result<Event>| {
             if let Err(e) = tx.send(res) {
                 error!("Failed to send file system event: {}", e);
             }
         })
-        .map_err(|e| NestGateError::Internal(format!("Failed to create file system watcher: {}", e)))?;
-        
+        .map_err(|e| {
+            NestGateError::Internal(format!("Failed to create file system watcher: {}", e))
+        })?;
+
         self.watcher = Some(Arc::new(Mutex::new(watcher)));
-        
+
         // Start watching configured paths
         for path in &self.config.watch_paths {
             self.add_watch_path(path).await?;
         }
-        
+
         // Start event processing task
         self.start_event_processor(rx).await?;
-        
+
         // Update stats
         {
             let mut stats = self.stats.write().await;
             stats.watched_paths = self.config.watch_paths.len();
         }
-        
+
         *self.is_running.write().await = true;
-        
+
         info!("File system monitor initialized successfully");
         Ok(())
     }
-    
+
     /// Shutdown the monitor
     pub async fn shutdown(&mut self) -> Result<()> {
         info!("Shutting down file system monitor");
-        
+
         *self.is_running.write().await = false;
-        
+
         // Close event sender
         if let Some(sender) = self.event_sender.take() {
             sender.close_channel();
         }
-        
+
         // Drop watcher
         self.watcher = None;
-        
+
         info!("File system monitor shut down successfully");
         Ok(())
     }
-    
+
     /// Add a path to watch
     pub async fn add_watch_path(&self, path: &Path) -> Result<()> {
         if let Some(watcher) = &self.watcher {
@@ -230,67 +235,77 @@ impl FsMonitor {
             } else {
                 RecursiveMode::NonRecursive
             };
-            
-            watcher.watch(path, mode)
-                .map_err(|e| NestGateError::Internal(format!("Failed to watch path {:?}: {}", path, e)))?;
-            
+
+            watcher.watch(path, mode).map_err(|e| {
+                NestGateError::Internal(format!("Failed to watch path {:?}: {}", path, e))
+            })?;
+
             info!("Added watch path: {:?}", path);
         }
-        
+
         Ok(())
     }
-    
+
     /// Remove a path from watching
     pub async fn remove_watch_path(&self, path: &Path) -> Result<()> {
         if let Some(watcher) = &self.watcher {
             let mut watcher = watcher.lock().await;
-            watcher.unwatch(path)
-                .map_err(|e| NestGateError::Internal(format!("Failed to unwatch path {:?}: {}", path, e)))?;
-            
+            watcher.unwatch(path).map_err(|e| {
+                NestGateError::Internal(format!("Failed to unwatch path {:?}: {}", path, e))
+            })?;
+
             info!("Removed watch path: {:?}", path);
         }
-        
+
         Ok(())
     }
-    
+
     /// Add an event handler
     pub async fn add_handler(&self, handler: Arc<dyn FsEventHandler>) {
         let mut handlers = self.handlers.write().await;
         handlers.push(handler);
         info!("Added file system event handler");
     }
-    
+
     /// Get monitor statistics
     pub async fn get_stats(&self) -> FsMonitorStats {
         let mut stats = self.stats.read().await.clone();
-        stats.uptime_seconds = self.start_time.elapsed().unwrap_or(Duration::ZERO).as_secs();
-        
+        stats.uptime_seconds = self
+            .start_time
+            .elapsed()
+            .unwrap_or(Duration::ZERO)
+            .as_secs();
+
         let buffer = self.event_buffer.read().await;
-        stats.buffer_utilization = (buffer.len() as f64 / self.config.max_buffer_size as f64) * 100.0;
-        
+        stats.buffer_utilization =
+            (buffer.len() as f64 / self.config.max_buffer_size as f64) * 100.0;
+
         stats
     }
-    
+
     /// Get recent events
     pub async fn get_recent_events(&self, limit: usize) -> Vec<FsEvent> {
         let buffer = self.event_buffer.read().await;
-        buffer.iter()
-            .rev()
-            .take(limit)
-            .cloned()
-            .collect()
+        buffer.iter().rev().take(limit).cloned().collect()
     }
-    
+
     /// Check if monitor is running
     pub async fn is_running(&self) -> bool {
         *self.is_running.read().await
     }
-    
+
     /// Start the event processing task
-    async fn start_event_processor(&mut self, rx: std::sync::mpsc::Receiver<notify::Result<Event>>) -> Result<()> {
-        let event_sender = self.event_sender.as_ref().unwrap().clone();
+    async fn start_event_processor(
+        &mut self,
+        rx: std::sync::mpsc::Receiver<notify::Result<Event>>,
+    ) -> Result<()> {
+        let event_sender = self
+            .event_sender
+            .as_ref()
+            .ok_or_else(|| NestGateError::Internal("Event sender not initialized".to_string()))?
+            .clone();
         let config = self.config.clone();
-        
+
         // Spawn task to convert notify events to our events
         tokio::spawn(async move {
             while let Ok(result) = rx.recv() {
@@ -309,22 +324,22 @@ impl FsMonitor {
                 }
             }
         });
-        
+
         // Spawn task to process our events
         if let Some(mut receiver) = self.event_receiver.take() {
             let handlers = Arc::clone(&self.handlers);
             let stats = Arc::clone(&self.stats);
             let event_buffer = Arc::clone(&self.event_buffer);
             let max_buffer_size = self.config.max_buffer_size;
-            
+
             tokio::spawn(async move {
                 while let Ok(Some(event)) = receiver.try_next() {
                     // Update statistics
                     Self::update_stats(&stats, &event).await;
-                    
+
                     // Add to buffer
                     Self::add_to_buffer(&event_buffer, event.clone(), max_buffer_size).await;
-                    
+
                     // Process with handlers
                     let handlers = handlers.read().await;
                     for handler in handlers.iter() {
@@ -335,10 +350,10 @@ impl FsMonitor {
                 }
             });
         }
-        
+
         Ok(())
     }
-    
+
     /// Convert notify event to our event format
     async fn convert_notify_event(event: Event, config: &FsMonitorConfig) -> Option<FsEvent> {
         // Check if path should be ignored
@@ -349,7 +364,7 @@ impl FsMonitor {
                 }
             }
         }
-        
+
         // Check file extensions if specified
         if !config.file_extensions.is_empty() {
             let mut has_matching_extension = false;
@@ -367,7 +382,7 @@ impl FsMonitor {
                 return None;
             }
         }
-        
+
         let event_type = match event.kind {
             EventKind::Create(_) => {
                 if event.paths.first()?.is_dir() {
@@ -388,26 +403,26 @@ impl FsMonitor {
             EventKind::Other => return None,
             _ => FsEventType::MetadataChanged,
         };
-        
+
         // Check if event type is in filters
         if !config.event_filters.contains(&event_type) {
             return None;
         }
-        
+
         let path = event.paths.first()?.clone();
         let dest_path = if event.paths.len() > 1 {
             Some(event.paths[1].clone())
         } else {
             None
         };
-        
+
         // Get file information
         let (file_size, is_directory) = if let Ok(metadata) = std::fs::metadata(&path) {
             (Some(metadata.len()), metadata.is_dir())
         } else {
             (None, false)
         };
-        
+
         Some(FsEvent {
             event_type,
             path,
@@ -417,26 +432,26 @@ impl FsMonitor {
             is_directory,
         })
     }
-    
+
     /// Update statistics
     async fn update_stats(stats: &Arc<RwLock<FsMonitorStats>>, event: &FsEvent) {
         let mut stats = stats.write().await;
         stats.total_events += 1;
         stats.last_event_time = Some(event.timestamp);
-        
+
         let event_type_str = format!("{:?}", event.event_type);
         *stats.events_by_type.entry(event_type_str).or_insert(0) += 1;
-        
+
         // Update time-based counters (simplified implementation)
         stats.events_last_minute += 1;
         stats.events_last_hour += 1;
     }
-    
+
     /// Add event to buffer
     async fn add_to_buffer(buffer: &Arc<RwLock<Vec<FsEvent>>>, event: FsEvent, max_size: usize) {
         let mut buffer = buffer.write().await;
         buffer.push(event);
-        
+
         // Keep buffer size manageable
         if buffer.len() > max_size {
             buffer.drain(0..max_size / 10); // Remove oldest 10%
@@ -449,7 +464,10 @@ impl FsMonitor {
 pub struct LoggingEventHandler;
 
 impl FsEventHandler for LoggingEventHandler {
-    fn handle_event(&self, event: FsEvent) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<()>> + Send + '_>> {
+    fn handle_event(
+        &self,
+        event: FsEvent,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<()>> + Send + '_>> {
         Box::pin(async move {
             debug!("FS Event: {:?} - {:?}", event.event_type, event.path);
             Ok(())
@@ -476,12 +494,12 @@ impl AccessPatternHandler {
             access_counts: Arc::new(RwLock::new(HashMap::new())),
         }
     }
-    
+
     pub async fn get_access_count(&self, path: &Path) -> u64 {
         let counts = self.access_counts.read().await;
         counts.get(path).copied().unwrap_or(0)
     }
-    
+
     pub async fn get_top_accessed_files(&self, limit: usize) -> Vec<(PathBuf, u64)> {
         let counts = self.access_counts.read().await;
         let mut entries: Vec<_> = counts.iter().map(|(k, v)| (k.clone(), *v)).collect();
@@ -491,7 +509,10 @@ impl AccessPatternHandler {
 }
 
 impl FsEventHandler for AccessPatternHandler {
-    fn handle_event(&self, event: FsEvent) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<()>> + Send + '_>> {
+    fn handle_event(
+        &self,
+        event: FsEvent,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<()>> + Send + '_>> {
         let access_counts = Arc::clone(&self.access_counts);
         Box::pin(async move {
             // Track access patterns for optimization
@@ -512,14 +533,14 @@ mod tests {
     use super::*;
     use std::fs;
     use tokio::time::{sleep, Duration};
-    
+
     #[tokio::test]
     async fn test_fs_monitor_creation() {
         let config = FsMonitorConfig::default();
         let monitor = FsMonitor::new(config);
         assert!(!monitor.is_running().await);
     }
-    
+
     #[tokio::test]
     async fn test_event_handler() {
         let handler = LoggingEventHandler;
@@ -531,15 +552,15 @@ mod tests {
             file_size: Some(1024),
             is_directory: false,
         };
-        
+
         assert!(handler.handle_event(event).await.is_ok());
     }
-    
+
     #[tokio::test]
     async fn test_access_pattern_handler() {
         let handler = AccessPatternHandler::new();
         let path = PathBuf::from("/tmp/test.txt");
-        
+
         let event = FsEvent {
             event_type: FsEventType::Accessed,
             path: path.clone(),
@@ -548,8 +569,8 @@ mod tests {
             file_size: Some(1024),
             is_directory: false,
         };
-        
+
         assert!(handler.handle_event(event).await.is_ok());
         assert_eq!(handler.get_access_count(&path).await, 1);
     }
-} 
+}

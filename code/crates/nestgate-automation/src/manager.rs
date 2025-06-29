@@ -1,7 +1,8 @@
 //! Intelligent Dataset Manager
-//! 
+//!
 //! Core manager for intelligent dataset automation with ecosystem integration
 
+use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::info;
@@ -9,20 +10,34 @@ use tracing::info;
 use crate::types::*;
 use crate::Result;
 
+/// Performance metrics for a dataset
+#[derive(Debug, Clone)]
+pub struct PerformanceMetrics {
+    pub read_iops: f64,
+    pub write_iops: f64,
+    pub latency_ms: f64,
+    pub throughput_mbps: f64,
+}
+
 /// Intelligent dataset lifecycle manager with dynamic ecosystem discovery
 #[derive(Debug)]
 pub struct IntelligentDatasetManager {
+    #[allow(dead_code)]
     config: AutomationConfig,
-    
-    // Ecosystem integration (when network-integration feature is enabled)
-    #[cfg(feature = "network-integration")]
+    dataset_analyzer: Arc<crate::analysis::DatasetAnalyzer>,
+    tier_predictor: Arc<crate::prediction::TierPredictor>,
+    #[allow(dead_code)]
     ecosystem_discovery: Arc<crate::discovery::EcosystemDiscovery>,
     #[cfg(feature = "network-integration")]
+    #[allow(dead_code)]
     service_connections: Arc<RwLock<crate::connections::ServiceConnectionPool>>,
-    
-    // Local components
-    file_analyzer: Arc<crate::analysis::FileAnalyzer>,
-    tier_predictor: Arc<crate::prediction::TierPredictor>,
+
+    // Performance monitoring and cache
+    #[allow(dead_code)]
+    performance_cache: Arc<RwLock<HashMap<String, PerformanceMetrics>>>,
+    #[allow(dead_code)]
+    ai_coordinator: Arc<crate::ai::AiAutomationCoordinator>,
+    #[allow(dead_code)]
     lifecycle_manager: Arc<crate::lifecycle::DatasetLifecycleManager>,
 }
 
@@ -33,32 +48,48 @@ impl IntelligentDatasetManager {
         automation_config: AutomationConfig,
     ) -> Result<Self> {
         info!("🧠 Initializing Intelligent Dataset Manager");
-        
-        let file_analyzer = Arc::new(crate::analysis::FileAnalyzer::new());
+
+        let dataset_analyzer = Arc::new(crate::analysis::DatasetAnalyzer::new());
         let tier_predictor = Arc::new(crate::prediction::TierPredictor::new());
         let lifecycle_manager = Arc::new(crate::lifecycle::DatasetLifecycleManager::new());
-        
+        let ai_coordinator = Arc::new(crate::ai::AiAutomationCoordinator::new(
+            crate::ai::AiConfig::default(),
+        ));
+        let performance_cache = Arc::new(RwLock::new(HashMap::new()));
+
         #[cfg(feature = "network-integration")]
         {
-            let ecosystem_discovery = Arc::new(crate::discovery::EcosystemDiscovery::new(&automation_config)?);
-            let service_connections = Arc::new(RwLock::new(crate::connections::ServiceConnectionPool::new()));
-            
+            let ecosystem_discovery = Arc::new(crate::discovery::EcosystemDiscovery::new(
+                &automation_config,
+            )?);
+            let service_connections =
+                Arc::new(RwLock::new(crate::connections::ServiceConnectionPool::new()));
+
             Ok(Self {
                 config: automation_config,
+                dataset_analyzer,
+                tier_predictor,
                 ecosystem_discovery,
                 service_connections,
-                file_analyzer,
-                tier_predictor,
+                performance_cache,
+                ai_coordinator,
                 lifecycle_manager,
             })
         }
-        
+
         #[cfg(not(feature = "network-integration"))]
         {
+            let ecosystem_discovery = Arc::new(crate::discovery::EcosystemDiscovery::new(
+                &automation_config,
+            )?);
+
             Ok(Self {
                 config: automation_config,
-                file_analyzer,
+                dataset_analyzer,
                 tier_predictor,
+                ecosystem_discovery,
+                performance_cache,
+                ai_coordinator,
                 lifecycle_manager,
             })
         }
@@ -67,36 +98,40 @@ impl IntelligentDatasetManager {
     /// Start the intelligent automation system
     pub async fn start(&mut self) -> Result<()> {
         info!("🚀 Starting Intelligent Dataset Manager");
-        
+
         #[cfg(feature = "network-integration")]
         {
             // Start ecosystem discovery
             self.start_ecosystem_discovery().await?;
         }
-        
+
         // Start local components
         self.start_lifecycle_management().await?;
-        
+
         info!("✅ Intelligent Dataset Manager started successfully");
         Ok(())
     }
 
     /// Predict optimal tier for a file
-    pub async fn predict_optimal_tier(&self, file_path: &str) -> Result<crate::prediction::TierPrediction> {
+    pub async fn predict_optimal_tier(
+        &self,
+        file_path: &str,
+    ) -> Result<crate::prediction::TierPrediction> {
         info!("🔍 Predicting optimal tier for: {}", file_path);
-        
+
         // Analyze file characteristics
-        let analysis = self.file_analyzer.analyze_file(file_path).await?;
-        
-        // Get access patterns (if available)
-        let patterns = self.file_analyzer.get_access_patterns(file_path).await?;
-        
+        let analysis = self.dataset_analyzer.analyze_file(file_path).await?;
+
+        // Get access patterns (simplified for now)
+        let patterns = AccessPatterns::default();
+
         // Convert types to prediction module types
         let prediction_analysis = crate::prediction::FileAnalysis {
             file_path: analysis.path.clone(),
             size_bytes: analysis.size,
             created_at: std::time::SystemTime::now(),
-            modified_at: std::time::SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(analysis.modified),
+            modified_at: std::time::SystemTime::UNIX_EPOCH
+                + std::time::Duration::from_secs(analysis.modified),
             accessed_at: patterns.last_access.unwrap_or(std::time::SystemTime::now()),
             file_type: format!("{:?}", analysis.file_type),
         };
@@ -108,10 +143,13 @@ impl IntelligentDatasetManager {
             total_accesses: patterns.daily_access_count as u64 * 365,
             last_access: patterns.last_access.unwrap_or(std::time::SystemTime::now()),
         };
-        
+
         // Predict tier using ML model
-        let prediction = self.tier_predictor.predict_tier(&prediction_analysis, &prediction_patterns).await?;
-        
+        let prediction = self
+            .tier_predictor
+            .predict_tier(&prediction_analysis, &prediction_patterns)
+            .await?;
+
         Ok(prediction)
     }
 
@@ -127,4 +165,4 @@ impl IntelligentDatasetManager {
         // Implementation will be added when we create the lifecycle module
         Ok(())
     }
-} 
+}

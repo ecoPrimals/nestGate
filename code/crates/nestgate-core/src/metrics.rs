@@ -1,11 +1,12 @@
 //! Metrics collection and monitoring for NestGate core
-//! 
+//!
 //! This module provides comprehensive metrics collection capabilities
 //! for monitoring system performance and health.
 
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
-use serde::{Deserialize, Serialize};
+use std::time::SystemTime;
 
 /// Type of metric being collected
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -37,19 +38,26 @@ impl MetricsCollector {
             metrics: Arc::new(RwLock::new(HashMap::new())),
         }
     }
-    
+
     /// Increment a counter metric
-    pub fn increment_counter(&mut self, name: &str, value: f64) {
-        let mut metrics = self.metrics.write().unwrap();
-        let metric = Metric {
+    pub fn increment_counter(&self, name: &str) {
+        let mut metrics = match self.metrics.write() {
+            Ok(metrics) => metrics,
+            Err(e) => {
+                eprintln!("Failed to acquire metrics lock for incrementing: {}", e);
+                return;
+            }
+        };
+        let entry = metrics.entry(name.to_string()).or_insert_with(|| Metric {
             name: name.to_string(),
-            value,
+            value: 0.0,
             metric_type: MetricType::Counter,
             timestamp: std::time::SystemTime::now(),
-        };
-        metrics.insert(name.to_string(), metric);
+        });
+        entry.value += 1.0;
+        entry.timestamp = std::time::SystemTime::now();
     }
-    
+
     /// Record a gauge metric
     pub fn record_gauge(&mut self, name: &str, value: f64) {
         let mut metrics = self.metrics.write().unwrap();
@@ -61,7 +69,7 @@ impl MetricsCollector {
         };
         metrics.insert(name.to_string(), metric);
     }
-    
+
     /// Record a histogram metric
     pub fn record_histogram(&mut self, name: &str, value: f64) {
         let mut metrics = self.metrics.write().unwrap();
@@ -73,23 +81,93 @@ impl MetricsCollector {
         };
         metrics.insert(name.to_string(), metric);
     }
-    
+
     /// Get a specific metric value
-    pub fn get_metric(&self, name: &str) -> Option<f64> {
-        let metrics = self.metrics.read().unwrap();
-        metrics.get(name).map(|m| m.value)
+    pub fn get_metric(&self, name: &str) -> Option<Metric> {
+        let metrics = match self.metrics.read() {
+            Ok(metrics) => metrics,
+            Err(e) => {
+                eprintln!("Failed to acquire metrics lock for reading: {}", e);
+                return None;
+            }
+        };
+        metrics.get(name).cloned()
     }
-    
+
     /// Get all metrics
-    pub fn get_all_metrics(&self) -> HashMap<String, Metric> {
-        let metrics = self.metrics.read().unwrap();
-        metrics.clone()
+    pub fn get_all_metrics(&self) -> Vec<Metric> {
+        let metrics = match self.metrics.read() {
+            Ok(metrics) => metrics,
+            Err(e) => {
+                eprintln!("Failed to acquire metrics lock for reading all: {}", e);
+                return Vec::new();
+            }
+        };
+        metrics.values().cloned().collect()
     }
-    
+
     /// Clear all metrics
-    pub fn clear(&mut self) {
-        let mut metrics = self.metrics.write().unwrap();
+    pub fn clear_metrics(&self) {
+        let mut metrics = match self.metrics.write() {
+            Ok(metrics) => metrics,
+            Err(e) => {
+                eprintln!("Failed to acquire metrics lock for clearing: {}", e);
+                return;
+            }
+        };
         metrics.clear();
+    }
+
+    pub fn record_operation(&self, operation: &str, duration_ms: f64, success: bool) {
+        let mut metrics = match self.metrics.write() {
+            Ok(metrics) => metrics,
+            Err(e) => {
+                eprintln!("Failed to acquire metrics lock for recording: {}", e);
+                return;
+            }
+        };
+
+        let entry = metrics
+            .entry(operation.to_string())
+            .or_insert_with(|| Metric {
+                name: operation.to_string(),
+                value: 0.0,
+                metric_type: MetricType::Counter,
+                timestamp: SystemTime::now(),
+            });
+
+        entry.value += 1.0;
+        if success {
+            entry.value += duration_ms;
+        } else {
+            entry.value -= duration_ms;
+        }
+        entry.timestamp = SystemTime::now();
+    }
+
+    pub fn add_metric(&self, metric: Metric) {
+        let mut metrics = match self.metrics.write() {
+            Ok(metrics) => metrics,
+            Err(e) => {
+                eprintln!("Failed to acquire metrics lock for adding: {}", e);
+                return;
+            }
+        };
+        metrics.insert(metric.name.clone(), metric);
+    }
+
+    pub fn update_metric(&self, name: &str, value: f64) {
+        let mut metrics = match self.metrics.write() {
+            Ok(metrics) => metrics,
+            Err(e) => {
+                eprintln!("Failed to acquire metrics lock for updating: {}", e);
+                return;
+            }
+        };
+        if let Some(metric) = metrics.get_mut(name) {
+            metric.value = value;
+            metric.timestamp = std::time::SystemTime::now();
+        }
     }
 }
 
@@ -106,37 +184,43 @@ mod tests {
     #[test]
     fn test_metrics_collector() {
         let mut collector = MetricsCollector::new();
-        
+
         // Test counter
-        collector.increment_counter("requests", 10.0);
-        assert_eq!(collector.get_metric("requests"), Some(10.0));
-        
+        collector.increment_counter("requests");
+        let requests_metric = collector.get_metric("requests");
+        assert!(requests_metric.is_some());
+        assert_eq!(requests_metric.unwrap().value, 1.0);
+
         // Test gauge
         collector.record_gauge("cpu_usage", 75.5);
-        assert_eq!(collector.get_metric("cpu_usage"), Some(75.5));
-        
+        let cpu_metric = collector.get_metric("cpu_usage");
+        assert!(cpu_metric.is_some());
+        assert_eq!(cpu_metric.unwrap().value, 75.5);
+
         // Test histogram
         collector.record_histogram("response_time", 250.0);
-        assert_eq!(collector.get_metric("response_time"), Some(250.0));
-        
+        let response_metric = collector.get_metric("response_time");
+        assert!(response_metric.is_some());
+        assert_eq!(response_metric.unwrap().value, 250.0);
+
         // Test all metrics
         let all_metrics = collector.get_all_metrics();
         assert_eq!(all_metrics.len(), 3);
-        
+
         // Test clear
-        collector.clear();
+        collector.clear_metrics();
         assert_eq!(collector.get_all_metrics().len(), 0);
     }
-    
+
     #[test]
     fn test_metric_types() {
         assert_eq!(MetricType::Counter, MetricType::Counter);
         assert_ne!(MetricType::Counter, MetricType::Gauge);
-        
+
         // Test serialization
         let metric_type = MetricType::Histogram;
         let serialized = serde_json::to_string(&metric_type).unwrap();
         let deserialized: MetricType = serde_json::from_str(&serialized).unwrap();
         assert_eq!(metric_type, deserialized);
     }
-} 
+}

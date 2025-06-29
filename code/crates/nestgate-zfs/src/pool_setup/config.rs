@@ -2,12 +2,12 @@
 //!
 //! Configuration structures and defaults for ZFS pool setup operations
 
-use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
 use nestgate_core::StorageTier;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 /// Configuration for pool setup operations
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PoolSetupConfiguration {
     /// ZFS pool properties
     pub pool_properties: PoolPropertyConfig,
@@ -73,7 +73,7 @@ pub struct SafetyConfig {
 }
 
 /// Performance configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PerformanceConfig {
     /// Cache hit ratio thresholds
     pub cache_hit_thresholds: CacheThresholds,
@@ -206,17 +206,6 @@ pub enum PoolTopology {
 }
 
 // Default implementations
-impl Default for PoolSetupConfiguration {
-    fn default() -> Self {
-        Self {
-            pool_properties: PoolPropertyConfig::default(),
-            device_detection: DeviceDetectionConfig::default(),
-            safety: SafetyConfig::default(),
-            performance: PerformanceConfig::default(),
-            tier_config: TierSetupConfig::default(),
-        }
-    }
-}
 
 impl Default for PoolPropertyConfig {
     fn default() -> Self {
@@ -235,7 +224,7 @@ impl Default for DeviceDetectionConfig {
     fn default() -> Self {
         Self {
             min_device_size: 1024 * 1024 * 1024, // 1GB
-            max_device_size: 0, // No limit
+            max_device_size: 0,                  // No limit
             skip_mountpoints: vec!["/".to_string(), "/boot".to_string()],
             skip_fstypes: vec!["tmpfs".to_string(), "devtmpfs".to_string()],
             scan_timeout_seconds: 30,
@@ -253,17 +242,6 @@ impl Default for SafetyConfig {
             min_free_space_percent: 10.0,
             default_dry_run: true,
             auto_backup: true,
-        }
-    }
-}
-
-impl Default for PerformanceConfig {
-    fn default() -> Self {
-        Self {
-            cache_hit_thresholds: CacheThresholds::default(),
-            io_thresholds: IoThresholds::default(),
-            memory_limits: MemoryLimits::default(),
-            optimization_intervals: OptimizationIntervals::default(),
         }
     }
 }
@@ -327,10 +305,10 @@ impl Default for L2ArcLimits {
 impl Default for OptimizationIntervals {
     fn default() -> Self {
         Self {
-            tier_optimization: 3600, // 1 hour
+            tier_optimization: 3600,   // 1 hour
             performance_analysis: 300, // 5 minutes
-            health_check: 60, // 1 minute
-            metrics_collection: 30, // 30 seconds
+            health_check: 60,          // 1 minute
+            metrics_collection: 30,    // 30 seconds
         }
     }
 }
@@ -338,39 +316,48 @@ impl Default for OptimizationIntervals {
 impl Default for TierSetupConfig {
     fn default() -> Self {
         let mut tier_properties = HashMap::new();
-        
+
         // Hot tier properties
-        tier_properties.insert("hot".to_string(), TierProperties {
-            compression: "lz4".to_string(),
-            recordsize: "128K".to_string(),
-            primarycache: "all".to_string(),
-            secondarycache: "all".to_string(),
-            logbias: "latency".to_string(),
-            sync: "standard".to_string(),
-            atime: "on".to_string(),
-        });
-        
+        tier_properties.insert(
+            "hot".to_string(),
+            TierProperties {
+                compression: "lz4".to_string(),
+                recordsize: "128K".to_string(),
+                primarycache: "all".to_string(),
+                secondarycache: "all".to_string(),
+                logbias: "latency".to_string(),
+                sync: "standard".to_string(),
+                atime: "on".to_string(),
+            },
+        );
+
         // Warm tier properties
-        tier_properties.insert("warm".to_string(), TierProperties {
-            compression: "gzip-6".to_string(),
-            recordsize: "1M".to_string(),
-            primarycache: "metadata".to_string(),
-            secondarycache: "all".to_string(),
-            logbias: "throughput".to_string(),
-            sync: "standard".to_string(),
-            atime: "off".to_string(),
-        });
-        
+        tier_properties.insert(
+            "warm".to_string(),
+            TierProperties {
+                compression: "gzip-6".to_string(),
+                recordsize: "1M".to_string(),
+                primarycache: "metadata".to_string(),
+                secondarycache: "all".to_string(),
+                logbias: "throughput".to_string(),
+                sync: "standard".to_string(),
+                atime: "off".to_string(),
+            },
+        );
+
         // Cold tier properties
-        tier_properties.insert("cold".to_string(), TierProperties {
-            compression: "gzip-9".to_string(),
-            recordsize: "1M".to_string(),
-            primarycache: "metadata".to_string(),
-            secondarycache: "metadata".to_string(),
-            logbias: "throughput".to_string(),
-            sync: "disabled".to_string(),
-            atime: "off".to_string(),
-        });
+        tier_properties.insert(
+            "cold".to_string(),
+            TierProperties {
+                compression: "gzip-9".to_string(),
+                recordsize: "1M".to_string(),
+                primarycache: "metadata".to_string(),
+                secondarycache: "metadata".to_string(),
+                logbias: "throughput".to_string(),
+                sync: "disabled".to_string(),
+                atime: "off".to_string(),
+            },
+        );
 
         Self {
             tier_properties,
@@ -427,4 +414,4 @@ impl Default for TierLimits {
             reserved_space,
         }
     }
-} 
+}

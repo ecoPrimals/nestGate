@@ -1,24 +1,23 @@
 //! Core types for NestGate automation system
 
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
-use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
-pub mod config;
-pub mod prediction;
-pub mod optimization;
-pub mod ecosystem;
 pub mod ai;
+pub mod config;
+pub mod ecosystem;
+pub mod optimization;
+pub mod prediction;
 
-pub use config::*;
-pub use prediction::*;
-pub use optimization::{
-    OptimizationResult, AiOptimizationResult, OptimizationPlan, PropertyChange,
-    TierThresholds, SizeThresholds, AgeThresholds, PerformanceExpectation,
-};
-pub use ecosystem::*;
 pub use ai::*;
+pub use config::*;
+pub use ecosystem::*;
+pub use optimization::{
+    AgeThresholds, AiOptimizationResult, OptimizationPlan, OptimizationResult,
+    PerformanceExpectation, PropertyChange, SizeThresholds, TierThresholds,
+};
+pub use prediction::*;
 
 /// Main error type for automation operations
 #[derive(Debug, thiserror::Error)]
@@ -26,30 +25,38 @@ pub enum AutomationError {
     /// Configuration error
     #[error("Configuration error: {0}")]
     Configuration(String),
-    
+
     /// Discovery error
     #[error("Discovery error: {0}")]
     Discovery(String),
-    
+
     /// Connection error
     #[error("Connection error: {0}")]
     Connection(String),
-    
+
     /// Network error
     #[error("Network error: {0}")]
     NetworkError(String),
-    
+
     /// File analysis error
     #[error("File analysis error: {0}")]
     FileAnalysis(String),
-    
+
     /// Service error
     #[error("Service error: {0}")]
     Service(String),
-    
+
     /// Internal error
     #[error("Internal error: {0}")]
     Internal(String),
+
+    /// Analysis related errors
+    #[error("Analysis error: {0}")]
+    AnalysisError(String),
+
+    /// Cache related errors
+    #[error("Cache error: {0}")]
+    Cache(String),
 }
 
 impl From<nestgate_core::NestGateError> for AutomationError {
@@ -154,21 +161,12 @@ pub struct TierStats {
 }
 
 /// Overall tier performance statistics
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TierPerformanceStats {
     pub hot_tier_performance: TierStats,
     pub warm_tier_performance: TierStats,
     pub cold_tier_performance: TierStats,
-}
-
-impl Default for TierPerformanceStats {
-    fn default() -> Self {
-        Self {
-            hot_tier_performance: TierStats::default(),
-            warm_tier_performance: TierStats::default(),
-            cold_tier_performance: TierStats::default(),
-        }
-    }
+    pub archive_tier_performance: TierStats,
 }
 
 /// Training example for ML models
@@ -200,4 +198,4 @@ pub struct DatasetContext {
     pub file_count: Option<u64>,
     pub mount_point: String,
     pub properties: HashMap<String, String>,
-} 
+}

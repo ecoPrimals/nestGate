@@ -2,7 +2,7 @@
 //!
 //! Common types used across the AI models system
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// AI model capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -80,4 +80,4 @@ impl Default for ModelMetadata {
             tags: vec![],
         }
     }
-} 
+}

@@ -45,7 +45,9 @@ pub struct PropertyChange {
 #[derive(Debug, Clone)]
 pub enum OptimizationPlan {
     /// Distribute optimization across multiple services
-    Distributed { squirrel_tasks: HashMap<String, Vec<String>> },
+    Distributed {
+        squirrel_tasks: HashMap<String, Vec<String>>,
+    },
     /// Use single service for all optimizations
     SingleSquirrel { squirrel_id: String },
     /// Fall back to local processing only
@@ -88,9 +90,9 @@ pub struct AgeThresholds {
 impl Default for TierThresholds {
     fn default() -> Self {
         Self {
-            hot_threshold: 10.0,     // 10+ accesses per day
-            warm_threshold: 1.0,     // 1+ access per day
-            cold_threshold: 0.1,     // 0.1+ access per day
+            hot_threshold: 10.0, // 10+ accesses per day
+            warm_threshold: 1.0, // 1+ access per day
+            cold_threshold: 0.1, // 0.1+ access per day
             size_thresholds: SizeThresholds::default(),
             age_thresholds: AgeThresholds::default(),
         }
@@ -100,7 +102,7 @@ impl Default for TierThresholds {
 impl Default for SizeThresholds {
     fn default() -> Self {
         Self {
-            small_file: 1024 * 1024,      // 1MB
+            small_file: 1024 * 1024,       // 1MB
             large_file: 100 * 1024 * 1024, // 100MB
         }
     }
@@ -109,8 +111,8 @@ impl Default for SizeThresholds {
 impl Default for AgeThresholds {
     fn default() -> Self {
         Self {
-            recent: 7,   // 7 days
-            old: 90,     // 90 days
+            recent: 7, // 7 days
+            old: 90,   // 90 days
         }
     }
 }
@@ -140,4 +142,4 @@ impl Default for PerformanceExpectation {
             expected_durability_nines: 11,
         }
     }
-} 
+}

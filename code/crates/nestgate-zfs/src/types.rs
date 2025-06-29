@@ -2,7 +2,7 @@
 //!
 //! Common types used across the ZFS system
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// Compression algorithms supported by ZFS
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -177,4 +177,4 @@ impl From<StorageTier> for nestgate_core::StorageTier {
             StorageTier::Cache => Self::Cache,
         }
     }
-} 
+}

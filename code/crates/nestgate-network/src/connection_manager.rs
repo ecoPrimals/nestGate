@@ -1,19 +1,19 @@
 //! Connection Manager - ALL connections MUST go through Songbird
 //!
-//! This module enforces that every network connection, port allocation, 
+//! This module enforces that every network connection, port allocation,
 //! and service communication goes through the Songbird orchestrator.
 //! NO DIRECT CONNECTIONS ALLOWED.
 
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 use tracing::{debug, error, info, warn};
 
 use crate::{Result, SongbirdClient};
 
 /// Connection types that must be managed by Songbird
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ConnectionType {
     /// API service connection
     Api,
@@ -94,10 +94,13 @@ pub struct SongbirdConnectionManager {
 impl SongbirdConnectionManager {
     /// Create new connection manager (Songbird is MANDATORY)
     pub fn new(songbird_url: String, service_name: String) -> Self {
-        info!("🎼 Creating Songbird Connection Manager for service: {}", service_name);
+        info!(
+            "🎼 Creating Songbird Connection Manager for service: {}",
+            service_name
+        );
         info!("🎼 Songbird URL: {}", songbird_url);
         info!("🚫 Direct connections are FORBIDDEN - all connections via Songbird");
-        
+
         Self {
             songbird: SongbirdClient::new(songbird_url),
             service_name,
@@ -107,13 +110,18 @@ impl SongbirdConnectionManager {
     }
 
     /// Request a connection through Songbird (MANDATORY PATH)
-    pub async fn request_connection(&self, request: ConnectionRequest) -> Result<ConnectionResponse> {
-        info!("🔗 Requesting connection via Songbird: {} -> {}", 
-              request.source_service, request.target_service);
-        
+    pub async fn request_connection(
+        &self,
+        request: ConnectionRequest,
+    ) -> Result<ConnectionResponse> {
+        info!(
+            "🔗 Requesting connection via Songbird: {} -> {}",
+            request.source_service, request.target_service
+        );
+
         // ✅ ALL CONNECTIONS MUST GO THROUGH SONGBIRD
         let response = self.songbird.request_connection(&request).await?;
-        
+
         // Track the connection
         let connection = ActiveConnection {
             connection_id: response.connection_id.clone(),
@@ -122,22 +130,31 @@ impl SongbirdConnectionManager {
             established_at: chrono::Utc::now(),
             last_used_at: chrono::Utc::now(),
         };
-        
+
         // Store in active connections
         let mut active = self.active_connections.write().await;
         active.insert(response.connection_id.clone(), connection.clone());
-        
+
         // Add to connection pool
         let mut pool = self.connection_pool.write().await;
-        let target_connections = pool.entry(request.target_service.clone()).or_insert_with(Vec::new);
+        let target_connections = pool
+            .entry(request.target_service.clone())
+            .or_insert_with(Vec::new);
         target_connections.push(connection);
-        
-        info!("✅ Connection established via Songbird: {}", response.connection_id);
+
+        info!(
+            "✅ Connection established via Songbird: {}",
+            response.connection_id
+        );
         Ok(response)
     }
 
     /// Get connection to a service (through Songbird)
-    pub async fn get_connection(&self, target_service: &str, connection_type: ConnectionType) -> Result<ConnectionResponse> {
+    pub async fn get_connection(
+        &self,
+        target_service: &str,
+        connection_type: ConnectionType,
+    ) -> Result<ConnectionResponse> {
         // Check if we have an existing connection
         let pool = self.connection_pool.read().await;
         if let Some(connections) = pool.get(target_service) {
@@ -149,7 +166,7 @@ impl SongbirdConnectionManager {
                 if let Some(active_conn) = active.get_mut(&conn.connection_id) {
                     active_conn.last_used_at = chrono::Utc::now();
                 }
-                
+
                 debug!("♻️ Reusing existing connection: {}", conn.connection_id);
                 return Ok(conn.response.clone());
             }
@@ -171,7 +188,7 @@ impl SongbirdConnectionManager {
     /// Release a connection through Songbird
     pub async fn release_connection(&self, connection_id: &str) -> Result<()> {
         info!("🔓 Releasing connection via Songbird: {}", connection_id);
-        
+
         // Remove from active connections
         let mut active = self.active_connections.write().await;
         let connection = active.remove(connection_id);
@@ -199,17 +216,31 @@ impl SongbirdConnectionManager {
     }
 
     /// Connect to a service (ONLY through Songbird)
-    pub async fn connect_to_service(&self, service_name: &str, connection_type: ConnectionType) -> Result<String> {
-        info!("🔌 Connecting to service via Songbird: {} (type: {:?})", service_name, connection_type);
-        
+    pub async fn connect_to_service(
+        &self,
+        service_name: &str,
+        connection_type: ConnectionType,
+    ) -> Result<String> {
+        info!(
+            "🔌 Connecting to service via Songbird: {} (type: {:?})",
+            service_name, connection_type
+        );
+
         let response = self.get_connection(service_name, connection_type).await?;
-        
-        info!("✅ Connected to service via Songbird: {} -> {}", service_name, response.endpoint);
+
+        info!(
+            "✅ Connected to service via Songbird: {} -> {}",
+            service_name, response.endpoint
+        );
         Ok(response.endpoint)
     }
 
     /// Get service endpoint (ONLY through Songbird)
-    pub async fn get_service_endpoint(&self, service_name: &str, connection_type: ConnectionType) -> Result<String> {
+    pub async fn get_service_endpoint(
+        &self,
+        service_name: &str,
+        connection_type: ConnectionType,
+    ) -> Result<String> {
         let response = self.get_connection(service_name, connection_type).await?;
         Ok(response.endpoint)
     }
@@ -238,7 +269,10 @@ impl SongbirdConnectionManager {
         for connection_id in to_remove {
             info!("🧹 Cleaning up expired connection: {}", connection_id);
             if let Err(e) = self.release_connection(&connection_id).await {
-                error!("Failed to release expired connection {}: {}", connection_id, e);
+                error!(
+                    "Failed to release expired connection {}: {}",
+                    connection_id, e
+                );
             }
         }
 
@@ -249,17 +283,21 @@ impl SongbirdConnectionManager {
     pub async fn health_check_connections(&self) -> Result<HashMap<String, bool>> {
         let mut health_status = HashMap::new();
         let active = self.active_connections.read().await;
-        
+
         for (connection_id, _connection) in active.iter() {
             // Check if connection is still valid
-            let is_healthy = self.songbird.check_connection_health(connection_id).await.unwrap_or(false);
+            let is_healthy = self
+                .songbird
+                .check_connection_health(connection_id)
+                .await
+                .unwrap_or(false);
             health_status.insert(connection_id.clone(), is_healthy);
-            
+
             if !is_healthy {
                 warn!("🏥 Unhealthy connection detected: {}", connection_id);
             }
         }
-        
+
         Ok(health_status)
     }
 }
@@ -267,56 +305,84 @@ impl SongbirdConnectionManager {
 /// Extension methods for SongbirdClient
 impl SongbirdClient {
     /// Request a connection through Songbird
-    pub async fn request_connection(&self, request: &ConnectionRequest) -> Result<ConnectionResponse> {
+    pub async fn request_connection(
+        &self,
+        request: &ConnectionRequest,
+    ) -> Result<ConnectionResponse> {
         let url = format!("{}/api/v1/connections/request", self.base_url);
-        
-        let response = self.client
+
+        let response = self
+            .client
             .post(&url)
             .json(request)
             .send()
             .await
-            .map_err(|e| nestgate_core::NestGateError::Internal(format!("Failed to request connection: {}", e)))?;
+            .map_err(|e| {
+                nestgate_core::NestGateError::Internal(format!(
+                    "Failed to request connection: {}",
+                    e
+                ))
+            })?;
 
         if response.status().is_success() {
-            let connection_response: ConnectionResponse = response.json().await
-                .map_err(|e| nestgate_core::NestGateError::Internal(format!("Failed to parse connection response: {}", e)))?;
-            
-            info!("✅ Connection requested via Songbird: {}", connection_response.connection_id);
+            let connection_response: ConnectionResponse = response.json().await.map_err(|e| {
+                nestgate_core::NestGateError::Internal(format!(
+                    "Failed to parse connection response: {}",
+                    e
+                ))
+            })?;
+
+            info!(
+                "✅ Connection requested via Songbird: {}",
+                connection_response.connection_id
+            );
             Ok(connection_response)
         } else {
-            Err(nestgate_core::NestGateError::Internal(format!("Connection request failed: HTTP {}", response.status())))
+            Err(nestgate_core::NestGateError::Internal(format!(
+                "Connection request failed: HTTP {}",
+                response.status()
+            )))
         }
     }
 
     /// Release a connection through Songbird
     pub async fn release_connection(&self, connection_id: &str) -> Result<()> {
-        let url = format!("{}/api/v1/connections/{}/release", self.base_url, connection_id);
-        
-        let response = self.client
-            .delete(&url)
-            .send()
-            .await
-            .map_err(|e| nestgate_core::NestGateError::Internal(format!("Failed to release connection: {}", e)))?;
+        let url = format!(
+            "{}/api/v1/connections/{}/release",
+            self.base_url, connection_id
+        );
+
+        let response = self.client.delete(&url).send().await.map_err(|e| {
+            nestgate_core::NestGateError::Internal(format!("Failed to release connection: {}", e))
+        })?;
 
         if response.status().is_success() {
             info!("✅ Connection released via Songbird: {}", connection_id);
             Ok(())
         } else {
-            warn!("Failed to release connection {}: HTTP {}", connection_id, response.status());
+            warn!(
+                "Failed to release connection {}: HTTP {}",
+                connection_id,
+                response.status()
+            );
             Ok(()) // Don't fail on release errors
         }
     }
 
     /// Check connection health through Songbird
     pub async fn check_connection_health(&self, connection_id: &str) -> Result<bool> {
-        let url = format!("{}/api/v1/connections/{}/health", self.base_url, connection_id);
-        
-        let response = self.client
-            .get(&url)
-            .send()
-            .await
-            .map_err(|e| nestgate_core::NestGateError::Internal(format!("Failed to check connection health: {}", e)))?;
+        let url = format!(
+            "{}/api/v1/connections/{}/health",
+            self.base_url, connection_id
+        );
+
+        let response = self.client.get(&url).send().await.map_err(|e| {
+            nestgate_core::NestGateError::Internal(format!(
+                "Failed to check connection health: {}",
+                e
+            ))
+        })?;
 
         Ok(response.status().is_success())
     }
-} 
+}

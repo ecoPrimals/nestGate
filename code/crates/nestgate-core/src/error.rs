@@ -1,5 +1,5 @@
 //! Error types for NestGate Core
-//! 
+//!
 //! Enhanced error handling with enhanced NestGate capabilities
 
 use thiserror::Error;
@@ -109,4 +109,4 @@ impl From<std::io::Error> for NestGateError {
     fn from(err: std::io::Error) -> Self {
         NestGateError::Io(err.to_string())
     }
-} 
+}

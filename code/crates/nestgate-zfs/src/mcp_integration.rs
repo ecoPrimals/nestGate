@@ -4,20 +4,16 @@
 //! enabling ZFS to act as a storage provider for MCP systems with tiered storage
 //! capabilities, AI optimization, and performance monitoring.
 
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::SystemTime;
-use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 use tracing::{error, info, warn};
 
 use nestgate_core::{Result, StorageTier};
 
-use crate::{
-    types::{DatasetProperty, CompressionAlgorithm},
-    dataset::DatasetConfig,
-    manager::ZfsManager,
-};
+use crate::manager::ZfsManager;
 
 /// MCP mount request
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -105,10 +101,7 @@ pub struct ZfsMcpStorageProvider {
 
 impl ZfsMcpStorageProvider {
     /// Create new ZFS MCP storage provider
-    pub fn new(
-        zfs_manager: Arc<ZfsManager>,
-        config: ZfsMcpConfig,
-    ) -> Self {
+    pub fn new(zfs_manager: Arc<ZfsManager>, config: ZfsMcpConfig) -> Self {
         Self {
             zfs_manager,
             config,
@@ -129,9 +122,14 @@ impl ZfsMcpStorageProvider {
         let dataset_name_parts: Vec<&str> = dataset_name.split('/').collect();
         let dataset_name_str = dataset_name.as_str();
         let name = dataset_name_parts.last().unwrap_or(&dataset_name_str);
-        let parent = dataset_name_parts[..dataset_name_parts.len()-1].join("/");
+        let parent = dataset_name_parts[..dataset_name_parts.len() - 1].join("/");
 
-        match self.zfs_manager.dataset_manager.create_dataset(name, &parent, tier.clone()).await {
+        match self
+            .zfs_manager
+            .dataset_manager
+            .create_dataset(name, &parent, tier.clone())
+            .await
+        {
             Ok(_) => {
                 let mount_info = ZfsMountInfo {
                     mount_id: request.mount_id.clone(),
@@ -152,8 +150,14 @@ impl ZfsMcpStorageProvider {
                 Ok(mount_info)
             }
             Err(e) => {
-                error!("Failed to create dataset for mount {}: {}", request.mount_id, e);
-                Err(nestgate_core::NestGateError::Internal(format!("Dataset creation failed: {}", e)))
+                error!(
+                    "Failed to create dataset for mount {}: {}",
+                    request.mount_id, e
+                );
+                Err(nestgate_core::NestGateError::Internal(format!(
+                    "Dataset creation failed: {}",
+                    e
+                )))
             }
         }
     }
@@ -163,19 +167,30 @@ impl ZfsMcpStorageProvider {
         info!("Removing ZFS mount: {}", mount_id);
 
         if let Some(mount_info) = self.active_mounts.write().await.remove(mount_id) {
-            match self.zfs_manager.dataset_manager.delete_dataset(&mount_info.dataset_path).await {
+            match self
+                .zfs_manager
+                .dataset_manager
+                .delete_dataset(&mount_info.dataset_path)
+                .await
+            {
                 Ok(_) => {
                     info!("Successfully removed ZFS mount: {}", mount_id);
                     Ok(())
                 }
                 Err(e) => {
                     error!("Failed to destroy dataset for mount {}: {}", mount_id, e);
-                    Err(nestgate_core::NestGateError::Internal(format!("Dataset destruction failed: {}", e)))
+                    Err(nestgate_core::NestGateError::Internal(format!(
+                        "Dataset destruction failed: {}",
+                        e
+                    )))
                 }
             }
         } else {
             warn!("Mount not found: {}", mount_id);
-            Err(nestgate_core::NestGateError::NotFound(format!("Mount not found: {}", mount_id)))
+            Err(nestgate_core::NestGateError::NotFound(format!(
+                "Mount not found: {}",
+                mount_id
+            )))
         }
     }
 
@@ -190,9 +205,14 @@ impl ZfsMcpStorageProvider {
         let dataset_name_parts: Vec<&str> = dataset_name.split('/').collect();
         let dataset_name_str = dataset_name.as_str();
         let name = dataset_name_parts.last().unwrap_or(&dataset_name_str);
-        let parent = dataset_name_parts[..dataset_name_parts.len()-1].join("/");
+        let parent = dataset_name_parts[..dataset_name_parts.len() - 1].join("/");
 
-        match self.zfs_manager.dataset_manager.create_dataset(name, &parent, tier.clone()).await {
+        match self
+            .zfs_manager
+            .dataset_manager
+            .create_dataset(name, &parent, tier.clone())
+            .await
+        {
             Ok(_) => {
                 let volume_info = ZfsVolumeInfo {
                     volume_id: request.volume_id.clone(),
@@ -212,8 +232,14 @@ impl ZfsMcpStorageProvider {
                 Ok(volume_info)
             }
             Err(e) => {
-                error!("Failed to create dataset for volume {}: {}", request.volume_id, e);
-                Err(nestgate_core::NestGateError::Internal(format!("Dataset creation failed: {}", e)))
+                error!(
+                    "Failed to create dataset for volume {}: {}",
+                    request.volume_id, e
+                );
+                Err(nestgate_core::NestGateError::Internal(format!(
+                    "Dataset creation failed: {}",
+                    e
+                )))
             }
         }
     }
@@ -223,19 +249,30 @@ impl ZfsMcpStorageProvider {
         info!("Removing ZFS volume: {}", volume_id);
 
         if let Some(volume_info) = self.active_volumes.write().await.remove(volume_id) {
-            match self.zfs_manager.dataset_manager.delete_dataset(&volume_info.dataset_path).await {
+            match self
+                .zfs_manager
+                .dataset_manager
+                .delete_dataset(&volume_info.dataset_path)
+                .await
+            {
                 Ok(_) => {
                     info!("Successfully removed ZFS volume: {}", volume_id);
                     Ok(())
                 }
                 Err(e) => {
                     error!("Failed to destroy dataset for volume {}: {}", volume_id, e);
-                    Err(nestgate_core::NestGateError::Internal(format!("Dataset destruction failed: {}", e)))
+                    Err(nestgate_core::NestGateError::Internal(format!(
+                        "Dataset destruction failed: {}",
+                        e
+                    )))
                 }
             }
         } else {
             warn!("Volume not found: {}", volume_id);
-            Err(nestgate_core::NestGateError::NotFound(format!("Volume not found: {}", volume_id)))
+            Err(nestgate_core::NestGateError::NotFound(format!(
+                "Volume not found: {}",
+                volume_id
+            )))
         }
     }
 
@@ -248,14 +285,16 @@ impl ZfsMcpStorageProvider {
     /// Trigger AI optimization
     pub async fn trigger_ai_optimization(&self) -> Result<()> {
         if !self.config.enable_ai_optimization {
-            return Err(nestgate_core::NestGateError::Internal("AI optimization not enabled".to_string()));
+            return Err(nestgate_core::NestGateError::Internal(
+                "AI optimization not enabled".to_string(),
+            ));
         }
 
         info!("Triggering AI optimization for MCP resources");
-        
+
         // This is a placeholder - in a real implementation, this would
         // trigger actual AI optimization of the storage tiers
         info!("AI optimization completed");
         Ok(())
     }
-} 
+}

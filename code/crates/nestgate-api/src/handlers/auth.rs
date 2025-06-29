@@ -1,17 +1,17 @@
 //! Authentication handler supporting dual-mode operation
-//! 
+//!
 //! Handles authentication in both standalone and BearDog integrated modes
 
+use crate::models::ErrorResponse;
 use axum::{
-    extract::{State, Json},
-    http::{StatusCode, HeaderMap},
+    extract::{Json, State},
+    http::{HeaderMap, StatusCode},
     response::{IntoResponse, Json as ResponseJson},
 };
+use nestgate_core::cert::{BearDogConfig, CertMode, CertValidator};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use nestgate_core::cert::{CertValidator, CertMode, BearDogConfig};
-use crate::models::ErrorResponse;
 
 /// Authentication request payload
 #[derive(Debug, Deserialize)]
@@ -59,7 +59,7 @@ impl AuthService {
             beardog_config: None,
         }
     }
-    
+
     /// Create new authentication service with BearDog integration
     pub fn with_beardog(config: BearDogConfig) -> Self {
         Self {
@@ -68,7 +68,7 @@ impl AuthService {
             beardog_config: Some(config),
         }
     }
-    
+
     /// Create hybrid authentication service
     pub fn hybrid(config: BearDogConfig) -> Self {
         Self {
@@ -77,13 +77,13 @@ impl AuthService {
             beardog_config: Some(config),
         }
     }
-    
+
     /// Get current authentication mode
     pub async fn current_mode(&self) -> CertMode {
         let validator = self.validator.read().await;
         validator.mode().clone()
     }
-    
+
     /// Check if BearDog integration is available
     pub async fn beardog_available(&self) -> bool {
         let validator = self.validator.read().await;
@@ -104,15 +104,18 @@ pub async fn authenticate(
             ResponseJson(ErrorResponse {
                 message: "Certificate required".to_string(),
                 code: None,
-                details: Some(serde_json::Value::String("Client certificate must be provided".to_string())),
+                details: Some(serde_json::Value::String(
+                    "Client certificate must be provided".to_string(),
+                )),
             }),
-        ).into_response();
+        )
+            .into_response();
     }
-    
+
     // Determine authentication mode
     let requested_mode = request.mode.as_deref().unwrap_or("default");
     let current_mode = auth_service.current_mode().await;
-    
+
     // Validate certificate
     let mut validator = auth_service.validator.write().await;
     let auth_result = match validator.validate_cert(&request.certificate).await {
@@ -123,12 +126,16 @@ pub async fn authenticate(
                 ResponseJson(ErrorResponse {
                     message: "Authentication failed".to_string(),
                     code: None,
-                    details: Some(serde_json::Value::String(format!("Validation error: {}", e))),
+                    details: Some(serde_json::Value::String(format!(
+                        "Validation error: {}",
+                        e
+                    ))),
                 }),
-            ).into_response();
+            )
+                .into_response();
         }
     };
-    
+
     // Generate response
     let response = if auth_result {
         // Successful authentication
@@ -137,11 +144,10 @@ pub async fn authenticate(
             CertMode::BearDog => "beardog",
             CertMode::Hybrid => "hybrid",
         };
-        
+
         // Generate session token (simplified)
-        let token = format!("nestgate_{}_{}", mode_str, 
-            chrono::Utc::now().timestamp());
-        
+        let token = format!("nestgate_{}_{}", mode_str, chrono::Utc::now().timestamp());
+
         AuthResponse {
             authenticated: true,
             mode: mode_str.to_string(),
@@ -159,31 +165,30 @@ pub async fn authenticate(
             authenticated: false,
             mode: match current_mode {
                 CertMode::Standalone => "standalone",
-                CertMode::BearDog => "beardog", 
+                CertMode::BearDog => "beardog",
                 CertMode::Hybrid => "hybrid",
-            }.to_string(),
+            }
+            .to_string(),
             token: None,
             expires_in: None,
             metadata: None,
         }
     };
-    
-    let status_code = if auth_result { 
-        StatusCode::OK 
-    } else { 
-        StatusCode::UNAUTHORIZED 
+
+    let status_code = if auth_result {
+        StatusCode::OK
+    } else {
+        StatusCode::UNAUTHORIZED
     };
-    
+
     (status_code, ResponseJson(response)).into_response()
 }
 
 /// Get authentication service status
-pub async fn auth_status(
-    State(auth_service): State<AuthService>,
-) -> impl IntoResponse {
+pub async fn auth_status(State(auth_service): State<AuthService>) -> impl IntoResponse {
     let current_mode = auth_service.current_mode().await;
     let beardog_available = auth_service.beardog_available().await;
-    
+
     let response = serde_json::json!({
         "mode": match current_mode {
             CertMode::Standalone => "standalone",
@@ -199,7 +204,7 @@ pub async fn auth_status(
         "status": "operational",
         "timestamp": chrono::Utc::now().to_rfc3339(),
     });
-    
+
     (StatusCode::OK, ResponseJson(response)).into_response()
 }
 
@@ -208,68 +213,97 @@ pub async fn switch_mode(
     State(auth_service): State<AuthService>,
     Json(request): Json<serde_json::Value>,
 ) -> impl IntoResponse {
-    let requested_mode = request.get("mode")
+    let requested_mode = request
+        .get("mode")
         .and_then(|v| v.as_str())
         .unwrap_or("hybrid");
-    
+
     match requested_mode {
         "standalone" => {
             // Switch to standalone mode
             let new_validator = CertValidator::standalone();
             let mut validator = auth_service.validator.write().await;
             *validator = new_validator;
-            
-            (StatusCode::OK, ResponseJson(serde_json::json!({
-                "mode": "standalone",
-                "status": "switched",
-                "message": "Authentication mode switched to standalone"
-            }))).into_response()
-        },
+
+            (
+                StatusCode::OK,
+                ResponseJson(serde_json::json!({
+                    "mode": "standalone",
+                    "status": "switched",
+                    "message": "Authentication mode switched to standalone"
+                })),
+            )
+                .into_response()
+        }
         "beardog" => {
             if let Some(config) = &auth_service.beardog_config {
                 let new_validator = CertValidator::with_beardog(config.clone());
                 let mut validator = auth_service.validator.write().await;
                 *validator = new_validator;
-                
-                (StatusCode::OK, ResponseJson(serde_json::json!({
-                    "mode": "beardog",
-                    "status": "switched",
-                    "message": "Authentication mode switched to BearDog"
-                }))).into_response()
+
+                (
+                    StatusCode::OK,
+                    ResponseJson(serde_json::json!({
+                        "mode": "beardog",
+                        "status": "switched",
+                        "message": "Authentication mode switched to BearDog"
+                    })),
+                )
+                    .into_response()
             } else {
-                (StatusCode::BAD_REQUEST, ResponseJson(ErrorResponse {
-                    message: "BearDog not configured".to_string(),
-                    code: None,
-                    details: Some(serde_json::Value::String("BearDog configuration required for this mode".to_string())),
-                })).into_response()
+                (
+                    StatusCode::BAD_REQUEST,
+                    ResponseJson(ErrorResponse {
+                        message: "BearDog not configured".to_string(),
+                        code: None,
+                        details: Some(serde_json::Value::String(
+                            "BearDog configuration required for this mode".to_string(),
+                        )),
+                    }),
+                )
+                    .into_response()
             }
-        },
+        }
         "hybrid" => {
             if let Some(config) = &auth_service.beardog_config {
                 let new_validator = CertValidator::hybrid(config.clone());
                 let mut validator = auth_service.validator.write().await;
                 *validator = new_validator;
-                
-                (StatusCode::OK, ResponseJson(serde_json::json!({
-                    "mode": "hybrid",
-                    "status": "switched",
-                    "message": "Authentication mode switched to hybrid"
-                }))).into_response()
+
+                (
+                    StatusCode::OK,
+                    ResponseJson(serde_json::json!({
+                        "mode": "hybrid",
+                        "status": "switched",
+                        "message": "Authentication mode switched to hybrid"
+                    })),
+                )
+                    .into_response()
             } else {
-                (StatusCode::BAD_REQUEST, ResponseJson(ErrorResponse {
-                    message: "BearDog not configured".to_string(),
-                    code: None,
-                    details: Some(serde_json::Value::String("BearDog configuration required for hybrid mode".to_string())),
-                })).into_response()
+                (
+                    StatusCode::BAD_REQUEST,
+                    ResponseJson(ErrorResponse {
+                        message: "BearDog not configured".to_string(),
+                        code: None,
+                        details: Some(serde_json::Value::String(
+                            "BearDog configuration required for hybrid mode".to_string(),
+                        )),
+                    }),
+                )
+                    .into_response()
             }
-        },
-        _ => {
-            (StatusCode::BAD_REQUEST, ResponseJson(ErrorResponse {
+        }
+        _ => (
+            StatusCode::BAD_REQUEST,
+            ResponseJson(ErrorResponse {
                 message: "Invalid mode".to_string(),
                 code: None,
-                details: Some(serde_json::Value::String("Supported modes: standalone, beardog, hybrid".to_string())),
-            })).into_response()
-        }
+                details: Some(serde_json::Value::String(
+                    "Supported modes: standalone, beardog, hybrid".to_string(),
+                )),
+            }),
+        )
+            .into_response(),
     }
 }
 
@@ -306,7 +340,7 @@ mod tests {
     #[tokio::test]
     async fn test_auth_request_validation() {
         let service = AuthService::standalone();
-        
+
         // Test valid certificate
         let cert = CertUtils::generate_self_signed().unwrap();
         let request = AuthRequest {
@@ -314,7 +348,7 @@ mod tests {
             service_id: Some("test-service".to_string()),
             mode: Some("standalone".to_string()),
         };
-        
+
         // Test certificate validation
         let mut validator = service.validator.write().await;
         let result = validator.validate_cert(&request.certificate).await;
@@ -331,7 +365,7 @@ mod tests {
             expires_in: Some(3600),
             metadata: Some(serde_json::json!({"test": "data"})),
         };
-        
+
         let json = serde_json::to_string(&response).unwrap();
         assert!(!json.is_empty());
         assert!(json.contains("authenticated"));
@@ -345,10 +379,10 @@ mod tests {
             "service_id": "test-service",
             "mode": "hybrid"
         }"#;
-        
+
         let request: AuthRequest = serde_json::from_str(json).unwrap();
         assert!(!request.certificate.is_empty());
         assert_eq!(request.service_id, Some("test-service".to_string()));
         assert_eq!(request.mode, Some("hybrid".to_string()));
     }
-} 
+}

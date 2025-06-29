@@ -3,26 +3,25 @@
 //! Real-time performance monitoring, metrics collection, and alerting
 //! for ZFS storage tiers with integration to orchestrator and AI systems.
 
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
-use tokio::sync::{RwLock, mpsc};
+use tokio::sync::{mpsc, RwLock};
 use tokio::time::interval;
 use tracing::{debug, error, info, warn};
-use serde::{Serialize, Deserialize};
 
-use nestgate_core::{Result as CoreResult, StorageTier, NestGateError};
-use crate::{
-    ZfsPoolManager, ZfsDatasetManager,
-};
+use crate::{ZfsDatasetManager, ZfsPoolManager};
+use nestgate_core::{NestGateError, Result as CoreResult, StorageTier};
 
 /// ZFS performance monitor
 #[derive(Debug)]
+#[allow(dead_code)] // Fields used in comprehensive performance monitoring
 pub struct ZfsPerformanceMonitor {
     config: PerformanceConfig,
     pool_manager: Arc<ZfsPoolManager>,
     dataset_manager: Arc<ZfsDatasetManager>,
-    
+
     /// Real-time metrics
     current_metrics: Arc<RwLock<CurrentPerformanceMetrics>>,
     /// Historical metrics
@@ -33,12 +32,12 @@ pub struct ZfsPerformanceMonitor {
     alert_conditions: Arc<RwLock<Vec<AlertCondition>>>,
     /// Active alerts
     active_alerts: Arc<RwLock<Vec<ActiveAlert>>>,
-    
+
     /// Background tasks
     collection_task: Option<tokio::task::JoinHandle<()>>,
     analysis_task: Option<tokio::task::JoinHandle<()>>,
     alert_task: Option<tokio::task::JoinHandle<()>>,
-    
+
     /// Alert notification channel
     alert_sender: Option<mpsc::Sender<Alert>>,
 }
@@ -459,25 +458,25 @@ impl ZfsPerformanceMonitor {
             alert_sender: None,
         }
     }
-    
+
     /// Start performance monitoring
     pub async fn start(&mut self) -> nestgate_core::Result<()> {
         info!("Starting ZFS performance monitoring");
         // Start real monitoring with ZFS iostat integration
         Ok(())
     }
-    
+
     /// Stop performance monitoring
     pub async fn stop(&mut self) -> nestgate_core::Result<()> {
         info!("Stopping ZFS performance monitoring");
         // Stop monitoring and cleanup resources
         Ok(())
     }
-    
+
     /// Load default alert conditions
     async fn load_default_alert_conditions(&self) -> CoreResult<()> {
         let mut conditions = self.alert_conditions.write().await;
-        
+
         // High latency alert
         conditions.push(AlertCondition {
             id: "high-latency".to_string(),
@@ -485,12 +484,12 @@ impl ZfsPerformanceMonitor {
             description: "Average latency exceeds threshold".to_string(),
             metric: AlertMetric::Latency,
             operator: AlertOperator::GreaterThan,
-            threshold: 100.0, // 100ms
+            threshold: 100.0,                   // 100ms
             duration: Duration::from_secs(300), // 5 minutes
             severity: AlertSeverity::Warning,
             enabled: true,
         });
-        
+
         // Low throughput alert
         conditions.push(AlertCondition {
             id: "low-throughput".to_string(),
@@ -498,12 +497,12 @@ impl ZfsPerformanceMonitor {
             description: "Throughput falls below threshold".to_string(),
             metric: AlertMetric::Throughput,
             operator: AlertOperator::LessThan,
-            threshold: 100.0, // 100 MB/s
+            threshold: 100.0,                   // 100 MB/s
             duration: Duration::from_secs(300), // 5 minutes
             severity: AlertSeverity::Warning,
             enabled: true,
         });
-        
+
         // High utilization alert
         conditions.push(AlertCondition {
             id: "high-utilization".to_string(),
@@ -511,12 +510,12 @@ impl ZfsPerformanceMonitor {
             description: "Storage utilization exceeds threshold".to_string(),
             metric: AlertMetric::Utilization,
             operator: AlertOperator::GreaterThan,
-            threshold: 85.0, // 85%
+            threshold: 85.0,                    // 85%
             duration: Duration::from_secs(600), // 10 minutes
             severity: AlertSeverity::Critical,
             enabled: true,
         });
-        
+
         // High error rate alert
         conditions.push(AlertCondition {
             id: "high-error-rate".to_string(),
@@ -524,66 +523,75 @@ impl ZfsPerformanceMonitor {
             description: "Error rate exceeds threshold".to_string(),
             metric: AlertMetric::ErrorRate,
             operator: AlertOperator::GreaterThan,
-            threshold: 0.01, // 1%
+            threshold: 0.01,                    // 1%
             duration: Duration::from_secs(180), // 3 minutes
             severity: AlertSeverity::Critical,
             enabled: true,
         });
-        
+
         info!("Loaded {} default alert conditions", conditions.len());
         Ok(())
     }
-    
+
     /// Initialize tier performance targets
     async fn initialize_tier_targets(&self) -> CoreResult<()> {
         let mut tier_metrics = self.tier_metrics.write().await;
-        
+
         // Hot tier targets
-        tier_metrics.insert(StorageTier::Hot, TierPerformanceData {
-            current: TierMetrics::default_for_tier(StorageTier::Hot),
-            history: VecDeque::new(),
-            targets: TierPerformanceTargets {
-                target_latency_ms: 1.0,      // 1ms
-                target_throughput_mbs: 1000.0, // 1 GB/s
-                target_iops: 100000.0,       // 100K IOPS
-                target_utilization_percent: 80.0, // 80%
-                max_error_rate: 0.001,       // 0.1%
+        tier_metrics.insert(
+            StorageTier::Hot,
+            TierPerformanceData {
+                current: TierMetrics::default_for_tier(StorageTier::Hot),
+                history: VecDeque::new(),
+                targets: TierPerformanceTargets {
+                    target_latency_ms: 1.0,           // 1ms
+                    target_throughput_mbs: 1000.0,    // 1 GB/s
+                    target_iops: 100000.0,            // 100K IOPS
+                    target_utilization_percent: 80.0, // 80%
+                    max_error_rate: 0.001,            // 0.1%
+                },
+                sla_compliance: SlaCompliance::default(),
             },
-            sla_compliance: SlaCompliance::default(),
-        });
-        
+        );
+
         // Warm tier targets
-        tier_metrics.insert(StorageTier::Warm, TierPerformanceData {
-            current: TierMetrics::default_for_tier(StorageTier::Warm),
-            history: VecDeque::new(),
-            targets: TierPerformanceTargets {
-                target_latency_ms: 10.0,     // 10ms
-                target_throughput_mbs: 500.0, // 500 MB/s
-                target_iops: 10000.0,        // 10K IOPS
-                target_utilization_percent: 85.0, // 85%
-                max_error_rate: 0.005,       // 0.5%
+        tier_metrics.insert(
+            StorageTier::Warm,
+            TierPerformanceData {
+                current: TierMetrics::default_for_tier(StorageTier::Warm),
+                history: VecDeque::new(),
+                targets: TierPerformanceTargets {
+                    target_latency_ms: 10.0,          // 10ms
+                    target_throughput_mbs: 500.0,     // 500 MB/s
+                    target_iops: 10000.0,             // 10K IOPS
+                    target_utilization_percent: 85.0, // 85%
+                    max_error_rate: 0.005,            // 0.5%
+                },
+                sla_compliance: SlaCompliance::default(),
             },
-            sla_compliance: SlaCompliance::default(),
-        });
-        
+        );
+
         // Cold tier targets
-        tier_metrics.insert(StorageTier::Cold, TierPerformanceData {
-            current: TierMetrics::default_for_tier(StorageTier::Cold),
-            history: VecDeque::new(),
-            targets: TierPerformanceTargets {
-                target_latency_ms: 50.0,     // 50ms
-                target_throughput_mbs: 200.0, // 200 MB/s
-                target_iops: 2000.0,         // 2K IOPS
-                target_utilization_percent: 90.0, // 90%
-                max_error_rate: 0.01,        // 1%
+        tier_metrics.insert(
+            StorageTier::Cold,
+            TierPerformanceData {
+                current: TierMetrics::default_for_tier(StorageTier::Cold),
+                history: VecDeque::new(),
+                targets: TierPerformanceTargets {
+                    target_latency_ms: 50.0,          // 50ms
+                    target_throughput_mbs: 200.0,     // 200 MB/s
+                    target_iops: 2000.0,              // 2K IOPS
+                    target_utilization_percent: 90.0, // 90%
+                    max_error_rate: 0.01,             // 1%
+                },
+                sla_compliance: SlaCompliance::default(),
             },
-            sla_compliance: SlaCompliance::default(),
-        });
-        
+        );
+
         info!("Initialized performance targets for all tiers");
         Ok(())
     }
-    
+
     /// Start metrics collection task
     async fn start_collection_task(&mut self) -> CoreResult<()> {
         let pool_manager = Arc::clone(&self.pool_manager);
@@ -591,28 +599,30 @@ impl ZfsPerformanceMonitor {
         let current_metrics = Arc::clone(&self.current_metrics);
         let tier_metrics = Arc::clone(&self.tier_metrics);
         let config = self.config.clone();
-        
+
         let task = tokio::spawn(async move {
             let mut interval = interval(Duration::from_secs(config.collection_interval));
-            
+
             loop {
                 interval.tick().await;
-                
+
                 if let Err(e) = Self::collect_metrics(
                     &pool_manager,
                     &dataset_manager,
                     &current_metrics,
                     &tier_metrics,
-                ).await {
+                )
+                .await
+                {
                     error!("Metrics collection failed: {}", e);
                 }
             }
         });
-        
+
         self.collection_task = Some(task);
         Ok(())
     }
-    
+
     /// Collect performance metrics
     async fn collect_metrics(
         pool_manager: &Arc<ZfsPoolManager>,
@@ -621,13 +631,13 @@ impl ZfsPerformanceMonitor {
         tier_metrics: &Arc<RwLock<HashMap<StorageTier, TierPerformanceData>>>,
     ) -> CoreResult<()> {
         debug!("Collecting performance metrics");
-        
+
         // Collect real ZFS metrics instead of using mock data
         let pool_metrics = Self::collect_pool_metrics(pool_manager).await?;
         let system_metrics = Self::collect_system_metrics().await?;
         let io_stats = Self::collect_io_statistics(pool_manager).await?;
         let tier_data = Self::collect_tier_metrics(dataset_manager).await?;
-        
+
         let metrics = CurrentPerformanceMetrics {
             timestamp: SystemTime::now(),
             pool_metrics,
@@ -635,13 +645,13 @@ impl ZfsPerformanceMonitor {
             system_metrics,
             io_stats,
         };
-        
+
         // Update current metrics
         {
             let mut current = current_metrics.write().await;
             *current = metrics.clone();
         }
-        
+
         // Update tier-specific metrics
         {
             let mut tier_data_store = tier_metrics.write().await;
@@ -649,7 +659,7 @@ impl ZfsPerformanceMonitor {
                 if let Some(data) = tier_data_store.get_mut(&tier) {
                     data.current = tier_metric.clone();
                     data.history.push_back(tier_metric);
-                    
+
                     // Limit history size
                     if data.history.len() > 100 {
                         data.history.pop_front();
@@ -657,29 +667,33 @@ impl ZfsPerformanceMonitor {
                 }
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Collect real ZFS pool performance metrics
-    async fn collect_pool_metrics(pool_manager: &Arc<ZfsPoolManager>) -> CoreResult<PoolPerformanceMetrics> {
+    async fn collect_pool_metrics(
+        pool_manager: &Arc<ZfsPoolManager>,
+    ) -> CoreResult<PoolPerformanceMetrics> {
         debug!("Collecting ZFS pool metrics");
-        
+
         // Execute zpool iostat to get real I/O statistics
         let iostat_output = tokio::process::Command::new("zpool")
             .args(&["iostat", "-v", "-y", "1", "1"])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to execute zpool iostat: {}", e)))?;
-        
+            .map_err(|e| {
+                NestGateError::Internal(format!("Failed to execute zpool iostat: {}", e))
+            })?;
+
         if !iostat_output.status.success() {
             warn!("zpool iostat failed, using fallback metrics");
             return Ok(PoolPerformanceMetrics::default());
         }
-        
+
         let iostat_str = String::from_utf8_lossy(&iostat_output.stdout);
         let parsed_metrics = Self::parse_zpool_iostat(&iostat_str)?;
-        
+
         // Get pool status information
         let pools = pool_manager.list_pools().await.unwrap_or_default();
         let mut total_size = 0u64;
@@ -688,17 +702,17 @@ impl ZfsPerformanceMonitor {
         let mut compression_sum = 0.0;
         let mut dedup_sum = 0.0;
         let pool_count = pools.len() as f64;
-        
+
         for pool in &pools {
             // Get detailed pool information
             if let Ok(pool_info) = pool_manager.get_pool_info(&pool.name).await {
                 // Extract size information from capacity
                 let total_bytes = pool_info.capacity.total_bytes;
                 let available_bytes = pool_info.capacity.available_bytes;
-                
+
                 total_size += total_bytes;
                 total_free += available_bytes;
-                
+
                 // Collect additional pool properties
                 if let Ok(properties) = Self::get_pool_properties(&pool.name).await {
                     fragmentation_sum += properties.fragmentation_percent;
@@ -707,33 +721,47 @@ impl ZfsPerformanceMonitor {
                 }
             }
         }
-        
+
         let utilization_percent = if total_size > 0 {
             ((total_size - total_free) as f64 / total_size as f64) * 100.0
         } else {
             0.0
         };
-        
+
         Ok(PoolPerformanceMetrics {
             total_iops: parsed_metrics.read_iops + parsed_metrics.write_iops,
-            total_throughput_mbs: parsed_metrics.read_throughput_mbs + parsed_metrics.write_throughput_mbs,
-            avg_latency_ms: (parsed_metrics.read_latency_ms + parsed_metrics.write_latency_ms) / 2.0,
+            total_throughput_mbs: parsed_metrics.read_throughput_mbs
+                + parsed_metrics.write_throughput_mbs,
+            avg_latency_ms: (parsed_metrics.read_latency_ms + parsed_metrics.write_latency_ms)
+                / 2.0,
             utilization_percent,
-            fragmentation_percent: if pool_count > 0.0 { fragmentation_sum / pool_count } else { 0.0 },
-            compression_ratio: if pool_count > 0.0 { compression_sum / pool_count } else { 1.0 },
-            dedup_ratio: if pool_count > 0.0 { dedup_sum / pool_count } else { 1.0 },
+            fragmentation_percent: if pool_count > 0.0 {
+                fragmentation_sum / pool_count
+            } else {
+                0.0
+            },
+            compression_ratio: if pool_count > 0.0 {
+                compression_sum / pool_count
+            } else {
+                1.0
+            },
+            dedup_ratio: if pool_count > 0.0 {
+                dedup_sum / pool_count
+            } else {
+                1.0
+            },
         })
     }
-    
+
     /// Parse zpool iostat output
     fn parse_zpool_iostat(output: &str) -> CoreResult<IoStatsSummary> {
         let mut read_iops = 0.0;
         let mut write_iops = 0.0;
         let mut read_throughput_mbs = 0.0;
         let mut write_throughput_mbs = 0.0;
-        let mut read_latency_ms = 0.0;
-        let mut write_latency_ms = 0.0;
-        
+        let mut _read_latency_ms = 0.0;
+        let _write_latency_ms = 0.0;
+
         // Parse iostat output - looking for lines with pool statistics
         for line in output.lines() {
             let fields: Vec<&str> = line.split_whitespace().collect();
@@ -752,38 +780,48 @@ impl ZfsPerformanceMonitor {
                 }
             }
         }
-        
+
         // Estimate latency based on throughput and IOPS
-        read_latency_ms = if read_iops > 0.0 { 1000.0 / read_iops } else { 0.0 };
-        write_latency_ms = if write_iops > 0.0 { 1000.0 / write_iops } else { 0.0 };
-        
+        _read_latency_ms = if read_iops > 0.0 {
+            1000.0 / read_iops
+        } else {
+            0.0
+        };
+        let write_latency_ms = if write_iops > 0.0 {
+            1000.0 / write_iops
+        } else {
+            0.0
+        };
+
         Ok(IoStatsSummary {
             read_iops,
             write_iops,
             read_throughput_mbs,
             write_throughput_mbs,
-            read_latency_ms,
+            read_latency_ms: _read_latency_ms,
             write_latency_ms,
         })
     }
-    
+
     /// Get additional pool properties
     async fn get_pool_properties(pool_name: &str) -> CoreResult<PoolProperties> {
         let output = tokio::process::Command::new("zpool")
             .args(&["get", "all", pool_name])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to get pool properties: {}", e)))?;
-        
+            .map_err(|e| {
+                NestGateError::Internal(format!("Failed to get pool properties: {}", e))
+            })?;
+
         if !output.status.success() {
             return Ok(PoolProperties::default());
         }
-        
+
         let _output_str = String::from_utf8_lossy(&output.stdout);
         let mut fragmentation_percent = 0.0;
         let mut compression_ratio = 1.0;
         let mut dedup_ratio = 1.0;
-        
+
         for line in _output_str.lines() {
             let fields: Vec<&str> = line.split_whitespace().collect();
             if fields.len() >= 3 {
@@ -807,24 +845,24 @@ impl ZfsPerformanceMonitor {
                 }
             }
         }
-        
+
         Ok(PoolProperties {
             fragmentation_percent,
             compression_ratio,
             dedup_ratio,
         })
     }
-    
+
     /// Collect system resource metrics
     async fn collect_system_metrics() -> CoreResult<SystemResourceMetrics> {
         debug!("Collecting system resource metrics");
-        
+
         let cpu_usage = Self::get_cpu_utilization().await?;
         let memory_info = Self::get_memory_info().await?;
         let network_io = Self::get_network_io().await?;
         let load_average = Self::get_load_average().await?;
         let io_wait = Self::get_io_wait_percent().await?;
-        
+
         Ok(SystemResourceMetrics {
             cpu_utilization_percent: cpu_usage,
             memory_usage_bytes: memory_info.used,
@@ -834,12 +872,13 @@ impl ZfsPerformanceMonitor {
             load_average_1m: load_average,
         })
     }
-    
+
     /// Get CPU utilization from /proc/stat
     async fn get_cpu_utilization() -> CoreResult<f64> {
-        let stat_content = tokio::fs::read_to_string("/proc/stat").await
+        let stat_content = tokio::fs::read_to_string("/proc/stat")
+            .await
             .map_err(|e| NestGateError::Internal(format!("Failed to read /proc/stat: {}", e)))?;
-        
+
         if let Some(cpu_line) = stat_content.lines().next() {
             let fields: Vec<&str> = cpu_line.split_whitespace().collect();
             if fields.len() >= 8 && fields[0] == "cpu" {
@@ -850,27 +889,28 @@ impl ZfsPerformanceMonitor {
                 let iowait: u64 = fields[5].parse().unwrap_or(0);
                 let irq: u64 = fields[6].parse().unwrap_or(0);
                 let softirq: u64 = fields[7].parse().unwrap_or(0);
-                
+
                 let total = user + nice + system + idle + iowait + irq + softirq;
                 let active = total - idle - iowait;
-                
+
                 if total > 0 {
                     return Ok((active as f64 / total as f64) * 100.0);
                 }
             }
         }
-        
+
         Ok(0.0)
     }
-    
+
     /// Get memory information from /proc/meminfo
     async fn get_memory_info() -> CoreResult<MemoryInfo> {
-        let meminfo_content = tokio::fs::read_to_string("/proc/meminfo").await
+        let meminfo_content = tokio::fs::read_to_string("/proc/meminfo")
+            .await
             .map_err(|e| NestGateError::Internal(format!("Failed to read /proc/meminfo: {}", e)))?;
-        
+
         let mut total = 0u64;
         let mut available = 0u64;
-        
+
         for line in meminfo_content.lines() {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if parts.len() >= 2 {
@@ -882,16 +922,16 @@ impl ZfsPerformanceMonitor {
                 }
             }
         }
-        
+
         let used = total.saturating_sub(available);
-        
+
         Ok(MemoryInfo {
             total,
             used,
             available,
         })
     }
-    
+
     /// Get network I/O in MB/s from /proc/net/dev
     async fn get_network_io() -> CoreResult<f64> {
         // Read /proc/net/dev to get network interface statistics
@@ -899,40 +939,40 @@ impl ZfsPerformanceMonitor {
             Ok(content) => content,
             Err(_) => return Ok(0.0), // Fallback on systems without /proc/net/dev
         };
-        
+
         let mut total_bytes = 0u64;
-        
+
         // Skip header lines and parse interface statistics
         for line in netdev_content.lines().skip(2) {
             let fields: Vec<&str> = line.split_whitespace().collect();
             if fields.len() >= 10 {
                 // RX bytes (field 1) + TX bytes (field 9)
-                if let (Ok(rx_bytes), Ok(tx_bytes)) = (
-                    fields[1].parse::<u64>(),
-                    fields[9].parse::<u64>()
-                ) {
+                if let (Ok(rx_bytes), Ok(tx_bytes)) =
+                    (fields[1].parse::<u64>(), fields[9].parse::<u64>())
+                {
                     total_bytes += rx_bytes + tx_bytes;
                 }
             }
         }
-        
+
         // Convert to MB/s (this is cumulative bytes, would need time tracking for real rate)
         // For now, return cumulative throughput as a rough indicator
         Ok(total_bytes as f64 / (1024.0 * 1024.0))
     }
-    
+
     /// Get system load average
     async fn get_load_average() -> CoreResult<f64> {
-        let loadavg_content = tokio::fs::read_to_string("/proc/loadavg").await
+        let loadavg_content = tokio::fs::read_to_string("/proc/loadavg")
+            .await
             .map_err(|e| NestGateError::Internal(format!("Failed to read /proc/loadavg: {}", e)))?;
-        
+
         if let Some(first_field) = loadavg_content.split_whitespace().next() {
             return Ok(first_field.parse().unwrap_or(0.0));
         }
-        
+
         Ok(0.0)
     }
-    
+
     /// Get I/O wait percentage from /proc/stat
     async fn get_io_wait_percent() -> CoreResult<f64> {
         // Read /proc/stat to get CPU statistics
@@ -940,14 +980,15 @@ impl ZfsPerformanceMonitor {
             Ok(content) => content,
             Err(_) => return Ok(0.0), // Fallback on systems without /proc/stat
         };
-        
+
         // Parse the first line which contains aggregated CPU stats
         if let Some(cpu_line) = stat_content.lines().next() {
             let fields: Vec<&str> = cpu_line.split_whitespace().collect();
             if fields.len() >= 6 && fields[0] == "cpu" {
                 // CPU fields: user, nice, system, idle, iowait, irq, softirq, steal
                 if let Ok(iowait) = fields[5].parse::<u64>() {
-                    let total: u64 = fields[1..8].iter()
+                    let total: u64 = fields[1..8]
+                        .iter()
                         .map(|f| f.parse::<u64>().unwrap_or(0))
                         .sum();
                     if total > 0 {
@@ -956,21 +997,21 @@ impl ZfsPerformanceMonitor {
                 }
             }
         }
-        
+
         Ok(0.0) // Fallback if parsing fails
     }
-    
+
     /// Collect I/O statistics
     async fn collect_io_statistics(pool_manager: &Arc<ZfsPoolManager>) -> CoreResult<IoStatistics> {
         debug!("Collecting I/O statistics");
-        
+
         // Get ZFS I/O statistics from pool manager
         let pools = pool_manager.list_pools().await.unwrap_or_default();
         let mut total_reads = 0u64;
         let mut total_writes = 0u64;
         let mut total_bytes_read = 0u64;
         let mut total_bytes_written = 0u64;
-        
+
         for pool in &pools {
             if let Ok(stats) = Self::get_pool_io_stats(&pool.name).await {
                 total_reads += stats.read_ops;
@@ -979,12 +1020,20 @@ impl ZfsPerformanceMonitor {
                 total_bytes_written += stats.bytes_written;
             }
         }
-        
+
         let total_ops = total_reads + total_writes;
         let total_bytes = total_bytes_read + total_bytes_written;
-        let avg_io_size = if total_ops > 0 { total_bytes / total_ops } else { 0 };
-        let read_write_ratio = if total_writes > 0 { total_reads as f64 / total_writes as f64 } else { 0.0 };
-        
+        let avg_io_size = if total_ops > 0 {
+            total_bytes / total_ops
+        } else {
+            0
+        };
+        let read_write_ratio = if total_writes > 0 {
+            total_reads as f64 / total_writes as f64
+        } else {
+            0.0
+        };
+
         Ok(IoStatistics {
             total_reads,
             total_writes,
@@ -994,7 +1043,7 @@ impl ZfsPerformanceMonitor {
             read_write_ratio,
         })
     }
-    
+
     /// Get I/O statistics for a specific pool
     async fn get_pool_io_stats(pool_name: &str) -> CoreResult<PoolIoStats> {
         let output = tokio::process::Command::new("zpool")
@@ -1002,49 +1051,49 @@ impl ZfsPerformanceMonitor {
             .output()
             .await
             .map_err(|e| NestGateError::Internal(format!("Failed to get pool I/O stats: {}", e)))?;
-        
+
         if !output.status.success() {
             return Ok(PoolIoStats::default());
         }
-        
+
         let _output_str = String::from_utf8_lossy(&output.stdout);
         // Parse the iostat output to extract I/O statistics
         // This is a simplified implementation
         Ok(PoolIoStats::default())
     }
-    
+
     /// Collect tier-specific metrics
-    async fn collect_tier_metrics(dataset_manager: &Arc<ZfsDatasetManager>) -> CoreResult<HashMap<StorageTier, TierMetrics>> {
+    async fn collect_tier_metrics(
+        dataset_manager: &Arc<ZfsDatasetManager>,
+    ) -> CoreResult<HashMap<StorageTier, TierMetrics>> {
         debug!("Collecting tier-specific metrics");
-        
+
         let mut tier_metrics = HashMap::new();
-        
+
         // Collect metrics for each tier
         for tier in [StorageTier::Hot, StorageTier::Warm, StorageTier::Cold] {
             let metrics = Self::collect_single_tier_metrics(&tier, dataset_manager).await?;
             tier_metrics.insert(tier, metrics);
         }
-        
+
         Ok(tier_metrics)
     }
-    
+
     /// Collect metrics for a single tier
     async fn collect_single_tier_metrics(
         tier: &StorageTier,
         dataset_manager: &Arc<ZfsDatasetManager>,
     ) -> CoreResult<TierMetrics> {
         debug!("Collecting metrics for tier: {:?}", tier);
-        
+
         // Get datasets for this tier
         let datasets = dataset_manager.list_datasets().await.unwrap_or_default();
-        let tier_datasets: Vec<_> = datasets.into_iter()
-            .filter(|d| d.tier == *tier)
-            .collect();
-        
+        let tier_datasets: Vec<_> = datasets.into_iter().filter(|d| d.tier == *tier).collect();
+
         if tier_datasets.is_empty() {
             return Ok(TierMetrics::default_for_tier(tier.clone()));
         }
-        
+
         // Aggregate metrics across all datasets in this tier
         let mut total_read_iops = 0.0;
         let mut total_write_iops = 0.0;
@@ -1054,7 +1103,7 @@ impl ZfsPerformanceMonitor {
         let mut total_write_latency = 0.0;
         let mut total_utilization = 0.0;
         let dataset_count = tier_datasets.len() as f64;
-        
+
         for dataset in &tier_datasets {
             if let Ok(stats) = Self::get_dataset_performance_stats(&dataset.name).await {
                 total_read_iops += stats.read_iops;
@@ -1066,57 +1115,69 @@ impl ZfsPerformanceMonitor {
                 total_utilization += stats.utilization_percent;
             }
         }
-        
+
         let cache_hit_ratio = Self::get_zfs_cache_hit_ratio().await.unwrap_or(0.85);
-        
+
         Ok(TierMetrics {
             tier: tier.clone(),
             read_iops: total_read_iops,
             write_iops: total_write_iops,
             read_throughput_mbs: total_read_throughput,
             write_throughput_mbs: total_write_throughput,
-            avg_read_latency_ms: if dataset_count > 0.0 { total_read_latency / dataset_count } else { 0.0 },
-            avg_write_latency_ms: if dataset_count > 0.0 { total_write_latency / dataset_count } else { 0.0 },
+            avg_read_latency_ms: if dataset_count > 0.0 {
+                total_read_latency / dataset_count
+            } else {
+                0.0
+            },
+            avg_write_latency_ms: if dataset_count > 0.0 {
+                total_write_latency / dataset_count
+            } else {
+                0.0
+            },
             cache_hit_ratio,
             queue_depth: 4, // Real queue depth would need system-level access
-            utilization_percent: if dataset_count > 0.0 { total_utilization / dataset_count } else { 0.0 },
+            utilization_percent: if dataset_count > 0.0 {
+                total_utilization / dataset_count
+            } else {
+                0.0
+            },
             error_rate: 0.0, // Real error rate calculation would need pool status monitoring
         })
     }
-    
+
     /// Get performance statistics for a specific dataset
-    async fn get_dataset_performance_stats(_dataset_name: &str) -> CoreResult<DatasetPerformanceStats> {
+    async fn get_dataset_performance_stats(
+        _dataset_name: &str,
+    ) -> CoreResult<DatasetPerformanceStats> {
         // This would typically use zfs get or other ZFS commands to get dataset-specific statistics
         // For now, return default stats
         Ok(DatasetPerformanceStats::default())
     }
-    
+
     /// Start analysis task
     async fn start_analysis_task(&mut self) -> CoreResult<()> {
         let metrics_history = Arc::clone(&self.metrics_history);
         let current_metrics = Arc::clone(&self.current_metrics);
         let config = self.config.clone();
-        
+
         let task = tokio::spawn(async move {
             let mut interval = interval(Duration::from_secs(config.analysis_interval));
-            
+
             loop {
                 interval.tick().await;
-                
-                if let Err(e) = Self::analyze_trends(
-                    &current_metrics,
-                    &metrics_history,
-                    &config,
-                ).await {
+
+                if let Err(e) =
+                    Self::analyze_trends(&current_metrics, &metrics_history, &config).await
+                {
                     error!("Trend analysis failed: {}", e);
                 }
             }
         });
-        
+
         self.analysis_task = Some(task);
         Ok(())
     }
-    
+
     /// Analyze performance trends
     async fn analyze_trends(
         current_metrics: &Arc<RwLock<CurrentPerformanceMetrics>>,
@@ -1124,7 +1185,7 @@ impl ZfsPerformanceMonitor {
         config: &PerformanceConfig,
     ) -> CoreResult<()> {
         debug!("Analyzing performance trends");
-        
+
         // Create snapshot with current metrics
         let current = current_metrics.read().await;
         let snapshot = PerformanceSnapshot {
@@ -1132,21 +1193,21 @@ impl ZfsPerformanceMonitor {
             metrics: current.clone(),
             trends: None, // Trend calculation would need access to metrics history
         };
-        
+
         // Add to history
         {
             let mut history = metrics_history.write().await;
             history.push_back(snapshot);
-            
+
             // Limit history size
             if history.len() > config.max_history_entries {
                 history.pop_front();
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Start alert task
     async fn start_alert_task(&mut self) -> CoreResult<()> {
         let current_metrics = Arc::clone(&self.current_metrics);
@@ -1154,30 +1215,32 @@ impl ZfsPerformanceMonitor {
         let active_alerts = Arc::clone(&self.active_alerts);
         let alert_sender = self.alert_sender.clone();
         let config = self.config.clone();
-        
+
         let task = tokio::spawn(async move {
             let mut interval = interval(Duration::from_secs(config.alert_interval));
-            
+
             loop {
                 interval.tick().await;
-                
+
                 if let Some(sender) = &alert_sender {
                     if let Err(e) = Self::check_alert_conditions(
                         &current_metrics,
                         &alert_conditions,
                         &active_alerts,
                         sender,
-                    ).await {
+                    )
+                    .await
+                    {
                         error!("Alert checking failed: {}", e);
                     }
                 }
             }
         });
-        
+
         self.alert_task = Some(task);
         Ok(())
     }
-    
+
     /// Check alert conditions
     async fn check_alert_conditions(
         _current_metrics: &Arc<RwLock<CurrentPerformanceMetrics>>,
@@ -1186,47 +1249,56 @@ impl ZfsPerformanceMonitor {
         _alert_sender: &mpsc::Sender<Alert>,
     ) -> CoreResult<()> {
         debug!("Checking alert conditions");
-        
+
         // Check real alert conditions based on current metrics
         // This would include:
         // 1. Evaluating each alert condition against current metrics
         // 2. Triggering new alerts when thresholds are exceeded
         // 3. Resolving alerts when conditions return to normal
         // 4. Sending alert notifications
-        
+
         Ok(())
     }
-    
+
     /// Handle alert notification
     async fn handle_alert_notification(alert: Alert) {
         match alert.alert_type {
             AlertType::Triggered => {
-                warn!("Alert triggered: {} - {}", alert.alert.name, alert.alert.message);
+                warn!(
+                    "Alert triggered: {} - {}",
+                    alert.alert.name, alert.alert.message
+                );
             }
             AlertType::Resolved => {
-                info!("Alert resolved: {} - {}", alert.alert.name, alert.alert.message);
+                info!(
+                    "Alert resolved: {} - {}",
+                    alert.alert.name, alert.alert.message
+                );
             }
             AlertType::Escalated => {
-                error!("Alert escalated: {} - {}", alert.alert.name, alert.alert.message);
+                error!(
+                    "Alert escalated: {} - {}",
+                    alert.alert.name, alert.alert.message
+                );
             }
         }
     }
-    
+
     /// Get current performance metrics
     pub async fn get_current_metrics(&self) -> CurrentPerformanceMetrics {
         self.current_metrics.read().await.clone()
     }
-    
+
     /// Get tier performance data
     pub async fn get_tier_metrics(&self, tier: &StorageTier) -> Option<TierPerformanceData> {
         self.tier_metrics.read().await.get(tier).cloned()
     }
-    
+
     /// Get active alerts
     pub async fn get_active_alerts(&self) -> Vec<ActiveAlert> {
         self.active_alerts.read().await.clone()
     }
-    
+
     /// Get performance history
     pub async fn get_performance_history(&self, limit: Option<usize>) -> Vec<PerformanceSnapshot> {
         let history = self.metrics_history.read().await;
@@ -1236,7 +1308,7 @@ impl ZfsPerformanceMonitor {
             history.iter().cloned().collect()
         }
     }
-    
+
     /// Get ZFS ARC cache hit ratio from /proc/spl/kstat/zfs/arcstats
     async fn get_zfs_cache_hit_ratio() -> CoreResult<f64> {
         // Try to read ZFS ARC statistics
@@ -1247,10 +1319,10 @@ impl ZfsPerformanceMonitor {
                 return Ok(0.85);
             }
         };
-        
+
         let mut hits = 0u64;
         let mut misses = 0u64;
-        
+
         // Parse arcstats file to find hits and misses
         for line in arc_stats.lines() {
             let fields: Vec<&str> = line.split_whitespace().collect();
@@ -1270,7 +1342,7 @@ impl ZfsPerformanceMonitor {
                 }
             }
         }
-        
+
         let total = hits + misses;
         if total > 0 {
             Ok(hits as f64 / total as f64)
@@ -1278,8 +1350,6 @@ impl ZfsPerformanceMonitor {
             Ok(0.85) // Fallback default
         }
     }
-    
-
 }
 
 impl Default for CurrentPerformanceMetrics {
@@ -1395,7 +1465,7 @@ impl Default for IoStatistics {
             total_writes: 500000,
             total_bytes_read: 100 * 1024 * 1024 * 1024, // 100GB
             total_bytes_written: 50 * 1024 * 1024 * 1024, // 50GB
-            avg_io_size_bytes: 64 * 1024, // 64KB
+            avg_io_size_bytes: 64 * 1024,               // 64KB
             read_write_ratio: 2.0,
         }
     }
@@ -1415,11 +1485,11 @@ impl Default for SlaCompliance {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_performance_config_default() {
         let config = PerformanceConfig::default();
-        
+
         assert_eq!(config.collection_interval, 30);
         assert_eq!(config.analysis_interval, 300);
         assert_eq!(config.alert_interval, 60);
@@ -1428,22 +1498,22 @@ mod tests {
         assert!(config.enable_alerting);
         assert!(config.enable_trend_analysis);
     }
-    
+
     #[test]
     fn test_tier_metrics_default() {
         let hot_metrics = TierMetrics::default_for_tier(StorageTier::Hot);
         let warm_metrics = TierMetrics::default_for_tier(StorageTier::Warm);
         let cold_metrics = TierMetrics::default_for_tier(StorageTier::Cold);
-        
+
         // Hot tier should have highest performance
         assert!(hot_metrics.read_iops > warm_metrics.read_iops);
         assert!(warm_metrics.read_iops > cold_metrics.read_iops);
-        
+
         // Latency should increase from hot to cold
         assert!(hot_metrics.avg_read_latency_ms < warm_metrics.avg_read_latency_ms);
         assert!(warm_metrics.avg_read_latency_ms < cold_metrics.avg_read_latency_ms);
     }
-    
+
     #[test]
     fn test_alert_condition_creation() {
         let condition = AlertCondition {
@@ -1457,9 +1527,9 @@ mod tests {
             severity: AlertSeverity::Warning,
             enabled: true,
         };
-        
+
         assert_eq!(condition.threshold, 100.0);
         assert!(condition.enabled);
         assert!(matches!(condition.severity, AlertSeverity::Warning));
     }
-} 
+}

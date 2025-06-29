@@ -22,22 +22,22 @@ pub fn initialize_uptime() {
 /// Get system status handler
 pub async fn get_status() -> Json<SystemStatus> {
     info!("Status endpoint called");
-    
+
     let start_time = START_TIME.get().copied().unwrap_or_else(SystemTime::now);
     let uptime = SystemTime::now()
         .duration_since(start_time)
         .unwrap_or_default()
         .as_secs();
-    
+
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs();
-    
+
     Json(SystemStatus {
         status: "healthy".to_string(),
         version: env!("CARGO_PKG_VERSION").to_string(),
         uptime,
         timestamp,
     })
-} 
+}

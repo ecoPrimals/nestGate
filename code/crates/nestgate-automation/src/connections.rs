@@ -1,5 +1,5 @@
 //! Service Connections
-//! 
+//!
 //! Management of dynamic connections to ecosystem services
 
 use std::collections::HashMap;
@@ -59,4 +59,10 @@ impl ServiceConnectionPool {
     pub fn add_nestgate_peer(&mut self, peer_id: String, endpoint: String) {
         self.nestgate_peers.insert(peer_id, endpoint);
     }
-} 
+}
+
+impl Default for ServiceConnectionPool {
+    fn default() -> Self {
+        Self::new()
+    }
+}

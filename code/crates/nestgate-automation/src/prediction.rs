@@ -2,12 +2,11 @@
 //!
 //! AI-powered tier prediction for optimal storage placement
 
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
-use serde::{Deserialize, Serialize};
 use tracing::{debug, info, warn};
 
-use crate::types::AutomationError;
 use crate::Result;
 
 /// Storage tier types for prediction
@@ -120,7 +119,7 @@ impl TierPredictor {
     /// Create a new tier predictor
     pub fn new() -> Self {
         info!("🧠 Initializing TierPredictor");
-        
+
         let mut rules = HashMap::new();
         // Default rules for file types
         rules.insert("*.log".to_string(), TierType::Cold);
@@ -131,7 +130,7 @@ impl TierPredictor {
         rules.insert("*.backup".to_string(), TierType::Cold);
         rules.insert("*.archive".to_string(), TierType::Cold);
         rules.insert("*.config".to_string(), TierType::Warm);
-        
+
         Self {
             model_type: ModelType::FrequencyBased,
             metrics: PredictionMetrics {
@@ -184,7 +183,9 @@ impl TierPredictor {
             .map(|ext| format!("*.{}", ext))
             .unwrap_or_else(|| "*".to_string());
 
-        let tier = self.rules.get(&file_extension)
+        let tier = self
+            .rules
+            .get(&file_extension)
             .or_else(|| self.rules.get("*"))
             .copied()
             .unwrap_or(TierType::Warm);
@@ -214,36 +215,50 @@ impl TierPredictor {
         let weekly_accesses = patterns.accesses_last_week;
         let monthly_accesses = patterns.accesses_last_month;
 
-        let (tier, confidence, reasoning) = if daily_accesses >= self.frequency_thresholds.hot_tier_accesses_per_day {
+        let (tier, confidence, reasoning) = if daily_accesses
+            >= self.frequency_thresholds.hot_tier_accesses_per_day
+        {
             (
                 TierType::Hot,
                 Confidence::VeryHigh,
-                format!("High frequency access: {} accesses in last 24h", daily_accesses)
+                format!(
+                    "High frequency access: {} accesses in last 24h",
+                    daily_accesses
+                ),
             )
         } else if weekly_accesses >= self.frequency_thresholds.warm_tier_accesses_per_week {
             (
                 TierType::Warm,
                 Confidence::High,
-                format!("Moderate frequency access: {} accesses in last week", weekly_accesses)
+                format!(
+                    "Moderate frequency access: {} accesses in last week",
+                    weekly_accesses
+                ),
             )
         } else if monthly_accesses <= self.frequency_thresholds.cold_tier_max_accesses_per_month {
             (
                 TierType::Cold,
                 Confidence::High,
-                format!("Low frequency access: {} accesses in last month", monthly_accesses)
+                format!(
+                    "Low frequency access: {} accesses in last month",
+                    monthly_accesses
+                ),
             )
         } else {
             (
                 TierType::Warm,
                 Confidence::Medium,
-                "Default to warm tier for moderate usage".to_string()
+                "Default to warm tier for moderate usage".to_string(),
             )
         };
 
         // Consider file size in the prediction
         let adjusted_tier = if analysis.size_bytes > 1_000_000_000 && tier == TierType::Hot {
             // Large files (>1GB) may be better in warm tier even with high access
-            warn!("Large file {} adjusted from Hot to Warm tier", analysis.file_path);
+            warn!(
+                "Large file {} adjusted from Hot to Warm tier",
+                analysis.file_path
+            );
             TierType::Warm
         } else {
             tier
@@ -291,18 +306,19 @@ impl TierPredictor {
     /// Update prediction metrics after a prediction
     pub async fn update_metrics(&mut self, was_accurate: bool) -> Result<()> {
         self.metrics.total_predictions += 1;
-        
+
         // Update accuracy rate using exponential moving average
         let alpha = 0.1; // Learning rate
         if self.metrics.total_predictions == 1 {
             self.metrics.accuracy_rate = if was_accurate { 1.0 } else { 0.0 };
         } else {
             let new_accuracy = if was_accurate { 1.0 } else { 0.0 };
-            self.metrics.accuracy_rate = (1.0 - alpha) * self.metrics.accuracy_rate + alpha * new_accuracy;
+            self.metrics.accuracy_rate =
+                (1.0 - alpha) * self.metrics.accuracy_rate + alpha * new_accuracy;
         }
 
         self.metrics.last_updated = SystemTime::now();
-        
+
         debug!(
             "Updated prediction metrics: {} predictions, {:.2}% accuracy",
             self.metrics.total_predictions,
@@ -378,7 +394,7 @@ mod tests {
     #[tokio::test]
     async fn test_rule_based_prediction() {
         let predictor = TierPredictor::new();
-        
+
         let analysis = FileAnalysis {
             file_path: "test.log".to_string(),
             size_bytes: 1024,
@@ -395,7 +411,7 @@ mod tests {
     #[tokio::test]
     async fn test_frequency_based_prediction() {
         let predictor = TierPredictor::new();
-        
+
         let analysis = FileAnalysis {
             file_path: "test.db".to_string(),
             size_bytes: 1024,
@@ -414,14 +430,17 @@ mod tests {
             last_access: SystemTime::now(),
         };
 
-        let prediction = predictor.predict_frequency_based(&analysis, &patterns).await.unwrap();
+        let prediction = predictor
+            .predict_frequency_based(&analysis, &patterns)
+            .await
+            .unwrap();
         assert_eq!(prediction.recommended_tier, TierType::Hot);
     }
 
     #[tokio::test]
     async fn test_metrics_update() {
         let mut predictor = TierPredictor::new();
-        
+
         predictor.update_metrics(true).await.unwrap();
         assert_eq!(predictor.metrics.total_predictions, 1);
         assert_eq!(predictor.metrics.accuracy_rate, 1.0);
@@ -434,7 +453,7 @@ mod tests {
     #[tokio::test]
     async fn test_rule_management() {
         let mut predictor = TierPredictor::new();
-        
+
         predictor.add_rule("*.test".to_string(), TierType::Hot);
         assert_eq!(predictor.rules.get("*.test"), Some(&TierType::Hot));
 

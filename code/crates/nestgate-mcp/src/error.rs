@@ -1,5 +1,5 @@
 //! Enhanced Error Handling
-//! 
+//!
 //! Comprehensive error types with advanced integration error handling
 //! with v2 orchestrator error management
 
@@ -73,7 +73,10 @@ impl Error {
 
     /// Create a new orchestrator error
     pub fn orchestrator(message: String) -> Self {
-        Self::new(ErrorType::InternalError, format!("Orchestrator error: {}", message))
+        Self::new(
+            ErrorType::InternalError,
+            format!("Orchestrator error: {}", message),
+        )
     }
 
     /// Create a new service error
@@ -137,7 +140,7 @@ impl Error {
                 | ErrorType::Timeout
                 | ErrorType::ServiceUnavailable
                 | ErrorType::Connection
-                | ErrorType::InternalError  // Internal errors can be retryable (e.g., temporary resource issues)
+                | ErrorType::InternalError // Internal errors can be retryable (e.g., temporary resource issues)
         )
     }
 
@@ -490,11 +493,11 @@ impl ErrorMetrics {
 
     pub fn record_error(&mut self, error: &Error) {
         self.error_count += 1;
-        *self.errors_by_type.entry(error.error_type.clone()).or_insert(0) += 1;
         *self
-            .errors_by_severity
-            .entry(error.severity())
+            .errors_by_type
+            .entry(error.error_type.clone())
             .or_insert(0) += 1;
+        *self.errors_by_severity.entry(error.severity()).or_insert(0) += 1;
         self.last_error = Some(error.clone());
         self.last_updated = SystemTime::now();
     }
@@ -537,7 +540,7 @@ mod tests {
     fn test_error_handler() {
         let handler = DefaultErrorHandler::new();
         let error = Error::network("Test".to_string());
-        
+
         assert_eq!(handler.handle_error(&error), ErrorHandlingAction::Retry);
         assert!(handler.should_retry(&error, 1));
         assert!(!handler.should_retry(&error, 5));
@@ -547,10 +550,10 @@ mod tests {
     fn test_error_metrics() {
         let mut metrics = ErrorMetrics::new();
         let error = Error::internal("Test".to_string());
-        
+
         metrics.record_error(&error);
         assert_eq!(metrics.error_count, 1);
         assert_eq!(metrics.errors_by_type[&ErrorType::InternalError], 1);
         assert_eq!(metrics.errors_by_severity[&ErrorSeverity::Critical], 1);
     }
-} 
+}
