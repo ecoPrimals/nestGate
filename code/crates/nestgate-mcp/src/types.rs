@@ -1,11 +1,11 @@
 //! Type definitions for the NestGate MCP system.
 
+use indexmap::IndexMap;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
 use std::path::PathBuf;
 use std::time::{Duration, SystemTime};
 use uuid::Uuid;
-use indexmap::IndexMap;
 
 /// Type aliases for convenience
 pub type ProviderId = String;
@@ -429,9 +429,9 @@ pub struct PerformanceConfig {
 pub struct SystemMetrics {
     pub timestamp: SystemTime,
     pub node_id: String,
-    pub cpu_usage: f64,      // 0.0 - 100.0
-    pub memory_usage: f64,   // 0.0 - 100.0  
-    pub disk_usage: f64,     // 0.0 - 100.0
+    pub cpu_usage: f64,    // 0.0 - 100.0
+    pub memory_usage: f64, // 0.0 - 100.0
+    pub disk_usage: f64,   // 0.0 - 100.0
     pub network_io: NetworkIo,
     pub disk_io: DiskIo,
     pub storage_metrics: StorageMetrics,
@@ -701,11 +701,7 @@ impl Default for EnhancedProviderCapabilities {
                 StorageProtocol::Nfs(NfsVersion::V4),
                 StorageProtocol::Smb(SmbVersion::V3),
             ],
-            supported_tiers: vec![
-                StorageTier::Hot,
-                StorageTier::Warm,
-                StorageTier::Cold,
-            ],
+            supported_tiers: vec![StorageTier::Hot, StorageTier::Warm, StorageTier::Cold],
             performance_capabilities: PerformanceCapabilities::default(),
             security_capabilities: SecurityCapabilities::default(),
             management_capabilities: ManagementCapabilities::default(),
@@ -916,4 +912,4 @@ pub struct EnhancedMountRequest {
 }
 
 /// Result type alias for this crate
-pub type Result<T> = std::result::Result<T, crate::error::Error>; 
+pub type Result<T> = std::result::Result<T, crate::error::Error>;

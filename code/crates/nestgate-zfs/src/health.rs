@@ -1,33 +1,19 @@
 //! ZFS Health Monitor - Health monitoring and alerting
-//! 
+//!
 //! This module will be fully implemented in Week 2
 
-use std::sync::Arc;
-use std::time::{Duration, SystemTime};
 use std::collections::HashMap;
-use std::sync::RwLock;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::collections::VecDeque;
-use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use std::time::SystemTime;
 
 use serde::{Deserialize, Serialize};
-use tokio::time::interval;
-use tracing::{info, debug, warn, error};
-use chrono;
 
-use nestgate_core::{Result, NestGateError, StorageTier};
-use crate::{
-    config::ZfsConfig,
-    pool::ZfsPoolManager,
-    dataset::ZfsDatasetManager,
-    performance::ZfsPerformanceMonitor,
-    migration::MigrationEngine,
-    manager::{
-        EnhancedServiceStatus, HealthState, PoolOverallStatus, TierOverallStatus,
-        AiIntegrationStatus, MigrationStatus, 
-        SnapshotStatus, CurrentMetrics
-    },
-};
+use tracing::{debug, info};
+
+use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager};
+use nestgate_core::Result;
 
 /// Health status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -68,6 +54,7 @@ pub struct Alert {
 
 /// ZFS Health Monitor - monitors system health
 #[derive(Debug)]
+#[allow(dead_code)] // Fields used in comprehensive health monitoring system
 pub struct ZfsHealthMonitor {
     config: ZfsConfig,
     pool_manager: Arc<ZfsPoolManager>,
@@ -84,7 +71,7 @@ impl HealthStatus {
     pub fn is_critical(&self) -> bool {
         matches!(self, HealthStatus::Critical)
     }
-    
+
     pub fn is_healthy(&self) -> bool {
         matches!(self, HealthStatus::Healthy)
     }
@@ -103,7 +90,10 @@ impl std::fmt::Display for HealthStatus {
 
 impl ZfsHealthMonitor {
     /// Create a new health monitor
-    pub async fn new(pool_manager: Arc<ZfsPoolManager>, dataset_manager: Arc<ZfsDatasetManager>) -> Result<Self> {
+    pub async fn new(
+        pool_manager: Arc<ZfsPoolManager>,
+        dataset_manager: Arc<ZfsDatasetManager>,
+    ) -> Result<Self> {
         Ok(Self {
             config: Default::default(),
             pool_manager,
@@ -116,84 +106,94 @@ impl ZfsHealthMonitor {
             background_tasks: Arc::new(tokio::sync::RwLock::new(Vec::new())),
         })
     }
-    
+
     /// Start ZFS health monitoring
     pub async fn start(&mut self) -> Result<()> {
         info!("🏥 Starting ZFS health monitoring...");
-        
+
         // Initialize monitoring tasks
         let config = self.config.clone();
         let pool_manager = self.pool_manager.clone();
-        let dataset_manager = self.dataset_manager.clone();
+        let _dataset_manager = self.dataset_manager.clone();
         let health_data = self.health_data.clone();
-        
+
         // Start pool health monitoring task
         let pool_monitor_handle = tokio::spawn(async move {
-            let mut interval = tokio::time::interval(
-                tokio::time::Duration::from_secs(config.monitoring_interval)
-            );
-            
+            let mut interval =
+                tokio::time::interval(tokio::time::Duration::from_secs(config.monitoring_interval));
+
             loop {
                 interval.tick().await;
-                
+
                 // Monitor all pools
                 if let Ok(pools) = pool_manager.list_pools().await {
                     for pool in pools {
                         // Check pool health
-                        let health_status = Self::check_pool_health(&pool_manager, &pool.name).await;
-                        
+                        let health_status =
+                            Self::check_pool_health(&pool_manager, &pool.name).await;
+
                         // Update health data
                         let mut health = health_data.write().await;
-                        health.insert(format!("pool:{}", pool.name), HealthReport {
-                            component_type: "pool".to_string(),
-                            component_name: pool.name.clone(),
-                            status: health_status,
-                            last_check: SystemTime::now(),
-                            details: format!("Pool capacity: {:.1}% used", pool.capacity.utilization_percent),
-                        });
+                        health.insert(
+                            format!("pool:{}", pool.name),
+                            HealthReport {
+                                component_type: "pool".to_string(),
+                                component_name: pool.name.clone(),
+                                status: health_status,
+                                last_check: SystemTime::now(),
+                                details: format!(
+                                    "Pool capacity: {:.1}% used",
+                                    pool.capacity.utilization_percent
+                                ),
+                            },
+                        );
                     }
                 }
-                
+
                 debug!("🔍 Pool health check cycle completed");
             }
         });
-        
-        // Start dataset health monitoring task  
+
+        // Start dataset health monitoring task
         let dataset_config = self.config.clone();
         let dataset_pool_manager = self.pool_manager.clone();
         let dataset_manager_clone = self.dataset_manager.clone();
         let dataset_health_data = self.health_data.clone();
-        
+
         let dataset_monitor_handle = tokio::spawn(async move {
             let mut interval = tokio::time::interval(
-                tokio::time::Duration::from_secs(dataset_config.monitoring_interval * 2) // Less frequent
+                tokio::time::Duration::from_secs(dataset_config.monitoring_interval * 2), // Less frequent
             );
-            
+
             loop {
                 interval.tick().await;
-                
+
                 // Monitor critical datasets
                 if let Ok(pools) = dataset_pool_manager.list_pools().await {
                     for pool in pools {
                         // Check datasets in this pool
-                        let health_status = Self::check_dataset_health(&dataset_manager_clone, &pool.name).await;
-                        
+                        let health_status =
+                            Self::check_dataset_health(&dataset_manager_clone, &pool.name).await;
+
                         let mut health = dataset_health_data.write().await;
-                        health.insert(format!("datasets:{}", pool.name), HealthReport {
-                            component_type: "datasets".to_string(),
-                            component_name: pool.name.clone(),
-                            status: health_status,
-                            last_check: SystemTime::now(),
-                            details: "Dataset health assessment completed".to_string(),
-                        });
+                        health.insert(
+                            format!("datasets:{}", pool.name),
+                            HealthReport {
+                                component_type: "datasets".to_string(),
+                                component_name: pool.name.clone(),
+                                status: health_status,
+                                last_check: SystemTime::now(),
+                                details: "Dataset health assessment completed".to_string(),
+                            },
+                        );
                     }
                 }
             }
         });
-        
+
         // Store task handles
         self.monitoring_tasks = Some((pool_monitor_handle, dataset_monitor_handle));
-        
+
         info!("✅ ZFS health monitoring started successfully");
         Ok(())
     }
@@ -201,26 +201,26 @@ impl ZfsHealthMonitor {
     /// Stop ZFS health monitoring
     pub async fn stop(&mut self) -> Result<()> {
         info!("🛑 Stopping ZFS health monitoring...");
-        
+
         // Cancel monitoring tasks
         if let Some((pool_handle, dataset_handle)) = self.monitoring_tasks.take() {
             pool_handle.abort();
             dataset_handle.abort();
-            
+
             // Wait for graceful shutdown
             tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
         }
-        
+
         // Clear health data
         {
             let mut health = self.health_data.write().await;
             health.clear();
         }
-        
+
         info!("✅ ZFS health monitoring stopped");
         Ok(())
     }
-    
+
     /// Get current health status
     pub async fn get_current_status(&self) -> Result<crate::manager::EnhancedServiceStatus> {
         let pool_status = match self.pool_manager.get_overall_status().await {
@@ -230,9 +230,9 @@ impl ZfsHealthMonitor {
                 pools_degraded: 0,
                 total_capacity: 0,
                 available_capacity: 0,
-            }
+            },
         };
-        
+
         // Create tier status
         let tier_status = crate::manager::TierOverallStatus {
             hot_utilization: 0.0,
@@ -240,7 +240,7 @@ impl ZfsHealthMonitor {
             cold_utilization: 0.0,
             migration_queue_size: 0,
         };
-        
+
         Ok(crate::manager::EnhancedServiceStatus {
             overall_health: crate::manager::HealthState::Healthy,
             pool_status,
@@ -253,9 +253,12 @@ impl ZfsHealthMonitor {
             timestamp: chrono::Utc::now(),
         })
     }
-    
+
     // Helper methods for health checking
-    async fn check_pool_health(pool_manager: &Arc<ZfsPoolManager>, pool_name: &str) -> HealthStatus {
+    async fn check_pool_health(
+        _pool_manager: &Arc<ZfsPoolManager>,
+        pool_name: &str,
+    ) -> HealthStatus {
         // Get pool status from zpool status command
         match tokio::process::Command::new("zpool")
             .args(&["status", pool_name])
@@ -264,7 +267,7 @@ impl ZfsHealthMonitor {
         {
             Ok(output) if output.status.success() => {
                 let stdout = String::from_utf8_lossy(&output.stdout);
-                
+
                 if stdout.contains("ONLINE") && !stdout.contains("errors:") {
                     HealthStatus::Healthy
                 } else if stdout.contains("DEGRADED") || stdout.contains("FAULTED") {
@@ -281,8 +284,11 @@ impl ZfsHealthMonitor {
             }
         }
     }
-    
-    async fn check_dataset_health(dataset_manager: &Arc<ZfsDatasetManager>, pool_name: &str) -> HealthStatus {
+
+    async fn check_dataset_health(
+        _dataset_manager: &Arc<ZfsDatasetManager>,
+        pool_name: &str,
+    ) -> HealthStatus {
         // Check if datasets in the pool are accessible
         match tokio::process::Command::new("zfs")
             .args(&["list", "-H", "-o", "name,avail", "-r", pool_name])
@@ -291,25 +297,26 @@ impl ZfsHealthMonitor {
         {
             Ok(output) if output.status.success() => {
                 let stdout = String::from_utf8_lossy(&output.stdout);
-                
+
                 // Check if all datasets have reasonable available space
                 let mut total_datasets = 0;
                 let mut low_space_datasets = 0;
-                
+
                 for line in stdout.lines() {
                     let fields: Vec<&str> = line.split('\t').collect();
                     if fields.len() >= 2 {
                         total_datasets += 1;
-                        
+
                         // Parse available space and check if it's critically low
                         if let Ok(avail_bytes) = fields[1].parse::<u64>() {
-                            if avail_bytes < 1024 * 1024 * 1024 { // Less than 1GB available
+                            if avail_bytes < 1024 * 1024 * 1024 {
+                                // Less than 1GB available
                                 low_space_datasets += 1;
                             }
                         }
                     }
                 }
-                
+
                 if low_space_datasets == 0 {
                     HealthStatus::Healthy
                 } else if low_space_datasets < total_datasets / 2 {
@@ -318,7 +325,7 @@ impl ZfsHealthMonitor {
                     HealthStatus::Critical
                 }
             }
-            _ => HealthStatus::Warning
+            _ => HealthStatus::Warning,
         }
     }
 
@@ -340,13 +347,13 @@ impl ZfsHealthMonitor {
         }
 
         self.monitoring_active.store(false, Ordering::Relaxed);
-        
+
         // Stop all background tasks
         let mut tasks = self.background_tasks.write().await;
         for task in tasks.drain(..) {
             task.abort();
         }
-        
+
         info!("Stopped ZFS health monitoring");
         Ok(())
     }

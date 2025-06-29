@@ -2,17 +2,17 @@
 //!
 //! Manages AI models for storage optimization
 
+use chrono::Utc;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, error, info, warn};
-use chrono::Utc;
 
 use crate::{
-    ModelConfig, ModelDeployment, ModelType, DeploymentStatus, OptimizationLevel,
-    TierOptimization, Priority, Result,
-    ModelRegistry, GPUMemoryManager, ModelOptimizer, InferenceService,
+    DeploymentStatus, GPUMemoryManager, InferenceService, ModelConfig, ModelDeployment,
+    ModelOptimizer, ModelRegistry, ModelType, OptimizationLevel, Priority, Result,
+    TierOptimization,
 };
 
 /// AI Model Manager for NestGate
@@ -38,7 +38,8 @@ impl ModelManager {
         compute_capability: f32,
         cache_dir: PathBuf,
     ) -> Result<Self> {
-        let gpu_memory_manager = Arc::new(GPUMemoryManager::new(gpu_memory_size, compute_capability));
+        let gpu_memory_manager =
+            Arc::new(GPUMemoryManager::new(gpu_memory_size, compute_capability));
         let model_registry = Arc::new(ModelRegistry::new());
         let model_optimizer = Arc::new(ModelOptimizer::new(cache_dir, compute_capability));
         let inference_service = Arc::new(InferenceService::new(Arc::clone(&model_registry)));
@@ -56,18 +57,21 @@ impl ModelManager {
     /// Start the model manager
     pub async fn start(&self) -> Result<()> {
         info!("Starting AI Model Manager");
-        
+
         // Initialize GPU memory
         info!("GPU compute capability: {}", self.gpu_compute_capability);
-        info!("Maximum model size: {} MB", self.max_model_size / (1024 * 1024));
-        
+        info!(
+            "Maximum model size: {} MB",
+            self.max_model_size / (1024 * 1024)
+        );
+
         Ok(())
     }
 
     /// Stop the model manager
     pub async fn stop(&self) -> Result<()> {
         info!("Stopping AI Model Manager");
-        
+
         // Unload all models
         let models = self.model_registry.get_all_models().await?;
         for model in models {
@@ -75,7 +79,7 @@ impl ModelManager {
                 warn!("Failed to unload model {}: {}", model.id, e);
             }
         }
-        
+
         Ok(())
     }
 
@@ -86,7 +90,8 @@ impl ModelManager {
             return Err(format!(
                 "Model requires compute capability {}, but GPU only supports {}",
                 config.min_compute_capability, self.gpu_compute_capability
-            ).into());
+            )
+            .into());
         }
 
         // Check model size
@@ -95,7 +100,8 @@ impl ModelManager {
                 "Model size {}MB exceeds maximum allowed size {}MB",
                 config.size / (1024 * 1024),
                 self.max_model_size / (1024 * 1024)
-            ).into());
+            )
+            .into());
         }
 
         // Check if model file exists
@@ -108,21 +114,25 @@ impl ModelManager {
 
     /// Deploy a model
     pub async fn deploy_model(&self, config: ModelConfig) -> Result<ModelDeployment> {
-        info!("Deploying model: {} ({})", config.id, config.model_type as u8);
-        
+        info!(
+            "Deploying model: {} ({})",
+            config.id, config.model_type as u8
+        );
+
         // Validate compatibility
         self.validate_model_compatibility(&config).await?;
-        
+
         // Check if model is already deployed
         if let Ok(_) = self.model_registry.get_model(&config.id).await {
             return Err(format!("Model {} is already deployed", config.id).into());
         }
-        
+
         // Allocate GPU memory
-        let memory = self.gpu_memory_manager
+        let memory = self
+            .gpu_memory_manager
             .allocate_memory(&config.id, config.size, config.priority)
             .await?;
-        
+
         // Create deployment info
         let deployment = ModelDeployment {
             id: config.id.clone(),
@@ -132,15 +142,19 @@ impl ModelManager {
             memory_usage: config.size,
             optimization_level: OptimizationLevel::Medium,
         };
-        
+
         // Register the model
-        self.model_registry.register_model(config.id.clone(), deployment.clone()).await?;
-        
+        self.model_registry
+            .register_model(config.id.clone(), deployment.clone())
+            .await?;
+
         // Update status to active
         let mut active_deployment = deployment.clone();
         active_deployment.status = DeploymentStatus::Active;
-        self.model_registry.register_model(config.id.clone(), active_deployment.clone()).await?;
-        
+        self.model_registry
+            .register_model(config.id.clone(), active_deployment.clone())
+            .await?;
+
         info!("Successfully deployed model: {}", config.id);
         Ok(active_deployment)
     }
@@ -148,19 +162,21 @@ impl ModelManager {
     /// Unload a model
     pub async fn unload_model(&self, id: &str) -> Result<()> {
         info!("Unloading model: {}", id);
-        
+
         // Update status to unloading
         if let Ok(mut deployment) = self.model_registry.get_model(id).await {
             deployment.status = DeploymentStatus::Unloading;
-            self.model_registry.register_model(id.to_string(), deployment).await?;
+            self.model_registry
+                .register_model(id.to_string(), deployment)
+                .await?;
         }
-        
+
         // Free GPU memory
         self.gpu_memory_manager.free_memory(id).await?;
-        
+
         // Unregister the model
         self.model_registry.unregister_model(id).await?;
-        
+
         info!("Successfully unloaded model: {}", id);
         Ok(())
     }
@@ -188,38 +204,40 @@ impl ModelManager {
     /// Optimize tier placement using AI
     pub async fn optimize_tier_placement(&self) -> Result<TierOptimization> {
         info!("Running AI-powered tier optimization");
-        
+
         // Find storage optimizer models
         let optimizer_models = self.get_models_by_type(ModelType::StorageOptimizer).await?;
-        
+
         if optimizer_models.is_empty() {
             return Err("No storage optimizer models available".into());
         }
-        
+
         let model = &optimizer_models[0];
-        
+
         // Run optimization inference with real system metrics
         // TODO: Integrate with nestgate-core system metrics collection
         let input = vec![0.25, 0.60, 0.05]; // Placeholder for real CPU, memory, IO metrics
         let output = self.run_inference(&model.id, input).await?;
-        
+
         // Interpret results (simplified)
         let to_warm_count = (output.get(0).unwrap_or(&0.0) * 10.0) as usize;
         let to_cold_count = (output.get(1).unwrap_or(&0.0) * 5.0) as usize;
         let performance_improvement = output.get(2).unwrap_or(&0.0) * 100.0;
-        
+
         let optimization = TierOptimization {
             optimized_at: Utc::now(),
             to_warm_count,
             to_cold_count,
             estimated_performance_improvement: performance_improvement as f64,
         };
-        
-        info!("Tier optimization completed: {} to warm, {} to cold, {:.1}% improvement",
-              optimization.to_warm_count,
-              optimization.to_cold_count,
-              optimization.estimated_performance_improvement);
-        
+
+        info!(
+            "Tier optimization completed: {} to warm, {} to cold, {:.1}% improvement",
+            optimization.to_warm_count,
+            optimization.to_cold_count,
+            optimization.estimated_performance_improvement
+        );
+
         Ok(optimization)
     }
 }
@@ -231,13 +249,15 @@ mod tests {
 
     #[tokio::test]
     async fn test_model_manager_creation() {
-        let temp_dir = tempdir().expect("Failed to create temporary directory for model manager test");
+        let temp_dir =
+            tempdir().expect("Failed to create temporary directory for model manager test");
         let manager = ModelManager::new(
             1024 * 1024 * 1024, // 1GB
-            7.5, // RTX 2070 compute capability
+            7.5,                // RTX 2070 compute capability
             temp_dir.path().to_path_buf(),
-        ).await;
-        
+        )
+        .await;
+
         assert!(manager.is_ok());
     }
-} 
+}

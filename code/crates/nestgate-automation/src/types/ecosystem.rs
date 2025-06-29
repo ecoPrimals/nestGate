@@ -1,15 +1,18 @@
 //! Ecosystem service types for network integration
 
+use super::{DatasetContext, ServiceHealth, StorageContext, TaskPriority};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
-use super::{ServiceHealth, TaskPriority, StorageContext, DatasetContext};
 
 /// Service plan for dynamic task execution
 #[derive(Debug, Clone)]
 pub enum ServicePlan {
     /// Use Squirrel MCP + Toadstool combination for complex AI tasks
-    SquirrelMcp { squirrel_id: String, toadstool_id: String },
+    SquirrelMcp {
+        squirrel_id: String,
+        toadstool_id: String,
+    },
     /// Direct connection to Toadstool for simple AI tasks  
     DirectToadstool { toadstool_id: String },
     /// Use multiple NestGate peers for distributed processing
@@ -55,8 +58,8 @@ pub struct SongbirdInstance {
 
 #[cfg(feature = "network-integration")]
 mod system_time_serde {
-    use std::time::{SystemTime, UNIX_EPOCH};
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     pub fn serialize<S>(time: &SystemTime, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -170,4 +173,4 @@ pub struct DirectAiResponse {
     pub result_data: serde_json::Value,
     pub processing_time_ms: u64,
     pub confidence: f64,
-} 
+}

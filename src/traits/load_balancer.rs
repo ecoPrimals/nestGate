@@ -276,9 +276,47 @@ impl LoadBalancer for WeightedRoundRobinLoadBalancer {
             return Err(SongbirdError::LoadBalancer("No services available".to_string()));
         }
         
-        // Simple implementation - just return first service for now
-        // TODO: Implement proper weighted round robin algorithm
-        Ok(services[0].clone())
+        // Implement proper weighted round robin algorithm
+        let weights = self.weights.read();
+        let mut current_weights = self.current_weights.write();
+        
+        // Initialize current weights if empty
+        if current_weights.is_empty() {
+            for service in services {
+                let weight = weights.get(&service.id).copied().unwrap_or(1.0);
+                current_weights.insert(service.id.clone(), weight);
+            }
+        }
+        
+        // Find service with highest current weight
+        let mut selected_service = None;
+        let mut max_weight = f64::NEG_INFINITY;
+        
+        for service in services {
+            let current_weight = current_weights.get(&service.id).copied().unwrap_or(0.0);
+            if current_weight > max_weight {
+                max_weight = current_weight;
+                selected_service = Some(service.clone());
+            }
+        }
+        
+        if let Some(ref service) = selected_service {
+            // Decrease selected service's current weight by total of all weights
+            let total_weight: f64 = weights.values().sum();
+            if let Some(current) = current_weights.get_mut(&service.id) {
+                *current -= total_weight;
+            }
+            
+            // Increase all services' current weights by their configured weights
+            for srv in services {
+                let configured_weight = weights.get(&srv.id).copied().unwrap_or(1.0);
+                current_weights.entry(srv.id.clone())
+                    .and_modify(|w| *w += configured_weight)
+                    .or_insert(configured_weight);
+            }
+        }
+        
+        selected_service.ok_or_else(|| SongbirdError::LoadBalancer("No service selected".to_string()))
     }
 
     async fn record_response(&self, service: &ServiceInfo, _response: &ServiceResponse) -> Result<()> {
@@ -396,20 +434,44 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
             return Err(SongbirdError::LoadBalancer("No services available".to_string()));
         }
         
-        // Simple implementation - just return random service for now
-        // TODO: Implement proper weighted random algorithm
+        // Implement proper weighted random algorithm
+        let weights = self.weights.read();
         use rand::Rng;
         
+        // Calculate total weight
+        let total_weight: f64 = services.iter()
+            .map(|service| weights.get(&service.id).copied().unwrap_or(1.0))
+            .sum();
+        
+        if total_weight <= 0.0 {
+            // Fallback to uniform random if no valid weights
+            let mut rng = self.rng.lock().unwrap();
+            let index = rng.gen_range(0..services.len());
+            return Ok(services[index].clone());
+        }
+        
+        // Generate random number in [0, total_weight)
         let mut rng = self.rng.lock().unwrap();
-        let index = rng.gen_range(0..services.len());
-        let selected = services[index].clone();
+        let random_weight = rng.gen::<f64>() * total_weight;
         drop(rng);
         
-        let mut stats = self.stats.write();
-        stats.total_requests += 1;
-        stats.service_stats.entry(selected.id.clone()).or_default().requests += 1;
+        // Find the service corresponding to this weight
+        let mut cumulative_weight = 0.0;
+        for service in services {
+            let service_weight = weights.get(&service.id).copied().unwrap_or(1.0);
+            cumulative_weight += service_weight;
+            
+            if random_weight < cumulative_weight {
+                let mut stats = self.stats.write();
+                stats.total_requests += 1;
+                stats.service_stats.entry(service.id.clone()).or_default().requests += 1;
+                
+                return Ok(service.clone());
+            }
+        }
         
-        Ok(selected)
+        // Fallback to last service (shouldn't happen with correct implementation)
+        Ok(services[services.len() - 1].clone())
     }
 
     async fn record_response(&self, service: &ServiceInfo, _response: &ServiceResponse) -> Result<()> {

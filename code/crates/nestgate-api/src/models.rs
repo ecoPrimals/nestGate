@@ -23,4 +23,4 @@ pub struct Response<T> {
     /// Optional metadata
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<serde_json::Value>,
-} 
+}

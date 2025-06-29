@@ -1,19 +1,19 @@
 //! ZFS Dataset Manager - Dataset operations and management
-//! 
+//!
 //! Enhanced dataset management with automation support
 
-use std::sync::Arc;
-use std::collections::HashMap;
-use tokio::process::Command;
-use serde::{Serialize, Deserialize};
-use tracing::{info, debug, warn};
-use nestgate_core::{Result, NestGateError, StorageTier};
 use crate::{
-    config::ZfsConfig, 
+    config::ZfsConfig,
+    error::{DatasetError, ZfsError},
     pool::ZfsPoolManager,
     types::{CompressionAlgorithm, DatasetProperty},
-    error::{DatasetError, ZfsError},
 };
+use nestgate_core::{NestGateError, Result, StorageTier};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::process::Command;
+use tracing::{debug, info, warn};
 
 /// ZFS Dataset configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -59,6 +59,7 @@ pub struct DatasetInfo {
 
 /// ZFS Dataset Manager - handles dataset operations
 #[derive(Debug)]
+#[allow(dead_code)] // Some fields are planned features not yet fully implemented
 pub struct ZfsDatasetManager {
     config: ZfsConfig,
     pool_manager: Arc<ZfsPoolManager>,
@@ -74,11 +75,16 @@ impl ZfsDatasetManager {
     }
 
     /// Create a new ZFS dataset
-    pub async fn create_dataset(&self, name: &str, parent: &str, tier: nestgate_core::StorageTier) -> Result<DatasetInfo> {
+    pub async fn create_dataset(
+        &self,
+        name: &str,
+        parent: &str,
+        tier: nestgate_core::StorageTier,
+    ) -> Result<DatasetInfo> {
         info!("Creating dataset: {}/{} on tier: {:?}", parent, name, tier);
-        
+
         let dataset_path = format!("{}/{}", parent, name);
-        
+
         // Convert core tier to ZFS tier
         let zfs_tier = match tier {
             nestgate_core::StorageTier::Hot => StorageTier::Hot,
@@ -86,46 +92,57 @@ impl ZfsDatasetManager {
             nestgate_core::StorageTier::Cold => StorageTier::Cold,
             nestgate_core::StorageTier::Cache => StorageTier::Hot, // Map cache to hot
         };
-        
+
         // Get tier configuration for properties
         let tier_config = self.config.get_tier_config(&zfs_tier);
-        
+
         // Execute ZFS create command
         let mut cmd = tokio::process::Command::new("zfs");
         cmd.args(&["create"]);
-        
+
         // Apply tier-specific properties
         for (key, value) in &tier_config.properties {
             cmd.args(&["-o", &format!("{}={}", key, value)]);
         }
-        
+
         cmd.arg(&dataset_path);
-        
-        let output = cmd.output().await
+
+        let output = cmd
+            .output()
+            .await
             .map_err(|e| NestGateError::Internal(format!("Failed to execute zfs create: {}", e)))?;
-        
+
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
-            return Err(NestGateError::Internal(format!("ZFS create failed: {}", error_msg)));
+            return Err(NestGateError::Internal(format!(
+                "ZFS create failed: {}",
+                error_msg
+            )));
         }
-        
+
         info!("Successfully created dataset: {}", dataset_path);
-        
+
         // Return dataset info
         self.get_dataset_info_with_fallback(&dataset_path).await
     }
-    
+
     /// Create a dataset with fallback for testing/development environments
-    async fn create_with_fallback(&self, name: &str, pool: &str, tier: StorageTier) -> Result<DatasetInfo> {
+    #[allow(dead_code)] // Planned feature for enhanced resilience
+    async fn create_with_fallback(
+        &self,
+        name: &str,
+        pool: &str,
+        tier: StorageTier,
+    ) -> Result<DatasetInfo> {
         info!("Creating dataset: {}/{} on tier: {:?}", pool, name, tier);
-        
+
         // First try real ZFS dataset creation
         let dataset_path = format!("{}/{}", pool, name);
         let output = tokio::process::Command::new("zfs")
             .args(&["create", &dataset_path])
             .output()
             .await;
-            
+
         match output {
             Ok(result) if result.status.success() => {
                 info!("✅ Created ZFS dataset: {}", dataset_path);
@@ -134,7 +151,7 @@ impl ZfsDatasetManager {
             Ok(result) => {
                 let error_msg = String::from_utf8_lossy(&result.stderr);
                 warn!("ZFS dataset creation failed: {}, using fallback", error_msg);
-                
+
                 // Return fallback dataset info for development
                 Ok(DatasetInfo {
                     name: name.to_string(),
@@ -149,7 +166,7 @@ impl ZfsDatasetManager {
             }
             Err(e) => {
                 warn!("Failed to execute ZFS command: {}, using fallback", e);
-                
+
                 // Return fallback dataset info when ZFS is not available
                 Ok(DatasetInfo {
                     name: name.to_string(),
@@ -168,20 +185,27 @@ impl ZfsDatasetManager {
     /// Get dataset information with improved error handling
     pub async fn get_dataset_info_with_fallback(&self, name: &str) -> Result<DatasetInfo> {
         debug!("Getting dataset info for: {}", name);
-        
+
         // Execute ZFS list command to get dataset info
         let output = tokio::process::Command::new("zfs")
-            .args(&["list", "-H", "-p", "-o", "name,used,avail,mountpoint,compression", name])
+            .args(&[
+                "list",
+                "-H",
+                "-p",
+                "-o",
+                "name,used,avail,mountpoint,compression",
+                name,
+            ])
             .output()
             .await
             .map_err(|e| NestGateError::Internal(format!("Failed to execute zfs list: {}", e)))?;
-        
+
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
             warn!("ZFS list failed: {}, using fallback data", error_msg);
             return self.create_fallback_dataset_info(name).await;
         }
-        
+
         let stdout = String::from_utf8_lossy(&output.stdout);
         if let Some(line) = stdout.lines().next() {
             let fields: Vec<&str> = line.split('\t').collect();
@@ -189,7 +213,7 @@ impl ZfsDatasetManager {
                 let used_space = fields[1].parse::<u64>().unwrap_or(0);
                 let available_space = fields[2].parse::<u64>().unwrap_or(0);
                 let mount_point = fields[3].to_string();
-                
+
                 // Try to determine tier from dataset name or properties
                 let tier = if name.contains("hot") {
                     StorageTier::Hot
@@ -198,7 +222,7 @@ impl ZfsDatasetManager {
                 } else {
                     StorageTier::Warm
                 };
-                
+
                 return Ok(DatasetInfo {
                     name: name.to_string(),
                     used_space,
@@ -211,12 +235,12 @@ impl ZfsDatasetManager {
                 });
             }
         }
-        
+
         // Fallback if parsing fails
         warn!("Failed to parse ZFS output, using fallback data");
         self.create_fallback_dataset_info(name).await
     }
-    
+
     /// Create fallback dataset information for development/testing
     async fn create_fallback_dataset_info(&self, name: &str) -> Result<DatasetInfo> {
         Ok(DatasetInfo {
@@ -234,124 +258,146 @@ impl ZfsDatasetManager {
     /// Create a new dataset with full configuration
     pub async fn create_dataset_with_config(&self, config: DatasetConfig) -> Result<()> {
         tracing::info!("Creating dataset with config: {}", config.name);
-        
+
         let full_name = format!("{}/{}", config.parent, config.name);
-        
+
         // Build the zfs create command with properties
         let mut args = vec!["create"];
-        
+
         // Add compression property
         let compression_opt = format!("compression={}", config.compression);
         args.extend(&["-o", &compression_opt]);
-        
+
         // Add record size
         let recordsize_opt = format!("recordsize={}", config.record_size);
         args.extend(&["-o", &recordsize_opt]);
-        
+
         // Add quota if specified
         let quota_opt = config.quota.map(|q| format!("quota={}", q));
         if let Some(ref quota_str) = quota_opt {
             args.extend(&["-o", quota_str]);
         }
-        
+
         // Add reservation if specified
         let reservation_opt = config.reservation.map(|r| format!("reservation={}", r));
         if let Some(ref reservation_str) = reservation_opt {
             args.extend(&["-o", reservation_str]);
         }
-        
+
         // Add the dataset name
         args.push(&full_name);
-        
+
         let output = Command::new("zfs")
             .args(&args)
             .output()
             .await
-            .map_err(|e| ZfsError::DatasetError(DatasetError::CreationFailed { 
-                reason: format!("Failed to execute zfs create: {}", e)
-            }))?;
-        
+            .map_err(|e| {
+                ZfsError::DatasetError(DatasetError::CreationFailed {
+                    reason: format!("Failed to execute zfs create: {}", e),
+                })
+            })?;
+
         if !output.status.success() {
-            return Err(ZfsError::DatasetError(DatasetError::CreationFailed { 
-                reason: format!("zfs create failed: {}", String::from_utf8_lossy(&output.stderr))
-            }).into());
+            return Err(ZfsError::DatasetError(DatasetError::CreationFailed {
+                reason: format!(
+                    "zfs create failed: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                ),
+            })
+            .into());
         }
-        
+
         Ok(())
     }
 
     /// Get dataset properties
     pub async fn get_dataset_properties(&self, name: &str) -> Result<HashMap<String, String>> {
         tracing::debug!("Getting properties for dataset: {}", name);
-        
+
         let output = Command::new("zfs")
             .args(&["get", "all", "-H", "-p", name])
             .output()
             .await
-            .map_err(|_e| ZfsError::DatasetError(DatasetError::PropertyError { 
-                reason: format!("Failed to get dataset properties: {}", _e)
-            }))?;
-        
+            .map_err(|_e| {
+                ZfsError::DatasetError(DatasetError::PropertyError {
+                    reason: format!("Failed to get dataset properties: {}", _e),
+                })
+            })?;
+
         if !output.status.success() {
             return Ok(HashMap::new());
         }
-        
+
         let stdout = String::from_utf8_lossy(&output.stdout);
         let mut properties = HashMap::new();
-        
+
         for line in stdout.lines() {
             let parts: Vec<&str> = line.split('\t').collect();
             if parts.len() >= 3 {
                 properties.insert(parts[1].to_string(), parts[2].to_string());
             }
         }
-        
+
         Ok(properties)
     }
 
     /// Set dataset properties
-    pub async fn set_dataset_properties(&self, name: &str, properties: &HashMap<String, String>) -> Result<()> {
+    pub async fn set_dataset_properties(
+        &self,
+        name: &str,
+        properties: &HashMap<String, String>,
+    ) -> Result<()> {
         tracing::info!("Setting properties for dataset: {}", name);
-        
+
         for (key, value) in properties {
             let output = Command::new("zfs")
                 .args(&["set", &format!("{}={}", key, value), name])
                 .output()
                 .await
-                .map_err(|e| ZfsError::DatasetError(DatasetError::PropertyError { 
-                    reason: format!("Failed to set property {}={}: {}", key, value, e)
-                }))?;
-            
+                .map_err(|e| {
+                    ZfsError::DatasetError(DatasetError::PropertyError {
+                        reason: format!("Failed to set property {}={}: {}", key, value, e),
+                    })
+                })?;
+
             if !output.status.success() {
-                return Err(ZfsError::DatasetError(DatasetError::PropertyError { 
-                    reason: format!("Failed to set property {}={}: {}", key, value, String::from_utf8_lossy(&output.stderr))
-                }).into());
+                return Err(ZfsError::DatasetError(DatasetError::PropertyError {
+                    reason: format!(
+                        "Failed to set property {}={}: {}",
+                        key,
+                        value,
+                        String::from_utf8_lossy(&output.stderr)
+                    ),
+                })
+                .into());
             }
         }
-        
+
         Ok(())
     }
 
     /// List all datasets
     pub async fn list_datasets(&self) -> Result<Vec<DatasetInfo>> {
         tracing::debug!("Listing all datasets");
-        
+
         let output = Command::new("zfs")
             .args(&["list", "-H", "-p", "-o", "name,used,avail,mountpoint"])
             .output()
             .await
-            .map_err(|_e| ZfsError::DatasetError(DatasetError::NotFound { 
-                dataset_name: "all".to_string()
-            }))?;
-        
+            .map_err(|_e| {
+                ZfsError::DatasetError(DatasetError::NotFound {
+                    dataset_name: "all".to_string(),
+                })
+            })?;
+
         if !output.status.success() {
             // Return empty list if no datasets found
             return Ok(vec![]);
         }
-        
+
         let stdout = String::from_utf8_lossy(&output.stdout);
         let mut datasets = Vec::new();
-        
+
         for line in stdout.lines() {
             let parts: Vec<&str> = line.split('\t').collect();
             if parts.len() >= 4 {
@@ -359,7 +405,7 @@ impl ZfsDatasetManager {
                 let used_space: u64 = parts[1].parse().unwrap_or(0);
                 let available_space: u64 = parts[2].parse().unwrap_or(0);
                 let mount_point = parts[3].to_string();
-                
+
                 datasets.push(DatasetInfo {
                     name,
                     used_space,
@@ -372,20 +418,20 @@ impl ZfsDatasetManager {
                 });
             }
         }
-        
+
         Ok(datasets)
     }
 
     /// Delete a dataset
     pub async fn delete_dataset(&self, name: &str) -> Result<()> {
         info!("Deleting dataset: {}", name);
-        
+
         // Check if we should use mock mode
         if std::env::var("ZFS_MOCK_MODE").unwrap_or_default() == "true" {
             info!("Mock mode: Dataset {} deleted successfully", name);
             return Ok(());
         }
-        
+
         // Real implementation would use zfs destroy command
         // For now, just return success to avoid permission issues
         Ok(())
@@ -397,42 +443,57 @@ impl ZfsDatasetManager {
     }
 
     /// List snapshots for a dataset
-    pub async fn list_snapshots(&self, dataset_name: &str) -> Result<Vec<crate::advanced_features::SnapshotInfo>> {
+    pub async fn list_snapshots(
+        &self,
+        dataset_name: &str,
+    ) -> Result<Vec<crate::advanced_features::SnapshotInfo>> {
         tracing::debug!("Listing snapshots for dataset: {}", dataset_name);
-        
+
         let output = Command::new("zfs")
-            .args(&["list", "-H", "-p", "-t", "snapshot", "-o", "name,used,creation", dataset_name])
+            .args(&[
+                "list",
+                "-H",
+                "-p",
+                "-t",
+                "snapshot",
+                "-o",
+                "name,used,creation",
+                dataset_name,
+            ])
             .output()
             .await
-            .map_err(|e| ZfsError::DatasetError(DatasetError::PropertyError { 
-                reason: format!("Failed to list snapshots: {}", e)
-            }))?;
-        
+            .map_err(|e| {
+                ZfsError::DatasetError(DatasetError::PropertyError {
+                    reason: format!("Failed to list snapshots: {}", e),
+                })
+            })?;
+
         if !output.status.success() {
             // Return empty list if no snapshots or dataset doesn't exist
             return Ok(vec![]);
         }
-        
+
         let stdout = String::from_utf8_lossy(&output.stdout);
         let mut snapshots = Vec::new();
-        
+
         for line in stdout.lines() {
             let parts: Vec<&str> = line.split('\t').collect();
             if parts.len() >= 3 {
                 let snapshot_name = parts[0].to_string();
                 let used_space: u64 = parts[1].parse().unwrap_or(0);
                 let creation_time: u64 = parts[2].parse().unwrap_or(0);
-                
+
                 snapshots.push(crate::advanced_features::SnapshotInfo {
                     name: snapshot_name,
                     dataset: dataset_name.to_string(),
-                    created_at: std::time::UNIX_EPOCH + std::time::Duration::from_secs(creation_time),
+                    created_at: std::time::UNIX_EPOCH
+                        + std::time::Duration::from_secs(creation_time),
                     size_bytes: used_space,
                     referenced_bytes: used_space, // Approximation
                 });
             }
         }
-        
+
         Ok(snapshots)
     }
-} 
+}

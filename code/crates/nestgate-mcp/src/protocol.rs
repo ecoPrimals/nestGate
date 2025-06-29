@@ -1,5 +1,5 @@
 //! Enhanced MCP Protocol Implementation
-//! 
+//!
 //! Advanced MCP protocol handling integrating enhanced NestGate capabilities
 //! with v2 orchestrator-centric architecture
 
@@ -7,14 +7,14 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::SystemTime;
+use tracing::{debug, error, info, warn};
 use uuid::Uuid;
-use tracing::{debug, info, warn, error};
 
-use crate::types::{
-    SystemMetrics, ProviderCapabilities, StorageProtocol, StorageTier,
-    MountRequest, MountInfo, VolumeRequest, VolumeInfo, MountOptions
-};
 use crate::error::{Error, ErrorType};
+use crate::types::{
+    MountInfo, MountOptions, MountRequest, ProviderCapabilities, StorageProtocol, StorageTier,
+    SystemMetrics, VolumeInfo, VolumeRequest,
+};
 
 // Use specific Result type
 pub type Result<T> = std::result::Result<T, Error>;
@@ -62,7 +62,7 @@ pub enum MessageType {
     CapabilityRegistration,
     CapabilityQuery,
     CapabilityResponse,
-    
+
     // Storage operations
     VolumeCreate,
     VolumeDelete,
@@ -70,25 +70,25 @@ pub enum MessageType {
     VolumeUnmount,
     VolumeList,
     VolumeInfo,
-    
+
     // Performance and monitoring
     MetricsReport,
     MetricsQuery,
     HealthCheck,
     StatusUpdate,
-    
+
     // Federation and clustering
     FederationJoin,
     FederationLeave,
     FederationSync,
     FederationHeartbeat,
-    
+
     // Orchestrator v2 specific
     OrchestratorRoute,
     ServiceRegistration,
     ServiceDiscovery,
     LoadBalancing,
-    
+
     // Error handling
     Error,
     Acknowledgment,
@@ -101,7 +101,7 @@ pub enum MessagePayload {
     CapabilityRegistration(CapabilityRegistrationPayload),
     CapabilityQuery(CapabilityQueryPayload),
     CapabilityResponse(CapabilityResponsePayload),
-    
+
     // Storage operation payloads
     VolumeCreate(VolumeCreatePayload),
     VolumeDelete(VolumeDeletePayload),
@@ -109,25 +109,25 @@ pub enum MessagePayload {
     VolumeUnmount(VolumeUnmountPayload),
     VolumeList(VolumeListPayload),
     VolumeInfo(VolumeInfoPayload),
-    
+
     // Performance and monitoring payloads
     MetricsReport(MetricsReportPayload),
     MetricsQuery(MetricsQueryPayload),
     HealthCheck(HealthCheckPayload),
     StatusUpdate(StatusUpdatePayload),
-    
+
     // Federation payloads
     FederationJoin(FederationJoinPayload),
     FederationLeave(FederationLeavePayload),
     FederationSync(FederationSyncPayload),
     FederationHeartbeat(FederationHeartbeatPayload),
-    
+
     // Orchestrator v2 payloads
     OrchestratorRoute(OrchestratorRoutePayload),
     ServiceRegistration(ServiceRegistrationPayload),
     ServiceDiscovery(ServiceDiscoveryPayload),
     LoadBalancing(LoadBalancingPayload),
-    
+
     // Error handling payloads
     Error(ErrorPayload),
     Acknowledgment(AcknowledmentPayload),
@@ -541,33 +541,18 @@ impl ProtocolHandler {
             MessageType::CapabilityRegistration => {
                 self.handle_capability_registration(message).await
             }
-            MessageType::CapabilityQuery => {
-                self.handle_capability_query(message).await
-            }
-            MessageType::VolumeCreate => {
-                self.handle_volume_create(message).await
-            }
-            MessageType::VolumeMount => {
-                self.handle_volume_mount(message).await
-            }
-            MessageType::MetricsReport => {
-                self.handle_metrics_report(message).await
-            }
-            MessageType::HealthCheck => {
-                self.handle_health_check(message).await
-            }
-            MessageType::FederationJoin => {
-                self.handle_federation_join(message).await
-            }
-            MessageType::OrchestratorRoute => {
-                self.handle_orchestrator_route(message).await
-            }
-            MessageType::ServiceRegistration => {
-                self.handle_service_registration(message).await
-            }
-            _ => {
-                Err(Error::unsupported(format!("Message type {:?} not supported", message.message_type)))
-            }
+            MessageType::CapabilityQuery => self.handle_capability_query(message).await,
+            MessageType::VolumeCreate => self.handle_volume_create(message).await,
+            MessageType::VolumeMount => self.handle_volume_mount(message).await,
+            MessageType::MetricsReport => self.handle_metrics_report(message).await,
+            MessageType::HealthCheck => self.handle_health_check(message).await,
+            MessageType::FederationJoin => self.handle_federation_join(message).await,
+            MessageType::OrchestratorRoute => self.handle_orchestrator_route(message).await,
+            MessageType::ServiceRegistration => self.handle_service_registration(message).await,
+            _ => Err(Error::unsupported(format!(
+                "Message type {:?} not supported",
+                message.message_type
+            ))),
         }
     }
 
@@ -581,7 +566,7 @@ impl ProtocolHandler {
         // Direct handling for standalone mode
         Ok(Response::success(
             message.id,
-            ResponsePayload::CapabilityResponse(self.capabilities.clone())
+            ResponsePayload::CapabilityResponse(self.capabilities.clone()),
         ))
     }
 
@@ -589,7 +574,7 @@ impl ProtocolHandler {
         // Return our capabilities
         Ok(Response::success(
             _message.id,
-            ResponsePayload::CapabilityResponse(self.capabilities.clone())
+            ResponsePayload::CapabilityResponse(self.capabilities.clone()),
         ))
     }
 
@@ -600,7 +585,9 @@ impl ProtocolHandler {
         }
 
         // Direct handling for standalone mode
-        Err(Error::unsupported("Volume operations require orchestrator".to_string()))
+        Err(Error::unsupported(
+            "Volume operations require orchestrator".to_string(),
+        ))
     }
 
     async fn handle_volume_mount(&self, message: Message) -> Result<Response> {
@@ -610,7 +597,9 @@ impl ProtocolHandler {
         }
 
         // Direct handling for standalone mode
-        Err(Error::unsupported("Mount operations require orchestrator".to_string()))
+        Err(Error::unsupported(
+            "Mount operations require orchestrator".to_string(),
+        ))
     }
 
     async fn handle_metrics_report(&self, message: Message) -> Result<Response> {
@@ -620,10 +609,7 @@ impl ProtocolHandler {
         }
 
         // Acknowledge metrics in standalone mode
-        Ok(Response::success(
-            message.id,
-            ResponsePayload::Empty
-        ))
+        Ok(Response::success(message.id, ResponsePayload::Empty))
     }
 
     async fn handle_health_check(&self, message: Message) -> Result<Response> {
@@ -636,7 +622,7 @@ impl ProtocolHandler {
 
         Ok(Response::success(
             message.id,
-            ResponsePayload::HealthStatus(health_status)
+            ResponsePayload::HealthStatus(health_status),
         ))
     }
 
@@ -647,7 +633,9 @@ impl ProtocolHandler {
         }
 
         // Standalone mode doesn't support federation
-        Err(Error::unsupported("Federation requires orchestrator".to_string()))
+        Err(Error::unsupported(
+            "Federation requires orchestrator".to_string(),
+        ))
     }
 
     /// Handle orchestrator routing
@@ -658,17 +646,15 @@ impl ProtocolHandler {
                 // Create a simple response instead of recursing
                 Ok(Response::success(message.id, ResponsePayload::Empty))
             }
-            _ => {
-                Ok(Response::error(
-                    message.id,
-                    ErrorPayload {
-                        error_code: "invalid_payload".to_string(),
-                        error_message: "Invalid orchestrator route payload".to_string(),
-                        details: HashMap::new(),
-                        timestamp: SystemTime::now(),
-                    }
-                ))
-            }
+            _ => Ok(Response::error(
+                message.id,
+                ErrorPayload {
+                    error_code: "invalid_payload".to_string(),
+                    error_message: "Invalid orchestrator route payload".to_string(),
+                    details: HashMap::new(),
+                    timestamp: SystemTime::now(),
+                },
+            )),
         }
     }
 
@@ -679,15 +665,14 @@ impl ProtocolHandler {
         }
 
         // Standalone mode doesn't support service registration
-        Err(Error::unsupported("Service registration requires orchestrator".to_string()))
+        Err(Error::unsupported(
+            "Service registration requires orchestrator".to_string(),
+        ))
     }
 
     async fn route_to_orchestrator(&self, message: Message) -> Result<Response> {
         // In a real implementation, this would make an HTTP request to the orchestrator
         // For now, we'll return a placeholder response
-        Ok(Response::success(
-            message.id,
-            ResponsePayload::Empty
-        ))
+        Ok(Response::success(message.id, ResponsePayload::Empty))
     }
-} 
+}

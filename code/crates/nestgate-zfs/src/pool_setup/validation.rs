@@ -2,15 +2,14 @@
 //!
 //! Validation logic and safety checks for ZFS pool setup operations
 
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tracing::{debug, warn};
-use serde::{Serialize, Deserialize};
 
-use nestgate_core::{Result as CoreResult, StorageTier};
 use super::{
-    config::{PoolSetupConfiguration, DeviceDetectionConfig},
-    device_detection::{StorageDevice, DeviceType, SpeedClass},
+    config::PoolSetupConfiguration,
+    device_detection::{DeviceType, StorageDevice},
 };
+use nestgate_core::StorageTier;
 
 /// Result of validation operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -28,16 +27,16 @@ impl ValidationResult {
             warnings: Vec::new(),
         }
     }
-    
+
     pub fn add_error(&mut self, error: String) {
         self.is_valid = false;
         self.issues.push(error);
     }
-    
+
     pub fn add_warning(&mut self, warning: String) {
         self.warnings.push(warning);
     }
-    
+
     pub fn merge(&mut self, other: ValidationResult) {
         if !other.is_valid {
             self.is_valid = false;
@@ -87,22 +86,20 @@ impl PoolSetupValidator {
     /// Validate device with enhanced logic
     pub fn validate_device(&self, device: &StorageDevice) -> ValidationResult {
         let mut result = ValidationResult::new();
-        
+
         // Size validation
         if device.size_bytes < self.config.device_detection.min_device_size {
             result.add_error(format!(
                 "Device {} is too small: {} bytes (minimum: {} bytes)",
-                device.device_path,
-                device.size_bytes,
-                self.config.device_detection.min_device_size
+                device.device_path, device.size_bytes, self.config.device_detection.min_device_size
             ));
         }
-        
+
         // Path validation
         if !device.device_path.starts_with("/dev/") {
             result.add_error(format!("Invalid device path: {}", device.device_path));
         }
-        
+
         // Usage validation
         if device.in_use {
             if let Some(ref usage) = device.current_use {
@@ -118,25 +115,25 @@ impl PoolSetupValidator {
                 }
             }
         }
-        
+
         result
     }
-    
+
     /// Validate pool configuration with enhanced logic
     pub fn validate_pool_config(&self, config: &PoolSetupConfig) -> ValidationResult {
         let mut issues = Vec::new();
-        let mut warnings = Vec::new();
-        
+        let warnings = Vec::new();
+
         // Pool name validation
         if config.pool_name.is_empty() {
             issues.push("Pool name cannot be empty".to_string());
         }
-        
+
         // Device validation
         if config.devices.is_empty() {
             issues.push("No devices specified for pool creation".to_string());
         }
-        
+
         // Check minimum device count for topology
         let min_devices = match config.topology {
             PoolTopology::Single => 1,
@@ -145,14 +142,16 @@ impl PoolSetupValidator {
             PoolTopology::RaidZ2 => 4,
             PoolTopology::RaidZ3 => 5,
         };
-        
+
         if config.devices.len() < min_devices {
             issues.push(format!(
                 "Topology {:?} requires at least {} devices, but {} provided",
-                config.topology, min_devices, config.devices.len()
+                config.topology,
+                min_devices,
+                config.devices.len()
             ));
         }
-        
+
         ValidationResult {
             is_valid: issues.is_empty(),
             issues,

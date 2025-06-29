@@ -1,36 +1,52 @@
 //! Enhanced Configuration Management for NestGate v2
-//! 
+//!
 //! Advanced configuration capabilities with v2 orchestrator-centric architecture
+//!
+//! ## Encryption Architecture Note
+//!
+//! NestGate is **encryption-agnostic** by design:
+//! - NestGate handles storage, ZFS operations, and replication
+//! - External systems (like BearDog) handle encryption, keys, and security
+//! - This separation allows NestGate to be a pure storage layer
+//! - BearDog (or other providers) can use NestGate for storage while handling encryption
+//!
+//! Configuration options marked as "encryption" are typically:
+//! - Metadata tracking (is this data encrypted?)
+//! - Hints/preferences for external encryption providers
+//! - NOT actual encryption operations performed by NestGate
 
+use config::{Config as ConfigBuilder, Environment as ConfigEnvironment, File};
 use serde::{Deserialize, Serialize};
-use std::path::Path;
-use config::{Config as ConfigBuilder, File, Environment as ConfigEnvironment};
 use std::collections::HashMap;
+use std::path::Path;
 use uuid;
 
 // Re-export from existing error module
-use crate::error::{Result, NestGateError};
+use crate::error::{NestGateError, Result};
 
 /// Main configuration structure for the NestGate v2 system
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     /// System-wide settings
     pub system: SystemConfig,
-    
+
     /// Storage configuration
     pub storage: StorageConfig,
-    
+
     /// Security settings
     pub security: SecurityConfig,
-    
+
     /// Monitoring configuration
     pub monitoring: MonitoringConfig,
-    
+
     /// MCP integration configuration (from Phase 1)
     pub mcp: Option<McpConfig>,
-    
+
     /// Federation configuration
     pub federation: Option<FederationConfig>,
+
+    /// Service endpoints configuration (replaces hardcoded URLs)
+    pub endpoints: ServiceEndpoints,
 }
 
 /// System-wide configuration settings with enhanced capabilities
@@ -38,19 +54,19 @@ pub struct Config {
 pub struct SystemConfig {
     /// Log level for the system
     pub log_level: String,
-    
+
     /// Data directory path
     pub data_dir: String,
-    
+
     /// Temporary directory path
     pub temp_dir: String,
-    
+
     /// Maximum number of concurrent operations
     pub max_concurrent_ops: usize,
-    
+
     /// System identification
     pub node_id: String,
-    
+
     /// Environment (dev, test, prod)
     pub environment: String,
 }
@@ -63,13 +79,13 @@ pub struct SystemConfig {
 pub struct StorageConfig {
     /// Cache size in bytes
     pub cache_size: u64,
-    
+
     /// Maximum file size in bytes
     pub max_file_size: u64,
-    
+
     /// Storage tier configurations
     pub tiers: Vec<StorageTierConfig>,
-    
+
     /// Storage protocols configuration
     pub protocols: StorageProtocolsConfig,
 }
@@ -79,16 +95,16 @@ pub struct StorageConfig {
 pub struct StorageTierConfig {
     /// Tier name
     pub name: String,
-    
+
     /// Tier type (hot, warm, cold, archive)
     pub tier_type: String,
-    
+
     /// Storage path
     pub path: String,
-    
+
     /// Maximum capacity in bytes
     pub capacity: u64,
-    
+
     /// Performance configuration
     pub performance: TierPerformanceConfig,
 }
@@ -98,10 +114,10 @@ pub struct StorageTierConfig {
 pub struct TierPerformanceConfig {
     /// Maximum IOPS
     pub max_iops: u64,
-    
+
     /// Maximum throughput in MB/s
     pub max_throughput: u64,
-    
+
     /// Latency target in milliseconds
     pub latency_target: f64,
 }
@@ -111,13 +127,13 @@ pub struct TierPerformanceConfig {
 pub struct StorageProtocolsConfig {
     /// NFS configuration
     pub nfs: Option<NfsConfig>,
-    
+
     /// SMB configuration
     pub smb: Option<SmbConfig>,
-    
+
     /// iSCSI configuration
     pub iscsi: Option<IscsiConfig>,
-    
+
     /// S3 configuration
     pub s3: Option<S3Config>,
 }
@@ -127,13 +143,13 @@ pub struct StorageProtocolsConfig {
 pub struct NfsConfig {
     /// NFS version (3, 4, 4.1, 4.2)
     pub version: String,
-    
+
     /// Export path
     pub export_path: String,
-    
+
     /// Allowed clients
     pub allowed_clients: Vec<String>,
-    
+
     /// Mount options
     pub mount_options: HashMap<String, String>,
 }
@@ -143,13 +159,13 @@ pub struct NfsConfig {
 pub struct SmbConfig {
     /// SMB version (2, 3, 3.1)
     pub version: String,
-    
+
     /// Share name
     pub share_name: String,
-    
+
     /// Workgroup
     pub workgroup: String,
-    
+
     /// Authentication method
     pub auth_method: String,
 }
@@ -159,10 +175,10 @@ pub struct SmbConfig {
 pub struct IscsiConfig {
     /// Target name
     pub target_name: String,
-    
+
     /// Portal address
     pub portal: String,
-    
+
     /// Authentication settings
     pub auth: IscsiAuthConfig,
 }
@@ -172,10 +188,10 @@ pub struct IscsiConfig {
 pub struct IscsiAuthConfig {
     /// CHAP username
     pub username: Option<String>,
-    
+
     /// CHAP secret
     pub secret: Option<String>,
-    
+
     /// Mutual CHAP
     pub mutual_chap: bool,
 }
@@ -185,16 +201,16 @@ pub struct IscsiAuthConfig {
 pub struct S3Config {
     /// S3 endpoint
     pub endpoint: String,
-    
+
     /// Bucket name
     pub bucket: String,
-    
+
     /// Region
     pub region: String,
-    
+
     /// Access key ID
     pub access_key_id: String,
-    
+
     /// Secret access key
     pub secret_access_key: String,
 }
@@ -204,22 +220,23 @@ pub struct S3Config {
 pub struct SecurityConfig {
     /// Authentication method to use
     pub auth_method: String,
-    
-    /// Encryption algorithm to use
+
+    /// Encryption algorithm preference (for external providers like BearDog)
+    /// Note: NestGate itself does not perform encryption - this is a hint for external systems
     pub encryption_algorithm: String,
-    
+
     /// Number of days between key rotations
     pub key_rotation_days: u32,
-    
+
     /// Maximum number of failed login attempts
     pub max_failed_attempts: u32,
-    
+
     /// JWT configuration
     pub jwt: Option<JwtConfig>,
-    
+
     /// TLS configuration
     pub tls: Option<TlsConfig>,
-    
+
     /// RBAC configuration
     pub rbac: RbacConfig,
 }
@@ -229,13 +246,13 @@ pub struct SecurityConfig {
 pub struct JwtConfig {
     /// JWT secret key
     pub secret: String,
-    
+
     /// Token expiration in seconds
     pub expiration: u64,
-    
+
     /// Issuer
     pub issuer: String,
-    
+
     /// Audience
     pub audience: String,
 }
@@ -245,13 +262,13 @@ pub struct JwtConfig {
 pub struct TlsConfig {
     /// Certificate file path
     pub cert_file: String,
-    
+
     /// Private key file path
     pub key_file: String,
-    
+
     /// CA certificate file path
     pub ca_file: Option<String>,
-    
+
     /// Minimum TLS version
     pub min_version: String,
 }
@@ -261,10 +278,10 @@ pub struct TlsConfig {
 pub struct RbacConfig {
     /// Enable RBAC
     pub enabled: bool,
-    
+
     /// Default role for new users
     pub default_role: String,
-    
+
     /// Role definitions
     pub roles: HashMap<String, RoleDefinition>,
 }
@@ -274,10 +291,10 @@ pub struct RbacConfig {
 pub struct RoleDefinition {
     /// Role name
     pub name: String,
-    
+
     /// Role description
     pub description: String,
-    
+
     /// Permissions
     pub permissions: Vec<String>,
 }
@@ -287,22 +304,22 @@ pub struct RoleDefinition {
 pub struct MonitoringConfig {
     /// Interval in seconds between metrics collection
     pub metrics_interval: u32,
-    
+
     /// Log level for system logging
     pub log_level: String,
-    
+
     /// Path to the log file
     pub log_file: String,
-    
+
     /// Maximum size in bytes before log rotation
     pub log_rotation_size: u32,
-    
+
     /// Number of days to retain log files
     pub log_retention_days: u32,
-    
+
     /// Prometheus configuration
     pub prometheus: Option<PrometheusConfig>,
-    
+
     /// Alert configuration
     pub alerts: AlertConfig,
 }
@@ -312,10 +329,10 @@ pub struct MonitoringConfig {
 pub struct PrometheusConfig {
     /// Enable Prometheus metrics
     pub enabled: bool,
-    
+
     /// Metrics endpoint port
     pub port: u16,
-    
+
     /// Metrics path
     pub path: String,
 }
@@ -325,10 +342,10 @@ pub struct PrometheusConfig {
 pub struct AlertConfig {
     /// Enable alerts
     pub enabled: bool,
-    
+
     /// Alert thresholds
     pub thresholds: AlertThresholds,
-    
+
     /// Notification configuration
     pub notifications: NotificationConfig,
 }
@@ -338,16 +355,16 @@ pub struct AlertConfig {
 pub struct AlertThresholds {
     /// CPU usage threshold as a percentage (0.0 - 100.0)
     pub cpu_threshold: f64,
-    
+
     /// Memory usage threshold as a percentage (0.0 - 100.0)
     pub memory_threshold: f64,
-    
+
     /// Disk usage threshold as a percentage (0.0 - 100.0)
     pub disk_threshold: f64,
-    
+
     /// Network latency threshold in milliseconds
     pub latency_threshold: f64,
-    
+
     /// Error rate threshold as a percentage
     pub error_rate_threshold: f64,
 }
@@ -357,10 +374,10 @@ pub struct AlertThresholds {
 pub struct NotificationConfig {
     /// Email notifications
     pub email: Option<EmailConfig>,
-    
+
     /// Slack notifications
     pub slack: Option<SlackConfig>,
-    
+
     /// Webhook notifications
     pub webhook: Option<WebhookConfig>,
 }
@@ -370,19 +387,19 @@ pub struct NotificationConfig {
 pub struct EmailConfig {
     /// SMTP server
     pub smtp_server: String,
-    
+
     /// SMTP port
     pub smtp_port: u16,
-    
+
     /// Username
     pub username: String,
-    
+
     /// Password
     pub password: String,
-    
+
     /// From address
     pub from: String,
-    
+
     /// To addresses
     pub to: Vec<String>,
 }
@@ -392,10 +409,10 @@ pub struct EmailConfig {
 pub struct SlackConfig {
     /// Webhook URL
     pub webhook_url: String,
-    
+
     /// Channel
     pub channel: String,
-    
+
     /// Username
     pub username: String,
 }
@@ -405,10 +422,10 @@ pub struct SlackConfig {
 pub struct WebhookConfig {
     /// Webhook URL
     pub url: String,
-    
+
     /// HTTP method
     pub method: String,
-    
+
     /// Headers
     pub headers: HashMap<String, String>,
 }
@@ -418,16 +435,16 @@ pub struct WebhookConfig {
 pub struct McpConfig {
     /// Enable MCP integration
     pub enabled: bool,
-    
+
     /// MCP cluster endpoint
     pub cluster_endpoint: String,
-    
+
     /// Node identifier
     pub node_id: String,
-    
+
     /// Federation enabled
     pub federation_enabled: bool,
-    
+
     /// Capabilities configuration
     pub capabilities: McpCapabilitiesConfig,
 }
@@ -437,13 +454,13 @@ pub struct McpConfig {
 pub struct McpCapabilitiesConfig {
     /// Supported storage protocols
     pub storage_protocols: Vec<String>,
-    
+
     /// Supported storage tiers
     pub storage_tiers: Vec<String>,
-    
+
     /// Maximum volume size
     pub max_volume_size: u64,
-    
+
     /// Maximum volumes
     pub max_volumes: u32,
 }
@@ -453,18 +470,72 @@ pub struct McpCapabilitiesConfig {
 pub struct FederationConfig {
     /// Enable federation
     pub enabled: bool,
-    
+
     /// Cluster name
     pub cluster_name: String,
-    
+
     /// Federation mode (leader, follower, observer)
     pub mode: String,
-    
+
     /// Peer nodes
     pub peers: Vec<String>,
-    
+
     /// Heartbeat interval in seconds
     pub heartbeat_interval: u64,
+}
+
+/// Service endpoint configuration to eliminate hardcoded URLs
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceEndpoints {
+    /// NestGate API endpoints
+    pub nestgate_api: String,
+    pub nestgate_ui: String,
+
+    /// External service endpoints  
+    pub songbird_orchestrator: String,
+    pub beardog_security: String,
+    pub ecosystem_orchestrator: String,
+
+    /// Development and testing endpoints
+    pub prometheus_metrics: Option<String>,
+    pub grafana_dashboard: Option<String>,
+
+    /// Discovery endpoints
+    pub discovery_endpoints: Vec<String>,
+}
+
+impl Default for ServiceEndpoints {
+    fn default() -> Self {
+        Self {
+            // NestGate services
+            nestgate_api: std::env::var("NESTGATE_API_URL")
+                .unwrap_or_else(|_| "http://localhost:8080".to_string()),
+            nestgate_ui: std::env::var("NESTGATE_UI_URL")
+                .unwrap_or_else(|_| "http://localhost:3000".to_string()),
+
+            // External services with environment fallbacks
+            songbird_orchestrator: std::env::var("SONGBIRD_URL")
+                .unwrap_or_else(|_| "http://songbird-orchestrator:8000".to_string()),
+            beardog_security: std::env::var("BEARDOG_URL")
+                .unwrap_or_else(|_| "https://beardog.local:8443".to_string()),
+            ecosystem_orchestrator: std::env::var("ECOSYSTEM_ORCHESTRATOR_URL")
+                .unwrap_or_else(|_| "http://localhost:8080".to_string()),
+
+            // Optional monitoring services
+            prometheus_metrics: std::env::var("PROMETHEUS_URL").ok(),
+            grafana_dashboard: std::env::var("GRAFANA_URL").ok(),
+
+            // Discovery endpoints with smart defaults
+            discovery_endpoints: std::env::var("DISCOVERY_ENDPOINTS")
+                .map(|s| s.split(',').map(String::from).collect())
+                .unwrap_or_else(|_| {
+                    vec![
+                        "http://localhost:8080/api/v1/discovery".to_string(),
+                        "http://127.0.0.1:3001/api/v1/discovery".to_string(),
+                    ]
+                }),
+        }
+    }
 }
 
 // Network configuration constants and utilities
@@ -503,7 +574,7 @@ impl Default for NetworkConfig {
     fn default() -> Self {
         // Check if we're in Songbird mode or standalone mode
         let songbird_mode = std::env::var("SONGBIRD_URL").is_ok();
-        
+
         if songbird_mode {
             // Songbird-enhanced mode: use service names
             Self {
@@ -541,7 +612,7 @@ impl NetworkConfig {
             custom_host: None,
         }
     }
-    
+
     /// Create a new network config for all interfaces (less secure, for production)
     pub fn all_interfaces(port: u16) -> Self {
         Self {
@@ -552,7 +623,7 @@ impl NetworkConfig {
             custom_host: None,
         }
     }
-    
+
     /// Create a new network config with custom host
     pub fn custom_host(host: &str, port: u16) -> Self {
         Self {
@@ -563,7 +634,7 @@ impl NetworkConfig {
             custom_host: Some(host.to_string()),
         }
     }
-    
+
     /// Get the full bind address
     pub fn bind_address(&self) -> String {
         if let Some(ref custom) = self.custom_host {
@@ -572,7 +643,7 @@ impl NetworkConfig {
             format!("{}:{}", self.bind_interface, self.port)
         }
     }
-    
+
     /// Get the interface to bind to
     pub fn interface(&self) -> &str {
         if let Some(ref custom) = self.custom_host {
@@ -581,15 +652,18 @@ impl NetworkConfig {
             &self.bind_interface
         }
     }
-    
+
     /// Check if this is a secure localhost-only binding
     pub fn is_localhost_only(&self) -> bool {
-        self.localhost_only || 
-        self.bind_interface == DEFAULT_LOCALHOST || 
-        self.bind_interface == DEFAULT_IPV6_LOCALHOST ||
-        self.custom_host.as_ref().is_some_and(|h| h == DEFAULT_LOCALHOST || h == DEFAULT_IPV6_LOCALHOST)
+        self.localhost_only
+            || self.bind_interface == DEFAULT_LOCALHOST
+            || self.bind_interface == DEFAULT_IPV6_LOCALHOST
+            || self
+                .custom_host
+                .as_ref()
+                .is_some_and(|h| h == DEFAULT_LOCALHOST || h == DEFAULT_IPV6_LOCALHOST)
     }
-    
+
     /// Check if this exposes the service to external networks
     pub fn is_externally_accessible(&self) -> bool {
         !self.is_localhost_only()
@@ -630,12 +704,13 @@ impl EnvironmentConfig {
     pub fn default_network_config(&self, service_port: u16) -> NetworkConfig {
         // Check if we're in Songbird mode
         let songbird_mode = std::env::var("SONGBIRD_URL").is_ok();
-        
+
         if songbird_mode {
             // Songbird-enhanced mode: service-based addressing
             NetworkConfig {
-                bind_interface: std::env::var("SONGBIRD_SERVICE_NAME")
-                    .unwrap_or_else(|_| format!("nestgate-{}", uuid::Uuid::new_v4().to_string()[..8].to_string())),
+                bind_interface: std::env::var("SONGBIRD_SERVICE_NAME").unwrap_or_else(|_| {
+                    format!("nestgate-{}", &uuid::Uuid::new_v4().to_string()[..8])
+                }),
                 port: 0, // Always let Songbird allocate
                 ipv6_enabled: false,
                 localhost_only: false, // Songbird handles security
@@ -672,10 +747,10 @@ impl EnvironmentConfig {
 
 impl Config {
     /// Loads configuration from the specified path with environment variable support
-    /// 
+    ///
     /// # Arguments
     /// * `path` - The path to the configuration file
-    /// 
+    ///
     /// # Errors
     /// * Returns error if the configuration file cannot be read or parsed
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
@@ -693,11 +768,11 @@ impl Config {
     /// Loads configuration from multiple sources with priority
     pub fn load_with_sources(sources: Vec<&str>) -> Result<Self> {
         let mut builder = ConfigBuilder::builder();
-        
+
         for source in sources {
             builder = builder.add_source(File::with_name(source).required(false));
         }
-        
+
         let config = builder
             .add_source(ConfigEnvironment::with_prefix("NESTGATE"))
             .build()
@@ -709,43 +784,56 @@ impl Config {
     }
 
     /// Validates the configuration
-    /// 
+    ///
     /// # Errors
     /// * Returns error if any configuration values are invalid
     pub fn validate(&self) -> Result<()> {
         // Validate system config
         if self.system.max_concurrent_ops == 0 {
-            return Err(NestGateError::Validation("max_concurrent_ops must be greater than 0".to_string()));
+            return Err(NestGateError::Validation(
+                "max_concurrent_ops must be greater than 0".to_string(),
+            ));
         }
 
         // Orchestrator validation removed - this is Songbird's responsibility
 
         // Validate storage config
         if self.storage.cache_size == 0 {
-            return Err(NestGateError::Validation("cache_size must be greater than 0".to_string()));
+            return Err(NestGateError::Validation(
+                "cache_size must be greater than 0".to_string(),
+            ));
         }
 
         // Validate security config
         if self.security.max_failed_attempts == 0 {
-            return Err(NestGateError::Validation("max_failed_attempts must be greater than 0".to_string()));
+            return Err(NestGateError::Validation(
+                "max_failed_attempts must be greater than 0".to_string(),
+            ));
         }
 
         // Validate monitoring config
         if self.monitoring.metrics_interval == 0 {
-            return Err(NestGateError::Validation("metrics_interval must be greater than 0".to_string()));
+            return Err(NestGateError::Validation(
+                "metrics_interval must be greater than 0".to_string(),
+            ));
         }
 
         // Validate MCP config if enabled
         if let Some(mcp) = &self.mcp {
             if mcp.enabled && mcp.cluster_endpoint.is_empty() {
-                return Err(NestGateError::Validation("MCP cluster_endpoint cannot be empty when MCP is enabled".to_string()));
+                return Err(NestGateError::Validation(
+                    "MCP cluster_endpoint cannot be empty when MCP is enabled".to_string(),
+                ));
             }
         }
 
         // Validate federation config if enabled
         if let Some(federation) = &self.federation {
             if federation.enabled && federation.cluster_name.is_empty() {
-                return Err(NestGateError::Validation("Federation cluster_name cannot be empty when federation is enabled".to_string()));
+                return Err(NestGateError::Validation(
+                    "Federation cluster_name cannot be empty when federation is enabled"
+                        .to_string(),
+                ));
             }
         }
 
@@ -754,24 +842,22 @@ impl Config {
 
     /// Save configuration to a file
     pub async fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
-        let serialized = toml::to_string_pretty(self)
-            .map_err(|e| NestGateError::Configuration(format!("Failed to serialize config: {}", e)))?;
-        
-        tokio::fs::write(path, serialized).await
-            .map_err(|e| NestGateError::Configuration(format!("Failed to write config file: {}", e)))?;
-        
+        let serialized = toml::to_string_pretty(self).map_err(|e| {
+            NestGateError::Configuration(format!("Failed to serialize config: {}", e))
+        })?;
+
+        tokio::fs::write(path, serialized).await.map_err(|e| {
+            NestGateError::Configuration(format!("Failed to write config file: {}", e))
+        })?;
+
         Ok(())
     }
 
     /// Gets the configuration for a specific environment
     pub fn for_environment(env: &str) -> Result<Self> {
         let env_config = format!("config/{}", env);
-        let config_files = vec![
-            "config/default",
-            &env_config,
-            "config/local",
-        ];
-        
+        let config_files = vec!["config/default", &env_config, "config/local"];
+
         Self::load_with_sources(config_files)
     }
 }
@@ -779,8 +865,11 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         // Generate dynamic node ID instead of hardcoding
-        let node_id = format!("nestgate-{}", uuid::Uuid::new_v4().simple().to_string()[..8].to_string());
-        
+        let node_id = format!(
+            "nestgate-{}",
+            &uuid::Uuid::new_v4().simple().to_string()[..8]
+        );
+
         Self {
             system: SystemConfig {
                 log_level: "info".to_string(),
@@ -793,7 +882,7 @@ impl Default for Config {
             },
             // Orchestrator config removed - this is Songbird's responsibility
             storage: StorageConfig {
-                cache_size: 1024 * 1024 * 1024, // 1GB
+                cache_size: 1024 * 1024 * 1024,          // 1GB
                 max_file_size: 1024 * 1024 * 1024 * 100, // 100GB
                 tiers: vec![],
                 protocols: StorageProtocolsConfig {
@@ -845,7 +934,7 @@ impl Default for Config {
                 },
             },
             mcp: Some(McpConfig {
-                enabled: false, // Disabled by default - Songbird manages MCP
+                enabled: false,                   // Disabled by default - Songbird manages MCP
                 cluster_endpoint: "".to_string(), // Empty - Songbird provides endpoint
                 node_id: node_id.clone(),
                 federation_enabled: false,
@@ -857,12 +946,13 @@ impl Default for Config {
                 },
             }),
             federation: Some(FederationConfig {
-                enabled: false, // Disabled by default - Songbird manages federation
-                cluster_name: "".to_string(), // Empty - Songbird provides cluster name
+                enabled: false,                 // Disabled by default - Songbird manages federation
+                cluster_name: "".to_string(),   // Empty - Songbird provides cluster name
                 mode: "standalone".to_string(), // Default to standalone
-                peers: vec![], // Empty - Songbird discovers peers
+                peers: vec![],                  // Empty - Songbird discovers peers
                 heartbeat_interval: 30,
             }),
+            endpoints: ServiceEndpoints::default(),
         }
     }
 }
@@ -870,8 +960,8 @@ impl Default for Config {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::NamedTempFile;
     use std::io::Write;
+    use tempfile::NamedTempFile;
 
     #[test]
     fn test_default_config() {
@@ -884,11 +974,11 @@ mod tests {
     #[test]
     fn test_config_validation() {
         let mut config = Config::default();
-        
+
         // Test invalid max_concurrent_ops
         config.system.max_concurrent_ops = 0;
         assert!(config.validate().is_err());
-        
+
         // Reset and test valid config
         config = Config::default();
         assert!(config.validate().is_ok());
@@ -901,7 +991,7 @@ mod tests {
             .expect("Failed to serialize config - this should never fail with default config");
         let deserialized: Config = serde_yaml::from_str(&serialized)
             .expect("Failed to deserialize config - serialization format may be corrupted");
-        
+
         assert_eq!(config.system.log_level, deserialized.system.log_level);
     }
 
@@ -979,17 +1069,18 @@ federation:
   peers: []
   heartbeat_interval: 30
 "#
-        ).unwrap();
+        )
+        .unwrap();
 
         // Copy to the new path with .yaml extension
         std::fs::copy(temp_file.path(), &temp_path).unwrap();
-        
+
         let config = Config::load(&temp_path).unwrap();
         assert_eq!(config.system.log_level, "debug");
         // Orchestrator port removed - this is Songbird's responsibility
         assert_eq!(config.system.max_concurrent_ops, 500);
         assert!(config.validate().is_ok());
-        
+
         // Clean up
         std::fs::remove_file(&temp_path).unwrap();
     }
@@ -997,25 +1088,26 @@ federation:
     #[tokio::test]
     async fn test_config_file_operations() {
         let config = Config::default();
-        let temp_file = NamedTempFile::new()
-            .expect("Failed to create temporary file for config test");
-        
+        let temp_file =
+            NamedTempFile::new().expect("Failed to create temporary file for config test");
+
         // Test saving config
-        config.save(temp_file.path()).await
+        config
+            .save(temp_file.path())
+            .await
             .expect("Failed to save config to temporary file");
 
         // Create a permanent temp path for loading test
         let temp_path = temp_file.path().with_extension("test.toml");
         std::fs::copy(temp_file.path(), &temp_path)
             .expect("Failed to copy temp file for loading test");
-        
-        let loaded_config = Config::load(&temp_path)
-            .expect("Failed to load config from temporary file");
-        
+
+        let loaded_config =
+            Config::load(&temp_path).expect("Failed to load config from temporary file");
+
         assert_eq!(config.system.log_level, loaded_config.system.log_level);
 
         // Cleanup
-        std::fs::remove_file(&temp_path)
-            .expect("Failed to cleanup temporary config file");
+        std::fs::remove_file(&temp_path).expect("Failed to cleanup temporary config file");
     }
-} 
+}

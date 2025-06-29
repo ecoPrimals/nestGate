@@ -3,19 +3,20 @@
 //! This example demonstrates how to set up and run the NestGate API server
 //! with full ZFS integration for development and testing purposes.
 
+use nestgate_api::{serve_with_zfs, Config};
+use nestgate_zfs::{config::ZfsConfig, ZfsManager};
 use std::sync::Arc;
-use tracing::{info, warn, error};
+use tracing::{error, info, warn};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use nestgate_api::{Config, serve_with_zfs};
-use nestgate_zfs::{ZfsManager, config::ZfsConfig};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize tracing
     tracing_subscriber::registry()
         .with(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "nestgate_api=debug,nestgate_zfs=debug,tower_http=debug".into()),
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+                "nestgate_api=debug,nestgate_zfs=debug,tower_http=debug".into()
+            }),
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
@@ -52,7 +53,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("  Bind address: {}", api_config.bind_addr);
     info!("  ZFS API enabled: {}", api_config.enable_zfs_api);
     info!("  Request timeout: {}s", api_config.request_timeout);
-    info!("  Max body size: {}MB", api_config.max_body_size / (1024 * 1024));
+    info!(
+        "  Max body size: {}MB",
+        api_config.max_body_size / (1024 * 1024)
+    );
 
     // Print available endpoints
     print_available_endpoints();
@@ -74,7 +78,7 @@ fn print_available_endpoints() {
     info!("    GET  /api/v1/status                    - System status");
     info!("    GET  /api/v1/zfs/health                - ZFS health status");
     info!("    GET  /api/v1/zfs/status                - ZFS system status");
-    
+
     info!("  Pool Management:");
     info!("    GET  /api/v1/zfs/pools                 - List all pools");
     info!("    POST /api/v1/zfs/pools                 - Create new pool");
@@ -82,7 +86,7 @@ fn print_available_endpoints() {
     info!("    DELETE /api/v1/zfs/pools/{{name}}       - Destroy pool");
     info!("    GET  /api/v1/zfs/pools/{{name}}/status   - Get pool status");
     info!("    POST /api/v1/zfs/pools/{{name}}/scrub    - Start pool scrub");
-    
+
     info!("  Dataset Management:");
     info!("    GET  /api/v1/zfs/datasets              - List all datasets");
     info!("    POST /api/v1/zfs/datasets              - Create new dataset");
@@ -90,12 +94,12 @@ fn print_available_endpoints() {
     info!("    DELETE /api/v1/zfs/datasets/{{name}}    - Destroy dataset");
     info!("    GET  /api/v1/zfs/datasets/{{name}}/properties - Get dataset properties");
     info!("    PUT  /api/v1/zfs/datasets/{{name}}/properties - Set dataset properties");
-    
+
     info!("  Snapshot Management:");
     info!("    GET  /api/v1/zfs/datasets/{{name}}/snapshots        - List snapshots");
     info!("    POST /api/v1/zfs/datasets/{{name}}/snapshots        - Create snapshot");
     info!("    DELETE /api/v1/zfs/datasets/{{name}}/snapshots/{{snap}} - Delete snapshot");
-    
+
     info!("  AI & Optimization:");
     info!("    POST /api/v1/zfs/ai/tier-prediction    - Get tier prediction");
     info!("    GET  /api/v1/zfs/optimization/analytics - Get performance analytics");
@@ -110,4 +114,4 @@ fn print_available_endpoints() {
     info!("    -d '{{\"name\":\"test_pool\",\"devices\":[\"/dev/loop0\"]}}'");
     info!("");
     info!("Web interface (if available): http://localhost:3000/");
-} 
+}

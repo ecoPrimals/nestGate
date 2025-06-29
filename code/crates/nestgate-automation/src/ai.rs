@@ -2,11 +2,11 @@
 //!
 //! Coordinates AI services across the NestGate ecosystem
 
+use crate::types::{AiPredictionResult, EcosystemService, ServicePlan};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{info, warn, error, debug};
-use crate::types::{AiPredictionResult, ServicePlan, EcosystemService};
+use tracing::{debug, info};
 
 /// AI automation coordinator
 #[derive(Debug)]
@@ -14,7 +14,12 @@ pub struct AiAutomationCoordinator {
     config: AiConfig,
     connected_services: Arc<RwLock<HashMap<String, EcosystemService>>>,
     active_predictions: Arc<RwLock<HashMap<String, AiPredictionResult>>>,
+    #[allow(dead_code)]
     service_plans: Arc<RwLock<HashMap<String, ServicePlan>>>,
+    #[allow(dead_code)]
+    predictor: Arc<crate::prediction::TierPredictor>,
+    #[allow(dead_code)]
+    analyzer: Arc<crate::analysis::DatasetAnalyzer>,
 }
 
 /// Configuration for AI automation
@@ -47,36 +52,38 @@ impl AiAutomationCoordinator {
             connected_services: Arc::new(RwLock::new(HashMap::new())),
             active_predictions: Arc::new(RwLock::new(HashMap::new())),
             service_plans: Arc::new(RwLock::new(HashMap::new())),
+            predictor: Arc::new(crate::prediction::TierPredictor::new()),
+            analyzer: Arc::new(crate::analysis::DatasetAnalyzer::new()),
         }
     }
 
     /// Initialize AI automation with service discovery
     pub async fn initialize(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         info!("🤖 Initializing AI automation coordinator...");
-        
+
         // Discover available AI services in ecosystem
         self.discover_ai_services().await?;
-        
+
         // Initialize prediction engines
         if self.config.enable_tier_prediction {
             self.initialize_tier_prediction().await?;
             info!("🎯 Tier prediction engine initialized");
         }
-        
+
         if self.config.enable_workload_analysis {
             self.initialize_workload_analysis().await?;
             info!("📊 Workload analysis engine initialized");
         }
-        
+
         if self.config.enable_optimization {
             self.initialize_optimization_engine().await?;
             info!("⚡ Optimization engine initialized");
         }
-        
+
         info!("✅ AI automation coordinator ready");
         Ok(())
     }
-    
+
     /// Predict optimal storage tier for file
     pub async fn predict_tier(
         &self,
@@ -84,38 +91,44 @@ impl AiAutomationCoordinator {
         file_metadata: Option<HashMap<String, String>>,
     ) -> Result<AiPredictionResult, Box<dyn std::error::Error>> {
         debug!("🔍 Predicting tier for file: {}", file_path);
-        
+
         // Select best AI service for this prediction
         let service_plan = self.select_prediction_service().await?;
-        
+
         // Execute prediction based on service plan
         let prediction = match service_plan {
-            ServicePlan::SquirrelMcp { squirrel_id, toadstool_id } => {
-                self.predict_via_squirrel_mcp(&squirrel_id, &toadstool_id, file_path, file_metadata).await?
+            ServicePlan::SquirrelMcp {
+                squirrel_id,
+                toadstool_id,
+            } => {
+                self.predict_via_squirrel_mcp(&squirrel_id, &toadstool_id, file_path, file_metadata)
+                    .await?
             }
             ServicePlan::DirectToadstool { toadstool_id } => {
-                self.predict_via_toadstool(&toadstool_id, file_path, file_metadata).await?
+                self.predict_via_toadstool(&toadstool_id, file_path, file_metadata)
+                    .await?
             }
             ServicePlan::DistributedNestGate { peer_ids } => {
-                self.predict_via_distributed(&peer_ids, file_path, file_metadata).await?
+                self.predict_via_distributed(&peer_ids, file_path, file_metadata)
+                    .await?
             }
-            ServicePlan::Fallback => {
-                self.predict_via_fallback(file_path, file_metadata).await?
-            }
+            ServicePlan::Fallback => self.predict_via_fallback(file_path, file_metadata).await?,
         };
-        
+
         // Cache prediction if confidence is high enough
         if prediction.confidence >= self.config.prediction_confidence_threshold {
             let mut cache = self.active_predictions.write().await;
             cache.insert(file_path.to_string(), prediction.clone());
         }
-        
-        info!("✅ Tier prediction complete: {:?} (confidence: {:.2})", 
-              prediction.predicted_tier, prediction.confidence);
-        
+
+        info!(
+            "✅ Tier prediction complete: {:?} (confidence: {:.2})",
+            prediction.predicted_tier, prediction.confidence
+        );
+
         Ok(prediction)
     }
-    
+
     /// Analyze workload patterns
     pub async fn analyze_workload(
         &self,
@@ -123,78 +136,88 @@ impl AiAutomationCoordinator {
         timeframe_hours: u32,
     ) -> Result<WorkloadAnalysis, Box<dyn std::error::Error>> {
         info!("📊 Analyzing workload for dataset: {}", dataset_name);
-        
+
         // Collect workload metrics
-        let metrics = self.collect_workload_metrics(dataset_name, timeframe_hours).await?;
-        
+        let metrics = self
+            .collect_workload_metrics(dataset_name, timeframe_hours)
+            .await?;
+
         // Analyze patterns using best available service
         let service_plan = self.select_analysis_service().await?;
-        let analysis = self.execute_workload_analysis(&service_plan, &metrics).await?;
-        
+        let analysis = self
+            .execute_workload_analysis(&service_plan, &metrics)
+            .await?;
+
         info!("✅ Workload analysis complete for {}", dataset_name);
         Ok(analysis)
     }
-    
+
     // Private implementation methods
-    
+
     async fn discover_ai_services(&self) -> Result<(), Box<dyn std::error::Error>> {
         info!("🔍 Discovering AI services in ecosystem...");
-        
+
         // This would integrate with service discovery
         // For now, simulate service discovery
         let mut services = self.connected_services.write().await;
-        
+
         // Add mock services for development
-        services.insert("local-toadstool".to_string(), EcosystemService {
-            instance_id: "local-toadstool".to_string(),
-            service_type: "toadstool".to_string(),
-            endpoint: "http://localhost:8081".to_string(),
-            version: "1.0.0".to_string(),
-            capabilities: vec!["tier_prediction".to_string(), "workload_analysis".to_string()],
-            health_status: crate::types::ServiceHealth::Healthy,
-            metadata: HashMap::new(),
-        });
-        
+        services.insert(
+            "local-toadstool".to_string(),
+            EcosystemService {
+                instance_id: "local-toadstool".to_string(),
+                service_type: "toadstool".to_string(),
+                endpoint: "http://localhost:8081".to_string(),
+                version: "1.0.0".to_string(),
+                capabilities: vec![
+                    "tier_prediction".to_string(),
+                    "workload_analysis".to_string(),
+                ],
+                health_status: crate::types::ServiceHealth::Healthy,
+                metadata: HashMap::new(),
+            },
+        );
+
         info!("🔍 Discovered {} AI services", services.len());
         Ok(())
     }
-    
+
     async fn initialize_tier_prediction(&self) -> Result<(), Box<dyn std::error::Error>> {
         // Initialize tier prediction models and rules
         info!("🎯 Setting up tier prediction models...");
         Ok(())
     }
-    
+
     async fn initialize_workload_analysis(&self) -> Result<(), Box<dyn std::error::Error>> {
         // Initialize workload analysis engines
         info!("📊 Setting up workload analysis engines...");
         Ok(())
     }
-    
+
     async fn initialize_optimization_engine(&self) -> Result<(), Box<dyn std::error::Error>> {
         // Initialize optimization recommendation engines
         info!("⚡ Setting up optimization engines...");
         Ok(())
     }
-    
+
     async fn select_prediction_service(&self) -> Result<ServicePlan, Box<dyn std::error::Error>> {
         let services = self.connected_services.read().await;
-        
+
         // Select best service based on availability and capabilities
         if let Some(toadstool) = services.values().find(|s| s.service_type == "toadstool") {
-            Ok(ServicePlan::DirectToadstool { 
-                toadstool_id: toadstool.instance_id.clone() 
+            Ok(ServicePlan::DirectToadstool {
+                toadstool_id: toadstool.instance_id.clone(),
             })
         } else {
             Ok(ServicePlan::Fallback)
         }
     }
-    
+
     async fn select_analysis_service(&self) -> Result<ServicePlan, Box<dyn std::error::Error>> {
         // Similar logic for workload analysis
         Ok(ServicePlan::Fallback)
     }
-    
+
     async fn predict_via_squirrel_mcp(
         &self,
         _squirrel_id: &str,
@@ -205,7 +228,7 @@ impl AiAutomationCoordinator {
         // Implementation would send request through Squirrel MCP to Toadstool
         self.predict_via_fallback(file_path, None).await
     }
-    
+
     async fn predict_via_toadstool(
         &self,
         _toadstool_id: &str,
@@ -215,7 +238,7 @@ impl AiAutomationCoordinator {
         // Implementation would send direct request to Toadstool
         self.predict_via_fallback(file_path, None).await
     }
-    
+
     async fn predict_via_distributed(
         &self,
         _peer_ids: &[String],
@@ -225,7 +248,7 @@ impl AiAutomationCoordinator {
         // Implementation would coordinate across multiple NestGate instances
         self.predict_via_fallback(file_path, None).await
     }
-    
+
     async fn predict_via_fallback(
         &self,
         file_path: &str,
@@ -234,7 +257,7 @@ impl AiAutomationCoordinator {
         // Fallback heuristic-based prediction
         let tier = self.heuristic_tier_prediction(file_path);
         let confidence = 0.6; // Moderate confidence for heuristic
-        
+
         Ok(AiPredictionResult {
             predicted_tier: tier,
             confidence,
@@ -244,7 +267,7 @@ impl AiAutomationCoordinator {
             alternative_predictions: vec![],
         })
     }
-    
+
     fn heuristic_tier_prediction(&self, file_path: &str) -> nestgate_core::StorageTier {
         // File extension-based heuristic
         if let Some(ext) = std::path::Path::new(file_path).extension() {
@@ -266,7 +289,7 @@ impl AiAutomationCoordinator {
             }
         }
     }
-    
+
     async fn collect_workload_metrics(
         &self,
         _dataset_name: &str,
@@ -283,7 +306,7 @@ impl AiAutomationCoordinator {
             access_pattern: "mixed".to_string(),
         })
     }
-    
+
     async fn execute_workload_analysis(
         &self,
         _service_plan: &ServicePlan,
@@ -323,4 +346,4 @@ pub struct WorkloadAnalysis {
     pub pattern_type: String,
     pub optimization_recommendations: Vec<String>,
     pub confidence: f64,
-} 
+}

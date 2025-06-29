@@ -1,8 +1,8 @@
 //! MCP Provider Management
-//! 
+//!
 //! Provider management for MCP integration
 
-use crate::{Result, Error, types::StorageTier};
+use crate::{types::StorageTier, Error, Result};
 
 /// Provider information
 #[derive(Debug, Clone)]
@@ -27,13 +27,13 @@ impl ProviderManager {
             // Initialize provider state
         }
     }
-    
+
     /// Initialize the provider manager
     pub async fn initialize(&self) -> Result<()> {
         // TODO: Implement provider initialization
         Ok(())
     }
-    
+
     /// Get provider information
     pub async fn get_provider_info(&self, id: &str) -> Result<ProviderInfo> {
         // TODO: Implement provider info retrieval
@@ -42,7 +42,7 @@ impl ProviderManager {
             name: format!("Provider {}", id),
             tier: StorageTier::Hot,
             capacity: 1000000000, // 1GB
-            available: 500000000,  // 500MB
+            available: 500000000, // 500MB
         })
     }
-} 
+}

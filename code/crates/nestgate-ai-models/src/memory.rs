@@ -2,10 +2,10 @@
 //!
 //! Manages GPU memory allocation for AI models
 
+use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use chrono::{DateTime, Utc};
 
 use crate::{Priority, Result};
 
@@ -50,7 +50,7 @@ impl GPUMemoryManager {
     ) -> Result<Box<[u8]>> {
         let mut allocations = self.allocated_memory.write().await;
         let available = self.total_memory - self.calculate_allocated_memory(&allocations);
-        
+
         if available >= size {
             // Sufficient memory available
             let allocation = AllocationInfo {
@@ -58,26 +58,27 @@ impl GPUMemoryManager {
                 priority,
                 allocated_at: Utc::now(),
             };
-            
+
             allocations.insert(model_id.to_string(), allocation);
             return Ok(vec![0; size].into_boxed_slice());
         }
-        
+
         // Insufficient memory, check if lower priority models can be unloaded
         let candidates: Vec<_> = allocations
             .iter()
             .filter(|(_, info)| info.priority < priority)
             .map(|(id, info)| (id.clone(), info.clone()))
             .collect();
-        
+
         if candidates.is_empty() {
             return Err(format!(
                 "Insufficient GPU memory: requested {}MB, available {}MB",
                 size / (1024 * 1024),
                 available / (1024 * 1024)
-            ).into());
+            )
+            .into());
         }
-        
+
         // For now, just return error - in real implementation would unload lower priority models
         Err(format!(
             "Insufficient GPU memory: requested {}MB, available {}MB (would need to unload {} models)",
@@ -105,7 +106,7 @@ impl GPUMemoryManager {
     pub async fn get_memory_stats(&self) -> Result<MemoryStats> {
         let allocations = self.allocated_memory.read().await;
         let allocated = self.calculate_allocated_memory(&allocations);
-        
+
         Ok(MemoryStats {
             total_memory: self.total_memory,
             allocated_memory: allocated,
@@ -122,4 +123,4 @@ pub struct MemoryStats {
     pub allocated_memory: usize,
     pub available_memory: usize,
     pub num_allocations: usize,
-} 
+}

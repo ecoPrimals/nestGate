@@ -1,29 +1,29 @@
-/*! 
+/*!
 NestGate AI Models
 
 This crate provides AI model integration for the NestGate NAS system.
 */
 
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, error, info, warn};
-use chrono::{DateTime, Utc};
-use serde::{Serialize, Deserialize};
 
-pub mod manager;
-pub mod optimizer;
 pub mod inference;
-pub mod registry;
+pub mod manager;
 pub mod memory;
+pub mod optimizer;
+pub mod registry;
 pub mod types;
 
-pub use manager::ModelManager;
-pub use optimizer::ModelOptimizer;
 pub use inference::InferenceService;
-pub use registry::ModelRegistry;
+pub use manager::ModelManager;
 pub use memory::GPUMemoryManager;
+pub use optimizer::ModelOptimizer;
+pub use registry::ModelRegistry;
 pub use types::*;
 
 /// Model types supported by the NestGate MCP NAS node
@@ -164,8 +164,8 @@ mod tests {
             priority: Priority::Medium,
             min_compute_capability: 7.5,
         };
-        
+
         assert_eq!(config.id, "test-model");
         assert_eq!(config.model_type, ModelType::StorageOptimizer);
     }
-} 
+}

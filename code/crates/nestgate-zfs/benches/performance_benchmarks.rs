@@ -2,7 +2,7 @@
 //!
 //! Benchmarks to validate performance characteristics and identify bottlenecks
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -25,11 +25,9 @@ fn bench_config_creation(c: &mut Criterion) {
 /// Benchmark configuration validation
 fn bench_config_validation(c: &mut Criterion) {
     let config = ZfsConfig::default();
-    
+
     c.bench_function("config_validation", |b| {
-        b.iter(|| {
-            black_box(config.validate()).unwrap()
-        })
+        b.iter(|| black_box(config.validate()).unwrap())
     });
 }
 
@@ -37,7 +35,7 @@ fn bench_config_validation(c: &mut Criterion) {
 fn bench_tier_config_access(c: &mut Criterion) {
     let config = ZfsConfig::default();
     let tiers = [StorageTier::Hot, StorageTier::Warm, StorageTier::Cold];
-    
+
     c.bench_function("tier_config_access", |b| {
         b.iter(|| {
             for tier in &tiers {
@@ -59,16 +57,19 @@ fn bench_performance_metrics(c: &mut Criterion) {
 
 /// Benchmark tier metrics generation
 fn bench_tier_metrics_generation(c: &mut Criterion) {
-    let tiers = [StorageTier::Hot, StorageTier::Warm, StorageTier::Cold, StorageTier::Cache];
-    
+    let tiers = [
+        StorageTier::Hot,
+        StorageTier::Warm,
+        StorageTier::Cold,
+        StorageTier::Cache,
+    ];
+
     for tier in &tiers {
         c.bench_with_input(
             BenchmarkId::new("tier_metrics_generation", format!("{:?}", tier)),
             tier,
             |b, &tier| {
-                b.iter(|| {
-                    black_box(crate::performance::TierMetrics::default_for_tier(tier))
-                })
+                b.iter(|| black_box(crate::performance::TierMetrics::default_for_tier(tier)))
             },
         );
     }
@@ -77,7 +78,7 @@ fn bench_tier_metrics_generation(c: &mut Criterion) {
 /// Benchmark AI optimization opportunity sorting
 fn bench_ai_optimization_sorting(c: &mut Criterion) {
     let mut group = c.benchmark_group("ai_optimization");
-    
+
     for size in [10, 100, 1000].iter() {
         group.bench_with_input(
             BenchmarkId::new("opportunity_sorting", size),
@@ -113,7 +114,7 @@ fn bench_migration_job_creation(c: &mut Criterion) {
 /// Benchmark snapshot policy validation
 fn bench_snapshot_policy_validation(c: &mut Criterion) {
     let policy = crate::snapshot::SnapshotPolicy::default();
-    
+
     c.bench_function("snapshot_policy_validation", |b| {
         b.iter(|| {
             // Simulate policy validation logic
@@ -125,15 +126,17 @@ fn bench_snapshot_policy_validation(c: &mut Criterion) {
 /// Benchmark concurrent metrics collection
 fn bench_concurrent_metrics(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
-    
+
     c.bench_function("concurrent_metrics_collection", |b| {
         b.to_async(&rt).iter(|| async {
-            let handles: Vec<_> = (0..10).map(|_| {
-                tokio::spawn(async {
-                    black_box(crate::performance::CurrentPerformanceMetrics::default())
+            let handles: Vec<_> = (0..10)
+                .map(|_| {
+                    tokio::spawn(async {
+                        black_box(crate::performance::CurrentPerformanceMetrics::default())
+                    })
                 })
-            }).collect();
-            
+                .collect();
+
             for handle in handles {
                 black_box(handle.await.unwrap());
             }
@@ -144,7 +147,7 @@ fn bench_concurrent_metrics(c: &mut Criterion) {
 /// Benchmark memory allocation patterns
 fn bench_memory_allocation(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_allocation");
-    
+
     group.bench_function("hashmap_creation", |b| {
         b.iter(|| {
             let mut map: HashMap<String, String> = HashMap::new();
@@ -154,7 +157,7 @@ fn bench_memory_allocation(c: &mut Criterion) {
             black_box(map)
         })
     });
-    
+
     group.bench_function("vec_creation", |b| {
         b.iter(|| {
             let mut vec = Vec::new();
@@ -164,29 +167,31 @@ fn bench_memory_allocation(c: &mut Criterion) {
             black_box(vec)
         })
     });
-    
+
     group.finish();
 }
 
 /// Benchmark error handling overhead
 fn bench_error_handling(c: &mut Criterion) {
     use crate::error::*;
-    
+
     c.bench_function("error_creation", |b| {
         b.iter(|| {
-            black_box(ZfsError::PoolError(PoolError::NotFound { 
-                pool_name: "test".to_string() 
+            black_box(ZfsError::PoolError(PoolError::NotFound {
+                pool_name: "test".to_string(),
             }))
         })
     });
-    
+
     c.bench_function("error_retryability_check", |b| {
         let errors = vec![
             ZfsError::Timeout("timeout".to_string()),
             ZfsError::SystemUnavailable("unavailable".to_string()),
-            ZfsError::PoolError(PoolError::NotFound { pool_name: "test".to_string() }),
+            ZfsError::PoolError(PoolError::NotFound {
+                pool_name: "test".to_string(),
+            }),
         ];
-        
+
         b.iter(|| {
             for error in &errors {
                 black_box(ZfsError::is_retryable(error));
@@ -199,44 +204,40 @@ fn bench_error_handling(c: &mut Criterion) {
 fn bench_serialization(c: &mut Criterion) {
     let config = ZfsConfig::default();
     let metrics = crate::performance::CurrentPerformanceMetrics::default();
-    
+
     let mut group = c.benchmark_group("serialization");
-    
+
     group.bench_function("config_json_serialize", |b| {
-        b.iter(|| {
-            black_box(serde_json::to_string(&config).unwrap())
-        })
+        b.iter(|| black_box(serde_json::to_string(&config).unwrap()))
     });
-    
+
     group.bench_function("metrics_json_serialize", |b| {
-        b.iter(|| {
-            black_box(serde_json::to_string(&metrics).unwrap())
-        })
+        b.iter(|| black_box(serde_json::to_string(&metrics).unwrap()))
     });
-    
+
     let config_json = serde_json::to_string(&config).unwrap();
     group.bench_function("config_json_deserialize", |b| {
-        b.iter(|| {
-            black_box(serde_json::from_str::<ZfsConfig>(&config_json).unwrap())
-        })
+        b.iter(|| black_box(serde_json::from_str::<ZfsConfig>(&config_json).unwrap()))
     });
-    
+
     group.finish();
 }
 
 /// Benchmark async operations
 fn bench_async_operations(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
-    
+
     c.bench_function("async_task_spawning", |b| {
         b.to_async(&rt).iter(|| async {
-            let handles: Vec<_> = (0..100).map(|i| {
-                tokio::spawn(async move {
-                    tokio::time::sleep(Duration::from_nanos(1)).await;
-                    black_box(i)
+            let handles: Vec<_> = (0..100)
+                .map(|i| {
+                    tokio::spawn(async move {
+                        tokio::time::sleep(Duration::from_nanos(1)).await;
+                        black_box(i)
+                    })
                 })
-            }).collect();
-            
+                .collect();
+
             for handle in handles {
                 black_box(handle.await.unwrap());
             }
@@ -246,16 +247,18 @@ fn bench_async_operations(c: &mut Criterion) {
 
 /// Helper function to create test optimization opportunities
 fn create_test_opportunities(count: usize) -> Vec<crate::ai_integration::OptimizationOpportunity> {
-    (0..count).map(|i| {
-        crate::ai_integration::OptimizationOpportunity {
-            optimization_type: crate::ai_integration::OptimizationType::TierMigration,
-            description: format!("Optimization {}", i),
-            expected_impact: (i as f64 * 3.7) % 100.0, // Pseudo-random impact
-            confidence: 0.5 + (i as f64 * 0.1) % 0.5,
-            complexity: crate::ai_integration::OptimizationComplexity::Medium,
-            implementation_time: Duration::from_secs(60 + (i as u64 * 13) % 300),
-        }
-    }).collect()
+    (0..count)
+        .map(|i| {
+            crate::ai_integration::OptimizationOpportunity {
+                optimization_type: crate::ai_integration::OptimizationType::TierMigration,
+                description: format!("Optimization {}", i),
+                expected_impact: (i as f64 * 3.7) % 100.0, // Pseudo-random impact
+                confidence: 0.5 + (i as f64 * 0.1) % 0.5,
+                complexity: crate::ai_integration::OptimizationComplexity::Medium,
+                implementation_time: Duration::from_secs(60 + (i as u64 * 13) % 300),
+            }
+        })
+        .collect()
 }
 
 criterion_group!(
@@ -275,4 +278,4 @@ criterion_group!(
     bench_async_operations
 );
 
-criterion_main!(benches); 
+criterion_main!(benches);

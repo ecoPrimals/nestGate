@@ -1,14 +1,13 @@
 //! MCP Protocol Adapter
-//! 
+//!
 //! Adapter for MCP protocol integration
 
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{info, error, warn};
-use serde::{Serialize, Deserialize};
+use tracing::{error, info, warn};
 
-use nestgate_core::{Result, NestGateError};
-
+use nestgate_core::{NestGateError, Result};
 
 /// MCP Adapter Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -67,90 +66,94 @@ impl McpAdapter {
     /// Create a new MCP adapter
     pub fn new(config: AdapterConfig) -> Self {
         info!("Initializing MCP adapter: {}", config.name);
-        
+
         Self {
             config,
             state: Arc::new(RwLock::new(AdapterState::default())),
         }
     }
-    
+
     /// Initialize the adapter with full configuration
     pub async fn initialize(&self) -> Result<()> {
         info!("Initializing MCP adapter: {}", self.config.name);
-        
+
         // Validate configuration
         if self.config.name.is_empty() {
-            return Err(NestGateError::Internal("Adapter name cannot be empty".to_string()));
+            return Err(NestGateError::Internal(
+                "Adapter name cannot be empty".to_string(),
+            ));
         }
-        
+
         if self.config.endpoint.is_empty() {
-            return Err(NestGateError::Internal("Adapter endpoint cannot be empty".to_string()));
+            return Err(NestGateError::Internal(
+                "Adapter endpoint cannot be empty".to_string(),
+            ));
         }
-        
+
         // Initialize adapter state
         let mut state = self.state.write().await;
         state.capabilities = self.config.capabilities.clone();
         state.last_heartbeat = std::time::SystemTime::now();
-        
+
         info!("MCP adapter initialized successfully: {}", self.config.name);
         Ok(())
     }
-    
+
     /// Connect to MCP server
     pub async fn connect(&self) -> Result<()> {
         info!("Connecting MCP adapter to: {}", self.config.endpoint);
-        
+
         // Simulate connection attempt
         // In a real implementation, this would establish the actual MCP connection
         let mut state = self.state.write().await;
         state.connected = true;
         state.last_heartbeat = std::time::SystemTime::now();
         state.error_count = 0;
-        
+
         info!("MCP adapter connected successfully");
         Ok(())
     }
-    
+
     /// Disconnect from MCP server
     pub async fn disconnect(&self) -> Result<()> {
         info!("Disconnecting MCP adapter");
-        
+
         let mut state = self.state.write().await;
         state.connected = false;
-        
+
         info!("MCP adapter disconnected");
         Ok(())
     }
-    
+
     /// Send heartbeat to maintain connection
     pub async fn heartbeat(&self) -> Result<()> {
         let mut state = self.state.write().await;
-        
+
         if !state.connected {
             return Err(NestGateError::Internal("Adapter not connected".to_string()));
         }
-        
+
         state.last_heartbeat = std::time::SystemTime::now();
         Ok(())
     }
-    
+
     /// Get adapter status
     pub async fn get_status(&self) -> AdapterState {
         self.state.read().await.clone()
     }
-    
+
     /// Handle connection errors
     pub async fn handle_error(&self, error: &str) -> Result<()> {
         warn!("MCP adapter error: {}", error);
-        
+
         let mut state = self.state.write().await;
         state.error_count += 1;
-        
+
         if state.error_count >= self.config.retry_attempts {
             error!("MCP adapter exceeded retry limit, disconnecting");
             state.connected = false;
         }
-        
+
         Ok(())
     }
-} 
+}

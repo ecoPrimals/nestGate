@@ -1,11 +1,11 @@
 //! ZFS Configuration Management
-//! 
+//!
 //! Advanced configuration patterns with ZFS-specific settings
 
+use nestgate_core::{NestGateError, Result, StorageTier};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use serde::{Deserialize, Serialize};
-use nestgate_core::{Result, NestGateError, StorageTier};
 
 /// Main ZFS configuration structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -32,6 +32,13 @@ pub struct ZfsConfig {
     pub enable_ai_integration: Option<bool>,
     /// Health monitoring interval in seconds
     pub monitoring_interval: u64,
+    /// Optional snapshot policies configuration file
+    pub snapshot_policies_file: Option<String>,
+    /// Dataset automation configuration
+    pub automation: Option<DatasetAutomationConfig>,
+    /// Ecosystem integration settings
+    pub ecosystem_orchestrator_url: String,
+    pub enable_ecosystem_integration: bool,
 }
 
 /// Tier-specific configurations for hot/warm/cold storage
@@ -64,9 +71,9 @@ pub struct TierConfig {
 /// Performance profile for tiers
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PerformanceProfile {
-    HighPerformance,    // Hot tier - optimized for speed
-    Balanced,           // Warm tier - balance of speed and compression
-    HighCompression,    // Cold tier - optimized for space efficiency
+    HighPerformance, // Hot tier - optimized for speed
+    Balanced,        // Warm tier - balance of speed and compression
+    HighCompression, // Cold tier - optimized for space efficiency
 }
 
 /// Migration rules between tiers
@@ -160,9 +167,10 @@ pub struct MigrationConfig {
 /// Security configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityConfig {
-    /// Enable encryption for new datasets
+    /// Enable encryption metadata tracking (encryption handled by external providers)
+    /// Note: NestGate tracks encryption state but does not perform encryption itself
     pub enable_encryption: bool,
-    /// Default encryption algorithm
+    /// Default encryption algorithm hint for external providers (like BearDog)
     pub encryption_algorithm: String,
     /// Key management settings
     pub key_management: KeyManagementConfig,
@@ -200,6 +208,34 @@ pub enum MetricsFormat {
     InfluxDb,
 }
 
+/// Dataset automation configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DatasetAutomationConfig {
+    /// Enable dataset automation
+    pub enabled: bool,
+    /// Automation scan interval (seconds)
+    pub scan_interval_seconds: u64,
+    /// Learning period for new datasets (days)
+    pub learning_period_days: u32,
+    /// Default automation policy
+    pub default_policy: String,
+    /// AI integration settings
+    pub ai_settings: AiAutomationSettings,
+}
+
+/// AI-powered automation settings
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AiAutomationSettings {
+    /// Enable AI-driven tier predictions
+    pub enable_ai_predictions: bool,
+    /// Confidence threshold for AI decisions
+    pub ai_confidence_threshold: f64,
+    /// Learning rate for access pattern prediction
+    pub learning_rate: f64,
+    /// Historical data window for learning (days)
+    pub learning_window_days: u32,
+}
+
 impl Default for ZfsConfig {
     fn default() -> Self {
         Self {
@@ -214,6 +250,13 @@ impl Default for ZfsConfig {
             security: SecurityConfig::default(),
             enable_ai_integration: Some(true),
             monitoring_interval: 300, // 5 minutes
+            snapshot_policies_file: None,
+            automation: None,
+            ecosystem_orchestrator_url: std::env::var("ECOSYSTEM_ORCHESTRATOR_URL")
+                .unwrap_or_else(|_| "http://localhost:8080".to_string()),
+            enable_ecosystem_integration: std::env::var("ENABLE_ECOSYSTEM_INTEGRATION")
+                .map(|v| v.to_lowercase() == "true")
+                .unwrap_or(false),
         }
     }
 }
@@ -237,7 +280,7 @@ impl TierConfig {
         properties.insert("atime".to_string(), "off".to_string());
         properties.insert("primarycache".to_string(), "all".to_string());
         properties.insert("secondarycache".to_string(), "all".to_string());
-        
+
         Self {
             name: "hot".to_string(),
             pool_name: "nestpool".to_string(),
@@ -248,7 +291,7 @@ impl TierConfig {
             capacity_limits: CapacityLimits::hot_tier_defaults(),
         }
     }
-    
+
     /// Default configuration for warm tier (balanced)
     pub fn warm_tier_default() -> Self {
         let mut properties = HashMap::new();
@@ -257,7 +300,7 @@ impl TierConfig {
         properties.insert("atime".to_string(), "on".to_string());
         properties.insert("primarycache".to_string(), "metadata".to_string());
         properties.insert("secondarycache".to_string(), "metadata".to_string());
-        
+
         Self {
             name: "warm".to_string(),
             pool_name: "nestpool".to_string(),
@@ -268,7 +311,7 @@ impl TierConfig {
             capacity_limits: CapacityLimits::warm_tier_defaults(),
         }
     }
-    
+
     /// Default configuration for cold tier (high compression)
     pub fn cold_tier_default() -> Self {
         let mut properties = HashMap::new();
@@ -277,7 +320,7 @@ impl TierConfig {
         properties.insert("atime".to_string(), "off".to_string());
         properties.insert("primarycache".to_string(), "metadata".to_string());
         properties.insert("secondarycache".to_string(), "none".to_string());
-        
+
         Self {
             name: "cold".to_string(),
             pool_name: "nestpool".to_string(),
@@ -293,64 +336,98 @@ impl TierConfig {
     pub fn hot_tier_production() -> Self {
         let mut config = Self::hot_tier_default();
         config.pool_name = "nestpool-prod".to_string();
-        
+
         // Production-optimized properties for NVMe
-        config.properties.insert("recordsize".to_string(), "128K".to_string());
-        config.properties.insert("compression".to_string(), "lz4".to_string());
-        config.properties.insert("primarycache".to_string(), "all".to_string());
-        config.properties.insert("secondarycache".to_string(), "all".to_string());
-        config.properties.insert("logbias".to_string(), "throughput".to_string());
-        config.properties.insert("sync".to_string(), "standard".to_string());
-        
+        config
+            .properties
+            .insert("recordsize".to_string(), "128K".to_string());
+        config
+            .properties
+            .insert("compression".to_string(), "lz4".to_string());
+        config
+            .properties
+            .insert("primarycache".to_string(), "all".to_string());
+        config
+            .properties
+            .insert("secondarycache".to_string(), "all".to_string());
+        config
+            .properties
+            .insert("logbias".to_string(), "throughput".to_string());
+        config
+            .properties
+            .insert("sync".to_string(), "standard".to_string());
+
         // Aggressive migration rules for hot tier
         config.migration_rules.age_threshold_days = 7;
         config.migration_rules.access_frequency_threshold = 10.0;
         config.migration_rules.auto_migration_enabled = true;
-        
+
         config
     }
-    
+
     /// Create production-optimized warm tier configuration
     pub fn warm_tier_production() -> Self {
         let mut config = Self::warm_tier_default();
         config.pool_name = "nestpool-prod".to_string();
-        
+
         // Balanced properties for warm tier
-        config.properties.insert("recordsize".to_string(), "1M".to_string());
-        config.properties.insert("compression".to_string(), "gzip-6".to_string());
-        config.properties.insert("primarycache".to_string(), "all".to_string());
-        config.properties.insert("secondarycache".to_string(), "metadata".to_string());
-        config.properties.insert("logbias".to_string(), "latency".to_string());
-        
+        config
+            .properties
+            .insert("recordsize".to_string(), "1M".to_string());
+        config
+            .properties
+            .insert("compression".to_string(), "gzip-6".to_string());
+        config
+            .properties
+            .insert("primarycache".to_string(), "all".to_string());
+        config
+            .properties
+            .insert("secondarycache".to_string(), "metadata".to_string());
+        config
+            .properties
+            .insert("logbias".to_string(), "latency".to_string());
+
         // Moderate migration rules
         config.migration_rules.age_threshold_days = 30;
         config.migration_rules.access_frequency_threshold = 1.0;
         config.migration_rules.auto_migration_enabled = true;
-        
+
         config
     }
-    
+
     /// Create production-optimized cold tier configuration
     pub fn cold_tier_production() -> Self {
         let mut config = Self::cold_tier_default();
         config.pool_name = "nestpool-prod".to_string();
-        
+
         // Space-optimized properties for cold tier
-        config.properties.insert("recordsize".to_string(), "1M".to_string());
-        config.properties.insert("compression".to_string(), "gzip-9".to_string());
-        config.properties.insert("primarycache".to_string(), "metadata".to_string());
-        config.properties.insert("secondarycache".to_string(), "none".to_string());
-        config.properties.insert("logbias".to_string(), "throughput".to_string());
-        config.properties.insert("dedup".to_string(), "on".to_string());
-        
+        config
+            .properties
+            .insert("recordsize".to_string(), "1M".to_string());
+        config
+            .properties
+            .insert("compression".to_string(), "gzip-9".to_string());
+        config
+            .properties
+            .insert("primarycache".to_string(), "metadata".to_string());
+        config
+            .properties
+            .insert("secondarycache".to_string(), "none".to_string());
+        config
+            .properties
+            .insert("logbias".to_string(), "throughput".to_string());
+        config
+            .properties
+            .insert("dedup".to_string(), "on".to_string());
+
         // Conservative migration rules
         config.migration_rules.age_threshold_days = 90;
         config.migration_rules.access_frequency_threshold = 0.1;
         config.migration_rules.auto_migration_enabled = true;
-        
+
         config
     }
-    
+
     /// Auto-detect hot tier configuration for any pool
     pub fn auto_detect_hot(pool_name: &str) -> Self {
         let mut config = Self::hot_tier_default();
@@ -358,7 +435,7 @@ impl TierConfig {
         config.dataset_prefix = format!("{}/hot", pool_name);
         config
     }
-    
+
     /// Auto-detect warm tier configuration for any pool
     pub fn auto_detect_warm(pool_name: &str) -> Self {
         let mut config = Self::warm_tier_default();
@@ -366,7 +443,7 @@ impl TierConfig {
         config.dataset_prefix = format!("{}/warm", pool_name);
         config
     }
-    
+
     /// Auto-detect cold tier configuration for any pool
     pub fn auto_detect_cold(pool_name: &str) -> Self {
         let mut config = Self::cold_tier_default();
@@ -379,30 +456,30 @@ impl TierConfig {
 impl MigrationRules {
     pub fn hot_tier_defaults() -> Self {
         Self {
-            age_threshold_days: 7,      // Move to warm after 7 days
-            access_frequency_threshold: 10.0,  // High access frequency
+            age_threshold_days: 7,                   // Move to warm after 7 days
+            access_frequency_threshold: 10.0,        // High access frequency
             size_threshold_bytes: 1024 * 1024 * 100, // 100MB
             auto_migration_enabled: true,
             migration_schedule: Some("0 2 * * *".to_string()), // Daily at 2 AM
         }
     }
-    
+
     pub fn warm_tier_defaults() -> Self {
         Self {
-            age_threshold_days: 30,     // Move to cold after 30 days
-            access_frequency_threshold: 1.0,   // Low access frequency
+            age_threshold_days: 30,                   // Move to cold after 30 days
+            access_frequency_threshold: 1.0,          // Low access frequency
             size_threshold_bytes: 1024 * 1024 * 1024, // 1GB
             auto_migration_enabled: true,
             migration_schedule: Some("0 3 * * 0".to_string()), // Weekly on Sunday at 3 AM
         }
     }
-    
+
     pub fn cold_tier_defaults() -> Self {
         Self {
-            age_threshold_days: 365,    // Archive after 1 year
-            access_frequency_threshold: 0.1,   // Very low access frequency
-            size_threshold_bytes: u64::MAX,    // No size limit
-            auto_migration_enabled: false,     // Manual archival only
+            age_threshold_days: 365,         // Archive after 1 year
+            access_frequency_threshold: 0.1, // Very low access frequency
+            size_threshold_bytes: u64::MAX,  // No size limit
+            auto_migration_enabled: false,   // Manual archival only
             migration_schedule: None,
         }
     }
@@ -411,25 +488,25 @@ impl MigrationRules {
 impl CapacityLimits {
     pub fn hot_tier_defaults() -> Self {
         Self {
-            max_utilization: 0.8,      // 80% max utilization
-            warning_threshold: 0.7,    // Warning at 70%
+            max_utilization: 0.8,                    // 80% max utilization
+            warning_threshold: 0.7,                  // Warning at 70%
             reserved_bytes: 1024 * 1024 * 1024 * 10, // 10GB reserved
         }
     }
-    
+
     pub fn warm_tier_defaults() -> Self {
         Self {
-            max_utilization: 0.9,      // 90% max utilization
-            warning_threshold: 0.8,    // Warning at 80%
-            reserved_bytes: 1024 * 1024 * 1024 * 5,  // 5GB reserved
+            max_utilization: 0.9,                   // 90% max utilization
+            warning_threshold: 0.8,                 // Warning at 80%
+            reserved_bytes: 1024 * 1024 * 1024 * 5, // 5GB reserved
         }
     }
-    
+
     pub fn cold_tier_defaults() -> Self {
         Self {
-            max_utilization: 0.95,     // 95% max utilization
-            warning_threshold: 0.9,    // Warning at 90%
-            reserved_bytes: 1024 * 1024 * 1024 * 2,  // 2GB reserved
+            max_utilization: 0.95,                  // 95% max utilization
+            warning_threshold: 0.9,                 // Warning at 90%
+            reserved_bytes: 1024 * 1024 * 1024 * 2, // 2GB reserved
         }
     }
 }
@@ -440,7 +517,7 @@ impl Default for PoolDiscoveryConfig {
             auto_discovery: true,
             include_pools: vec![],
             exclude_pools: vec!["rpool".to_string()], // Exclude system pools
-            discovery_interval_seconds: 300, // 5 minutes
+            discovery_interval_seconds: 300,          // 5 minutes
             validate_health: true,
         }
     }
@@ -514,16 +591,34 @@ impl Default for AccessControlConfig {
     }
 }
 
+impl Default for DatasetAutomationConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            scan_interval_seconds: 300, // 5 minutes
+            learning_period_days: 7,
+            default_policy: "balanced_performance".to_string(),
+            ai_settings: AiAutomationSettings {
+                enable_ai_predictions: true,
+                ai_confidence_threshold: 0.8,
+                learning_rate: 0.1,
+                learning_window_days: 30,
+            },
+        }
+    }
+}
+
 impl ZfsConfig {
     /// Load configuration from file with advanced integration patterns
     pub async fn load_from_file(path: &std::path::Path) -> Result<Self> {
-        let content = tokio::fs::read_to_string(path)
-            .await
-            .map_err(|e| NestGateError::Configuration(format!("Failed to read config file: {}", e)))?;
-        
+        let content = tokio::fs::read_to_string(path).await.map_err(|e| {
+            NestGateError::Configuration(format!("Failed to read config file: {}", e))
+        })?;
+
         // Support multiple formats (YAML, JSON)
-        if path.extension().and_then(|s| s.to_str()) == Some("yaml") || 
-           path.extension().and_then(|s| s.to_str()) == Some("yml") {
+        if path.extension().and_then(|s| s.to_str()) == Some("yaml")
+            || path.extension().and_then(|s| s.to_str()) == Some("yml")
+        {
             serde_yaml::from_str(&content)
                 .map_err(|e| NestGateError::Configuration(format!("YAML parsing error: {}", e)))
         } else {
@@ -531,25 +626,28 @@ impl ZfsConfig {
                 .map_err(|e| NestGateError::Configuration(format!("JSON parsing error: {}", e)))
         }
     }
-    
+
     /// Save configuration to file
     pub async fn save_to_file(&self, path: &std::path::Path) -> Result<()> {
-        let content = if path.extension().and_then(|s| s.to_str()) == Some("yaml") || 
-                         path.extension().and_then(|s| s.to_str()) == Some("yml") {
-            serde_yaml::to_string(self)
-                .map_err(|e| NestGateError::Configuration(format!("YAML serialization error: {}", e)))?
+        let content = if path.extension().and_then(|s| s.to_str()) == Some("yaml")
+            || path.extension().and_then(|s| s.to_str()) == Some("yml")
+        {
+            serde_yaml::to_string(self).map_err(|e| {
+                NestGateError::Configuration(format!("YAML serialization error: {}", e))
+            })?
         } else {
-            serde_json::to_string_pretty(self)
-                .map_err(|e| NestGateError::Configuration(format!("JSON serialization error: {}", e)))?
+            serde_json::to_string_pretty(self).map_err(|e| {
+                NestGateError::Configuration(format!("JSON serialization error: {}", e))
+            })?
         };
-        
-        tokio::fs::write(path, content)
-            .await
-            .map_err(|e| NestGateError::Configuration(format!("Failed to write config file: {}", e)))?;
-        
+
+        tokio::fs::write(path, content).await.map_err(|e| {
+            NestGateError::Configuration(format!("Failed to write config file: {}", e))
+        })?;
+
         Ok(())
     }
-    
+
     /// Get tier configuration by storage tier
     pub fn get_tier_config(&self, tier: &StorageTier) -> &TierConfig {
         match tier {
@@ -559,33 +657,35 @@ impl ZfsConfig {
             StorageTier::Cache => &self.tiers.hot, // Cache uses hot tier config
         }
     }
-    
+
     /// Validate configuration
     pub fn validate(&self) -> Result<()> {
         // Validate API endpoint
         url::Url::parse(&self.api_endpoint)
             .map_err(|e| NestGateError::Configuration(format!("Invalid API endpoint: {}", e)))?;
-        
+
         // Validate pool name
         if self.default_pool.is_empty() {
-            return Err(NestGateError::Configuration("Default pool name cannot be empty".to_string()));
+            return Err(NestGateError::Configuration(
+                "Default pool name cannot be empty".to_string(),
+            ));
         }
-        
+
         // Validate tier configurations
         self.tiers.hot.validate()?;
         self.tiers.warm.validate()?;
         self.tiers.cold.validate()?;
-        
+
         Ok(())
     }
 
     /// Create a production configuration with auto-detected pools
     pub async fn production_config() -> Result<Self> {
         let mut config = Self::default();
-        
+
         // Auto-detect available ZFS pools
         let available_pools = Self::detect_available_pools().await?;
-        
+
         // Prefer production pool if available
         if available_pools.contains(&"nestpool-prod".to_string()) {
             config.default_pool = "nestpool-prod".to_string();
@@ -598,16 +698,16 @@ impl ZfsConfig {
             config.default_pool = available_pools[0].clone();
             config.tiers = TierConfigurations::auto_detect_tiers(&config.default_pool);
         }
-        
+
         // Enable production-optimized settings
         config.use_real_zfs = true;
         config.health_monitoring.enabled = true;
         config.metrics.enabled = true;
         config.migration.background_migration = true;
-        
+
         Ok(config)
     }
-    
+
     /// Detect available ZFS pools on the system
     async fn detect_available_pools() -> Result<Vec<String>> {
         let output = tokio::process::Command::new("zpool")
@@ -615,20 +715,20 @@ impl ZfsConfig {
             .output()
             .await
             .map_err(|e| NestGateError::Internal(format!("Failed to list ZFS pools: {}", e)))?;
-        
+
         if !output.status.success() {
             return Ok(Vec::new());
         }
-        
+
         let pools: Vec<String> = String::from_utf8_lossy(&output.stdout)
             .lines()
             .map(|line| line.trim().to_string())
             .filter(|line| !line.is_empty())
             .collect();
-        
+
         Ok(pools)
     }
-    
+
     /// Check if a pool has the expected tier structure
     pub async fn validate_pool_structure(&self, pool_name: &str) -> Result<bool> {
         let output = tokio::process::Command::new("zfs")
@@ -636,48 +736,49 @@ impl ZfsConfig {
             .output()
             .await
             .map_err(|e| NestGateError::Internal(format!("Failed to list pool datasets: {}", e)))?;
-        
+
         if !output.status.success() {
             return Ok(false);
         }
-        
+
         let datasets: Vec<String> = String::from_utf8_lossy(&output.stdout)
             .lines()
             .map(|line| line.trim().to_string())
             .filter(|line| !line.is_empty())
             .collect();
-        
+
         // Check for expected tier datasets
         let expected_tiers = vec![
             format!("{}/hot", pool_name),
             format!("{}/warm", pool_name),
             format!("{}/cold", pool_name),
         ];
-        
+
         for tier in expected_tiers {
             if !datasets.contains(&tier) {
                 return Ok(false);
             }
         }
-        
+
         Ok(true)
     }
-    
+
     /// Get the best available pool for NestGate operations
     pub async fn get_best_pool() -> Result<String> {
         let available_pools = Self::detect_available_pools().await?;
-        
+
         // Priority order: production pool > test pool > any other pool
         let preferred_pools = vec!["nestpool-prod", "nestpool"];
-        
+
         for preferred in preferred_pools {
             if available_pools.contains(&preferred.to_string()) {
                 return Ok(preferred.to_string());
             }
         }
-        
+
         // Return first available pool if no preferred pools found
-        available_pools.first()
+        available_pools
+            .first()
             .cloned()
             .ok_or_else(|| NestGateError::Internal("No ZFS pools found".to_string()))
     }
@@ -687,22 +788,31 @@ impl TierConfig {
     /// Validate tier configuration
     pub fn validate(&self) -> Result<()> {
         if self.name.is_empty() {
-            return Err(NestGateError::Configuration("Tier name cannot be empty".to_string()));
+            return Err(NestGateError::Configuration(
+                "Tier name cannot be empty".to_string(),
+            ));
         }
-        
+
         if self.pool_name.is_empty() {
-            return Err(NestGateError::Configuration("Pool name cannot be empty".to_string()));
+            return Err(NestGateError::Configuration(
+                "Pool name cannot be empty".to_string(),
+            ));
         }
-        
+
         // Validate capacity limits
-        if self.capacity_limits.max_utilization > 1.0 || self.capacity_limits.max_utilization <= 0.0 {
-            return Err(NestGateError::Configuration("Max utilization must be between 0.0 and 1.0".to_string()));
+        if self.capacity_limits.max_utilization > 1.0 || self.capacity_limits.max_utilization <= 0.0
+        {
+            return Err(NestGateError::Configuration(
+                "Max utilization must be between 0.0 and 1.0".to_string(),
+            ));
         }
-        
+
         if self.capacity_limits.warning_threshold > self.capacity_limits.max_utilization {
-            return Err(NestGateError::Configuration("Warning threshold cannot exceed max utilization".to_string()));
+            return Err(NestGateError::Configuration(
+                "Warning threshold cannot exceed max utilization".to_string(),
+            ));
         }
-        
+
         Ok(())
     }
 }
@@ -716,7 +826,7 @@ impl TierConfigurations {
             cold: TierConfig::cold_tier_production(),
         }
     }
-    
+
     /// Auto-detect tier configurations for a given pool
     pub fn auto_detect_tiers(pool_name: &str) -> Self {
         Self {
@@ -725,4 +835,4 @@ impl TierConfigurations {
             cold: TierConfig::auto_detect_cold(pool_name),
         }
     }
-} 
+}

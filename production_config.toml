@@ -1,5 +1,7 @@
+# IMPORTANT: NestGate is encryption-agnostic - these are external provider settings
 [encryption]
-provider = "software"  # Options: software, beardog, hybrid
+# External encryption provider (NestGate delegates all encryption to external systems)
+provider = "none"  # Options: none (default), beardog, external
 algorithm = "aes-256-gcm"
 key_rotation_interval_days = 90
 compression_before_encryption = true
