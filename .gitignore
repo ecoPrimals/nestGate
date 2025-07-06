@@ -88,9 +88,12 @@ nestgate-port-manager-*.tar.gz
 # Criterion benchmark results
 /target/criterion/
 
-# Test reports
+# Test reports and HTML artifacts
 /test-reports/
 /tests/reports/
+/reports/
+*.html
+!**/src/**/*.html
 
 # Development artifacts
 .port-manager.pid
