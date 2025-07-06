@@ -2,8 +2,11 @@
 //!
 //! File characteristic analysis and access pattern tracking
 
-use crate::types::*;
+use crate::types::prediction::{DataPattern, FileType, TierType};
+use crate::types::{AccessType, FileAnalysis, AccessPatterns, FileCharacteristics, AccessEvent, AutomationError};
 use crate::Result;
+use nestgate_core::types::StorageTier;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -23,42 +26,33 @@ impl FileAnalyzer {
     pub fn new() -> Self {
         Self {
             analysis_cache: tokio::sync::RwLock::new(HashMap::new()),
-            cache_ttl: 300, // 5 minutes
+            cache_ttl: 3600, // 1 hour
         }
     }
 
+    /// Analyze a file and return its characteristics
     pub async fn analyze_file(&self, file_path: &str) -> Result<FileAnalysis> {
         // Check cache first
         if let Some(cached) = self.get_cached_analysis(file_path).await {
-            debug!("Using cached analysis for {}", file_path);
             return Ok(cached);
         }
 
-        info!("Analyzing file: {}", file_path);
-
         let path = Path::new(file_path);
-
-        // Get file metadata
         let metadata = fs::metadata(path).await.map_err(|e| {
             AutomationError::FileAnalysis(format!(
-                "Failed to read metadata for {}: {}",
+                "Failed to get metadata for {}: {}",
                 file_path, e
             ))
         })?;
 
         let size = metadata.len();
+        let file_type = self.determine_file_type(path);
+        let characteristics = self.analyze_characteristics(path, size, &file_type).await?;
+
         let modified = metadata
             .modified()
-            .unwrap_or(UNIX_EPOCH)
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-
-        // Determine file type from extension and content
-        let file_type = self.determine_file_type(path);
-
-        // Analyze file characteristics
-        let characteristics = self.analyze_characteristics(path, size, &file_type).await?;
+            .map(|t| t.duration_since(UNIX_EPOCH).unwrap_or_default().as_secs())
+            .unwrap_or(0);
 
         let analysis = FileAnalysis {
             path: file_path.to_string(),
@@ -71,51 +65,44 @@ impl FileAnalyzer {
         // Cache the result
         self.cache_analysis(file_path, analysis.clone()).await;
 
+        debug!("Analyzed file {}: {} bytes, type: {:?}", file_path, size, analysis.file_type);
+
         Ok(analysis)
     }
 
+    /// Get access patterns for a file
     pub async fn get_access_patterns(&self, file_path: &str) -> Result<AccessPatterns> {
-        // For now, generate patterns based on file characteristics
+        // In a real implementation, this would track actual access patterns
+        // For now, we'll estimate based on file characteristics
         let analysis = self.analyze_file(file_path).await?;
+        
+        let daily_access_count = self.estimate_daily_access(&analysis);
+        let read_write_ratio = self.estimate_read_write_ratio(&analysis);
+        let peak_hours = self.estimate_peak_hours(&analysis);
 
-        let patterns = AccessPatterns {
-            daily_access_count: self.estimate_daily_access(&analysis),
+        Ok(AccessPatterns {
+            daily_access_count,
             average_file_size: analysis.size,
-            read_write_ratio: self.estimate_read_write_ratio(&analysis),
-            sequential_access_ratio: if analysis.characteristics.is_sequential_access {
-                0.8
-            } else {
-                0.2
-            },
-            peak_access_hours: self.estimate_peak_hours(&analysis),
+            read_write_ratio,
+            sequential_access_ratio: 0.7, // Default estimate
+            peak_access_hours: peak_hours,
             last_access: Some(SystemTime::now()),
-        };
-
-        Ok(patterns)
+        })
     }
 
-    /// Determine file type from extension
     fn determine_file_type(&self, path: &Path) -> FileType {
-        if let Some(extension) = path.extension() {
-            if let Some(ext_str) = extension.to_str() {
-                match ext_str.to_lowercase().as_str() {
-                    "db" | "sqlite" | "sqlite3" => FileType::Database,
-                    "pdf" | "doc" | "docx" | "txt" | "md" => FileType::Document,
-                    "jpg" | "jpeg" | "png" | "gif" | "bmp" => FileType::Image,
-                    "zip" | "tar" | "gz" | "bz2" | "xz" | "rar" | "7z" => FileType::Archive,
-                    "log" | "logs" => FileType::Log,
-                    "bak" | "backup" | "dump" => FileType::Backup,
-                    _ => FileType::Unknown,
-                }
-            } else {
-                FileType::Unknown
-            }
-        } else {
-            FileType::Unknown
+        match path.extension().and_then(|ext| ext.to_str()) {
+            Some("db") | Some("sqlite") | Some("sqlite3") => FileType::Database,
+            Some("txt") | Some("md") | Some("doc") | Some("docx") | Some("pdf") => FileType::Document,
+            Some("jpg") | Some("jpeg") | Some("png") | Some("gif") | Some("bmp") => FileType::Image,
+            Some("zip") | Some("tar") | Some("gz") | Some("7z") | Some("rar") => FileType::Archive,
+            Some("log") | Some("out") | Some("err") => FileType::Log,
+            Some("bak") | Some("backup") | Some("old") => FileType::Backup,
+            _ => FileType::Unknown,
         }
     }
 
-    /// Analyze file characteristics
+    /// Analyze file characteristics for intelligent processing
     async fn analyze_characteristics(
         &self,
         path: &Path,
@@ -135,43 +122,37 @@ impl FileAnalyzer {
         })
     }
 
-    /// Estimate access frequency
+    /// Estimate if file is frequently accessed based on size and other factors
     async fn estimate_access_frequency(&self, path: &Path, size: u64) -> bool {
-        // Small files are likely frequently accessed
-        if size < 10 * 1024 * 1024 {
-            // < 10MB
+        // Small files are more likely to be frequently accessed
+        if size < 1024 * 1024 {
             return true;
         }
 
-        // Check if file was recently modified
-        if let Ok(metadata) = fs::metadata(path).await {
-            if let Ok(modified) = metadata.modified() {
-                let age = SystemTime::now()
-                    .duration_since(modified)
-                    .unwrap_or_default();
-                return age.as_secs() < 24 * 60 * 60; // Modified within 24 hours
-            }
-        }
-
-        false
+        // Check file name patterns
+        let file_name = path.file_name().unwrap_or_default().to_string_lossy();
+        let frequently_accessed_patterns = ["config", "index", "cache", "temp", "recent"];
+        
+        frequently_accessed_patterns.iter().any(|pattern| {
+            file_name.to_lowercase().contains(pattern)
+        })
     }
 
-    /// Estimate sequential access patterns
+    /// Estimate sequential access patterns based on file type and size
     fn estimate_sequential_access(&self, file_type: &FileType, size: u64) -> bool {
         match file_type {
-            FileType::Log | FileType::Backup => true,
-            FileType::Database => size > 100 * 1024 * 1024, // Large databases
-            FileType::Archive => true,
-            _ => false,
+            FileType::Archive | FileType::Backup => true,
+            FileType::Log => size > 10 * 1024 * 1024, // Large log files
+            FileType::Database => false, // Databases are typically random access
+            _ => size > 100 * 1024 * 1024, // Large files are more likely sequential
         }
     }
 
-    /// Estimate compression potential
+    /// Estimate compressibility based on file type
     fn estimate_compressibility(&self, file_type: &FileType) -> bool {
         match file_type {
-            FileType::Archive => false, // Already compressed
-            FileType::Image => false,   // Usually compressed
             FileType::Document | FileType::Log | FileType::Database => true,
+            FileType::Image | FileType::Archive => false, // Already compressed
             _ => true,
         }
     }
@@ -180,36 +161,30 @@ impl FileAnalyzer {
     fn estimate_deduplication_potential(&self, file_type: &FileType, size: u64) -> bool {
         match file_type {
             FileType::Backup => true,
-            FileType::Log => size > 1024 * 1024,
-            FileType::Document => true,
-            _ => size > 10 * 1024 * 1024,
+            FileType::Archive if size > 100 * 1024 * 1024 => true,
+            _ => false,
         }
     }
 
-    /// Estimate daily access count
+    /// Estimate daily access count based on file analysis
     fn estimate_daily_access(&self, analysis: &FileAnalysis) -> u32 {
         match analysis.file_type {
             FileType::Database => 50,
+            FileType::Document if analysis.size < 1024 * 1024 => 20,
+            FileType::Document => 5,
             FileType::Log => 10,
-            FileType::Document => {
-                if analysis.size < 1024 * 1024 {
-                    5
-                } else {
-                    1
-                }
-            }
             FileType::Archive | FileType::Backup => 1,
             _ => 3,
         }
     }
 
-    /// Estimate read/write ratio
+    /// Estimate read/write ratio based on file analysis
     fn estimate_read_write_ratio(&self, analysis: &FileAnalysis) -> f64 {
         match analysis.file_type {
-            FileType::Log => 0.1,                         // Mostly writes
-            FileType::Backup | FileType::Archive => 10.0, // Mostly reads
-            FileType::Database => 3.0,
-            FileType::Document => 5.0,
+            FileType::Database => 3.0, // More reads than writes
+            FileType::Document => 5.0, // Mostly reads
+            FileType::Log => 0.1, // Mostly writes
+            FileType::Archive | FileType::Backup => 10.0, // Almost all reads
             _ => 2.0,
         }
     }
@@ -217,20 +192,17 @@ impl FileAnalyzer {
     /// Estimate peak access hours
     fn estimate_peak_hours(&self, analysis: &FileAnalysis) -> Vec<u8> {
         match analysis.file_type {
-            FileType::Database => vec![9, 10, 11, 14, 15, 16],
-            FileType::Log => vec![0, 1, 2, 23],
-            FileType::Backup => vec![2, 3, 4],
-            _ => vec![9, 10, 14, 15],
+            FileType::Database => vec![9, 10, 11, 14, 15, 16], // Business hours
+            FileType::Log => vec![0, 1, 2, 3, 4, 5], // Off-hours maintenance
+            _ => vec![9, 10, 14, 15], // General business hours
         }
     }
 
-    /// Get cached analysis
+    /// Get cached analysis result
     async fn get_cached_analysis(&self, file_path: &str) -> Option<FileAnalysis> {
         let cache = self.analysis_cache.read().await;
-        if let Some((analysis, timestamp)) = cache.get(file_path) {
-            let age = SystemTime::now()
-                .duration_since(*timestamp)
-                .unwrap_or_default();
+        if let Some((analysis, cached_at)) = cache.get(file_path) {
+            let age = SystemTime::now().duration_since(*cached_at).unwrap_or_default();
             if age.as_secs() < self.cache_ttl {
                 return Some(analysis.clone());
             }
@@ -242,16 +214,10 @@ impl FileAnalyzer {
     async fn cache_analysis(&self, file_path: &str, analysis: FileAnalysis) {
         let mut cache = self.analysis_cache.write().await;
         cache.insert(file_path.to_string(), (analysis, SystemTime::now()));
-
-        // Clean old entries
-        if cache.len() > 1000 {
-            let cutoff = SystemTime::now() - std::time::Duration::from_secs(self.cache_ttl);
-            cache.retain(|_, (_, timestamp)| *timestamp > cutoff);
-        }
     }
 }
 
-/// Access pattern analyzer
+/// Access pattern analyzer for tracking file access history
 #[derive(Debug)]
 pub struct AccessPatternAnalyzer {
     pattern_history: tokio::sync::RwLock<HashMap<String, Vec<AccessEvent>>>,
@@ -266,7 +232,6 @@ impl AccessPatternAnalyzer {
         }
     }
 
-    /// Record an access event
     pub async fn record_access(
         &self,
         file_path: &str,
@@ -281,18 +246,17 @@ impl AccessPatternAnalyzer {
         };
 
         let mut history = self.pattern_history.write().await;
-        let file_history = history
-            .entry(file_path.to_string())
-            .or_insert_with(Vec::new);
-        file_history.push(event);
+        let events = history.entry(file_path.to_string()).or_insert_with(Vec::new);
+        events.push(event);
 
-        if file_history.len() > self.max_history {
-            file_history.drain(0..self.max_history / 10);
+        // Keep history bounded
+        if events.len() > self.max_history {
+            events.remove(0);
         }
     }
 }
 
-/// Dataset analyzer
+/// Dataset analyzer for comprehensive dataset analysis
 #[derive(Debug)]
 pub struct DatasetAnalyzer {
     file_analyzer: FileAnalyzer,
@@ -327,34 +291,11 @@ impl DatasetAnalyzer {
     }
 
     pub async fn analyze_dataset(&self, dataset_name: &str) -> Result<DatasetAnalysis> {
-        info!("Analyzing dataset: {}", dataset_name);
-
-        let dataset_path = format!("/mnt/storage/{}", dataset_name);
-        let path = Path::new(&dataset_path);
-
-        if !path.exists() {
-            warn!("Dataset path does not exist: {}", dataset_path);
-            return Ok(DatasetAnalysis {
-                dataset_name: dataset_name.to_string(),
-                total_files: 0,
-                total_size: 0,
-                file_types: vec![],
-                access_patterns: AccessPatterns::default(),
-                recommendations: vec!["Dataset not found".to_string()],
-            });
-        }
-
+        let path = Path::new(dataset_name);
+        
         let (file_analyses, total_files, total_size) = self.scan_dataset_directory(path).await?;
-
-        let mut file_type_counts: HashMap<FileType, u32> = HashMap::new();
-        for analysis in &file_analyses {
-            *file_type_counts
-                .entry(analysis.file_type.clone())
-                .or_insert(0) += 1;
-        }
-        let file_types: Vec<FileType> = file_type_counts.keys().cloned().collect();
-
         let access_patterns = self.aggregate_access_patterns(&file_analyses).await;
+        let file_types = file_analyses.iter().map(|f| f.file_type.clone()).collect();
         let recommendations = self.generate_recommendations(&file_analyses, &access_patterns);
 
         Ok(DatasetAnalysis {
@@ -374,24 +315,24 @@ impl DatasetAnalyzer {
     pub async fn recommend_tier(
         &self,
         characteristics: &FileAnalysis,
-    ) -> Result<nestgate_core::StorageTier> {
+    ) -> Result<StorageTier> {
         let tier = if characteristics.characteristics.is_frequently_accessed
             || characteristics.size < 10 * 1024 * 1024
         {
-            nestgate_core::StorageTier::Hot
+            StorageTier::Hot
         } else if characteristics.size < 1024 * 1024 * 1024 {
             match characteristics.file_type {
-                FileType::Database => nestgate_core::StorageTier::Hot,
-                FileType::Document => nestgate_core::StorageTier::Warm,
-                FileType::Log => nestgate_core::StorageTier::Warm,
-                FileType::Archive | FileType::Backup => nestgate_core::StorageTier::Cold,
-                _ => nestgate_core::StorageTier::Warm,
+                FileType::Database => StorageTier::Hot,
+                FileType::Document => StorageTier::Warm,
+                FileType::Log => StorageTier::Warm,
+                FileType::Archive | FileType::Backup => StorageTier::Cold,
+                _ => StorageTier::Warm,
             }
         } else {
             match characteristics.file_type {
-                FileType::Database => nestgate_core::StorageTier::Warm,
-                FileType::Archive | FileType::Backup => nestgate_core::StorageTier::Cold,
-                _ => nestgate_core::StorageTier::Cold,
+                FileType::Database => StorageTier::Warm,
+                FileType::Archive | FileType::Backup => StorageTier::Cold,
+                _ => StorageTier::Cold,
             }
         };
 
@@ -524,10 +465,33 @@ impl DatasetAnalyzer {
 
         recommendations
     }
+
+    pub fn analyze_storage_tier(
+        &self,
+        file_type: &FileType,
+        access_patterns: &[DataPattern],
+    ) -> Result<StorageTier> {
+        match access_patterns.len() {
+            0 => Ok(StorageTier::Hot),
+            1..=3 => Ok(match file_type {
+                FileType::Database => StorageTier::Hot,
+                FileType::Document => StorageTier::Warm,
+                FileType::Log => StorageTier::Warm,
+                FileType::Archive | FileType::Backup => StorageTier::Cold,
+                _ => StorageTier::Warm,
+            }),
+            4..=10 => Ok(match file_type {
+                FileType::Database => StorageTier::Warm,
+                FileType::Archive | FileType::Backup => StorageTier::Cold,
+                _ => StorageTier::Cold,
+            }),
+            _ => Ok(StorageTier::Cold),
+        }
+    }
 }
 
 /// Result of dataset analysis
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatasetAnalysis {
     pub dataset_name: String,
     pub total_files: u64,

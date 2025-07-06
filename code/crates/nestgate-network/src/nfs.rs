@@ -46,6 +46,12 @@ pub struct NfsServer {
     running: Arc<RwLock<bool>>,
 }
 
+impl Default for NfsServer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl NfsServer {
     /// Create a new NFS server
     pub fn new() -> Self {
@@ -136,7 +142,7 @@ impl NfsServer {
 
         // Start rpcbind (required for NFS)
         let rpcbind_output = Command::new("systemctl")
-            .args(&["start", "rpcbind"])
+            .args(["start", "rpcbind"])
             .output()
             .map_err(|e| NestGateError::Network(format!("Failed to start rpcbind: {}", e)))?;
 
@@ -147,7 +153,7 @@ impl NfsServer {
 
         // Start NFS server
         let nfs_output = Command::new("systemctl")
-            .args(&["start", "nfs-kernel-server"])
+            .args(["start", "nfs-kernel-server"])
             .output()
             .map_err(|e| NestGateError::Network(format!("Failed to start NFS server: {}", e)))?;
 
@@ -171,7 +177,7 @@ impl NfsServer {
 
         // Stop NFS server
         let nfs_output = Command::new("systemctl")
-            .args(&["stop", "nfs-kernel-server"])
+            .args(["stop", "nfs-kernel-server"])
             .output()
             .map_err(|e| NestGateError::Network(format!("Failed to stop NFS server: {}", e)))?;
 
@@ -227,7 +233,7 @@ impl NfsServer {
         let mut exports_content = String::new();
 
         // Generate exports file content
-        for (name, export) in exports.iter() {
+        for (_name, export) in exports.iter() {
             let path = export.path.to_string_lossy();
             let mut options = Vec::new();
 
@@ -279,7 +285,7 @@ impl NfsServer {
         // Move temp file to /etc/exports (requires root privileges)
         use std::process::Command;
         let mv_output = Command::new("sudo")
-            .args(&["cp", temp_path, "/etc/exports"])
+            .args(["cp", temp_path, "/etc/exports"])
             .output()
             .map_err(|e| NestGateError::Network(format!("Failed to update /etc/exports: {}", e)))?;
 
@@ -293,7 +299,7 @@ impl NfsServer {
 
         // Reload exports
         let reload_output = Command::new("sudo")
-            .args(&["exportfs", "-ra"])
+            .args(["exportfs", "-ra"])
             .output()
             .map_err(|e| NestGateError::Network(format!("Failed to reload exports: {}", e)))?;
 
@@ -386,7 +392,6 @@ async fn perform_nfs_mount(
     client_host: &str,
 ) -> Result<()> {
     use std::fs;
-    use std::process::Command;
 
     tracing::info!(
         "Performing NFS mount: {} -> {:?} for client {}",

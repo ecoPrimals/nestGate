@@ -246,15 +246,15 @@ fn bench_async_operations(c: &mut Criterion) {
 }
 
 /// Helper function to create test optimization opportunities
-fn create_test_opportunities(count: usize) -> Vec<crate::ai_integration::OptimizationOpportunity> {
+fn create_test_opportunities(count: usize) -> Vec<OptimizationOpportunity> {
     (0..count)
         .map(|i| {
-            crate::ai_integration::OptimizationOpportunity {
-                optimization_type: crate::ai_integration::OptimizationType::TierMigration,
+            OptimizationOpportunity {
+                optimization_type: OptimizationType::TierMigration,
                 description: format!("Optimization {}", i),
                 expected_impact: (i as f64 * 3.7) % 100.0, // Pseudo-random impact
                 confidence: 0.5 + (i as f64 * 0.1) % 0.5,
-                complexity: crate::ai_integration::OptimizationComplexity::Medium,
+                complexity: OptimizationComplexity::Medium,
                 implementation_time: Duration::from_secs(60 + (i as u64 * 13) % 300),
             }
         })

@@ -3,9 +3,10 @@
 //! Enhanced error handling with enhanced NestGate capabilities
 
 use thiserror::Error;
+use serde::{Serialize, Deserialize};
 
 /// Main error type for NestGate operations
-#[derive(Error, Debug, Clone)]
+#[derive(Error, Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum NestGateError {
     /// Generic internal error
     #[error("Internal error: {0}")]
@@ -94,6 +95,46 @@ pub enum NestGateError {
     /// Parse error
     #[error("Parse error: {0}")]
     Parse(String),
+
+    /// Permission denied error
+    #[error("Permission denied: {0}")]
+    PermissionDenied(String),
+
+    /// Compression error
+    #[error("Compression error: {0}")]
+    CompressionError(String),
+
+    /// Connection error
+    #[error("Connection error: {0}")]
+    ConnectionError(String),
+
+    /// Configuration errors
+    #[error("Configuration error: {0}")]
+    Config(String),
+
+    /// Automation/AI errors
+    #[error("Automation error: {0}")]
+    Automation(String),
+
+    /// Data ingestion errors
+    #[error("Data ingestion error: {0}")]
+    DataIngestion(String),
+
+    /// Hardware-related errors
+    #[error("Hardware error: {0}")]
+    Hardware(String),
+
+    /// Service discovery errors
+    #[error("Service discovery error: {0}")]
+    ServiceDiscovery(String),
+
+    /// ZFS-specific errors
+    #[error("ZFS error: {0}")]
+    Zfs(String),
+
+    /// Generic errors
+    #[error("Generic error: {0}")]
+    Generic(String),
 }
 
 /// Result type alias for NestGate operations
@@ -108,5 +149,17 @@ impl From<std::num::ParseIntError> for NestGateError {
 impl From<std::io::Error> for NestGateError {
     fn from(err: std::io::Error) -> Self {
         NestGateError::Io(err.to_string())
+    }
+}
+
+impl From<reqwest::Error> for NestGateError {
+    fn from(err: reqwest::Error) -> Self {
+        NestGateError::Network(err.to_string())
+    }
+}
+
+impl From<serde_json::Error> for NestGateError {
+    fn from(err: serde_json::Error) -> Self {
+        NestGateError::Parse(err.to_string())
     }
 }

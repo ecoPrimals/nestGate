@@ -13,7 +13,9 @@ use nestgate_core::{Result, StorageTier};
 /// Manages tiered storage operations
 #[derive(Debug)]
 pub struct TierManager {
+    #[allow(dead_code)]
     config: ZfsConfig,
+    #[allow(dead_code)]
     pool_manager: Arc<ZfsPoolManager>,
     dataset_manager: Arc<ZfsDatasetManager>,
     tier_stats: Arc<RwLock<HashMap<StorageTier, TierStats>>>,

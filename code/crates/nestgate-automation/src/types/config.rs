@@ -18,6 +18,9 @@ pub struct AutomationConfig {
     pub squirrel_mcp_url: String,
     #[cfg(feature = "network-integration")]
     pub toadstool_compute_url: String,
+
+    pub data_api_endpoint: String,
+    pub prediction_endpoint: String,
 }
 
 impl Default for AutomationConfig {
@@ -30,11 +33,51 @@ impl Default for AutomationConfig {
             min_confidence_threshold: 0.7,
 
             #[cfg(feature = "network-integration")]
-            songbird_url: "http://localhost:8080".to_string(),
+            songbird_url: std::env::var("NESTGATE_SONGBIRD_URL")
+                .unwrap_or_else(|_| {
+                    format!(
+                        "http://localhost:{}",
+                        nestgate_core::constants::network::api_port()
+                    )
+                })
+                .to_string(),
             #[cfg(feature = "network-integration")]
-            squirrel_mcp_url: "http://localhost:8081".to_string(),
+            squirrel_mcp_url: std::env::var("NESTGATE_SQUIRREL_MCP_URL")
+                .unwrap_or_else(|_| {
+                    format!(
+                        "http://localhost:{}",
+                        std::env::var("NESTGATE_MCP_PORT").unwrap_or_else(|_| "8081".to_string())
+                    )
+                })
+                .to_string(),
             #[cfg(feature = "network-integration")]
-            toadstool_compute_url: "http://localhost:8082".to_string(),
+            toadstool_compute_url: std::env::var("NESTGATE_TOADSTOOL_COMPUTE_URL")
+                .unwrap_or_else(|_| {
+                    format!(
+                        "http://localhost:{}",
+                        std::env::var("NESTGATE_PREDICTION_PORT")
+                            .unwrap_or_else(|_| "8082".to_string())
+                    )
+                })
+                .to_string(),
+
+            data_api_endpoint: std::env::var("NESTGATE_DATA_API_ENDPOINT")
+                .unwrap_or_else(|_| {
+                    format!(
+                        "http://localhost:{}",
+                        nestgate_core::constants::network::api_port()
+                    )
+                })
+                .to_string(),
+            prediction_endpoint: std::env::var("NESTGATE_PREDICTION_ENDPOINT")
+                .unwrap_or_else(|_| {
+                    format!(
+                        "http://localhost:{}",
+                        std::env::var("NESTGATE_PREDICTION_PORT")
+                            .unwrap_or_else(|_| "8082".to_string())
+                    )
+                })
+                .to_string(),
         }
     }
 }
@@ -56,11 +99,25 @@ impl DiscoveryConfig {
         Self {
             known_songbird_endpoints: vec![
                 config.songbird_url.clone(),
-                "http://localhost:8080".to_string(),
-                "http://localhost:8081".to_string(),
+                std::env::var("NESTGATE_SONGBIRD_BACKUP_URL_1").unwrap_or_else(|_| {
+                    format!(
+                        "http://localhost:{}",
+                        std::env::var("NESTGATE_SONGBIRD_BACKUP_PORT")
+                            .unwrap_or_else(|_| "8080".to_string())
+                    )
+                }),
+                std::env::var("NESTGATE_SONGBIRD_BACKUP_URL_2").unwrap_or_else(|_| {
+                    format!(
+                        "http://localhost:{}",
+                        std::env::var("NESTGATE_MCP_PORT").unwrap_or_else(|_| "8081".to_string())
+                    )
+                }),
             ],
             discovery_timeout_ms: 5000,
-            health_check_interval_ms: 30000,
+            health_check_interval_ms: std::env::var("NESTGATE_HEALTH_CHECK_INTERVAL_MS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30000),
             multicast_enabled: true,
             mdns_enabled: true,
         }

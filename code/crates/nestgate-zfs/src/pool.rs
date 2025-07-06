@@ -15,6 +15,7 @@ use nestgate_core::{NestGateError, Result};
 /// ZFS Pool Manager - handles pool discovery and management
 #[derive(Debug)]
 pub struct ZfsPoolManager {
+    #[allow(dead_code)]
     config: ZfsConfig,
     discovered_pools: Arc<DashMap<String, PoolInfo>>,
 }
@@ -120,7 +121,8 @@ impl ZfsPoolManager {
         Ok(())
     }
 
-    /// Discover real ZFS pools using zpool command
+    /// Discover real ZFS pools on the system
+    #[allow(dead_code)]
     async fn discover_real_pools(&self) -> Result<()> {
         let output = TokioCommand::new("zpool")
             .args(["list", "-H", "-p"])
@@ -238,7 +240,8 @@ impl ZfsPoolManager {
         Some((number * multiplier as f64) as u64)
     }
 
-    /// Get pool properties using zpool get
+    /// Get pool properties using zpool command
+    #[allow(dead_code)]
     async fn get_pool_properties(&self, pool_name: &str) -> Result<HashMap<String, String>> {
         let output = TokioCommand::new("zpool")
             .args(["get", "all", "-H", "-p", pool_name])
@@ -268,7 +271,8 @@ impl ZfsPoolManager {
         Ok(properties)
     }
 
-    /// Initialize default pool if none exists
+    /// Ensure default pool exists for testing/development
+    #[allow(dead_code)]
     async fn ensure_default_pool(&self) -> Result<()> {
         if self.discovered_pools.is_empty() {
             info!("No pools discovered, attempting to create default pool");

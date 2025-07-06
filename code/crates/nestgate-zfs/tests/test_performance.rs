@@ -11,4 +11,4 @@ mod basic_tests {
         let config = PerformanceEngineConfig::default();
         assert_eq!(config.latency_threshold_ms, 10.0);
     }
-} 
+}

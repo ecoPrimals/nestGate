@@ -5,10 +5,8 @@
 
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
-use std::sync::Arc;
-use std::time::{Duration, Instant};
-use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
+use std::time::Duration;
+use tracing::debug;
 use uuid::Uuid;
 
 use crate::error::{Error, Result};
@@ -119,7 +117,7 @@ impl SessionManager {
     pub fn new() -> Self {
         Self {
             sessions: HashMap::new(),
-            timeout: Duration::from_secs(3600), // Default: 1 hour
+            timeout: nestgate_core::constants::time::HOUR,
         }
     }
 
@@ -254,13 +252,13 @@ mod tests {
         session.last_activity = two_hours_ago;
 
         // Check if session is expired with 1 hour timeout
-        assert!(session.is_expired(Duration::from_secs(3600)));
+        assert!(session.is_expired(nestgate_core::constants::time::HOUR));
 
         // Update activity
         session.update_activity();
 
         // Should no longer be expired
-        assert!(!session.is_expired(Duration::from_secs(3600)));
+        assert!(!session.is_expired(nestgate_core::constants::time::HOUR));
     }
 
     #[test]

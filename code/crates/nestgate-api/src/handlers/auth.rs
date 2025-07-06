@@ -94,7 +94,7 @@ impl AuthService {
 /// Authenticate client certificate
 pub async fn authenticate(
     State(auth_service): State<AuthService>,
-    headers: HeaderMap,
+    _headers: HeaderMap,
     Json(request): Json<AuthRequest>,
 ) -> impl IntoResponse {
     // Validate request
@@ -113,7 +113,7 @@ pub async fn authenticate(
     }
 
     // Determine authentication mode
-    let requested_mode = request.mode.as_deref().unwrap_or("default");
+    let _requested_mode = request.mode.as_deref().unwrap_or("default");
     let current_mode = auth_service.current_mode().await;
 
     // Validate certificate
@@ -145,14 +145,21 @@ pub async fn authenticate(
             CertMode::Hybrid => "hybrid",
         };
 
-        // Generate session token (simplified)
-        let token = format!("nestgate_{}_{}", mode_str, chrono::Utc::now().timestamp());
+        // Generate session token using configurable prefix
+        let token_prefix = nestgate_core::constants::auth::token_prefix();
+        let token = format!(
+            "{}_{}_{}_{}",
+            token_prefix,
+            mode_str,
+            chrono::Utc::now().timestamp(),
+            &uuid::Uuid::new_v4().to_string()[..8]
+        );
 
         AuthResponse {
             authenticated: true,
             mode: mode_str.to_string(),
             token: Some(token),
-            expires_in: Some(3600), // 1 hour
+            expires_in: Some(nestgate_core::constants::auth::session_duration().as_secs() as u64),
             metadata: Some(serde_json::json!({
                 "service_id": request.service_id,
                 "auth_time": chrono::Utc::now().to_rfc3339(),
@@ -310,7 +317,7 @@ pub async fn switch_mode(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::http::StatusCode;
+
     use nestgate_core::cert::CertUtils;
 
     #[tokio::test]

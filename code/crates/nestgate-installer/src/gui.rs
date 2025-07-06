@@ -1,7 +1,9 @@
 use anyhow::Result;
 #[cfg(feature = "gui")]
 use iced::{
-    widget::{button, column, container, progress_bar, row, scrollable, text},
+    widget::{
+        button, checkbox, column, container, progress_bar, row, scrollable, text, text_input,
+    },
     Application, Command, Element, Length, Settings, Theme,
 };
 
@@ -326,11 +328,29 @@ impl NestGateInstallerGui {
     fn install_options_view(&self) -> Element<Message> {
         column![
             text("Installation Options").size(24),
-            // TODO: Add checkboxes and input fields for installation options
-            text("Configure how NestGate should be installed:"),
-            text(format!("Install as service: {}", self.install_as_service)),
-            text(format!("Enable ZFS: {}", self.enable_zfs)),
-            text(format!("Install path: {}", self.install_path)),
+            text("Configure how NestGate should be installed:").size(16),
+            // Interactive controls instead of static text
+            row![
+                checkbox("Install as system service", self.install_as_service)
+                    .on_toggle(Message::ToggleService),
+                text("Automatically start NestGate on system boot").size(12)
+            ]
+            .spacing(10)
+            .align_items(iced::Alignment::Center),
+            row![
+                checkbox("Enable ZFS support", self.enable_zfs).on_toggle(Message::ToggleZfs),
+                text("Required for advanced storage features").size(12)
+            ]
+            .spacing(10)
+            .align_items(iced::Alignment::Center),
+            column![
+                text("Installation Path:").size(14),
+                text_input("Installation directory", &self.install_path)
+                    .on_input(Message::SetInstallPath)
+                    .width(Length::Fill),
+                text("Default: /opt/nestgate").size(10)
+            ]
+            .spacing(5),
             row![
                 button("Back").on_press(Message::PreviousStep),
                 button("Next").on_press(Message::NextStep),
@@ -388,7 +408,10 @@ impl NestGateInstallerGui {
             column![
                 text("Next steps:"),
                 text("  • Run 'nestgate --help' to see available commands"),
-                text("  • Visit http://localhost:8080 for the web interface"),
+                text(&format!(
+                    "  • Visit http://localhost:{} for the web interface",
+                    std::env::var("NESTGATE_UI_PORT").unwrap_or_else(|_| "8080".to_string())
+                )),
                 text("  • Check the documentation for advanced configuration"),
             ]
             .spacing(5),

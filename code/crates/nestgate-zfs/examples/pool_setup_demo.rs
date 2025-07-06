@@ -3,7 +3,7 @@
 //! Demonstrates the pure Rust ZFS pool setup functionality with hardware detection
 //! and intelligent configuration recommendations.
 
-use nestgate_zfs::pool_setup::{setup_production_zfs, ZfsPoolSetup};
+use nestgate_zfs::pool_setup::ZfsPoolSetup;
 use tracing::{error, info, warn};
 use tracing_subscriber;
 

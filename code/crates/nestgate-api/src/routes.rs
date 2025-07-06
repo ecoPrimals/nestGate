@@ -14,12 +14,12 @@ pub fn create_router() -> Router {
 }
 
 /// Create the ZFS API router (requires ZFS state)
-pub fn create_zfs_router() -> Router<handlers::zfs::ZfsApiState> {
+pub fn _create_zfs_router() -> Router<handlers::zfs::ZfsApiState> {
     handlers::zfs::create_zfs_routes()
 }
 
 /// Create authentication router
-pub fn create_auth_router() -> Router<AuthService> {
+pub fn _create_auth_router() -> Router<AuthService> {
     use axum::routing::post;
     Router::new()
         .route(
@@ -44,7 +44,7 @@ pub fn create_combined_router() -> Router<handlers::zfs::ZfsApiState> {
 }
 
 /// Create full-featured router with authentication and ZFS support
-pub fn create_full_router() -> Router {
+pub fn _create_full_router() -> Router {
     use axum::routing::post;
 
     // Create authentication service in hybrid mode (fallback to standalone)

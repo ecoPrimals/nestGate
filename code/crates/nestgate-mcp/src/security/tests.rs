@@ -137,4 +137,71 @@ mod tests {
         let token = manager.get_current_token();
         assert!(BASE64.decode(token).is_ok());
     }
+
+    #[test]
+    fn test_mcp_security_config_validation() {
+        let config = McpSecurityConfig {
+            admin_password: Some("valid".to_string()),
+            user_store_path: "/valid/path/that/exists".to_string(),
+            token_expiry_hours: 24,
+            ..Default::default()
+        };
+        
+        let validation_result = config.validate();
+        assert!(validation_result.is_ok());
+    }
+
+    #[test]
+    fn test_mcp_security_config_missing_admin_password() {
+        let config = McpSecurityConfig {
+            admin_password: None,
+            user_store_path: "/valid/path/that/exists".to_string(),
+            token_expiry_hours: 24,
+            ..Default::default()
+        };
+        
+        let validation_result = config.validate();
+        match validation_result {
+            Err(Error::Configuration(msg)) => {
+                assert!(msg.contains("Admin password is required"));
+            }
+            _ => assert!(false, "Expected ConfigError"),
+        }
+    }
+
+    #[test]
+    fn test_mcp_security_config_invalid_user_store_path() {
+        let config = McpSecurityConfig {
+            admin_password: Some("valid".to_string()),
+            user_store_path: "/invalid/path/that/does/not/exist".to_string(),
+            token_expiry_hours: 24,
+            ..Default::default()
+        };
+        
+        let validation_result = config.validate();
+        match validation_result {
+            Err(Error::Configuration(msg)) => {
+                assert!(msg.contains("Invalid user store path"));
+            }
+            _ => assert!(false, "Expected ConfigError"),
+        }
+    }
+
+    #[test]
+    fn test_mcp_security_config_invalid_token_expiry() {
+        let config = McpSecurityConfig {
+            admin_password: Some("valid".to_string()),
+            user_store_path: "/valid/path/that/exists".to_string(),
+            token_expiry_hours: 0, // Invalid value
+            ..Default::default()
+        };
+        
+        let validation_result = config.validate();
+        match validation_result {
+            Err(Error::Configuration(msg)) => {
+                assert!(msg.contains("token expiry") || msg.contains("Invalid"));
+            }
+            _ => assert!(false, "Expected ConfigError"),
+        }
+    }
 } 

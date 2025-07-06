@@ -27,7 +27,7 @@ async fn test_real_system_performance_monitoring() -> Result<(), Box<dyn std::er
     let monitor = ZfsPerformanceMonitor::new(perf_config, pool_manager, dataset_manager);
     
     // Test I/O wait percentage (should read from /proc/stat)
-    let io_wait = monitor.get_io_wait_percent().await;
+    let io_wait = monitor.get_system_io_wait_percent().await;
     match io_wait {
         Ok(wait_percent) => {
             assert!(wait_percent >= 0.0 && wait_percent <= 100.0, "I/O wait should be 0-100%");
@@ -53,7 +53,7 @@ async fn test_real_system_performance_monitoring() -> Result<(), Box<dyn std::er
     }
     
     // Test network I/O monitoring (should read from /proc/net/dev)
-    let network_io = monitor.get_network_io().await;
+    let network_io = monitor.get_system_network_io().await;
     match network_io {
         Ok(io_mbps) => {
             assert!(io_mbps >= 0.0, "Network I/O should be non-negative");

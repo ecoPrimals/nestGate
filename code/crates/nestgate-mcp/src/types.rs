@@ -1,11 +1,9 @@
 //! Type definitions for the NestGate MCP system.
 
-use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::time::{Duration, SystemTime};
-use uuid::Uuid;
+use std::time::SystemTime;
 
 /// Type aliases for convenience
 pub type ProviderId = String;
@@ -30,6 +28,18 @@ pub enum StorageTier {
     Cold,
     /// Archive storage for rarely accessed data.
     Archive,
+}
+
+impl StorageTier {
+    /// Convert storage tier to string representation
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            StorageTier::Hot => "Hot",
+            StorageTier::Warm => "Warm",
+            StorageTier::Cold => "Cold",
+            StorageTier::Archive => "Archive",
+        }
+    }
 }
 
 /// Storage protocols supported by providers

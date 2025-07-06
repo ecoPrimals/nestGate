@@ -462,10 +462,10 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
             cumulative_weight += service_weight;
             
             if random_weight < cumulative_weight {
-                let mut stats = self.stats.write();
-                stats.total_requests += 1;
+        let mut stats = self.stats.write();
+        stats.total_requests += 1;
                 stats.service_stats.entry(service.id.clone()).or_default().requests += 1;
-                
+        
                 return Ok(service.clone());
             }
         }
