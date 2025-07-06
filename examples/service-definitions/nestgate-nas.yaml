@@ -272,64 +272,11 @@ services:
       protocol: "smb"
 
   # Web Management Interface
-  - name: "web-interface"
-    service_type: "WebServer"
-    version: "2.0.0"
-    description: "NestGate web management interface"
-    
-    command:
-      binary:
-        path: "/usr/local/bin/nestgate-ui"
-        args: ["--bind", "0.0.0.0:8090"]
-    
-    resources:
-      cpu:
-        min_cores: 0.5
-        max_cores: 2.0
-      memory:
-        min_memory: 536870912   # 512MB
-        max_memory: 2147483648  # 2GB
-    
-    networking:
-      ports:
-        - container_port: 8090
-          host_port: 8090
-          protocol: "HTTP"
-          expose_externally: true
-          load_balance: true
-      ssl_termination:
-        cert_path: "/etc/ssl/certs/nestgate.crt"
-        key_path: "/etc/ssl/private/nestgate.key"
-        protocols: ["TLSv1.2", "TLSv1.3"]
-    
-    health_check:
-      checks:
-        - http:
-            endpoint: "http://localhost:8090/health"
-            expected_status: 200
-            timeout: "10s"
-      interval: "30s"
-    
-    dependencies:
-      - service_name: "zfs-storage"
-        dependency_type: "Available"
-        condition: "Ready"
-        timeout: "30s"
-        optional: false
-    
-    scaling:
-      min_instances: 1
-      max_instances: 3
-      scaling_metrics:
-        - metric_type: "RequestRate"
-          target_value: 1000.0
-          comparison: "GreaterThan"
-    
-    protocol_support: ["HTTP", "HTTPS", "WebSocket"]
-    
-    labels:
-      tier: "frontend"
-      component: "ui"
+  # DEPRECATED: Web interface removed - using API-only architecture
+  # - name: "web-interface"
+  #   service_type: "WebServer"
+  #   version: "2.0.0"
+  #   description: "NestGate web management interface [DEPRECATED]"
 
 # Global orchestrator configuration
 orchestrator:
