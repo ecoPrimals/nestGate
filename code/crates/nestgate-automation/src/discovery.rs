@@ -26,6 +26,10 @@ pub struct DiscoveryConfig {
     pub enable_network_scan: bool,
     /// Cache expiration time in seconds
     pub cache_expiration_seconds: u64,
+    /// Network ranges to scan
+    pub network_ranges: Vec<String>,
+    /// Default scan networks
+    pub default_scan_networks: Vec<String>,
 }
 
 impl DiscoveryConfig {
@@ -36,7 +40,28 @@ impl DiscoveryConfig {
             discovery_endpoints: None, // Will use defaults
             enable_mdns: true,
             enable_network_scan: true,
-            cache_expiration_seconds: 300, // 5 minutes
+            cache_expiration_seconds: std::env::var("NESTGATE_DISCOVERY_CACHE_EXPIRATION_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(300), // 5 minutes
+            network_ranges: std::env::var("NESTGATE_DISCOVERY_NETWORK_RANGES")
+                .map(|ranges| ranges.split(',').map(String::from).collect())
+                .unwrap_or_else(|_| {
+                    vec![
+                        "192.168.1.0/24".to_string(),
+                        "192.168.0.0/24".to_string(),
+                        "10.0.0.0/24".to_string(),
+                    ]
+                }),
+            default_scan_networks: std::env::var("NESTGATE_DEFAULT_SCAN_NETWORKS")
+                .map(|networks| networks.split(',').map(String::from).collect())
+                .unwrap_or_else(|_| {
+                    vec![
+                        "192.168.1.0/24".to_string(),
+                        "192.168.0.0/24".to_string(),
+                        "10.0.0.0/24".to_string(),
+                    ]
+                }),
         }
     }
 }
@@ -45,14 +70,54 @@ impl Default for DiscoveryConfig {
     fn default() -> Self {
         Self {
             timeout_seconds: 10,
-            discovery_ports: Some(vec![8080, 3000, 3001, 8000, 9000]),
+            discovery_ports: Some(
+                std::env::var("NESTGATE_DISCOVERY_PORTS")
+                    .ok()
+                    .and_then(|s| {
+                        s.split(',')
+                            .filter_map(|p| p.trim().parse().ok())
+                            .collect::<Vec<u16>>()
+                            .into()
+                    })
+                    .filter(|v: &Vec<u16>| !v.is_empty())
+                    .unwrap_or_else(|| vec![8080, 3000, 3001, 8000, 9000]),
+            ),
             discovery_endpoints: Some(vec![
-                "http://localhost:8080/api/v1/discovery/songbirds".to_string(),
-                "http://127.0.0.1:3001/api/v1/discovery/songbirds".to_string(),
+                format!(
+                    "http://{}:{}/api/v1/discovery/songbirds",
+                    nestgate_core::constants::addresses::localhost(),
+                    nestgate_core::constants::network::api_port()
+                ),
+                format!(
+                    "http://{}:{}/api/v1/discovery/songbirds",
+                    nestgate_core::constants::addresses::localhost(),
+                    nestgate_core::constants::network::discovery_port()
+                ),
             ]),
             enable_mdns: true,
             enable_network_scan: true,
-            cache_expiration_seconds: 300,
+            cache_expiration_seconds: std::env::var("NESTGATE_DISCOVERY_CACHE_EXPIRATION_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(300),
+            network_ranges: std::env::var("NESTGATE_DISCOVERY_NETWORK_RANGES")
+                .map(|ranges| ranges.split(',').map(String::from).collect())
+                .unwrap_or_else(|_| {
+                    vec![
+                        "192.168.1.0/24".to_string(),
+                        "192.168.0.0/24".to_string(),
+                        "10.0.0.0/24".to_string(),
+                    ]
+                }),
+            default_scan_networks: std::env::var("NESTGATE_DEFAULT_SCAN_NETWORKS")
+                .map(|networks| networks.split(',').map(String::from).collect())
+                .unwrap_or_else(|_| {
+                    vec![
+                        "192.168.1.0/24".to_string(),
+                        "192.168.0.0/24".to_string(),
+                        "10.0.0.0/24".to_string(),
+                    ]
+                }),
         }
     }
 }
@@ -73,7 +138,12 @@ impl EcosystemDiscovery {
         Ok(Self {
             config: DiscoveryConfig::from_automation_config(config),
             client: reqwest::Client::builder()
-                .timeout(Duration::from_secs(10))
+                .timeout(Duration::from_secs(
+                    std::env::var("NESTGATE_DISCOVERY_REQUEST_TIMEOUT_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(10), // 10 seconds default
+                ))
                 .build()
                 .map_err(|e| crate::types::AutomationError::NetworkError(e.to_string()))?,
             discovered_instances: std::sync::Arc::new(std::sync::RwLock::new(HashMap::new())),
@@ -170,9 +240,19 @@ impl EcosystemDiscovery {
         })?;
 
         // Join mDNS multicast group
-        let multicast_addr = "224.0.0.251:5353".parse::<SocketAddr>().map_err(|e| {
-            crate::types::AutomationError::NetworkError(format!("Invalid mDNS address: {}", e))
-        })?;
+        let multicast_addr = std::env::var("NESTGATE_MULTICAST_ADDRESS")
+            .unwrap_or_else(|_| {
+                format!(
+                    "{}:{}",
+                    std::env::var("NESTGATE_MULTICAST_IP")
+                        .unwrap_or_else(|_| "224.0.0.251".to_string()),
+                    std::env::var("NESTGATE_MULTICAST_PORT").unwrap_or_else(|_| "5353".to_string())
+                )
+            })
+            .parse::<SocketAddr>()
+            .map_err(|e| {
+                crate::types::AutomationError::NetworkError(format!("Invalid mDNS address: {}", e))
+            })?;
 
         // Send mDNS query for _nestgate._tcp.local
         let query = self.build_mdns_query();
@@ -180,7 +260,7 @@ impl EcosystemDiscovery {
         match socket.send_to(&query, multicast_addr).await {
             Ok(_) => {
                 tracing::debug!("Sent mDNS query for NestGate services");
-                // TODO: Listen for responses and parse them
+                // mDNS response parsing requires full DNS packet implementation
                 // For now, return empty list as this requires more complex mDNS parsing
             }
             Err(e) => {
@@ -244,12 +324,8 @@ impl EcosystemDiscovery {
             }
             Err(e) => {
                 tracing::warn!("Failed to get network routes: {}", e);
-                // Fallback to common subnets
-                subnets.extend(vec![
-                    "192.168.1.0/24".to_string(),
-                    "192.168.0.0/24".to_string(),
-                    "10.0.0.0/24".to_string(),
-                ]);
+                // Fallback to configurable subnets
+                subnets.extend(self.config.network_ranges.clone());
             }
         }
 
@@ -293,7 +369,12 @@ impl EcosystemDiscovery {
                     // Try to connect to see if there's a NestGate instance
                     match reqwest::Client::new()
                         .get(&url)
-                        .timeout(Duration::from_secs(2))
+                        .timeout(Duration::from_secs(
+                            std::env::var("NESTGATE_DISCOVERY_TIMEOUT_SECS")
+                                .ok()
+                                .and_then(|s| s.parse().ok())
+                                .unwrap_or(2), // 2 seconds default
+                        ))
                         .send()
                         .await
                     {
@@ -335,8 +416,16 @@ impl EcosystemDiscovery {
         // Use configurable discovery endpoints instead of hardcoded values
         let discovery_endpoints = self.config.discovery_endpoints.clone().unwrap_or_else(|| {
             vec![
-                "http://localhost:8080/api/v1/discovery/songbirds".to_string(),
-                "http://127.0.0.1:3001/api/v1/discovery/songbirds".to_string(),
+                format!(
+                    "http://{}:{}/api/v1/discovery/songbirds",
+                    nestgate_core::constants::addresses::localhost(),
+                    nestgate_core::constants::network::api_port()
+                ),
+                format!(
+                    "http://{}:{}/api/v1/discovery/songbirds",
+                    nestgate_core::constants::addresses::localhost(),
+                    nestgate_core::constants::network::discovery_port()
+                ),
             ]
         });
 
@@ -344,7 +433,12 @@ impl EcosystemDiscovery {
             match self
                 .client
                 .get(&endpoint)
-                .timeout(Duration::from_secs(5))
+                .timeout(Duration::from_secs(
+                    std::env::var("NESTGATE_DISCOVERY_HEALTH_TIMEOUT_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(5), // 5 seconds default
+                ))
                 .send()
                 .await
             {
@@ -392,8 +486,13 @@ impl EcosystemDiscovery {
         };
         match *last {
             Some(last_time) => {
-                last_time.elapsed().unwrap_or(Duration::from_secs(0)) > Duration::from_secs(300)
-                // 5 minutes
+                last_time.elapsed().unwrap_or(Duration::from_secs(0))
+                    > Duration::from_secs(
+                        std::env::var("NESTGATE_DISCOVERY_CACHE_STALENESS_SECS")
+                            .ok()
+                            .and_then(|s| s.parse().ok())
+                            .unwrap_or(300), // 5 minutes default
+                    )
             }
             None => true,
         }

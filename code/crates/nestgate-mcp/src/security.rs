@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use tracing::{debug, error, warn};
+use tracing::{debug, warn};
 
 use crate::{Error, Result};
 
@@ -25,7 +25,7 @@ pub struct AuthToken {
     /// Permissions
     pub permissions: Vec<Permission>,
     /// Token creation time
-    pub created_at: SystemTime,
+    pub _created_at: SystemTime,
     /// Token expiration time
     pub expires_at: Option<SystemTime>,
     /// Whether token is active
@@ -179,8 +179,8 @@ struct UserCredentials {
     password_hash: String,
     salt: String,
     role: Role,
-    created_at: SystemTime,
-    last_login: Option<SystemTime>,
+    _created_at: SystemTime,
+    _last_login: Option<SystemTime>,
     is_active: bool,
 }
 
@@ -196,8 +196,8 @@ impl UserCredentials {
             password_hash,
             salt,
             role,
-            created_at: SystemTime::now(),
-            last_login: None,
+            _created_at: SystemTime::now(),
+            _last_login: None,
             is_active: true,
         })
     }
@@ -338,7 +338,7 @@ impl SecurityManager {
                 username: user_id.to_string(),
                 role: Role::Admin,
                 permissions: Role::Admin.default_permissions(),
-                created_at: SystemTime::now(),
+                _created_at: SystemTime::now(),
                 expires_at: None,
                 is_active: true,
             });
@@ -388,7 +388,7 @@ impl SecurityManager {
             username: credentials.username.clone(),
             role: credentials.role.clone(),
             permissions: credentials.role.default_permissions(),
-            created_at: SystemTime::now(),
+            _created_at: SystemTime::now(),
             expires_at: self
                 .config
                 .token_expiration
@@ -420,7 +420,7 @@ impl SecurityManager {
                 username: "System".to_string(),
                 role: Role::Admin,
                 permissions: Role::Admin.default_permissions(),
-                created_at: SystemTime::now(),
+                _created_at: SystemTime::now(),
                 expires_at: None,
                 is_active: true,
             });
@@ -739,7 +739,7 @@ mod tests {
         assert!(manager.validate_token(&token.token).await.is_ok());
 
         // Wait for expiration
-        tokio::time::sleep(Duration::from_secs(2)).await;
+        tokio::time::sleep(nestgate_core::constants::timeouts::retry_interval()).await;
 
         // Token should be expired now
         assert!(manager.validate_token(&token.token).await.is_err());

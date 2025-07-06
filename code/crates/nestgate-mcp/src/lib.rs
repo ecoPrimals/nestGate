@@ -54,12 +54,20 @@ pub struct McpConfig {
 impl Default for McpConfig {
     fn default() -> Self {
         Self {
-            cluster_endpoint: "http://localhost:8080".to_string(),
+            cluster_endpoint: format!(
+                "http://{}:{}",
+                nestgate_core::constants::addresses::localhost(),
+                nestgate_core::constants::network::api_port()
+            ),
             node_id: "default-node".to_string(),
             auth: None,
             tls: None,
             provider_config: None,
-            orchestrator_endpoint: "http://localhost:8090".to_string(),
+            orchestrator_endpoint: format!(
+                "http://{}:{}",
+                nestgate_core::constants::addresses::localhost(),
+                nestgate_core::constants::network::orchestrator_port()
+            ),
             federation_enabled: false,
         }
     }
@@ -99,9 +107,9 @@ pub struct EnhancedMcpService {
     orchestrator_client: Arc<dyn OrchestratorClient>,
     capabilities: Arc<RwLock<ProviderCapabilities>>,
     metrics: Arc<RwLock<SystemMetrics>>,
-    session_manager: Arc<session::SessionManager>,
+    _session_manager: Arc<session::SessionManager>,
     storage_adapter: Arc<storage::StorageAdapter>,
-    provider_registry: Arc<RwLock<HashMap<String, provider::ProviderInfo>>>,
+    _provider_registry: Arc<RwLock<HashMap<String, provider::ProviderInfo>>>,
 }
 
 impl EnhancedMcpService {
@@ -162,9 +170,9 @@ impl EnhancedMcpService {
                     },
                 },
             })),
-            session_manager: Arc::new(session::SessionManager::new()),
+            _session_manager: Arc::new(session::SessionManager::new()),
             storage_adapter: Arc::new(storage::StorageAdapter::new()),
-            provider_registry: Arc::new(RwLock::new(HashMap::new())),
+            _provider_registry: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
@@ -293,17 +301,32 @@ mod tests {
     #[tokio::test]
     async fn test_mcp_config_creation() {
         let config = McpConfig {
-            cluster_endpoint: "localhost:8080".to_string(),
+            cluster_endpoint: format!(
+                "{}:{}",
+                nestgate_core::constants::addresses::localhost(),
+                nestgate_core::constants::network::api_port()
+            ),
             node_id: "test-node".to_string(),
             auth: None,
             tls: None,
             provider_config: None,
-            orchestrator_endpoint: "localhost:9090".to_string(),
+            orchestrator_endpoint: format!(
+                "{}:{}",
+                nestgate_core::constants::addresses::localhost(),
+                nestgate_core::constants::network::prometheus_port()
+            ),
             federation_enabled: true,
         };
 
         assert_eq!(config.node_id, "test-node");
-        assert_eq!(config.cluster_endpoint, "localhost:8080");
+        assert_eq!(
+            config.cluster_endpoint,
+            format!(
+                "{}:{}",
+                nestgate_core::constants::addresses::localhost(),
+                nestgate_core::constants::network::api_port()
+            )
+        );
     }
 
     #[tokio::test]

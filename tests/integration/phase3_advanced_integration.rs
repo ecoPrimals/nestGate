@@ -295,7 +295,7 @@ async fn test_performance_load_testing() -> CoreResult<()> {
     
     // Performance assertions
     assert!(successful_tasks >= 8, "At least 80% of tasks should succeed");
-    assert!(total_duration < Duration::from_secs(30), "Total test should complete within 30s");
+    assert!(total_duration < nestgate_core::constants::test_defaults::TEST_MEDIUM_TIMEOUT, "Total test should complete within 30s");
     assert!(avg_task_duration < 5000, "Average task should complete within 5s");
     
     Ok(())
@@ -447,7 +447,7 @@ async fn test_automation_system_integration() -> CoreResult<()> {
             size_bytes: size,
             created_at: SystemTime::now(),
             modified_at: SystemTime::now() - Duration::from_secs(3600),
-            accessed_at: SystemTime::now() - Duration::from_secs(60),
+            accessed_at: SystemTime::now() - nestgate_core::constants::test_defaults::TEST_LONG_TIMEOUT,
             access_count: match pattern {
                 AccessPattern::Hot => 1000,
                 AccessPattern::Sequential => 100,

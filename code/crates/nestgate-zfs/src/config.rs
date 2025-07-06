@@ -239,7 +239,14 @@ pub struct AiAutomationSettings {
 impl Default for ZfsConfig {
     fn default() -> Self {
         Self {
-            api_endpoint: "http://localhost:8080".to_string(),
+            api_endpoint: std::env::var("NESTGATE_API_ENDPOINT")
+                .unwrap_or_else(|_| {
+                    format!(
+                        "http://localhost:{}",
+                        nestgate_core::constants::network::api_port()
+                    )
+                })
+                .to_string(),
             default_pool: "nestpool".to_string(),
             use_real_zfs: true,
             tiers: TierConfigurations::default(),
@@ -252,8 +259,14 @@ impl Default for ZfsConfig {
             monitoring_interval: 300, // 5 minutes
             snapshot_policies_file: None,
             automation: None,
-            ecosystem_orchestrator_url: std::env::var("ECOSYSTEM_ORCHESTRATOR_URL")
-                .unwrap_or_else(|_| "http://localhost:8080".to_string()),
+            ecosystem_orchestrator_url: std::env::var("ECOSYSTEM_ORCHESTRATOR_URL").unwrap_or_else(
+                |_| {
+                    format!(
+                        "http://localhost:{}",
+                        nestgate_core::constants::network::api_port()
+                    )
+                },
+            ),
             enable_ecosystem_integration: std::env::var("ENABLE_ECOSYSTEM_INTEGRATION")
                 .map(|v| v.to_lowercase() == "true")
                 .unwrap_or(false),
@@ -711,7 +724,7 @@ impl ZfsConfig {
     /// Detect available ZFS pools on the system
     async fn detect_available_pools() -> Result<Vec<String>> {
         let output = tokio::process::Command::new("zpool")
-            .args(&["list", "-H", "-o", "name"])
+            .args(["list", "-H", "-o", "name"])
             .output()
             .await
             .map_err(|e| NestGateError::Internal(format!("Failed to list ZFS pools: {}", e)))?;
@@ -732,7 +745,7 @@ impl ZfsConfig {
     /// Check if a pool has the expected tier structure
     pub async fn validate_pool_structure(&self, pool_name: &str) -> Result<bool> {
         let output = tokio::process::Command::new("zfs")
-            .args(&["list", "-H", "-o", "name", "-r", pool_name])
+            .args(["list", "-H", "-o", "name", "-r", pool_name])
             .output()
             .await
             .map_err(|e| NestGateError::Internal(format!("Failed to list pool datasets: {}", e)))?;

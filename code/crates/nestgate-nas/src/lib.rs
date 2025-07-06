@@ -27,10 +27,11 @@ impl Default for NasConfig {
             smb_enabled: true,
             nfs_enabled: true,
             http_enabled: true,
-            bind_address: "0.0.0.0".to_string(),
-            smb_port: 445,
-            nfs_port: 2049,
-            http_port: 8080,
+            bind_address: std::env::var("NESTGATE_NAS_BIND_ADDRESS")
+                .unwrap_or_else(|_| "192.168.1.100".to_string()),
+            smb_port: nestgate_core::constants::network::smb_port(),
+            nfs_port: nestgate_core::constants::network::nfs_port(),
+            http_port: nestgate_core::constants::network::api_port(),
             share_root: PathBuf::from("/nas/shares"),
         }
     }
@@ -293,7 +294,7 @@ mod tests {
         assert!(config.smb_enabled);
         assert!(config.nfs_enabled);
         assert!(config.http_enabled);
-        assert_eq!(config.bind_address, "0.0.0.0");
+        assert_eq!(config.bind_address, "192.168.1.100");
         assert_eq!(config.smb_port, 445);
         assert_eq!(config.nfs_port, 2049);
         assert_eq!(config.http_port, 8080);
@@ -331,7 +332,7 @@ mod tests {
 
         // Test that protocols can be cloned and compared
         for protocol in protocols {
-            let cloned = protocol.clone();
+            let cloned = protocol;
             assert_eq!(protocol, cloned);
 
             // Test debug formatting
@@ -397,7 +398,7 @@ mod tests {
 
     #[test]
     fn test_nas_share_different_protocols() {
-        let all_protocols = vec![ShareProtocol::SMB, ShareProtocol::NFS, ShareProtocol::HTTP];
+        let all_protocols = [ShareProtocol::SMB, ShareProtocol::NFS, ShareProtocol::HTTP];
 
         for (i, protocol) in all_protocols.iter().enumerate() {
             let share = NasShare {
@@ -405,7 +406,7 @@ mod tests {
                 path: PathBuf::from(format!("/nas/share_{}", i)),
                 read_only: i % 2 == 0, // Alternate read-only
                 allowed_users: vec![format!("user_{}", i)],
-                protocols: vec![protocol.clone()],
+                protocols: vec![*protocol],
             };
 
             assert_eq!(share.name, format!("share_{}", i));
@@ -443,7 +444,8 @@ mod tests {
             smb_enabled: true,
             nfs_enabled: false,
             http_enabled: true,
-            bind_address: "192.168.1.100".to_string(),
+            bind_address: std::env::var("NESTGATE_NAS_BIND_ADDRESS")
+                .unwrap_or_else(|_| "192.168.1.100".to_string()),
             smb_port: 445,
             nfs_port: 2049,
             http_port: 8080,
@@ -508,12 +510,14 @@ mod tests {
 
     #[test]
     fn test_nas_config_bind_addresses() {
+        let specific_ip = std::env::var("NESTGATE_NAS_SPECIFIC_IP")
+            .unwrap_or_else(|_| "192.168.1.100".to_string());
         let addresses = vec![
-            "0.0.0.0",       // All interfaces
-            "127.0.0.1",     // Localhost
-            "192.168.1.100", // Specific IP
-            "::",            // IPv6 all interfaces
-            "::1",           // IPv6 localhost
+            "0.0.0.0",    // All interfaces
+            "127.0.0.1",  // Localhost
+            &specific_ip, // Specific IP
+            "::",         // IPv6 all interfaces
+            "::1",        // IPv6 localhost
         ];
 
         for address in addresses {

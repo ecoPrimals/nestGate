@@ -19,7 +19,7 @@ mod basic_network_tests {
 
     #[test]
     fn test_protocol_variants() {
-        let protocols = vec![
+        let protocols = [
             Protocol::Nfs,
             Protocol::Smb,
             Protocol::Ftp,
@@ -35,7 +35,7 @@ mod basic_network_tests {
 
     #[test]
     fn test_performance_preference_variants() {
-        let preferences = vec![
+        let preferences = [
             PerformancePreference::Speed,
             PerformancePreference::Reliability,
             PerformancePreference::Compatibility,
@@ -69,7 +69,7 @@ mod basic_network_tests {
 
     #[test]
     fn test_connection_type_variants() {
-        let types = vec![
+        let types = [
             ConnectionType::Api,
             ConnectionType::Nfs,
             ConnectionType::Smb,

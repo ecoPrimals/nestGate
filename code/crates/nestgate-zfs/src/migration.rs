@@ -6,7 +6,7 @@
 use chrono::Timelike;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime};
 use tokio::sync::{mpsc, RwLock, Semaphore};
@@ -188,6 +188,18 @@ pub struct MigrationStatistics {
     pub success_rate: f64,
 }
 
+/// Migration queue processing context
+struct MigrationContext<'a> {
+    job_queue: &'a Arc<RwLock<VecDeque<MigrationJob>>>,
+    active_migrations: &'a Arc<RwLock<HashMap<String, MigrationJob>>>,
+    migration_history: &'a Arc<RwLock<Vec<MigrationJob>>>,
+    statistics: &'a Arc<RwLock<MigrationStatistics>>,
+    migration_semaphore: &'a Arc<Semaphore>,
+    config: &'a MigrationConfig,
+    pool_manager: &'a Arc<ZfsPoolManager>,
+    dataset_manager: &'a Arc<ZfsDatasetManager>,
+}
+
 /// Migration engine for automated tier-to-tier data movement
 #[derive(Debug)]
 #[allow(dead_code)] // Configuration fields used in migration planning
@@ -261,7 +273,7 @@ impl MigrationEngine {
         let migration_history = Arc::clone(&self.migration_history);
         let statistics = Arc::clone(&self.statistics);
         let migration_semaphore = Arc::clone(&self.migration_semaphore);
-        let bandwidth_semaphore = Arc::clone(&self.bandwidth_semaphore);
+        let _bandwidth_semaphore = Arc::clone(&self.bandwidth_semaphore);
         let config = self.config.clone();
         let pool_manager = Arc::clone(&self.pool_manager);
         let dataset_manager = Arc::clone(&self.dataset_manager);
@@ -272,17 +284,18 @@ impl MigrationEngine {
             loop {
                 tokio::select! {
                     _ = interval.tick() => {
-                        if let Err(e) = Self::process_migration_queue(
-                            &job_queue,
-                            &active_migrations,
-                            &migration_history,
-                            &statistics,
-                            &migration_semaphore,
-                            &bandwidth_semaphore,
-                            &config,
-                            &pool_manager,
-                            &dataset_manager,
-                        ).await {
+                        let context = MigrationContext {
+                            job_queue: &job_queue,
+                            active_migrations: &active_migrations,
+                            migration_history: &migration_history,
+                            statistics: &statistics,
+                            migration_semaphore: &migration_semaphore,
+                            config: &config,
+                            pool_manager: &pool_manager,
+                            dataset_manager: &dataset_manager,
+                        };
+
+                        if let Err(e) = Self::process_migration_queue(context).await {
                             error!("Error processing migration queue: {}", e);
                         }
                     }
@@ -310,7 +323,12 @@ impl MigrationEngine {
         }
 
         // Wait for active migrations to complete (with timeout)
-        let timeout_duration = Duration::from_secs(30);
+        let timeout_duration = Duration::from_secs(
+            std::env::var("NESTGATE_ZFS_MIGRATION_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30), // 30 seconds default
+        );
         let start_time = Instant::now();
 
         while start_time.elapsed() < timeout_duration {
@@ -327,7 +345,13 @@ impl MigrationEngine {
                 "Waiting for {} active migrations to complete...",
                 active_count
             );
-            tokio::time::sleep(Duration::from_secs(1)).await;
+            tokio::time::sleep(Duration::from_secs(
+                std::env::var("NESTGATE_ZFS_MIGRATION_POLL_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(1), // 1 second default
+            ))
+            .await;
         }
 
         // Cancel any remaining active migrations
@@ -503,7 +527,12 @@ impl MigrationEngine {
         let statistics = Arc::clone(&self.statistics);
 
         tokio::spawn(async move {
-            let mut interval = interval(Duration::from_secs(3600)); // Check every hour
+            let mut interval = interval(Duration::from_secs(
+                std::env::var("NESTGATE_ZFS_MIGRATION_CHECK_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(3600), // 1 hour default
+            )); // Migration check interval
 
             loop {
                 interval.tick().await;
@@ -564,7 +593,7 @@ impl MigrationEngine {
                 let file_size = metadata.len();
 
                 // Skip very small files (< 1MB) or very large files (> 10GB) for automatic migration
-                if file_size < 1024 * 1024 || file_size > 10 * 1024 * 1024 * 1024 {
+                if !(1024 * 1024..=10 * 1024 * 1024 * 1024).contains(&file_size) {
                     continue;
                 }
 
@@ -655,7 +684,7 @@ impl MigrationEngine {
 
     /// Analyze a file to determine if it should be migrated
     async fn analyze_migration_candidate(
-        file_path: &PathBuf,
+        file_path: &Path,
         _current_tier: StorageTier,
         analyzer: &Arc<DatasetAnalyzer>,
     ) -> CoreResult<Option<StorageTier>> {
@@ -683,40 +712,30 @@ impl MigrationEngine {
     }
 
     /// Process the migration queue
-    async fn process_migration_queue(
-        job_queue: &Arc<RwLock<VecDeque<MigrationJob>>>,
-        active_migrations: &Arc<RwLock<HashMap<String, MigrationJob>>>,
-        migration_history: &Arc<RwLock<Vec<MigrationJob>>>,
-        statistics: &Arc<RwLock<MigrationStatistics>>,
-        migration_semaphore: &Arc<Semaphore>,
-        _bandwidth_semaphore: &Arc<Semaphore>,
-        config: &MigrationConfig,
-        pool_manager: &Arc<ZfsPoolManager>,
-        dataset_manager: &Arc<ZfsDatasetManager>,
-    ) -> CoreResult<()> {
+    async fn process_migration_queue(context: MigrationContext<'_>) -> CoreResult<()> {
         // Check if we can start new migrations
-        if migration_semaphore.available_permits() == 0 {
+        if context.migration_semaphore.available_permits() == 0 {
             return Ok(()); // No available slots
         }
 
         // Get next job from queue
         let job = {
-            let mut queue = job_queue.write().await;
+            let mut queue = context.job_queue.write().await;
             queue.pop_front()
         };
 
         if let Some(mut job) = job {
             // Check if migration is allowed at this time
             let current_hour = chrono::Local::now().hour() as u8;
-            if !config.allowed_hours.contains(&current_hour) {
+            if !context.config.allowed_hours.contains(&current_hour) {
                 // Put job back in queue
-                let mut queue = job_queue.write().await;
+                let mut queue = context.job_queue.write().await;
                 queue.push_front(job);
                 return Ok(());
             }
 
             // Acquire migration permit
-            let _permit = migration_semaphore.acquire().await.map_err(|e| {
+            let _permit = context.migration_semaphore.acquire().await.map_err(|e| {
                 NestGateError::Internal(format!("Failed to acquire migration permit: {}", e))
             })?;
 
@@ -728,24 +747,24 @@ impl MigrationEngine {
 
             // Add to active migrations
             {
-                let mut active = active_migrations.write().await;
+                let mut active = context.active_migrations.write().await;
                 active.insert(job_id.clone(), job.clone());
             }
 
             // Update statistics
             {
-                let mut stats = statistics.write().await;
+                let mut stats = context.statistics.write().await;
                 stats.active_migrations += 1;
                 stats.queued_migrations = stats.queued_migrations.saturating_sub(1);
             }
 
             // Spawn migration task
             let job_clone = job.clone();
-            let active_migrations_clone = Arc::clone(active_migrations);
-            let migration_history_clone = Arc::clone(migration_history);
-            let statistics_clone = Arc::clone(statistics);
-            let pool_manager_clone = Arc::clone(pool_manager);
-            let dataset_manager_clone = Arc::clone(dataset_manager);
+            let active_migrations_clone = Arc::clone(context.active_migrations);
+            let migration_history_clone = Arc::clone(context.migration_history);
+            let statistics_clone = Arc::clone(context.statistics);
+            let pool_manager_clone = Arc::clone(context.pool_manager);
+            let dataset_manager_clone = Arc::clone(context.dataset_manager);
 
             tokio::spawn(async move {
                 let result =
@@ -883,7 +902,7 @@ impl MigrationEngine {
     }
 
     /// Construct target path based on source path and target dataset
-    fn construct_target_path(source_path: &PathBuf, target_dataset: &str) -> CoreResult<PathBuf> {
+    fn construct_target_path(source_path: &Path, target_dataset: &str) -> CoreResult<PathBuf> {
         // Extract relative path from source
         let file_name = source_path
             .file_name()
@@ -1082,7 +1101,7 @@ impl MigrationEngine {
     }
 
     /// Get tier from file path
-    fn get_tier_from_path(path: &PathBuf) -> CoreResult<StorageTier> {
+    fn get_tier_from_path(path: &Path) -> CoreResult<StorageTier> {
         let path_str = path.to_string_lossy();
 
         if path_str.contains("/hot/") || path_str.contains("storage/hot") {

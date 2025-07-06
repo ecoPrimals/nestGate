@@ -38,7 +38,7 @@ mod tests {
     #[test]
     fn test_protocol_enum_variants() {
         // Test all protocol variants
-        let protocols = vec![
+        let protocols = [
             Protocol::Nfs,
             Protocol::Smb,
             Protocol::Ftp,
@@ -63,7 +63,7 @@ mod tests {
     #[test]
     fn test_performance_preference_variants() {
         // Test all performance preference variants
-        let preferences = vec![
+        let preferences = [
             PerformancePreference::Speed,
             PerformancePreference::Reliability,
             PerformancePreference::Compatibility,
@@ -156,15 +156,29 @@ mod tests {
             vlan_id: 100,
             name: "Production".to_string(),
             description: "Production network".to_string(),
-            ip_range: Some("192.168.100.0/24".to_string()),
-            gateway: Some(IpAddr::V4("192.168.100.1".parse().unwrap())),
+            ip_range: Some(
+                std::env::var("NESTGATE_TEST_VLAN_IP_RANGE")
+                    .unwrap_or_else(|_| "192.168.100.0/24".to_string()),
+            ),
+            gateway: Some(IpAddr::V4(
+                std::env::var("NESTGATE_TEST_VLAN_GATEWAY")
+                    .unwrap_or_else(|_| "192.168.100.1".to_string())
+                    .parse()
+                    .unwrap(),
+            )),
             enabled: true,
         };
 
         assert_eq!(vlan.vlan_id, 100);
         assert_eq!(vlan.name, "Production");
         assert_eq!(vlan.description, "Production network");
-        assert_eq!(vlan.ip_range, Some("192.168.100.0/24".to_string()));
+        assert_eq!(
+            vlan.ip_range,
+            Some(
+                std::env::var("NESTGATE_TEST_VLAN_IP_RANGE")
+                    .unwrap_or_else(|_| "192.168.100.0/24".to_string())
+            ),
+        );
         assert!(vlan.gateway.is_some());
         assert!(vlan.enabled);
     }
@@ -191,8 +205,16 @@ mod tests {
             vlan_id: 200,
             name: "Test VLAN".to_string(),
             description: "Test description".to_string(),
-            ip_range: Some("10.0.200.0/24".to_string()),
-            gateway: Some(IpAddr::V4("10.0.200.1".parse().unwrap())),
+            ip_range: Some(
+                std::env::var("NESTGATE_DEV_VLAN_IP_RANGE")
+                    .unwrap_or_else(|_| "10.0.200.0/24".to_string()),
+            ),
+            gateway: Some(IpAddr::V4(
+                std::env::var("NESTGATE_DEV_VLAN_GATEWAY")
+                    .unwrap_or_else(|_| "10.0.200.1".to_string())
+                    .parse()
+                    .unwrap(),
+            )),
             enabled: true,
         };
 
@@ -352,7 +374,7 @@ mod tests {
     #[test]
     fn test_connection_type_variants() {
         // Test all connection type variants
-        let connection_types = vec![
+        let connection_types = [
             ConnectionType::Api,
             ConnectionType::Nfs,
             ConnectionType::Smb,
@@ -373,7 +395,7 @@ mod tests {
         if let ConnectionType::Internal(service) = &connection_types[5] {
             assert_eq!(service, "test-service");
         } else {
-            panic!("Expected Internal connection type");
+            assert!(false, "Expected Internal connection type");
         }
     }
 
@@ -404,14 +426,19 @@ mod tests {
 
         let response = ConnectionResponse {
             connection_id: "conn-12345".to_string(),
-            endpoint: "192.168.1.100:8080".to_string(),
+            endpoint: std::env::var("NESTGATE_TEST_ENDPOINT")
+                .unwrap_or_else(|_| "192.168.1.100:8080".to_string()),
             token: Some("auth-token-xyz".to_string()),
             expires_at: Some(chrono::Utc::now() + chrono::Duration::hours(1)),
             metadata: metadata.clone(),
         };
 
         assert_eq!(response.connection_id, "conn-12345");
-        assert_eq!(response.endpoint, "192.168.1.100:8080");
+        assert_eq!(
+            response.endpoint,
+            std::env::var("NESTGATE_TEST_ENDPOINT")
+                .unwrap_or_else(|_| "192.168.1.100:8080".to_string())
+        );
         assert!(response.token.is_some());
         assert!(response.expires_at.is_some());
         assert_eq!(
@@ -423,7 +450,12 @@ mod tests {
     #[test]
     fn test_songbird_connection_manager_creation() {
         let manager = SongbirdConnectionManager::new(
-            "http://localhost:8080".to_string(),
+            std::env::var("NESTGATE_API_URL").unwrap_or_else(|_| {
+                format!(
+                    "http://localhost:{}",
+                    nestgate_core::constants::network::api_port()
+                )
+            }),
             "test-service".to_string(),
         );
 
@@ -438,7 +470,7 @@ mod tests {
     #[test]
     fn test_service_status_variants() {
         // Test all service status variants
-        let statuses = vec![
+        let statuses = [
             ServiceStatus::Starting,
             ServiceStatus::Running,
             ServiceStatus::Stopping,
@@ -487,7 +519,10 @@ mod tests {
 
     #[test]
     fn test_songbird_client_creation() {
-        let client = SongbirdClient::new("http://localhost:9000".to_string());
+        let client = SongbirdClient::new(
+            std::env::var("NESTGATE_SONGBIRD_CLIENT_URL")
+                .unwrap_or_else(|_| "http://localhost:9000".to_string()),
+        );
 
         // Client should be created successfully
         // We can't inspect internal state but creation shouldn't panic

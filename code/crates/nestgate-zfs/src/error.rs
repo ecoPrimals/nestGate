@@ -347,12 +347,12 @@ impl ZfsError {
             ZfsError::SystemUnavailable(_) => true,
             ZfsError::Timeout(_) => true,
             ZfsError::ResourceExhausted(_) => true,
-            ZfsError::IoError(io_err) => match io_err.kind() {
-                std::io::ErrorKind::Interrupted => true,
-                std::io::ErrorKind::TimedOut => true,
-                std::io::ErrorKind::WouldBlock => true,
-                _ => false,
-            },
+            ZfsError::IoError(io_err) => matches!(
+                io_err.kind(),
+                std::io::ErrorKind::Interrupted
+                    | std::io::ErrorKind::TimedOut
+                    | std::io::ErrorKind::WouldBlock
+            ),
             ZfsError::PoolError(PoolError::Offline { .. }) => true,
             ZfsError::DatasetError(DatasetError::Busy { .. }) => true,
             _ => false,

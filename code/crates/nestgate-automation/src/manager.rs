@@ -36,8 +36,6 @@ pub struct IntelligentDatasetManager {
     #[allow(dead_code)]
     performance_cache: Arc<RwLock<HashMap<String, PerformanceMetrics>>>,
     #[allow(dead_code)]
-    ai_coordinator: Arc<crate::ai::AiAutomationCoordinator>,
-    #[allow(dead_code)]
     lifecycle_manager: Arc<crate::lifecycle::DatasetLifecycleManager>,
 }
 
@@ -52,9 +50,6 @@ impl IntelligentDatasetManager {
         let dataset_analyzer = Arc::new(crate::analysis::DatasetAnalyzer::new());
         let tier_predictor = Arc::new(crate::prediction::TierPredictor::new());
         let lifecycle_manager = Arc::new(crate::lifecycle::DatasetLifecycleManager::new());
-        let ai_coordinator = Arc::new(crate::ai::AiAutomationCoordinator::new(
-            crate::ai::AiConfig::default(),
-        ));
         let performance_cache = Arc::new(RwLock::new(HashMap::new()));
 
         #[cfg(feature = "network-integration")]
@@ -72,7 +67,6 @@ impl IntelligentDatasetManager {
                 ecosystem_discovery,
                 service_connections,
                 performance_cache,
-                ai_coordinator,
                 lifecycle_manager,
             })
         }
@@ -89,7 +83,6 @@ impl IntelligentDatasetManager {
                 tier_predictor,
                 ecosystem_discovery,
                 performance_cache,
-                ai_coordinator,
                 lifecycle_manager,
             })
         }

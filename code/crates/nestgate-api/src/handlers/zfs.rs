@@ -14,7 +14,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{debug, error, info, warn};
-use uuid::Uuid;
 
 use nestgate_core::StorageTier;
 use nestgate_zfs::{
@@ -154,6 +153,14 @@ impl<T> ApiResponse<T> {
     }
 }
 
+/// Tier prediction request
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TierPredictionRequest {
+    pub file_path: String,
+}
+
+// Use TierPrediction from nestgate-automation for tier recommendations
+
 /// Create ZFS API router
 pub fn create_zfs_routes() -> Router<ZfsApiState> {
     Router::new()
@@ -186,6 +193,12 @@ pub fn create_zfs_routes() -> Router<ZfsApiState> {
         .route("/ai/tier-prediction", post(get_tier_prediction))
         .route("/optimization/analytics", get(get_performance_analytics))
         .route("/optimization/trigger", post(trigger_optimization))
+
+        // biomeOS integration endpoints
+        .route("/biomeos/provision", post(provision_from_manifest))
+        .route("/biomeos/volumes", get(list_biomeos_volumes))
+        .route("/biomeos/templates", get(get_primal_templates))
+        .route("/biomeos/service-info", get(get_biomeos_service_info))
 }
 
 // Health and Status Endpoints
@@ -603,31 +616,34 @@ pub async fn delete_snapshot(
 
 // AI and Optimization Endpoints
 
-/// Tier prediction request
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TierPredictionRequest {
-    pub file_path: String,
-}
-
-/// Get AI tier prediction for a file
+/// Get heuristic tier recommendation for a file
 pub async fn get_tier_prediction(
     State(state): State<ZfsApiState>,
     Json(request): Json<TierPredictionRequest>,
-) -> Result<Json<ApiResponse<Option<nestgate_zfs::ai_integration::TierPrediction>>>, StatusCode> {
-    debug!("Getting tier prediction for file: {}", request.file_path);
+) -> Result<
+    Json<ApiResponse<Option<nestgate_automation::types::prediction::TierPrediction>>>,
+    StatusCode,
+> {
+    debug!(
+        "Getting heuristic tier recommendation for file: {}",
+        request.file_path
+    );
 
     match state
         .zfs_manager
         .get_ai_tier_recommendation(&request.file_path)
         .await
     {
-        Ok(prediction) => {
-            info!("Retrieved tier prediction for file: {}", request.file_path);
-            Ok(Json(ApiResponse::success(prediction)))
+        Ok(recommendation) => {
+            info!(
+                "Retrieved heuristic tier recommendation for file: {}",
+                request.file_path
+            );
+            Ok(Json(ApiResponse::success(recommendation)))
         }
         Err(e) => {
             error!(
-                "Failed to get tier prediction for {}: {}",
+                "Failed to get tier recommendation for {}: {}",
                 request.file_path, e
             );
             Err(StatusCode::INTERNAL_SERVER_ERROR)
@@ -683,4 +699,437 @@ pub struct PoolStatusResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SnapshotOperationResponse {
     pub operation_id: String,
+}
+
+// biomeOS Integration Endpoints
+
+/// biomeOS volume provisioning request
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BiomeOSProvisionRequest {
+    /// Volume specification from biome.yaml
+    pub volume_spec: nestgate_core::biomeos::VolumeSpec,
+    /// Biome context
+    pub biome_context: nestgate_core::biomeos::BiomeContext,
+}
+
+/// biomeOS service information response
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BiomeOSServiceInfo {
+    /// Service ID in biomeOS format
+    pub service_id: String,
+    /// Primal type
+    pub primal_type: String,
+    /// Biome ID
+    pub biome_id: String,
+    /// Service capabilities
+    pub capabilities: BiomeOSCapabilities,
+    /// API endpoints
+    pub api_endpoints: HashMap<String, String>,
+    /// Health checks
+    pub health_checks: HashMap<String, String>,
+}
+
+/// biomeOS capabilities structure
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BiomeOSCapabilities {
+    /// Core capabilities
+    pub core: Vec<String>,
+    /// Extended capabilities
+    pub extended: Vec<String>,
+    /// Integration capabilities
+    pub integrations: Vec<String>,
+}
+
+/// Provision storage from biome.yaml manifest
+/// This is the key function specified in the biomeOS Integration Specification
+pub async fn provision_from_manifest(
+    State(state): State<ZfsApiState>,
+    Json(request): Json<BiomeOSProvisionRequest>,
+) -> Result<Json<ApiResponse<nestgate_core::biomeos::VolumeInfo>>, StatusCode> {
+    info!(
+        "Provisioning storage from biome.yaml: volume={}, biome={}",
+        request.volume_spec.name, request.biome_context.biome_id
+    );
+
+    // Parse volume size from string format (e.g., "100Gi" -> bytes)
+    let size_bytes = match request.volume_spec.size_bytes() {
+        Ok(size) => size,
+        Err(e) => {
+            error!("Invalid size format {}: {}", request.volume_spec.size, e);
+            return Err(StatusCode::BAD_REQUEST);
+        }
+    };
+
+    // Convert tier string to StorageTier enum
+    let storage_tier = match request.volume_spec.storage_tier() {
+        Ok(tier) => tier,
+        Err(e) => {
+            error!("Invalid storage tier {}: {}", request.volume_spec.tier, e);
+            return Err(StatusCode::BAD_REQUEST);
+        }
+    };
+
+    // Create dataset path based on biome context
+    let _dataset_name = format!(
+        "biomeos/{}/{}",
+        request.biome_context.biome_id, request.volume_spec.name
+    );
+
+    // Create the dataset using existing ZFS functionality
+    let dataset_parent = format!(
+        "{}/{}",
+        nestgate_core::constants::biomeos_defaults::DEFAULT_BIOMEOS_POOL,
+        nestgate_core::constants::biomeos_defaults::DEFAULT_BIOMEOS_DATASET_PREFIX
+    );
+
+    match state
+        .zfs_manager
+        .dataset_manager
+        .create_dataset(
+            &request.volume_spec.name,
+            &dataset_parent,
+            storage_tier.clone(),
+        )
+        .await
+    {
+        Ok(dataset_info) => {
+            // Determine mount point
+            let mount_point = request.volume_spec.mount_path.clone().unwrap_or_else(|| {
+                format!(
+                    "{}/{}/{}",
+                    nestgate_core::constants::biomeos_defaults::DEFAULT_BIOMEOS_MOUNT_PREFIX,
+                    request.biome_context.biome_id,
+                    request.volume_spec.name
+                )
+            });
+
+            // Create volume info response
+            let volume_info = nestgate_core::biomeos::VolumeInfo {
+                id: format!(
+                    "vol-{}-{}",
+                    request.biome_context.biome_id, request.volume_spec.name
+                ),
+                name: request.volume_spec.name.clone(),
+                size_bytes,
+                used_bytes: dataset_info.used_space,
+                available_bytes: dataset_info.available_space,
+                tier: storage_tier,
+                mount_point,
+                status: nestgate_core::biomeos::VolumeStatus::Available,
+                created_at: chrono::Utc::now(),
+                metadata: {
+                    let mut metadata = HashMap::new();
+                    metadata.insert(
+                        "biome_id".to_string(),
+                        request.biome_context.biome_id.clone(),
+                    );
+                    metadata.insert("node_id".to_string(), request.biome_context.node_id.clone());
+                    metadata.insert(
+                        "provisioner".to_string(),
+                        request.volume_spec.provisioner.clone(),
+                    );
+                    metadata.insert(
+                        "environment".to_string(),
+                        request.biome_context.environment.clone(),
+                    );
+                    metadata
+                },
+            };
+
+            info!(
+                "Successfully provisioned volume {} for biome {}",
+                request.volume_spec.name, request.biome_context.biome_id
+            );
+
+            // Register with Songbird service mesh for cross-Primal discovery
+            // This enables other Primals (Toadstool, Squirrel) to discover this volume
+            if let Err(e) =
+                register_volume_with_songbird(&volume_info, &request.biome_context).await
+            {
+                warn!("Failed to register volume with Songbird: {}", e);
+                // Continue execution as this is not critical for basic volume provisioning
+            }
+
+            Ok(Json(ApiResponse::success(volume_info)))
+        }
+        Err(e) => {
+            error!(
+                "Failed to provision volume {} for biome {}: {}",
+                request.volume_spec.name, request.biome_context.biome_id, e
+            );
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
+}
+
+/// List volumes provisioned for biomeOS
+pub async fn list_biomeos_volumes(
+    State(state): State<ZfsApiState>,
+    Query(_query): Query<ListQuery>,
+) -> Result<Json<ApiResponse<Vec<nestgate_core::biomeos::VolumeInfo>>>, StatusCode> {
+    debug!("Listing biomeOS volumes");
+
+    // Get all datasets that are under biomeos path
+    match state.zfs_manager.dataset_manager.list_datasets().await {
+        Ok(datasets) => {
+            let mut biomeos_volumes = Vec::new();
+
+            // Filter for biomeos datasets and convert to VolumeInfo
+            let biomeos_prefix = format!(
+                "{}/{}/",
+                nestgate_core::constants::biomeos_defaults::DEFAULT_BIOMEOS_POOL,
+                nestgate_core::constants::biomeos_defaults::DEFAULT_BIOMEOS_DATASET_PREFIX
+            );
+
+            for dataset in datasets {
+                if dataset.name.starts_with(&biomeos_prefix) {
+                    // Extract biome_id and volume name from path
+                    let path_parts: Vec<&str> = dataset.name.split('/').collect();
+                    if path_parts.len() >= 3 {
+                        let volume_info = nestgate_core::biomeos::VolumeInfo {
+                            id: format!("vol-{}", path_parts[2]),
+                            name: path_parts[2].to_string(),
+                            size_bytes: dataset.used_space + dataset.available_space,
+                            used_bytes: dataset.used_space,
+                            available_bytes: dataset.available_space,
+                            tier: dataset.tier,
+                            mount_point: dataset.mount_point.clone(),
+                            status: nestgate_core::biomeos::VolumeStatus::Available,
+                            created_at: chrono::Utc::now(),
+                            metadata: {
+                                let mut metadata = HashMap::new();
+                                metadata.insert("dataset_name".to_string(), dataset.name.clone());
+                                metadata
+                            },
+                        };
+                        biomeos_volumes.push(volume_info);
+                    }
+                }
+            }
+
+            info!("Listed {} biomeOS volumes", biomeos_volumes.len());
+            Ok(Json(ApiResponse::success(biomeos_volumes)))
+        }
+        Err(e) => {
+            error!("Failed to list biomeOS volumes: {}", e);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
+}
+
+/// Get Primal-specific storage templates
+pub async fn get_primal_templates(
+    Query(params): Query<HashMap<String, String>>,
+) -> Result<Json<ApiResponse<Vec<nestgate_core::biomeos::TemplateSpec>>>, StatusCode> {
+    let primal_type = params.get("primal_type").unwrap_or(&"".to_string()).clone();
+
+    debug!("Getting storage templates for primal: {}", primal_type);
+
+    // Define built-in templates for different Primals as specified in biomeOS spec
+    let templates = match primal_type.as_str() {
+        "toadstool" => vec![
+            nestgate_core::biomeos::TemplateSpec {
+                name: "scratch_space".to_string(),
+                resources:
+                    nestgate_core::constants::biomeos_defaults::template_sizes::SCRATCH_SPACE_SIZE
+                        .to_string(),
+                config: {
+                    let mut config = HashMap::new();
+                    config.insert(
+                        "tier".to_string(),
+                        serde_json::Value::String("hot".to_string()),
+                    );
+                    config.insert(
+                        "access_mode".to_string(),
+                        serde_json::Value::String("ReadWriteMany".to_string()),
+                    );
+                    config.insert(
+                        "purpose".to_string(),
+                        serde_json::Value::String("temporary_execution_space".to_string()),
+                    );
+                    config
+                },
+            },
+            nestgate_core::biomeos::TemplateSpec {
+                name: "results_storage".to_string(),
+                resources:
+                    nestgate_core::constants::biomeos_defaults::template_sizes::RESULTS_STORAGE_SIZE
+                        .to_string(),
+                config: {
+                    let mut config = HashMap::new();
+                    config.insert(
+                        "tier".to_string(),
+                        serde_json::Value::String("warm".to_string()),
+                    );
+                    config.insert(
+                        "access_mode".to_string(),
+                        serde_json::Value::String("ReadWriteOnce".to_string()),
+                    );
+                    config.insert(
+                        "purpose".to_string(),
+                        serde_json::Value::String("persistent_results".to_string()),
+                    );
+                    config
+                },
+            },
+        ],
+        "squirrel" => vec![
+            nestgate_core::biomeos::TemplateSpec {
+                name: "model_cache".to_string(),
+                resources:
+                    nestgate_core::constants::biomeos_defaults::template_sizes::MODEL_CACHE_SIZE
+                        .to_string(),
+                config: {
+                    let mut config = HashMap::new();
+                    config.insert(
+                        "tier".to_string(),
+                        serde_json::Value::String("hot".to_string()),
+                    );
+                    config.insert(
+                        "access_mode".to_string(),
+                        serde_json::Value::String("ReadOnlyMany".to_string()),
+                    );
+                    config.insert(
+                        "purpose".to_string(),
+                        serde_json::Value::String("ai_model_cache".to_string()),
+                    );
+                    config
+                },
+            },
+            nestgate_core::biomeos::TemplateSpec {
+                name: "training_data".to_string(),
+                resources:
+                    nestgate_core::constants::biomeos_defaults::template_sizes::TRAINING_DATA_SIZE
+                        .to_string(),
+                config: {
+                    let mut config = HashMap::new();
+                    config.insert(
+                        "tier".to_string(),
+                        serde_json::Value::String("warm".to_string()),
+                    );
+                    config.insert(
+                        "access_mode".to_string(),
+                        serde_json::Value::String("ReadOnlyMany".to_string()),
+                    );
+                    config.insert(
+                        "purpose".to_string(),
+                        serde_json::Value::String("ai_training_datasets".to_string()),
+                    );
+                    config
+                },
+            },
+        ],
+        _ => vec![], // No specific templates for other primals yet
+    };
+
+    info!(
+        "Retrieved {} templates for primal: {}",
+        templates.len(),
+        primal_type
+    );
+    Ok(Json(ApiResponse::success(templates)))
+}
+
+/// Get biomeOS service information for NestGate
+pub async fn get_biomeos_service_info(
+    Query(params): Query<HashMap<String, String>>,
+) -> Result<Json<ApiResponse<BiomeOSServiceInfo>>, StatusCode> {
+    let biome_id = params
+        .get("biome_id")
+        .unwrap_or(&"default".to_string())
+        .clone();
+    let instance_id = params
+        .get("instance_id")
+        .unwrap_or(&"1".to_string())
+        .clone();
+
+    debug!("Getting biomeOS service info for biome: {}", biome_id);
+
+    // Create service info in biomeOS standard format as specified
+    let service_info = BiomeOSServiceInfo {
+        service_id: format!(
+            "{}-{}",
+            nestgate_core::constants::biomeos_defaults::DEFAULT_PRIMAL_SERVICE_PREFIX,
+            instance_id
+        ),
+        primal_type: "nestgate".to_string(),
+        biome_id: biome_id.clone(),
+        capabilities: BiomeOSCapabilities {
+            core: vec![
+                nestgate_core::constants::biomeos_defaults::capabilities::ZFS_POOLS.to_string(),
+                nestgate_core::constants::biomeos_defaults::capabilities::TIERED_STORAGE
+                    .to_string(),
+                nestgate_core::constants::biomeos_defaults::capabilities::SNAPSHOTS.to_string(),
+                nestgate_core::constants::biomeos_defaults::capabilities::VOLUME_PROVISIONING
+                    .to_string(),
+            ],
+            extended: vec![
+                nestgate_core::constants::biomeos_defaults::capabilities::ENCRYPTION.to_string(),
+                nestgate_core::constants::biomeos_defaults::capabilities::FEDERATION.to_string(),
+                nestgate_core::constants::biomeos_defaults::capabilities::COMPRESSION.to_string(),
+                nestgate_core::constants::biomeos_defaults::capabilities::DEDUPLICATION.to_string(),
+            ],
+            integrations: vec![
+                nestgate_core::constants::biomeos_defaults::integrations::SONGBIRD_INTEGRATION
+                    .to_string(),
+                nestgate_core::constants::biomeos_defaults::integrations::BEARDOG_INTEGRATION
+                    .to_string(),
+                nestgate_core::constants::biomeos_defaults::integrations::SQUIRREL_INTEGRATION
+                    .to_string(),
+                nestgate_core::constants::biomeos_defaults::integrations::TOADSTOOL_INTEGRATION
+                    .to_string(),
+            ],
+        },
+        api_endpoints: {
+            let mut endpoints = HashMap::new();
+            endpoints.insert("pools".to_string(), "/api/v1/zfs/pools".to_string());
+            endpoints.insert("datasets".to_string(), "/api/v1/zfs/datasets".to_string());
+            endpoints.insert("snapshots".to_string(), "/api/v1/zfs/snapshots".to_string());
+            endpoints.insert(
+                "biomeos_provision".to_string(),
+                "/api/v1/zfs/biomeos/provision".to_string(),
+            );
+            endpoints.insert("health".to_string(), "/api/v1/zfs/health".to_string());
+            endpoints
+        },
+        health_checks: {
+            let mut health = HashMap::new();
+            health.insert("zfs_health".to_string(), "/api/v1/zfs/health".to_string());
+            health.insert(
+                "pool_status".to_string(),
+                "/api/v1/zfs/pools/{name}/status".to_string(),
+            );
+            health
+        },
+    };
+
+    info!(
+        "Generated biomeOS service info for NestGate in biome: {}",
+        biome_id
+    );
+    Ok(Json(ApiResponse::success(service_info)))
+}
+
+/// Register volume with Songbird service mesh for cross-Primal discovery
+/// This is a placeholder implementation for the Songbird integration
+async fn register_volume_with_songbird(
+    volume_info: &nestgate_core::biomeos::VolumeInfo,
+    biome_context: &nestgate_core::biomeos::BiomeContext,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    debug!(
+        "Registering volume {} with Songbird for biome {}",
+        volume_info.name, biome_context.biome_id
+    );
+
+    // In a full implementation, this would:
+    // 1. Connect to Songbird service mesh
+    // 2. Register the volume in the service registry
+    // 3. Set up discovery metadata for other Primals
+    // 4. Configure access policies
+
+    // For now, return success to indicate the volume is available
+    // The actual Songbird integration will be implemented when the
+    // Songbird crate provides the necessary APIs
+
+    Ok(())
 }

@@ -261,7 +261,7 @@ impl ZfsHealthMonitor {
     ) -> HealthStatus {
         // Get pool status from zpool status command
         match tokio::process::Command::new("zpool")
-            .args(&["status", pool_name])
+            .args(["status", pool_name])
             .output()
             .await
         {
@@ -270,9 +270,10 @@ impl ZfsHealthMonitor {
 
                 if stdout.contains("ONLINE") && !stdout.contains("errors:") {
                     HealthStatus::Healthy
-                } else if stdout.contains("DEGRADED") || stdout.contains("FAULTED") {
-                    HealthStatus::Critical
-                } else if stdout.contains("UNAVAIL") {
+                } else if stdout.contains("DEGRADED")
+                    || stdout.contains("FAULTED")
+                    || stdout.contains("UNAVAIL")
+                {
                     HealthStatus::Critical
                 } else {
                     HealthStatus::Warning
@@ -291,7 +292,7 @@ impl ZfsHealthMonitor {
     ) -> HealthStatus {
         // Check if datasets in the pool are accessible
         match tokio::process::Command::new("zfs")
-            .args(&["list", "-H", "-o", "name,avail", "-r", pool_name])
+            .args(["list", "-H", "-o", "name,avail", "-r", pool_name])
             .output()
             .await
         {

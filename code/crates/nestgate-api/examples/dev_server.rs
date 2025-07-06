@@ -42,7 +42,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create API configuration
     let api_config = Config {
-        bind_addr: "0.0.0.0:3000".to_string(),
+        bind_addr: std::env::var("NESTGATE_DEV_SERVER_BIND")
+            .unwrap_or_else(|_| "0.0.0.0:3000".to_string()),
         cors: None, // Will use permissive CORS
         enable_zfs_api: true,
         request_timeout: 30,
@@ -72,46 +73,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn print_available_endpoints() {
-    info!("Available API endpoints:");
-    info!("  Health & Status:");
-    info!("    GET  /health                           - Basic health check");
-    info!("    GET  /api/v1/status                    - System status");
-    info!("    GET  /api/v1/zfs/health                - ZFS health status");
-    info!("    GET  /api/v1/zfs/status                - ZFS system status");
+    let port = std::env::var("NESTGATE_DEV_SERVER_PORT").unwrap_or_else(|_| "3000".to_string());
 
-    info!("  Pool Management:");
-    info!("    GET  /api/v1/zfs/pools                 - List all pools");
-    info!("    POST /api/v1/zfs/pools                 - Create new pool");
-    info!("    GET  /api/v1/zfs/pools/{{name}}          - Get pool info");
-    info!("    DELETE /api/v1/zfs/pools/{{name}}       - Destroy pool");
-    info!("    GET  /api/v1/zfs/pools/{{name}}/status   - Get pool status");
-    info!("    POST /api/v1/zfs/pools/{{name}}/scrub    - Start pool scrub");
-
-    info!("  Dataset Management:");
-    info!("    GET  /api/v1/zfs/datasets              - List all datasets");
-    info!("    POST /api/v1/zfs/datasets              - Create new dataset");
-    info!("    GET  /api/v1/zfs/datasets/{{name}}       - Get dataset info");
-    info!("    DELETE /api/v1/zfs/datasets/{{name}}    - Destroy dataset");
-    info!("    GET  /api/v1/zfs/datasets/{{name}}/properties - Get dataset properties");
-    info!("    PUT  /api/v1/zfs/datasets/{{name}}/properties - Set dataset properties");
-
-    info!("  Snapshot Management:");
-    info!("    GET  /api/v1/zfs/datasets/{{name}}/snapshots        - List snapshots");
-    info!("    POST /api/v1/zfs/datasets/{{name}}/snapshots        - Create snapshot");
-    info!("    DELETE /api/v1/zfs/datasets/{{name}}/snapshots/{{snap}} - Delete snapshot");
-
-    info!("  AI & Optimization:");
-    info!("    POST /api/v1/zfs/ai/tier-prediction    - Get tier prediction");
-    info!("    GET  /api/v1/zfs/optimization/analytics - Get performance analytics");
-    info!("    POST /api/v1/zfs/optimization/trigger  - Trigger optimization");
-
-    info!("");
-    info!("Example requests:");
-    info!("  curl http://localhost:3000/health");
-    info!("  curl http://localhost:3000/api/v1/zfs/pools");
-    info!("  curl -X POST http://localhost:3000/api/v1/zfs/pools \\");
-    info!("    -H 'Content-Type: application/json' \\");
-    info!("    -d '{{\"name\":\"test_pool\",\"devices\":[\"/dev/loop0\"]}}'");
-    info!("");
-    info!("Web interface (if available): http://localhost:3000/");
+    info!("Development server running successfully!");
+    info!("Available endpoints:");
+    info!("  curl http://localhost:{}/health", port);
+    info!("  curl http://localhost:{}/api/v1/zfs/pools", port);
+    info!(
+        "  curl -X POST http://localhost:{}/api/v1/zfs/pools \\",
+        port
+    );
+    info!("       -H 'Content-Type: application/json' \\");
+    info!("       -d '{{\"name\":\"test-pool\",\"devices\":[\"/dev/loop0\"]}}'");
+    info!("Web interface (if available): http://localhost:{}/", port);
 }

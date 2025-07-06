@@ -508,18 +508,42 @@ impl Default for ServiceEndpoints {
     fn default() -> Self {
         Self {
             // NestGate services
-            nestgate_api: std::env::var("NESTGATE_API_URL")
-                .unwrap_or_else(|_| "http://localhost:8080".to_string()),
-            nestgate_ui: std::env::var("NESTGATE_UI_URL")
-                .unwrap_or_else(|_| "http://localhost:3000".to_string()),
+            nestgate_api: std::env::var("NESTGATE_API_URL").unwrap_or_else(|_| {
+                format!("http://localhost:{}", crate::constants::network::api_port())
+            }),
+            nestgate_ui: std::env::var("NESTGATE_UI_URL").unwrap_or_else(|_| {
+                format!(
+                    "http://localhost:{}",
+                    std::env::var("NESTGATE_UI_PORT").unwrap_or_else(|_| "3000".to_string())
+                )
+            }),
 
             // External services with environment fallbacks
-            songbird_orchestrator: std::env::var("SONGBIRD_URL")
-                .unwrap_or_else(|_| "http://songbird-orchestrator:8000".to_string()),
-            beardog_security: std::env::var("BEARDOG_URL")
-                .unwrap_or_else(|_| "https://beardog.local:8443".to_string()),
-            ecosystem_orchestrator: std::env::var("ECOSYSTEM_ORCHESTRATOR_URL")
-                .unwrap_or_else(|_| "http://localhost:8080".to_string()),
+            songbird_orchestrator: std::env::var("SONGBIRD_ORCHESTRATOR_URL").unwrap_or_else(
+                |_| {
+                    format!(
+                        "http://{}:{}",
+                        std::env::var("SONGBIRD_HOST")
+                            .unwrap_or_else(|_| "songbird-orchestrator".to_string()),
+                        std::env::var("SONGBIRD_PORT").unwrap_or_else(|_| "8000".to_string())
+                    )
+                },
+            ),
+            beardog_security: std::env::var("BEARDOG_URL").unwrap_or_else(|_| {
+                format!(
+                    "https://{}:{}",
+                    std::env::var("BEARDOG_HOST").unwrap_or_else(|_| "beardog.local".to_string()),
+                    std::env::var("BEARDOG_PORT").unwrap_or_else(|_| "8443".to_string())
+                )
+            }),
+            ecosystem_orchestrator: std::env::var("ECOSYSTEM_ORCHESTRATOR_URL").unwrap_or_else(
+                |_| {
+                    format!(
+                        "http://localhost:{}",
+                        crate::constants::network::orchestrator_port()
+                    )
+                },
+            ),
 
             // Optional monitoring services
             prometheus_metrics: std::env::var("PROMETHEUS_URL").ok(),
@@ -530,8 +554,15 @@ impl Default for ServiceEndpoints {
                 .map(|s| s.split(',').map(String::from).collect())
                 .unwrap_or_else(|_| {
                     vec![
-                        "http://localhost:8080/api/v1/discovery".to_string(),
-                        "http://127.0.0.1:3001/api/v1/discovery".to_string(),
+                        format!(
+                            "http://localhost:{}/api/v1/discovery",
+                            crate::constants::network::api_port()
+                        ),
+                        format!(
+                            "http://{}:{}/api/v1/discovery",
+                            crate::constants::addresses::localhost(),
+                            crate::constants::network::discovery_port()
+                        ),
                     ]
                 }),
         }
@@ -910,7 +941,10 @@ impl Default for Config {
                 log_level: "info".to_string(),
                 // Use relative path - Songbird manages absolute paths
                 log_file: "./logs/nestgate.log".to_string(),
-                log_rotation_size: 1024 * 1024, // 1MB
+                log_rotation_size: std::env::var("NESTGATE_LOG_ROTATION_SIZE_BYTES")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(1024 * 1024), // 1MB default
                 log_retention_days: 30,
                 prometheus: Some(PrometheusConfig {
                     enabled: true,
@@ -934,8 +968,9 @@ impl Default for Config {
                 },
             },
             mcp: Some(McpConfig {
-                enabled: false,                   // Disabled by default - Songbird manages MCP
-                cluster_endpoint: "".to_string(), // Empty - Songbird provides endpoint
+                enabled: false, // Disabled by default - Songbird manages MCP
+                cluster_endpoint: std::env::var("NESTGATE_CLUSTER_ENDPOINT")
+                    .unwrap_or_else(|_| "localhost:8080".to_string()),
                 node_id: node_id.clone(),
                 federation_enabled: false,
                 capabilities: McpCapabilitiesConfig {
@@ -1054,7 +1089,7 @@ monitoring:
       webhook: null
 mcp:
   enabled: true
-  cluster_endpoint: "localhost:8080"
+  cluster_endpoint: "localhost:8080"  # Can be overridden with NESTGATE_CLUSTER_ENDPOINT
   node_id: "test-node"
   federation_enabled: false
   capabilities:
@@ -1068,6 +1103,15 @@ federation:
   mode: "follower"
   peers: []
   heartbeat_interval: 30
+endpoints:
+  nestgate_api: "http://localhost:8080"
+  nestgate_ui: "http://localhost:3000"
+  songbird_orchestrator: "http://localhost:9000"
+  beardog_security: "http://localhost:7000"
+  ecosystem_orchestrator: "http://localhost:6000"
+  prometheus_metrics: "http://localhost:9090"
+  grafana_dashboard: "http://localhost:3001"
+  discovery_endpoints: []
 "#
         )
         .unwrap();

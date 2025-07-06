@@ -50,6 +50,7 @@ pub struct ZfsPoolSetup {
     /// Existing ZFS pools
     existing_pools: Vec<String>,
     /// Configuration
+    #[allow(dead_code)]
     config: PoolSetupConfiguration,
     /// Device scanner
     scanner: DeviceScanner,
@@ -98,7 +99,7 @@ impl ZfsPoolSetup {
         use tokio::process::Command;
 
         let output = Command::new("zpool")
-            .args(&["list", "-H", "-o", "name"])
+            .args(["list", "-H", "-o", "name"])
             .output()
             .await;
 
@@ -267,8 +268,7 @@ impl ZfsPoolSetup {
                 } else {
                     return Err(NestGateError::Internal(
                         "No device types available for warm tier".to_string(),
-                    )
-                    .into());
+                    ));
                 }
             }
             if cold_types.is_empty() {

@@ -137,7 +137,10 @@ impl InstallationWizard {
         if songbird_integration {
             let songbird_url: String = Input::new()
                 .with_prompt("Songbird server URL")
-                .default("http://localhost:3000".to_string())
+                .default(
+                    std::env::var("NESTGATE_UI_URL")
+                        .unwrap_or_else(|_| "http://localhost:3000".to_string()),
+                )
                 .interact_text()?;
 
             self.config.songbird_url = Some(songbird_url);

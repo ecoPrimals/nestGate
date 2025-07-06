@@ -50,7 +50,7 @@ async fn test_beardog_integration_mode() {
         endpoint: "https://beardog.test:8443".to_string(),
         api_key: "test-api-key-12345".to_string(),
         trust_anchor: "system".to_string(),
-        validation_timeout: Duration::from_secs(10),
+        validation_timeout: nestgate_core::constants::test_defaults::TEST_SHORT_TIMEOUT,
         retry_attempts: 2,
     };
     
@@ -168,7 +168,7 @@ fn test_beardog_config_serialization() {
     let default_config = BearDogConfig::default();
     assert!(default_config.endpoint.contains("beardog.local"));
     assert_eq!(default_config.retry_attempts, 3);
-    assert_eq!(default_config.validation_timeout, Duration::from_secs(30));
+    assert_eq!(default_config.validation_timeout, nestgate_core::constants::test_defaults::TEST_MEDIUM_TIMEOUT);
 }
 
 /// Test concurrent certificate validation

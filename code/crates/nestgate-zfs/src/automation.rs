@@ -6,14 +6,13 @@
 
 // Re-export main automation types and functionality
 pub use nestgate_automation::{
-    AccessPatternAnalyzer, AccessPatterns, AiPredictionResult, AutomationConfig, DatasetAnalysis,
-    DatasetAnalyzer, DatasetLifecycleManager, FileAnalysis, FileAnalyzer,
-    IntelligentDatasetManager, OptimizationResult, Result as AutomationResult,
-    TierPerformanceStats, TierPrediction, TierPredictor,
+    AccessPatternAnalyzer, AccessPatterns, AutomationConfig, DatasetAnalysis, DatasetAnalyzer,
+    DatasetLifecycleManager, FileAnalysis, FileAnalyzer, IntelligentDatasetManager,
+    OptimizationResult, Result as AutomationResult, TierPerformanceStats, TierPrediction,
+    TierPredictor,
 };
 
-// Backward compatibility aliases
-pub use nestgate_automation::AiPredictionResult as PredictionResult;
+// Note: AI prediction functionality has been sunset - use heuristic tier prediction instead
 
 // Re-export ecosystem integration types (when network integration is enabled)
 #[cfg(feature = "network-integration")]
@@ -65,10 +64,7 @@ use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
-use crate::{
-    ai_integration::ZfsAiIntegration, dataset::ZfsDatasetManager, migration::MigrationEngine,
-    pool::ZfsPoolManager,
-};
+use crate::{dataset::ZfsDatasetManager, migration::MigrationEngine, pool::ZfsPoolManager};
 use nestgate_core::{Result, StorageTier};
 
 pub use crate::config::{AiAutomationSettings, DatasetAutomationConfig};
@@ -126,8 +122,6 @@ pub struct DatasetAutomation {
     dataset_manager: Arc<ZfsDatasetManager>,
     /// Migration engine for tier movement
     migration_engine: Arc<RwLock<MigrationEngine>>,
-    /// AI integration for predictions
-    ai_integration: Option<Arc<RwLock<ZfsAiIntegration>>>,
     /// Active automation policies
     policies: Arc<RwLock<HashMap<String, AutomationPolicy>>>,
     /// Lifecycle tracking
@@ -333,7 +327,6 @@ impl DatasetAutomation {
         pool_manager: Arc<ZfsPoolManager>,
         dataset_manager: Arc<ZfsDatasetManager>,
         migration_engine: Arc<RwLock<MigrationEngine>>,
-        ai_integration: Option<Arc<RwLock<ZfsAiIntegration>>>,
         config: DatasetAutomationConfig,
     ) -> Result<Self> {
         info!("Initializing Dataset Automation Engine");
@@ -345,7 +338,6 @@ impl DatasetAutomation {
             pool_manager,
             dataset_manager,
             migration_engine,
-            ai_integration,
             policies,
             lifecycle_tracker,
             config,
@@ -517,7 +509,12 @@ impl DatasetAutomation {
         let now = SystemTime::now();
         let age_days = now
             .duration_since(lifecycle.created)
-            .unwrap_or(Duration::from_secs(0))
+            .unwrap_or(Duration::from_secs(
+                std::env::var("NESTGATE_ZFS_DEFAULT_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(0), // 0 seconds default (immediate)
+            ))
             .as_secs()
             / (24 * 3600);
 
@@ -644,25 +641,35 @@ impl DatasetAutomation {
     ) -> Result<bool> {
         let condition_lower = condition.to_lowercase();
 
-        if condition_lower.starts_with("age_days>") {
-            if let Ok(days) = condition_lower[9..].parse::<u32>() {
+        if let Some(stripped) = condition_lower.strip_prefix("age_days>") {
+            if let Ok(days) = stripped.parse::<u32>() {
                 let age_days = SystemTime::now()
                     .duration_since(lifecycle.created)
-                    .unwrap_or(Duration::from_secs(0))
+                    .unwrap_or(Duration::from_secs(
+                        std::env::var("NESTGATE_ZFS_DEFAULT_TIMEOUT_SECS")
+                            .ok()
+                            .and_then(|s| s.parse().ok())
+                            .unwrap_or(0), // 0 seconds default (immediate)
+                    ))
                     .as_secs()
                     / (24 * 3600);
                 return Ok(age_days > days as u64);
             }
-        } else if condition_lower.starts_with("access_count<") {
-            if let Ok(count) = condition_lower[13..].parse::<u64>() {
+        } else if let Some(stripped) = condition_lower.strip_prefix("access_count<") {
+            if let Ok(count) = stripped.parse::<u64>() {
                 return Ok(lifecycle.access_count < count);
             }
-        } else if condition_lower.starts_with("days_since_access>") {
-            if let Ok(days) = condition_lower[18..].parse::<u32>() {
+        } else if let Some(stripped) = condition_lower.strip_prefix("days_since_access>") {
+            if let Ok(days) = stripped.parse::<u32>() {
                 if let Some(last_access) = lifecycle.last_accessed {
                     let days_since = SystemTime::now()
                         .duration_since(last_access)
-                        .unwrap_or(Duration::from_secs(0))
+                        .unwrap_or(Duration::from_secs(
+                            std::env::var("NESTGATE_ZFS_DEFAULT_TIMEOUT_SECS")
+                                .ok()
+                                .and_then(|s| s.parse().ok())
+                                .unwrap_or(0), // 0 seconds default (immediate)
+                        ))
                         .as_secs()
                         / (24 * 3600);
                     return Ok(days_since > days as u64);
@@ -670,8 +677,8 @@ impl DatasetAutomation {
                     return Ok(true); // Never accessed
                 }
             }
-        } else if condition_lower.starts_with("size_gb>") {
-            if let Ok(size_gb) = condition_lower[8..].parse::<f64>() {
+        } else if let Some(stripped) = condition_lower.strip_prefix("size_gb>") {
+            if let Ok(size_gb) = stripped.parse::<f64>() {
                 // Get current dataset size from ZFS
                 if let Ok(current_size) = self.get_dataset_size_bytes(dataset_name).await {
                     let size_gb_actual = current_size as f64 / (1024.0 * 1024.0 * 1024.0);
@@ -694,8 +701,8 @@ impl DatasetAutomation {
     ) -> Result<String> {
         let action_lower = action.to_lowercase();
 
-        if action_lower.starts_with("migrate_to_") {
-            let target_tier = match &action_lower[11..] {
+        if let Some(stripped) = action_lower.strip_prefix("migrate_to_") {
+            let target_tier = match stripped {
                 "hot" => StorageTier::Hot,
                 "warm" => StorageTier::Warm,
                 "cold" => StorageTier::Cold,
@@ -704,8 +711,7 @@ impl DatasetAutomation {
                     return Err(nestgate_core::NestGateError::InvalidInput(format!(
                         "Invalid target tier in action: {}",
                         action
-                    ))
-                    .into())
+                    )))
                 }
             };
 
@@ -739,8 +745,8 @@ impl DatasetAutomation {
         } else if action_lower == "optimize_recordsize" {
             self.optimize_dataset_recordsize(dataset_name).await?;
             return Ok("Optimized record size".to_string());
-        } else if action_lower.starts_with("set_quota_") {
-            if let Ok(quota_gb) = action_lower[10..].parse::<u64>() {
+        } else if let Some(stripped) = action_lower.strip_prefix("set_quota_") {
+            if let Ok(quota_gb) = stripped.parse::<u64>() {
                 self.set_dataset_quota(dataset_name, quota_gb * 1024 * 1024 * 1024)
                     .await?;
                 return Ok(format!("Set quota to {}GB", quota_gb));
@@ -756,8 +762,7 @@ impl DatasetAutomation {
         Err(nestgate_core::NestGateError::InvalidInput(format!(
             "Unknown lifecycle action: {}",
             action
-        ))
-        .into())
+        )))
     }
 
     /// Apply automatic stage-specific rules
@@ -1008,24 +1013,7 @@ impl DatasetAutomation {
     ) -> Result<StorageTier> {
         debug!("Evaluating optimal tier for dataset: {}", dataset_name);
 
-        // Get AI prediction if available
-        if let Some(ai_integration) = &self.ai_integration {
-            let ai_lock = ai_integration.read().await;
-            if let Ok(prediction) = ai_lock
-                .predict_optimal_tier(dataset_name, Some(metadata.size_bytes), None)
-                .await
-            {
-                info!(
-                    "AI predicted tier {} for {} (confidence: {:.2})",
-                    format!("{:?}", prediction.predicted_tier),
-                    dataset_name,
-                    prediction.confidence
-                );
-                return Ok(prediction.predicted_tier);
-            }
-        }
-
-        // Fallback to intelligent rule-based tier assignment
+        // Intelligent rule-based tier evaluation with sophisticated algorithms
         self.evaluate_tier_by_intelligent_rules(dataset_name, metadata)
             .await
     }
@@ -1194,7 +1182,6 @@ impl Clone for DatasetAutomation {
             pool_manager: self.pool_manager.clone(),
             dataset_manager: self.dataset_manager.clone(),
             migration_engine: self.migration_engine.clone(),
-            ai_integration: self.ai_integration.clone(),
             policies: self.policies.clone(),
             lifecycle_tracker: self.lifecycle_tracker.clone(),
             config: self.config.clone(),
@@ -1273,13 +1260,12 @@ impl TierScoring {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::ZfsConfig;
+
     use crate::{ZfsDatasetManager, ZfsPoolManager};
     use nestgate_automation::DatasetAnalyzer;
-    use std::collections::HashMap;
+
     use std::sync::Arc;
     use tokio::sync::RwLock;
-    use tokio::test;
 
     fn create_test_config() -> DatasetAutomationConfig {
         DatasetAutomationConfig {
@@ -1298,7 +1284,14 @@ mod tests {
 
     async fn create_test_automation() -> DatasetAutomation {
         let zfs_config = crate::config::ZfsConfig {
-            api_endpoint: "http://localhost:8080".to_string(),
+            api_endpoint: std::env::var("NESTGATE_API_ENDPOINT")
+                .unwrap_or_else(|_| {
+                    format!(
+                        "http://localhost:{}",
+                        nestgate_core::constants::network::api_port()
+                    )
+                })
+                .to_string(),
             default_pool: "test-pool".to_string(),
             use_real_zfs: false,
             tiers: crate::config::TierConfigurations::default(),
@@ -1311,7 +1304,14 @@ mod tests {
             monitoring_interval: 60,
             snapshot_policies_file: None,
             automation: Some(create_test_config()),
-            ecosystem_orchestrator_url: "http://localhost:8080".to_string(),
+            ecosystem_orchestrator_url: std::env::var("NESTGATE_ORCHESTRATOR_URL")
+                .unwrap_or_else(|_| {
+                    format!(
+                        "http://localhost:{}",
+                        nestgate_core::constants::network::orchestrator_port()
+                    )
+                })
+                .to_string(),
             enable_ecosystem_integration: false,
         };
 
@@ -1337,7 +1337,6 @@ mod tests {
             pool_manager,
             dataset_manager,
             migration_engine,
-            None, // No AI integration for tests
             create_test_config(),
         )
         .await

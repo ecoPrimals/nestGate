@@ -27,9 +27,13 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # Time handling
 chrono = { workspace = true, features = ["serde"] }
 
+# System utilities
+num_cpus = "1.16"
+
 # NestGate dependencies
 nestgate-core = { path = "../nestgate-core" }
 nestgate-zfs = { path = "../nestgate-zfs" }
+nestgate-automation = { path = "../nestgate-automation" }
 
 # Added for operation IDs
 uuid = { workspace = true }

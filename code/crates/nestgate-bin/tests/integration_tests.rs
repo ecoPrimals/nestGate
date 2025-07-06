@@ -194,14 +194,39 @@ mod integration_mode_tests {
     #[test]
     fn test_ecosystem_mode_configuration() {
         // Test ecosystem mode (with external URLs)
-        std::env::set_var("SONGBIRD_URL", "http://songbird:8080");
-        std::env::set_var("BEARDOG_URL", "http://beardog:8080");
+        std::env::set_var(
+            "SONGBIRD_URL",
+            &format!(
+                "http://{}:{}",
+                nestgate_core::constants::services::orchestrator_service_name(),
+                nestgate_core::constants::network::orchestrator_port()
+            ),
+        );
+        std::env::set_var(
+            "BEARDOG_URL",
+            &format!(
+                "http://{}:{}",
+                nestgate_core::constants::services::beardog_service_name(),
+                nestgate_core::constants::network::beardog_port()
+            ),
+        );
 
         assert_eq!(
             std::env::var("SONGBIRD_URL").unwrap(),
-            "http://songbird:8080"
+            format!(
+                "http://{}:{}",
+                nestgate_core::constants::services::orchestrator_service_name(),
+                nestgate_core::constants::network::orchestrator_port()
+            )
         );
-        assert_eq!(std::env::var("BEARDOG_URL").unwrap(), "http://beardog:8080");
+        assert_eq!(
+            std::env::var("BEARDOG_URL").unwrap(),
+            format!(
+                "http://{}:{}",
+                nestgate_core::constants::services::beardog_service_name(),
+                nestgate_core::constants::network::beardog_port()
+            )
+        );
 
         std::env::remove_var("SONGBIRD_URL");
         std::env::remove_var("BEARDOG_URL");

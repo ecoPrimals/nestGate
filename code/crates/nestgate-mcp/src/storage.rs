@@ -3,15 +3,16 @@
 //! Storage management for MCP integration
 
 use crate::{
-    types::{MountInfo, MountRequest, StorageTier, VolumeRequest},
-    Error, Result,
+    error::Error,
+    types::{MountInfo, MountRequest, StorageTier},
+    Result,
 };
-use nestgate_core::NestGateError;
+use nestgate_core::biomeos::{BiomeContext, VolumeSpec};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info};
+use tracing::{debug, info};
 
 /// Storage volume configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -38,10 +39,27 @@ pub struct VolumeInfo {
     pub health: String,
 }
 
+/// biomeOS storage statistics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BiomeStorageStats {
+    pub biome_id: String,
+    pub volume_count: usize,
+    pub total_size_bytes: u64,
+    pub total_used_bytes: u64,
+    pub total_available_bytes: u64,
+    pub volumes: Vec<VolumeInfo>,
+}
+
 /// MCP Storage Manager
 #[derive(Debug, Clone)]
 pub struct McpStorageManager {
     volumes: Arc<RwLock<HashMap<String, VolumeInfo>>>,
+}
+
+impl Default for McpStorageManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl McpStorageManager {
@@ -199,63 +217,196 @@ impl McpStorageManager {
 
     /// Discover existing volumes
     async fn discover_volumes(&self) -> Result<()> {
-        debug!("Discovering existing storage volumes");
+        info!("Discovering existing storage volumes");
 
-        // In a real implementation, this would scan the system for existing volumes
-        // For now, we'll create some default volumes for demonstration
+        // In a real implementation, this would scan for existing volumes
+        // For now, we'll start with an empty volume set
 
-        let default_volumes = vec![
-            VolumeInfo {
-                name: "system".to_string(),
-                size_bytes: 100 * 1024 * 1024 * 1024, // 100GB
-                used_bytes: 50 * 1024 * 1024 * 1024,  // 50GB used
-                available_bytes: 50 * 1024 * 1024 * 1024, // 50GB available
-                tier: StorageTier::Hot,
-                mount_point: "/system".to_string(),
-                filesystem: "zfs".to_string(),
-                mounted: true,
-                health: "Healthy".to_string(),
+        Ok(())
+    }
+
+    /// Provision volume from biomeOS manifest
+    /// This is the MCP-level implementation of biomeOS volume provisioning
+    pub async fn provision_from_biomeos_manifest(
+        &self,
+        volume_spec: &VolumeSpec,
+        biome_context: &BiomeContext,
+    ) -> Result<VolumeInfo> {
+        info!(
+            "Provisioning volume from biome manifest: {} for biome {}",
+            volume_spec.name, biome_context.biome_id
+        );
+
+        // Parse size string to bytes
+        let size_bytes = volume_spec
+            .size_bytes()
+            .map_err(|e| Error::validation(format!("Invalid volume size: {}", e)))?;
+
+        // Convert biomeOS tier to MCP tier
+        let mcp_tier = match volume_spec.tier.to_lowercase().as_str() {
+            "hot" => StorageTier::Hot,
+            "warm" => StorageTier::Warm,
+            "cold" => StorageTier::Cold,
+            "cache" => StorageTier::Hot, // Map cache to hot tier
+            _ => {
+                return Err(Error::validation(format!(
+                    "Unknown storage tier: {}",
+                    volume_spec.tier
+                )))
+            }
+        };
+
+        // Determine mount point
+        let mount_point = volume_spec
+            .mount_path
+            .clone()
+            .unwrap_or_else(|| format!("/biomeos/{}/{}", biome_context.biome_id, volume_spec.name));
+
+        // Create volume configuration
+        let config = VolumeConfig {
+            name: format!("biomeos-{}-{}", biome_context.biome_id, volume_spec.name),
+            size_bytes,
+            tier: mcp_tier,
+            mount_point,
+            filesystem: "zfs".to_string(),
+            options: {
+                let mut options = HashMap::new();
+                options.insert("biome_id".to_string(), biome_context.biome_id.clone());
+                options.insert("node_id".to_string(), biome_context.node_id.clone());
+                options.insert("provisioner".to_string(), volume_spec.provisioner.clone());
+                options.insert("environment".to_string(), biome_context.environment.clone());
+
+                // Add any additional options from volume spec
+                if let Some(spec_options) = &volume_spec.options {
+                    for (key, value) in spec_options {
+                        options.insert(key.clone(), value.clone());
+                    }
+                }
+
+                options
             },
-            VolumeInfo {
-                name: "data".to_string(),
-                size_bytes: 1024 * 1024 * 1024 * 1024, // 1TB
-                used_bytes: 200 * 1024 * 1024 * 1024,  // 200GB used
-                available_bytes: 824 * 1024 * 1024 * 1024, // 824GB available
-                tier: StorageTier::Warm,
-                mount_point: "/data".to_string(),
-                filesystem: "zfs".to_string(),
-                mounted: true,
-                health: "Healthy".to_string(),
-            },
-        ];
+        };
 
+        // Create the volume using existing infrastructure
+        self.create_volume(config).await
+    }
+
+    /// List biomeOS volumes only
+    pub async fn list_biomeos_volumes(&self) -> Result<Vec<VolumeInfo>> {
+        debug!("Listing biomeOS volumes");
+
+        let volumes = self.volumes.read().await;
+        let biomeos_volumes: Vec<VolumeInfo> = volumes
+            .values()
+            .filter(|v| v.name.starts_with("biomeos-"))
+            .cloned()
+            .collect();
+
+        Ok(biomeos_volumes)
+    }
+
+    /// Get biomeOS volume by biome ID and volume name
+    pub async fn get_biomeos_volume(
+        &self,
+        biome_id: &str,
+        volume_name: &str,
+    ) -> Result<VolumeInfo> {
+        let volume_key = format!("biomeos-{}-{}", biome_id, volume_name);
+        self.get_volume(&volume_key).await
+    }
+
+    /// Delete biomeOS volume by biome ID and volume name
+    pub async fn delete_biomeos_volume(&self, biome_id: &str, volume_name: &str) -> Result<()> {
+        let volume_key = format!("biomeos-{}-{}", biome_id, volume_name);
+        self.delete_volume(&volume_key).await
+    }
+
+    /// Get volume usage statistics for biome
+    pub async fn get_biome_storage_stats(&self, biome_id: &str) -> Result<BiomeStorageStats> {
+        debug!("Getting storage stats for biome: {}", biome_id);
+
+        let volumes = self.volumes.read().await;
+        let biome_volumes: Vec<&VolumeInfo> = volumes
+            .values()
+            .filter(|v| v.name.starts_with(&format!("biomeos-{}-", biome_id)))
+            .collect();
+
+        let total_size = biome_volumes.iter().map(|v| v.size_bytes).sum();
+        let total_used = biome_volumes.iter().map(|v| v.used_bytes).sum();
+        let total_available = biome_volumes.iter().map(|v| v.available_bytes).sum();
+
+        Ok(BiomeStorageStats {
+            biome_id: biome_id.to_string(),
+            volume_count: biome_volumes.len(),
+            total_size_bytes: total_size,
+            total_used_bytes: total_used,
+            total_available_bytes: total_available,
+            volumes: biome_volumes.into_iter().cloned().collect(),
+        })
+    }
+
+    /// Resize volume for biomeOS
+    pub async fn resize_biomeos_volume(
+        &self,
+        biome_id: &str,
+        volume_name: &str,
+        new_size_bytes: u64,
+    ) -> Result<VolumeInfo> {
+        info!(
+            "Resizing biomeOS volume {}/{} to {} bytes",
+            biome_id, volume_name, new_size_bytes
+        );
+
+        let volume_key = format!("biomeos-{}-{}", biome_id, volume_name);
         let mut volumes = self.volumes.write().await;
-        for volume in default_volumes {
-            volumes.insert(volume.name.clone(), volume);
+
+        let volume = volumes
+            .get_mut(&volume_key)
+            .ok_or_else(|| Error::storage(format!("Volume not found: {}", volume_key)))?;
+
+        if new_size_bytes < volume.used_bytes {
+            return Err(Error::storage(format!(
+                "Cannot shrink volume below used space: {} < {}",
+                new_size_bytes, volume.used_bytes
+            )));
         }
 
-        debug!("Volume discovery complete: {} volumes found", volumes.len());
-        Ok(())
+        volume.size_bytes = new_size_bytes;
+        volume.available_bytes = new_size_bytes - volume.used_bytes;
+
+        info!("Successfully resized volume: {}", volume_key);
+        Ok(volume.clone())
     }
 }
 
 /// Storage adapter for orchestrator integration
 #[derive(Debug, Clone)]
 pub struct StorageAdapter {
-    manager: McpStorageManager,
+    _manager: McpStorageManager,
+}
+
+impl Default for StorageAdapter {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl StorageAdapter {
     /// Create a new storage adapter
     pub fn new() -> Self {
         Self {
-            manager: McpStorageManager::new(),
+            _manager: McpStorageManager::new(),
         }
     }
 
     /// Mount a volume
     pub async fn mount_volume(&self, request: &MountRequest) -> Result<MountInfo> {
-        // TODO: Implement volume mounting
+        // Implement volume mounting for MCP storage adapter
+        tracing::info!(
+            "Mounting volume: {} to {}",
+            request.volume_id,
+            request.mount_path.display()
+        );
         Ok(MountInfo {
             id: format!("mount_{}", request.volume_id),
             volume_id: request.volume_id.clone(),

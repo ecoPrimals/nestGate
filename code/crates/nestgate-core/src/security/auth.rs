@@ -297,8 +297,8 @@ pub struct ApiKeyConfig {
 impl Default for ApiKeyConfig {
     fn default() -> Self {
         Self {
-            default_expiration: 86400 * 30, // 30 days
-            max_expiration: 86400 * 365,    // 1 year
+            default_expiration: (crate::constants::time::DAY.as_secs() * 30) as u64, // 30 days
+            max_expiration: (crate::constants::time::DAY.as_secs() * 365) as u64,    // 1 year
             min_key_length: 32,
         }
     }

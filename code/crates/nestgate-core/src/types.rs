@@ -105,7 +105,7 @@ impl Default for SystemInfo {
             total_memory: 8_589_934_592,     // 8GB
             available_memory: 4_294_967_296, // 4GB
             cpu_cores: 4,
-            uptime_seconds: 86400, // 1 day
+            uptime_seconds: crate::constants::time::DAY.as_secs(), // 1 day
         }
     }
 }
@@ -229,7 +229,7 @@ mod tests {
 
         for pattern in patterns {
             let serialized = serde_json::to_string(&pattern).unwrap();
-            let deserialized: AccessPattern = serde_json::from_str(&serialized).unwrap();
+            let _deserialized: AccessPattern = serde_json::from_str(&serialized).unwrap();
             // Note: We can't use PartialEq on AccessPattern in the current setup
             // but serialization/deserialization should work
             assert!(!serialized.is_empty());

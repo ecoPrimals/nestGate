@@ -1,0 +1,294 @@
+apiVersion: biomeos/v1
+kind: Biome
+metadata:
+  name: ai-research-biome
+  version: "1.0.0"
+  description: "AI Research and Model Training Biome"
+  author: "NestGate Team"
+  created_at: "2024-07-01T12:00:00Z"
+
+# Primal configurations - the core components of biomeOS
+primals:
+  nestgate:
+    primal_type: nestgate
+    version: "2.0.0"
+    config:
+      pool_name: "nestpool"
+      encryption: true
+      compression: "lz4"
+      deduplication: true
+    resources:
+      cpu_cores: 4.0
+      memory_mb: 8192
+      storage_gb: 2000
+
+  squirrel:
+    primal_type: squirrel
+    version: "1.5.0"
+    config:
+      model_cache_size: "50Gi"
+      max_concurrent_models: 5
+      gpu_acceleration: true
+    resources:
+      cpu_cores: 8.0
+      memory_mb: 16384
+      storage_gb: 500
+
+  toadstool:
+    primal_type: toadstool
+    version: "2.1.0"
+    config:
+      runtime_engine: "containerd"
+      scratch_space: "10Gi"
+      max_concurrent_jobs: 10
+    resources:
+      cpu_cores: 12.0
+      memory_mb: 32768
+      storage_gb: 200
+
+  songbird:
+    primal_type: songbird
+    version: "1.8.0"
+    config:
+      service_mesh: true
+      load_balancing: "round_robin"
+      discovery_timeout: 30
+    resources:
+      cpu_cores: 2.0
+      memory_mb: 4096
+      storage_gb: 50
+
+  beardog:
+    primal_type: beardog
+    version: "1.3.0"
+    config:
+      encryption_provider: "hardware"
+      key_rotation_days: 30
+      audit_level: "high"
+    resources:
+      cpu_cores: 2.0
+      memory_mb: 4096
+      storage_gb: 100
+
+# Service definitions
+services:
+  nestgate-storage:
+    service_type: storage
+    version: "2.0.0"
+    endpoints:
+      - "http://nestgate:8080/api/v1/zfs"
+      - "http://nestgate:8080/api/v1/zfs/biomeos"
+    capabilities:
+      - "zfs-pools"
+      - "tiered-storage"
+      - "snapshots"
+      - "volume-provisioning"
+    metadata:
+      provider: "nestgate"
+      service_id: "primal-nestgate-1"
+
+# Resource requirements
+resources:
+  storage:
+    total_gb: 2000
+    volumes:
+      - name: ai-models
+        size: "500Gi"
+        tier: "hot"
+        provisioner: "nestgate"
+        mount_path: "/biome/ai-models"
+        access_mode: "ReadOnlyMany"
+        options:
+          compression: "lz4"
+          deduplication: "on"
+          
+      - name: training-data
+        size: "1Ti"
+        tier: "warm"
+        provisioner: "nestgate"
+        mount_path: "/biome/training-data"
+        access_mode: "ReadWriteMany"
+        options:
+          compression: "zstd"
+          backup: "daily"
+          
+      - name: scratch-space
+        size: "100Gi"
+        tier: "hot"
+        provisioner: "nestgate"
+        mount_path: "/biome/scratch"
+        access_mode: "ReadWriteMany"
+        options:
+          temporary: "true"
+          
+      - name: results-archive
+        size: "500Gi"
+        tier: "cold"
+        provisioner: "nestgate"
+        mount_path: "/biome/results"
+        access_mode: "ReadWriteOnce"
+        options:
+          compression: "zstd"
+          encryption: "on"
+
+  compute:
+    cpu_cores: 28.0
+    memory_mb: 65536
+    gpu:
+      count: 2
+      memory_mb: 24576
+      gpu_type: "nvidia-a100"
+
+  network:
+    bandwidth_mbps: 10000
+    ports:
+      - port: 8080
+        protocol: TCP
+        expose_externally: true
+      - port: 443
+        protocol: TCP
+        expose_externally: true
+      - port: 22
+        protocol: TCP
+        expose_externally: false
+
+# Security configuration
+security:
+  security_level: High
+  encryption_policies:
+    at_rest: true
+    in_transit: true
+    key_rotation_days: 30
+    provider: "beardog"
+  access_controls:
+    default_access: "deny"
+    user_permissions:
+      "ai-researcher": ["read", "write", "execute"]
+      "data-scientist": ["read", "write"]
+      "admin": ["read", "write", "admin"]
+    group_permissions:
+      "research-team": ["read", "write"]
+      "ml-engineers": ["read", "write", "execute"]
+  audit_requirements:
+    level: "detailed"
+    retention_days: 365
+    destinations: ["nestgate-audit", "external-siem"]
+
+# Networking configuration
+networking:
+  service_mesh:
+    enabled: true
+    provider: "songbird"
+    config:
+      encryption: true
+      mutual_tls: true
+  load_balancing:
+    strategy: "round_robin"
+    health_check:
+      interval_seconds: 30
+      timeout_seconds: 5
+      path: "/health"
+  network_policies:
+    - name: ai-isolation
+      rules:
+        - from: ["ai-models"]
+          to: ["training-data", "scratch-space"]
+          ports: [8080, 443]
+
+# Storage configuration (NestGate-specific)
+storage:
+  default_class: "zfs-hot"
+  volumes:
+    - name: ai-models
+      size: "500Gi"
+      tier: "hot"
+      provisioner: "nestgate"
+      mount_path: "/biome/ai-models"
+      access_mode: "ReadOnlyMany"
+      
+    - name: training-data
+      size: "1Ti"
+      tier: "warm"
+      provisioner: "nestgate"
+      mount_path: "/biome/training-data"
+      access_mode: "ReadWriteMany"
+      
+    - name: scratch-space
+      size: "100Gi"
+      tier: "hot"
+      provisioner: "nestgate"
+      mount_path: "/biome/scratch"
+      access_mode: "ReadWriteMany"
+      
+    - name: results-archive
+      size: "500Gi"
+      tier: "cold"
+      provisioner: "nestgate"
+      mount_path: "/biome/results"
+      access_mode: "ReadWriteOnce"
+      
+  policies:
+    default_tier: "warm"
+    tier_migration:
+      auto_migration: true
+      rules:
+        - from_tier: "hot"
+          to_tier: "warm"
+          condition: "age"
+          age_days: 7
+        - from_tier: "warm"
+          to_tier: "cold"
+          condition: "age"
+          age_days: 30
+    retention:
+      default_days: 365
+      tier_retention:
+        hot: 30
+        warm: 90
+        cold: 365
+        
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"  # Daily at 2 AM
+    retention_days: 30
+    destinations: ["nestgate-backup", "offsite-storage"]
+
+# Biome specialization
+specialization:
+  specialization_type: "ai-research"
+  parameters:
+    model_types: ["llm", "vision", "multimodal"]
+    frameworks: ["pytorch", "tensorflow", "jax"]
+    optimization_targets: ["throughput", "latency", "accuracy"]
+
+# Templates for common configurations
+templates:
+  toadstool_runtime:
+    - name: "pytorch-training"
+      resources: "8Gi"
+      config:
+        image: "pytorch/pytorch:latest"
+        gpu: true
+        volumes: ["ai-models", "training-data", "scratch-space"]
+        
+    - name: "inference-server"
+      resources: "4Gi"
+      config:
+        image: "tritonserver:latest"
+        gpu: true
+        volumes: ["ai-models"]
+        
+  squirrel_agents:
+    - name: "model-optimizer"
+      resources: "16Gi"
+      config:
+        optimization_level: "aggressive"
+        cache_size: "50Gi"
+        gpu: true
+        
+    - name: "data-preprocessor"
+      resources: "8Gi"
+      config:
+        batch_size: 1000
+        parallel_jobs: 4
+        cache_size: "20Gi" 

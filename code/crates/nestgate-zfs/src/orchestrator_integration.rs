@@ -113,7 +113,14 @@ impl NestGateZfsService {
             available_capacity: 500000000000, // 500GB placeholder
             last_check: SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_else(|_| std::time::Duration::from_secs(0))
+                .unwrap_or_else(|_| {
+                    std::time::Duration::from_secs(
+                        std::env::var("NESTGATE_ZFS_DEFAULT_TIMEOUT_SECS")
+                            .ok()
+                            .and_then(|s| s.parse().ok())
+                            .unwrap_or(0), // 0 seconds default (immediate)
+                    )
+                })
                 .as_secs(),
         })
     }
@@ -169,7 +176,7 @@ impl NestGateZfsService {
         debug!("🔍 Checking ZFS pool health");
 
         let output = tokio::process::Command::new("zpool")
-            .args(&["status", "-x"])
+            .args(["status", "-x"])
             .output()
             .await
             .map_err(|e| ZfsError::Internal {
@@ -198,7 +205,7 @@ impl NestGateZfsService {
         debug!("🔍 Checking ZFS dataset health");
 
         let output = tokio::process::Command::new("zfs")
-            .args(&["list", "-H", "-o", "name,available,used"])
+            .args(["list", "-H", "-o", "name,available,used"])
             .output()
             .await
             .map_err(|e| ZfsError::Internal {

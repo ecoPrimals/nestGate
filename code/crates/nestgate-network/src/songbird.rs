@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 use uuid;
 
 use crate::{Result, ServiceInstance, ServiceStatus, SongbirdClient};
@@ -37,8 +37,14 @@ impl Default for SongbirdConfig {
         metadata.insert("protocols".to_string(), "nfs,smb,iscsi,s3".to_string());
 
         Self {
-            orchestrator_url: std::env::var("SONGBIRD_URL")
-                .unwrap_or_else(|_| "http://songbird-orchestrator:8000".to_string()),
+            orchestrator_url: std::env::var("SONGBIRD_URL").unwrap_or_else(|_| {
+                format!(
+                    "http://{}:{}",
+                    std::env::var("NESTGATE_SONGBIRD_HOST")
+                        .unwrap_or_else(|_| "songbird-orchestrator".to_string()),
+                    std::env::var("NESTGATE_SONGBIRD_PORT").unwrap_or_else(|_| "8000".to_string())
+                )
+            }),
             registration_interval: 30,
             health_check_interval: 10,
             discovery_interval: 60,
@@ -244,7 +250,15 @@ impl SongbirdIntegration {
                 let _health_status = ServiceStatus::Running;
 
                 debug!("💓 Sending health check to Songbird: {:?}", _health_status);
-                // TODO: Send health status to Songbird
+
+                // Send health status to Songbird orchestrator
+                if let Err(e) = client
+                    .send_health_status(&service_name, _health_status)
+                    .await
+                {
+                    warn!("⚠️ Failed to send health status to Songbird: {}", e);
+                    // Continue with health checks even if reporting fails
+                }
             }
         })
     }
@@ -266,7 +280,7 @@ impl SongbirdIntegration {
                 // Implement service discovery from Songbird
                 SongbirdIntegration::discover_services(&discovered_services).await;
                 // For now, just log the discovery attempt
-                let mut services = discovered_services.write().await;
+                let services = discovered_services.write().await;
                 debug!(
                     "📊 Currently tracking {} discovered services",
                     services.len()
@@ -327,7 +341,7 @@ impl SongbirdIntegration {
         let mut healthy = true;
 
         // Check disk space
-        if let Ok(metadata) = std::fs::metadata("/") {
+        if let Ok(_metadata) = std::fs::metadata("/") {
             // Basic disk space check - this is a simplified example
             debug!("🔍 Checking disk space...");
         } else {
@@ -364,7 +378,11 @@ impl SongbirdIntegration {
         let example_service = ServiceInstance {
             id: "example-nestgate-1".to_string(),
             name: "nestgate".to_string(),
-            host: "192.168.1.100:8080".to_string(),
+            host: format!(
+                "{}:{}",
+                nestgate_core::constants::addresses::test_host_address(),
+                nestgate_core::constants::network::api_port()
+            ),
             port: 8080,
             status: ServiceStatus::Running,
             created_at: chrono::Utc::now(),

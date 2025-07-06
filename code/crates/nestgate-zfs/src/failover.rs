@@ -122,7 +122,7 @@ impl PoolTakeoverManager {
         info!("Force importing pool: {}", pool_name);
 
         let output = TokioCommand::new("zpool")
-            .args(&["import", "-f", "-N", pool_name])  // -N prevents auto-mounting
+            .args(["import", "-f", "-N", pool_name])  // -N prevents auto-mounting
             .output()
             .await
             .map_err(|e| NestGateError::Internal(format!("Failed to execute zpool import: {}", e)))?;
@@ -151,7 +151,7 @@ impl PoolTakeoverManager {
     /// Verify that a pool was successfully imported
     async fn verify_pool_import(&self, pool_name: &str) -> Result<bool> {
         let output = TokioCommand::new("zpool")
-            .args(&["status", pool_name])
+            .args(["status", pool_name])
             .output()
             .await
             .map_err(|e| NestGateError::Internal(format!("Failed to verify pool import: {}", e)))?;
@@ -165,7 +165,7 @@ impl PoolTakeoverManager {
         debug!("Discovering importable pools");
 
         let output = TokioCommand::new("zpool")
-            .args(&["import"])
+            .args(["import"])
             .output()
             .await
             .map_err(|e| {
@@ -225,7 +225,7 @@ impl PoolTakeoverManager {
 
         // Try to get pool properties without importing
         let output = TokioCommand::new("zpool")
-            .args(&["import", "-N", "-o", "readonly=on", pool_name])
+            .args(["import", "-N", "-o", "readonly=on", pool_name])
             .output()
             .await;
 
@@ -235,7 +235,7 @@ impl PoolTakeoverManager {
                 if result.status.success() {
                     // Pool was temporarily imported readonly - clean up
                     let _ = TokioCommand::new("zpool")
-                        .args(&["export", pool_name])
+                        .args(["export", pool_name])
                         .output()
                         .await;
 
@@ -277,7 +277,7 @@ impl PoolTakeoverManager {
         info!("Exporting pool for handover: {}", pool_name);
 
         let output = TokioCommand::new("zpool")
-            .args(&["export", pool_name])
+            .args(["export", pool_name])
             .output()
             .await
             .map_err(|e| {
@@ -386,7 +386,7 @@ mod tests {
     #[tokio::test]
     async fn test_node_health_monitoring() {
         let config = FailoverConfig::default();
-        let mut monitor = NodeHealthMonitor::new(config);
+        let monitor = NodeHealthMonitor::new(config);
 
         // Update heartbeat for a node
         monitor.update_node_heartbeat("node1").await;
@@ -399,7 +399,13 @@ mod tests {
         {
             let mut nodes = monitor.known_nodes.write().await;
             if let Some(node) = nodes.get_mut("node1") {
-                node.last_heartbeat = SystemTime::now() - Duration::from_secs(300);
+                node.last_heartbeat = SystemTime::now()
+                    - Duration::from_secs(
+                        std::env::var("NESTGATE_ZFS_HEARTBEAT_TIMEOUT_SECS")
+                            .ok()
+                            .and_then(|s| s.parse().ok())
+                            .unwrap_or(300), // 5 minutes default
+                    );
             }
         }
 

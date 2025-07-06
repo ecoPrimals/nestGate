@@ -173,7 +173,7 @@ async fn initialize_networking(
                     warn!("🔄 Gracefully falling back to standalone mode");
 
                     // Fallback to standalone
-                    let api_port = 8080;
+                    let api_port = nestgate_core::constants::network::api_port();
                     let bind_addr = format!("0.0.0.0:{}", api_port);
 
                     Ok(NetworkConfig {

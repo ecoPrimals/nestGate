@@ -2,18 +2,12 @@
 //!
 //! This module provides network services and port management through Songbird orchestration.
 
-use axum::{
-    extract::{Path, State},
-    http::StatusCode,
-    response::Json,
-    routing::get,
-    Router,
-};
+use axum::{extract::State, http::StatusCode, response::Json, routing::get, Router};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 
 use crate::Result;
 
@@ -155,6 +149,47 @@ impl SongbirdClient {
             Ok(()) // Don't fail on port release errors
         }
     }
+
+    /// Send health status to Songbird
+    pub async fn send_health_status(
+        &self,
+        service_name: &str,
+        status: ServiceStatus,
+    ) -> Result<()> {
+        let url = format!("{}/api/v1/services/{}/health", self.base_url, service_name);
+
+        let request = HealthStatusRequest {
+            service_name: service_name.to_string(),
+            status: status.clone(),
+            timestamp: chrono::Utc::now(),
+            metadata: std::collections::HashMap::new(),
+        };
+
+        let response = self
+            .client
+            .post(&url)
+            .json(&request)
+            .send()
+            .await
+            .map_err(|e| {
+                nestgate_core::NestGateError::Internal(format!(
+                    "Failed to send health status: {}",
+                    e
+                ))
+            })?;
+
+        if response.status().is_success() {
+            debug!(
+                "✅ Health status sent to Songbird: {} -> {:?}",
+                service_name, status
+            );
+            Ok(())
+        } else {
+            let error_msg = format!("Failed to send health status: HTTP {}", response.status());
+            debug!("{}", error_msg);
+            Err(nestgate_core::NestGateError::Internal(error_msg))
+        }
+    }
 }
 
 /// Port allocation request for Songbird
@@ -177,6 +212,15 @@ struct PortAllocationResponse {
 struct PortReleaseRequest {
     service_name: String,
     port: u16,
+}
+
+/// Health status request for Songbird
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct HealthStatusRequest {
+    service_name: String,
+    status: ServiceStatus,
+    timestamp: chrono::DateTime<chrono::Utc>,
+    metadata: std::collections::HashMap<String, String>,
 }
 
 /// Network API with Songbird integration

@@ -560,7 +560,7 @@ pub mod network {
 
     /// Check if a port is available
     pub async fn is_port_available(port: u16) -> bool {
-        let addr = format!("127.0.0.1:{}", port);
+        let addr = format!("{}:{}", crate::constants::addresses::localhost(), port);
         (tokio::net::TcpListener::bind(&addr).await).is_ok()
     }
 }
@@ -886,13 +886,12 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix kebab case test issue
+    // Kebab case test fixed
     fn test_string_utils() {
         assert_eq!(string::to_snake_case("CamelCase"), "camel_case");
         assert_eq!(string::to_camel_case("snake_case"), "snakeCase");
         assert_eq!(string::to_pascal_case("snake_case"), "SnakeCase");
-        // TODO: Fix kebab case test - function returns "camel-case" but test expects "camel_case"
-        // assert_eq!(string::to_kebab_case("CamelCase"), "camel-case");
+        assert_eq!(string::to_kebab_case("CamelCase"), "camel-case");
 
         assert!(string::is_alphanumeric("abc123"));
         assert!(!string::is_alphanumeric("abc-123"));

@@ -233,6 +233,7 @@ pub struct SnapshotStatistics {
 /// ZFS Snapshot Manager
 #[derive(Debug)]
 pub struct ZfsSnapshotManager {
+    #[allow(dead_code)]
     config: ZfsConfig,
     pool_manager: Arc<ZfsPoolManager>,
     dataset_manager: Arc<ZfsDatasetManager>,
@@ -286,7 +287,12 @@ impl ZfsSnapshotManager {
         let dataset_manager = Arc::clone(&self.dataset_manager);
 
         tokio::spawn(async move {
-            let mut interval = interval(Duration::from_secs(60)); // Check every minute
+            let mut interval = interval(Duration::from_secs(
+                std::env::var("NESTGATE_ZFS_SNAPSHOT_CHECK_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60), // 60 seconds default
+            )); // Snapshot check interval
 
             loop {
                 tokio::select! {
@@ -703,7 +709,7 @@ impl ZfsSnapshotManager {
 
         // List existing snapshots for this dataset
         let output = tokio::process::Command::new("zfs")
-            .args(&[
+            .args([
                 "list",
                 "-t",
                 "snapshot",
@@ -732,9 +738,12 @@ impl ZfsSnapshotManager {
             if parts.len() >= 2 {
                 let snapshot_name = parts[0].to_string();
                 // Parse creation time - simplified approach
-                if let Some(creation_time) =
-                    SystemTime::now().checked_sub(std::time::Duration::from_secs(3600))
-                {
+                if let Some(creation_time) = SystemTime::now().checked_sub(Duration::from_secs(
+                    std::env::var("NESTGATE_ZFS_SNAPSHOT_CLEANUP_AGE_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(3600), // 1 hour default
+                )) {
                     snapshots.push((snapshot_name, creation_time));
                 }
             }
@@ -752,7 +761,7 @@ impl ZfsSnapshotManager {
                     for (snapshot_name, _) in snapshots.iter().take(to_delete) {
                         debug!("Deleting old snapshot: {}", snapshot_name);
                         let _ = tokio::process::Command::new("zfs")
-                            .args(&["destroy", snapshot_name])
+                            .args(["destroy", snapshot_name])
                             .output()
                             .await;
                     }
@@ -764,7 +773,7 @@ impl ZfsSnapshotManager {
                     if *creation_time < cutoff_time {
                         debug!("Deleting expired snapshot: {}", snapshot_name);
                         let _ = tokio::process::Command::new("zfs")
-                            .args(&["destroy", snapshot_name])
+                            .args(["destroy", snapshot_name])
                             .output()
                             .await;
                     }
@@ -780,14 +789,19 @@ impl ZfsSnapshotManager {
     }
 
     /// Start the operation processor
-    async fn start_operation_processor(&self) -> CoreResult<()> {
+    pub async fn start_operation_processor(&self) -> CoreResult<()> {
         let operation_queue = Arc::clone(&self.operation_queue);
         let statistics = Arc::clone(&self.statistics);
         let pool_manager = Arc::clone(&self.pool_manager);
         let dataset_manager = Arc::clone(&self.dataset_manager);
 
         tokio::spawn(async move {
-            let mut interval = interval(Duration::from_secs(5));
+            let mut interval = interval(Duration::from_secs(
+                std::env::var("NESTGATE_ZFS_SNAPSHOT_PROGRESS_CHECK_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(5), // 5 seconds default
+            ));
 
             loop {
                 interval.tick().await;
@@ -824,7 +838,7 @@ impl ZfsSnapshotManager {
                 operation.started_at = Some(SystemTime::now());
 
                 let result =
-                    Self::execute_operation(&operation, _pool_manager, _dataset_manager).await;
+                    Self::execute_operation(operation, _pool_manager, _dataset_manager).await;
 
                 match result {
                     Ok(_) => {
@@ -901,7 +915,7 @@ impl ZfsSnapshotManager {
 
         // Execute zfs snapshot command
         let output = tokio::process::Command::new("zfs")
-            .args(&["snapshot", &snapshot_full_name])
+            .args(["snapshot", &snapshot_full_name])
             .output()
             .await
             .map_err(|e| ZfsError::CommandFailed {
@@ -921,7 +935,7 @@ impl ZfsSnapshotManager {
 
         // Verify snapshot was created
         let verify_output = tokio::process::Command::new("zfs")
-            .args(&["list", "-t", "snapshot", &snapshot_full_name])
+            .args(["list", "-t", "snapshot", &snapshot_full_name])
             .output()
             .await
             .map_err(|e| ZfsError::CommandFailed {
@@ -958,7 +972,7 @@ impl ZfsSnapshotManager {
 
         // Check if snapshot exists before attempting deletion
         let list_output = tokio::process::Command::new("zfs")
-            .args(&["list", "-t", "snapshot", &snapshot_full_name])
+            .args(["list", "-t", "snapshot", &snapshot_full_name])
             .output()
             .await
             .map_err(|e| ZfsError::CommandFailed {
@@ -976,7 +990,7 @@ impl ZfsSnapshotManager {
 
         // Execute zfs destroy command
         let output = tokio::process::Command::new("zfs")
-            .args(&["destroy", &snapshot_full_name])
+            .args(["destroy", &snapshot_full_name])
             .output()
             .await
             .map_err(|e| ZfsError::CommandFailed {
@@ -1014,7 +1028,7 @@ impl ZfsSnapshotManager {
 
         // Execute zfs rollback command
         let output = tokio::process::Command::new("zfs")
-            .args(&["rollback", "-r", &snapshot_full_name])
+            .args(["rollback", "-r", &snapshot_full_name])
             .output()
             .await
             .map_err(|e| ZfsError::CommandFailed {
@@ -1059,7 +1073,7 @@ impl ZfsSnapshotManager {
 
         // Execute zfs clone command
         let output = tokio::process::Command::new("zfs")
-            .args(&["clone", &snapshot_full_name, &clone_name])
+            .args(["clone", &snapshot_full_name, &clone_name])
             .output()
             .await
             .map_err(|e| ZfsError::CommandFailed {
@@ -1101,7 +1115,7 @@ impl ZfsSnapshotManager {
 
         // Execute zfs send command (this is a simplified version)
         let output = tokio::process::Command::new("zfs")
-            .args(&["send", &snapshot_full_name])
+            .args(["send", &snapshot_full_name])
             .output()
             .await
             .map_err(|e| ZfsError::CommandFailed {
@@ -1143,7 +1157,7 @@ impl ZfsSnapshotManager {
         // This is a simplified receive operation
         // In practice, this would involve reading from a stream or file
         let output = tokio::process::Command::new("zfs")
-            .args(&["receive", &destination_dataset])
+            .args(["receive", &destination_dataset])
             .output()
             .await
             .map_err(|e| ZfsError::CommandFailed {
@@ -1165,13 +1179,18 @@ impl ZfsSnapshotManager {
     }
 
     /// Start the cache updater
-    async fn start_cache_updater(&self) -> CoreResult<()> {
+    pub async fn start_cache_updater(&self) -> CoreResult<()> {
         let snapshot_cache = Arc::clone(&self.snapshot_cache);
         let statistics = Arc::clone(&self.statistics);
         let pool_manager = Arc::clone(&self.pool_manager);
 
         tokio::spawn(async move {
-            let mut interval = interval(Duration::from_secs(300)); // Update every 5 minutes
+            let mut interval = interval(Duration::from_secs(
+                std::env::var("NESTGATE_METRICS_COLLECTION_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300), // 5 minutes default
+            )); // Update every 5 minutes
 
             loop {
                 interval.tick().await;
@@ -1197,7 +1216,7 @@ impl ZfsSnapshotManager {
         debug!("Updating snapshot cache");
 
         let output = tokio::process::Command::new("zfs")
-            .args(&[
+            .args([
                 "list",
                 "-t",
                 "snapshot",
@@ -1294,9 +1313,11 @@ impl ZfsSnapshotManager {
         match schedule {
             ScheduleFrequency::Hours(hours) => Ok(Duration::from_secs(*hours as u64 * 3600)),
             ScheduleFrequency::Minutes(minutes) => Ok(Duration::from_secs(*minutes as u64 * 60)),
-            ScheduleFrequency::Daily(_hour) => Ok(Duration::from_secs(86400)),
-            ScheduleFrequency::Weekly { .. } => Ok(Duration::from_secs(604800)),
-            ScheduleFrequency::Monthly { .. } => Ok(Duration::from_secs(2592000)), // Approximate
+            ScheduleFrequency::Daily(_hour) => Ok(nestgate_core::constants::time::DAY),
+            ScheduleFrequency::Weekly { .. } => Ok(nestgate_core::constants::time::WEEK),
+            ScheduleFrequency::Monthly { .. } => {
+                Ok(nestgate_core::constants::schedule_defaults::MONTHLY_DURATION)
+            } // Approximate
             ScheduleFrequency::Cron(cron_expr) => self.parse_cron_expression(cron_expr),
         }
     }
@@ -1306,20 +1327,21 @@ impl ZfsSnapshotManager {
         // Simple cron parsing - in production, use a proper cron library
         match cron_expr {
             "0 */6 * * *" => Ok(Duration::from_secs(6 * 3600)), // Every 6 hours
-            "0 0 * * *" => Ok(Duration::from_secs(86400)),      // Daily at midnight
-            "0 0 * * 0" => Ok(Duration::from_secs(604800)),     // Weekly on Sunday
+            "0 0 * * *" => Ok(nestgate_core::constants::time::DAY), // Daily at midnight
+            "0 0 * * 0" => Ok(nestgate_core::constants::time::WEEK), // Weekly on Sunday
             _ => {
                 // Default to daily if we can't parse
                 warn!(
                     "Could not parse cron expression '{}', defaulting to daily",
                     cron_expr
                 );
-                Ok(Duration::from_secs(86400))
+                Ok(nestgate_core::constants::time::DAY)
             }
         }
     }
 
     /// Apply retention policy to remove old snapshots
+    #[allow(dead_code)]
     async fn apply_retention_policy(
         &self,
         dataset: &str,
@@ -1363,7 +1385,7 @@ impl ZfsSnapshotManager {
             } => {
                 // Implement custom retention logic
                 let now = SystemTime::now();
-                let one_hour = Duration::from_secs(3600);
+                let one_hour = nestgate_core::constants::time::HOUR;
                 let one_day = Duration::from_secs(24 * 3600);
                 let one_week = Duration::from_secs(7 * 24 * 3600);
                 let one_month = Duration::from_secs(30 * 24 * 3600); // Approximate
@@ -1373,16 +1395,13 @@ impl ZfsSnapshotManager {
                     let age = now.duration_since(snapshot.created_at).unwrap_or_default();
 
                     // Determine if snapshot should be kept based on age and frequency
-                    let should_delete = if age < one_hour * (*hourly_hours as u32) {
-                        false // Keep hourly snapshots
-                    } else if age < one_day * (*daily_days as u32) {
-                        false // Keep daily snapshots
-                    } else if age < one_week * (*weekly_weeks as u32) {
-                        false // Keep weekly snapshots
-                    } else if age < one_month * (*monthly_months as u32) {
-                        false // Keep monthly snapshots
-                    } else if age < one_year * (*yearly_years as u32) {
-                        false // Keep yearly snapshots
+                    let should_delete = if age < one_hour * *hourly_hours
+                        || age < one_day * *daily_days
+                        || age < one_week * *weekly_weeks
+                        || age < one_month * *monthly_months
+                        || age < one_year * *yearly_years
+                    {
+                        false // Keep snapshots within retention periods
                     } else {
                         true // Delete older snapshots
                     };
@@ -1397,7 +1416,8 @@ impl ZfsSnapshotManager {
         Ok(())
     }
 
-    /// Update policy cache
+    /// Update policy cache with current settings
+    #[allow(dead_code)]
     async fn update_policy_cache(&self) -> CoreResult<()> {
         // Update the snapshot cache with current policies
         let mut cache = self.snapshot_cache.write().await;
@@ -1521,7 +1541,7 @@ mod tests {
             assert_eq!(monthly_months, 12);
             assert_eq!(yearly_years, 5);
         } else {
-            panic!("Invalid retention policy type - expected Custom");
+            assert!(false, "Invalid retention policy type - expected Custom");
         }
     }
 

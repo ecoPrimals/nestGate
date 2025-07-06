@@ -1,456 +1,397 @@
-/*!
- * Security module for the Port Manager
- */
+//! # Security utilities for NestGate
+//!
+//! This module provides security-related functionality including API key management,
+//! authentication, and authorization for NestGate operations.
 
-use axum::http::{HeaderMap, StatusCode};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
-use tokio::sync::RwLock;
+use serde::{Deserialize, Serialize};
+use chrono::{DateTime, Utc};
+use uuid::Uuid;
 
-use crate::errors::{Error, Result};
-
-/// Authentication context for API requests
-#[derive(Debug, Clone)]
-pub struct AuthContext {
-    /// User ID
-    pub user_id: String,
-
-    /// Username for display
-    pub username: String,
-
-    /// User role
-    pub role: Role,
-
-    /// API key used for authentication
-    pub api_key: String,
-
-    /// Authentication timestamp
-    pub auth_time: Instant,
-
-    /// Permissions
-    pub permissions: Vec<Permission>,
-}
-
-/// User roles
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Role {
-    /// Administrator with full access
-    Admin,
-
-    /// Operator with service management access
-    Operator,
-
-    /// Read-only access
-    ReadOnly,
-
-    /// Service account for automated systems
-    Service,
-}
-
-/// Permissions for various operations
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Permission {
-    /// Read service information
-    ServiceRead,
-
-    /// Start/stop services
-    ServiceWrite,
-
-    /// Register/unregister services
-    ServiceAdmin,
-
-    /// Read port information
-    PortRead,
-
-    /// Allocate/deallocate ports
-    PortWrite,
-
-    /// Read process information
-    ProcessRead,
-
-    /// Manage processes
-    ProcessWrite,
-
-    /// System administration
-    SystemAdmin,
-
-    /// Health monitoring access
-    HealthRead,
-
-    /// Metrics collection access
-    MetricsRead,
-}
-
-/// Rate limiting information
-#[derive(Debug, Clone)]
-pub struct RateLimit {
-    /// Maximum requests per window
-    pub max_requests: u32,
-
-    /// Time window in seconds
-    pub window_seconds: u64,
-
-    /// Current request count
-    pub current_count: u32,
-
-    /// Window start time
-    pub window_start: Instant,
-}
-
-/// Security configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SecurityConfig {
-    pub api_keys: Vec<ApiKey>,
-    pub rate_limiting: RateLimitConfig,
-    pub ssl: SslConfig,
-    pub ip_whitelist: Vec<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ApiKey {
-    pub key: String,
-    pub permissions: Vec<String>,
-    pub description: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RateLimitConfig {
-    pub enabled: bool,
-    pub requests_per_minute: u32,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SslConfig {
-    pub enabled: bool,
-    pub cert_file: String,
-    pub key_file: String,
-}
-
-impl Default for SecurityConfig {
-    fn default() -> Self {
-        Self {
-            api_keys: vec![ApiKey {
-                key: "admin-port-manager-key".to_string(),
-                permissions: vec!["admin".to_string(), "read".to_string(), "write".to_string()],
-                description: "Admin API key".to_string(),
-            }],
-            rate_limiting: RateLimitConfig {
-                enabled: false,
-                requests_per_minute: 100,
-            },
-            ssl: SslConfig {
-                enabled: false,
-                cert_file: String::new(),
-                key_file: String::new(),
-            },
-            ip_whitelist: vec![],
-        }
-    }
-}
-
-/// Security manager for the port manager
-#[derive(Clone)]
+/// Security manager for handling authentication and authorization
 pub struct SecurityManager {
-    /// API key storage
-    api_keys: Arc<RwLock<HashMap<String, AuthContext>>>,
+    /// API keys for external services
+    api_keys: HashMap<String, String>,
+    /// Authentication tokens
+    tokens: HashMap<String, AuthToken>,
+    /// Security policies
+    policies: Vec<SecurityPolicy>,
+}
 
-    /// Rate limiting storage
-    rate_limits: Arc<Mutex<HashMap<String, RateLimit>>>,
+/// Authentication token
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthToken {
+    /// Token value
+    pub token: String,
+    /// Token expiration
+    pub expires_at: DateTime<Utc>,
+    /// Associated user ID
+    pub user_id: String,
+    /// Token permissions
+    pub permissions: Vec<String>,
+}
 
-    /// Security configuration
-    config: SecurityConfig,
+/// Security policy
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecurityPolicy {
+    /// Policy ID
+    pub id: String,
+    /// Policy name
+    pub name: String,
+    /// Policy rules
+    pub rules: Vec<SecurityRule>,
+    /// Policy enabled
+    pub enabled: bool,
+}
+
+/// Security rule
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecurityRule {
+    /// Rule ID
+    pub id: String,
+    /// Rule condition
+    pub condition: String,
+    /// Rule action
+    pub action: SecurityAction,
+}
+
+/// Security action
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum SecurityAction {
+    /// Allow the action
+    Allow,
+    /// Deny the action
+    Deny,
+    /// Require authentication
+    RequireAuth,
+    /// Log the action
+    Log,
 }
 
 impl SecurityManager {
-    /// Create a new security manager
-    pub fn new(config: SecurityConfig) -> Self {
-        let mut api_keys = HashMap::new();
-
-        // Add default admin API key for development
-        api_keys.insert(
-            "admin-port-manager-key".to_string(),
-            AuthContext {
-                user_id: "admin".to_string(),
-                username: "Administrator".to_string(),
-                role: Role::Admin,
-                api_key: "admin-port-manager-key".to_string(),
-                auth_time: Instant::now(),
-                permissions: vec![
-                    Permission::ServiceRead,
-                    Permission::ServiceWrite,
-                    Permission::ServiceAdmin,
-                    Permission::PortRead,
-                    Permission::PortWrite,
-                    Permission::ProcessRead,
-                    Permission::ProcessWrite,
-                    Permission::SystemAdmin,
-                    Permission::HealthRead,
-                    Permission::MetricsRead,
-                ],
-            },
-        );
-
-        // Add read-only API key
-        api_keys.insert(
-            "readonly-port-manager-key".to_string(),
-            AuthContext {
-                user_id: "readonly".to_string(),
-                username: "Read-Only User".to_string(),
-                role: Role::ReadOnly,
-                api_key: "readonly-port-manager-key".to_string(),
-                auth_time: Instant::now(),
-                permissions: vec![
-                    Permission::ServiceRead,
-                    Permission::PortRead,
-                    Permission::ProcessRead,
-                    Permission::HealthRead,
-                    Permission::MetricsRead,
-                ],
-            },
-        );
-
+    /// Create new security manager
+    pub fn new() -> Self {
         Self {
-            api_keys: Arc::new(RwLock::new(api_keys)),
-            rate_limits: Arc::new(Mutex::new(HashMap::new())),
-            config,
+            api_keys: HashMap::new(),
+            tokens: HashMap::new(),
+            policies: Vec::new(),
         }
     }
-
-    /// Initialize the security manager
-    pub async fn initialize(&self) -> Result<()> {
-        tracing::info!("Initializing security manager");
-        tracing::info!("Authentication enabled: {}", self.config.ssl.enabled);
-        tracing::info!(
-            "Rate limiting enabled: {}",
-            self.config.rate_limiting.enabled
-        );
-        tracing::info!("TLS enabled: {}", self.config.ssl.enabled);
-        Ok(())
+    
+    /// Add API key
+    pub fn add_api_key(&mut self, service: String, key: String) {
+        self.api_keys.insert(service, key);
     }
-
-    /// Validate API key and return authentication context
-    pub async fn authenticate(&self, api_key: &str) -> Result<AuthContext> {
-        if !self.config.ssl.enabled {
-            // If SSL is disabled, return admin context
-            return Ok(AuthContext {
-                user_id: "system".to_string(),
-                username: "System".to_string(),
-                role: Role::Admin,
-                api_key: api_key.to_string(),
-                auth_time: Instant::now(),
-                permissions: vec![
-                    Permission::ServiceRead,
-                    Permission::ServiceWrite,
-                    Permission::ServiceAdmin,
-                    Permission::PortRead,
-                    Permission::PortWrite,
-                    Permission::ProcessRead,
-                    Permission::ProcessWrite,
-                    Permission::SystemAdmin,
-                    Permission::HealthRead,
-                    Permission::MetricsRead,
-                ],
-            });
-        }
-
-        let api_keys = self.api_keys.read().await;
-
-        match api_keys.get(api_key) {
-            Some(context) => {
-                // Check if session is still valid
-                if context.auth_time.elapsed().as_secs() > 3600 {
-                    return Err(Error::Api("Session expired".to_string()));
-                }
-
-                Ok(context.clone())
-            }
-            None => Err(Error::Api("Invalid API key".to_string())),
-        }
+    
+    /// Get API key for service
+    pub fn get_api_key(&self, service: &str) -> Option<&String> {
+        self.api_keys.get(service)
     }
-
-    /// Check if user has required permission
-    pub fn has_permission(&self, context: &AuthContext, permission: &Permission) -> bool {
-        // Admin role has all permissions
-        if context.role == Role::Admin {
-            return true;
-        }
-
-        context.permissions.contains(permission)
-    }
-
-    /// Check rate limiting for a client IP
-    pub fn check_rate_limit(&self, client_ip: &str) -> Result<()> {
-        if !self.config.rate_limiting.enabled {
-            return Ok(());
-        }
-
-        let mut rate_limits = self.rate_limits.lock().unwrap();
-        let now = Instant::now();
-
-        let rate_limit = rate_limits
-            .entry(client_ip.to_string())
-            .or_insert(RateLimit {
-                max_requests: self.config.rate_limiting.requests_per_minute,
-                window_seconds: 60,
-                current_count: 0,
-                window_start: now,
-            });
-
-        // Reset window if needed
-        if now.duration_since(rate_limit.window_start).as_secs() >= rate_limit.window_seconds {
-            rate_limit.current_count = 0;
-            rate_limit.window_start = now;
-        }
-
-        // Check if limit exceeded
-        if rate_limit.current_count >= rate_limit.max_requests {
-            return Err(Error::Api("Rate limit exceeded".to_string()));
-        }
-
-        rate_limit.current_count += 1;
-        Ok(())
-    }
-
+    
     /// Extract API key from headers
-    pub fn extract_api_key(&self, headers: &HeaderMap) -> Option<String> {
-        headers
-            .get("x-api-key")
-            .and_then(|value| value.to_str().ok())
-            .map(|s| s.to_string())
+    pub fn extract_api_key<'a>(&self, headers: &'a HashMap<String, String>) -> Option<&'a str> {
+        headers.get("authorization")
+            .and_then(|auth| auth.strip_prefix("Bearer "))
+            .or_else(|| headers.get("x-api-key").map(|s| s.as_str()))
     }
-
-    /// Extract client IP from headers
-    pub fn extract_client_ip(&self, headers: &HeaderMap) -> String {
-        // Try various headers for client IP
-        for &header_name in &["x-forwarded-for", "x-real-ip", "x-client-ip"] {
-            if let Some(value) = headers.get(header_name) {
-                if let Ok(ip) = value.to_str() {
-                    return ip.split(',').next().unwrap_or("unknown").trim().to_string();
+    
+    /// Validate authentication token
+    pub fn validate_token(&self, token: &str) -> bool {
+        if let Some(auth_token) = self.tokens.get(token) {
+            auth_token.expires_at > Utc::now()
+        } else {
+            false
+        }
+    }
+    
+    /// Create authentication token
+    pub fn create_token(&mut self, user_id: String, permissions: Vec<String>) -> String {
+        let token = Uuid::new_v4().to_string();
+        let auth_token = AuthToken {
+            token: token.clone(),
+            expires_at: Utc::now() + chrono::Duration::hours(24),
+            user_id,
+            permissions,
+        };
+        self.tokens.insert(token.clone(), auth_token);
+        token
+    }
+    
+    /// Add security policy
+    pub fn add_policy(&mut self, policy: SecurityPolicy) {
+        self.policies.push(policy);
+    }
+    
+    /// Check if action is allowed
+    pub fn is_allowed(&self, action: &str, context: &SecurityContext) -> bool {
+        for policy in &self.policies {
+            if !policy.enabled {
+                continue;
+            }
+            
+            for rule in &policy.rules {
+                if self.matches_condition(&rule.condition, action, context) {
+                    match rule.action {
+                        SecurityAction::Allow => return true,
+                        SecurityAction::Deny => return false,
+                        SecurityAction::RequireAuth => {
+                            return context.authenticated;
+                        }
+                        SecurityAction::Log => {
+                            tracing::info!("Security action logged: {}", action);
+                        }
+                    }
                 }
             }
         }
-
-        "unknown".to_string()
+        
+        // Default to allow if no policy matches
+        true
     }
-
-    /// Add a new API key
-    pub async fn add_api_key(&self, api_key: String, context: AuthContext) -> Result<()> {
-        let mut api_keys = self.api_keys.write().await;
-        api_keys.insert(api_key, context);
-        Ok(())
-    }
-
-    /// Remove an API key
-    pub async fn remove_api_key(&self, api_key: &str) -> Result<()> {
-        let mut api_keys = self.api_keys.write().await;
-        api_keys.remove(api_key);
-        Ok(())
-    }
-
-    /// List all API keys (for admin use)
-    pub async fn list_api_keys(&self) -> Vec<String> {
-        let api_keys = self.api_keys.read().await;
-        api_keys.keys().cloned().collect()
-    }
-
-    /// Get configuration
-    pub fn config(&self) -> &SecurityConfig {
-        &self.config
-    }
-
-    pub fn validate_api_key(&self, key: &str) -> bool {
-        self.config
-            .api_keys
-            .iter()
-            .any(|api_key| api_key.key == key)
-    }
-
-    pub fn get_permissions(&self, key: &str) -> Vec<String> {
-        self.config
-            .api_keys
-            .iter()
-            .find(|api_key| api_key.key == key)
-            .map(|api_key| api_key.permissions.clone())
-            .unwrap_or_default()
-    }
-
-    /// Check if rate limit is exceeded for a given key
-    pub fn is_rate_limited(&self, key: &str) -> bool {
-        let mut rate_limits = match self.rate_limits.lock() {
-            Ok(guard) => guard,
-            Err(poisoned) => {
-                // If the mutex is poisoned, we can still access the data
-                // but we should log this as it indicates a panic occurred while holding the lock
-                tracing::warn!("Rate limiter mutex was poisoned, recovering");
-                poisoned.into_inner()
-            }
-        };
-
-        let now = Instant::now();
-        let window_duration =
-            Duration::from_secs(self.config.rate_limiting.requests_per_minute as u64 * 60);
-
-        let entry = rate_limits
-            .entry(key.to_string())
-            .or_insert_with(|| RateLimit {
-                max_requests: self.config.rate_limiting.requests_per_minute,
-                window_seconds: 60,
-                current_count: 0,
-                window_start: now,
-            });
-
-        // Reset window if expired
-        if now.duration_since(entry.window_start) >= window_duration {
-            entry.current_count = 0;
-            entry.window_start = now;
-        }
-
-        entry.current_count += 1;
-        entry.current_count > entry.max_requests
+    
+    fn matches_condition(&self, condition: &str, action: &str, _context: &SecurityContext) -> bool {
+        // Simple condition matching - in production this would be more sophisticated
+        condition == action || condition == "*"
     }
 }
 
-/// Middleware function to validate authentication and authorization
-pub async fn validate_request(
-    security_manager: &SecurityManager,
-    headers: &HeaderMap,
-    required_permission: Permission,
-) -> std::result::Result<AuthContext, (StatusCode, String)> {
-    // Check IP allowlist if configured
-    if !security_manager.config.ip_whitelist.is_empty() {
-        let client_ip = security_manager.extract_client_ip(headers);
-        if !security_manager.config.ip_whitelist.contains(&client_ip) && client_ip != "unknown" {
-            return Err((StatusCode::FORBIDDEN, "IP not allowed".to_string()));
+/// Security context for operations
+#[derive(Debug, Clone)]
+pub struct SecurityContext {
+    /// User ID
+    pub user_id: Option<String>,
+    /// Whether user is authenticated
+    pub authenticated: bool,
+    /// User permissions
+    pub permissions: Vec<String>,
+    /// Request IP address
+    pub ip_address: Option<String>,
+    /// Request headers
+    pub headers: HashMap<String, String>,
+}
+
+impl Default for SecurityContext {
+    fn default() -> Self {
+        Self {
+            user_id: None,
+            authenticated: false,
+            permissions: Vec::new(),
+            ip_address: None,
+            headers: HashMap::new(),
         }
     }
+}
 
-    // Check rate limiting
-    let client_ip = security_manager.extract_client_ip(headers);
-    if let Err(e) = security_manager.check_rate_limit(&client_ip) {
-        return Err((StatusCode::TOO_MANY_REQUESTS, e.to_string()));
+/// API key validation result
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApiKeyValidation {
+    /// Whether the key is valid
+    pub valid: bool,
+    /// Associated service name
+    pub service: Option<String>,
+    /// Key permissions
+    pub permissions: Vec<String>,
+    /// Key expiration
+    pub expires_at: Option<DateTime<Utc>>,
+}
+
+/// Enhanced security manager with crypto lock integration
+pub struct EnhancedSecurityManager {
+    /// Base security manager
+    base: SecurityManager,
+    /// Crypto lock keys
+    crypto_keys: HashMap<String, String>,
+    /// Security events log
+    events: Vec<SecurityEvent>,
+}
+
+/// Security event
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecurityEvent {
+    /// Event ID
+    pub id: String,
+    /// Event timestamp
+    pub timestamp: DateTime<Utc>,
+    /// Event type
+    pub event_type: SecurityEventType,
+    /// Event details
+    pub details: HashMap<String, String>,
+    /// Event severity
+    pub severity: SecuritySeverity,
+}
+
+/// Security event type
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum SecurityEventType {
+    /// Authentication attempt
+    AuthAttempt,
+    /// Authorization failure
+    AuthFailure,
+    /// API key usage
+    ApiKeyUsage,
+    /// Crypto lock validation
+    CryptoLockValidation,
+    /// External access attempt
+    ExternalAccess,
+    /// Suspicious activity
+    SuspiciousActivity,
+}
+
+/// Security severity level
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum SecuritySeverity {
+    /// Low severity
+    Low,
+    /// Medium severity
+    Medium,
+    /// High severity
+    High,
+    /// Critical severity
+    Critical,
+}
+
+impl EnhancedSecurityManager {
+    /// Create new enhanced security manager
+    pub fn new() -> Self {
+        Self {
+            base: SecurityManager::new(),
+            crypto_keys: HashMap::new(),
+            events: Vec::new(),
+        }
     }
-
-    // Extract and validate API key
-    let api_key = match security_manager.extract_api_key(headers) {
-        Some(key) => key,
-        None => return Err((StatusCode::UNAUTHORIZED, "Missing API key".to_string())),
-    };
-
-    // Authenticate
-    let auth_context = match security_manager.authenticate(&api_key).await {
-        Ok(context) => context,
-        Err(e) => return Err((StatusCode::UNAUTHORIZED, e.to_string())),
-    };
-
-    // Check permission
-    if !security_manager.has_permission(&auth_context, &required_permission) {
-        return Err((
-            StatusCode::FORBIDDEN,
-            "Insufficient permissions".to_string(),
-        ));
+    
+    /// Add crypto key
+    pub fn add_crypto_key(&mut self, key_id: String, key_value: String) {
+        self.crypto_keys.insert(key_id, key_value);
     }
+    
+    /// Validate crypto key
+    pub fn validate_crypto_key(&self, key_id: &str, key_value: &str) -> bool {
+        if let Some(stored_key) = self.crypto_keys.get(key_id) {
+            stored_key == key_value
+        } else {
+            false
+        }
+    }
+    
+    /// Log security event
+    pub fn log_event(&mut self, event_type: SecurityEventType, details: HashMap<String, String>, severity: SecuritySeverity) {
+        let event = SecurityEvent {
+            id: Uuid::new_v4().to_string(),
+            timestamp: Utc::now(),
+            event_type,
+            details,
+            severity,
+        };
+        self.events.push(event);
+    }
+    
+    /// Get security events
+    pub fn get_events(&self) -> &Vec<SecurityEvent> {
+        &self.events
+    }
+    
+    /// Get security manager
+    pub fn get_base_manager(&self) -> &SecurityManager {
+        &self.base
+    }
+    
+    /// Get mutable security manager
+    pub fn get_base_manager_mut(&mut self) -> &mut SecurityManager {
+        &mut self.base
+    }
+}
 
-    Ok(auth_context)
+/// Secure API wrapper
+pub struct SecureApiWrapper {
+    /// Security manager
+    security_manager: EnhancedSecurityManager,
+    /// API endpoint
+    endpoint: String,
+    /// Default headers
+    default_headers: HashMap<String, String>,
+}
+
+impl SecureApiWrapper {
+    /// Create new secure API wrapper
+    pub fn new(endpoint: String) -> Self {
+        Self {
+            security_manager: EnhancedSecurityManager::new(),
+            endpoint,
+            default_headers: HashMap::new(),
+        }
+    }
+    
+    /// Set default header
+    pub fn set_default_header(&mut self, key: String, value: String) {
+        self.default_headers.insert(key, value);
+    }
+    
+    /// Get security manager
+    pub fn get_security_manager(&self) -> &EnhancedSecurityManager {
+        &self.security_manager
+    }
+    
+    /// Get mutable security manager
+    pub fn get_security_manager_mut(&mut self) -> &mut EnhancedSecurityManager {
+        &mut self.security_manager
+    }
+}
+
+/// Validate API key with headers
+pub fn validate_api_key_with_headers(headers: &HashMap<String, String>) -> Result<String, String> {
+    let security_manager = SecurityManager::new();
+    let api_key = security_manager.extract_api_key(headers)
+        .ok_or_else(|| "No API key found".to_string())?;
+    
+    Ok(api_key.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_security_manager_creation() {
+        let manager = SecurityManager::new();
+        assert!(manager.api_keys.is_empty());
+        assert!(manager.tokens.is_empty());
+        assert!(manager.policies.is_empty());
+    }
+    
+    #[test]
+    fn test_api_key_management() {
+        let mut manager = SecurityManager::new();
+        manager.add_api_key("test_service".to_string(), "test_key".to_string());
+        
+        assert_eq!(manager.get_api_key("test_service"), Some(&"test_key".to_string()));
+        assert_eq!(manager.get_api_key("unknown_service"), None);
+    }
+    
+    #[test]
+    fn test_token_validation() {
+        let mut manager = SecurityManager::new();
+        let token = manager.create_token("user123".to_string(), vec!["read".to_string()]);
+        
+        assert!(manager.validate_token(&token));
+        assert!(!manager.validate_token("invalid_token"));
+    }
+    
+    #[test]
+    fn test_security_context() {
+        let context = SecurityContext::default();
+        assert!(!context.authenticated);
+        assert!(context.permissions.is_empty());
+        assert!(context.user_id.is_none());
+    }
+    
+    #[test]
+    fn test_enhanced_security_manager() {
+        let mut manager = EnhancedSecurityManager::new();
+        manager.add_crypto_key("key1".to_string(), "value1".to_string());
+        
+        assert!(manager.validate_crypto_key("key1", "value1"));
+        assert!(!manager.validate_crypto_key("key1", "wrong_value"));
+        assert!(!manager.validate_crypto_key("unknown_key", "value1"));
+    }
 }

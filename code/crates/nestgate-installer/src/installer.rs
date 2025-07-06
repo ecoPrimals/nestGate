@@ -24,6 +24,7 @@ pub struct InstallationInfo {
 
 pub struct NestGateInstaller {
     platform: PlatformInfo,
+    #[allow(dead_code)] // Used for future installation functionality
     install_dir: Option<PathBuf>,
     downloader: DownloadManager,
 }
@@ -54,15 +55,15 @@ impl NestGateInstaller {
         println!();
 
         // Check if already installed
-        if self.is_installed() && !force {
-            if !yes
-                && !Confirm::new()
-                    .with_prompt("NestGate is already installed. Reinstall?")
-                    .interact()?
-            {
-                println!("Installation cancelled.");
-                return Ok(());
-            }
+        if self.is_installed()
+            && !force
+            && !yes
+            && !Confirm::new()
+                .with_prompt("NestGate is already installed. Reinstall?")
+                .interact()?
+        {
+            println!("Installation cancelled.");
+            return Ok(());
         }
 
         // System requirements check
@@ -205,7 +206,7 @@ impl NestGateInstaller {
             );
 
             if !Confirm::new()
-                .with_prompt(&format!("{}. Continue?", message))
+                .with_prompt(format!("{}. Continue?", message))
                 .interact()?
             {
                 println!("Uninstallation cancelled.");
@@ -223,19 +224,19 @@ impl NestGateInstaller {
         }
 
         // Remove configuration if requested
-        if remove_config && installation_info.config_path.exists() {
-            if installation_info.config_path
+        if remove_config
+            && installation_info.config_path.exists()
+            && installation_info.config_path
                 != installation_info
                     .install_path
                     .join("etc")
                     .join("nestgate.toml")
-            {
-                fs::remove_dir_all(&installation_info.config_path)?;
-                info!(
-                    "Removed configuration: {}",
-                    installation_info.config_path.display()
-                );
-            }
+        {
+            fs::remove_dir_all(&installation_info.config_path)?;
+            info!(
+                "Removed configuration: {}",
+                installation_info.config_path.display()
+            );
         }
 
         // Remove data if requested
@@ -283,7 +284,7 @@ impl NestGateInstaller {
 
         if !yes
             && !Confirm::new()
-                .with_prompt(&format!(
+                .with_prompt(format!(
                     "Update NestGate from {} to {}?",
                     installation_info.version, target_version
                 ))

@@ -23,8 +23,12 @@ impl Default for AdapterConfig {
     fn default() -> Self {
         Self {
             name: "nestgate-mcp".to_string(),
-            endpoint: "http://localhost:8080".to_string(),
-            timeout_seconds: 30,
+            endpoint: format!(
+                "http://{}:{}",
+                nestgate_core::constants::addresses::localhost(),
+                nestgate_core::constants::network::api_port()
+            ),
+            timeout_seconds: nestgate_core::constants::timeouts::request_timeout().as_secs() as u64,
             retry_attempts: 3,
             capabilities: vec![
                 "storage".to_string(),

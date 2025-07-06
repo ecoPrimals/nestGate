@@ -126,8 +126,10 @@ async fn test_zfs_concurrent_operations() -> Result<()> {
 async fn test_zfs_error_handling() -> Result<()> {
     println!("❌ Testing ZFS error handling");
 
-    let mut config = ZfsConfig::default();
-    config.default_pool = "nonexistent-pool".to_string();
+    let config = ZfsConfig {
+        default_pool: "nonexistent-pool".to_string(),
+        ..Default::default()
+    };
 
     let manager = ZfsManager::new(config).await?;
 

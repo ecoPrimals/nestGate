@@ -27,10 +27,10 @@ pub struct ChaosConfig {
 impl Default for ChaosConfig {
     fn default() -> Self {
         Self {
-            duration: Duration::from_secs(30),
+            duration: nestgate_core::constants::test_defaults::TEST_MEDIUM_TIMEOUT,
             stress_intensity: 0.7,
             failure_injection_rate: 0.1,
-            recovery_timeout: Duration::from_secs(10),
+            recovery_timeout: nestgate_core::constants::test_defaults::TEST_SHORT_TIMEOUT,
             metrics_interval: Duration::from_millis(500),
             enable_disk_stress: true,
             enable_memory_stress: true,
@@ -647,7 +647,7 @@ mod tests {
     #[tokio::test]
     async fn test_light_chaos_scenario() {
         let config = ChaosConfig {
-            duration: Duration::from_secs(10),
+            duration: nestgate_core::constants::test_defaults::TEST_SHORT_TIMEOUT,
             stress_intensity: 0.3,
             failure_injection_rate: 0.05,
             recovery_timeout: Duration::from_secs(2),

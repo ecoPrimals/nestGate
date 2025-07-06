@@ -244,7 +244,7 @@ async fn test_scalability_limits() -> Result<()> {
         let _ = zfs_manager.get_zfs_health().await;
         
         // Check if we're taking too long
-        if start.elapsed() > Duration::from_secs(30) {
+        if start.elapsed() > nestgate_core::constants::test_defaults::TEST_MEDIUM_TIMEOUT {
             warn!("Scalability test stopped early at {} operations", i);
             break;
         }
@@ -277,7 +277,7 @@ async fn test_graceful_shutdown() -> Result<()> {
     assert!(shutdown_result.is_ok(), "Shutdown should complete successfully");
     
     // Should shutdown within reasonable time
-    assert!(shutdown_time < Duration::from_secs(10),
+    assert!(shutdown_time < nestgate_core::constants::test_defaults::TEST_SHORT_TIMEOUT,
            "Shutdown took {}s, exceeded 10s limit", shutdown_time.as_secs_f64());
     
     info!("✅ Graceful shutdown test passed: {:.2}s", shutdown_time.as_secs_f64());

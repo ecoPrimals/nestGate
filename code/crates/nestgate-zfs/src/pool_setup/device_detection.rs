@@ -66,7 +66,7 @@ impl DeviceScanner {
 
         // Use lsblk to get device information
         let output = Command::new("lsblk")
-            .args(&[
+            .args([
                 "--json",
                 "--output",
                 "NAME,SIZE,TYPE,MODEL,FSTYPE,MOUNTPOINT",

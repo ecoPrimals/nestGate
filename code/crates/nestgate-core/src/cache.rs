@@ -71,7 +71,10 @@ pub struct CacheConfig {
 impl Default for CacheConfig {
     fn default() -> Self {
         Self {
-            max_size: 1024 * 1024 * 100, // 100MB
+            max_size: std::env::var("NESTGATE_CACHE_MAX_SIZE_BYTES")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1024 * 1024 * 100), // 100MB default
             max_items: 1000,
             ttl: 3600, // 1 hour
             tier: StorageTier::Hot,
@@ -450,7 +453,10 @@ impl MultiTierCache {
         // Create hot tier config
         let hot_config = CacheConfig {
             tier: StorageTier::Hot,
-            max_size: 256 * 1024 * 1024, // 256 MB
+            max_size: std::env::var("NESTGATE_CACHE_LARGE_MAX_SIZE_BYTES")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(256 * 1024 * 1024), // 256 MB default
             max_items: 1000,
             ttl: 3600, // 1 hour
             ..Default::default()
@@ -461,7 +467,7 @@ impl MultiTierCache {
             tier: StorageTier::Warm,
             max_size: 1024 * 1024 * 1024, // 1 GB
             max_items: 1000,
-            ttl: 86400, // 24 hours
+            ttl: crate::constants::time::DAY.as_secs(), // 24 hours
             ..Default::default()
         };
 
@@ -470,7 +476,7 @@ impl MultiTierCache {
             tier: StorageTier::Cold,
             max_size: 10 * 1024 * 1024 * 1024, // 10 GB
             max_items: 1000,
-            ttl: 7 * 86400, // 7 days
+            ttl: crate::constants::time::WEEK.as_secs(), // 7 days
             ..Default::default()
         };
 
@@ -480,7 +486,7 @@ impl MultiTierCache {
             cold: CacheManager::with_config(cold_config),
             access_counts: Arc::new(RwLock::new(HashMap::new())),
             promotion_threshold: 5,
-            decay_interval: Duration::from_secs(3600), // 1 hour
+            decay_interval: crate::constants::time::HOUR, // 1 hour
         }
     }
 
