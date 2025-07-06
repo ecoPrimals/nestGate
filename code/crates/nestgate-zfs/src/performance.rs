@@ -73,7 +73,15 @@ impl Default for PerformanceConfig {
             max_history_entries: 2880,   // 24 hours at 30-second intervals
             enable_alerting: true,
             enable_trend_analysis: true,
-            prometheus_endpoint: Some("http://localhost:9090".to_string()),
+            prometheus_endpoint: Some(
+                std::env::var("NESTGATE_PROMETHEUS_ENDPOINT").unwrap_or_else(|_| {
+                    format!(
+                        "http://localhost:{}",
+                        std::env::var("NESTGATE_PROMETHEUS_PORT")
+                            .unwrap_or_else(|_| "9090".to_string())
+                    )
+                }),
+            ),
         }
     }
 }
@@ -355,6 +363,7 @@ pub enum AlertType {
 
 /// I/O statistics summary from zpool iostat
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct IoStatsSummary {
     pub read_iops: f64,
     pub write_iops: f64,
@@ -364,12 +373,18 @@ struct IoStatsSummary {
     pub write_latency_ms: f64,
 }
 
-/// Pool properties for performance calculation
+/// Pool properties for monitoring
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct PoolProperties {
     pub fragmentation_percent: f64,
     pub compression_ratio: f64,
     pub dedup_ratio: f64,
+    pub capacity_bytes: u64,
+    pub allocated_bytes: u64,
+    pub free_bytes: u64,
+    pub readonly: bool,
+    pub health_status: String,
 }
 
 impl Default for PoolProperties {
@@ -378,25 +393,36 @@ impl Default for PoolProperties {
             fragmentation_percent: 0.0,
             compression_ratio: 1.0,
             dedup_ratio: 1.0,
+            capacity_bytes: 0,
+            allocated_bytes: 0,
+            free_bytes: 0,
+            readonly: false,
+            health_status: String::new(),
         }
     }
 }
 
-/// Memory information from system
-#[derive(Debug, Clone)]
+/// System memory information
+#[derive(Debug)]
+#[allow(dead_code)]
 struct MemoryInfo {
-    pub total: u64,
-    pub used: u64,
-    pub available: u64,
+    pub total_mb: u64,
+    pub available_mb: u64,
+    pub used_mb: u64,
 }
 
 /// Pool I/O statistics
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct PoolIoStats {
     pub read_ops: u64,
     pub write_ops: u64,
     pub bytes_read: u64,
     pub bytes_written: u64,
+    pub read_latency_ms: f64,
+    pub write_latency_ms: f64,
+    pub queue_depth: u64,
+    pub utilization_percent: f64,
 }
 
 impl Default for PoolIoStats {
@@ -406,12 +432,17 @@ impl Default for PoolIoStats {
             write_ops: 0,
             bytes_read: 0,
             bytes_written: 0,
+            read_latency_ms: 0.0,
+            write_latency_ms: 0.0,
+            queue_depth: 0,
+            utilization_percent: 0.0,
         }
     }
 }
 
 /// Dataset performance statistics
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct DatasetPerformanceStats {
     pub read_iops: f64,
     pub write_iops: f64,
@@ -420,6 +451,9 @@ struct DatasetPerformanceStats {
     pub read_latency_ms: f64,
     pub write_latency_ms: f64,
     pub utilization_percent: f64,
+    pub cache_hit_ratio: f64,
+    pub compression_effectiveness: f64,
+    pub deduplication_effectiveness: f64,
 }
 
 impl Default for DatasetPerformanceStats {
@@ -432,6 +466,9 @@ impl Default for DatasetPerformanceStats {
             read_latency_ms: 0.0,
             write_latency_ms: 0.0,
             utilization_percent: 0.0,
+            cache_hit_ratio: 0.0,
+            compression_effectiveness: 0.0,
+            deduplication_effectiveness: 0.0,
         }
     }
 }
@@ -474,6 +511,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Load default alert conditions
+    #[allow(dead_code)]
     async fn load_default_alert_conditions(&self) -> CoreResult<()> {
         let mut conditions = self.alert_conditions.write().await;
 
@@ -484,8 +522,13 @@ impl ZfsPerformanceMonitor {
             description: "Average latency exceeds threshold".to_string(),
             metric: AlertMetric::Latency,
             operator: AlertOperator::GreaterThan,
-            threshold: 100.0,                   // 100ms
-            duration: Duration::from_secs(300), // 5 minutes
+            threshold: 100.0, // 100ms
+            duration: Duration::from_secs(
+                std::env::var("NESTGATE_ZFS_LATENCY_ALERT_DURATION_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300), // 5 minutes default
+            ), // Latency alert duration
             severity: AlertSeverity::Warning,
             enabled: true,
         });
@@ -497,8 +540,13 @@ impl ZfsPerformanceMonitor {
             description: "Throughput falls below threshold".to_string(),
             metric: AlertMetric::Throughput,
             operator: AlertOperator::LessThan,
-            threshold: 100.0,                   // 100 MB/s
-            duration: Duration::from_secs(300), // 5 minutes
+            threshold: 100.0, // 100 MB/s
+            duration: Duration::from_secs(
+                std::env::var("NESTGATE_ZFS_PERFORMANCE_ALERT_DURATION_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300), // 5 minutes default
+            ),
             severity: AlertSeverity::Warning,
             enabled: true,
         });
@@ -510,8 +558,13 @@ impl ZfsPerformanceMonitor {
             description: "Storage utilization exceeds threshold".to_string(),
             metric: AlertMetric::Utilization,
             operator: AlertOperator::GreaterThan,
-            threshold: 85.0,                    // 85%
-            duration: Duration::from_secs(600), // 10 minutes
+            threshold: 85.0, // 85%
+            duration: Duration::from_secs(
+                std::env::var("NESTGATE_ZFS_CAPACITY_ALERT_DURATION_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(600), // 10 minutes default
+            ), // Capacity alert duration
             severity: AlertSeverity::Critical,
             enabled: true,
         });
@@ -523,8 +576,13 @@ impl ZfsPerformanceMonitor {
             description: "Error rate exceeds threshold".to_string(),
             metric: AlertMetric::ErrorRate,
             operator: AlertOperator::GreaterThan,
-            threshold: 0.01,                    // 1%
-            duration: Duration::from_secs(180), // 3 minutes
+            threshold: 0.01, // 1%
+            duration: Duration::from_secs(
+                std::env::var("NESTGATE_ZFS_ERROR_ALERT_DURATION_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(180), // 3 minutes default
+            ), // Error alert duration
             severity: AlertSeverity::Critical,
             enabled: true,
         });
@@ -533,7 +591,8 @@ impl ZfsPerformanceMonitor {
         Ok(())
     }
 
-    /// Initialize tier performance targets
+    /// Initialize performance targets for each tier
+    #[allow(dead_code)]
     async fn initialize_tier_targets(&self) -> CoreResult<()> {
         let mut tier_metrics = self.tier_metrics.write().await;
 
@@ -593,6 +652,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Start metrics collection task
+    #[allow(dead_code)]
     async fn start_collection_task(&mut self) -> CoreResult<()> {
         let pool_manager = Arc::clone(&self.pool_manager);
         let dataset_manager = Arc::clone(&self.dataset_manager);
@@ -624,6 +684,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Collect performance metrics
+    #[allow(dead_code)]
     async fn collect_metrics(
         pool_manager: &Arc<ZfsPoolManager>,
         dataset_manager: &Arc<ZfsDatasetManager>,
@@ -672,6 +733,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Collect real ZFS pool performance metrics
+    #[allow(dead_code)]
     async fn collect_pool_metrics(
         pool_manager: &Arc<ZfsPoolManager>,
     ) -> CoreResult<PoolPerformanceMetrics> {
@@ -679,7 +741,7 @@ impl ZfsPerformanceMonitor {
 
         // Execute zpool iostat to get real I/O statistics
         let iostat_output = tokio::process::Command::new("zpool")
-            .args(&["iostat", "-v", "-y", "1", "1"])
+            .args(["iostat", "-v", "-y", "1", "1"])
             .output()
             .await
             .map_err(|e| {
@@ -753,7 +815,8 @@ impl ZfsPerformanceMonitor {
         })
     }
 
-    /// Parse zpool iostat output
+    /// Parse zpool iostat output into structured metrics
+    #[allow(dead_code)]
     fn parse_zpool_iostat(output: &str) -> CoreResult<IoStatsSummary> {
         let mut read_iops = 0.0;
         let mut write_iops = 0.0;
@@ -803,10 +866,11 @@ impl ZfsPerformanceMonitor {
         })
     }
 
-    /// Get additional pool properties
+    /// Get pool properties for monitoring
+    #[allow(dead_code)]
     async fn get_pool_properties(pool_name: &str) -> CoreResult<PoolProperties> {
         let output = tokio::process::Command::new("zpool")
-            .args(&["get", "all", pool_name])
+            .args(["get", "all", pool_name])
             .output()
             .await
             .map_err(|e| {
@@ -850,6 +914,11 @@ impl ZfsPerformanceMonitor {
             fragmentation_percent,
             compression_ratio,
             dedup_ratio,
+            capacity_bytes: 0,
+            allocated_bytes: 0,
+            free_bytes: 0,
+            readonly: false,
+            health_status: String::new(),
         })
     }
 
@@ -865,8 +934,8 @@ impl ZfsPerformanceMonitor {
 
         Ok(SystemResourceMetrics {
             cpu_utilization_percent: cpu_usage,
-            memory_usage_bytes: memory_info.used,
-            available_memory_bytes: memory_info.available,
+            memory_usage_bytes: memory_info.used_mb,
+            available_memory_bytes: memory_info.available_mb,
             network_io_mbs: network_io,
             io_wait_percent: io_wait,
             load_average_1m: load_average,
@@ -926,9 +995,9 @@ impl ZfsPerformanceMonitor {
         let used = total.saturating_sub(available);
 
         Ok(MemoryInfo {
-            total,
-            used,
-            available,
+            total_mb: total,
+            available_mb: available,
+            used_mb: used,
         })
     }
 
@@ -985,7 +1054,7 @@ impl ZfsPerformanceMonitor {
         if let Some(cpu_line) = stat_content.lines().next() {
             let fields: Vec<&str> = cpu_line.split_whitespace().collect();
             if fields.len() >= 6 && fields[0] == "cpu" {
-                // CPU fields: user, nice, system, idle, iowait, irq, softirq, steal
+                // CPU fields: user, nice, system, idle, iowait, irq, softirq
                 if let Ok(iowait) = fields[5].parse::<u64>() {
                     let total: u64 = fields[1..8]
                         .iter()
@@ -1047,7 +1116,7 @@ impl ZfsPerformanceMonitor {
     /// Get I/O statistics for a specific pool
     async fn get_pool_io_stats(pool_name: &str) -> CoreResult<PoolIoStats> {
         let output = tokio::process::Command::new("zpool")
-            .args(&["iostat", "-v", pool_name, "1", "1"])
+            .args(["iostat", "-v", pool_name, "1", "1"])
             .output()
             .await
             .map_err(|e| NestGateError::Internal(format!("Failed to get pool I/O stats: {}", e)))?;
@@ -1155,6 +1224,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Start analysis task
+    #[allow(dead_code)]
     async fn start_analysis_task(&mut self) -> CoreResult<()> {
         let metrics_history = Arc::clone(&self.metrics_history);
         let current_metrics = Arc::clone(&self.current_metrics);
@@ -1179,6 +1249,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Analyze performance trends
+    #[allow(dead_code)]
     async fn analyze_trends(
         current_metrics: &Arc<RwLock<CurrentPerformanceMetrics>>,
         metrics_history: &Arc<RwLock<VecDeque<PerformanceSnapshot>>>,
@@ -1209,6 +1280,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Start alert task
+    #[allow(dead_code)]
     async fn start_alert_task(&mut self) -> CoreResult<()> {
         let current_metrics = Arc::clone(&self.current_metrics);
         let alert_conditions = Arc::clone(&self.alert_conditions);
@@ -1242,6 +1314,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Check alert conditions
+    #[allow(dead_code)]
     async fn check_alert_conditions(
         _current_metrics: &Arc<RwLock<CurrentPerformanceMetrics>>,
         _alert_conditions: &Arc<RwLock<Vec<AlertCondition>>>,
@@ -1261,6 +1334,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Handle alert notification
+    #[allow(dead_code)]
     async fn handle_alert_notification(alert: Alert) {
         match alert.alert_type {
             AlertType::Triggered => {
@@ -1523,7 +1597,12 @@ mod tests {
             metric: AlertMetric::Latency,
             operator: AlertOperator::GreaterThan,
             threshold: 100.0,
-            duration: Duration::from_secs(300),
+            duration: Duration::from_secs(
+                std::env::var("NESTGATE_ZFS_PERFORMANCE_ALERT_DURATION_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(300), // 5 minutes default
+            ),
             severity: AlertSeverity::Warning,
             enabled: true,
         };

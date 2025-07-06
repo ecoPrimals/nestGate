@@ -3,19 +3,18 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
+use nestgate_core::types::StorageTier;
 
-pub mod ai;
 pub mod config;
 pub mod ecosystem;
 pub mod optimization;
 pub mod prediction;
 
-pub use ai::*;
 pub use config::*;
 pub use ecosystem::*;
 pub use optimization::{
-    AgeThresholds, AiOptimizationResult, OptimizationPlan, OptimizationResult,
-    PerformanceExpectation, PropertyChange, SizeThresholds, TierThresholds,
+    AgeThresholds, OptimizationPlan, OptimizationResult, PerformanceExpectation, PropertyChange,
+    SizeThresholds, TierThresholds,
 };
 pub use prediction::*;
 
@@ -72,18 +71,6 @@ impl From<nestgate_core::NestGateError> for AutomationError {
             _ => AutomationError::Internal(format!("Unhandled error: {:?}", err)),
         }
     }
-}
-
-/// File type classification for intelligent processing
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
-pub enum FileType {
-    Database,
-    Document,
-    Image,
-    Archive,
-    Log,
-    Backup,
-    Unknown,
 }
 
 /// Access type for tracking file operations
@@ -174,7 +161,7 @@ pub struct TierPerformanceStats {
 pub struct TrainingExample {
     pub file_analysis: FileAnalysis,
     pub access_patterns: AccessPatterns,
-    pub actual_tier: nestgate_core::StorageTier,
+    pub actual_tier: StorageTier,
     pub performance_outcome: f64,
 }
 
@@ -191,11 +178,18 @@ pub struct StorageContext {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatasetContext {
     pub name: String,
-    pub current_tier: nestgate_core::StorageTier,
+    pub current_tier: StorageTier,
     pub used_space: u64,
     pub available_space: u64,
     pub compression_ratio: Option<f64>,
     pub file_count: Option<u64>,
     pub mount_point: String,
     pub properties: HashMap<String, String>,
+}
+
+pub enum FileClassification {
+    Text,
+    Binary,
+    Compressed,
+    Encrypted,
 }

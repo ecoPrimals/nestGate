@@ -3,12 +3,11 @@
 //! Intelligent automation and ecosystem integration for ZFS storage management.
 //! This library provides:
 //! - Dynamic ecosystem service discovery
-//! - AI-powered tier prediction and optimization
+//! - Heuristic tier prediction and optimization (AI compute handled by Toadstool)
 //! - Automated dataset lifecycle management
 //! - Performance monitoring and optimization
 //! - File analysis and access pattern tracking
 
-pub mod ai;
 pub mod analysis;
 pub mod connections;
 pub mod discovery;
@@ -18,7 +17,6 @@ pub mod prediction;
 pub mod types;
 
 // Re-export main types and interfaces
-pub use ai::AiAutomationCoordinator;
 pub use analysis::*;
 pub use connections::{ServiceConnectionPool, SquirrelConnection};
 pub use discovery::EcosystemDiscovery;

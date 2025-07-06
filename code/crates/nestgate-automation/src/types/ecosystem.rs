@@ -4,17 +4,19 @@ use super::{DatasetContext, ServiceHealth, StorageContext, TaskPriority};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
+use crate::types::prediction::FileType;
+use nestgate_core::types::StorageTier;
 
 /// Service plan for dynamic task execution
 #[derive(Debug, Clone)]
 pub enum ServicePlan {
-    /// Use Squirrel MCP + Toadstool combination for complex AI tasks
+    /// Use Squirrel MCP for data management coordination
     SquirrelMcp {
         squirrel_id: String,
-        toadstool_id: String,
+        compute_service_id: String,
     },
-    /// Direct connection to Toadstool for simple AI tasks  
-    DirectToadstool { toadstool_id: String },
+    /// Direct connection to external compute service for analysis  
+    DirectCompute { compute_service_id: String },
     /// Use multiple NestGate peers for distributed processing
     DistributedNestGate { peer_ids: Vec<String> },
     /// Fall back to local processing
@@ -99,7 +101,7 @@ pub struct TierDiscoveryRequest {
 /// Tier discovery response
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TierDiscoveryResponse {
-    pub recommended_tier: nestgate_core::StorageTier,
+    pub recommended_tier: StorageTier,
     pub reasoning: String,
 }
 
@@ -107,7 +109,7 @@ pub struct TierDiscoveryResponse {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetCreatedNotification {
     pub dataset_name: String,
-    pub tier: nestgate_core::StorageTier,
+    pub tier: StorageTier,
     pub mount_point: String,
     pub service_id: String,
 }
@@ -126,7 +128,7 @@ pub struct McpTierPredictionTask {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct McpOptimizationTask {
     pub dataset_name: String,
-    pub current_tier: nestgate_core::StorageTier,
+    pub current_tier: StorageTier,
     pub request_id: String,
     pub storage_context: DatasetContext,
 }
@@ -144,7 +146,7 @@ pub struct McpTaskStatus {
     pub task_id: String,
     pub state: String,
     pub progress: f64,
-    pub result: Option<super::AiPredictionResult>,
+    pub result: Option<TierDiscoveryResponse>,
     pub error: Option<String>,
 }
 
@@ -154,21 +156,21 @@ pub struct McpOptimizationStatus {
     pub task_id: String,
     pub state: String,
     pub progress: f64,
-    pub result: Option<crate::types::optimization::AiOptimizationResult>,
+    pub result: Option<crate::types::optimization::OptimizationResult>,
     pub error: Option<String>,
 }
 
-/// Direct AI request to Toadstool
+/// Direct data analysis request to external compute service
 #[derive(Debug, Serialize, Deserialize)]
-pub struct DirectAiRequest {
+pub struct DirectAnalysisRequest {
     pub task_type: String,
     pub input_data: serde_json::Value,
     pub request_id: String,
 }
 
-/// Direct AI response from Toadstool
+/// Direct data analysis response from external compute service
 #[derive(Debug, Serialize, Deserialize)]
-pub struct DirectAiResponse {
+pub struct DirectAnalysisResponse {
     pub request_id: String,
     pub result_data: serde_json::Value,
     pub processing_time_ms: u64,

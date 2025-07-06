@@ -2,8 +2,10 @@
 //!
 //! Automated dataset lifecycle management and optimization scheduling
 
+use crate::types::prediction::{PredictionResult, FileType};
 use crate::types::*;
 use crate::Result;
+use nestgate_core::types::StorageTier;
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 use tokio::sync::{mpsc, RwLock};
@@ -63,7 +65,7 @@ pub enum TransitionCondition {
     /// Dataset size exceeds threshold
     SizeExceeds(u64),
     /// Storage tier matches condition
-    TierMatches(nestgate_core::StorageTier),
+    TierMatches(StorageTier),
     /// Custom condition based on metrics
     CustomMetric(String, f64, ComparisonOperator),
 }
@@ -82,7 +84,7 @@ pub enum ComparisonOperator {
 #[derive(Debug, Clone)]
 pub enum LifecycleAction {
     /// Move dataset to different tier
-    ChangeTier(nestgate_core::StorageTier),
+    ChangeTier(StorageTier),
     /// Enable compression
     EnableCompression,
     /// Enable deduplication
@@ -154,7 +156,12 @@ pub struct LifecycleConfig {
 impl Default for LifecycleConfig {
     fn default() -> Self {
         Self {
-            evaluation_interval: Duration::from_secs(3600), // 1 hour
+            evaluation_interval: Duration::from_secs(
+                std::env::var("NESTGATE_LIFECYCLE_EVALUATION_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(3600), // 1 hour default
+            ), // Lifecycle evaluation interval
             max_concurrent_actions: 5,
             require_approval_for_destructive: true,
             default_policies: vec!["standard".to_string()],
@@ -452,8 +459,15 @@ impl DatasetLifecycleManager {
                 LifecycleTransition {
                     from_stage: LifecycleStage::Created,
                     to_stage: LifecycleStage::Active,
-                    conditions: vec![TransitionCondition::AgeExceeds(Duration::from_secs(3600))], // 1 hour
-                    min_stage_duration: Duration::from_secs(60),
+                    conditions: vec![TransitionCondition::AgeExceeds(
+                        nestgate_core::constants::time::HOUR,
+                    )], // 1 hour
+                    min_stage_duration: Duration::from_secs(
+                        std::env::var("NESTGATE_LIFECYCLE_MIN_STAGE_DURATION_SECS")
+                            .ok()
+                            .and_then(|s| s.parse().ok())
+                            .unwrap_or(60), // 1 minute default
+                    ),
                     requires_approval: false,
                 },
                 LifecycleTransition {
@@ -481,19 +495,19 @@ impl DatasetLifecycleManager {
                 let mut actions = HashMap::new();
                 actions.insert(
                     LifecycleStage::Active,
-                    vec![LifecycleAction::ChangeTier(nestgate_core::StorageTier::Hot)],
+                    vec![LifecycleAction::ChangeTier(StorageTier::Hot)],
                 );
                 actions.insert(
                     LifecycleStage::Aging,
                     vec![
-                        LifecycleAction::ChangeTier(nestgate_core::StorageTier::Warm),
+                        LifecycleAction::ChangeTier(StorageTier::Warm),
                         LifecycleAction::EnableCompression,
                     ],
                 );
                 actions.insert(
                     LifecycleStage::Archived,
                     vec![
-                        LifecycleAction::ChangeTier(nestgate_core::StorageTier::Cold),
+                        LifecycleAction::ChangeTier(StorageTier::Cold),
                         LifecycleAction::EnableCompression,
                         LifecycleAction::EnableDeduplication,
                     ],
@@ -513,8 +527,15 @@ impl DatasetLifecycleManager {
             transitions: vec![LifecycleTransition {
                 from_stage: LifecycleStage::Created,
                 to_stage: LifecycleStage::Archived,
-                conditions: vec![TransitionCondition::AgeExceeds(Duration::from_secs(3600))], // 1 hour
-                min_stage_duration: Duration::from_secs(60),
+                conditions: vec![TransitionCondition::AgeExceeds(
+                    nestgate_core::constants::time::HOUR,
+                )], // 1 hour
+                min_stage_duration: Duration::from_secs(
+                    std::env::var("NESTGATE_BACKUP_LIFECYCLE_MIN_STAGE_DURATION_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(60), // 1 minute default
+                ),
                 requires_approval: false,
             }],
             stage_actions: {
@@ -522,7 +543,7 @@ impl DatasetLifecycleManager {
                 actions.insert(
                     LifecycleStage::Archived,
                     vec![
-                        LifecycleAction::ChangeTier(nestgate_core::StorageTier::Cold),
+                        LifecycleAction::ChangeTier(StorageTier::Cold),
                         LifecycleAction::EnableCompression,
                         LifecycleAction::EnableDeduplication,
                     ],
@@ -625,7 +646,7 @@ impl DatasetLifecycleManager {
                 let size = state.metrics.get("dataset_size").unwrap_or(&0.0);
                 (*size as u64) > *threshold
             }
-            TransitionCondition::TierMatches(_tier) => {
+            TransitionCondition::TierMatches(tier) => {
                 // In a real implementation, this would check current tier
                 true
             }

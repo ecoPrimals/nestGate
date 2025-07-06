@@ -4,7 +4,6 @@
 
 // Core modules
 pub mod advanced_features;
-pub mod ai_integration;
 pub mod automation;
 pub mod command;
 pub mod config;
@@ -28,7 +27,6 @@ pub mod types; // New failover module for high availability
 pub use advanced_features::{
     AdvancedSnapshotManager, IntelligentReplicationManager, PredictiveAnalyticsEngine,
 };
-pub use ai_integration::ZfsAiIntegration;
 pub use automation::{AutomationPolicy, DatasetAutomation, DatasetAutomationConfig};
 pub use command::{
     CommandResult, PoolStatus, ZfsCommand, ZfsDataset, ZfsOperations, ZfsPool, ZfsSnapshot,
@@ -126,8 +124,6 @@ pub fn features() -> Vec<String> {
     // Add conditional features based on compilation flags
     #[cfg(feature = "advanced")]
     features.push("advanced".to_string());
-    #[cfg(feature = "ai")]
-    features.push("ai".to_string());
     #[cfg(feature = "performance")]
     features.push("performance".to_string());
 
@@ -186,12 +182,8 @@ mod tests {
         // but it validates the manager creation logic
         match ZfsManager::new(config).await {
             Ok(manager) => {
-                // Verify AI integration status
-                if manager.ai_integration.is_some() {
-                    println!("AI integration enabled");
-                } else {
-                    println!("AI integration disabled or failed to initialize");
-                }
+                // Note: AI integration has been sunset - NestGate focuses on data management
+                // while Toadstool handles AI/GPU compute workloads
 
                 // Verify performance monitoring is available
                 let monitor = manager.performance_monitor.read().await;
@@ -206,16 +198,20 @@ mod tests {
     }
 
     #[test]
-    fn test_ai_config_defaults() {
-        let ai_config = crate::ai_integration::ZfsAiConfig::default();
+    fn test_data_management_focus() {
+        // NestGate now focuses on data management capabilities
+        // AI/ML tier prediction is handled by external systems via API
+        let config = ZfsConfig::default();
 
-        assert!(ai_config.enable_tier_optimization);
-        assert!(ai_config.enable_predictive_analytics);
-        assert!(ai_config.enable_anomaly_detection);
-        assert_eq!(ai_config.optimization_interval, 3600);
-        assert_eq!(ai_config.analytics_interval, 300);
-        assert_eq!(ai_config.min_confidence_threshold, 0.7);
-        assert_eq!(ai_config.max_concurrent_models, 3);
+        // Verify all three tiers are properly configured
+        assert!(!config.tiers.hot.name.is_empty());
+        assert!(!config.tiers.warm.name.is_empty());
+        assert!(!config.tiers.cold.name.is_empty());
+
+        // Verify tier names match expected values
+        assert_eq!(config.tiers.hot.name, "hot");
+        assert_eq!(config.tiers.warm.name, "warm");
+        assert_eq!(config.tiers.cold.name, "cold");
     }
 
     #[test]

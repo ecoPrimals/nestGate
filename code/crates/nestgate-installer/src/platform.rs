@@ -1,5 +1,5 @@
 use anyhow::Result;
-use std::path::PathBuf;
+use std::path::Path;
 
 #[derive(Debug, Clone)]
 pub struct PlatformInfo {
@@ -39,7 +39,7 @@ impl PlatformInfo {
     }
 }
 
-pub fn add_to_path(install_path: &PathBuf) -> Result<()> {
+pub fn add_to_path(install_path: &Path) -> Result<()> {
     #[cfg(unix)]
     {
         add_to_path_unix(install_path)
@@ -52,7 +52,7 @@ pub fn add_to_path(install_path: &PathBuf) -> Result<()> {
 }
 
 #[cfg(unix)]
-fn add_to_path_unix(install_path: &PathBuf) -> Result<()> {
+fn add_to_path_unix(install_path: &Path) -> Result<()> {
     use std::fs::OpenOptions;
     use std::io::Write;
 
@@ -83,7 +83,7 @@ fn add_to_path_unix(install_path: &PathBuf) -> Result<()> {
 }
 
 #[cfg(windows)]
-fn add_to_path_windows(install_path: &PathBuf) -> Result<()> {
+fn add_to_path_windows(install_path: &Path) -> Result<()> {
     use winreg::enums::*;
     use winreg::RegKey;
 
@@ -109,7 +109,7 @@ fn add_to_path_windows(install_path: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-pub fn create_desktop_shortcut(install_path: &PathBuf, name: &str) -> Result<()> {
+pub fn create_desktop_shortcut(install_path: &Path, name: &str) -> Result<()> {
     #[cfg(unix)]
     {
         create_desktop_shortcut_unix(install_path, name)
@@ -122,9 +122,8 @@ pub fn create_desktop_shortcut(install_path: &PathBuf, name: &str) -> Result<()>
 }
 
 #[cfg(unix)]
-fn create_desktop_shortcut_unix(install_path: &PathBuf, name: &str) -> Result<()> {
+fn create_desktop_shortcut_unix(install_path: &Path, name: &str) -> Result<()> {
     use std::fs;
-    use std::io::Write;
 
     if let Some(desktop_dir) = dirs::desktop_dir() {
         let shortcut_path = desktop_dir.join(format!("{}.desktop", name));
@@ -168,7 +167,7 @@ Categories=System;
 }
 
 #[cfg(windows)]
-fn create_desktop_shortcut_windows(_install_path: &PathBuf, _name: &str) -> Result<()> {
+fn create_desktop_shortcut_windows(_install_path: &Path, _name: &str) -> Result<()> {
     // Windows shortcut creation would require additional dependencies
     // For now, we'll skip this and focus on core functionality
     println!("Desktop shortcut creation not yet implemented on Windows");

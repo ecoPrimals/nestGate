@@ -3,14 +3,14 @@
 
 [package]
 name = "nestgate"
-version = "0.1.0"
+version = "0.9.2"
 edition = "2021"
-description = "Sovereign NAS system with ZFS integration and tiered storage"
+authors = ["NestGate Team"]
 license = "AGPL-3.0-or-later"
-repository = "https://github.com/strandgeek/nestgate"
-documentation = "https://docs.rs/nestgate"
-keywords = ["nas", "zfs", "storage", "tier-management", "automation"]
-categories = ["filesystem", "web-programming", "development-tools"]
+description = "Intelligent ZFS-based storage automation platform"
+repository = "https://github.com/nestgate/nestgate"
+keywords = ["zfs", "storage", "automation", "nas", "backup"]
+categories = ["filesystem", "command-line-utilities"]
 
 # This is a library-only package - no binary
 [lib]
@@ -22,17 +22,16 @@ path = "src/lib.rs"
 members = [
     "code/crates/nestgate-core",
     "code/crates/nestgate-zfs",
-    "code/crates/nestgate-bin",
-    "code/crates/nestgate-automation",
     "code/crates/nestgate-api",
     "code/crates/nestgate-network",
-    "code/crates/nestgate-mcp",
-    "code/crates/nestgate-middleware",
-    "code/crates/nestgate-ai-models",
+    "code/crates/nestgate-automation",
     "code/crates/nestgate-nas",
     "code/crates/nestgate-ui",
+    "code/crates/nestgate-mcp",
     "code/crates/nestgate-installer",
+    "code/crates/nestgate-bin",
     "code/crates/nestgate-fsmonitor",
+    "code/crates/nestgate-middleware",
 ]
 exclude = [
     "target",
@@ -51,18 +50,38 @@ thiserror = "1.0"
 # Main binary depends on all crates
 nestgate-core = { path = "code/crates/nestgate-core" }
 nestgate-zfs = { path = "code/crates/nestgate-zfs" }
+nestgate-api = { path = "code/crates/nestgate-api" }
+nestgate-network = { path = "code/crates/nestgate-network" }
 nestgate-automation = { path = "code/crates/nestgate-automation" }
+nestgate-nas = { path = "code/crates/nestgate-nas" }
+nestgate-ui = { path = "code/crates/nestgate-ui" }
+nestgate-mcp = { path = "code/crates/nestgate-mcp" }
+nestgate-installer = { path = "code/crates/nestgate-installer" }
+nestgate-fsmonitor = { path = "code/crates/nestgate-fsmonitor" }
+nestgate-middleware = { path = "code/crates/nestgate-middleware" }
+uuid.workspace = true
+rand = "0.8"
+regex = "1.0"
+tokio = { version = "1.40", features = ["full"] }
 
 [dev-dependencies]
 tokio-test = "0.4"
-tokio = { version = "1.0", features = ["full"] }
+regex = "1.0"
 futures = "0.3"
 chrono = { version = "0.4", features = ["serde"] }
-rand = "0.8"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tempfile = "3.8"
+fastrand = "2.0"
+sysinfo = "0.30"
+num_cpus = "1.16"
+criterion = { version = "0.5", features = ["html_reports"] }
 
 [features]
 default = []
+
+[[bench]]
+name = "performance_benchmarks"
+harness = false
 
 [workspace.dependencies]
 # Shared dependencies for workspace members
@@ -82,7 +101,7 @@ tower-http = { version = "0.5", features = ["cors", "trace"] }
 warp = "0.3"
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.0", features = ["v4", "serde"] }
-clap = { version = "4.4", features = ["derive"] }
+clap = { version = "4.0", features = ["derive"] }
 tokio-test = "0.4"
 indexmap = "2.0"
 reqwest = { version = "0.11", features = ["json"] }

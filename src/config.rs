@@ -9,16 +9,81 @@ pub const DEFAULT_ALL_INTERFACES: &str = "0.0.0.0";
 pub const DEFAULT_IPV6_LOCALHOST: &str = "::1";
 pub const DEFAULT_IPV6_ALL_INTERFACES: &str = "::";
 
-// Default ports for different services
+// Environment-aware default ports for different services
 pub mod default_ports {
-    pub const ORCHESTRATOR: u16 = 8090;
-    pub const API: u16 = 8080;
-    pub const MCP: u16 = 8081;
-    pub const WEBSOCKET: u16 = 8082;
-    pub const METRICS: u16 = 8083;
-    pub const HEALTH: u16 = 8084;
-    pub const ZFS_API: u16 = 8085;
-    pub const NETWORK_SERVICE: u16 = 8086;
+    use std::env;
+    
+    /// Get orchestrator port from environment or fallback to default
+    pub fn orchestrator() -> u16 {
+        env::var("NESTGATE_ORCHESTRATOR_PORT")
+            .unwrap_or_else(|_| "8090".to_string())
+            .parse()
+            .unwrap_or(8090)
+    }
+    
+    /// Get API port from environment or fallback to default
+    pub fn api() -> u16 {
+        env::var("NESTGATE_API_PORT")
+            .unwrap_or_else(|_| "8080".to_string())
+            .parse()
+            .unwrap_or(8080)
+    }
+    
+    /// Get MCP port from environment or fallback to default
+    pub fn mcp() -> u16 {
+        env::var("NESTGATE_MCP_PORT")
+            .unwrap_or_else(|_| "8081".to_string())
+            .parse()
+            .unwrap_or(8081)
+    }
+    
+    /// Get WebSocket port from environment or fallback to default
+    pub fn websocket() -> u16 {
+        env::var("NESTGATE_WEBSOCKET_PORT")
+            .unwrap_or_else(|_| "8082".to_string())
+            .parse()
+            .unwrap_or(8082)
+    }
+    
+    /// Get metrics port from environment or fallback to default
+    pub fn metrics() -> u16 {
+        env::var("NESTGATE_METRICS_PORT")
+            .unwrap_or_else(|_| "8083".to_string())
+            .parse()
+            .unwrap_or(8083)
+    }
+    
+    /// Get health check port from environment or fallback to default
+    pub fn health() -> u16 {
+        env::var("NESTGATE_HEALTH_PORT")
+            .unwrap_or_else(|_| "8084".to_string())
+            .parse()
+            .unwrap_or(8084)
+    }
+    
+    /// Get ZFS API port from environment or fallback to default
+    pub fn zfs_api() -> u16 {
+        env::var("NESTGATE_ZFS_API_PORT")
+            .unwrap_or_else(|_| "8085".to_string())
+            .parse()
+            .unwrap_or(8085)
+    }
+    
+    /// Get network service port from environment or fallback to default
+    pub fn network_service() -> u16 {
+        env::var("NESTGATE_NETWORK_SERVICE_PORT")
+            .unwrap_or_else(|_| "8086".to_string())
+            .parse()
+            .unwrap_or(8086)
+    }
+    
+    // Legacy constants for backward compatibility (deprecated)
+    #[deprecated(note = "Use default_ports::api() instead")]
+    pub const API: u16 = default_ports::api();
+    #[deprecated(note = "Use default_ports::orchestrator() instead")]
+    pub const ORCHESTRATOR: u16 = default_ports::orchestrator();
+    #[deprecated(note = "Use default_ports::mcp() instead")]
+    pub const MCP: u16 = default_ports::mcp();
 }
 
 /// Network binding configuration
@@ -55,10 +120,10 @@ impl Default for NetworkConfig {
             // Standalone mode: use localhost binding
             Self {
                 bind_interface: "127.0.0.1".to_string(), // ✅ LOCALHOST FOR STANDALONE
-                port: std::env::var("NESTGATE_PORT")
-                    .unwrap_or_else(|_| "8080".to_string())
-                    .parse()
-                    .unwrap_or(8080),
+                            port: std::env::var("NESTGATE_PORT")
+                .unwrap_or_else(|_| default_ports::api().to_string())
+                .parse()
+                .unwrap_or(default_ports::api()),
                 ipv6_enabled: false,
                 localhost_only: true, // ✅ SECURE BY DEFAULT
                 custom_host: None,

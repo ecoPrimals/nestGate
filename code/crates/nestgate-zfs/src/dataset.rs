@@ -12,6 +12,7 @@ use nestgate_core::{NestGateError, Result, StorageTier};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::SystemTime;
 use tokio::process::Command;
 use tracing::{debug, info, warn};
 
@@ -98,11 +99,11 @@ impl ZfsDatasetManager {
 
         // Execute ZFS create command
         let mut cmd = tokio::process::Command::new("zfs");
-        cmd.args(&["create"]);
+        cmd.args(["create"]);
 
         // Apply tier-specific properties
         for (key, value) in &tier_config.properties {
-            cmd.args(&["-o", &format!("{}={}", key, value)]);
+            cmd.args(["-o", &format!("{}={}", key, value)]);
         }
 
         cmd.arg(&dataset_path);
@@ -139,7 +140,7 @@ impl ZfsDatasetManager {
         // First try real ZFS dataset creation
         let dataset_path = format!("{}/{}", pool, name);
         let output = tokio::process::Command::new("zfs")
-            .args(&["create", &dataset_path])
+            .args(["create", &dataset_path])
             .output()
             .await;
 
@@ -188,7 +189,7 @@ impl ZfsDatasetManager {
 
         // Execute ZFS list command to get dataset info
         let output = tokio::process::Command::new("zfs")
-            .args(&[
+            .args([
                 "list",
                 "-H",
                 "-p",
@@ -315,7 +316,7 @@ impl ZfsDatasetManager {
         tracing::debug!("Getting properties for dataset: {}", name);
 
         let output = Command::new("zfs")
-            .args(&["get", "all", "-H", "-p", name])
+            .args(["get", "all", "-H", "-p", name])
             .output()
             .await
             .map_err(|_e| {
@@ -351,7 +352,7 @@ impl ZfsDatasetManager {
 
         for (key, value) in properties {
             let output = Command::new("zfs")
-                .args(&["set", &format!("{}={}", key, value), name])
+                .args(["set", &format!("{}={}", key, value), name])
                 .output()
                 .await
                 .map_err(|e| {
@@ -381,7 +382,7 @@ impl ZfsDatasetManager {
         tracing::debug!("Listing all datasets");
 
         let output = Command::new("zfs")
-            .args(&["list", "-H", "-p", "-o", "name,used,avail,mountpoint"])
+            .args(["list", "-H", "-p", "-o", "name,used,avail,mountpoint"])
             .output()
             .await
             .map_err(|_e| {
@@ -446,50 +447,60 @@ impl ZfsDatasetManager {
     pub async fn list_snapshots(
         &self,
         dataset_name: &str,
-    ) -> Result<Vec<crate::advanced_features::SnapshotInfo>> {
-        tracing::debug!("Listing snapshots for dataset: {}", dataset_name);
+    ) -> Result<Vec<crate::snapshot::SnapshotInfo>> {
+        debug!("Listing snapshots for dataset: {}", dataset_name);
 
         let output = Command::new("zfs")
-            .args(&[
+            .args([
                 "list",
-                "-H",
-                "-p",
                 "-t",
                 "snapshot",
+                "-H",
                 "-o",
-                "name,used,creation",
-                dataset_name,
+                "name,used,referenced,creation",
             ])
             .output()
             .await
-            .map_err(|e| {
-                ZfsError::DatasetError(DatasetError::PropertyError {
-                    reason: format!("Failed to list snapshots: {}", e),
-                })
-            })?;
+            .map_err(|e| NestGateError::Internal(format!("Failed to list snapshots: {}", e)))?;
 
         if !output.status.success() {
-            // Return empty list if no snapshots or dataset doesn't exist
-            return Ok(vec![]);
+            return Err(NestGateError::Internal(format!(
+                "ZFS list snapshots failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            )));
         }
 
-        let stdout = String::from_utf8_lossy(&output.stdout);
         let mut snapshots = Vec::new();
+        for line in String::from_utf8_lossy(&output.stdout).lines() {
+            if line.trim().is_empty() {
+                continue;
+            }
 
-        for line in stdout.lines() {
             let parts: Vec<&str> = line.split('\t').collect();
-            if parts.len() >= 3 {
-                let snapshot_name = parts[0].to_string();
+            if parts.len() >= 4 {
+                let full_name = parts[0].to_string();
+                let name = full_name
+                    .split('@')
+                    .next_back()
+                    .unwrap_or(&full_name)
+                    .to_string();
                 let used_space: u64 = parts[1].parse().unwrap_or(0);
-                let creation_time: u64 = parts[2].parse().unwrap_or(0);
+                let referenced_size: u64 = parts[2].parse().unwrap_or(0);
 
-                snapshots.push(crate::advanced_features::SnapshotInfo {
-                    name: snapshot_name,
+                snapshots.push(crate::snapshot::SnapshotInfo {
+                    name,
+                    full_name,
                     dataset: dataset_name.to_string(),
-                    created_at: std::time::UNIX_EPOCH
-                        + std::time::Duration::from_secs(creation_time),
-                    size_bytes: used_space,
-                    referenced_bytes: used_space, // Approximation
+                    created_at: SystemTime::now(), // Placeholder
+                    size: used_space,
+                    referenced_size,
+                    written_size: used_space, // Approximation
+                    compression_ratio: 1.0,   // Default value
+                    properties: std::collections::HashMap::new(),
+                    policy: None,
+                    tier: nestgate_core::StorageTier::Warm, // Default tier
+                    protected: false,
+                    tags: Vec::new(),
                 });
             }
         }

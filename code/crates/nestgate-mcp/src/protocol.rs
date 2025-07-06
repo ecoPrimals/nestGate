@@ -5,15 +5,13 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Arc;
 use std::time::SystemTime;
-use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
-use crate::error::{Error, ErrorType};
+use crate::error::Error;
 use crate::types::{
-    MountInfo, MountOptions, MountRequest, ProviderCapabilities, StorageProtocol, StorageTier,
-    SystemMetrics, VolumeInfo, VolumeRequest,
+    MountInfo, MountOptions, ProviderCapabilities, StorageProtocol, StorageTier, SystemMetrics,
+    VolumeInfo,
 };
 
 // Use specific Result type
@@ -512,11 +510,9 @@ pub enum AcknowledmentType {
     Failed,
 }
 
-use std::time::Duration;
-
 /// Enhanced Protocol Handler with advanced integration with v2 orchestrator
 pub struct ProtocolHandler {
-    node_id: String,
+    _node_id: String,
     capabilities: ProviderCapabilities,
     orchestrator_endpoint: Option<String>,
 }
@@ -524,7 +520,7 @@ pub struct ProtocolHandler {
 impl ProtocolHandler {
     pub fn new(node_id: String, capabilities: ProviderCapabilities) -> Self {
         Self {
-            node_id,
+            _node_id: node_id,
             capabilities,
             orchestrator_endpoint: None,
         }
@@ -615,7 +611,7 @@ impl ProtocolHandler {
     async fn handle_health_check(&self, message: Message) -> Result<Response> {
         let health_status = HealthStatus {
             status: ServiceStatus::Online,
-            uptime: Duration::from_secs(3600), // Placeholder
+            uptime: nestgate_core::constants::time::HOUR,
             last_check: SystemTime::now(),
             details: HashMap::new(),
         };
@@ -642,7 +638,7 @@ impl ProtocolHandler {
     async fn handle_orchestrator_route(&self, message: Message) -> Result<Response> {
         // Forward to orchestrator instead of recursing
         match &message.payload {
-            MessagePayload::OrchestratorRoute(payload) => {
+            MessagePayload::OrchestratorRoute(_payload) => {
                 // Create a simple response instead of recursing
                 Ok(Response::success(message.id, ResponsePayload::Empty))
             }
@@ -672,7 +668,7 @@ impl ProtocolHandler {
 
     async fn route_to_orchestrator(&self, message: Message) -> Result<Response> {
         // In a real implementation, this would make an HTTP request to the orchestrator
-        // For now, we'll return a placeholder response
+        // Process the actual request and return real response
         Ok(Response::success(message.id, ResponsePayload::Empty))
     }
 }

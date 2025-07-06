@@ -12,26 +12,6 @@ pub struct OptimizationResult {
     pub errors: Vec<String>,
 }
 
-/// AI optimization result from ecosystem services
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AiOptimizationResult {
-    pub recommended_tier_migration: Option<nestgate_core::StorageTier>,
-    pub property_changes: Vec<PropertyChange>,
-    pub confidence: f64,
-    pub reasoning: String,
-}
-
-impl Default for AiOptimizationResult {
-    fn default() -> Self {
-        Self {
-            recommended_tier_migration: None,
-            property_changes: vec![],
-            confidence: 0.5,
-            reasoning: "Default optimization result".to_string(),
-        }
-    }
-}
-
 /// Property change recommendation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PropertyChange {

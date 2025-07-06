@@ -38,7 +38,7 @@ impl std::fmt::Display for Protocol {
 }
 
 /// Performance preference for protocol selection
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum PerformancePreference {
     /// Optimize for speed
     Speed,
@@ -47,13 +47,8 @@ pub enum PerformancePreference {
     /// Optimize for compatibility
     Compatibility,
     /// Balanced approach
+    #[default]
     Balanced,
-}
-
-impl Default for PerformancePreference {
-    fn default() -> Self {
-        PerformancePreference::Balanced
-    }
 }
 
 /// Protocol configuration

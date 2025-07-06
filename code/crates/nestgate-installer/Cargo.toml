@@ -6,6 +6,10 @@ description = "NestGate Installation and Configuration Tool"
 authors = ["NestGate Team"]
 license = "AGPL-3.0-or-later"
 
+[lib]
+name = "nestgate_installer"
+path = "src/lib.rs"
+
 [[bin]]
 name = "nestgate-installer"
 path = "src/main.rs"

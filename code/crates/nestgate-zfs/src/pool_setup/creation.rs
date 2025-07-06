@@ -148,7 +148,12 @@ impl PoolCreator {
         }
 
         // Execute with timeout
-        let timeout_duration = Duration::from_secs(300); // 5 minutes
+        let timeout_duration = Duration::from_secs(
+            std::env::var("NESTGATE_ZFS_CREATION_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(300), // 5 minutes default
+        );
         let output = tokio::time::timeout(timeout_duration, cmd.output())
             .await
             .map_err(|_| NestGateError::Internal("Pool creation timed out".to_string()))?
@@ -326,7 +331,7 @@ impl PoolCreator {
 
         // Try to destroy the partially created pool
         let destroy_result = tokio::process::Command::new("zpool")
-            .args(&["destroy", "-f", pool_name])
+            .args(["destroy", "-f", pool_name])
             .output()
             .await;
 
@@ -350,6 +355,7 @@ impl PoolCreator {
     }
 
     /// Log pool creation attempt
+    #[allow(dead_code)]
     async fn log_creation_attempt(&self, config: &PoolSetupConfig) -> CoreResult<()> {
         info!("Attempting to create ZFS pool: {}", config.pool_name);
         info!("  Devices: {:?}", config.devices);
@@ -358,13 +364,14 @@ impl PoolCreator {
         Ok(())
     }
 
-    /// Cleanup failed pool creation
+    /// Cleanup after failed pool creation
+    #[allow(dead_code)]
     async fn cleanup_failed_pool_creation(&self, pool_name: &str) -> CoreResult<()> {
         info!("🧹 Cleaning up failed pool creation: {}", pool_name);
 
         // Check if pool exists in any state
         let pool_check = tokio::process::Command::new("zpool")
-            .args(&["status", pool_name])
+            .args(["status", pool_name])
             .output()
             .await;
 
@@ -374,7 +381,7 @@ impl PoolCreator {
                 warn!("🗑️ Destroying partially created pool: {}", pool_name);
 
                 let destroy_result = tokio::process::Command::new("zpool")
-                    .args(&["destroy", "-f", pool_name])
+                    .args(["destroy", "-f", pool_name])
                     .output()
                     .await;
 
@@ -412,12 +419,13 @@ impl PoolCreator {
     }
 
     /// Clear ZFS labels from devices that were part of failed pool creation
+    #[allow(dead_code)]
     async fn cleanup_device_labels(&self, pool_name: &str) -> CoreResult<()> {
         debug!("🏷️ Checking for device labels to clear after failed pool creation");
 
         // Get list of devices that might have ZFS labels
         let import_check = tokio::process::Command::new("zpool")
-            .args(&["import"])
+            .args(["import"])
             .output()
             .await;
 
@@ -430,7 +438,7 @@ impl PoolCreator {
 
                 // Force cleanup of the importable pool
                 let force_cleanup = tokio::process::Command::new("zpool")
-                    .args(&["import", "-f", "-D", pool_name])
+                    .args(["import", "-f", "-D", pool_name])
                     .output()
                     .await;
 
@@ -438,7 +446,7 @@ impl PoolCreator {
                     if cleanup_output.status.success() {
                         // Now destroy it properly
                         let _ = tokio::process::Command::new("zpool")
-                            .args(&["destroy", "-f", pool_name])
+                            .args(["destroy", "-f", pool_name])
                             .output()
                             .await;
                     }

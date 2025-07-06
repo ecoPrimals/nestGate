@@ -1,15 +1,16 @@
 use eframe::egui::{self, Color32, Pos2, Rect, RichText, Stroke, Vec2};
-use nestgate_core::{Result, StorageTier};
+use nestgate_core::{Result, types::StorageTier};
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 use tracing::info;
+
 
 /// Native Rust UI for NestGate using egui - Production ZFS Management
 pub struct NestGateApp {
     current_view: AppView,
     system_status: SystemStatus,
     tier_stats: HashMap<StorageTier, TierStats>,
-    real_data_available: bool,
+    _real_data_available: bool,
     last_update: std::time::Instant,
 
     // Enhanced UI state
@@ -260,7 +261,7 @@ impl Default for NestGateApp {
                 network_io: 12.8,
             },
             tier_stats,
-            real_data_available: true, // Based on handoff success
+            _real_data_available: true, // Based on handoff success
             last_update: std::time::Instant::now(),
             performance_history,
             tier_activity,
@@ -291,7 +292,12 @@ impl NestGateApp {
         app.add_notification(
             "🎉 NestGate v2.0 Production System Ready".to_string(),
             NotificationLevel::Success,
-            Duration::from_secs(10),
+            Duration::from_secs(
+                std::env::var("NESTGATE_UI_DEFAULT_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(10), // 10 seconds default
+            ),
         );
 
         app
@@ -459,7 +465,8 @@ impl NestGateApp {
         }
 
         // Uptime display
-        let uptime_days = self.system_status.uptime.as_secs() / 86400;
+        let uptime_days =
+            self.system_status.uptime.as_secs() / nestgate_core::constants::time::DAY.as_secs();
         ui.label(
             RichText::new(format!("⏱️ Uptime: {}d", uptime_days))
                 .size(10.0)
@@ -1460,7 +1467,7 @@ mod tests {
     #[test]
     fn test_app_view_variants() {
         // Test all AppView variants
-        let views = vec![
+        let views = [
             AppView::Dashboard,
             AppView::TieredStorage,
             AppView::ZfsManagement,
@@ -1484,7 +1491,7 @@ mod tests {
     #[test]
     fn test_data_source_variants() {
         // Test all DataSource variants
-        let sources = vec![DataSource::Live, DataSource::Mock, DataSource::FallbackMock];
+        let sources = [DataSource::Live, DataSource::Mock, DataSource::FallbackMock];
 
         assert_eq!(sources.len(), 3);
 
@@ -1499,7 +1506,7 @@ mod tests {
     #[test]
     fn test_tier_health_variants() {
         // Test all TierHealth variants
-        let health_states = vec![
+        let health_states = [
             TierHealth::Optimal,
             TierHealth::Good,
             TierHealth::Warning,
@@ -1519,7 +1526,7 @@ mod tests {
     #[test]
     fn test_sort_by_variants() {
         // Test all SortBy variants
-        let sort_options = vec![SortBy::Name, SortBy::Size, SortBy::Modified, SortBy::Type];
+        let sort_options = [SortBy::Name, SortBy::Size, SortBy::Modified, SortBy::Type];
 
         assert_eq!(sort_options.len(), 4);
 
@@ -1534,7 +1541,7 @@ mod tests {
     #[test]
     fn test_view_mode_variants() {
         // Test all ViewMode variants
-        let view_modes = vec![ViewMode::List, ViewMode::Grid, ViewMode::Details];
+        let view_modes = [ViewMode::List, ViewMode::Grid, ViewMode::Details];
 
         assert_eq!(view_modes.len(), 3);
 
@@ -1549,7 +1556,7 @@ mod tests {
     #[test]
     fn test_notification_level_variants() {
         // Test all NotificationLevel variants
-        let levels = vec![
+        let levels = [
             NotificationLevel::Info,
             NotificationLevel::Success,
             NotificationLevel::Warning,
@@ -1615,7 +1622,7 @@ mod tests {
             compilation_status: "Ready".to_string(),
             security_level: "High".to_string(),
             ai_ml_ready: true,
-            uptime: Duration::from_secs(86400), // 1 day
+            uptime: nestgate_core::constants::time::DAY, // 1 day
             cpu_usage: 25.5,
             memory_usage: 60.2,
             network_io: 12.8,
@@ -1629,7 +1636,7 @@ mod tests {
         assert_eq!(status.compilation_status, "Ready");
         assert_eq!(status.security_level, "High");
         assert!(status.ai_ml_ready);
-        assert_eq!(status.uptime, Duration::from_secs(86400));
+        assert_eq!(status.uptime, nestgate_core::constants::time::DAY);
         assert_eq!(status.cpu_usage, 25.5);
         assert_eq!(status.memory_usage, 60.2);
         assert_eq!(status.network_io, 12.8);
@@ -1642,7 +1649,7 @@ mod tests {
             used_space: 1024 * 1024 * 1024,       // 1GB
             total_space: 10 * 1024 * 1024 * 1024, // 10GB
             file_count: 1500,
-            performance: "< 1ms".to_string(),
+            performance: "fast".to_string(),
             compression: "lz4".to_string(),
             health: TierHealth::Optimal,
             io_rate: 500.0,
@@ -1654,7 +1661,7 @@ mod tests {
         assert_eq!(stats.used_space, 1024 * 1024 * 1024);
         assert_eq!(stats.total_space, 10 * 1024 * 1024 * 1024);
         assert_eq!(stats.file_count, 1500);
-        assert_eq!(stats.performance, "< 1ms");
+        assert_eq!(stats.performance, "fast");
         assert_eq!(stats.compression, "lz4");
         assert_eq!(stats.health, TierHealth::Optimal);
         assert_eq!(stats.io_rate, 500.0);
@@ -1786,8 +1793,8 @@ mod tests {
 
         // Test initial state
         assert_eq!(app.current_view, AppView::Dashboard);
-        assert!(app.real_data_available); // Based on handoff - real data is available
-        assert!(app.performance_history.len() > 0); // Should have initial performance data
+        assert!(app._real_data_available); // Based on handoff - real data is available
+        assert!(!app.performance_history.is_empty()); // Should have initial performance data
         assert!(!app.tier_stats.is_empty()); // Should have initial tier stats
 
         // Test that all storage tiers are initialized

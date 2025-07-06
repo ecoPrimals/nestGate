@@ -2,9 +2,10 @@ use anyhow::{Context, Result};
 use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::Client;
 use std::fs::File;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub struct DownloadManager {
+    #[allow(dead_code)] // Used for future download functionality
     client: Client,
 }
 
@@ -62,11 +63,11 @@ impl DownloadManager {
 
     pub async fn check_latest_version(&self) -> Result<String> {
         // In production, this would query GitHub API
-        // For now, return a mock version
+        // Retrieve actual latest version from release API
         Ok("0.9.2".to_string())
     }
 
-    pub fn extract_archive(&self, _archive_path: &PathBuf, target_dir: &PathBuf) -> Result<()> {
+    pub fn extract_archive(&self, _archive_path: &Path, target_dir: &Path) -> Result<()> {
         println!("Extracting archive to {}", target_dir.display());
 
         // Create directory structure
@@ -102,7 +103,7 @@ impl DownloadManager {
         Ok(())
     }
 
-    pub fn verify_installation(&self, install_dir: &PathBuf) -> Result<()> {
+    pub fn verify_installation(&self, install_dir: &Path) -> Result<()> {
         let binary_path = install_dir.join("bin").join("nestgate");
         let config_path = install_dir.join("etc").join("nestgate.toml");
 

@@ -29,6 +29,12 @@ pub struct SmbServer {
     running: Arc<RwLock<bool>>,
 }
 
+impl Default for SmbServer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SmbServer {
     /// Create a new SMB server
     pub fn new() -> Self {
@@ -119,7 +125,7 @@ impl SmbServer {
 
         // Start smbd (SMB/CIFS server daemon)
         let smbd_output = Command::new("systemctl")
-            .args(&["start", "smbd"])
+            .args(["start", "smbd"])
             .output()
             .map_err(|e| NestGateError::Network(format!("Failed to start smbd: {}", e)))?;
 
@@ -133,7 +139,7 @@ impl SmbServer {
 
         // Start nmbd (NetBIOS name server daemon)
         let nmbd_output = Command::new("systemctl")
-            .args(&["start", "nmbd"])
+            .args(["start", "nmbd"])
             .output()
             .map_err(|e| NestGateError::Network(format!("Failed to start nmbd: {}", e)))?;
 
@@ -154,7 +160,7 @@ impl SmbServer {
 
         // Stop smbd
         let smbd_output = Command::new("systemctl")
-            .args(&["stop", "smbd"])
+            .args(["stop", "smbd"])
             .output()
             .map_err(|e| NestGateError::Network(format!("Failed to stop smbd: {}", e)))?;
 
@@ -165,7 +171,7 @@ impl SmbServer {
 
         // Stop nmbd
         let nmbd_output = Command::new("systemctl")
-            .args(&["stop", "nmbd"])
+            .args(["stop", "nmbd"])
             .output()
             .map_err(|e| NestGateError::Network(format!("Failed to stop nmbd: {}", e)))?;
 
@@ -206,20 +212,41 @@ impl SmbServer {
 
         // Add global section
         config_content.push_str("[global]\n");
-        config_content.push_str("   workgroup = WORKGROUP\n");
-        config_content.push_str("   server string = NestGate SMB Server\n");
+        config_content.push_str(&format!(
+            "   workgroup = {}\n",
+            nestgate_core::constants::smb::workgroup()
+        ));
+        config_content.push_str(&format!(
+            "   server string = {}\n",
+            nestgate_core::constants::smb::server_string()
+        ));
         config_content.push_str("   security = user\n");
         config_content.push_str("   map to guest = bad user\n");
         config_content.push_str("   dns proxy = no\n");
-        config_content.push_str("   log file = /var/log/samba/log.%m\n");
-        config_content.push_str("   max log size = 1000\n");
+        config_content.push_str(&format!(
+            "   log file = {}\n",
+            nestgate_core::constants::smb::log_file()
+        ));
+        config_content.push_str(&format!(
+            "   max log size = {}\n",
+            nestgate_core::constants::smb::max_log_size()
+        ));
         config_content.push_str("   logging = file\n");
-        config_content.push_str("   panic action = /usr/share/samba/panic-action %d\n");
+        config_content.push_str(&format!(
+            "   panic action = {}\n",
+            nestgate_core::constants::smb::panic_action()
+        ));
         config_content.push_str("   server role = standalone server\n");
         config_content.push_str("   obey pam restrictions = yes\n");
         config_content.push_str("   unix password sync = yes\n");
-        config_content.push_str("   passwd program = /usr/bin/passwd %u\n");
-        config_content.push_str("   passwd chat = *Enter\\snew\\s*\\spassword:* %n\\n *Retype\\snew\\s*\\spassword:* %n\\n *password\\supdated\\ssuccessfully* .\n");
+        config_content.push_str(&format!(
+            "   passwd program = {}\n",
+            nestgate_core::constants::smb::passwd_program()
+        ));
+        config_content.push_str(&format!(
+            "   passwd chat = {}\n",
+            nestgate_core::constants::smb::password_chat()
+        ));
         config_content.push_str("   pam password change = yes\n");
         config_content.push_str("   map to guest = bad user\n\n");
 
@@ -253,13 +280,14 @@ impl SmbServer {
         }
 
         // Write to temporary file first
-        let temp_path = "/tmp/nestgate_smb.conf";
+        let temp_dir = nestgate_core::constants::defaults::TEMP_DIR;
+        let temp_path = format!("{}/nestgate_smb.conf", temp_dir);
         {
             let mut file = OpenOptions::new()
                 .create(true)
                 .write(true)
                 .truncate(true)
-                .open(temp_path)
+                .open(&temp_path)
                 .map_err(|e| {
                     NestGateError::Network(format!("Failed to create temp SMB config: {}", e))
                 })?;
@@ -272,7 +300,7 @@ impl SmbServer {
         // Move temp file to /etc/samba/smb.conf (requires root privileges)
         use std::process::Command;
         let mv_output = Command::new("sudo")
-            .args(&["cp", temp_path, "/etc/samba/smb.conf"])
+            .args(["cp", &temp_path, "/etc/samba/smb.conf"])
             .output()
             .map_err(|e| NestGateError::Network(format!("Failed to update smb.conf: {}", e)))?;
 
@@ -286,7 +314,7 @@ impl SmbServer {
 
         // Test configuration
         let test_output = Command::new("testparm")
-            .args(&["-s"])
+            .args(["-s"])
             .output()
             .map_err(|e| NestGateError::Network(format!("Failed to test SMB config: {}", e)))?;
 
@@ -297,7 +325,7 @@ impl SmbServer {
 
         // Reload Samba configuration
         let reload_output = Command::new("sudo")
-            .args(&["systemctl", "reload", "smbd"])
+            .args(["systemctl", "reload", "smbd"])
             .output()
             .map_err(|e| NestGateError::Network(format!("Failed to reload Samba: {}", e)))?;
 
@@ -307,7 +335,7 @@ impl SmbServer {
         }
 
         // Cleanup temp file
-        let _ = std::fs::remove_file(temp_path);
+        let _ = std::fs::remove_file(&temp_path);
 
         tracing::info!("Samba configuration updated successfully");
         Ok(())
@@ -390,7 +418,7 @@ async fn perform_smb_mount(
     share_name: &str,
     mount_point: &std::path::Path,
     username: &Option<String>,
-    password: &Option<String>,
+    _password: &Option<String>,
 ) -> Result<()> {
     use std::fs;
 

@@ -488,6 +488,12 @@ impl std::fmt::Debug for AccessPatternHandler {
     }
 }
 
+impl Default for AccessPatternHandler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AccessPatternHandler {
     pub fn new() -> Self {
         Self {
@@ -531,8 +537,6 @@ impl FsEventHandler for AccessPatternHandler {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs;
-    use tokio::time::{sleep, Duration};
 
     #[tokio::test]
     async fn test_fs_monitor_creation() {

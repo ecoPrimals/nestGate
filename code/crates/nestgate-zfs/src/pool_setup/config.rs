@@ -305,10 +305,13 @@ impl Default for L2ArcLimits {
 impl Default for OptimizationIntervals {
     fn default() -> Self {
         Self {
-            tier_optimization: 3600,   // 1 hour
-            performance_analysis: 300, // 5 minutes
-            health_check: 60,          // 1 minute
-            metrics_collection: 30,    // 30 seconds
+            tier_optimization: 3600, // 1 hour
+            performance_analysis: std::env::var("NESTGATE_ZFS_PERFORMANCE_ANALYSIS_INTERVAL_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(300), // 5 minutes
+            health_check: 60,        // 1 minute
+            metrics_collection: 30,  // 30 seconds
         }
     }
 }
