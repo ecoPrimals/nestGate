@@ -141,10 +141,12 @@ use std::sync::Arc;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing::info;
 
+pub mod byob;
 pub mod handlers;
 mod models;
 mod routes;
 
+pub use byob::create_byob_router;
 pub use handlers::zfs::ZfsApiState;
 
 /// API server configuration
