@@ -8,9 +8,14 @@
 
 // Core NAS modules
 pub mod error;
+pub mod universal_adapter;
 
 // Re-export main types for easy access
 pub use error::{NestGateError, Result};
+pub use universal_adapter::{
+    NestGateUniversalAdapter, PrimalCoordination, CoordinationResult, 
+    CoordinationStatus, UniversalCoordination
+};
 
 /// Current version of NestGate
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

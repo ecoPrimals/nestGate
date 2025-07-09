@@ -5,6 +5,7 @@
 // Core modules
 pub mod advanced_features;
 pub mod automation;
+pub mod byob;
 pub mod command;
 pub mod config;
 pub mod dataset;
@@ -28,6 +29,10 @@ pub use advanced_features::{
     AdvancedSnapshotManager, IntelligentReplicationManager, PredictiveAnalyticsEngine,
 };
 pub use automation::{AutomationPolicy, DatasetAutomation, DatasetAutomationConfig};
+pub use byob::{
+    ByobStorageProvider, ByobStorageRequest, ByobStorageResponse, ZfsStorageProvider,
+    create_zfs_storage_provider,
+};
 pub use command::{
     CommandResult, PoolStatus, ZfsCommand, ZfsDataset, ZfsOperations, ZfsPool, ZfsSnapshot,
 };
