@@ -11,6 +11,11 @@ use crate::{Result, StorageTier};
 /// biomeOS manifest structure for NestGate integration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BiomeManifest {
+    /// API version for biomeOS compatibility
+    #[serde(rename = "apiVersion")]
+    pub api_version: String,
+    /// Resource kind
+    pub kind: String,
     /// Biome metadata
     pub metadata: BiomeMetadata,
     /// Primal configurations
@@ -29,6 +34,10 @@ pub struct BiomeManifest {
     pub specialization: Option<BiomeSpecialization>,
     /// Storage templates
     pub templates: Option<BiomeTemplates>,
+    /// Agent definitions (for Squirrel integration)
+    pub agents: Option<Vec<AgentSpec>>,
+    /// Coordination patterns (universal cross-Primal)
+    pub coordination: Option<CoordinationConfig>,
 }
 
 /// Biome metadata information
@@ -44,6 +53,10 @@ pub struct BiomeMetadata {
     pub author: Option<String>,
     /// Creation timestamp
     pub created_at: Option<chrono::DateTime<chrono::Utc>>,
+    /// Biome labels for organization
+    pub labels: Option<HashMap<String, String>>,
+    /// Biome annotations for metadata
+    pub annotations: Option<HashMap<String, String>>,
 }
 
 /// Primal configuration within biome
@@ -57,6 +70,108 @@ pub struct PrimalConfig {
     pub config: HashMap<String, serde_json::Value>,
     /// Resource requirements
     pub resources: Option<PrimalResources>,
+    /// Integration dependencies
+    pub dependencies: Option<Vec<String>>,
+}
+
+/// Agent specification for Squirrel integration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AgentSpec {
+    /// Agent name
+    pub name: String,
+    /// Agent runtime (wasm, container, native)
+    pub runtime: String,
+    /// Agent capabilities
+    pub capabilities: Vec<String>,
+    /// Executor (squirrel, toadstool)
+    pub executor: String,
+    /// Resource limits
+    pub resource_limits: Option<ResourceLimits>,
+    /// AI provider configuration
+    pub ai_provider: Option<String>,
+    /// Model specification
+    pub model: Option<String>,
+    /// Environment variables
+    pub env: Option<HashMap<String, String>>,
+}
+
+/// Resource limits for agents
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ResourceLimits {
+    /// Memory limit in MB
+    pub memory_mb: Option<u32>,
+    /// CPU percentage limit
+    pub cpu_percent: Option<u32>,
+    /// Execution timeout in seconds
+    pub timeout_seconds: Option<u32>,
+}
+
+/// Universal coordination configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CoordinationConfig {
+    /// Service mesh configuration
+    pub service_mesh: Option<ServiceMeshConfig>,
+    /// Discovery configuration
+    pub discovery: Option<DiscoveryConfig>,
+    /// Health check configuration
+    pub health_checks: Option<HealthChecksConfig>,
+    /// Event coordination
+    pub events: Option<EventCoordinationConfig>,
+}
+
+/// Discovery configuration for universal patterns
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiscoveryConfig {
+    /// Discovery provider (songbird, consul, etcd)
+    pub provider: String,
+    /// Discovery timeout
+    pub timeout_seconds: Option<u32>,
+    /// Retry configuration
+    pub retry: Option<RetryConfig>,
+}
+
+/// Retry configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RetryConfig {
+    /// Maximum retries
+    pub max_retries: u32,
+    /// Retry interval in seconds
+    pub interval_seconds: u32,
+    /// Backoff strategy
+    pub backoff: Option<String>,
+}
+
+/// Health checks configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HealthChecksConfig {
+    /// Health check interval
+    pub interval_seconds: u32,
+    /// Health check timeout
+    pub timeout_seconds: u32,
+    /// Health check endpoints
+    pub endpoints: Vec<HealthCheckEndpoint>,
+}
+
+/// Health check endpoint
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HealthCheckEndpoint {
+    /// Endpoint name
+    pub name: String,
+    /// Endpoint path
+    pub path: String,
+    /// Expected status code
+    pub expected_status: Option<u16>,
+}
+
+/// Event coordination configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EventCoordinationConfig {
+    /// Event bus provider
+    pub provider: String,
+    /// Event topics
+    pub topics: Vec<String>,
+    /// Event retention
+    pub retention_hours: Option<u32>,
 }
 
 /// Service configuration
@@ -72,6 +187,10 @@ pub struct ServiceConfig {
     pub capabilities: Vec<String>,
     /// Service metadata
     pub metadata: HashMap<String, String>,
+    /// Service health checks
+    pub health_checks: Option<Vec<HealthCheckEndpoint>>,
+    /// Service dependencies
+    pub dependencies: Option<Vec<String>>,
 }
 
 /// Biome resource requirements
@@ -122,6 +241,10 @@ pub struct VolumeSpec {
     pub access_mode: Option<String>,
     /// Volume options
     pub options: Option<HashMap<String, String>>,
+    /// Supported protocols
+    pub protocols: Option<Vec<String>>,
+    /// Backup policy
+    pub backup_policy: Option<String>,
 }
 
 /// Compute resource requirements
@@ -416,6 +539,8 @@ pub struct SecurityContext {
     pub permissions: Vec<String>,
     /// Security level
     pub security_level: SecurityLevel,
+    /// Whether encryption is enabled
+    pub encryption_enabled: bool,
 }
 
 /// Resource constraints
@@ -454,6 +579,22 @@ pub struct VolumeInfo {
     pub created_at: chrono::DateTime<chrono::Utc>,
     /// Volume metadata
     pub metadata: HashMap<String, String>,
+    /// Mount path (alias for mount_point)
+    pub mount_path: String,
+    /// Filesystem type
+    pub filesystem: String,
+    /// Biome ID
+    pub biome_id: String,
+    /// Access endpoints
+    pub access_endpoints: Vec<String>,
+    /// Supported protocols
+    pub protocols: Vec<String>,
+    /// Backup policy
+    pub backup_policy: Option<String>,
+    /// Encryption status
+    pub encryption_status: String,
+    /// Replication status
+    pub replication_status: String,
 }
 
 /// Volume status

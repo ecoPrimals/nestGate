@@ -809,13 +809,13 @@ impl PerformanceOptimizationEngine {
                                             // Generate alerts for negative trends
                                             if iops_trend < -0.1 {
                                                 // 10% degradation trend
-                                                warn!("🔴 IOPS degradation trend detected on pool {}: {:.2}% decline", 
+                                                warn!("🔴 IOPS degradation trend detected on pool {}: {:.2}% decline",
                                                      pool_name, iops_trend * 100.0);
                                             }
 
                                             if bandwidth_trend < -0.1 {
                                                 // 10% degradation trend
-                                                warn!("🔴 Bandwidth degradation trend detected on pool {}: {:.2}% decline", 
+                                                warn!("🔴 Bandwidth degradation trend detected on pool {}: {:.2}% decline",
                                                      pool_name, bandwidth_trend * 100.0);
                                             }
 
@@ -826,7 +826,7 @@ impl PerformanceOptimizationEngine {
                                                 recent_iops.iter().fold(0.0f64, |a, &b| a.max(b));
 
                                             if max_iops > avg_iops * 3.0 && avg_iops > 100.0 {
-                                                warn!("⚠️ IOPS spike detected on pool {}: {} (avg: {})", 
+                                                warn!("⚠️ IOPS spike detected on pool {}: {} (avg: {})",
                                                      pool_name, max_iops, avg_iops);
                                             }
                                         }

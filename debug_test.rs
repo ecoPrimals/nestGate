@@ -1,34 +1,38 @@
-use std::time::{Duration, Instant};
+use std::process::Command;
 
-#[tokio::main]
-async fn main() {
-    let ops_per_sec = 100u64;
-    let duration = 20u64;
-    
-    let sleep_duration = Duration::from_micros(1_000_000 / ops_per_sec.max(1));
-    let total_operations = ops_per_sec * duration;
-    let end_time = Instant::now() + Duration::from_secs(duration);
-    
-    println!("ops_per_sec: {}", ops_per_sec);
-    println!("duration: {} seconds", duration);
-    println!("sleep_duration: {:?}", sleep_duration);
-    println!("total_operations: {}", total_operations);
-    println!("end_time: {:?}", end_time);
-    
-    let start = Instant::now();
-    let mut op_count = 0u64;
-    
-    while Instant::now() < end_time && op_count < total_operations {
-        op_count += 1;
-        if op_count % 100 == 0 {
-            println!("op_count: {}, elapsed: {:?}", op_count, start.elapsed());
+fn main() {
+    println!("Testing string utility functions:");
+
+    // Test kebab-case conversion
+    let test_code = r#"
+        use nestgate_core::utils::string;
+
+        fn main() {
+            let result = string::to_kebab_case("CamelCase");
+            println!("to_kebab_case(\"CamelCase\") = \"{}\"", result);
+
+            let snake_result = string::to_snake_case("CamelCase");
+            println!("to_snake_case(\"CamelCase\") = \"{}\"", snake_result);
+
+            let camel_result = string::to_camel_case("snake_case");
+            println!("to_camel_case(\"snake_case\") = \"{}\"", camel_result);
         }
-        if op_count > 10 {
-            break; // Don't run forever
-        }
-    }
-    
-    println!("Final op_count: {}, elapsed: {:?}", op_count, start.elapsed());
-    println!("Condition: now < end_time: {}", Instant::now() < end_time);
-    println!("Condition: op_count < total_operations: {}", op_count < total_operations);
+    "#;
+
+    println!("Expected outputs:");
+    println!("to_kebab_case(\"CamelCase\") should return \"camel-case\"");
+    println!("to_snake_case(\"CamelCase\") should return \"camel_case\"");
+    println!("to_camel_case(\"snake_case\") should return \"snakeCase\"");
+
+    std::fs::write("temp_test.rs", test_code).unwrap();
+
+    let output = Command::new("cargo")
+        .args(&["run", "--bin", "temp_test"])
+        .output()
+        .expect("Failed to run test");
+
+    println!("Output: {}", String::from_utf8_lossy(&output.stdout));
+    println!("Error: {}", String::from_utf8_lossy(&output.stderr));
+
+    std::fs::remove_file("temp_test.rs").ok();
 }

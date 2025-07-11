@@ -687,7 +687,7 @@ pub mod string {
         for c in chars {
             if c.is_ascii_uppercase() {
                 if !result.is_empty() {
-                    result.push('-');
+                    result.push('_');
                 }
                 if let Some(lowercase_char) = c.to_lowercase().next() {
                     result.push(lowercase_char);
@@ -886,7 +886,6 @@ mod tests {
     }
 
     #[test]
-    // Kebab case test fixed
     fn test_string_utils() {
         assert_eq!(string::to_snake_case("CamelCase"), "camel_case");
         assert_eq!(string::to_camel_case("snake_case"), "snakeCase");

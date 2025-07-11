@@ -256,7 +256,7 @@ impl SecurityConfig {
         }
 
         // Validate endpoints are not empty in production
-        if std::env::var("NESTGATE_ENVIRONMENT").unwrap_or_default() == "production" 
+        if std::env::var("NESTGATE_ENVIRONMENT").unwrap_or_default() == "production"
             && self.endpoints.songbird_endpoints.is_empty() {
             return Err("Songbird endpoints must be configured in production".to_string());
         }

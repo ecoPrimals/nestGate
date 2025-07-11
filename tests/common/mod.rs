@@ -1,5 +1,5 @@
-//! Common Test Infrastructure for Songbird Orchestrator
-//! 
+//! Common Test Infrastructure for Universal Primal Architecture
+//!
 //! Provides shared utilities, mock services, and test helpers
 
 use async_trait::async_trait;
@@ -9,9 +9,8 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
 
-use songbird_orchestrator::{
-    Orchestrator, OrchestratorConfig, ServiceInfo, ServiceRequest, ServiceResponse,
-    ServiceMetrics, UniversalService, SongbirdError, Result, utils,
+use nestgate_core::{
+    UniversalService, PrimalError, Result, utils,
 };
 use tempfile::TempDir;
 
@@ -74,15 +73,15 @@ impl MockService {
             health_status: Arc::new(RwLock::new(MockHealth::default())),
         }
     }
-    
+
     pub async fn set_error_rate(&self, rate: f64) {
         *self.error_rate.write().await = rate;
     }
-    
+
     pub async fn get_request_count(&self) -> u64 {
         *self.request_count.read().await
     }
-    
+
     pub async fn is_started(&self) -> bool {
         *self.started.read().await
     }
@@ -93,45 +92,45 @@ impl UniversalService for MockService {
     type Config = MockConfig;
     type Health = MockHealth;
     type Error = Box<dyn std::error::Error + Send + Sync>;
-    
+
     async fn initialize(&mut self, config: Self::Config) -> Result<(), Self::Error> {
         self.config = Some(config);
         Ok(())
     }
-    
+
     async fn start(&mut self) -> Result<(), Self::Error> {
         *self.started.write().await = true;
         Ok(())
     }
-    
+
     async fn stop(&mut self) -> Result<(), Self::Error> {
         *self.started.write().await = false;
         Ok(())
     }
-    
+
     async fn health_check(&self) -> Result<Self::Health, Self::Error> {
         let mut health = self.health_status.write().await;
         health.requests_handled = *self.request_count.read().await;
         Ok(health.clone())
     }
-    
-    async fn handle_request(&self, request: ServiceRequest) -> Result<ServiceResponse, Self::Error> {
+
+    async fn handle_request(&self, request: nestgate_core::ServiceRequest) -> Result<nestgate_core::ServiceResponse, Self::Error> {
         *self.request_count.write().await += 1;
-        
+
         // Simulate response delay
         if let Some(config) = &self.config {
             if config.response_delay_ms > 0 {
                 tokio::time::sleep(Duration::from_millis(config.response_delay_ms)).await;
             }
         }
-        
+
         // Simulate errors based on error rate
         let error_rate = *self.error_rate.read().await;
         if error_rate > 0.0 && rand::random::<f64>() < error_rate {
-            return Ok(ServiceResponse::error(request.id, 500, "Simulated error"));
+            return Ok(nestgate_core::ServiceResponse::error(request.id, 500, "Simulated error"));
         }
-        
-        Ok(ServiceResponse::success(
+
+        Ok(nestgate_core::ServiceResponse::success(
             request.id,
             serde_json::json!({
                 "service_id": self.id,
@@ -142,14 +141,14 @@ impl UniversalService for MockService {
             })
         ))
     }
-    
+
     async fn update_config(&mut self, config: Self::Config) -> Result<(), Self::Error> {
         self.config = Some(config);
         Ok(())
     }
-    
-    async fn get_metrics(&self) -> Result<ServiceMetrics, Self::Error> {
-        Ok(ServiceMetrics {
+
+    async fn get_metrics(&self) -> Result<nestgate_core::ServiceMetrics, Self::Error> {
+        Ok(nestgate_core::ServiceMetrics {
             request_count: *self.request_count.read().await,
             error_count: 0,
             avg_response_time_ms: 10.0,
@@ -166,9 +165,9 @@ impl UniversalService for MockService {
             custom_metrics: HashMap::new(),
         })
     }
-    
-    fn service_info(&self) -> ServiceInfo {
-        ServiceInfo {
+
+    fn service_info(&self) -> nestgate_core::ServiceInfo {
+        nestgate_core::ServiceInfo {
             id: self.id.clone(),
             name: format!("Mock Service {}", self.id),
             version: "1.0.0".to_string(),
@@ -180,11 +179,11 @@ impl UniversalService for MockService {
             metadata: HashMap::new(),
         }
     }
-    
+
     async fn can_handle_load(&self) -> Result<bool, Self::Error> {
         Ok(*self.started.read().await)
     }
-    
+
     async fn get_load_factor(&self) -> Result<f64, Self::Error> {
         let request_count = *self.request_count.read().await;
         // Simulate increasing load factor based on request count
@@ -194,32 +193,32 @@ impl UniversalService for MockService {
 
 /// Test configuration builder
 pub struct TestConfigBuilder {
-    config: OrchestratorConfig<MockConfig>,
+    config: nestgate_core::PrimalConfig<MockConfig>,
 }
 
 impl TestConfigBuilder {
     pub fn new() -> Self {
         Self {
-            config: OrchestratorConfig::default(),
+            config: nestgate_core::PrimalConfig::default(),
         }
     }
-    
+
     pub fn with_port(mut self, port: u16) -> Self {
-        self.config.orchestrator.port = port;
+        self.config.primal.port = port;
         self
     }
-    
+
     pub fn with_max_services(mut self, max_services: usize) -> Self {
-        self.config.orchestrator.max_services = max_services;
+        self.config.primal.max_services = max_services;
         self
     }
-    
+
     pub fn with_health_check_interval(mut self, interval: Duration) -> Self {
-        self.config.orchestrator.health_check_interval = interval;
+        self.config.primal.health_check_interval = interval;
         self
     }
-    
-    pub fn build(self) -> OrchestratorConfig<MockConfig> {
+
+    pub fn build(self) -> nestgate_core::PrimalConfig<MockConfig> {
         self.config
     }
 }
@@ -230,14 +229,14 @@ impl Default for TestConfigBuilder {
     }
 }
 
-/// Test orchestrator setup
-pub async fn setup_test_orchestrator() -> Result<Orchestrator, SongbirdError> {
+/// Test primal setup
+pub async fn setup_test_primal() -> Result<nestgate_core::Primal, PrimalError> {
     let config = TestConfigBuilder::new()
         .with_port(0) // Use random available port
         .with_health_check_interval(Duration::from_millis(100))
         .build();
-    
-    Orchestrator::new(config).await
+
+    nestgate_core::Primal::new(config).await
 }
 
 /// Create multiple mock services for testing
@@ -258,14 +257,14 @@ where
     Fut: std::future::Future<Output = bool>,
 {
     let start = std::time::Instant::now();
-    
+
     while start.elapsed() < timeout {
         if condition().await {
             return Ok(());
         }
         tokio::time::sleep(check_interval).await;
     }
-    
+
     Err("Condition timeout")
 }
 
@@ -288,56 +287,56 @@ pub struct LoadTestResults {
 }
 
 /// Create an error response
-pub fn create_error_response(request_id: String, error: String) -> ServiceResponse {
-    ServiceResponse::error(request_id, 500, error)
+pub fn create_error_response(request_id: String, error: String) -> nestgate_core::ServiceResponse {
+    nestgate_core::ServiceResponse::error(request_id, 500, error)
 }
 
-/// Test orchestrator fixture for comprehensive testing
-pub struct TestOrchestrator {
-    orchestrator: Orchestrator,
+/// Test primal fixture for comprehensive testing
+pub struct TestPrimal {
+    primal: nestgate_core::Primal,
     _temp_dir: Option<TempDir>,
 }
 
-impl TestOrchestrator {
-    /// Create a new test orchestrator with default configuration
+impl TestPrimal {
+    /// Create a new test primal with default configuration
     pub async fn new() -> Result<Self> {
-        let config = OrchestratorConfig::default();
-        let orchestrator = Orchestrator::new(config).await?;
-        
+        let config = nestgate_core::PrimalConfig::default();
+        let primal = nestgate_core::Primal::new(config).await?;
+
         Ok(Self {
-            orchestrator,
+            primal,
             _temp_dir: None,
         })
     }
-    
-    /// Create a test orchestrator with custom configuration
-    pub async fn with_config(config: OrchestratorConfig) -> Result<Self> {
-        let orchestrator = Orchestrator::new(config).await?;
-        
+
+    /// Create a test primal with custom configuration
+    pub async fn with_config(config: nestgate_core::PrimalConfig) -> Result<Self> {
+        let primal = nestgate_core::Primal::new(config).await?;
+
         Ok(Self {
-            orchestrator,
+            primal,
             _temp_dir: None,
         })
     }
-    
-    /// Get a reference to the orchestrator
-    pub fn orchestrator(&self) -> &Orchestrator {
-        &self.orchestrator
+
+    /// Get a reference to the primal
+    pub fn primal(&self) -> &nestgate_core::Primal {
+        &self.primal
     }
-    
+
     /// Create a test service info
-    pub fn create_test_service(&self, id: &str, service_type: &str) -> ServiceInfo {
+    pub fn create_test_service(&self, id: &str, service_type: &str) -> nestgate_core::ServiceInfo {
         utils::create_test_service_info(id, id, service_type)
     }
-    
+
     /// Create a test request
-    pub fn create_test_request(&self, method: &str, path: &str) -> ServiceRequest {
+    pub fn create_test_request(&self, method: &str, path: &str) -> nestgate_core::ServiceRequest {
         utils::create_test_request(method, path)
     }
-    
+
     /// Cleanup resources
     pub async fn cleanup(&self) -> Result<()> {
         // Perform any necessary cleanup
         Ok(())
     }
-} 
+}

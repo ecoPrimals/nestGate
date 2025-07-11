@@ -139,7 +139,7 @@ pub enum ZfsError {
     #[error("Feature not available: {feature}")]
     FeatureNotAvailable { feature: String },
 
-    /// Network error  
+    /// Network error
     #[error("Network error: {0}")]
     NetworkError(String),
 

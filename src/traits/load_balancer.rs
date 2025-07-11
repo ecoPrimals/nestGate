@@ -15,16 +15,16 @@ use crate::traits::service::{ServiceInfo, ServiceRequest, ServiceResponse};
 pub trait LoadBalancer: Send + Sync {
     /// Select a service instance for a request
     async fn select_service(&self, services: &[ServiceInfo], request: &ServiceRequest) -> Result<ServiceInfo>;
-    
+
     /// Record the response for learning
     async fn record_response(&self, service: &ServiceInfo, response: &ServiceResponse) -> Result<()>;
-    
+
     /// Update service weights
     async fn update_weights(&self, weights: HashMap<String, f64>) -> Result<()>;
-    
+
     /// Get load balancer statistics
     async fn get_stats(&self) -> Result<LoadBalancerStats>;
-    
+
     /// Get algorithm name
     fn algorithm(&self) -> &'static str;
 }
@@ -244,7 +244,7 @@ impl LoadBalancer for RoundRobinLoadBalancer {
         if services.is_empty() {
             return Err(SongbirdError::LoadBalancer("No services available".to_string()));
         }
-        
+
         let index = self.counter.fetch_add(1, std::sync::atomic::Ordering::Relaxed) % services.len();
         Ok(services[index].clone())
     }
@@ -275,11 +275,11 @@ impl LoadBalancer for WeightedRoundRobinLoadBalancer {
         if services.is_empty() {
             return Err(SongbirdError::LoadBalancer("No services available".to_string()));
         }
-        
+
         // Implement proper weighted round robin algorithm
         let weights = self.weights.read();
         let mut current_weights = self.current_weights.write();
-        
+
         // Initialize current weights if empty
         if current_weights.is_empty() {
             for service in services {
@@ -287,11 +287,11 @@ impl LoadBalancer for WeightedRoundRobinLoadBalancer {
                 current_weights.insert(service.id.clone(), weight);
             }
         }
-        
+
         // Find service with highest current weight
         let mut selected_service = None;
         let mut max_weight = f64::NEG_INFINITY;
-        
+
         for service in services {
             let current_weight = current_weights.get(&service.id).copied().unwrap_or(0.0);
             if current_weight > max_weight {
@@ -299,14 +299,14 @@ impl LoadBalancer for WeightedRoundRobinLoadBalancer {
                 selected_service = Some(service.clone());
             }
         }
-        
+
         if let Some(ref service) = selected_service {
             // Decrease selected service's current weight by total of all weights
             let total_weight: f64 = weights.values().sum();
             if let Some(current) = current_weights.get_mut(&service.id) {
                 *current -= total_weight;
             }
-            
+
             // Increase all services' current weights by their configured weights
             for srv in services {
                 let configured_weight = weights.get(&srv.id).copied().unwrap_or(1.0);
@@ -315,7 +315,7 @@ impl LoadBalancer for WeightedRoundRobinLoadBalancer {
                     .or_insert(configured_weight);
             }
         }
-        
+
         selected_service.ok_or_else(|| SongbirdError::LoadBalancer("No service selected".to_string()))
     }
 
@@ -354,7 +354,7 @@ impl LoadBalancer for LeastConnectionsLoadBalancer {
         for service in services {
             let connections = self.connection_counts.get(&service.id)
                 .map_or(0, |entry| entry.requests);
-            
+
             if connections < min_connections {
                 min_connections = connections;
                 selected_service = Some(service.clone());
@@ -367,7 +367,7 @@ impl LoadBalancer for LeastConnectionsLoadBalancer {
 
     async fn record_response(&self, service: &ServiceInfo, _response: &ServiceResponse) -> Result<()> {
         self.connection_counts.entry(service.id.clone()).or_default().requests += 1;
-        
+
         let mut stats = self.stats.write();
         stats.total_requests += 1;
         stats.service_stats.entry(service.id.clone()).or_default().requests += 1;
@@ -393,18 +393,18 @@ impl LoadBalancer for RandomLoadBalancer {
         if services.is_empty() {
             return Err(SongbirdError::LoadBalancer("No services available".to_string()));
         }
-        
+
         use rand::Rng;
-        
-        let mut rng = self.rng.lock().unwrap();
+
+        let mut rng = self.rng.lock().map_err(|_| SongbirdError::LoadBalancer("Random number generator lock poisoned".to_string()))?;
         let index = rng.gen_range(0..services.len());
         let selected = services[index].clone();
         drop(rng);
-        
+
         let mut stats = self.stats.write();
         stats.total_requests += 1;
         stats.service_stats.entry(selected.id.clone()).or_default().requests += 1;
-        
+
         Ok(selected)
     }
 
@@ -433,43 +433,43 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
         if services.is_empty() {
             return Err(SongbirdError::LoadBalancer("No services available".to_string()));
         }
-        
+
         // Implement proper weighted random algorithm
         let weights = self.weights.read();
         use rand::Rng;
-        
+
         // Calculate total weight
         let total_weight: f64 = services.iter()
             .map(|service| weights.get(&service.id).copied().unwrap_or(1.0))
             .sum();
-        
+
         if total_weight <= 0.0 {
             // Fallback to uniform random if no valid weights
-            let mut rng = self.rng.lock().unwrap();
+            let mut rng = self.rng.lock().map_err(|_| SongbirdError::LoadBalancer("Random number generator lock poisoned".to_string()))?;
             let index = rng.gen_range(0..services.len());
             return Ok(services[index].clone());
         }
-        
+
         // Generate random number in [0, total_weight)
-        let mut rng = self.rng.lock().unwrap();
+        let mut rng = self.rng.lock().map_err(|_| SongbirdError::LoadBalancer("Random number generator lock poisoned".to_string()))?;
         let random_weight = rng.gen::<f64>() * total_weight;
         drop(rng);
-        
+
         // Find the service corresponding to this weight
         let mut cumulative_weight = 0.0;
         for service in services {
             let service_weight = weights.get(&service.id).copied().unwrap_or(1.0);
             cumulative_weight += service_weight;
-            
+
             if random_weight < cumulative_weight {
         let mut stats = self.stats.write();
         stats.total_requests += 1;
                 stats.service_stats.entry(service.id.clone()).or_default().requests += 1;
-        
+
                 return Ok(service.clone());
             }
         }
-        
+
         // Fallback to last service (shouldn't happen with correct implementation)
         Ok(services[services.len() - 1].clone())
     }
@@ -502,11 +502,11 @@ impl LoadBalancer for HealthAwareLoadBalancer {
             .filter(|service| service.status == crate::traits::service::ServiceStatus::Running)
             .cloned()
             .collect();
-        
+
         if healthy_services.is_empty() {
             return Err(SongbirdError::LoadBalancer("No healthy services available".to_string()));
         }
-        
+
         self.inner.select_service(&healthy_services, request).await
     }
 
@@ -515,7 +515,7 @@ impl LoadBalancer for HealthAwareLoadBalancer {
         stats.total_requests += 1;
         stats.service_stats.entry(service.id.clone()).or_default().requests += 1;
         drop(stats);
-        
+
         self.inner.record_response(service, response).await
     }
 
@@ -530,4 +530,4 @@ impl LoadBalancer for HealthAwareLoadBalancer {
     fn algorithm(&self) -> &'static str {
         self.inner.algorithm()
     }
-} 
+}

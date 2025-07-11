@@ -2,7 +2,6 @@
 //!
 //! Automated dataset lifecycle management and optimization scheduling
 
-use crate::types::prediction::{PredictionResult, FileType};
 use crate::types::*;
 use crate::Result;
 use nestgate_core::types::StorageTier;
@@ -646,7 +645,7 @@ impl DatasetLifecycleManager {
                 let size = state.metrics.get("dataset_size").unwrap_or(&0.0);
                 (*size as u64) > *threshold
             }
-            TransitionCondition::TierMatches(tier) => {
+            TransitionCondition::TierMatches(_tier) => {
                 // In a real implementation, this would check current tier
                 true
             }

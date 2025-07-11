@@ -1,8 +1,8 @@
 //! Prediction types for heuristic tier prediction
 
+use nestgate_core::types::StorageTier;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
-use nestgate_core::types::StorageTier;
 
 /// Storage tier types for prediction
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

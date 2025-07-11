@@ -97,7 +97,7 @@ impl NestGateBiomeOSIntegration {
     ) -> Self {
         let biomeos_client = BiomeOSClient::new(biomeos_endpoint);
         let instance_id = format!("nestgate-{}", Uuid::new_v4().simple());
-        
+
         Self {
             config,
             manager,
@@ -107,11 +107,11 @@ impl NestGateBiomeOSIntegration {
             active_biomes: Arc::new(RwLock::new(HashMap::new())),
         }
     }
-    
+
     /// Register NestGate with the biomeOS ecosystem
     pub async fn register_with_biomeos(&mut self, biome_id: String) -> Result<()> {
         info!("Registering NestGate with biomeOS ecosystem");
-        
+
         let registration = BiomeOSServiceRegistration {
             service_id: format!("primal-nestgate-{}", self.instance_id),
             primal_type: "nestgate".to_string(),
@@ -119,30 +119,30 @@ impl NestGateBiomeOSIntegration {
             version: env!("CARGO_PKG_VERSION").to_string(),
             api_version: "biomeOS/v1".to_string(),
             registration_time: Utc::now(),
-            
+
             endpoints: BiomeOSEndpoints {
-                primary: format!("http://{}:{}", 
-                    self.config.network.http_listen_address, 
+                primary: format!("http://{}:{}",
+                    self.config.network.http_listen_address,
                     self.config.network.http_listen_port
                 ),
-                health: format!("http://{}:{}/health", 
-                    self.config.network.http_listen_address, 
+                health: format!("http://{}:{}/health",
+                    self.config.network.http_listen_address,
                     self.config.network.http_listen_port
                 ),
-                metrics: format!("http://{}:{}/metrics", 
-                    self.config.network.http_listen_address, 
+                metrics: format!("http://{}:{}/metrics",
+                    self.config.network.http_listen_address,
                     self.config.network.http_listen_port
                 ),
-                admin: Some(format!("http://{}:{}/admin", 
-                    self.config.network.http_listen_address, 
+                admin: Some(format!("http://{}:{}/admin",
+                    self.config.network.http_listen_address,
                     self.config.network.http_listen_port + 1
                 )),
-                websocket: Some(format!("ws://{}:{}/ws", 
-                    self.config.network.http_listen_address, 
+                websocket: Some(format!("ws://{}:{}/ws",
+                    self.config.network.http_listen_address,
                     self.config.network.http_listen_port
                 )),
             },
-            
+
             capabilities: BiomeOSCapabilities {
                 core: vec![
                     "storage_provisioning".to_string(),
@@ -161,34 +161,34 @@ impl NestGateBiomeOSIntegration {
                 ],
                 integrations: vec![
                     "biomeos_volume_provisioning".to_string(),
-                    "toadstool_mount_coordination".to_string(),
-                    "songbird_discovery_integration".to_string(),
-                    "beardog_encryption_integration".to_string(),
-                    "squirrel_ai_storage_optimization".to_string(),
+                    "primal_mount_coordination".to_string(),
+                    "primal_discovery_integration".to_string(),
+                    "primal_encryption_integration".to_string(),
+                    "primal_ai_storage_optimization".to_string(),
                 ],
             },
-            
+
             security: BiomeOSSecurity {
                 authentication_method: "ecosystem_jwt".to_string(),
                 tls_enabled: true,
                 mtls_required: false, // Will be true when BearDog is ready
                 trust_domain: "biome.local".to_string(),
             },
-            
+
             resource_requirements: BiomeOSResourceRequirements {
                 cpu: "4".to_string(),
                 memory: "16Gi".to_string(),
                 storage: "1Ti".to_string(), // Available storage capacity
                 network: "10Gbps".to_string(),
             },
-            
+
             health_check: BiomeOSHealthCheckConfig {
                 interval_secs: 30,
                 timeout_secs: 10,
                 retries: 3,
                 grace_period_secs: 60,
             },
-            
+
             metadata: {
                 let mut meta = HashMap::new();
                 meta.insert("environment".to_string(), "production".to_string());
@@ -199,22 +199,22 @@ impl NestGateBiomeOSIntegration {
                 meta
             },
         };
-        
+
         // Register with biomeOS
         self.biomeos_client.register_service(&registration).await?;
         self.registration = Some(registration);
-        
+
         info!("NestGate successfully registered with biomeOS ecosystem");
         Ok(())
     }
-    
+
     /// Provision storage for a biome deployment
     pub async fn provision_biome_storage(
         &self,
         request: BiomeOSStorageProvisionRequest,
     ) -> Result<BiomeOSStorageProvisionResponse> {
         info!("Provisioning storage for biome: {}", request.biome_id);
-        
+
         // Create biome storage context
         let storage_context = BiomeStorageContext {
             biome_id: request.biome_id.clone(),
@@ -223,17 +223,17 @@ impl NestGateBiomeOSIntegration {
             volumes: HashMap::new(),
             created_at: Utc::now(),
         };
-        
+
         // Store context
         {
             let mut biomes = self.active_biomes.write().await;
             biomes.insert(request.biome_id.clone(), storage_context);
         }
-        
+
         // Provision volumes for each service
         let mut provisioned_volumes = Vec::new();
         let manager = self.manager.read().await;
-        
+
         for volume_req in &request.volume_requirements {
             let volume_spec = VolumeSpec {
                 name: format!("biome-{}-{}", request.biome_id, volume_req.name),
@@ -243,9 +243,9 @@ impl NestGateBiomeOSIntegration {
                 mount_options: volume_req.mount_options.clone(),
                 backup_policy: volume_req.backup_policy.clone(),
             };
-            
+
             let volume = manager.provision_volume(volume_spec).await?;
-            
+
             let provisioned_volume = BiomeOSProvisionedVolume {
                 volume_id: volume.id.clone(),
                 name: volume_req.name.clone(),
@@ -255,10 +255,10 @@ impl NestGateBiomeOSIntegration {
                 size_bytes: volume.size_bytes,
                 tier: volume_req.tier.clone(),
             };
-            
+
             provisioned_volumes.push(provisioned_volume);
         }
-        
+
         // Update biome context with volumes
         {
             let mut biomes = self.active_biomes.write().await;
@@ -268,7 +268,7 @@ impl NestGateBiomeOSIntegration {
                 }
             }
         }
-        
+
         let response = BiomeOSStorageProvisionResponse {
             biome_id: request.biome_id,
             status: "provisioned".to_string(),
@@ -279,15 +279,15 @@ impl NestGateBiomeOSIntegration {
             access_endpoints: self.generate_biome_access_endpoints(&request.biome_id).await?,
             created_at: Utc::now(),
         };
-        
+
         info!("Storage provisioning completed for biome: {}", response.biome_id);
         Ok(response)
     }
-    
+
     /// Handle ecosystem messages from other Primals
     pub async fn handle_ecosystem_message(&mut self, message: EcosystemMessage) -> Result<Option<EcosystemMessage>> {
         debug!("Handling ecosystem message: {:?}", message.message_type);
-        
+
         match message.message_type {
             EcosystemMessageType::VolumeProvisionRequest => {
                 self.handle_volume_provision_request(message).await
@@ -307,21 +307,21 @@ impl NestGateBiomeOSIntegration {
             }
         }
     }
-    
+
     /// Get NestGate status for ecosystem monitoring
     pub async fn get_ecosystem_status(&self) -> Result<NestGateEcosystemStatus> {
         let manager = self.manager.read().await;
         let pools = manager.get_storage_pools().await?;
         let biomes = self.active_biomes.read().await;
-        
+
         let total_capacity = pools.iter()
             .map(|p| p.total_bytes)
             .sum();
-            
+
         let used_capacity = pools.iter()
             .map(|p| p.used_bytes)
             .sum();
-        
+
         Ok(NestGateEcosystemStatus {
             service_id: self.registration.as_ref()
                 .map(|r| r.service_id.clone())
@@ -339,45 +339,45 @@ impl NestGateBiomeOSIntegration {
             primal_integrations: self.get_primal_integration_status().await?,
         })
     }
-    
+
     // Private helper methods
-    
+
     async fn generate_access_endpoint(&self, volume: &Volume) -> Result<String> {
         // Generate appropriate access endpoint based on protocol
-        Ok(format!("nfs://{}:{}{}", 
+        Ok(format!("nfs://{}:{}{}",
             self.config.network.nfs_listen_address,
             self.config.network.nfs_listen_port,
             volume.mount_path.display()
         ))
     }
-    
+
     async fn generate_biome_access_endpoints(&self, biome_id: &str) -> Result<Vec<String>> {
         // Generate all access endpoints for a biome
         Ok(vec![
-            format!("nfs://{}:{}/biome/{}", 
+            format!("nfs://{}:{}/biome/{}",
                 self.config.network.nfs_listen_address,
                 self.config.network.nfs_listen_port,
                 biome_id
             ),
-            format!("smb://{}:{}/biome/{}", 
+            format!("smb://{}:{}/biome/{}",
                 self.config.network.smb_listen_address,
                 self.config.network.smb_listen_port,
                 biome_id
             ),
-            format!("s3://{}:{}/biome/{}", 
+            format!("s3://{}:{}/biome/{}",
                 self.config.network.s3_listen_address,
                 self.config.network.s3_listen_port,
                 biome_id
             ),
         ])
     }
-    
+
     async fn handle_volume_provision_request(&mut self, message: EcosystemMessage) -> Result<Option<EcosystemMessage>> {
         info!("Handling volume provision request from: {}", message.from_primal);
-        
+
         // Parse request from message payload
         let request: VolumeProvisionRequest = serde_json::from_value(message.payload)?;
-        
+
         // Provision volume
         let manager = self.manager.read().await;
         let volume_spec = VolumeSpec {
@@ -388,9 +388,9 @@ impl NestGateBiomeOSIntegration {
             mount_options: HashMap::new(),
             backup_policy: None,
         };
-        
+
         let volume = manager.provision_volume(volume_spec).await?;
-        
+
         // Create response
         let response = EcosystemMessage {
             message_id: Uuid::new_v4(),
@@ -407,19 +407,19 @@ impl NestGateBiomeOSIntegration {
             timestamp: Utc::now(),
             correlation_id: Some(message.message_id),
         };
-        
+
         Ok(Some(response))
     }
-    
+
     async fn handle_mount_request(&mut self, message: EcosystemMessage) -> Result<Option<EcosystemMessage>> {
         info!("Handling mount request from: {}", message.from_primal);
-        
+
         // Parse mount request
         let request: MountRequest = serde_json::from_value(message.payload)?;
-        
+
         // Process mount request (coordinate with Toadstool)
         let mount_info = self.process_mount_request(&request).await?;
-        
+
         // Create response
         let response = EcosystemMessage {
             message_id: Uuid::new_v4(),
@@ -435,16 +435,16 @@ impl NestGateBiomeOSIntegration {
             timestamp: Utc::now(),
             correlation_id: Some(message.message_id),
         };
-        
+
         Ok(Some(response))
     }
-    
+
     async fn handle_resource_request(&mut self, message: EcosystemMessage) -> Result<Option<EcosystemMessage>> {
         info!("Handling resource request from: {}", message.from_primal);
-        
+
         // Get current resource status
         let status = self.get_ecosystem_status().await?;
-        
+
         // Create response
         let response = EcosystemMessage {
             message_id: Uuid::new_v4(),
@@ -460,10 +460,10 @@ impl NestGateBiomeOSIntegration {
             timestamp: Utc::now(),
             correlation_id: Some(message.message_id),
         };
-        
+
         Ok(Some(response))
     }
-    
+
     async fn handle_health_check(&mut self, message: EcosystemMessage) -> Result<Option<EcosystemMessage>> {
         // Respond to health check requests
         let response = EcosystemMessage {
@@ -479,10 +479,10 @@ impl NestGateBiomeOSIntegration {
             timestamp: Utc::now(),
             correlation_id: Some(message.message_id),
         };
-        
+
         Ok(Some(response))
     }
-    
+
     async fn process_mount_request(&self, request: &MountRequest) -> Result<MountInfo> {
         // Process mount request and coordinate with target system
         Ok(MountInfo {
@@ -490,17 +490,48 @@ impl NestGateBiomeOSIntegration {
             options: request.mount_options.clone(),
         })
     }
-    
+
     async fn get_primal_integration_status(&self) -> Result<HashMap<String, String>> {
         let mut integrations = HashMap::new();
-        
-        // Check integration status with other Primals
-        integrations.insert("toadstool".to_string(), "connected".to_string());
-        integrations.insert("songbird".to_string(), "connected".to_string());
-        integrations.insert("beardog".to_string(), "preparing".to_string());
-        integrations.insert("squirrel".to_string(), "preparing".to_string());
-        
+
+        // Dynamic discovery of available primals
+        // In production, this would query the primal discovery service
+        // For now, return generic status based on ecosystem capabilities
+
+        // Check for compute primals (like toadstool)
+        if self.has_capability("compute_coordination").await? {
+            integrations.insert("compute_primal".to_string(), "connected".to_string());
+        }
+
+        // Check for orchestration primals (like songbird)
+        if self.has_capability("orchestration_support").await? {
+            integrations.insert("orchestration_primal".to_string(), "connected".to_string());
+        }
+
+        // Check for security primals (like beardog)
+        if self.has_capability("encryption_support").await? {
+            integrations.insert("security_primal".to_string(), "preparing".to_string());
+        }
+
+        // Check for AI primals (like squirrel)
+        if self.has_capability("ai_optimization").await? {
+            integrations.insert("ai_primal".to_string(), "preparing".to_string());
+        }
+
         Ok(integrations)
+    }
+
+    /// Check if NestGate has a specific capability
+    async fn has_capability(&self, capability: &str) -> Result<bool> {
+        // This would integrate with the universal primal discovery system
+        // For now, return true for basic capabilities
+        match capability {
+            "compute_coordination" => Ok(true),
+            "orchestration_support" => Ok(true),
+            "encryption_support" => Ok(false), // Future capability
+            "ai_optimization" => Ok(false), // Future capability
+            _ => Ok(false),
+        }
     }
 }
 
@@ -517,44 +548,44 @@ impl BiomeOSClient {
             client: Client::new(),
         }
     }
-    
+
     pub async fn register_service(&self, registration: &BiomeOSServiceRegistration) -> Result<()> {
         let url = format!("{}/api/v1/ecosystem/services", self.endpoint);
-        
+
         let response = self.client
             .post(&url)
             .json(registration)
             .send()
             .await
             .map_err(|e| NestGateError::network(format!("Failed to register with biomeOS: {}", e)))?;
-            
+
         if !response.status().is_success() {
             return Err(NestGateError::network(format!(
                 "biomeOS registration failed: {}",
                 response.status()
             )));
         }
-        
+
         Ok(())
     }
-    
+
     pub async fn send_message(&self, message: &EcosystemMessage) -> Result<()> {
         let url = format!("{}/api/v1/ecosystem/messages", self.endpoint);
-        
+
         let response = self.client
             .post(&url)
             .json(message)
             .send()
             .await
             .map_err(|e| NestGateError::network(format!("Failed to send message to biomeOS: {}", e)))?;
-            
+
         if !response.status().is_success() {
             return Err(NestGateError::network(format!(
                 "Message send failed: {}",
                 response.status()
             )));
         }
-        
+
         Ok(())
     }
 }
@@ -689,36 +720,36 @@ pub enum EcosystemMessageType {
 mod tests {
     use super::*;
     use crate::config::NestGateConfig;
-    
+
     #[tokio::test]
     async fn test_biomeos_registration() {
         let config = NestGateConfig::default();
         let manager = Arc::new(RwLock::new(NestGateManager::new()));
-        
+
         let mut integration = NestGateBiomeOSIntegration::new(
             config,
             manager,
             "http://localhost:4000".to_string(),
         );
-        
+
         // Test registration structure
         assert!(integration.registration.is_none());
-        
+
         // Note: Actual registration would require a running biomeOS instance
         // This test validates the structure and logic
     }
-    
+
     #[tokio::test]
     async fn test_storage_provisioning() {
         let config = NestGateConfig::default();
         let manager = Arc::new(RwLock::new(NestGateManager::new()));
-        
+
         let integration = NestGateBiomeOSIntegration::new(
             config,
             manager,
             "http://localhost:4000".to_string(),
         );
-        
+
         let request = BiomeOSStorageProvisionRequest {
             biome_id: "test-biome".to_string(),
             team_id: "test-team".to_string(),
@@ -739,10 +770,10 @@ mod tests {
                 },
             ],
         };
-        
+
         // Note: Actual provisioning would require proper storage setup
         // This test validates the request structure
         assert_eq!(request.biome_id, "test-biome");
         assert_eq!(request.volume_requirements.len(), 1);
     }
-} 
+}

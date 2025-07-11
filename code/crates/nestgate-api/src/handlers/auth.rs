@@ -349,7 +349,8 @@ mod tests {
         let service = AuthService::standalone();
 
         // Test valid certificate
-        let cert = CertUtils::generate_self_signed().unwrap();
+        let cert =
+            CertUtils::generate_self_signed().expect("Failed to generate self-signed certificate");
         let request = AuthRequest {
             certificate: cert,
             service_id: Some("test-service".to_string()),
@@ -360,7 +361,7 @@ mod tests {
         let mut validator = service.validator.write().await;
         let result = validator.validate_cert(&request.certificate).await;
         assert!(result.is_ok());
-        assert!(result.unwrap());
+        assert!(result.expect("Failed to validate certificate"));
     }
 
     #[test]
@@ -373,7 +374,7 @@ mod tests {
             metadata: Some(serde_json::json!({"test": "data"})),
         };
 
-        let json = serde_json::to_string(&response).unwrap();
+        let json = serde_json::to_string(&response).expect("Failed to serialize auth response");
         assert!(!json.is_empty());
         assert!(json.contains("authenticated"));
         assert!(json.contains("standalone"));
@@ -387,7 +388,8 @@ mod tests {
             "mode": "hybrid"
         }"#;
 
-        let request: AuthRequest = serde_json::from_str(json).unwrap();
+        let request: AuthRequest =
+            serde_json::from_str(json).expect("Failed to deserialize auth request");
         assert!(!request.certificate.is_empty());
         assert_eq!(request.service_id, Some("test-service".to_string()));
         assert_eq!(request.mode, Some("hybrid".to_string()));

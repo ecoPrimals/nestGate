@@ -7,16 +7,16 @@
 //! BENCHMARKS: Full-power demonstrations in benches/performance_benchmarks.rs
 
 use std::collections::HashMap;
+use std::env;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use std::env;
-use tokio::time::{sleep, timeout};
 use tokio::sync::{RwLock, Semaphore};
+use tokio::time::{sleep, timeout};
 
 // Import NestGate services for real integration testing
 use nestgate_core::SystemInfo;
-use nestgate_zfs::{ZfsManager, config::ZfsConfig, is_zfs_available};
+use nestgate_zfs::{config::ZfsConfig, is_zfs_available, ZfsManager};
 
 // Import futures for batch operations
 use futures::future::join_all;
@@ -62,29 +62,29 @@ impl ChaosConfig {
     /// 🚀 REGRESSION FAST: Lightweight configuration for CI/CD
     pub fn regression_fast() -> Self {
         Self {
-            total_operations: 200,  // 200 operations for regression
-            operations_per_second: 100,  // 100 ops/sec
-            max_duration_seconds: 15,  // 15 second max for regression
-            fault_injection_rate: 0.05,  // 5% fault injection
+            total_operations: 200,      // 200 operations for regression
+            operations_per_second: 100, // 100 ops/sec
+            max_duration_seconds: 15,   // 15 second max for regression
+            fault_injection_rate: 0.05, // 5% fault injection
             integrity_check_interval_seconds: 2,
-            max_concurrent_operations: 20,  // Low concurrency for regression
+            max_concurrent_operations: 20, // Low concurrency for regression
             circuit_breaker_threshold: 5,
             retry_attempts: 2,
             operation_timeout_ms: 1000,
             recovery_delay_ms: 10,
             enable_graceful_degradation: true,
             batch_size: 10,
-            memory_allocation_kb: 8,  // Small memory for regression
+            memory_allocation_kb: 8, // Small memory for regression
         }
     }
 
     /// 🧪 REGRESSION MODERATE: Medium regression test
     pub fn regression_moderate() -> Self {
         Self {
-            total_operations: 150,  // 150 operations
+            total_operations: 150,      // 150 operations
             operations_per_second: 50,  // 50 ops/sec
-            max_duration_seconds: 10,  // 10 second max
-            fault_injection_rate: 0.10,  // 10% fault injection
+            max_duration_seconds: 10,   // 10 second max
+            fault_injection_rate: 0.10, // 10% fault injection
             integrity_check_interval_seconds: 1,
             max_concurrent_operations: 15,
             circuit_breaker_threshold: 3,
@@ -100,10 +100,10 @@ impl ChaosConfig {
     /// 🔥 REGRESSION INTENSIVE: High-intensity regression test
     pub fn regression_intensive() -> Self {
         Self {
-            total_operations: 100,  // 100 operations
+            total_operations: 100,      // 100 operations
             operations_per_second: 25,  // 25 ops/sec
-            max_duration_seconds: 8,  // 8 second max
-            fault_injection_rate: 0.20,  // 20% fault injection
+            max_duration_seconds: 8,    // 8 second max
+            fault_injection_rate: 0.20, // 20% fault injection
             integrity_check_interval_seconds: 1,
             max_concurrent_operations: 10,
             circuit_breaker_threshold: 2,
@@ -119,133 +119,133 @@ impl ChaosConfig {
     /// 🚀 BLAZING FAST: Maximum speed configuration for genome database workloads
     pub fn blazing_fast() -> Self {
         Self {
-            total_operations: 100_000,  // 100K operations by default
-            operations_per_second: 10_000,  // 10K ops/sec - blazing fast
-            max_duration_seconds: 300,  // 5 minute safety cutoff
-            fault_injection_rate: 0.05,  // 5% realistic fault injection
+            total_operations: 100_000,     // 100K operations by default
+            operations_per_second: 10_000, // 10K ops/sec - blazing fast
+            max_duration_seconds: 300,     // 5 minute safety cutoff
+            fault_injection_rate: 0.05,    // 5% realistic fault injection
             integrity_check_interval_seconds: 2,
-            max_concurrent_operations: 1000,  // High concurrency for genome workloads
+            max_concurrent_operations: 1000, // High concurrency for genome workloads
             circuit_breaker_threshold: 10,
-            retry_attempts: 2,  // Fast failure for speed
-            operation_timeout_ms: 1000,  // 1 second timeout
-            recovery_delay_ms: 10,  // Minimal recovery delay
+            retry_attempts: 2,          // Fast failure for speed
+            operation_timeout_ms: 1000, // 1 second timeout
+            recovery_delay_ms: 10,      // Minimal recovery delay
             enable_graceful_degradation: true,
-            batch_size: 100,  // Bulk operations for speed
-            memory_allocation_kb: 64,  // Simulate genome data chunks
+            batch_size: 100,          // Bulk operations for speed
+            memory_allocation_kb: 64, // Simulate genome data chunks
         }
     }
 
     /// 🔥 LUDICROUS SPEED: Ultra-high performance for massive genome datasets
     pub fn ludicrous_speed() -> Self {
         Self {
-            total_operations: 1_000_000,  // 1 million operations
-            operations_per_second: 50_000,  // 50K ops/sec - ludicrous speed
-            max_duration_seconds: 600,  // 10 minute safety cutoff
-            fault_injection_rate: 0.03,  // 3% fault injection at ludicrous speed
+            total_operations: 1_000_000,   // 1 million operations
+            operations_per_second: 50_000, // 50K ops/sec - ludicrous speed
+            max_duration_seconds: 600,     // 10 minute safety cutoff
+            fault_injection_rate: 0.03,    // 3% fault injection at ludicrous speed
             integrity_check_interval_seconds: 5,
-            max_concurrent_operations: 5000,  // Extreme concurrency
+            max_concurrent_operations: 5000, // Extreme concurrency
             circuit_breaker_threshold: 20,
-            retry_attempts: 1,  // Minimal retries for speed
-            operation_timeout_ms: 500,  // 0.5 second timeout
-            recovery_delay_ms: 5,  // Minimal recovery delay
+            retry_attempts: 1,         // Minimal retries for speed
+            operation_timeout_ms: 500, // 0.5 second timeout
+            recovery_delay_ms: 5,      // Minimal recovery delay
             enable_graceful_degradation: true,
-            batch_size: 500,  // Large batches for speed
-            memory_allocation_kb: 128,  // Larger genome data chunks
+            batch_size: 500,           // Large batches for speed
+            memory_allocation_kb: 128, // Larger genome data chunks
         }
     }
 
     /// 🐌 SLOW BUT STEADY: 100% reliability at reduced speed
     pub fn slow_but_steady() -> Self {
         Self {
-            total_operations: 10_000,  // 10K operations
-            operations_per_second: 100,  // 100 ops/sec - steady pace
+            total_operations: 10_000,   // 10K operations
+            operations_per_second: 100, // 100 ops/sec - steady pace
             max_duration_seconds: 200,  // 3.3 minute safety cutoff
-            fault_injection_rate: 0.01,  // 1% minimal fault injection
+            fault_injection_rate: 0.01, // 1% minimal fault injection
             integrity_check_interval_seconds: 1,
-            max_concurrent_operations: 20,  // Low concurrency for reliability
+            max_concurrent_operations: 20, // Low concurrency for reliability
             circuit_breaker_threshold: 3,
-            retry_attempts: 5,  // More retries for reliability
-            operation_timeout_ms: 10_000,  // 10 second timeout
-            recovery_delay_ms: 500,  // Longer recovery delay
+            retry_attempts: 5,            // More retries for reliability
+            operation_timeout_ms: 10_000, // 10 second timeout
+            recovery_delay_ms: 500,       // Longer recovery delay
             enable_graceful_degradation: true,
-            batch_size: 10,  // Small batches for reliability
-            memory_allocation_kb: 32,  // Smaller memory allocation
+            batch_size: 10,           // Small batches for reliability
+            memory_allocation_kb: 32, // Smaller memory allocation
         }
     }
 
     /// 🧬 GENOME SCALE: Optimized for massive genome database operations
     pub fn genome_scale() -> Self {
         Self {
-            total_operations: 10_000_000,  // 10 million operations
-            operations_per_second: 100_000,  // 100K ops/sec - genome scale
-            max_duration_seconds: 1800,  // 30 minute safety cutoff
-            fault_injection_rate: 0.02,  // 2% fault injection for genome workloads
+            total_operations: 10_000_000,   // 10 million operations
+            operations_per_second: 100_000, // 100K ops/sec - genome scale
+            max_duration_seconds: 1800,     // 30 minute safety cutoff
+            fault_injection_rate: 0.02,     // 2% fault injection for genome workloads
             integrity_check_interval_seconds: 10,
-            max_concurrent_operations: 10_000,  // Extreme concurrency for genome data
+            max_concurrent_operations: 10_000, // Extreme concurrency for genome data
             circuit_breaker_threshold: 50,
-            retry_attempts: 1,  // Minimal retries for speed
-            operation_timeout_ms: 200,  // 0.2 second timeout
-            recovery_delay_ms: 1,  // Minimal recovery delay
+            retry_attempts: 1,         // Minimal retries for speed
+            operation_timeout_ms: 200, // 0.2 second timeout
+            recovery_delay_ms: 1,      // Minimal recovery delay
             enable_graceful_degradation: true,
-            batch_size: 1000,  // Large batches for genome data
-            memory_allocation_kb: 256,  // Large genome data chunks
+            batch_size: 1000,          // Large batches for genome data
+            memory_allocation_kb: 256, // Large genome data chunks
         }
     }
 
     /// 🌐 NETWORK SATURATION 2.5G: Optimized to saturate 2.5G networks (280 MB/s)
     pub fn network_saturation_2_5g() -> Self {
         Self {
-            total_operations: 500_000,  // 500K operations
-            operations_per_second: 4_000,  // 4K ops/sec
-            max_duration_seconds: 300,  // 5 minute safety cutoff
-            fault_injection_rate: 0.03,  // 3% fault injection for network testing
+            total_operations: 500_000,    // 500K operations
+            operations_per_second: 4_000, // 4K ops/sec
+            max_duration_seconds: 300,    // 5 minute safety cutoff
+            fault_injection_rate: 0.03,   // 3% fault injection for network testing
             integrity_check_interval_seconds: 3,
-            max_concurrent_operations: 2_000,  // High concurrency for network load
+            max_concurrent_operations: 2_000, // High concurrency for network load
             circuit_breaker_threshold: 15,
-            retry_attempts: 2,  // Quick retries for network faults
-            operation_timeout_ms: 750,  // 0.75 second timeout
-            recovery_delay_ms: 25,  // Quick recovery for network
+            retry_attempts: 2,         // Quick retries for network faults
+            operation_timeout_ms: 750, // 0.75 second timeout
+            recovery_delay_ms: 25,     // Quick recovery for network
             enable_graceful_degradation: true,
-            batch_size: 250,  // Medium batches for network efficiency
-            memory_allocation_kb: 70,  // 70KB * 4K ops/sec = 280 MB/s (2.5G saturation)
+            batch_size: 250,          // Medium batches for network efficiency
+            memory_allocation_kb: 70, // 70KB * 4K ops/sec = 280 MB/s (2.5G saturation)
         }
     }
 
     /// 🚀 NETWORK SATURATION 10G: Optimized to saturate 10G networks (1,100 MB/s)
     pub fn network_saturation_10g() -> Self {
         Self {
-            total_operations: 2_000_000,  // 2M operations
-            operations_per_second: 15_000,  // 15K ops/sec
-            max_duration_seconds: 300,  // 5 minute safety cutoff
-            fault_injection_rate: 0.02,  // 2% fault injection for sustained throughput
+            total_operations: 2_000_000,   // 2M operations
+            operations_per_second: 15_000, // 15K ops/sec
+            max_duration_seconds: 300,     // 5 minute safety cutoff
+            fault_injection_rate: 0.02,    // 2% fault injection for sustained throughput
             integrity_check_interval_seconds: 5,
-            max_concurrent_operations: 5_000,  // Very high concurrency for 10G
+            max_concurrent_operations: 5_000, // Very high concurrency for 10G
             circuit_breaker_threshold: 25,
-            retry_attempts: 1,  // Minimal retries for maximum speed
-            operation_timeout_ms: 400,  // 0.4 second timeout
-            recovery_delay_ms: 10,  // Very quick recovery
+            retry_attempts: 1,         // Minimal retries for maximum speed
+            operation_timeout_ms: 400, // 0.4 second timeout
+            recovery_delay_ms: 10,     // Very quick recovery
             enable_graceful_degradation: true,
-            batch_size: 500,  // Large batches for 10G efficiency
-            memory_allocation_kb: 73,  // 73KB * 15K ops/sec = 1,095 MB/s (10G saturation)
+            batch_size: 500,          // Large batches for 10G efficiency
+            memory_allocation_kb: 73, // 73KB * 15K ops/sec = 1,095 MB/s (10G saturation)
         }
     }
 
     /// 🌐 NETWORK STRESS 25G: Future-proof for 25G networks (2,750 MB/s)
     pub fn network_saturation_25g() -> Self {
         Self {
-            total_operations: 5_000_000,  // 5M operations
-            operations_per_second: 35_000,  // 35K ops/sec
-            max_duration_seconds: 300,  // 5 minute safety cutoff
-            fault_injection_rate: 0.015,  // 1.5% fault injection for extreme speed
+            total_operations: 5_000_000,   // 5M operations
+            operations_per_second: 35_000, // 35K ops/sec
+            max_duration_seconds: 300,     // 5 minute safety cutoff
+            fault_injection_rate: 0.015,   // 1.5% fault injection for extreme speed
             integrity_check_interval_seconds: 10,
-            max_concurrent_operations: 10_000,  // Extreme concurrency for 25G
+            max_concurrent_operations: 10_000, // Extreme concurrency for 25G
             circuit_breaker_threshold: 50,
-            retry_attempts: 1,  // Minimal retries
-            operation_timeout_ms: 200,  // 0.2 second timeout
-            recovery_delay_ms: 5,  // Ultra-quick recovery
+            retry_attempts: 1,         // Minimal retries
+            operation_timeout_ms: 200, // 0.2 second timeout
+            recovery_delay_ms: 5,      // Ultra-quick recovery
             enable_graceful_degradation: true,
-            batch_size: 1000,  // Large batches for 25G efficiency
-            memory_allocation_kb: 78,  // 78KB * 35K ops/sec = 2,730 MB/s (25G saturation)
+            batch_size: 1000,         // Large batches for 25G efficiency
+            memory_allocation_kb: 78, // 78KB * 35K ops/sec = 2,730 MB/s (25G saturation)
         }
     }
 
@@ -253,104 +253,104 @@ impl ChaosConfig {
     pub fn home_connection_maxed() -> Self {
         Self {
             total_operations: 10_000_000,  // 10M operations
-            operations_per_second: 50_000,  // 50K ops/sec
-            max_duration_seconds: 400,  // 6.7 minute safety cutoff
-            fault_injection_rate: 0.01,  // 1% fault injection for extreme throughput
+            operations_per_second: 50_000, // 50K ops/sec
+            max_duration_seconds: 400,     // 6.7 minute safety cutoff
+            fault_injection_rate: 0.01,    // 1% fault injection for extreme throughput
             integrity_check_interval_seconds: 15,
-            max_concurrent_operations: 15_000,  // Extreme concurrency for home fiber
+            max_concurrent_operations: 15_000, // Extreme concurrency for home fiber
             circuit_breaker_threshold: 100,
-            retry_attempts: 1,  // Minimal retries
-            operation_timeout_ms: 100,  // 0.1 second timeout
-            recovery_delay_ms: 2,  // Ultra-minimal recovery delay
+            retry_attempts: 1,         // Minimal retries
+            operation_timeout_ms: 100, // 0.1 second timeout
+            recovery_delay_ms: 2,      // Ultra-minimal recovery delay
             enable_graceful_degradation: true,
-            batch_size: 2000,  // Very large batches for home fiber
-            memory_allocation_kb: 100,  // 100KB * 50K ops/sec = 5,000 MB/s (home fiber maxed)
+            batch_size: 2000,          // Very large batches for home fiber
+            memory_allocation_kb: 100, // 100KB * 50K ops/sec = 5,000 MB/s (home fiber maxed)
         }
     }
 
     /// 🏢 NAS 10G MAXED: Saturate 10G NAS connections (1,250 MB/s)
     pub fn nas_10g_maxed() -> Self {
         Self {
-            total_operations: 3_000_000,  // 3M operations
-            operations_per_second: 18_000,  // 18K ops/sec
-            max_duration_seconds: 300,  // 5 minute safety cutoff
-            fault_injection_rate: 0.015,  // 1.5% fault injection for NAS reliability
+            total_operations: 3_000_000,   // 3M operations
+            operations_per_second: 18_000, // 18K ops/sec
+            max_duration_seconds: 300,     // 5 minute safety cutoff
+            fault_injection_rate: 0.015,   // 1.5% fault injection for NAS reliability
             integrity_check_interval_seconds: 4,
-            max_concurrent_operations: 6_000,  // High concurrency for NAS throughput
+            max_concurrent_operations: 6_000, // High concurrency for NAS throughput
             circuit_breaker_threshold: 30,
-            retry_attempts: 2,  // Some retries for NAS reliability
-            operation_timeout_ms: 300,  // 0.3 second timeout
-            recovery_delay_ms: 8,  // Quick recovery for NAS
+            retry_attempts: 2,         // Some retries for NAS reliability
+            operation_timeout_ms: 300, // 0.3 second timeout
+            recovery_delay_ms: 8,      // Quick recovery for NAS
             enable_graceful_degradation: true,
-            batch_size: 600,  // Large batches for NAS efficiency
-            memory_allocation_kb: 69,  // 69KB * 18K ops/sec = 1,242 MB/s (10G NAS maxed)
+            batch_size: 600,          // Large batches for NAS efficiency
+            memory_allocation_kb: 69, // 69KB * 18K ops/sec = 1,242 MB/s (10G NAS maxed)
         }
     }
 
     /// 🚀 LOCAL COMPUTE GPU MAXED: Saturate local GPU memory bandwidth (1,000+ GB/s)
     pub fn local_compute_gpu_maxed() -> Self {
         Self {
-            total_operations: 50_000_000,  // 50M operations
-            operations_per_second: 500_000,  // 500K ops/sec
-            max_duration_seconds: 200,  // 3.3 minute safety cutoff
-            fault_injection_rate: 0.005,  // 0.5% fault injection for GPU stability
+            total_operations: 50_000_000,   // 50M operations
+            operations_per_second: 500_000, // 500K ops/sec
+            max_duration_seconds: 200,      // 3.3 minute safety cutoff
+            fault_injection_rate: 0.005,    // 0.5% fault injection for GPU stability
             integrity_check_interval_seconds: 20,
-            max_concurrent_operations: 50_000,  // Extreme concurrency for GPU
+            max_concurrent_operations: 50_000, // Extreme concurrency for GPU
             circuit_breaker_threshold: 200,
-            retry_attempts: 1,  // Minimal retries for GPU speed
-            operation_timeout_ms: 20,  // 0.02 second timeout
-            recovery_delay_ms: 1,  // Minimal recovery delay
+            retry_attempts: 1,        // Minimal retries for GPU speed
+            operation_timeout_ms: 20, // 0.02 second timeout
+            recovery_delay_ms: 1,     // Minimal recovery delay
             enable_graceful_degradation: true,
-            batch_size: 10_000,  // Very large batches for GPU efficiency
-            memory_allocation_kb: 2048,  // 2MB * 500K ops/sec = 1,000 GB/s (GPU memory bandwidth)
+            batch_size: 10_000,         // Very large batches for GPU efficiency
+            memory_allocation_kb: 2048, // 2MB * 500K ops/sec = 1,000 GB/s (GPU memory bandwidth)
         }
     }
 
     /// 🧠 LOCAL COMPUTE CPU MAXED: Saturate local CPU memory bandwidth (200+ GB/s)
     pub fn local_compute_cpu_maxed() -> Self {
         Self {
-            total_operations: 25_000_000,  // 25M operations
-            operations_per_second: 250_000,  // 250K ops/sec
-            max_duration_seconds: 180,  // 3 minute safety cutoff
-            fault_injection_rate: 0.008,  // 0.8% fault injection for CPU stability
+            total_operations: 25_000_000,   // 25M operations
+            operations_per_second: 250_000, // 250K ops/sec
+            max_duration_seconds: 180,      // 3 minute safety cutoff
+            fault_injection_rate: 0.008,    // 0.8% fault injection for CPU stability
             integrity_check_interval_seconds: 15,
-            max_concurrent_operations: 25_000,  // High concurrency for CPU
+            max_concurrent_operations: 25_000, // High concurrency for CPU
             circuit_breaker_threshold: 150,
-            retry_attempts: 1,  // Minimal retries for CPU speed
-            operation_timeout_ms: 50,  // 0.05 second timeout
-            recovery_delay_ms: 2,  // Minimal recovery delay
+            retry_attempts: 1,        // Minimal retries for CPU speed
+            operation_timeout_ms: 50, // 0.05 second timeout
+            recovery_delay_ms: 2,     // Minimal recovery delay
             enable_graceful_degradation: true,
-            batch_size: 5_000,  // Large batches for CPU efficiency
-            memory_allocation_kb: 820,  // 820KB * 250K ops/sec = 205 GB/s (CPU memory bandwidth)
+            batch_size: 5_000,         // Large batches for CPU efficiency
+            memory_allocation_kb: 820, // 820KB * 250K ops/sec = 205 GB/s (CPU memory bandwidth)
         }
     }
 
     /// 💾 NVME DIRECT ACCESS: Bypass filesystem for direct NVMe saturation (7,000+ MB/s)
     pub fn nvme_direct_access() -> Self {
         Self {
-            total_operations: 100_000_000,  // 100M operations
-            operations_per_second: 1_000_000,  // 1M ops/sec
-            max_duration_seconds: 150,  // 2.5 minute safety cutoff
-            fault_injection_rate: 0.002,  // 0.2% fault injection for direct access
+            total_operations: 100_000_000,    // 100M operations
+            operations_per_second: 1_000_000, // 1M ops/sec
+            max_duration_seconds: 150,        // 2.5 minute safety cutoff
+            fault_injection_rate: 0.002,      // 0.2% fault injection for direct access
             integrity_check_interval_seconds: 25,
-            max_concurrent_operations: 100_000,  // Extreme concurrency for direct access
+            max_concurrent_operations: 100_000, // Extreme concurrency for direct access
             circuit_breaker_threshold: 500,
-            retry_attempts: 1,  // Minimal retries for direct access speed
-            operation_timeout_ms: 5,  // 0.005 second timeout
-            recovery_delay_ms: 1,  // Minimal recovery delay
+            retry_attempts: 1,       // Minimal retries for direct access speed
+            operation_timeout_ms: 5, // 0.005 second timeout
+            recovery_delay_ms: 1,    // Minimal recovery delay
             enable_graceful_degradation: true,
-            batch_size: 20_000,  // Very large batches for direct access
-            memory_allocation_kb: 7,  // 7KB * 1M ops/sec = 7,000 MB/s (NVMe direct access)
+            batch_size: 20_000,      // Very large batches for direct access
+            memory_allocation_kb: 7, // 7KB * 1M ops/sec = 7,000 MB/s (NVMe direct access)
         }
     }
 
     /// 🌟 NVME_PURE_PERFORMANCE: Pure NVMe speed test without network simulation
     pub fn nvme_pure_performance() -> Self {
         Self {
-            total_operations: 8_000_000,     // 8M operations
-            operations_per_second: 50_000,   // 50K ops/sec
-            max_duration_seconds: 200,       // 200s cutoff
-            fault_injection_rate: 0.001,     // 0.1% faults for stability
+            total_operations: 8_000_000,   // 8M operations
+            operations_per_second: 50_000, // 50K ops/sec
+            max_duration_seconds: 200,     // 200s cutoff
+            fault_injection_rate: 0.001,   // 0.1% faults for stability
             integrity_check_interval_seconds: 2,
             max_concurrent_operations: 8_000, // High concurrency
             circuit_breaker_threshold: 150,
@@ -358,18 +358,18 @@ impl ChaosConfig {
             operation_timeout_ms: 120,
             recovery_delay_ms: 5,
             enable_graceful_degradation: true,
-            batch_size: 2_000,              // 2K batches
-            memory_allocation_kb: 32,       // 32KB per operation
+            batch_size: 2_000,        // 2K batches
+            memory_allocation_kb: 32, // 32KB per operation
         }
     }
 
     /// 🚀 NVME_OPTIMIZED: Maximizes NVMe throughput for storage testing
     pub fn nvme_optimized() -> Self {
         Self {
-            total_operations: 10_000_000,    // 10M operations
-            operations_per_second: 60_000,   // 60K ops/sec
-            max_duration_seconds: 200,       // 200s cutoff
-            fault_injection_rate: 0.0005,    // 0.05% faults for maximum stability
+            total_operations: 10_000_000,  // 10M operations
+            operations_per_second: 60_000, // 60K ops/sec
+            max_duration_seconds: 200,     // 200s cutoff
+            fault_injection_rate: 0.0005,  // 0.05% faults for maximum stability
             integrity_check_interval_seconds: 1,
             max_concurrent_operations: 10_000, // Maximum concurrency
             circuit_breaker_threshold: 200,
@@ -377,8 +377,8 @@ impl ChaosConfig {
             operation_timeout_ms: 100,
             recovery_delay_ms: 3,
             enable_graceful_degradation: true,
-            batch_size: 2_500,              // 2.5K batches
-            memory_allocation_kb: 24,       // 24KB per operation
+            batch_size: 2_500,        // 2.5K batches
+            memory_allocation_kb: 24, // 24KB per operation
         }
     }
 
@@ -407,19 +407,21 @@ impl ChaosConfig {
 
     /// Get estimated duration based on current settings
     pub fn estimated_duration(&self) -> Duration {
-        let duration_secs = (self.total_operations as f64 / self.operations_per_second as f64).ceil() as u64;
+        let duration_secs =
+            (self.total_operations as f64 / self.operations_per_second as f64).ceil() as u64;
         Duration::from_secs(duration_secs.min(self.max_duration_seconds))
     }
 
     /// Parse configuration from environment variables
     pub fn from_env() -> Self {
         let mut config = Self::blazing_fast();
-        
+
         if let Ok(ops) = env::var("CHAOS_TOTAL_OPERATIONS") {
             config.total_operations = ops.parse().unwrap_or(config.total_operations);
         }
         if let Ok(ops_per_sec) = env::var("CHAOS_OPS_PER_SECOND") {
-            config.operations_per_second = ops_per_sec.parse().unwrap_or(config.operations_per_second);
+            config.operations_per_second =
+                ops_per_sec.parse().unwrap_or(config.operations_per_second);
         }
         if let Ok(max_dur) = env::var("CHAOS_MAX_DURATION") {
             config.max_duration_seconds = max_dur.parse().unwrap_or(config.max_duration_seconds);
@@ -428,13 +430,13 @@ impl ChaosConfig {
             config.fault_injection_rate = fault_rate.parse().unwrap_or(config.fault_injection_rate);
         }
         if let Ok(concurrency) = env::var("CHAOS_CONCURRENCY") {
-            config.max_concurrent_operations = concurrency.parse().unwrap_or(config.max_concurrent_operations);
+            config.max_concurrent_operations = concurrency
+                .parse()
+                .unwrap_or(config.max_concurrent_operations);
         }
-        
+
         config
     }
-
-
 
     /// Calculate target network throughput in MB/s
     pub fn target_network_throughput_mbs(&self) -> f64 {
@@ -444,10 +446,10 @@ impl ChaosConfig {
     /// Storage baseline for 2.5G networks
     pub fn storage_baseline_2_5g() -> Self {
         Self {
-            total_operations: 2_000_000,     // 2M operations
-            operations_per_second: 15_000,   // 15K ops/sec
-            max_duration_seconds: 150,       // 150s cutoff
-            fault_injection_rate: 0.002,     // 0.2% faults
+            total_operations: 2_000_000,   // 2M operations
+            operations_per_second: 15_000, // 15K ops/sec
+            max_duration_seconds: 150,     // 150s cutoff
+            fault_injection_rate: 0.002,   // 0.2% faults
             integrity_check_interval_seconds: 3,
             max_concurrent_operations: 2_000, // Moderate concurrency
             circuit_breaker_threshold: 100,
@@ -455,18 +457,18 @@ impl ChaosConfig {
             operation_timeout_ms: 200,
             recovery_delay_ms: 10,
             enable_graceful_degradation: true,
-            batch_size: 500,                // 500 batches
-            memory_allocation_kb: 64,       // 64KB per operation for 200+ MB/s
+            batch_size: 500,          // 500 batches
+            memory_allocation_kb: 64, // 64KB per operation for 200+ MB/s
         }
     }
 
     /// Storage optimized for 10G networks
     pub fn storage_optimized_10g() -> Self {
         Self {
-            total_operations: 6_000_000,     // 6M operations
-            operations_per_second: 35_000,   // 35K ops/sec
-            max_duration_seconds: 200,       // 200s cutoff
-            fault_injection_rate: 0.001,     // 0.1% faults for better stability
+            total_operations: 6_000_000,   // 6M operations
+            operations_per_second: 35_000, // 35K ops/sec
+            max_duration_seconds: 200,     // 200s cutoff
+            fault_injection_rate: 0.001,   // 0.1% faults for better stability
             integrity_check_interval_seconds: 2,
             max_concurrent_operations: 6_000, // High concurrency
             circuit_breaker_threshold: 150,
@@ -474,8 +476,8 @@ impl ChaosConfig {
             operation_timeout_ms: 150,
             recovery_delay_ms: 5,
             enable_graceful_degradation: true,
-            batch_size: 1_500,              // 1.5K batches
-            memory_allocation_kb: 96,       // 96KB per operation for 800+ MB/s
+            batch_size: 1_500,        // 1.5K batches
+            memory_allocation_kb: 96, // 96KB per operation for 800+ MB/s
         }
     }
 }
@@ -644,7 +646,10 @@ impl ExtremeStressConfig {
 
     /// Create extreme stress config from base chaos config
     pub fn from_chaos_config(chaos_config: &ChaosConfig, target_stability: f64) -> Self {
-        let mut config = Self::for_stability_target_with_operations(target_stability, chaos_config.total_operations);
+        let mut config = Self::for_stability_target_with_operations(
+            target_stability,
+            chaos_config.total_operations,
+        );
         config.operations_per_second = chaos_config.operations_per_second;
         config.max_duration_seconds = chaos_config.max_duration_seconds;
         config.concurrent_connections = chaos_config.max_concurrent_operations;
@@ -654,7 +659,8 @@ impl ExtremeStressConfig {
 
     /// Get estimated duration based on current settings
     pub fn estimated_duration(&self) -> Duration {
-        let duration_secs = (self.total_operations as f64 / self.operations_per_second as f64).ceil() as u64;
+        let duration_secs =
+            (self.total_operations as f64 / self.operations_per_second as f64).ceil() as u64;
         Duration::from_secs(duration_secs.min(self.max_duration_seconds))
     }
 }
@@ -715,7 +721,7 @@ impl CircuitBreaker {
         Fut: std::future::Future<Output = Result<T, String>>,
     {
         let state = self.state.read().await;
-        
+
         match *state {
             CircuitBreakerState::Open => {
                 let last_failure = self.last_failure_time.read().await;
@@ -754,7 +760,7 @@ impl CircuitBreaker {
             Err(e) => {
                 let failures = self.failure_count.fetch_add(1, Ordering::Relaxed) + 1;
                 *self.last_failure_time.write().await = Some(Instant::now());
-                
+
                 if failures >= self.threshold {
                     *self.state.write().await = CircuitBreakerState::Open;
                 }
@@ -803,9 +809,9 @@ impl PolishedChaosFramework {
         };
 
         // Detect storage-focused configurations
-        let is_storage_benchmarking = config.operations_per_second >= 25_000 && 
-                                      config.fault_injection_rate <= 0.01 &&
-                                      config.memory_allocation_kb <= 20;
+        let is_storage_benchmarking = config.operations_per_second >= 25_000
+            && config.fault_injection_rate <= 0.01
+            && config.memory_allocation_kb <= 20;
 
         Self {
             circuit_breaker: Arc::new(CircuitBreaker::new(
@@ -825,12 +831,27 @@ impl PolishedChaosFramework {
     pub async fn execute_chaos_test(&self, test_name: &str) -> ChaosTestResults {
         println!("🔥 Executing Production Chaos Test: {}", test_name);
         println!("   🎯 Total Operations: {}", self.config.total_operations);
-        println!("   ⚡ Target Speed: {} ops/sec", self.config.operations_per_second);
-        println!("   ⏱️  Max Duration: {} seconds (safety cutoff)", self.config.max_duration_seconds);
-        println!("   💥 Fault Rate: {:.1}%", self.config.fault_injection_rate * 100.0);
-        println!("   🛡️  Circuit Breaker Threshold: {}", self.config.circuit_breaker_threshold);
+        println!(
+            "   ⚡ Target Speed: {} ops/sec",
+            self.config.operations_per_second
+        );
+        println!(
+            "   ⏱️  Max Duration: {} seconds (safety cutoff)",
+            self.config.max_duration_seconds
+        );
+        println!(
+            "   💥 Fault Rate: {:.1}%",
+            self.config.fault_injection_rate * 100.0
+        );
+        println!(
+            "   🛡️  Circuit Breaker Threshold: {}",
+            self.config.circuit_breaker_threshold
+        );
         println!("   🔄 Retry Attempts: {}", self.config.retry_attempts);
-        println!("   ⏰ Operation Timeout: {}ms", self.config.operation_timeout_ms);
+        println!(
+            "   ⏰ Operation Timeout: {}ms",
+            self.config.operation_timeout_ms
+        );
 
         let start_time = Instant::now();
 
@@ -845,17 +866,19 @@ impl PolishedChaosFramework {
 
         // Wait for operations to complete (the primary driver)
         let _ = operations_handle.await;
-        
+
         // Signal background tasks to stop
         shutdown_flag.store(1, Ordering::Relaxed);
-        
+
         // Give background tasks a moment to clean up
         let _ = tokio::time::timeout(Duration::from_millis(100), async {
             let _ = tokio::join!(faults_handle, integrity_handle, health_handle);
-        }).await;
+        })
+        .await;
 
         let test_duration = start_time.elapsed();
-        self.analyze_production_results(test_name, test_duration).await
+        self.analyze_production_results(test_name, test_duration)
+            .await
     }
 
     /// Run resilient operations with circuit breaker and retry logic
@@ -877,18 +900,28 @@ impl PolishedChaosFramework {
             let start_time = Instant::now();
             let _sleep_duration = Duration::from_micros(1_000_000 / ops_per_sec.max(1));
             let mut op_count = 0u64;
-            
-            println!("🚀 Starting {} operations at {} ops/sec (batch size: {}){}",
-                     total_operations, ops_per_sec, batch_size,
-                     if is_storage_benchmarking { " [NVMe OPTIMIZED]" } else { "" });
 
-            while op_count < total_operations && start_time.elapsed() < Duration::from_secs(max_duration) {
+            println!(
+                "🚀 Starting {} operations at {} ops/sec (batch size: {}){}",
+                total_operations,
+                ops_per_sec,
+                batch_size,
+                if is_storage_benchmarking {
+                    " [NVMe OPTIMIZED]"
+                } else {
+                    ""
+                }
+            );
+
+            while op_count < total_operations
+                && start_time.elapsed() < Duration::from_secs(max_duration)
+            {
                 let remaining_ops = total_operations - op_count;
                 let current_batch_size = batch_size.min(remaining_ops as usize);
-                
+
                 // Process operations in batches for better throughput
                 let mut batch_handles = Vec::new();
-                
+
                 for _ in 0..current_batch_size {
                     let permit = semaphore.clone().acquire_owned().await.unwrap();
                     let circuit_breaker = circuit_breaker.clone();
@@ -898,47 +931,57 @@ impl PolishedChaosFramework {
                     let operation_timeout = operation_timeout;
                     let retry_attempts = retry_attempts;
                     let is_storage_benchmarking = is_storage_benchmarking;
-                    
+
                     let handle = tokio::spawn(async move {
                         let _permit = permit;
-                let operation_start = Instant::now();
+                        let operation_start = Instant::now();
 
                         // Execute operation with circuit breaker and retry logic
                         let mut attempts = 0;
                         let mut success = false;
 
                         while attempts < retry_attempts && !success {
-                            let result = circuit_breaker.call(|| async {
-                                let operation_result = timeout(
-                                    operation_timeout,
-                                    Box::pin(Self::execute_operation(zfs_manager.clone(), is_storage_benchmarking))
-                                ).await;
+                            let result = circuit_breaker
+                                .call(|| async {
+                                    let operation_result = timeout(
+                                        operation_timeout,
+                                        Box::pin(Self::execute_operation(
+                                            zfs_manager.clone(),
+                                            is_storage_benchmarking,
+                                        )),
+                                    )
+                                    .await;
 
-                                match operation_result {
-                                    Ok(Ok(_)) => Ok(()),
-                                    Ok(Err(e)) => Err(e),
-                                    Err(_) => {
-                                        metrics.timeout_recoveries.fetch_add(1, Ordering::Relaxed);
-                                        Err("Operation timeout".to_string())
+                                    match operation_result {
+                                        Ok(Ok(_)) => Ok(()),
+                                        Ok(Err(e)) => Err(e),
+                                        Err(_) => {
+                                            metrics
+                                                .timeout_recoveries
+                                                .fetch_add(1, Ordering::Relaxed);
+                                            Err("Operation timeout".to_string())
+                                        }
                                     }
-                                }
-                            }).await;
+                                })
+                                .await;
 
-                match result {
-                    Ok(_) => {
+                            match result {
+                                Ok(_) => {
                                     success = true;
                                     if attempts > 0 {
                                         metrics.retry_successes.fetch_add(1, Ordering::Relaxed);
                                     }
-                        metrics.operations_completed.fetch_add(1, Ordering::Relaxed);
-                    }
+                                    metrics.operations_completed.fetch_add(1, Ordering::Relaxed);
+                                }
                                 Err(e) => {
                                     attempts += 1;
                                     if e.contains("Circuit breaker open") {
-                                        metrics.circuit_breaker_trips.fetch_add(1, Ordering::Relaxed);
+                                        metrics
+                                            .circuit_breaker_trips
+                                            .fetch_add(1, Ordering::Relaxed);
                                     }
                                     if attempts >= retry_attempts {
-                        metrics.operations_failed.fetch_add(1, Ordering::Relaxed);
+                                        metrics.operations_failed.fetch_add(1, Ordering::Relaxed);
                                     }
                                     // Brief backoff between retries
                                     if attempts < retry_attempts {
@@ -950,10 +993,10 @@ impl PolishedChaosFramework {
 
                         let operation_duration = operation_start.elapsed();
                         response_times.write().await.push(operation_duration);
-                        
+
                         1 // Return 1 for successful completion
                     });
-                    
+
                     batch_handles.push(handle);
                 }
 
@@ -969,7 +1012,7 @@ impl PolishedChaosFramework {
                     let elapsed_secs = start_time.elapsed().as_secs_f64();
                     let current_ops_per_sec = op_count as f64 / elapsed_secs;
                     let progress = (op_count as f64 / total_operations as f64) * 100.0;
-                    
+
                     println!(
                         "📊 Progress: {:.1}% ({}/{}) - {} completed, {} failed, {} CB trips - Speed: {:.0} ops/sec",
                         progress, op_count, total_operations, completed, failed, cb_trips, current_ops_per_sec
@@ -984,7 +1027,7 @@ impl PolishedChaosFramework {
                     }
                 } else if ops_per_sec < 1_000 {
                     let batch_duration = Duration::from_micros(
-                        (current_batch_size as u64 * 1_000_000) / ops_per_sec.max(1)
+                        (current_batch_size as u64 * 1_000_000) / ops_per_sec.max(1),
                     );
                     sleep(batch_duration).await;
                 } else {
@@ -995,13 +1038,20 @@ impl PolishedChaosFramework {
 
             let final_elapsed = start_time.elapsed();
             let final_ops_per_sec = op_count as f64 / final_elapsed.as_secs_f64();
-            println!("🏁 Operations completed: {} in {:.2}s ({:.0} ops/sec)", 
-                     op_count, final_elapsed.as_secs_f64(), final_ops_per_sec);
+            println!(
+                "🏁 Operations completed: {} in {:.2}s ({:.0} ops/sec)",
+                op_count,
+                final_elapsed.as_secs_f64(),
+                final_ops_per_sec
+            );
         })
     }
 
     /// Execute operation based on configuration (storage benchmarking or production)
-    async fn execute_operation(zfs_manager: Option<Arc<ZfsManager>>, is_storage_benchmarking: bool) -> Result<(), String> {
+    async fn execute_operation(
+        zfs_manager: Option<Arc<ZfsManager>>,
+        is_storage_benchmarking: bool,
+    ) -> Result<(), String> {
         if is_storage_benchmarking {
             Self::execute_nvme_benchmarking_operation(zfs_manager).await
         } else {
@@ -1010,7 +1060,9 @@ impl PolishedChaosFramework {
     }
 
     /// Execute production operation with real service integration
-    async fn execute_production_operation(zfs_manager: Option<Arc<ZfsManager>>) -> Result<(), String> {
+    async fn execute_production_operation(
+        zfs_manager: Option<Arc<ZfsManager>>,
+    ) -> Result<(), String> {
         match fastrand::u32(0..10) {
             0..=2 => {
                 // ZFS operations (30% of operations)
@@ -1040,7 +1092,9 @@ impl PolishedChaosFramework {
     }
 
     /// Execute high-performance operations optimized for NVMe storage benchmarking
-    async fn execute_nvme_benchmarking_operation(zfs_manager: Option<Arc<ZfsManager>>) -> Result<(), String> {
+    async fn execute_nvme_benchmarking_operation(
+        zfs_manager: Option<Arc<ZfsManager>>,
+    ) -> Result<(), String> {
         // High-performance workload distribution for NVMe benchmarking
         match fastrand::u32(0..10) {
             0..=5 => {
@@ -1076,7 +1130,10 @@ impl PolishedChaosFramework {
         match fastrand::u32(0..4) {
             0 => {
                 // Pool status check - uses default pool from config
-                match zfs_manager.get_pool_status(&zfs_manager.config.default_pool).await {
+                match zfs_manager
+                    .get_pool_status(&zfs_manager.config.default_pool)
+                    .await
+                {
                     Ok(_) => Ok(()),
                     Err(e) => Err(format!("ZFS pool status failed: {}", e)),
                 }
@@ -1141,7 +1198,7 @@ impl PolishedChaosFramework {
                 sleep(Duration::from_millis(fastrand::u64(3..15))).await;
             }
         }
-        
+
         // Realistic failure rate for storage operations (2-3%)
         if fastrand::f64() < 0.025 {
             let error_types = [
@@ -1165,22 +1222,23 @@ impl PolishedChaosFramework {
                 // Direct memory operations (30%) - simulate NVMe speed
                 let data_size = fastrand::usize(4096..16384); // 4-16KB realistic
                 let mut buffer = vec![0u8; data_size];
-                
+
                 // Simulate high-speed read/write with memory copy
                 for chunk in buffer.chunks_mut(1024) {
                     chunk.fill(fastrand::u8(0..255));
                 }
-                
+
                 // Minimal realistic delay for NVMe access (microseconds, not milliseconds)
-                if fastrand::f64() < 0.1 { // 10% chance of tiny delay
+                if fastrand::f64() < 0.1 {
+                    // 10% chance of tiny delay
                     sleep(Duration::from_micros(fastrand::u64(10..100))).await;
                 }
             }
             3..=5 => {
-                // Bulk sequential operations (30%) - simulate sequential NVMe performance  
+                // Bulk sequential operations (30%) - simulate sequential NVMe performance
                 let iterations = fastrand::u32(1000..5000);
                 let mut result = 0u64;
-                
+
                 // Unrolled loop for better performance
                 for i in (0..iterations).step_by(4) {
                     result = result.wrapping_add(i as u64);
@@ -1188,9 +1246,10 @@ impl PolishedChaosFramework {
                     result = result.wrapping_add((i + 2) as u64);
                     result = result.wrapping_add((i + 3) as u64);
                 }
-                
+
                 // Prevent optimization and add tiny realistic delay
-                if result == 0 || fastrand::f64() < 0.05 { // 5% chance
+                if result == 0 || fastrand::f64() < 0.05 {
+                    // 5% chance
                     sleep(Duration::from_micros(fastrand::u64(1..50))).await;
                 }
             }
@@ -1198,14 +1257,15 @@ impl PolishedChaosFramework {
                 // Random access patterns (20%) - simulate random NVMe IOPS
                 let access_count = fastrand::u32(500..2000);
                 let mut data = vec![0u64; 1024]; // 8KB buffer
-                
+
                 for _ in 0..access_count {
                     let idx = fastrand::usize(0..data.len());
                     data[idx] = data[idx].wrapping_mul(31).wrapping_add(17);
                 }
-                
+
                 // Very minimal delay for random access
-                if fastrand::f64() < 0.02 { // 2% chance
+                if fastrand::f64() < 0.02 {
+                    // 2% chance
                     sleep(Duration::from_micros(fastrand::u64(1..25))).await;
                 }
             }
@@ -1213,14 +1273,15 @@ impl PolishedChaosFramework {
                 // Metadata operations (10%) - simulate filesystem metadata
                 let ops = fastrand::u32(100..500);
                 let mut hash = 0u64;
-                
+
                 for i in 0..ops {
                     hash = hash.wrapping_mul(i as u64).wrapping_add(i as u64);
                     hash = hash.rotate_left(1);
                 }
-                
+
                 // Metadata access delay
-                if hash == 0 || fastrand::f64() < 0.03 { // 3% chance
+                if hash == 0 || fastrand::f64() < 0.03 {
+                    // 3% chance
                     sleep(Duration::from_micros(fastrand::u64(5..75))).await;
                 }
             }
@@ -1228,19 +1289,20 @@ impl PolishedChaosFramework {
                 // Cache operations (10%) - simulate NVMe controller cache
                 let cache_size = fastrand::usize(2048..8192); // 2-8KB
                 let _cache_data: Vec<u8> = (0..cache_size).map(|i| (i % 256) as u8).collect();
-                
+
                 // Cache operations are nearly instant
-                if fastrand::f64() < 0.01 { // 1% chance of tiny delay
+                if fastrand::f64() < 0.01 {
+                    // 1% chance of tiny delay
                     sleep(Duration::from_micros(fastrand::u64(1..10))).await;
                 }
             }
         }
-        
+
         // Very low failure rate for optimized operations (0.1% - realistic NVMe)
         if fastrand::f64() < 0.001 {
             let error_types = [
                 "NVMe controller busy",
-                "Cache miss penalty", 
+                "Cache miss penalty",
                 "Thermal throttling",
                 "Queue depth exceeded",
             ];
@@ -1287,12 +1349,12 @@ impl PolishedChaosFramework {
                 sleep(Duration::from_millis(fastrand::u64(2..10))).await;
             }
         }
-        
+
         // Realistic core system failure rate (1-2%)
         if fastrand::f64() < 0.015 {
             let error_types = [
                 "Resource exhaustion",
-                "Service unavailable", 
+                "Service unavailable",
                 "Configuration error",
                 "Permission denied",
                 "System overload",
@@ -1337,7 +1399,7 @@ impl PolishedChaosFramework {
                 sleep(Duration::from_millis(fastrand::u64(12..50))).await;
             }
         }
-        
+
         // Realistic network failure rate (3-5%)
         if fastrand::f64() < 0.04 {
             let error_types = [
@@ -1391,7 +1453,7 @@ impl PolishedChaosFramework {
                 sleep(Duration::from_millis(fastrand::u64(1..6))).await;
             }
         }
-        
+
         // Realistic memory failure rate (1%)
         if fastrand::f64() < 0.01 {
             let error_types = [
@@ -1474,7 +1536,7 @@ impl PolishedChaosFramework {
                 }
             }
         }
-        
+
         // CPU operations can fail due to resource contention (0.5%)
         if fastrand::f64() < 0.005 {
             let error_types = [
@@ -1490,7 +1552,10 @@ impl PolishedChaosFramework {
     }
 
     /// Inject intelligent faults with production patterns
-    fn inject_intelligent_faults_with_shutdown(&self, shutdown_flag: Arc<AtomicU64>) -> tokio::task::JoinHandle<()> {
+    fn inject_intelligent_faults_with_shutdown(
+        &self,
+        shutdown_flag: Arc<AtomicU64>,
+    ) -> tokio::task::JoinHandle<()> {
         let metrics = self.metrics.clone();
         let fault_rate = self.config.fault_injection_rate;
         let duration = self.config.max_duration_seconds;
@@ -1507,7 +1572,9 @@ impl PolishedChaosFramework {
                     metrics.faults_injected.fetch_add(1, Ordering::Relaxed);
 
                     if enable_degradation {
-                        metrics.graceful_degradations.fetch_add(1, Ordering::Relaxed);
+                        metrics
+                            .graceful_degradations
+                            .fetch_add(1, Ordering::Relaxed);
                     }
 
                     if fault_count % 3 == 0 {
@@ -1544,7 +1611,11 @@ impl PolishedChaosFramework {
                     let iterations = config.cpu_stress_threads as u32 * 10000;
                     for _ in 0..config.cpu_stress_threads {
                         for i in 0..iterations {
-                            let _ = i.wrapping_mul(i).wrapping_add(i).wrapping_mul(31).wrapping_add(17);
+                            let _ = i
+                                .wrapping_mul(i)
+                                .wrapping_add(i)
+                                .wrapping_mul(31)
+                                .wrapping_add(17);
                         }
                     }
                     sleep(Duration::from_millis(config.network_latency_ms / 8)).await;
@@ -1556,7 +1627,9 @@ impl PolishedChaosFramework {
                 9..=11 => {
                     // Disk I/O pressure
                     let io_size = config.disk_io_pressure * 1024;
-                    let _data: Vec<Vec<u8>> = (0..config.disk_io_pressure).map(|_| vec![0; io_size]).collect();
+                    let _data: Vec<Vec<u8>> = (0..config.disk_io_pressure)
+                        .map(|_| vec![0; io_size])
+                        .collect();
                     sleep(Duration::from_millis(config.network_latency_ms / 2)).await;
                 }
                 12..=14 => {
@@ -1578,13 +1651,15 @@ impl PolishedChaosFramework {
                             "Memory bit flip",
                             "Disk sector corruption",
                         ];
-                        let _corruption_type = corruption_types[fastrand::usize(0..corruption_types.len())];
+                        let _corruption_type =
+                            corruption_types[fastrand::usize(0..corruption_types.len())];
                         sleep(Duration::from_millis(config.network_latency_ms * 2)).await;
                     }
                 }
                 18 => {
                     // System resource exhaustion
-                    let _system_pressure: Vec<u8> = vec![0; config.memory_pressure_mb * 1024 * 1024 / 4];
+                    let _system_pressure: Vec<u8> =
+                        vec![0; config.memory_pressure_mb * 1024 * 1024 / 4];
                     let extreme_iterations = config.cpu_stress_threads as u32 * 5000;
                     for i in 0..extreme_iterations {
                         let _ = i.wrapping_mul(i).wrapping_add(i);
@@ -1594,7 +1669,8 @@ impl PolishedChaosFramework {
                 _ => {
                     // Cascading failure simulation
                     sleep(Duration::from_millis(config.network_latency_ms * 3)).await;
-                    let _cascade_memory: Vec<u8> = vec![0; config.memory_pressure_mb * 1024 * 1024 / 8];
+                    let _cascade_memory: Vec<u8> =
+                        vec![0; config.memory_pressure_mb * 1024 * 1024 / 8];
                     for i in 0..config.cpu_stress_threads as u32 * 2000 {
                         let _ = i.wrapping_mul(i).wrapping_add(i).wrapping_mul(31);
                     }
@@ -1680,7 +1756,9 @@ impl PolishedChaosFramework {
             }
             7 => {
                 // Cache miss cascade
-                let _data: Vec<Vec<u8>> = (0..50).map(|_| vec![0; fastrand::usize(4096..16384)]).collect();
+                let _data: Vec<Vec<u8>> = (0..50)
+                    .map(|_| vec![0; fastrand::usize(4096..16384)])
+                    .collect();
                 sleep(Duration::from_millis(fastrand::u64(30..120))).await;
             }
             8 => {
@@ -1703,7 +1781,9 @@ impl PolishedChaosFramework {
             }
             10 => {
                 // Garbage collection pressure
-                let _memory: Vec<Vec<u8>> = (0..100).map(|_| vec![0; fastrand::usize(1024..8192)]).collect();
+                let _memory: Vec<Vec<u8>> = (0..100)
+                    .map(|_| vec![0; fastrand::usize(1024..8192)])
+                    .collect();
                 sleep(Duration::from_millis(fastrand::u64(40..180))).await;
             }
             _ => {
@@ -1720,7 +1800,10 @@ impl PolishedChaosFramework {
     }
 
     /// Monitor enhanced integrity with production patterns
-    fn monitor_enhanced_integrity_with_shutdown(&self, shutdown_flag: Arc<AtomicU64>) -> tokio::task::JoinHandle<()> {
+    fn monitor_enhanced_integrity_with_shutdown(
+        &self,
+        shutdown_flag: Arc<AtomicU64>,
+    ) -> tokio::task::JoinHandle<()> {
         let metrics = self.metrics.clone();
         let check_interval = self.config.integrity_check_interval_seconds;
         let duration = self.config.max_duration_seconds;
@@ -1734,7 +1817,9 @@ impl PolishedChaosFramework {
                 check_count += 1;
 
                 if integrity_ok {
-                    metrics.integrity_checks_passed.fetch_add(1, Ordering::Relaxed);
+                    metrics
+                        .integrity_checks_passed
+                        .fetch_add(1, Ordering::Relaxed);
                 } else {
                     println!("🚨 Enhanced integrity check {} FAILED!", check_count);
                 }
@@ -1747,7 +1832,10 @@ impl PolishedChaosFramework {
     }
 
     /// Monitor system health during chaos test
-    fn monitor_system_health_with_shutdown(&self, shutdown_flag: Arc<AtomicU64>) -> tokio::task::JoinHandle<()> {
+    fn monitor_system_health_with_shutdown(
+        &self,
+        shutdown_flag: Arc<AtomicU64>,
+    ) -> tokio::task::JoinHandle<()> {
         let metrics = self.metrics.clone();
         let duration = self.config.max_duration_seconds;
 
@@ -1760,7 +1848,7 @@ impl PolishedChaosFramework {
                 let system_info = SystemInfo::default();
                 let _cpu_usage = system_info.cpu_cores;
                 let _memory_usage = system_info.total_memory;
-                
+
                 health_check_count += 1;
 
                 if health_check_count % 20 == 0 {
@@ -1768,16 +1856,22 @@ impl PolishedChaosFramework {
                     let failed = metrics.operations_failed.load(Ordering::Relaxed);
                     let success_rate = if completed + failed > 0 {
                         (completed as f64 / (completed + failed) as f64) * 100.0
-        } else {
+                    } else {
                         0.0
                     };
-                    println!("💚 System Health Check {}: {:.1}% success rate", health_check_count, success_rate);
+                    println!(
+                        "💚 System Health Check {}: {:.1}% success rate",
+                        health_check_count, success_rate
+                    );
                 }
 
                 sleep(Duration::from_millis(500)).await;
             }
 
-            println!("🏥 Health monitoring completed: {} checks", health_check_count);
+            println!(
+                "🏥 Health monitoring completed: {} checks",
+                health_check_count
+            );
         })
     }
 
@@ -1792,20 +1886,38 @@ impl PolishedChaosFramework {
     }
 
     /// Execute extreme stress benchmark test
-    pub async fn execute_extreme_stress_benchmark(&self, config: &ExtremeStressConfig) -> ChaosTestResults {
-        let test_name = format!("Extreme Stress Benchmark - Target {}%", config.target_stability_percentage);
-        
+    pub async fn execute_extreme_stress_benchmark(
+        &self,
+        config: &ExtremeStressConfig,
+    ) -> ChaosTestResults {
+        let test_name = format!(
+            "Extreme Stress Benchmark - Target {}%",
+            config.target_stability_percentage
+        );
+
         println!("🔥💀 Executing EXTREME STRESS TEST: {}", test_name);
         println!("   ⏱️  Duration: {} seconds", config.max_duration_seconds);
         println!("   🎯 Target OPS: {}/sec", config.operations_per_second);
-        println!("   💥 Fault Rate: {:.0}%", config.fault_injection_rate * 100.0);
+        println!(
+            "   💥 Fault Rate: {:.0}%",
+            config.fault_injection_rate * 100.0
+        );
         println!("   🧠 Memory Pressure: {} MB", config.memory_pressure_mb);
         println!("   🔥 CPU Stress Threads: {}", config.cpu_stress_threads);
         println!("   🌐 Network Latency: {} ms", config.network_latency_ms);
         println!("   💾 Disk I/O Pressure: {}", config.disk_io_pressure);
-        println!("   🔗 Concurrent Connections: {}", config.concurrent_connections);
-        println!("   💀 Data Corruption Rate: {:.1}%", config.data_corruption_rate * 100.0);
-        println!("   🎯 Target Stability: {:.1}%", config.target_stability_percentage);
+        println!(
+            "   🔗 Concurrent Connections: {}",
+            config.concurrent_connections
+        );
+        println!(
+            "   💀 Data Corruption Rate: {:.1}%",
+            config.data_corruption_rate * 100.0
+        );
+        println!(
+            "   🎯 Target Stability: {:.1}%",
+            config.target_stability_percentage
+        );
 
         let start_time = Instant::now();
 
@@ -1816,14 +1928,23 @@ impl PolishedChaosFramework {
         let health_handle = self.monitor_extreme_health(config);
 
         // Wait for all tasks to complete
-        let _ = tokio::join!(operations_handle, extreme_faults_handle, integrity_handle, health_handle);
+        let _ = tokio::join!(
+            operations_handle,
+            extreme_faults_handle,
+            integrity_handle,
+            health_handle
+        );
 
         let test_duration = start_time.elapsed();
-        self.analyze_production_results(&test_name, test_duration).await
+        self.analyze_production_results(&test_name, test_duration)
+            .await
     }
 
     /// Run extreme stress operations
-    fn run_extreme_stress_operations(&self, config: &ExtremeStressConfig) -> tokio::task::JoinHandle<()> {
+    fn run_extreme_stress_operations(
+        &self,
+        config: &ExtremeStressConfig,
+    ) -> tokio::task::JoinHandle<()> {
         let metrics = self.metrics.clone();
         let circuit_breaker = self.circuit_breaker.clone();
         let semaphore = Arc::new(Semaphore::new(config.concurrent_connections * 2)); // Allow more concurrency for high throughput
@@ -1848,21 +1969,24 @@ impl PolishedChaosFramework {
                 let mut success = false;
 
                 while attempts < retry_attempts && !success {
-                    let result = circuit_breaker.call(|| async {
-                        let operation_result = timeout(
-                            operation_timeout,
-                            Self::execute_extreme_stress_operation(zfs_manager.clone())
-                        ).await;
+                    let result = circuit_breaker
+                        .call(|| async {
+                            let operation_result = timeout(
+                                operation_timeout,
+                                Self::execute_extreme_stress_operation(zfs_manager.clone()),
+                            )
+                            .await;
 
-                        match operation_result {
-                            Ok(Ok(_)) => Ok(()),
-                            Ok(Err(e)) => Err(e),
-                            Err(_) => {
-                                metrics.timeout_recoveries.fetch_add(1, Ordering::Relaxed);
-                                Err("Extreme stress timeout".to_string())
+                            match operation_result {
+                                Ok(Ok(_)) => Ok(()),
+                                Ok(Err(e)) => Err(e),
+                                Err(_) => {
+                                    metrics.timeout_recoveries.fetch_add(1, Ordering::Relaxed);
+                                    Err("Extreme stress timeout".to_string())
+                                }
                             }
-                        }
-                    }).await;
+                        })
+                        .await;
 
                     match result {
                         Ok(_) => {
@@ -1875,7 +1999,9 @@ impl PolishedChaosFramework {
                         Err(e) => {
                             attempts += 1;
                             if e.contains("Circuit breaker open") {
-                                metrics.circuit_breaker_trips.fetch_add(1, Ordering::Relaxed);
+                                metrics
+                                    .circuit_breaker_trips
+                                    .fetch_add(1, Ordering::Relaxed);
                             }
                             if attempts >= retry_attempts {
                                 metrics.operations_failed.fetch_add(1, Ordering::Relaxed);
@@ -1902,7 +2028,11 @@ impl PolishedChaosFramework {
                     } else {
                         0.0
                     };
-                    println!("💀 EXTREME STRESS Progress: {} ops, {:.1}% stability", completed + failed, stability);
+                    println!(
+                        "💀 EXTREME STRESS Progress: {} ops, {:.1}% stability",
+                        completed + failed,
+                        stability
+                    );
                 }
 
                 // Minimal rate limiting for genome workload throughput
@@ -1916,7 +2046,9 @@ impl PolishedChaosFramework {
     }
 
     /// Execute extreme stress operation with higher failure rates
-    async fn execute_extreme_stress_operation(zfs_manager: Option<Arc<ZfsManager>>) -> Result<(), String> {
+    async fn execute_extreme_stress_operation(
+        zfs_manager: Option<Arc<ZfsManager>>,
+    ) -> Result<(), String> {
         // Base failure rate for ALL operations - realistic for high-throughput systems (2-3%)
         if fastrand::f64() < 0.025 {
             return Err("Base system failure under load".to_string());
@@ -1960,14 +2092,18 @@ impl PolishedChaosFramework {
     async fn execute_extreme_zfs_operation(zfs_manager: Arc<ZfsManager>) -> Result<(), String> {
         // Simulate extreme ZFS stress with higher failure rates
         sleep(Duration::from_millis(fastrand::u64(50..200))).await;
-        
+
         match fastrand::u32(0..4) {
             0 => {
-                match zfs_manager.get_pool_status(&zfs_manager.config.default_pool).await {
+                match zfs_manager
+                    .get_pool_status(&zfs_manager.config.default_pool)
+                    .await
+                {
                     Ok(_) => {
                         // Simulate extreme load causing intermittent failures
-                                             if fastrand::f64() < 0.25 { // 25% failure rate for genome database loads
-                         Err("ZFS pool under extreme stress".to_string())
+                        if fastrand::f64() < 0.25 {
+                            // 25% failure rate for genome database loads
+                            Err("ZFS pool under extreme stress".to_string())
                         } else {
                             Ok(())
                         }
@@ -1978,8 +2114,9 @@ impl PolishedChaosFramework {
             1 => {
                 match zfs_manager.get_performance_analytics().await {
                     Ok(_) => {
-                                             if fastrand::f64() < 0.20 { // 20% failure rate for analytics under load
-                         Err("ZFS analytics under extreme load".to_string())
+                        if fastrand::f64() < 0.20 {
+                            // 20% failure rate for analytics under load
+                            Err("ZFS analytics under extreme load".to_string())
                         } else {
                             Ok(())
                         }
@@ -1990,8 +2127,9 @@ impl PolishedChaosFramework {
             2 => {
                 match zfs_manager.get_real_health_state().await {
                     Ok(_) => {
-                                             if fastrand::f64() < 0.18 { // 18% failure rate for health checks
-                         Err("ZFS health check under extreme stress".to_string())
+                        if fastrand::f64() < 0.18 {
+                            // 18% failure rate for health checks
+                            Err("ZFS health check under extreme stress".to_string())
                         } else {
                             Ok(())
                         }
@@ -2002,8 +2140,9 @@ impl PolishedChaosFramework {
             _ => {
                 match zfs_manager.get_service_status().await {
                     Ok(_) => {
-                                             if fastrand::f64() < 0.15 { // 15% failure rate for service status
-                         Err("ZFS service under extreme pressure".to_string())
+                        if fastrand::f64() < 0.15 {
+                            // 15% failure rate for service status
+                            Err("ZFS service under extreme pressure".to_string())
                         } else {
                             Ok(())
                         }
@@ -2018,7 +2157,7 @@ impl PolishedChaosFramework {
     async fn execute_extreme_mock_storage_operation() -> Result<(), String> {
         // Simulate extreme storage conditions
         sleep(Duration::from_millis(fastrand::u64(20..100))).await;
-        
+
         // Aggressive failure rate for realistic stress (20-30%)
         if fastrand::f64() < 0.25 {
             let error_types = [
@@ -2040,7 +2179,7 @@ impl PolishedChaosFramework {
     async fn execute_extreme_core_operation() -> Result<(), String> {
         // Simulate extreme core system stress
         sleep(Duration::from_millis(fastrand::u64(10..50))).await;
-        
+
         // Aggressive failure rate for realistic stress (15-20%)
         if fastrand::f64() < 0.18 {
             let error_types = [
@@ -2061,7 +2200,7 @@ impl PolishedChaosFramework {
     async fn execute_extreme_network_operation() -> Result<(), String> {
         // Simulate extreme network conditions
         sleep(Duration::from_millis(fastrand::u64(100..500))).await;
-        
+
         // Aggressive failure rate for realistic genome workloads (25-35%)
         if fastrand::f64() < 0.30 {
             let error_types = [
@@ -2085,7 +2224,7 @@ impl PolishedChaosFramework {
         // Simulate extreme memory conditions
         let _extreme_memory: Vec<u8> = vec![0; fastrand::usize(65536..262144)];
         sleep(Duration::from_millis(fastrand::u64(5..25))).await;
-        
+
         // Aggressive failure rate for genome workloads (12-18%)
         if fastrand::f64() < 0.15 {
             let error_types = [
@@ -2106,15 +2245,18 @@ impl PolishedChaosFramework {
         // Simulate extreme CPU stress
         let iterations = fastrand::u32(50000..200000);
         let mut result = 0u64;
-                for i in 0..iterations {
-            result = result.wrapping_mul(i as u64).wrapping_add(i as u64).wrapping_mul(31);
+        for i in 0..iterations {
+            result = result
+                .wrapping_mul(i as u64)
+                .wrapping_add(i as u64)
+                .wrapping_mul(31);
         }
-        
+
         // Prevent optimization
         if result == 0 {
             return Err("CPU computation overflow".to_string());
         }
-        
+
         // Aggressive failure rate for genome computation workloads (8-15%)
         if fastrand::f64() < 0.12 {
             let error_types = [
@@ -2140,7 +2282,7 @@ impl PolishedChaosFramework {
             }
             sleep(Duration::from_millis(fastrand::u64(10..30))).await;
         }
-        
+
         // Very high failure rate for compound operations (20-30%)
         if fastrand::f64() < 0.25 {
             let error_types = [
@@ -2157,7 +2299,10 @@ impl PolishedChaosFramework {
     }
 
     /// Inject extreme stress faults
-    fn inject_extreme_stress_faults(&self, config: &ExtremeStressConfig) -> tokio::task::JoinHandle<()> {
+    fn inject_extreme_stress_faults(
+        &self,
+        config: &ExtremeStressConfig,
+    ) -> tokio::task::JoinHandle<()> {
         let metrics = self.metrics.clone();
         let fault_rate = config.fault_injection_rate;
         let duration = config.max_duration_seconds;
@@ -2170,14 +2315,18 @@ impl PolishedChaosFramework {
             while Instant::now() < end_time {
                 // Extreme fault injection - can inject multiple faults per check
                 let base_rate = fault_rate.min(1.0);
-                let extra_faults = if fault_rate > 1.0 { fault_rate - 1.0 } else { 0.0 };
-                
+                let extra_faults = if fault_rate > 1.0 {
+                    fault_rate - 1.0
+                } else {
+                    0.0
+                };
+
                 if fastrand::f64() < base_rate {
                     Self::inject_extreme_stress_fault(&extreme_config).await;
                     fault_count += 1;
                     metrics.faults_injected.fetch_add(1, Ordering::Relaxed);
                 }
-                
+
                 // Additional faults for > 100% injection rate
                 if fastrand::f64() < extra_faults {
                     Self::inject_extreme_stress_fault(&extreme_config).await;
@@ -2197,7 +2346,10 @@ impl PolishedChaosFramework {
     }
 
     /// Monitor extreme integrity
-    fn monitor_extreme_integrity(&self, config: &ExtremeStressConfig) -> tokio::task::JoinHandle<()> {
+    fn monitor_extreme_integrity(
+        &self,
+        config: &ExtremeStressConfig,
+    ) -> tokio::task::JoinHandle<()> {
         let metrics = self.metrics.clone();
         let check_interval = 2; // More frequent checks
         let duration = config.max_duration_seconds;
@@ -2211,7 +2363,9 @@ impl PolishedChaosFramework {
                 check_count += 1;
 
                 if integrity_ok {
-                    metrics.integrity_checks_passed.fetch_add(1, Ordering::Relaxed);
+                    metrics
+                        .integrity_checks_passed
+                        .fetch_add(1, Ordering::Relaxed);
                 } else {
                     println!("💀 EXTREME integrity check {} FAILED!", check_count);
                 }
@@ -2243,13 +2397,19 @@ impl PolishedChaosFramework {
                     } else {
                         0.0
                     };
-                    println!("💀 EXTREME Health Check {}: {:.1}% stability", health_check_count, success_rate);
+                    println!(
+                        "💀 EXTREME Health Check {}: {:.1}% stability",
+                        health_check_count, success_rate
+                    );
                 }
 
                 sleep(Duration::from_millis(300)).await;
             }
 
-            println!("💀 Extreme health monitoring completed: {} checks", health_check_count);
+            println!(
+                "💀 Extreme health monitoring completed: {} checks",
+                health_check_count
+            );
         })
     }
 
@@ -2263,7 +2423,11 @@ impl PolishedChaosFramework {
     }
 
     /// Analyze production results with comprehensive metrics
-    async fn analyze_production_results(&self, test_name: &str, duration: Duration) -> ChaosTestResults {
+    async fn analyze_production_results(
+        &self,
+        test_name: &str,
+        duration: Duration,
+    ) -> ChaosTestResults {
         let total_operations = self.metrics.operations_completed.load(Ordering::Relaxed)
             + self.metrics.operations_failed.load(Ordering::Relaxed);
         let successful_ops = self.metrics.operations_completed.load(Ordering::Relaxed);
@@ -2285,9 +2449,13 @@ impl PolishedChaosFramework {
         // Calculate response time metrics
         let response_times = self.response_times.read().await;
         let avg_response_time = if !response_times.is_empty() {
-            response_times.iter().map(|d| d.as_millis() as f64).sum::<f64>() / response_times.len() as f64
-            } else {
-                0.0
+            response_times
+                .iter()
+                .map(|d| d.as_millis() as f64)
+                .sum::<f64>()
+                / response_times.len() as f64
+        } else {
+            0.0
         };
 
         let mut sorted_times: Vec<_> = response_times.iter().map(|d| d.as_millis()).collect();
@@ -2304,10 +2472,22 @@ impl PolishedChaosFramework {
         performance_metrics.insert("throughput".to_string(), throughput);
         performance_metrics.insert("avg_response_time_ms".to_string(), avg_response_time);
         performance_metrics.insert("p99_response_time_ms".to_string(), p99_response_time);
-        performance_metrics.insert("circuit_breaker_efficiency".to_string(), 
-            if cb_trips > 0 { retry_successes as f64 / cb_trips as f64 } else { 1.0 });
-        performance_metrics.insert("fault_tolerance_ratio".to_string(),
-            if faults_injected > 0 { successful_ops as f64 / faults_injected as f64 } else { 1.0 });
+        performance_metrics.insert(
+            "circuit_breaker_efficiency".to_string(),
+            if cb_trips > 0 {
+                retry_successes as f64 / cb_trips as f64
+            } else {
+                1.0
+            },
+        );
+        performance_metrics.insert(
+            "fault_tolerance_ratio".to_string(),
+            if faults_injected > 0 {
+                successful_ops as f64 / faults_injected as f64
+            } else {
+                1.0
+            },
+        );
 
         ChaosTestResults {
             test_name: test_name.to_string(),
@@ -2346,17 +2526,39 @@ fn print_production_chaos_results(results: &ChaosTestResults) {
     );
     println!("💥 Faults Injected: {}", results.faults_injected);
     println!("🏆 Stability Score: {:.2}%", results.stability_score);
-    println!("🚀 Throughput: {:.1} ops/sec", results.throughput_ops_per_sec);
-    println!("🔒 Data Integrity: {}", if results.data_integrity_verified { "✅ VERIFIED" } else { "❌ FAILED" });
-    
+    println!(
+        "🚀 Throughput: {:.1} ops/sec",
+        results.throughput_ops_per_sec
+    );
+    println!(
+        "🔒 Data Integrity: {}",
+        if results.data_integrity_verified {
+            "✅ VERIFIED"
+        } else {
+            "❌ FAILED"
+        }
+    );
+
     // Enhanced production metrics
     println!("\n🛡️  RESILIENCE METRICS:");
-    println!("   🔄 Circuit Breaker Trips: {}", results.circuit_breaker_trips);
+    println!(
+        "   🔄 Circuit Breaker Trips: {}",
+        results.circuit_breaker_trips
+    );
     println!("   ↩️  Retry Successes: {}", results.retry_successes);
     println!("   ⏰ Timeout Recoveries: {}", results.timeout_recoveries);
-    println!("   🎯 Graceful Degradations: {}", results.graceful_degradations);
-    println!("   📊 Avg Response Time: {:.2}ms", results.average_response_time_ms);
-    println!("   📈 P99 Response Time: {:.2}ms", results.p99_response_time_ms);
+    println!(
+        "   🎯 Graceful Degradations: {}",
+        results.graceful_degradations
+    );
+    println!(
+        "   📊 Avg Response Time: {:.2}ms",
+        results.average_response_time_ms
+    );
+    println!(
+        "   📈 P99 Response Time: {:.2}ms",
+        results.p99_response_time_ms
+    );
 
     println!("\n📈 PERFORMANCE METRICS:");
     for (metric, value) in &results.performance_metrics {
@@ -2383,29 +2585,31 @@ async fn test_production_basic_resilience() {
     // 🔥 REGRESSION TEST VERSION - Fast execution for CI/CD
     // 📊 For full production benchmarks, run: cargo bench
     let config = ChaosConfig {
-        total_operations: 200, // Reduced from 2,400 for fast regression testing
-        operations_per_second: 50, // Reduced from 120 for resource conservation
-        max_duration_seconds: 5, // Reduced from 20 for quick feedback
+        total_operations: 200,      // Reduced from 2,400 for fast regression testing
+        operations_per_second: 50,  // Reduced from 120 for resource conservation
+        max_duration_seconds: 5,    // Reduced from 20 for quick feedback
         fault_injection_rate: 0.15, // Reduced from 0.20 for stability
         integrity_check_interval_seconds: 2, // Reduced from 4
         max_concurrent_operations: 10, // Reduced from 30
         circuit_breaker_threshold: 2, // Reduced from 3
-        retry_attempts: 2, // Reduced from 3
+        retry_attempts: 2,          // Reduced from 3
         operation_timeout_ms: 1000, // Reduced from 3000
-        recovery_delay_ms: 50, // Reduced from 100
+        recovery_delay_ms: 50,      // Reduced from 100
         enable_graceful_degradation: true,
-        batch_size: 10, // Reduced from 20
+        batch_size: 10,           // Reduced from 20
         memory_allocation_kb: 16, // Reduced from 32
     };
 
     let framework = PolishedChaosFramework::new(config).await;
-    let results = framework.execute_chaos_test("Production Basic Resilience (Regression)").await;
+    let results = framework
+        .execute_chaos_test("Production Basic Resilience (Regression)")
+        .await;
     print_production_chaos_results(&results);
 
     // More relaxed assertions for regression testing
     assert!(
         results.stability_score >= 85.0,
-        "Regression test should achieve 85%+ stability under light chaos, got {:.2}%", 
+        "Regression test should achieve 85%+ stability under light chaos, got {:.2}%",
         results.stability_score
     );
     assert!(
@@ -2414,10 +2618,14 @@ async fn test_production_basic_resilience() {
     );
     assert!(
         results.total_operations >= 50, // Much lower threshold for regression
-        "Should complete some operations under light chaos, got {}", results.total_operations
+        "Should complete some operations under light chaos, got {}",
+        results.total_operations
     );
-    
-    println!("✅ Basic resilience regression test passed - {:.2}% stability", results.stability_score);
+
+    println!(
+        "✅ Basic resilience regression test passed - {:.2}% stability",
+        results.stability_score
+    );
 }
 
 #[tokio::test]
@@ -2425,29 +2633,31 @@ async fn test_production_moderate_chaos() {
     // 🔥 REGRESSION TEST VERSION - Fast execution for CI/CD
     // 📊 For full production benchmarks, run: cargo bench
     let config = ChaosConfig {
-        total_operations: 150, // Reduced from 3,750 for fast regression testing
-        operations_per_second: 40, // Reduced from 150 for resource conservation
-        max_duration_seconds: 4, // Reduced from 25 for quick feedback
+        total_operations: 150,      // Reduced from 3,750 for fast regression testing
+        operations_per_second: 40,  // Reduced from 150 for resource conservation
+        max_duration_seconds: 4,    // Reduced from 25 for quick feedback
         fault_injection_rate: 0.20, // Reduced from 0.30 for stability
         integrity_check_interval_seconds: 2, // Reduced from 3
         max_concurrent_operations: 8, // Reduced from 40
         circuit_breaker_threshold: 2, // Reduced from 4
-        retry_attempts: 2, // Reduced from 4
+        retry_attempts: 2,          // Reduced from 4
         operation_timeout_ms: 1000, // Reduced from 4000
-        recovery_delay_ms: 50, // Reduced from 150
+        recovery_delay_ms: 50,      // Reduced from 150
         enable_graceful_degradation: true,
-        batch_size: 8, // Reduced from 25
+        batch_size: 8,            // Reduced from 25
         memory_allocation_kb: 16, // Reduced from 48
     };
 
     let framework = PolishedChaosFramework::new(config).await;
-    let results = framework.execute_chaos_test("Production Moderate Chaos (Regression)").await;
+    let results = framework
+        .execute_chaos_test("Production Moderate Chaos (Regression)")
+        .await;
     print_production_chaos_results(&results);
 
     // More relaxed assertions for regression testing
     assert!(
         results.stability_score >= 80.0,
-        "Regression test should achieve 80%+ stability under moderate chaos, got {:.2}%", 
+        "Regression test should achieve 80%+ stability under moderate chaos, got {:.2}%",
         results.stability_score
     );
     assert!(
@@ -2456,10 +2666,14 @@ async fn test_production_moderate_chaos() {
     );
     assert!(
         results.total_operations >= 30, // Much lower threshold for regression
-        "Should complete some operations under moderate chaos, got {}", results.total_operations
+        "Should complete some operations under moderate chaos, got {}",
+        results.total_operations
     );
-    
-    println!("✅ Moderate chaos regression test passed - {:.2}% stability", results.stability_score);
+
+    println!(
+        "✅ Moderate chaos regression test passed - {:.2}% stability",
+        results.stability_score
+    );
 }
 
 #[tokio::test]
@@ -2467,29 +2681,31 @@ async fn test_production_high_intensity_chaos() {
     // 🔥 REGRESSION TEST VERSION - Fast execution for CI/CD
     // 📊 For full production benchmarks, run: cargo bench
     let config = ChaosConfig {
-        total_operations: 100, // Reduced from 6,000 for fast regression testing
-        operations_per_second: 30, // Reduced from 200 for resource conservation
-        max_duration_seconds: 4, // Reduced from 30 for quick feedback
+        total_operations: 100,      // Reduced from 6,000 for fast regression testing
+        operations_per_second: 30,  // Reduced from 200 for resource conservation
+        max_duration_seconds: 4,    // Reduced from 30 for quick feedback
         fault_injection_rate: 0.25, // Reduced from 0.40 for stability
         integrity_check_interval_seconds: 2, // Reduced from 2
         max_concurrent_operations: 6, // Reduced from 50
         circuit_breaker_threshold: 2, // Reduced from 5
-        retry_attempts: 2, // Reduced from 5
+        retry_attempts: 2,          // Reduced from 5
         operation_timeout_ms: 1000, // Reduced from 5000
-        recovery_delay_ms: 50, // Reduced from 200
+        recovery_delay_ms: 50,      // Reduced from 200
         enable_graceful_degradation: true,
-        batch_size: 6, // Reduced from 30
+        batch_size: 6,            // Reduced from 30
         memory_allocation_kb: 16, // Reduced from 64
     };
 
     let framework = PolishedChaosFramework::new(config).await;
-    let results = framework.execute_chaos_test("Production High Intensity Chaos (Regression)").await;
+    let results = framework
+        .execute_chaos_test("Production High Intensity Chaos (Regression)")
+        .await;
     print_production_chaos_results(&results);
 
     // More relaxed assertions for regression testing
     assert!(
         results.stability_score >= 70.0,
-        "Regression test should achieve 70%+ stability under high intensity chaos, got {:.2}%", 
+        "Regression test should achieve 70%+ stability under high intensity chaos, got {:.2}%",
         results.stability_score
     );
     assert!(
@@ -2498,10 +2714,14 @@ async fn test_production_high_intensity_chaos() {
     );
     assert!(
         results.total_operations >= 20, // Much lower threshold for regression
-        "Should complete some operations under high intensity chaos, got {}", results.total_operations
+        "Should complete some operations under high intensity chaos, got {}",
+        results.total_operations
     );
-    
-    println!("✅ High intensity chaos regression test passed - {:.2}% stability", results.stability_score);
+
+    println!(
+        "✅ High intensity chaos regression test passed - {:.2}% stability",
+        results.stability_score
+    );
 }
 
 // =============================================================================
@@ -2612,8 +2832,13 @@ async fn test_production_comprehensive_chaos_suite() {
     let total_cb_trips: u64 = all_results.iter().map(|r| r.circuit_breaker_trips).sum();
     let total_retries: u64 = all_results.iter().map(|r| r.retry_successes).sum();
     let total_recoveries: u64 = all_results.iter().map(|r| r.timeout_recoveries).sum();
-    let avg_stability: f64 = all_results.iter().map(|r| r.stability_score).sum::<f64>() / all_results.len() as f64;
-    let avg_response_time: f64 = all_results.iter().map(|r| r.average_response_time_ms).sum::<f64>() / all_results.len() as f64;
+    let avg_stability: f64 =
+        all_results.iter().map(|r| r.stability_score).sum::<f64>() / all_results.len() as f64;
+    let avg_response_time: f64 = all_results
+        .iter()
+        .map(|r| r.average_response_time_ms)
+        .sum::<f64>()
+        / all_results.len() as f64;
     let all_integrity_ok = all_results.iter().all(|r| r.data_integrity_verified);
 
     println!("📊 Total Operations: {}", total_ops);
@@ -2629,7 +2854,11 @@ async fn test_production_comprehensive_chaos_suite() {
     println!("📊 Average Response Time: {:.2}ms", avg_response_time);
     println!(
         "🔒 Data Integrity: {}",
-        if all_integrity_ok { "✅ PERFECT" } else { "❌ COMPROMISED" }
+        if all_integrity_ok {
+            "✅ PERFECT"
+        } else {
+            "❌ COMPROMISED"
+        }
     );
 
     println!("\n🎖️  PRODUCTION READINESS ASSESSMENT:");
@@ -2640,25 +2869,38 @@ async fn test_production_comprehensive_chaos_suite() {
         println!("   🥇 NEAR PRODUCTION - Excellent resilience achieved!");
     } else if avg_stability >= 90.0 && all_integrity_ok {
         println!("   🥈 STRONG PERFORMANCE - Good stability with room for improvement!");
-        } else {
+    } else {
         println!("   🥉 NEEDS OPTIMIZATION - Requires stability improvements!");
     }
 
     println!("=====================================\n");
 
     // Production-ready assertions
-    assert!(avg_stability >= 98.0, "Production suite should achieve 98%+ average stability, got {:.2}%", avg_stability);
-    assert!(all_integrity_ok, "All production tests must maintain data integrity");
-    assert!(total_ops >= 3500, "Should complete substantial total operations under comprehensive chaos"); // Realistic under 15-50% fault injection
+    assert!(
+        avg_stability >= 98.0,
+        "Production suite should achieve 98%+ average stability, got {:.2}%",
+        avg_stability
+    );
+    assert!(
+        all_integrity_ok,
+        "All production tests must maintain data integrity"
+    );
+    assert!(
+        total_ops >= 3500,
+        "Should complete substantial total operations under comprehensive chaos"
+    ); // Realistic under 15-50% fault injection
     assert!(total_retries > 0, "Should demonstrate retry resilience");
-    assert!(avg_response_time < 100.0, "Should maintain low average response time");
+    assert!(
+        avg_response_time < 100.0,
+        "Should maintain low average response time"
+    );
 }
 
 #[tokio::test]
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_production_service_integration() {
     println!("🧪 Testing production service integration...");
-    
+
     // Test service integration with real NestGate components
     let config = ChaosConfig {
         total_operations: 500, // 10 seconds * 50 ops/sec
@@ -2677,24 +2919,26 @@ async fn test_production_service_integration() {
     };
 
     let framework = PolishedChaosFramework::new(config).await;
-    
+
     // Test operations
     for i in 0..10 {
         let zfs_available = is_zfs_available().await;
-        let result = PolishedChaosFramework::execute_production_operation(
-            if zfs_available { framework.zfs_manager.clone() } else { None }
-        ).await;
+        let result = PolishedChaosFramework::execute_production_operation(if zfs_available {
+            framework.zfs_manager.clone()
+        } else {
+            None
+        })
+        .await;
         println!("Production operation {}: {:?}", i, result);
     }
-    
+
     // Test circuit breaker
     let cb = CircuitBreaker::new(2, Duration::from_millis(100));
-    let cb_result = cb.call(|| async {
-        Ok::<_, String>("Success".to_string())
-    }).await;
+    let cb_result = cb
+        .call(|| async { Ok::<_, String>("Success".to_string()) })
+        .await;
     println!("Circuit breaker test: {:?}", cb_result);
-    
-    
+
     println!("✅ Production service integration test complete");
 }
 
@@ -2704,22 +2948,28 @@ async fn test_production_service_integration() {
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_extreme_stress_benchmark_98_percent() {
     println!("💀🔥 EXTREME STRESS BENCHMARK - Target 98% Stability");
-    
+
     let config = ExtremeStressConfig::for_stability_target(98.0);
     let framework = PolishedChaosFramework::new(ChaosConfig::default()).await;
     let results = framework.execute_extreme_stress_benchmark(&config).await;
-    
+
     print_production_chaos_results(&results);
-    
+
     // Verify realistic stability under extreme stress (Netflix-level expectations)
     assert!(
         results.stability_score >= 90.0,
-        "System should maintain 90%+ stability under extreme stress (realistic for genome workloads), got {:.2}%", 
+        "System should maintain 90%+ stability under extreme stress (realistic for genome workloads), got {:.2}%",
         results.stability_score
     );
-    assert!(results.data_integrity_verified, "Data integrity must be maintained under extreme stress");
-    assert!(results.total_operations >= 100, "Should complete operations under extreme stress");
-    
+    assert!(
+        results.data_integrity_verified,
+        "Data integrity must be maintained under extreme stress"
+    );
+    assert!(
+        results.total_operations >= 100,
+        "Should complete operations under extreme stress"
+    );
+
     println!("✅ 98% Stability Benchmark PASSED under extreme stress");
 }
 
@@ -2727,22 +2977,28 @@ async fn test_extreme_stress_benchmark_98_percent() {
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_extreme_stress_benchmark_95_percent() {
     println!("💀🔥 EXTREME STRESS BENCHMARK - Target 95% Stability");
-    
+
     let config = ExtremeStressConfig::for_stability_target(95.0);
     let framework = PolishedChaosFramework::new(ChaosConfig::default()).await;
     let results = framework.execute_extreme_stress_benchmark(&config).await;
-    
+
     print_production_chaos_results(&results);
-    
+
     // At 95% target, expect realistic degradation under severe stress
     assert!(
         results.stability_score >= 88.0,
-        "System should maintain 88%+ stability under severe stress (realistic for high-throughput systems), got {:.2}%", 
+        "System should maintain 88%+ stability under severe stress (realistic for high-throughput systems), got {:.2}%",
         results.stability_score
     );
-    assert!(results.data_integrity_verified, "Data integrity must be maintained");
-    assert!(results.total_operations >= 75, "Should complete operations under severe stress");
-    
+    assert!(
+        results.data_integrity_verified,
+        "Data integrity must be maintained"
+    );
+    assert!(
+        results.total_operations >= 75,
+        "Should complete operations under severe stress"
+    );
+
     println!("✅ 95% Stability Benchmark PASSED under severe stress");
 }
 
@@ -2750,22 +3006,28 @@ async fn test_extreme_stress_benchmark_95_percent() {
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_extreme_stress_benchmark_90_percent() {
     println!("💀🔥 EXTREME STRESS BENCHMARK - Target 90% Stability");
-    
+
     let config = ExtremeStressConfig::for_stability_target(90.0);
     let framework = PolishedChaosFramework::new(ChaosConfig::default()).await;
     let results = framework.execute_extreme_stress_benchmark(&config).await;
-    
+
     print_production_chaos_results(&results);
-    
+
     // At 90% target, expect significant degradation under brutal stress
     assert!(
         results.stability_score >= 82.0,
-        "System should maintain 82%+ stability under brutal stress (approaching system limits), got {:.2}%", 
+        "System should maintain 82%+ stability under brutal stress (approaching system limits), got {:.2}%",
         results.stability_score
     );
-    assert!(results.data_integrity_verified, "Data integrity must be maintained");
-    assert!(results.total_operations >= 50, "Should complete operations under brutal stress");
-    
+    assert!(
+        results.data_integrity_verified,
+        "Data integrity must be maintained"
+    );
+    assert!(
+        results.total_operations >= 50,
+        "Should complete operations under brutal stress"
+    );
+
     println!("✅ 90% Stability Benchmark PASSED under brutal stress");
 }
 
@@ -2773,22 +3035,28 @@ async fn test_extreme_stress_benchmark_90_percent() {
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_extreme_stress_benchmark_85_percent() {
     println!("💀🔥 EXTREME STRESS BENCHMARK - Target 85% Stability");
-    
+
     let config = ExtremeStressConfig::for_stability_target(85.0);
     let framework = PolishedChaosFramework::new(ChaosConfig::default()).await;
     let results = framework.execute_extreme_stress_benchmark(&config).await;
-    
+
     print_production_chaos_results(&results);
-    
+
     // At 85% target, expect major degradation under crushing stress
     assert!(
         results.stability_score >= 75.0,
-        "System should maintain 75%+ stability under crushing stress (near breaking point), got {:.2}%", 
+        "System should maintain 75%+ stability under crushing stress (near breaking point), got {:.2}%",
         results.stability_score
     );
-    assert!(results.data_integrity_verified, "Data integrity must be maintained");
-    assert!(results.total_operations >= 30, "Should complete operations under crushing stress");
-    
+    assert!(
+        results.data_integrity_verified,
+        "Data integrity must be maintained"
+    );
+    assert!(
+        results.total_operations >= 30,
+        "Should complete operations under crushing stress"
+    );
+
     println!("✅ 85% Stability Benchmark PASSED under crushing stress");
 }
 
@@ -2796,22 +3064,28 @@ async fn test_extreme_stress_benchmark_85_percent() {
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_extreme_stress_benchmark_75_percent() {
     println!("💀🔥 EXTREME STRESS BENCHMARK - Target 75% Stability");
-    
+
     let config = ExtremeStressConfig::for_stability_target(75.0);
     let framework = PolishedChaosFramework::new(ChaosConfig::default()).await;
     let results = framework.execute_extreme_stress_benchmark(&config).await;
-    
+
     print_production_chaos_results(&results);
-    
+
     // At 75% target, expect severe degradation at absolute breaking point
     assert!(
         results.stability_score >= 65.0,
-        "System should maintain 65%+ stability at absolute breaking point (survival mode), got {:.2}%", 
+        "System should maintain 65%+ stability at absolute breaking point (survival mode), got {:.2}%",
         results.stability_score
     );
-    assert!(results.data_integrity_verified, "Data integrity must be maintained even at breaking point");
-    assert!(results.total_operations >= 20, "Should complete some operations at breaking point");
-    
+    assert!(
+        results.data_integrity_verified,
+        "Data integrity must be maintained even at breaking point"
+    );
+    assert!(
+        results.total_operations >= 20,
+        "Should complete some operations at breaking point"
+    );
+
     println!("✅ 75% Stability Benchmark PASSED at system breaking point");
 }
 
@@ -2829,10 +3103,10 @@ async fn test_comprehensive_stress_benchmark_suite() {
         let config = ExtremeStressConfig::for_stability_target(target);
         let framework = PolishedChaosFramework::new(ChaosConfig::default()).await;
         let results = framework.execute_extreme_stress_benchmark(&config).await;
-        
+
         print_production_chaos_results(&results);
         all_results.push(results);
-        
+
         // Brief pause between extreme tests
         sleep(Duration::from_secs(2)).await;
     }
@@ -2845,8 +3119,13 @@ async fn test_comprehensive_stress_benchmark_suite() {
     let total_successful: u64 = all_results.iter().map(|r| r.successful_operations).sum();
     let total_faults: u64 = all_results.iter().map(|r| r.faults_injected).sum();
     let total_retries: u64 = all_results.iter().map(|r| r.retry_successes).sum();
-    let avg_stability: f64 = all_results.iter().map(|r| r.stability_score).sum::<f64>() / all_results.len() as f64;
-    let avg_response_time: f64 = all_results.iter().map(|r| r.average_response_time_ms).sum::<f64>() / all_results.len() as f64;
+    let avg_stability: f64 =
+        all_results.iter().map(|r| r.stability_score).sum::<f64>() / all_results.len() as f64;
+    let avg_response_time: f64 = all_results
+        .iter()
+        .map(|r| r.average_response_time_ms)
+        .sum::<f64>()
+        / all_results.len() as f64;
     let all_integrity_ok = all_results.iter().all(|r| r.data_integrity_verified);
 
     println!("📊 Total Operations: {}", total_ops);
@@ -2855,14 +3134,23 @@ async fn test_comprehensive_stress_benchmark_suite() {
     println!("🔄 Total Retries: {}", total_retries);
     println!("📈 Average Stability: {:.1}%", avg_stability);
     println!("📊 Average Response Time: {:.1}ms", avg_response_time);
-    println!("🔒 Data Integrity: {}", if all_integrity_ok { "✅ PERFECT" } else { "❌ COMPROMISED" });
+    println!(
+        "🔒 Data Integrity: {}",
+        if all_integrity_ok {
+            "✅ PERFECT"
+        } else {
+            "❌ COMPROMISED"
+        }
+    );
 
     // Show stability degradation curve
     println!("\n📈 STABILITY DEGRADATION CURVE:");
     for (i, result) in all_results.iter().enumerate() {
         let target = [98.0, 95.0, 90.0, 85.0, 75.0][i];
-        println!("   Target {:.1}% → Achieved {:.1}% ({} ops)", 
-                 target, result.stability_score, result.total_operations);
+        println!(
+            "   Target {:.1}% → Achieved {:.1}% ({} ops)",
+            target, result.stability_score, result.total_operations
+        );
     }
 
     println!("\n🏆 REALISTIC EXTREME STRESS ASSESSMENT:");
@@ -2882,10 +3170,19 @@ async fn test_comprehensive_stress_benchmark_suite() {
 
     // Validate comprehensive realistic results
     assert!(avg_stability >= 78.0, "Average stability should be 78%+ across all extreme stress tests (realistic for genome workloads)");
-    assert!(all_integrity_ok, "Data integrity must be maintained across all extreme stress tests");
-    assert!(total_ops >= 300, "Should complete substantial operations across all extreme stress tests");
-    assert!(total_retries > 0, "Should demonstrate retry resilience under extreme stress");
-    
+    assert!(
+        all_integrity_ok,
+        "Data integrity must be maintained across all extreme stress tests"
+    );
+    assert!(
+        total_ops >= 300,
+        "Should complete substantial operations across all extreme stress tests"
+    );
+    assert!(
+        total_retries > 0,
+        "Should demonstrate retry resilience under extreme stress"
+    );
+
     println!("✅ COMPREHENSIVE EXTREME STRESS BENCHMARK SUITE PASSED");
 }
 
@@ -2895,97 +3192,187 @@ async fn test_comprehensive_stress_benchmark_suite() {
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_blazing_fast_chaos_10k_operations() {
     println!("🚀💥 BLAZING FAST CHAOS - 10,000 Operations Test");
-    
+
     let config = ChaosConfig::targeted_operations(10_000);
     let framework = PolishedChaosFramework::new(config.clone()).await;
-    
+
     println!("📋 Configuration:");
     println!("   🎯 Total Operations: {}", config.total_operations);
-    println!("   ⚡ Target Speed: {} ops/sec", config.operations_per_second);
+    println!(
+        "   ⚡ Target Speed: {} ops/sec",
+        config.operations_per_second
+    );
     println!("   🔄 Batch Size: {}", config.batch_size);
-    println!("   ⏱️  Estimated Duration: {:.1}s", config.estimated_duration().as_secs_f64());
-    
+    println!(
+        "   ⏱️  Estimated Duration: {:.1}s",
+        config.estimated_duration().as_secs_f64()
+    );
+
     let start_time = Instant::now();
-    let results = framework.execute_chaos_test("Blazing Fast 10K Operations").await;
+    let results = framework
+        .execute_chaos_test("Blazing Fast 10K Operations")
+        .await;
     let actual_duration = start_time.elapsed();
-    
+
     print_production_chaos_results(&results);
-    
+
     // Verify blazing fast performance (realistic expectations for comprehensive chaos testing)
-    assert!(results.total_operations >= 9_000, "Should complete at least 9K operations, got {}", results.total_operations);
-    assert!(results.throughput_ops_per_sec >= 300.0, "Should achieve 300+ ops/sec (blazing fast for chaos testing), got {:.0}", results.throughput_ops_per_sec);
-    assert!(results.stability_score >= 95.0, "Should maintain 95%+ stability at high speed, got {:.2}%", results.stability_score);
-    assert!(results.data_integrity_verified, "Data integrity must be maintained at high speed");
-    assert!(actual_duration < Duration::from_secs(60), "Should complete in under 1 minute (blazing fast)");
-    
-    println!("✅ BLAZING FAST 10K Test PASSED - {} ops in {:.2}s", results.total_operations, actual_duration.as_secs_f64());
+    assert!(
+        results.total_operations >= 9_000,
+        "Should complete at least 9K operations, got {}",
+        results.total_operations
+    );
+    assert!(
+        results.throughput_ops_per_sec >= 300.0,
+        "Should achieve 300+ ops/sec (blazing fast for chaos testing), got {:.0}",
+        results.throughput_ops_per_sec
+    );
+    assert!(
+        results.stability_score >= 95.0,
+        "Should maintain 95%+ stability at high speed, got {:.2}%",
+        results.stability_score
+    );
+    assert!(
+        results.data_integrity_verified,
+        "Data integrity must be maintained at high speed"
+    );
+    assert!(
+        actual_duration < Duration::from_secs(60),
+        "Should complete in under 1 minute (blazing fast)"
+    );
+
+    println!(
+        "✅ BLAZING FAST 10K Test PASSED - {} ops in {:.2}s",
+        results.total_operations,
+        actual_duration.as_secs_f64()
+    );
 }
 
 #[tokio::test]
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_blazing_fast_chaos_100k_operations() {
     println!("🚀💥 BLAZING FAST CHAOS - 100,000 Operations Test");
-    
+
     let config = ChaosConfig::targeted_operations(100_000);
     let framework = PolishedChaosFramework::new(config.clone()).await;
-    
+
     println!("📋 Configuration:");
     println!("   🎯 Total Operations: {}", config.total_operations);
-    println!("   ⚡ Target Speed: {} ops/sec", config.operations_per_second);
+    println!(
+        "   ⚡ Target Speed: {} ops/sec",
+        config.operations_per_second
+    );
     println!("   🔄 Batch Size: {}", config.batch_size);
-    println!("   ⏱️  Estimated Duration: {:.1}s", config.estimated_duration().as_secs_f64());
-    
+    println!(
+        "   ⏱️  Estimated Duration: {:.1}s",
+        config.estimated_duration().as_secs_f64()
+    );
+
     let start_time = Instant::now();
-    let results = framework.execute_chaos_test("Blazing Fast 100K Operations").await;
+    let results = framework
+        .execute_chaos_test("Blazing Fast 100K Operations")
+        .await;
     let actual_duration = start_time.elapsed();
-    
+
     print_production_chaos_results(&results);
-    
+
     // Verify blazing fast performance at scale
-    assert!(results.total_operations >= 90_000, "Should complete at least 90K operations, got {}", results.total_operations);
-    assert!(results.throughput_ops_per_sec >= 8_000.0, "Should achieve 8K+ ops/sec, got {:.0}", results.throughput_ops_per_sec);
-    assert!(results.stability_score >= 94.0, "Should maintain 94%+ stability at high speed, got {:.2}%", results.stability_score);
-    assert!(results.data_integrity_verified, "Data integrity must be maintained at high speed");
-    assert!(actual_duration < Duration::from_secs(20), "Should complete in under 20 seconds");
-    
-    println!("✅ BLAZING FAST 100K Test PASSED - {} ops in {:.2}s", results.total_operations, actual_duration.as_secs_f64());
+    assert!(
+        results.total_operations >= 90_000,
+        "Should complete at least 90K operations, got {}",
+        results.total_operations
+    );
+    assert!(
+        results.throughput_ops_per_sec >= 8_000.0,
+        "Should achieve 8K+ ops/sec, got {:.0}",
+        results.throughput_ops_per_sec
+    );
+    assert!(
+        results.stability_score >= 94.0,
+        "Should maintain 94%+ stability at high speed, got {:.2}%",
+        results.stability_score
+    );
+    assert!(
+        results.data_integrity_verified,
+        "Data integrity must be maintained at high speed"
+    );
+    assert!(
+        actual_duration < Duration::from_secs(20),
+        "Should complete in under 20 seconds"
+    );
+
+    println!(
+        "✅ BLAZING FAST 100K Test PASSED - {} ops in {:.2}s",
+        results.total_operations,
+        actual_duration.as_secs_f64()
+    );
 }
 
 #[tokio::test]
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_ludicrous_speed_chaos_1m_operations() {
     println!("🔥🚀 LUDICROUS SPEED CHAOS - 1,000,000 Operations Test");
-    
+
     let config = ChaosConfig::ludicrous_speed();
     let framework = PolishedChaosFramework::new(config.clone()).await;
-    
+
     println!("📋 Configuration:");
     println!("   🎯 Total Operations: {}", config.total_operations);
-    println!("   ⚡ Target Speed: {} ops/sec", config.operations_per_second);
+    println!(
+        "   ⚡ Target Speed: {} ops/sec",
+        config.operations_per_second
+    );
     println!("   🔄 Batch Size: {}", config.batch_size);
-    println!("   ⏱️  Estimated Duration: {:.1}s", config.estimated_duration().as_secs_f64());
-    
+    println!(
+        "   ⏱️  Estimated Duration: {:.1}s",
+        config.estimated_duration().as_secs_f64()
+    );
+
     let start_time = Instant::now();
-    let results = framework.execute_chaos_test("Ludicrous Speed 1M Operations").await;
+    let results = framework
+        .execute_chaos_test("Ludicrous Speed 1M Operations")
+        .await;
     let actual_duration = start_time.elapsed();
-    
+
     print_production_chaos_results(&results);
-    
+
     // Verify ludicrous speed performance
-    assert!(results.total_operations >= 900_000, "Should complete at least 900K operations, got {}", results.total_operations);
-    assert!(results.throughput_ops_per_sec >= 15_000.0, "Should achieve 15K+ ops/sec, got {:.0}", results.throughput_ops_per_sec);
-    assert!(results.stability_score >= 93.0, "Should maintain 93%+ stability at ludicrous speed, got {:.2}%", results.stability_score);
-    assert!(results.data_integrity_verified, "Data integrity must be maintained at ludicrous speed");
-    assert!(actual_duration < Duration::from_secs(120), "Should complete in under 2 minutes");
-    
-    println!("✅ LUDICROUS SPEED 1M Test PASSED - {} ops in {:.2}s", results.total_operations, actual_duration.as_secs_f64());
+    assert!(
+        results.total_operations >= 900_000,
+        "Should complete at least 900K operations, got {}",
+        results.total_operations
+    );
+    assert!(
+        results.throughput_ops_per_sec >= 15_000.0,
+        "Should achieve 15K+ ops/sec, got {:.0}",
+        results.throughput_ops_per_sec
+    );
+    assert!(
+        results.stability_score >= 93.0,
+        "Should maintain 93%+ stability at ludicrous speed, got {:.2}%",
+        results.stability_score
+    );
+    assert!(
+        results.data_integrity_verified,
+        "Data integrity must be maintained at ludicrous speed"
+    );
+    assert!(
+        actual_duration < Duration::from_secs(120),
+        "Should complete in under 2 minutes"
+    );
+
+    println!(
+        "✅ LUDICROUS SPEED 1M Test PASSED - {} ops in {:.2}s",
+        results.total_operations,
+        actual_duration.as_secs_f64()
+    );
 }
 
 #[tokio::test]
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_custom_chaos_builder_pattern() {
     println!("🔧🚀 CUSTOM CHAOS BUILDER - Custom Configuration Test");
-    
+
     let config = ChaosConfig::custom()
         .operations(50_000)
         .speed(25_000)
@@ -2995,60 +3382,114 @@ async fn test_custom_chaos_builder_pattern() {
         .timeout(800)
         .memory_per_op(128)
         .build();
-    
+
     let framework = PolishedChaosFramework::new(config.clone()).await;
-    
+
     println!("📋 Custom Configuration:");
     println!("   🎯 Total Operations: {}", config.total_operations);
-    println!("   ⚡ Target Speed: {} ops/sec", config.operations_per_second);
+    println!(
+        "   ⚡ Target Speed: {} ops/sec",
+        config.operations_per_second
+    );
     println!("   🔄 Batch Size: {}", config.batch_size);
-    println!("   💥 Fault Rate: {:.1}%", config.fault_injection_rate * 100.0);
+    println!(
+        "   💥 Fault Rate: {:.1}%",
+        config.fault_injection_rate * 100.0
+    );
     println!("   🧠 Memory per Op: {} KB", config.memory_allocation_kb);
-    println!("   ⏱️  Estimated Duration: {:.1}s", config.estimated_duration().as_secs_f64());
-    
+    println!(
+        "   ⏱️  Estimated Duration: {:.1}s",
+        config.estimated_duration().as_secs_f64()
+    );
+
     let start_time = Instant::now();
     let results = framework.execute_chaos_test("Custom Builder Pattern").await;
     let actual_duration = start_time.elapsed();
-    
+
     print_production_chaos_results(&results);
-    
+
     // Verify custom configuration performance
-    assert!(results.total_operations >= 45_000, "Should complete at least 45K operations, got {}", results.total_operations);
-    assert!(results.throughput_ops_per_sec >= 12_000.0, "Should achieve 12K+ ops/sec, got {:.0}", results.throughput_ops_per_sec);
-    assert!(results.stability_score >= 92.0, "Should maintain 92%+ stability with custom config, got {:.2}%", results.stability_score);
-    assert!(results.data_integrity_verified, "Data integrity must be maintained with custom config");
-    
-    println!("✅ CUSTOM BUILDER Test PASSED - {} ops in {:.2}s", results.total_operations, actual_duration.as_secs_f64());
+    assert!(
+        results.total_operations >= 45_000,
+        "Should complete at least 45K operations, got {}",
+        results.total_operations
+    );
+    assert!(
+        results.throughput_ops_per_sec >= 12_000.0,
+        "Should achieve 12K+ ops/sec, got {:.0}",
+        results.throughput_ops_per_sec
+    );
+    assert!(
+        results.stability_score >= 92.0,
+        "Should maintain 92%+ stability with custom config, got {:.2}%",
+        results.stability_score
+    );
+    assert!(
+        results.data_integrity_verified,
+        "Data integrity must be maintained with custom config"
+    );
+
+    println!(
+        "✅ CUSTOM BUILDER Test PASSED - {} ops in {:.2}s",
+        results.total_operations,
+        actual_duration.as_secs_f64()
+    );
 }
 
 #[tokio::test]
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_slow_but_steady_chaos_reliability() {
     println!("🐌🛡️  SLOW BUT STEADY CHAOS - 100% Reliability Test");
-    
+
     let config = ChaosConfig::slow_but_steady();
     let framework = PolishedChaosFramework::new(config.clone()).await;
-    
+
     println!("📋 Configuration:");
     println!("   🎯 Total Operations: {}", config.total_operations);
-    println!("   ⚡ Target Speed: {} ops/sec (steady pace)", config.operations_per_second);
+    println!(
+        "   ⚡ Target Speed: {} ops/sec (steady pace)",
+        config.operations_per_second
+    );
     println!("   🔄 Batch Size: {}", config.batch_size);
-    println!("   💥 Fault Rate: {:.1}% (minimal)", config.fault_injection_rate * 100.0);
-    println!("   ⏱️  Estimated Duration: {:.1}s", config.estimated_duration().as_secs_f64());
-    
+    println!(
+        "   💥 Fault Rate: {:.1}% (minimal)",
+        config.fault_injection_rate * 100.0
+    );
+    println!(
+        "   ⏱️  Estimated Duration: {:.1}s",
+        config.estimated_duration().as_secs_f64()
+    );
+
     let start_time = Instant::now();
-    let results = framework.execute_chaos_test("Slow But Steady Reliability").await;
+    let results = framework
+        .execute_chaos_test("Slow But Steady Reliability")
+        .await;
     let actual_duration = start_time.elapsed();
-    
+
     print_production_chaos_results(&results);
-    
+
     // Verify steady reliability
-    assert!(results.total_operations >= 9_500, "Should complete at least 9.5K operations, got {}", results.total_operations);
-    assert!(results.stability_score >= 99.0, "Should maintain 99%+ stability with slow but steady, got {:.2}%", results.stability_score);
-    assert!(results.data_integrity_verified, "Data integrity must be maintained with slow but steady");
-    
-    println!("✅ SLOW BUT STEADY Test PASSED - {} ops in {:.2}s ({:.2}% stability)", 
-             results.total_operations, actual_duration.as_secs_f64(), results.stability_score);
+    assert!(
+        results.total_operations >= 9_500,
+        "Should complete at least 9.5K operations, got {}",
+        results.total_operations
+    );
+    assert!(
+        results.stability_score >= 99.0,
+        "Should maintain 99%+ stability with slow but steady, got {:.2}%",
+        results.stability_score
+    );
+    assert!(
+        results.data_integrity_verified,
+        "Data integrity must be maintained with slow but steady"
+    );
+
+    println!(
+        "✅ SLOW BUT STEADY Test PASSED - {} ops in {:.2}s ({:.2}% stability)",
+        results.total_operations,
+        actual_duration.as_secs_f64(),
+        results.stability_score
+    );
 }
 
 #[tokio::test]
@@ -3061,13 +3502,16 @@ async fn test_configurable_chaos_comprehensive_suite() {
         ("Blazing Fast Default", ChaosConfig::blazing_fast()),
         ("Targeted 25K", ChaosConfig::targeted_operations(25_000)),
         ("Slow But Steady", ChaosConfig::slow_but_steady()),
-        ("Custom High Speed", ChaosConfig::custom()
-            .operations(30_000)
-            .speed(20_000)
-            .concurrency(1500)
-            .fault_rate(0.06)
-            .batch_size(150)
-            .build()),
+        (
+            "Custom High Speed",
+            ChaosConfig::custom()
+                .operations(30_000)
+                .speed(20_000)
+                .concurrency(1500)
+                .fault_rate(0.06)
+                .batch_size(150)
+                .build(),
+        ),
     ];
 
     let mut all_results = Vec::new();
@@ -3076,50 +3520,82 @@ async fn test_configurable_chaos_comprehensive_suite() {
 
     for (test_name, config) in test_configs {
         println!("🚀 Executing: {}", test_name);
-        println!("   📊 {} ops at {} ops/sec", config.total_operations, config.operations_per_second);
-        
+        println!(
+            "   📊 {} ops at {} ops/sec",
+            config.total_operations, config.operations_per_second
+        );
+
         let framework = PolishedChaosFramework::new(config).await;
         let test_start = Instant::now();
         let results = framework.execute_chaos_test(test_name).await;
         let test_duration = test_start.elapsed();
-        
+
         print_production_chaos_results(&results);
-        
+
         total_operations += results.total_operations;
         all_results.push((test_name, results, test_duration));
-        
-        println!("   ✅ {} completed in {:.2}s\n", test_name, test_duration.as_secs_f64());
-        
+
+        println!(
+            "   ✅ {} completed in {:.2}s\n",
+            test_name,
+            test_duration.as_secs_f64()
+        );
+
         // Brief pause between tests
         sleep(Duration::from_secs(1)).await;
     }
 
     let suite_duration = suite_start.elapsed();
-    
+
     // Comprehensive analysis
     println!("🏆 CONFIGURABLE CHAOS SUITE RESULTS");
     println!("====================================");
-    
-    let total_successful: u64 = all_results.iter().map(|(_, r, _)| r.successful_operations).sum();
+
+    let total_successful: u64 = all_results
+        .iter()
+        .map(|(_, r, _)| r.successful_operations)
+        .sum();
     let total_faults: u64 = all_results.iter().map(|(_, r, _)| r.faults_injected).sum();
-    let avg_stability: f64 = all_results.iter().map(|(_, r, _)| r.stability_score).sum::<f64>() / all_results.len() as f64;
-    let avg_throughput: f64 = all_results.iter().map(|(_, r, _)| r.throughput_ops_per_sec).sum::<f64>() / all_results.len() as f64;
-    let all_integrity_ok = all_results.iter().all(|(_, r, _)| r.data_integrity_verified);
-    
+    let avg_stability: f64 = all_results
+        .iter()
+        .map(|(_, r, _)| r.stability_score)
+        .sum::<f64>()
+        / all_results.len() as f64;
+    let avg_throughput: f64 = all_results
+        .iter()
+        .map(|(_, r, _)| r.throughput_ops_per_sec)
+        .sum::<f64>()
+        / all_results.len() as f64;
+    let all_integrity_ok = all_results
+        .iter()
+        .all(|(_, r, _)| r.data_integrity_verified);
+
     println!("📊 Total Operations: {}", total_operations);
     println!("✅ Total Successful: {}", total_successful);
     println!("💥 Total Faults: {}", total_faults);
     println!("📈 Average Stability: {:.2}%", avg_stability);
     println!("⚡ Average Throughput: {:.0} ops/sec", avg_throughput);
-    println!("🔒 Data Integrity: {}", if all_integrity_ok { "✅ PERFECT" } else { "❌ COMPROMISED" });
+    println!(
+        "🔒 Data Integrity: {}",
+        if all_integrity_ok {
+            "✅ PERFECT"
+        } else {
+            "❌ COMPROMISED"
+        }
+    );
     println!("⏱️  Suite Duration: {:.2}s", suite_duration.as_secs_f64());
-    
+
     // Per-test breakdown
     println!("\n📋 Per-Test Performance:");
     for (test_name, results, duration) in &all_results {
-        println!("   {} - {} ops in {:.2}s ({:.0} ops/sec, {:.1}% stability)",
-                 test_name, results.total_operations, duration.as_secs_f64(), 
-                 results.throughput_ops_per_sec, results.stability_score);
+        println!(
+            "   {} - {} ops in {:.2}s ({:.0} ops/sec, {:.1}% stability)",
+            test_name,
+            results.total_operations,
+            duration.as_secs_f64(),
+            results.throughput_ops_per_sec,
+            results.stability_score
+        );
     }
 
     println!("\n🎖️  CONFIGURABILITY ASSESSMENT:");
@@ -3137,12 +3613,29 @@ async fn test_configurable_chaos_comprehensive_suite() {
     println!("====================================\n");
 
     // Comprehensive assertions
-    assert!(avg_stability >= 93.0, "Average stability should be 93%+, got {:.2}%", avg_stability);
-    assert!(avg_throughput >= 8_000.0, "Average throughput should be 8K+ ops/sec, got {:.0}", avg_throughput);
-    assert!(all_integrity_ok, "All configurations must maintain data integrity");
-    assert!(total_operations >= 150_000, "Should complete substantial total operations across all configs");
-    assert!(suite_duration < Duration::from_secs(180), "Suite should complete in under 3 minutes");
-    
+    assert!(
+        avg_stability >= 93.0,
+        "Average stability should be 93%+, got {:.2}%",
+        avg_stability
+    );
+    assert!(
+        avg_throughput >= 8_000.0,
+        "Average throughput should be 8K+ ops/sec, got {:.0}",
+        avg_throughput
+    );
+    assert!(
+        all_integrity_ok,
+        "All configurations must maintain data integrity"
+    );
+    assert!(
+        total_operations >= 150_000,
+        "Should complete substantial total operations across all configs"
+    );
+    assert!(
+        suite_duration < Duration::from_secs(180),
+        "Suite should complete in under 3 minutes"
+    );
+
     println!("✅ CONFIGURABLE CHAOS COMPREHENSIVE SUITE PASSED");
 }
 
@@ -3150,47 +3643,89 @@ async fn test_configurable_chaos_comprehensive_suite() {
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_environment_variable_configuration() {
     println!("🌍🔧 ENVIRONMENT VARIABLE CONFIGURATION TEST");
-    
+
     // Set environment variables for testing
     std::env::set_var("CHAOS_TOTAL_OPERATIONS", "20000");
     std::env::set_var("CHAOS_OPS_PER_SECOND", "15000");
     std::env::set_var("CHAOS_CONCURRENCY", "1200");
     std::env::set_var("CHAOS_FAULT_RATE", "0.07");
-    
+
     let config = ChaosConfig::from_env();
     let framework = PolishedChaosFramework::new(config.clone()).await;
-    
+
     println!("📋 Environment Configuration:");
     println!("   🎯 Total Operations: {}", config.total_operations);
-    println!("   ⚡ Target Speed: {} ops/sec", config.operations_per_second);
+    println!(
+        "   ⚡ Target Speed: {} ops/sec",
+        config.operations_per_second
+    );
     println!("   🔄 Concurrency: {}", config.max_concurrent_operations);
-    println!("   💥 Fault Rate: {:.1}%", config.fault_injection_rate * 100.0);
-    println!("   ⏱️  Estimated Duration: {:.1}s", config.estimated_duration().as_secs_f64());
-    
+    println!(
+        "   💥 Fault Rate: {:.1}%",
+        config.fault_injection_rate * 100.0
+    );
+    println!(
+        "   ⏱️  Estimated Duration: {:.1}s",
+        config.estimated_duration().as_secs_f64()
+    );
+
     let start_time = Instant::now();
-    let results = framework.execute_chaos_test("Environment Variable Config").await;
+    let results = framework
+        .execute_chaos_test("Environment Variable Config")
+        .await;
     let actual_duration = start_time.elapsed();
-    
+
     print_production_chaos_results(&results);
-    
+
     // Verify environment configuration
-    assert_eq!(config.total_operations, 20_000, "Should use env var for total operations");
-    assert_eq!(config.operations_per_second, 15_000, "Should use env var for ops per second");
-    assert_eq!(config.max_concurrent_operations, 1_200, "Should use env var for concurrency");
-    assert!((config.fault_injection_rate - 0.07).abs() < 0.001, "Should use env var for fault rate");
-    
-    assert!(results.total_operations >= 18_000, "Should complete at least 18K operations, got {}", results.total_operations);
-    assert!(results.throughput_ops_per_sec >= 10_000.0, "Should achieve 10K+ ops/sec, got {:.0}", results.throughput_ops_per_sec);
-    assert!(results.stability_score >= 92.0, "Should maintain 92%+ stability with env config, got {:.2}%", results.stability_score);
-    assert!(results.data_integrity_verified, "Data integrity must be maintained with env config");
-    
+    assert_eq!(
+        config.total_operations, 20_000,
+        "Should use env var for total operations"
+    );
+    assert_eq!(
+        config.operations_per_second, 15_000,
+        "Should use env var for ops per second"
+    );
+    assert_eq!(
+        config.max_concurrent_operations, 1_200,
+        "Should use env var for concurrency"
+    );
+    assert!(
+        (config.fault_injection_rate - 0.07).abs() < 0.001,
+        "Should use env var for fault rate"
+    );
+
+    assert!(
+        results.total_operations >= 18_000,
+        "Should complete at least 18K operations, got {}",
+        results.total_operations
+    );
+    assert!(
+        results.throughput_ops_per_sec >= 10_000.0,
+        "Should achieve 10K+ ops/sec, got {:.0}",
+        results.throughput_ops_per_sec
+    );
+    assert!(
+        results.stability_score >= 92.0,
+        "Should maintain 92%+ stability with env config, got {:.2}%",
+        results.stability_score
+    );
+    assert!(
+        results.data_integrity_verified,
+        "Data integrity must be maintained with env config"
+    );
+
     // Clean up environment variables
     std::env::remove_var("CHAOS_TOTAL_OPERATIONS");
     std::env::remove_var("CHAOS_OPS_PER_SECOND");
     std::env::remove_var("CHAOS_CONCURRENCY");
     std::env::remove_var("CHAOS_FAULT_RATE");
-    
-    println!("✅ ENVIRONMENT VARIABLE Test PASSED - {} ops in {:.2}s", results.total_operations, actual_duration.as_secs_f64());
+
+    println!(
+        "✅ ENVIRONMENT VARIABLE Test PASSED - {} ops in {:.2}s",
+        results.total_operations,
+        actual_duration.as_secs_f64()
+    );
 }
 
 #[tokio::test]
@@ -3198,32 +3733,65 @@ async fn test_environment_variable_configuration() {
 async fn test_genome_scale_chaos_10m_operations() {
     println!("🧬🔥 GENOME SCALE CHAOS - 10,000,000 Operations Test");
     println!("⚠️  This is a MASSIVE scale test - may take several minutes!");
-    
+
     let config = ChaosConfig::genome_scale();
     let framework = PolishedChaosFramework::new(config.clone()).await;
-    
+
     println!("📋 Genome Scale Configuration:");
     println!("   🎯 Total Operations: {}", config.total_operations);
-    println!("   ⚡ Target Speed: {} ops/sec", config.operations_per_second);
+    println!(
+        "   ⚡ Target Speed: {} ops/sec",
+        config.operations_per_second
+    );
     println!("   🔄 Batch Size: {}", config.batch_size);
-    println!("   💥 Fault Rate: {:.1}%", config.fault_injection_rate * 100.0);
+    println!(
+        "   💥 Fault Rate: {:.1}%",
+        config.fault_injection_rate * 100.0
+    );
     println!("   🧠 Memory per Op: {} KB", config.memory_allocation_kb);
-    println!("   ⏱️  Estimated Duration: {:.1}s", config.estimated_duration().as_secs_f64());
-    
+    println!(
+        "   ⏱️  Estimated Duration: {:.1}s",
+        config.estimated_duration().as_secs_f64()
+    );
+
     let start_time = Instant::now();
-    let results = framework.execute_chaos_test("Genome Scale 10M Operations").await;
+    let results = framework
+        .execute_chaos_test("Genome Scale 10M Operations")
+        .await;
     let actual_duration = start_time.elapsed();
-    
+
     print_production_chaos_results(&results);
-    
+
     // Verify genome scale performance
-    assert!(results.total_operations >= 9_000_000, "Should complete at least 9M operations, got {}", results.total_operations);
-    assert!(results.throughput_ops_per_sec >= 30_000.0, "Should achieve 30K+ ops/sec, got {:.0}", results.throughput_ops_per_sec);
-    assert!(results.stability_score >= 90.0, "Should maintain 90%+ stability at genome scale, got {:.2}%", results.stability_score);
-    assert!(results.data_integrity_verified, "Data integrity must be maintained at genome scale");
-    assert!(actual_duration < Duration::from_secs(600), "Should complete in under 10 minutes");
-    
-    println!("✅ GENOME SCALE 10M Test PASSED - {} ops in {:.2}s", results.total_operations, actual_duration.as_secs_f64());
+    assert!(
+        results.total_operations >= 9_000_000,
+        "Should complete at least 9M operations, got {}",
+        results.total_operations
+    );
+    assert!(
+        results.throughput_ops_per_sec >= 30_000.0,
+        "Should achieve 30K+ ops/sec, got {:.0}",
+        results.throughput_ops_per_sec
+    );
+    assert!(
+        results.stability_score >= 90.0,
+        "Should maintain 90%+ stability at genome scale, got {:.2}%",
+        results.stability_score
+    );
+    assert!(
+        results.data_integrity_verified,
+        "Data integrity must be maintained at genome scale"
+    );
+    assert!(
+        actual_duration < Duration::from_secs(600),
+        "Should complete in under 10 minutes"
+    );
+
+    println!(
+        "✅ GENOME SCALE 10M Test PASSED - {} ops in {:.2}s",
+        results.total_operations,
+        actual_duration.as_secs_f64()
+    );
     println!("🧬 Ready for real-world genome database workloads!");
 }
 
@@ -3231,32 +3799,60 @@ async fn test_genome_scale_chaos_10m_operations() {
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_configurable_extreme_stress_with_operations() {
     println!("🔥💀 CONFIGURABLE EXTREME STRESS - Custom Operations Test");
-    
+
     let operations = 50_000;
     let config = ExtremeStressConfig::for_stability_target_with_operations(95.0, operations);
     let framework = PolishedChaosFramework::new(ChaosConfig::targeted_operations(operations)).await;
-    
+
     println!("📋 Extreme Stress Configuration:");
     println!("   🎯 Total Operations: {}", config.total_operations);
-    println!("   ⚡ Target Speed: {} ops/sec", config.operations_per_second);
+    println!(
+        "   ⚡ Target Speed: {} ops/sec",
+        config.operations_per_second
+    );
     println!("   🔄 Batch Size: {}", config.batch_size);
-    println!("   💥 Fault Rate: {:.0}%", config.fault_injection_rate * 100.0);
+    println!(
+        "   💥 Fault Rate: {:.0}%",
+        config.fault_injection_rate * 100.0
+    );
     println!("   🧠 Memory Pressure: {} MB", config.memory_pressure_mb);
-    println!("   ⏱️  Estimated Duration: {:.1}s", config.estimated_duration().as_secs_f64());
-    
+    println!(
+        "   ⏱️  Estimated Duration: {:.1}s",
+        config.estimated_duration().as_secs_f64()
+    );
+
     let start_time = Instant::now();
     let results = framework.execute_extreme_stress_benchmark(&config).await;
     let actual_duration = start_time.elapsed();
-    
+
     print_production_chaos_results(&results);
-    
+
     // Verify configurable extreme stress
-    assert!(results.total_operations >= 40_000, "Should complete at least 40K operations, got {}", results.total_operations);
-    assert!(results.throughput_ops_per_sec >= 8_000.0, "Should achieve 8K+ ops/sec under extreme stress, got {:.0}", results.throughput_ops_per_sec);
-    assert!(results.stability_score >= 85.0, "Should maintain 85%+ stability under extreme stress, got {:.2}%", results.stability_score);
-    assert!(results.data_integrity_verified, "Data integrity must be maintained under extreme stress");
-    
-    println!("✅ CONFIGURABLE EXTREME STRESS Test PASSED - {} ops in {:.2}s", results.total_operations, actual_duration.as_secs_f64());
+    assert!(
+        results.total_operations >= 40_000,
+        "Should complete at least 40K operations, got {}",
+        results.total_operations
+    );
+    assert!(
+        results.throughput_ops_per_sec >= 8_000.0,
+        "Should achieve 8K+ ops/sec under extreme stress, got {:.0}",
+        results.throughput_ops_per_sec
+    );
+    assert!(
+        results.stability_score >= 85.0,
+        "Should maintain 85%+ stability under extreme stress, got {:.2}%",
+        results.stability_score
+    );
+    assert!(
+        results.data_integrity_verified,
+        "Data integrity must be maintained under extreme stress"
+    );
+
+    println!(
+        "✅ CONFIGURABLE EXTREME STRESS Test PASSED - {} ops in {:.2}s",
+        results.total_operations,
+        actual_duration.as_secs_f64()
+    );
 }
 
 #[tokio::test]
@@ -3267,28 +3863,37 @@ async fn test_ultimate_configurability_showcase() {
 
     let test_scenarios = vec![
         ("10K Blazing Fast", ChaosConfig::targeted_operations(10_000)),
-        ("50K Custom Speed", ChaosConfig::custom()
-            .operations(50_000)
-            .speed(30_000)
-            .concurrency(2000)
-            .fault_rate(0.05)
-            .batch_size(200)
-            .build()),
+        (
+            "50K Custom Speed",
+            ChaosConfig::custom()
+                .operations(50_000)
+                .speed(30_000)
+                .concurrency(2000)
+                .fault_rate(0.05)
+                .batch_size(200)
+                .build(),
+        ),
         ("100K Ludicrous", ChaosConfig::targeted_operations(100_000)),
-        ("25K Steady Reliability", ChaosConfig::custom()
-            .operations(25_000)
-            .speed(5_000)
-            .concurrency(100)
-            .fault_rate(0.01)
-            .batch_size(50)
-            .build()),
-        ("75K Balanced Performance", ChaosConfig::custom()
-            .operations(75_000)
-            .speed(20_000)
-            .concurrency(1500)
-            .fault_rate(0.06)
-            .batch_size(150)
-            .build()),
+        (
+            "25K Steady Reliability",
+            ChaosConfig::custom()
+                .operations(25_000)
+                .speed(5_000)
+                .concurrency(100)
+                .fault_rate(0.01)
+                .batch_size(50)
+                .build(),
+        ),
+        (
+            "75K Balanced Performance",
+            ChaosConfig::custom()
+                .operations(75_000)
+                .speed(20_000)
+                .concurrency(1500)
+                .fault_rate(0.06)
+                .batch_size(150)
+                .build(),
+        ),
     ];
 
     let mut all_results = Vec::new();
@@ -3297,40 +3902,66 @@ async fn test_ultimate_configurability_showcase() {
 
     for (scenario_name, config) in test_scenarios {
         println!("🚀 Executing: {}", scenario_name);
-        println!("   📊 {} ops at {} ops/sec ({}% fault rate)", 
-                 config.total_operations, config.operations_per_second, 
-                 (config.fault_injection_rate * 100.0) as u32);
-        
+        println!(
+            "   📊 {} ops at {} ops/sec ({}% fault rate)",
+            config.total_operations,
+            config.operations_per_second,
+            (config.fault_injection_rate * 100.0) as u32
+        );
+
         let framework = PolishedChaosFramework::new(config).await;
         let test_start = Instant::now();
         let results = framework.execute_chaos_test(scenario_name).await;
         let test_duration = test_start.elapsed();
-        
+
         print_production_chaos_results(&results);
-        
+
         total_operations += results.total_operations;
         all_results.push((scenario_name, results, test_duration));
-        
-        println!("   ✅ {} completed in {:.2}s\n", scenario_name, test_duration.as_secs_f64());
-        
+
+        println!(
+            "   ✅ {} completed in {:.2}s\n",
+            scenario_name,
+            test_duration.as_secs_f64()
+        );
+
         // Brief pause between tests
         sleep(Duration::from_secs(1)).await;
     }
 
     let suite_duration = suite_start.elapsed();
-    
+
     // Ultimate analysis
     println!("🏆 ULTIMATE CONFIGURABILITY SHOWCASE RESULTS");
     println!("==============================================");
-    
-    let total_successful: u64 = all_results.iter().map(|(_, r, _)| r.successful_operations).sum();
+
+    let total_successful: u64 = all_results
+        .iter()
+        .map(|(_, r, _)| r.successful_operations)
+        .sum();
     let total_faults: u64 = all_results.iter().map(|(_, r, _)| r.faults_injected).sum();
-    let avg_stability: f64 = all_results.iter().map(|(_, r, _)| r.stability_score).sum::<f64>() / all_results.len() as f64;
-    let avg_throughput: f64 = all_results.iter().map(|(_, r, _)| r.throughput_ops_per_sec).sum::<f64>() / all_results.len() as f64;
-    let max_throughput: f64 = all_results.iter().map(|(_, r, _)| r.throughput_ops_per_sec).fold(0.0, f64::max);
-    let min_stability: f64 = all_results.iter().map(|(_, r, _)| r.stability_score).fold(100.0, f64::min);
-    let all_integrity_ok = all_results.iter().all(|(_, r, _)| r.data_integrity_verified);
-    
+    let avg_stability: f64 = all_results
+        .iter()
+        .map(|(_, r, _)| r.stability_score)
+        .sum::<f64>()
+        / all_results.len() as f64;
+    let avg_throughput: f64 = all_results
+        .iter()
+        .map(|(_, r, _)| r.throughput_ops_per_sec)
+        .sum::<f64>()
+        / all_results.len() as f64;
+    let max_throughput: f64 = all_results
+        .iter()
+        .map(|(_, r, _)| r.throughput_ops_per_sec)
+        .fold(0.0, f64::max);
+    let min_stability: f64 = all_results
+        .iter()
+        .map(|(_, r, _)| r.stability_score)
+        .fold(100.0, f64::min);
+    let all_integrity_ok = all_results
+        .iter()
+        .all(|(_, r, _)| r.data_integrity_verified);
+
     println!("📊 Total Operations: {}", total_operations);
     println!("✅ Total Successful: {}", total_successful);
     println!("💥 Total Faults: {}", total_faults);
@@ -3338,23 +3969,43 @@ async fn test_ultimate_configurability_showcase() {
     println!("📉 Minimum Stability: {:.2}%", min_stability);
     println!("⚡ Average Throughput: {:.0} ops/sec", avg_throughput);
     println!("🚀 Maximum Throughput: {:.0} ops/sec", max_throughput);
-    println!("🔒 Data Integrity: {}", if all_integrity_ok { "✅ PERFECT" } else { "❌ COMPROMISED" });
+    println!(
+        "🔒 Data Integrity: {}",
+        if all_integrity_ok {
+            "✅ PERFECT"
+        } else {
+            "❌ COMPROMISED"
+        }
+    );
     println!("⏱️  Suite Duration: {:.2}s", suite_duration.as_secs_f64());
-    
+
     // Detailed per-test breakdown
     println!("\n📋 Detailed Performance Analysis:");
     for (test_name, results, duration) in &all_results {
-        println!("   {} - {} ops in {:.2}s ({:.0} ops/sec, {:.1}% stability)",
-                 test_name, results.total_operations, duration.as_secs_f64(), 
-                 results.throughput_ops_per_sec, results.stability_score);
+        println!(
+            "   {} - {} ops in {:.2}s ({:.0} ops/sec, {:.1}% stability)",
+            test_name,
+            results.total_operations,
+            duration.as_secs_f64(),
+            results.throughput_ops_per_sec,
+            results.stability_score
+        );
     }
 
     println!("\n🎖️  ULTIMATE CONFIGURABILITY ASSESSMENT:");
-    if avg_stability >= 95.0 && avg_throughput >= 15_000.0 && max_throughput >= 20_000.0 && all_integrity_ok {
+    if avg_stability >= 95.0
+        && avg_throughput >= 15_000.0
+        && max_throughput >= 20_000.0
+        && all_integrity_ok
+    {
         println!("   🏆 LEGENDARY PERFORMANCE - Ultimate configurability mastery!");
         println!("   🚀 BLAZING FAST & ULTRA RELIABLE - Genome database ready!");
         println!("   🧬 PRODUCTION EXCELLENCE - Ready for any workload!");
-    } else if avg_stability >= 92.0 && avg_throughput >= 10_000.0 && max_throughput >= 15_000.0 && all_integrity_ok {
+    } else if avg_stability >= 92.0
+        && avg_throughput >= 10_000.0
+        && max_throughput >= 15_000.0
+        && all_integrity_ok
+    {
         println!("   🥇 OUTSTANDING CONFIGURABILITY - Excellent performance range!");
         println!("   💪 ROBUST & FAST - Ready for production deployment!");
     } else if avg_stability >= 88.0 && avg_throughput >= 8_000.0 && all_integrity_ok {
@@ -3366,14 +4017,39 @@ async fn test_ultimate_configurability_showcase() {
     println!("==============================================\n");
 
     // Ultimate assertions
-    assert!(avg_stability >= 93.0, "Average stability should be 93%+, got {:.2}%", avg_stability);
-    assert!(avg_throughput >= 12_000.0, "Average throughput should be 12K+ ops/sec, got {:.0}", avg_throughput);
-    assert!(max_throughput >= 18_000.0, "Maximum throughput should be 18K+ ops/sec, got {:.0}", max_throughput);
-    assert!(min_stability >= 85.0, "Minimum stability should be 85%+, got {:.2}%", min_stability);
-    assert!(all_integrity_ok, "All configurations must maintain data integrity");
-    assert!(total_operations >= 260_000, "Should complete substantial total operations across all scenarios");
-    assert!(suite_duration < Duration::from_secs(120), "Suite should complete in under 2 minutes");
-    
+    assert!(
+        avg_stability >= 93.0,
+        "Average stability should be 93%+, got {:.2}%",
+        avg_stability
+    );
+    assert!(
+        avg_throughput >= 12_000.0,
+        "Average throughput should be 12K+ ops/sec, got {:.0}",
+        avg_throughput
+    );
+    assert!(
+        max_throughput >= 18_000.0,
+        "Maximum throughput should be 18K+ ops/sec, got {:.0}",
+        max_throughput
+    );
+    assert!(
+        min_stability >= 85.0,
+        "Minimum stability should be 85%+, got {:.2}%",
+        min_stability
+    );
+    assert!(
+        all_integrity_ok,
+        "All configurations must maintain data integrity"
+    );
+    assert!(
+        total_operations >= 260_000,
+        "Should complete substantial total operations across all scenarios"
+    );
+    assert!(
+        suite_duration < Duration::from_secs(120),
+        "Suite should complete in under 2 minutes"
+    );
+
     println!("✅ ULTIMATE CONFIGURABILITY SHOWCASE PASSED");
     println!("🎯 NestGate chaos testing framework achieves ultimate configurability!");
     println!("🚀 Ready for any scale: from thousands to millions of operations!");
@@ -3388,28 +4064,37 @@ async fn test_ultimate_configurability_test() {
 
     let test_scenarios = vec![
         ("10K Blazing Fast", ChaosConfig::targeted_operations(10_000)),
-        ("50K Custom Speed", ChaosConfig::custom()
-            .operations(50_000)
-            .speed(30_000)
-            .concurrency(2000)
-            .fault_rate(0.05)
-            .batch_size(200)
-            .build()),
+        (
+            "50K Custom Speed",
+            ChaosConfig::custom()
+                .operations(50_000)
+                .speed(30_000)
+                .concurrency(2000)
+                .fault_rate(0.05)
+                .batch_size(200)
+                .build(),
+        ),
         ("100K Ludicrous", ChaosConfig::targeted_operations(100_000)),
-        ("25K Steady Reliability", ChaosConfig::custom()
-            .operations(25_000)
-            .speed(5_000)
-            .concurrency(100)
-            .fault_rate(0.01)
-            .batch_size(50)
-            .build()),
-        ("75K Balanced Performance", ChaosConfig::custom()
-            .operations(75_000)
-            .speed(20_000)
-            .concurrency(1500)
-            .fault_rate(0.06)
-            .batch_size(150)
-            .build()),
+        (
+            "25K Steady Reliability",
+            ChaosConfig::custom()
+                .operations(25_000)
+                .speed(5_000)
+                .concurrency(100)
+                .fault_rate(0.01)
+                .batch_size(50)
+                .build(),
+        ),
+        (
+            "75K Balanced Performance",
+            ChaosConfig::custom()
+                .operations(75_000)
+                .speed(20_000)
+                .concurrency(1500)
+                .fault_rate(0.06)
+                .batch_size(150)
+                .build(),
+        ),
     ];
 
     let mut all_results = Vec::new();
@@ -3418,40 +4103,66 @@ async fn test_ultimate_configurability_test() {
 
     for (scenario_name, config) in test_scenarios {
         println!("🚀 Executing: {}", scenario_name);
-        println!("   📊 {} ops at {} ops/sec ({}% fault rate)", 
-                 config.total_operations, config.operations_per_second, 
-                 (config.fault_injection_rate * 100.0) as u32);
-        
+        println!(
+            "   📊 {} ops at {} ops/sec ({}% fault rate)",
+            config.total_operations,
+            config.operations_per_second,
+            (config.fault_injection_rate * 100.0) as u32
+        );
+
         let framework = PolishedChaosFramework::new(config).await;
         let test_start = Instant::now();
         let results = framework.execute_chaos_test(scenario_name).await;
         let test_duration = test_start.elapsed();
-        
+
         print_production_chaos_results(&results);
-        
+
         total_operations += results.total_operations;
         all_results.push((scenario_name, results, test_duration));
-        
-        println!("   ✅ {} completed in {:.2}s\n", scenario_name, test_duration.as_secs_f64());
-        
+
+        println!(
+            "   ✅ {} completed in {:.2}s\n",
+            scenario_name,
+            test_duration.as_secs_f64()
+        );
+
         // Brief pause between tests
         sleep(Duration::from_secs(1)).await;
     }
 
     let suite_duration = suite_start.elapsed();
-    
+
     // Ultimate analysis
     println!("🏆 ULTIMATE CONFIGURABILITY SHOWCASE RESULTS");
     println!("==============================================");
-    
-    let total_successful: u64 = all_results.iter().map(|(_, r, _)| r.successful_operations).sum();
+
+    let total_successful: u64 = all_results
+        .iter()
+        .map(|(_, r, _)| r.successful_operations)
+        .sum();
     let total_faults: u64 = all_results.iter().map(|(_, r, _)| r.faults_injected).sum();
-    let avg_stability: f64 = all_results.iter().map(|(_, r, _)| r.stability_score).sum::<f64>() / all_results.len() as f64;
-    let avg_throughput: f64 = all_results.iter().map(|(_, r, _)| r.throughput_ops_per_sec).sum::<f64>() / all_results.len() as f64;
-    let max_throughput: f64 = all_results.iter().map(|(_, r, _)| r.throughput_ops_per_sec).fold(0.0, f64::max);
-    let min_stability: f64 = all_results.iter().map(|(_, r, _)| r.stability_score).fold(100.0, f64::min);
-    let all_integrity_ok = all_results.iter().all(|(_, r, _)| r.data_integrity_verified);
-    
+    let avg_stability: f64 = all_results
+        .iter()
+        .map(|(_, r, _)| r.stability_score)
+        .sum::<f64>()
+        / all_results.len() as f64;
+    let avg_throughput: f64 = all_results
+        .iter()
+        .map(|(_, r, _)| r.throughput_ops_per_sec)
+        .sum::<f64>()
+        / all_results.len() as f64;
+    let max_throughput: f64 = all_results
+        .iter()
+        .map(|(_, r, _)| r.throughput_ops_per_sec)
+        .fold(0.0, f64::max);
+    let min_stability: f64 = all_results
+        .iter()
+        .map(|(_, r, _)| r.stability_score)
+        .fold(100.0, f64::min);
+    let all_integrity_ok = all_results
+        .iter()
+        .all(|(_, r, _)| r.data_integrity_verified);
+
     println!("📊 Total Operations: {}", total_operations);
     println!("✅ Total Successful: {}", total_successful);
     println!("💥 Total Faults: {}", total_faults);
@@ -3459,23 +4170,43 @@ async fn test_ultimate_configurability_test() {
     println!("📉 Minimum Stability: {:.2}%", min_stability);
     println!("⚡ Average Throughput: {:.0} ops/sec", avg_throughput);
     println!("🚀 Maximum Throughput: {:.0} ops/sec", max_throughput);
-    println!("🔒 Data Integrity: {}", if all_integrity_ok { "✅ PERFECT" } else { "❌ COMPROMISED" });
+    println!(
+        "🔒 Data Integrity: {}",
+        if all_integrity_ok {
+            "✅ PERFECT"
+        } else {
+            "❌ COMPROMISED"
+        }
+    );
     println!("⏱️  Suite Duration: {:.2}s", suite_duration.as_secs_f64());
-    
+
     // Detailed per-test breakdown
     println!("\n📋 Detailed Performance Analysis:");
     for (test_name, results, duration) in &all_results {
-        println!("   {} - {} ops in {:.2}s ({:.0} ops/sec, {:.1}% stability)",
-                 test_name, results.total_operations, duration.as_secs_f64(), 
-                 results.throughput_ops_per_sec, results.stability_score);
+        println!(
+            "   {} - {} ops in {:.2}s ({:.0} ops/sec, {:.1}% stability)",
+            test_name,
+            results.total_operations,
+            duration.as_secs_f64(),
+            results.throughput_ops_per_sec,
+            results.stability_score
+        );
     }
 
     println!("\n🎖️  ULTIMATE CONFIGURABILITY ASSESSMENT:");
-    if avg_stability >= 95.0 && avg_throughput >= 15_000.0 && max_throughput >= 20_000.0 && all_integrity_ok {
+    if avg_stability >= 95.0
+        && avg_throughput >= 15_000.0
+        && max_throughput >= 20_000.0
+        && all_integrity_ok
+    {
         println!("   🏆 LEGENDARY PERFORMANCE - Ultimate configurability mastery!");
         println!("   🚀 BLAZING FAST & ULTRA RELIABLE - Genome database ready!");
         println!("   🧬 PRODUCTION EXCELLENCE - Ready for any workload!");
-    } else if avg_stability >= 92.0 && avg_throughput >= 10_000.0 && max_throughput >= 15_000.0 && all_integrity_ok {
+    } else if avg_stability >= 92.0
+        && avg_throughput >= 10_000.0
+        && max_throughput >= 15_000.0
+        && all_integrity_ok
+    {
         println!("   🥇 OUTSTANDING CONFIGURABILITY - Excellent performance range!");
         println!("   💪 ROBUST & FAST - Ready for production deployment!");
     } else if avg_stability >= 88.0 && avg_throughput >= 8_000.0 && all_integrity_ok {
@@ -3487,15 +4218,44 @@ async fn test_ultimate_configurability_test() {
     println!("==============================================\n");
 
     // Ultimate assertions
-    assert!(avg_stability >= 93.0, "Average stability should be 93%+, got {:.2}%", avg_stability);
-    assert!(avg_throughput >= 12_000.0, "Average throughput should be 12K+ ops/sec, got {:.0}", avg_throughput);
-    assert!(max_throughput >= 18_000.0, "Maximum throughput should be 18K+ ops/sec, got {:.0}", max_throughput);
-    assert!(min_stability >= 85.0, "Minimum stability should be 85%+, got {:.2}%", min_stability);
-    assert!(all_integrity_ok, "All configurations must maintain data integrity");
-    assert!(total_operations >= 260_000, "Should complete substantial total operations across all scenarios");
-    assert!(suite_duration < Duration::from_secs(120), "Suite should complete in under 2 minutes");
-    
-    println!("✅ ULTIMATE CONFIGURABILITY Test PASSED - {} total ops in {:.2}s", total_operations, suite_duration.as_secs_f64());
+    assert!(
+        avg_stability >= 93.0,
+        "Average stability should be 93%+, got {:.2}%",
+        avg_stability
+    );
+    assert!(
+        avg_throughput >= 12_000.0,
+        "Average throughput should be 12K+ ops/sec, got {:.0}",
+        avg_throughput
+    );
+    assert!(
+        max_throughput >= 18_000.0,
+        "Maximum throughput should be 18K+ ops/sec, got {:.0}",
+        max_throughput
+    );
+    assert!(
+        min_stability >= 85.0,
+        "Minimum stability should be 85%+, got {:.2}%",
+        min_stability
+    );
+    assert!(
+        all_integrity_ok,
+        "All configurations must maintain data integrity"
+    );
+    assert!(
+        total_operations >= 260_000,
+        "Should complete substantial total operations across all scenarios"
+    );
+    assert!(
+        suite_duration < Duration::from_secs(120),
+        "Suite should complete in under 2 minutes"
+    );
+
+    println!(
+        "✅ ULTIMATE CONFIGURABILITY Test PASSED - {} total ops in {:.2}s",
+        total_operations,
+        suite_duration.as_secs_f64()
+    );
     println!("🔧 NestGate Chaos Framework: FULLY CONFIGURABLE & BLAZING FAST!");
 }
 
@@ -3505,201 +4265,375 @@ async fn test_ultimate_configurability_test() {
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_network_saturation_2_5g_chaos() {
     println!("🌐💥 NETWORK SATURATION 2.5G - Chaos Testing");
-    
+
     let config = ChaosConfig::network_saturation_2_5g();
     let framework = PolishedChaosFramework::new(config.clone()).await;
-    
+
     println!("📋 2.5G Network Configuration:");
     println!("   🎯 Total Operations: {}", config.total_operations);
-    println!("   ⚡ Target Speed: {} ops/sec", config.operations_per_second);
-    println!("   🌐 Target Throughput: {:.0} MB/s", config.target_network_throughput_mbs());
-    println!("   💥 Fault Rate: {:.1}%", config.fault_injection_rate * 100.0);
+    println!(
+        "   ⚡ Target Speed: {} ops/sec",
+        config.operations_per_second
+    );
+    println!(
+        "   🌐 Target Throughput: {:.0} MB/s",
+        config.target_network_throughput_mbs()
+    );
+    println!(
+        "   💥 Fault Rate: {:.1}%",
+        config.fault_injection_rate * 100.0
+    );
     println!("   🔄 Batch Size: {}", config.batch_size);
-    println!("   ⏱️  Estimated Duration: {:.1}s", config.estimated_duration().as_secs_f64());
-    
+    println!(
+        "   ⏱️  Estimated Duration: {:.1}s",
+        config.estimated_duration().as_secs_f64()
+    );
+
     let start_time = Instant::now();
-    let results = framework.execute_chaos_test("Network Saturation 2.5G").await;
+    let results = framework
+        .execute_chaos_test("Network Saturation 2.5G")
+        .await;
     let actual_duration = start_time.elapsed();
-    
+
     print_production_chaos_results(&results);
-    
+
     // Verify 2.5G network saturation capability
-    assert!(results.total_operations >= 450_000, "Should complete at least 450K operations, got {}", results.total_operations);
-    assert!(results.throughput_ops_per_sec >= 3_000.0, "Should achieve 3K+ ops/sec (2.5G saturation), got {:.0}", results.throughput_ops_per_sec);
-    
+    assert!(
+        results.total_operations >= 450_000,
+        "Should complete at least 450K operations, got {}",
+        results.total_operations
+    );
+    assert!(
+        results.throughput_ops_per_sec >= 3_000.0,
+        "Should achieve 3K+ ops/sec (2.5G saturation), got {:.0}",
+        results.throughput_ops_per_sec
+    );
+
     // Calculate actual network throughput
-    let network_throughput_mbs = (results.throughput_ops_per_sec * config.memory_allocation_kb as f64) / 1024.0;
-    assert!(network_throughput_mbs >= 200.0, "Should achieve 200+ MB/s network throughput, got {:.0} MB/s", network_throughput_mbs);
-    
-    assert!(results.stability_score >= 96.0, "Should maintain 96%+ stability for 2.5G network, got {:.2}%", results.stability_score);
-    assert!(results.data_integrity_verified, "Data integrity must be maintained during network saturation");
-    
-    println!("✅ 2.5G NETWORK SATURATION Test PASSED - {:.0} MB/s network throughput", network_throughput_mbs);
+    let network_throughput_mbs =
+        (results.throughput_ops_per_sec * config.memory_allocation_kb as f64) / 1024.0;
+    assert!(
+        network_throughput_mbs >= 200.0,
+        "Should achieve 200+ MB/s network throughput, got {:.0} MB/s",
+        network_throughput_mbs
+    );
+
+    assert!(
+        results.stability_score >= 96.0,
+        "Should maintain 96%+ stability for 2.5G network, got {:.2}%",
+        results.stability_score
+    );
+    assert!(
+        results.data_integrity_verified,
+        "Data integrity must be maintained during network saturation"
+    );
+
+    println!(
+        "✅ 2.5G NETWORK SATURATION Test PASSED - {:.0} MB/s network throughput",
+        network_throughput_mbs
+    );
 }
 
 #[tokio::test]
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_network_saturation_10g_chaos() {
     println!("🚀🌐 NETWORK SATURATION 10G - Chaos Testing");
-    
+
     let config = ChaosConfig::network_saturation_10g();
     let framework = PolishedChaosFramework::new(config.clone()).await;
-    
+
     println!("📋 10G Network Configuration:");
     println!("   🎯 Total Operations: {}", config.total_operations);
-    println!("   ⚡ Target Speed: {} ops/sec", config.operations_per_second);
-    println!("   🌐 Target Throughput: {:.0} MB/s", config.target_network_throughput_mbs());
-    println!("   💥 Fault Rate: {:.1}%", config.fault_injection_rate * 100.0);
+    println!(
+        "   ⚡ Target Speed: {} ops/sec",
+        config.operations_per_second
+    );
+    println!(
+        "   🌐 Target Throughput: {:.0} MB/s",
+        config.target_network_throughput_mbs()
+    );
+    println!(
+        "   💥 Fault Rate: {:.1}%",
+        config.fault_injection_rate * 100.0
+    );
     println!("   🔄 Batch Size: {}", config.batch_size);
-    println!("   ⏱️  Estimated Duration: {:.1}s", config.estimated_duration().as_secs_f64());
-    
+    println!(
+        "   ⏱️  Estimated Duration: {:.1}s",
+        config.estimated_duration().as_secs_f64()
+    );
+
     let start_time = Instant::now();
     let results = framework.execute_chaos_test("Network Saturation 10G").await;
     let actual_duration = start_time.elapsed();
-    
+
     print_production_chaos_results(&results);
-    
+
     // Verify 10G network saturation capability
-    assert!(results.total_operations >= 1_800_000, "Should complete at least 1.8M operations, got {}", results.total_operations);
-    assert!(results.throughput_ops_per_sec >= 12_000.0, "Should achieve 12K+ ops/sec (10G saturation), got {:.0}", results.throughput_ops_per_sec);
-    
+    assert!(
+        results.total_operations >= 1_800_000,
+        "Should complete at least 1.8M operations, got {}",
+        results.total_operations
+    );
+    assert!(
+        results.throughput_ops_per_sec >= 12_000.0,
+        "Should achieve 12K+ ops/sec (10G saturation), got {:.0}",
+        results.throughput_ops_per_sec
+    );
+
     // Calculate actual network throughput
-    let network_throughput_mbs = (results.throughput_ops_per_sec * config.memory_allocation_kb as f64) / 1024.0;
-    assert!(network_throughput_mbs >= 800.0, "Should achieve 800+ MB/s network throughput, got {:.0} MB/s", network_throughput_mbs);
-    
-    assert!(results.stability_score >= 95.0, "Should maintain 95%+ stability for 10G network, got {:.2}%", results.stability_score);
-    assert!(results.data_integrity_verified, "Data integrity must be maintained during 10G saturation");
-    
-    println!("✅ 10G NETWORK SATURATION Test PASSED - {:.0} MB/s network throughput", network_throughput_mbs);
+    let network_throughput_mbs =
+        (results.throughput_ops_per_sec * config.memory_allocation_kb as f64) / 1024.0;
+    assert!(
+        network_throughput_mbs >= 800.0,
+        "Should achieve 800+ MB/s network throughput, got {:.0} MB/s",
+        network_throughput_mbs
+    );
+
+    assert!(
+        results.stability_score >= 95.0,
+        "Should maintain 95%+ stability for 10G network, got {:.2}%",
+        results.stability_score
+    );
+    assert!(
+        results.data_integrity_verified,
+        "Data integrity must be maintained during 10G saturation"
+    );
+
+    println!(
+        "✅ 10G NETWORK SATURATION Test PASSED - {:.0} MB/s network throughput",
+        network_throughput_mbs
+    );
 }
 
 #[tokio::test]
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_network_saturation_25g_chaos() {
     println!("🌐🔥 NETWORK SATURATION 25G - Future-Proof Chaos Testing");
-    
+
     let config = ChaosConfig::network_saturation_25g();
     let framework = PolishedChaosFramework::new(config.clone()).await;
-    
+
     println!("📋 25G Network Configuration:");
     println!("   🎯 Total Operations: {}", config.total_operations);
-    println!("   ⚡ Target Speed: {} ops/sec", config.operations_per_second);
-    println!("   🌐 Target Throughput: {:.0} MB/s", config.target_network_throughput_mbs());
-    println!("   💥 Fault Rate: {:.1}%", config.fault_injection_rate * 100.0);
+    println!(
+        "   ⚡ Target Speed: {} ops/sec",
+        config.operations_per_second
+    );
+    println!(
+        "   🌐 Target Throughput: {:.0} MB/s",
+        config.target_network_throughput_mbs()
+    );
+    println!(
+        "   💥 Fault Rate: {:.1}%",
+        config.fault_injection_rate * 100.0
+    );
     println!("   🔄 Batch Size: {}", config.batch_size);
-    println!("   ⏱️  Estimated Duration: {:.1}s", config.estimated_duration().as_secs_f64());
-    
+    println!(
+        "   ⏱️  Estimated Duration: {:.1}s",
+        config.estimated_duration().as_secs_f64()
+    );
+
     let start_time = Instant::now();
     let results = framework.execute_chaos_test("Network Saturation 25G").await;
     let actual_duration = start_time.elapsed();
-    
+
     print_production_chaos_results(&results);
-    
-    // Verify 25G network saturation capability  
-    assert!(results.total_operations >= 4_500_000, "Should complete at least 4.5M operations, got {}", results.total_operations);
-    assert!(results.throughput_ops_per_sec >= 28_000.0, "Should achieve 28K+ ops/sec (25G saturation), got {:.0}", results.throughput_ops_per_sec);
-    
+
+    // Verify 25G network saturation capability
+    assert!(
+        results.total_operations >= 4_500_000,
+        "Should complete at least 4.5M operations, got {}",
+        results.total_operations
+    );
+    assert!(
+        results.throughput_ops_per_sec >= 28_000.0,
+        "Should achieve 28K+ ops/sec (25G saturation), got {:.0}",
+        results.throughput_ops_per_sec
+    );
+
     // Calculate actual network throughput
-    let network_throughput_mbs = (results.throughput_ops_per_sec * config.memory_allocation_kb as f64) / 1024.0;
-    assert!(network_throughput_mbs >= 2_000.0, "Should achieve 2,000+ MB/s network throughput, got {:.0} MB/s", network_throughput_mbs);
-    
-    assert!(results.stability_score >= 93.0, "Should maintain 93%+ stability for 25G network, got {:.2}%", results.stability_score);
-    assert!(results.data_integrity_verified, "Data integrity must be maintained during 25G saturation");
-    
-    println!("✅ 25G NETWORK SATURATION Test PASSED - {:.0} MB/s network throughput", network_throughput_mbs);
+    let network_throughput_mbs =
+        (results.throughput_ops_per_sec * config.memory_allocation_kb as f64) / 1024.0;
+    assert!(
+        network_throughput_mbs >= 2_000.0,
+        "Should achieve 2,000+ MB/s network throughput, got {:.0} MB/s",
+        network_throughput_mbs
+    );
+
+    assert!(
+        results.stability_score >= 93.0,
+        "Should maintain 93%+ stability for 25G network, got {:.2}%",
+        results.stability_score
+    );
+    assert!(
+        results.data_integrity_verified,
+        "Data integrity must be maintained during 25G saturation"
+    );
+
+    println!(
+        "✅ 25G NETWORK SATURATION Test PASSED - {:.0} MB/s network throughput",
+        network_throughput_mbs
+    );
 }
 
 #[tokio::test]
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_home_connection_maxed_chaos() {
     println!("🏠🔥 HOME CONNECTION MAXED - Ultimate Network Chaos Testing");
-    
+
     let config = ChaosConfig::home_connection_maxed();
     let framework = PolishedChaosFramework::new(config.clone()).await;
-    
+
     println!("📋 Home Connection Maxed Configuration:");
     println!("   🎯 Total Operations: {}", config.total_operations);
-    println!("   ⚡ Target Speed: {} ops/sec", config.operations_per_second);
-    println!("   🌐 Target Throughput: {:.0} MB/s", config.target_network_throughput_mbs());
-    println!("   💥 Fault Rate: {:.1}%", config.fault_injection_rate * 100.0);
+    println!(
+        "   ⚡ Target Speed: {} ops/sec",
+        config.operations_per_second
+    );
+    println!(
+        "   🌐 Target Throughput: {:.0} MB/s",
+        config.target_network_throughput_mbs()
+    );
+    println!(
+        "   💥 Fault Rate: {:.1}%",
+        config.fault_injection_rate * 100.0
+    );
     println!("   🔄 Batch Size: {}", config.batch_size);
-    println!("   ⏱️  Estimated Duration: {:.1}s", config.estimated_duration().as_secs_f64());
-    
+    println!(
+        "   ⏱️  Estimated Duration: {:.1}s",
+        config.estimated_duration().as_secs_f64()
+    );
+
     let start_time = Instant::now();
     let results = framework.execute_chaos_test("Home Connection Maxed").await;
     let actual_duration = start_time.elapsed();
-    
+
     print_production_chaos_results(&results);
-    
+
     // Verify home connection maxing capability
-    assert!(results.total_operations >= 9_000_000, "Should complete at least 9M operations, got {}", results.total_operations);
-    assert!(results.throughput_ops_per_sec >= 40_000.0, "Should achieve 40K+ ops/sec (home connection maxed), got {:.0}", results.throughput_ops_per_sec);
-    
+    assert!(
+        results.total_operations >= 9_000_000,
+        "Should complete at least 9M operations, got {}",
+        results.total_operations
+    );
+    assert!(
+        results.throughput_ops_per_sec >= 40_000.0,
+        "Should achieve 40K+ ops/sec (home connection maxed), got {:.0}",
+        results.throughput_ops_per_sec
+    );
+
     // Calculate actual network throughput
-    let network_throughput_mbs = (results.throughput_ops_per_sec * config.memory_allocation_kb as f64) / 1024.0;
-    assert!(network_throughput_mbs >= 3_500.0, "Should achieve 3,500+ MB/s network throughput, got {:.0} MB/s", network_throughput_mbs);
-    
-    assert!(results.stability_score >= 90.0, "Should maintain 90%+ stability for home connection maxing, got {:.2}%", results.stability_score);
-    assert!(results.data_integrity_verified, "Data integrity must be maintained during home connection maxing");
-    
-    println!("✅ HOME CONNECTION MAXED Test PASSED - {:.0} MB/s network throughput", network_throughput_mbs);
+    let network_throughput_mbs =
+        (results.throughput_ops_per_sec * config.memory_allocation_kb as f64) / 1024.0;
+    assert!(
+        network_throughput_mbs >= 3_500.0,
+        "Should achieve 3,500+ MB/s network throughput, got {:.0} MB/s",
+        network_throughput_mbs
+    );
+
+    assert!(
+        results.stability_score >= 90.0,
+        "Should maintain 90%+ stability for home connection maxing, got {:.2}%",
+        results.stability_score
+    );
+    assert!(
+        results.data_integrity_verified,
+        "Data integrity must be maintained during home connection maxing"
+    );
+
+    println!(
+        "✅ HOME CONNECTION MAXED Test PASSED - {:.0} MB/s network throughput",
+        network_throughput_mbs
+    );
 }
 
 #[tokio::test]
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_comprehensive_network_saturation_suite() {
     println!("🌐🔥🔥🔥 COMPREHENSIVE NETWORK SATURATION SUITE 🔥🔥🔥\n");
-    
+
     let network_scenarios = vec![
-        ("2.5G Network", ChaosConfig::network_saturation_2_5g(), 200.0),
+        (
+            "2.5G Network",
+            ChaosConfig::network_saturation_2_5g(),
+            200.0,
+        ),
         ("10G Network", ChaosConfig::network_saturation_10g(), 800.0),
         ("25G Network", ChaosConfig::network_saturation_25g(), 2000.0),
         ("Home Maxed", ChaosConfig::home_connection_maxed(), 3500.0),
     ];
-    
+
     let mut all_results = Vec::new();
     let mut total_throughput = 0.0;
-    
+
     for (scenario_name, config, min_throughput) in network_scenarios {
         println!("🚀 Testing Network Scenario: {}", scenario_name);
         let framework = PolishedChaosFramework::new(config.clone()).await;
         let start_time = Instant::now();
         let results = framework.execute_chaos_test(scenario_name).await;
         let actual_duration = start_time.elapsed();
-        
+
         // Calculate network throughput
-        let network_throughput_mbs = (results.throughput_ops_per_sec * config.memory_allocation_kb as f64) / 1024.0;
+        let network_throughput_mbs =
+            (results.throughput_ops_per_sec * config.memory_allocation_kb as f64) / 1024.0;
         total_throughput += network_throughput_mbs;
-        
+
         print_production_chaos_results(&results);
-        println!("   🌐 Network Throughput: {:.0} MB/s", network_throughput_mbs);
+        println!(
+            "   🌐 Network Throughput: {:.0} MB/s",
+            network_throughput_mbs
+        );
         println!("   ⏱️  Duration: {:.2}s", actual_duration.as_secs_f64());
         println!();
-        
+
         // Verify minimum throughput for each scenario
-        assert!(network_throughput_mbs >= min_throughput, 
-            "{} should achieve {}+ MB/s, got {:.0} MB/s", 
-            scenario_name, min_throughput, network_throughput_mbs);
-        
+        assert!(
+            network_throughput_mbs >= min_throughput,
+            "{} should achieve {}+ MB/s, got {:.0} MB/s",
+            scenario_name,
+            min_throughput,
+            network_throughput_mbs
+        );
+
         all_results.push((scenario_name, results, network_throughput_mbs));
-        
+
         // Brief pause between network stress tests
         sleep(Duration::from_secs(2)).await;
     }
-    
+
     println!("🔥 COMPREHENSIVE NETWORK SATURATION SUITE RESULTS:");
     println!("   📊 Total Scenarios: {}", all_results.len());
-    println!("   🌐 Average Network Throughput: {:.0} MB/s", total_throughput / all_results.len() as f64);
+    println!(
+        "   🌐 Average Network Throughput: {:.0} MB/s",
+        total_throughput / all_results.len() as f64
+    );
     println!("   ✅ All Network Saturation Tests PASSED");
-    
+
     // Verify overall suite performance
-    let all_integrity_ok = all_results.iter().all(|(_, r, _)| r.data_integrity_verified);
-    let avg_stability = all_results.iter().map(|(_, r, _)| r.stability_score).sum::<f64>() / all_results.len() as f64;
-    
-    assert!(all_integrity_ok, "Data integrity must be maintained across all network saturation tests");
-    assert!(avg_stability >= 92.0, "Should maintain 92%+ average stability across all network tests, got {:.2}%", avg_stability);
-    assert!(total_throughput >= 6_500.0, "Should achieve cumulative 6,500+ MB/s throughput, got {:.0} MB/s", total_throughput);
-    
+    let all_integrity_ok = all_results
+        .iter()
+        .all(|(_, r, _)| r.data_integrity_verified);
+    let avg_stability = all_results
+        .iter()
+        .map(|(_, r, _)| r.stability_score)
+        .sum::<f64>()
+        / all_results.len() as f64;
+
+    assert!(
+        all_integrity_ok,
+        "Data integrity must be maintained across all network saturation tests"
+    );
+    assert!(
+        avg_stability >= 92.0,
+        "Should maintain 92%+ average stability across all network tests, got {:.2}%",
+        avg_stability
+    );
+    assert!(
+        total_throughput >= 6_500.0,
+        "Should achieve cumulative 6,500+ MB/s throughput, got {:.0} MB/s",
+        total_throughput
+    );
+
     println!("✅ COMPREHENSIVE NETWORK SATURATION SUITE PASSED - Ready for 2.5G to Home Fiber!");
 }
 
@@ -3709,68 +4643,120 @@ async fn test_comprehensive_network_saturation_suite() {
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_storage_baseline_2_5g_benchmark() {
     println!("💾⚡ STORAGE BASELINE 2.5G - NVMe Performance Test");
-    
+
     let config = ChaosConfig::storage_baseline_2_5g();
     let framework = PolishedChaosFramework::new(config.clone()).await;
-    
+
     println!("📋 2.5G Storage Baseline Configuration:");
     println!("   🎯 Operations: {}", config.total_operations);
-    println!("   ⚡ Target Speed: {} ops/sec", config.operations_per_second);
-    println!("   🌐 Target Throughput: {:.0} MB/s", config.target_network_throughput_mbs());
-    println!("   💥 Fault Rate: {:.1}%", config.fault_injection_rate * 100.0);
+    println!(
+        "   ⚡ Target Speed: {} ops/sec",
+        config.operations_per_second
+    );
+    println!(
+        "   🌐 Target Throughput: {:.0} MB/s",
+        config.target_network_throughput_mbs()
+    );
+    println!(
+        "   💥 Fault Rate: {:.1}%",
+        config.fault_injection_rate * 100.0
+    );
     println!("   🔧 Concurrency: {}", config.max_concurrent_operations);
     println!("   📦 Batch Size: {}", config.batch_size);
-    
+
     let start_time = std::time::Instant::now();
     let results = framework.execute_chaos_test("NVMe-2.5G-Baseline").await;
     let actual_duration = start_time.elapsed();
-    
+
     println!("📊 2.5G Storage Baseline Results:");
-    println!("   📈 Throughput: {:.0} ops/sec", results.throughput_ops_per_sec);
-    println!("   🌐 Data Rate: {:.0} MB/s", (results.throughput_ops_per_sec * config.memory_allocation_kb as f64) / 1024.0);
+    println!(
+        "   📈 Throughput: {:.0} ops/sec",
+        results.throughput_ops_per_sec
+    );
+    println!(
+        "   🌐 Data Rate: {:.0} MB/s",
+        (results.throughput_ops_per_sec * config.memory_allocation_kb as f64) / 1024.0
+    );
     println!("   🎯 Stability: {:.2}%", results.stability_score * 100.0);
     println!("   💥 Faults: {}", results.faults_injected);
     println!("   ⏱️  Duration: {:.2}s", actual_duration.as_secs_f64());
-    
+
     // 2.5G baseline should achieve at least 200 MB/s
-    let actual_throughput_mbs = (results.throughput_ops_per_sec * config.memory_allocation_kb as f64) / 1024.0;
-    assert!(actual_throughput_mbs >= 200.0, "2.5G baseline should achieve at least 200 MB/s, got {:.0} MB/s", actual_throughput_mbs);
-    assert!(results.stability_score >= 0.99, "2.5G baseline should have 99%+ stability");
-    
-    println!("✅ 2.5G Storage Baseline PASSED - {:.0} MB/s throughput", actual_throughput_mbs);
+    let actual_throughput_mbs =
+        (results.throughput_ops_per_sec * config.memory_allocation_kb as f64) / 1024.0;
+    assert!(
+        actual_throughput_mbs >= 200.0,
+        "2.5G baseline should achieve at least 200 MB/s, got {:.0} MB/s",
+        actual_throughput_mbs
+    );
+    assert!(
+        results.stability_score >= 0.99,
+        "2.5G baseline should have 99%+ stability"
+    );
+
+    println!(
+        "✅ 2.5G Storage Baseline PASSED - {:.0} MB/s throughput",
+        actual_throughput_mbs
+    );
 }
 
 #[tokio::test]
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
 async fn test_storage_optimized_10g_benchmark() {
     println!("💾🚀 STORAGE OPTIMIZED 10G - Maximum NVMe Performance Test");
-    
+
     let config = ChaosConfig::storage_optimized_10g();
     let framework = PolishedChaosFramework::new(config.clone()).await;
-    
+
     println!("📋 10G Storage Optimized Configuration:");
     println!("   🎯 Operations: {}", config.total_operations);
-    println!("   ⚡ Target Speed: {} ops/sec", config.operations_per_second);
-    println!("   🌐 Target Throughput: {:.0} MB/s", config.target_network_throughput_mbs());
-    println!("   💥 Fault Rate: {:.1}%", config.fault_injection_rate * 100.0);
+    println!(
+        "   ⚡ Target Speed: {} ops/sec",
+        config.operations_per_second
+    );
+    println!(
+        "   🌐 Target Throughput: {:.0} MB/s",
+        config.target_network_throughput_mbs()
+    );
+    println!(
+        "   💥 Fault Rate: {:.1}%",
+        config.fault_injection_rate * 100.0
+    );
     println!("   🔧 Concurrency: {}", config.max_concurrent_operations);
     println!("   📦 Batch Size: {}", config.batch_size);
-    
+
     let start_time = std::time::Instant::now();
     let results = framework.execute_chaos_test("NVMe-10G-Optimized").await;
     let actual_duration = start_time.elapsed();
-    
+
     println!("📊 10G Storage Optimized Results:");
-    println!("   📈 Throughput: {:.0} ops/sec", results.throughput_ops_per_sec);
-    println!("   🌐 Data Rate: {:.0} MB/s", (results.throughput_ops_per_sec * config.memory_allocation_kb as f64) / 1024.0);
+    println!(
+        "   📈 Throughput: {:.0} ops/sec",
+        results.throughput_ops_per_sec
+    );
+    println!(
+        "   🌐 Data Rate: {:.0} MB/s",
+        (results.throughput_ops_per_sec * config.memory_allocation_kb as f64) / 1024.0
+    );
     println!("   🎯 Stability: {:.2}%", results.stability_score * 100.0);
     println!("   💥 Faults: {}", results.faults_injected);
     println!("   ⏱️  Duration: {:.2}s", actual_duration.as_secs_f64());
-    
+
     // 10G optimized should achieve at least 800 MB/s
-    let actual_throughput_mbs = (results.throughput_ops_per_sec * config.memory_allocation_kb as f64) / 1024.0;
-    assert!(actual_throughput_mbs >= 800.0, "10G optimized should achieve at least 800 MB/s, got {:.0} MB/s", actual_throughput_mbs);
-    assert!(results.stability_score >= 0.998, "10G optimized should have 99.8%+ stability");
-    
-    println!("✅ 10G Storage Optimized PASSED - {:.0} MB/s throughput", actual_throughput_mbs);
+    let actual_throughput_mbs =
+        (results.throughput_ops_per_sec * config.memory_allocation_kb as f64) / 1024.0;
+    assert!(
+        actual_throughput_mbs >= 800.0,
+        "10G optimized should achieve at least 800 MB/s, got {:.0} MB/s",
+        actual_throughput_mbs
+    );
+    assert!(
+        results.stability_score >= 0.998,
+        "10G optimized should have 99.8%+ stability"
+    );
+
+    println!(
+        "✅ 10G Storage Optimized PASSED - {:.0} MB/s throughput",
+        actual_throughput_mbs
+    );
 }

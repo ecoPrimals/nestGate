@@ -54,7 +54,7 @@ mod tests {
     async fn test_token_rotation_interval() {
         let (_temp_dir, tls_config) = create_test_certs();
         let mut manager = SecurityManager::new(Some(tls_config), "test-token".to_string());
-        
+
         // Override rotation interval for testing
         manager.token_rotation_interval = Duration::from_millis(100);
         manager.last_rotation = SystemTime::now() - Duration::from_secs(1);
@@ -116,7 +116,7 @@ mod tests {
     async fn test_token_rotation_service() {
         let (_temp_dir, tls_config) = create_test_certs();
         let mut manager = SecurityManager::new(Some(tls_config), "test-token".to_string());
-        
+
         // Override rotation interval for testing
         manager.token_rotation_interval = Duration::from_millis(100);
         let initial_token = manager.get_current_token().to_string();
@@ -132,7 +132,7 @@ mod tests {
     fn test_token_generation() {
         let (_temp_dir, tls_config) = create_test_certs();
         let manager = SecurityManager::new(Some(tls_config), "test-token".to_string());
-        
+
         // Verify token is valid base64
         let token = manager.get_current_token();
         assert!(BASE64.decode(token).is_ok());
@@ -146,7 +146,7 @@ mod tests {
             token_expiry_hours: 24,
             ..Default::default()
         };
-        
+
         let validation_result = config.validate();
         assert!(validation_result.is_ok());
     }
@@ -159,7 +159,7 @@ mod tests {
             token_expiry_hours: 24,
             ..Default::default()
         };
-        
+
         let validation_result = config.validate();
         match validation_result {
             Err(Error::Configuration(msg)) => {
@@ -177,7 +177,7 @@ mod tests {
             token_expiry_hours: 24,
             ..Default::default()
         };
-        
+
         let validation_result = config.validate();
         match validation_result {
             Err(Error::Configuration(msg)) => {
@@ -195,7 +195,7 @@ mod tests {
             token_expiry_hours: 0, // Invalid value
             ..Default::default()
         };
-        
+
         let validation_result = config.validate();
         match validation_result {
             Err(Error::Configuration(msg)) => {
@@ -204,4 +204,4 @@ mod tests {
             _ => assert!(false, "Expected ConfigError"),
         }
     }
-} 
+}

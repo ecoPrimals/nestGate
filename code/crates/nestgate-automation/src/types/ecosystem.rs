@@ -4,7 +4,7 @@ use super::{DatasetContext, ServiceHealth, StorageContext, TaskPriority};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
-use crate::types::prediction::FileType;
+
 use nestgate_core::types::StorageTier;
 
 /// Service plan for dynamic task execution
@@ -15,7 +15,7 @@ pub enum ServicePlan {
         squirrel_id: String,
         compute_service_id: String,
     },
-    /// Direct connection to external compute service for analysis  
+    /// Direct connection to external compute service for analysis
     DirectCompute { compute_service_id: String },
     /// Use multiple NestGate peers for distributed processing
     DistributedNestGate { peer_ids: Vec<String> },

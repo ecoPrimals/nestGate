@@ -12,7 +12,7 @@ pub const DEFAULT_IPV6_ALL_INTERFACES: &str = "::";
 // Environment-aware default ports for different services
 pub mod default_ports {
     use std::env;
-    
+
     /// Get orchestrator port from environment or fallback to default
     pub fn orchestrator() -> u16 {
         env::var("NESTGATE_ORCHESTRATOR_PORT")
@@ -20,7 +20,7 @@ pub mod default_ports {
             .parse()
             .unwrap_or(8090)
     }
-    
+
     /// Get API port from environment or fallback to default
     pub fn api() -> u16 {
         env::var("NESTGATE_API_PORT")
@@ -28,7 +28,7 @@ pub mod default_ports {
             .parse()
             .unwrap_or(8080)
     }
-    
+
     /// Get MCP port from environment or fallback to default
     pub fn mcp() -> u16 {
         env::var("NESTGATE_MCP_PORT")
@@ -36,7 +36,7 @@ pub mod default_ports {
             .parse()
             .unwrap_or(8081)
     }
-    
+
     /// Get WebSocket port from environment or fallback to default
     pub fn websocket() -> u16 {
         env::var("NESTGATE_WEBSOCKET_PORT")
@@ -44,7 +44,7 @@ pub mod default_ports {
             .parse()
             .unwrap_or(8082)
     }
-    
+
     /// Get metrics port from environment or fallback to default
     pub fn metrics() -> u16 {
         env::var("NESTGATE_METRICS_PORT")
@@ -52,7 +52,7 @@ pub mod default_ports {
             .parse()
             .unwrap_or(8083)
     }
-    
+
     /// Get health check port from environment or fallback to default
     pub fn health() -> u16 {
         env::var("NESTGATE_HEALTH_PORT")
@@ -60,7 +60,7 @@ pub mod default_ports {
             .parse()
             .unwrap_or(8084)
     }
-    
+
     /// Get ZFS API port from environment or fallback to default
     pub fn zfs_api() -> u16 {
         env::var("NESTGATE_ZFS_API_PORT")
@@ -68,7 +68,7 @@ pub mod default_ports {
             .parse()
             .unwrap_or(8085)
     }
-    
+
     /// Get network service port from environment or fallback to default
     pub fn network_service() -> u16 {
         env::var("NESTGATE_NETWORK_SERVICE_PORT")
@@ -76,7 +76,7 @@ pub mod default_ports {
             .parse()
             .unwrap_or(8086)
     }
-    
+
     // Legacy constants for backward compatibility (deprecated)
     #[deprecated(note = "Use default_ports::api() instead")]
     pub const API: u16 = default_ports::api();
@@ -105,7 +105,7 @@ impl Default for NetworkConfig {
     fn default() -> Self {
         // Check if we're in Songbird mode or standalone mode
         let songbird_mode = std::env::var("SONGBIRD_URL").is_ok();
-        
+
         if songbird_mode {
             // Songbird-enhanced mode: use service names
             Self {
@@ -143,7 +143,7 @@ impl NetworkConfig {
             custom_host: None,
         }
     }
-    
+
     /// Create a new network config for all interfaces (less secure, for production)
     pub fn all_interfaces(port: u16) -> Self {
         Self {
@@ -154,7 +154,7 @@ impl NetworkConfig {
             custom_host: None,
         }
     }
-    
+
     /// Create a new network config with custom host
     pub fn custom_host(host: &str, port: u16) -> Self {
         Self {
@@ -165,7 +165,7 @@ impl NetworkConfig {
             custom_host: Some(host.to_string()),
         }
     }
-    
+
     /// Get the full bind address
     pub fn bind_address(&self) -> String {
         if let Some(ref custom) = self.custom_host {
@@ -174,7 +174,7 @@ impl NetworkConfig {
             format!("{}:{}", self.bind_interface, self.port)
         }
     }
-    
+
     /// Get the interface to bind to
     pub fn interface(&self) -> &str {
         if let Some(ref custom) = self.custom_host {
@@ -183,15 +183,15 @@ impl NetworkConfig {
             &self.bind_interface
         }
     }
-    
+
     /// Check if this is a secure localhost-only binding
     pub fn is_localhost_only(&self) -> bool {
-        self.localhost_only || 
-        self.bind_interface == DEFAULT_LOCALHOST || 
+        self.localhost_only ||
+        self.bind_interface == DEFAULT_LOCALHOST ||
         self.bind_interface == DEFAULT_IPV6_LOCALHOST ||
         self.custom_host.as_ref().is_some_and(|h| h == DEFAULT_LOCALHOST || h == DEFAULT_IPV6_LOCALHOST)
     }
-    
+
     /// Check if this exposes the service to external networks
     pub fn is_externally_accessible(&self) -> bool {
         !self.is_localhost_only()
@@ -233,7 +233,7 @@ impl EnvironmentConfig {
     pub fn default_network_config(&self, service_port: u16) -> NetworkConfig {
         // Check if we're in Songbird mode
         let songbird_mode = std::env::var("SONGBIRD_URL").is_ok();
-        
+
         if songbird_mode {
             // Songbird-enhanced mode: service-based addressing
             NetworkConfig {
@@ -271,4 +271,4 @@ impl EnvironmentConfig {
             }
         }
     }
-} 
+}

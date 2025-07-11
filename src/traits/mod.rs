@@ -1,5 +1,5 @@
 //! Core traits for the Songbird Orchestrator
-//! 
+//!
 //! This module defines the fundamental traits that enable universal service orchestration
 //! across different project types and deployment environments.
 
@@ -15,4 +15,4 @@ pub use service::*;
 pub use discovery::{ServiceDiscovery, ServiceQuery, ServiceEvent};
 pub use health::{HealthMonitor, HealthCheck, HealthStatus, HealthState};
 pub use config::ConfigProvider;
-pub use communication::CommunicationLayer; 
+pub use communication::CommunicationLayer;

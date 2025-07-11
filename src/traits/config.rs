@@ -1,5 +1,5 @@
 //! Configuration Provider Trait
-//! 
+//!
 //! Defines the interface for pluggable configuration backends,
 //! supporting file-based, environment, Consul, and other configuration sources.
 
@@ -17,22 +17,22 @@ pub use crate::config::*;
 
 /// Configuration provider trait
 #[async_trait]
-pub trait ConfigProvider<T>: Send + Sync 
-where 
-    T: serde::de::DeserializeOwned + Clone + Send + Sync 
+pub trait ConfigProvider<T>: Send + Sync
+where
+    T: serde::de::DeserializeOwned + Clone + Send + Sync
 {
     /// Load configuration from the provider
     async fn load_config(&self) -> Result<T>;
-    
+
     /// Reload configuration (useful for file-based configs)
     async fn reload_config(&self) -> Result<T>;
-    
+
     /// Watch for configuration changes
     async fn watch_config(&self) -> impl Stream<Item = Result<T>>;
-    
+
     /// Validate configuration before loading
     async fn validate_config(&self, config: &T) -> Result<()>;
-    
+
     /// Get provider information
     fn provider_info(&self) -> ConfigProviderInfo;
 }
@@ -61,4 +61,4 @@ pub struct NetworkConfig {
     pub websocket: WebSocketConfig,
     pub http: HttpConfig,
     pub federation: FederationConfig,
-} 
+}

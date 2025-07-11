@@ -18,7 +18,11 @@
 use config::{Config as ConfigBuilder, Environment as ConfigEnvironment, File};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::env;
+use std::net::SocketAddr;
 use std::path::Path;
+use std::path::PathBuf;
+use std::str::FromStr;
 use uuid;
 
 // Re-export from existing error module
@@ -491,7 +495,7 @@ pub struct ServiceEndpoints {
     pub nestgate_api: String,
     pub nestgate_ui: String,
 
-    /// External service endpoints  
+    /// External service endpoints
     pub songbird_orchestrator: String,
     pub beardog_security: String,
     pub ecosystem_orchestrator: String,
@@ -1153,5 +1157,620 @@ endpoints:
 
         // Cleanup
         std::fs::remove_file(&temp_path).expect("Failed to cleanup temporary config file");
+    }
+}
+
+/// Network configuration constants
+pub mod network {
+    use super::*;
+
+    /// Get the default bind address for services
+    pub fn default_bind_address() -> String {
+        env::var("NESTGATE_BIND_ADDRESS").unwrap_or_else(|_| "0.0.0.0:8080".to_string())
+    }
+
+    /// Get the default API server address
+    pub fn default_api_address() -> String {
+        env::var("NESTGATE_API_ADDRESS").unwrap_or_else(|_| "0.0.0.0:8080".to_string())
+    }
+
+    /// Get the default streaming RPC address
+    pub fn default_streaming_rpc_address() -> String {
+        env::var("NESTGATE_STREAMING_RPC_ADDRESS").unwrap_or_else(|_| "0.0.0.0:8081".to_string())
+    }
+
+    /// Get the default WebSocket address
+    pub fn default_websocket_address() -> String {
+        env::var("NESTGATE_WEBSOCKET_ADDRESS").unwrap_or_else(|_| "0.0.0.0:8082".to_string())
+    }
+
+    /// Get the default server hostname
+    pub fn default_hostname() -> String {
+        env::var("NESTGATE_HOSTNAME").unwrap_or_else(|_| "localhost".to_string())
+    }
+
+    /// Get the default external hostname for client connections
+    pub fn default_external_hostname() -> String {
+        env::var("NESTGATE_EXTERNAL_HOSTNAME").unwrap_or_else(|_| "localhost".to_string())
+    }
+
+    /// Get the default API port
+    pub fn default_api_port() -> u16 {
+        env::var("NESTGATE_API_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(8080)
+    }
+
+    /// Get the default streaming RPC port
+    pub fn default_streaming_rpc_port() -> u16 {
+        env::var("NESTGATE_STREAMING_RPC_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(8081)
+    }
+
+    /// Get the default WebSocket port
+    pub fn default_websocket_port() -> u16 {
+        env::var("NESTGATE_WEBSOCKET_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(8082)
+    }
+
+    /// Get the default web interface port
+    pub fn default_web_port() -> u16 {
+        env::var("NESTGATE_WEB_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(3000)
+    }
+
+    /// Get the NAS bind address
+    pub fn default_nas_bind_address() -> String {
+        env::var("NESTGATE_NAS_BIND_ADDRESS").unwrap_or_else(|_| "127.0.0.1".to_string())
+    }
+
+    /// Get the health check URL
+    pub fn default_health_check_url() -> String {
+        let hostname = default_external_hostname();
+        let port = default_api_port();
+        env::var("NESTGATE_HEALTH_CHECK_URL")
+            .unwrap_or_else(|_| format!("http://{}:{}/health", hostname, port))
+    }
+
+    /// Get API base URL
+    pub fn default_api_base_url() -> String {
+        let hostname = default_external_hostname();
+        let port = default_api_port();
+        env::var("NESTGATE_API_BASE_URL")
+            .unwrap_or_else(|_| format!("http://{}:{}", hostname, port))
+    }
+}
+
+/// Service endpoint configuration
+pub mod endpoints {
+    use super::*;
+
+    /// Get BearDog service endpoint
+    pub fn beardog_endpoint() -> String {
+        env::var("BEARDOG_URL").unwrap_or_else(|_| "http://beardog:8443".to_string())
+    }
+
+    /// Get Songbird service endpoint
+    pub fn songbird_endpoint() -> String {
+        env::var("SONGBIRD_URL").unwrap_or_else(|_| "http://songbird:8080".to_string())
+    }
+
+    /// Get Squirrel AI service endpoint
+    pub fn squirrel_endpoint() -> String {
+        env::var("SQUIRREL_URL").unwrap_or_else(|_| "http://squirrel:8080".to_string())
+    }
+
+    /// Get Toadstool compute service endpoint
+    pub fn toadstool_endpoint() -> String {
+        env::var("TOADSTOOL_URL").unwrap_or_else(|_| "http://toadstool-compute:8080".to_string())
+    }
+
+    /// Get orchestration service endpoint
+    pub fn orchestration_endpoint() -> String {
+        env::var("NESTGATE_ORCHESTRATION_URL")
+            .unwrap_or_else(|_| "http://localhost:3000".to_string())
+    }
+
+    /// Get BiomeOS service endpoint
+    pub fn biomeos_endpoint() -> String {
+        env::var("BIOMEOS_URL").unwrap_or_else(|_| "http://localhost:4000".to_string())
+    }
+
+    /// Get storage node endpoint
+    pub fn storage_node_endpoint() -> String {
+        env::var("NESTGATE_STORAGE_NODE_URL")
+            .unwrap_or_else(|_| "http://storage-node:8080".to_string())
+    }
+}
+
+/// File system paths configuration
+pub mod paths {
+    use super::*;
+
+    /// Get the default cache directory
+    pub fn default_cache_dir() -> PathBuf {
+        env::var("NESTGATE_CACHE_DIR")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| {
+                let mut path = env::temp_dir();
+                path.push("nestgate_cache");
+                path
+            })
+    }
+
+    /// Get the default temporary directory
+    pub fn default_temp_dir() -> PathBuf {
+        env::var("NESTGATE_TEMP_DIR")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| {
+                let mut path = env::temp_dir();
+                path.push("nestgate_tmp");
+                path
+            })
+    }
+
+    /// Get the default data directory
+    pub fn default_data_dir() -> PathBuf {
+        env::var("NESTGATE_DATA_DIR")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| {
+                if let Ok(home) = env::var("HOME") {
+                    let mut path = PathBuf::from(home);
+                    path.push(".nestgate");
+                    path.push("data");
+                    path
+                } else {
+                    PathBuf::from("/var/lib/nestgate/data")
+                }
+            })
+    }
+
+    /// Get the default configuration directory
+    pub fn default_config_dir() -> PathBuf {
+        env::var("NESTGATE_CONFIG_DIR")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| {
+                if let Ok(home) = env::var("HOME") {
+                    let mut path = PathBuf::from(home);
+                    path.push(".nestgate");
+                    path.push("config");
+                    path
+                } else {
+                    PathBuf::from("/etc/nestgate")
+                }
+            })
+    }
+
+    /// Get the default log directory
+    pub fn default_log_dir() -> PathBuf {
+        env::var("NESTGATE_LOG_DIR")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| {
+                if let Ok(home) = env::var("HOME") {
+                    let mut path = PathBuf::from(home);
+                    path.push(".nestgate");
+                    path.push("logs");
+                    path
+                } else {
+                    PathBuf::from("/var/log/nestgate")
+                }
+            })
+    }
+
+    /// Get the default HuggingFace cache directory
+    pub fn default_huggingface_cache_dir() -> PathBuf {
+        env::var("NESTGATE_HF_CACHE_DIR")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| {
+                let mut path = default_cache_dir();
+                path.push("huggingface");
+                path
+            })
+    }
+
+    /// Get the default NFS exports path
+    pub fn default_nfs_exports_path() -> PathBuf {
+        env::var("NESTGATE_NFS_EXPORTS_PATH")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| {
+                let mut path = default_temp_dir();
+                path.push("nestgate_exports");
+                path
+            })
+    }
+
+    /// Get the default share root directory
+    pub fn default_share_root() -> PathBuf {
+        env::var("NESTGATE_SHARE_ROOT")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| {
+                let mut path = default_data_dir();
+                path.push("shares");
+                path
+            })
+    }
+}
+
+/// Authentication and security configuration
+pub mod security {
+    use super::*;
+
+    /// Get BearDog API key
+    pub fn beardog_api_key() -> String {
+        env::var("BEARDOG_API_KEY").unwrap_or_else(|_| {
+            tracing::warn!("BEARDOG_API_KEY not set, using default (not secure for production)");
+            "default_beardog_key".to_string()
+        })
+    }
+
+    /// Get Songbird API key
+    pub fn songbird_api_key() -> String {
+        env::var("SONGBIRD_API_KEY").unwrap_or_else(|_| {
+            tracing::warn!("SONGBIRD_API_KEY not set, using default (not secure for production)");
+            "default_songbird_key".to_string()
+        })
+    }
+
+    /// Get Squirrel AI API key
+    pub fn squirrel_api_key() -> String {
+        env::var("SQUIRREL_API_KEY").unwrap_or_else(|_| {
+            tracing::warn!("SQUIRREL_API_KEY not set, using default (not secure for production)");
+            "default_squirrel_key".to_string()
+        })
+    }
+
+    /// Get Toadstool compute API key
+    pub fn toadstool_api_key() -> String {
+        env::var("TOADSTOOL_API_KEY").unwrap_or_else(|_| {
+            tracing::warn!("TOADSTOOL_API_KEY not set, using default (not secure for production)");
+            "default_toadstool_key".to_string()
+        })
+    }
+
+    /// Get HuggingFace API token
+    pub fn huggingface_api_token() -> Option<String> {
+        env::var("HUGGINGFACE_API_TOKEN").ok()
+    }
+
+    /// Get NCBI API key
+    pub fn ncbi_api_key() -> Option<String> {
+        env::var("NCBI_API_KEY").ok()
+    }
+
+    /// Get default BearDog validation token (for testing only)
+    pub fn default_beardog_validation_token() -> String {
+        env::var("BEARDOG_VALIDATION_TOKEN").unwrap_or_else(|_| {
+            if is_production() {
+                panic!("BEARDOG_VALIDATION_TOKEN must be set in production");
+            }
+            tracing::warn!("Using default BearDog validation token (testing only)");
+            "test_token".to_string()
+        })
+    }
+
+    /// Get JWT secret key
+    pub fn jwt_secret() -> String {
+        env::var("NESTGATE_JWT_SECRET").unwrap_or_else(|_| {
+            if is_production() {
+                panic!("NESTGATE_JWT_SECRET must be set in production");
+            }
+            tracing::warn!("Using default JWT secret (not secure for production)");
+            "default_jwt_secret_change_in_production".to_string()
+        })
+    }
+
+    /// Get encryption key
+    pub fn encryption_key() -> String {
+        env::var("NESTGATE_ENCRYPTION_KEY").unwrap_or_else(|_| {
+            if is_production() {
+                panic!("NESTGATE_ENCRYPTION_KEY must be set in production");
+            }
+            tracing::warn!("Using default encryption key (not secure for production)");
+            "default_encryption_key_change_in_production".to_string()
+        })
+    }
+}
+
+/// Environment detection
+pub mod environment {
+    use super::*;
+
+    /// Check if running in production mode
+    pub fn is_production() -> bool {
+        env::var("NESTGATE_ENV")
+            .map(|env| env.to_lowercase() == "production")
+            .unwrap_or(false)
+    }
+
+    /// Check if running in development mode
+    pub fn is_development() -> bool {
+        env::var("NESTGATE_ENV")
+            .map(|env| env.to_lowercase() == "development")
+            .unwrap_or(true)
+    }
+
+    /// Check if running in test mode
+    pub fn is_test() -> bool {
+        env::var("NESTGATE_ENV")
+            .map(|env| env.to_lowercase() == "test")
+            .unwrap_or(false)
+    }
+
+    /// Get the current environment
+    pub fn current_environment() -> String {
+        env::var("NESTGATE_ENV").unwrap_or_else(|_| "development".to_string())
+    }
+}
+
+/// Feature flags configuration
+pub mod features {
+    use super::*;
+
+    /// Check if AI features are enabled
+    pub fn ai_features_enabled() -> bool {
+        env::var("NESTGATE_AI_FEATURES")
+            .map(|v| v.to_lowercase() == "true" || v == "1")
+            .unwrap_or(true)
+    }
+
+    /// Check if ZFS features are enabled
+    pub fn zfs_features_enabled() -> bool {
+        env::var("NESTGATE_ZFS_FEATURES")
+            .map(|v| v.to_lowercase() == "true" || v == "1")
+            .unwrap_or(true)
+    }
+
+    /// Check if networking features are enabled
+    pub fn network_features_enabled() -> bool {
+        env::var("NESTGATE_NETWORK_FEATURES")
+            .map(|v| v.to_lowercase() == "true" || v == "1")
+            .unwrap_or(true)
+    }
+
+    /// Check if web interface is enabled
+    pub fn web_interface_enabled() -> bool {
+        env::var("NESTGATE_WEB_INTERFACE")
+            .map(|v| v.to_lowercase() == "true" || v == "1")
+            .unwrap_or(true)
+    }
+
+    /// Check if metrics collection is enabled
+    pub fn metrics_enabled() -> bool {
+        env::var("NESTGATE_METRICS")
+            .map(|v| v.to_lowercase() == "true" || v == "1")
+            .unwrap_or(true)
+    }
+
+    /// Check if debug logging is enabled
+    pub fn debug_logging_enabled() -> bool {
+        env::var("NESTGATE_DEBUG_LOGGING")
+            .map(|v| v.to_lowercase() == "true" || v == "1")
+            .unwrap_or(false)
+    }
+}
+
+/// Database configuration
+pub mod database {
+    use super::*;
+
+    /// Get database URL
+    pub fn database_url() -> String {
+        env::var("NESTGATE_DATABASE_URL").unwrap_or_else(|_| {
+            let data_dir = super::paths::default_data_dir();
+            format!("sqlite://{}/nestgate.db", data_dir.display())
+        })
+    }
+
+    /// Get database connection pool size
+    pub fn database_pool_size() -> u32 {
+        env::var("NESTGATE_DATABASE_POOL_SIZE")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(10)
+    }
+}
+
+/// Performance tuning configuration
+pub mod performance {
+    use super::*;
+
+    /// Get the number of worker threads
+    pub fn worker_threads() -> usize {
+        env::var("NESTGATE_WORKER_THREADS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or_else(num_cpus::get)
+    }
+
+    /// Get the request timeout in seconds
+    pub fn request_timeout_seconds() -> u64 {
+        env::var("NESTGATE_REQUEST_TIMEOUT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(30)
+    }
+
+    /// Get the connection timeout in seconds
+    pub fn connection_timeout_seconds() -> u64 {
+        env::var("NESTGATE_CONNECTION_TIMEOUT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(5)
+    }
+
+    /// Get the maximum concurrent connections
+    pub fn max_concurrent_connections() -> usize {
+        env::var("NESTGATE_MAX_CONNECTIONS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(1000)
+    }
+}
+
+/// Utility functions
+pub use environment::is_production;
+
+/// Centralized configuration structure
+#[derive(Debug, Clone)]
+pub struct NestGateConfig {
+    pub bind_address: String,
+    pub api_address: String,
+    pub streaming_rpc_address: String,
+    pub websocket_address: String,
+    pub hostname: String,
+    pub external_hostname: String,
+    pub api_port: u16,
+    pub streaming_rpc_port: u16,
+    pub websocket_port: u16,
+    pub web_port: u16,
+    pub cache_dir: PathBuf,
+    pub temp_dir: PathBuf,
+    pub data_dir: PathBuf,
+    pub config_dir: PathBuf,
+    pub log_dir: PathBuf,
+    pub beardog_api_key: String,
+    pub songbird_api_key: String,
+    pub squirrel_api_key: String,
+    pub toadstool_api_key: String,
+    pub huggingface_api_token: Option<String>,
+    pub ncbi_api_key: Option<String>,
+    pub jwt_secret: String,
+    pub encryption_key: String,
+    pub environment: String,
+    pub ai_features_enabled: bool,
+    pub zfs_features_enabled: bool,
+    pub network_features_enabled: bool,
+    pub web_interface_enabled: bool,
+    pub metrics_enabled: bool,
+    pub debug_logging_enabled: bool,
+    pub database_url: String,
+    pub database_pool_size: u32,
+    pub worker_threads: usize,
+    pub request_timeout_seconds: u64,
+    pub connection_timeout_seconds: u64,
+    pub max_concurrent_connections: usize,
+}
+
+impl Default for NestGateConfig {
+    fn default() -> Self {
+        Self {
+            bind_address: network::default_bind_address(),
+            api_address: network::default_api_address(),
+            streaming_rpc_address: network::default_streaming_rpc_address(),
+            websocket_address: network::default_websocket_address(),
+            hostname: network::default_hostname(),
+            external_hostname: network::default_external_hostname(),
+            api_port: network::default_api_port(),
+            streaming_rpc_port: network::default_streaming_rpc_port(),
+            websocket_port: network::default_websocket_port(),
+            web_port: network::default_web_port(),
+            cache_dir: paths::default_cache_dir(),
+            temp_dir: paths::default_temp_dir(),
+            data_dir: paths::default_data_dir(),
+            config_dir: paths::default_config_dir(),
+            log_dir: paths::default_log_dir(),
+            beardog_api_key: security::beardog_api_key(),
+            songbird_api_key: security::songbird_api_key(),
+            squirrel_api_key: security::squirrel_api_key(),
+            toadstool_api_key: security::toadstool_api_key(),
+            huggingface_api_token: security::huggingface_api_token(),
+            ncbi_api_key: security::ncbi_api_key(),
+            jwt_secret: security::jwt_secret(),
+            encryption_key: security::encryption_key(),
+            environment: environment::current_environment(),
+            ai_features_enabled: features::ai_features_enabled(),
+            zfs_features_enabled: features::zfs_features_enabled(),
+            network_features_enabled: features::network_features_enabled(),
+            web_interface_enabled: features::web_interface_enabled(),
+            metrics_enabled: features::metrics_enabled(),
+            debug_logging_enabled: features::debug_logging_enabled(),
+            database_url: database::database_url(),
+            database_pool_size: database::database_pool_size(),
+            worker_threads: performance::worker_threads(),
+            request_timeout_seconds: performance::request_timeout_seconds(),
+            connection_timeout_seconds: performance::connection_timeout_seconds(),
+            max_concurrent_connections: performance::max_concurrent_connections(),
+        }
+    }
+}
+
+impl NestGateConfig {
+    /// Create a new configuration with all defaults
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Load configuration from environment variables
+    pub fn from_env() -> Self {
+        Self::default()
+    }
+
+    /// Validate the configuration
+    pub fn validate(&self) -> std::result::Result<(), String> {
+        // Validate network addresses
+        if let Err(e) = SocketAddr::from_str(&self.bind_address) {
+            return Err(format!("Invalid bind address: {}", e));
+        }
+
+        if let Err(e) = SocketAddr::from_str(&self.api_address) {
+            return Err(format!("Invalid API address: {}", e));
+        }
+
+        if let Err(e) = SocketAddr::from_str(&self.streaming_rpc_address) {
+            return Err(format!("Invalid streaming RPC address: {}", e));
+        }
+
+        if let Err(e) = SocketAddr::from_str(&self.websocket_address) {
+            return Err(format!("Invalid WebSocket address: {}", e));
+        }
+
+        // Validate ports
+        if self.api_port == 0
+            || self.streaming_rpc_port == 0
+            || self.websocket_port == 0
+            || self.web_port == 0
+        {
+            return Err("Ports must be non-zero".to_string());
+        }
+
+        // Validate directories exist or can be created
+        for dir in [
+            &self.cache_dir,
+            &self.temp_dir,
+            &self.data_dir,
+            &self.config_dir,
+            &self.log_dir,
+        ] {
+            if let Some(parent) = dir.parent() {
+                if !parent.exists() {
+                    return Err(format!(
+                        "Parent directory does not exist: {}",
+                        parent.display()
+                    ));
+                }
+            }
+        }
+
+        // Validate security settings in production
+        if is_production() {
+            if self.jwt_secret.starts_with("default_") {
+                return Err("JWT secret must be set in production".to_string());
+            }
+            if self.encryption_key.starts_with("default_") {
+                return Err("Encryption key must be set in production".to_string());
+            }
+            if self.beardog_api_key.starts_with("default_") {
+                return Err("BearDog API key must be set in production".to_string());
+            }
+        }
+
+        Ok(())
     }
 }

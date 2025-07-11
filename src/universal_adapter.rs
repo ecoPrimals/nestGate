@@ -11,7 +11,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use tracing::{info, warn, error};
+use tracing::{info, warn};
 use uuid::Uuid;
 
 use crate::{NestGateError, Result};
@@ -21,10 +21,10 @@ use crate::{NestGateError, Result};
 pub struct PrimalCoordination {
     /// Whether this Primal is enabled for coordination
     pub enabled: bool,
-    
+
     /// Network endpoint for coordination (discovered or configured)
     pub endpoint: Option<String>,
-    
+
     /// Coordination capabilities this Primal provides
     pub capabilities: Vec<String>,
 }
@@ -33,10 +33,10 @@ pub struct PrimalCoordination {
 pub struct NestGateUniversalAdapter {
     /// HTTP client for making requests
     client: Client,
-    
+
     /// Configuration for all available Primals
     primal_configs: HashMap<String, PrimalCoordination>,
-    
+
     /// NestGate's own identity and capabilities
     nestgate_identity: NestGateIdentity,
 }
@@ -67,7 +67,7 @@ impl NestGateUniversalAdapter {
             .timeout(Duration::from_secs(30))
             .build()
             .expect("Failed to create HTTP client");
-            
+
         let nestgate_identity = NestGateIdentity {
             instance_id: format!("nestgate-{}", Uuid::new_v4().simple()),
             capabilities: vec![
@@ -105,21 +105,20 @@ impl NestGateUniversalAdapter {
                 ],
             },
         };
-        
+
         Self {
             client,
             primal_configs,
             nestgate_identity,
         }
     }
-    
+
     /// Universal coordination method that works with any Primal
     pub async fn coordinate_with_primal(&self, primal_name: &str) -> Result<CoordinationResult> {
-        let primal_config = self.primal_configs.get(primal_name)
-            .ok_or_else(|| NestGateError::ConfigurationError(
-                format!("Primal {} not configured", primal_name)
-            ))?;
-            
+        let primal_config = self.primal_configs.get(primal_name).ok_or_else(|| {
+            NestGateError::ConfigurationError(format!("Primal {} not configured", primal_name))
+        })?;
+
         if !primal_config.enabled {
             info!("Primal {} coordination disabled - skipping", primal_name);
             return Ok(CoordinationResult::skipped(primal_name));
@@ -127,19 +126,24 @@ impl NestGateUniversalAdapter {
 
         if let Some(endpoint) = &primal_config.endpoint {
             info!("Coordinating with {} at: {}", primal_name, endpoint);
-            
+
             // Use universal coordination based on capabilities
-            return self.call_universal_primal_api(primal_name, endpoint, primal_config).await;
+            return self
+                .call_universal_primal_api(primal_name, endpoint, primal_config)
+                .await;
         }
 
-        warn!("{} coordination endpoint not available - continuing without", primal_name);
+        warn!(
+            "{} coordination endpoint not available - continuing without",
+            primal_name
+        );
         Ok(CoordinationResult::unavailable(primal_name))
     }
-    
+
     /// Coordinate with all configured Primals
     pub async fn coordinate_with_all_primals(&self) -> Vec<CoordinationResult> {
         let mut results = Vec::new();
-        
+
         for (primal_name, _config) in &self.primal_configs {
             match self.coordinate_with_primal(primal_name).await {
                 Ok(result) => results.push(result),
@@ -149,10 +153,10 @@ impl NestGateUniversalAdapter {
                 }
             }
         }
-        
+
         results
     }
-    
+
     /// Universal API call that adapts to any Primal's interface
     async fn call_universal_primal_api(
         &self,
@@ -163,27 +167,37 @@ impl NestGateUniversalAdapter {
         // Determine the appropriate API path based on capabilities
         let api_path = self.determine_api_path(primal_name, &config.capabilities);
         let full_url = format!("{}{}", endpoint, api_path);
-        
+
         // Create universal coordination payload
         let coordination_payload = self.create_universal_payload(primal_name, &config.capabilities);
-        
-        info!("Universal coordination with {} at {}", primal_name, full_url);
-        
-        let response = self.client
+
+        info!(
+            "Universal coordination with {} at {}",
+            primal_name, full_url
+        );
+
+        let response = self
+            .client
             .post(&full_url)
             .json(&coordination_payload)
             .send()
             .await
             .map_err(|e| NestGateError::NetworkError(format!("Request failed: {}", e)))?;
-        
+
         if response.status().is_success() {
-            info!("Successfully coordinated with {} (universal adapter)", primal_name);
-            
+            info!(
+                "Successfully coordinated with {} (universal adapter)",
+                primal_name
+            );
+
             // Parse response if available
             if let Ok(response_data) = response.json::<serde_json::Value>().await {
-                return Ok(CoordinationResult::success(primal_name, Some(response_data)));
+                return Ok(CoordinationResult::success(
+                    primal_name,
+                    Some(response_data),
+                ));
             }
-            
+
             Ok(CoordinationResult::success(primal_name, None))
         } else {
             let error_msg = format!("{} coordination failed: {}", primal_name, response.status());
@@ -191,27 +205,33 @@ impl NestGateUniversalAdapter {
             Ok(CoordinationResult::failed(primal_name, error_msg))
         }
     }
-    
+
     /// Determine the appropriate API path based on Primal capabilities
-    fn determine_api_path(&self, primal_name: &str, capabilities: &[String]) -> String {
+    fn determine_api_path(&self, _primal_name: &str, capabilities: &[String]) -> String {
         // Universal API path detection based on capabilities
         for capability in capabilities {
             match capability.as_str() {
                 "compute" | "execution" => return "/api/v1/provision-storage".to_string(),
-                "orchestration" | "coordination" => return "/api/v1/coordinate-storage".to_string(),
+                "orchestration" | "coordination" => {
+                    return "/api/v1/coordinate-storage".to_string()
+                }
                 "security" | "authentication" => return "/api/v1/secure-storage".to_string(),
                 "ai" | "ml" | "agents" => return "/api/v1/optimize-storage".to_string(),
                 "custom" => return "/api/v1/coordinate".to_string(),
                 _ => continue,
             }
         }
-        
+
         // Fallback to standard coordination endpoint
         "/api/v1/coordinate".to_string()
     }
-    
+
     /// Create universal payload that any Primal can understand
-    fn create_universal_payload(&self, primal_name: &str, capabilities: &[String]) -> serde_json::Value {
+    fn create_universal_payload(
+        &self,
+        primal_name: &str,
+        capabilities: &[String],
+    ) -> serde_json::Value {
         serde_json::json!({
             "coordination_request": {
                 "from": "nestgate",
@@ -230,22 +250,22 @@ impl NestGateUniversalAdapter {
             }
         })
     }
-    
+
     /// Update storage information from actual storage manager
     pub fn update_storage_info(&mut self, storage_info: StorageCapabilities) {
         self.nestgate_identity.storage_info = storage_info;
     }
-    
+
     /// Add or update a Primal configuration
     pub fn add_primal_config(&mut self, primal_name: String, config: PrimalCoordination) {
         self.primal_configs.insert(primal_name, config);
     }
-    
+
     /// Remove a Primal configuration
     pub fn remove_primal_config(&mut self, primal_name: &str) {
         self.primal_configs.remove(primal_name);
     }
-    
+
     /// Get current Primal configurations
     pub fn get_primal_configs(&self) -> &HashMap<String, PrimalCoordination> {
         &self.primal_configs
@@ -280,7 +300,7 @@ impl CoordinationResult {
             timestamp: Utc::now(),
         }
     }
-    
+
     pub fn failed(primal_name: &str, error: String) -> Self {
         Self {
             primal_name: primal_name.to_string(),
@@ -290,7 +310,7 @@ impl CoordinationResult {
             timestamp: Utc::now(),
         }
     }
-    
+
     pub fn skipped(primal_name: &str) -> Self {
         Self {
             primal_name: primal_name.to_string(),
@@ -300,7 +320,7 @@ impl CoordinationResult {
             timestamp: Utc::now(),
         }
     }
-    
+
     pub fn unavailable(primal_name: &str) -> Self {
         Self {
             primal_name: primal_name.to_string(),
@@ -316,13 +336,22 @@ impl CoordinationResult {
 #[async_trait]
 pub trait UniversalCoordination {
     /// Coordinate storage provisioning with other Primals
-    async fn coordinate_storage_provisioning(&self, request: StorageProvisionRequest) -> Result<Vec<CoordinationResult>>;
-    
+    async fn coordinate_storage_provisioning(
+        &self,
+        request: StorageProvisionRequest,
+    ) -> Result<Vec<CoordinationResult>>;
+
     /// Coordinate volume mounting with compute Primals
-    async fn coordinate_volume_mounting(&self, request: VolumeMountRequest) -> Result<Vec<CoordinationResult>>;
-    
+    async fn coordinate_volume_mounting(
+        &self,
+        request: VolumeMountRequest,
+    ) -> Result<Vec<CoordinationResult>>;
+
     /// Coordinate backup operations with other storage or security Primals
-    async fn coordinate_backup_operations(&self, request: BackupRequest) -> Result<Vec<CoordinationResult>>;
+    async fn coordinate_backup_operations(
+        &self,
+        request: BackupRequest,
+    ) -> Result<Vec<CoordinationResult>>;
 }
 
 /// Storage provisioning request for universal coordination
@@ -380,34 +409,40 @@ mod tests {
     #[test]
     fn test_universal_adapter_creation() {
         let mut primal_configs = HashMap::new();
-        primal_configs.insert("toadstool".to_string(), PrimalCoordination {
-            enabled: true,
-            endpoint: Some("http://localhost:8082".to_string()),
-            capabilities: vec!["compute".to_string(), "execution".to_string()],
-        });
+        primal_configs.insert(
+            "example-compute".to_string(),
+            PrimalCoordination {
+                enabled: true,
+                endpoint: Some("http://localhost:8082".to_string()),
+                capabilities: vec!["compute".to_string(), "execution".to_string()],
+            },
+        );
 
         let adapter = NestGateUniversalAdapter::new(primal_configs);
         assert_eq!(adapter.primal_configs.len(), 1);
-        assert!(adapter.nestgate_identity.capabilities.contains(&"storage".to_string()));
+        assert!(adapter
+            .nestgate_identity
+            .capabilities
+            .contains(&"storage".to_string()));
     }
 
     #[test]
     fn test_api_path_determination() {
         let adapter = NestGateUniversalAdapter::new(HashMap::new());
-        
-        let compute_path = adapter.determine_api_path("toadstool", &["compute".to_string()]);
+
+        let compute_path = adapter.determine_api_path("example-compute", &["compute".to_string()]);
         assert_eq!(compute_path, "/api/v1/provision-storage");
-        
+
         let custom_path = adapter.determine_api_path("custom-primal", &["custom".to_string()]);
         assert_eq!(custom_path, "/api/v1/coordinate");
     }
 
     #[tokio::test]
     async fn test_coordination_result_types() {
-        let success = CoordinationResult::success("test", None);
+        let success = CoordinationResult::success("test-primal", None);
         assert!(matches!(success.status, CoordinationStatus::Success));
-        
-        let failed = CoordinationResult::failed("test", "error".to_string());
+
+        let failed = CoordinationResult::failed("test-primal", "error".to_string());
         assert!(matches!(failed.status, CoordinationStatus::Failed));
     }
-} 
+}

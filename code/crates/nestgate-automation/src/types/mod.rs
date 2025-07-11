@@ -1,9 +1,9 @@
 //! Core types for NestGate automation system
 
+use nestgate_core::types::StorageTier;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
-use nestgate_core::types::StorageTier;
 
 pub mod config;
 pub mod ecosystem;

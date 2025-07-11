@@ -1,378 +1,229 @@
 //! # Hardware Tuning API Routes
-//! 
+//!
 //! **REST API endpoints for hardware-agnostic tuning**
-//! 
+//!
 //! These routes provide external access to hardware tuning capabilities
 //! while enforcing crypto lock protection for commercial extraction.
 
-use std::sync::Arc;
+use crate::handlers::hardware_tuning::{HardwareTuningRequest, HardwareTuningResponse};
+use crate::routes::AppState;
+use axum::response::IntoResponse;
 use axum::{
-    routing::{get, post},
-    Router, Json, Path,
-    extract::{State, Query},
-    response::Json as ResponseJson,
+    extract::{Json, Path, State},
     http::StatusCode,
+    response::Json as ResponseJson,
 };
-use serde::{Deserialize, Serialize};
+use nestgate_core::ExtractionLock;
+use tracing::{error, info};
 use uuid::Uuid;
-use crate::handlers::{
-    HardwareTuningService, HardwareTuningRequest, HardwareTuningResponse,
-    BenchmarkResult, TuningProfile, ExtractionLock,
-};
 
-/// Hardware tuning API state
-#[derive(Clone)]
-pub struct HardwareTuningState {
-    pub service: Arc<HardwareTuningService>,
-}
+/// Auto-tune hardware endpoint with live Toadstool integration
+pub async fn auto_tune(
+    State(state): State<AppState>,
+    Json(_request): Json<HardwareTuningRequest>,
+) -> std::result::Result<ResponseJson<HardwareTuningResponse>, StatusCode> {
+    let service = &state.hardware_tuning_service;
 
-/// Query parameters for tuning session
-#[derive(Debug, Serialize, Deserialize)]
-pub struct SessionQuery {
-    pub session_id: Uuid,
-}
+    info!("🚀 Auto-tuning hardware with live Toadstool integration");
 
-/// Query parameters for benchmark
-#[derive(Debug, Serialize, Deserialize)]
-pub struct BenchmarkQuery {
-    pub name: String,
-}
+    match service.auto_tune().await {
+        Ok(result) => {
+            info!(
+                "✅ Auto-tuning completed: {} optimizations applied",
+                result.optimizations_applied.len()
+            );
 
-/// Crypto lock installation request
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CryptoLockRequest {
-    pub source: String,
-    pub destination: String,
-    pub lock: ExtractionLock,
-}
+            let performance_gain = result.estimated_performance_gain;
 
-/// Crypto lock installation response
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CryptoLockResponse {
-    pub success: bool,
-    pub message: String,
-}
-
-/// Create hardware tuning routes
-pub fn create_routes(state: HardwareTuningState) -> Router {
-    Router::new()
-        .route("/hardware/tune", post(start_tuning_session))
-        .route("/hardware/session/:session_id", get(get_session_status))
-        .route("/hardware/benchmark", post(run_benchmark))
-        .route("/hardware/profiles", get(list_tuning_profiles))
-        .route("/hardware/crypto-lock", post(install_crypto_lock))
-        .route("/hardware/health", get(health_check))
-        .with_state(state)
-}
-
-/// Start a new hardware tuning session
-/// 
-/// **POST /api/hardware/tune**
-/// 
-/// Starts automatic hardware detection and tuning with external extraction protection.
-/// 
-/// **External Access Protection:**
-/// - Internal primal communication: FREE
-/// - External system access: CRYPTO LOCK REQUIRED
-/// - Commercial extraction: COPYLEFT ENFORCEMENT
-/// 
-/// **Request Body:**
-/// ```json
-/// {
-///   "mode": "Auto" | "Performance" | "Balanced" | "Efficiency",
-///   "target_profile": "optional_profile_name",
-///   "custom_params": { "key": "value" },
-///   "external_access": {
-///     "external_systems": ["https://api.example.com"],
-///     "operations": ["read", "write"],
-///     "crypto_lock": { ... }
-///   }
-/// }
-/// ```
-/// 
-/// **Response:**
-/// ```json
-/// {
-///   "session_id": "uuid",
-///   "status": "Completed",
-///   "hardware_config": { ... },
-///   "result": { ... },
-///   "performance_improvement": 40.0,
-///   "recommendations": ["..."],
-///   "warnings": ["..."]
-/// }
-/// ```
-async fn start_tuning_session(
-    State(state): State<HardwareTuningState>,
-    Json(request): Json<HardwareTuningRequest>,
-) -> Result<ResponseJson<HardwareTuningResponse>, StatusCode> {
-    match state.service.start_tuning_session(request).await {
-        Ok(response) => Ok(ResponseJson(response)),
-        Err(e) => {
-            eprintln!("Tuning session error: {}", e);
-            Err(StatusCode::INTERNAL_SERVER_ERROR)
-        }
-    }
-}
-
-/// Get hardware tuning session status
-/// 
-/// **GET /api/hardware/session/{session_id}**
-/// 
-/// Retrieves the current status of a hardware tuning session.
-/// 
-/// **Path Parameters:**
-/// - `session_id`: UUID of the tuning session
-/// 
-/// **Response:**
-/// ```json
-/// {
-///   "session_id": "uuid",
-///   "status": "Completed",
-///   "hardware_config": { ... },
-///   "result": { ... },
-///   "performance_improvement": 40.0
-/// }
-/// ```
-async fn get_session_status(
-    State(state): State<HardwareTuningState>,
-    Path(session_id): Path<Uuid>,
-) -> Result<ResponseJson<HardwareTuningResponse>, StatusCode> {
-    match state.service.get_session_status(session_id).await {
-        Ok(response) => Ok(ResponseJson(response)),
-        Err(e) => {
-            eprintln!("Session status error: {}", e);
-            Err(StatusCode::NOT_FOUND)
-        }
-    }
-}
-
-/// Run performance benchmark
-/// 
-/// **POST /api/hardware/benchmark**
-/// 
-/// Runs hardware performance benchmarks for CPU, memory, storage, or network.
-/// 
-/// **Query Parameters:**
-/// - `name`: Benchmark name ("cpu", "memory", "storage", "network", "overall")
-/// 
-/// **Response:**
-/// ```json
-/// {
-///   "name": "cpu",
-///   "timestamp": "2024-01-01T00:00:00Z",
-///   "hardware_config": { ... },
-///   "metrics": {
-///     "cpu_score": 85.0,
-///     "memory_score": 90.0,
-///     "storage_score": 95.0,
-///     "network_score": 80.0,
-///     "overall_score": 87.5,
-///     "latency_ms": 1.0,
-///     "throughput_mbps": 5000.0,
-///     "iops": 500000
-///   }
-/// }
-/// ```
-async fn run_benchmark(
-    State(state): State<HardwareTuningState>,
-    Query(query): Query<BenchmarkQuery>,
-) -> Result<ResponseJson<BenchmarkResult>, StatusCode> {
-    match state.service.run_benchmark(&query.name).await {
-        Ok(result) => Ok(ResponseJson(result)),
-        Err(e) => {
-            eprintln!("Benchmark error: {}", e);
-            Err(StatusCode::BAD_REQUEST)
-        }
-    }
-}
-
-/// List available tuning profiles
-/// 
-/// **GET /api/hardware/profiles**
-/// 
-/// Lists all available hardware tuning profiles.
-/// 
-/// **Response:**
-/// ```json
-/// [
-///   {
-///     "name": "High Performance",
-///     "cpu_optimizations": ["enable_turbo", "set_affinity"],
-///     "memory_optimizations": ["huge_pages", "numa_aware"],
-///     "storage_optimizations": ["io_scheduler", "readahead"],
-///     "network_optimizations": ["tcp_tuning", "buffer_sizes"],
-///     "estimated_performance_gain": 40.0
-///   }
-/// ]
-/// ```
-async fn list_tuning_profiles(
-    State(state): State<HardwareTuningState>,
-) -> Result<ResponseJson<Vec<TuningProfile>>, StatusCode> {
-    match state.service.list_tuning_profiles().await {
-        Ok(profiles) => Ok(ResponseJson(profiles)),
-        Err(e) => {
-            eprintln!("Profile list error: {}", e);
-            Err(StatusCode::INTERNAL_SERVER_ERROR)
-        }
-    }
-}
-
-/// Install crypto lock for external system access
-/// 
-/// **POST /api/hardware/crypto-lock**
-/// 
-/// Installs a crypto lock for accessing external systems, enforcing copyleft
-/// requirements and preventing commercial extraction.
-/// 
-/// **Request Body:**
-/// ```json
-/// {
-///   "source": "nestgate-api",
-///   "destination": "https://api.example.com",
-///   "lock": {
-///     "lock_id": "uuid",
-///     "lock_type": "SovereignExternal",
-///     "proof": {
-///       "public_key": "...",
-///       "signature": "...",
-///       "timestamp": "2024-01-01T00:00:00Z",
-///       "nonce": "...",
-///       "proof_hash": "...",
-///       "ecosystem_fingerprint": "..."
-///     },
-///     "expires_at": null,
-///     "allowed_operations": ["read", "write"],
-///     "restrictions": {
-///       "max_data_volume": 1000000,
-///       "max_api_calls": 1000,
-///       "geographic_limits": ["US", "EU"],
-///       "purpose_restrictions": ["research", "development"]
-///     },
-///     "copyleft_requirements": {
-///       "require_source_disclosure": true,
-///       "require_attribution": true,
-///       "require_share_alike": true,
-///       "require_modification_disclosure": true,
-///       "compatible_licenses": ["GPL-3.0", "AGPL-3.0"]
-///     }
-///   }
-/// }
-/// ```
-/// 
-/// **Response:**
-/// ```json
-/// {
-///   "success": true,
-///   "message": "Crypto lock installed successfully"
-/// }
-/// ```
-async fn install_crypto_lock(
-    State(state): State<HardwareTuningState>,
-    Json(request): Json<CryptoLockRequest>,
-) -> Result<ResponseJson<CryptoLockResponse>, StatusCode> {
-    match state.service.install_crypto_lock(&request.source, &request.destination, request.lock).await {
-        Ok(()) => Ok(ResponseJson(CryptoLockResponse {
-            success: true,
-            message: "Crypto lock installed successfully".to_string(),
-        })),
-        Err(e) => {
-            eprintln!("Crypto lock installation error: {}", e);
-            Ok(ResponseJson(CryptoLockResponse {
-                success: false,
-                message: format!("Failed to install crypto lock: {}", e),
+            Ok(ResponseJson(HardwareTuningResponse {
+                session_id: Uuid::new_v4(),
+                timestamp: chrono::Utc::now(),
+                status: crate::handlers::hardware_tuning::SessionStatus::Completed,
+                hardware_config: None,
+                result: Some(result),
+                performance_improvement: Some(performance_gain),
+                external_access_status: None,
+                recommendations: vec![
+                    "Hardware tuning completed with live Toadstool data".to_string(),
+                    "Consider monitoring performance metrics".to_string(),
+                ],
+                warnings: vec![],
             }))
         }
-    }
-}
-
-/// Hardware tuning health check
-/// 
-/// **GET /api/hardware/health**
-/// 
-/// Provides health status of the hardware tuning service.
-/// 
-/// **Response:**
-/// ```json
-/// {
-///   "status": "healthy",
-///   "timestamp": "2024-01-01T00:00:00Z",
-///   "version": "1.0.0",
-///   "features": {
-///     "hardware_detection": true,
-///     "auto_tuning": true,
-///     "crypto_locks": true,
-///     "external_protection": true
-///   }
-/// }
-/// ```
-async fn health_check(
-    State(_state): State<HardwareTuningState>,
-) -> ResponseJson<serde_json::Value> {
-    ResponseJson(serde_json::json!({
-        "status": "healthy",
-        "timestamp": chrono::Utc::now(),
-        "version": "1.0.0",
-        "features": {
-            "hardware_detection": true,
-            "auto_tuning": true,
-            "crypto_locks": true,
-            "external_protection": true,
-            "agnostic_setup": true,
-            "internal_communication_free": true,
-            "copyleft_enforcement": true
-        },
-        "supported_hardware": {
-            "cpu": ["x86_64", "arm64", "riscv64"],
-            "memory": ["DDR4", "DDR5", "HBM"],
-            "storage": ["HDD", "SSD", "NVMe", "Optane", "Tape"],
-            "network": ["Ethernet", "WiFi", "Infiniband", "Fiber"],
-            "accelerators": ["GPU", "TPU", "FPGA", "ASIC"]
-        },
-        "external_boundary_protection": {
-            "internal_primal_communication": "FREE",
-            "external_system_access": "CRYPTO_LOCK_REQUIRED",
-            "commercial_extraction": "COPYLEFT_ENFORCEMENT"
+        Err(e) => {
+            error!("❌ Auto-tuning failed: {}", e);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
-    }))
+    }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use axum::body::Body;
-    use axum::http::{Request, Method};
-    use tower::ServiceExt;
-    
-    #[tokio::test]
-    async fn test_health_check_endpoint() {
-        let service = Arc::new(HardwareTuningService::new());
-        let state = HardwareTuningState { service };
-        let app = create_routes(state);
-        
-        let request = Request::builder()
-            .method(Method::GET)
-            .uri("/hardware/health")
-            .body(Body::empty())
-            .unwrap();
-        
-        let response = app.oneshot(request).await.unwrap();
-        assert_eq!(response.status(), StatusCode::OK);
+/// Get hardware configuration with live data
+pub async fn get_config(
+    State(state): State<AppState>,
+) -> std::result::Result<ResponseJson<serde_json::Value>, StatusCode> {
+    let service = &state.hardware_tuning_service;
+
+    info!("📊 Getting hardware configuration with live Toadstool data");
+
+    match service.get_config().await {
+        Ok(config) => {
+            info!("✅ Hardware configuration retrieved with live metrics");
+            Ok(ResponseJson(config))
+        }
+        Err(e) => {
+            error!("❌ Failed to get configuration: {}", e);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
     }
-    
-    #[tokio::test]
-    async fn test_list_profiles_endpoint() {
-        let service = Arc::new(HardwareTuningService::new());
-        let state = HardwareTuningState { service };
-        let app = create_routes(state);
-        
-        let request = Request::builder()
-            .method(Method::GET)
-            .uri("/hardware/profiles")
-            .body(Body::empty())
-            .unwrap();
-        
-        let response = app.oneshot(request).await.unwrap();
-        assert_eq!(response.status(), StatusCode::OK);
+}
+
+/// Get tuning profiles from Toadstool
+pub async fn get_profiles(
+    State(state): State<AppState>,
+) -> std::result::Result<ResponseJson<serde_json::Value>, StatusCode> {
+    let service = &state.hardware_tuning_service;
+
+    info!("📋 Getting tuning profiles from Toadstool");
+
+    match service.get_profiles().await {
+        Ok(profiles) => {
+            info!(
+                "✅ Retrieved {} tuning profiles from Toadstool",
+                profiles.len()
+            );
+            Ok(ResponseJson(serde_json::json!({
+                "profiles": profiles,
+                "source": "toadstool_live_data",
+                "timestamp": chrono::Utc::now()
+            })))
+        }
+        Err(e) => {
+            error!("❌ Failed to get profiles: {}", e);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
     }
-} 
+}
+
+/// Run live benchmark with Toadstool compute resources
+pub async fn run_benchmark(
+    State(state): State<AppState>,
+    Json(request): Json<serde_json::Value>,
+) -> std::result::Result<ResponseJson<serde_json::Value>, StatusCode> {
+    let service = &state.hardware_tuning_service;
+    let benchmark_name = request
+        .get("benchmark_name")
+        .and_then(|v| v.as_str())
+        .unwrap_or("overall");
+
+    info!(
+        "🏁 Running live benchmark '{}' with Toadstool resources",
+        benchmark_name
+    );
+
+    match service.benchmark(benchmark_name).await {
+        Ok(result) => {
+            info!(
+                "✅ Live benchmark '{}' completed (score: {})",
+                benchmark_name, result.metrics.overall_score
+            );
+
+            Ok(ResponseJson(serde_json::json!({
+                "benchmark_result": result,
+                "source": "toadstool_live_compute",
+                "timestamp": chrono::Utc::now()
+            })))
+        }
+        Err(e) => {
+            error!("❌ Benchmark '{}' failed: {}", benchmark_name, e);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
+}
+
+/// Generate extraction lock with BearDog integration
+pub async fn generate_extraction_lock(
+    State(state): State<AppState>,
+    Json(request): Json<serde_json::Value>,
+) -> std::result::Result<ResponseJson<ExtractionLock>, StatusCode> {
+    let service = &state.hardware_tuning_service;
+
+    let source = request
+        .get("source")
+        .and_then(|v| v.as_str())
+        .unwrap_or("localhost")
+        .to_string();
+    let destination = request
+        .get("destination")
+        .and_then(|v| v.as_str())
+        .unwrap_or("remote")
+        .to_string();
+
+    info!(
+        "🔐 Generating extraction lock: {} -> {}",
+        source, destination
+    );
+
+    match service.generate_extraction_lock(source, destination).await {
+        Ok(lock) => {
+            info!("✅ Extraction lock generated with BearDog cryptographic proof");
+            Ok(ResponseJson(lock))
+        }
+        Err(e) => {
+            error!("❌ Failed to generate extraction lock: {}", e);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
+}
+
+/// Verify extraction lock with BearDog validation
+pub async fn verify_extraction_lock(
+    State(state): State<AppState>,
+    Json(request): Json<serde_json::Value>,
+) -> std::result::Result<ResponseJson<serde_json::Value>, StatusCode> {
+    let service = &state.hardware_tuning_service;
+
+    let lock_id = request
+        .get("lock_id")
+        .and_then(|v| v.as_str())
+        .and_then(|s| Uuid::parse_str(s).ok())
+        .unwrap_or_else(Uuid::new_v4);
+
+    info!("🔓 Verifying extraction lock: {}", lock_id);
+
+    match service.verify_extraction_lock(lock_id).await {
+        Ok(valid) => {
+            info!(
+                "✅ Extraction lock verification: {}",
+                if valid { "VALID" } else { "INVALID" }
+            );
+
+            Ok(ResponseJson(serde_json::json!({
+                "valid": valid,
+                "lock_id": lock_id,
+                "verified_by": "beardog_cryptographic_proof",
+                "timestamp": chrono::Utc::now()
+            })))
+        }
+        Err(e) => {
+            error!("❌ Failed to verify extraction lock: {}", e);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
+}
+
+/// Get session status
+pub async fn get_session_status(
+    State(state): State<AppState>,
+    Path(session_id): Path<Uuid>,
+) -> Result<impl IntoResponse, StatusCode> {
+    info!("🔍 Getting session status for: {}", session_id);
+
+    // Get session from hardware tuning service
+    let session = state
+        .hardware_tuning_service
+        .get_session_status(session_id)
+        .await
+        .map_err(|_| StatusCode::NOT_FOUND)?;
+
+    Ok(Json(session))
+}

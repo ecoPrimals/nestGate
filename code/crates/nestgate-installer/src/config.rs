@@ -8,7 +8,7 @@ pub struct InstallerConfig {
     pub service_mode: bool,
     pub enable_zfs: bool,
     pub api_port: u16,
-    pub songbird_url: Option<String>,
+    pub orchestration_url: Option<String>,
     pub ai_enabled: bool,
     pub create_desktop_shortcut: bool,
     pub add_to_path: bool,
@@ -24,7 +24,7 @@ impl Default for InstallerConfig {
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(8080),
-            songbird_url: None,
+            orchestration_url: None,
             ai_enabled: false,
             create_desktop_shortcut: true,
             add_to_path: true,
@@ -50,7 +50,7 @@ impl InstallerConfig {
 
     pub fn to_nestgate_config(&self) -> String {
         let host = std::env::var("NESTGATE_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
-        let default_songbird_port =
+        let default_orchestration_port =
             std::env::var("NESTGATE_UI_PORT").unwrap_or_else(|_| "3000".to_string());
 
         format!(
@@ -67,7 +67,7 @@ enabled = {}
 [ai]
 enabled = {}
 
-[songbird]
+[orchestration]
 {}
 
 [logging]
@@ -77,10 +77,13 @@ level = "info"
             self.api_port,
             self.enable_zfs,
             self.ai_enabled,
-            if let Some(url) = &self.songbird_url {
+            if let Some(url) = &self.orchestration_url {
                 format!("url = \"{}\"", url)
             } else {
-                format!("# url = \"http://localhost:{}\"", default_songbird_port)
+                format!(
+                    "# url = \"http://localhost:{}\"",
+                    default_orchestration_port
+                )
             }
         )
     }

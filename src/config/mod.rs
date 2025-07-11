@@ -1,5 +1,5 @@
-//! Configuration module for Songbird Orchestrator
-//! 
+//! Configuration module for Universal Primal Architecture
+//!
 //! Re-exports configuration types and provides implementation modules.
 
 use serde::{Deserialize, Serialize};
@@ -16,37 +16,37 @@ pub mod providers;
 
 /// Main orchestrator configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OrchestratorConfig<T = DefaultServiceConfig> 
-where 
+pub struct OrchestratorConfig<T = DefaultServiceConfig>
+where
     T: Clone + Send + Sync + serde::de::DeserializeOwned
 {
     /// Core orchestrator configuration
     pub orchestrator: CoreOrchestratorConfig,
-    
+
     /// Network configuration
     pub network: NetworkConfig,
-    
-    /// Security configuration  
+
+    /// Security configuration
     pub security: SecurityConfig,
-    
+
     /// Monitoring configuration
     pub monitoring: MonitoringConfig,
-    
+
     /// Service discovery configuration
     pub discovery: DiscoveryConfig,
-    
+
     /// Load balancing configuration
     pub load_balancing: LoadBalancingConfig,
-    
+
     /// Health monitoring configuration
     pub health: HealthConfig,
-    
+
     /// Service-specific configuration
     pub service: T,
 }
 
-impl<T> Default for OrchestratorConfig<T> 
-where 
+impl<T> Default for OrchestratorConfig<T>
+where
     T: Default
 {
     fn default() -> Self {
@@ -233,4 +233,4 @@ pub struct StaticServiceConfig {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DefaultServiceConfig {
     pub placeholder: bool,
-} 
+}

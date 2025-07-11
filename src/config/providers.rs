@@ -47,13 +47,13 @@ where
 {
     async fn load_config(&self) -> Result<T> {
         let content = tokio::fs::read_to_string(&self.path).await?;
-        
+
         let config = match self.format {
             ConfigFormat::Json => serde_json::from_str(&content)?,
             ConfigFormat::Yaml => serde_yaml::from_str(&content)?,
             ConfigFormat::Toml => toml::from_str(&content)?,
         };
-        
+
         Ok(config)
     }
 
@@ -66,4 +66,4 @@ where
         // In a real implementation, this would watch the file for changes
         Ok(futures_util::stream::empty())
     }
-} 
+}

@@ -22,9 +22,10 @@ This UI component is being deprecated in favor of:
 
 ## Timeline
 
-- **Current**: Component marked as deprecated
-- **Future**: Component will be removed in a future release
-- **Migration**: All functionality has been moved to API endpoints
+- **Current**: Component marked as deprecated (2025-01-26)
+- **Future**: Component will be removed in next major version (v3.0)
+- **Migration**: All functionality available via comprehensive REST APIs
+- **Replacement**: biomeOS UI integration via API endpoints
 
 ## For Developers
 

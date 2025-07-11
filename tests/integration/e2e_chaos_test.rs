@@ -1,5 +1,5 @@
 //! End-to-End Chaos Testing for NestGate
-//! 
+//!
 //! This module implements comprehensive chaos testing to validate system resilience,
 //! failure modes, and recovery mechanisms under stress conditions.
 
@@ -99,13 +99,13 @@ impl ChaosTestRunner {
 
         // Start metrics collection
         let metrics_task = self.start_metrics_collection().await;
-        
+
         // Start system stressors
         self.start_system_stressors().await?;
-        
+
         // Start failure injection
         let failure_task = self.start_failure_injection().await;
-        
+
         // Start recovery validation
         let recovery_task = self.start_recovery_validation().await;
 
@@ -121,7 +121,7 @@ impl ChaosTestRunner {
         // Return collected metrics
         let metrics = self.metrics_history.read().await.clone();
         self.print_chaos_summary(&metrics).await;
-        
+
         Ok(metrics)
     }
 
@@ -210,7 +210,7 @@ impl ChaosTestRunner {
             }
             Err(_) => {}
         }
-        
+
         // Fallback to simulated CPU usage
         thread_rng().gen_range(10.0..80.0)
     }
@@ -222,7 +222,7 @@ impl ChaosTestRunner {
             Ok(content) => {
                 let mut total_kb = 0u64;
                 let mut available_kb = 0u64;
-                
+
                 for line in content.lines() {
                     if line.starts_with("MemTotal:") {
                         if let Some(value_str) = line.split_whitespace().nth(1) {
@@ -234,7 +234,7 @@ impl ChaosTestRunner {
                         }
                     }
                 }
-                
+
                 if total_kb > 0 && available_kb <= total_kb {
                     let used_kb = total_kb - available_kb;
                     return (used_kb as f64 / total_kb as f64) * 100.0;
@@ -242,7 +242,7 @@ impl ChaosTestRunner {
             }
             Err(_) => {}
         }
-        
+
         // Fallback to simulated memory usage
         thread_rng().gen_range(30.0..70.0)
     }
@@ -250,17 +250,17 @@ impl ChaosTestRunner {
     /// Measure disk I/O activity
     async fn measure_disk_io() -> f64 {
         let start = Instant::now();
-        
+
         // Perform a small file operation to measure I/O
         let test_data = vec![0u8; 1024]; // 1KB
         let temp_file = "/tmp/chaos_io_test.tmp";
-        
+
         let _ = tokio::fs::write(temp_file, &test_data).await;
         let _ = tokio::fs::read(temp_file).await;
         let _ = tokio::fs::remove_file(temp_file).await;
-        
+
         let io_time = start.elapsed().as_millis() as f64;
-        
+
         // Convert to I/O metric (lower time = higher I/O performance)
         (1000.0 / (io_time + 1.0)).min(100.0)
     }
@@ -291,10 +291,10 @@ impl ChaosTestRunner {
     /// Measure system response time
     async fn measure_response_time() -> f64 {
         let start = Instant::now();
-        
+
         // Simulate some work (file system operation)
         let _ = tokio::fs::metadata("/").await;
-        
+
         start.elapsed().as_millis() as f64
     }
 
@@ -318,7 +318,7 @@ impl ChaosTestRunner {
         print!("REC: {} | ", metrics.recovery_count);
         print!("RT: {:.1}ms | ", metrics.response_time_ms);
         print!("TPS: {:.0}    ", metrics.throughput_ops_per_sec);
-        
+
         use std::io::{self, Write};
         io::stdout().flush().unwrap();
     }
@@ -365,7 +365,7 @@ impl ChaosTestRunner {
                     iteration = iteration.wrapping_add(1);
                     iteration = iteration.wrapping_mul(17);
                 }
-                
+
                 // Brief pause to allow other work
                 sleep(Duration::from_millis(1)).await;
             }
@@ -386,18 +386,18 @@ impl ChaosTestRunner {
 
         let handle = tokio::spawn(async move {
             let mut memory_hogs: Vec<Vec<u8>> = Vec::new();
-            
+
             while !stop_signal_clone.load(Ordering::SeqCst) {
                 // Allocate memory chunks
                 let chunk_size = (intensity * 1024.0 * 1024.0) as usize; // MB
                 let chunk = vec![0u8; chunk_size];
                 memory_hogs.push(chunk);
-                
+
                 // Keep only recent allocations to avoid OOM
                 if memory_hogs.len() > 10 {
                     memory_hogs.remove(0);
                 }
-                
+
                 sleep(Duration::from_millis(100)).await;
             }
         });
@@ -417,19 +417,19 @@ impl ChaosTestRunner {
 
         let handle = tokio::spawn(async move {
             let mut file_counter = 0;
-            
+
             while !stop_signal_clone.load(Ordering::SeqCst) {
                 // Create temporary files for I/O stress
                 let filename = format!("/tmp/chaos_test_{}.tmp", file_counter);
                 let data_size = (intensity * 1024.0 * 1024.0) as usize; // MB
                 let data = vec![0u8; data_size];
-                
+
                 // Write and read operations
                 if let Ok(()) = tokio::fs::write(&filename, &data).await {
                     let _ = tokio::fs::read(&filename).await;
                     let _ = tokio::fs::remove_file(&filename).await;
                 }
-                
+
                 file_counter += 1;
                 sleep(Duration::from_millis(200)).await;
             }
@@ -453,7 +453,7 @@ impl ChaosTestRunner {
                 // Simulate network stress with concurrent connections
                 let connection_count = (intensity * 10.0) as usize;
                 let mut tasks = Vec::new();
-                
+
                 for _ in 0..connection_count {
                     let task = tokio::spawn(async {
                         // Simulate network operation
@@ -464,10 +464,10 @@ impl ChaosTestRunner {
                     });
                     tasks.push(task);
                 }
-                
+
                 // Wait for all connections to complete or timeout
                 let _ = join_all(tasks).await;
-                
+
                 sleep(Duration::from_millis(500)).await;
             }
         });
@@ -491,7 +491,7 @@ impl ChaosTestRunner {
                     // Inject random failure
                     Self::inject_random_failure(&error_counter).await;
                 }
-                
+
                 sleep(Duration::from_millis(1000)).await;
             }
         })
@@ -501,14 +501,14 @@ impl ChaosTestRunner {
     async fn inject_random_failure(error_counter: &Arc<AtomicU64>) {
         let failure_types = [
             "NETWORK_TIMEOUT",
-            "DISK_FULL_SIMULATION", 
+            "DISK_FULL_SIMULATION",
             "MEMORY_PRESSURE",
             "SERVICE_UNAVAILABLE",
             "ZFS_DEGRADED_SIMULATION",
         ];
-        
+
         let failure_type = failure_types[thread_rng().gen_range(0..failure_types.len())];
-        
+
         match failure_type {
             "NETWORK_TIMEOUT" => {
                 // Simulate network timeout
@@ -531,7 +531,7 @@ impl ChaosTestRunner {
                 sleep(Duration::from_millis(100)).await;
             }
         }
-        
+
         error_counter.fetch_add(1, Ordering::SeqCst);
         println!("\n💥 Injected failure: {}", failure_type);
     }
@@ -549,7 +549,7 @@ impl ChaosTestRunner {
                     recovery_counter.fetch_add(1, Ordering::SeqCst);
                     println!("\n🔄 System recovery validated");
                 }
-                
+
                 sleep(recovery_timeout).await;
             }
         })
@@ -562,9 +562,9 @@ impl ChaosTestRunner {
         let responsive = tokio::time::timeout(Duration::from_millis(1000), async {
             tokio::fs::metadata("/").await.is_ok()
         }).await.unwrap_or(false);
-        
+
         let response_time = start.elapsed();
-        
+
         // System is considered recovered if responsive within reasonable time
         responsive && response_time < Duration::from_millis(500)
     }
@@ -572,15 +572,15 @@ impl ChaosTestRunner {
     /// Stop chaos test
     async fn stop_chaos_test(&self) {
         println!("\n🛑 Stopping chaos test...");
-        
+
         self.is_running.store(false, Ordering::SeqCst);
-        
+
         // Stop all stressors
         let mut stressors = self.active_stressors.write().await;
         for stressor in stressors.iter() {
             stressor.stop_signal.store(true, Ordering::SeqCst);
         }
-        
+
         // Wait for stressors to stop
         while let Some(stressor) = stressors.pop() {
             let _ = stressor.handle.await;
@@ -598,44 +598,44 @@ impl ChaosTestRunner {
         println!("📊 ========== CHAOS TEST SUMMARY ==========");
         println!("🕒 Duration: {:?}", self.test_start_time.elapsed());
         println!("📈 Metrics Collected: {}", metrics.len());
-        
+
         // Calculate statistics
         let cpu_avg = metrics.iter().map(|m| m.cpu_usage).sum::<f64>() / metrics.len() as f64;
         let cpu_max = metrics.iter().map(|m| m.cpu_usage).fold(0.0, f64::max);
-        
+
         let mem_avg = metrics.iter().map(|m| m.memory_usage).sum::<f64>() / metrics.len() as f64;
         let mem_max = metrics.iter().map(|m| m.memory_usage).fold(0.0, f64::max);
-        
+
         let response_avg = metrics.iter().map(|m| m.response_time_ms).sum::<f64>() / metrics.len() as f64;
         let response_max = metrics.iter().map(|m| m.response_time_ms).fold(0.0, f64::max);
-        
+
         let total_errors = self.error_counter.load(Ordering::SeqCst);
         let total_recoveries = self.recovery_counter.load(Ordering::SeqCst);
-        
+
         println!("💻 CPU Usage - Avg: {:.1}%, Max: {:.1}%", cpu_avg, cpu_max);
         println!("🧠 Memory Usage - Avg: {:.1}%, Max: {:.1}%", mem_avg, mem_max);
         println!("⏱️  Response Time - Avg: {:.1}ms, Max: {:.1}ms", response_avg, response_max);
         println!("💥 Total Failures Injected: {}", total_errors);
         println!("🔄 Total Recoveries: {}", total_recoveries);
-        
+
         // Calculate recovery rate
         let recovery_rate = if total_errors > 0 {
             (total_recoveries as f64 / total_errors as f64) * 100.0
         } else {
             100.0
         };
-        
+
         println!("📊 Recovery Rate: {:.1}%", recovery_rate);
-        
+
         // Determine test result
         let test_passed = recovery_rate >= 80.0 && response_avg < 1000.0;
-        
+
         if test_passed {
             println!("✅ CHAOS TEST PASSED - System demonstrates good resilience");
         } else {
             println!("❌ CHAOS TEST FAILED - System needs resilience improvements");
         }
-        
+
         println!("==========================================");
     }
 }
@@ -660,17 +660,17 @@ mod tests {
 
         let mut runner = ChaosTestRunner::new(config);
         let metrics = runner.run_chaos_test().await.expect("Chaos test should complete");
-        
+
         assert!(!metrics.is_empty(), "Should collect metrics during test");
         assert!(metrics.len() >= 10, "Should collect multiple metric points");
-        
+
         // Validate that metrics show system activity
         let has_cpu_activity = metrics.iter().any(|m| m.cpu_usage > 0.0);
         let has_memory_usage = metrics.iter().any(|m| m.memory_usage > 0.0);
-        
+
         assert!(has_cpu_activity, "Should show CPU activity during stress test");
         assert!(has_memory_usage, "Should show memory usage during stress test");
-        
+
         println!("✅ Light chaos test completed successfully");
     }
 
@@ -690,18 +690,18 @@ mod tests {
 
         let mut runner = ChaosTestRunner::new(config);
         let metrics = runner.run_chaos_test().await.expect("Chaos test should complete");
-        
+
         assert!(!metrics.is_empty(), "Should collect metrics during test");
-        
+
         // Validate system resilience
         let error_count = runner.error_counter.load(Ordering::SeqCst);
         let recovery_count = runner.recovery_counter.load(Ordering::SeqCst);
-        
+
         if error_count > 0 {
             let recovery_rate = (recovery_count as f64 / error_count as f64) * 100.0;
             assert!(recovery_rate >= 50.0, "System should recover from at least 50% of failures");
         }
-        
+
         println!("✅ Moderate chaos test completed successfully");
     }
 
@@ -721,21 +721,21 @@ mod tests {
 
         let mut runner = ChaosTestRunner::new(config);
         let metrics = runner.run_chaos_test().await.expect("Chaos test should complete");
-        
+
         // Validate fail-safe behavior
         for metric in &metrics {
             // System should never completely lock up
             assert!(metric.response_time_ms < 10000.0, "Response time should stay reasonable even under stress");
-            
+
             // Memory usage should not exceed safe limits
             assert!(metric.memory_usage < 95.0, "Memory usage should not exceed 95% to prevent OOM");
-            
+
             // CPU usage spikes are okay, but system should remain responsive
             if metric.cpu_usage > 90.0 {
                 assert!(metric.response_time_ms < 5000.0, "High CPU should not cause excessive response times");
             }
         }
-        
+
         println!("✅ Fail-safe validation completed successfully");
     }
 
@@ -755,15 +755,15 @@ mod tests {
 
         let mut runner = ChaosTestRunner::new(config);
         let metrics = runner.run_chaos_test().await.expect("Chaos test should complete");
-        
+
         // Validate metrics collection
         assert!(metrics.len() >= 20, "Should collect metrics at regular intervals");
-        
+
         // Check that timestamps are sequential
         for window in metrics.windows(2) {
             assert!(window[1].timestamp >= window[0].timestamp, "Timestamps should be sequential");
         }
-        
+
         // Validate metric ranges
         for metric in &metrics {
             assert!(metric.cpu_usage >= 0.0 && metric.cpu_usage <= 100.0, "CPU usage should be in valid range");
@@ -771,7 +771,7 @@ mod tests {
             assert!(metric.response_time_ms >= 0.0, "Response time should be non-negative");
             assert!(metric.throughput_ops_per_sec >= 0.0, "Throughput should be non-negative");
         }
-        
+
         println!("✅ Metrics collection accuracy validated");
     }
 
@@ -791,26 +791,26 @@ mod tests {
 
         let mut runner = ChaosTestRunner::new(config);
         let metrics = runner.run_chaos_test().await.expect("Chaos test should complete");
-        
+
         // Analyze stress and recovery patterns
         let mut high_stress_periods = 0;
         let mut recovery_periods = 0;
-        
+
         for window in metrics.windows(3) {
             let avg_cpu = window.iter().map(|m| m.cpu_usage).sum::<f64>() / 3.0;
             let avg_response = window.iter().map(|m| m.response_time_ms).sum::<f64>() / 3.0;
-            
+
             if avg_cpu > 50.0 || avg_response > 100.0 {
                 high_stress_periods += 1;
             } else if avg_cpu < 30.0 && avg_response < 50.0 {
                 recovery_periods += 1;
             }
         }
-        
+
         // System should show both stress and recovery periods
         assert!(high_stress_periods > 0, "Should detect periods of high stress");
         assert!(recovery_periods > 0, "Should detect recovery periods");
-        
+
         println!("✅ Stress and recovery cycle validation completed");
         println!("📊 High stress periods: {}, Recovery periods: {}", high_stress_periods, recovery_periods);
     }
