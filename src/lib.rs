@@ -13,8 +13,8 @@ pub mod universal_adapter;
 // Re-export main types for easy access
 pub use error::{NestGateError, Result};
 pub use universal_adapter::{
-    NestGateUniversalAdapter, PrimalCoordination, CoordinationResult, 
-    CoordinationStatus, UniversalCoordination
+    CoordinationResult, CoordinationStatus, NestGateUniversalAdapter, PrimalCoordination,
+    UniversalCoordination,
 };
 
 /// Current version of NestGate

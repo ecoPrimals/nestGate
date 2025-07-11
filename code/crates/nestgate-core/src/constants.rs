@@ -208,7 +208,7 @@ pub mod security_defaults {
     pub const BROADCAST_IP: &str = "255.255.255.255";
 }
 
-/// Songbird Service Constants  
+/// Songbird Service Constants
 pub mod songbird_defaults {
     pub const DEFAULT_SONGBIRD_SERVICE: &str = "http://songbird-orchestrator:8000";
 }
@@ -227,7 +227,7 @@ pub mod network {
             .unwrap_or(8080)
     }
 
-    /// Default UI port (configurable via NESTGATE_UI_PORT)  
+    /// Default UI port (configurable via NESTGATE_UI_PORT)
     pub fn ui_port() -> u16 {
         env::var("NESTGATE_UI_PORT")
             .ok()
@@ -292,7 +292,7 @@ pub mod network {
     }
 }
 
-/// Timeout Constants  
+/// Timeout Constants
 pub mod timeouts {
     use super::Duration;
     use std::env;
@@ -498,7 +498,7 @@ pub mod time {
         )
     }
 
-    /// One week duration (configurable via NESTGATE_TIME_WEEK_SECS)  
+    /// One week duration (configurable via NESTGATE_TIME_WEEK_SECS)
     pub fn week() -> Duration {
         Duration::from_secs(
             std::env::var("NESTGATE_TIME_WEEK_SECS")
@@ -623,7 +623,7 @@ pub mod biomeos_defaults {
         /// Standard results storage size
         pub const RESULTS_STORAGE_SIZE: &str = "100Gi";
 
-        /// Large training data storage size  
+        /// Large training data storage size
         pub const TRAINING_DATA_SIZE: &str = "500Gi";
     }
 

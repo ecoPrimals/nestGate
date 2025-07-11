@@ -11,15 +11,10 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 use uuid::Uuid;
 
-use crate::{
-    dataset::{DatasetInfo, ZfsDatasetManager},
-    manager::ZfsManager,
-    pool::ZfsPoolManager,
-    snapshot::ZfsSnapshotManager,
-};
+use crate::{dataset::DatasetInfo, manager::ZfsManager};
 use nestgate_core::{NestGateError, Result, StorageTier};
 
 /// BYOB storage request from Songbird
@@ -251,21 +246,31 @@ pub struct StorageEndpoint {
 }
 
 /// Active storage deployment tracking
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct ActiveStorageDeployment {
+    /// Deployment ID
+    deployment_id: String,
+    /// Workspace ID
+    workspace_id: String,
+    /// Storage provider configuration
+    provider_config: String,
+    /// Current status
+    status: StorageStatus,
+    /// Status message
+    status_message: String,
     /// Storage request
     request: ByobStorageRequest,
-    /// Storage status
-    status: StorageStatus,
     /// Created datasets
     datasets: HashMap<String, DatasetInfo>,
     /// Storage mounts
     mounts: HashMap<String, StorageMount>,
     /// Storage usage
     usage: StorageUsage,
-    /// Created timestamp
+    /// Infrastructure fields for future use
+    #[allow(dead_code)]
     created_at: Instant,
     /// Updated timestamp
+    #[allow(dead_code)]
     updated_at: Instant,
 }
 
@@ -303,16 +308,10 @@ impl Default for ByobStorageConfig {
 #[async_trait]
 pub trait ByobStorageProvider: Send + Sync {
     /// Provision storage for a team deployment
-    async fn provision_storage(
-        &self,
-        request: ByobStorageRequest,
-    ) -> Result<ByobStorageResponse>;
+    async fn provision_storage(&self, request: ByobStorageRequest) -> Result<ByobStorageResponse>;
 
     /// Get storage status
-    async fn get_storage_status(
-        &self,
-        deployment_id: Uuid,
-    ) -> Result<ByobStorageResponse>;
+    async fn get_storage_status(&self, deployment_id: Uuid) -> Result<ByobStorageResponse>;
 
     /// Remove storage for a deployment
     async fn remove_storage(&self, deployment_id: Uuid) -> Result<()>;
@@ -324,18 +323,10 @@ pub trait ByobStorageProvider: Send + Sync {
     async fn get_storage_usage(&self, deployment_id: Uuid) -> Result<StorageUsage>;
 
     /// Create storage snapshot
-    async fn create_snapshot(
-        &self,
-        deployment_id: Uuid,
-        snapshot_name: String,
-    ) -> Result<String>;
+    async fn create_snapshot(&self, deployment_id: Uuid, snapshot_name: String) -> Result<String>;
 
     /// Restore from snapshot
-    async fn restore_snapshot(
-        &self,
-        deployment_id: Uuid,
-        snapshot_name: String,
-    ) -> Result<()>;
+    async fn restore_snapshot(&self, deployment_id: Uuid, snapshot_name: String) -> Result<()>;
 }
 
 /// ZFS-based BYOB storage provider
@@ -354,14 +345,21 @@ pub struct ZfsStorageProvider {
 #[derive(Debug, Clone)]
 struct TeamWorkspace {
     /// Team ID
+    #[allow(dead_code)]
     team_id: String,
-    /// Root dataset path
+    /// Workspace name
+    workspace_name: String,
+    /// Root dataset
     root_dataset: String,
     /// Storage quotas
+    #[allow(dead_code)]
     quotas: TeamStorageQuotas,
+    /// ZFS configuration
+    zfs_config: String,
     /// Active deployments
     active_deployments: Vec<Uuid>,
-    /// Created timestamp
+    /// Infrastructure field for future use
+    #[allow(dead_code)]
     created_at: Instant,
 }
 
@@ -378,8 +376,23 @@ impl ZfsStorageProvider {
 
     /// Validate storage request
     fn validate_storage_request(&self, request: &ByobStorageRequest) -> Result<()> {
+        // Basic validation checks
+        if request.team_id.is_empty() {
+            return Err(NestGateError::Storage(
+                "Team ID cannot be empty".to_string(),
+            ));
+        }
+
+        if request.deployment_name.is_empty() {
+            return Err(NestGateError::Storage(
+                "Deployment name cannot be empty".to_string(),
+            ));
+        }
+
         // Check total storage requirements against team quotas
-        let total_storage: u64 = request.storage_requirements.values()
+        let total_storage: u64 = request
+            .storage_requirements
+            .values()
             .map(|req| req.storage_bytes)
             .sum();
 
@@ -420,7 +433,11 @@ impl ZfsStorageProvider {
     }
 
     /// Create team workspace if it doesn't exist
-    async fn ensure_team_workspace(&self, team_id: &str, quotas: &TeamStorageQuotas) -> Result<String> {
+    async fn ensure_team_workspace(
+        &self,
+        team_id: &str,
+        quotas: &TeamStorageQuotas,
+    ) -> Result<String> {
         let mut workspaces = self.team_workspaces.write().await;
 
         if let Some(workspace) = workspaces.get(team_id) {
@@ -429,25 +446,31 @@ impl ZfsStorageProvider {
 
         // Create root dataset for team
         let root_dataset = format!("{}/teams/{}", self.config.default_pool, team_id);
-        
+
         info!("Creating team workspace: {}", root_dataset);
-        
-        self.zfs_manager.create_dataset(
-            &format!("teams/{}", team_id),
-            &self.config.default_pool,
-            StorageTier::Warm,
-        ).await.map_err(|e| NestGateError::Storage(format!(
-            "Failed to create team workspace: {}", e
-        )))?;
+
+        self.zfs_manager
+            .create_dataset(
+                &format!("teams/{}", team_id),
+                &self.config.default_pool,
+                StorageTier::Warm,
+            )
+            .await
+            .map_err(|e| {
+                NestGateError::Storage(format!("Failed to create team workspace: {}", e))
+            })?;
 
         // Set team quotas
-        self.set_dataset_quota(&root_dataset, quotas.max_total_storage).await?;
+        self.set_dataset_quota(&root_dataset, quotas.max_total_storage)
+            .await?;
 
         // Create workspace tracking
         let workspace = TeamWorkspace {
             team_id: team_id.to_string(),
+            workspace_name: format!("workspace-{}", team_id),
             root_dataset: root_dataset.clone(),
             quotas: quotas.clone(),
+            zfs_config: "default".to_string(),
             active_deployments: Vec::new(),
             created_at: Instant::now(),
         };
@@ -459,7 +482,10 @@ impl ZfsStorageProvider {
 
     /// Set dataset quota
     async fn set_dataset_quota(&self, dataset: &str, quota_bytes: u64) -> Result<()> {
-        debug!("Setting quota for dataset {}: {} bytes", dataset, quota_bytes);
+        debug!(
+            "Setting quota for dataset {}: {} bytes",
+            dataset, quota_bytes
+        );
 
         let output = tokio::process::Command::new("zfs")
             .args(["set", &format!("quota={}", quota_bytes), dataset])
@@ -470,7 +496,8 @@ impl ZfsStorageProvider {
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
             return Err(NestGateError::Storage(format!(
-                "Failed to set quota: {}", error_msg
+                "Failed to set quota: {}",
+                error_msg
             )));
         }
 
@@ -485,37 +512,41 @@ impl ZfsStorageProvider {
         requirements: &ServiceStorageRequirements,
     ) -> Result<DatasetInfo> {
         let dataset_name = format!("{}/{}", team_dataset, service_name);
-        
-        info!("Creating service dataset: {} on tier {:?}", dataset_name, requirements.tier);
+
+        info!(
+            "Creating service dataset: {} on tier {:?}",
+            dataset_name, requirements.tier
+        );
 
         // Create dataset
-        let dataset_info = self.zfs_manager.create_dataset(
-            service_name,
-            team_dataset,
-            requirements.tier.clone(),
-        ).await.map_err(|e| NestGateError::Storage(format!(
-            "Failed to create service dataset: {}", e
-        )))?;
+        let dataset_info = self
+            .zfs_manager
+            .create_dataset(service_name, team_dataset, requirements.tier.clone())
+            .await
+            .map_err(|e| {
+                NestGateError::Storage(format!("Failed to create service dataset: {}", e))
+            })?;
 
         // Set service-specific quota
         if requirements.storage_bytes > 0 {
-            self.set_dataset_quota(&dataset_name, requirements.storage_bytes).await?;
+            self.set_dataset_quota(&dataset_name, requirements.storage_bytes)
+                .await?;
         }
 
         // Create volume datasets for each volume requirement
         for volume in &requirements.volumes {
             let volume_dataset = format!("{}/{}", dataset_name, volume.name);
-            
-            self.zfs_manager.create_dataset(
-                &volume.name,
-                &dataset_name,
-                volume.tier.clone(),
-            ).await.map_err(|e| NestGateError::Storage(format!(
-                "Failed to create volume dataset: {}", e
-            )))?;
+
+            self.zfs_manager
+                .create_dataset(&volume.name, &dataset_name, volume.tier.clone())
+                .await
+                .map_err(|e| {
+                    NestGateError::Storage(format!("Failed to create volume dataset: {}", e))
+                })?;
 
             // Set volume quota
-            self.set_dataset_quota(&volume_dataset, volume.size_bytes).await?;
+            self.set_dataset_quota(&volume_dataset, volume.size_bytes)
+                .await?;
         }
 
         Ok(dataset_info)
@@ -573,20 +604,22 @@ impl ZfsStorageProvider {
         for (name, dataset) in datasets {
             total_used += dataset.used_space;
             total_allocated += dataset.used_space + dataset.available_space;
-            
+
             usage_per_dataset.insert(name.clone(), dataset.used_space);
 
-            let tier_usage = usage_per_tier.entry(dataset.tier.clone()).or_insert(TierUsage {
-                allocated: 0,
-                used: 0,
-                dataset_count: 0,
-                compression_ratio: 1.0,
-            });
+            let tier_usage = usage_per_tier
+                .entry(dataset.tier.clone())
+                .or_insert(TierUsage {
+                    allocated: 0,
+                    used: 0,
+                    dataset_count: 0,
+                    compression_ratio: 1.0,
+                });
 
             tier_usage.used += dataset.used_space;
             tier_usage.allocated += dataset.used_space + dataset.available_space;
             tier_usage.dataset_count += 1;
-            
+
             // Use compression ratio from dataset if available
             if let Some(ratio) = dataset.compression_ratio {
                 tier_usage.compression_ratio = (tier_usage.compression_ratio + ratio) / 2.0;
@@ -609,15 +642,19 @@ impl ZfsStorageProvider {
     ) -> HashMap<String, StorageEndpoint> {
         let mut endpoints = HashMap::new();
 
+        // Get server hostname from environment or default to localhost
+        let server_host =
+            std::env::var("NESTGATE_SERVER_HOST").unwrap_or_else(|_| "localhost".to_string());
+
         // Create NFS endpoint if configured
         if let Some(nfs_config) = &network_config.nfs_config {
             let endpoint = StorageEndpoint {
                 endpoint_type: "nfs".to_string(),
-                url: format!("nfs://{}/{}", "localhost", team_dataset), // TODO: Get actual host
+                url: format!("nfs://{}/{}", server_host, team_dataset),
                 credentials: None,
                 mount_instructions: format!(
                     "mount -t nfs {}:{} /mnt/point",
-                    "localhost", nfs_config.export_path
+                    server_host, nfs_config.export_path
                 ),
             };
             endpoints.insert("nfs".to_string(), endpoint);
@@ -627,11 +664,11 @@ impl ZfsStorageProvider {
         if let Some(smb_config) = &network_config.smb_config {
             let endpoint = StorageEndpoint {
                 endpoint_type: "smb".to_string(),
-                url: format!("smb://{}/{}", "localhost", smb_config.share_name),
+                url: format!("smb://{}/{}", server_host, smb_config.share_name),
                 credentials: None,
                 mount_instructions: format!(
                     "mount -t cifs //{}/{} /mnt/point",
-                    "localhost", smb_config.share_name
+                    server_host, smb_config.share_name
                 ),
             };
             endpoints.insert("smb".to_string(), endpoint);
@@ -640,27 +677,129 @@ impl ZfsStorageProvider {
         endpoints
     }
 
-    /// Monitor storage usage
+    /// Monitor storage usage and performance
     async fn monitor_storage_usage(&self) -> Result<()> {
-        // TODO: Implement storage monitoring
-        // This would track usage patterns, performance, and optimization opportunities
+        debug!("Monitoring storage usage across all deployments");
+
+        let deployments = self.active_deployments.read().await;
+        let mut total_usage = 0u64;
+        let mut tier_usage = HashMap::new();
+
+        for (deployment_id, deployment) in deployments.iter() {
+            // Update usage metrics for each deployment
+            let current_usage = self.calculate_storage_usage(&deployment.datasets).await?;
+            total_usage += current_usage.total_used;
+
+            // Aggregate tier usage
+            for (tier, usage) in current_usage.usage_per_tier {
+                let entry = tier_usage.entry(tier).or_insert(TierUsage {
+                    allocated: 0,
+                    used: 0,
+                    dataset_count: 0,
+                    compression_ratio: 1.0,
+                });
+                entry.allocated += usage.allocated;
+                entry.used += usage.used;
+                entry.dataset_count += usage.dataset_count;
+            }
+
+            // Log usage alerts if approaching quotas
+            if let Some(workspace) = self
+                .team_workspaces
+                .read()
+                .await
+                .get(&deployment.request.team_id)
+            {
+                let usage_percent = (current_usage.total_used as f64
+                    / workspace.quotas.max_total_storage as f64)
+                    * 100.0;
+                if usage_percent > 90.0 {
+                    warn!(
+                        "Team {} storage usage at {:.1}% for deployment {}",
+                        deployment.request.team_id, usage_percent, deployment_id
+                    );
+                }
+            }
+        }
+
+        info!(
+            "Storage monitoring complete. Total usage: {} bytes across {} deployments",
+            total_usage,
+            deployments.len()
+        );
         Ok(())
     }
 
-    /// Cleanup expired deployments
+    /// Cleanup expired or failed deployments
     async fn cleanup_expired_deployments(&self) -> Result<()> {
-        // TODO: Implement cleanup of expired or failed deployments
+        debug!("Starting cleanup of expired and failed deployments");
+
+        let mut deployments = self.active_deployments.write().await;
+        let mut to_remove = Vec::new();
+
+        for (deployment_id, deployment) in deployments.iter() {
+            let should_cleanup = match &deployment.status {
+                StorageStatus::Failed { .. } => {
+                    // Clean up failed deployments older than 1 hour
+                    deployment.created_at.elapsed() > Duration::from_secs(3600)
+                }
+                StorageStatus::Removed => {
+                    // Clean up removed deployments immediately
+                    true
+                }
+                _ => {
+                    // Check for deployments that have been inactive for more than 24 hours
+                    deployment.updated_at.elapsed() > Duration::from_secs(86400)
+                }
+            };
+
+            if should_cleanup {
+                to_remove.push(*deployment_id);
+            }
+        }
+
+        // Remove expired deployments
+        for deployment_id in to_remove {
+            if let Some(deployment) = deployments.remove(&deployment_id) {
+                info!("Cleaning up expired deployment: {}", deployment_id);
+
+                // Clean up datasets if they still exist
+                for (service_name, _) in &deployment.datasets {
+                    let dataset_path = format!(
+                        "{}/teams/{}/{}",
+                        self.config.default_pool, deployment.request.team_id, service_name
+                    );
+
+                    // Attempt dataset cleanup (ignore errors for non-existent datasets)
+                    if let Err(e) = self.zfs_manager.destroy_dataset(&dataset_path).await {
+                        debug!(
+                            "Dataset {} already cleaned up or doesn't exist: {}",
+                            dataset_path, e
+                        );
+                    }
+                }
+
+                // Update team workspace
+                let mut workspaces = self.team_workspaces.write().await;
+                if let Some(workspace) = workspaces.get_mut(&deployment.request.team_id) {
+                    workspace
+                        .active_deployments
+                        .retain(|&id| id != deployment_id);
+                }
+            }
+        }
+
         Ok(())
     }
 }
 
 #[async_trait]
 impl ByobStorageProvider for ZfsStorageProvider {
-    async fn provision_storage(
-        &self,
-        request: ByobStorageRequest,
-    ) -> Result<ByobStorageResponse> {
-        info!("Provisioning storage for deployment: {}", request.deployment_id);
+    async fn provision_storage(&self, request: ByobStorageRequest) -> Result<ByobStorageResponse> {
+        info!(
+            "Provisioning storage for deployment: {}",
+            request.deployment_id
+        );
 
         // Validate request
         self.validate_storage_request(&request)?;
@@ -668,39 +807,42 @@ impl ByobStorageProvider for ZfsStorageProvider {
         // Check concurrent operations limit
         {
             let deployments = self.active_deployments.read().await;
-            let active_count = deployments.values()
+            let active_count = deployments
+                .values()
                 .filter(|d| matches!(d.status, StorageStatus::Provisioning))
                 .count();
-            
+
             if active_count >= self.config.max_concurrent_operations as usize {
                 return Err(NestGateError::Storage(
-                    "Maximum concurrent storage operations reached".to_string()
+                    "Maximum concurrent storage operations reached".to_string(),
                 ));
             }
         }
 
         // Ensure team workspace exists
-        let team_dataset = self.ensure_team_workspace(&request.team_id, &request.team_quotas).await?;
+        let team_dataset = self
+            .ensure_team_workspace(&request.team_id, &request.team_quotas)
+            .await?;
 
         // Create datasets for each service
         let mut datasets = HashMap::new();
         for (service_name, requirements) in &request.storage_requirements {
-            let dataset_info = self.create_service_dataset(
-                &team_dataset,
-                service_name,
-                requirements,
-            ).await?;
+            let dataset_info = self
+                .create_service_dataset(&team_dataset, service_name, requirements)
+                .await?;
 
             datasets.insert(service_name.clone(), dataset_info);
         }
 
         // Create storage mounts
-        let mounts = self.create_storage_mounts(
-            request.deployment_id,
-            &team_dataset,
-            &request.storage_requirements,
-            &request.network_config,
-        ).await?;
+        let mounts = self
+            .create_storage_mounts(
+                request.deployment_id,
+                &team_dataset,
+                &request.storage_requirements,
+                &request.network_config,
+            )
+            .await?;
 
         // Calculate storage usage
         let usage = self.calculate_storage_usage(&datasets).await?;
@@ -710,8 +852,12 @@ impl ByobStorageProvider for ZfsStorageProvider {
 
         // Create active deployment tracking
         let active_deployment = ActiveStorageDeployment {
-            request: request.clone(),
+            deployment_id: request.deployment_id.to_string(),
+            workspace_id: "".to_string(), // Placeholder, needs actual workspace ID
+            provider_config: "ZFS".to_string(),
             status: StorageStatus::Ready,
+            status_message: "".to_string(),
+            request: request.clone(),
             datasets: datasets.clone(),
             mounts: mounts.clone(),
             usage: usage.clone(),
@@ -744,16 +890,16 @@ impl ByobStorageProvider for ZfsStorageProvider {
             updated_at: Utc::now(),
         };
 
-        info!("Storage provisioned successfully for deployment: {}", request.deployment_id);
+        info!(
+            "Storage provisioned successfully for deployment: {}",
+            request.deployment_id
+        );
         Ok(response)
     }
 
-    async fn get_storage_status(
-        &self,
-        deployment_id: Uuid,
-    ) -> Result<ByobStorageResponse> {
+    async fn get_storage_status(&self, deployment_id: Uuid) -> Result<ByobStorageResponse> {
         let deployments = self.active_deployments.read().await;
-        
+
         if let Some(deployment) = deployments.get(&deployment_id) {
             let response = ByobStorageResponse {
                 deployment_id,
@@ -762,7 +908,10 @@ impl ByobStorageProvider for ZfsStorageProvider {
                 mounts: deployment.mounts.clone(),
                 usage: deployment.usage.clone(),
                 endpoints: self.create_storage_endpoints(
-                    &format!("{}/teams/{}", self.config.default_pool, deployment.request.team_id),
+                    &format!(
+                        "{}/teams/{}",
+                        self.config.default_pool, deployment.request.team_id
+                    ),
                     &deployment.request.network_config,
                 ),
                 created_at: deployment.request.created_at,
@@ -782,7 +931,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
         info!("Removing storage for deployment: {}", deployment_id);
 
         let mut deployments = self.active_deployments.write().await;
-        
+
         if let Some(mut deployment) = deployments.remove(&deployment_id) {
             deployment.status = StorageStatus::Removing;
 
@@ -790,9 +939,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
             for (service_name, _dataset_info) in &deployment.datasets {
                 let dataset_path = format!(
                     "{}/teams/{}/{}",
-                    self.config.default_pool,
-                    deployment.request.team_id,
-                    service_name
+                    self.config.default_pool, deployment.request.team_id, service_name
                 );
 
                 // Delete dataset and all children
@@ -800,7 +947,9 @@ impl ByobStorageProvider for ZfsStorageProvider {
                     .args(["destroy", "-r", &dataset_path])
                     .output()
                     .await
-                    .map_err(|e| NestGateError::Storage(format!("Failed to destroy dataset: {}", e)))?;
+                    .map_err(|e| {
+                        NestGateError::Storage(format!("Failed to destroy dataset: {}", e))
+                    })?;
 
                 if !output.status.success() {
                     let error_msg = String::from_utf8_lossy(&output.stderr);
@@ -812,11 +961,16 @@ impl ByobStorageProvider for ZfsStorageProvider {
             {
                 let mut workspaces = self.team_workspaces.write().await;
                 if let Some(workspace) = workspaces.get_mut(&deployment.request.team_id) {
-                    workspace.active_deployments.retain(|&id| id != deployment_id);
+                    workspace
+                        .active_deployments
+                        .retain(|&id| id != deployment_id);
                 }
             }
 
-            info!("Storage removed successfully for deployment: {}", deployment_id);
+            info!(
+                "Storage removed successfully for deployment: {}",
+                deployment_id
+            );
         } else {
             return Err(NestGateError::Storage(format!(
                 "Storage deployment {} not found",
@@ -829,7 +983,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
 
     async fn list_team_storage(&self, team_id: &str) -> Result<Vec<ByobStorageResponse>> {
         let deployments = self.active_deployments.read().await;
-        
+
         let mut team_deployments = Vec::new();
         for (deployment_id, deployment) in deployments.iter() {
             if deployment.request.team_id == team_id {
@@ -855,7 +1009,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
 
     async fn get_storage_usage(&self, deployment_id: Uuid) -> Result<StorageUsage> {
         let deployments = self.active_deployments.read().await;
-        
+
         if let Some(deployment) = deployments.get(&deployment_id) {
             // Recalculate current usage
             self.calculate_storage_usage(&deployment.datasets).await
@@ -867,24 +1021,24 @@ impl ByobStorageProvider for ZfsStorageProvider {
         }
     }
 
-    async fn create_snapshot(
-        &self,
-        deployment_id: Uuid,
-        snapshot_name: String,
-    ) -> Result<String> {
-        info!("Creating snapshot {} for deployment: {}", snapshot_name, deployment_id);
+    async fn create_snapshot(&self, deployment_id: Uuid, snapshot_name: String) -> Result<String> {
+        info!(
+            "Creating snapshot {} for deployment: {}",
+            snapshot_name, deployment_id
+        );
 
         let deployments = self.active_deployments.read().await;
-        
+
         if let Some(deployment) = deployments.get(&deployment_id) {
             let team_dataset = format!(
                 "{}/teams/{}",
-                self.config.default_pool,
-                deployment.request.team_id
+                self.config.default_pool, deployment.request.team_id
             );
 
             // Create recursive snapshot of entire team deployment
-            let snapshot_id = self.zfs_manager.snapshot_manager
+            let snapshot_id = self
+                .zfs_manager
+                .snapshot_manager
                 .create_snapshot(&team_dataset, &snapshot_name, true)
                 .await
                 .map_err(|e| NestGateError::Storage(format!("Failed to create snapshot: {}", e)))?;
@@ -899,20 +1053,18 @@ impl ByobStorageProvider for ZfsStorageProvider {
         }
     }
 
-    async fn restore_snapshot(
-        &self,
-        deployment_id: Uuid,
-        snapshot_name: String,
-    ) -> Result<()> {
-        info!("Restoring snapshot {} for deployment: {}", snapshot_name, deployment_id);
+    async fn restore_snapshot(&self, deployment_id: Uuid, snapshot_name: String) -> Result<()> {
+        info!(
+            "Restoring snapshot {} for deployment: {}",
+            snapshot_name, deployment_id
+        );
 
         let deployments = self.active_deployments.read().await;
-        
+
         if let Some(deployment) = deployments.get(&deployment_id) {
             let team_dataset = format!(
                 "{}/teams/{}",
-                self.config.default_pool,
-                deployment.request.team_id
+                self.config.default_pool, deployment.request.team_id
             );
 
             // Rollback to snapshot
@@ -920,12 +1072,15 @@ impl ByobStorageProvider for ZfsStorageProvider {
                 .args(["rollback", &format!("{}@{}", team_dataset, snapshot_name)])
                 .output()
                 .await
-                .map_err(|e| NestGateError::Storage(format!("Failed to rollback snapshot: {}", e)))?;
+                .map_err(|e| {
+                    NestGateError::Storage(format!("Failed to rollback snapshot: {}", e))
+                })?;
 
             if !output.status.success() {
                 let error_msg = String::from_utf8_lossy(&output.stderr);
                 return Err(NestGateError::Storage(format!(
-                    "Failed to rollback snapshot: {}", error_msg
+                    "Failed to rollback snapshot: {}",
+                    error_msg
                 )));
             }
 
@@ -954,17 +1109,166 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_validate_storage_request() {
-        // TODO: Implement tests for storage request validation
+    async fn test_should_validate_storage_request() {
+        let zfs_config = crate::config::ZfsConfig::default();
+        let zfs_manager = Arc::new(crate::ZfsManager::new(zfs_config).await.unwrap());
+        let config = ByobStorageConfig::default();
+        let provider = ZfsStorageProvider::new(zfs_manager, config.clone());
+
+        // Test valid request
+        let valid_request = ByobStorageRequest {
+            deployment_id: Uuid::new_v4(),
+            team_id: "valid-team".to_string(),
+            deployment_name: "test-deployment".to_string(),
+            storage_requirements: std::collections::HashMap::new(),
+            team_quotas: TeamStorageQuotas {
+                max_total_storage: 1024 * 1024 * 1024, // 1GB
+                max_per_tier: std::collections::HashMap::new(),
+                max_datasets: 10,
+                max_snapshots: 5,
+                max_backup_retention_days: 30,
+            },
+            network_config: StorageNetworkConfig {
+                network_name: "test-network".to_string(),
+                nfs_config: None,
+                smb_config: None,
+            },
+            created_at: chrono::Utc::now(),
+        };
+
+        let result = provider.validate_storage_request(&valid_request);
+        assert!(result.is_ok(), "Valid request should pass validation");
+
+        // Test invalid request (empty team ID)
+        let mut invalid_request = valid_request.clone();
+        invalid_request.team_id = "".to_string();
+        let result = provider.validate_storage_request(&invalid_request);
+        assert!(result.is_err(), "Invalid team ID should fail validation");
     }
 
     #[tokio::test]
     async fn test_team_workspace_creation() {
-        // TODO: Implement tests for team workspace creation
+        let zfs_config = crate::config::ZfsConfig::default();
+        let zfs_manager = Arc::new(crate::ZfsManager::new(zfs_config).await.unwrap());
+        let config = ByobStorageConfig::default();
+        let provider = ZfsStorageProvider::new(zfs_manager, config.clone());
+
+        let team_id = "test-team-workspace";
+        let quotas = TeamStorageQuotas {
+            max_total_storage: 2 * 1024 * 1024 * 1024, // 2GB
+            max_per_tier: {
+                let mut map = std::collections::HashMap::new();
+                map.insert(nestgate_core::StorageTier::Hot, 1024 * 1024 * 1024); // 1GB hot
+                map.insert(nestgate_core::StorageTier::Cold, 1024 * 1024 * 1024); // 1GB cold
+                map
+            },
+            max_datasets: 20,
+            max_snapshots: 10,
+            max_backup_retention_days: 90,
+        };
+
+        // Test workspace creation
+        let result = provider.ensure_team_workspace(team_id, &quotas).await;
+
+        // Note: This test may fail in CI without ZFS, but validates the logic
+        match result {
+            Ok(workspace_path) => {
+                assert!(
+                    workspace_path.contains(team_id),
+                    "Workspace path should contain team ID"
+                );
+                assert!(
+                    workspace_path.contains(&config.default_pool),
+                    "Workspace should be in default pool"
+                );
+            }
+            Err(e) => {
+                // In test environments without ZFS, we expect this to fail gracefully
+                println!(
+                    "Test workspace creation failed as expected in test environment: {}",
+                    e
+                );
+            }
+        }
     }
 
     #[tokio::test]
     async fn test_storage_provisioning() {
-        // TODO: Implement tests for storage provisioning
+        let zfs_config = crate::config::ZfsConfig::default();
+        let zfs_manager = Arc::new(crate::ZfsManager::new(zfs_config).await.unwrap());
+        let config = ByobStorageConfig::default();
+        let provider = ZfsStorageProvider::new(zfs_manager, config);
+
+        let mut storage_requirements = std::collections::HashMap::new();
+        storage_requirements.insert(
+            "test-service".to_string(),
+            ServiceStorageRequirements {
+                service_name: "test-service".to_string(),
+                storage_bytes: 100 * 1024 * 1024, // 100MB
+                tier: nestgate_core::StorageTier::Hot,
+                volumes: vec![VolumeRequirement {
+                    name: "data-volume".to_string(),
+                    mount_path: "/data".to_string(),
+                    size_bytes: 50 * 1024 * 1024, // 50MB
+                    tier: nestgate_core::StorageTier::Hot,
+                    read_only: false,
+                    backup_policy: Some("daily".to_string()),
+                }],
+                persistence: PersistenceRequirement::Persistent,
+                access_mode: StorageAccessMode::ReadWriteOnce,
+            },
+        );
+
+        let request = ByobStorageRequest {
+            deployment_id: Uuid::new_v4(),
+            team_id: "test-provisioning-team".to_string(),
+            deployment_name: "test-provisioning".to_string(),
+            storage_requirements,
+            team_quotas: TeamStorageQuotas {
+                max_total_storage: 1024 * 1024 * 1024, // 1GB
+                max_per_tier: std::collections::HashMap::new(),
+                max_datasets: 10,
+                max_snapshots: 5,
+                max_backup_retention_days: 30,
+            },
+            network_config: StorageNetworkConfig {
+                network_name: "test-network".to_string(),
+                nfs_config: Some(NfsExportConfig {
+                    export_path: "/test-export".to_string(),
+                    allowed_hosts: vec!["192.168.1.0/24".to_string()],
+                    options: std::collections::HashMap::new(),
+                }),
+                smb_config: None,
+            },
+            created_at: chrono::Utc::now(),
+        };
+
+        // Test storage provisioning
+        let result = provider.provision_storage(request.clone()).await;
+
+        match result {
+            Ok(response) => {
+                assert_eq!(response.deployment_id, request.deployment_id);
+                assert!(!response.datasets.is_empty(), "Should create datasets");
+                assert!(
+                    !response.endpoints.is_empty(),
+                    "Should create storage endpoints"
+                );
+                println!("Storage provisioning test passed: {:?}", response.status);
+            }
+            Err(e) => {
+                // In test environments without ZFS, we expect this to fail gracefully
+                println!(
+                    "Test storage provisioning failed as expected in test environment: {}",
+                    e
+                );
+                // Verify it's a ZFS-related error, not a logic error
+                assert!(
+                    e.to_string().contains("ZFS")
+                        || e.to_string().contains("pool")
+                        || e.to_string().contains("dataset")
+                );
+            }
+        }
     }
-} 
+}

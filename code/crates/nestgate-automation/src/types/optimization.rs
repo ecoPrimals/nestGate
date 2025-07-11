@@ -54,7 +54,7 @@ pub struct TierThresholds {
 pub struct SizeThresholds {
     /// Small file threshold (bytes)
     pub small_file: u64,
-    /// Large file threshold (bytes)  
+    /// Large file threshold (bytes)
     pub large_file: u64,
 }
 

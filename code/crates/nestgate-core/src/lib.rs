@@ -14,6 +14,7 @@
 //! - **Security Framework**: Comprehensive authentication and authorization
 //! - **Configuration Management**: Hierarchical configuration with environment overrides
 //! - **Error Handling**: Structured error types for robust error propagation
+//! - **Universal Storage**: Multi-protocol storage with real-time synchronization
 //!
 //! ## Architecture
 //!
@@ -28,6 +29,12 @@
 //!           └───────────────────────┼───────────────────────┘
 //!                                   │
 //!                      ┌─────────────────┐
+//!                      │  Universal      │
+//!                      │  Storage        │
+//!                      │  Manager        │
+//!                      └─────────────────┘
+//!                                   │
+//!                      ┌─────────────────┐
 //!                      │  Core Types &   │
 //!                      │  Utilities      │
 //!                      └─────────────────┘
@@ -40,6 +47,7 @@
 //!     temporal_storage::{TemporalStorageSystem, StorageEra},
 //!     crypto_locks::{ExternalBoundaryGuardian, BearDogConfig},
 //!     data_sources::{NCBIGenomeSource, HuggingFaceModelSource},
+//!     universal_storage::{UniversalStorageManager, StorageProtocol},
 //!     Result, NestGateError
 //! };
 //!
@@ -53,6 +61,9 @@
 //! // Connect to data sources
 //! let ncbi = NCBIGenomeSource::new();
 //! let hf = HuggingFaceModelSource::new(None);
+//!
+//! // Initialize universal storage
+//! let universal_storage = UniversalStorageManager::new().await?;
 //! ```
 //!
 //! ## Integration
@@ -92,39 +103,43 @@
 //! - **Comprehensive Testing**: 95%+ code coverage
 //! - **Continuous Integration**: Automated testing on every commit
 
-pub mod config;
-pub mod error;
-pub mod types;
-pub mod utils;
-pub mod security;
-pub mod constants;
-pub mod temporal_storage;
-pub mod data_sources;
-pub mod crypto_locks;
 pub mod biomeos;
+pub mod cache;
 pub mod cert;
+pub mod config;
+pub mod constants;
+pub mod crypto_locks;
+pub mod data_sources;
+pub mod error;
+pub mod security;
+pub mod temporal_storage;
+pub mod types;
+pub mod universal_storage;
+pub mod utils;
 
 use serde::{Deserialize, Serialize};
 
 // Re-export commonly used types
-pub use error::*;
-pub use types::*;
-pub use temporal_storage::*;
-pub use data_sources::*;
-pub use crypto_locks::*;
 pub use cert::*;
+pub use crypto_locks::*;
+pub use data_sources::*;
+pub use error::*;
+pub use temporal_storage::{StorageEra, TemporalStorageSystem};
+pub use types::*;
+pub use universal_storage::{StorageProtocol, UniversalStorageManager};
 
 /// Initialize the NestGate core library with enhanced capabilities
 pub fn init() -> Result<()> {
     // Initialize logging
     tracing_subscriber::fmt::init();
-    
+
     tracing::info!("NestGate Core initialized with advanced features");
     tracing::info!("- Temporal storage: Enabled");
     tracing::info!("- Universal data sources: Enabled");
     tracing::info!("- External extraction protection: Enabled");
     tracing::info!("- Hardware-agnostic tuning: Enabled");
-    
+    tracing::info!("- Universal storage manager: Enabled");
+
     Ok(())
 }
 
@@ -141,6 +156,8 @@ pub struct NestGateConfig {
     pub security: SecurityConfig,
     /// Performance configuration
     pub performance: PerformanceConfig,
+    /// Universal storage configuration
+    pub universal_storage: UniversalStorageConfig,
 }
 
 /// Storage configuration
@@ -180,6 +197,19 @@ pub struct PerformanceConfig {
     pub profile: String,
 }
 
+/// Universal storage configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UniversalStorageConfig {
+    /// Enable multi-protocol support
+    pub multi_protocol: bool,
+    /// Enable real-time synchronization
+    pub real_time_sync: bool,
+    /// Enable distributed coordination
+    pub distributed_coordination: bool,
+    /// Protocol configurations
+    pub protocols: std::collections::HashMap<String, serde_json::Value>,
+}
+
 impl Default for NestGateConfig {
     fn default() -> Self {
         Self {
@@ -201,6 +231,12 @@ impl Default for NestGateConfig {
                 hardware_tuning: true,
                 auto_optimization: true,
                 profile: "balanced".to_string(),
+            },
+            universal_storage: UniversalStorageConfig {
+                multi_protocol: true,
+                real_time_sync: true,
+                distributed_coordination: true,
+                protocols: std::collections::HashMap::new(),
             },
         }
     }

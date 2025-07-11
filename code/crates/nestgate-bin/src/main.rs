@@ -17,7 +17,7 @@ use nestgate_core::config::Config as NestGateConfig;
 use nestgate_zfs::manager::ZfsManager;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Initialize logging
     tracing_subscriber::fmt()
         .with_env_filter("info,nestgate=debug")
@@ -133,7 +133,7 @@ fn detect_ecosystem_integration() -> EcosystemMode {
 async fn initialize_networking(
     service_name: &str,
     ecosystem_mode: &EcosystemMode,
-) -> Result<NetworkConfig, Box<dyn std::error::Error>> {
+) -> Result<NetworkConfig, Box<dyn std::error::Error + Send + Sync>> {
     match ecosystem_mode {
         EcosystemMode::Standalone => {
             info!("🔧 Initializing standalone networking...");
@@ -190,7 +190,7 @@ async fn try_ecosystem_integration(
     _service_name: &str,
     _songbird_url: &str,
     _beardog_available: bool,
-) -> Result<NetworkConfig, Box<dyn std::error::Error>> {
+) -> Result<NetworkConfig, Box<dyn std::error::Error + Send + Sync>> {
     // This is where ecosystem integration would go
     // For now, we'll implement a placeholder that demonstrates the pattern
 

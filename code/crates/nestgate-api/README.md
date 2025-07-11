@@ -1,413 +1,431 @@
-# NestGate API
+# NestGate API - Enhanced Streaming & Bidirectional Communication
 
-The NestGate API provides a comprehensive HTTP/REST interface for managing ZFS storage systems with intelligent automation and AI-powered optimization.
+**Advanced API server with comprehensive real-time communication capabilities**
 
-## Features
+## 🌟 **Features Overview**
 
-- **Complete ZFS Management**: Pool, dataset, and snapshot operations
-- **AI-Powered Optimization**: Intelligent tier recommendations and performance analytics
-- **RESTful Design**: Standard HTTP methods and JSON responses
-- **Comprehensive Testing**: Unit and integration test suites
-- **Development Server**: Ready-to-use development environment
-- **CORS Support**: Cross-origin request handling
-- **Request Tracing**: Built-in request/response logging
+NestGate API provides a complete communication infrastructure supporting:
 
-## Quick Start
+- **🌐 HTTP REST API** - Traditional request/response patterns
+- **⚡ Server-Sent Events (SSE)** - Real-time server-to-client streaming  
+- **🔄 WebSocket Communication** - Bidirectional real-time messaging
+- **🚀 Streaming RPC** - Type-safe bidirectional RPC with tarpc
+- **🤖 MCP Protocol Extensions** - AI system integration streaming
+- **📡 Event Coordination** - Unified event system across all layers
 
-### Development Server
+## 🏗️ **Architecture Overview**
 
-Run the development server with mock ZFS integration:
-
-```bash
-cargo run --example dev_server
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     NestGate API Gateway                        │
+├─────────────────────────────────────────────────────────────────┤
+│  HTTP REST API  │  SSE Streaming  │  WebSocket  │  Streaming RPC │
+├─────────────────────────────────────────────────────────────────┤
+│                    Event Coordination Layer                     │
+├─────────────────────────────────────────────────────────────────┤
+│          MCP Streaming          │       Communication           │
+│          Extensions             │       Manager                 │
+├─────────────────────────────────────────────────────────────────┤
+│                      NestGate Core Services                     │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-The server will start on `http://localhost:3000` with full API documentation printed to the console.
+## 🚀 **Quick Start**
 
-### Integration Example
+### Basic Server Setup
 
 ```rust
-use std::sync::Arc;
-use nestgate_api::{Config, serve_with_zfs};
-use nestgate_zfs::{ZfsManager, config::ZfsConfig};
+use nestgate_api::{start_server, CommunicationManager};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize ZFS manager
-    let zfs_config = ZfsConfig::default();
-    let zfs_manager = Arc::new(ZfsManager::new(zfs_config).await?);
-    
-    // Configure API server
-    let config = Config {
-        bind_addr: "0.0.0.0:3000".to_string(),
-        enable_zfs_api: true,
-        ..Default::default()
-    };
-    
-    // Start server
-    serve_with_zfs(config, zfs_manager).await?;
+    // Start with all communication layers
+    let comm_manager = CommunicationManager::new();
+    comm_manager.start_all("127.0.0.1:8080", "127.0.0.1:8081").await?;
     Ok(())
 }
 ```
 
-## API Endpoints
+### Client Integration
 
-### Health & Status
+```rust
+use nestgate_api_client::NestGateStreamingClient;
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/health` | Basic health check |
-| GET | `/api/v1/status` | System status |
-| GET | `/api/v1/zfs/health` | ZFS health status |
-| GET | `/api/v1/zfs/status` | ZFS system status |
-
-### Pool Management
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/zfs/pools` | List all pools |
-| POST | `/api/v1/zfs/pools` | Create new pool |
-| GET | `/api/v1/zfs/pools/{name}` | Get pool information |
-| DELETE | `/api/v1/zfs/pools/{name}` | Destroy pool |
-| GET | `/api/v1/zfs/pools/{name}/status` | Get detailed pool status |
-| POST | `/api/v1/zfs/pools/{name}/scrub` | Start pool scrub operation |
-
-### Dataset Management
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/zfs/datasets` | List all datasets |
-| POST | `/api/v1/zfs/datasets` | Create new dataset |
-| GET | `/api/v1/zfs/datasets/{name}` | Get dataset information |
-| DELETE | `/api/v1/zfs/datasets/{name}` | Destroy dataset |
-| GET | `/api/v1/zfs/datasets/{name}/properties` | Get dataset properties |
-| PUT | `/api/v1/zfs/datasets/{name}/properties` | Set dataset properties |
-
-### Snapshot Management
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/zfs/datasets/{name}/snapshots` | List dataset snapshots |
-| POST | `/api/v1/zfs/datasets/{name}/snapshots` | Create snapshot |
-| DELETE | `/api/v1/zfs/datasets/{name}/snapshots/{snap}` | Delete snapshot |
-
-### AI & Optimization
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/v1/zfs/ai/tier-prediction` | Get AI tier recommendation |
-| GET | `/api/v1/zfs/optimization/analytics` | Performance analytics |
-| POST | `/api/v1/zfs/optimization/trigger` | Trigger optimization |
-
-## Request/Response Examples
-
-### Create Pool
-
-**Request:**
-```bash
-curl -X POST http://localhost:3000/api/v1/zfs/pools \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "name": "storage_pool",
-    "devices": ["/dev/sda", "/dev/sdb"],
-    "config": {
-      "raid_level": "mirror",
-      "compression": "lz4",
-      "dedup": false,
-      "encryption": true
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut client = NestGateStreamingClient::new("http://127.0.0.1:8080".to_string()).await?;
+    client.connect_all().await?;
+    
+    // Subscribe to real-time events
+    let mut events = client.get_event_stream();
+    while let Ok(event) = events.recv().await {
+        println!("Received: {:?}", event);
     }
-  }'
-```
-
-**Response:**
-```json
-{
-  "name": "storage_pool",
-  "size": 2000000000000,
-  "allocated": 0,
-  "free": 2000000000000,
-  "health": "ONLINE",
-  "fragmentation": 0,
-  "compression_ratio": 1.0
+    
+    Ok(())
 }
 ```
 
-### Create Dataset
+## 📡 **Communication Layers**
 
-**Request:**
-```bash
-curl -X POST http://localhost:3000/api/v1/zfs/datasets \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "name": "documents",
-    "parent": "storage_pool",
-    "tier": "Warm",
-    "properties": {
-      "compression": "zstd",
-      "recordsize": "128K"
+### 1. Server-Sent Events (SSE)
+
+**Real-time server-to-client streaming for live updates**
+
+#### Endpoints
+```
+GET /api/v1/sse/events    - All event types
+GET /api/v1/sse/storage   - Storage operations  
+GET /api/v1/sse/health    - System health
+GET /api/v1/sse/metrics   - Performance metrics
+```
+
+#### Example Usage
+```javascript
+// JavaScript client
+const eventSource = new EventSource('/api/v1/sse/storage');
+eventSource.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    console.log('Storage event:', data);
+};
+```
+
+```rust
+// Rust client
+let mut event_stream = client.create_storage_stream().await;
+while let Some(event) = event_stream.next().await {
+    println!("Storage event: {:?}", event);
+}
+```
+
+#### Event Types
+- **Storage Operations**: Dataset creation, snapshots, transfers
+- **System Health**: Component status, health metrics
+- **Performance Metrics**: CPU, memory, disk, network stats
+- **Hardware Tuning**: Optimization events and results
+
+### 2. WebSocket Communication
+
+**Bidirectional real-time messaging**
+
+#### Connection
+```
+ws://localhost:8080/api/v1/communication/websocket
+```
+
+#### Message Format
+```json
+{
+    "event_id": "uuid",
+    "event_type": "storage_operation",
+    "data": {
+        "operation": "create_dataset",
+        "dataset": "/storage/my-data",
+        "status": "success"
+    },
+    "timestamp": 1704067200
+}
+```
+
+#### Example Usage
+```rust
+// Send WebSocket message
+client.send_websocket_message(json!({
+    "type": "storage_request",
+    "operation": "list_datasets",
+    "filters": {"pool": "main"}
+})).await?;
+```
+
+### 3. Streaming RPC (tarpc)
+
+**Type-safe bidirectional RPC with streaming support**
+
+#### Connection
+```rust
+use nestgate_api::streaming_rpc::StreamingRpcClient;
+
+let client = StreamingRpcClient::connect("127.0.0.1:8081".to_string()).await?;
+```
+
+#### Operations
+```rust
+// Storage operations
+let result = client.execute_storage_operation(
+    StorageOperation::CreateDataset {
+        name: "my/dataset".to_string(),
+        properties: HashMap::new(),
     }
-  }'
-```
+).await?;
 
-**Response:**
-```json
-{
-  "name": "storage_pool/documents",
-  "mountpoint": "/storage_pool/documents",
-  "used": 0,
-  "available": 2000000000000,
-  "tier": "Warm",
-  "compression": "zstd",
-  "recordsize": "128K"
+// ZFS operations  
+let pools = client.execute_zfs_operation(
+    ZfsOperation::ListPools { include_status: true }
+).await?;
+
+// Streaming events
+let mut event_stream = client.stream_storage_events(EventFilter {
+    event_types: vec!["storage".to_string()],
+    source_filter: Some("nestgate".to_string()),
+    priority_filter: None,
+    since: Some(SystemTime::now()),
+}).await?;
+
+while let Some(event) = event_stream.next().await {
+    println!("RPC Event: {:?}", event);
 }
 ```
 
-### AI Tier Prediction
+#### Bidirectional Streaming
+```rust
+// Create bidirectional stream
+let (client_tx, client_rx) = tokio::sync::mpsc::unbounded_channel();
+let client_stream = tokio_stream::wrappers::UnboundedReceiverStream::new(client_rx);
 
-**Request:**
-```bash
-curl -X POST http://localhost:3000/api/v1/zfs/ai/tier-prediction \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "file_path": "/storage_pool/documents/report.pdf"
-  }'
-```
+let mut server_stream = client.bidirectional_stream(Box::pin(client_stream)).await?;
 
-**Response:**
-```json
-{
-  "file_path": "/storage_pool/documents/report.pdf",
-  "predicted_tier": "Cold",
-  "current_tier": "Warm",
-  "confidence": 0.89,
-  "reasoning": "Low access frequency, large file size",
-  "expected_improvement": 25.5,
-  "timestamp": "2024-01-26T10:30:45Z"
+// Send client messages
+client_tx.send(ClientMessage::Command {
+    id: "cmd-1".to_string(),
+    command: Command::StorageCommand(StorageOperation::ListDatasets {
+        pool: None,
+        recursive: true,
+    }),
+})?;
+
+// Process server responses
+while let Some(response) = server_stream.next().await {
+    match response {
+        ServerMessage::CommandResult { id, result } => {
+            println!("Command {} result: {:?}", id, result);
+        }
+        ServerMessage::Event { subscription_id, event } => {
+            println!("Event for {}: {:?}", subscription_id, event);
+        }
+        _ => {}
+    }
 }
 ```
 
-## Data Models
+### 4. MCP Protocol Extensions
 
-### Storage Tiers
+**AI system integration with streaming capabilities**
 
 ```rust
-pub enum StorageTier {
-    Hot,    // High-performance, frequently accessed
-    Warm,   // Balanced performance and storage
-    Cold,   // Long-term storage, infrequently accessed
-    Cache,  // Ultra-fast cache layer
-}
+// Create MCP stream for AI training
+let ai_config = StreamConfig {
+    stream_type: StreamType::StorageMonitoring,
+    buffer_size: 1000,
+    compression: true,
+    encryption: true,
+    batch_size: 50,
+    flush_interval: Duration::from_millis(100),
+    metadata: HashMap::from([
+        ("purpose".to_string(), "ai_training".to_string()),
+        ("model_type".to_string(), "storage_predictor".to_string()),
+    ]),
+};
+
+let stream = mcp_manager.create_stream(ai_config).await?;
+
+// Send training data
+let training_data = json!({
+    "storage_operations": [...],
+    "performance_metrics": {...},
+    "prediction_features": {...}
+});
+
+mcp_manager.send_to_stream(&stream.id, training_data).await?;
 ```
 
-### Pool Configuration
+## 🎯 **Event Coordination**
+
+The event coordination system unifies events across all communication layers:
 
 ```rust
-pub struct PoolConfig {
-    pub raid_level: Option<String>,    // mirror, raidz1, raidz2, raidz3
-    pub compression: Option<String>,   // lz4, zstd, gzip, off
-    pub dedup: Option<bool>,          // Enable deduplication
-    pub encryption: Option<bool>,     // Enable encryption
-}
+// Register event handler
+let handler = EventHandler {
+    id: uuid::Uuid::new_v4(),
+    name: "storage_coordinator".to_string(),
+    patterns: vec!["storage".to_string(), "zfs".to_string()],
+    priority: Priority::High,
+    active: true,
+    config: json!({"auto_respond": true}),
+};
+
+event_coordinator.register_handler(handler).await?;
+
+// Emit coordinated event
+let event = CoordinatedEvent {
+    event_id: uuid::Uuid::new_v4(),
+    event_type: CoordinatedEventType::StorageOperation,
+    source: "api_server".to_string(),
+    data: json!({
+        "operation": "backup_started",
+        "dataset": "/storage/critical-data"
+    }),
+    timestamp: SystemTime::now(),
+};
+
+event_coordinator.emit_event(event).await?;
 ```
 
-### Dataset Properties
+## 📊 **Monitoring & Statistics**
 
-Common ZFS properties that can be configured:
-
-- `compression`: Compression algorithm (lz4, zstd, gzip, off)
-- `recordsize`: Record size (512, 1K, 2K, 4K, 8K, 16K, 32K, 64K, 128K, 256K, 512K, 1M)
-- `quota`: Dataset quota (e.g., "100G", "1T")
-- `reservation`: Space reservation (e.g., "50G")
-- `readonly`: Read-only mode (on/off)
-- `atime`: Access time updates (on/off)
-- `relatime`: Relative access time (on/off)
-
-## Error Handling
-
-All API endpoints return consistent error responses:
+### Communication Statistics
+```
+GET /api/v1/communication/stats
+```
 
 ```json
 {
-  "status": "error",
-  "data": null,
-  "message": "Detailed error description",
-  "timestamp": "2024-01-26T10:30:45Z"
+    "websocket": {
+        "active_connections": 15,
+        "total_connections": 42,
+        "messages_sent": 1250,
+        "messages_received": 800,
+        "bytes_transferred": 2048576
+    },
+    "sse": {
+        "active_connections": 8,
+        "events_sent": 5000,
+        "bytes_transferred": 1048576
+    },
+    "mcp_streaming": {
+        "active_streams": 5,
+        "total_streams": 12,
+        "messages_sent": 15000
+    },
+    "event_coordination": {
+        "total_events": 2500,
+        "events_processed": 2500,
+        "active_handlers": 10
+    }
 }
 ```
 
-Common HTTP status codes:
-- `200 OK`: Successful operation
-- `201 Created`: Resource created successfully
-- `204 No Content`: Successful operation with no response body
-- `400 Bad Request`: Invalid request parameters
-- `404 Not Found`: Resource not found
-- `409 Conflict`: Resource already exists
-- `500 Internal Server Error`: Server-side error
-
-## Testing
-
-### Run All Tests
-
-```bash
-cargo test
+### Health Check
+```
+GET /health
 ```
 
-### Run Integration Tests
-
-```bash
-cargo test --test zfs_api_tests
-```
-
-### Run Unit Tests
-
-```bash
-cargo test --test unit_tests
-```
-
-### Test Coverage
-
-Generate test coverage report:
-
-```bash
-cargo tarpaulin --out Html
-```
-
-## Configuration
-
-### API Server Configuration
-
-```rust
-pub struct Config {
-    pub bind_addr: String,           // Server bind address
-    pub cors: Option<CorsLayer>,     // CORS configuration
-    pub enable_zfs_api: bool,        // Enable ZFS endpoints
-    pub request_timeout: u64,        // Request timeout (seconds)
-    pub max_body_size: usize,        // Max request body size (bytes)
+```json
+{
+    "status": "ok",
+    "service": "nestgate-api",
+    "version": "0.1.0",
+    "communication_layers": {
+        "websocket": true,
+        "sse": true,
+        "streaming_rpc": true,
+        "mcp_streaming": true,
+        "event_coordination": true
+    }
 }
+```
+
+## 🔧 **Configuration**
+
+### Feature Flags
+```toml
+[features]
+default = ["sse", "streaming-rpc", "full-communication"]
+
+# SSE streaming support
+sse = ["axum/sse"]
+
+# Enhanced RPC streaming
+streaming-rpc = ["tarpc", "tokio-stream"]
+
+# Full communication suite
+full-communication = ["sse", "streaming-rpc"]
 ```
 
 ### Environment Variables
-
-- `RUST_LOG`: Set logging level (e.g., `debug`, `info`, `warn`, `error`)
-- `NESTGATE_API_BIND`: Override default bind address
-- `NESTGATE_ZFS_MOCK`: Enable ZFS mock mode for testing
-
-## Development
-
-### Prerequisites
-
-- Rust 1.70+
-- ZFS utilities (for non-mock mode)
-- Development dependencies: `axum-test`, `tokio-test`, `mockall`
-
-### Building
-
 ```bash
-cargo build
+# Server configuration
+NESTGATE_HTTP_ADDR=127.0.0.1:8080
+NESTGATE_RPC_ADDR=127.0.0.1:8081
+
+# Communication settings
+NESTGATE_MAX_CONNECTIONS=1000
+NESTGATE_EVENT_BUFFER_SIZE=10000
+NESTGATE_COMPRESSION_ENABLED=true
+
+# Security settings  
+NESTGATE_TLS_ENABLED=false
+NESTGATE_AUTH_REQUIRED=false
 ```
 
-### Running Tests
+## 🔒 **Security Features**
 
+- **TLS/SSL Support**: Secure all communication layers
+- **Authentication**: Bearer token and API key support
+- **Authorization**: Role-based access control
+- **Rate Limiting**: Per-client connection and message limits
+- **Input Validation**: Comprehensive message validation
+- **Event Encryption**: Optional encryption for sensitive events
+
+## 🚀 **Performance Optimizations**
+
+- **Connection Pooling**: Efficient connection management
+- **Message Batching**: Reduce overhead for high-frequency events
+- **Compression**: Optional compression for large payloads
+- **Backpressure Handling**: Graceful handling of slow clients
+- **Memory Management**: Efficient buffer management
+- **Async Processing**: Non-blocking event processing
+
+## 📚 **Examples**
+
+### Full Integration Demo
 ```bash
-cargo test --all-features
+cargo run --example enhanced_streaming_demo
 ```
 
-### Linting
-
+### Client Implementation
 ```bash
-cargo clippy --all-targets --all-features
-cargo fmt --all --check
+cargo run --example streaming_client_demo
 ```
 
-## Architecture
-
-The API is built using:
-
-- **Axum**: Modern, fast web framework
-- **Tower**: Middleware and service abstractions
-- **Serde**: JSON serialization/deserialization
-- **Tokio**: Async runtime
-- **Tracing**: Structured logging
-
-### Key Components
-
-- `handlers/`: HTTP request handlers
-- `routes.rs`: Route definitions and configuration
-- `models.rs`: Data models and serialization
-- `lib.rs`: Main library interface
-
-## Performance
-
-### Benchmarks
-
-- API response time: < 100ms for simple operations
-- ZFS operations: Optimized for concurrent access
-- Memory usage: Efficient Arc-based state sharing
-- Throughput: 1000+ requests/second (typical hardware)
-
-### Optimization Features
-
-- Connection pooling
-- Request/response compression
-- Async I/O throughout
-- Zero-copy JSON parsing where possible
-
-## Security
-
-### Features
-
-- CORS protection
-- Request size limits
-- Input validation
-- Error message sanitization
-- Structured logging (no sensitive data)
-
-### Best Practices
-
-- Run behind reverse proxy (nginx, traefik)
-- Use TLS/SSL for production
-- Implement authentication middleware
-- Regular security updates
-
-## Monitoring
-
-### Metrics
-
-The API provides built-in metrics for:
-- Request/response times
-- Error rates
-- ZFS operation statistics
-- AI prediction accuracy
-- Resource utilization
-
-### Logging
-
-Structured logging with tracing:
-```rust
-use tracing::{info, warn, error, debug};
-
-// Request tracing
-info!("Processing request", method = "POST", path = "/api/v1/zfs/pools");
-
-// Error logging
-error!("ZFS operation failed", pool = "storage_pool", error = %e);
+### Simple Usage
+```bash
+cargo run --example hybrid_communication_simple_demo
 ```
 
-## Contributing
+## 🔗 **API Reference**
+
+### Storage Operations
+- `POST /api/v1/storage/deployments` - Create storage deployment
+- `GET /api/v1/storage/deployments/{id}` - Get deployment status
+- `DELETE /api/v1/storage/deployments/{id}` - Delete deployment
+
+### Workspace Management
+- `POST /api/v1/workspaces` - Create workspace
+- `GET /api/v1/workspaces/{id}` - Get workspace details
+- `POST /api/v1/workspaces/{id}/deploy` - Deploy workspace
+
+### Hardware Tuning
+- `POST /api/v1/hardware/tune` - Start auto-tuning
+- `GET /api/v1/hardware/config` - Get current configuration
+
+## 🤝 **Contributing**
 
 1. Fork the repository
 2. Create a feature branch
-3. Add tests for new functionality
+3. Add tests for new communication features
 4. Ensure all tests pass
 5. Submit a pull request
 
-### Code Style
+## 📄 **License**
 
-- Follow Rust standard formatting (`cargo fmt`)
-- Use meaningful variable names
-- Add documentation for public APIs
-- Include examples in documentation
+AGPL-3.0-or-later - See LICENSE file for details
 
-## License
+## 🆘 **Support**
 
-See the main NestGate repository for license information. 
+- **Documentation**: [NestGate Docs](https://docs.nestgate.io)
+- **Issues**: [GitHub Issues](https://github.com/DataScienceBioLab/NestGateV2/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/DataScienceBioLab/NestGateV2/discussions)
+
+---
+
+**Built with ❤️ for high-performance, real-time distributed systems** 

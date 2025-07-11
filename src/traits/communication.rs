@@ -13,28 +13,28 @@ use crate::errors::{SongbirdError, Result};
 pub trait CommunicationLayer: Send + Sync {
     /// Send a message to a specific service
     async fn send_message(&self, target: ServiceAddress, message: ServiceMessage) -> Result<CommunicationResponse>;
-    
+
     /// Broadcast a message to all services
     async fn broadcast(&self, message: ServiceMessage) -> Result<Vec<CommunicationResponse>>;
-    
+
     /// Listen for incoming messages
     async fn listen(&self) -> impl Stream<Item = (ServiceAddress, ServiceMessage)>;
-    
+
     /// Subscribe to a topic
     async fn subscribe(&self, topic: &str) -> Result<()>;
-    
+
     /// Unsubscribe from a topic
     async fn unsubscribe(&self, topic: &str) -> Result<()>;
-    
+
     /// Connect to the communication layer
     async fn connect(&self) -> Result<()>;
-    
-    /// Disconnect from the communication layer  
+
+    /// Disconnect from the communication layer
     async fn disconnect(&self) -> Result<()>;
-    
+
     /// Check if connected
     async fn is_connected(&self) -> bool;
-    
+
     /// Get communication statistics
     async fn get_stats(&self) -> Result<CommunicationStats>;
 }
@@ -91,4 +91,4 @@ pub struct CommunicationStats {
     pub active_connections: u64,
     pub failed_connections: u64,
     pub last_activity: Option<DateTime<Utc>>,
-} 
+}

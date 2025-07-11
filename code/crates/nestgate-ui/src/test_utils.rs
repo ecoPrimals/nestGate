@@ -76,11 +76,11 @@ impl TestFixture {
                 }
             }
         }
-        
+
         if self.mount_point.exists() {
             fs::remove_dir_all(&self.mount_point).await?;
         }
-        
+
         Ok(())
     }
 
@@ -94,7 +94,7 @@ impl TestFixture {
     pub async fn verify_file_contents(&self, expected_content: &str) -> Result<bool> {
         let filename = format!("test_file_{}.txt", "nfs");
         let file_path = self.mount_point.join(&filename);
-        
+
         match timeout(FILE_OPERATION_TIMEOUT, fs::read(&file_path)).await {
             Ok(Ok(content)) => Ok(content == expected_content.as_bytes()),
             Ok(Err(e)) => Err(Error::from(e)),
@@ -212,4 +212,4 @@ pub fn create_test_mount_options(protocol: &str) -> MountOptions {
         username: Some("test-user".to_string()),
         password: Some("test-pass".to_string()),
     }
-} 
+}

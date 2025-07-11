@@ -777,7 +777,7 @@ mod integration_validation_tests {
         let (cpu, memory, _, _) = get_real_system_metrics();
         let (zfs_available, _, _) = get_real_zfs_health();
 
-        println!("✅ UI state consistency validated with real system data (CPU: {:.1}%, Memory: {:.1}%, ZFS: {})", 
+        println!("✅ UI state consistency validated with real system data (CPU: {:.1}%, Memory: {:.1}%, ZFS: {})",
                  cpu, memory, zfs_available);
     }
 }

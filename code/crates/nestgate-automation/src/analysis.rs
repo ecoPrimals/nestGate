@@ -2,8 +2,10 @@
 //!
 //! File characteristic analysis and access pattern tracking
 
-use crate::types::prediction::{DataPattern, FileType, TierType};
-use crate::types::{AccessType, FileAnalysis, AccessPatterns, FileCharacteristics, AccessEvent, AutomationError};
+use crate::types::prediction::{DataPattern, FileType};
+use crate::types::{
+    AccessEvent, AccessPatterns, AccessType, AutomationError, FileAnalysis, FileCharacteristics,
+};
 use crate::Result;
 use nestgate_core::types::StorageTier;
 use serde::{Deserialize, Serialize};
@@ -65,7 +67,10 @@ impl FileAnalyzer {
         // Cache the result
         self.cache_analysis(file_path, analysis.clone()).await;
 
-        debug!("Analyzed file {}: {} bytes, type: {:?}", file_path, size, analysis.file_type);
+        debug!(
+            "Analyzed file {}: {} bytes, type: {:?}",
+            file_path, size, analysis.file_type
+        );
 
         Ok(analysis)
     }
@@ -75,7 +80,7 @@ impl FileAnalyzer {
         // In a real implementation, this would track actual access patterns
         // For now, we'll estimate based on file characteristics
         let analysis = self.analyze_file(file_path).await?;
-        
+
         let daily_access_count = self.estimate_daily_access(&analysis);
         let read_write_ratio = self.estimate_read_write_ratio(&analysis);
         let peak_hours = self.estimate_peak_hours(&analysis);
@@ -93,7 +98,9 @@ impl FileAnalyzer {
     fn determine_file_type(&self, path: &Path) -> FileType {
         match path.extension().and_then(|ext| ext.to_str()) {
             Some("db") | Some("sqlite") | Some("sqlite3") => FileType::Database,
-            Some("txt") | Some("md") | Some("doc") | Some("docx") | Some("pdf") => FileType::Document,
+            Some("txt") | Some("md") | Some("doc") | Some("docx") | Some("pdf") => {
+                FileType::Document
+            }
             Some("jpg") | Some("jpeg") | Some("png") | Some("gif") | Some("bmp") => FileType::Image,
             Some("zip") | Some("tar") | Some("gz") | Some("7z") | Some("rar") => FileType::Archive,
             Some("log") | Some("out") | Some("err") => FileType::Log,
@@ -132,10 +139,10 @@ impl FileAnalyzer {
         // Check file name patterns
         let file_name = path.file_name().unwrap_or_default().to_string_lossy();
         let frequently_accessed_patterns = ["config", "index", "cache", "temp", "recent"];
-        
-        frequently_accessed_patterns.iter().any(|pattern| {
-            file_name.to_lowercase().contains(pattern)
-        })
+
+        frequently_accessed_patterns
+            .iter()
+            .any(|pattern| file_name.to_lowercase().contains(pattern))
     }
 
     /// Estimate sequential access patterns based on file type and size
@@ -143,8 +150,8 @@ impl FileAnalyzer {
         match file_type {
             FileType::Archive | FileType::Backup => true,
             FileType::Log => size > 10 * 1024 * 1024, // Large log files
-            FileType::Database => false, // Databases are typically random access
-            _ => size > 100 * 1024 * 1024, // Large files are more likely sequential
+            FileType::Database => false,              // Databases are typically random access
+            _ => size > 100 * 1024 * 1024,            // Large files are more likely sequential
         }
     }
 
@@ -181,9 +188,9 @@ impl FileAnalyzer {
     /// Estimate read/write ratio based on file analysis
     fn estimate_read_write_ratio(&self, analysis: &FileAnalysis) -> f64 {
         match analysis.file_type {
-            FileType::Database => 3.0, // More reads than writes
-            FileType::Document => 5.0, // Mostly reads
-            FileType::Log => 0.1, // Mostly writes
+            FileType::Database => 3.0,                    // More reads than writes
+            FileType::Document => 5.0,                    // Mostly reads
+            FileType::Log => 0.1,                         // Mostly writes
             FileType::Archive | FileType::Backup => 10.0, // Almost all reads
             _ => 2.0,
         }
@@ -193,8 +200,8 @@ impl FileAnalyzer {
     fn estimate_peak_hours(&self, analysis: &FileAnalysis) -> Vec<u8> {
         match analysis.file_type {
             FileType::Database => vec![9, 10, 11, 14, 15, 16], // Business hours
-            FileType::Log => vec![0, 1, 2, 3, 4, 5], // Off-hours maintenance
-            _ => vec![9, 10, 14, 15], // General business hours
+            FileType::Log => vec![0, 1, 2, 3, 4, 5],           // Off-hours maintenance
+            _ => vec![9, 10, 14, 15],                          // General business hours
         }
     }
 
@@ -202,7 +209,9 @@ impl FileAnalyzer {
     async fn get_cached_analysis(&self, file_path: &str) -> Option<FileAnalysis> {
         let cache = self.analysis_cache.read().await;
         if let Some((analysis, cached_at)) = cache.get(file_path) {
-            let age = SystemTime::now().duration_since(*cached_at).unwrap_or_default();
+            let age = SystemTime::now()
+                .duration_since(*cached_at)
+                .unwrap_or_default();
             if age.as_secs() < self.cache_ttl {
                 return Some(analysis.clone());
             }
@@ -246,7 +255,9 @@ impl AccessPatternAnalyzer {
         };
 
         let mut history = self.pattern_history.write().await;
-        let events = history.entry(file_path.to_string()).or_insert_with(Vec::new);
+        let events = history
+            .entry(file_path.to_string())
+            .or_insert_with(Vec::new);
         events.push(event);
 
         // Keep history bounded
@@ -292,7 +303,7 @@ impl DatasetAnalyzer {
 
     pub async fn analyze_dataset(&self, dataset_name: &str) -> Result<DatasetAnalysis> {
         let path = Path::new(dataset_name);
-        
+
         let (file_analyses, total_files, total_size) = self.scan_dataset_directory(path).await?;
         let access_patterns = self.aggregate_access_patterns(&file_analyses).await;
         let file_types = file_analyses.iter().map(|f| f.file_type.clone()).collect();
@@ -312,10 +323,7 @@ impl DatasetAnalyzer {
         self.file_analyzer.analyze_file(file_path).await
     }
 
-    pub async fn recommend_tier(
-        &self,
-        characteristics: &FileAnalysis,
-    ) -> Result<StorageTier> {
+    pub async fn recommend_tier(&self, characteristics: &FileAnalysis) -> Result<StorageTier> {
         let tier = if characteristics.characteristics.is_frequently_accessed
             || characteristics.size < 10 * 1024 * 1024
         {
