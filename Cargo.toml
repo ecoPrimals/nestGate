@@ -26,7 +26,7 @@ members = [
     "code/crates/nestgate-network",
     "code/crates/nestgate-automation",
     "code/crates/nestgate-nas",
-    "code/crates/nestgate-ui",
+    "code/crates/nestgate-ui",  # DEPRECATED - will be removed in future release
     "code/crates/nestgate-mcp",
     "code/crates/nestgate-installer",
     "code/crates/nestgate-bin",
@@ -54,7 +54,7 @@ nestgate-api = { path = "code/crates/nestgate-api" }
 nestgate-network = { path = "code/crates/nestgate-network" }
 nestgate-automation = { path = "code/crates/nestgate-automation" }
 nestgate-nas = { path = "code/crates/nestgate-nas" }
-nestgate-ui = { path = "code/crates/nestgate-ui" }
+nestgate-ui = { path = "code/crates/nestgate-ui" }  # DEPRECATED - headless design
 nestgate-mcp = { path = "code/crates/nestgate-mcp" }
 nestgate-installer = { path = "code/crates/nestgate-installer" }
 nestgate-fsmonitor = { path = "code/crates/nestgate-fsmonitor" }
@@ -63,6 +63,10 @@ uuid.workspace = true
 rand = "0.8"
 regex = "1.0"
 tokio = { version = "1.40", features = ["full"] }
+async-trait.workspace = true
+chrono = "0.4"
+reqwest.workspace = true
+tracing.workspace = true
 
 [dev-dependencies]
 tokio-test = "0.4"

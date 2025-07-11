@@ -586,63 +586,63 @@ impl CertValidator {
             Err(NestGateError::Internal("BearDog unreachable".to_string()))
         }
     }
-    
+
     /// Get BearDog key ID for crypto lock operations
     pub async fn get_key_id(&self) -> Result<String> {
         let _config = self
             .beardog_config
             .as_ref()
             .ok_or_else(|| NestGateError::Validation("BearDog config not set".to_string()))?;
-        
+
         // In real implementation, this would retrieve the key ID from BearDog
         // For now, generate a deterministic key ID based on config
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
-        
+
         let mut hasher = DefaultHasher::new();
         _config.endpoint.hash(&mut hasher);
         _config.api_key.hash(&mut hasher);
-        
+
         Ok(format!("beardog-key-{:x}", hasher.finish()))
     }
-    
+
     /// Sign data using BearDog
     pub async fn sign_data(&self, data: &str) -> Result<String> {
         let _config = self
             .beardog_config
             .as_ref()
             .ok_or_else(|| NestGateError::Validation("BearDog config not set".to_string()))?;
-        
+
         // In real implementation, this would make a signing request to BearDog
         // For now, generate a deterministic signature
-        use sha2::{Sha256, Digest};
-        
+        use sha2::{Digest, Sha256};
+
         let mut hasher = Sha256::new();
         hasher.update(data.as_bytes());
         hasher.update(_config.api_key.as_bytes());
         hasher.update(_config.endpoint.as_bytes());
-        
+
         Ok(format!("beardog-sig-{:x}", hasher.finalize()))
     }
-    
+
     /// Generate BearDog validation token
     pub async fn generate_validation_token(&self, proof_data: &str) -> Result<String> {
         let _config = self
             .beardog_config
             .as_ref()
             .ok_or_else(|| NestGateError::Validation("BearDog config not set".to_string()))?;
-        
+
         // In real implementation, this would generate a token via BearDog
-        use sha2::{Sha256, Digest};
-        
+        use sha2::{Digest, Sha256};
+
         let mut hasher = Sha256::new();
         hasher.update(proof_data.as_bytes());
         hasher.update(_config.trust_anchor.as_bytes());
         hasher.update(chrono::Utc::now().timestamp().to_string().as_bytes());
-        
+
         Ok(format!("beardog-token-{:x}", hasher.finalize()))
     }
-    
+
     /// Verify signature using BearDog
     pub async fn verify_signature(
         &self,
@@ -654,26 +654,26 @@ impl CertValidator {
             .beardog_config
             .as_ref()
             .ok_or_else(|| NestGateError::Validation("BearDog config not set".to_string()))?;
-        
+
         // In real implementation, this would verify via BearDog
         // For now, recreate the signature and compare
         let expected_sig = self.sign_data(data).await?;
         let expected_key_id = self.get_key_id().await?;
-        
+
         Ok(signature == expected_sig && key_id == expected_key_id)
     }
-    
+
     /// Validate BearDog token
     pub async fn validate_token(&self, token: &str, proof_data: &str) -> Result<bool> {
         let _config = self
             .beardog_config
             .as_ref()
             .ok_or_else(|| NestGateError::Validation("BearDog config not set".to_string()))?;
-        
+
         // In real implementation, this would validate via BearDog
         // For now, recreate the token and compare (with some time tolerance)
         let expected_token = self.generate_validation_token(proof_data).await?;
-        
+
         // Simple validation - in real implementation would check timestamp validity
         Ok(token.starts_with("beardog-token-") && expected_token.starts_with("beardog-token-"))
     }

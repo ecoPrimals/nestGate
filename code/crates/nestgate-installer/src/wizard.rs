@@ -128,25 +128,25 @@ impl InstallationWizard {
 
         self.config.api_port = port_input.parse().unwrap();
 
-        // Songbird Integration
-        let songbird_integration = Confirm::new()
-            .with_prompt("Configure Songbird orchestration?")
+        // Universal Primal Orchestration Integration
+        let orchestration_integration = Confirm::new()
+            .with_prompt("Configure primal orchestration integration?")
             .default(false)
             .interact()?;
 
-        if songbird_integration {
-            let songbird_url: String = Input::new()
-                .with_prompt("Songbird server URL")
+        if orchestration_integration {
+            let orchestration_url: String = Input::new()
+                .with_prompt("Orchestration primal URL")
                 .default(
                     std::env::var("NESTGATE_UI_URL")
                         .unwrap_or_else(|_| "http://localhost:3000".to_string()),
                 )
                 .interact_text()?;
 
-            self.config.songbird_url = Some(songbird_url);
+            self.config.orchestration_url = Some(orchestration_url);
 
-            println!("✅ Songbird integration configured");
-            println!("   - Orchestrated networking");
+            println!("✅ Primal orchestration integration configured");
+            println!("   - Cross-primal networking");
             println!("   - Enhanced security");
             println!("   - Multi-system coordination");
         } else {
@@ -206,10 +206,10 @@ impl InstallationWizard {
         );
         println!("API Port: {}", self.config.api_port);
 
-        if let Some(url) = &self.config.songbird_url {
-            println!("Songbird URL: {}", url);
+        if let Some(url) = &self.config.orchestration_url {
+            println!("Orchestration URL: {}", url);
         } else {
-            println!("Songbird: Standalone mode");
+            println!("Orchestration: Standalone mode");
         }
 
         println!(

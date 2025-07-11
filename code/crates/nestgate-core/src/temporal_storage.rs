@@ -2,15 +2,15 @@
 //!
 //! Universal storage system spanning all technology eras from punch cards to DNA storage
 
-use std::collections::HashMap;
-use std::path::PathBuf;
-use std::time::SystemTime;
-use std::hash::Hash;
-use std::pin::Pin;
-use std::future::Future;
-use serde::{Deserialize, Serialize};
-use async_trait::async_trait;
 use crate::Result;
+use async_trait::async_trait;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::future::Future;
+use std::hash::Hash;
+use std::path::PathBuf;
+use std::pin::Pin;
+use std::time::SystemTime;
 
 /// Core temporal device abstraction
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -127,23 +127,23 @@ pub enum DataType {
     Sequence,
     Variants,
     Annotations,
-    
+
     // AI/ML data
     Model(ModelType),
     Dataset(DatasetType),
     Weights,
     Configuration,
-    
+
     // Legacy data
     LegacyFiles,
     SystemImages,
     Applications,
-    
+
     // Research data
     Publications,
     ExperimentalData,
     Simulations,
-    
+
     // General
     Documents,
     Media,
@@ -186,9 +186,17 @@ pub struct AccessRequirements {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AuthenticationMethod {
     APIKey(String),
-    OAuth2 { client_id: String, scope: Vec<String> },
-    BasicAuth { username: String, password: String },
-    Certificate { cert_path: PathBuf },
+    OAuth2 {
+        client_id: String,
+        scope: Vec<String>,
+    },
+    BasicAuth {
+        username: String,
+        password: String,
+    },
+    Certificate {
+        cert_path: PathBuf,
+    },
     None,
 }
 
@@ -305,7 +313,10 @@ pub enum ReplicationStrategy {
 
 /// Data stream trait
 pub trait DataStream: Send + Sync {
-    fn read_chunk(&mut self, size: usize) -> Pin<Box<dyn Future<Output = Result<Vec<u8>>> + Send + '_>>;
+    fn read_chunk(
+        &mut self,
+        size: usize,
+    ) -> Pin<Box<dyn Future<Output = Result<Vec<u8>>> + Send + '_>>;
     fn seek(&mut self, position: u64) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
 }
 
@@ -440,29 +451,29 @@ impl TemporalDevice {
     /// Auto-detect any storage devices
     pub async fn auto_detect_any_storage() -> Result<Vec<TemporalDevice>> {
         let mut devices = Vec::new();
-        
+
         // Detect legacy devices
         devices.extend(Self::detect_legacy_devices().await?);
-        
+
         // Detect modern devices
         devices.extend(Self::detect_modern_devices().await?);
-        
+
         // Detect future devices
         devices.extend(Self::detect_future_devices().await?);
-        
+
         Ok(devices)
     }
-    
+
     async fn detect_legacy_devices() -> Result<Vec<TemporalDevice>> {
         // Placeholder for legacy device detection
         Ok(vec![])
     }
-    
+
     async fn detect_modern_devices() -> Result<Vec<TemporalDevice>> {
         // Placeholder for modern device detection
         Ok(vec![])
     }
-    
+
     async fn detect_future_devices() -> Result<Vec<TemporalDevice>> {
         // Placeholder for future device detection
         Ok(vec![])
@@ -472,22 +483,22 @@ impl TemporalDevice {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[tokio::test]
     async fn test_temporal_device_detection() {
         let devices = TemporalDevice::auto_detect_any_storage().await.unwrap();
         // Test passes if no errors occur
         assert_eq!(devices.len(), 0); // Currently returns empty vec
     }
-    
+
     #[test]
     fn test_storage_era_classification() {
         let punch_card = StorageEra::Prehistoric;
         let nvme = StorageEra::Modern;
         let dna = StorageEra::Biological;
-        
+
         assert_eq!(punch_card, StorageEra::Prehistoric);
         assert_eq!(nvme, StorageEra::Modern);
         assert_eq!(dna, StorageEra::Biological);
     }
-} 
+}

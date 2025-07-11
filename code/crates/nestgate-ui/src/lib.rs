@@ -1,9 +1,8 @@
 use eframe::egui::{self, Color32, Pos2, Rect, RichText, Stroke, Vec2};
-use nestgate_core::{Result, types::StorageTier};
+use nestgate_core::{types::StorageTier, Result};
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 use tracing::info;
-
 
 /// Native Rust UI for NestGate using egui - Production ZFS Management
 pub struct NestGateApp {

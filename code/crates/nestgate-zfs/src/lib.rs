@@ -30,8 +30,8 @@ pub use advanced_features::{
 };
 pub use automation::{AutomationPolicy, DatasetAutomation, DatasetAutomationConfig};
 pub use byob::{
-    ByobStorageProvider, ByobStorageRequest, ByobStorageResponse, ZfsStorageProvider,
-    create_zfs_storage_provider,
+    create_zfs_storage_provider, ByobStorageProvider, ByobStorageRequest, ByobStorageResponse,
+    ZfsStorageProvider,
 };
 pub use command::{
     CommandResult, PoolStatus, ZfsCommand, ZfsDataset, ZfsOperations, ZfsPool, ZfsSnapshot,

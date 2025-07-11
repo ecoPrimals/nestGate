@@ -118,7 +118,7 @@ pub struct LifecycleRule {
 pub struct DatasetAutomation {
     /// Pool management
     pool_manager: Arc<ZfsPoolManager>,
-    /// Dataset management  
+    /// Dataset management
     dataset_manager: Arc<ZfsDatasetManager>,
     /// Migration engine for tier movement
     migration_engine: Arc<RwLock<MigrationEngine>>,
@@ -161,7 +161,7 @@ pub struct TierAssignmentRules {
 pub struct TierSizeThresholds {
     /// Files smaller than this go to hot tier (bytes)
     pub hot_max_size: u64,
-    /// Files smaller than this go to warm tier (bytes)  
+    /// Files smaller than this go to warm tier (bytes)
     pub warm_max_size: u64,
 }
 

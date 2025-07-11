@@ -3,40 +3,62 @@ name = "nestgate-api"
 version = "0.1.0"
 edition = "2021"
 authors = ["DataScienceBioLab"]
-description = "API server and interface definitions for NestGate with enhanced capabilities"
+description = "API server and interface definitions for NestGate with enhanced streaming capabilities"
 license = "AGPL-3.0-or-later"
 repository = "https://github.com/DataScienceBioLab/NestGateV2"
-keywords = ["api", "kubernetes", "network", "gateway", "service-mesh"]
+keywords = ["api", "kubernetes", "network", "gateway", "service-mesh", "streaming", "sse", "rpc"]
 categories = ["network-programming", "api-bindings", "web-programming"]
 
 [dependencies]
-# Web framework
-axum = { workspace = true, features = ["json", "query", "multipart"] }
+# Core HTTP and web framework
+axum = { workspace = true }
 tower = { workspace = true }
-tower-http = { workspace = true, features = ["cors", "trace", "timeout", "limit"] }
-tokio = { workspace = true, features = ["full"] }
+tower-http = { workspace = true }
+hyper = "0.14"
+tokio = { workspace = true }
 
-# Serialization
-serde = { workspace = true, features = ["derive"] }
+# Serialization and JSON
+serde = { workspace = true }
 serde_json = { workspace = true }
 
-# Logging
-tracing = { workspace = true }
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+# Async and concurrency
+futures = { workspace = true }
+futures-util = "0.3"
+async-trait = { workspace = true }
 
-# Time handling
-chrono = { workspace = true, features = ["serde"] }
+# Streaming utilities
+tokio-stream = { version = "0.1", features = ["sync"] }
 
 # System utilities
 num_cpus = "1.16"
 
+# Utilities
+uuid = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }
+
+# Random number generation for testing
+fastrand = "2.0"
+toml = "0.8"
+
 # NestGate dependencies
 nestgate-core = { path = "../nestgate-core" }
 nestgate-zfs = { path = "../nestgate-zfs" }
+nestgate-network = { path = "../nestgate-network" }
 nestgate-automation = { path = "../nestgate-automation" }
 
-# Added for operation IDs
-uuid = { workspace = true }
+# Configuration
+config = { workspace = true }
+
+# Enhanced communication
+warp = { workspace = true }
+
+# MCP dependencies
+rmp = "0.8"
+rmp-serde = "1.3"
+reqwest = { workspace = true }
 
 [dev-dependencies]
 # Testing framework
@@ -49,7 +71,19 @@ rstest = "0.18"
 reqwest = { version = "0.11", features = ["json"] }
 
 # Test utilities
-tempfile = "3.8"
+tempfile = "3.10"
+
+# Tracing support for development
+tracing-subscriber = { workspace = true }
+
+[features]
+default = ["sse"]
+
+# SSE streaming support (built into axum 0.7)
+sse = []
+
+# Streaming RPC support for enhanced communication
+streaming-rpc = []
 
 [lints]
 workspace = true 

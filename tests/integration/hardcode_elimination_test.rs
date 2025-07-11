@@ -5,7 +5,7 @@ use regex::Regex;
 #[test]
 fn test_no_hardcoded_network_values() {
     let violations = scan_specific_files_for_hardcoded_values();
-    
+
     if !violations.is_empty() {
         println!("\n🚨 HARDCODED VALUES DETECTED:");
         for violation in &violations {
@@ -13,7 +13,7 @@ fn test_no_hardcoded_network_values() {
         }
         panic!("Found {} hardcoded values. Use environment variables or constants!", violations.len());
     }
-    
+
     println!("✅ No hardcoded values detected - all configuration is properly externalized!");
 }
 
@@ -26,22 +26,22 @@ struct Violation {
 
 fn scan_specific_files_for_hardcoded_values() -> Vec<Violation> {
     let mut violations = Vec::new();
-    
+
     // Target specific key files instead of scanning everything
     let key_files = vec![
         "code/crates/nestgate-api/src/lib.rs",
-        "code/crates/nestgate-network/src/lib.rs", 
+        "code/crates/nestgate-network/src/lib.rs",
         "code/crates/nestgate-core/src/config.rs",
         "code/crates/nestgate-nas/src/lib.rs",
         "code/crates/nestgate-network/src/songbird.rs",
     ];
-    
+
     for file_path in key_files {
         if std::path::Path::new(file_path).exists() {
             scan_file_for_violations(file_path, &mut violations);
         }
     }
-    
+
     violations
 }
 
@@ -59,7 +59,7 @@ fn check_line_for_hardcoded_values(file_path: &str, line_num: usize, line: &str,
     if trimmed.starts_with("//") || trimmed.contains("debug!(") || trimmed.contains("info!(") {
         return;
     }
-    
+
     // Agnostic approach: Find ANY port and check if explicitly allowed
     check_ports_agnostic(file_path, line_num, line, violations);
     check_ips_agnostic(file_path, line_num, line, violations);
@@ -68,11 +68,11 @@ fn check_line_for_hardcoded_values(file_path: &str, line_num: usize, line: &str,
 
 fn check_ports_agnostic(file_path: &str, line_num: usize, line: &str, violations: &mut Vec<Violation>) {
     let port_regex = Regex::new(r":(\d{3,5})\b").unwrap();
-    
+
     for cap in port_regex.captures_iter(line) {
         if let Some(port_match) = cap.get(1) {
             let port: u16 = port_match.as_str().parse().unwrap_or(0);
-            
+
             if !is_explicitly_allowed_port(port, line) {
                 violations.push(Violation {
                     file: file_path.to_string(),
@@ -86,10 +86,10 @@ fn check_ports_agnostic(file_path: &str, line_num: usize, line: &str, violations
 
 fn check_ips_agnostic(file_path: &str, line_num: usize, line: &str, violations: &mut Vec<Violation>) {
     let ip_regex = Regex::new(r"\b(?:\d{1,3}\.){3}\d{1,3}\b").unwrap();
-    
+
     for ip_match in ip_regex.find_iter(line) {
         let ip = ip_match.as_str();
-        
+
         if !is_explicitly_allowed_ip(ip, line) {
             violations.push(Violation {
                 file: file_path.to_string(),
@@ -102,10 +102,10 @@ fn check_ips_agnostic(file_path: &str, line_num: usize, line: &str, violations: 
 
 fn check_urls_agnostic(file_path: &str, line_num: usize, line: &str, violations: &mut Vec<Violation>) {
     let url_regex = Regex::new(r"https?://[^\s\"']+").unwrap();
-    
+
     for url_match in url_regex.find_iter(line) {
         let url = url_match.as_str();
-        
+
         if !is_explicitly_allowed_url(url, line) {
             violations.push(Violation {
                 file: file_path.to_string(),
@@ -121,7 +121,7 @@ fn check_urls_agnostic(file_path: &str, line_num: usize, line: &str, violations:
 fn is_explicitly_allowed_port(port: u16, line: &str) -> bool {
     // Only well-known standard ports OR configurable values
     let standard_ports = HashSet::from([80, 443, 22, 53, 445, 2049]);
-    
+
     standard_ports.contains(&port) ||
     line.contains("env::var") ||
     line.contains("config.") ||
@@ -145,4 +145,3 @@ fn is_explicitly_allowed_url(url: &str, line: &str) -> bool {
     line.contains("DEFAULT_") ||
     url.contains("example.com")
 }
- 

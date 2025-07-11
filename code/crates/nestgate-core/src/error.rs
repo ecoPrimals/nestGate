@@ -2,8 +2,8 @@
 //!
 //! Enhanced error handling with enhanced NestGate capabilities
 
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use serde::{Serialize, Deserialize};
 
 /// Main error type for NestGate operations
 #[derive(Error, Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -135,6 +135,10 @@ pub enum NestGateError {
     /// Generic errors
     #[error("Generic error: {0}")]
     Generic(String),
+
+    /// Permission errors
+    #[error("Permission error: {0}")]
+    Permission(String),
 }
 
 /// Result type alias for NestGate operations

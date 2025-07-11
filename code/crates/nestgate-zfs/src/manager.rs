@@ -33,7 +33,7 @@ use crate::orchestrator::OrchestratorClient;
 pub struct ZfsManager {
     /// Pool management operations
     pub pool_manager: Arc<ZfsPoolManager>,
-    /// Dataset management operations  
+    /// Dataset management operations
     pub dataset_manager: Arc<ZfsDatasetManager>,
     /// Snapshot management operations
     pub snapshot_manager: Arc<ZfsSnapshotManager>,
@@ -1038,7 +1038,7 @@ impl ZfsManager {
             if perf_data.current.avg_read_latency_ms > 100.0
                 || perf_data.current.avg_write_latency_ms > 100.0
             {
-                recommendations.push(format!("Tier {:?} showing high latency (read: {:.1}ms, write: {:.1}ms) - consider optimization", 
+                recommendations.push(format!("Tier {:?} showing high latency (read: {:.1}ms, write: {:.1}ms) - consider optimization",
                                            tier, perf_data.current.avg_read_latency_ms, perf_data.current.avg_write_latency_ms));
             }
         }

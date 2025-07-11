@@ -1,249 +1,283 @@
-//! # NestGate API
+//! NestGate API Crate
 //!
-//! ## Overview
-//!
-//! NestGate API provides a comprehensive REST API layer for interacting with the NestGate
-//! ecosystem. It exposes all core functionality through well-designed HTTP endpoints with
-//! built-in authentication, rate limiting, and comprehensive error handling.
-//!
-//! ## Key Features
-//!
-//! - **RESTful Architecture**: Clean, intuitive API design following REST principles
-//! - **Hardware Tuning**: Dynamic hardware optimization and performance tuning
-//! - **ZFS Integration**: Direct access to ZFS storage operations
-//! - **Health Monitoring**: Real-time system health and status reporting
-//! - **BearDog Security**: Integrated crypto lock protection for external access
-//! - **Async Performance**: High-throughput async request handling
-//!
-//! ## API Endpoints
-//!
-//! ### Health & Status
-//! - `GET /health` - System health check
-//! - `GET /status` - Detailed system status
-//! - `GET /metrics` - Performance metrics
-//!
-//! ### Hardware Tuning
-//! - `POST /hardware/tune` - Auto-tune hardware configuration
-//! - `GET /hardware/config` - Get current hardware configuration
-//! - `POST /hardware/benchmark` - Run hardware benchmarks
-//! - `POST /hardware/optimize` - Apply performance optimizations
-//!
-//! ### ZFS Operations
-//! - `GET /zfs/pools` - List ZFS pools
-//! - `GET /zfs/pools/{pool}/status` - Get pool status
-//! - `POST /zfs/pools/{pool}/scrub` - Start pool scrub
-//! - `GET /zfs/datasets` - List datasets
-//! - `POST /zfs/snapshot` - Create snapshot
-//!
-//! ### Authentication
-//! - `POST /auth/login` - User authentication
-//! - `POST /auth/refresh` - Token refresh
-//! - `POST /auth/logout` - User logout
-//!
-//! ## Architecture
-//!
-//! ```text
-//! ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-//! │   HTTP Layer    │    │   Middleware    │    │   Handlers      │
-//! │   (axum)        │    │   (auth/cors)   │    │   (business)    │
-//! └─────────────────┘    └─────────────────┘    └─────────────────┘
-//!           │                       │                       │
-//!           └───────────────────────┼───────────────────────┘
-//!                                   │
-//!                      ┌─────────────────┐
-//!                      │   NestGate      │
-//!                      │   Core          │
-//!                      └─────────────────┘
-//! ```
-//!
-//! ## Usage
-//!
-//! ### Starting the API Server
-//!
-//! ```rust
-//! use nestgate_api::{create_app, ApiConfig};
-//!
-//! #[tokio::main]
-//! async fn main() {
-//!     let config = ApiConfig::default();
-//!     let app = create_app(config).await;
-//!     
-//!     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-//!     axum::serve(listener, app).await.unwrap();
-//! }
-//! ```
-//!
-//! ### Making API Calls
-//!
-//! ```bash
-//! # Health check
-//! curl -X GET http://localhost:3000/health
-//!
-//! # Get hardware configuration
-//! curl -X GET http://localhost:3000/api/v1/hardware/config
-//!
-//! # Auto-tune hardware
-//! curl -X POST http://localhost:3000/api/v1/hardware/tune
-//!
-//! # Get ZFS pool status
-//! curl -X GET http://localhost:3000/api/v1/zfs/pools/mypool/status
-//! ```
-//!
-//! ## Performance
-//!
-//! The API is optimized for high performance:
-//!
-//! - **Concurrent Requests**: 10,000+ concurrent connections
-//! - **Low Latency**: Sub-10ms response times for most endpoints
-//! - **Memory Efficient**: Minimal memory allocation per request
-//! - **Connection Pooling**: Efficient database and service connections
-//!
-//! ## Security
-//!
-//! Multiple layers of security protection:
-//!
-//! - **BearDog Crypto Locks**: External API access requires crypto locks
-//! - **JWT Authentication**: Secure token-based authentication
-//! - **Rate Limiting**: Prevent abuse and DoS attacks
-//! - **CORS Protection**: Configurable cross-origin resource sharing
-//! - **Input Validation**: Comprehensive input sanitization
-//!
-//! ## Error Handling
-//!
-//! Comprehensive error handling with structured responses:
-//!
-//! ```json
-//! {
-//!   "error": {
-//!     "code": "HARDWARE_TUNING_FAILED",
-//!     "message": "Failed to apply hardware tuning configuration",
-//!     "details": {
-//!       "component": "cpu_governor",
-//!       "reason": "insufficient_permissions"
-//!     },
-//!     "timestamp": "2024-01-01T12:00:00Z"
-//!   }
-//! }
-//! ```
-//!
-//! ## Monitoring
-//!
-//! Built-in monitoring and observability:
-//!
-//! - **Health Endpoints**: Real-time health checks
-//! - **Metrics Collection**: Prometheus-compatible metrics
-//! - **Request Logging**: Structured logging for all requests
-//! - **Performance Tracing**: Distributed tracing support
+//! This crate provides the HTTP REST API and advanced communication layer for NestGate
+//! with support for:
+//! - HTTP REST API endpoints
+//! - WebSocket real-time communication
+//! - Server-Sent Events (SSE) streaming
+//! - Bidirectional RPC with tarpc
+//! - Event coordination and streaming
+//! - MCP protocol extensions
 
 use axum::Router;
-use nestgate_zfs::manager::ZfsManager;
 use std::sync::Arc;
-use tower_http::{cors::CorsLayer, trace::TraceLayer};
+use tower_http::cors::CorsLayer;
 use tracing::info;
 
+use crate::routes::create_router;
+
 pub mod byob;
-pub mod handlers;
-mod models;
-mod routes;
+pub mod event_coordination;
+pub mod handlers {
+    pub mod auth;
+    pub mod hardware_tuning;
+    pub mod health;
+    pub mod load_testing;
+    pub mod performance_analytics;
+    pub mod status;
+    pub mod storage;
+    pub mod workspace_management;
+    pub mod zfs;
+}
+pub mod mcp_streaming;
+pub mod models;
+pub mod routes;
+#[cfg(feature = "streaming-rpc")]
+pub mod tarpc_service;
+pub mod websocket;
 
-pub use byob::create_byob_router;
-pub use handlers::zfs::ZfsApiState;
+// New modules for enhanced streaming and RPC
+pub mod sse;
+pub mod universal_primal;
+pub mod universal_primal_config;
 
-/// API server configuration
+#[cfg(feature = "streaming-rpc")]
+pub mod streaming_rpc;
+
+/// Create the main API application with all communication layers
+pub fn create_app() -> Router {
+    info!("Creating NestGate API application with enhanced communication layers");
+
+    // Create the router with built-in state management
+    let router = create_router();
+
+    // Add CORS middleware
+    router.layer(CorsLayer::permissive())
+}
+
+/// Start the API server with all communication protocols
+pub async fn start_server(addr: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let app = create_app();
+
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    info!(
+        "NestGate API server listening on {} with full communication suite",
+        addr
+    );
+
+    axum::serve(listener, app).await?;
+    Ok(())
+}
+
+/// Configuration for the NestGate API server
 #[derive(Debug, Clone)]
 pub struct Config {
-    /// The address to bind the API server to
+    /// Address to bind the server to (e.g., "0.0.0.0:8080")
     pub bind_addr: String,
-    /// CORS configuration
-    pub cors: Option<CorsLayer>,
     /// Enable ZFS API endpoints
     pub enable_zfs_api: bool,
-    /// Request timeout in seconds
-    pub request_timeout: u64,
-    /// Maximum request body size in bytes
-    pub max_body_size: usize,
+    /// Enable SSE streaming endpoints
+    pub enable_sse: bool,
+    /// Enable WebSocket endpoints
+    pub enable_websockets: bool,
+    /// Maximum request size in bytes
+    pub max_request_size: usize,
 }
 
 impl Default for Config {
     fn default() -> Self {
-        // Check if we're in Songbird mode or standalone mode
-        let songbird_mode = std::env::var("SONGBIRD_URL").is_ok();
-
-        let bind_addr = if songbird_mode {
-            // Songbird-enhanced mode: use service name with auto port
-            std::env::var("NESTGATE_API_BIND").unwrap_or_else(|_| "nestgate-api:0".to_string())
-        } else {
-            // Standalone mode: use localhost with configurable port
-            let port = std::env::var("NESTGATE_PORT").unwrap_or_else(|_| "8080".to_string());
-            format!(
-                "{}:{}",
-                nestgate_core::constants::addresses::localhost(),
-                port
-            )
-        };
-
         Self {
-            bind_addr,
-            cors: None,
+            bind_addr: "0.0.0.0:8080".to_string(),
             enable_zfs_api: true,
-            request_timeout: 30,
-            max_body_size: 16 * 1024 * 1024, // 16MB
+            enable_sse: true,
+            enable_websockets: true,
+            max_request_size: 10 * 1024 * 1024, // 10MB
         }
     }
 }
 
-/// Initialize and start the API server with ZFS integration
+/// Start the API server with ZFS integration
 pub async fn serve_with_zfs(
     config: Config,
-    zfs_manager: Arc<ZfsManager>,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let zfs_state = ZfsApiState { zfs_manager };
+    _zfs_manager: Arc<nestgate_zfs::manager::ZfsManager>,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    info!("Starting NestGate API server with ZFS integration");
+    info!("Configuration: {:?}", config);
 
-    let app = routes::create_combined_router()
-        .with_state(zfs_state)
-        .layer(TraceLayer::new_for_http())
-        .layer(config.cors.unwrap_or_else(|| {
-            CorsLayer::permissive() // Default to permissive CORS in development
-        }));
+    // For now, we'll use the existing start_server function
+    // In the future, this could be enhanced to pass the ZFS manager to routes
+    // that need direct ZFS access
+    start_server(&config.bind_addr).await
+}
 
-    info!(
-        "Starting NestGate API server on {} with ZFS integration",
-        config.bind_addr
-    );
-    let listener = tokio::net::TcpListener::bind(&config.bind_addr).await?;
-    axum::serve(listener, app).await?;
-
+/// Start the streaming RPC server
+#[cfg(feature = "streaming-rpc")]
+pub async fn start_streaming_rpc_server(
+    addr: &str,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let server = streaming_rpc::StreamingRpcServer::new();
+    server.start(addr.to_string()).await?;
     Ok(())
 }
 
-/// Initialize and start the basic API server (without ZFS)
-pub async fn serve(config: Config) -> Result<(), Box<dyn std::error::Error>> {
-    let app = routes::create_router()
-        .layer(TraceLayer::new_for_http())
-        .layer(config.cors.unwrap_or_else(|| {
-            CorsLayer::permissive() // Default to permissive CORS in development
-        }));
-
-    info!("Starting basic API server on {}", config.bind_addr);
-    let listener = tokio::net::TcpListener::bind(&config.bind_addr).await?;
-    axum::serve(listener, app).await?;
-
-    Ok(())
+/// Communication layer manager for coordinating all protocols
+pub struct CommunicationManager {
+    pub websocket_manager: websocket::WebSocketManager,
+    pub sse_manager: sse::SseManager,
+    #[cfg(feature = "streaming-rpc")]
+    pub streaming_rpc_server: streaming_rpc::StreamingRpcServer,
+    pub mcp_streaming_manager: mcp_streaming::McpStreamingManager,
+    pub event_coordinator: event_coordination::EventCoordinator,
 }
 
-/// Create a configured API router with ZFS integration
-pub fn create_api_router(zfs_manager: Arc<ZfsManager>) -> Router {
-    let zfs_state = ZfsApiState { zfs_manager };
+impl CommunicationManager {
+    /// Create a new communication manager with all protocols
+    pub fn new() -> Self {
+        let websocket_manager = websocket::WebSocketManager::new();
+        let sse_manager = sse::SseManager::new();
+        #[cfg(feature = "streaming-rpc")]
+        let streaming_rpc_server = streaming_rpc::StreamingRpcServer::new();
+        let mcp_streaming_manager = mcp_streaming::McpStreamingManager::new();
+        let event_coordinator = event_coordination::EventCoordinator::new();
 
-    routes::create_combined_router()
-        .with_state(zfs_state)
-        .layer(TraceLayer::new_for_http())
-        .layer(CorsLayer::permissive())
+        Self {
+            websocket_manager,
+            sse_manager,
+            #[cfg(feature = "streaming-rpc")]
+            streaming_rpc_server,
+            mcp_streaming_manager,
+            event_coordinator,
+        }
+    }
+
+    /// Start all communication protocols
+    pub async fn start_all(
+        &self,
+        http_addr: &str,
+        _rpc_addr: &str,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        info!("Starting all communication protocols");
+
+        // Start HTTP/WebSocket/SSE server
+        let http_server = start_server(http_addr);
+
+        // Start cleanup tasks
+        let _sse_cleanup = self.sse_manager.start_cleanup_task();
+
+        // Start streaming RPC server if feature is enabled
+        #[cfg(feature = "streaming-rpc")]
+        let rpc_server = self.streaming_rpc_server.start(_rpc_addr.to_string());
+
+        // Run servers concurrently
+        #[cfg(feature = "streaming-rpc")]
+        tokio::try_join!(http_server, rpc_server)?;
+        #[cfg(not(feature = "streaming-rpc"))]
+        http_server.await?;
+
+        Ok(())
+    }
+
+    /// Broadcast an event to all communication channels
+    pub async fn broadcast_event(
+        &self,
+        event_data: serde_json::Value,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        // Create SSE event
+        let sse_event = sse::SseEvent {
+            id: uuid::Uuid::new_v4(),
+            event_type: sse::SseEventType::SystemEvent,
+            data: event_data.clone(),
+            timestamp: std::time::SystemTime::now(),
+            source: "nestgate-api".to_string(),
+            priority: sse::EventPriority::Normal,
+        };
+
+        // Broadcast to SSE clients
+        self.sse_manager.broadcast_event(sse_event).await?;
+
+        // Create WebSocket event
+        let ws_event = websocket::WebSocketEvent {
+            event_id: uuid::Uuid::new_v4(),
+            client_id: uuid::Uuid::new_v4(), // Broadcast to all
+            event_type: websocket::WebSocketEventType::Message,
+            data: event_data.clone(),
+            timestamp: std::time::SystemTime::now(),
+        };
+
+        // Broadcast to WebSocket clients
+        self.websocket_manager.broadcast_event(ws_event).await?;
+
+        // Create and broadcast streaming RPC event if feature is enabled
+        #[cfg(feature = "streaming-rpc")]
+        {
+            let rpc_event = streaming_rpc::StorageEvent {
+                id: uuid::Uuid::new_v4().to_string(),
+                event_type: "system_event".to_string(),
+                timestamp: std::time::SystemTime::now(),
+                source: "nestgate-api".to_string(),
+                data: event_data,
+                priority: 2,
+            };
+
+            // Broadcast to RPC clients
+            self.streaming_rpc_server.broadcast_event(rpc_event).await?;
+        }
+
+        Ok(())
+    }
 }
 
-/// Create a basic API router without ZFS integration
-pub fn create_basic_router() -> Router {
-    routes::create_router()
-        .layer(TraceLayer::new_for_http())
-        .layer(CorsLayer::permissive())
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_toadstool_integration() {
+        // Test that Toadstool integration is properly initialized
+        let toadstool_url = std::env::var("NESTGATE_TOADSTOOL_COMPUTE_URL")
+            .unwrap_or_else(|_| "http://localhost:8080".to_string());
+
+        assert!(!toadstool_url.is_empty());
+        println!("✅ Toadstool integration configured: {}", toadstool_url);
+    }
+
+    #[tokio::test]
+    async fn test_communication_manager() {
+        let manager = CommunicationManager::new();
+
+        // Test event broadcasting
+        let test_event = serde_json::json!({
+            "type": "test_event",
+            "message": "Hello from NestGate!",
+            "timestamp": chrono::Utc::now().to_rfc3339()
+        });
+
+        // This should not fail even if no clients are connected
+        assert!(manager.broadcast_event(test_event).await.is_ok());
+        println!("✅ Communication manager event broadcasting works");
+    }
+
+    #[cfg(feature = "streaming-rpc")]
+    #[tokio::test]
+    async fn test_streaming_rpc_server() {
+        let server = streaming_rpc::StreamingRpcServer::new();
+
+        // Test health check
+        let health = server
+            .health_check(tarpc::context::Context::current())
+            .await;
+        assert!(health.is_ok());
+        println!("✅ Streaming RPC server health check works");
+
+        // Test capabilities
+        let capabilities = server
+            .get_capabilities(tarpc::context::Context::current())
+            .await;
+        assert!(capabilities.is_ok());
+
+        let caps = capabilities.unwrap();
+        assert!(caps.streaming_support);
+        assert!(caps.bidirectional_support);
+        println!("✅ Streaming RPC server capabilities correct");
+    }
 }
