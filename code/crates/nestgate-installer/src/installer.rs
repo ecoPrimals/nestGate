@@ -206,7 +206,7 @@ impl NestGateInstaller {
             );
 
             if !Confirm::new()
-                .with_prompt(format!("{}. Continue?", message))
+                .with_prompt(format!("{message}. Continue?"))
                 .interact()?
             {
                 println!("Uninstallation cancelled.");
@@ -278,7 +278,7 @@ impl NestGateInstaller {
         };
 
         if target_version == installation_info.version {
-            println!("Already up to date (version {})", target_version);
+            println!("Already up to date (version {target_version})");
             return Ok(());
         }
 
@@ -354,7 +354,7 @@ impl NestGateInstaller {
 
         if config_file.exists() {
             let content = fs::read_to_string(&config_file)?;
-            println!("{}", content);
+            println!("{content}");
         } else {
             println!("Configuration file does not exist.");
         }

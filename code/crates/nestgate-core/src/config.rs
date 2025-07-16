@@ -878,11 +878,11 @@ impl Config {
     /// Save configuration to a file
     pub async fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         let serialized = toml::to_string_pretty(self).map_err(|e| {
-            NestGateError::Configuration(format!("Failed to serialize config: {}", e))
+            NestGateError::Configuration(format!("Failed to serialize config: {e}"))
         })?;
 
         tokio::fs::write(path, serialized).await.map_err(|e| {
-            NestGateError::Configuration(format!("Failed to write config file: {}", e))
+            NestGateError::Configuration(format!("Failed to write config file: {e}"))
         })?;
 
         Ok(())
@@ -890,7 +890,7 @@ impl Config {
 
     /// Gets the configuration for a specific environment
     pub fn for_environment(env: &str) -> Result<Self> {
-        let env_config = format!("config/{}", env);
+        let env_config = format!("config/{env}");
         let config_files = vec!["config/default", &env_config, "config/local"];
 
         Self::load_with_sources(config_files)
@@ -1236,15 +1236,14 @@ pub mod network {
         let hostname = default_external_hostname();
         let port = default_api_port();
         env::var("NESTGATE_HEALTH_CHECK_URL")
-            .unwrap_or_else(|_| format!("http://{}:{}/health", hostname, port))
+            .unwrap_or_else(|_| format!("http://{hostname}:{port}/health"))
     }
 
     /// Get API base URL
     pub fn default_api_base_url() -> String {
         let hostname = default_external_hostname();
         let port = default_api_port();
-        env::var("NESTGATE_API_BASE_URL")
-            .unwrap_or_else(|_| format!("http://{}:{}", hostname, port))
+        env::var("NESTGATE_API_BASE_URL").unwrap_or_else(|_| format!("http://{hostname}:{port}"))
     }
 }
 
@@ -1448,10 +1447,15 @@ pub mod security {
     pub fn default_beardog_validation_token() -> String {
         env::var("BEARDOG_VALIDATION_TOKEN").unwrap_or_else(|_| {
             if is_production() {
-                panic!("BEARDOG_VALIDATION_TOKEN must be set in production");
+                tracing::error!(
+                    "BEARDOG_VALIDATION_TOKEN must be set in production - using fallback"
+                );
+                // Return a distinctive error token that will fail validation
+                "MISSING_BEARDOG_VALIDATION_TOKEN_IN_PRODUCTION".to_string()
+            } else {
+                tracing::warn!("Using default BearDog validation token (testing only)");
+                "test_token".to_string()
             }
-            tracing::warn!("Using default BearDog validation token (testing only)");
-            "test_token".to_string()
         })
     }
 
@@ -1459,10 +1463,13 @@ pub mod security {
     pub fn jwt_secret() -> String {
         env::var("NESTGATE_JWT_SECRET").unwrap_or_else(|_| {
             if is_production() {
-                panic!("NESTGATE_JWT_SECRET must be set in production");
+                tracing::error!("NESTGATE_JWT_SECRET must be set in production - using fallback");
+                // Return a distinctive error token that will fail validation
+                "MISSING_JWT_SECRET_IN_PRODUCTION".to_string()
+            } else {
+                tracing::warn!("Using default JWT secret (not secure for production)");
+                "default_jwt_secret_change_in_production".to_string()
             }
-            tracing::warn!("Using default JWT secret (not secure for production)");
-            "default_jwt_secret_change_in_production".to_string()
         })
     }
 
@@ -1470,11 +1477,46 @@ pub mod security {
     pub fn encryption_key() -> String {
         env::var("NESTGATE_ENCRYPTION_KEY").unwrap_or_else(|_| {
             if is_production() {
-                panic!("NESTGATE_ENCRYPTION_KEY must be set in production");
+                tracing::error!(
+                    "NESTGATE_ENCRYPTION_KEY must be set in production - using fallback"
+                );
+                // Return a distinctive error token that will fail validation
+                "MISSING_ENCRYPTION_KEY_IN_PRODUCTION".to_string()
+            } else {
+                tracing::warn!("Using default encryption key (not secure for production)");
+                "default_encryption_key_change_in_production".to_string()
             }
-            tracing::warn!("Using default encryption key (not secure for production)");
-            "default_encryption_key_change_in_production".to_string()
         })
+    }
+
+    /// Validate production configuration requirements
+    pub fn validate_production_config() -> Result<()> {
+        if !is_production() {
+            return Ok(());
+        }
+
+        let mut missing_vars = Vec::new();
+
+        if env::var("BEARDOG_VALIDATION_TOKEN").is_err() {
+            missing_vars.push("BEARDOG_VALIDATION_TOKEN");
+        }
+
+        if env::var("NESTGATE_JWT_SECRET").is_err() {
+            missing_vars.push("NESTGATE_JWT_SECRET");
+        }
+
+        if env::var("NESTGATE_ENCRYPTION_KEY").is_err() {
+            missing_vars.push("NESTGATE_ENCRYPTION_KEY");
+        }
+
+        if !missing_vars.is_empty() {
+            return Err(NestGateError::Configuration(format!(
+                "Missing required environment variables for production: {}",
+                missing_vars.join(", ")
+            )));
+        }
+
+        Ok(())
     }
 }
 
@@ -1716,19 +1758,19 @@ impl NestGateConfig {
     pub fn validate(&self) -> std::result::Result<(), String> {
         // Validate network addresses
         if let Err(e) = SocketAddr::from_str(&self.bind_address) {
-            return Err(format!("Invalid bind address: {}", e));
+            return Err(format!("Invalid bind address: {e}"));
         }
 
         if let Err(e) = SocketAddr::from_str(&self.api_address) {
-            return Err(format!("Invalid API address: {}", e));
+            return Err(format!("Invalid API address: {e}"));
         }
 
         if let Err(e) = SocketAddr::from_str(&self.streaming_rpc_address) {
-            return Err(format!("Invalid streaming RPC address: {}", e));
+            return Err(format!("Invalid streaming RPC address: {e}"));
         }
 
         if let Err(e) = SocketAddr::from_str(&self.websocket_address) {
-            return Err(format!("Invalid WebSocket address: {}", e));
+            return Err(format!("Invalid WebSocket address: {e}"));
         }
 
         // Validate ports

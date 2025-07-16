@@ -7,11 +7,7 @@
 //! 4. Internal communication remains free
 //! 5. External companies must use BearDog keys
 
-use chrono::{DateTime, Utc};
-use std::collections::HashMap;
 use std::time::Duration;
-use tokio::time::sleep;
-use uuid::Uuid;
 
 use nestgate_core::{
     cert::{BearDogConfig, CertValidator},
@@ -173,7 +169,7 @@ async fn test_external_company_sovereign_lock() -> Result<()> {
         .await?;
 
     assert!(lock_id.starts_with("beardog-sovereign-"));
-    println!("✅ Sovereign lock created: {}", lock_id);
+    println!("✅ Sovereign lock created: {lock_id}");
 
     // Test that the lock requires copyleft compliance
     guardian
@@ -247,7 +243,7 @@ async fn test_beardog_key_ecosystem_sovereignty() -> Result<()> {
     );
 
     println!("✅ BearDog keys remain within ecosystem");
-    println!("   Key ID: {}", key_id);
+    println!("   Key ID: {key_id}");
     println!("   Signature: {}...", &signature[..20.min(signature.len())]);
     println!("   Ecosystem: {}", proof.ecosystem_fingerprint);
 
@@ -407,7 +403,7 @@ async fn test_beardog_sovereignty_model() -> Result<()> {
         .await?;
 
     println!("✅ Sovereign lock created for BigTech Corp");
-    println!("   Lock ID: {}", sovereign_lock);
+    println!("   Lock ID: {sovereign_lock}");
     println!("   Requirements: Source disclosure, Attribution, Share-alike");
 
     // Scenario 4: AI API access through Squirrel (special exception)

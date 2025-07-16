@@ -62,61 +62,76 @@ pub struct StorageCapabilities {
 
 impl NestGateUniversalAdapter {
     /// Create a new universal adapter
-    pub fn new(primal_configs: HashMap<String, PrimalCoordination>) -> Self {
+    pub fn new(primal_configs: HashMap<String, PrimalCoordination>) -> Result<Self> {
         let client = Client::builder()
             .timeout(Duration::from_secs(30))
             .build()
-            .expect("Failed to create HTTP client");
+            .map_err(|e| {
+                NestGateError::NetworkError(format!("Failed to create HTTP client: {e}"))
+            })?;
 
         let nestgate_identity = NestGateIdentity {
             instance_id: format!("nestgate-{}", Uuid::new_v4().simple()),
             capabilities: vec![
                 "storage".to_string(),
                 "data".to_string(),
-                "provisioning".to_string(),
-                "volume_management".to_string(),
-                "zfs_operations".to_string(),
-                "snapshot_management".to_string(),
-                "backup_restore".to_string(),
-                "multi_protocol_access".to_string(),
+                "orchestration".to_string(),
+                "ai".to_string(),
+                "security".to_string(),
+                "tiered_storage".to_string(),
+                "replication".to_string(),
+                "snapshots".to_string(),
+                "encryption".to_string(),
+                "monitoring".to_string(),
+                "automation".to_string(),
+                "performance".to_string(),
+                "federation".to_string(),
+                "ecosystem".to_string(),
+                "universal_coordination".to_string(),
+                "storage_provider".to_string(),
+                "data_processor".to_string(),
+                "orchestration_participant".to_string(),
+                "ai_compute_provider".to_string(),
+                "security_coordinator".to_string(),
+                "ecosystem_member".to_string(),
             ],
-            endpoints: HashMap::new(), // Will be populated during initialization
+            endpoints: HashMap::new(),
             storage_info: StorageCapabilities {
-                total_capacity_bytes: 0, // Will be updated from actual storage
+                total_capacity_bytes: 0,
                 available_capacity_bytes: 0,
                 supported_protocols: vec![
-                    "nfs".to_string(),
-                    "smb".to_string(),
-                    "iscsi".to_string(),
-                    "s3".to_string(),
+                    "NFS".to_string(),
+                    "SMB".to_string(),
+                    "HTTP".to_string(),
+                    "ZFS".to_string(),
                 ],
-                storage_tiers: vec![
-                    "hot".to_string(),
-                    "warm".to_string(),
-                    "cold".to_string(),
-                    "archive".to_string(),
-                ],
+                storage_tiers: vec!["Hot".to_string(), "Warm".to_string(), "Cold".to_string()],
                 zfs_features: vec![
+                    "pooled_storage".to_string(),
+                    "tiered_storage".to_string(),
                     "snapshots".to_string(),
-                    "clones".to_string(),
-                    "deduplication".to_string(),
+                    "replication".to_string(),
                     "compression".to_string(),
+                    "deduplication".to_string(),
                     "encryption".to_string(),
+                    "performance_monitoring".to_string(),
+                    "automated_management".to_string(),
+                    "federation".to_string(),
                 ],
             },
         };
 
-        Self {
+        Ok(Self {
             client,
             primal_configs,
             nestgate_identity,
-        }
+        })
     }
 
     /// Universal coordination method that works with any Primal
     pub async fn coordinate_with_primal(&self, primal_name: &str) -> Result<CoordinationResult> {
         let primal_config = self.primal_configs.get(primal_name).ok_or_else(|| {
-            NestGateError::ConfigurationError(format!("Primal {} not configured", primal_name))
+            NestGateError::ConfigurationError(format!("Primal {primal_name} not configured"))
         })?;
 
         if !primal_config.enabled {
@@ -144,7 +159,7 @@ impl NestGateUniversalAdapter {
     pub async fn coordinate_with_all_primals(&self) -> Vec<CoordinationResult> {
         let mut results = Vec::new();
 
-        for (primal_name, _config) in &self.primal_configs {
+        for primal_name in self.primal_configs.keys() {
             match self.coordinate_with_primal(primal_name).await {
                 Ok(result) => results.push(result),
                 Err(e) => {
@@ -166,7 +181,7 @@ impl NestGateUniversalAdapter {
     ) -> Result<CoordinationResult> {
         // Determine the appropriate API path based on capabilities
         let api_path = self.determine_api_path(primal_name, &config.capabilities);
-        let full_url = format!("{}{}", endpoint, api_path);
+        let full_url = format!("{endpoint}{api_path}");
 
         // Create universal coordination payload
         let coordination_payload = self.create_universal_payload(primal_name, &config.capabilities);
@@ -182,7 +197,7 @@ impl NestGateUniversalAdapter {
             .json(&coordination_payload)
             .send()
             .await
-            .map_err(|e| NestGateError::NetworkError(format!("Request failed: {}", e)))?;
+            .map_err(|e| NestGateError::NetworkError(format!("Request failed: {e}")))?;
 
         if response.status().is_success() {
             info!(
@@ -418,7 +433,7 @@ mod tests {
             },
         );
 
-        let adapter = NestGateUniversalAdapter::new(primal_configs);
+        let adapter = NestGateUniversalAdapter::new(primal_configs).unwrap();
         assert_eq!(adapter.primal_configs.len(), 1);
         assert!(adapter
             .nestgate_identity
@@ -428,7 +443,7 @@ mod tests {
 
     #[test]
     fn test_api_path_determination() {
-        let adapter = NestGateUniversalAdapter::new(HashMap::new());
+        let adapter = NestGateUniversalAdapter::new(HashMap::new()).unwrap();
 
         let compute_path = adapter.determine_api_path("example-compute", &["compute".to_string()]);
         assert_eq!(compute_path, "/api/v1/provision-storage");

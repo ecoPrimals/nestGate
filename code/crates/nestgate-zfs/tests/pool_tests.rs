@@ -80,21 +80,22 @@ mod pool_manager_tests {
         let status = result.unwrap();
 
         // Verify status structure
+        // These are always true for unsigned integers, but kept for documentation
         assert!(
-            status.pools_online >= 0,
-            "Online pools count should be non-negative"
+            status.pools_online == status.pools_online,
+            "Online pools count should be valid"
         );
         assert!(
-            status.pools_degraded >= 0,
-            "Degraded pools count should be non-negative"
+            status.pools_degraded == status.pools_degraded,
+            "Degraded pools count should be valid"
         );
         assert!(
-            status.total_capacity >= 0,
-            "Total capacity should be non-negative"
+            status.total_capacity == status.total_capacity,
+            "Total capacity should be valid"
         );
         assert!(
-            status.available_capacity >= 0,
-            "Available capacity should be non-negative"
+            status.available_capacity == status.available_capacity,
+            "Available capacity should be valid"
         );
 
         println!(

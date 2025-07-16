@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 #[cfg(test)]
 mod protocol_tests {
-    use super::*;
+    // use super::*;
 
     #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
     enum Protocol {

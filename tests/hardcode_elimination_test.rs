@@ -264,8 +264,7 @@ fn test_environment_variable_standards() {
                     content.contains("NESTGATE_") || content.contains("env::var");
                 assert!(
                     has_nestgate_vars,
-                    "Config file {} should use NESTGATE_* environment variables",
-                    config_file
+                    "Config file {config_file} should use NESTGATE_* environment variables"
                 );
             }
         }

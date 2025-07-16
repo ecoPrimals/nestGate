@@ -44,19 +44,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let api_config = Config {
         bind_addr: std::env::var("NESTGATE_DEV_SERVER_BIND")
             .unwrap_or_else(|_| "0.0.0.0:3000".to_string()),
-        cors: None, // Will use permissive CORS
         enable_zfs_api: true,
-        request_timeout: 30,
-        max_body_size: 16 * 1024 * 1024, // 16MB
+        enable_sse: true,
+        enable_websockets: true,
+        max_request_size: 16 * 1024 * 1024, // 16MB
     };
 
     info!("API server configuration:");
     info!("  Bind address: {}", api_config.bind_addr);
     info!("  ZFS API enabled: {}", api_config.enable_zfs_api);
-    info!("  Request timeout: {}s", api_config.request_timeout);
+    info!("  SSE enabled: {}", api_config.enable_sse);
+    info!("  WebSockets enabled: {}", api_config.enable_websockets);
     info!(
-        "  Max body size: {}MB",
-        api_config.max_body_size / (1024 * 1024)
+        "  Max request size: {}MB",
+        api_config.max_request_size / (1024 * 1024)
     );
 
     // Print available endpoints

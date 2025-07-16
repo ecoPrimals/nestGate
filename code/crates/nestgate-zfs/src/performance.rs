@@ -12,6 +12,7 @@ use tokio::time::interval;
 use tracing::{debug, error, info, warn};
 
 use crate::{ZfsDatasetManager, ZfsPoolManager};
+use nestgate_core::zero_copy::StreamingProcReader;
 use nestgate_core::{NestGateError, Result as CoreResult, StorageTier};
 
 /// ZFS performance monitor
@@ -405,7 +406,7 @@ impl Default for PoolProperties {
 /// System memory information
 #[derive(Debug)]
 #[allow(dead_code)]
-struct MemoryInfo {
+struct LocalMemoryInfo {
     pub total_mb: u64,
     pub available_mb: u64,
     pub used_mb: u64,
@@ -745,7 +746,7 @@ impl ZfsPerformanceMonitor {
             .output()
             .await
             .map_err(|e| {
-                NestGateError::Internal(format!("Failed to execute zpool iostat: {}", e))
+                NestGateError::Internal(format!("Failed to execute zpool iostat: {e}"))
             })?;
 
         if !iostat_output.status.success() {
@@ -874,7 +875,7 @@ impl ZfsPerformanceMonitor {
             .output()
             .await
             .map_err(|e| {
-                NestGateError::Internal(format!("Failed to get pool properties: {}", e))
+                NestGateError::Internal(format!("Failed to get pool properties: {e}"))
             })?;
 
         if !output.status.success() {
@@ -946,7 +947,7 @@ impl ZfsPerformanceMonitor {
     async fn get_cpu_utilization() -> CoreResult<f64> {
         let stat_content = tokio::fs::read_to_string("/proc/stat")
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to read /proc/stat: {}", e)))?;
+            .map_err(|e| NestGateError::Internal(format!("Failed to read /proc/stat: {e}")))?;
 
         if let Some(cpu_line) = stat_content.lines().next() {
             let fields: Vec<&str> = cpu_line.split_whitespace().collect();
@@ -972,68 +973,41 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Get memory information from /proc/meminfo
-    async fn get_memory_info() -> CoreResult<MemoryInfo> {
-        let meminfo_content = tokio::fs::read_to_string("/proc/meminfo")
-            .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to read /proc/meminfo: {}", e)))?;
-
-        let mut total = 0u64;
-        let mut available = 0u64;
-
-        for line in meminfo_content.lines() {
-            let parts: Vec<&str> = line.split_whitespace().collect();
-            if parts.len() >= 2 {
-                let value = parts[1].parse::<u64>().unwrap_or(0) * 1024; // Convert kB to bytes
-                match parts[0] {
-                    "MemTotal:" => total = value,
-                    "MemAvailable:" => available = value,
-                    _ => {}
-                }
-            }
+    async fn get_memory_info() -> CoreResult<LocalMemoryInfo> {
+        // Use zero-copy streaming reader for /proc/meminfo
+        match StreamingProcReader::read_meminfo().await {
+            Ok(memory_info) => Ok(LocalMemoryInfo {
+                total_mb: memory_info.total,
+                available_mb: memory_info.available,
+                used_mb: memory_info.used,
+            }),
+            Err(e) => Err(e),
         }
-
-        let used = total.saturating_sub(available);
-
-        Ok(MemoryInfo {
-            total_mb: total,
-            available_mb: available,
-            used_mb: used,
-        })
     }
 
     /// Get network I/O in MB/s from /proc/net/dev
     async fn get_network_io() -> CoreResult<f64> {
-        // Read /proc/net/dev to get network interface statistics
-        let netdev_content = match tokio::fs::read_to_string("/proc/net/dev").await {
-            Ok(content) => content,
-            Err(_) => return Ok(0.0), // Fallback on systems without /proc/net/dev
-        };
+        // Use zero-copy streaming reader for /proc/net/dev
+        match StreamingProcReader::read_network_stats().await {
+            Ok(network_stats) => {
+                let total_bytes: u64 = network_stats
+                    .iter()
+                    .map(|stat| stat.rx_bytes + stat.tx_bytes)
+                    .sum();
 
-        let mut total_bytes = 0u64;
-
-        // Skip header lines and parse interface statistics
-        for line in netdev_content.lines().skip(2) {
-            let fields: Vec<&str> = line.split_whitespace().collect();
-            if fields.len() >= 10 {
-                // RX bytes (field 1) + TX bytes (field 9)
-                if let (Ok(rx_bytes), Ok(tx_bytes)) =
-                    (fields[1].parse::<u64>(), fields[9].parse::<u64>())
-                {
-                    total_bytes += rx_bytes + tx_bytes;
-                }
+                // Convert to MB/s (this is cumulative bytes, would need time tracking for real rate)
+                // For now, return cumulative throughput as a rough indicator
+                Ok(total_bytes as f64 / (1024.0 * 1024.0))
             }
+            Err(_) => Ok(0.0), // Fallback on systems without /proc/net/dev
         }
-
-        // Convert to MB/s (this is cumulative bytes, would need time tracking for real rate)
-        // For now, return cumulative throughput as a rough indicator
-        Ok(total_bytes as f64 / (1024.0 * 1024.0))
     }
 
     /// Get system load average
     async fn get_load_average() -> CoreResult<f64> {
         let loadavg_content = tokio::fs::read_to_string("/proc/loadavg")
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to read /proc/loadavg: {}", e)))?;
+            .map_err(|e| NestGateError::Internal(format!("Failed to read /proc/loadavg: {e}")))?;
 
         if let Some(first_field) = loadavg_content.split_whitespace().next() {
             return Ok(first_field.parse().unwrap_or(0.0));
@@ -1119,7 +1093,7 @@ impl ZfsPerformanceMonitor {
             .args(["iostat", "-v", pool_name, "1", "1"])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to get pool I/O stats: {}", e)))?;
+            .map_err(|e| NestGateError::Internal(format!("Failed to get pool I/O stats: {e}")))?;
 
         if !output.status.success() {
             return Ok(PoolIoStats::default());
@@ -1160,7 +1134,7 @@ impl ZfsPerformanceMonitor {
         let tier_datasets: Vec<_> = datasets.into_iter().filter(|d| d.tier == *tier).collect();
 
         if tier_datasets.is_empty() {
-            return Ok(TierMetrics::default_for_tier(tier.clone()));
+            return Ok(TierMetrics::default_for_tier(*tier));
         }
 
         // Aggregate metrics across all datasets in this tier
@@ -1188,7 +1162,7 @@ impl ZfsPerformanceMonitor {
         let cache_hit_ratio = Self::get_zfs_cache_hit_ratio().await.unwrap_or(0.85);
 
         Ok(TierMetrics {
-            tier: tier.clone(),
+            tier: *tier,
             read_iops: total_read_iops,
             write_iops: total_write_iops,
             read_throughput_mbs: total_read_throughput,

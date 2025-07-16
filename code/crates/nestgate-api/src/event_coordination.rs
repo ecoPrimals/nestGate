@@ -214,8 +214,29 @@ impl EventCoordinator {
             event.event_id, handler.name
         );
 
-        // Simple event processing based on priority - for now just succeed
-        let result: std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> = Ok(());
+        // Route to the appropriate handler method based on event type
+        let result: std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> = match event.event_type {
+            CoordinatedEventType::WebSocket => {
+                self.handle_websocket_event(&event).await
+            }
+            CoordinatedEventType::InternalService => {
+                self.handle_internal_service_event(&event).await
+            }
+            CoordinatedEventType::McpStream => {
+                self.handle_mcp_stream_event(&event).await
+            }
+            CoordinatedEventType::StorageOperation => {
+                self.handle_storage_operation_event(&event).await
+            }
+            CoordinatedEventType::ConfigurationChange => {
+                debug!("Handling configuration change event: {}", event.event_id);
+                Ok(())
+            }
+            CoordinatedEventType::HealthMonitoring => {
+                debug!("Handling health monitoring event: {}", event.event_id);
+                Ok(())
+            }
+        };
 
         // Update stats
         let mut stats = self.stats.write().await;
@@ -239,7 +260,38 @@ impl EventCoordinator {
         event: &CoordinatedEvent,
     ) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
         debug!("Handling WebSocket event: {:?}", event.event_type);
-        // In a real implementation, this would coordinate with WebSocket manager
+        
+        // Create a WebSocket event from the coordinated event (if WebSocket feature is enabled)
+        #[cfg(feature = "streaming-rpc")]
+        {
+            let _ws_event = crate::websocket::WebSocketEvent {
+                event_id: event.event_id.to_string(),
+                client_id: event.source.clone(),
+                event_type: crate::websocket::WebSocketEventType::Message,
+                data: event.data.clone(),
+            };
+            
+            // In a full implementation, this would be sent to the WebSocket manager
+            tracing::debug!("WebSocket event created: {}", _ws_event.event_id);
+        }
+        
+        #[cfg(not(feature = "streaming-rpc"))]
+        {
+            tracing::debug!("WebSocket support not enabled, skipping WebSocket event creation");
+        }
+        
+        // Broadcast to WebSocket clients through the event broadcaster
+        if let Err(e) = self.event_broadcaster.send(event.clone()) {
+            tracing::warn!("Failed to broadcast WebSocket event: {}", e);
+        }
+        
+        // Update statistics
+        {
+            let mut stats = self.stats.write().await;
+            stats.events_processed += 1;
+        }
+        
+        info!("WebSocket event handled successfully: {}", event.event_id);
         Ok(())
     }
 
@@ -249,7 +301,35 @@ impl EventCoordinator {
         event: &CoordinatedEvent,
     ) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
         debug!("Handling internal service event: {:?}", event.event_type);
-        // In a real implementation, this would coordinate with internal services
+        
+        // Route to appropriate internal service based on event data
+        match event.data.get("service_type").and_then(|v| v.as_str()) {
+            Some("universal_primal") => {
+                info!("Routing to Universal Primal service: {}", event.event_id);
+                // In a full implementation, this would interface with UniversalPrimal
+                // Log the routing action without emitting another event to avoid recursion
+                debug!("Routed event {} to universal_primal service", event.event_id);
+            }
+            Some("security") => {
+                info!("Routing to Security service: {}", event.event_id);
+                // Route to security manager
+            }
+            Some("performance") => {
+                info!("Routing to Performance service: {}", event.event_id);
+                // Route to performance monitor
+            }
+            _ => {
+                info!("Generic internal service event: {}", event.event_id);
+                // Handle generic internal service events
+            }
+        }
+        
+        // Update statistics
+        {
+            let mut stats = self.stats.write().await;
+            stats.events_processed += 1;
+        }
+        
         Ok(())
     }
 
@@ -259,7 +339,45 @@ impl EventCoordinator {
         event: &CoordinatedEvent,
     ) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
         debug!("Handling MCP stream event: {:?}", event.event_type);
-        // In a real implementation, this would coordinate with MCP streaming manager
+        
+        // Extract stream information from event data
+        let stream_id = event.data.get("stream_id")
+            .and_then(|v| v.as_str())
+            .unwrap_or("unknown");
+        
+        let stream_type = event.data.get("stream_type")
+            .and_then(|v| v.as_str())
+            .unwrap_or("generic");
+        
+        // Handle different types of MCP stream events
+        match stream_type {
+            "model_request" => {
+                info!("Processing MCP model request stream: {}", stream_id);
+                // In a full implementation, this would coordinate with MCP streaming manager
+                // to handle model requests, potentially routing to AI services
+            }
+            "data_stream" => {
+                info!("Processing MCP data stream: {}", stream_id);
+                // Handle data streaming events
+            }
+            "control_message" => {
+                info!("Processing MCP control message: {}", stream_id);
+                // Handle control messages that might affect stream state
+            }
+            _ => {
+                info!("Processing generic MCP stream event: {}", stream_id);
+            }
+        }
+        
+        // Log the MCP stream processing completion (avoid recursion)
+        debug!("MCP stream event {} processed for stream {}", event.event_id, stream_id);
+        
+        // Update statistics
+        {
+            let mut stats = self.stats.write().await;
+            stats.events_processed += 1;
+        }
+        
         Ok(())
     }
 
@@ -269,7 +387,63 @@ impl EventCoordinator {
         event: &CoordinatedEvent,
     ) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
         debug!("Handling storage operation event: {:?}", event.event_type);
-        // In a real implementation, this would coordinate with storage services
+        
+        // Extract storage operation information from event data
+        let operation = event.data.get("operation")
+            .and_then(|v| v.as_str())
+            .unwrap_or("unknown");
+        
+        let pool_name = event.data.get("pool_name")
+            .and_then(|v| v.as_str())
+            .unwrap_or("default");
+        
+        let dataset_name = event.data.get("dataset_name")
+            .and_then(|v| v.as_str());
+        
+        // Handle different types of storage operations
+        match operation {
+            "pool_create" => {
+                info!("Processing pool creation event for pool: {}", pool_name);
+                // In a full implementation, this would coordinate with ZFS manager
+                // to handle pool creation and emit status updates
+            }
+            "pool_destroy" => {
+                info!("Processing pool destruction event for pool: {}", pool_name);
+                // Handle pool destruction coordination
+            }
+            "dataset_create" => {
+                if let Some(dataset) = dataset_name {
+                    info!("Processing dataset creation event: {}", dataset);
+                }
+            }
+            "dataset_destroy" => {
+                if let Some(dataset) = dataset_name {
+                    info!("Processing dataset destruction event: {}", dataset);
+                }
+            }
+            "snapshot_create" => {
+                info!("Processing snapshot creation event for pool: {}", pool_name);
+                // Handle snapshot operations
+            }
+            "health_check" => {
+                info!("Processing storage health check event for pool: {}", pool_name);
+                // Coordinate health monitoring
+            }
+            _ => {
+                info!("Processing generic storage operation: {}", operation);
+            }
+        }
+        
+        // Log the storage operation completion (avoid recursion)
+        debug!("Storage operation {} completed for pool {} (operation: {})", 
+               event.event_id, pool_name, operation);
+        
+        // Update statistics
+        {
+            let mut stats = self.stats.write().await;
+            stats.events_processed += 1;
+        }
+        
         Ok(())
     }
 

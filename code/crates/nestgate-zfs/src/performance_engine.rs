@@ -26,6 +26,7 @@ use nestgate_core::{config::AlertThresholds, Result, StorageTier};
 
 #[cfg(feature = "network-integration")]
 use crate::automation::{EcosystemDiscovery, ServiceConnectionPool};
+use nestgate_core::zero_copy::StreamingProcReader;
 
 /// Real-time Performance Optimization Engine
 ///
@@ -568,7 +569,7 @@ impl PerformanceOptimizationEngine {
         debug!("🌐 Requesting optimization strategy from ecosystem");
 
         let request_data = serde_json::to_vec(&request).map_err(|e| ZfsError::Internal {
-            message: format!("Failed to serialize request: {}", e),
+            message: format!("Failed to serialize request: {e}"),
         })?;
         let ecosystem_url = std::env::var("ECOSYSTEM_ORCHESTRATOR_URL").unwrap_or_else(|_| {
             format!(
@@ -576,7 +577,7 @@ impl PerformanceOptimizationEngine {
                 nestgate_core::constants::network::api_port()
             )
         });
-        let optimize_endpoint = format!("{}/api/optimize", ecosystem_url);
+        let optimize_endpoint = format!("{ecosystem_url}/api/optimize");
 
         let response = reqwest::Client::new()
             .post(&optimize_endpoint)
@@ -584,13 +585,13 @@ impl PerformanceOptimizationEngine {
             .send()
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Ecosystem request failed: {}", e),
+                message: format!("Ecosystem request failed: {e}"),
             })?;
 
         if response.status().is_success() {
             let strategy: EcosystemOptimizationStrategy =
                 response.json().await.map_err(|e| ZfsError::Internal {
-                    message: format!("Failed to parse optimization strategy: {}", e),
+                    message: format!("Failed to parse optimization strategy: {e}"),
                 })?;
             Ok(strategy)
         } else {
@@ -905,7 +906,7 @@ impl PerformanceOptimizationEngine {
             .output()
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to get pool iostat: {}", e),
+                message: format!("Failed to get pool iostat: {e}"),
             })?;
 
         if !output.status.success() {
@@ -931,7 +932,7 @@ impl PerformanceOptimizationEngine {
             .output()
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to get pool iostat: {}", e),
+                message: format!("Failed to get pool iostat: {e}"),
             })?;
 
         if !output.status.success() {
@@ -1090,34 +1091,13 @@ impl PerformanceOptimizationEngine {
     }
 
     async fn get_system_memory_usage(&self) -> Result<SystemMemoryUsage> {
-        // Read real memory information from /proc/meminfo
-        match tokio::fs::read_to_string("/proc/meminfo").await {
-            Ok(content) => {
-                let mut total_memory = 0u64;
-                let mut available_memory = 0u64;
-
-                for line in content.lines() {
-                    if line.starts_with("MemTotal:") {
-                        if let Some(kb_str) = line.split_whitespace().nth(1) {
-                            total_memory = kb_str.parse::<u64>().unwrap_or(0) * 1024;
-                            // Convert KB to bytes
-                        }
-                    } else if line.starts_with("MemAvailable:") {
-                        if let Some(kb_str) = line.split_whitespace().nth(1) {
-                            available_memory = kb_str.parse::<u64>().unwrap_or(0) * 1024;
-                            // Convert KB to bytes
-                        }
-                    }
-                }
-
-                let used_memory = total_memory.saturating_sub(available_memory);
-
-                Ok(SystemMemoryUsage {
-                    total_memory,
-                    used_memory,
-                    available_memory,
-                })
-            }
+        // Use zero-copy streaming reader for /proc/meminfo
+        match StreamingProcReader::read_meminfo().await {
+            Ok(memory_info) => Ok(SystemMemoryUsage {
+                total_memory: memory_info.total,
+                used_memory: memory_info.used,
+                available_memory: memory_info.available,
+            }),
             Err(_) => {
                 // Fallback to reasonable defaults if /proc/meminfo is not available
                 warn!("Cannot read /proc/meminfo, using fallback memory values");
@@ -1463,7 +1443,7 @@ impl PerformanceOptimizationEngine {
                     {
                         warn!("Failed to boost ARC: {}", e);
                     } else {
-                        actions.push(format!("Boosted ARC target to {} bytes", boosted_size));
+                        actions.push(format!("Boosted ARC target to {boosted_size} bytes"));
                     }
                 }
 
@@ -1607,9 +1587,8 @@ impl PerformanceOptimizationEngine {
                     {
                         warn!("Failed to tune ARC metadata: {}", e);
                     } else {
-                        actions.push(format!(
-                            "Optimized ARC metadata limit to {} bytes",
-                            optimal_arc_meta
+                                                  actions.push(format!(
+                            "Optimized ARC metadata limit to {optimal_arc_meta} bytes"
                         ));
                     }
                 }
@@ -1744,7 +1723,7 @@ impl PerformanceOptimizationEngine {
                             )
                             .await
                         {
-                            warnings.push(format!("Failed to set recordsize: {}", e));
+                            warnings.push(format!("Failed to set recordsize: {e}"));
                         } else {
                             tuned_parameters.push((
                                 recommendation.parameter_name,
@@ -1768,7 +1747,7 @@ impl PerformanceOptimizationEngine {
                             )
                             .await
                         {
-                            warnings.push(format!("Failed to set compression: {}", e));
+                            warnings.push(format!("Failed to set compression: {e}"));
                         } else {
                             tuned_parameters.push((
                                 recommendation.parameter_name,
@@ -1794,7 +1773,7 @@ impl PerformanceOptimizationEngine {
                             )
                             .await
                         {
-                            warnings.push(format!("Failed to set logbias: {}", e));
+                            warnings.push(format!("Failed to set logbias: {e}"));
                         } else {
                             tuned_parameters.push((
                                 recommendation.parameter_name,
@@ -1869,7 +1848,7 @@ impl PerformanceOptimizationEngine {
                 .set_dataset_property(dataset_name, "recordsize", optimal_recordsize)
                 .await
             {
-                warnings.push(format!("Failed to optimize recordsize: {}", e));
+                warnings.push(format!("Failed to optimize recordsize: {e}"));
             } else {
                 tuned_parameters.push(("recordsize".to_string(), optimal_recordsize.to_string()));
             }
@@ -1888,7 +1867,7 @@ impl PerformanceOptimizationEngine {
             .set_dataset_property(dataset_name, "compression", optimal_compression)
             .await
         {
-            warnings.push(format!("Failed to optimize compression: {}", e));
+            warnings.push(format!("Failed to optimize compression: {e}"));
         } else {
             tuned_parameters.push(("compression".to_string(), optimal_compression.to_string()));
         }
@@ -1904,7 +1883,7 @@ impl PerformanceOptimizationEngine {
             .set_dataset_property(dataset_name, "logbias", optimal_logbias)
             .await
         {
-            warnings.push(format!("Failed to optimize logbias: {}", e));
+            warnings.push(format!("Failed to optimize logbias: {e}"));
         } else {
             tuned_parameters.push(("logbias".to_string(), optimal_logbias.to_string()));
         }
@@ -1934,7 +1913,7 @@ impl PerformanceOptimizationEngine {
                         return Ok(Some(AppliedOptimization {
                             optimization_type: OptimizationType::RecordSizeAdjustment,
                             component: "default".to_string(),
-                            description: format!("Adjusted recordsize to {}", value),
+                            description: format!("Adjusted recordsize to {value}"),
                             parameters_changed: vec![("recordsize".to_string(), value.clone())],
                             expected_improvement: recommendation.expected_improvement.clone(),
                         }));
@@ -1945,7 +1924,7 @@ impl PerformanceOptimizationEngine {
                         return Ok(Some(AppliedOptimization {
                             optimization_type: OptimizationType::CompressionTuning,
                             component: "default".to_string(),
-                            description: format!("Changed compression to {}", value),
+                            description: format!("Changed compression to {value}"),
                             parameters_changed: vec![("compression".to_string(), value.clone())],
                             expected_improvement: recommendation.expected_improvement.clone(),
                         }));
@@ -1967,7 +1946,7 @@ impl PerformanceOptimizationEngine {
             .output()
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to get dedup info: {}", e),
+                message: format!("Failed to get dedup info: {e}"),
             })?;
 
         if output.status.success() {
@@ -1993,7 +1972,7 @@ impl PerformanceOptimizationEngine {
             .output()
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to get recordsize: {}", e),
+                message: format!("Failed to get recordsize: {e}"),
             })?;
 
         if output.status.success() {
@@ -2107,11 +2086,11 @@ impl PerformanceOptimizationEngine {
         value: &str,
     ) -> Result<()> {
         let output = tokio::process::Command::new("zfs")
-            .args(["set", &format!("{}={}", property, value), dataset_name])
+            .args(["set", &format!("{property}={value}"), dataset_name])
             .output()
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to set property: {}", e),
+                message: format!("Failed to set property: {e}"),
             })?;
 
         if output.status.success() {
@@ -2120,7 +2099,7 @@ impl PerformanceOptimizationEngine {
         } else {
             let error = String::from_utf8_lossy(&output.stderr);
             Err(ZfsError::Internal {
-                message: format!("Failed to set {}: {}", property, error),
+                message: format!("Failed to set {property}: {error}"),
             }
             .into())
         }
@@ -2390,35 +2369,20 @@ impl RealTimePerformanceMonitor {
         }
 
         // Collect system memory usage
-        let system_memory_usage =
-            if let Ok(meminfo) = tokio::fs::read_to_string("/proc/meminfo").await {
-                let mut total_memory = 0u64;
-                let mut available_memory = 0u64;
-
-                for line in meminfo.lines() {
-                    if line.starts_with("MemTotal:") {
-                        if let Some(kb_str) = line.split_whitespace().nth(1) {
-                            total_memory = kb_str.parse::<u64>().unwrap_or(0) * 1024;
-                        }
-                    } else if line.starts_with("MemAvailable:") {
-                        if let Some(kb_str) = line.split_whitespace().nth(1) {
-                            available_memory = kb_str.parse::<u64>().unwrap_or(0) * 1024;
-                        }
-                    }
-                }
-
-                SystemMemoryUsage {
-                    total_memory,
-                    used_memory: total_memory.saturating_sub(available_memory),
-                    available_memory,
-                }
-            } else {
+        let system_memory_usage = match StreamingProcReader::read_meminfo().await {
+            Ok(memory_info) => SystemMemoryUsage {
+                total_memory: memory_info.total,
+                used_memory: memory_info.used,
+                available_memory: memory_info.available,
+            },
+            Err(_) => {
                 SystemMemoryUsage {
                     total_memory: 16 * 1024 * 1024 * 1024,    // 16GB default
                     used_memory: 8 * 1024 * 1024 * 1024,      // 8GB default
                     available_memory: 8 * 1024 * 1024 * 1024, // 8GB default
                 }
-            };
+            }
+        };
 
         // Collect detailed ARC statistics
         let arc_stats = if let Ok(arc_content) =

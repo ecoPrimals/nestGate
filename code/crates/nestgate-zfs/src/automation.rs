@@ -6,10 +6,9 @@
 
 // Re-export main automation types and functionality
 pub use nestgate_automation::{
-    AccessPatternAnalyzer, AccessPatterns, AutomationConfig, DatasetAnalysis, DatasetAnalyzer,
-    DatasetLifecycleManager, FileAnalysis, FileAnalyzer, IntelligentDatasetManager,
-    OptimizationResult, Result as AutomationResult, TierPerformanceStats, TierPrediction,
-    TierPredictor,
+    AccessPatterns, AutomationConfig, DatasetAnalysis, DatasetAnalyzer, DatasetLifecycleManager,
+    FileAnalysis, FileAnalyzer, IntelligentDatasetManager, OptimizationResult,
+    Result as AutomationResult, TierPerformanceStats, TierPrediction, TierPredictor,
 };
 
 // Note: AI prediction functionality has been sunset - use heuristic tier prediction instead
@@ -709,8 +708,7 @@ impl DatasetAutomation {
                 "cache" => StorageTier::Cache,
                 _ => {
                     return Err(nestgate_core::NestGateError::InvalidInput(format!(
-                        "Invalid target tier in action: {}",
-                        action
+                        "Invalid target tier in action: {action}"
                     )))
                 }
             };
@@ -718,8 +716,8 @@ impl DatasetAutomation {
             if lifecycle.current_tier != target_tier {
                 self.execute_tier_migration(
                     dataset_name,
-                    lifecycle.current_tier.clone(),
-                    target_tier.clone(),
+                    lifecycle.current_tier,
+                    target_tier,
                 )
                 .await?;
                 return Ok(format!(
@@ -741,7 +739,7 @@ impl DatasetAutomation {
             let snapshot_name = format!("auto-{}", chrono::Utc::now().format("%Y%m%d-%H%M%S"));
             self.create_automated_snapshot(dataset_name, &snapshot_name)
                 .await?;
-            return Ok(format!("Created snapshot {}", snapshot_name));
+            return Ok(format!("Created snapshot {snapshot_name}"));
         } else if action_lower == "optimize_recordsize" {
             self.optimize_dataset_recordsize(dataset_name).await?;
             return Ok("Optimized record size".to_string());
@@ -749,19 +747,18 @@ impl DatasetAutomation {
             if let Ok(quota_gb) = stripped.parse::<u64>() {
                 self.set_dataset_quota(dataset_name, quota_gb * 1024 * 1024 * 1024)
                     .await?;
-                return Ok(format!("Set quota to {}GB", quota_gb));
+                return Ok(format!("Set quota to {quota_gb}GB"));
             }
         } else if action_lower == "cleanup_old_snapshots" {
             let cleaned_count = self.cleanup_old_snapshots(dataset_name).await?;
-            return Ok(format!("Cleaned {} old snapshots", cleaned_count));
+            return Ok(format!("Cleaned {cleaned_count} old snapshots"));
         } else if action_lower == "enable_deduplication" {
             self.enable_dataset_deduplication(dataset_name).await?;
             return Ok("Enabled deduplication".to_string());
         }
 
         Err(nestgate_core::NestGateError::InvalidInput(format!(
-            "Unknown lifecycle action: {}",
-            action
+            "Unknown lifecycle action: {action}"
         )))
     }
 
@@ -826,7 +823,7 @@ impl DatasetAutomation {
                     if let Err(e) = self
                         .execute_tier_migration(
                             dataset_name,
-                            lifecycle.current_tier.clone(),
+                            lifecycle.current_tier,
                             StorageTier::Cold,
                         )
                         .await
@@ -886,7 +883,7 @@ impl DatasetAutomation {
                 event_id: uuid::Uuid::new_v4().to_string(),
                 event_type: AutomationEventType::PolicyUpdate,
                 timestamp: SystemTime::now(),
-                details: format!("Stage transition: {:?} → {:?}", old_stage, new_stage),
+                details: format!("Stage transition: {old_stage:?} → {new_stage:?}"),
                 success: true,
             });
 
@@ -965,10 +962,64 @@ impl DatasetAutomation {
         Ok(())
     }
 
-    async fn get_dataset_size_bytes(&self, _dataset_name: &str) -> Result<u64> {
-        // This would query ZFS for current dataset size
-        // zfs get -H -p used dataset_name
-        Ok(1024 * 1024 * 1024) // Placeholder: 1GB
+    async fn get_dataset_size_bytes(&self, dataset_name: &str) -> Result<u64> {
+        use tokio::process::Command;
+
+        debug!("Getting dataset size for: {}", dataset_name);
+
+        // Check if we're in mock mode
+        if std::env::var("ZFS_MOCK_MODE").unwrap_or_default() == "true" {
+            // Return mock value for testing
+            let mock_size = 1024 * 1024 * 1024; // 1GB
+            debug!(
+                "Mock mode: returning {} bytes for dataset {}",
+                mock_size, dataset_name
+            );
+            return Ok(mock_size);
+        }
+
+        // Query ZFS for actual dataset size
+        let output = Command::new("zfs")
+            .args(["get", "-H", "-p", "used", dataset_name])
+            .output()
+            .await
+            .map_err(|e| crate::ZfsError::Internal {
+                message: format!("Failed to execute zfs command: {e}"),
+            })?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(crate::ZfsError::Internal {
+                message: format!(
+                    "ZFS command failed for dataset {dataset_name}: {stderr}"
+                ),
+            }
+            .into());
+        }
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let parts: Vec<&str> = stdout.trim().split('\t').collect();
+
+        if parts.len() < 3 {
+            return Err(crate::ZfsError::Internal {
+                message: format!(
+                    "Invalid ZFS output format for dataset {dataset_name}: {stdout}"
+                ),
+            }
+            .into());
+        }
+
+        let size_str = parts[2]; // The "used" value is in the 3rd column
+        let size_bytes = size_str
+            .parse::<u64>()
+            .map_err(|e| crate::ZfsError::Internal {
+                message: format!(
+                    "Failed to parse dataset size for {dataset_name}: {size_str} ({e})"
+                ),
+            })?;
+
+        debug!("Dataset {} size: {} bytes", dataset_name, size_bytes);
+        Ok(size_bytes)
     }
 
     /// Update lifecycle tracking
@@ -1112,13 +1163,13 @@ impl DatasetAutomation {
                 for tier_rule in &policy.conditions.tier_rules {
                     match tier_rule.target_tier {
                         StorageTier::Hot => {
-                            tier_score.add_hot_weight(0.2, &format!("Policy {}", policy_id))
+                            tier_score.add_hot_weight(0.2, &format!("Policy {policy_id}"))
                         }
                         StorageTier::Warm => {
-                            tier_score.add_warm_weight(0.2, &format!("Policy {}", policy_id))
+                            tier_score.add_warm_weight(0.2, &format!("Policy {policy_id}"))
                         }
                         StorageTier::Cold => {
-                            tier_score.add_cold_weight(0.2, &format!("Policy {}", policy_id))
+                            tier_score.add_cold_weight(0.2, &format!("Policy {policy_id}"))
                         }
                         StorageTier::Cache => {
                             tier_score.add_hot_weight(0.3, &format!("Cache Policy {}", policy_id))

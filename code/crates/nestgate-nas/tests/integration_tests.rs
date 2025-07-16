@@ -5,7 +5,7 @@
 use nestgate_nas::{NasConfig, NasServer, NasShare, ShareProtocol};
 use std::path::PathBuf;
 use tempfile::TempDir;
-use tokio_test;
+// use tokio_test;
 
 #[cfg(test)]
 mod nas_config_tests {
@@ -192,7 +192,7 @@ mod nas_server_tests {
     #[test]
     fn test_nas_server_creation() {
         let config = NasConfig::default();
-        let server = NasServer::new(config);
+        let _server = NasServer::new(config);
 
         // Server should be created successfully
         // We can't inspect internal state but creation shouldn't panic

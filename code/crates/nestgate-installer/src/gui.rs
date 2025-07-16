@@ -1,9 +1,7 @@
 use anyhow::Result;
 #[cfg(feature = "gui")]
 use iced::{
-    widget::{
-        button, checkbox, column, container, progress_bar, row, scrollable, text, text_input,
-    },
+    widget::{button, checkbox, column, container, progress_bar, row, text, text_input},
     Application, Command, Element, Length, Settings, Theme,
 };
 
@@ -11,8 +9,8 @@ use iced::{
 pub async fn run_gui_installer() -> Result<()> {
     let settings = Settings {
         window: iced::window::Settings {
-            size: (800, 600),
-            min_size: Some((600, 400)),
+            size: iced::Size::new(800.0, 600.0),
+            min_size: Some(iced::Size::new(600.0, 400.0)),
             ..Default::default()
         },
         ..Default::default()
@@ -29,6 +27,7 @@ pub async fn run_gui_installer() -> Result<()> {
 
 #[cfg(feature = "gui")]
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Some variants used in future implementation
 pub enum Message {
     // Navigation
     NextStep,
@@ -97,6 +96,7 @@ struct SystemCheck {
 
 #[cfg(feature = "gui")]
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Some variants used in future implementation
 enum CheckStatus {
     Pending,
     Success,
@@ -408,7 +408,7 @@ impl NestGateInstallerGui {
             column![
                 text("Next steps:"),
                 text("  • Run 'nestgate --help' to see available commands"),
-                text(&format!(
+                text(format!(
                     "  • Visit http://localhost:{} for the web interface",
                     std::env::var("NESTGATE_UI_PORT").unwrap_or_else(|_| "8080".to_string())
                 )),

@@ -29,8 +29,7 @@ async fn ai_demo_nas_10g() {
 
     println!("\n🚀 Fast-Path Test Execution:");
     println!(
-        "   🎯 Operations: {} across {} threads",
-        total_operations, num_threads
+        "   🎯 Operations: {total_operations} across {num_threads} threads"
     );
 
     let ops_per_thread = total_operations / num_threads as u64;
@@ -80,10 +79,9 @@ async fn ai_demo_nas_10g() {
     println!("\n📊 AI PERFORMANCE RESULTS:");
     println!("   ⏱️  Duration: {:.2}s", duration.as_secs_f64());
     println!(
-        "   ✅ Operations: {} ({:.0} ops/sec)",
-        total_completed, ops_per_sec
+        "   ✅ Operations: {total_completed} ({ops_per_sec:.0} ops/sec)"
     );
-    println!("   📈 Throughput: {:.0} MB/s", throughput_mbs);
+    println!("   📈 Throughput: {throughput_mbs:.0} MB/s");
     println!(
         "   ⚡ Avg Latency: {:.2}ms",
         duration.as_millis() as f64 / total_completed as f64
@@ -92,7 +90,7 @@ async fn ai_demo_nas_10g() {
     println!("\n🧠 AI ANALYSIS:");
     let target_throughput = 1250.0;
     let efficiency = (throughput_mbs / target_throughput) * 100.0;
-    println!("   🎯 Target Efficiency: {:.1}%", efficiency);
+    println!("   🎯 Target Efficiency: {efficiency:.1}%");
 
     if efficiency >= 80.0 {
         println!("   ✅ EXCELLENT: Ready for 10G NAS workload");
@@ -162,8 +160,7 @@ async fn ai_demo_cold_storage() {
 
     println!("\n❄️ Cold Storage Test Execution:");
     println!(
-        "   🎯 Operations: {} (sequential for reliability)",
-        total_operations
+        "   🎯 Operations: {total_operations} (sequential for reliability)"
     );
 
     let mut completed = 0u64;
@@ -188,7 +185,7 @@ async fn ai_demo_cold_storage() {
         // Progress update
         if i > 0 && i % progress_interval == 0 {
             let progress = (i as f64 / total_operations as f64) * 100.0;
-            println!("   📊 Progress: {:.0}%", progress);
+            println!("   📊 Progress: {progress:.0}%");
         }
 
         // Much smaller delay for faster testing - reduced from 1ms
@@ -203,12 +200,11 @@ async fn ai_demo_cold_storage() {
     println!("\n📊 AI COLD STORAGE RESULTS:");
     println!("   ⏱️  Duration: {:.2}s", duration.as_secs_f64());
     println!(
-        "   ✅ Operations: {} ({:.0} ops/sec)",
-        completed, ops_per_sec
+        "   ✅ Operations: {completed} ({ops_per_sec:.0} ops/sec)"
     );
-    println!("   📈 Throughput: {:.0} MB/s", throughput_mbs);
-    println!("   🛡️  Uptime: {:.2}%", uptime_percent);
-    println!("   ❌ Errors: {}", errors);
+    println!("   📈 Throughput: {throughput_mbs:.0} MB/s");
+    println!("   🛡️  Uptime: {uptime_percent:.2}%");
+    println!("   ❌ Errors: {errors}");
 
     println!("\n🧠 AI ANALYSIS:");
     if uptime_percent >= 99.99 {

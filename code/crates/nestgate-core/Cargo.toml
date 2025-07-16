@@ -39,6 +39,13 @@ config = "0.14"
 futures = "0.3"
 log = "0.4"
 
+# Zero-copy optimization dependencies
+bytes = "1.7"
+memmap2 = "0.9"
+
+# Data source integration dependencies
+urlencoding = "2.0"
+
 [dev-dependencies]
 tokio-test = { workspace = true }
 tempfile = "3.8"

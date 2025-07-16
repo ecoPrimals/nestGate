@@ -1541,7 +1541,7 @@ mod tests {
             assert_eq!(monthly_months, 12);
             assert_eq!(yearly_years, 5);
         } else {
-            assert!(false, "Invalid retention policy type - expected Custom");
+            panic!("Invalid retention policy type - expected Custom");
         }
     }
 

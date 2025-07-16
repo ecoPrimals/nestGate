@@ -5,12 +5,36 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::Arc;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
 use tokio::runtime::Runtime;
 
-use nestgate_core::StorageTier;
 use nestgate_zfs::*;
+
+// Temporary definitions for missing types
+#[derive(Debug, Clone)]
+pub enum OptimizationComplexity {
+    Low,
+    Medium,
+    High,
+}
+
+#[derive(Debug, Clone)]
+pub enum OptimizationType {
+    TierMigration,
+    Compression,
+    Deduplication,
+    Caching,
+}
+
+#[derive(Debug, Clone)]
+pub struct OptimizationOpportunity {
+    pub optimization_type: OptimizationType,
+    pub description: String,
+    pub expected_impact: f64,
+    pub confidence: f64,
+    pub complexity: OptimizationComplexity,
+    pub implementation_time: Duration,
+}
 
 /// Benchmark configuration creation
 fn bench_config_creation(c: &mut Criterion) {
@@ -39,7 +63,7 @@ fn bench_tier_config_access(c: &mut Criterion) {
     c.bench_function("tier_config_access", |b| {
         b.iter(|| {
             for tier in &tiers {
-                black_box(config.get_tier_config(tier));
+                black_box(config.get_tier_config(&(*tier).into()));
             }
         })
     });
@@ -69,7 +93,11 @@ fn bench_tier_metrics_generation(c: &mut Criterion) {
             BenchmarkId::new("tier_metrics_generation", format!("{:?}", tier)),
             tier,
             |b, &tier| {
-                b.iter(|| black_box(crate::performance::TierMetrics::default_for_tier(tier)))
+                b.iter(|| {
+                    black_box(crate::performance::TierMetrics::default_for_tier(
+                        tier.into(),
+                    ))
+                })
             },
         );
     }

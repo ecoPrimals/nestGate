@@ -714,8 +714,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_token_expiration() {
-        let mut config = SecurityConfig::default();
-        config.token_expiration = Some(1); // 1 second expiration
+        let config = SecurityConfig {
+            token_expiration: Some(1), // 1 second expiration
+            ..Default::default()
+        };
 
         let manager = SecurityManager::new(config);
         manager.initialize().await.unwrap();

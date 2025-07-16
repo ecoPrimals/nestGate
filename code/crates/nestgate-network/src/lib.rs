@@ -395,7 +395,7 @@ mod tests {
         if let ConnectionType::Internal(service) = &connection_types[5] {
             assert_eq!(service, "test-service");
         } else {
-            assert!(false, "Expected Internal connection type");
+            panic!("Expected Internal connection type");
         }
     }
 

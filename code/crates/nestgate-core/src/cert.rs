@@ -159,7 +159,7 @@ impl CertificateManager {
     async fn load_certificate<P: AsRef<Path>>(&self, path: P) -> Result<Certificate> {
         let content = std::fs::read_to_string(path)?;
         let cert: Certificate = serde_json::from_str(&content)
-            .map_err(|e| NestGateError::Internal(format!("Certificate parse error: {}", e)))?;
+            .map_err(|e| NestGateError::Internal(format!("Certificate parse error: {e}")))?;
         Ok(cert)
     }
 
@@ -175,8 +175,7 @@ impl CertificateManager {
         }
 
         Err(NestGateError::Internal(format!(
-            "Insufficient permissions for integration: {:?}",
-            integration
+            "Insufficient permissions for integration: {integration:?}"
         )))
     }
 
@@ -785,7 +784,7 @@ mod tests {
         assert!(cert.contains("END CERTIFICATE"));
 
         // Print the cert content for debugging
-        println!("Certificate content: {}", cert);
+        println!("Certificate content: {cert}");
 
         let cn_result = CertUtils::extract_cn(&cert);
         match cn_result {

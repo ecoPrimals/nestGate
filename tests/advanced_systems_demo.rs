@@ -9,26 +9,22 @@
 
 use chrono::Utc;
 use nestgate_core::{
-    cert::{BearDogConfig, CertValidator},
+    cert::BearDogConfig,
     crypto_locks::{
         AccessDecision, CopyleftRequirements, CryptographicProof, ExternalBoundaryGuardian,
-        ExternalLockType, ExternalSystemType, ExtractionRestrictions, ExtractionRisk,
+        ExternalLockType, ExtractionRestrictions,
         HardwareAgnosticTuner, InternalPrimalCommunication,
     },
     data_sources::{HuggingFaceModelSource, NCBIGenomeSource},
     temporal_storage::{
-        APIType, AccessRequirements, AuthenticationMethod, DataDescriptor, DataSourceType,
-        DataType, EraMapping, IngestedData, IngestionMetadata, ModelType, NCBIDatabase,
+        AccessRequirements, AuthenticationMethod, DataDescriptor, DataSourceType,
+        DataType, EraMapping, ModelType, NCBIDatabase,
         PerformanceTier, PhysicalDimensions, RateLimits, ResearchDatabase, StorageEra,
-        StorageTechnology, TemporalDevice, TemporalStorageSystem, UniversalDataSource,
-        ValidationStatus,
-    },
-    NestGateError, Result,
+        StorageTechnology, TemporalDevice, TemporalStorageSystem,
+    }, Result,
 };
 use std::collections::HashMap;
 use std::time::Duration;
-use tokio::time::sleep;
-use uuid::Uuid;
 
 #[tokio::test]
 async fn test_complete_advanced_systems_integration() -> Result<()> {
@@ -171,7 +167,7 @@ async fn test_crypto_lock_protection() -> Result<()> {
 
     match internal_decision {
         AccessDecision::Allow { reason, .. } => {
-            println!("   ✅ Internal communication is FREE: {}", reason);
+            println!("   ✅ Internal communication is FREE: {reason}");
         }
         _ => println!("   ⚠️ Internal communication requires attention"),
     }
@@ -183,10 +179,10 @@ async fn test_crypto_lock_protection() -> Result<()> {
 
     match external_decision {
         AccessDecision::RequireLock { reason, .. } => {
-            println!("   ✅ External access requires crypto locks: {}", reason);
+            println!("   ✅ External access requires crypto locks: {reason}");
         }
         AccessDecision::Deny { reason, .. } => {
-            println!("   ✅ External access denied: {}", reason);
+            println!("   ✅ External access denied: {reason}");
         }
         _ => println!("   ⚠️ External access behavior unexpected"),
     }
@@ -228,7 +224,7 @@ async fn test_hardware_agnostic_tuning() -> Result<()> {
     );
 
     for optimization in &tuning_result.optimizations_applied {
-        println!("      - {}", optimization);
+        println!("      - {optimization}");
     }
 
     println!("   🎯 Hardware-agnostic tuning: OPERATIONAL");
@@ -281,7 +277,7 @@ async fn test_universal_data_sources() -> Result<()> {
             );
         }
         Err(e) => {
-            println!("   ⚠️ Hardware tuning skipped: {}", e);
+            println!("   ⚠️ Hardware tuning skipped: {e}");
         }
     }
 
@@ -313,11 +309,8 @@ async fn test_universal_data_sources() -> Result<()> {
         },
     };
 
-    match data_source {
-        DataSourceType::ResearchDatabase { .. } => {
-            println!("   ✅ Research database configured: NCBI GenBank");
-        }
-        _ => {}
+    if let DataSourceType::ResearchDatabase { .. } = data_source {
+        println!("   ✅ Research database configured: NCBI GenBank");
     }
 
     // 3. System automatically applies hardware tuning
@@ -389,7 +382,7 @@ async fn test_complete_integration() -> Result<()> {
     } else {
         "High-Performance SSD"
     };
-    println!("   ✅ Step 3: Storage tier selected: {}", storage_tier);
+    println!("   ✅ Step 3: Storage tier selected: {storage_tier}");
 
     // Step 4: Verify extraction protection
     match access_check {
@@ -432,7 +425,7 @@ async fn test_api_first_autonomous_operation() -> Result<()> {
             database: NCBIDatabase::GenBank,
         },
     };
-    println!("   ✅ Auto-configured: {:?}", data_source);
+    println!("   ✅ Auto-configured: {data_source:?}");
 
     // 3. System optimizes hardware for genomic workload
     let mut tuner = HardwareAgnosticTuner::new();

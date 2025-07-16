@@ -450,7 +450,7 @@ mod automation_unit_tests {
 
     #[test]
     fn test_policy_pattern_matching() {
-        let policies = vec![
+        let policies = [
             TierPolicy {
                 name: "Database Files".to_string(),
                 pattern: r"\.db$".to_string(),
@@ -586,10 +586,8 @@ mod phase2_lifecycle_management_tests {
             match &rule.actions[0].as_str() {
                 &"EnableCompression" => {
                     if rule.stage == LifecycleStage::New {
-                        assert!(
-                            condition_met || !condition_met,
-                            "Compression rule should be evaluable"
-                        );
+                        // Always true - just testing that rule can be evaluated
+                        assert!(true, "Compression rule should be evaluable");
                     }
                 }
                 _ => {
@@ -621,8 +619,7 @@ mod phase2_lifecycle_management_tests {
             );
             assert_eq!(
                 result, expected,
-                "Condition evaluation failed for: {}",
-                condition
+                "Condition evaluation failed for: {condition}"
             );
         }
     }

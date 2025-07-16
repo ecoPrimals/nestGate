@@ -48,6 +48,10 @@ pub enum ZfsError {
     #[error("Resource exhausted: {0}")]
     ResourceExhausted(String),
 
+    /// Network-related errors
+    #[error("Network error: {0}")]
+    Network(String),
+
     /// Permission errors
     #[error("Permission denied: {0}")]
     PermissionError(String),

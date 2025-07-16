@@ -290,8 +290,7 @@ impl DatasetLifecycleManager {
             let states = self.dataset_states.read().await;
             states.get(dataset_name).cloned().ok_or_else(|| {
                 AutomationError::Internal(format!(
-                    "Dataset {} not found in lifecycle management",
-                    dataset_name
+                    "Dataset {dataset_name} not found in lifecycle management"
                 ))
             })?
         };

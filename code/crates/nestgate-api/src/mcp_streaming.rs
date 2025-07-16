@@ -120,6 +120,51 @@ pub enum StreamEventType {
 
 impl McpStreamingManager {
     /// Create a new MCP streaming manager
+    ///
+    /// Initializes a Model Control Protocol (MCP) streaming manager that provides
+    /// high-performance, low-latency bidirectional communication with AI systems
+    /// and external MCP clusters.
+    ///
+    /// ## Features
+    ///
+    /// - **High-Throughput Streaming**: Efficient data transfer for AI workloads
+    /// - **Bidirectional Communication**: Full duplex communication with AI systems
+    /// - **Stream Management**: Automatic lifecycle management of active streams
+    /// - **Performance Monitoring**: Real-time statistics and metrics tracking
+    /// - **Error Handling**: Robust error detection and recovery mechanisms
+    /// - **Automatic Cleanup**: Background tasks for connection maintenance
+    ///
+    /// ## Stream Types Supported
+    ///
+    /// - **AI Inference**: Real-time model inference streaming
+    /// - **Data Processing**: Bulk data processing pipelines
+    /// - **Model Training**: Training data and parameter streaming
+    /// - **System Monitoring**: Health and performance metrics
+    ///
+    /// ## Usage
+    ///
+    /// ```rust
+    /// use nestgate_api::mcp_streaming::McpStreamingManager;
+    ///
+    /// let mcp_manager = McpStreamingManager::new();
+    ///
+    /// // Start background cleanup
+    /// let _cleanup_task = mcp_manager.start_cleanup_task();
+    ///
+    /// // Create a new stream
+    /// let stream_config = StreamConfig {
+    ///     stream_type: StreamType::AIInference,
+    ///     buffer_size: 1000,
+    ///     compression: true,
+    ///     priority: StreamPriority::High,
+    /// };
+    /// let stream = mcp_manager.create_stream(stream_config).await?;
+    /// ```
+    ///
+    /// ## Performance
+    ///
+    /// The manager uses optimized broadcasting and connection pooling to handle
+    /// high-throughput AI workloads with minimal latency overhead.
     pub fn new() -> Self {
         let (event_broadcaster, _) = broadcast::channel(1000);
 
@@ -216,6 +261,43 @@ impl McpStreamingManager {
         } else {
             Err("Stream not found".into())
         }
+    }
+
+    /// Clean up inactive streams
+    pub async fn cleanup_streams(&self) {
+        let mut streams = self.active_streams.write().await;
+        let now = SystemTime::now();
+        let timeout = Duration::from_secs(300); // 5 minutes timeout
+
+        let mut to_remove = Vec::new();
+        for (id, stream) in streams.iter() {
+            if let Ok(elapsed) = now.duration_since(stream.last_activity) {
+                if elapsed > timeout {
+                    to_remove.push(*id);
+                }
+            }
+        }
+
+        for id in to_remove {
+            streams.remove(&id);
+
+            // Update statistics
+            if let Ok(mut stats) = self.stats.try_write() {
+                stats.active_streams = stats.active_streams.saturating_sub(1);
+            }
+        }
+    }
+
+    /// Start background cleanup task
+    pub fn start_cleanup_task(&self) -> tokio::task::JoinHandle<()> {
+        let manager = self.clone();
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(Duration::from_secs(60));
+            loop {
+                interval.tick().await;
+                manager.cleanup_streams().await;
+            }
+        })
     }
 
     /// Close a stream

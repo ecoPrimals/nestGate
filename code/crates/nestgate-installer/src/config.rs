@@ -78,12 +78,9 @@ level = "info"
             self.enable_zfs,
             self.ai_enabled,
             if let Some(url) = &self.orchestration_url {
-                format!("url = \"{}\"", url)
+                format!("url = \"{url}\"")
             } else {
-                format!(
-                    "# url = \"http://localhost:{}\"",
-                    default_orchestration_port
-                )
+                format!("# url = \"http://localhost:{default_orchestration_port}\"")
             }
         )
     }

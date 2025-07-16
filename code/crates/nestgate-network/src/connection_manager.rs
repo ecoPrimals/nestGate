@@ -318,17 +318,13 @@ impl SongbirdClient {
             .send()
             .await
             .map_err(|e| {
-                nestgate_core::NestGateError::Internal(format!(
-                    "Failed to request connection: {}",
-                    e
-                ))
+                nestgate_core::NestGateError::Internal(format!("Failed to request connection: {e}"))
             })?;
 
         if response.status().is_success() {
             let connection_response: ConnectionResponse = response.json().await.map_err(|e| {
                 nestgate_core::NestGateError::Internal(format!(
-                    "Failed to parse connection response: {}",
-                    e
+                    "Failed to parse connection response: {e}"
                 ))
             })?;
 
@@ -353,7 +349,7 @@ impl SongbirdClient {
         );
 
         let response = self.client.delete(&url).send().await.map_err(|e| {
-            nestgate_core::NestGateError::Internal(format!("Failed to release connection: {}", e))
+            nestgate_core::NestGateError::Internal(format!("Failed to release connection: {e}"))
         })?;
 
         if response.status().is_success() {
@@ -378,8 +374,7 @@ impl SongbirdClient {
 
         let response = self.client.get(&url).send().await.map_err(|e| {
             nestgate_core::NestGateError::Internal(format!(
-                "Failed to check connection health: {}",
-                e
+                "Failed to check connection health: {e}"
             ))
         })?;
 

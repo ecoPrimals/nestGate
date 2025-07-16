@@ -210,7 +210,7 @@ impl ProtocolManager {
     /// Unmount using the appropriate protocol handler
     pub async fn unmount(&self, protocol: Protocol, mount_id: &str) -> Result<bool> {
         let handler = self.get_handler(protocol).ok_or_else(|| {
-            NestGateError::InvalidInput(format!("No handler for protocol: {}", protocol))
+            NestGateError::InvalidInput(format!("No handler for protocol: {protocol}"))
         })?;
 
         handler.unmount(mount_id).await
@@ -219,7 +219,7 @@ impl ProtocolManager {
     /// Get status using the appropriate protocol handler
     pub async fn get_status(&self, protocol: Protocol, mount_id: &str) -> Result<MountStatus> {
         let handler = self.get_handler(protocol).ok_or_else(|| {
-            NestGateError::InvalidInput(format!("No handler for protocol: {}", protocol))
+            NestGateError::InvalidInput(format!("No handler for protocol: {protocol}"))
         })?;
 
         handler.get_status(mount_id).await

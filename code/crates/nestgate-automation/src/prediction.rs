@@ -180,7 +180,7 @@ impl TierPredictor {
         let file_extension = std::path::Path::new(file_path)
             .extension()
             .and_then(|ext| ext.to_str())
-            .map(|ext| format!("*.{}", ext))
+            .map(|ext| format!("*.{ext}"))
             .unwrap_or_else(|| "*".to_string());
 
         let tier = self
@@ -199,7 +199,7 @@ impl TierPredictor {
         Ok(TierPrediction {
             recommended_tier: tier,
             confidence,
-            reasoning: format!("Rule-based prediction for file type: {}", file_extension),
+            reasoning: format!("Rule-based prediction for file type: {file_extension}"),
             alternative_tiers: vec![],
             prediction_score: self.confidence_to_score(&confidence),
         })
@@ -221,28 +221,19 @@ impl TierPredictor {
             (
                 TierType::Hot,
                 Confidence::VeryHigh,
-                format!(
-                    "High frequency access: {} accesses in last 24h",
-                    daily_accesses
-                ),
+                format!("High frequency access: {daily_accesses} accesses in last 24h"),
             )
         } else if weekly_accesses >= self.frequency_thresholds.warm_tier_accesses_per_week {
             (
                 TierType::Warm,
                 Confidence::High,
-                format!(
-                    "Moderate frequency access: {} accesses in last week",
-                    weekly_accesses
-                ),
+                format!("Moderate frequency access: {weekly_accesses} accesses in last week"),
             )
         } else if monthly_accesses <= self.frequency_thresholds.cold_tier_max_accesses_per_month {
             (
                 TierType::Cold,
                 Confidence::High,
-                format!(
-                    "Low frequency access: {} accesses in last month",
-                    monthly_accesses
-                ),
+                format!("Low frequency access: {monthly_accesses} accesses in last month"),
             )
         } else {
             (

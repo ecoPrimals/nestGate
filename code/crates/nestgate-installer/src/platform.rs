@@ -76,7 +76,7 @@ fn add_to_path_unix(install_path: &Path) -> Result<()> {
         )?;
 
         println!("Added {} to PATH in {:?}", install_path.display(), rc_path);
-        println!("Please restart your shell or run: source {:?}", rc_path);
+        println!("Please restart your shell or run: source {rc_path:?}");
     }
 
     Ok(())
@@ -126,7 +126,7 @@ fn create_desktop_shortcut_unix(install_path: &Path, name: &str) -> Result<()> {
     use std::fs;
 
     if let Some(desktop_dir) = dirs::desktop_dir() {
-        let shortcut_path = desktop_dir.join(format!("{}.desktop", name));
+        let shortcut_path = desktop_dir.join(format!("{name}.desktop"));
         let binary_path = install_path.join("bin").join("nestgate");
 
         let desktop_entry = format!(

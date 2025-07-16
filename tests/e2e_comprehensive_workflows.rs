@@ -143,8 +143,8 @@ impl E2EWorkflowOrchestrator {
             }
             Err(e) => {
                 operations_failed += 1;
-                error_messages.push(format!("System initialization failed: {}", e));
-                println!("    ❌ System initialization failed: {}", e);
+                error_messages.push(format!("System initialization failed: {e}"));
+                println!("    ❌ System initialization failed: {e}");
             }
         }
 
@@ -154,12 +154,12 @@ impl E2EWorkflowOrchestrator {
             Ok(pool_count) => {
                 operations_completed += 1;
                 response_times.push(_operation_start.elapsed());
-                println!("    ✅ Discovered {} ZFS pools", pool_count);
+                println!("    ✅ Discovered {pool_count} ZFS pools");
             }
             Err(e) => {
                 operations_failed += 1;
-                error_messages.push(format!("Pool discovery failed: {}", e));
-                println!("    ❌ Pool discovery failed: {}", e);
+                error_messages.push(format!("Pool discovery failed: {e}"));
+                println!("    ❌ Pool discovery failed: {e}");
             }
         }
 
@@ -169,12 +169,12 @@ impl E2EWorkflowOrchestrator {
             Ok(dataset_count) => {
                 operations_completed += 1;
                 response_times.push(_operation_start.elapsed());
-                println!("    ✅ Created {} initial datasets", dataset_count);
+                println!("    ✅ Created {dataset_count} initial datasets");
             }
             Err(e) => {
                 operations_failed += 1;
-                error_messages.push(format!("Dataset creation failed: {}", e));
-                println!("    ❌ Dataset creation failed: {}", e);
+                error_messages.push(format!("Dataset creation failed: {e}"));
+                println!("    ❌ Dataset creation failed: {e}");
             }
         }
 
@@ -188,8 +188,8 @@ impl E2EWorkflowOrchestrator {
             }
             Err(e) => {
                 operations_failed += 1;
-                error_messages.push(format!("Security setup failed: {}", e));
-                println!("    ❌ Security setup failed: {}", e);
+                error_messages.push(format!("Security setup failed: {e}"));
+                println!("    ❌ Security setup failed: {e}");
             }
         }
 
@@ -233,7 +233,7 @@ impl E2EWorkflowOrchestrator {
         for i in 0..10 {
             let _operation_start = Instant::now();
             match self
-                .simulate_file_upload(format!("test_file_{}.txt", i))
+                .simulate_file_upload(format!("test_file_{i}.txt"))
                 .await
             {
                 Ok(_) => {
@@ -242,7 +242,7 @@ impl E2EWorkflowOrchestrator {
                 }
                 Err(e) => {
                     operations_failed += 1;
-                    error_messages.push(format!("File upload {} failed: {}", i, e));
+                    error_messages.push(format!("File upload {i} failed: {e}"));
                 }
             }
         }
@@ -251,7 +251,7 @@ impl E2EWorkflowOrchestrator {
         for i in 0..5 {
             let _operation_start = Instant::now();
             match self
-                .simulate_file_search(format!("test_file_{}.txt", i))
+                .simulate_file_search(format!("test_file_{i}.txt"))
                 .await
             {
                 Ok(_) => {
@@ -260,7 +260,7 @@ impl E2EWorkflowOrchestrator {
                 }
                 Err(e) => {
                     operations_failed += 1;
-                    error_messages.push(format!("File search {} failed: {}", i, e));
+                    error_messages.push(format!("File search {i} failed: {e}"));
                 }
             }
         }
@@ -269,7 +269,7 @@ impl E2EWorkflowOrchestrator {
         for i in 0..5 {
             let _operation_start = Instant::now();
             match self
-                .simulate_file_download(format!("test_file_{}.txt", i))
+                .simulate_file_download(format!("test_file_{i}.txt"))
                 .await
             {
                 Ok(_) => {
@@ -278,7 +278,7 @@ impl E2EWorkflowOrchestrator {
                 }
                 Err(e) => {
                     operations_failed += 1;
-                    error_messages.push(format!("File download {} failed: {}", i, e));
+                    error_messages.push(format!("File download {i} failed: {e}"));
                 }
             }
         }
@@ -287,7 +287,7 @@ impl E2EWorkflowOrchestrator {
         for i in 0..3 {
             let _operation_start = Instant::now();
             match self
-                .simulate_file_deletion(format!("test_file_{}.txt", i))
+                .simulate_file_deletion(format!("test_file_{i}.txt"))
                 .await
             {
                 Ok(_) => {
@@ -296,7 +296,7 @@ impl E2EWorkflowOrchestrator {
                 }
                 Err(e) => {
                     operations_failed += 1;
-                    error_messages.push(format!("File deletion {} failed: {}", i, e));
+                    error_messages.push(format!("File deletion {i} failed: {e}"));
                 }
             }
         }
@@ -314,8 +314,7 @@ impl E2EWorkflowOrchestrator {
             .unwrap_or(Duration::from_millis(0));
 
         println!(
-            "    ✅ File management workflow completed: {} ops, {} failed",
-            operations_completed, operations_failed
+            "    ✅ File management workflow completed: {operations_completed} ops, {operations_failed} failed"
         );
 
         Ok(WorkflowResults {
@@ -348,11 +347,11 @@ impl E2EWorkflowOrchestrator {
             Ok(predictions) => {
                 operations_completed += 1;
                 response_times.push(_operation_start.elapsed());
-                println!("    ✅ Generated {} tier predictions", predictions);
+                println!("    ✅ Generated {predictions} tier predictions");
             }
             Err(e) => {
                 operations_failed += 1;
-                error_messages.push(format!("AI tier prediction failed: {}", e));
+                error_messages.push(format!("AI tier prediction failed: {e}"));
             }
         }
 
@@ -366,7 +365,7 @@ impl E2EWorkflowOrchestrator {
                 }
                 Err(e) => {
                     operations_failed += 1;
-                    error_messages.push(format!("Tier migration to {} failed: {}", tier, e));
+                    error_messages.push(format!("Tier migration to {tier} failed: {e}"));
                 }
             }
         }
@@ -381,7 +380,7 @@ impl E2EWorkflowOrchestrator {
             }
             Err(e) => {
                 operations_failed += 1;
-                error_messages.push(format!("Performance optimization failed: {}", e));
+                error_messages.push(format!("Performance optimization failed: {e}"));
             }
         }
 
@@ -458,15 +457,14 @@ impl E2EWorkflowOrchestrator {
                     operations_failed += failures;
                 }
                 Err(e) => {
-                    error_messages.push(format!("User task failed: {}", e));
+                    error_messages.push(format!("User task failed: {e}"));
                 }
             }
         }
 
         let duration = start_time.elapsed();
         println!(
-            "    ✅ Concurrent user workflow completed: {} ops, {} failed",
-            operations_completed, operations_failed
+            "    ✅ Concurrent user workflow completed: {operations_completed} ops, {operations_failed} failed"
         );
 
         Ok(WorkflowResults {
@@ -497,7 +495,7 @@ impl E2EWorkflowOrchestrator {
             Ok(_) => operations_completed += 1,
             Err(e) => {
                 operations_failed += 1;
-                error_messages.push(format!("Health monitoring failed: {}", e));
+                error_messages.push(format!("Health monitoring failed: {e}"));
             }
         }
 
@@ -506,7 +504,7 @@ impl E2EWorkflowOrchestrator {
             Ok(_) => operations_completed += 1,
             Err(e) => {
                 operations_failed += 1;
-                error_messages.push(format!("Metrics collection failed: {}", e));
+                error_messages.push(format!("Metrics collection failed: {e}"));
             }
         }
 
@@ -515,7 +513,7 @@ impl E2EWorkflowOrchestrator {
             Ok(_) => operations_completed += 1,
             Err(e) => {
                 operations_failed += 1;
-                error_messages.push(format!("Configuration update failed: {}", e));
+                error_messages.push(format!("Configuration update failed: {e}"));
             }
         }
 
@@ -549,7 +547,7 @@ impl E2EWorkflowOrchestrator {
             Ok(_) => operations_completed += 1,
             Err(e) => {
                 operations_failed += 1;
-                error_messages.push(format!("Snapshot creation failed: {}", e));
+                error_messages.push(format!("Snapshot creation failed: {e}"));
             }
         }
 
@@ -558,7 +556,7 @@ impl E2EWorkflowOrchestrator {
             Ok(_) => operations_completed += 1,
             Err(e) => {
                 operations_failed += 1;
-                error_messages.push(format!("Backup validation failed: {}", e));
+                error_messages.push(format!("Backup validation failed: {e}"));
             }
         }
 
@@ -567,7 +565,7 @@ impl E2EWorkflowOrchestrator {
             Ok(_) => operations_completed += 1,
             Err(e) => {
                 operations_failed += 1;
-                error_messages.push(format!("Disaster recovery failed: {}", e));
+                error_messages.push(format!("Disaster recovery failed: {e}"));
             }
         }
 
@@ -601,7 +599,7 @@ impl E2EWorkflowOrchestrator {
             Ok(_) => operations_completed += 1,
             Err(e) => {
                 operations_failed += 1;
-                error_messages.push(format!("Performance baseline failed: {}", e));
+                error_messages.push(format!("Performance baseline failed: {e}"));
             }
         }
 
@@ -610,7 +608,7 @@ impl E2EWorkflowOrchestrator {
             Ok(_) => operations_completed += 1,
             Err(e) => {
                 operations_failed += 1;
-                error_messages.push(format!("Optimization recommendations failed: {}", e));
+                error_messages.push(format!("Optimization recommendations failed: {e}"));
             }
         }
 
@@ -619,7 +617,7 @@ impl E2EWorkflowOrchestrator {
             Ok(_) => operations_completed += 1,
             Err(e) => {
                 operations_failed += 1;
-                error_messages.push(format!("Optimization implementation failed: {}", e));
+                error_messages.push(format!("Optimization implementation failed: {e}"));
             }
         }
 
@@ -653,7 +651,7 @@ impl E2EWorkflowOrchestrator {
             Ok(_) => operations_completed += 1,
             Err(e) => {
                 operations_failed += 1;
-                error_messages.push(format!("NFS setup failed: {}", e));
+                error_messages.push(format!("NFS setup failed: {e}"));
             }
         }
 
@@ -662,7 +660,7 @@ impl E2EWorkflowOrchestrator {
             Ok(_) => operations_completed += 1,
             Err(e) => {
                 operations_failed += 1;
-                error_messages.push(format!("SMB setup failed: {}", e));
+                error_messages.push(format!("SMB setup failed: {e}"));
             }
         }
 
@@ -671,7 +669,7 @@ impl E2EWorkflowOrchestrator {
             Ok(_) => operations_completed += 1,
             Err(e) => {
                 operations_failed += 1;
-                error_messages.push(format!("Protocol integration failed: {}", e));
+                error_messages.push(format!("Protocol integration failed: {e}"));
             }
         }
 
@@ -860,8 +858,8 @@ impl E2EWorkflowOrchestrator {
         }
 
         println!("\n📈 OVERALL STATISTICS:");
-        println!("  Total Operations: {}", total_operations);
-        println!("  Total Failures: {}", total_failures);
+        println!("  Total Operations: {total_operations}");
+        println!("  Total Failures: {total_failures}");
         println!(
             "  Success Rate: {:.1}%",
             (total_operations - total_failures) as f64 / total_operations as f64 * 100.0
@@ -887,8 +885,7 @@ impl E2EWorkflowOrchestrator {
         };
 
         println!(
-            "\n🏆 E2E Certification: {} ({:.1}%)",
-            certification, overall_score
+            "\n🏆 E2E Certification: {certification} ({overall_score:.1}%)"
         );
     }
 }

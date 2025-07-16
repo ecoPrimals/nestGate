@@ -274,6 +274,44 @@ struct ActiveStorageDeployment {
     updated_at: Instant,
 }
 
+impl ActiveStorageDeployment {
+    /// Get deployment ID
+    pub fn get_deployment_id(&self) -> &str {
+        &self.deployment_id
+    }
+
+    /// Get workspace ID
+    pub fn get_workspace_id(&self) -> &str {
+        &self.workspace_id
+    }
+
+    /// Get provider configuration
+    pub fn get_provider_config(&self) -> &str {
+        &self.provider_config
+    }
+
+    /// Get status message
+    pub fn get_status_message(&self) -> &str {
+        &self.status_message
+    }
+
+    /// Update status message
+    pub fn update_status_message(&mut self, message: String) {
+        self.status_message = message;
+        self.updated_at = Instant::now();
+    }
+
+    /// Check if deployment is ready
+    pub fn is_ready(&self) -> bool {
+        matches!(self.status, StorageStatus::Ready)
+    }
+
+    /// Get deployment age in seconds
+    pub fn get_age_seconds(&self) -> u64 {
+        self.created_at.elapsed().as_secs()
+    }
+}
+
 /// BYOB storage provider configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ByobStorageConfig {
@@ -330,6 +368,7 @@ pub trait ByobStorageProvider: Send + Sync {
 }
 
 /// ZFS-based BYOB storage provider
+#[derive(Clone)]
 pub struct ZfsStorageProvider {
     /// ZFS manager for operations
     zfs_manager: Arc<ZfsManager>,
@@ -363,15 +402,64 @@ struct TeamWorkspace {
     created_at: Instant,
 }
 
+impl TeamWorkspace {
+    /// Get workspace name
+    pub fn get_workspace_name(&self) -> &str {
+        &self.workspace_name
+    }
+
+    /// Get ZFS configuration
+    pub fn get_zfs_config(&self) -> &str {
+        &self.zfs_config
+    }
+
+    /// Update ZFS configuration
+    pub fn update_zfs_config(&mut self, config: String) {
+        self.zfs_config = config;
+    }
+
+    /// Get workspace display name
+    pub fn get_display_name(&self) -> String {
+        format!("Team Workspace: {}", self.workspace_name)
+    }
+
+    /// Check if workspace has active deployments
+    pub fn has_active_deployments(&self) -> bool {
+        !self.active_deployments.is_empty()
+    }
+
+    /// Get active deployment count
+    pub fn get_active_deployment_count(&self) -> usize {
+        self.active_deployments.len()
+    }
+}
+
 impl ZfsStorageProvider {
     /// Create a new ZFS storage provider
     pub fn new(zfs_manager: Arc<ZfsManager>, config: ByobStorageConfig) -> Self {
-        Self {
+        let provider = Self {
             zfs_manager,
             config,
             active_deployments: Arc::new(RwLock::new(HashMap::new())),
             team_workspaces: Arc::new(RwLock::new(HashMap::new())),
-        }
+        };
+
+        // Start background tasks
+        let provider_clone = provider.clone();
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(provider_clone.config.monitoring_interval);
+            loop {
+                interval.tick().await;
+                if let Err(e) = provider_clone.monitor_storage_usage().await {
+                    tracing::warn!("Storage monitoring error: {}", e);
+                }
+                if let Err(e) = provider_clone.cleanup_expired_deployments().await {
+                    tracing::warn!("Cleanup error: {}", e);
+                }
+            }
+        });
+
+        provider
     }
 
     /// Validate storage request
@@ -475,7 +563,28 @@ impl ZfsStorageProvider {
             created_at: Instant::now(),
         };
 
+        // Log workspace creation using the new methods
+        info!(
+            "Created team workspace: {} ({})",
+            workspace.get_display_name(),
+            workspace.get_workspace_name()
+        );
+        debug!("ZFS configuration: {}", workspace.get_zfs_config());
+
         workspaces.insert(team_id.to_string(), workspace);
+
+        // Update ZFS configuration for optimization
+        if let Some(workspace) = workspaces.get_mut(team_id) {
+            let optimized_config = format!("optimized-{}", workspace.get_zfs_config());
+            workspace.update_zfs_config(optimized_config);
+
+            // Log deployment status using the new method
+            debug!(
+                "Workspace {} has active deployments: {}",
+                workspace.get_workspace_name(),
+                workspace.has_active_deployments()
+            );
+        }
 
         Ok(root_dataset)
     }
@@ -715,8 +824,12 @@ impl ZfsStorageProvider {
                     * 100.0;
                 if usage_percent > 90.0 {
                     warn!(
-                        "Team {} storage usage at {:.1}% for deployment {}",
-                        deployment.request.team_id, usage_percent, deployment_id
+                        "Team {} storage usage at {:.1}% for deployment {} (Workspace: {}, Active deployments: {})",
+                        deployment.request.team_id,
+                        usage_percent,
+                        deployment_id,
+                        workspace.get_workspace_name(),
+                        workspace.get_active_deployment_count()
                     );
                 }
             }
@@ -785,6 +898,14 @@ impl ZfsStorageProvider {
                     workspace
                         .active_deployments
                         .retain(|&id| id != deployment_id);
+
+                    // Log workspace cleanup using the new methods
+                    info!(
+                        "Cleaned up deployment {} from {} ({} active deployments remaining)",
+                        deployment_id,
+                        workspace.get_display_name(),
+                        workspace.get_active_deployment_count()
+                    );
                 }
             }
         }
@@ -853,10 +974,11 @@ impl ByobStorageProvider for ZfsStorageProvider {
         // Create active deployment tracking
         let active_deployment = ActiveStorageDeployment {
             deployment_id: request.deployment_id.to_string(),
-            workspace_id: "".to_string(), // Placeholder, needs actual workspace ID
-            provider_config: "ZFS".to_string(),
+            workspace_id: request.team_id.clone(), // Use team ID as workspace ID
+            provider_config: serde_json::to_string(&self.config)
+                .unwrap_or_else(|_| "ZFS".to_string()),
             status: StorageStatus::Ready,
-            status_message: "".to_string(),
+            status_message: "Storage provisioning completed successfully".to_string(),
             request: request.clone(),
             datasets: datasets.clone(),
             mounts: mounts.clone(),
@@ -864,6 +986,15 @@ impl ByobStorageProvider for ZfsStorageProvider {
             created_at: Instant::now(),
             updated_at: Instant::now(),
         };
+
+        // Log deployment information using the new methods before moving
+        info!(
+            "Storage provisioned successfully for deployment: {} (workspace: {}, config: {})",
+            active_deployment.get_deployment_id(),
+            active_deployment.get_workspace_id(),
+            active_deployment.get_provider_config()
+        );
+        debug!("Status: {}", active_deployment.get_status_message());
 
         // Store active deployment
         {
@@ -876,6 +1007,13 @@ impl ByobStorageProvider for ZfsStorageProvider {
             let mut workspaces = self.team_workspaces.write().await;
             if let Some(workspace) = workspaces.get_mut(&request.team_id) {
                 workspace.active_deployments.push(request.deployment_id);
+
+                // Log deployment count using the new method
+                info!(
+                    "Team workspace {} now has {} active deployments",
+                    workspace.get_workspace_name(),
+                    workspace.get_active_deployment_count()
+                );
             }
         }
 
@@ -890,10 +1028,6 @@ impl ByobStorageProvider for ZfsStorageProvider {
             updated_at: Utc::now(),
         };
 
-        info!(
-            "Storage provisioned successfully for deployment: {}",
-            request.deployment_id
-        );
         Ok(response)
     }
 
@@ -901,6 +1035,16 @@ impl ByobStorageProvider for ZfsStorageProvider {
         let deployments = self.active_deployments.read().await;
 
         if let Some(deployment) = deployments.get(&deployment_id) {
+            // Log deployment information using the new methods
+            debug!(
+                "Getting storage status for deployment: {} (workspace: {}, age: {}s, ready: {})",
+                deployment.get_deployment_id(),
+                deployment.get_workspace_id(),
+                deployment.get_age_seconds(),
+                deployment.is_ready()
+            );
+            debug!("Current status: {}", deployment.get_status_message());
+
             let response = ByobStorageResponse {
                 deployment_id,
                 status: deployment.status.clone(),
@@ -934,6 +1078,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
 
         if let Some(mut deployment) = deployments.remove(&deployment_id) {
             deployment.status = StorageStatus::Removing;
+            deployment.update_status_message("Removal in progress".to_string());
 
             // Remove datasets
             for (service_name, _dataset_info) in &deployment.datasets {
@@ -1111,7 +1256,11 @@ mod tests {
     #[tokio::test]
     async fn test_should_validate_storage_request() {
         let zfs_config = crate::config::ZfsConfig::default();
-        let zfs_manager = Arc::new(crate::ZfsManager::new(zfs_config).await.unwrap());
+        let zfs_manager = Arc::new(
+            crate::ZfsManager::new(zfs_config)
+                .await
+                .expect("Failed to create ZFS manager in test"),
+        );
         let config = ByobStorageConfig::default();
         let provider = ZfsStorageProvider::new(zfs_manager, config.clone());
 
@@ -1149,7 +1298,11 @@ mod tests {
     #[tokio::test]
     async fn test_team_workspace_creation() {
         let zfs_config = crate::config::ZfsConfig::default();
-        let zfs_manager = Arc::new(crate::ZfsManager::new(zfs_config).await.unwrap());
+        let zfs_manager = Arc::new(
+            crate::ZfsManager::new(zfs_config)
+                .await
+                .expect("Failed to create ZFS manager in test"),
+        );
         let config = ByobStorageConfig::default();
         let provider = ZfsStorageProvider::new(zfs_manager, config.clone());
 
@@ -1195,7 +1348,11 @@ mod tests {
     #[tokio::test]
     async fn test_storage_provisioning() {
         let zfs_config = crate::config::ZfsConfig::default();
-        let zfs_manager = Arc::new(crate::ZfsManager::new(zfs_config).await.unwrap());
+        let zfs_manager = Arc::new(
+            crate::ZfsManager::new(zfs_config)
+                .await
+                .expect("Failed to create ZFS manager in test"),
+        );
         let config = ByobStorageConfig::default();
         let provider = ZfsStorageProvider::new(zfs_manager, config);
 

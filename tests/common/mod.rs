@@ -14,6 +14,18 @@ use nestgate_core::{
 };
 use tempfile::TempDir;
 
+// Consolidated mock infrastructure
+pub mod consolidated_mocks;
+
+// Test configuration system
+pub mod test_config;
+
+// Re-export consolidated mock infrastructure
+pub use consolidated_mocks::*;
+
+// Re-export test configuration
+pub use test_config::*;
+
 /// Mock service for testing
 pub struct MockService {
     pub id: String,

@@ -183,7 +183,7 @@ impl FsMonitor {
             }
         })
         .map_err(|e| {
-            NestGateError::Internal(format!("Failed to create file system watcher: {}", e))
+            NestGateError::Internal(format!("Failed to create file system watcher: {e}"))
         })?;
 
         self.watcher = Some(Arc::new(Mutex::new(watcher)));
@@ -237,7 +237,7 @@ impl FsMonitor {
             };
 
             watcher.watch(path, mode).map_err(|e| {
-                NestGateError::Internal(format!("Failed to watch path {:?}: {}", path, e))
+                NestGateError::Internal(format!("Failed to watch path {path:?}: {e}"))
             })?;
 
             info!("Added watch path: {:?}", path);
@@ -251,7 +251,7 @@ impl FsMonitor {
         if let Some(watcher) = &self.watcher {
             let mut watcher = watcher.lock().await;
             watcher.unwatch(path).map_err(|e| {
-                NestGateError::Internal(format!("Failed to unwatch path {:?}: {}", path, e))
+                NestGateError::Internal(format!("Failed to unwatch path {path:?}: {e}"))
             })?;
 
             info!("Removed watch path: {:?}", path);

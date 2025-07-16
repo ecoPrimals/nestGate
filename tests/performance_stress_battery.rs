@@ -76,7 +76,7 @@ impl PerformanceStressBattery {
 
     /// Execute comprehensive performance stress test
     pub async fn execute_performance_test(&self, test_name: &str) -> PerformanceResults {
-        println!("🚀 Performance Stress Test: {}", test_name);
+        println!("🚀 Performance Stress Test: {test_name}");
         println!(
             "   ⏱️  Duration: {} seconds",
             self.config.test_duration_seconds
@@ -196,8 +196,7 @@ impl PerformanceStressBattery {
                                 .duration_since(Instant::now() - Duration::from_secs(duration))
                                 .as_secs_f64();
                         println!(
-                            "📊 Performance: {} ops, Rate: {:.1}/sec",
-                            operations_count, actual_ops_per_sec
+                            "📊 Performance: {operations_count} ops, Rate: {actual_ops_per_sec:.1}/sec"
                         );
                     }
                 } else {
@@ -206,7 +205,7 @@ impl PerformanceStressBattery {
                 }
             }
 
-            println!("✅ Performance operations completed: {}", operations_count);
+            println!("✅ Performance operations completed: {operations_count}");
         })
     }
 
@@ -230,7 +229,7 @@ impl PerformanceStressBattery {
                 }
             }
 
-            println!("🖥️  CPU stress test completed: {} cycles", cpu_cycles);
+            println!("🖥️  CPU stress test completed: {cpu_cycles} cycles");
         })
     }
 
@@ -290,7 +289,7 @@ impl PerformanceStressBattery {
                 }
             }
 
-            println!("📁 I/O stress test completed: {} operations", io_operations);
+            println!("📁 I/O stress test completed: {io_operations} operations");
         })
     }
 
@@ -355,7 +354,7 @@ impl PerformanceStressBattery {
         };
 
         if fastrand::f64() < failure_rate {
-            Err(format!("Simulated {} failure", selected_operation))
+            Err(format!("Simulated {selected_operation} failure"))
         } else {
             Ok(())
         }
@@ -458,7 +457,7 @@ fn print_performance_results(results: &PerformanceResults) {
 
     println!("\n⚡ Response Times:");
     for (percentile, time) in &results.response_time_percentiles {
-        println!("   {}: {:.3}ms", percentile, time);
+        println!("   {percentile}: {time:.3}ms");
     }
 
     println!("\n🏆 PERFORMANCE VERDICT:");
@@ -605,7 +604,7 @@ async fn test_comprehensive_performance_suite() {
     let mut all_results = Vec::new();
 
     for (test_name, config) in test_scenarios {
-        println!("🚀 Running {} Test...", test_name);
+        println!("🚀 Running {test_name} Test...");
         let battery = PerformanceStressBattery::new(config);
         let results = battery.execute_performance_test(test_name).await;
         print_performance_results(&results);
@@ -628,9 +627,9 @@ async fn test_comprehensive_performance_suite() {
         .sum::<f64>()
         / all_results.len() as f64;
 
-    println!("Total Operations: {}", total_operations);
-    println!("Average Performance Score: {:.1}", avg_score);
-    println!("Average Throughput Efficiency: {:.1}%", avg_efficiency);
+    println!("Total Operations: {total_operations}");
+    println!("Average Performance Score: {avg_score:.1}");
+    println!("Average Throughput Efficiency: {avg_efficiency:.1}%");
 
     println!("\n🏆 FINAL SUITE RATING:");
     if avg_score >= 85.0 {

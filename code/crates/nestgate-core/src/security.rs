@@ -159,7 +159,7 @@ impl SecurityManager {
 }
 
 /// Security context for requests
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SecurityContext {
     /// User ID
     pub user_id: Option<String>,
@@ -177,21 +177,6 @@ pub struct SecurityContext {
     pub authenticated: bool,
     /// Additional headers
     pub headers: HashMap<String, String>,
-}
-
-impl Default for SecurityContext {
-    fn default() -> Self {
-        Self {
-            user_id: None,
-            roles: Vec::new(),
-            permissions: Vec::new(),
-            session_id: None,
-            api_key: None,
-            ip_address: None,
-            authenticated: false,
-            headers: HashMap::new(),
-        }
-    }
 }
 
 /// API key validation result
@@ -219,6 +204,8 @@ pub struct EnhancedSecurityManager {
     active_locks: HashMap<String, String>,
     /// Security events
     events: Vec<SecurityEvent>,
+    /// Default headers for HTTP requests
+    pub default_headers: HashMap<String, String>,
 }
 
 /// Security event
@@ -340,9 +327,10 @@ impl SecureApiWrapper {
     }
 
     /// Set default header
-    pub fn set_default_header(&mut self, _key: String, _value: String) {
-        // TODO: Implement header setting
-        tracing::warn!("Header setting not yet implemented for key: {}", _key);
+    pub fn set_default_header(&mut self, key: String, value: String) {
+        // Add the header to the internal headers map
+        self.security_manager.default_headers.insert(key.clone(), value.clone());
+        tracing::debug!("Set default header: {} = {}", key, value);
     }
 
     /// Get security manager

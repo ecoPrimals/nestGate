@@ -26,10 +26,9 @@ use nestgate_automation::{Confidence, DatasetAnalyzer, TierPrediction, TierType 
 use nestgate_core::StorageTier;
 
 #[cfg(feature = "orchestrator")]
-use crate::orchestrator::OrchestratorClient;
+use nestgate_mcp::OrchestratorClient;
 
 /// Enhanced ZFS Manager integrating AI and performance monitoring
-#[derive(Debug)]
 pub struct ZfsManager {
     /// Pool management operations
     pub pool_manager: Arc<ZfsPoolManager>,
@@ -57,7 +56,26 @@ pub struct ZfsManager {
     pub config: ZfsConfig,
     /// Optional orchestrator client
     #[cfg(feature = "orchestrator")]
-    orchestrator_client: Option<Arc<OrchestratorClient>>,
+    orchestrator_client: Option<Arc<dyn OrchestratorClient>>,
+}
+
+impl std::fmt::Debug for ZfsManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ZfsManager")
+            .field("pool_manager", &self.pool_manager)
+            .field("dataset_manager", &self.dataset_manager)
+            .field("snapshot_manager", &self.snapshot_manager)
+            .field("migration_engine", &self.migration_engine)
+            .field("dataset_analyzer", &self.dataset_analyzer)
+            .field("performance_monitor", &self.performance_monitor)
+            .field("tier_manager", &self.tier_manager)
+            .field("health_monitor", &self.health_monitor)
+            .field("metrics", &self.metrics)
+            .field("automation", &self.automation)
+            .field("config", &self.config)
+            .field("orchestrator_client", &"<trait object>")
+            .finish()
+    }
 }
 
 /// Enhanced service information for orchestrator registration
@@ -281,18 +299,20 @@ impl ZfsManager {
             orchestrator_endpoint
         );
 
-        let client = OrchestratorClient::new(orchestrator_endpoint)
-            .await
-            .map_err(|e| {
-                error!("Failed to create orchestrator client: {}", e);
-                ZfsError::Network(format!("Orchestrator: {}", e))
-            })?;
+        // Create orchestrator client
+        let client = Arc::new(nestgate_mcp::HttpOrchestratorClient::new(orchestrator_endpoint));
 
         // Prepare enhanced service information
-        let service_info = ServiceInfo {
-            name: "nestgate-zfs-enhanced".to_string(),
-            endpoint: self.config.api_endpoint.clone(),
-            health_endpoint: format!("{}/health", self.config.api_endpoint),
+        let service_info = nestgate_mcp::protocol::ServiceInfo {
+            id: "nestgate-zfs-enhanced".to_string(),
+            name: "NestGate ZFS Enhanced".to_string(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+            provider: "nestgate-zfs".to_string(),
+            service_type: "storage".to_string(),
+            endpoints: vec![
+                self.config.api_endpoint.clone(),
+                format!("{}/health", self.config.api_endpoint),
+            ],
             capabilities: vec![
                 "dataset_management".to_string(),
                 "snapshot_operations".to_string(),
@@ -305,23 +325,6 @@ impl ZfsManager {
                 "predictive_analytics".to_string(),
                 "automated_tiering".to_string(),
             ],
-            ai_capabilities: if self.ai_integration.is_some() {
-                vec![
-                    "tier_optimization".to_string(),
-                    "workload_prediction".to_string(),
-                    "anomaly_detection".to_string(),
-                    "performance_forecasting".to_string(),
-                ]
-            } else {
-                vec![]
-            },
-            monitoring_features: vec![
-                "real_time_metrics".to_string(),
-                "performance_alerting".to_string(),
-                "trend_analysis".to_string(),
-                "sla_monitoring".to_string(),
-                "capacity_planning".to_string(),
-            ],
             metadata: {
                 let mut metadata = std::collections::HashMap::new();
                 metadata.insert("version".to_string(), env!("CARGO_PKG_VERSION").to_string());
@@ -329,7 +332,7 @@ impl ZfsManager {
                 metadata.insert("zfs_enabled".to_string(), cfg!(feature = "zfs").to_string());
                 metadata.insert(
                     "ai_enabled".to_string(),
-                    self.ai_integration.is_some().to_string(),
+                    "false".to_string(), // AI integration has been sunset
                 );
                 metadata.insert("performance_monitoring".to_string(), "enabled".to_string());
                 metadata.insert("migration_engine".to_string(), "enabled".to_string());
@@ -345,7 +348,7 @@ impl ZfsManager {
             ZfsError::Network(format!("Service registration: {}", e))
         })?;
 
-        self.orchestrator_client = Some(Arc::new(client));
+        self.orchestrator_client = Some(client);
 
         info!("Successfully registered Enhanced ZFS service with orchestrator");
         Ok(())
@@ -1011,13 +1014,130 @@ impl ZfsManager {
     }
 
     /// Parse capacity information from status string
-    fn _parse_capacity_from_status(&self, _status: &str) -> Option<_CapacityInfo> {
-        // Simplified capacity parsing - would need real ZFS status parsing
-        // For now, return default values to avoid compilation errors
-        Some(_CapacityInfo {
-            used_bytes: 1000000,   // 1MB placeholder
-            total_bytes: 10000000, // 10MB placeholder
-        })
+    fn _parse_capacity_from_status(&self, status: &str) -> Option<_CapacityInfo> {
+        // Parse ZFS status output to extract capacity information
+        debug!("Parsing ZFS status for capacity info");
+
+        // Look for lines like "pool: 1.23T allocated, 456G used, 789G available"
+        // or "capacity: 1.23T allocated, 456G used, 789G available"
+        for line in status.lines() {
+            let line = line.trim();
+            if line.contains("allocated") && line.contains("used") && line.contains("available") {
+                // Parse the capacity line
+                if let Some(capacity_info) = self._parse_capacity_line(line) {
+                    return Some(capacity_info);
+                }
+            }
+        }
+
+        // Fallback: try to parse individual size lines
+        let mut total_bytes = 0u64;
+        let mut used_bytes = 0u64;
+
+        for line in status.lines() {
+            let line = line.trim();
+            if line.starts_with("size:") {
+                if let Some(size) = self._parse_size_value(line) {
+                    total_bytes = size;
+                }
+            } else if line.starts_with("allocated:") {
+                if let Some(size) = self._parse_size_value(line) {
+                    used_bytes = size;
+                }
+            }
+        }
+
+        if total_bytes > 0 {
+            Some(_CapacityInfo {
+                used_bytes,
+                total_bytes,
+            })
+        } else {
+            // Return reasonable defaults if parsing fails
+            warn!("Failed to parse ZFS capacity information, using defaults");
+            Some(_CapacityInfo {
+                used_bytes: 1000000,   // 1MB default
+                total_bytes: 10000000, // 10MB default
+            })
+        }
+    }
+
+    /// Parse a capacity line like "1.23T allocated, 456G used, 789G available"
+    fn _parse_capacity_line(&self, line: &str) -> Option<_CapacityInfo> {
+        // Split by commas and parse each segment
+        let parts: Vec<&str> = line.split(',').collect();
+        let mut total_bytes = 0u64;
+        let mut used_bytes = 0u64;
+
+        for part in parts {
+            let part = part.trim();
+            if part.contains("allocated") {
+                if let Some(size) = self._parse_size_from_segment(part) {
+                    total_bytes = size;
+                }
+            } else if part.contains("used") {
+                if let Some(size) = self._parse_size_from_segment(part) {
+                    used_bytes = size;
+                }
+            }
+        }
+
+        if total_bytes > 0 {
+            Some(_CapacityInfo {
+                used_bytes,
+                total_bytes,
+            })
+        } else {
+            None
+        }
+    }
+
+    /// Parse size value from lines like "size: 1.23T"
+    fn _parse_size_value(&self, line: &str) -> Option<u64> {
+        let parts: Vec<&str> = line.split(':').collect();
+        if parts.len() >= 2 {
+            let size_str = parts[1].trim();
+            self._parse_size_from_segment(size_str)
+        } else {
+            None
+        }
+    }
+
+    /// Parse size from segment like "1.23T allocated" or "456G"
+    fn _parse_size_from_segment(&self, segment: &str) -> Option<u64> {
+        // Extract the size part (e.g., "1.23T" from "1.23T allocated")
+        let size_str = segment.split_whitespace().next()?;
+
+        // Parse the numeric value and unit
+        let len = size_str.len();
+        if len == 0 {
+            return None;
+        }
+
+        let (number_str, unit) = if len > 1 {
+            let unit_char = size_str.chars().last()?;
+            if unit_char.is_alphabetic() {
+                (&size_str[..len - 1], unit_char)
+            } else {
+                (size_str, 'B') // Default to bytes
+            }
+        } else {
+            (size_str, 'B')
+        };
+
+        let number: f64 = number_str.parse().ok()?;
+
+        let multiplier = match unit.to_ascii_uppercase() {
+            'B' => 1,
+            'K' => 1024,
+            'M' => 1024 * 1024,
+            'G' => 1024 * 1024 * 1024,
+            'T' => 1024u64 * 1024 * 1024 * 1024,
+            'P' => 1024u64 * 1024 * 1024 * 1024 * 1024,
+            _ => 1, // Default to bytes for unknown units
+        };
+
+        Some((number * multiplier as f64) as u64)
     }
 
     /// Heuristic-based tier optimization

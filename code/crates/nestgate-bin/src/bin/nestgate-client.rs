@@ -7,7 +7,7 @@ use std::env;
 use std::path::PathBuf;
 use std::process;
 use std::str::FromStr;
-use tracing::{error, info};
+use tracing::error;
 // Use our local StorageTier enum instead
 // use nestgate_network::StorageTier;
 

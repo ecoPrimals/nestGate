@@ -197,7 +197,7 @@ mod tests {
             }
             Err(e) => {
                 // Expected in test environments without ZFS
-                println!("ZFS Manager creation failed (expected in test env): {}", e);
+                println!("ZFS Manager creation failed (expected in test env): {e}");
             }
         }
     }
