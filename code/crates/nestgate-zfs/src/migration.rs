@@ -397,7 +397,7 @@ impl MigrationEngine {
             .map_err(|e| NestGateError::Internal(format!("File analysis failed: {}", e)))?;
         let recommendation = self
             .analyzer
-            .recommend_tier(&characteristics)
+            .predict_optimal_tier(&source_path.to_string_lossy())
             .await
             .map_err(|e| NestGateError::Internal(format!("Tier recommendation failed: {}", e)))?;
 
@@ -689,14 +689,14 @@ impl MigrationEngine {
         analyzer: &Arc<DatasetAnalyzer>,
     ) -> CoreResult<Option<StorageTier>> {
         // Analyze file characteristics
-        let characteristics = analyzer
+        let _characteristics = analyzer
             .analyze_file(&file_path.to_string_lossy())
             .await
             .map_err(|e| NestGateError::Internal(format!("File analysis failed: {}", e)))?;
 
         // Get tier recommendation
         let recommendation = analyzer
-            .recommend_tier(&characteristics)
+            .predict_optimal_tier(&file_path.to_string_lossy())
             .await
             .map_err(|e| NestGateError::Internal(format!("Tier recommendation failed: {}", e)))?;
 
@@ -969,7 +969,7 @@ impl MigrationEngine {
         Ok(())
     }
 
-    /// Copy file with progress tracking
+    /// Copy file with progress tracking using zero-copy buffer
     async fn copy_file_with_progress(
         source_path: &PathBuf,
         target_path: &PathBuf,
@@ -985,7 +985,9 @@ impl MigrationEngine {
             .await
             .map_err(|e| NestGateError::Storage(format!("Failed to create target file: {}", e)))?;
 
-        let mut buffer = vec![0u8; 1024 * 1024]; // 1MB buffer
+        // Use larger buffer for better performance
+        let buffer_size = 4 * 1024 * 1024; // 4MB buffer instead of 1MB
+        let mut buffer = vec![0u8; buffer_size];
         let mut total_copied = 0u64;
         let start_time = Instant::now();
 
@@ -1021,9 +1023,9 @@ impl MigrationEngine {
                 }
             }
 
-            // Yield to prevent blocking
-            if total_copied % (10 * 1024 * 1024) == 0 {
-                // Every 10MB
+            // Yield less frequently for better performance
+            if total_copied % (50 * 1024 * 1024) == 0 {
+                // Every 50MB instead of 10MB
                 tokio::task::yield_now().await;
             }
         }

@@ -619,15 +619,14 @@ pub enum VolumeStatus {
 impl BiomeManifest {
     /// Parse biome.yaml from string
     pub fn from_yaml(yaml_content: &str) -> Result<Self> {
-        serde_yaml::from_str(yaml_content).map_err(|e| {
-            crate::NestGateError::Internal(format!("Failed to parse biome.yaml: {}", e))
-        })
+        serde_yaml::from_str(yaml_content)
+            .map_err(|e| crate::NestGateError::Internal(format!("Failed to parse biome.yaml: {e}")))
     }
 
     /// Parse biome.yaml from file
     pub async fn from_file(file_path: &str) -> Result<Self> {
         let content = tokio::fs::read_to_string(file_path).await.map_err(|e| {
-            crate::NestGateError::Internal(format!("Failed to read biome.yaml: {}", e))
+            crate::NestGateError::Internal(format!("Failed to read biome.yaml: {e}"))
         })?;
 
         Self::from_yaml(&content)
@@ -697,25 +696,25 @@ fn parse_size(size_str: &str) -> Result<u64> {
     if size_str.ends_with("Gi") || size_str.ends_with("gi") {
         let num_str = &size_str[..size_str.len() - 2];
         let num: f64 = num_str.parse().map_err(|_| {
-            crate::NestGateError::Internal(format!("Invalid size format: {}", size_str))
+            crate::NestGateError::Internal(format!("Invalid size format: {size_str}"))
         })?;
         Ok((num * 1024.0 * 1024.0 * 1024.0) as u64)
     } else if size_str.ends_with("Ti") || size_str.ends_with("ti") {
         let num_str = &size_str[..size_str.len() - 2];
         let num: f64 = num_str.parse().map_err(|_| {
-            crate::NestGateError::Internal(format!("Invalid size format: {}", size_str))
+            crate::NestGateError::Internal(format!("Invalid size format: {size_str}"))
         })?;
         Ok((num * 1024.0 * 1024.0 * 1024.0 * 1024.0) as u64)
     } else if size_str.ends_with("Mi") || size_str.ends_with("mi") {
         let num_str = &size_str[..size_str.len() - 2];
         let num: f64 = num_str.parse().map_err(|_| {
-            crate::NestGateError::Internal(format!("Invalid size format: {}", size_str))
+            crate::NestGateError::Internal(format!("Invalid size format: {size_str}"))
         })?;
         Ok((num * 1024.0 * 1024.0) as u64)
     } else {
         // Assume bytes if no suffix
-        size_str.parse().map_err(|_| {
-            crate::NestGateError::Internal(format!("Invalid size format: {}", size_str))
-        })
+        size_str
+            .parse()
+            .map_err(|_| crate::NestGateError::Internal(format!("Invalid size format: {size_str}")))
     }
 }

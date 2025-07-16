@@ -10,9 +10,6 @@
 //! - AI-driven configuration optimization
 //! - Hardware-aware test parameter selection
 
-use chrono::{DateTime, Utc};
-use nestgate_core::{NestGateError, Result};
-use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use tokio::time::{sleep, timeout};
 use tracing::{debug, info};
@@ -215,7 +212,7 @@ impl AIPerformanceOrchestrator {
 
     /// Run AI-orchestrated performance test
     pub async fn run_ai_performance_test(&mut self, test_name: &str) -> AITestResults {
-        println!("🤖 AI Performance Orchestrator: {}", test_name);
+        println!("🤖 AI Performance Orchestrator: {test_name}");
 
         // AI decision: Choose optimal test configuration
         let optimal_config = self
@@ -263,8 +260,7 @@ impl AIPerformanceOrchestrator {
         let total_operations = (operations_per_second * config.test_duration_seconds) as u64;
 
         println!(
-            "   🎯 Operations: {} ({:.0} ops/sec)",
-            total_operations, operations_per_second
+            "   🎯 Operations: {total_operations} ({operations_per_second:.0} ops/sec)"
         );
         println!(
             "   💾 Operation Size: {:.0} KB",
@@ -365,8 +361,7 @@ impl AIPerformanceOrchestrator {
         let total_operations = (conservative_ops_per_sec * config.test_duration_seconds) as u64;
 
         println!(
-            "   🎯 Operations: {} ({:.0} ops/sec)",
-            total_operations, conservative_ops_per_sec
+            "   🎯 Operations: {total_operations} ({conservative_ops_per_sec:.0} ops/sec)"
         );
         println!("   🛡️  Reliability Focus: High");
         println!("   ⏱️  Duration: {:.1}s", config.test_duration_seconds);
@@ -396,8 +391,7 @@ impl AIPerformanceOrchestrator {
             if i > 0 && progress_interval > 0 && i % progress_interval == 0 {
                 let progress = (i as f64 / total_operations as f64) * 100.0;
                 println!(
-                    "   📊 Progress: {:.0}% ({}/{} ops)",
-                    progress, i, total_operations
+                    "   📊 Progress: {progress:.0}% ({i}/{total_operations} ops)"
                 );
             }
 
@@ -439,8 +433,7 @@ impl AIPerformanceOrchestrator {
         let total_operations = (balanced_ops_per_sec * config.test_duration_seconds) as u64;
 
         println!(
-            "   🎯 Operations: {} ({:.0} ops/sec)",
-            total_operations, balanced_ops_per_sec
+            "   🎯 Operations: {total_operations} ({balanced_ops_per_sec:.0} ops/sec)"
         );
         println!("   ⚖️ Balance: Speed + Reliability");
         println!("   ⏱️  Duration: {:.1}s", config.test_duration_seconds);
@@ -654,8 +647,7 @@ impl AIDecisionEngine {
                     avg_operation_size_kb: 1.0, // Smaller operations
                     test_duration_seconds: 3.0, // Short test - reduced from 10s
                     reasoning: format!(
-                        "Cold storage mode: Optimized for {:.1}% uptime with reliability focus",
-                        target_uptime_percent
+                        "Cold storage mode: Optimized for {target_uptime_percent:.1}% uptime with reliability focus"
                     ),
                 }
             }
@@ -884,14 +876,14 @@ impl AITestResults {
         if !self.ai_analysis.bottlenecks.is_empty() {
             println!("\n🚨 BOTTLENECKS IDENTIFIED:");
             for bottleneck in &self.ai_analysis.bottlenecks {
-                println!("   • {}", bottleneck);
+                println!("   • {bottleneck}");
             }
         }
 
         if !self.ai_analysis.recommendations.is_empty() {
             println!("\n💡 AI RECOMMENDATIONS:");
             for recommendation in &self.ai_analysis.recommendations {
-                println!("   • {}", recommendation);
+                println!("   • {recommendation}");
             }
         }
 

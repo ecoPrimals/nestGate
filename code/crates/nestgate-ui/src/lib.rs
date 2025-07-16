@@ -382,7 +382,7 @@ impl NestGateApp {
             let is_selected = self.current_view == view;
             let response = ui.selectable_label(
                 is_selected,
-                RichText::new(format!("{} {}", icon, label))
+                RichText::new(format!("{icon} {label}"))
                     .size(14.0)
                     .color(if is_selected {
                         self.theme.accent_color
@@ -467,7 +467,7 @@ impl NestGateApp {
         let uptime_days =
             self.system_status.uptime.as_secs() / nestgate_core::constants::time::DAY.as_secs();
         ui.label(
-            RichText::new(format!("⏱️ Uptime: {}d", uptime_days))
+            RichText::new(format!("⏱️ Uptime: {uptime_days}d"))
                 .size(10.0)
                 .color(Color32::LIGHT_GRAY),
         );
@@ -713,7 +713,7 @@ impl NestGateApp {
                 ui.set_min_width(140.0);
                 ui.vertical_centered(|ui| {
                     ui.label(
-                        RichText::new(format!("{} {}", icon, title))
+                        RichText::new(format!("{icon} {title}"))
                             .size(11.0)
                             .color(self.theme.muted_text),
                     );
@@ -742,13 +742,13 @@ impl NestGateApp {
                 ui.vertical(|ui| {
                     ui.horizontal(|ui| {
                         ui.label(
-                            RichText::new(format!("{} {}", icon, title))
+                            RichText::new(format!("{icon} {title}"))
                                 .size(11.0)
                                 .color(self.theme.muted_text),
                         );
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             ui.label(
-                                RichText::new(format!("{:.1}%", value))
+                                RichText::new(format!("{value:.1}%"))
                                     .size(14.0)
                                     .color(color)
                                     .strong(),
@@ -800,7 +800,7 @@ impl NestGateApp {
                         let usage_percent =
                             (stats.used_space as f32 / stats.total_space as f32) * 100.0;
                         let progress_bar = egui::ProgressBar::new(usage_percent / 100.0)
-                            .text(format!("{:.1}% used", usage_percent))
+                            .text(format!("{usage_percent:.1}% used"))
                             .fill(tier_color)
                             .animate(true);
                         ui.add_sized([200.0, 12.0], progress_bar);
@@ -930,7 +930,7 @@ impl NestGateApp {
                     columns[0].add_space(4.0);
                     let usage_gb = stats.used_space as f64 / (1024.0 * 1024.0 * 1024.0);
                     let total_gb = stats.total_space as f64 / (1024.0 * 1024.0 * 1024.0);
-                    columns[0].label(format!("{:.1} GB / {:.1} GB", usage_gb, total_gb));
+                    columns[0].label(format!("{usage_gb:.1} GB / {total_gb:.1} GB"));
                     let usage_percent =
                         (stats.used_space as f32 / stats.total_space as f32) * 100.0;
                     let progress = egui::ProgressBar::new(usage_percent / 100.0).fill(tier_color);
@@ -1263,7 +1263,7 @@ impl NestGateApp {
 
                 if let Some(latest) = data.last() {
                     ui.label(
-                        RichText::new(format!("Current: {:.1}%", latest))
+                        RichText::new(format!("Current: {latest:.1}%"))
                             .size(12.0)
                             .color(color),
                     );
@@ -1456,7 +1456,7 @@ pub fn run_app() -> Result<()> {
         options,
         Box::new(|cc| Box::new(NestGateApp::new(cc))),
     )
-    .map_err(|e| nestgate_core::NestGateError::Storage(format!("Failed to run enhanced UI: {}", e)))
+    .map_err(|e| nestgate_core::NestGateError::Storage(format!("Failed to run enhanced UI: {e}")))
 }
 
 #[cfg(test)]

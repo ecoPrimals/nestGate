@@ -69,10 +69,7 @@ impl VlanManager {
     pub async fn remove_vlan(&self, vlan_id: u16) -> Result<()> {
         let mut vlans = self.vlans.write().await;
         if vlans.remove(&vlan_id).is_none() {
-            return Err(NestGateError::NotFound(format!(
-                "VLAN {} not found",
-                vlan_id
-            )));
+            return Err(NestGateError::NotFound(format!("VLAN {vlan_id} not found")));
         }
 
         tracing::info!("Removed VLAN {}", vlan_id);
@@ -85,7 +82,7 @@ impl VlanManager {
         vlans
             .get(&vlan_id)
             .cloned()
-            .ok_or_else(|| NestGateError::NotFound(format!("VLAN {} not found", vlan_id)))
+            .ok_or_else(|| NestGateError::NotFound(format!("VLAN {vlan_id} not found")))
     }
 
     /// List all VLANs
@@ -104,10 +101,7 @@ impl VlanManager {
 
         let mut vlans = self.vlans.write().await;
         if !vlans.contains_key(&vlan_id) {
-            return Err(NestGateError::NotFound(format!(
-                "VLAN {} not found",
-                vlan_id
-            )));
+            return Err(NestGateError::NotFound(format!("VLAN {vlan_id} not found")));
         }
 
         tracing::info!("Updating VLAN {}: {}", vlan_id, updated_vlan.name);
@@ -124,10 +118,7 @@ impl VlanManager {
             tracing::info!("Enabled VLAN {}", vlan_id);
             Ok(())
         } else {
-            Err(NestGateError::NotFound(format!(
-                "VLAN {} not found",
-                vlan_id
-            )))
+            Err(NestGateError::NotFound(format!("VLAN {vlan_id} not found")))
         }
     }
 
@@ -139,10 +130,7 @@ impl VlanManager {
             tracing::info!("Disabled VLAN {}", vlan_id);
             Ok(())
         } else {
-            Err(NestGateError::NotFound(format!(
-                "VLAN {} not found",
-                vlan_id
-            )))
+            Err(NestGateError::NotFound(format!("VLAN {vlan_id} not found")))
         }
     }
 

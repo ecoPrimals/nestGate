@@ -41,7 +41,7 @@ impl InstallationWizard {
 
         // Validate the path
         if let Err(e) = self.config.validate() {
-            println!("⚠️  Warning: {}", e);
+            println!("⚠️  Warning: {e}");
             if !Confirm::new()
                 .with_prompt("Continue with this path anyway?")
                 .default(false)
@@ -207,7 +207,7 @@ impl InstallationWizard {
         println!("API Port: {}", self.config.api_port);
 
         if let Some(url) = &self.config.orchestration_url {
-            println!("Orchestration URL: {}", url);
+            println!("Orchestration URL: {url}");
         } else {
             println!("Orchestration: Standalone mode");
         }

@@ -22,7 +22,7 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Simple health check function
 pub fn health_check() -> Result<String> {
-    Ok(format!("NestGate v{} - System OK", VERSION))
+    Ok(format!("NestGate v{VERSION} - System OK"))
 }
 
 #[cfg(test)]

@@ -157,7 +157,7 @@ impl SessionManager {
             debug!("Closed session {}", id);
             Ok(())
         } else {
-            Err(Error::session(format!("Session not found: {}", id)))
+            Err(Error::session(format!("Session not found: {id}")))
         }
     }
 
@@ -266,9 +266,9 @@ mod tests {
         let mut manager = SessionManager::new();
 
         // Create three sessions
-        let session1 = manager.create_session("client-1".to_string(), "192.168.1.1".to_string());
-        let session2 = manager.create_session("client-2".to_string(), "192.168.1.2".to_string());
-        let session3 = manager.create_session("client-3".to_string(), "192.168.1.3".to_string());
+        let _session1 = manager.create_session("client-1".to_string(), "192.168.1.1".to_string());
+        let _session2 = manager.create_session("client-2".to_string(), "192.168.1.2".to_string());
+        let _session3 = manager.create_session("client-3".to_string(), "192.168.1.3".to_string());
 
         // Set a short timeout
         manager.set_timeout(Duration::from_millis(10));

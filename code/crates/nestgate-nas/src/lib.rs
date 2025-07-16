@@ -336,7 +336,7 @@ mod tests {
             assert_eq!(protocol, cloned);
 
             // Test debug formatting
-            let debug_str = format!("{:?}", protocol);
+            let debug_str = format!("{protocol:?}");
             assert!(!debug_str.is_empty());
         }
     }
@@ -402,14 +402,14 @@ mod tests {
 
         for (i, protocol) in all_protocols.iter().enumerate() {
             let share = NasShare {
-                name: format!("share_{}", i),
-                path: PathBuf::from(format!("/nas/share_{}", i)),
+                name: format!("share_{i}"),
+                path: PathBuf::from(format!("/nas/share_{i}")),
                 read_only: i % 2 == 0, // Alternate read-only
                 allowed_users: vec![format!("user_{}", i)],
                 protocols: vec![*protocol],
             };
 
-            assert_eq!(share.name, format!("share_{}", i));
+            assert_eq!(share.name, format!("share_{i}"));
             assert_eq!(share.path, PathBuf::from(format!("/nas/share_{}", i)));
             assert_eq!(share.read_only, i % 2 == 0);
             assert_eq!(share.protocols, vec![*protocol]);

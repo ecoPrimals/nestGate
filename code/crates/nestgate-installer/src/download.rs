@@ -31,7 +31,7 @@ impl DownloadManager {
             "Downloading NestGate {} for {}-{}",
             version, platform_info.os, platform_info.arch
         );
-        println!("URL: {}", download_url);
+        println!("URL: {download_url}");
 
         // Create progress bar
         let pb = ProgressBar::new_spinner();
@@ -44,7 +44,7 @@ impl DownloadManager {
 
         // For now, simulate download by creating a placeholder
         // In production, this would actually download from the URL
-        let archive_path = target_dir.join(format!("nestgate-{}.tar.gz", version));
+        let archive_path = target_dir.join(format!("nestgate-{version}.tar.gz"));
 
         // Simulate download progress
         for i in 0..10 {

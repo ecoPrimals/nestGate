@@ -127,13 +127,12 @@ impl SmbServer {
         let smbd_output = Command::new("systemctl")
             .args(["start", "smbd"])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to start smbd: {}", e)))?;
+            .map_err(|e| NestGateError::Network(format!("Failed to start smbd: {e}")))?;
 
         if !smbd_output.status.success() {
             let error = String::from_utf8_lossy(&smbd_output.stderr);
             return Err(NestGateError::Network(format!(
-                "Failed to start smbd: {}",
-                error
+                "Failed to start smbd: {error}"
             )));
         }
 
@@ -141,7 +140,7 @@ impl SmbServer {
         let nmbd_output = Command::new("systemctl")
             .args(["start", "nmbd"])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to start nmbd: {}", e)))?;
+            .map_err(|e| NestGateError::Network(format!("Failed to start nmbd: {e}")))?;
 
         if !nmbd_output.status.success() {
             let error = String::from_utf8_lossy(&nmbd_output.stderr);
@@ -162,7 +161,7 @@ impl SmbServer {
         let smbd_output = Command::new("systemctl")
             .args(["stop", "smbd"])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to stop smbd: {}", e)))?;
+            .map_err(|e| NestGateError::Network(format!("Failed to stop smbd: {e}")))?;
 
         if !smbd_output.status.success() {
             let error = String::from_utf8_lossy(&smbd_output.stderr);
@@ -173,7 +172,7 @@ impl SmbServer {
         let nmbd_output = Command::new("systemctl")
             .args(["stop", "nmbd"])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to stop nmbd: {}", e)))?;
+            .map_err(|e| NestGateError::Network(format!("Failed to stop nmbd: {e}")))?;
 
         if !nmbd_output.status.success() {
             let error = String::from_utf8_lossy(&nmbd_output.stderr);
@@ -252,7 +251,7 @@ impl SmbServer {
 
         // Add shares
         for (name, share) in shares.iter() {
-            config_content.push_str(&format!("[{}]\n", name));
+            config_content.push_str(&format!("[{name}]\n"));
             config_content.push_str(&format!("   comment = {}\n", share.comment));
             config_content.push_str(&format!("   path = {}\n", share.path.to_string_lossy()));
 
@@ -281,7 +280,7 @@ impl SmbServer {
 
         // Write to temporary file first
         let temp_dir = nestgate_core::constants::defaults::TEMP_DIR;
-        let temp_path = format!("{}/nestgate_smb.conf", temp_dir);
+        let temp_path = format!("{temp_dir}/nestgate_smb.conf");
         {
             let mut file = OpenOptions::new()
                 .create(true)
@@ -289,12 +288,11 @@ impl SmbServer {
                 .truncate(true)
                 .open(&temp_path)
                 .map_err(|e| {
-                    NestGateError::Network(format!("Failed to create temp SMB config: {}", e))
+                    NestGateError::Network(format!("Failed to create temp SMB config: {e}"))
                 })?;
 
-            file.write_all(config_content.as_bytes()).map_err(|e| {
-                NestGateError::Network(format!("Failed to write SMB config: {}", e))
-            })?;
+            file.write_all(config_content.as_bytes())
+                .map_err(|e| NestGateError::Network(format!("Failed to write SMB config: {e}")))?;
         }
 
         // Move temp file to /etc/samba/smb.conf (requires root privileges)
@@ -302,13 +300,12 @@ impl SmbServer {
         let mv_output = Command::new("sudo")
             .args(["cp", &temp_path, "/etc/samba/smb.conf"])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to update smb.conf: {}", e)))?;
+            .map_err(|e| NestGateError::Network(format!("Failed to update smb.conf: {e}")))?;
 
         if !mv_output.status.success() {
             let error = String::from_utf8_lossy(&mv_output.stderr);
             return Err(NestGateError::Network(format!(
-                "Failed to update smb.conf: {}",
-                error
+                "Failed to update smb.conf: {error}"
             )));
         }
 
@@ -316,7 +313,7 @@ impl SmbServer {
         let test_output = Command::new("testparm")
             .args(["-s"])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to test SMB config: {}", e)))?;
+            .map_err(|e| NestGateError::Network(format!("Failed to test SMB config: {e}")))?;
 
         if !test_output.status.success() {
             let error = String::from_utf8_lossy(&test_output.stderr);
@@ -327,7 +324,7 @@ impl SmbServer {
         let reload_output = Command::new("sudo")
             .args(["systemctl", "reload", "smbd"])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to reload Samba: {}", e)))?;
+            .map_err(|e| NestGateError::Network(format!("Failed to reload Samba: {e}")))?;
 
         if !reload_output.status.success() {
             let error = String::from_utf8_lossy(&reload_output.stderr);
@@ -401,7 +398,7 @@ pub async fn handle_smb_mount_request(
             return Ok(SmbMountResponse {
                 mount_id: String::new(),
                 success: false,
-                message: format!("Mount failed: {}", e),
+                message: format!("Mount failed: {e}"),
             });
         }
     }
@@ -427,13 +424,13 @@ async fn perform_smb_mount(
     // Ensure mount point directory exists
     if let Some(parent) = mount_point.parent() {
         fs::create_dir_all(parent).map_err(|e| {
-            NestGateError::Network(format!("Failed to create mount point parent: {}", e))
+            NestGateError::Network(format!("Failed to create mount point parent: {e}"))
         })?;
     }
 
     if !mount_point.exists() {
         fs::create_dir_all(mount_point)
-            .map_err(|e| NestGateError::Network(format!("Failed to create mount point: {}", e)))?;
+            .map_err(|e| NestGateError::Network(format!("Failed to create mount point: {e}")))?;
     }
 
     // For SMB server, we don't actually mount on the server side

@@ -143,10 +143,7 @@ impl CryptographicProof {
         let nonce = uuid::Uuid::new_v4().to_string();
 
         // Create proof data
-        let proof_data = format!(
-            "{}:{}:{}:{}",
-            operation, destination, nonce, ecosystem_fingerprint
-        );
+        let proof_data = format!("{operation}:{destination}:{nonce}:{ecosystem_fingerprint}");
 
         // Get BearDog key ID and signature
         let beardog_key_id = beardog_validator.get_key_id().await?;
@@ -228,7 +225,7 @@ impl CryptographicProof {
         let pid = process::id();
         let timestamp = Utc::now().timestamp();
 
-        format!("nestgate-ecosystem-{}-{}-{}", hostname, pid, timestamp)
+        format!("nestgate-ecosystem-{hostname}-{pid}-{timestamp}")
     }
 
     /// Hash proof data with BearDog signature
@@ -240,7 +237,7 @@ impl CryptographicProof {
         hasher.update(signature.as_bytes());
         let result = hasher.finalize();
 
-        Ok(format!("{:x}", result))
+        Ok(format!("{result:x}"))
     }
 }
 
@@ -408,7 +405,7 @@ impl ExternalBoundaryGuardian {
 
         // Check for existing BearDog-validated extraction lock
         let extraction_locks = self.extraction_locks.read().await;
-        let lock_key = format!("{}:{}", source, destination);
+        let lock_key = format!("{source}:{destination}");
 
         if let Some(lock) = extraction_locks.get(&lock_key) {
             // Validate existing lock using BearDog
@@ -460,10 +457,7 @@ impl ExternalBoundaryGuardian {
         // Check allowed operations
         if !lock.allowed_operations.contains(&operation.to_string()) {
             return Ok(AccessDecision::Deny {
-                reason: format!(
-                    "Operation '{}' not allowed by BearDog extraction lock",
-                    operation
-                ),
+                reason: format!("Operation '{operation}' not allowed by BearDog extraction lock"),
                 alternative: Some("Request additional BearDog permissions".to_string()),
             });
         }
@@ -527,7 +521,7 @@ impl ExternalBoundaryGuardian {
 
         // Install lock
         let mut extraction_locks = self.extraction_locks.write().await;
-        let lock_key = format!("{}:{}", source, destination);
+        let lock_key = format!("{source}:{destination}");
         extraction_locks.insert(lock_key, lock);
 
         tracing::info!(
@@ -549,7 +543,7 @@ impl ExternalBoundaryGuardian {
     ) -> Result<String> {
         // Generate lock ID with proper prefix
         let lock_id = Uuid::new_v4();
-        let lock_id_string = format!("beardog-sovereign-{}", lock_id);
+        let lock_id_string = format!("beardog-sovereign-{lock_id}");
 
         // Create BearDog proof for sovereign access
         let proof = CryptographicProof::new_with_beardog(
@@ -706,7 +700,7 @@ pub struct CopyleftEnforcer;
 
 impl CopyleftEnforcer {
     pub fn new() -> Self {
-        Self::default()
+        Self
     }
 
     /// Enforce source code disclosure
@@ -730,11 +724,18 @@ impl CopyleftEnforcer {
 }
 
 /// Hardware-agnostic performance tuning
+#[derive(Debug, Clone)]
 pub struct HardwareAgnosticTuner {
     /// Detected hardware configuration
     hardware_config: Option<HardwareConfiguration>,
     /// Tuning profiles
-    tuning_profiles: HashMap<String, TuningProfile>,
+    tuning_profiles: Vec<TuningProfile>,
+}
+
+impl Default for HardwareAgnosticTuner {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl HardwareAgnosticTuner {
@@ -813,7 +814,8 @@ impl HardwareAgnosticTuner {
             1..=4 => {
                 // Low core count - use efficient profile
                 self.tuning_profiles
-                    .get("efficient")
+                    .iter()
+                    .find(|p| p.name == "Efficient")
                     .ok_or_else(|| {
                         crate::NestGateError::InvalidInput(
                             "Efficient tuning profile not found".to_string(),
@@ -824,7 +826,8 @@ impl HardwareAgnosticTuner {
             5..=16 => {
                 // Medium core count - use balanced profile
                 self.tuning_profiles
-                    .get("balanced")
+                    .iter()
+                    .find(|p| p.name == "Balanced")
                     .ok_or_else(|| {
                         crate::NestGateError::InvalidInput(
                             "Balanced tuning profile not found".to_string(),
@@ -835,7 +838,8 @@ impl HardwareAgnosticTuner {
             _ => {
                 // High core count - use high performance profile
                 self.tuning_profiles
-                    .get("high_performance")
+                    .iter()
+                    .find(|p| p.name == "High Performance")
                     .ok_or_else(|| {
                         crate::NestGateError::InvalidInput(
                             "High performance tuning profile not found".to_string(),
@@ -852,25 +856,25 @@ impl HardwareAgnosticTuner {
         // Apply CPU optimizations
         for opt in &profile.cpu_optimizations {
             self.apply_cpu_optimization(opt).await?;
-            optimizations.push(format!("CPU: {}", opt));
+            optimizations.push(format!("CPU: {opt}"));
         }
 
         // Apply memory optimizations
         for opt in &profile.memory_optimizations {
             self.apply_memory_optimization(opt).await?;
-            optimizations.push(format!("Memory: {}", opt));
+            optimizations.push(format!("Memory: {opt}"));
         }
 
         // Apply storage optimizations
         for opt in &profile.storage_optimizations {
             self.apply_storage_optimization(opt).await?;
-            optimizations.push(format!("Storage: {}", opt));
+            optimizations.push(format!("Storage: {opt}"));
         }
 
         // Apply network optimizations
         for opt in &profile.network_optimizations {
             self.apply_network_optimization(opt).await?;
-            optimizations.push(format!("Network: {}", opt));
+            optimizations.push(format!("Network: {opt}"));
         }
 
         Ok(TuningResult {
@@ -950,11 +954,8 @@ impl HardwareAgnosticTuner {
         Ok(())
     }
 
-    fn default_tuning_profiles() -> HashMap<String, TuningProfile> {
-        let mut profiles = HashMap::new();
-
-        profiles.insert(
-            "high_performance".to_string(),
+    fn default_tuning_profiles() -> Vec<TuningProfile> {
+        vec![
             TuningProfile {
                 name: "High Performance".to_string(),
                 cpu_optimizations: vec![
@@ -979,10 +980,6 @@ impl HardwareAgnosticTuner {
                 ],
                 estimated_performance_gain: 40.0,
             },
-        );
-
-        profiles.insert(
-            "balanced".to_string(),
             TuningProfile {
                 name: "Balanced".to_string(),
                 cpu_optimizations: vec!["set_affinity".to_string()],
@@ -991,10 +988,6 @@ impl HardwareAgnosticTuner {
                 network_optimizations: vec!["tcp_tuning".to_string()],
                 estimated_performance_gain: 20.0,
             },
-        );
-
-        profiles.insert(
-            "efficient".to_string(),
             TuningProfile {
                 name: "Efficient".to_string(),
                 cpu_optimizations: vec!["set_affinity".to_string()],
@@ -1003,9 +996,7 @@ impl HardwareAgnosticTuner {
                 network_optimizations: vec![],
                 estimated_performance_gain: 5.0,
             },
-        );
-
-        profiles
+        ]
     }
 }
 
@@ -1152,7 +1143,7 @@ mod tests {
         assert!(result.is_ok());
         match result.unwrap() {
             AccessDecision::Allow { .. } => (),
-            _ => panic!("Internal communication should be allowed"),
+            decision => panic!("Internal communication should be allowed, got: {decision:?}"),
         }
     }
 
@@ -1176,7 +1167,7 @@ mod tests {
         assert!(result.is_ok());
         match result.unwrap() {
             AccessDecision::RequireLock { .. } => (),
-            _ => panic!("External access should require lock"),
+            decision => panic!("External access should require lock, got: {decision:?}"),
         }
     }
 

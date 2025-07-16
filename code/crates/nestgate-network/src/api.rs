@@ -65,7 +65,7 @@ impl SongbirdClient {
             .send()
             .await
             .map_err(|e| {
-                nestgate_core::NestGateError::Internal(format!("Failed to register service: {}", e))
+                nestgate_core::NestGateError::Internal(format!("Failed to register service: {e}"))
             })?;
 
         if response.status().is_success() {
@@ -95,14 +95,13 @@ impl SongbirdClient {
             .send()
             .await
             .map_err(|e| {
-                nestgate_core::NestGateError::Internal(format!("Failed to allocate port: {}", e))
+                nestgate_core::NestGateError::Internal(format!("Failed to allocate port: {e}"))
             })?;
 
         if response.status().is_success() {
             let allocation: PortAllocationResponse = response.json().await.map_err(|e| {
                 nestgate_core::NestGateError::Internal(format!(
-                    "Failed to parse port allocation response: {}",
-                    e
+                    "Failed to parse port allocation response: {e}"
                 ))
             })?;
 
@@ -134,7 +133,7 @@ impl SongbirdClient {
             .send()
             .await
             .map_err(|e| {
-                nestgate_core::NestGateError::Internal(format!("Failed to release port: {}", e))
+                nestgate_core::NestGateError::Internal(format!("Failed to release port: {e}"))
             })?;
 
         if response.status().is_success() {
@@ -172,10 +171,7 @@ impl SongbirdClient {
             .send()
             .await
             .map_err(|e| {
-                nestgate_core::NestGateError::Internal(format!(
-                    "Failed to send health status: {}",
-                    e
-                ))
+                nestgate_core::NestGateError::Internal(format!("Failed to send health status: {e}"))
             })?;
 
         if response.status().is_success() {
@@ -312,8 +308,7 @@ impl NetworkApi {
             Ok(service.status.clone())
         } else {
             Err(nestgate_core::NestGateError::Internal(format!(
-                "Service not found: {}",
-                service_name
+                "Service not found: {service_name}"
             )))
         }
     }

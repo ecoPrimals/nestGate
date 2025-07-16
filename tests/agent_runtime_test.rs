@@ -1,11 +1,9 @@
 use std::collections::HashMap;
 
 use nestgate_core::biomeos::{
-    AgentSpec, BackupConfig, BiomeManifest, BiomeMetadata, BiomeNetworking, BiomeResources,
+    AgentSpec, BiomeManifest, BiomeMetadata, BiomeNetworking, BiomeResources,
     BiomeSecurity, BiomeStorage, ComputeResources, CoordinationConfig, DiscoveryConfig,
-    EventCoordinationConfig, HealthCheckEndpoint, HealthChecksConfig, NetworkResources, PortSpec,
-    PrimalConfig, ResourceLimits, RetryConfig, SecurityLevel, ServiceConfig, ServiceMeshConfig,
-    StoragePolicies, StorageResources, VolumeSpec,
+    EventCoordinationConfig, HealthCheckEndpoint, HealthChecksConfig, NetworkResources, PortSpec, ResourceLimits, RetryConfig, SecurityLevel, ServiceMeshConfig, StorageResources, VolumeSpec,
 };
 
 #[tokio::test]

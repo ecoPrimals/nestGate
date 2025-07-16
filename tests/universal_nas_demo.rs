@@ -55,9 +55,9 @@ async fn demonstrate_temporal_device_detection() {
     ];
 
     for (name, era, capacity, strategy) in simulated_devices {
-        println!("  {} detected in {}", name, era);
-        println!("    Capacity: {}", capacity);
-        println!("    Strategy: {}", strategy);
+        println!("  {name} detected in {era}");
+        println!("    Capacity: {capacity}");
+        println!("    Strategy: {strategy}");
     }
 }
 
@@ -127,9 +127,9 @@ async fn demonstrate_ai_data_classification() {
 
     for (name, category, tier_recommendation) in data_classifications {
         println!("\n📊 Data Classification Analysis:");
-        println!("  Data: {}", name);
-        println!("  Category: {}", category);
-        println!("  🎯 AI Recommendation: {}", tier_recommendation);
+        println!("  Data: {name}");
+        println!("  Category: {category}");
+        println!("  🎯 AI Recommendation: {tier_recommendation}");
     }
 
     println!("\n✨ AI Classification Benefits:");
