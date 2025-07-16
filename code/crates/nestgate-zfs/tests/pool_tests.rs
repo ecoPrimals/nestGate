@@ -60,10 +60,7 @@ mod pool_manager_tests {
                 }
             }
             Err(e) => {
-                println!(
-                    "Pool discovery failed as expected in test environment: {}",
-                    e
-                );
+                println!("Pool discovery failed as expected in test environment: {e}");
                 // This is acceptable in environments without ZFS
             }
         }
@@ -116,14 +113,14 @@ mod pool_manager_tests {
         match pool_info_result {
             Ok(_) => println!("get_pool_info unexpectedly succeeded"),
             Err(e) => {
-                println!("get_pool_info failed as expected: {}", e);
+                println!("get_pool_info failed as expected: {e}");
                 match e {
                     NestGateError::NotFound(_)
                     | NestGateError::Internal(_)
                     | NestGateError::Io(_) => {
                         // These are appropriate error types
                     }
-                    _ => println!("Unexpected error type for get_pool_info: {:?}", e),
+                    _ => println!("Unexpected error type for get_pool_info: {e:?}"),
                 }
             }
         }
@@ -133,7 +130,7 @@ mod pool_manager_tests {
         match pool_status_result {
             Ok(_) => println!("get_pool_status unexpectedly succeeded"),
             Err(e) => {
-                println!("get_pool_status failed as expected: {}", e);
+                println!("get_pool_status failed as expected: {e}");
             }
         }
 
@@ -142,7 +139,7 @@ mod pool_manager_tests {
         match refresh_result {
             Ok(_) => println!("refresh_pool_info unexpectedly succeeded"),
             Err(e) => {
-                println!("refresh_pool_info failed as expected: {}", e);
+                println!("refresh_pool_info failed as expected: {e}");
             }
         }
     }
@@ -163,7 +160,7 @@ mod pool_manager_tests {
         );
 
         let error = result.err().unwrap();
-        println!("Pool creation failed as expected: {}", error);
+        println!("Pool creation failed as expected: {error}");
     }
 
     #[tokio::test]
@@ -226,7 +223,7 @@ mod pool_info_tests {
         ];
 
         for state in states {
-            println!("Pool state: {:?}", state);
+            println!("Pool state: {state:?}");
             // Should not panic
         }
     }
@@ -241,7 +238,7 @@ mod pool_info_tests {
         ];
 
         for health in health_states {
-            println!("Pool health: {:?}", health);
+            println!("Pool health: {health:?}");
             // Should not panic
         }
     }
@@ -302,7 +299,7 @@ mod integration_tests {
                 assert!(status.is_ok(), "Should be able to get status");
             }
             Err(e) => {
-                println!("Pool manager creation failed as expected: {}", e);
+                println!("Pool manager creation failed as expected: {e}");
                 // This is acceptable in test environments
             }
         }

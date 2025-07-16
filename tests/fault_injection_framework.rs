@@ -628,9 +628,7 @@ impl FaultInjectionFramework {
             "❌ INSUFFICIENT RESILIENCE"
         };
 
-        println!(
-            "\n🏆 Resilience Certification: {certification} ({resilience_score:.1}%)"
-        );
+        println!("\n🏆 Resilience Certification: {certification} ({resilience_score:.1}%)");
     }
 }
 

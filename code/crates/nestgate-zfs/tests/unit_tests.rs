@@ -28,11 +28,11 @@ mod config_unit_tests {
         // Test configuration defaults (using actual field names from struct)
         assert!(config.api_endpoint.starts_with("http://localhost:"));
         assert_eq!(config.default_pool, "nestpool");
-        assert_eq!(config.use_real_zfs, true);
+        assert!(config.use_real_zfs);
         assert_eq!(config.tiers.hot.name, "hot");
         assert_eq!(config.tiers.warm.name, "warm");
         assert_eq!(config.tiers.cold.name, "cold");
-        assert_eq!(config.pool_discovery.auto_discovery, true);
+        assert!(config.pool_discovery.auto_discovery);
         assert!(config.health_monitoring.enabled);
         assert_eq!(config.health_monitoring.check_interval_seconds, 30);
         assert!(config.metrics.enabled);
@@ -170,7 +170,7 @@ mod performance_unit_tests {
 
     #[test]
     fn test_tier_metrics_performance_hierarchy() {
-        let metrics = TierMetrics {
+        let _metrics = TierMetrics {
             tier: CoreStorageTier::Hot,
             read_iops: 1000.0,
             write_iops: 500.0,
@@ -225,7 +225,7 @@ mod heuristic_unit_tests {
     #[test]
     fn test_optimization_opportunity_creation() {
         // Test heuristic-based optimization opportunity detection
-        let metrics = TierMetrics {
+        let _metrics = TierMetrics {
             tier: CoreStorageTier::Hot,
             read_iops: 1000.0,
             write_iops: 500.0,
@@ -501,7 +501,6 @@ mod automation_unit_tests {
                 | LocalFileType::Archive
                 | LocalFileType::Other => {
                     // All enum variants are acceptable
-                    assert!(true, "Valid file type detected for {}", filename);
                 }
             }
         }
@@ -520,7 +519,7 @@ enum LocalFileType {
 }
 
 fn detect_file_type(filename: &str) -> LocalFileType {
-    let extension = filename.split('.').last().unwrap_or("");
+    let extension = filename.split('.').next_back().unwrap_or("");
     match extension.to_lowercase().as_str() {
         "db" | "sql" | "sqlite" => LocalFileType::Database,
         "vmdk" | "vdi" | "qcow2" => LocalFileType::VirtualMachine,
@@ -551,8 +550,7 @@ mod phase2_lifecycle_management_tests {
             let stage = determine_lifecycle_stage(age_days, access_count, days_since_access);
             assert_eq!(
                 stage, expected_stage,
-                "Failed for age: {}, access: {}, since: {}",
-                age_days, access_count, days_since_access
+                "Failed for age: {age_days}, access: {access_count}, since: {days_since_access}"
             );
         }
     }
@@ -581,13 +579,13 @@ mod phase2_lifecycle_management_tests {
         ];
 
         for rule in &rules {
-            let condition_met =
+            let _condition_met =
                 evaluate_lifecycle_condition(&rule.conditions[0], 5.0, 50.0, 100.0, 1024);
             match &rule.actions[0].as_str() {
                 &"EnableCompression" => {
                     if rule.stage == LifecycleStage::New {
                         // Always true - just testing that rule can be evaluated
-                        assert!(true, "Compression rule should be evaluable");
+                        // Compression rule should be evaluable
                     }
                 }
                 _ => {
@@ -668,7 +666,7 @@ mod phase4_optimization_detection_tests {
         ];
 
         // Test priority calculation
-        for (name, confidence, expected_priority) in opportunities {
+        for (_name, confidence, expected_priority) in opportunities {
             let priority_score = calculate_heuristic_priority(confidence);
 
             if expected_priority == "High" {
@@ -862,13 +860,13 @@ impl TierPolicy {
 
 // Mock functions for testing AI integration
 fn extract_features(
-    file_analysis: &nestgate_automation::types::prediction::FileAnalysis,
+    _file_analysis: &nestgate_automation::types::prediction::FileAnalysis,
 ) -> Vec<f64> {
     // Mock 19-dimensional feature vector
     vec![0.5; 19]
 }
 
-fn predict_decision_tree(features: &[f64]) -> TierScores {
+fn predict_decision_tree(_features: &[f64]) -> TierScores {
     TierScores {
         hot: 0.7,
         warm: 0.2,
@@ -876,7 +874,7 @@ fn predict_decision_tree(features: &[f64]) -> TierScores {
     }
 }
 
-fn predict_naive_bayes(features: &[f64]) -> TierScores {
+fn predict_naive_bayes(_features: &[f64]) -> TierScores {
     TierScores {
         hot: 0.6,
         warm: 0.3,
@@ -884,7 +882,7 @@ fn predict_naive_bayes(features: &[f64]) -> TierScores {
     }
 }
 
-fn predict_gradient_boosting(features: &[f64]) -> TierScores {
+fn predict_gradient_boosting(_features: &[f64]) -> TierScores {
     TierScores {
         hot: 0.65,
         warm: 0.25,
@@ -892,7 +890,7 @@ fn predict_gradient_boosting(features: &[f64]) -> TierScores {
     }
 }
 
-fn predict_neural_network(features: &[f64]) -> TierScores {
+fn predict_neural_network(_features: &[f64]) -> TierScores {
     TierScores {
         hot: 0.68,
         warm: 0.22,

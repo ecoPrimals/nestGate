@@ -161,6 +161,12 @@ pub struct ApiState {
     pub config: Arc<tokio::sync::RwLock<serde_json::Value>>,
 }
 
+impl Default for ApiState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ApiState {
     pub fn new() -> Self {
         Self {
@@ -637,7 +643,7 @@ pub async fn create_workspace(
     info!("🏗️ Creating new workspace: {}", request.name);
 
     let workspace_id = Uuid::new_v4();
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_id);
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}");
     let storage_quota = request.storage_quota.unwrap_or_else(|| "10G".to_string());
     let compression = request.compression.unwrap_or_else(|| "lz4".to_string());
 
@@ -893,7 +899,7 @@ pub async fn health() -> impl IntoResponse {
 
     // Check ZFS pool health
     match tokio::process::Command::new("zpool")
-        .args(&["list", "-H"])
+        .args(["list", "-H"])
         .output()
         .await
     {
@@ -912,7 +918,7 @@ pub async fn health() -> impl IntoResponse {
 
     // Check disk space
     match tokio::process::Command::new("df")
-        .args(&["-h", "/"])
+        .args(["-h", "/"])
         .output()
         .await
     {
@@ -984,9 +990,20 @@ pub async fn provision_storage(
 
     // Real storage provisioning via ZFS
     let zfs_config = nestgate_zfs::config::ZfsConfig::default();
-    let zfs_manager = nestgate_zfs::ZfsManager::new(zfs_config)
-        .await
-        .expect("Failed to initialize ZFS manager");
+    let zfs_manager = match nestgate_zfs::ZfsManager::new(zfs_config).await {
+        Ok(manager) => manager,
+        Err(e) => {
+            tracing::error!("Failed to initialize ZFS manager: {}", e);
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({
+                    "error": "ZFS initialization failed",
+                    "details": e.to_string()
+                })),
+            )
+                .into_response();
+        }
+    };
 
     // Create team dataset
     let dataset_name = format!("teams/{}", _request.team_id);
@@ -1017,7 +1034,7 @@ pub async fn provision_storage(
             error!("Failed to provision storage: {}", e);
             ErrorResponse::new(
                 "PROVISIONING_FAILED",
-                &format!("Failed to provision storage: {}", e),
+                &format!("Failed to provision storage: {e}"),
             )
             .into_response()
         }
@@ -1056,9 +1073,20 @@ pub async fn get_storage_status(
 ) -> impl IntoResponse {
     // Try to get dataset info from ZFS
     let zfs_config = nestgate_zfs::config::ZfsConfig::default();
-    let zfs_manager = nestgate_zfs::ZfsManager::new(zfs_config)
-        .await
-        .expect("Failed to initialize ZFS manager");
+    let zfs_manager = match nestgate_zfs::ZfsManager::new(zfs_config).await {
+        Ok(manager) => manager,
+        Err(e) => {
+            tracing::error!("Failed to initialize ZFS manager: {}", e);
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({
+                    "error": "ZFS initialization failed",
+                    "details": e.to_string()
+                })),
+            )
+                .into_response();
+        }
+    };
 
     // Check if we can find the dataset (we'll need to search by deployment_id)
     let dataset_list = zfs_manager.dataset_manager.list_datasets().await;
@@ -1102,7 +1130,7 @@ pub async fn get_storage_status(
             error!("Failed to get storage status: {}", e);
             ErrorResponse::new(
                 "STATUS_CHECK_FAILED",
-                &format!("Failed to check storage status: {}", e),
+                &format!("Failed to check storage status: {e}"),
             )
             .into_response()
         }
@@ -1259,7 +1287,7 @@ pub async fn deploy_workspace(
     info!("🚀 Deploying workspace: {}", workspace_id);
 
     let workspace_name = workspace_id.to_string();
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_name);
+    let dataset_name = format!("nestpool/workspaces/{workspace_name}");
 
     // Create ZFS dataset for workspace
     let create_result = std::process::Command::new("zfs")
@@ -1317,7 +1345,7 @@ pub async fn get_workspace_status(
     let workspace_name = workspace_id.to_string();
 
     // Direct ZFS status check implementation
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_name);
+    let dataset_name = format!("nestpool/workspaces/{workspace_name}");
 
     let status_result = std::process::Command::new("zfs")
         .args(["get", "-H", "used,avail,quota,compressratio", &dataset_name])
@@ -1366,11 +1394,11 @@ pub async fn cleanup_workspace(
     let workspace_name = workspace_id.to_string();
 
     // Direct ZFS cleanup implementation
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_name);
+    let dataset_name = format!("nestpool/workspaces/{workspace_name}");
 
     // Clean up by removing temporary files and defragmenting
     let cleanup_result = std::process::Command::new("zfs")
-        .args(["destroy", "-r", &format!("{}@temp*", dataset_name)])
+        .args(["destroy", "-r", &format!("{dataset_name}@temp*")])
         .output();
 
     match cleanup_result {
@@ -1424,7 +1452,7 @@ pub async fn scale_workspace(
     info!("📈 Scaling workspace: {}", workspace_id);
 
     let workspace_name = workspace_id.to_string();
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_name);
+    let dataset_name = format!("nestpool/workspaces/{workspace_name}");
 
     // Scale storage by adjusting quota (example: increase by 50%)
     let current_quota_result = std::process::Command::new("zfs")
@@ -1437,7 +1465,7 @@ pub async fn scale_workspace(
             let new_quota = if quota_str == "none" { "15G" } else { "20G" }; // Simple scaling logic
 
             let scale_result = std::process::Command::new("zfs")
-                .args(["set", &format!("quota={}", new_quota), &dataset_name])
+                .args(["set", &format!("quota={new_quota}"), &dataset_name])
                 .output();
 
             match scale_result {
@@ -1530,9 +1558,9 @@ pub async fn backup_workspace(
     let workspace_name = workspace_id.to_string();
 
     // Direct ZFS backup implementation
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_name);
+    let dataset_name = format!("nestpool/workspaces/{workspace_name}");
     let backup_name = format!("backup_{}", chrono::Utc::now().format("%Y%m%d_%H%M%S"));
-    let backup_snapshot = format!("{}@{}", dataset_name, backup_name);
+    let backup_snapshot = format!("{dataset_name}@{backup_name}");
 
     // Create backup snapshot
     let backup_result = std::process::Command::new("zfs")
@@ -1582,7 +1610,7 @@ pub async fn restore_workspace(
     let workspace_name = workspace_id.to_string();
 
     // Direct ZFS restore implementation
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_name);
+    let dataset_name = format!("nestpool/workspaces/{workspace_name}");
 
     // Find the most recent backup snapshot
     let list_result = std::process::Command::new("zfs")
@@ -1677,11 +1705,11 @@ pub async fn migrate_workspace(
     info!("🚚 Migrating workspace: {}", workspace_id);
 
     let workspace_name = workspace_id.to_string();
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_name);
+    let dataset_name = format!("nestpool/workspaces/{workspace_name}");
 
     // Create migration snapshot
     let timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S").to_string();
-    let migration_snapshot = format!("{}@migration_{}", dataset_name, timestamp);
+    let migration_snapshot = format!("{dataset_name}@migration_{timestamp}");
 
     let snapshot_result = std::process::Command::new("zfs")
         .args(["snapshot", &migration_snapshot])
@@ -1732,7 +1760,7 @@ pub async fn optimize_workspace(
     info!("⚡ Optimizing workspace: {}", workspace_id);
 
     let workspace_name = workspace_id.to_string();
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_name);
+    let dataset_name = format!("nestpool/workspaces/{workspace_name}");
     let mut optimizations = Vec::new();
     let mut space_saved = 0u64;
 
@@ -1829,7 +1857,7 @@ pub async fn optimize_workspace(
                 }
 
                 if deleted_count > 0 {
-                    optimizations.push(format!("Cleaned up {} old snapshots", deleted_count));
+                    optimizations.push(format!("Cleaned up {deleted_count} old snapshots"));
                 }
             }
         }
@@ -1921,7 +1949,7 @@ pub async fn get_workspace_config(
     info!("⚙️ Getting workspace configuration: {}", workspace_id);
 
     let workspace_name = workspace_id.to_string();
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_name);
+    let dataset_name = format!("nestpool/workspaces/{workspace_name}");
 
     // Get ZFS dataset properties that represent configuration
     let props_result = std::process::Command::new("zfs")
@@ -2001,18 +2029,18 @@ pub async fn update_workspace_config(
 
         // Build ZFS property update commands
         if let Some(quota) = &request.quota {
-            update_commands.push(format!("quota={}", quota));
+            update_commands.push(format!("quota={quota}"));
             updated_properties.push("quota");
         }
 
         if let Some(compression) = &request.compression {
-            update_commands.push(format!("compression={}", compression));
+            update_commands.push(format!("compression={compression}"));
             updated_properties.push("compression");
         }
 
         if let Some(dedup) = request.deduplication {
             let dedup_value = if dedup { "on" } else { "off" };
-            update_commands.push(format!("dedup={}", dedup_value));
+            update_commands.push(format!("dedup={dedup_value}"));
             updated_properties.push("deduplication");
         }
 
@@ -2042,10 +2070,10 @@ pub async fn update_workspace_config(
                 }
                 Ok(output) => {
                     let error_msg = String::from_utf8_lossy(&output.stderr);
-                    failed_updates.push(format!("{} (error: {})", property, error_msg));
+                    failed_updates.push(format!("{property} (error: {error_msg})"));
                 }
                 Err(e) => {
-                    failed_updates.push(format!("{} (error: {})", property, e));
+                    failed_updates.push(format!("{property} (error: {e})"));
                 }
             }
         }
@@ -2112,12 +2140,12 @@ pub async fn create_workspace_template(
     let _timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S").to_string();
 
     let _workspace_id = _workspace_id.to_string();
-    let dataset_name = format!("nestpool/workspaces/{}", _workspace_id);
-    let template_name = format!("template_{}", _workspace_id);
+    let dataset_name = format!("nestpool/workspaces/{_workspace_id}");
+    let template_name = format!("template_{_workspace_id}");
 
     // Create template by taking a snapshot
     let _timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S").to_string();
-    let template_snapshot = format!("{}@{}", dataset_name, template_name);
+    let template_snapshot = format!("{dataset_name}@{template_name}");
 
     let snapshot_result = std::process::Command::new("zfs")
         .args(["snapshot", &template_snapshot])
@@ -2196,11 +2224,8 @@ pub async fn apply_workspace_template(
     );
 
     let workspace_name = workspace_id.to_string();
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_name);
-    let template_snapshot = format!(
-        "nestpool/workspaces/template_{}@{}",
-        template_id, template_id
-    );
+    let dataset_name = format!("nestpool/workspaces/{workspace_name}");
+    let template_snapshot = format!("nestpool/workspaces/template_{template_id}@{template_id}");
 
     // Clone from template (create a new dataset from snapshot)
     let clone_result = std::process::Command::new("zfs")
@@ -2325,10 +2350,7 @@ pub async fn get_workspace_template(
         template_id, workspace_id
     );
 
-    let template_snapshot = format!(
-        "nestpool/workspaces/template_{}@{}",
-        template_id, template_id
-    );
+    let template_snapshot = format!("nestpool/workspaces/template_{template_id}@{template_id}");
 
     // Get template snapshot details
     let template_result = std::process::Command::new("zfs")
@@ -2399,13 +2421,13 @@ pub async fn update_workspace_template(
 
     // ZFS snapshots are immutable, so we'll create a new snapshot with updated timestamp
     let workspace_name = workspace_id.to_string();
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_name);
+    let dataset_name = format!("nestpool/workspaces/{workspace_name}");
     let new_template_name = format!(
         "template_{}_{}",
         template_id,
         chrono::Utc::now().format("%Y%m%d_%H%M%S")
     );
-    let new_template_snapshot = format!("{}@{}", dataset_name, new_template_name);
+    let new_template_snapshot = format!("{dataset_name}@{new_template_name}");
 
     // Create new snapshot
     let snapshot_result = std::process::Command::new("zfs")
@@ -2461,10 +2483,7 @@ pub async fn delete_workspace_template(
         template_id, workspace_id
     );
 
-    let template_snapshot = format!(
-        "nestpool/workspaces/template_{}@{}",
-        template_id, template_id
-    );
+    let template_snapshot = format!("nestpool/workspaces/template_{template_id}@{template_id}");
 
     // Delete the template snapshot
     let delete_result = std::process::Command::new("zfs")
@@ -2577,13 +2596,24 @@ pub async fn create_workspace_volume(
     Path(_workspace_id): Path<Uuid>,
 ) -> impl IntoResponse {
     let zfs_config = nestgate_zfs::config::ZfsConfig::default();
-    let zfs_manager = nestgate_zfs::ZfsManager::new(zfs_config)
-        .await
-        .expect("Failed to initialize ZFS manager");
+    let zfs_manager = match nestgate_zfs::ZfsManager::new(zfs_config).await {
+        Ok(manager) => manager,
+        Err(e) => {
+            tracing::error!("Failed to initialize ZFS manager: {}", e);
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({
+                    "error": "ZFS initialization failed",
+                    "details": e.to_string()
+                })),
+            )
+                .into_response();
+        }
+    };
     let volume_id = uuid::Uuid::new_v4();
 
     // Create ZFS volume for workspace
-    let dataset_name = format!("workspaces/{}/volumes/{}", _workspace_id, volume_id);
+    let dataset_name = format!("workspaces/{_workspace_id}/volumes/{volume_id}");
     let dataset_result = zfs_manager
         .create_dataset(&dataset_name, "nestpool", nestgate_core::StorageTier::Hot)
         .await;
@@ -2591,24 +2621,32 @@ pub async fn create_workspace_volume(
     match dataset_result {
         Ok(_) => {
             info!("Workspace volume created successfully: {}", volume_id);
-            Json(serde_json::json!({
-                "status": "success",
-                "volume_id": volume_id,
-                "workspace_id": _workspace_id,
-                "dataset_name": dataset_name,
-                "mount_path": format!("/mnt/nestpool/{}", dataset_name),
-                "size": "10GB",
-                "timestamp": chrono::Utc::now()
-            }))
+            (
+                StatusCode::CREATED,
+                Json(serde_json::json!({
+                    "status": "success",
+                    "volume_id": volume_id,
+                    "workspace_id": _workspace_id,
+                    "dataset_name": dataset_name,
+                    "mount_path": format!("/mnt/nestpool/{}", dataset_name),
+                    "size": "10GB",
+                    "timestamp": chrono::Utc::now()
+                })),
+            )
+                .into_response()
         }
         Err(e) => {
             error!("Failed to create workspace volume: {}", e);
-            Json(serde_json::json!({
-                "status": "error",
-                "error": "VOLUME_CREATION_FAILED",
-                "message": format!("Failed to create workspace volume: {}", e),
-                "timestamp": chrono::Utc::now()
-            }))
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "error": "VOLUME_CREATION_FAILED",
+                    "message": format!("Failed to create workspace volume: {}", e),
+                    "timestamp": chrono::Utc::now()
+                })),
+            )
+                .into_response()
         }
     }
 }
@@ -2659,8 +2697,8 @@ pub async fn mount_workspace_volume(
         workspace_id, volume_id
     );
 
-    let dataset_name = format!("nestpool/workspaces/{}/volumes/{}", workspace_id, volume_id);
-    let default_mount_point = format!("/mnt/nestgate/{}/{}", workspace_id, volume_id);
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}/volumes/{volume_id}");
+    let default_mount_point = format!("/mnt/nestgate/{workspace_id}/{volume_id}");
     let mount_point = _request
         .get("mount_point")
         .and_then(|v| v.as_str())
@@ -2699,7 +2737,7 @@ pub async fn mount_workspace_volume(
 
     // Set mountpoint property and mount the dataset
     let mount_output = std::process::Command::new("zfs")
-        .args(["set", &format!("mountpoint={}", mount_point), &dataset_name])
+        .args(["set", &format!("mountpoint={mount_point}"), &dataset_name])
         .output();
 
     match mount_output {
@@ -2779,7 +2817,7 @@ pub async fn unmount_workspace_volume(
         workspace_id, volume_id
     );
 
-    let dataset_name = format!("nestpool/workspaces/{}/volumes/{}", workspace_id, volume_id);
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}/volumes/{volume_id}");
     let force = _request
         .get("force")
         .and_then(|v| v.as_bool())
@@ -2846,18 +2884,14 @@ pub async fn resize_workspace_volume(
         workspace_id, volume_id
     );
 
-    let dataset_name = format!("nestpool/workspaces/{}/volumes/{}", workspace_id, volume_id);
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}/volumes/{volume_id}");
     let new_size = _request
         .get("size")
         .and_then(|v| v.as_str())
         .unwrap_or("10G");
 
     // Validate size format (should be like "10G", "500M", "1T")
-    if !new_size
-        .chars()
-        .last()
-        .map_or(false, |c| "KMGT".contains(c))
-    {
+    if !new_size.chars().last().is_some_and(|c| "KMGT".contains(c)) {
         return Json(serde_json::json!({
             "status": "error",
             "message": "Invalid size format. Use format like '10G', '500M', '1T'",
@@ -2868,14 +2902,14 @@ pub async fn resize_workspace_volume(
 
     // Set quota property
     let quota_output = std::process::Command::new("zfs")
-        .args(["set", &format!("quota={}", new_size), &dataset_name])
+        .args(["set", &format!("quota={new_size}"), &dataset_name])
         .output();
 
     match quota_output {
         Ok(output) if output.status.success() => {
             // Also set reservation for guaranteed space
             let reservation_output = std::process::Command::new("zfs")
-                .args(["set", &format!("reservation={}", new_size), &dataset_name])
+                .args(["set", &format!("reservation={new_size}"), &dataset_name])
                 .output();
 
             match reservation_output {
@@ -2956,14 +2990,14 @@ pub async fn snapshot_workspace_volume(
         workspace_id, volume_id
     );
 
-    let dataset_name = format!("nestpool/workspaces/{}/volumes/{}", workspace_id, volume_id);
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}/volumes/{volume_id}");
     let default_snapshot_name = format!("snapshot_{}", chrono::Utc::now().format("%Y%m%d_%H%M%S"));
     let snapshot_name = _request
         .get("snapshot_name")
         .and_then(|v| v.as_str())
         .unwrap_or(&default_snapshot_name);
 
-    let full_snapshot_name = format!("{}@{}", dataset_name, snapshot_name);
+    let full_snapshot_name = format!("{dataset_name}@{snapshot_name}");
 
     // Create snapshot
     let snapshot_output = std::process::Command::new("zfs")
@@ -2988,7 +3022,7 @@ pub async fn snapshot_workspace_volume(
                 Ok(props) if props.status.success() => {
                     let stdout = String::from_utf8_lossy(&props.stdout);
                     let lines: Vec<&str> = stdout.lines().collect();
-                    let used = lines.get(0).unwrap_or(&"unknown").to_string();
+                    let used = lines.first().unwrap_or(&"unknown").to_string();
                     let creation = lines.get(1).unwrap_or(&"unknown").to_string();
                     (used, creation)
                 }
@@ -3044,7 +3078,7 @@ pub async fn clone_workspace_volume(
         workspace_id, volume_id
     );
 
-    let source_dataset = format!("nestpool/workspaces/{}/volumes/{}", workspace_id, volume_id);
+    let source_dataset = format!("nestpool/workspaces/{workspace_id}/volumes/{volume_id}");
     let default_clone_name = format!("clone_{}", chrono::Utc::now().format("%Y%m%d_%H%M%S"));
     let clone_name = _request
         .get("clone_name")
@@ -3058,17 +3092,14 @@ pub async fn clone_workspace_volume(
         .unwrap_or(&workspace_id_string);
 
     let clone_id = Uuid::new_v4();
-    let clone_dataset = format!(
-        "nestpool/workspaces/{}/volumes/{}",
-        target_workspace, clone_id
-    );
+    let clone_dataset = format!("nestpool/workspaces/{target_workspace}/volumes/{clone_id}");
 
     // First, create a snapshot to clone from
     let snapshot_name = format!(
         "clone_source_{}",
         chrono::Utc::now().format("%Y%m%d_%H%M%S")
     );
-    let full_snapshot_name = format!("{}@{}", source_dataset, snapshot_name);
+    let full_snapshot_name = format!("{source_dataset}@{snapshot_name}");
 
     // Create the snapshot
     let snapshot_output = std::process::Command::new("zfs")
@@ -3093,7 +3124,7 @@ pub async fn clone_workspace_volume(
                     let props_to_set = vec![
                         (
                             "mountpoint",
-                            format!("/mnt/nestgate/{}/{}", target_workspace, clone_id),
+                            format!("/mnt/nestgate/{target_workspace}/{clone_id}"),
                         ),
                         ("compression", "lz4".to_string()),
                         ("quota", "10G".to_string()),
@@ -3101,7 +3132,7 @@ pub async fn clone_workspace_volume(
 
                     for (prop, value) in props_to_set {
                         let _ = std::process::Command::new("zfs")
-                            .args(["set", &format!("{}={}", prop, value), &clone_dataset])
+                            .args(["set", &format!("{prop}={value}"), &clone_dataset])
                             .output();
                     }
 
@@ -3287,7 +3318,7 @@ pub async fn scrub_workspace_volume(
         workspace_id, volume_id
     );
 
-    let dataset_name = format!("nestpool/workspaces/{}/volumes/{}", workspace_id, volume_id);
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}/volumes/{volume_id}");
 
     // Get the pool name (everything before the first slash in dataset path)
     let pool_name = dataset_name.split('/').next().unwrap_or("nestpool");
@@ -3399,7 +3430,7 @@ pub async fn get_workspace_volume_stats(
         workspace_id, volume_id
     );
 
-    let dataset_name = format!("nestpool/workspaces/{}/volumes/{}", workspace_id, volume_id);
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}/volumes/{volume_id}");
 
     // Get comprehensive ZFS properties
     let properties = [
@@ -4047,12 +4078,8 @@ mod tests {
     use super::*;
     use axum_test::TestServer;
     use nestgate_zfs::byob::{
-        create_zfs_storage_provider, ByobStorageProvider, ByobStorageRequest, ByobStorageResponse,
-        StorageStatus, StorageUsage,
+        ByobStorageProvider, ByobStorageRequest, ByobStorageResponse, StorageStatus, StorageUsage,
     };
-    use nestgate_zfs::config::ZfsConfig;
-    use nestgate_zfs::ZfsManager;
-    use std::sync::Arc;
 
     // Mock storage provider for testing
     struct MockStorageProvider;

@@ -19,7 +19,7 @@ use std::process::Command;
 /// Helper to get real ZFS pool information
 fn get_real_zfs_pool_info() -> Option<(String, u64, u64)> {
     // Try to get real ZFS pool information
-    if let Ok(output) = Command::new("zpool").args(&["list", "-H", "-p"]).output() {
+    if let Ok(output) = Command::new("zpool").args(["list", "-H", "-p"]).output() {
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
             for line in stdout.lines().take(1) {
@@ -129,13 +129,11 @@ fn get_real_filesystem_info() -> (String, Vec<String>, u64) {
 
     // Try to read directory contents
     if let Ok(entries) = fs::read_dir(&current_path) {
-        for entry in entries.take(10) {
+        for entry in entries.take(10).flatten() {
             // Limit to first 10 entries
-            if let Ok(entry) = entry {
-                if let Some(name) = entry.file_name().to_str() {
-                    files.push(name.to_string());
-                    file_count += 1;
-                }
+            if let Some(name) = entry.file_name().to_str() {
+                files.push(name.to_string());
+                file_count += 1;
             }
         }
     }
@@ -150,7 +148,7 @@ fn get_real_zfs_health() -> (bool, String, String) {
     let mut compilation_status = "❓ Unknown".to_string();
 
     // Check if ZFS is available
-    if let Ok(output) = Command::new("zpool").args(&["status"]).output() {
+    if let Ok(output) = Command::new("zpool").args(["status"]).output() {
         if output.status.success() {
             zfs_available = true;
             let stdout = String::from_utf8_lossy(&output.stdout);
@@ -169,7 +167,7 @@ fn get_real_zfs_health() -> (bool, String, String) {
 
     // Check compilation status by trying to compile a simple test
     if let Ok(output) = Command::new("cargo")
-        .args(&["check", "--workspace", "--quiet"])
+        .args(["check", "--workspace", "--quiet"])
         .output()
     {
         if output.status.success() {
@@ -319,7 +317,7 @@ mod tier_stats_tests {
         let (_, _, file_count) = get_real_filesystem_info();
 
         let stats = TierStats {
-            name: format!("{} Hot Tier", pool_name),
+            name: format!("{pool_name} Hot Tier"),
             used_space: used,
             total_space: total,
             file_count: file_count.try_into().unwrap_or(0),
@@ -393,7 +391,7 @@ mod tier_stats_tests {
 
         // Test utilization percentage
         let utilization = (stats.used_space as f64 / stats.total_space as f64) * 100.0;
-        assert!(utilization >= 0.0 && utilization <= 100.0);
+        assert!((0.0..=100.0).contains(&utilization));
 
         println!(
             "✅ Real space calculation: {:.1}% utilization ({:.2}GB free)",
@@ -513,7 +511,7 @@ mod notification_tests {
         let (zfs_available, health_status, _) = get_real_zfs_health();
 
         let message = if zfs_available {
-            format!("ZFS system is {}", health_status)
+            format!("ZFS system is {health_status}")
         } else {
             "ZFS not available - using mock data".to_string()
         };
@@ -537,7 +535,7 @@ mod notification_tests {
         assert_eq!(notification.level, level);
         assert_eq!(notification.duration, Duration::from_secs(5));
 
-        println!("✅ Real notification: {}", message);
+        println!("✅ Real notification: {message}");
     }
 
     #[test]
@@ -576,7 +574,7 @@ mod notification_tests {
 
         if cpu > 80.0 {
             notifications.push(Notification {
-                message: format!("High CPU usage: {:.1}%", cpu),
+                message: format!("High CPU usage: {cpu:.1}%"),
                 level: NotificationLevel::Warning,
                 timestamp: Instant::now(),
                 duration: Duration::from_secs(5),
@@ -585,7 +583,7 @@ mod notification_tests {
 
         if memory > 90.0 {
             notifications.push(Notification {
-                message: format!("High memory usage: {:.1}%", memory),
+                message: format!("High memory usage: {memory:.1}%"),
                 level: NotificationLevel::Error,
                 timestamp: Instant::now(),
                 duration: Duration::from_secs(10),
@@ -593,7 +591,7 @@ mod notification_tests {
         }
 
         notifications.push(Notification {
-            message: format!("System status: CPU {:.1}%, Memory {:.1}%", cpu, memory),
+            message: format!("System status: CPU {cpu:.1}%, Memory {memory:.1}%"),
             level: NotificationLevel::Info,
             timestamp: Instant::now(),
             duration: Duration::from_secs(3),
@@ -672,7 +670,7 @@ mod integration_validation_tests {
         };
 
         let _tier_stats = TierStats {
-            name: format!("{} Integration Tier", pool_name),
+            name: format!("{pool_name} Integration Tier"),
             used_space: used,
             total_space: total,
             file_count: 1000,
@@ -736,7 +734,7 @@ mod integration_validation_tests {
             let tier_total = total / 4;
 
             let stats = TierStats {
-                name: format!("{:?} Tier (Real Data)", tier),
+                name: format!("{tier:?} Tier (Real Data)"),
                 used_space: tier_used,
                 total_space: tier_total,
                 file_count: 1000,
@@ -777,7 +775,6 @@ mod integration_validation_tests {
         let (cpu, memory, _, _) = get_real_system_metrics();
         let (zfs_available, _, _) = get_real_zfs_health();
 
-        println!("✅ UI state consistency validated with real system data (CPU: {:.1}%, Memory: {:.1}%, ZFS: {})",
-                 cpu, memory, zfs_available);
+        println!("✅ UI state consistency validated with real system data (CPU: {cpu:.1}%, Memory: {memory:.1}%, ZFS: {zfs_available})");
     }
 }

@@ -494,15 +494,14 @@ impl ZfsStorageProvider {
         // Check per-tier quotas
         let mut tier_usage: HashMap<StorageTier, u64> = HashMap::new();
         for req in request.storage_requirements.values() {
-            *tier_usage.entry(req.tier.clone()).or_insert(0) += req.storage_bytes;
+            *tier_usage.entry(req.tier).or_insert(0) += req.storage_bytes;
         }
 
         for (tier, usage) in tier_usage {
             if let Some(quota) = request.team_quotas.max_per_tier.get(&tier) {
                 if usage > *quota {
                     return Err(NestGateError::Storage(format!(
-                        "Storage requirement {} for tier {:?} exceeds quota {}",
-                        usage, tier, quota
+                        "Storage requirement {usage} for tier {tier:?} exceeds quota {quota}"
                     )));
                 }
             }
@@ -539,14 +538,12 @@ impl ZfsStorageProvider {
 
         self.zfs_manager
             .create_dataset(
-                &format!("teams/{}", team_id),
+                &format!("teams/{team_id}"),
                 &self.config.default_pool,
                 StorageTier::Warm,
             )
             .await
-            .map_err(|e| {
-                NestGateError::Storage(format!("Failed to create team workspace: {}", e))
-            })?;
+            .map_err(|e| NestGateError::Storage(format!("Failed to create team workspace: {e}")))?;
 
         // Set team quotas
         self.set_dataset_quota(&root_dataset, quotas.max_total_storage)
@@ -555,7 +552,7 @@ impl ZfsStorageProvider {
         // Create workspace tracking
         let workspace = TeamWorkspace {
             team_id: team_id.to_string(),
-            workspace_name: format!("workspace-{}", team_id),
+            workspace_name: format!("workspace-{team_id}"),
             root_dataset: root_dataset.clone(),
             quotas: quotas.clone(),
             zfs_config: "default".to_string(),
@@ -597,16 +594,15 @@ impl ZfsStorageProvider {
         );
 
         let output = tokio::process::Command::new("zfs")
-            .args(["set", &format!("quota={}", quota_bytes), dataset])
+            .args(["set", &format!("quota={quota_bytes}"), dataset])
             .output()
             .await
-            .map_err(|e| NestGateError::Storage(format!("Failed to set quota: {}", e)))?;
+            .map_err(|e| NestGateError::Storage(format!("Failed to set quota: {e}")))?;
 
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
             return Err(NestGateError::Storage(format!(
-                "Failed to set quota: {}",
-                error_msg
+                "Failed to set quota: {error_msg}"
             )));
         }
 
@@ -620,7 +616,7 @@ impl ZfsStorageProvider {
         service_name: &str,
         requirements: &ServiceStorageRequirements,
     ) -> Result<DatasetInfo> {
-        let dataset_name = format!("{}/{}", team_dataset, service_name);
+        let dataset_name = format!("{team_dataset}/{service_name}");
 
         info!(
             "Creating service dataset: {} on tier {:?}",
@@ -630,10 +626,10 @@ impl ZfsStorageProvider {
         // Create dataset
         let dataset_info = self
             .zfs_manager
-            .create_dataset(service_name, team_dataset, requirements.tier.clone())
+            .create_dataset(service_name, team_dataset, requirements.tier)
             .await
             .map_err(|e| {
-                NestGateError::Storage(format!("Failed to create service dataset: {}", e))
+                NestGateError::Storage(format!("Failed to create service dataset: {e}"))
             })?;
 
         // Set service-specific quota
@@ -647,10 +643,10 @@ impl ZfsStorageProvider {
             let volume_dataset = format!("{}/{}", dataset_name, volume.name);
 
             self.zfs_manager
-                .create_dataset(&volume.name, &dataset_name, volume.tier.clone())
+                .create_dataset(&volume.name, &dataset_name, volume.tier)
                 .await
                 .map_err(|e| {
-                    NestGateError::Storage(format!("Failed to create volume dataset: {}", e))
+                    NestGateError::Storage(format!("Failed to create volume dataset: {e}"))
                 })?;
 
             // Set volume quota
@@ -716,14 +712,12 @@ impl ZfsStorageProvider {
 
             usage_per_dataset.insert(name.clone(), dataset.used_space);
 
-            let tier_usage = usage_per_tier
-                .entry(dataset.tier.clone())
-                .or_insert(TierUsage {
-                    allocated: 0,
-                    used: 0,
-                    dataset_count: 0,
-                    compression_ratio: 1.0,
-                });
+            let tier_usage = usage_per_tier.entry(dataset.tier).or_insert(TierUsage {
+                allocated: 0,
+                used: 0,
+                dataset_count: 0,
+                compression_ratio: 1.0,
+            });
 
             tier_usage.used += dataset.used_space;
             tier_usage.allocated += dataset.used_space + dataset.available_space;
@@ -759,7 +753,7 @@ impl ZfsStorageProvider {
         if let Some(nfs_config) = &network_config.nfs_config {
             let endpoint = StorageEndpoint {
                 endpoint_type: "nfs".to_string(),
-                url: format!("nfs://{}/{}", server_host, team_dataset),
+                url: format!("nfs://{server_host}/{team_dataset}"),
                 credentials: None,
                 mount_instructions: format!(
                     "mount -t nfs {}:{} /mnt/point",
@@ -877,7 +871,7 @@ impl ZfsStorageProvider {
                 info!("Cleaning up expired deployment: {}", deployment_id);
 
                 // Clean up datasets if they still exist
-                for (service_name, _) in &deployment.datasets {
+                for service_name in deployment.datasets.keys() {
                     let dataset_path = format!(
                         "{}/teams/{}/{}",
                         self.config.default_pool, deployment.request.team_id, service_name
@@ -1065,8 +1059,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
             Ok(response)
         } else {
             Err(NestGateError::Storage(format!(
-                "Storage deployment {} not found",
-                deployment_id
+                "Storage deployment {deployment_id} not found"
             )))
         }
     }
@@ -1081,7 +1074,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
             deployment.update_status_message("Removal in progress".to_string());
 
             // Remove datasets
-            for (service_name, _dataset_info) in &deployment.datasets {
+            for service_name in deployment.datasets.keys() {
                 let dataset_path = format!(
                     "{}/teams/{}/{}",
                     self.config.default_pool, deployment.request.team_id, service_name
@@ -1093,7 +1086,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
                     .output()
                     .await
                     .map_err(|e| {
-                        NestGateError::Storage(format!("Failed to destroy dataset: {}", e))
+                        NestGateError::Storage(format!("Failed to destroy dataset: {e}"))
                     })?;
 
                 if !output.status.success() {
@@ -1118,8 +1111,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
             );
         } else {
             return Err(NestGateError::Storage(format!(
-                "Storage deployment {} not found",
-                deployment_id
+                "Storage deployment {deployment_id} not found"
             )));
         }
 
@@ -1160,8 +1152,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
             self.calculate_storage_usage(&deployment.datasets).await
         } else {
             Err(NestGateError::Storage(format!(
-                "Storage deployment {} not found",
-                deployment_id
+                "Storage deployment {deployment_id} not found"
             )))
         }
     }
@@ -1186,14 +1177,13 @@ impl ByobStorageProvider for ZfsStorageProvider {
                 .snapshot_manager
                 .create_snapshot(&team_dataset, &snapshot_name, true)
                 .await
-                .map_err(|e| NestGateError::Storage(format!("Failed to create snapshot: {}", e)))?;
+                .map_err(|e| NestGateError::Storage(format!("Failed to create snapshot: {e}")))?;
 
             info!("Snapshot created successfully: {}", snapshot_id);
             Ok(snapshot_id)
         } else {
             Err(NestGateError::Storage(format!(
-                "Storage deployment {} not found",
-                deployment_id
+                "Storage deployment {deployment_id} not found"
             )))
         }
     }
@@ -1214,18 +1204,15 @@ impl ByobStorageProvider for ZfsStorageProvider {
 
             // Rollback to snapshot
             let output = tokio::process::Command::new("zfs")
-                .args(["rollback", &format!("{}@{}", team_dataset, snapshot_name)])
+                .args(["rollback", &format!("{team_dataset}@{snapshot_name}")])
                 .output()
                 .await
-                .map_err(|e| {
-                    NestGateError::Storage(format!("Failed to rollback snapshot: {}", e))
-                })?;
+                .map_err(|e| NestGateError::Storage(format!("Failed to rollback snapshot: {e}")))?;
 
             if !output.status.success() {
                 let error_msg = String::from_utf8_lossy(&output.stderr);
                 return Err(NestGateError::Storage(format!(
-                    "Failed to rollback snapshot: {}",
-                    error_msg
+                    "Failed to rollback snapshot: {error_msg}"
                 )));
             }
 
@@ -1233,8 +1220,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
             Ok(())
         } else {
             Err(NestGateError::Storage(format!(
-                "Storage deployment {} not found",
-                deployment_id
+                "Storage deployment {deployment_id} not found"
             )))
         }
     }
@@ -1337,10 +1323,7 @@ mod tests {
             }
             Err(e) => {
                 // In test environments without ZFS, we expect this to fail gracefully
-                println!(
-                    "Test workspace creation failed as expected in test environment: {}",
-                    e
-                );
+                println!("Test workspace creation failed as expected in test environment: {e}");
             }
         }
     }
@@ -1415,10 +1398,7 @@ mod tests {
             }
             Err(e) => {
                 // In test environments without ZFS, we expect this to fail gracefully
-                println!(
-                    "Test storage provisioning failed as expected in test environment: {}",
-                    e
-                );
+                println!("Test storage provisioning failed as expected in test environment: {e}");
                 // Verify it's a ZFS-related error, not a logic error
                 assert!(
                     e.to_string().contains("ZFS")

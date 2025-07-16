@@ -7,10 +7,10 @@ mod protocol_tests {
 
     #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
     enum Protocol {
-        NFS,
-        SMB,
-        HTTP,
-        FTP,
+        Nfs,
+        Smb,
+        Http,
+        Ftp,
     }
 
     impl Protocol {
@@ -20,19 +20,19 @@ mod protocol_tests {
 
         fn default_port(&self) -> u16 {
             match self {
-                Protocol::NFS => 2049,
-                Protocol::SMB => 445,
-                Protocol::HTTP => 80,
-                Protocol::FTP => 21,
+                Protocol::Nfs => 2049,
+                Protocol::Smb => 445,
+                Protocol::Http => 80,
+                Protocol::Ftp => 21,
             }
         }
 
         fn supports_encryption(&self) -> bool {
             match self {
-                Protocol::NFS => true,
-                Protocol::SMB => true,
-                Protocol::HTTP => false,
-                Protocol::FTP => false,
+                Protocol::Nfs => true,
+                Protocol::Smb => true,
+                Protocol::Http => false,
+                Protocol::Ftp => false,
             }
         }
 
@@ -47,7 +47,7 @@ mod protocol_tests {
 
     #[test]
     fn test_protocol_types() {
-        let protocols = vec![Protocol::NFS, Protocol::SMB, Protocol::HTTP, Protocol::FTP];
+        let protocols = vec![Protocol::Nfs, Protocol::Smb, Protocol::Http, Protocol::Ftp];
 
         for protocol in protocols {
             assert!(protocol.is_valid());
@@ -58,32 +58,32 @@ mod protocol_tests {
     #[test]
     fn test_protocol_properties() {
         // Test NFS protocol
-        assert_eq!(Protocol::NFS.default_port(), 2049);
-        assert!(Protocol::NFS.supports_encryption());
-        assert!(Protocol::NFS.is_network_protocol());
+        assert_eq!(Protocol::Nfs.default_port(), 2049);
+        assert!(Protocol::Nfs.supports_encryption());
+        assert!(Protocol::Nfs.is_network_protocol());
 
         // Test SMB protocol
-        assert_eq!(Protocol::SMB.default_port(), 445);
-        assert!(Protocol::SMB.supports_encryption());
-        assert!(Protocol::SMB.is_network_protocol());
+        assert_eq!(Protocol::Smb.default_port(), 445);
+        assert!(Protocol::Smb.supports_encryption());
+        assert!(Protocol::Smb.is_network_protocol());
 
         // Test HTTP protocol
-        assert_eq!(Protocol::HTTP.default_port(), 80);
-        assert!(!Protocol::HTTP.supports_encryption()); // HTTP itself doesn't, HTTPS does
-        assert!(Protocol::HTTP.is_network_protocol());
+        assert_eq!(Protocol::Http.default_port(), 80);
+        assert!(!Protocol::Http.supports_encryption()); // HTTP itself doesn't, HTTPS does
+        assert!(Protocol::Http.is_network_protocol());
     }
 
     #[test]
     fn test_protocol_compatibility() {
         // Test protocol compatibility matrix
-        assert!(Protocol::NFS.is_compatible_with(&Protocol::SMB));
-        assert!(Protocol::SMB.is_compatible_with(&Protocol::HTTP));
-        assert!(Protocol::HTTP.is_compatible_with(&Protocol::FTP));
+        assert!(Protocol::Nfs.is_compatible_with(&Protocol::Smb));
+        assert!(Protocol::Smb.is_compatible_with(&Protocol::Http));
+        assert!(Protocol::Http.is_compatible_with(&Protocol::Ftp));
     }
 
     #[test]
     fn test_protocol_serialization() {
-        let protocols = vec![Protocol::NFS, Protocol::SMB, Protocol::HTTP];
+        let protocols = vec![Protocol::Nfs, Protocol::Smb, Protocol::Http];
 
         for protocol in protocols {
             let json = serde_json::to_string(&protocol);
@@ -100,7 +100,6 @@ mod protocol_tests {
 
 #[cfg(test)]
 mod access_mode_tests {
-    use super::*;
 
     #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
     enum AccessMode {
@@ -299,7 +298,6 @@ mod share_config_tests {
 
 #[cfg(test)]
 mod permission_tests {
-    use super::*;
 
     #[derive(Debug, Clone, PartialEq)]
     struct Permission {

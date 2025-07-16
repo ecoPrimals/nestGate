@@ -394,12 +394,12 @@ impl MigrationEngine {
             .analyzer
             .analyze_file(&source_path.to_string_lossy())
             .await
-            .map_err(|e| NestGateError::Internal(format!("File analysis failed: {}", e)))?;
+            .map_err(|e| NestGateError::Internal(format!("File analysis failed: {e}")))?;
         let recommendation = self
             .analyzer
             .predict_optimal_tier(&source_path.to_string_lossy())
             .await
-            .map_err(|e| NestGateError::Internal(format!("Tier recommendation failed: {}", e)))?;
+            .map_err(|e| NestGateError::Internal(format!("Tier recommendation failed: {e}")))?;
 
         // Convert from nestgate_core::StorageTier to types::StorageTier
         let source_tier = match recommendation {
@@ -658,11 +658,11 @@ impl MigrationEngine {
             }
 
             let mut entries = tokio::fs::read_dir(&dir_path).await.map_err(|e| {
-                NestGateError::Storage(format!("Failed to read directory {:?}: {}", dir_path, e))
+                NestGateError::Storage(format!("Failed to read directory {dir_path:?}: {e}"))
             })?;
 
             while let Some(entry) = entries.next_entry().await.map_err(|e| {
-                NestGateError::Storage(format!("Failed to read directory entry: {}", e))
+                NestGateError::Storage(format!("Failed to read directory entry: {e}"))
             })? {
                 let path = entry.path();
 
@@ -692,13 +692,13 @@ impl MigrationEngine {
         let _characteristics = analyzer
             .analyze_file(&file_path.to_string_lossy())
             .await
-            .map_err(|e| NestGateError::Internal(format!("File analysis failed: {}", e)))?;
+            .map_err(|e| NestGateError::Internal(format!("File analysis failed: {e}")))?;
 
         // Get tier recommendation
         let recommendation = analyzer
             .predict_optimal_tier(&file_path.to_string_lossy())
             .await
-            .map_err(|e| NestGateError::Internal(format!("Tier recommendation failed: {}", e)))?;
+            .map_err(|e| NestGateError::Internal(format!("Tier recommendation failed: {e}")))?;
 
         // Convert from nestgate_core::StorageTier to types::StorageTier
         let recommended_tier = match recommendation {
@@ -736,7 +736,7 @@ impl MigrationEngine {
 
             // Acquire migration permit
             let _permit = context.migration_semaphore.acquire().await.map_err(|e| {
-                NestGateError::Internal(format!("Failed to acquire migration permit: {}", e))
+                NestGateError::Internal(format!("Failed to acquire migration permit: {e}"))
             })?;
 
             // Start migration
@@ -856,7 +856,7 @@ impl MigrationEngine {
         // 4. Ensure target directory exists
         if let Some(parent) = target_path.parent() {
             tokio::fs::create_dir_all(parent).await.map_err(|e| {
-                NestGateError::Storage(format!("Failed to create target directory: {}", e))
+                NestGateError::Storage(format!("Failed to create target directory: {e}"))
             })?;
         }
 
@@ -875,7 +875,7 @@ impl MigrationEngine {
             tokio::fs::remove_file(&job.source_path)
                 .await
                 .map_err(|e| {
-                    NestGateError::Storage(format!("Failed to remove source file: {}", e))
+                    NestGateError::Storage(format!("Failed to remove source file: {e}"))
                 })?;
         }
 
@@ -923,7 +923,7 @@ impl MigrationEngine {
         let datasets = dataset_manager
             .list_datasets()
             .await
-            .map_err(|e| NestGateError::Storage(format!("Failed to list datasets: {}", e)))?;
+            .map_err(|e| NestGateError::Storage(format!("Failed to list datasets: {e}")))?;
 
         let dataset_exists = datasets.iter().any(|d| d.name == dataset_name);
 
@@ -963,7 +963,7 @@ impl MigrationEngine {
             dataset_manager
                 .create_dataset(dataset_name, "storage", core_tier)
                 .await
-                .map_err(|e| NestGateError::Storage(format!("Failed to create dataset: {}", e)))?;
+                .map_err(|e| NestGateError::Storage(format!("Failed to create dataset: {e}")))?;
         }
 
         Ok(())
@@ -979,11 +979,11 @@ impl MigrationEngine {
 
         let mut source_file = tokio::fs::File::open(source_path)
             .await
-            .map_err(|e| NestGateError::Storage(format!("Failed to open source file: {}", e)))?;
+            .map_err(|e| NestGateError::Storage(format!("Failed to open source file: {e}")))?;
 
         let mut target_file = tokio::fs::File::create(target_path)
             .await
-            .map_err(|e| NestGateError::Storage(format!("Failed to create target file: {}", e)))?;
+            .map_err(|e| NestGateError::Storage(format!("Failed to create target file: {e}")))?;
 
         // Use larger buffer for better performance
         let buffer_size = 4 * 1024 * 1024; // 4MB buffer instead of 1MB
@@ -992,9 +992,10 @@ impl MigrationEngine {
         let start_time = Instant::now();
 
         loop {
-            let bytes_read = source_file.read(&mut buffer).await.map_err(|e| {
-                NestGateError::Storage(format!("Failed to read source file: {}", e))
-            })?;
+            let bytes_read = source_file
+                .read(&mut buffer)
+                .await
+                .map_err(|e| NestGateError::Storage(format!("Failed to read source file: {e}")))?;
 
             if bytes_read == 0 {
                 break; // EOF
@@ -1003,9 +1004,7 @@ impl MigrationEngine {
             target_file
                 .write_all(&buffer[..bytes_read])
                 .await
-                .map_err(|e| {
-                    NestGateError::Storage(format!("Failed to write target file: {}", e))
-                })?;
+                .map_err(|e| NestGateError::Storage(format!("Failed to write target file: {e}")))?;
 
             total_copied += bytes_read as u64;
 
@@ -1034,7 +1033,7 @@ impl MigrationEngine {
         target_file
             .sync_all()
             .await
-            .map_err(|e| NestGateError::Storage(format!("Failed to sync target file: {}", e)))?;
+            .map_err(|e| NestGateError::Storage(format!("Failed to sync target file: {e}")))?;
 
         Ok(())
     }
@@ -1044,11 +1043,11 @@ impl MigrationEngine {
         // Compare file sizes
         let source_metadata = tokio::fs::metadata(source_path)
             .await
-            .map_err(|e| NestGateError::Storage(format!("Failed to get source metadata: {}", e)))?;
+            .map_err(|e| NestGateError::Storage(format!("Failed to get source metadata: {e}")))?;
 
         let target_metadata = tokio::fs::metadata(target_path)
             .await
-            .map_err(|e| NestGateError::Storage(format!("Failed to get target metadata: {}", e)))?;
+            .map_err(|e| NestGateError::Storage(format!("Failed to get target metadata: {e}")))?;
 
         if source_metadata.len() != target_metadata.len() {
             return Err(NestGateError::Storage(format!(
@@ -1062,11 +1061,11 @@ impl MigrationEngine {
         if source_metadata.len() < 10 * 1024 * 1024 {
             // 10MB threshold
             let source_content = tokio::fs::read(source_path).await.map_err(|e| {
-                NestGateError::Storage(format!("Failed to read source for verification: {}", e))
+                NestGateError::Storage(format!("Failed to read source for verification: {e}"))
             })?;
 
             let target_content = tokio::fs::read(target_path).await.map_err(|e| {
-                NestGateError::Storage(format!("Failed to read target for verification: {}", e))
+                NestGateError::Storage(format!("Failed to read target for verification: {e}"))
             })?;
 
             if source_content != target_content {

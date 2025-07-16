@@ -180,7 +180,7 @@ impl NestGateZfsService {
             .output()
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to check pool status: {}", e),
+                message: format!("Failed to check pool status: {e}"),
             })?;
 
         if !output.status.success() {
@@ -209,7 +209,7 @@ impl NestGateZfsService {
             .output()
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to list datasets: {}", e),
+                message: format!("Failed to list datasets: {e}"),
             })?;
 
         if !output.status.success() {
@@ -247,7 +247,7 @@ impl NestGateZfsService {
         let memory_info = tokio::fs::read_to_string("/proc/meminfo")
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to read memory info: {}", e),
+                message: format!("Failed to read memory info: {e}"),
             })?;
 
         let mut total_memory = 0u64;
@@ -287,7 +287,7 @@ impl NestGateZfsService {
         let modules_info = tokio::fs::read_to_string("/proc/modules")
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to read modules info: {}", e),
+                message: format!("Failed to read modules info: {e}"),
             })?;
 
         if modules_info.contains("zfs ") {

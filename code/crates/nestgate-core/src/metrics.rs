@@ -26,7 +26,7 @@ pub struct Metric {
 }
 
 /// Metrics collector for system monitoring
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MetricsCollector {
     metrics: Arc<RwLock<HashMap<String, Metric>>>,
 }
@@ -44,7 +44,7 @@ impl MetricsCollector {
         let mut metrics = match self.metrics.write() {
             Ok(metrics) => metrics,
             Err(e) => {
-                eprintln!("Failed to acquire metrics lock for incrementing: {}", e);
+                eprintln!("Failed to acquire metrics lock for incrementing: {e}");
                 return;
             }
         };
@@ -60,26 +60,32 @@ impl MetricsCollector {
 
     /// Record a gauge metric
     pub fn record_gauge(&mut self, name: &str, value: f64) {
-        let mut metrics = self.metrics.write().unwrap();
-        let metric = Metric {
-            name: name.to_string(),
-            value,
-            metric_type: MetricType::Gauge,
-            timestamp: std::time::SystemTime::now(),
-        };
-        metrics.insert(name.to_string(), metric);
+        if let Ok(mut metrics) = self.metrics.write() {
+            let metric = Metric {
+                name: name.to_string(),
+                value,
+                metric_type: MetricType::Gauge,
+                timestamp: std::time::SystemTime::now(),
+            };
+            metrics.insert(name.to_string(), metric);
+        } else {
+            tracing::error!("Failed to acquire write lock for metrics in record_gauge");
+        }
     }
 
     /// Record a histogram metric
     pub fn record_histogram(&mut self, name: &str, value: f64) {
-        let mut metrics = self.metrics.write().unwrap();
-        let metric = Metric {
-            name: name.to_string(),
-            value,
-            metric_type: MetricType::Histogram,
-            timestamp: std::time::SystemTime::now(),
-        };
-        metrics.insert(name.to_string(), metric);
+        if let Ok(mut metrics) = self.metrics.write() {
+            let metric = Metric {
+                name: name.to_string(),
+                value,
+                metric_type: MetricType::Histogram,
+                timestamp: std::time::SystemTime::now(),
+            };
+            metrics.insert(name.to_string(), metric);
+        } else {
+            tracing::error!("Failed to acquire write lock for metrics in record_histogram");
+        }
     }
 
     /// Get a specific metric value
@@ -87,7 +93,7 @@ impl MetricsCollector {
         let metrics = match self.metrics.read() {
             Ok(metrics) => metrics,
             Err(e) => {
-                eprintln!("Failed to acquire metrics lock for reading: {}", e);
+                eprintln!("Failed to acquire metrics lock for reading: {e}");
                 return None;
             }
         };
@@ -99,7 +105,7 @@ impl MetricsCollector {
         let metrics = match self.metrics.read() {
             Ok(metrics) => metrics,
             Err(e) => {
-                eprintln!("Failed to acquire metrics lock for reading all: {}", e);
+                eprintln!("Failed to acquire metrics lock for reading all: {e}");
                 return Vec::new();
             }
         };
@@ -111,7 +117,7 @@ impl MetricsCollector {
         let mut metrics = match self.metrics.write() {
             Ok(metrics) => metrics,
             Err(e) => {
-                eprintln!("Failed to acquire metrics lock for clearing: {}", e);
+                eprintln!("Failed to acquire metrics lock for clearing: {e}");
                 return;
             }
         };
@@ -122,7 +128,7 @@ impl MetricsCollector {
         let mut metrics = match self.metrics.write() {
             Ok(metrics) => metrics,
             Err(e) => {
-                eprintln!("Failed to acquire metrics lock for recording: {}", e);
+                eprintln!("Failed to acquire metrics lock for recording: {e}");
                 return;
             }
         };
@@ -149,7 +155,7 @@ impl MetricsCollector {
         let mut metrics = match self.metrics.write() {
             Ok(metrics) => metrics,
             Err(e) => {
-                eprintln!("Failed to acquire metrics lock for adding: {}", e);
+                eprintln!("Failed to acquire metrics lock for adding: {e}");
                 return;
             }
         };
@@ -160,7 +166,7 @@ impl MetricsCollector {
         let mut metrics = match self.metrics.write() {
             Ok(metrics) => metrics,
             Err(e) => {
-                eprintln!("Failed to acquire metrics lock for updating: {}", e);
+                eprintln!("Failed to acquire metrics lock for updating: {e}");
                 return;
             }
         };

@@ -455,7 +455,7 @@ impl NestGateStoragePrimal {
         // Send registration request to Songbird
         let client = reqwest::Client::new();
         match client
-            .post(&format!("{}/api/v1/services/register", songbird.endpoint))
+            .post(format!("{}/api/v1/services/register", songbird.endpoint))
             .json(&registration_request)
             .send()
             .await
@@ -527,7 +527,7 @@ impl NestGateStoragePrimal {
                 });
 
                 match client
-                    .post(&format!("{}/api/v1/services/heartbeat", songbird_endpoint))
+                    .post(format!("{songbird_endpoint}/api/v1/services/heartbeat"))
                     .json(&heartbeat_request)
                     .send()
                     .await
@@ -766,7 +766,7 @@ impl NestGateStoragePrimal {
         // Try to communicate with BearDog
         let client = reqwest::Client::new();
         let security_response = match client
-            .post(&format!("{}/api/v1/security/configure", beardog_endpoint))
+            .post(format!("{beardog_endpoint}/api/v1/security/configure"))
             .json(&security_request)
             .send()
             .await
@@ -857,9 +857,7 @@ impl NestGateStoragePrimal {
         performance_requirements: PerformanceRequirements,
     ) -> Result<StoragePrimalResponse> {
         // ✅ IMPLEMENTED: Universal AI integration using our new Universal Model API
-        use nestgate_core::universal_model_api::{
-            RegistryConfig, UniversalModelRegistry,
-        };
+        use nestgate_core::universal_model_api::{RegistryConfig, UniversalModelRegistry};
 
         tracing::info!("🤖 Handling AI integration request: {:?}", data_type);
 
@@ -964,7 +962,7 @@ impl NestGateStoragePrimal {
         // Try to communicate with Songbird
         let client = reqwest::Client::new();
         let network_response = match client
-            .post(&format!("{}/api/v1/network/configure", songbird_endpoint))
+            .post(format!("{songbird_endpoint}/api/v1/network/configure"))
             .json(&network_request)
             .send()
             .await
@@ -1087,7 +1085,7 @@ impl NestGateStoragePrimal {
         // Try to communicate with Toadstool
         let client = reqwest::Client::new();
         let compute_response = match client
-            .post(&format!("{}/api/v1/compute/configure", toadstool_endpoint))
+            .post(format!("{toadstool_endpoint}/api/v1/compute/configure"))
             .json(&compute_request)
             .send()
             .await
@@ -1291,7 +1289,7 @@ impl NestGateStoragePrimal {
                     request_id: Uuid::new_v4(),
                     from_primal: self.primal_id().to_string(),
                     status: StorageResponseStatus::NotSupported {
-                        reason: format!("Unknown operation: {}", operation),
+                        reason: format!("Unknown operation: {operation}"),
                     },
                     payload: serde_json::json!({
                         "error": format!("Unknown operation: {}", operation)
@@ -1311,10 +1309,13 @@ impl NestGateStoragePrimal {
         // Get real health data from ZFS manager
         let zfs_status = self.zfs_manager.get_zfs_health().await?;
         let zfs_health = self.zfs_manager.get_real_health_state().await?;
-        
+
         // Extract actual metrics from ZFS
-        let _disk_usage = (zfs_status.pool_status.total_capacity as f64 - zfs_status.pool_status.available_capacity as f64) / zfs_status.pool_status.total_capacity as f64 * 100.0;
-        
+        let _disk_usage = (zfs_status.pool_status.total_capacity as f64
+            - zfs_status.pool_status.available_capacity as f64)
+            / zfs_status.pool_status.total_capacity as f64
+            * 100.0;
+
         let _memory_usage = 65.2; // Would normally get from system
         let _response_time = 125.0; // Would normally measure actual response time
 
@@ -1322,7 +1323,7 @@ impl NestGateStoragePrimal {
         let total_bytes = zfs_status.pool_status.total_capacity;
         let available_bytes = zfs_status.pool_status.available_capacity;
         let used_bytes = total_bytes - available_bytes;
-        
+
         Ok(HealthMetrics {
             uptime: chrono::Utc::now().timestamp() as u64 - 86400, // 24 hours ago
             capacity: StorageCapacityInfo {
@@ -1330,15 +1331,48 @@ impl NestGateStoragePrimal {
                 used_bytes,
                 available_bytes,
                 reserved_bytes: 0,
-                compression_ratio: if matches!(zfs_health, nestgate_zfs::manager::HealthState::Healthy) { 0.75 } else { 0.5 },
+                compression_ratio: if matches!(
+                    zfs_health,
+                    nestgate_zfs::manager::HealthState::Healthy
+                ) {
+                    0.75
+                } else {
+                    0.5
+                },
                 deduplication_ratio: 0.0,
             },
             performance: StoragePerformanceMetrics {
-                read_iops: if matches!(zfs_health, nestgate_zfs::manager::HealthState::Healthy) { 1250 } else { 500 },
-                write_iops: if matches!(zfs_health, nestgate_zfs::manager::HealthState::Healthy) { 1250 } else { 500 },
-                read_throughput_mbps: if matches!(zfs_health, nestgate_zfs::manager::HealthState::Healthy) { 850 } else { 300 },
-                write_throughput_mbps: if matches!(zfs_health, nestgate_zfs::manager::HealthState::Healthy) { 850 } else { 300 },
-                latency_us: if matches!(zfs_health, nestgate_zfs::manager::HealthState::Healthy) { 125000 } else { 500000 },
+                read_iops: if matches!(zfs_health, nestgate_zfs::manager::HealthState::Healthy) {
+                    1250
+                } else {
+                    500
+                },
+                write_iops: if matches!(zfs_health, nestgate_zfs::manager::HealthState::Healthy) {
+                    1250
+                } else {
+                    500
+                },
+                read_throughput_mbps: if matches!(
+                    zfs_health,
+                    nestgate_zfs::manager::HealthState::Healthy
+                ) {
+                    850
+                } else {
+                    300
+                },
+                write_throughput_mbps: if matches!(
+                    zfs_health,
+                    nestgate_zfs::manager::HealthState::Healthy
+                ) {
+                    850
+                } else {
+                    300
+                },
+                latency_us: if matches!(zfs_health, nestgate_zfs::manager::HealthState::Healthy) {
+                    125000
+                } else {
+                    500000
+                },
                 queue_depth: 10,
             },
         })
@@ -1575,6 +1609,12 @@ impl PrimalDiscoveryClient {
 
 pub struct StorageMetricsCollector {
     // Implementation for metrics collection
+}
+
+impl Default for StorageMetricsCollector {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl StorageMetricsCollector {

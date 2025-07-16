@@ -5,7 +5,6 @@
 
 use nestgate_zfs::pool_setup::ZfsPoolSetup;
 use tracing::{error, info, warn};
-use tracing_subscriber;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
