@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
 use uuid::Uuid;
 
-use crate::{NestGateError, Result};
+use nestgate_core::{NestGateError, Result};
 
 /// Universal coordination configuration for any Primal
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -66,9 +66,7 @@ impl NestGateUniversalAdapter {
         let client = Client::builder()
             .timeout(Duration::from_secs(30))
             .build()
-            .map_err(|e| {
-                NestGateError::NetworkError(format!("Failed to create HTTP client: {e}"))
-            })?;
+            .map_err(|e| NestGateError::Network(format!("Failed to create HTTP client: {e}")))?;
 
         let nestgate_identity = NestGateIdentity {
             instance_id: format!("nestgate-{}", Uuid::new_v4().simple()),
@@ -131,7 +129,7 @@ impl NestGateUniversalAdapter {
     /// Universal coordination method that works with any Primal
     pub async fn coordinate_with_primal(&self, primal_name: &str) -> Result<CoordinationResult> {
         let primal_config = self.primal_configs.get(primal_name).ok_or_else(|| {
-            NestGateError::ConfigurationError(format!("Primal {primal_name} not configured"))
+            NestGateError::Configuration(format!("Primal {primal_name} not configured"))
         })?;
 
         if !primal_config.enabled {
@@ -197,7 +195,7 @@ impl NestGateUniversalAdapter {
             .json(&coordination_payload)
             .send()
             .await
-            .map_err(|e| NestGateError::NetworkError(format!("Request failed: {e}")))?;
+            .map_err(|e| NestGateError::Network(format!("Request failed: {e}")))?;
 
         if response.status().is_success() {
             info!(

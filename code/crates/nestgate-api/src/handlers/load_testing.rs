@@ -195,6 +195,12 @@ pub struct LoadTestManager {
     performance_baselines: Arc<RwLock<HashMap<String, PerformanceMetrics>>>,
 }
 
+impl Default for LoadTestManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl LoadTestManager {
     /// Create a new load test manager
     pub fn new() -> Self {
@@ -332,7 +338,6 @@ impl LoadTestManager {
         let mut tasks = Vec::new();
 
         for user_id in 0..config.concurrent_users {
-            let test_id = test_id;
             let config = config.clone();
 
             let task = tokio::spawn(async move {
@@ -628,8 +633,7 @@ impl LoadTestManager {
         if fastrand::f32() < 0.05 {
             // 5% failure rate
             return Err(nestgate_core::NestGateError::InvalidInput(format!(
-                "Simulated failure for {} {}",
-                method, endpoint
+                "Simulated failure for {method} {endpoint}"
             )));
         }
 
@@ -659,8 +663,7 @@ impl LoadTestManager {
             Ok(())
         } else {
             Err(nestgate_core::NestGateError::InvalidInput(format!(
-                "Test {} not found in active tests",
-                test_id
+                "Test {test_id} not found in active tests"
             )))
         }
     }

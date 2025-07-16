@@ -884,9 +884,7 @@ impl E2EWorkflowOrchestrator {
             "❌ INSUFFICIENT E2E COVERAGE"
         };
 
-        println!(
-            "\n🏆 E2E Certification: {certification} ({overall_score:.1}%)"
-        );
+        println!("\n🏆 E2E Certification: {certification} ({overall_score:.1}%)");
     }
 }
 

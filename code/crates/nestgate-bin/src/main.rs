@@ -8,11 +8,8 @@
 
 use std::sync::Arc;
 use tracing::{info, warn};
-use tracing_subscriber;
-use uuid;
 
 // Core NestGate services
-use nestgate_api;
 use nestgate_core::config::Config as NestGateConfig;
 use nestgate_zfs::manager::ZfsManager;
 
@@ -63,7 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let service_name = std::env::var("NESTGATE_SERVICE_NAME").unwrap_or_else(|_| {
         format!(
             "nestgate-{}",
-            uuid::Uuid::new_v4().simple().to_string()[..8].to_string()
+            &uuid::Uuid::new_v4().simple().to_string()[..8]
         )
     });
 
@@ -144,7 +141,7 @@ async fn initialize_networking(
                 .parse::<u16>()
                 .unwrap_or(8080);
 
-            let bind_addr = format!("0.0.0.0:{}", api_port);
+            let bind_addr = format!("0.0.0.0:{api_port}");
 
             info!("✅ Standalone networking ready:");
             info!("   - Local access: http://localhost:{}", api_port);
@@ -174,7 +171,7 @@ async fn initialize_networking(
 
                     // Fallback to standalone
                     let api_port = nestgate_core::constants::network::api_port();
-                    let bind_addr = format!("0.0.0.0:{}", api_port);
+                    let bind_addr = format!("0.0.0.0:{api_port}");
 
                     Ok(NetworkConfig {
                         api_bind_addr: bind_addr,

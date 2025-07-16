@@ -360,9 +360,7 @@ impl AiChaosOrchestrator {
             }
         }
 
-        println!(
-            "   📊 Phase completed: {operation_count} operations, {fault_count} faults"
-        );
+        println!("   📊 Phase completed: {operation_count} operations, {fault_count} faults");
     }
 
     /// Execute single operation with realistic simulation
@@ -909,9 +907,7 @@ async fn test_ai_comprehensive_chaos_campaign() {
         })
         .count();
 
-    println!(
-        "📊 Total Operations Across All Scenarios: {total_operations}"
-    );
+    println!("📊 Total Operations Across All Scenarios: {total_operations}");
     println!("🛡️  Average System Resilience: {avg_resilience:.2}%");
     println!(
         "⚠️  High Risk Scenarios: {}/{}",

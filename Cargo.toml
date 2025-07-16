@@ -12,10 +12,7 @@ repository = "https://github.com/nestgate/nestgate"
 keywords = ["zfs", "storage", "automation", "nas", "backup"]
 categories = ["filesystem", "command-line-utilities"]
 
-# This is a library-only package - no binary
-[lib]
-name = "nestgate"
-path = "src/lib.rs"
+# This is a workspace-only package - no binary or lib
 
 # Workspace configuration for all NestGate crates
 [workspace]

@@ -202,139 +202,156 @@ impl AdvancedSnapshotManager {
     /// Execute retention plan based on policies
     pub async fn execute_retention_plan(&self, plan: &str) -> Result<String> {
         tracing::info!("🗂️ Executing intelligent retention plan: {}", plan);
-        
+
         // Parse retention plan (simplified format: "dataset:policy:action")
         let plan_parts: Vec<&str> = plan.split(':').collect();
-        
+
         if plan_parts.len() < 3 {
             return Err(crate::error::ZfsError::Internal {
                 message: "Invalid retention plan format".to_string(),
             });
         }
-        
+
         let dataset_name = plan_parts[0];
         let policy_name = plan_parts[1];
         let action = plan_parts[2];
-        
+
         let mut results = Vec::new();
-        
+
         match action {
             "cleanup_old_snapshots" => {
                 let cleanup_result = self.cleanup_old_snapshots(dataset_name).await?;
-                                 results.push(format!("Cleaned up {cleanup_result} old snapshots for dataset {dataset_name}"));
-             }
-             "compress_snapshots" => {
-                 let compress_result = self.compress_snapshots(dataset_name).await?;
-                 results.push(format!("Compressed {compress_result} snapshots for dataset {dataset_name}"));
-             }
-             "archive_snapshots" => {
-                 let archive_result = self.archive_snapshots(dataset_name).await?;
-                 results.push(format!("Archived {archive_result} snapshots for dataset {dataset_name}"));
-             }
-             "optimize_retention" => {
-                 let optimize_result = self.optimize_retention_schedule(dataset_name).await?;
-                 results.push(format!("Optimized retention schedule for dataset {dataset_name}: {optimize_result}"));
-             }
-             _ => {
-                 return Err(crate::error::ZfsError::Internal {
-                     message: format!("Unknown retention action: {action}"),
-                 });
-             }
+                results.push(format!(
+                    "Cleaned up {cleanup_result} old snapshots for dataset {dataset_name}"
+                ));
+            }
+            "compress_snapshots" => {
+                let compress_result = self.compress_snapshots(dataset_name).await?;
+                results.push(format!(
+                    "Compressed {compress_result} snapshots for dataset {dataset_name}"
+                ));
+            }
+            "archive_snapshots" => {
+                let archive_result = self.archive_snapshots(dataset_name).await?;
+                results.push(format!(
+                    "Archived {archive_result} snapshots for dataset {dataset_name}"
+                ));
+            }
+            "optimize_retention" => {
+                let optimize_result = self.optimize_retention_schedule(dataset_name).await?;
+                results.push(format!(
+                    "Optimized retention schedule for dataset {dataset_name}: {optimize_result}"
+                ));
+            }
+            _ => {
+                return Err(crate::error::ZfsError::Internal {
+                    message: format!("Unknown retention action: {action}"),
+                });
+            }
         }
-        
-                 // Update retention policies with execution results
-         {
-             let mut retention_policies = self.retention_policies.write().await;
-             retention_policies.insert(
-                 format!("{dataset_name}:{policy_name}"),
-                 format!("Executed: {}", results.join("; "))
-             );
-         }
-        
+
+        // Update retention policies with execution results
+        {
+            let mut retention_policies = self.retention_policies.write().await;
+            retention_policies.insert(
+                format!("{dataset_name}:{policy_name}"),
+                format!("Executed: {}", results.join("; ")),
+            );
+        }
+
         tracing::info!("✅ Retention plan executed successfully");
         Ok(results.join("; "))
     }
-    
+
     /// Cleanup old snapshots based on intelligent analysis
     async fn cleanup_old_snapshots(&self, dataset_name: &str) -> Result<u32> {
         tracing::info!("🧹 Cleaning up old snapshots for dataset: {}", dataset_name);
-        
+
         // Get current snapshots
         let snapshots = self.list_dataset_snapshots(dataset_name).await?;
-        
+
         let mut deleted_count = 0;
         let now = std::time::SystemTime::now();
-        
+
         for snapshot in snapshots {
             // Intelligent cleanup logic based on snapshot age and access patterns
             let age = now.duration_since(snapshot.created_at).unwrap_or_default();
-            
+
             // Delete snapshots older than 90 days that haven't been accessed
-            if age.as_secs() > 90 * 24 * 3600 && !snapshot.recently_accessed {
-                if self.delete_snapshot(&snapshot.full_name).await.is_ok() {
-                    deleted_count += 1;
-                    tracing::debug!("Deleted old snapshot: {}", snapshot.full_name);
-                }
+            if age.as_secs() > 90 * 24 * 3600
+                && !snapshot.recently_accessed
+                && self.delete_snapshot(&snapshot.full_name).await.is_ok()
+            {
+                deleted_count += 1;
+                tracing::debug!("Deleted old snapshot: {}", snapshot.full_name);
             }
         }
-        
+
         Ok(deleted_count)
     }
-    
+
     /// Compress snapshots to save space
     async fn compress_snapshots(&self, dataset_name: &str) -> Result<u32> {
         tracing::info!("🗜️ Compressing snapshots for dataset: {}", dataset_name);
-        
+
         // Get snapshots that can be compressed
         let snapshots = self.list_dataset_snapshots(dataset_name).await?;
-        
+
         let mut compressed_count = 0;
-        
+
         for snapshot in snapshots {
             // Check if snapshot can benefit from compression
             if snapshot.size_bytes > 1024 * 1024 * 1024 && !snapshot.compressed {
                 // Enable compression on snapshot
-                if self.enable_snapshot_compression(&snapshot.full_name).await.is_ok() {
+                if self
+                    .enable_snapshot_compression(&snapshot.full_name)
+                    .await
+                    .is_ok()
+                {
                     compressed_count += 1;
                     tracing::debug!("Compressed snapshot: {}", snapshot.full_name);
                 }
             }
         }
-        
+
         Ok(compressed_count)
     }
-    
+
     /// Archive snapshots to cold storage
     async fn archive_snapshots(&self, dataset_name: &str) -> Result<u32> {
         tracing::info!("📦 Archiving snapshots for dataset: {}", dataset_name);
-        
+
         let snapshots = self.list_dataset_snapshots(dataset_name).await?;
-        
+
         let mut archived_count = 0;
         let now = std::time::SystemTime::now();
-        
+
         for snapshot in snapshots {
             // Archive snapshots older than 30 days
             let age = now.duration_since(snapshot.created_at).unwrap_or_default();
-            
-            if age.as_secs() > 30 * 24 * 3600 && !snapshot.archived {
-                if self.archive_snapshot(&snapshot.full_name).await.is_ok() {
-                    archived_count += 1;
-                    tracing::debug!("Archived snapshot: {}", snapshot.full_name);
-                }
+
+            if age.as_secs() > 30 * 24 * 3600
+                && !snapshot.archived
+                && self.archive_snapshot(&snapshot.full_name).await.is_ok()
+            {
+                archived_count += 1;
+                tracing::debug!("Archived snapshot: {}", snapshot.full_name);
             }
         }
-        
+
         Ok(archived_count)
     }
-    
-        /// Optimize retention schedule based on usage patterns
+
+    /// Optimize retention schedule based on usage patterns
     async fn optimize_retention_schedule(&self, dataset_name: &str) -> Result<String> {
-        tracing::info!("⚡ Optimizing retention schedule for dataset: {}", dataset_name);
-        
+        tracing::info!(
+            "⚡ Optimizing retention schedule for dataset: {}",
+            dataset_name
+        );
+
         // Analyze usage patterns
         let usage_analysis = self.analyze_dataset_usage(dataset_name).await?;
-        
+
         // Generate optimized retention schedule based on comprehensive analysis
         let optimized_schedule = match usage_analysis.access_frequency {
             AccessFrequency::High => {
@@ -344,7 +361,7 @@ impl AdvancedSnapshotManager {
                 } else {
                     "Hourly snapshots, 7-day retention"
                 }
-            },
+            }
             AccessFrequency::Medium => {
                 // Medium frequency based on access patterns and data size
                 if usage_analysis.average_access_size > 512 * 1024 {
@@ -352,115 +369,139 @@ impl AdvancedSnapshotManager {
                 } else {
                     "Daily snapshots, 30-day retention"
                 }
-            },
+            }
             AccessFrequency::Low => {
                 // Low frequency datasets get longer retention but less frequent snapshots
                 let age_since_last_access = std::time::SystemTime::now()
                     .duration_since(usage_analysis.last_access)
                     .unwrap_or_default();
-                
+
                 if age_since_last_access.as_secs() > 7 * 24 * 3600 {
                     "Weekly snapshots, 180-day retention" // Very old data
                 } else {
                     "Weekly snapshots, 90-day retention"
                 }
-            },
+            }
         };
-        
+
         // Update retention policies with detailed analysis
         {
             let mut retention_policies = self.retention_policies.write().await;
             retention_policies.insert(
                 format!("{dataset_name}_schedule"),
-                format!("{} (based on {} accesses, avg size: {} bytes)", 
-                    optimized_schedule, usage_analysis.total_accesses, usage_analysis.average_access_size)
+                format!(
+                    "{} (based on {} accesses, avg size: {} bytes)",
+                    optimized_schedule,
+                    usage_analysis.total_accesses,
+                    usage_analysis.average_access_size
+                ),
             );
         }
-        
+
         tracing::info!(
             "Optimized retention for {}: {} (accesses: {}, avg_size: {})",
-            dataset_name, optimized_schedule, usage_analysis.total_accesses, usage_analysis.average_access_size
+            dataset_name,
+            optimized_schedule,
+            usage_analysis.total_accesses,
+            usage_analysis.average_access_size
         );
-        
+
         Ok(optimized_schedule.to_string())
     }
-    
+
     /// List snapshots for a dataset
     async fn list_dataset_snapshots(&self, dataset_name: &str) -> Result<Vec<SnapshotMetadata>> {
         // Mock implementation - in real system would query ZFS
         let mut snapshots = Vec::new();
-        
+
         // Create some mock snapshots for demonstration
         let now = std::time::SystemTime::now();
-        
+
         for i in 0..5 {
             let age_days = i * 30; // 0, 30, 60, 90, 120 days old
-            let created_at = now.checked_sub(std::time::Duration::from_secs(age_days * 24 * 3600))
+            let created_at = now
+                .checked_sub(std::time::Duration::from_secs(age_days * 24 * 3600))
                 .unwrap_or(now);
-            
-                         snapshots.push(SnapshotMetadata {
-                 full_name: format!("{dataset_name}@auto_{i}"),
-                 created_at,
-                 size_bytes: (i + 1) * 1024 * 1024 * 1024, // 1GB, 2GB, 3GB, etc.
-                 compressed: false,
-                 archived: false,
-                 recently_accessed: i < 2, // Only first 2 are recently accessed
-             });
+
+            snapshots.push(SnapshotMetadata {
+                full_name: format!("{dataset_name}@auto_{i}"),
+                created_at,
+                size_bytes: (i + 1) * 1024 * 1024 * 1024, // 1GB, 2GB, 3GB, etc.
+                compressed: false,
+                archived: false,
+                recently_accessed: i < 2, // Only first 2 are recently accessed
+            });
         }
-        
+
         Ok(snapshots)
     }
-    
+
     /// Delete a snapshot
     async fn delete_snapshot(&self, snapshot_name: &str) -> Result<()> {
         tracing::debug!("Deleting snapshot: {}", snapshot_name);
         // Mock implementation - in real system would call ZFS destroy
         Ok(())
     }
-    
+
     /// Enable compression on a snapshot
     async fn enable_snapshot_compression(&self, snapshot_name: &str) -> Result<()> {
         tracing::debug!("Enabling compression for snapshot: {}", snapshot_name);
         // Mock implementation - in real system would set ZFS compression
         Ok(())
     }
-    
+
     /// Archive a snapshot to cold storage
     async fn archive_snapshot(&self, snapshot_name: &str) -> Result<()> {
         tracing::debug!("Archiving snapshot: {}", snapshot_name);
         // Mock implementation - in real system would move to cold tier
         Ok(())
     }
-    
+
     /// Analyze dataset usage patterns
     async fn analyze_dataset_usage(&self, dataset_name: &str) -> Result<DatasetUsageAnalysis> {
         tracing::debug!("Analyzing usage patterns for dataset: {}", dataset_name);
-        
+
         // Simulate realistic usage analysis based on dataset characteristics
         let now = std::time::SystemTime::now();
-        let (access_frequency, total_accesses, average_access_size, last_access_age) = if dataset_name.contains("hot") {
-            (AccessFrequency::High, 10000, 64 * 1024, std::time::Duration::from_secs(300)) // 5 minutes ago
-        } else if dataset_name.contains("warm") {
-            (AccessFrequency::Medium, 2000, 256 * 1024, std::time::Duration::from_secs(3600)) // 1 hour ago
-        } else {
-            (AccessFrequency::Low, 100, 1024 * 1024, std::time::Duration::from_secs(86400)) // 1 day ago
-        };
-        
+        let (access_frequency, total_accesses, average_access_size, last_access_age) =
+            if dataset_name.contains("hot") {
+                (
+                    AccessFrequency::High,
+                    10000,
+                    64 * 1024,
+                    std::time::Duration::from_secs(300),
+                ) // 5 minutes ago
+            } else if dataset_name.contains("warm") {
+                (
+                    AccessFrequency::Medium,
+                    2000,
+                    256 * 1024,
+                    std::time::Duration::from_secs(3600),
+                ) // 1 hour ago
+            } else {
+                (
+                    AccessFrequency::Low,
+                    100,
+                    1024 * 1024,
+                    std::time::Duration::from_secs(86400),
+                ) // 1 day ago
+            };
+
         let last_access = now.checked_sub(last_access_age).unwrap_or(now);
-        
+
         let usage = DatasetUsageAnalysis {
             access_frequency,
             last_access,
             total_accesses,
             average_access_size,
         };
-        
+
         // Log comprehensive analysis results
         tracing::info!(
             "Dataset {} usage analysis: frequency={:?}, total_accesses={}, avg_size={}, last_access_age={:?}",
             dataset_name, usage.access_frequency, usage.total_accesses, usage.average_access_size, last_access_age
         );
-        
+
         Ok(usage)
     }
 }

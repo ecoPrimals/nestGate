@@ -958,7 +958,7 @@ impl PerformanceOptimizationEngine {
             .output()
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to get pool iostat: {}", e),
+                message: format!("Failed to get pool iostat: {e}"),
             })?;
 
         if !output.status.success() {
@@ -985,7 +985,7 @@ impl PerformanceOptimizationEngine {
             .output()
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to get pool iostat: {}", e),
+                message: format!("Failed to get pool iostat: {e}"),
             })?;
 
         if !output.status.success() {
@@ -1012,7 +1012,7 @@ impl PerformanceOptimizationEngine {
             .output()
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to get pool latency: {}", e),
+                message: format!("Failed to get pool latency: {e}"),
             })?;
 
         if !output.status.success() {
@@ -1075,7 +1075,7 @@ impl PerformanceOptimizationEngine {
             .output()
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to get pool fragmentation: {}", e),
+                message: format!("Failed to get pool fragmentation: {e}"),
             })?;
 
         if !output.status.success() {
@@ -1181,7 +1181,7 @@ impl PerformanceOptimizationEngine {
             .output()
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to get dataset properties: {}", e),
+                message: format!("Failed to get dataset properties: {e}"),
             })?;
 
         if !output.status.success() {
@@ -1254,7 +1254,7 @@ impl PerformanceOptimizationEngine {
             .output()
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to get dataset stats: {}", e),
+                message: format!("Failed to get dataset stats: {e}"),
             })?;
 
         let read_write_ratio = 3.0; // Default 3:1 read to write
@@ -1319,7 +1319,7 @@ impl PerformanceOptimizationEngine {
             .output()
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to get ZFS configuration: {}", e),
+                message: format!("Failed to get ZFS configuration: {e}"),
             })?;
 
         if !output.status.success() {
@@ -1435,8 +1435,7 @@ impl PerformanceOptimizationEngine {
                     if let Err(e) = tokio::process::Command::new("sh")
                         .arg("-c")
                         .arg(format!(
-                            "echo {} > /sys/module/zfs/parameters/zfs_arc_max",
-                            boosted_size
+                            "echo {boosted_size} > /sys/module/zfs/parameters/zfs_arc_max"
                         ))
                         .output()
                         .await
@@ -1579,15 +1578,14 @@ impl PerformanceOptimizationEngine {
                     if let Err(e) = tokio::process::Command::new("sh")
                         .arg("-c")
                         .arg(format!(
-                            "echo {} > /sys/module/zfs/parameters/zfs_arc_meta_limit",
-                            optimal_arc_meta
+                            "echo {optimal_arc_meta} > /sys/module/zfs/parameters/zfs_arc_meta_limit"
                         ))
                         .output()
                         .await
                     {
                         warn!("Failed to tune ARC metadata: {}", e);
                     } else {
-                                                  actions.push(format!(
+                        actions.push(format!(
                             "Optimized ARC metadata limit to {optimal_arc_meta} bytes"
                         ));
                     }

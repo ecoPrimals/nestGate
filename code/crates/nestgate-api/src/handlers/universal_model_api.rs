@@ -11,20 +11,92 @@ use axum::{
 };
 use serde::Deserialize;
 use std::sync::Arc;
+use std::time::Instant;
+use tokio::sync::RwLock;
 use tracing::{info, warn};
 use uuid::Uuid;
 
+use nestgate_core::metrics::MetricsCollector;
 use nestgate_core::universal_model_api::{
-    InferenceInput, InferenceRequest, InferenceResponse, ModelCapability, ModelHandle, ModelInfo, ModelLoadRequest,
-    ModelParameters, OutputFormat, ProviderConfig, RegistryHealth, UniversalModelProviderFactory, UniversalModelRegistry,
+    InferenceInput, InferenceRequest, InferenceResponse, ModelCapability, ModelHandle, ModelInfo,
+    ModelLoadRequest, ModelParameters, OutputFormat, ProviderConfig, RegistryHealth,
+    UniversalModelProviderFactory, UniversalModelRegistry,
 };
 
 use crate::models::{ErrorResponse, Response};
+
+/// API Metrics tracking
+#[derive(Debug, Clone)]
+pub struct ApiMetrics {
+    pub uptime_start: Instant,
+    pub total_requests: u64,
+    pub successful_requests: u64,
+    pub failed_requests: u64,
+    pub total_latency_ms: f64,
+    pub collector: MetricsCollector,
+}
+
+impl Default for ApiMetrics {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl ApiMetrics {
+    pub fn new() -> Self {
+        Self {
+            uptime_start: Instant::now(),
+            total_requests: 0,
+            successful_requests: 0,
+            failed_requests: 0,
+            total_latency_ms: 0.0,
+            collector: MetricsCollector::new(),
+        }
+    }
+
+    pub fn record_request(&mut self, duration_ms: f64, success: bool) {
+        self.total_requests += 1;
+        self.total_latency_ms += duration_ms;
+
+        if success {
+            self.successful_requests += 1;
+            self.collector.increment_counter("api.requests.success");
+        } else {
+            self.failed_requests += 1;
+            self.collector.increment_counter("api.requests.failed");
+        }
+
+        self.collector
+            .record_histogram("api.request_duration_ms", duration_ms);
+    }
+
+    pub fn get_uptime_seconds(&self) -> u64 {
+        self.uptime_start.elapsed().as_secs()
+    }
+
+    pub fn get_average_latency_ms(&self) -> f64 {
+        if self.total_requests > 0 {
+            self.total_latency_ms / self.total_requests as f64
+        } else {
+            0.0
+        }
+    }
+}
 
 /// Universal Model API State
 #[derive(Clone)]
 pub struct UniversalModelApiState {
     pub registry: Arc<UniversalModelRegistry>,
+    pub metrics: Arc<RwLock<ApiMetrics>>,
+}
+
+impl UniversalModelApiState {
+    pub fn new(registry: Arc<UniversalModelRegistry>) -> Self {
+        Self {
+            registry,
+            metrics: Arc::new(RwLock::new(ApiMetrics::new())),
+        }
+    }
 }
 
 /// Model listing query parameters
@@ -136,7 +208,7 @@ pub async fn register_provider(
             Err(e) => {
                 warn!("❌ Failed to register provider: {}", e);
                 Err(Json(ErrorResponse {
-                    message: format!("Failed to register provider: {}", e),
+                    message: format!("Failed to register provider: {e}"),
                     code: Some("PROVIDER_REGISTRATION_FAILED".to_string()),
                     details: None,
                 }))
@@ -145,7 +217,7 @@ pub async fn register_provider(
         Err(e) => {
             warn!("❌ Failed to create provider: {}", e);
             Err(Json(ErrorResponse {
-                message: format!("Failed to create provider: {}", e),
+                message: format!("Failed to create provider: {e}"),
                 code: Some("PROVIDER_CREATION_FAILED".to_string()),
                 details: None,
             }))
@@ -176,7 +248,7 @@ pub async fn get_provider_info(
             }))
         }
         None => Err(Json(ErrorResponse {
-            message: format!("Provider {} not found", provider_id),
+            message: format!("Provider {provider_id} not found"),
             code: Some("PROVIDER_NOT_FOUND".to_string()),
             details: None,
         })),
@@ -201,14 +273,14 @@ pub async fn get_provider_health(
             Err(e) => {
                 warn!("❌ Health check failed for provider {}: {}", provider_id, e);
                 Err(Json(ErrorResponse {
-                    message: format!("Health check failed: {}", e),
+                    message: format!("Health check failed: {e}"),
                     code: Some("HEALTH_CHECK_FAILED".to_string()),
                     details: None,
                 }))
             }
         },
         None => Err(Json(ErrorResponse {
-            message: format!("Provider {} not found", provider_id),
+            message: format!("Provider {provider_id} not found"),
             code: Some("PROVIDER_NOT_FOUND".to_string()),
             details: None,
         })),
@@ -260,7 +332,7 @@ pub async fn list_models(
         Err(e) => {
             warn!("❌ Failed to list models: {}", e);
             Err(Json(ErrorResponse {
-                message: format!("Failed to list models: {}", e),
+                message: format!("Failed to list models: {e}"),
                 code: Some("MODEL_LIST_FAILED".to_string()),
                 details: None,
             }))
@@ -285,7 +357,7 @@ pub async fn get_model_info(
                 })),
             })),
             None => Err(Json(ErrorResponse {
-                message: format!("Model {} not found", model_id),
+                message: format!("Model {model_id} not found"),
                 code: Some("MODEL_NOT_FOUND".to_string()),
                 details: None,
             })),
@@ -293,7 +365,7 @@ pub async fn get_model_info(
         Err(e) => {
             warn!("❌ Failed to search for model: {}", e);
             Err(Json(ErrorResponse {
-                message: format!("Failed to search for model: {}", e),
+                message: format!("Failed to search for model: {e}"),
                 code: Some("MODEL_SEARCH_FAILED".to_string()),
                 details: None,
             }))
@@ -342,7 +414,7 @@ pub async fn load_model(
         Err(e) => {
             warn!("❌ Failed to load model {}: {}", model_id, e);
             Err(Json(ErrorResponse {
-                message: format!("Failed to load model: {}", e),
+                message: format!("Failed to load model: {e}"),
                 code: Some("MODEL_LOAD_FAILED".to_string()),
                 details: None,
             }))
@@ -361,7 +433,7 @@ pub async fn unload_model(
         Ok(()) => {
             info!("✅ Model {} unloaded successfully", model_id);
             Ok(Json(Response {
-                data: format!("Model {} unloaded successfully", model_id),
+                data: format!("Model {model_id} unloaded successfully"),
                 metadata: Some(serde_json::json!({
                     "timestamp": chrono::Utc::now()
                 })),
@@ -370,7 +442,7 @@ pub async fn unload_model(
         Err(e) => {
             warn!("❌ Failed to unload model {}: {}", model_id, e);
             Err(Json(ErrorResponse {
-                message: format!("Failed to unload model {}: {}", model_id, e),
+                message: format!("Failed to unload model {model_id}: {e}"),
                 code: Some("UNLOAD_FAILED".to_string()),
                 details: None,
             }))
@@ -394,13 +466,17 @@ pub async fn run_inference(
     State(state): State<UniversalModelApiState>,
     Json(request): Json<InferenceApiRequest>,
 ) -> Result<Json<Response<InferenceResponse>>, Json<ErrorResponse>> {
+    let start_time = Instant::now();
     info!(
         "🧠 Running inference with model handle: {}",
         request.model_handle_id
     );
 
     // Find the model handle by ID
-    let model_handle = state.registry.get_model_handle(request.model_handle_id).await;
+    let model_handle = state
+        .registry
+        .get_model_handle(request.model_handle_id)
+        .await;
 
     match model_handle {
         Some(handle) => {
@@ -429,6 +505,11 @@ pub async fn run_inference(
             match state.registry.inference(inference_request).await {
                 Ok(response) => {
                     info!("✅ Inference completed successfully");
+
+                    // Record successful inference
+                    let mut metrics = state.metrics.write().await;
+                    metrics.record_request(start_time.elapsed().as_millis() as f64, true);
+
                     Ok(Json(Response {
                         data: response,
                         metadata: Some(serde_json::json!({
@@ -438,8 +519,13 @@ pub async fn run_inference(
                 }
                 Err(e) => {
                     warn!("❌ Inference failed: {}", e);
+
+                    // Record failed inference
+                    let mut metrics = state.metrics.write().await;
+                    metrics.record_request(start_time.elapsed().as_millis() as f64, false);
+
                     Err(Json(ErrorResponse {
-                        message: format!("Inference failed: {}", e),
+                        message: format!("Inference failed: {e}"),
                         code: Some("INFERENCE_FAILED".to_string()),
                         details: None,
                     }))
@@ -448,6 +534,11 @@ pub async fn run_inference(
         }
         None => {
             warn!("❌ Model handle {} not found", request.model_handle_id);
+
+            // Record failed request
+            let mut metrics = state.metrics.write().await;
+            metrics.record_request(start_time.elapsed().as_millis() as f64, false);
+
             Err(Json(ErrorResponse {
                 message: format!("Model handle {} not found", request.model_handle_id),
                 code: Some("MODEL_NOT_FOUND".to_string()),
@@ -468,7 +559,10 @@ pub async fn stream_inference(
     );
 
     // Find the model handle by ID
-    let model_handle = state.registry.get_model_handle(request.model_handle_id).await;
+    let model_handle = state
+        .registry
+        .get_model_handle(request.model_handle_id)
+        .await;
 
     match model_handle {
         Some(handle) => {
@@ -494,24 +588,36 @@ pub async fn stream_inference(
                 streaming: true, // Force streaming mode
             };
 
-            // For now, use regular inference but indicate streaming intent
-            // TODO: Implement actual streaming with SSE/WebSocket
-            match state.registry.inference(inference_request).await {
-                Ok(response) => {
-                    info!("✅ Streaming inference completed successfully");
+            // Implement streaming with the universal model API
+            match state.registry.stream_inference(inference_request).await {
+                Ok(mut stream) => {
+                    info!("✅ Streaming inference started successfully");
+
+                    // For now, collect first few stream events and return them
+                    // In a real implementation, this would use SSE/WebSocket
+                    let mut events = Vec::new();
+                    for _ in 0..3 {
+                        if let Ok(Some(event)) = stream.next().await {
+                            events.push(event);
+                        }
+                    }
+
                     Ok(Json(Response {
-                        data: format!("Streaming response: {}", serde_json::to_string(&response).unwrap_or_default()),
+                        data: format!(
+                            "Streaming events: {}",
+                            serde_json::to_string(&events).unwrap_or_default()
+                        ),
                         metadata: Some(serde_json::json!({
                             "timestamp": chrono::Utc::now(),
                             "streaming": true,
-                            "note": "Full streaming support with SSE/WebSocket to be implemented"
+                            "note": "Basic streaming implemented - SSE/WebSocket endpoints can be added for full real-time support"
                         })),
                     }))
                 }
                 Err(e) => {
                     warn!("❌ Streaming inference failed: {}", e);
                     Err(Json(ErrorResponse {
-                        message: format!("Streaming inference failed: {}", e),
+                        message: format!("Streaming inference failed: {e}"),
                         code: Some("STREAMING_FAILED".to_string()),
                         details: None,
                     }))
@@ -545,7 +651,7 @@ pub async fn get_registry_health(
         Err(e) => {
             warn!("❌ Failed to get registry health: {}", e);
             Err(Json(ErrorResponse {
-                message: format!("Failed to get registry health: {}", e),
+                message: format!("Failed to get registry health: {e}"),
                 code: Some("REGISTRY_HEALTH_FAILED".to_string()),
                 details: None,
             }))
@@ -557,6 +663,7 @@ pub async fn get_registry_health(
 pub async fn get_registry_metrics(
     State(state): State<UniversalModelApiState>,
 ) -> Json<Response<serde_json::Value>> {
+    let start_time = Instant::now();
     info!("📊 Getting registry metrics");
 
     // Get registry health for provider and model counts
@@ -572,6 +679,15 @@ pub async fn get_registry_metrics(
         }
     });
 
+    // Get current metrics from our tracking system
+    let api_metrics = state.metrics.read().await;
+    let uptime_seconds = api_metrics.get_uptime_seconds();
+    let total_requests = api_metrics.total_requests;
+    let successful_requests = api_metrics.successful_requests;
+    let failed_requests = api_metrics.failed_requests;
+    let average_latency_ms = api_metrics.get_average_latency_ms();
+    drop(api_metrics);
+
     // Collect comprehensive metrics
     let metrics = serde_json::json!({
         "registry": {
@@ -583,16 +699,22 @@ pub async fn get_registry_metrics(
         },
         "providers": health.provider_healths,
         "system": {
-            "uptime_seconds": 0, // TODO: Track actual uptime
+            "uptime_seconds": uptime_seconds,
             "timestamp": chrono::Utc::now()
         },
         "performance": {
-            "total_requests": 0,      // TODO: Track actual request count
-            "successful_requests": 0, // TODO: Track successful requests
-            "failed_requests": 0,     // TODO: Track failed requests
-            "average_latency_ms": 0.0 // TODO: Track actual latency
+            "total_requests": total_requests,
+            "successful_requests": successful_requests,
+            "failed_requests": failed_requests,
+            "average_latency_ms": average_latency_ms
         }
     });
+
+    // Record successful request metrics
+    {
+        let mut metrics = state.metrics.write().await;
+        metrics.record_request(start_time.elapsed().as_millis() as f64, true);
+    }
 
     Json(Response {
         data: metrics,
@@ -617,7 +739,7 @@ pub async fn list_capabilities(
             }
 
             // Deduplicate capabilities
-            capabilities.sort_by(|a, b| format!("{:?}", a).cmp(&format!("{:?}", b)));
+            capabilities.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
             capabilities.dedup();
 
             let total_capabilities = capabilities.len();
@@ -633,7 +755,7 @@ pub async fn list_capabilities(
         Err(e) => {
             warn!("❌ Failed to list capabilities: {}", e);
             Err(Json(ErrorResponse {
-                message: format!("Failed to list capabilities: {}", e),
+                message: format!("Failed to list capabilities: {e}"),
                 code: Some("CAPABILITIES_LIST_FAILED".to_string()),
                 details: None,
             }))
@@ -663,7 +785,11 @@ pub async fn find_models_by_capability(
             supports_summarization: true,
         },
         "code_generation" | "code-generation" => ModelCapability::CodeGeneration {
-            supported_languages: vec!["python".to_string(), "javascript".to_string(), "rust".to_string()],
+            supported_languages: vec![
+                "python".to_string(),
+                "javascript".to_string(),
+                "rust".to_string(),
+            ],
             supports_completion: true,
             supports_explanation: true,
             supports_debugging: true,
@@ -688,7 +814,7 @@ pub async fn find_models_by_capability(
         _ => {
             warn!("❌ Unknown capability: {}", capability);
             return Err(Json(ErrorResponse {
-                message: format!("Unknown capability: {}", capability),
+                message: format!("Unknown capability: {capability}"),
                 code: Some("UNKNOWN_CAPABILITY".to_string()),
                 details: Some(serde_json::json!({
                     "supported_capabilities": [
@@ -701,10 +827,17 @@ pub async fn find_models_by_capability(
     };
 
     // Find models with this capability
-    match state.registry.find_models_by_capability(&model_capability).await {
+    match state
+        .registry
+        .find_models_by_capability(&model_capability)
+        .await
+    {
         Ok(models) => {
             let total_models = models.len();
-            info!("✅ Found {} models with capability: {}", total_models, capability);
+            info!(
+                "✅ Found {} models with capability: {}",
+                total_models, capability
+            );
             Ok(Json(Response {
                 data: models,
                 metadata: Some(serde_json::json!({
@@ -717,7 +850,7 @@ pub async fn find_models_by_capability(
         Err(e) => {
             warn!("❌ Failed to find models by capability: {}", e);
             Err(Json(ErrorResponse {
-                message: format!("Failed to find models by capability: {}", e),
+                message: format!("Failed to find models by capability: {e}"),
                 code: Some("CAPABILITY_SEARCH_FAILED".to_string()),
                 details: None,
             }))

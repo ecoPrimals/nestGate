@@ -81,7 +81,7 @@ impl ZfsCommand {
             .args(args)
             .output()
             .await
-            .with_context(|| format!("Failed to execute {} command", command))?;
+            .with_context(|| format!("Failed to execute {command} command"))?;
 
         let result = CommandResult {
             success: output.status.success(),
@@ -312,7 +312,7 @@ impl ZfsOperations {
         let mut property_strings = Vec::new();
         if let Some(props) = properties {
             for (key, value) in props {
-                property_strings.push(format!("{}={}", key, value));
+                property_strings.push(format!("{key}={value}"));
             }
             for prop_string in &property_strings {
                 args.push("-o");
@@ -337,7 +337,7 @@ impl ZfsOperations {
 
     /// Create a snapshot
     pub async fn create_snapshot(&self, dataset_name: &str, snapshot_name: &str) -> Result<()> {
-        let full_name = format!("{}@{}", dataset_name, snapshot_name);
+        let full_name = format!("{dataset_name}@{snapshot_name}");
         let result = self.command.zfs(&["snapshot", &full_name]).await?;
 
         if !result.is_success() {
@@ -448,9 +448,8 @@ mod tests {
         let available = ZfsCommand::check_zfs_available()
             .await
             .expect("Failed to check ZFS availability in test");
-        println!("ZFS available: {}", available);
+        println!("ZFS available: {available}");
         // This test will pass regardless of ZFS availability
-        assert!(true);
     }
 
     #[tokio::test]

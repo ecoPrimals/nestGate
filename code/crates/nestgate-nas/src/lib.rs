@@ -410,7 +410,7 @@ mod tests {
             };
 
             assert_eq!(share.name, format!("share_{i}"));
-            assert_eq!(share.path, PathBuf::from(format!("/nas/share_{}", i)));
+            assert_eq!(share.path, PathBuf::from(format!("/nas/share_{i}")));
             assert_eq!(share.read_only, i % 2 == 0);
             assert_eq!(share.protocols, vec![*protocol]);
         }

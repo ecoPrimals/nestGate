@@ -445,7 +445,7 @@ impl TierConfig {
     pub fn auto_detect_hot(pool_name: &str) -> Self {
         let mut config = Self::hot_tier_default();
         config.pool_name = pool_name.to_string();
-        config.dataset_prefix = format!("{}/hot", pool_name);
+        config.dataset_prefix = format!("{pool_name}/hot");
         config
     }
 
@@ -453,7 +453,7 @@ impl TierConfig {
     pub fn auto_detect_warm(pool_name: &str) -> Self {
         let mut config = Self::warm_tier_default();
         config.pool_name = pool_name.to_string();
-        config.dataset_prefix = format!("{}/warm", pool_name);
+        config.dataset_prefix = format!("{pool_name}/warm");
         config
     }
 
@@ -461,7 +461,7 @@ impl TierConfig {
     pub fn auto_detect_cold(pool_name: &str) -> Self {
         let mut config = Self::cold_tier_default();
         config.pool_name = pool_name.to_string();
-        config.dataset_prefix = format!("{}/cold", pool_name);
+        config.dataset_prefix = format!("{pool_name}/cold");
         config
     }
 }
@@ -625,7 +625,7 @@ impl ZfsConfig {
     /// Load configuration from file with advanced integration patterns
     pub async fn load_from_file(path: &std::path::Path) -> Result<Self> {
         let content = tokio::fs::read_to_string(path).await.map_err(|e| {
-            NestGateError::Configuration(format!("Failed to read config file: {}", e))
+            NestGateError::Configuration(format!("Failed to read config file: {e}"))
         })?;
 
         // Support multiple formats (YAML, JSON)
@@ -633,10 +633,10 @@ impl ZfsConfig {
             || path.extension().and_then(|s| s.to_str()) == Some("yml")
         {
             serde_yaml::from_str(&content)
-                .map_err(|e| NestGateError::Configuration(format!("YAML parsing error: {}", e)))
+                .map_err(|e| NestGateError::Configuration(format!("YAML parsing error: {e}")))
         } else {
             serde_json::from_str(&content)
-                .map_err(|e| NestGateError::Configuration(format!("JSON parsing error: {}", e)))
+                .map_err(|e| NestGateError::Configuration(format!("JSON parsing error: {e}")))
         }
     }
 
@@ -646,16 +646,16 @@ impl ZfsConfig {
             || path.extension().and_then(|s| s.to_str()) == Some("yml")
         {
             serde_yaml::to_string(self).map_err(|e| {
-                NestGateError::Configuration(format!("YAML serialization error: {}", e))
+                NestGateError::Configuration(format!("YAML serialization error: {e}"))
             })?
         } else {
             serde_json::to_string_pretty(self).map_err(|e| {
-                NestGateError::Configuration(format!("JSON serialization error: {}", e))
+                NestGateError::Configuration(format!("JSON serialization error: {e}"))
             })?
         };
 
         tokio::fs::write(path, content).await.map_err(|e| {
-            NestGateError::Configuration(format!("Failed to write config file: {}", e))
+            NestGateError::Configuration(format!("Failed to write config file: {e}"))
         })?;
 
         Ok(())
@@ -675,7 +675,7 @@ impl ZfsConfig {
     pub fn validate(&self) -> Result<()> {
         // Validate API endpoint
         url::Url::parse(&self.api_endpoint)
-            .map_err(|e| NestGateError::Configuration(format!("Invalid API endpoint: {}", e)))?;
+            .map_err(|e| NestGateError::Configuration(format!("Invalid API endpoint: {e}")))?;
 
         // Validate pool name
         if self.default_pool.is_empty() {
@@ -727,7 +727,7 @@ impl ZfsConfig {
             .args(["list", "-H", "-o", "name"])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to list ZFS pools: {}", e)))?;
+            .map_err(|e| NestGateError::Internal(format!("Failed to list ZFS pools: {e}")))?;
 
         if !output.status.success() {
             return Ok(Vec::new());
@@ -748,7 +748,7 @@ impl ZfsConfig {
             .args(["list", "-H", "-o", "name", "-r", pool_name])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to list pool datasets: {}", e)))?;
+            .map_err(|e| NestGateError::Internal(format!("Failed to list pool datasets: {e}")))?;
 
         if !output.status.success() {
             return Ok(false);

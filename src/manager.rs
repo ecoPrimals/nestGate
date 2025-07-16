@@ -1,1 +1,0 @@
-            .map_err(|e| ZfsError::Storage { message: e.to_string() })?;

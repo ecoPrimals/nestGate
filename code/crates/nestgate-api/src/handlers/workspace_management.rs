@@ -158,7 +158,7 @@ pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Json<V
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_id);
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}");
 
     // Check if dataset exists first
     let check_output = Command::new("zfs")
@@ -230,7 +230,7 @@ pub async fn get_workspace_status(
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_id);
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}");
 
     // Get ZFS dataset properties
     let status_output = Command::new("zfs")
@@ -334,7 +334,7 @@ pub async fn cleanup_workspace(
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_id);
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}");
     let mut cleanup_actions = Vec::new();
     let mut space_freed = 0u64;
 
@@ -370,7 +370,7 @@ pub async fn cleanup_workspace(
 
                     if let Ok(result) = delete_result {
                         if result.status.success() {
-                            cleanup_actions.push(format!("Deleted old snapshot: {}", snapshot));
+                            cleanup_actions.push(format!("Deleted old snapshot: {snapshot}"));
                             space_freed += 1024 * 1024; // Estimate 1MB per snapshot
                         }
                     }
@@ -448,9 +448,9 @@ pub async fn create_workspace_backup(
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_id);
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}");
     let timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S").to_string();
-    let snapshot_name = format!("{}@backup_{}", dataset_name, timestamp);
+    let snapshot_name = format!("{dataset_name}@backup_{timestamp}");
 
     // Create ZFS snapshot
     let snapshot_output = Command::new("zfs")
@@ -515,7 +515,7 @@ pub async fn restore_workspace(
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_id);
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}");
 
     // Find the most recent backup snapshot
     let snapshot_output = Command::new("zfs")
@@ -608,7 +608,7 @@ pub async fn scale_workspace(Path(workspace_id): Path<String>) -> Result<Json<Va
     info!("📈 Scaling workspace storage: {}", workspace_id);
 
     // Real ZFS quota/reservation scaling implementation
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_id);
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}");
 
     // Get current usage statistics
     let usage_result = std::process::Command::new("zfs")
@@ -654,23 +654,22 @@ pub async fn scale_workspace(Path(workspace_id): Path<String>) -> Result<Json<Va
                             let new_quota = format_zfs_size(new_quota_bytes);
 
                             let quota_result = std::process::Command::new("zfs")
-                                .args(["set", &format!("quota={}", new_quota), &dataset_name])
+                                .args(["set", &format!("quota={new_quota}"), &dataset_name])
                                 .output();
 
                             match quota_result {
                                 Ok(q_output) if q_output.status.success() => {
                                     scaling_actions.push(format!(
-                                        "Quota scaled from {} to {}",
-                                        current_quota, new_quota
+                                        "Quota scaled from {current_quota} to {new_quota}"
                                     ));
                                     info!("✅ Quota scaled successfully");
                                 }
                                 Ok(q_output) => {
                                     let error_msg = String::from_utf8_lossy(&q_output.stderr);
-                                    warnings.push(format!("Failed to scale quota: {}", error_msg));
+                                    warnings.push(format!("Failed to scale quota: {error_msg}"));
                                 }
                                 Err(e) => {
-                                    warnings.push(format!("Quota scaling command failed: {}", e));
+                                    warnings.push(format!("Quota scaling command failed: {e}"));
                                 }
                             }
                         }
@@ -682,7 +681,7 @@ pub async fn scale_workspace(Path(workspace_id): Path<String>) -> Result<Json<Va
                         let reservation_result = std::process::Command::new("zfs")
                             .args([
                                 "set",
-                                &format!("reservation={}", new_reservation),
+                                &format!("reservation={new_reservation}"),
                                 &dataset_name,
                             ])
                             .output();
@@ -690,17 +689,16 @@ pub async fn scale_workspace(Path(workspace_id): Path<String>) -> Result<Json<Va
                         match reservation_result {
                             Ok(r_output) if r_output.status.success() => {
                                 scaling_actions
-                                    .push(format!("Reservation adjusted to {}", new_reservation));
+                                    .push(format!("Reservation adjusted to {new_reservation}"));
                                 info!("✅ Reservation adjusted successfully");
                             }
                             Ok(r_output) => {
                                 let error_msg = String::from_utf8_lossy(&r_output.stderr);
-                                warnings
-                                    .push(format!("Failed to adjust reservation: {}", error_msg));
+                                warnings.push(format!("Failed to adjust reservation: {error_msg}"));
                             }
                             Err(e) => {
                                 warnings
-                                    .push(format!("Reservation adjustment command failed: {}", e));
+                                    .push(format!("Reservation adjustment command failed: {e}"));
                             }
                         }
                     }
@@ -709,10 +707,10 @@ pub async fn scale_workspace(Path(workspace_id): Path<String>) -> Result<Json<Va
         }
         Ok(output) => {
             let error_msg = String::from_utf8_lossy(&output.stderr);
-            warnings.push(format!("Failed to get usage statistics: {}", error_msg));
+            warnings.push(format!("Failed to get usage statistics: {error_msg}"));
         }
         Err(e) => {
-            warnings.push(format!("Usage statistics command failed: {}", e));
+            warnings.push(format!("Usage statistics command failed: {e}"));
         }
     }
 
@@ -763,23 +761,14 @@ fn parse_zfs_size(size_str: &str) -> Result<u64, Box<dyn std::error::Error>> {
         return Ok(0);
     }
 
-    let (number, unit) = if size_str.ends_with('K') {
-        (size_str[..size_str.len() - 1].parse::<f64>()?, 1024)
-    } else if size_str.ends_with('M') {
-        (
-            size_str[..size_str.len() - 1].parse::<f64>()?,
-            1024_u64.pow(2),
-        )
-    } else if size_str.ends_with('G') {
-        (
-            size_str[..size_str.len() - 1].parse::<f64>()?,
-            1024_u64.pow(3),
-        )
-    } else if size_str.ends_with('T') {
-        (
-            size_str[..size_str.len() - 1].parse::<f64>()?,
-            1024_u64.pow(4),
-        )
+    let (number, unit) = if let Some(stripped) = size_str.strip_suffix('K') {
+        (stripped.parse::<f64>()?, 1024)
+    } else if let Some(stripped) = size_str.strip_suffix('M') {
+        (stripped.parse::<f64>()?, 1024_u64.pow(2))
+    } else if let Some(stripped) = size_str.strip_suffix('G') {
+        (stripped.parse::<f64>()?, 1024_u64.pow(3))
+    } else if let Some(stripped) = size_str.strip_suffix('T') {
+        (stripped.parse::<f64>()?, 1024_u64.pow(4))
     } else {
         (size_str.parse::<f64>()?, 1)
     };
@@ -797,7 +786,7 @@ fn format_zfs_size(bytes: u64) -> String {
     } else if bytes >= 1024 {
         format!("{}K", bytes / 1024)
     } else {
-        format!("{}", bytes)
+        format!("{bytes}")
     }
 }
 
@@ -808,7 +797,7 @@ pub async fn optimize_workspace(
     info!("⚡ Optimizing workspace storage: {}", workspace_id);
 
     // Real ZFS optimization implementation
-    let dataset_name = format!("nestpool/workspaces/{}", workspace_id);
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}");
 
     let mut optimizations = Vec::new();
     let warnings: Vec<String> = Vec::new();
@@ -838,7 +827,7 @@ pub async fn optimize_workspace(
     // 5. Delegate AI analysis to Squirrel via MCP (if available)
     let ai_recommendations = request_ai_optimization(&dataset_name, &pattern_analysis).await;
     if let Some(ai_rec) = ai_recommendations {
-        optimizations.push(format!("AI recommendations: {}", ai_rec));
+        optimizations.push(format!("AI recommendations: {ai_rec}"));
         info!("🧠 AI optimization recommendations: {}", ai_rec);
     }
 
@@ -922,21 +911,20 @@ async fn optimize_compression(dataset_name: &str, pattern: &StoragePattern) -> O
     let result = std::process::Command::new("zfs")
         .args([
             "set",
-            &format!("compression={}", optimal_compression),
+            &format!("compression={optimal_compression}"),
             dataset_name,
         ])
         .output();
 
     match result {
         Ok(output) if output.status.success() => Some(format!(
-            "Compression set to {} for optimal performance",
-            optimal_compression
+            "Compression set to {optimal_compression} for optimal performance"
         )),
         Ok(output) => {
             let error_msg = String::from_utf8_lossy(&output.stderr);
-            Some(format!("Compression optimization failed: {}", error_msg))
+            Some(format!("Compression optimization failed: {error_msg}"))
         }
-        Err(e) => Some(format!("Compression command failed: {}", e)),
+        Err(e) => Some(format!("Compression command failed: {e}")),
     }
 }
 
@@ -954,21 +942,20 @@ async fn optimize_recordsize(dataset_name: &str, pattern: &StoragePattern) -> Op
     let result = std::process::Command::new("zfs")
         .args([
             "set",
-            &format!("recordsize={}", optimal_recordsize),
+            &format!("recordsize={optimal_recordsize}"),
             dataset_name,
         ])
         .output();
 
     match result {
         Ok(output) if output.status.success() => Some(format!(
-            "Recordsize optimized to {} based on access patterns",
-            optimal_recordsize
+            "Recordsize optimized to {optimal_recordsize} based on access patterns"
         )),
         Ok(output) => {
             let error_msg = String::from_utf8_lossy(&output.stderr);
-            Some(format!("Recordsize optimization failed: {}", error_msg))
+            Some(format!("Recordsize optimization failed: {error_msg}"))
         }
-        Err(e) => Some(format!("Recordsize command failed: {}", e)),
+        Err(e) => Some(format!("Recordsize command failed: {e}")),
     }
 }
 
@@ -984,17 +971,13 @@ async fn optimize_cache_settings(dataset_name: &str, pattern: &StoragePattern) -
 
     // Apply cache settings
     let primary_result = std::process::Command::new("zfs")
-        .args([
-            "set",
-            &format!("primarycache={}", primarycache),
-            dataset_name,
-        ])
+        .args(["set", &format!("primarycache={primarycache}"), dataset_name])
         .output();
 
     let secondary_result = std::process::Command::new("zfs")
         .args([
             "set",
-            &format!("secondarycache={}", secondarycache),
+            &format!("secondarycache={secondarycache}"),
             dataset_name,
         ])
         .output();
@@ -1002,8 +985,7 @@ async fn optimize_cache_settings(dataset_name: &str, pattern: &StoragePattern) -
     match (primary_result, secondary_result) {
         (Ok(p_output), Ok(s_output)) if p_output.status.success() && s_output.status.success() => {
             Some(format!(
-                "Cache settings optimized: primary={}, secondary={}",
-                primarycache, secondarycache
+                "Cache settings optimized: primary={primarycache}, secondary={secondarycache}"
             ))
         }
         _ => Some("Cache optimization partially failed".to_string()),
@@ -1022,9 +1004,9 @@ async fn optimize_deduplication(dataset_name: &str) -> Option<String> {
         }
         Ok(output) => {
             let error_msg = String::from_utf8_lossy(&output.stderr);
-            Some(format!("Deduplication failed: {}", error_msg))
+            Some(format!("Deduplication failed: {error_msg}"))
         }
-        Err(e) => Some(format!("Deduplication command failed: {}", e)),
+        Err(e) => Some(format!("Deduplication command failed: {e}")),
     }
 }
 
@@ -1047,7 +1029,7 @@ async fn request_ai_optimization(dataset_name: &str, pattern: &StoragePattern) -
 
     let client = reqwest::Client::new();
     match client
-        .post(&format!("{}/api/v1/analyze/storage", squirrel_endpoint))
+        .post(format!("{squirrel_endpoint}/api/v1/analyze/storage"))
         .json(&request_data)
         .send()
         .await
@@ -1152,17 +1134,17 @@ pub async fn migrate_workspace(
     info!("🚚 Migrating workspace storage: {}", workspace_id);
 
     // Real ZFS send/receive migration implementation
-    let source_dataset = format!("nestpool/workspaces/{}", workspace_id);
+    let source_dataset = format!("nestpool/workspaces/{workspace_id}");
     let target_pool =
         std::env::var("MIGRATION_TARGET_POOL").unwrap_or_else(|_| "backup_pool".to_string());
-    let target_dataset = format!("{}/migrated/{}", target_pool, workspace_id);
+    let target_dataset = format!("{target_pool}/migrated/{workspace_id}");
 
     let mut migration_steps = Vec::new();
     let mut warnings: Vec<String> = Vec::new();
 
     // Step 1: Create migration snapshot
     let snapshot_name = format!("migration_{}", chrono::Utc::now().format("%Y%m%d_%H%M%S"));
-    let snapshot_path = format!("{}@{}", source_dataset, snapshot_name);
+    let snapshot_path = format!("{source_dataset}@{snapshot_name}");
 
     info!("📸 Creating migration snapshot: {}", snapshot_path);
     let snapshot_result = std::process::Command::new("zfs")
@@ -1171,12 +1153,12 @@ pub async fn migrate_workspace(
 
     match snapshot_result {
         Ok(output) if output.status.success() => {
-            migration_steps.push(format!("Migration snapshot created: {}", snapshot_name));
+            migration_steps.push(format!("Migration snapshot created: {snapshot_name}"));
             info!("✅ Migration snapshot created successfully");
         }
         Ok(output) => {
             let error_msg = String::from_utf8_lossy(&output.stderr);
-            warnings.push(format!("Snapshot creation failed: {}", error_msg));
+            warnings.push(format!("Snapshot creation failed: {error_msg}"));
 
             return Ok(Json(json!({
                 "status": "error",
@@ -1186,7 +1168,7 @@ pub async fn migrate_workspace(
             })));
         }
         Err(e) => {
-            warnings.push(format!("Snapshot command failed: {}", e));
+            warnings.push(format!("Snapshot command failed: {e}"));
 
             return Ok(Json(json!({
                 "status": "error",
@@ -1204,10 +1186,10 @@ pub async fn migrate_workspace(
 
     match pool_check {
         Ok(output) if output.status.success() => {
-            migration_steps.push(format!("Target pool {} verified", target_pool));
+            migration_steps.push(format!("Target pool {target_pool} verified"));
         }
         _ => {
-            warnings.push(format!("Target pool {} not available", target_pool));
+            warnings.push(format!("Target pool {target_pool} not available"));
 
             // Clean up snapshot before failing
             let _ = std::process::Command::new("zfs")
@@ -1229,11 +1211,11 @@ pub async fn migrate_workspace(
 
     match send_receive_result {
         Ok(transfer_info) => {
-            migration_steps.push(format!("ZFS send/receive completed: {}", transfer_info));
+            migration_steps.push(format!("ZFS send/receive completed: {transfer_info}"));
             info!("✅ ZFS send/receive migration completed");
         }
         Err(e) => {
-            warnings.push(format!("ZFS send/receive failed: {}", e));
+            warnings.push(format!("ZFS send/receive failed: {e}"));
 
             // Clean up snapshot
             let _ = std::process::Command::new("zfs")
@@ -1255,14 +1237,11 @@ pub async fn migrate_workspace(
 
     match verification_result {
         Ok(verification_info) => {
-            migration_steps.push(format!(
-                "Migration integrity verified: {}",
-                verification_info
-            ));
+            migration_steps.push(format!("Migration integrity verified: {verification_info}"));
             info!("✅ Migration integrity verified");
         }
         Err(e) => {
-            warnings.push(format!("Migration verification failed: {}", e));
+            warnings.push(format!("Migration verification failed: {e}"));
             // Continue anyway, but note the warning
         }
     }
@@ -1276,8 +1255,7 @@ pub async fn migrate_workspace(
             setup_incremental_replication(&source_dataset, &target_dataset, &snapshot_name).await
         {
             migration_steps.push(format!(
-                "Incremental replication configured: {}",
-                replication_info
+                "Incremental replication configured: {replication_info}"
             ));
         } else {
             warnings.push("Incremental replication setup failed".to_string());
@@ -1321,7 +1299,7 @@ async fn perform_zfs_send_receive(
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()
-        .map_err(|e| format!("Failed to start zfs send: {}", e))?;
+        .map_err(|e| format!("Failed to start zfs send: {e}"))?;
 
     let send_stdout = send_process
         .stdout
@@ -1334,29 +1312,29 @@ async fn perform_zfs_send_receive(
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()
-        .map_err(|e| format!("Failed to start zfs receive: {}", e))?;
+        .map_err(|e| format!("Failed to start zfs receive: {e}"))?;
 
     // Wait for both processes to complete
     let send_result = send_process
         .wait_with_output()
-        .map_err(|e| format!("zfs send failed: {}", e))?;
+        .map_err(|e| format!("zfs send failed: {e}"))?;
 
     let receive_result = receive_process
         .wait_with_output()
-        .map_err(|e| format!("zfs receive failed: {}", e))?;
+        .map_err(|e| format!("zfs receive failed: {e}"))?;
 
     if !send_result.status.success() {
         let error_msg = String::from_utf8_lossy(&send_result.stderr);
-        return Err(format!("zfs send failed: {}", error_msg));
+        return Err(format!("zfs send failed: {error_msg}"));
     }
 
     if !receive_result.status.success() {
         let error_msg = String::from_utf8_lossy(&receive_result.stderr);
-        return Err(format!("zfs receive failed: {}", error_msg));
+        return Err(format!("zfs receive failed: {error_msg}"));
     }
 
     // Calculate transfer information
-    let transfer_info = format!("Transfer completed successfully");
+    let transfer_info = "Transfer completed successfully".to_string();
     Ok(transfer_info)
 }
 
@@ -1369,11 +1347,9 @@ async fn verify_migration_integrity(
     let target_checksum = get_dataset_checksum(target_dataset).await?;
 
     if source_checksum == target_checksum {
-        Ok(format!("Checksums match - migration integrity verified"))
+        Ok("Checksums match - migration integrity verified".to_string())
     } else {
-        Err(format!(
-            "Checksum mismatch - migration integrity compromised"
-        ))
+        Err("Checksum mismatch - migration integrity compromised".to_string())
     }
 }
 
@@ -1382,7 +1358,7 @@ async fn get_dataset_checksum(dataset: &str) -> Result<String, String> {
     let output = std::process::Command::new("zfs")
         .args(["get", "-H", "-o", "value", "used,referenced", dataset])
         .output()
-        .map_err(|e| format!("Failed to get dataset properties: {}", e))?;
+        .map_err(|e| format!("Failed to get dataset properties: {e}"))?;
 
     if output.status.success() {
         let properties = String::from_utf8_lossy(&output.stdout);
@@ -1391,7 +1367,7 @@ async fn get_dataset_checksum(dataset: &str) -> Result<String, String> {
         Ok(checksum)
     } else {
         let error_msg = String::from_utf8_lossy(&output.stderr);
-        Err(format!("Failed to get dataset checksum: {}", error_msg))
+        Err(format!("Failed to get dataset checksum: {error_msg}"))
     }
 }
 
@@ -1401,25 +1377,24 @@ async fn setup_incremental_replication(
     snapshot_name: &str,
 ) -> Result<String, String> {
     // Set up incremental replication using ZFS bookmarks
-    let bookmark_name = format!("{}#{}", source_dataset, snapshot_name);
+    let bookmark_name = format!("{source_dataset}#{snapshot_name}");
 
     let bookmark_result = std::process::Command::new("zfs")
         .args([
             "bookmark",
-            &format!("{}@{}", source_dataset, snapshot_name),
+            &format!("{source_dataset}@{snapshot_name}"),
             &bookmark_name,
         ])
         .output()
-        .map_err(|e| format!("Failed to create bookmark: {}", e))?;
+        .map_err(|e| format!("Failed to create bookmark: {e}"))?;
 
     if bookmark_result.status.success() {
         Ok(format!(
-            "Incremental replication bookmark created: {}",
-            bookmark_name
+            "Incremental replication bookmark created: {bookmark_name}"
         ))
     } else {
         let error_msg = String::from_utf8_lossy(&bookmark_result.stderr);
-        Err(format!("Bookmark creation failed: {}", error_msg))
+        Err(format!("Bookmark creation failed: {error_msg}"))
     }
 }
 

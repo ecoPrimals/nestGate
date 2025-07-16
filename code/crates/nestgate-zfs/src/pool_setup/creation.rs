@@ -156,14 +156,12 @@ impl PoolCreator {
         let output = tokio::time::timeout(timeout_duration, cmd.output())
             .await
             .map_err(|_| NestGateError::Internal("Pool creation timed out".to_string()))?
-            .map_err(|e| {
-                NestGateError::Internal(format!("Failed to execute zpool create: {e}"))
-            })?;
+            .map_err(|e| NestGateError::Internal(format!("Failed to execute zpool create: {e}")))?;
 
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
             let stdout_msg = String::from_utf8_lossy(&output.stdout);
-                          return Err(NestGateError::Internal(format!(
+            return Err(NestGateError::Internal(format!(
                 "Pool creation failed: stderr: {error_msg}, stdout: {stdout_msg}"
             )));
         }
@@ -278,7 +276,7 @@ impl PoolCreator {
 
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
-                          return Err(NestGateError::Internal(format!(
+            return Err(NestGateError::Internal(format!(
                 "Failed to create tier dataset {dataset_name}: {error_msg}"
             )));
         }
@@ -312,7 +310,7 @@ impl PoolCreator {
 
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
-                          return Err(NestGateError::Internal(format!(
+            return Err(NestGateError::Internal(format!(
                 "Failed to destroy pool {pool_name}: {error_msg}"
             )));
         }
@@ -391,7 +389,7 @@ impl PoolCreator {
                     }
                     Err(e) => {
                         error!("❌ Failed to destroy pool during cleanup: {}", e);
-                                                  return Err(NestGateError::Internal(format!(
+                        return Err(NestGateError::Internal(format!(
                             "Cleanup destroy command failed: {e}"
                         )));
                     }

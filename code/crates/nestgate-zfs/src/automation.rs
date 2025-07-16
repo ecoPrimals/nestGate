@@ -714,12 +714,8 @@ impl DatasetAutomation {
             };
 
             if lifecycle.current_tier != target_tier {
-                self.execute_tier_migration(
-                    dataset_name,
-                    lifecycle.current_tier,
-                    target_tier,
-                )
-                .await?;
+                self.execute_tier_migration(dataset_name, lifecycle.current_tier, target_tier)
+                    .await?;
                 return Ok(format!(
                     "Migrated to {} tier",
                     match target_tier {
@@ -990,9 +986,7 @@ impl DatasetAutomation {
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
             return Err(crate::ZfsError::Internal {
-                message: format!(
-                    "ZFS command failed for dataset {dataset_name}: {stderr}"
-                ),
+                message: format!("ZFS command failed for dataset {dataset_name}: {stderr}"),
             }
             .into());
         }
@@ -1002,9 +996,7 @@ impl DatasetAutomation {
 
         if parts.len() < 3 {
             return Err(crate::ZfsError::Internal {
-                message: format!(
-                    "Invalid ZFS output format for dataset {dataset_name}: {stdout}"
-                ),
+                message: format!("Invalid ZFS output format for dataset {dataset_name}: {stdout}"),
             }
             .into());
         }
@@ -1172,7 +1164,7 @@ impl DatasetAutomation {
                             tier_score.add_cold_weight(0.2, &format!("Policy {policy_id}"))
                         }
                         StorageTier::Cache => {
-                            tier_score.add_hot_weight(0.3, &format!("Cache Policy {}", policy_id))
+                            tier_score.add_hot_weight(0.3, &format!("Cache Policy {policy_id}"))
                         }
                     }
                 }

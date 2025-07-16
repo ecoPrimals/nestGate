@@ -2042,7 +2042,7 @@ fn format_size_bytes(bytes: u64) -> String {
     }
 
     if unit_index == 0 {
-        format!("{}", bytes)
+        format!("{bytes}")
     } else {
         format!("{:.1}{}", size, UNITS[unit_index])
     }

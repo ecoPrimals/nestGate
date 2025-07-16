@@ -81,7 +81,7 @@ impl DeviceScanner {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-                          return Err(NestGateError::SystemError(format!(
+            return Err(NestGateError::SystemError(format!(
                 "lsblk failed: {stderr}"
             )));
         }
@@ -146,9 +146,7 @@ impl DeviceScanner {
         // Check if device is in use
         let in_use = fstype.is_some() || mountpoint.is_some();
         let current_use = if in_use {
-                          Some(format!(
-                "fstype: {fstype:?}, mountpoint: {mountpoint:?}"
-            ))
+            Some(format!("fstype: {fstype:?}, mountpoint: {mountpoint:?}"))
         } else {
             None
         };
@@ -200,9 +198,9 @@ impl DeviceScanner {
             (size_str, "")
         };
 
-        let number: f64 = number_part.parse().map_err(|_| {
-            NestGateError::SystemError(format!("Invalid size format: {size_str}"))
-        })?;
+        let number: f64 = number_part
+            .parse()
+            .map_err(|_| NestGateError::SystemError(format!("Invalid size format: {size_str}")))?;
 
         let multiplier = match unit_part.to_uppercase().as_str() {
             "" | "B" => 1,
@@ -212,7 +210,7 @@ impl DeviceScanner {
             "T" | "TB" => 1024_u64.pow(4),
             "P" | "PB" => 1024_u64.pow(5),
             _ => {
-                                  return Err(NestGateError::SystemError(format!(
+                return Err(NestGateError::SystemError(format!(
                     "Unknown size unit: {unit_part}"
                 )))
             }

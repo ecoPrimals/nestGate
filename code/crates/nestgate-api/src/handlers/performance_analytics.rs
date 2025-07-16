@@ -532,7 +532,7 @@ impl PerformanceAnalytics {
                         if config.read().await.predictive_enabled {
                             if let Ok(recs) = Self::generate_recommendations(
                                 &metrics,
-                                &*metrics_history.read().await,
+                                &metrics_history.read().await,
                             )
                             .await
                             {
@@ -803,11 +803,11 @@ impl PerformanceAnalytics {
                         "ZFS pool {} health issue: {}",
                         pool_name, pool_metrics.health
                     ),
-                    metric: format!("zfs.pools.{}.health", pool_name),
+                    metric: format!("zfs.pools.{pool_name}.health"),
                     current_value: 0.0, // Health is not numeric
                     threshold_value: 1.0,
                     timestamp: Utc::now(),
-                    component: format!("ZFS Pool {}", pool_name),
+                    component: format!("ZFS Pool {pool_name}"),
                     suggested_actions: vec![
                         "Check pool status with 'zpool status'".to_string(),
                         "Review system logs for disk errors".to_string(),
@@ -868,7 +868,7 @@ impl PerformanceAnalytics {
                 recommendations.push(PerformanceRecommendation {
                     id: Uuid::new_v4(),
                     recommendation_type: RecommendationType::ZfsConfiguration,
-                    title: format!("Defragment ZFS Pool {}", pool_name),
+                    title: format!("Defragment ZFS Pool {pool_name}"),
                     description: format!(
                         "Pool {} has {:.1}% fragmentation, which may impact performance.",
                         pool_name, pool_metrics.fragmentation
@@ -878,7 +878,7 @@ impl PerformanceAnalytics {
                     priority: Priority::Medium,
                     actions: vec![RecommendationAction {
                         description: "Schedule ZFS pool defragmentation".to_string(),
-                        command: Some(format!("zpool online -e {}", pool_name)),
+                        command: Some(format!("zpool online -e {pool_name}")),
                         config_changes: None,
                         risk_level: RiskLevel::Medium,
                     }],

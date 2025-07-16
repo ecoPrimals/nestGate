@@ -308,7 +308,7 @@ fn test_serialization_performance() {
         properties: Some({
             let mut props = HashMap::new();
             for i in 0..1000 {
-                props.insert(format!("property_{}", i), format!("value_{}", i));
+                props.insert(format!("property_{i}"), format!("value_{i}"));
             }
             props
         }),
@@ -326,12 +326,10 @@ fn test_serialization_performance() {
     // Serialization should be reasonably fast (less than 10ms for 1000 properties)
     assert!(
         serialize_time.as_millis() < 10,
-        "Serialization took too long: {:?}",
-        serialize_time
+        "Serialization took too long: {serialize_time:?}"
     );
     assert!(
         deserialize_time.as_millis() < 10,
-        "Deserialization took too long: {:?}",
-        deserialize_time
+        "Deserialization took too long: {deserialize_time:?}"
     );
 }
