@@ -28,9 +28,7 @@ async fn ai_demo_nas_10g() {
     let num_threads = 32;
 
     println!("\n🚀 Fast-Path Test Execution:");
-    println!(
-        "   🎯 Operations: {total_operations} across {num_threads} threads"
-    );
+    println!("   🎯 Operations: {total_operations} across {num_threads} threads");
 
     let ops_per_thread = total_operations / num_threads as u64;
     let mut handles = Vec::new();
@@ -78,9 +76,7 @@ async fn ai_demo_nas_10g() {
 
     println!("\n📊 AI PERFORMANCE RESULTS:");
     println!("   ⏱️  Duration: {:.2}s", duration.as_secs_f64());
-    println!(
-        "   ✅ Operations: {total_completed} ({ops_per_sec:.0} ops/sec)"
-    );
+    println!("   ✅ Operations: {total_completed} ({ops_per_sec:.0} ops/sec)");
     println!("   📈 Throughput: {throughput_mbs:.0} MB/s");
     println!(
         "   ⚡ Avg Latency: {:.2}ms",
@@ -159,9 +155,7 @@ async fn ai_demo_cold_storage() {
     let operation_size_kb = 16; // Smaller operations - reduced from 1024KB
 
     println!("\n❄️ Cold Storage Test Execution:");
-    println!(
-        "   🎯 Operations: {total_operations} (sequential for reliability)"
-    );
+    println!("   🎯 Operations: {total_operations} (sequential for reliability)");
 
     let mut completed = 0u64;
     let mut bytes_processed = 0u64;
@@ -199,9 +193,7 @@ async fn ai_demo_cold_storage() {
 
     println!("\n📊 AI COLD STORAGE RESULTS:");
     println!("   ⏱️  Duration: {:.2}s", duration.as_secs_f64());
-    println!(
-        "   ✅ Operations: {completed} ({ops_per_sec:.0} ops/sec)"
-    );
+    println!("   ✅ Operations: {completed} ({ops_per_sec:.0} ops/sec)");
     println!("   📈 Throughput: {throughput_mbs:.0} MB/s");
     println!("   🛡️  Uptime: {uptime_percent:.2}%");
     println!("   ❌ Errors: {errors}");

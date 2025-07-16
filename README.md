@@ -11,6 +11,128 @@
 
 ---
 
+## 🚀 **Quick Start Guide**
+
+### **Prerequisites**
+- Rust 1.70+ with Cargo
+- ZFS utilities (`zfs`, `zpool`) installed
+- Linux/macOS system with ZFS support
+
+### **Installation**
+```bash
+# Clone the repository
+git clone https://github.com/your-org/nestgate.git
+cd nestgate
+
+# Build the project
+cargo build --release
+
+# Run the main NestGate daemon
+./target/release/nestgate
+```
+
+### **Basic Usage**
+
+#### **1. ZFS Pool Management**
+```bash
+# Create a ZFS pool
+curl -X POST http://localhost:8080/api/v1/pools \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "mypool",
+    "devices": ["/dev/sdb"],
+    "pool_type": "stripe"
+  }'
+
+# List all pools
+curl http://localhost:8080/api/v1/pools
+
+# Get pool status
+curl http://localhost:8080/api/v1/pools/mypool/status
+```
+
+#### **2. Storage Tier Management**
+```bash
+# Create tiered storage
+curl -X POST http://localhost:8080/api/v1/storage/provision \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workspace_id": "dev-workspace",
+    "storage_gb": 100,
+    "tier": "warm",
+    "backup_enabled": true
+  }'
+
+# Monitor storage performance
+curl http://localhost:8080/api/v1/storage/metrics
+```
+
+#### **3. BYOB (Bring Your Own Backup) Workspaces**
+```bash
+# Create a new workspace
+curl -X POST http://localhost:8080/api/v1/byob/workspaces \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "data-science-lab",
+    "description": "ML research workspace",
+    "storage_tier": "hot",
+    "backup_frequency": "daily"
+  }'
+
+# Backup workspace
+curl -X POST http://localhost:8080/api/v1/byob/workspaces/data-science-lab/backup
+
+# Restore from backup
+curl -X POST http://localhost:8080/api/v1/byob/workspaces/data-science-lab/restore \
+  -H "Content-Type: application/json" \
+  -d '{"snapshot_name": "2024-01-15_daily"}'
+```
+
+#### **4. AI-Powered Optimization**
+```bash
+# Get AI recommendations
+curl http://localhost:8080/api/v1/ai/recommendations
+
+# Enable intelligent tier migration
+curl -X POST http://localhost:8080/api/v1/ai/tier-migration/enable \
+  -H "Content-Type: application/json" \
+  -d '{"threshold": 0.8, "enabled": true}'
+```
+
+### **Configuration**
+
+Create `config.toml` in your project root:
+
+```toml
+[server]
+host = "0.0.0.0"
+port = 8080
+
+[storage]
+default_pool = "nestpool"
+cache_size_gb = 10
+compression = "lz4"
+
+[ai]
+enabled = true
+squirrel_endpoint = "http://localhost:3000"
+
+[security]
+auth_mode = "standalone"  # or "beardog"
+```
+
+### **Web Interface**
+
+Access the native Rust UI at: `http://localhost:8080/ui`
+
+Features:
+- Real-time pool monitoring
+- Storage tier visualization
+- Performance metrics dashboard
+- Backup management interface
+
+---
+
 ## Architecture Principles
 
 ### 🏗️ **Universal Primal Ecosystem Integration**

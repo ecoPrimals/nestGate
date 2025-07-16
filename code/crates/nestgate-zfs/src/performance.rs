@@ -745,9 +745,7 @@ impl ZfsPerformanceMonitor {
             .args(["iostat", "-v", "-y", "1", "1"])
             .output()
             .await
-            .map_err(|e| {
-                NestGateError::Internal(format!("Failed to execute zpool iostat: {e}"))
-            })?;
+            .map_err(|e| NestGateError::Internal(format!("Failed to execute zpool iostat: {e}")))?;
 
         if !iostat_output.status.success() {
             warn!("zpool iostat failed, using fallback metrics");
@@ -874,9 +872,7 @@ impl ZfsPerformanceMonitor {
             .args(["get", "all", pool_name])
             .output()
             .await
-            .map_err(|e| {
-                NestGateError::Internal(format!("Failed to get pool properties: {e}"))
-            })?;
+            .map_err(|e| NestGateError::Internal(format!("Failed to get pool properties: {e}")))?;
 
         if !output.status.success() {
             return Ok(PoolProperties::default());

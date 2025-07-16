@@ -259,9 +259,7 @@ impl AIPerformanceOrchestrator {
         let operations_per_second = 1000.0; // Fixed rate for testing
         let total_operations = (operations_per_second * config.test_duration_seconds) as u64;
 
-        println!(
-            "   🎯 Operations: {total_operations} ({operations_per_second:.0} ops/sec)"
-        );
+        println!("   🎯 Operations: {total_operations} ({operations_per_second:.0} ops/sec)");
         println!(
             "   💾 Operation Size: {:.0} KB",
             config.avg_operation_size_kb
@@ -360,9 +358,7 @@ impl AIPerformanceOrchestrator {
         let conservative_ops_per_sec = 100.0; // Fixed low rate
         let total_operations = (conservative_ops_per_sec * config.test_duration_seconds) as u64;
 
-        println!(
-            "   🎯 Operations: {total_operations} ({conservative_ops_per_sec:.0} ops/sec)"
-        );
+        println!("   🎯 Operations: {total_operations} ({conservative_ops_per_sec:.0} ops/sec)");
         println!("   🛡️  Reliability Focus: High");
         println!("   ⏱️  Duration: {:.1}s", config.test_duration_seconds);
         println!("   📊 Progress: Starting...");
@@ -390,9 +386,7 @@ impl AIPerformanceOrchestrator {
             // Progress update
             if i > 0 && progress_interval > 0 && i % progress_interval == 0 {
                 let progress = (i as f64 / total_operations as f64) * 100.0;
-                println!(
-                    "   📊 Progress: {progress:.0}% ({i}/{total_operations} ops)"
-                );
+                println!("   📊 Progress: {progress:.0}% ({i}/{total_operations} ops)");
             }
 
             // Small delay for cold storage stability
@@ -432,9 +426,7 @@ impl AIPerformanceOrchestrator {
         let balanced_ops_per_sec = config.target_throughput_mbs * 500.0;
         let total_operations = (balanced_ops_per_sec * config.test_duration_seconds) as u64;
 
-        println!(
-            "   🎯 Operations: {total_operations} ({balanced_ops_per_sec:.0} ops/sec)"
-        );
+        println!("   🎯 Operations: {total_operations} ({balanced_ops_per_sec:.0} ops/sec)");
         println!("   ⚖️ Balance: Speed + Reliability");
         println!("   ⏱️  Duration: {:.1}s", config.test_duration_seconds);
 

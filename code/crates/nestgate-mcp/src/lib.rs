@@ -121,7 +121,7 @@ impl HttpOrchestratorClient {
 impl OrchestratorClient for HttpOrchestratorClient {
     async fn register_service(&self, service_info: protocol::ServiceInfo) -> Result<()> {
         let url = format!("{}/services/register", self.base_url);
-        
+
         let response = self
             .client
             .post(&url)
@@ -143,7 +143,7 @@ impl OrchestratorClient for HttpOrchestratorClient {
 
     async fn send_metrics(&self, metrics: &SystemMetrics) -> Result<()> {
         let url = format!("{}/metrics", self.base_url);
-        
+
         let response = self
             .client
             .post(&url)
@@ -165,7 +165,7 @@ impl OrchestratorClient for HttpOrchestratorClient {
 
     async fn route_message(&self, message: protocol::Message) -> Result<protocol::Response> {
         let url = format!("{}/messages", self.base_url);
-        
+
         let response = self
             .client
             .post(&url)
@@ -175,11 +175,9 @@ impl OrchestratorClient for HttpOrchestratorClient {
             .map_err(error::Error::from)?;
 
         if response.status().is_success() {
-            let response_data: protocol::Response = response
-                .json()
-                .await
-                .map_err(error::Error::from)?;
-            
+            let response_data: protocol::Response =
+                response.json().await.map_err(error::Error::from)?;
+
             Ok(response_data)
         } else {
             Err(error::Error::network(format!(

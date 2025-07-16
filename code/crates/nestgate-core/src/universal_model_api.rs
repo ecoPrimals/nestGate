@@ -704,6 +704,28 @@ impl UniversalModelRegistry {
         )))
     }
 
+    /// Universal streaming inference across providers
+    pub async fn stream_inference(
+        &self,
+        request: InferenceRequest,
+    ) -> Result<Box<dyn InferenceStream>> {
+        let handle = &request.model_handle;
+
+        // Find the provider for this model
+        let providers = self.providers.read().await;
+
+        for provider in providers.values() {
+            if provider.provider_id() == handle.provider {
+                return provider.stream_inference(request).await;
+            }
+        }
+
+        Err(NestGateError::Configuration(format!(
+            "Provider {} not found",
+            handle.provider
+        )))
+    }
+
     /// Get registry health with configuration-based checks
     pub async fn get_health(&self) -> Result<RegistryHealth> {
         let providers = self.providers.read().await;
@@ -752,17 +774,17 @@ impl UniversalModelRegistry {
     pub async fn unload_model(&self, model_id: &str) -> Result<()> {
         // Find the model handle
         let mut loaded_models = self.loaded_models.write().await;
-        
+
         if let Some(handle) = loaded_models.remove(model_id) {
             // Find the provider for this model
             let providers = self.providers.read().await;
-            
+
             for provider in providers.values() {
                 if provider.provider_id() == handle.provider {
                     return provider.unload_model(handle).await;
                 }
             }
-            
+
             Err(NestGateError::Configuration(format!(
                 "Provider {} not found for model {}",
                 handle.provider, model_id
@@ -777,7 +799,10 @@ impl UniversalModelRegistry {
     /// Get a model handle by handle ID
     pub async fn get_model_handle(&self, handle_id: Uuid) -> Option<ModelHandle> {
         let loaded_models = self.loaded_models.read().await;
-        loaded_models.values().find(|h| h.handle_id == handle_id).cloned()
+        loaded_models
+            .values()
+            .find(|h| h.handle_id == handle_id)
+            .cloned()
     }
 }
 
@@ -873,7 +898,10 @@ mod providers {
                 // Simple rate limiting: check if we've exceeded max retries
                 // In a real implementation, this would use a token bucket or similar
                 // For now, we'll allow all requests within the retry limit
-                tracing::debug!("Rate limit check passed - within retry limit of {}", self.config.max_retries);
+                tracing::debug!(
+                    "Rate limit check passed - within retry limit of {}",
+                    self.config.max_retries
+                );
                 Ok(())
             } else {
                 Err(NestGateError::Configuration(
@@ -980,12 +1008,12 @@ mod providers {
 
         async fn get_model_info(&self, model_id: &str) -> Result<ModelInfo> {
             self.check_rate_limits()?;
-            
+
             let base_url = self.get_base_url();
-            let api_key = self.get_api_key()?;
-            
+            let _api_key = self.get_api_key()?;
+
             tracing::info!("Fetching model info for {model_id} from HuggingFace API");
-            
+
             // Build model info from available data
             let model_info = ModelInfo {
                 id: model_id.to_string(),
@@ -1038,27 +1066,36 @@ mod providers {
                 },
                 metadata: {
                     let mut metadata = HashMap::new();
-                    metadata.insert("base_url".to_string(), serde_json::Value::String(base_url.to_string()));
-                    metadata.insert("api_version".to_string(), serde_json::Value::String("v1".to_string()));
-                    metadata.insert("supports_streaming".to_string(), serde_json::Value::Bool(self.config.enable_streaming));
+                    metadata.insert(
+                        "base_url".to_string(),
+                        serde_json::Value::String(base_url.to_string()),
+                    );
+                    metadata.insert(
+                        "api_version".to_string(),
+                        serde_json::Value::String("v1".to_string()),
+                    );
+                    metadata.insert(
+                        "supports_streaming".to_string(),
+                        serde_json::Value::Bool(self.config.enable_streaming),
+                    );
                     metadata
                 },
             };
-            
+
             Ok(model_info)
         }
 
         async fn load_model(&self, request: ModelLoadRequest) -> Result<ModelHandle> {
             self.check_rate_limits()?;
-            
-            let base_url = self.get_base_url();
-            let api_key = self.get_api_key()?;
-            
+
+            let _base_url = self.get_base_url();
+            let _api_key = self.get_api_key()?;
+
             tracing::info!("Loading HuggingFace model: {}", request.model_id);
-            
+
             // Validate model exists
-            let model_info = self.get_model_info(&request.model_id).await?;
-            
+            let _model_info = self.get_model_info(&request.model_id).await?;
+
             // Create model handle
             let handle = ModelHandle {
                 handle_id: Uuid::new_v4(),
@@ -1074,60 +1111,82 @@ mod providers {
                     network_usage_mbps: 0.0,
                 },
             };
-            
-            tracing::info!("Successfully loaded HuggingFace model {} with handle {}", 
-                request.model_id, handle.handle_id);
-            
+
+            tracing::info!(
+                "Successfully loaded HuggingFace model {} with handle {}",
+                request.model_id,
+                handle.handle_id
+            );
+
             Ok(handle)
         }
 
         async fn unload_model(&self, handle: ModelHandle) -> Result<()> {
-            tracing::info!("Unloading HuggingFace model: {} (handle: {})", 
-                handle.model_id, handle.handle_id);
-            
+            tracing::info!(
+                "Unloading HuggingFace model: {} (handle: {})",
+                handle.model_id,
+                handle.handle_id
+            );
+
             // Log resource cleanup
-            tracing::info!("Releasing resources: {:.2} GB memory, {:.2} GB GPU memory, {:.2} GB storage", 
+            tracing::info!(
+                "Releasing resources: {:.2} GB memory, {:.2} GB GPU memory, {:.2} GB storage",
                 handle.resource_usage.memory_used_gb,
                 handle.resource_usage.gpu_memory_used_gb,
-                handle.resource_usage.storage_used_gb);
-            
+                handle.resource_usage.storage_used_gb
+            );
+
             // In a real implementation, this would:
             // 1. Clean up GPU memory
             // 2. Release model weights from memory
             // 3. Close any active connections
             // 4. Update resource tracking
-            
-            tracing::info!("Successfully unloaded HuggingFace model: {}", handle.model_id);
+
+            tracing::info!(
+                "Successfully unloaded HuggingFace model: {}",
+                handle.model_id
+            );
             Ok(())
         }
 
         async fn inference(&self, request: InferenceRequest) -> Result<InferenceResponse> {
             self.check_rate_limits()?;
-            
+
             let start_time = std::time::Instant::now();
-            
-            tracing::info!("Processing inference request {} for model {} (handle: {})", 
-                request.request_id, request.model_handle.model_id, request.model_handle.handle_id);
-            
+
+            tracing::info!(
+                "Processing inference request {} for model {} (handle: {})",
+                request.request_id,
+                request.model_handle.model_id,
+                request.model_handle.handle_id
+            );
+
             // Process different input types
             let output = match &request.input {
                 InferenceInput::Text(text) => {
                     tracing::debug!("Processing text input: {} characters", text.len());
-                    
+
                     // In a real implementation, this would make actual API calls to HuggingFace
                     // For now, we'll generate a realistic response
-                    let response_text = if request.model_handle.model_id.contains("gpt") || 
-                                         request.model_handle.model_id.contains("llama") {
-                        format!("Generated response to: {}", text.chars().take(100).collect::<String>())
+                    let response_text = if request.model_handle.model_id.contains("gpt")
+                        || request.model_handle.model_id.contains("llama")
+                    {
+                        format!(
+                            "Generated response to: {}",
+                            text.chars().take(100).collect::<String>()
+                        )
                     } else {
-                        format!("Model {} processed: {}", request.model_handle.model_id, text)
+                        format!(
+                            "Model {} processed: {}",
+                            request.model_handle.model_id, text
+                        )
                     };
-                    
+
                     InferenceOutput::Text(response_text)
-                },
-                InferenceInput::Structured(data) => {
+                }
+                InferenceInput::Structured(_data) => {
                     tracing::debug!("Processing structured input");
-                    
+
                     // Handle structured data
                     let response = serde_json::json!({
                         "processed": true,
@@ -1135,30 +1194,34 @@ mod providers {
                         "input_type": "structured",
                         "timestamp": chrono::Utc::now()
                     });
-                    
+
                     InferenceOutput::Structured(response)
-                },
+                }
                 InferenceInput::Image(image) => {
-                    tracing::debug!("Processing image input: {}x{} pixels", image.width, image.height);
-                    
+                    tracing::debug!(
+                        "Processing image input: {}x{} pixels",
+                        image.width,
+                        image.height
+                    );
+
                     // Handle image input
                     let response = serde_json::json!({
                         "image_analysis": format!("Analyzed {}x{} image", image.width, image.height),
                         "format": image.format,
                         "model": request.model_handle.model_id
                     });
-                    
+
                     InferenceOutput::Structured(response)
-                },
+                }
                 _ => {
                     return Err(NestGateError::Configuration(
-                        "Unsupported input type for HuggingFace".to_string()
+                        "Unsupported input type for HuggingFace".to_string(),
                     ));
                 }
             };
-            
+
             let processing_time = start_time.elapsed();
-            
+
             let response = InferenceResponse {
                 request_id: request.request_id,
                 response_id: Uuid::new_v4(),
@@ -1180,8 +1243,11 @@ mod providers {
                 },
                 generated_at: chrono::Utc::now(),
             };
-            
-            tracing::info!("Completed inference in {:.2}ms", processing_time.as_millis());
+
+            tracing::info!(
+                "Completed inference in {:.2}ms",
+                processing_time.as_millis()
+            );
             Ok(response)
         }
 
@@ -1190,19 +1256,22 @@ mod providers {
             request: InferenceRequest,
         ) -> Result<Box<dyn InferenceStream>> {
             self.check_rate_limits()?;
-            
-            tracing::info!("Starting streaming inference for model {} (handle: {})", 
-                request.model_handle.model_id, request.model_handle.handle_id);
-            
+
+            tracing::info!(
+                "Starting streaming inference for model {} (handle: {})",
+                request.model_handle.model_id,
+                request.model_handle.handle_id
+            );
+
             // Create a streaming inference implementation
             let stream = HuggingFaceInferenceStream::new(request).await?;
-            
+
             Ok(Box::new(stream))
         }
 
         async fn get_metrics(&self, model_id: &str) -> Result<ModelMetrics> {
             tracing::info!("Getting metrics for HuggingFace model: {}", model_id);
-            
+
             // In a real implementation, this would query actual metrics from HuggingFace API
             // For now, we'll return realistic sample metrics
             let metrics = ModelMetrics {
@@ -1223,7 +1292,7 @@ mod providers {
                 },
                 cost_total: Some(45.75),
             };
-            
+
             Ok(metrics)
         }
 
@@ -1252,7 +1321,7 @@ mod providers {
         pub async fn new(request: InferenceRequest) -> Result<Self> {
             let total_tokens = match &request.input {
                 InferenceInput::Text(text) => text.len() / 4, // Rough token estimate
-                _ => 50, // Default token count
+                _ => 50,                                      // Default token count
             };
 
             Ok(Self {
@@ -1280,25 +1349,25 @@ mod providers {
             if self.current_position < self.total_tokens {
                 let token = format!("token_{}", self.current_position);
                 self.current_position += 1;
-                
+
                 // Simulate processing delay
                 tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-                
+
                 return Ok(Some(InferenceStreamEvent::TokenGenerated(token)));
             }
 
             // Send final response
             if !self.completed {
                 self.completed = true;
-                
+
                 let final_response = InferenceResponse {
                     request_id: self.request.request_id,
                     response_id: Uuid::new_v4(),
                     model_handle: self.request.model_handle.clone(),
                     output: match &self.request.input {
                         InferenceInput::Text(text) => {
-                            InferenceOutput::Text(format!("Stream completed for: {}", text))
-                        },
+                            InferenceOutput::Text(format!("Stream completed for: {text}"))
+                        }
                         _ => InferenceOutput::Text("Stream completed".to_string()),
                     },
                     metrics: InferenceMetrics {
@@ -1318,7 +1387,9 @@ mod providers {
                     generated_at: chrono::Utc::now(),
                 };
 
-                return Ok(Some(InferenceStreamEvent::FinalResponse(Box::new(final_response))));
+                return Ok(Some(InferenceStreamEvent::FinalResponse(Box::new(
+                    final_response,
+                ))));
             }
 
             Ok(Some(InferenceStreamEvent::StreamEnd))
@@ -1472,21 +1543,29 @@ mod providers {
         }
 
         async fn get_model_info(&self, model_id: &str) -> Result<ModelInfo> {
-            let api_key = self.get_api_key()?;
+            let _api_key = self.get_api_key()?;
             let base_url = self.get_base_url();
-            
+
             tracing::info!("Fetching OpenAI model info for: {}", model_id);
-            
+
             let model_info = ModelInfo {
                 id: model_id.to_string(),
                 name: model_id.to_string(),
-                description: Some(format!("OpenAI model: {}", model_id)),
+                description: Some(format!("OpenAI model: {model_id}")),
                 provider: "openai".to_string(),
                 model_type: if model_id.contains("gpt") {
                     ModelType::Language {
                         architecture: "transformer".to_string(),
-                        size_parameters: if model_id.contains("gpt-4") { Some(1760000000000) } else { Some(175000000000) },
-                        context_length: if model_id.contains("gpt-4") { Some(8192) } else { Some(4096) },
+                        size_parameters: if model_id.contains("gpt-4") {
+                            Some(1760000000000)
+                        } else {
+                            Some(175000000000)
+                        },
+                        context_length: if model_id.contains("gpt-4") {
+                            Some(8192)
+                        } else {
+                            Some(4096)
+                        },
                     }
                 } else if model_id.contains("dall-e") {
                     ModelType::Vision {
@@ -1498,7 +1577,11 @@ mod providers {
                     ModelType::Audio {
                         architecture: "transformer".to_string(),
                         sample_rate: Some(16000),
-                        supported_formats: vec!["mp3".to_string(), "wav".to_string(), "flac".to_string()],
+                        supported_formats: vec![
+                            "mp3".to_string(),
+                            "wav".to_string(),
+                            "flac".to_string(),
+                        ],
                     }
                 } else {
                     ModelType::Language {
@@ -1519,8 +1602,16 @@ mod providers {
                     custom_parameters: HashMap::new(),
                 },
                 pricing: Some(ModelPricing {
-                    input_cost_per_token: if model_id.contains("gpt-4") { Some(0.03) } else { Some(0.002) },
-                    output_cost_per_token: if model_id.contains("gpt-4") { Some(0.06) } else { Some(0.002) },
+                    input_cost_per_token: if model_id.contains("gpt-4") {
+                        Some(0.03)
+                    } else {
+                        Some(0.002)
+                    },
+                    output_cost_per_token: if model_id.contains("gpt-4") {
+                        Some(0.06)
+                    } else {
+                        Some(0.002)
+                    },
                     cost_per_request: None,
                     cost_per_hour: None,
                     currency: "USD".to_string(),
@@ -1528,30 +1619,43 @@ mod providers {
                 }),
                 availability: ModelAvailability {
                     status: ModelStatus::Available,
-                    regions: vec!["us-east-1".to_string(), "us-west-2".to_string(), "eu-west-1".to_string()],
+                    regions: vec![
+                        "us-east-1".to_string(),
+                        "us-west-2".to_string(),
+                        "eu-west-1".to_string(),
+                    ],
                     uptime_percentage: Some(99.9),
                     last_updated: Some(chrono::Utc::now()),
                 },
                 metadata: {
                     let mut metadata = HashMap::new();
-                    metadata.insert("base_url".to_string(), serde_json::Value::String(base_url.to_string()));
-                    metadata.insert("api_version".to_string(), serde_json::Value::String("v1".to_string()));
-                    metadata.insert("organization".to_string(), serde_json::Value::String("openai".to_string()));
+                    metadata.insert(
+                        "base_url".to_string(),
+                        serde_json::Value::String(base_url.to_string()),
+                    );
+                    metadata.insert(
+                        "api_version".to_string(),
+                        serde_json::Value::String("v1".to_string()),
+                    );
+                    metadata.insert(
+                        "organization".to_string(),
+                        serde_json::Value::String("openai".to_string()),
+                    );
                     metadata
                 },
             };
-            
+
             Ok(model_info)
         }
 
         async fn load_model(&self, request: ModelLoadRequest) -> Result<ModelHandle> {
-            let api_key = self.get_api_key()?;
-            
+            let _api_key = self.get_api_key()?;
+
             tracing::info!("Loading OpenAI model: {}", request.model_id);
-            
+
             // Validate model exists
-            let model_info = self.get_model_info(&request.model_id).await?;
-            
+            let _model_info = self.get_model_info(&request.model_id).await?;
+
             let handle = ModelHandle {
                 handle_id: Uuid::new_v4(),
                 model_id: request.model_id.clone(),
@@ -1566,46 +1670,61 @@ mod providers {
                     network_usage_mbps: 0.0,
                 },
             };
-            
-            tracing::info!("Successfully loaded OpenAI model {} with handle {}", 
-                request.model_id, handle.handle_id);
-            
+
+            tracing::info!(
+                "Successfully loaded OpenAI model {} with handle {}",
+                request.model_id,
+                handle.handle_id
+            );
+
             Ok(handle)
         }
 
         async fn unload_model(&self, handle: ModelHandle) -> Result<()> {
-            tracing::info!("Unloading OpenAI model: {} (handle: {})", 
-                handle.model_id, handle.handle_id);
-            
+            tracing::info!(
+                "Unloading OpenAI model: {} (handle: {})",
+                handle.model_id,
+                handle.handle_id
+            );
+
             // For OpenAI, no explicit unloading is needed since it's cloud-based
             // Just clean up any local state
-            
+
             tracing::info!("Successfully unloaded OpenAI model: {}", handle.model_id);
             Ok(())
         }
 
         async fn inference(&self, request: InferenceRequest) -> Result<InferenceResponse> {
-            let api_key = self.get_api_key()?;
+            let _api_key = self.get_api_key()?;
             let start_time = std::time::Instant::now();
-            
-            tracing::info!("Processing OpenAI inference for model {} (handle: {})", 
-                request.model_handle.model_id, request.model_handle.handle_id);
-            
+
+            tracing::info!(
+                "Processing OpenAI inference for model {} (handle: {})",
+                request.model_handle.model_id,
+                request.model_handle.handle_id
+            );
+
             let output = match &request.input {
                 InferenceInput::Text(text) => {
                     tracing::debug!("Processing text input: {} characters", text.len());
-                    
+
                     // Simulate OpenAI API response
                     let response_text = if request.model_handle.model_id.contains("gpt-4") {
-                        format!("GPT-4 response: {}", text.chars().take(100).collect::<String>())
+                        format!(
+                            "GPT-4 response: {}",
+                            text.chars().take(100).collect::<String>()
+                        )
                     } else if request.model_handle.model_id.contains("gpt-3.5") {
-                        format!("GPT-3.5 response: {}", text.chars().take(100).collect::<String>())
+                        format!(
+                            "GPT-3.5 response: {}",
+                            text.chars().take(100).collect::<String>()
+                        )
                     } else {
-                        format!("OpenAI response: {}", text)
+                        format!("OpenAI response: {text}")
                     };
-                    
+
                     InferenceOutput::Text(response_text)
-                },
+                }
                 InferenceInput::Image(image) => {
                     if request.model_handle.model_id.contains("dall-e") {
                         // Handle image generation
@@ -1626,8 +1745,8 @@ mod providers {
                         });
                         InferenceOutput::Structured(response)
                     }
-                },
-                InferenceInput::Audio(audio) => {
+                }
+                InferenceInput::Audio(_audio) => {
                     if request.model_handle.model_id.contains("whisper") {
                         // Handle audio transcription
                         let response = serde_json::json!({
@@ -1638,19 +1757,19 @@ mod providers {
                         InferenceOutput::Structured(response)
                     } else {
                         return Err(NestGateError::Configuration(
-                            "Audio not supported for this OpenAI model".to_string()
+                            "Audio not supported for this OpenAI model".to_string(),
                         ));
                     }
-                },
+                }
                 _ => {
                     return Err(NestGateError::Configuration(
-                        "Unsupported input type for OpenAI".to_string()
+                        "Unsupported input type for OpenAI".to_string(),
                     ));
                 }
             };
-            
+
             let processing_time = start_time.elapsed();
-            
+
             let response = InferenceResponse {
                 request_id: request.request_id,
                 response_id: Uuid::new_v4(),
@@ -1672,8 +1791,11 @@ mod providers {
                 },
                 generated_at: chrono::Utc::now(),
             };
-            
-            tracing::info!("Completed OpenAI inference in {:.2}ms", processing_time.as_millis());
+
+            tracing::info!(
+                "Completed OpenAI inference in {:.2}ms",
+                processing_time.as_millis()
+            );
             Ok(response)
         }
 
@@ -1681,19 +1803,22 @@ mod providers {
             &self,
             request: InferenceRequest,
         ) -> Result<Box<dyn InferenceStream>> {
-            let api_key = self.get_api_key()?;
-            
-            tracing::info!("Starting OpenAI streaming inference for model {} (handle: {})", 
-                request.model_handle.model_id, request.model_handle.handle_id);
-            
+            let _api_key = self.get_api_key()?;
+
+            tracing::info!(
+                "Starting OpenAI streaming inference for model {} (handle: {})",
+                request.model_handle.model_id,
+                request.model_handle.handle_id
+            );
+
             let stream = OpenAIInferenceStream::new(request).await?;
-            
+
             Ok(Box::new(stream))
         }
 
         async fn get_metrics(&self, model_id: &str) -> Result<ModelMetrics> {
             tracing::info!("Getting metrics for OpenAI model: {}", model_id);
-            
+
             let metrics = ModelMetrics {
                 model_id: model_id.to_string(),
                 total_requests: 8500,
@@ -1712,7 +1837,7 @@ mod providers {
                 },
                 cost_total: Some(145.80),
             };
-            
+
             Ok(metrics)
         }
 
@@ -1771,24 +1896,24 @@ mod providers {
                 } else {
                     format!("openai_token_{}", self.current_position)
                 };
-                
+
                 self.current_position += 1;
                 tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
-                
+
                 return Ok(Some(InferenceStreamEvent::TokenGenerated(token)));
             }
 
             if !self.completed {
                 self.completed = true;
-                
+
                 let final_response = InferenceResponse {
                     request_id: self.request.request_id,
                     response_id: Uuid::new_v4(),
                     model_handle: self.request.model_handle.clone(),
                     output: match &self.request.input {
                         InferenceInput::Text(text) => {
-                            InferenceOutput::Text(format!("OpenAI stream completed for: {}", text))
-                        },
+                            InferenceOutput::Text(format!("OpenAI stream completed for: {text}"))
+                        }
                         _ => InferenceOutput::Text("OpenAI stream completed".to_string()),
                     },
                     metrics: InferenceMetrics {
@@ -1808,7 +1933,9 @@ mod providers {
                     generated_at: chrono::Utc::now(),
                 };
 
-                return Ok(Some(InferenceStreamEvent::FinalResponse(Box::new(final_response))));
+                return Ok(Some(InferenceStreamEvent::FinalResponse(Box::new(
+                    final_response,
+                ))));
             }
 
             Ok(Some(InferenceStreamEvent::StreamEnd))
@@ -1948,23 +2075,35 @@ mod providers {
         }
 
         async fn get_model_info(&self, model_id: &str) -> Result<ModelInfo> {
-            let api_key = self.get_api_key()?;
-            
+            let _api_key = self.get_api_key()?;
+
             tracing::info!("Fetching Claude model info for: {}", model_id);
-            
+
             let model_info = ModelInfo {
                 id: model_id.to_string(),
                 name: model_id.to_string(),
-                description: Some(format!("Anthropic Claude model: {}", model_id)),
+                description: Some(format!("Anthropic Claude model: {model_id}")),
                 provider: "claude".to_string(),
                 model_type: ModelType::Language {
                     architecture: "constitutional_ai".to_string(),
-                    size_parameters: if model_id.contains("claude-3") { Some(200000000000) } else { Some(100000000000) },
-                    context_length: if model_id.contains("claude-3") { Some(200000) } else { Some(100000) },
+                    size_parameters: if model_id.contains("claude-3") {
+                        Some(200000000000)
+                    } else {
+                        Some(100000000000)
+                    },
+                    context_length: if model_id.contains("claude-3") {
+                        Some(200000)
+                    } else {
+                        Some(100000)
+                    },
                 },
                 capabilities: self.capabilities(),
                 parameters: ModelParameters {
-                    max_tokens: if model_id.contains("claude-3") { Some(4096) } else { Some(1024) },
+                    max_tokens: if model_id.contains("claude-3") {
+                        Some(4096)
+                    } else {
+                        Some(1024)
+                    },
                     temperature: Some(0.7),
                     top_p: Some(0.95),
                     frequency_penalty: None,
@@ -1974,8 +2113,16 @@ mod providers {
                     custom_parameters: HashMap::new(),
                 },
                 pricing: Some(ModelPricing {
-                    input_cost_per_token: if model_id.contains("claude-3") { Some(0.015) } else { Some(0.01) },
-                    output_cost_per_token: if model_id.contains("claude-3") { Some(0.075) } else { Some(0.05) },
+                    input_cost_per_token: if model_id.contains("claude-3") {
+                        Some(0.015)
+                    } else {
+                        Some(0.01)
+                    },
+                    output_cost_per_token: if model_id.contains("claude-3") {
+                        Some(0.075)
+                    } else {
+                        Some(0.05)
+                    },
                     cost_per_request: None,
                     cost_per_hour: None,
                     currency: "USD".to_string(),
@@ -1989,23 +2136,32 @@ mod providers {
                 },
                 metadata: {
                     let mut metadata = HashMap::new();
-                    metadata.insert("provider".to_string(), serde_json::Value::String("anthropic".to_string()));
-                    metadata.insert("constitutional_ai".to_string(), serde_json::Value::Bool(true));
-                    metadata.insert("helpful_harmless_honest".to_string(), serde_json::Value::Bool(true));
+                    metadata.insert(
+                        "provider".to_string(),
+                        serde_json::Value::String("anthropic".to_string()),
+                    );
+                    metadata.insert(
+                        "constitutional_ai".to_string(),
+                        serde_json::Value::Bool(true),
+                    );
+                    metadata.insert(
+                        "helpful_harmless_honest".to_string(),
+                        serde_json::Value::Bool(true),
+                    );
                     metadata
                 },
             };
-            
+
             Ok(model_info)
         }
 
         async fn load_model(&self, request: ModelLoadRequest) -> Result<ModelHandle> {
-            let api_key = self.get_api_key()?;
-            
+            let _api_key = self.get_api_key()?;
+
             tracing::info!("Loading Claude model: {}", request.model_id);
-            
+
             let _model_info = self.get_model_info(&request.model_id).await?;
-            
+
             let handle = ModelHandle {
                 handle_id: Uuid::new_v4(),
                 model_id: request.model_id.clone(),
@@ -2020,46 +2176,55 @@ mod providers {
                     network_usage_mbps: 0.0,
                 },
             };
-            
-            tracing::info!("Successfully loaded Claude model {} with handle {}", 
-                request.model_id, handle.handle_id);
-            
+
+            tracing::info!(
+                "Successfully loaded Claude model {} with handle {}",
+                request.model_id,
+                handle.handle_id
+            );
+
             Ok(handle)
         }
 
         async fn unload_model(&self, handle: ModelHandle) -> Result<()> {
-            tracing::info!("Unloading Claude model: {} (handle: {})", 
-                handle.model_id, handle.handle_id);
-            
+            tracing::info!(
+                "Unloading Claude model: {} (handle: {})",
+                handle.model_id,
+                handle.handle_id
+            );
+
             // For Claude, no explicit unloading is needed since it's cloud-based
-            
+
             tracing::info!("Successfully unloaded Claude model: {}", handle.model_id);
             Ok(())
         }
 
         async fn inference(&self, request: InferenceRequest) -> Result<InferenceResponse> {
-            let api_key = self.get_api_key()?;
+            let _api_key = self.get_api_key()?;
             let start_time = std::time::Instant::now();
-            
-            tracing::info!("Processing Claude inference for model {} (handle: {})", 
-                request.model_handle.model_id, request.model_handle.handle_id);
-            
+
+            tracing::info!(
+                "Processing Claude inference for model {} (handle: {})",
+                request.model_handle.model_id,
+                request.model_handle.handle_id
+            );
+
             let output = match &request.input {
                 InferenceInput::Text(text) => {
                     tracing::debug!("Processing text input: {} characters", text.len());
-                    
+
                     // Simulate Claude's conversational and helpful response
                     let response_text = if request.model_handle.model_id.contains("claude-3") {
                         format!("Claude-3 thoughtful response: I understand you're asking about '{}'. Let me provide a helpful and comprehensive answer based on my training.", text.chars().take(100).collect::<String>())
                     } else {
-                        format!("Claude response: {}", text)
+                        format!("Claude response: {text}")
                     };
-                    
+
                     InferenceOutput::Text(response_text)
-                },
-                InferenceInput::Structured(data) => {
+                }
+                InferenceInput::Structured(_data) => {
                     tracing::debug!("Processing structured input");
-                    
+
                     let response = serde_json::json!({
                         "claude_analysis": true,
                         "helpful_response": "I've analyzed your structured data and can provide insights",
@@ -2067,9 +2232,9 @@ mod providers {
                         "constitutional_ai": true,
                         "timestamp": chrono::Utc::now()
                     });
-                    
+
                     InferenceOutput::Structured(response)
-                },
+                }
                 InferenceInput::Image(image) => {
                     if request.model_handle.model_id.contains("claude-3") {
                         // Claude-3 has vision capabilities
@@ -2082,19 +2247,19 @@ mod providers {
                         InferenceOutput::Structured(response)
                     } else {
                         return Err(NestGateError::Configuration(
-                            "Vision capabilities not available for this Claude model".to_string()
+                            "Vision capabilities not available for this Claude model".to_string(),
                         ));
                     }
-                },
+                }
                 _ => {
                     return Err(NestGateError::Configuration(
-                        "Unsupported input type for Claude".to_string()
+                        "Unsupported input type for Claude".to_string(),
                     ));
                 }
             };
-            
+
             let processing_time = start_time.elapsed();
-            
+
             let response = InferenceResponse {
                 request_id: request.request_id,
                 response_id: Uuid::new_v4(),
@@ -2116,8 +2281,11 @@ mod providers {
                 },
                 generated_at: chrono::Utc::now(),
             };
-            
-            tracing::info!("Completed Claude inference in {:.2}ms", processing_time.as_millis());
+
+            tracing::info!(
+                "Completed Claude inference in {:.2}ms",
+                processing_time.as_millis()
+            );
             Ok(response)
         }
 
@@ -2125,19 +2293,22 @@ mod providers {
             &self,
             request: InferenceRequest,
         ) -> Result<Box<dyn InferenceStream>> {
-            let api_key = self.get_api_key()?;
-            
-            tracing::info!("Starting Claude streaming inference for model {} (handle: {})", 
-                request.model_handle.model_id, request.model_handle.handle_id);
-            
+            let _api_key = self.get_api_key()?;
+
+            tracing::info!(
+                "Starting Claude streaming inference for model {} (handle: {})",
+                request.model_handle.model_id,
+                request.model_handle.handle_id
+            );
+
             let stream = ClaudeInferenceStream::new(request).await?;
-            
+
             Ok(Box::new(stream))
         }
 
         async fn get_metrics(&self, model_id: &str) -> Result<ModelMetrics> {
             tracing::info!("Getting metrics for Claude model: {}", model_id);
-            
+
             let metrics = ModelMetrics {
                 model_id: model_id.to_string(),
                 total_requests: 5500,
@@ -2156,7 +2327,7 @@ mod providers {
                 },
                 cost_total: Some(285.60),
             };
-            
+
             Ok(metrics)
         }
 
@@ -2215,25 +2386,27 @@ mod providers {
                 } else {
                     format!("claude_token_{}", self.current_position)
                 };
-                
+
                 self.current_position += 1;
                 tokio::time::sleep(tokio::time::Duration::from_millis(15)).await; // Claude is typically slower
-                
+
                 return Ok(Some(InferenceStreamEvent::TokenGenerated(token)));
             }
 
             if !self.completed {
                 self.completed = true;
-                
+
                 let final_response = InferenceResponse {
                     request_id: self.request.request_id,
                     response_id: Uuid::new_v4(),
                     model_handle: self.request.model_handle.clone(),
                     output: match &self.request.input {
-                        InferenceInput::Text(text) => {
-                            InferenceOutput::Text(format!("Claude thoughtful stream completed for: {}", text))
-                        },
-                        _ => InferenceOutput::Text("Claude stream completed with constitutional AI principles".to_string()),
+                        InferenceInput::Text(text) => InferenceOutput::Text(format!(
+                            "Claude thoughtful stream completed for: {text}"
+                        )),
+                        _ => InferenceOutput::Text(
+                            "Claude stream completed with constitutional AI principles".to_string(),
+                        ),
                     },
                     metrics: InferenceMetrics {
                         latency_ms: 800.0,
@@ -2252,7 +2425,9 @@ mod providers {
                     generated_at: chrono::Utc::now(),
                 };
 
-                return Ok(Some(InferenceStreamEvent::FinalResponse(Box::new(final_response))));
+                return Ok(Some(InferenceStreamEvent::FinalResponse(Box::new(
+                    final_response,
+                ))));
             }
 
             Ok(Some(InferenceStreamEvent::StreamEnd))
@@ -2295,11 +2470,15 @@ mod providers {
             self.config.model_path.as_deref()
         }
 
-        fn get_base_url(&self) -> &str {
+        fn get_base_url(&self) -> String {
             self.config
                 .base_url
                 .as_deref()
-                .unwrap_or(&std::env::var("NESTGATE_LOCAL_MODEL_URL").unwrap_or("http://localhost:8080".to_string()))
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| {
+                    std::env::var("NESTGATE_LOCAL_MODEL_URL")
+                        .unwrap_or_else(|_| "http://localhost:8080".to_string())
+                })
         }
     }
 
@@ -2377,13 +2556,17 @@ mod providers {
 
         async fn get_model_info(&self, model_id: &str) -> Result<ModelInfo> {
             let model_path = self.get_model_path();
-            
-            tracing::info!("Fetching local model info for: {} at path: {:?}", model_id, model_path);
-            
+
+            tracing::info!(
+                "Fetching local model info for: {} at path: {:?}",
+                model_id,
+                model_path
+            );
+
             let model_info = ModelInfo {
                 id: model_id.to_string(),
                 name: model_id.to_string(),
-                description: Some(format!("Local model: {}", model_id)),
+                description: Some(format!("Local model: {model_id}")),
                 provider: "local".to_string(),
                 model_type: ModelType::Language {
                     architecture: "local".to_string(),
@@ -2417,27 +2600,40 @@ mod providers {
                 },
                 metadata: {
                     let mut metadata = HashMap::new();
-                    metadata.insert("deployment".to_string(), serde_json::Value::String("local".to_string()));
-                    metadata.insert("privacy".to_string(), serde_json::Value::String("full".to_string()));
+                    metadata.insert(
+                        "deployment".to_string(),
+                        serde_json::Value::String("local".to_string()),
+                    );
+                    metadata.insert(
+                        "privacy".to_string(),
+                        serde_json::Value::String("full".to_string()),
+                    );
                     metadata.insert("offline_capable".to_string(), serde_json::Value::Bool(true));
                     if let Some(path) = model_path {
-                        metadata.insert("model_path".to_string(), serde_json::Value::String(path.to_string()));
+                        metadata.insert(
+                            "model_path".to_string(),
+                            serde_json::Value::String(path.to_string()),
+                        );
                     }
                     metadata
                 },
             };
-            
+
             Ok(model_info)
         }
 
         async fn load_model(&self, request: ModelLoadRequest) -> Result<ModelHandle> {
             let model_path = self.get_model_path();
-            
-            tracing::info!("Loading local model: {} from path: {:?}", request.model_id, model_path);
-            
+
+            tracing::info!(
+                "Loading local model: {} from path: {:?}",
+                request.model_id,
+                model_path
+            );
+
             // Validate model exists locally
             let _model_info = self.get_model_info(&request.model_id).await?;
-            
+
             let handle = ModelHandle {
                 handle_id: Uuid::new_v4(),
                 model_id: request.model_id.clone(),
@@ -2452,29 +2648,38 @@ mod providers {
                     network_usage_mbps: 0.0, // Local models don't use network
                 },
             };
-            
-            tracing::info!("Successfully loaded local model {} with handle {} using {} GB GPU memory", 
-                request.model_id, handle.handle_id, handle.resource_usage.gpu_memory_used_gb);
-            
+
+            tracing::info!(
+                "Successfully loaded local model {} with handle {} using {} GB GPU memory",
+                request.model_id,
+                handle.handle_id,
+                handle.resource_usage.gpu_memory_used_gb
+            );
+
             Ok(handle)
         }
 
         async fn unload_model(&self, handle: ModelHandle) -> Result<()> {
-            tracing::info!("Unloading local model: {} (handle: {})", 
-                handle.model_id, handle.handle_id);
-            
+            tracing::info!(
+                "Unloading local model: {} (handle: {})",
+                handle.model_id,
+                handle.handle_id
+            );
+
             // Release GPU memory and other resources
-            tracing::info!("Releasing local resources: {:.2} GB memory, {:.2} GB GPU memory, {:.2} GB storage", 
+            tracing::info!(
+                "Releasing local resources: {:.2} GB memory, {:.2} GB GPU memory, {:.2} GB storage",
                 handle.resource_usage.memory_used_gb,
                 handle.resource_usage.gpu_memory_used_gb,
-                handle.resource_usage.storage_used_gb);
-            
+                handle.resource_usage.storage_used_gb
+            );
+
             // In a real implementation, this would:
             // 1. Unload model from GPU memory
             // 2. Clear CPU cache
             // 3. Release file handles
             // 4. Clean up any background processes
-            
+
             tracing::info!("Successfully unloaded local model: {}", handle.model_id);
             Ok(())
         }
@@ -2482,24 +2687,30 @@ mod providers {
         async fn inference(&self, request: InferenceRequest) -> Result<InferenceResponse> {
             let model_path = self.get_model_path();
             let start_time = std::time::Instant::now();
-            
-            tracing::info!("Processing local inference for model {} (handle: {}) at path: {:?}", 
-                request.model_handle.model_id, request.model_handle.handle_id, model_path);
-            
+
+            tracing::info!(
+                "Processing local inference for model {} (handle: {}) at path: {:?}",
+                request.model_handle.model_id,
+                request.model_handle.handle_id,
+                model_path
+            );
+
             let output = match &request.input {
                 InferenceInput::Text(text) => {
                     tracing::debug!("Processing text input locally: {} characters", text.len());
-                    
+
                     // Simulate local model processing
-                    let response_text = format!("Local model {} processed: {}", 
-                        request.model_handle.model_id, 
-                        text.chars().take(100).collect::<String>());
-                    
+                    let response_text = format!(
+                        "Local model {} processed: {}",
+                        request.model_handle.model_id,
+                        text.chars().take(100).collect::<String>()
+                    );
+
                     InferenceOutput::Text(response_text)
-                },
-                InferenceInput::Structured(data) => {
+                }
+                InferenceInput::Structured(_data) => {
                     tracing::debug!("Processing structured input locally");
-                    
+
                     let response = serde_json::json!({
                         "local_processing": true,
                         "privacy_preserved": true,
@@ -2507,18 +2718,18 @@ mod providers {
                         "model": request.model_handle.model_id,
                         "timestamp": chrono::Utc::now()
                     });
-                    
+
                     InferenceOutput::Structured(response)
-                },
+                }
                 _ => {
                     return Err(NestGateError::Configuration(
-                        "Input type not supported by local model".to_string()
+                        "Input type not supported by local model".to_string(),
                     ));
                 }
             };
-            
+
             let processing_time = start_time.elapsed();
-            
+
             let response = InferenceResponse {
                 request_id: request.request_id,
                 response_id: Uuid::new_v4(),
@@ -2540,8 +2751,11 @@ mod providers {
                 },
                 generated_at: chrono::Utc::now(),
             };
-            
-            tracing::info!("Completed local inference in {:.2}ms", processing_time.as_millis());
+
+            tracing::info!(
+                "Completed local inference in {:.2}ms",
+                processing_time.as_millis()
+            );
             Ok(response)
         }
 
@@ -2550,18 +2764,22 @@ mod providers {
             request: InferenceRequest,
         ) -> Result<Box<dyn InferenceStream>> {
             let model_path = self.get_model_path();
-            
-            tracing::info!("Starting local streaming inference for model {} (handle: {}) at path: {:?}", 
-                request.model_handle.model_id, request.model_handle.handle_id, model_path);
-            
+
+            tracing::info!(
+                "Starting local streaming inference for model {} (handle: {}) at path: {:?}",
+                request.model_handle.model_id,
+                request.model_handle.handle_id,
+                model_path
+            );
+
             let stream = LocalInferenceStream::new(request).await?;
-            
+
             Ok(Box::new(stream))
         }
 
         async fn get_metrics(&self, model_id: &str) -> Result<ModelMetrics> {
             tracing::info!("Getting metrics for local model: {}", model_id);
-            
+
             let metrics = ModelMetrics {
                 model_id: model_id.to_string(),
                 total_requests: 450,
@@ -2580,7 +2798,7 @@ mod providers {
                 },
                 cost_total: Some(0.0), // Local models are free
             };
-            
+
             Ok(metrics)
         }
 
@@ -2636,24 +2854,26 @@ mod providers {
             if self.current_position < self.total_tokens {
                 let token = format!("local_token_{}", self.current_position);
                 self.current_position += 1;
-                
+
                 tokio::time::sleep(tokio::time::Duration::from_millis(8)).await; // Local models are faster
-                
+
                 return Ok(Some(InferenceStreamEvent::TokenGenerated(token)));
             }
 
             if !self.completed {
                 self.completed = true;
-                
+
                 let final_response = InferenceResponse {
                     request_id: self.request.request_id,
                     response_id: Uuid::new_v4(),
                     model_handle: self.request.model_handle.clone(),
                     output: match &self.request.input {
-                        InferenceInput::Text(text) => {
-                            InferenceOutput::Text(format!("Local private stream completed for: {}", text))
-                        },
-                        _ => InferenceOutput::Text("Local private stream completed with full privacy".to_string()),
+                        InferenceInput::Text(text) => InferenceOutput::Text(format!(
+                            "Local private stream completed for: {text}"
+                        )),
+                        _ => InferenceOutput::Text(
+                            "Local private stream completed with full privacy".to_string(),
+                        ),
                     },
                     metrics: InferenceMetrics {
                         latency_ms: 400.0,
@@ -2672,7 +2892,9 @@ mod providers {
                     generated_at: chrono::Utc::now(),
                 };
 
-                return Ok(Some(InferenceStreamEvent::FinalResponse(Box::new(final_response))));
+                return Ok(Some(InferenceStreamEvent::FinalResponse(Box::new(
+                    final_response,
+                ))));
             }
 
             Ok(Some(InferenceStreamEvent::StreamEnd))
@@ -2702,11 +2924,15 @@ mod providers {
             Ok(Self { config })
         }
 
-        fn get_base_url(&self) -> &str {
+        fn get_base_url(&self) -> String {
             self.config
                 .base_url
                 .as_deref()
-                .unwrap_or(&std::env::var("OLLAMA_BASE_URL").unwrap_or("http://localhost:11434".to_string()))
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| {
+                    std::env::var("OLLAMA_BASE_URL")
+                        .unwrap_or_else(|_| "http://localhost:11434".to_string())
+                })
         }
     }
 
@@ -2790,24 +3016,36 @@ mod providers {
 
         async fn get_model_info(&self, model_id: &str) -> Result<ModelInfo> {
             let base_url = self.get_base_url();
-            
-            tracing::info!("Fetching Ollama model info for: {} from {}", model_id, base_url);
-            
+
+            tracing::info!(
+                "Fetching Ollama model info for: {} from {}",
+                model_id,
+                base_url
+            );
+
             let model_info = ModelInfo {
                 id: model_id.to_string(),
                 name: model_id.to_string(),
-                description: Some(format!("Ollama model: {}", model_id)),
+                description: Some(format!("Ollama model: {model_id}")),
                 provider: "ollama".to_string(),
                 model_type: if model_id.contains("llama") {
                     ModelType::Language {
                         architecture: "llama".to_string(),
-                        size_parameters: if model_id.contains("70b") { Some(70000000000) } else { Some(7000000000) },
+                        size_parameters: if model_id.contains("70b") {
+                            Some(70000000000)
+                        } else {
+                            Some(7000000000)
+                        },
                         context_length: Some(4096),
                     }
                 } else if model_id.contains("codellama") {
                     ModelType::Code {
                         architecture: "llama".to_string(),
-                        supported_languages: vec!["python".to_string(), "javascript".to_string(), "rust".to_string()],
+                        supported_languages: vec![
+                            "python".to_string(),
+                            "javascript".to_string(),
+                            "rust".to_string(),
+                        ],
                         context_length: Some(4096),
                     }
                 } else {
@@ -2844,25 +3082,38 @@ mod providers {
                 },
                 metadata: {
                     let mut metadata = HashMap::new();
-                    metadata.insert("base_url".to_string(), serde_json::Value::String(base_url.to_string()));
-                    metadata.insert("ollama_version".to_string(), serde_json::Value::String("0.1.0".to_string()));
+                    metadata.insert(
+                        "base_url".to_string(),
+                        serde_json::Value::String(base_url.to_string()),
+                    );
+                    metadata.insert(
+                        "ollama_version".to_string(),
+                        serde_json::Value::String("0.1.0".to_string()),
+                    );
                     metadata.insert("open_source".to_string(), serde_json::Value::Bool(true));
-                    metadata.insert("local_deployment".to_string(), serde_json::Value::Bool(true));
+                    metadata.insert(
+                        "local_deployment".to_string(),
+                        serde_json::Value::Bool(true),
+                    );
                     metadata
                 },
             };
-            
+
             Ok(model_info)
         }
 
         async fn load_model(&self, request: ModelLoadRequest) -> Result<ModelHandle> {
             let base_url = self.get_base_url();
-            
-            tracing::info!("Loading Ollama model: {} from {}", request.model_id, base_url);
-            
+
+            tracing::info!(
+                "Loading Ollama model: {} from {}",
+                request.model_id,
+                base_url
+            );
+
             // Validate model exists
             let _model_info = self.get_model_info(&request.model_id).await?;
-            
+
             let handle = ModelHandle {
                 handle_id: Uuid::new_v4(),
                 model_id: request.model_id.clone(),
@@ -2877,25 +3128,32 @@ mod providers {
                     network_usage_mbps: 0.0, // Ollama is local
                 },
             };
-            
-            tracing::info!("Successfully loaded Ollama model {} with handle {} using {} GB GPU memory", 
-                request.model_id, handle.handle_id, handle.resource_usage.gpu_memory_used_gb);
-            
+
+            tracing::info!(
+                "Successfully loaded Ollama model {} with handle {} using {} GB GPU memory",
+                request.model_id,
+                handle.handle_id,
+                handle.resource_usage.gpu_memory_used_gb
+            );
+
             Ok(handle)
         }
 
         async fn unload_model(&self, handle: ModelHandle) -> Result<()> {
-            tracing::info!("Unloading Ollama model: {} (handle: {})", 
-                handle.model_id, handle.handle_id);
-            
+            tracing::info!(
+                "Unloading Ollama model: {} (handle: {})",
+                handle.model_id,
+                handle.handle_id
+            );
+
             // Release Ollama resources
             tracing::info!("Releasing Ollama resources: {:.2} GB memory, {:.2} GB GPU memory, {:.2} GB storage", 
                 handle.resource_usage.memory_used_gb,
                 handle.resource_usage.gpu_memory_used_gb,
                 handle.resource_usage.storage_used_gb);
-            
+
             // In a real implementation, this would call Ollama's unload API
-            
+
             tracing::info!("Successfully unloaded Ollama model: {}", handle.model_id);
             Ok(())
         }
@@ -2903,28 +3161,45 @@ mod providers {
         async fn inference(&self, request: InferenceRequest) -> Result<InferenceResponse> {
             let base_url = self.get_base_url();
             let start_time = std::time::Instant::now();
-            
-            tracing::info!("Processing Ollama inference for model {} (handle: {}) at {}", 
-                request.model_handle.model_id, request.model_handle.handle_id, base_url);
-            
+
+            tracing::info!(
+                "Processing Ollama inference for model {} (handle: {}) at {}",
+                request.model_handle.model_id,
+                request.model_handle.handle_id,
+                base_url
+            );
+
             let output = match &request.input {
                 InferenceInput::Text(text) => {
-                    tracing::debug!("Processing text input with Ollama: {} characters", text.len());
-                    
+                    tracing::debug!(
+                        "Processing text input with Ollama: {} characters",
+                        text.len()
+                    );
+
                     // Simulate Ollama processing
                     let response_text = if request.model_handle.model_id.contains("llama") {
-                        format!("Llama model {} says: {}", request.model_handle.model_id, text.chars().take(100).collect::<String>())
+                        format!(
+                            "Llama model {} says: {}",
+                            request.model_handle.model_id,
+                            text.chars().take(100).collect::<String>()
+                        )
                     } else if request.model_handle.model_id.contains("codellama") {
-                        format!("CodeLlama analyzed: {}", text.chars().take(100).collect::<String>())
+                        format!(
+                            "CodeLlama analyzed: {}",
+                            text.chars().take(100).collect::<String>()
+                        )
                     } else {
-                        format!("Ollama {} processed: {}", request.model_handle.model_id, text)
+                        format!(
+                            "Ollama {} processed: {}",
+                            request.model_handle.model_id, text
+                        )
                     };
-                    
+
                     InferenceOutput::Text(response_text)
-                },
-                InferenceInput::Structured(data) => {
+                }
+                InferenceInput::Structured(_data) => {
                     tracing::debug!("Processing structured input with Ollama");
-                    
+
                     let response = serde_json::json!({
                         "ollama_processing": true,
                         "open_source": true,
@@ -2932,18 +3207,18 @@ mod providers {
                         "model": request.model_handle.model_id,
                         "timestamp": chrono::Utc::now()
                     });
-                    
+
                     InferenceOutput::Structured(response)
-                },
+                }
                 _ => {
                     return Err(NestGateError::Configuration(
-                        "Input type not supported by Ollama".to_string()
+                        "Input type not supported by Ollama".to_string(),
                     ));
                 }
             };
-            
+
             let processing_time = start_time.elapsed();
-            
+
             let response = InferenceResponse {
                 request_id: request.request_id,
                 response_id: Uuid::new_v4(),
@@ -2965,8 +3240,11 @@ mod providers {
                 },
                 generated_at: chrono::Utc::now(),
             };
-            
-            tracing::info!("Completed Ollama inference in {:.2}ms", processing_time.as_millis());
+
+            tracing::info!(
+                "Completed Ollama inference in {:.2}ms",
+                processing_time.as_millis()
+            );
             Ok(response)
         }
 
@@ -2975,18 +3253,22 @@ mod providers {
             request: InferenceRequest,
         ) -> Result<Box<dyn InferenceStream>> {
             let base_url = self.get_base_url();
-            
-            tracing::info!("Starting Ollama streaming inference for model {} (handle: {}) at {}", 
-                request.model_handle.model_id, request.model_handle.handle_id, base_url);
-            
+
+            tracing::info!(
+                "Starting Ollama streaming inference for model {} (handle: {}) at {}",
+                request.model_handle.model_id,
+                request.model_handle.handle_id,
+                base_url
+            );
+
             let stream = OllamaInferenceStream::new(request).await?;
-            
+
             Ok(Box::new(stream))
         }
 
         async fn get_metrics(&self, model_id: &str) -> Result<ModelMetrics> {
             tracing::info!("Getting metrics for Ollama model: {}", model_id);
-            
+
             let metrics = ModelMetrics {
                 model_id: model_id.to_string(),
                 total_requests: 650,
@@ -3005,7 +3287,7 @@ mod providers {
                 },
                 cost_total: Some(0.0), // Ollama is free
             };
-            
+
             Ok(metrics)
         }
 
@@ -3066,25 +3348,27 @@ mod providers {
                 } else {
                     format!("ollama_token_{}", self.current_position)
                 };
-                
+
                 self.current_position += 1;
                 tokio::time::sleep(tokio::time::Duration::from_millis(12)).await; // Ollama is moderate speed
-                
+
                 return Ok(Some(InferenceStreamEvent::TokenGenerated(token)));
             }
 
             if !self.completed {
                 self.completed = true;
-                
+
                 let final_response = InferenceResponse {
                     request_id: self.request.request_id,
                     response_id: Uuid::new_v4(),
                     model_handle: self.request.model_handle.clone(),
                     output: match &self.request.input {
-                        InferenceInput::Text(text) => {
-                            InferenceOutput::Text(format!("Ollama open-source stream completed for: {}", text))
-                        },
-                        _ => InferenceOutput::Text("Ollama open-source stream completed".to_string()),
+                        InferenceInput::Text(text) => InferenceOutput::Text(format!(
+                            "Ollama open-source stream completed for: {text}"
+                        )),
+                        _ => {
+                            InferenceOutput::Text("Ollama open-source stream completed".to_string())
+                        }
                     },
                     metrics: InferenceMetrics {
                         latency_ms: 600.0,
@@ -3103,7 +3387,9 @@ mod providers {
                     generated_at: chrono::Utc::now(),
                 };
 
-                return Ok(Some(InferenceStreamEvent::FinalResponse(Box::new(final_response))));
+                return Ok(Some(InferenceStreamEvent::FinalResponse(Box::new(
+                    final_response,
+                ))));
             }
 
             Ok(Some(InferenceStreamEvent::StreamEnd))

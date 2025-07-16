@@ -76,7 +76,7 @@ mod share_protocol_tests {
 
     #[test]
     fn test_share_protocol_variants() {
-        let protocols = vec![ShareProtocol::SMB, ShareProtocol::NFS, ShareProtocol::HTTP];
+        let protocols = [ShareProtocol::SMB, ShareProtocol::NFS, ShareProtocol::HTTP];
 
         assert_eq!(protocols.len(), 3);
 
@@ -211,26 +211,26 @@ mod nas_server_tests {
             share_root: PathBuf::from("/tmp/test_shares"),
         };
 
-        let server = NasServer::new(config);
+        let _server = NasServer::new(config);
 
         // Server should be created with custom configuration
         // Creation should not panic or fail
     }
 
     #[test]
-    fn test_nas_server_with_disabled_protocols() {
+    fn test_nas_server_disabled_protocols() {
         let config = NasConfig {
-            smb_enabled: false,
             nfs_enabled: false,
+            smb_enabled: false,
             http_enabled: false,
             bind_address: "127.0.0.1".to_string(),
-            smb_port: 445,
             nfs_port: 2049,
+            smb_port: 445,
             http_port: 8080,
             share_root: PathBuf::from("/tmp/disabled_shares"),
         };
 
-        let server = NasServer::new(config);
+        let _server = NasServer::new(config);
 
         // Server should be created even with all protocols disabled
         // This might be useful for testing or specific configurations
@@ -342,7 +342,7 @@ mod integration_validation_tests {
         let temp_dir = TempDir::new().unwrap();
 
         // Test all possible protocol combinations
-        let combinations = vec![
+        let combinations = [
             vec![ShareProtocol::SMB],
             vec![ShareProtocol::NFS],
             vec![ShareProtocol::HTTP],
@@ -354,8 +354,8 @@ mod integration_validation_tests {
 
         for (i, protocols) in combinations.iter().enumerate() {
             let share = NasShare {
-                name: format!("test_share_{}", i),
-                path: temp_dir.path().join(format!("share_{}", i)),
+                name: format!("test_share_{i}"),
+                path: temp_dir.path().join(format!("share_{i}")),
                 read_only: false,
                 allowed_users: vec!["test_user".to_string()],
                 protocols: protocols.clone(),
@@ -409,7 +409,7 @@ mod integration_validation_tests {
 
         for config in configs {
             // Each configuration should be valid
-            let server = NasServer::new(config);
+            let _server = NasServer::new(config);
             // Server creation should succeed
         }
     }

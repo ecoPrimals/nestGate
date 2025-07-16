@@ -84,7 +84,7 @@ impl ZfsDatasetManager {
     ) -> Result<DatasetInfo> {
         info!("Creating dataset: {}/{} on tier: {:?}", parent, name, tier);
 
-        let dataset_path = format!("{}/{}", parent, name);
+        let dataset_path = format!("{parent}/{name}");
 
         // Convert core tier to ZFS tier
         let zfs_tier = match tier {
@@ -103,7 +103,7 @@ impl ZfsDatasetManager {
 
         // Apply tier-specific properties
         for (key, value) in &tier_config.properties {
-            cmd.args(["-o", &format!("{}={}", key, value)]);
+            cmd.args(["-o", &format!("{key}={value}")]);
         }
 
         cmd.arg(&dataset_path);
@@ -111,13 +111,12 @@ impl ZfsDatasetManager {
         let output = cmd
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to execute zfs create: {}", e)))?;
+            .map_err(|e| NestGateError::Internal(format!("Failed to execute zfs create: {e}")))?;
 
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
             return Err(NestGateError::Internal(format!(
-                "ZFS create failed: {}",
-                error_msg
+                "ZFS create failed: {error_msg}"
             )));
         }
 
@@ -138,7 +137,7 @@ impl ZfsDatasetManager {
         info!("Creating dataset: {}/{} on tier: {:?}", pool, name, tier);
 
         // First try real ZFS dataset creation
-        let dataset_path = format!("{}/{}", pool, name);
+        let dataset_path = format!("{pool}/{name}");
         let output = tokio::process::Command::new("zfs")
             .args(["create", &dataset_path])
             .output()
@@ -160,7 +159,7 @@ impl ZfsDatasetManager {
                     available_space: 1024 * 1024 * 1024,
                     file_count: None,
                     compression_ratio: Some(1.0),
-                    mount_point: format!("/{}", name),
+                    mount_point: format!("/{name}"),
                     tier,
                     properties: HashMap::new(),
                 })
@@ -175,7 +174,7 @@ impl ZfsDatasetManager {
                     available_space: 1024 * 1024 * 1024,
                     file_count: None,
                     compression_ratio: Some(1.0),
-                    mount_point: format!("/{}", name),
+                    mount_point: format!("/{name}"),
                     tier,
                     properties: HashMap::new(),
                 })
@@ -199,7 +198,7 @@ impl ZfsDatasetManager {
             ])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to execute zfs list: {}", e)))?;
+            .map_err(|e| NestGateError::Internal(format!("Failed to execute zfs list: {e}")))?;
 
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
@@ -250,7 +249,7 @@ impl ZfsDatasetManager {
             available_space: 512 * 1024 * 1024,
             file_count: None,
             compression_ratio: Some(1.5),
-            mount_point: format!("/{}", name),
+            mount_point: format!("/{name}"),
             tier: StorageTier::Warm,
             properties: HashMap::new(),
         })
@@ -274,13 +273,13 @@ impl ZfsDatasetManager {
         args.extend(&["-o", &recordsize_opt]);
 
         // Add quota if specified
-        let quota_opt = config.quota.map(|q| format!("quota={}", q));
+        let quota_opt = config.quota.map(|q| format!("quota={q}"));
         if let Some(ref quota_str) = quota_opt {
             args.extend(&["-o", quota_str]);
         }
 
         // Add reservation if specified
-        let reservation_opt = config.reservation.map(|r| format!("reservation={}", r));
+        let reservation_opt = config.reservation.map(|r| format!("reservation={r}"));
         if let Some(ref reservation_str) = reservation_opt {
             args.extend(&["-o", reservation_str]);
         }
@@ -294,7 +293,7 @@ impl ZfsDatasetManager {
             .await
             .map_err(|e| {
                 ZfsError::DatasetError(DatasetError::CreationFailed {
-                    reason: format!("Failed to execute zfs create: {}", e),
+                    reason: format!("Failed to execute zfs create: {e}"),
                 })
             })?;
 
@@ -321,7 +320,7 @@ impl ZfsDatasetManager {
             .await
             .map_err(|_e| {
                 ZfsError::DatasetError(DatasetError::PropertyError {
-                    reason: format!("Failed to get dataset properties: {}", _e),
+                    reason: format!("Failed to get dataset properties: {_e}"),
                 })
             })?;
 
@@ -352,12 +351,12 @@ impl ZfsDatasetManager {
 
         for (key, value) in properties {
             let output = Command::new("zfs")
-                .args(["set", &format!("{}={}", key, value), name])
+                .args(["set", &format!("{key}={value}"), name])
                 .output()
                 .await
                 .map_err(|e| {
                     ZfsError::DatasetError(DatasetError::PropertyError {
-                        reason: format!("Failed to set property {}={}: {}", key, value, e),
+                        reason: format!("Failed to set property {key}={value}: {e}"),
                     })
                 })?;
 
@@ -461,7 +460,7 @@ impl ZfsDatasetManager {
             ])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to list snapshots: {}", e)))?;
+            .map_err(|e| NestGateError::Internal(format!("Failed to list snapshots: {e}")))?;
 
         if !output.status.success() {
             return Err(NestGateError::Internal(format!(

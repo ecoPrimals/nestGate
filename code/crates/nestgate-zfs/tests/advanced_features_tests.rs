@@ -2,11 +2,7 @@
 //!
 //! Simplified tests for basic functionality without ecosystem integration
 
-use nestgate_mcp::types::SystemMetrics;
-use nestgate_zfs::advanced_features::*;
-use nestgate_zfs::performance::IoStatistics;
 use nestgate_zfs::performance_engine::BottleneckSeverity;
-use nestgate_zfs::snapshot::SnapshotPolicy;
 use std::collections::HashMap;
 use std::time::SystemTime;
 
@@ -197,7 +193,7 @@ fn test_snapshot_requirements_and_policy() {
 
 #[test]
 fn test_retention_analyzer() {
-    let analyzer = RetentionAnalyzer::new();
+    let _analyzer = RetentionAnalyzer::new();
 
     // Test that the analyzer was created successfully
     // Since the struct is opaque, we can only test that it can be instantiated

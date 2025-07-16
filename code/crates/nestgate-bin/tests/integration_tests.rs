@@ -1,11 +1,10 @@
 use std::process::{Command, Stdio};
 use std::time::Duration;
-use tokio::time::timeout;
 
 #[tokio::test]
 async fn test_binary_help_output() {
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "nestgate", "--", "--help"])
+        .args(["run", "--bin", "nestgate", "--", "--help"])
         .output()
         .expect("Failed to execute nestgate binary");
 
@@ -28,7 +27,7 @@ async fn test_binary_starts_successfully() {
     std::env::set_var("NESTGATE_SERVICE_NAME", "test-nestgate");
 
     let mut child = Command::new("cargo")
-        .args(&["run", "--bin", "nestgate"])
+        .args(["run", "--bin", "nestgate"])
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
@@ -39,12 +38,12 @@ async fn test_binary_starts_successfully() {
 
     // Check if process is still running (didn't crash)
     match child.try_wait() {
-        Ok(Some(status)) => panic!("Process exited unexpectedly with status: {}", status),
+        Ok(Some(status)) => panic!("Process exited unexpectedly with status: {status}"),
         Ok(None) => {
             // Process is still running, which is good
             println!("✅ Binary started successfully and is running");
         }
-        Err(e) => panic!("Error checking process status: {}", e),
+        Err(e) => panic!("Error checking process status: {e}"),
     }
 
     // Clean up
@@ -76,7 +75,7 @@ async fn test_binary_with_invalid_config() {
 #[tokio::test]
 async fn test_client_binary_help() {
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "nestgate-client", "--", "--help"])
+        .args(["run", "--bin", "nestgate-client", "--", "--help"])
         .output()
         .expect("Failed to execute nestgate-client binary");
 
@@ -84,7 +83,7 @@ async fn test_client_binary_help() {
     let stderr = String::from_utf8_lossy(&output.stderr);
 
     // Check for client-specific content
-    let combined_output = format!("{}{}", stdout, stderr);
+    let combined_output = format!("{stdout}{stderr}");
     assert!(
         combined_output.contains("client")
             || combined_output.contains("Client")
@@ -118,7 +117,6 @@ async fn test_gui_binary_exists() {
 
 #[cfg(test)]
 mod cli_tests {
-    use super::*;
 
     #[test]
     fn test_environment_variable_parsing() {
@@ -152,7 +150,6 @@ mod cli_tests {
 
 #[cfg(test)]
 mod configuration_tests {
-    use super::*;
 
     #[test]
     fn test_default_configuration_values() {
@@ -178,7 +175,6 @@ mod configuration_tests {
 
 #[cfg(test)]
 mod integration_mode_tests {
-    use super::*;
 
     #[test]
     fn test_standalone_mode_configuration() {
@@ -196,7 +192,7 @@ mod integration_mode_tests {
         // Test ecosystem mode (with external URLs)
         std::env::set_var(
             "SONGBIRD_URL",
-            &format!(
+            format!(
                 "http://{}:{}",
                 nestgate_core::constants::services::orchestrator_service_name(),
                 nestgate_core::constants::network::orchestrator_port()
@@ -204,7 +200,7 @@ mod integration_mode_tests {
         );
         std::env::set_var(
             "BEARDOG_URL",
-            &format!(
+            format!(
                 "http://{}:{}",
                 nestgate_core::constants::services::beardog_service_name(),
                 nestgate_core::constants::network::beardog_port()

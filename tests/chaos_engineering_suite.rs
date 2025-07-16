@@ -208,9 +208,9 @@ impl ChaosTestSuite {
                                 .await
                                 .faults_injected
                                 .fetch_add(1, Ordering::Relaxed);
-                            println!("💥 Fault Injected: {:?}", fault_type);
+                            println!("💥 Fault Injected: {fault_type:?}");
                         }
-                        Err(e) => println!("Failed to inject fault: {}", e),
+                        Err(e) => println!("Failed to inject fault: {e}"),
                     }
                 }
 
@@ -331,7 +331,7 @@ impl ChaosTestSuite {
                             .fetch_add(1, Ordering::Relaxed);
                     }
                     Err(e) => {
-                        println!("Integrity check failed: {}", e);
+                        println!("Integrity check failed: {e}");
                     }
                 }
 
@@ -383,7 +383,7 @@ impl ChaosTestSuite {
                             .fetch_add(1, Ordering::Relaxed);
                     }
                     Err(e) => {
-                        println!("Recovery test failed: {}", e);
+                        println!("Recovery test failed: {e}");
                     }
                 }
 
@@ -415,7 +415,7 @@ impl ChaosTestSuite {
     async fn inject_fault(fault_type: &FaultType) -> Result<()> {
         match fault_type {
             FaultType::NetworkLatency(duration) => {
-                println!("💥 Injecting network latency: {:?}", duration);
+                println!("💥 Injecting network latency: {duration:?}");
                 // Simulate network latency using tokio::time::sleep
                 sleep(*duration).await;
             }
@@ -424,7 +424,7 @@ impl ChaosTestSuite {
                 // Simulate packet loss by randomly failing operations
             }
             FaultType::DiskSlowdown(duration) => {
-                println!("💥 Injecting disk slowdown: {:?}", duration);
+                println!("💥 Injecting disk slowdown: {duration:?}");
                 // Simulate disk I/O slowdown
                 sleep(*duration).await;
             }
@@ -453,7 +453,7 @@ impl ChaosTestSuite {
                 // Simulate ZFS pool issues
             }
             _ => {
-                println!("Fault type not implemented: {:?}", fault_type);
+                println!("Fault type not implemented: {fault_type:?}");
             }
         }
 

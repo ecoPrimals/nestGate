@@ -667,7 +667,6 @@ impl UniversalNestGateConfig {
 }
 
 /// Example configuration files for different deployment scenarios
-
 /// Generate a basic configuration
 pub fn generate_basic_config() -> UniversalNestGateConfig {
     UniversalNestGateConfig::default()

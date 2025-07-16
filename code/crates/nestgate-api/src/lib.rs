@@ -18,6 +18,7 @@ use crate::routes::create_router;
 
 pub mod byob;
 pub mod event_coordination;
+pub mod universal_adapter;
 pub mod handlers {
     pub mod auth;
     pub mod hardware_tuning;
@@ -163,6 +164,12 @@ pub struct CommunicationManager {
     // pub streaming_rpc_server: streaming_rpc::StreamingRpcServer, // Disabled - requires tarpc
     pub mcp_streaming_manager: mcp_streaming::McpStreamingManager,
     pub event_coordinator: event_coordination::EventCoordinator,
+}
+
+impl Default for CommunicationManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl CommunicationManager {
@@ -315,7 +322,7 @@ mod tests {
             .unwrap_or_else(|_| "http://localhost:8080".to_string());
 
         assert!(!toadstool_url.is_empty());
-        println!("✅ Toadstool integration configured: {}", toadstool_url);
+        println!("✅ Toadstool integration configured: {toadstool_url}");
     }
 
     #[tokio::test]

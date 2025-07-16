@@ -587,7 +587,7 @@ mod alert_handling_comprehensive_tests {
 
     #[test]
     fn test_alert_response_generation() {
-        let alert = PerformanceAlert {
+        let _alert = PerformanceAlert {
             alert_type: AlertType::HighLatency,
             severity: AlertSeverity::Critical,
             component: "production_pool".to_string(),
@@ -800,7 +800,7 @@ mod integration_scenario_tests {
         let _config = config;
 
         // Test basic functionality - objects created successfully
-        assert!(true, "Infrastructure objects created successfully");
+        // Infrastructure objects created successfully
     }
 
     #[test]

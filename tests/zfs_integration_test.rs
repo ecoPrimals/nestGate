@@ -58,7 +58,7 @@ async fn test_zfs_dataset_operations() -> Result<()> {
 
     match result {
         Ok(_) => println!("✅ Dataset created successfully"),
-        Err(e) => println!("⚠️ Dataset creation failed (expected in test): {}", e),
+        Err(e) => println!("⚠️ Dataset creation failed (expected in test): {e}"),
     }
 
     Ok(())
@@ -105,7 +105,7 @@ async fn test_zfs_concurrent_operations() -> Result<()> {
                 .await
                 .get_current_metrics()
                 .await;
-            println!("🔄 Concurrent operation {} completed", i);
+            println!("🔄 Concurrent operation {i} completed");
             Ok::<(), NestGateError>(())
         });
         handles.push(handle);

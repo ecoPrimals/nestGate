@@ -329,7 +329,9 @@ impl SecureApiWrapper {
     /// Set default header
     pub fn set_default_header(&mut self, key: String, value: String) {
         // Add the header to the internal headers map
-        self.security_manager.default_headers.insert(key.clone(), value.clone());
+        self.security_manager
+            .default_headers
+            .insert(key.clone(), value.clone());
         tracing::debug!("Set default header: {} = {}", key, value);
     }
 

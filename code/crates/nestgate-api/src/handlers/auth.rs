@@ -126,10 +126,7 @@ pub async fn authenticate(
                 ResponseJson(ErrorResponse {
                     message: "Authentication failed".to_string(),
                     code: None,
-                    details: Some(serde_json::Value::String(format!(
-                        "Validation error: {}",
-                        e
-                    ))),
+                    details: Some(serde_json::Value::String(format!("Validation error: {e}"))),
                 }),
             )
                 .into_response();

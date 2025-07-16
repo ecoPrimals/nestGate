@@ -9,6 +9,7 @@
 //! This simplified version focuses on the core communication patterns
 //! without the complex routing and state management issues.
 
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
@@ -312,7 +313,7 @@ impl HybridCommunicationSystem {
         }
     }
 
-    pub async fn initialize(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn initialize(&self) -> Result<()> {
         // Register internal services
         self.internal_manager
             .register_service("nestgate-core".to_string())
@@ -343,9 +344,7 @@ impl HybridCommunicationSystem {
         Ok(())
     }
 
-    pub async fn demonstrate_hybrid_communication(
-        &self,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn demonstrate_hybrid_communication(&self) -> Result<()> {
         info!("🚀 Starting Hybrid Communication Demonstration");
 
         // Demo 1: External Client Communication (WebSocket + JSON)
@@ -501,7 +500,7 @@ impl HybridCommunicationSystem {
 
         for message in stream_messages {
             self.streaming_manager
-                .send_to_stream(&message.stream_id, message)
+                .send_to_stream(&message.stream_id.clone(), message)
                 .await?;
         }
 
@@ -638,7 +637,7 @@ impl HybridCommunicationSystem {
                         }),
                     };
                     self.streaming_manager
-                        .send_to_stream(&message.stream_id, message)
+                        .send_to_stream(&message.stream_id.clone(), message)
                         .await?;
                 }
                 "event" => {
@@ -691,7 +690,7 @@ impl HybridCommunicationSystem {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> anyhow::Result<()> {
     // Initialize tracing
     tracing_subscriber::fmt::init();
 

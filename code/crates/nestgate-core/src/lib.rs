@@ -111,6 +111,8 @@ pub mod constants;
 pub mod crypto_locks;
 pub mod data_sources;
 pub mod error;
+pub mod metrics;
+pub mod performance;
 pub mod security;
 pub mod temporal_storage;
 pub mod types;

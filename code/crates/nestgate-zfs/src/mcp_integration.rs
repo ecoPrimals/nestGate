@@ -11,9 +11,9 @@ use std::time::SystemTime;
 use tokio::sync::RwLock;
 use tracing::{error, info, warn};
 
-use nestgate_core::{Result, StorageTier};
-
-use crate::manager::ZfsManager;
+use crate::types::StorageTier;
+use crate::ZfsManager;
+use nestgate_core::{NestGateError, Result};
 
 /// MCP mount request
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -91,6 +91,58 @@ impl Default for ZfsMcpConfig {
     }
 }
 
+impl ZfsMcpConfig {
+    /// Validate the configuration settings
+    pub fn validate(&self) -> Result<()> {
+        if self.max_concurrent_operations == 0 {
+            return Err(NestGateError::InvalidInput("max_concurrent_operations must be greater than 0".to_string()));
+        }
+        if self.max_concurrent_operations > 1000 {
+            return Err(NestGateError::InvalidInput("max_concurrent_operations must be less than or equal to 1000".to_string()));
+        }
+        Ok(())
+    }
+
+    /// Get tier configuration for a specific tier
+    pub fn get_tier_config(&self, tier: &StorageTier) -> TierConfig {
+        match tier {
+            StorageTier::Hot => TierConfig {
+                priority: 1,
+                cache_enabled: true,
+                compression: false,
+                replication: 2,
+            },
+            StorageTier::Warm => TierConfig {
+                priority: 2,
+                cache_enabled: true,
+                compression: true,
+                replication: 1,
+            },
+            StorageTier::Cold => TierConfig {
+                priority: 3,
+                cache_enabled: false,
+                compression: true,
+                replication: 1,
+            },
+            StorageTier::Cache => TierConfig {
+                priority: 0,
+                cache_enabled: true,
+                compression: false,
+                replication: 3,
+            },
+        }
+    }
+}
+
+/// Configuration for a storage tier
+#[derive(Debug, Clone)]
+pub struct TierConfig {
+    pub priority: u8,
+    pub cache_enabled: bool,
+    pub compression: bool,
+    pub replication: u32,
+}
+
 /// ZFS MCP Storage Provider
 pub struct ZfsMcpStorageProvider {
     zfs_manager: Arc<ZfsManager>,
@@ -114,7 +166,7 @@ impl ZfsMcpStorageProvider {
     pub async fn create_mount(&self, request: McpMountRequest) -> Result<ZfsMountInfo> {
         info!("Creating ZFS mount for MCP: {}", request.mount_id);
 
-        let tier = request.tier.clone();
+        let tier = request.tier;
         let dataset_name = format!("nestpool/mcp/mounts/{}", request.mount_id);
         let mount_path = format!("/mcp/mounts/{}", request.mount_id);
 
@@ -127,7 +179,7 @@ impl ZfsMcpStorageProvider {
         match self
             .zfs_manager
             .dataset_manager
-            .create_dataset(name, &parent, tier.clone())
+            .create_dataset(name, &parent, tier.into())
             .await
         {
             Ok(_) => {
@@ -155,8 +207,7 @@ impl ZfsMcpStorageProvider {
                     request.mount_id, e
                 );
                 Err(nestgate_core::NestGateError::Internal(format!(
-                    "Dataset creation failed: {}",
-                    e
+                    "Dataset creation failed: {e}"
                 )))
             }
         }
@@ -180,16 +231,14 @@ impl ZfsMcpStorageProvider {
                 Err(e) => {
                     error!("Failed to destroy dataset for mount {}: {}", mount_id, e);
                     Err(nestgate_core::NestGateError::Internal(format!(
-                        "Dataset destruction failed: {}",
-                        e
+                        "Dataset destruction failed: {e}"
                     )))
                 }
             }
         } else {
             warn!("Mount not found: {}", mount_id);
             Err(nestgate_core::NestGateError::NotFound(format!(
-                "Mount not found: {}",
-                mount_id
+                "Mount not found: {mount_id}"
             )))
         }
     }
@@ -198,7 +247,7 @@ impl ZfsMcpStorageProvider {
     pub async fn create_volume(&self, request: McpVolumeRequest) -> Result<ZfsVolumeInfo> {
         info!("Creating ZFS volume for MCP: {}", request.volume_id);
 
-        let tier = request.tier.clone();
+        let tier = request.tier;
         let dataset_name = format!("nestpool/mcp/volumes/{}", request.volume_id);
 
         // Create the dataset using the new API
@@ -210,7 +259,7 @@ impl ZfsMcpStorageProvider {
         match self
             .zfs_manager
             .dataset_manager
-            .create_dataset(name, &parent, tier.clone())
+            .create_dataset(name, &parent, tier.into())
             .await
         {
             Ok(_) => {
@@ -237,8 +286,7 @@ impl ZfsMcpStorageProvider {
                     request.volume_id, e
                 );
                 Err(nestgate_core::NestGateError::Internal(format!(
-                    "Dataset creation failed: {}",
-                    e
+                    "Dataset creation failed: {e}"
                 )))
             }
         }
@@ -262,16 +310,14 @@ impl ZfsMcpStorageProvider {
                 Err(e) => {
                     error!("Failed to destroy dataset for volume {}: {}", volume_id, e);
                     Err(nestgate_core::NestGateError::Internal(format!(
-                        "Dataset destruction failed: {}",
-                        e
+                        "Dataset destruction failed: {e}"
                     )))
                 }
             }
         } else {
             warn!("Volume not found: {}", volume_id);
             Err(nestgate_core::NestGateError::NotFound(format!(
-                "Volume not found: {}",
-                volume_id
+                "Volume not found: {volume_id}"
             )))
         }
     }

@@ -118,6 +118,12 @@ pub enum StreamEventType {
     Error,
 }
 
+impl Default for McpStreamingManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl McpStreamingManager {
     /// Create a new MCP streaming manager
     ///

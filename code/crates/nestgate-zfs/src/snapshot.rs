@@ -723,7 +723,7 @@ impl ZfsSnapshotManager {
             .await
             .map_err(|e| ZfsError::CommandFailed {
                 command: "zfs".to_string(),
-                error: format!("Failed to list snapshots: {}", e),
+                error: format!("Failed to list snapshots: {e}"),
             })?;
 
         if !output.status.success() {
@@ -920,7 +920,7 @@ impl ZfsSnapshotManager {
             .await
             .map_err(|e| ZfsError::CommandFailed {
                 command: "zfs".to_string(),
-                error: format!("Failed to execute zfs snapshot: {}", e),
+                error: format!("Failed to execute zfs snapshot: {e}"),
             })?;
 
         if !output.status.success() {
@@ -940,7 +940,7 @@ impl ZfsSnapshotManager {
             .await
             .map_err(|e| ZfsError::CommandFailed {
                 command: "zfs".to_string(),
-                error: format!("Failed to execute zfs snapshot: {}", e),
+                error: format!("Failed to execute zfs snapshot: {e}"),
             })?;
 
         if !verify_output.status.success() {
@@ -977,7 +977,7 @@ impl ZfsSnapshotManager {
             .await
             .map_err(|e| ZfsError::CommandFailed {
                 command: "zfs".to_string(),
-                error: format!("Failed to execute zfs snapshot: {}", e),
+                error: format!("Failed to execute zfs snapshot: {e}"),
             })?;
 
         if !list_output.status.success() {
@@ -995,7 +995,7 @@ impl ZfsSnapshotManager {
             .await
             .map_err(|e| ZfsError::CommandFailed {
                 command: "zfs".to_string(),
-                error: format!("Failed to execute zfs snapshot: {}", e),
+                error: format!("Failed to execute zfs snapshot: {e}"),
             })?;
 
         if !output.status.success() {
@@ -1033,7 +1033,7 @@ impl ZfsSnapshotManager {
             .await
             .map_err(|e| ZfsError::CommandFailed {
                 command: "zfs".to_string(),
-                error: format!("Failed to execute zfs snapshot: {}", e),
+                error: format!("Failed to execute zfs snapshot: {e}"),
             })?;
 
         if !output.status.success() {
@@ -1078,7 +1078,7 @@ impl ZfsSnapshotManager {
             .await
             .map_err(|e| ZfsError::CommandFailed {
                 command: "zfs".to_string(),
-                error: format!("Failed to execute zfs snapshot: {}", e),
+                error: format!("Failed to execute zfs snapshot: {e}"),
             })?;
 
         if !output.status.success() {
@@ -1120,7 +1120,7 @@ impl ZfsSnapshotManager {
             .await
             .map_err(|e| ZfsError::CommandFailed {
                 command: "zfs".to_string(),
-                error: format!("Failed to execute zfs snapshot: {}", e),
+                error: format!("Failed to execute zfs snapshot: {e}"),
             })?;
 
         if !output.status.success() {
@@ -1162,7 +1162,7 @@ impl ZfsSnapshotManager {
             .await
             .map_err(|e| ZfsError::CommandFailed {
                 command: "zfs".to_string(),
-                error: format!("Failed to execute zfs snapshot: {}", e),
+                error: format!("Failed to execute zfs snapshot: {e}"),
             })?;
 
         if !output.status.success() {
@@ -1228,7 +1228,7 @@ impl ZfsSnapshotManager {
             .await
             .map_err(|e| ZfsError::CommandFailed {
                 command: "zfs".to_string(),
-                error: format!("Failed to list snapshots: {}", e),
+                error: format!("Failed to list snapshots: {e}"),
             })?;
 
         if !output.status.success() {

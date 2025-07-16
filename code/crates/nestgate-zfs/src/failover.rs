@@ -125,13 +125,12 @@ impl PoolTakeoverManager {
             .args(["import", "-f", "-N", pool_name])  // -N prevents auto-mounting
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to execute zpool import: {}", e)))?;
+            .map_err(|e| NestGateError::Internal(format!("Failed to execute zpool import: {e}")))?;
 
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
             return Err(NestGateError::Internal(format!(
-                "Pool import failed: {}",
-                error_msg
+                "Pool import failed: {error_msg}"
             )));
         }
 
@@ -139,8 +138,7 @@ impl PoolTakeoverManager {
         let verification = self.verify_pool_import(pool_name).await?;
         if !verification {
             return Err(NestGateError::Internal(format!(
-                "Pool import verification failed: {}",
-                pool_name
+                "Pool import verification failed: {pool_name}"
             )));
         }
 
@@ -154,7 +152,7 @@ impl PoolTakeoverManager {
             .args(["status", pool_name])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to verify pool import: {}", e)))?;
+            .map_err(|e| NestGateError::Internal(format!("Failed to verify pool import: {e}")))?;
 
         Ok(output.status.success()
             && String::from_utf8_lossy(&output.stdout).contains("state: ONLINE"))
@@ -168,9 +166,7 @@ impl PoolTakeoverManager {
             .args(["import"])
             .output()
             .await
-            .map_err(|e| {
-                NestGateError::Internal(format!("Failed to execute zpool import: {}", e))
-            })?;
+            .map_err(|e| NestGateError::Internal(format!("Failed to execute zpool import: {e}")))?;
 
         // Note: zpool import returns non-zero when no pools available, which is normal
         let stdout = String::from_utf8_lossy(&output.stdout);
@@ -280,15 +276,12 @@ impl PoolTakeoverManager {
             .args(["export", pool_name])
             .output()
             .await
-            .map_err(|e| {
-                NestGateError::Internal(format!("Failed to execute zpool export: {}", e))
-            })?;
+            .map_err(|e| NestGateError::Internal(format!("Failed to execute zpool export: {e}")))?;
 
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
             return Err(NestGateError::Internal(format!(
-                "Pool export failed: {}",
-                error_msg
+                "Pool export failed: {error_msg}"
             )));
         }
 

@@ -53,6 +53,12 @@ pub struct AppState {
     pub hardware_tuning_service: Arc<crate::handlers::hardware_tuning::HardwareTuningHandler>,
 }
 
+impl Default for AppState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AppState {
     #[cfg(feature = "streaming-rpc")]
     pub fn new(

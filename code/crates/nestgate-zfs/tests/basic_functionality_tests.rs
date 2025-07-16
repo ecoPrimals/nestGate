@@ -38,7 +38,7 @@ fn test_storage_tier_functionality() {
     assert_ne!(hot_tier, cold_tier);
 
     // Test serialization/deserialization
-    let tier_str = format!("{:?}", hot_tier);
+    let tier_str = format!("{hot_tier:?}");
     assert!(tier_str.contains("Hot"));
 }
 

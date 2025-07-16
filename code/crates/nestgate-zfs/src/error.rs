@@ -392,13 +392,10 @@ impl ZfsError {
     pub fn to_nestgate_error(&self) -> nestgate_core::NestGateError {
         match self {
             ZfsError::PoolError(PoolError::NotFound { pool_name }) => {
-                nestgate_core::NestGateError::NotFound(format!("Pool not found: {}", pool_name))
+                nestgate_core::NestGateError::NotFound(format!("Pool not found: {pool_name}"))
             }
             ZfsError::DatasetError(DatasetError::NotFound { dataset_name }) => {
-                nestgate_core::NestGateError::NotFound(format!(
-                    "Dataset not found: {}",
-                    dataset_name
-                ))
+                nestgate_core::NestGateError::NotFound(format!("Dataset not found: {dataset_name}"))
             }
             ZfsError::PermissionError(msg) => {
                 nestgate_core::NestGateError::Authorization(msg.clone())
@@ -460,18 +457,18 @@ impl<T> ZfsErrorExt<T> for ZfsResult<T> {
     fn with_context(self, context: String) -> ZfsResult<T> {
         self.map_err(|e| match e {
             ZfsError::Internal { message } => ZfsError::Internal {
-                message: format!("{}: {}", context, message),
+                message: format!("{context}: {message}"),
             },
             other => other,
         })
     }
 
     fn with_operation(self, operation: &str) -> ZfsResult<T> {
-        self.with_context(format!("Operation: {}", operation))
+        self.with_context(format!("Operation: {operation}"))
     }
 
     fn with_component(self, component: &str) -> ZfsResult<T> {
-        self.with_context(format!("Component: {}", component))
+        self.with_context(format!("Component: {component}"))
     }
 }
 
@@ -502,11 +499,7 @@ mod tests {
         ];
 
         for error in retryable_errors {
-            assert!(
-                error.is_retryable(),
-                "Error should be retryable: {:?}",
-                error
-            );
+            assert!(error.is_retryable(), "Error should be retryable: {error:?}");
         }
 
         let non_retryable_errors = vec![
@@ -520,8 +513,7 @@ mod tests {
         for error in non_retryable_errors {
             assert!(
                 !error.is_retryable(),
-                "Error should not be retryable: {:?}",
-                error
+                "Error should not be retryable: {error:?}"
             );
         }
     }

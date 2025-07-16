@@ -61,7 +61,7 @@ impl ToadstoolComputeClient {
     /// Add authentication header to request if token is available
     fn add_auth_header(&self, request: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
         if let Some(token) = &self.auth_token {
-            request.header("Authorization", format!("Bearer {}", token))
+            request.header("Authorization", format!("Bearer {token}"))
         } else {
             request
         }
@@ -76,9 +76,9 @@ impl ToadstoolComputeClient {
 
         let request = self
             .client
-            .post(&format!("{}/compute/services/register", self.base_url))
+            .post(format!("{}/compute/services/register", self.base_url))
             .json(service);
-        
+
         let response = self.add_auth_header(request).send().await?;
 
         if response.status().is_success() {
@@ -91,8 +91,7 @@ impl ToadstoolComputeClient {
             let error = response.text().await?;
             error!("❌ Failed to register with Toadstool: {}", error);
             Err(nestgate_core::NestGateError::Internal(format!(
-                "Toadstool registration failed: {}",
-                error
+                "Toadstool registration failed: {error}"
             )))
         }
     }
@@ -106,7 +105,7 @@ impl ToadstoolComputeClient {
 
         let response = self
             .client
-            .post(&format!("{}/compute/resources/allocate", self.base_url))
+            .post(format!("{}/compute/resources/allocate", self.base_url))
             .json(request)
             .send()
             .await?;
@@ -122,8 +121,7 @@ impl ToadstoolComputeClient {
             let error = response.text().await?;
             error!("❌ Failed to allocate compute resources: {}", error);
             Err(nestgate_core::NestGateError::Internal(format!(
-                "Toadstool allocation failed: {}",
-                error
+                "Toadstool allocation failed: {error}"
             )))
         }
     }
@@ -132,7 +130,7 @@ impl ToadstoolComputeClient {
     pub async fn get_live_hardware_metrics(&self) -> Result<LiveHardwareMetrics> {
         let response = self
             .client
-            .get(&format!("{}/compute/metrics/live", self.base_url))
+            .get(format!("{}/compute/metrics/live", self.base_url))
             .send()
             .await?;
 
@@ -142,8 +140,7 @@ impl ToadstoolComputeClient {
         } else {
             let error = response.text().await?;
             Err(nestgate_core::NestGateError::Internal(format!(
-                "Failed to get live metrics: {}",
-                error
+                "Failed to get live metrics: {error}"
             )))
         }
     }
@@ -198,7 +195,7 @@ impl ToadstoolComputeClient {
 
         let response = self
             .client
-            .delete(&format!(
+            .delete(format!(
                 "{}/compute/resources/{}",
                 self.base_url, allocation_id
             ))
@@ -214,8 +211,7 @@ impl ToadstoolComputeClient {
         } else {
             let error = response.text().await?;
             Err(nestgate_core::NestGateError::Internal(format!(
-                "Failed to release resources: {}",
-                error
+                "Failed to release resources: {error}"
             )))
         }
     }
@@ -224,14 +220,13 @@ impl ToadstoolComputeClient {
 /// ToadSTool System Information Integration
 impl ToadstoolComputeClient {
     /// 1. SYSTEM INFORMATION (Sysinfo)
-
-    /// Platform Detection: CPU, memory, storage capabilities
+    ///    Platform Detection: CPU, memory, storage capabilities
     pub async fn get_platform_info(&self) -> Result<PlatformInfo> {
         info!("🐸 Getting platform information from ToadStool");
 
         let response = self
             .client
-            .get(&format!("{}/sysinfo/platform", self.base_url))
+            .get(format!("{}/sysinfo/platform", self.base_url))
             .send()
             .await?;
 
@@ -247,8 +242,7 @@ impl ToadstoolComputeClient {
         } else {
             let error = response.text().await?;
             Err(nestgate_core::NestGateError::Internal(format!(
-                "Failed to get platform info: {}",
-                error
+                "Failed to get platform info: {error}"
             )))
         }
     }
@@ -257,7 +251,7 @@ impl ToadstoolComputeClient {
     pub async fn get_realtime_metrics(&self) -> Result<RealtimeMetrics> {
         let response = self
             .client
-            .get(&format!("{}/sysinfo/metrics/realtime", self.base_url))
+            .get(format!("{}/sysinfo/metrics/realtime", self.base_url))
             .send()
             .await?;
 
@@ -267,8 +261,7 @@ impl ToadstoolComputeClient {
         } else {
             let error = response.text().await?;
             Err(nestgate_core::NestGateError::Internal(format!(
-                "Failed to get realtime metrics: {}",
-                error
+                "Failed to get realtime metrics: {error}"
             )))
         }
     }
@@ -279,7 +272,7 @@ impl ToadstoolComputeClient {
 
         let response = self
             .client
-            .get(&format!("{}/sysinfo/compute/discovery", self.base_url))
+            .get(format!("{}/sysinfo/compute/discovery", self.base_url))
             .send()
             .await?;
 
@@ -294,8 +287,7 @@ impl ToadstoolComputeClient {
         } else {
             let error = response.text().await?;
             Err(nestgate_core::NestGateError::Internal(format!(
-                "Failed to discover compute resources: {}",
-                error
+                "Failed to discover compute resources: {error}"
             )))
         }
     }
@@ -304,7 +296,7 @@ impl ToadstoolComputeClient {
     pub async fn get_system_health(&self) -> Result<SystemHealth> {
         let response = self
             .client
-            .get(&format!("{}/sysinfo/health", self.base_url))
+            .get(format!("{}/sysinfo/health", self.base_url))
             .send()
             .await?;
 
@@ -314,15 +306,13 @@ impl ToadstoolComputeClient {
         } else {
             let error = response.text().await?;
             Err(nestgate_core::NestGateError::Internal(format!(
-                "Failed to get system health: {}",
-                error
+                "Failed to get system health: {error}"
             )))
         }
     }
 
     /// 2. COMPUTE NEEDS
-
-    /// Workload Execution: Running storage management processes
+    ///    Workload Execution: Running storage management processes
     pub async fn execute_storage_workload(
         &self,
         workload: &StorageWorkload,
@@ -334,7 +324,7 @@ impl ToadstoolComputeClient {
 
         let response = self
             .client
-            .post(&format!("{}/compute/workload/execute", self.base_url))
+            .post(format!("{}/compute/workload/execute", self.base_url))
             .json(workload)
             .send()
             .await?;
@@ -349,8 +339,7 @@ impl ToadstoolComputeClient {
         } else {
             let error = response.text().await?;
             Err(nestgate_core::NestGateError::Internal(format!(
-                "Failed to execute storage workload: {}",
-                error
+                "Failed to execute storage workload: {error}"
             )))
         }
     }
@@ -364,7 +353,7 @@ impl ToadstoolComputeClient {
 
         let response = self
             .client
-            .post(&format!(
+            .post(format!(
                 "{}/compute/resources/storage/allocate",
                 self.base_url
             ))
@@ -382,8 +371,7 @@ impl ToadstoolComputeClient {
         } else {
             let error = response.text().await?;
             Err(nestgate_core::NestGateError::Internal(format!(
-                "Failed to allocate storage resources: {}",
-                error
+                "Failed to allocate storage resources: {error}"
             )))
         }
     }
@@ -400,7 +388,7 @@ impl ToadstoolComputeClient {
 
         let response = self
             .client
-            .post(&format!("{}/compute/process/manage", self.base_url))
+            .post(format!("{}/compute/process/manage", self.base_url))
             .json(process_request)
             .send()
             .await?;
@@ -415,8 +403,7 @@ impl ToadstoolComputeClient {
         } else {
             let error = response.text().await?;
             Err(nestgate_core::NestGateError::Internal(format!(
-                "Failed to manage storage process: {}",
-                error
+                "Failed to manage storage process: {error}"
             )))
         }
     }
@@ -430,7 +417,7 @@ impl ToadstoolComputeClient {
 
         let response = self
             .client
-            .post(&format!("{}/compute/optimization/storage", self.base_url))
+            .post(format!("{}/compute/optimization/storage", self.base_url))
             .json(optimization_request)
             .send()
             .await?;
@@ -445,8 +432,7 @@ impl ToadstoolComputeClient {
         } else {
             let error = response.text().await?;
             Err(nestgate_core::NestGateError::Internal(format!(
-                "Failed to optimize storage performance: {}",
-                error
+                "Failed to optimize storage performance: {error}"
             )))
         }
     }
@@ -584,23 +570,20 @@ pub struct HardwareTuningHandler {
 }
 
 /// Hardware tuning state
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct HardwareTuningState {
     pub sessions: HashMap<Uuid, TuningSession>,
     pub active_profiles: HashMap<String, TuningProfile>,
 }
 
-impl Default for HardwareTuningState {
-    fn default() -> Self {
-        Self {
-            sessions: HashMap::new(),
-            active_profiles: HashMap::new(),
-        }
-    }
-}
-
 pub struct SessionManager {
     sessions: HashMap<Uuid, TuningSession>,
+}
+
+impl Default for SessionManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl SessionManager {
@@ -690,6 +673,12 @@ impl Default for PerformanceThresholds {
                 .parse()
                 .unwrap_or(50.0),
         }
+    }
+}
+
+impl Default for HardwareTuningService {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -800,7 +789,7 @@ impl HardwareTuningService {
         let sessions = self.session_manager.read().await;
         let session = sessions
             .get(&session_id)
-            .ok_or_else(|| NestGateError::NotFound(format!("Session not found: {}", session_id)))?;
+            .ok_or_else(|| NestGateError::NotFound(format!("Session not found: {session_id}")))?;
 
         Ok(HardwareTuningResponse {
             session_id,
@@ -838,8 +827,7 @@ impl HardwareTuningService {
             "overall" => self.run_overall_benchmark().await?,
             _ => {
                 return Err(NestGateError::InvalidInput(format!(
-                    "Unknown benchmark: {}",
-                    benchmark_name
+                    "Unknown benchmark: {benchmark_name}"
                 )))
             }
         };
@@ -854,24 +842,30 @@ impl HardwareTuningService {
 
         // Store benchmark result in sessions for tracking
         let mut sessions = self.session_manager.write().await;
-        sessions.insert(Uuid::new_v4(), TuningSession {
-            session_id: Uuid::new_v4(),
-            started_at: chrono::Utc::now(),
-            status: SessionStatus::Completed,
-            mode: TuningMode::Auto,
-            progress: 100.0,
-            hardware_config: Some(serde_json::json!({
-                "benchmark_name": benchmark_name,
-                "timestamp": chrono::Utc::now()
-            })),
-            results: Some(TuningResult {
-                profile_name: "benchmark".to_string(),
-                optimizations_applied: vec![format!("Benchmark '{}' completed", benchmark_name)],
-                estimated_performance_gain: benchmark_result.metrics.overall_score,
-                status: "completed".to_string(),
-                applied_settings: std::collections::HashMap::new(),
-            }),
-        });
+        sessions.insert(
+            Uuid::new_v4(),
+            TuningSession {
+                session_id: Uuid::new_v4(),
+                started_at: chrono::Utc::now(),
+                status: SessionStatus::Completed,
+                mode: TuningMode::Auto,
+                progress: 100.0,
+                hardware_config: Some(serde_json::json!({
+                    "benchmark_name": benchmark_name,
+                    "timestamp": chrono::Utc::now()
+                })),
+                results: Some(TuningResult {
+                    profile_name: "benchmark".to_string(),
+                    optimizations_applied: vec![format!(
+                        "Benchmark '{}' completed",
+                        benchmark_name
+                    )],
+                    estimated_performance_gain: benchmark_result.metrics.overall_score,
+                    status: "completed".to_string(),
+                    applied_settings: std::collections::HashMap::new(),
+                }),
+            },
+        );
 
         Ok(benchmark_result)
     }
@@ -999,8 +993,10 @@ impl HardwareTuningService {
 
     async fn apply_performance_tuning(&self, _session_id: Uuid) -> Result<TuningResult> {
         // Apply performance optimizations
-        let mut config = TuningResult::default();
-        config.status = "performance".to_string();
+        let mut config = TuningResult {
+            status: "performance".to_string(),
+            ..Default::default()
+        };
         config
             .applied_settings
             .insert("cpu_governor".to_string(), "performance".to_string());
@@ -1015,8 +1011,10 @@ impl HardwareTuningService {
 
     async fn apply_balanced_tuning(&self, _session_id: Uuid) -> Result<TuningResult> {
         // Apply balanced optimizations
-        let mut config = TuningResult::default();
-        config.status = "balanced".to_string();
+        let mut config = TuningResult {
+            status: "balanced".to_string(),
+            ..Default::default()
+        };
         config
             .applied_settings
             .insert("cpu_governor".to_string(), "balanced".to_string());
@@ -1031,8 +1029,10 @@ impl HardwareTuningService {
 
     async fn apply_efficiency_tuning(&self, _session_id: Uuid) -> Result<TuningResult> {
         // Apply efficiency optimizations
-        let mut config = TuningResult::default();
-        config.status = "efficiency".to_string();
+        let mut config = TuningResult {
+            status: "efficiency".to_string(),
+            ..Default::default()
+        };
         config
             .applied_settings
             .insert("cpu_governor".to_string(), "powersave".to_string());
@@ -1051,8 +1051,10 @@ impl HardwareTuningService {
         _params: &HashMap<String, serde_json::Value>,
     ) -> Result<TuningResult> {
         // Apply custom tuning parameters
-        let mut config = TuningResult::default();
-        config.status = "custom".to_string();
+        let config = TuningResult {
+            status: "custom".to_string(),
+            ..Default::default()
+        };
         // In a real implementation, we would apply the custom parameters
         Ok(config)
     }
@@ -1286,8 +1288,7 @@ impl HardwareTuningService {
             "overall" => self.run_overall_benchmark().await?,
             _ => {
                 return Err(nestgate_core::NestGateError::InvalidInput(format!(
-                    "Unknown benchmark type: {}",
-                    benchmark_name
+                    "Unknown benchmark type: {benchmark_name}"
                 )))
             }
         };
@@ -1395,20 +1396,17 @@ impl HardwareTuningService {
             }
             Ok(AccessDecision::RequireAuthentication { reason, .. }) => {
                 Err(nestgate_core::NestGateError::PermissionDenied(format!(
-                    "Authentication required for external access: {}",
-                    reason
+                    "Authentication required for external access: {reason}"
                 )))
             }
             Ok(AccessDecision::RequireLock { reason, .. }) => {
                 Err(nestgate_core::NestGateError::PermissionDenied(format!(
-                    "Crypto lock required for external access: {}",
-                    reason
+                    "Crypto lock required for external access: {reason}"
                 )))
             }
             Ok(AccessDecision::Deny { reason, .. }) => {
                 Err(nestgate_core::NestGateError::PermissionDenied(format!(
-                    "Extraction lock denied: {}",
-                    reason
+                    "Extraction lock denied: {reason}"
                 )))
             }
             Err(e) => Err(e),
@@ -1435,6 +1433,12 @@ impl HardwareTuningService {
         }
 
         Ok(is_valid)
+    }
+}
+
+impl Default for HardwareTuningHandler {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -1506,7 +1510,7 @@ impl HardwareTuningHandler {
             .sessions
             .get(&session_id)
             .cloned()
-            .ok_or_else(|| NestGateError::NotFound(format!("Session not found: {}", session_id)))
+            .ok_or_else(|| NestGateError::NotFound(format!("Session not found: {session_id}")))
     }
 
     /// Execute comprehensive benchmark suite
@@ -1524,8 +1528,7 @@ impl HardwareTuningHandler {
             "overall" => self.execute_overall_benchmark().await?,
             _ => {
                 return Err(nestgate_core::NestGateError::Internal(format!(
-                    "Unknown benchmark: {}",
-                    benchmark_name
+                    "Unknown benchmark: {benchmark_name}"
                 )))
             }
         };
@@ -1872,38 +1875,50 @@ impl HardwareTuningHandler {
 
         // Adapt configuration based on platform capabilities and current health
         let mut enabled_features = vec!["auto_tuning".to_string()];
-        
+
         // Enable features based on platform info
         if platform_info.cpu_cores > 4 {
             enabled_features.push("cpu_optimization".to_string());
         }
-        if platform_info.memory_gb > 8 { // 8GB
+        if platform_info.memory_gb > 8 {
+            // 8GB
             enabled_features.push("memory_optimization".to_string());
         }
-        if platform_info.storage_devices.iter().any(|d| d.device_type == "nvme") {
+        if platform_info
+            .storage_devices
+            .iter()
+            .any(|d| d.device_type == "nvme")
+        {
             enabled_features.push("io_optimization".to_string());
         }
-        if platform_info.platform_capabilities.contains(&"multiple_network_interfaces".to_string()) {
+        if platform_info
+            .platform_capabilities
+            .contains(&"multiple_network_interfaces".to_string())
+        {
             enabled_features.push("network_optimization".to_string());
         }
-        
+
         // Adjust thresholds based on system health
         let (cpu_warning, cpu_critical) = if system_health.cpu_health.score < 70.0 {
             (70.0, 85.0) // Lower thresholds for already stressed systems
         } else {
             (80.0, 95.0) // Normal thresholds
         };
-        
+
         let (memory_warning, memory_critical) = if system_health.memory_health.score < 70.0 {
             (75.0, 90.0) // Lower thresholds for memory-constrained systems
         } else {
             (85.0, 95.0) // Normal thresholds
         };
-        
+
         Ok(TuningConfig {
             version: "2.0.0".to_string(),
             enabled_features,
-            default_profile: if platform_info.cpu_cores > 8 { "performance".to_string() } else { "balanced".to_string() },
+            default_profile: if platform_info.cpu_cores > 8 {
+                "performance".to_string()
+            } else {
+                "balanced".to_string()
+            },
             performance_thresholds: PerformanceThresholds {
                 cpu_warning,
                 cpu_critical,
@@ -1943,21 +1958,39 @@ impl HardwareTuningHandler {
 
         // Get live hardware metrics from Toadstool
         let live_metrics = self.toadstool_client.get_live_hardware_metrics().await?;
-        
+
         // Use the tuner to analyze metrics and generate tuning recommendations
         let tuner = self.tuner.read().await;
         // Generate tuning recommendations based on live metrics
         let tuning_recommendations = TuningRecommendations {
-            recommended_profile: if live_metrics.cpu_usage > 80.0 { "performance" } else { "balanced" }.to_string(),
+            recommended_profile: if live_metrics.cpu_usage > 80.0 {
+                "performance"
+            } else {
+                "balanced"
+            }
+            .to_string(),
             optimizations: vec![
-                if live_metrics.cpu_usage > 80.0 { "cpu_optimization" } else { "cpu_balanced" }.to_string(),
-                if live_metrics.memory_usage > 80.0 { "memory_optimization" } else { "memory_balanced" }.to_string(),
+                if live_metrics.cpu_usage > 80.0 {
+                    "cpu_optimization"
+                } else {
+                    "cpu_balanced"
+                }
+                .to_string(),
+                if live_metrics.memory_usage > 80.0 {
+                    "memory_optimization"
+                } else {
+                    "memory_balanced"
+                }
+                .to_string(),
             ],
         };
         drop(tuner);
-        
+
         // Apply tuning recommendations
-        tracing::info!("Applying tuning recommendations: {:?}", tuning_recommendations);
+        tracing::info!(
+            "Applying tuning recommendations: {:?}",
+            tuning_recommendations
+        );
 
         // Request compute resources for tuning
         let resource_request = ComputeResourceRequest {
@@ -2058,10 +2091,21 @@ impl HardwareTuningHandler {
         let live_metrics = self.toadstool_client.get_live_hardware_metrics().await?;
 
         // Calculate composite scores from struct metrics
-        let disk_io_score = ((live_metrics.disk_io.read_bytes + live_metrics.disk_io.write_bytes) as f64 / 1024.0 / 1024.0) / 10.0; // MB/s
-        let network_io_score = ((live_metrics.network_io.bytes_sent + live_metrics.network_io.bytes_received) as f64 / 1024.0 / 1024.0) / 5.0; // MB/s
+        let disk_io_score = ((live_metrics.disk_io.read_bytes + live_metrics.disk_io.write_bytes)
+            as f64
+            / 1024.0
+            / 1024.0)
+            / 10.0; // MB/s
+        let network_io_score = ((live_metrics.network_io.bytes_sent
+            + live_metrics.network_io.bytes_received) as f64
+            / 1024.0
+            / 1024.0)
+            / 5.0; // MB/s
         let disk_iops = (live_metrics.disk_io.read_ops + live_metrics.disk_io.write_ops) as f64;
-        let network_throughput = (live_metrics.network_io.bytes_sent + live_metrics.network_io.bytes_received) as f64 / 1024.0 / 1024.0; // MB/s
+        let network_throughput = (live_metrics.network_io.bytes_sent
+            + live_metrics.network_io.bytes_received) as f64
+            / 1024.0
+            / 1024.0; // MB/s
 
         // Run benchmark with allocated resources using baseline metrics
         let result = BenchmarkResult {
@@ -2077,7 +2121,7 @@ impl HardwareTuningHandler {
             metrics: PerformanceMetrics {
                 cpu_score: 100.0 - live_metrics.cpu_usage, // Higher score for lower usage
                 memory_score: 100.0 - live_metrics.memory_usage, // Higher score for lower usage
-                storage_score: disk_io_score.min(100.0), // Scale disk IO to score
+                storage_score: disk_io_score.min(100.0),   // Scale disk IO to score
                 network_score: network_io_score.min(100.0), // Scale network IO to score
                 overall_score: {
                     let cpu_score = 100.0 - live_metrics.cpu_usage;
@@ -2086,11 +2130,27 @@ impl HardwareTuningHandler {
                     let network_score = network_io_score.min(100.0);
                     (cpu_score + memory_score + storage_score + network_score) / 4.0
                 },
-                latency_ms: if live_metrics.cpu_usage > 80.0 { 5.0 } else { 2.1 },
-                throughput_mbps: if network_throughput > 100.0 { network_throughput * 10.0 } else { 1250.0 },
-                iops: if disk_iops > 50.0 { (disk_iops * 300.0) as u64 } else { 15000 },
+                latency_ms: if live_metrics.cpu_usage > 80.0 {
+                    5.0
+                } else {
+                    2.1
+                },
+                throughput_mbps: if network_throughput > 100.0 {
+                    network_throughput * 10.0
+                } else {
+                    1250.0
+                },
+                iops: if disk_iops > 50.0 {
+                    (disk_iops * 300.0) as u64
+                } else {
+                    15000
+                },
             },
-            baseline_comparison: Some(if live_metrics.cpu_usage < 50.0 { 12.5 } else { -5.0 }),
+            baseline_comparison: Some(if live_metrics.cpu_usage < 50.0 {
+                12.5
+            } else {
+                -5.0
+            }),
         };
 
         // Release resources after benchmark
@@ -2175,20 +2235,17 @@ impl HardwareTuningHandler {
             }
             Ok(AccessDecision::RequireAuthentication { reason, .. }) => {
                 Err(nestgate_core::NestGateError::PermissionDenied(format!(
-                    "Authentication required for external access: {}",
-                    reason
+                    "Authentication required for external access: {reason}"
                 )))
             }
             Ok(AccessDecision::RequireLock { reason, .. }) => {
                 Err(nestgate_core::NestGateError::PermissionDenied(format!(
-                    "Crypto lock required for external access: {}",
-                    reason
+                    "Crypto lock required for external access: {reason}"
                 )))
             }
             Ok(AccessDecision::Deny { reason, .. }) => {
                 Err(nestgate_core::NestGateError::PermissionDenied(format!(
-                    "Extraction lock denied: {}",
-                    reason
+                    "Extraction lock denied: {reason}"
                 )))
             }
             Err(e) => Err(e),
@@ -2201,7 +2258,7 @@ impl HardwareTuningHandler {
 
         // Generate recommendations based on platform capabilities
         let mut optimizations = Vec::new();
-        
+
         // CPU-specific recommendations
         if platform_info.cpu_cores > 8 {
             optimizations.push("Enable CPU frequency scaling for high-core systems".to_string());
@@ -2209,29 +2266,37 @@ impl HardwareTuningHandler {
         } else {
             optimizations.push("Enable CPU frequency scaling".to_string());
         }
-        
+
         // Memory-specific recommendations
-        if platform_info.memory_gb > 32 { // 32GB
+        if platform_info.memory_gb > 32 {
+            // 32GB
             optimizations.push("Configure memory swappiness for high-memory systems".to_string());
             optimizations.push("Enable memory compaction".to_string());
         } else {
             optimizations.push("Configure memory swappiness".to_string());
         }
-        
+
         // Storage-specific recommendations
-        if platform_info.storage_devices.iter().any(|d| d.device_type == "nvme") {
+        if platform_info
+            .storage_devices
+            .iter()
+            .any(|d| d.device_type == "nvme")
+        {
             optimizations.push("Use noop I/O scheduler for NVMe storage".to_string());
             optimizations.push("Enable NVMe multiqueue support".to_string());
         } else {
             optimizations.push("Optimize disk scheduler for traditional storage".to_string());
         }
-        
+
         // Network-specific recommendations
-        if platform_info.platform_capabilities.contains(&"multiple_network_interfaces".to_string()) {
+        if platform_info
+            .platform_capabilities
+            .contains(&"multiple_network_interfaces".to_string())
+        {
             optimizations.push("Configure network bonding for redundancy".to_string());
             optimizations.push("Enable network interrupt coalescing".to_string());
         }
-        
+
         let recommended_profile = if platform_info.cpu_cores > 16 && platform_info.memory_gb > 64 {
             "high_performance".to_string()
         } else if platform_info.cpu_cores > 8 && platform_info.memory_gb > 16 {
@@ -2239,7 +2304,7 @@ impl HardwareTuningHandler {
         } else {
             "balanced".to_string()
         };
-        
+
         Ok(TuningRecommendations {
             recommended_profile,
             optimizations,
@@ -2251,8 +2316,14 @@ impl HardwareTuningHandler {
         let live_metrics = self.toadstool_client.get_live_hardware_metrics().await?;
 
         // Calculate composite scores from struct metrics
-        let disk_io_score = (live_metrics.disk_io.read_bytes + live_metrics.disk_io.write_bytes) as f64 / 1024.0 / 1024.0; // MB/s
-        let network_io_score = (live_metrics.network_io.bytes_sent + live_metrics.network_io.bytes_received) as f64 / 1024.0 / 1024.0; // MB/s
+        let disk_io_score = (live_metrics.disk_io.read_bytes + live_metrics.disk_io.write_bytes)
+            as f64
+            / 1024.0
+            / 1024.0; // MB/s
+        let network_io_score = (live_metrics.network_io.bytes_sent
+            + live_metrics.network_io.bytes_received) as f64
+            / 1024.0
+            / 1024.0; // MB/s
 
         // Return formatted metrics using actual data
         Ok(LivePerformanceMetrics {
@@ -2266,7 +2337,7 @@ impl HardwareTuningHandler {
 
     pub async fn validate_session_integrity(&self) -> Result<()> {
         let sessions = self.session_manager.read().await;
-        
+
         // Validate each session for integrity
         for (session_id, session) in sessions.sessions.iter() {
             // Check session expiration
@@ -2275,24 +2346,28 @@ impl HardwareTuningHandler {
                 tracing::warn!("Session {} expired (age: {:?})", session_id, session_age);
                 continue;
             }
-            
+
             // Validate session status
             if matches!(session.status, SessionStatus::Failed) {
                 tracing::error!("Session {} is in failed state", session_id);
-                return Err(NestGateError::Internal("Session integrity validation failed".to_string()));
+                return Err(NestGateError::Internal(
+                    "Session integrity validation failed".to_string(),
+                ));
             }
-            
+
             tracing::debug!("Session {} validated successfully", session_id);
         }
-        
-        tracing::info!("All {} sessions passed integrity validation", sessions.sessions.len());
+
+        tracing::info!(
+            "All {} sessions passed integrity validation",
+            sessions.sessions.len()
+        );
         Ok(())
     }
 }
 
 /// 1. SYSTEM INFORMATION (Sysinfo) Data Structures
-
-/// Platform Detection: CPU, memory, storage capabilities
+///    Platform Detection: CPU, memory, storage capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlatformInfo {
     pub cpu_cores: u32,
@@ -2422,8 +2497,7 @@ pub struct SystemAlert {
 }
 
 /// 2. COMPUTE NEEDS Data Structures
-
-/// Workload Execution: Running storage management processes
+///    Workload Execution: Running storage management processes
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageWorkload {
     pub name: String,

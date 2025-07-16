@@ -154,7 +154,7 @@ impl ZfsManager {
         let pool_manager = Arc::new(ZfsPoolManager::new(&config).await.map_err(|e| {
             error!("Failed to initialize ZFS pool manager: {}", e);
             ZfsError::Internal {
-                message: format!("Pool manager: {}", e),
+                message: format!("Pool manager: {e}"),
             }
         })?);
 
@@ -197,7 +197,7 @@ impl ZfsManager {
                 .map_err(|e| {
                     error!("Failed to initialize tier manager: {}", e);
                     ZfsError::Internal {
-                        message: format!("Tier manager: {}", e),
+                        message: format!("Tier manager: {e}"),
                     }
                 })?,
         );
@@ -209,7 +209,7 @@ impl ZfsManager {
                 .map_err(|e| {
                     error!("Failed to initialize ZFS health monitor: {}", e);
                     ZfsError::Internal {
-                        message: format!("Health monitor: {}", e),
+                        message: format!("Health monitor: {e}"),
                     }
                 })?,
         ));
@@ -300,7 +300,9 @@ impl ZfsManager {
         );
 
         // Create orchestrator client
-        let client = Arc::new(nestgate_mcp::HttpOrchestratorClient::new(orchestrator_endpoint));
+        let client = Arc::new(nestgate_mcp::HttpOrchestratorClient::new(
+            orchestrator_endpoint,
+        ));
 
         // Prepare enhanced service information
         let service_info = nestgate_mcp::protocol::ServiceInfo {
@@ -500,7 +502,7 @@ impl ZfsManager {
     /// Analyze file for tier prediction
     async fn analyze_file_for_tier_prediction(&self, file_path: &str) -> Result<FileAnalysis> {
         let metadata = std::fs::metadata(file_path).map_err(|e| ZfsError::Storage {
-            message: format!("Failed to read file metadata: {}", e),
+            message: format!("Failed to read file metadata: {e}"),
         })?;
 
         let file_extension = std::path::Path::new(file_path)
@@ -681,7 +683,7 @@ impl ZfsManager {
             .create_pool(name, devices)
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to create pool: {}", e),
+                message: format!("Failed to create pool: {e}"),
             })?;
 
         Ok(result)
@@ -695,7 +697,7 @@ impl ZfsManager {
             .destroy_pool(name)
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to destroy pool: {}", e),
+                message: format!("Failed to destroy pool: {e}"),
             })?;
 
         Ok(())
@@ -707,7 +709,7 @@ impl ZfsManager {
             .get_pool_status(name)
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to get pool status: {}", e),
+                message: format!("Failed to get pool status: {e}"),
             })
     }
 
@@ -719,7 +721,7 @@ impl ZfsManager {
             .scrub_pool(name)
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to scrub pool: {}", e),
+                message: format!("Failed to scrub pool: {e}"),
             })?;
 
         Ok(())
@@ -742,7 +744,7 @@ impl ZfsManager {
             .create_dataset(name, parent, tier)
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to create dataset: {}", e),
+                message: format!("Failed to create dataset: {e}"),
             })?;
 
         Ok(result)
@@ -756,7 +758,7 @@ impl ZfsManager {
             .destroy_dataset(name)
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to destroy dataset: {}", e),
+                message: format!("Failed to destroy dataset: {e}"),
             })?;
 
         Ok(())
@@ -771,7 +773,7 @@ impl ZfsManager {
             .list_snapshots(dataset)
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to list snapshots: {}", e),
+                message: format!("Failed to list snapshots: {e}"),
             })
     }
 
@@ -979,7 +981,7 @@ impl ZfsManager {
             .list_pools()
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to list pools: {}", e),
+                message: format!("Failed to list pools: {e}"),
             })?;
 
         if pools.is_empty() {
@@ -995,7 +997,7 @@ impl ZfsManager {
                 .get_pool_status(&pool.name)
                 .await
                 .map_err(|e| ZfsError::Internal {
-                    message: format!("Failed to get pool status: {}", e),
+                    message: format!("Failed to get pool status: {e}"),
                 })?;
 
             // Parse status string for utilization info - simplified parsing
@@ -1176,7 +1178,7 @@ impl ZfsManager {
             .list_pools()
             .await
             .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to list pools: {}", e),
+                message: format!("Failed to list pools: {e}"),
             })?;
 
         for pool in &pools {
@@ -1185,7 +1187,7 @@ impl ZfsManager {
                 .get_pool_status(&pool.name)
                 .await
                 .map_err(|e| ZfsError::Internal {
-                    message: format!("Failed to get pool status: {}", e),
+                    message: format!("Failed to get pool status: {e}"),
                 })?;
 
             // Parse basic pool status for optimization recommendations

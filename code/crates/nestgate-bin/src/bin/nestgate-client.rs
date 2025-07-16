@@ -4,7 +4,7 @@
 
 use clap::{arg, Args, Parser, Subcommand};
 use std::env;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process;
 use std::str::FromStr;
 use tracing::error;
@@ -30,7 +30,7 @@ impl FromStr for StorageTier {
             "warm" => Ok(StorageTier::Warm),
             "cold" => Ok(StorageTier::Cold),
             "cache" => Ok(StorageTier::Cache),
-            _ => Err(format!("Invalid storage tier: {}", s)),
+            _ => Err(format!("Invalid storage tier: {s}")),
         }
     }
 }
@@ -49,7 +49,7 @@ impl FromStr for Protocol {
         match s.to_lowercase().as_str() {
             "nfs" => Ok(Protocol::Nfs),
             "smb" => Ok(Protocol::Smb),
-            _ => Err(format!("Invalid protocol: {}", s)),
+            _ => Err(format!("Invalid protocol: {s}")),
         }
     }
 }
@@ -67,7 +67,7 @@ impl FromStr for AccessMode {
         match s.to_lowercase().as_str() {
             "read_only" => Ok(AccessMode::ReadOnly),
             "read_write" => Ok(AccessMode::ReadWrite),
-            _ => Err(format!("Invalid access mode: {}", s)),
+            _ => Err(format!("Invalid access mode: {s}")),
         }
     }
 }
@@ -87,7 +87,7 @@ impl FromStr for PerformancePreference {
             "throughput" => Ok(PerformancePreference::Throughput),
             "iops" => Ok(PerformancePreference::Iops),
             "balanced" => Ok(PerformancePreference::Balanced),
-            _ => Err(format!("Invalid performance preference: {}", s)),
+            _ => Err(format!("Invalid performance preference: {s}")),
         }
     }
 }
@@ -242,7 +242,7 @@ enum StorageCommands {
 struct DummyClient {}
 
 impl DummyClient {
-    async fn from_config(_config_path: &PathBuf) -> Result<Self, Box<dyn std::error::Error>> {
+    async fn from_config(_config_path: &Path) -> Result<Self, Box<dyn std::error::Error>> {
         // In a real implementation, this would create a client from a config file
         Ok(Self {})
     }
@@ -382,7 +382,7 @@ fn random_id() -> String {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_millis();
-    format!("{:x}", now)
+    format!("{now:x}")
 }
 
 // Response type definitions
@@ -466,7 +466,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(client) => client,
         Err(e) => {
             error!("Failed to create NestGate client: {}", e);
-            eprintln!("Error: Failed to create NestGate client: {}", e);
+            eprintln!("Error: Failed to create NestGate client: {e}");
             process::exit(1);
         }
     };
