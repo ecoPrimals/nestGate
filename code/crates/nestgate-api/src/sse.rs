@@ -153,6 +153,47 @@ pub struct SseStats {
 
 impl SseManager {
     /// Create a new SSE manager
+    ///
+    /// Initializes a Server-Sent Events (SSE) manager that provides real-time
+    /// streaming capabilities for web clients. SSE is ideal for one-way
+    /// communication from server to client with automatic reconnection.
+    ///
+    /// ## Features
+    ///
+    /// - **Real-time Updates**: Stream events to multiple clients simultaneously
+    /// - **Automatic Reconnection**: Built-in client reconnection handling
+    /// - **Connection Management**: Automatic cleanup of inactive connections
+    /// - **Performance Monitoring**: Tracks connections, events, and throughput
+    /// - **Event Broadcasting**: Efficient distribution to all connected clients
+    /// - **Keep-alive Support**: Configurable heartbeat to maintain connections
+    ///
+    /// ## Event Types Supported
+    ///
+    /// - Storage operations (create, update, delete)
+    /// - System health updates
+    /// - Performance metrics
+    /// - Custom application events
+    ///
+    /// ## Usage
+    ///
+    /// ```rust
+    /// use nestgate_api::sse::SseManager;
+    ///
+    /// let sse_manager = SseManager::new();
+    ///
+    /// // Start background cleanup
+    /// let _cleanup_task = sse_manager.start_cleanup_task();
+    ///
+    /// // Create event streams
+    /// let storage_stream = sse_manager.create_storage_stream().await;
+    /// let health_stream = sse_manager.create_health_stream().await;
+    /// ```
+    ///
+    /// ## Performance
+    ///
+    /// The manager uses a large broadcast channel (10,000 events) to handle
+    /// high-throughput scenarios and provides efficient event distribution
+    /// to multiple concurrent connections.
     pub fn new() -> Self {
         let (event_broadcaster, _) = broadcast::channel(10000); // Large buffer for SSE
 

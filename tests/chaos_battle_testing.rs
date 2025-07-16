@@ -285,7 +285,7 @@ impl AiChaosOrchestrator {
                 .max(phase.stress_intensity.operations_per_second())
         };
 
-        println!("   ⚡ Operations/sec: {}", ops_per_sec);
+        println!("   ⚡ Operations/sec: {ops_per_sec}");
         println!(
             "   💥 Fault rate: {:.1}%",
             phase.fault_injection_rate * 100.0
@@ -361,8 +361,7 @@ impl AiChaosOrchestrator {
         }
 
         println!(
-            "   📊 Phase completed: {} operations, {} faults",
-            operation_count, fault_count
+            "   📊 Phase completed: {operation_count} operations, {fault_count} faults"
         );
     }
 
@@ -396,7 +395,7 @@ impl AiChaosOrchestrator {
                 };
 
                 return if fastrand::f64() < failure_rate {
-                    Err(format!("{} operation failed", op_type))
+                    Err(format!("{op_type} operation failed"))
                 } else {
                     Ok(())
                 };
@@ -677,20 +676,20 @@ fn print_ai_chaos_results(results: &AiChaosResults) {
     if !results.ai_insights.predicted_failure_points.is_empty() {
         println!("   ⚠️  Predicted Failure Points:");
         for point in &results.ai_insights.predicted_failure_points {
-            println!("      • {}", point);
+            println!("      • {point}");
         }
     }
 
     if !results.ai_insights.optimization_opportunities.is_empty() {
         println!("   🚀 Optimization Opportunities:");
         for opportunity in &results.ai_insights.optimization_opportunities {
-            println!("      • {}", opportunity);
+            println!("      • {opportunity}");
         }
     }
 
     println!("\n💡 RECOMMENDATIONS:");
     for rec in &results.recommendations {
-        println!("   • {}", rec);
+        println!("   • {rec}");
     }
 
     println!("\n🏆 FINAL ASSESSMENT:");
@@ -855,12 +854,12 @@ async fn test_ai_comprehensive_chaos_campaign() {
     let mut campaign_results = Vec::new();
 
     for (scenario_name, min_stability, fault_rate, stress_level) in scenarios {
-        println!("\n🎯 EXECUTING: {}", scenario_name);
+        println!("\n🎯 EXECUTING: {scenario_name}");
 
         let config = AiChaosConfig {
             test_name: scenario_name.to_string(),
             phases: vec![TestPhase {
-                name: format!("{} Phase", scenario_name),
+                name: format!("{scenario_name} Phase"),
                 duration_seconds: 15,
                 operations_per_second: stress_level.operations_per_second(),
                 fault_injection_rate: fault_rate,
@@ -911,10 +910,9 @@ async fn test_ai_comprehensive_chaos_campaign() {
         .count();
 
     println!(
-        "📊 Total Operations Across All Scenarios: {}",
-        total_operations
+        "📊 Total Operations Across All Scenarios: {total_operations}"
     );
-    println!("🛡️  Average System Resilience: {:.2}%", avg_resilience);
+    println!("🛡️  Average System Resilience: {avg_resilience:.2}%");
     println!(
         "⚠️  High Risk Scenarios: {}/{}",
         high_risk_scenarios,

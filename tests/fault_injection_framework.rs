@@ -208,7 +208,7 @@ impl FaultInjectionFramework {
                             .collect::<String>()
                     );
 
-                    println!("💥 Injecting fault: {:?} (ID: {})", fault_type, fault_id);
+                    println!("💥 Injecting fault: {fault_type:?} (ID: {fault_id})");
 
                     // Create fault event
                     let fault_duration = {
@@ -245,12 +245,11 @@ impl FaultInjectionFramework {
                             system_health.store(new_health, Ordering::SeqCst);
 
                             println!(
-                                "  ✅ Fault injected successfully, system health: {}%",
-                                new_health
+                                "  ✅ Fault injected successfully, system health: {new_health}%"
                             );
                         }
                         Err(e) => {
-                            println!("  ❌ Failed to inject fault: {}", e);
+                            println!("  ❌ Failed to inject fault: {e}");
                             fault_history.write().await.push(fault_event);
                         }
                     }
@@ -309,7 +308,7 @@ impl FaultInjectionFramework {
                             let new_health = (current_health + health_restoration).min(100);
                             system_health.store(new_health, Ordering::SeqCst);
 
-                            println!("  💚 System health restored to: {}%", new_health);
+                            println!("  💚 System health restored to: {new_health}%");
                         }
                         Err(e) => {
                             println!(
@@ -600,7 +599,7 @@ impl FaultInjectionFramework {
 
         println!("\n🔍 FAULT TYPE BREAKDOWN:");
         for (fault_type, count) in fault_type_counts {
-            println!("  {:?}: {} occurrences", fault_type, count);
+            println!("  {fault_type:?}: {count} occurrences");
         }
 
         // Determine resilience score
@@ -630,8 +629,7 @@ impl FaultInjectionFramework {
         };
 
         println!(
-            "\n🏆 Resilience Certification: {} ({:.1}%)",
-            certification, resilience_score
+            "\n🏆 Resilience Certification: {certification} ({resilience_score:.1}%)"
         );
     }
 }

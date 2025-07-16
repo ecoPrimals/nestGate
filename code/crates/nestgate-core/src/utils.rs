@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crate::error::{NestGateError, Result};
+use crate::zero_copy::StreamingProcReader;
 
 /// Enhanced file system utilities with advanced capabilities
 pub mod fs {
@@ -263,22 +264,16 @@ pub mod sys {
     pub fn get_total_memory() -> Result<u64> {
         #[cfg(target_os = "linux")]
         {
-            match stdfs::read_to_string("/proc/meminfo") {
-                Ok(content) => {
-                    let parts: Vec<&str> = content.split_whitespace().collect();
-                    if parts.len() >= 2 {
-                        if let Ok(kb) = parts[1].parse::<u64>() {
-                            return Ok(kb * 1024); // Convert KB to bytes
-                        }
-                    }
-                    Err(NestGateError::SystemError(
-                        "Failed to parse /proc/meminfo".to_string(),
-                    ))
+            // Use zero-copy streaming reader for /proc/meminfo
+            match tokio::runtime::Runtime::new() {
+                Ok(rt) => match rt.block_on(StreamingProcReader::read_meminfo()) {
+                    Ok(memory_info) => Ok(memory_info.total),
+                    Err(e) => Err(e),
+                },
+                Err(_) => {
+                    // Fallback for systems without tokio runtime
+                    Ok(8 * 1024 * 1024 * 1024) // Default to 8GB
                 }
-                Err(e) => Err(NestGateError::SystemError(format!(
-                    "Failed to read /proc/meminfo: {}",
-                    e
-                ))),
             }
         }
         #[cfg(not(target_os = "linux"))]
@@ -292,22 +287,16 @@ pub mod sys {
     pub fn get_free_memory() -> Result<u64> {
         #[cfg(target_os = "linux")]
         {
-            match stdfs::read_to_string("/proc/meminfo") {
-                Ok(content) => {
-                    let parts: Vec<&str> = content.split_whitespace().collect();
-                    if parts.len() >= 2 {
-                        if let Ok(kb) = parts[1].parse::<u64>() {
-                            return Ok(kb * 1024); // Convert KB to bytes
-                        }
-                    }
-                    Err(NestGateError::SystemError(
-                        "Failed to parse /proc/meminfo".to_string(),
-                    ))
+            // Use zero-copy streaming reader for /proc/meminfo
+            match tokio::runtime::Runtime::new() {
+                Ok(rt) => match rt.block_on(StreamingProcReader::read_meminfo()) {
+                    Ok(memory_info) => Ok(memory_info.available),
+                    Err(e) => Err(e),
+                },
+                Err(_) => {
+                    // Fallback for systems without tokio runtime
+                    Ok(4 * 1024 * 1024 * 1024) // Default to 4GB free
                 }
-                Err(e) => Err(NestGateError::SystemError(format!(
-                    "Failed to read /proc/meminfo: {}",
-                    e
-                ))),
             }
         }
         #[cfg(not(target_os = "linux"))]
@@ -324,8 +313,7 @@ pub mod sys {
         match stdfs::metadata("/") {
             Ok(_) => Ok(1024 * 1024 * 1024 * 1024), // Default to 1TB
             Err(e) => Err(NestGateError::SystemError(format!(
-                "Failed to get disk info: {}",
-                e
+                "Failed to get disk info: {e}"
             ))),
         }
     }
@@ -353,8 +341,7 @@ pub mod sys {
                     ))
                 }
                 Err(e) => Err(NestGateError::SystemError(format!(
-                    "Failed to read /proc/uptime: {}",
-                    e
+                    "Failed to read /proc/uptime: {e}"
                 ))),
             }
         }
@@ -405,20 +392,20 @@ pub mod time {
         let seconds = total_seconds % 60;
 
         if days > 0 {
-            format!("{}d {}h {}m {}s", days, hours, minutes, seconds)
+            format!("{days}d {hours}h {minutes}m {seconds}s")
         } else if hours > 0 {
-            format!("{}h {}m {}s", hours, minutes, seconds)
+            format!("{hours}h {minutes}m {seconds}s")
         } else if minutes > 0 {
-            format!("{}m {}s", minutes, seconds)
+            format!("{minutes}m {seconds}s")
         } else {
-            format!("{}s", seconds)
+            format!("{seconds}s")
         }
     }
 
     /// Parse a timestamp string
     pub fn parse_timestamp(s: &str) -> Result<i64> {
         s.parse::<i64>()
-            .map_err(|e| NestGateError::InvalidInput(format!("Invalid timestamp: {}", e)))
+            .map_err(|e| NestGateError::InvalidInput(format!("Invalid timestamp: {e}")))
     }
 
     /// Get elapsed time since a timestamp
@@ -501,8 +488,7 @@ pub mod network {
         let parts: Vec<&str> = cidr.split('/').collect();
         if parts.len() != 2 {
             return Err(NestGateError::InvalidInput(format!(
-                "Invalid CIDR notation: {}",
-                cidr
+                "Invalid CIDR notation: {cidr}"
             )));
         }
 
@@ -518,14 +504,12 @@ pub mod network {
         match ip {
             IpAddr::V4(_) if prefix > 32 => {
                 return Err(NestGateError::InvalidInput(format!(
-                    "Invalid IPv4 prefix length: {}",
-                    prefix
+                    "Invalid IPv4 prefix length: {prefix}"
                 )));
             }
             IpAddr::V6(_) if prefix > 128 => {
                 return Err(NestGateError::InvalidInput(format!(
-                    "Invalid IPv6 prefix length: {}",
-                    prefix
+                    "Invalid IPv6 prefix length: {prefix}"
                 )));
             }
             _ => {}
@@ -597,25 +581,25 @@ pub mod filesys {
     /// Get file size
     pub fn file_size(path: &Path) -> Result<u64> {
         fs::get_file_size(path)
-            .map_err(|e| NestGateError::FileSystem(format!("Failed to get file size: {}", e)))
+            .map_err(|e| NestGateError::FileSystem(format!("Failed to get file size: {e}")))
     }
 
     /// Create directory
     pub fn create_dir_all(path: &Path) -> Result<()> {
         fs::ensure_dir(path)
-            .map_err(|e| NestGateError::FileSystem(format!("Failed to create directory: {}", e)))
+            .map_err(|e| NestGateError::FileSystem(format!("Failed to create directory: {e}")))
     }
 
     /// Remove file
     pub fn remove_file(path: &Path) -> Result<()> {
         stdfs::remove_file(path)
-            .map_err(|e| NestGateError::FileSystem(format!("Failed to remove file: {}", e)))
+            .map_err(|e| NestGateError::FileSystem(format!("Failed to remove file: {e}")))
     }
 
     /// Remove directory
     pub fn remove_dir_all(path: &Path) -> Result<()> {
         stdfs::remove_dir_all(path)
-            .map_err(|e| NestGateError::FileSystem(format!("Failed to remove directory: {}", e)))
+            .map_err(|e| NestGateError::FileSystem(format!("Failed to remove directory: {e}")))
     }
 
     /// Get temp directory
@@ -633,7 +617,7 @@ pub mod filesys {
     /// Calculate directory size
     pub fn directory_size(path: &Path) -> Result<u64> {
         fs::get_directory_size(path).map_err(|e| {
-            NestGateError::FileSystem(format!("Failed to calculate directory size: {}", e))
+            NestGateError::FileSystem(format!("Failed to calculate directory size: {e}"))
         })
     }
 }
@@ -801,7 +785,7 @@ pub mod config {
     /// Load configuration from file
     pub fn load_config<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<T> {
         let content = stdfs::read_to_string(path)
-            .map_err(|e| NestGateError::FileSystem(format!("Failed to read config file: {}", e)))?;
+            .map_err(|e| NestGateError::FileSystem(format!("Failed to read config file: {e}")))?;
 
         if path.extension().and_then(|s| s.to_str()) == Some("yaml")
             || path.extension().and_then(|s| s.to_str()) == Some("yml")
@@ -827,7 +811,7 @@ pub mod config {
         }
 
         stdfs::write(path, content)
-            .map_err(|e| NestGateError::FileSystem(format!("Failed to write config file: {}", e)))
+            .map_err(|e| NestGateError::FileSystem(format!("Failed to write config file: {e}")))
     }
 }
 

@@ -106,11 +106,10 @@ impl PoolCreator {
         for (key, value) in &config.properties {
             if key.is_empty() || value.is_empty() {
                 return Err(NestGateError::Internal(format!(
-                    "Invalid property: {}={}",
-                    key, value
+                    "Invalid property: {key}={value}"
                 )));
             }
-            cmd.args(["-o", &format!("{}={}", key, value)]);
+            cmd.args(["-o", &format!("{key}={value}")]);
         }
 
         // Add dataset properties
@@ -158,15 +157,14 @@ impl PoolCreator {
             .await
             .map_err(|_| NestGateError::Internal("Pool creation timed out".to_string()))?
             .map_err(|e| {
-                NestGateError::Internal(format!("Failed to execute zpool create: {}", e))
+                NestGateError::Internal(format!("Failed to execute zpool create: {e}"))
             })?;
 
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
             let stdout_msg = String::from_utf8_lossy(&output.stdout);
-            return Err(NestGateError::Internal(format!(
-                "Pool creation failed: stderr: {}, stdout: {}",
-                error_msg, stdout_msg
+                          return Err(NestGateError::Internal(format!(
+                "Pool creation failed: stderr: {error_msg}, stdout: {stdout_msg}"
             )));
         }
 
@@ -231,8 +229,8 @@ impl PoolCreator {
         _tier: &StorageTier,
         tier_name: &str,
     ) -> CoreResult<()> {
-        let dataset_name = format!("{}/{}", pool_name, tier_name);
-        let mountpoint = format!("/{}", dataset_name);
+        let dataset_name = format!("{pool_name}/{tier_name}");
+        let mountpoint = format!("/{dataset_name}");
 
         // Get tier-specific properties from configuration
         let tier_props = self
@@ -269,20 +267,19 @@ impl PoolCreator {
         cmd.args(["-o", &format!("logbias={}", tier_props.logbias)]);
         cmd.args(["-o", &format!("sync={}", tier_props.sync)]);
         cmd.args(["-o", &format!("atime={}", tier_props.atime)]);
-        cmd.args(["-o", &format!("mountpoint={}", mountpoint)]);
+        cmd.args(["-o", &format!("mountpoint={mountpoint}")]);
 
         cmd.arg(&dataset_name);
 
         let output = cmd
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to execute zfs create: {}", e)))?;
+            .map_err(|e| NestGateError::Internal(format!("Failed to execute zfs create: {e}")))?;
 
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
-            return Err(NestGateError::Internal(format!(
-                "Failed to create tier dataset {}: {}",
-                dataset_name, error_msg
+                          return Err(NestGateError::Internal(format!(
+                "Failed to create tier dataset {dataset_name}: {error_msg}"
             )));
         }
 
@@ -310,14 +307,13 @@ impl PoolCreator {
         cmd.arg(pool_name);
 
         let output = cmd.output().await.map_err(|e| {
-            NestGateError::Internal(format!("Failed to execute zpool destroy: {}", e))
+            NestGateError::Internal(format!("Failed to execute zpool destroy: {e}"))
         })?;
 
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
-            return Err(NestGateError::Internal(format!(
-                "Failed to destroy pool {}: {}",
-                pool_name, error_msg
+                          return Err(NestGateError::Internal(format!(
+                "Failed to destroy pool {pool_name}: {error_msg}"
             )));
         }
 
@@ -395,9 +391,8 @@ impl PoolCreator {
                     }
                     Err(e) => {
                         error!("❌ Failed to destroy pool during cleanup: {}", e);
-                        return Err(NestGateError::Internal(format!(
-                            "Cleanup destroy command failed: {}",
-                            e
+                                                  return Err(NestGateError::Internal(format!(
+                            "Cleanup destroy command failed: {e}"
                         )));
                     }
                 }

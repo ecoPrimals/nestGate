@@ -12,7 +12,7 @@ use std::collections::HashMap;
 fn test_api_response_success() {
     let response = ApiResponse::success("test data".to_string());
 
-    assert_eq!(response.success, true);
+    assert!(response.success);
     assert_eq!(response.data, Some("test data".to_string()));
     assert!(response.error.is_none());
     assert!(!response.timestamp.to_string().is_empty());
@@ -22,7 +22,7 @@ fn test_api_response_success() {
 fn test_api_response_error() {
     let response = ApiResponse::<()>::error_empty("Test error message".to_string());
 
-    assert_eq!(response.success, false);
+    assert!(!response.success);
     assert!(response.data.is_none());
     assert_eq!(response.error, Some("Test error message".to_string()));
     assert!(!response.timestamp.to_string().is_empty());

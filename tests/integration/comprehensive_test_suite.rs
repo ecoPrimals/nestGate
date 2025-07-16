@@ -14,6 +14,7 @@ use std::sync::Arc;
 use tokio::time::timeout;
 use std::collections::HashMap;
 use serde_json;
+use std::sync::{Once, Mutex};
 
 // Import all the modules we need to test
 use nestgate_core::{Result as CoreResult, NestGateError, StorageTier};
@@ -1629,15 +1630,16 @@ pub struct TestReport {
     pub performance_insights: Vec<String>,
 }
 
-static mut TEST_RUNNER: Option<ComprehensiveTestRunner> = None;
+static TEST_RUNNER_INIT: Once = Once::new();
+static mut TEST_RUNNER: Option<Mutex<ComprehensiveTestRunner>> = None;
 
-fn get_test_runner() -> &'static mut ComprehensiveTestRunner {
-    unsafe {
-        if TEST_RUNNER.is_none() {
-            TEST_RUNNER = Some(ComprehensiveTestRunner::new());
+fn get_test_runner() -> &'static Mutex<ComprehensiveTestRunner> {
+    TEST_RUNNER_INIT.call_once(|| {
+        unsafe {
+            TEST_RUNNER = Some(Mutex::new(ComprehensiveTestRunner::new()));
         }
-        TEST_RUNNER.as_mut().unwrap()
-    }
+    });
+    unsafe { TEST_RUNNER.as_ref().unwrap() }
 }
 
 #[tokio::test]
@@ -1722,7 +1724,7 @@ async fn test_comprehensive_zfs_performance_monitoring() -> Result<(), Box<dyn s
     }
 
     let total_duration = start_time.elapsed();
-    get_test_runner().record_test_performance("comprehensive_zfs_performance", total_duration.as_millis() as f64, true);
+    get_test_runner().lock().unwrap().record_test_performance("comprehensive_zfs_performance", total_duration.as_millis() as f64, true);
 
     info!("🎉 Comprehensive ZFS performance monitoring test completed in {:.1}ms", total_duration.as_millis());
     Ok(())
@@ -1812,7 +1814,7 @@ async fn test_zfs_manager_integration_with_performance() -> Result<(), Box<dyn s
     }
 
     let total_duration = start_time.elapsed();
-    get_test_runner().record_test_performance("zfs_manager_integration", total_duration.as_millis() as f64, true);
+    get_test_runner().lock().unwrap().record_test_performance("zfs_manager_integration", total_duration.as_millis() as f64, true);
 
     info!("🎉 ZFS Manager integration test completed in {:.1}ms", total_duration.as_millis());
     Ok(())
@@ -1822,7 +1824,7 @@ async fn test_zfs_manager_integration_with_performance() -> Result<(), Box<dyn s
 async fn test_comprehensive_integration_report() -> Result<(), Box<dyn std::error::Error>> {
     info!("📋 Generating Comprehensive Integration Test Report");
 
-    let runner = get_test_runner();
+    let runner = get_test_runner().lock().unwrap();
     let test_report = runner.generate_test_report();
 
     // Display comprehensive test results

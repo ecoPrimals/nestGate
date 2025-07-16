@@ -98,13 +98,12 @@ impl ZfsPoolManager {
             .args(["list", "-H", "-o", "name,size,alloc,free,cap,health"])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to execute zpool list: {}", e)))?;
+            .map_err(|e| NestGateError::Internal(format!("Failed to execute zpool list: {e}")))?;
 
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
             return Err(NestGateError::Internal(format!(
-                "zpool list failed: {}",
-                error_msg
+                "zpool list failed: {error_msg}"
             )));
         }
 
@@ -130,7 +129,7 @@ impl ZfsPoolManager {
             .await
             .map_err(|e| {
                 crate::error::ZfsError::PoolError(PoolError::DiscoveryFailed {
-                    reason: format!("Failed to execute zpool command: {}", e),
+                    reason: format!("Failed to execute zpool command: {e}"),
                 })
             })?;
 
@@ -250,7 +249,7 @@ impl ZfsPoolManager {
             .map_err(|e| {
                 crate::error::ZfsError::PoolError(PoolError::HealthCheckFailed {
                     pool_name: pool_name.to_string(),
-                    details: format!("Failed to get pool properties: {}", e),
+                    details: format!("Failed to get pool properties: {e}"),
                 })
             })?;
 
@@ -344,7 +343,7 @@ impl ZfsPoolManager {
             .map_err(|e| {
                 crate::error::ZfsError::PoolError(PoolError::CreationFailed {
                     pool_name: name.to_string(),
-                    reason: format!("Failed to execute zpool create: {}", e),
+                    reason: format!("Failed to execute zpool create: {e}"),
                 })
             })?;
 
@@ -377,7 +376,7 @@ impl ZfsPoolManager {
             .map_err(|e| {
                 crate::error::ZfsError::PoolError(PoolError::DestructionFailed {
                     pool_name: name.to_string(),
-                    reason: format!("Failed to execute zpool destroy: {}", e),
+                    reason: format!("Failed to execute zpool destroy: {e}"),
                 })
             })?;
 
@@ -412,7 +411,7 @@ impl ZfsPoolManager {
             .map_err(|e| {
                 crate::error::ZfsError::PoolError(PoolError::HealthCheckFailed {
                     pool_name: name.to_string(),
-                    details: format!("Failed to execute zpool status: {}", e),
+                    details: format!("Failed to execute zpool status: {e}"),
                 })
             })?;
 
@@ -443,7 +442,7 @@ impl ZfsPoolManager {
             .map_err(|e| {
                 crate::error::ZfsError::PoolError(PoolError::ScrubFailed {
                     pool_name: name.to_string(),
-                    details: format!("Failed to execute zpool scrub: {}", e),
+                    details: format!("Failed to execute zpool scrub: {e}"),
                 })
             })?;
 
@@ -489,7 +488,7 @@ impl ZfsPoolManager {
             .await
             .map_err(|e| {
                 crate::error::ZfsError::PoolError(PoolError::DiscoveryFailed {
-                    reason: format!("Failed to execute zpool command: {}", e),
+                    reason: format!("Failed to execute zpool command: {e}"),
                 })
             })?;
 

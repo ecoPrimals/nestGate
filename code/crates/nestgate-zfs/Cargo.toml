@@ -20,6 +20,7 @@ performance = ["zfs"]
 # Core dependencies
 nestgate-core = { path = "../nestgate-core" }
 nestgate-automation = { path = "../nestgate-automation" }
+nestgate-mcp = { path = "../nestgate-mcp" }
 
 # Async runtime
 tokio = { version = "1.0", features = ["full"] }

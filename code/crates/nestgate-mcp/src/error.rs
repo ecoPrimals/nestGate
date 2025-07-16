@@ -38,7 +38,7 @@ impl Error {
 
     /// Create a new network error
     pub fn network(err: impl fmt::Display) -> Self {
-        Self::new(ErrorType::Network, format!("Network error: {}", err))
+        Self::new(ErrorType::Network, format!("Network error: {err}"))
     }
 
     /// Create a new authentication error
@@ -68,14 +68,14 @@ impl Error {
 
     /// Create a new federation error
     pub fn federation(message: String) -> Self {
-        Self::new(ErrorType::Network, format!("Federation error: {}", message))
+        Self::new(ErrorType::Network, format!("Federation error: {message}"))
     }
 
     /// Create a new orchestrator error
     pub fn orchestrator(message: String) -> Self {
         Self::new(
             ErrorType::InternalError,
-            format!("Orchestrator error: {}", message),
+            format!("Orchestrator error: {message}"),
         )
     }
 
@@ -258,13 +258,13 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}: {}", self.error_type, self.message)?;
         if let Some(details) = &self.details {
-            write!(f, " ({})", details)?;
+            write!(f, " ({details})")?;
         }
         if let Some(source) = &self.source {
-            write!(f, " [source: {}]", source)?;
+            write!(f, " [source: {source}]")?;
         }
         if let Some(code) = &self.error_code {
-            write!(f, " [code: {}]", code)?;
+            write!(f, " [code: {code}]")?;
         }
         Ok(())
     }
@@ -276,31 +276,31 @@ impl std::error::Error for Error {}
 
 impl From<std::io::Error> for Error {
     fn from(err: std::io::Error) -> Self {
-        Error::internal(format!("IO error: {}", err))
+        Error::internal(format!("IO error: {err}"))
     }
 }
 
 impl From<serde_json::Error> for Error {
     fn from(err: serde_json::Error) -> Self {
-        Error::new(ErrorType::Serialization, format!("JSON error: {}", err))
+        Error::new(ErrorType::Serialization, format!("JSON error: {err}"))
     }
 }
 
 impl From<reqwest::Error> for Error {
     fn from(err: reqwest::Error) -> Self {
         if err.is_timeout() {
-            Error::timeout(format!("Request timeout: {}", err))
+            Error::timeout(format!("Request timeout: {err}"))
         } else if err.is_connect() {
             Error::network(err)
         } else {
-            Error::internal(format!("HTTP client error: {}", err))
+            Error::internal(format!("HTTP client error: {err}"))
         }
     }
 }
 
 impl From<tokio::time::error::Elapsed> for Error {
     fn from(err: tokio::time::error::Elapsed) -> Self {
-        Error::timeout(format!("Operation timeout: {}", err))
+        Error::timeout(format!("Operation timeout: {err}"))
     }
 }
 
@@ -372,7 +372,7 @@ impl fmt::Display for ContextualError {
             self.error, self.context.component, self.context.operation
         )?;
         if let Some(request_id) = &self.context.request_id {
-            write!(f, " [request_id: {}]", request_id)?;
+            write!(f, " [request_id: {request_id}]")?;
         }
         Ok(())
     }

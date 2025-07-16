@@ -114,8 +114,12 @@ pub mod error;
 pub mod security;
 pub mod temporal_storage;
 pub mod types;
+pub mod universal_model_api;
 pub mod universal_storage;
 pub mod utils;
+
+// Zero-copy optimization utilities
+pub mod zero_copy;
 
 use serde::{Deserialize, Serialize};
 

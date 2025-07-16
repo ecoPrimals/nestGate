@@ -15,6 +15,10 @@
 ### **📋 Implementation & Priorities**
 - **[IMMEDIATE_ACTIONS.md](IMMEDIATE_ACTIONS.md)** - Universal primal implementation priorities
 - **[NEXT_SPRINT_PRIORITIES.md](NEXT_SPRINT_PRIORITIES.md)** - Universal system development roadmap
+- **[CODEBASE_REVIEW_REPORT.md](CODEBASE_REVIEW_REPORT.md)** - 🚨 **CRITICAL** - Comprehensive technical debt analysis
+- **[CRITICAL_ACTION_PLAN.md](CRITICAL_ACTION_PLAN.md)** - 🔥 **URGENT** - 4-week remediation plan
+- **[PROGRESS_SUMMARY.md](PROGRESS_SUMMARY.md)** - ✅ **SUCCESS** - Major compilation fixes completed
+- **[MAJOR_ACCOMPLISHMENTS_SUMMARY.md](MAJOR_ACCOMPLISHMENTS_SUMMARY.md)** - 🎉 **BREAKTHROUGH** - Comprehensive achievements summary
 
 ## **📁 Archive Structure**
 

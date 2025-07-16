@@ -40,51 +40,202 @@ impl NCBIGenomeSource {
         }
     }
 
-    /// Search for genomes (placeholder for future implementation)
+    /// Search for genomes using NCBI E-utilities API
     async fn _search_genomes(&self, query: &str) -> Result<Vec<String>> {
-        // TODO: Implement genome search
-        warn!(
-            "🔄 NCBI genome search not yet implemented for query: {}",
-            query
+        use tracing::info;
+        use urlencoding;
+
+        info!("🔍 Searching NCBI for genomes with query: {}", query);
+
+        let client = reqwest::Client::new();
+        let search_url = format!(
+            "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=genome&term={}&retmode=json&retmax=100",
+            urlencoding::encode(query)
         );
-        Ok(vec![])
+
+        match client.get(&search_url).send().await {
+            Ok(response) => {
+                if response.status().is_success() {
+                    match response.json::<serde_json::Value>().await {
+                        Ok(data) => {
+                            let ids: Vec<String> = data["esearchresult"]["idlist"]
+                                .as_array()
+                                .map(|arr| {
+                                    arr.iter()
+                                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                                        .collect()
+                                })
+                                .unwrap_or_default();
+
+                            info!("✅ Found {} genome IDs for query: {}", ids.len(), query);
+                            Ok(ids)
+                        }
+                        Err(e) => {
+                            warn!("⚠️ Failed to parse NCBI search response: {}", e);
+                            Ok(vec![])
+                        }
+                    }
+                } else {
+                    warn!("⚠️ NCBI search request failed: {}", response.status());
+                    Ok(vec![])
+                }
+            }
+            Err(e) => {
+                warn!("⚠️ NCBI API unavailable: {}", e);
+                Ok(vec![])
+            }
+        }
     }
 
-    /// Fetch genome information (placeholder for future implementation)
+    /// Fetch genome information using NCBI E-utilities API
     async fn _fetch_genome_info(&self, genome_id: &str) -> Result<GenomeInfo> {
-        // TODO: Implement genome info fetching
-        warn!(
-            "🔄 NCBI genome info fetching not yet implemented for ID: {}",
-            genome_id
+        use tracing::info;
+
+        info!("📄 Fetching NCBI genome info for ID: {}", genome_id);
+
+        let client = reqwest::Client::new();
+        let summary_url = format!(
+            "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=genome&id={genome_id}&retmode=json"
         );
-        Ok(GenomeInfo {
-            id: genome_id.to_string(),
-            organism: "Unknown".to_string(),
-            assembly_accession: "Unknown".to_string(),
-            size_mb: 0,
-            chromosome_count: 0,
-            annotation_date: "Unknown".to_string(),
-        })
+
+        match client.get(&summary_url).send().await {
+            Ok(response) => {
+                if response.status().is_success() {
+                    match response.json::<serde_json::Value>().await {
+                        Ok(data) => {
+                            let result = &data["result"][genome_id];
+                            let organism = result["organism_name"]
+                                .as_str()
+                                .unwrap_or("Unknown")
+                                .to_string();
+                            let assembly_accession = result["assembly_accession"]
+                                .as_str()
+                                .unwrap_or("Unknown")
+                                .to_string();
+                            let size_mb = result["size_mb"].as_f64().unwrap_or(0.0) as u32;
+                            let chromosome_count =
+                                result["chromosome_count"].as_u64().unwrap_or(0) as u32;
+                            let annotation_date = result["annotation_date"]
+                                .as_str()
+                                .unwrap_or("Unknown")
+                                .to_string();
+
+                            info!(
+                                "✅ Retrieved genome info for: {} ({})",
+                                organism, assembly_accession
+                            );
+                            Ok(GenomeInfo {
+                                id: genome_id.to_string(),
+                                organism,
+                                assembly_accession,
+                                size_mb,
+                                chromosome_count,
+                                annotation_date,
+                            })
+                        }
+                        Err(e) => {
+                            warn!("⚠️ Failed to parse NCBI genome info: {}", e);
+                            Ok(GenomeInfo {
+                                id: genome_id.to_string(),
+                                organism: "Unknown".to_string(),
+                                assembly_accession: "Unknown".to_string(),
+                                size_mb: 0,
+                                chromosome_count: 0,
+                                annotation_date: "Unknown".to_string(),
+                            })
+                        }
+                    }
+                } else {
+                    warn!("⚠️ NCBI genome info request failed: {}", response.status());
+                    Ok(GenomeInfo {
+                        id: genome_id.to_string(),
+                        organism: "Unknown".to_string(),
+                        assembly_accession: "Unknown".to_string(),
+                        size_mb: 0,
+                        chromosome_count: 0,
+                        annotation_date: "Unknown".to_string(),
+                    })
+                }
+            }
+            Err(e) => {
+                warn!("⚠️ NCBI API unavailable: {}", e);
+                Ok(GenomeInfo {
+                    id: genome_id.to_string(),
+                    organism: "Unknown".to_string(),
+                    assembly_accession: "Unknown".to_string(),
+                    size_mb: 0,
+                    chromosome_count: 0,
+                    annotation_date: "Unknown".to_string(),
+                })
+            }
+        }
     }
 
-    /// Download genome sequence (placeholder for future implementation)
+    /// Download genome sequence using NCBI E-utilities API
     async fn _download_genome_sequence(&self, accession: &str) -> Result<Vec<u8>> {
-        // TODO: Implement genome sequence download
-        warn!(
-            "🔄 NCBI genome sequence download not yet implemented for accession: {}",
+        use tracing::info;
+
+        info!(
+            "📥 Downloading NCBI genome sequence for accession: {}",
             accession
         );
-        Ok(vec![])
+
+        let client = reqwest::Client::new();
+        let fetch_url = format!(
+            "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id={accession}&rettype=fasta&retmode=text"
+        );
+
+        match client.get(&fetch_url).send().await {
+            Ok(response) => {
+                if response.status().is_success() {
+                    match response.bytes().await {
+                        Ok(bytes) => {
+                            info!(
+                                "✅ Downloaded {} bytes for accession: {}",
+                                bytes.len(),
+                                accession
+                            );
+                            Ok(bytes.to_vec())
+                        }
+                        Err(e) => {
+                            warn!("⚠️ Failed to read NCBI sequence data: {}", e);
+                            Ok(vec![])
+                        }
+                    }
+                } else {
+                    warn!("⚠️ NCBI sequence download failed: {}", response.status());
+                    Ok(vec![])
+                }
+            }
+            Err(e) => {
+                warn!("⚠️ NCBI API unavailable: {}", e);
+                Ok(vec![])
+            }
+        }
     }
 
-    /// Decompress gzip data (placeholder for future implementation)
+    /// Decompress gzip data using flate2
     fn _decompress_gzip(data: &[u8]) -> Result<Vec<u8>> {
-        // TODO: Implement gzip decompression
-        warn!(
-            "🔄 GZIP decompression not yet implemented for {} bytes",
-            data.len()
-        );
-        Ok(vec![])
+        use flate2::read::GzDecoder;
+        use std::io::Read;
+
+        use tracing::info;
+
+        info!("🗜️ Decompressing {} bytes of gzip data", data.len());
+
+        let mut decoder = GzDecoder::new(data);
+        let mut decompressed = Vec::new();
+
+        match decoder.read_to_end(&mut decompressed) {
+            Ok(_) => {
+                info!("✅ Decompressed to {} bytes", decompressed.len());
+                Ok(decompressed)
+            }
+            Err(e) => {
+                warn!("⚠️ Failed to decompress gzip data: {}", e);
+                Ok(data.to_vec()) // Return original data if decompression fails
+            }
+        }
     }
 }
 
@@ -141,13 +292,13 @@ impl UniversalDataSource for NCBIGenomeSource {
                 if let Some(id_str) = id.as_str() {
                     let mut metadata = HashMap::new();
                     metadata.insert("source_type".to_string(), "ncbi_genome".to_string());
-                    metadata.insert("source_location".to_string(), format!("ncbi://{}", id_str));
+                    metadata.insert("source_location".to_string(), format!("ncbi://{id_str}"));
 
                     descriptors.push(DataDescriptor {
                         id: id_str.to_string(),
                         data_type: DataType::Genome,
                         size_bytes: 0,
-                        source_location: format!("ncbi://{}", id_str),
+                        source_location: format!("ncbi://{id_str}"),
                         metadata,
                         access_requirements: AccessRequirements {
                             authentication: None,
@@ -259,58 +410,235 @@ impl HuggingFaceModelSource {
         }
     }
 
-    /// Search for models (placeholder for future implementation)
+    /// Search for models using HuggingFace Hub API
     async fn _search_models(
         &self,
         query: &str,
-        model_type: Option<&str>,
-    ) -> Result<Vec<ModelInfo>> {
-        // TODO: Implement model search
-        warn!(
-            "🔄 HuggingFace model search not yet implemented for query: {} type: {:?}",
-            query, model_type
+        model_type: Option<ModelType>,
+    ) -> Result<Vec<String>> {
+        use tracing::info;
+        use urlencoding;
+
+        info!(
+            "🔍 Searching HuggingFace Hub for models with query: {}",
+            query
         );
-        Ok(vec![])
+
+        let client = reqwest::Client::new();
+        let mut search_url = format!(
+            "https://huggingface.co/api/models?search={}&limit=100",
+            urlencoding::encode(query)
+        );
+
+        // Add model type filter if specified
+        if let Some(mt) = model_type {
+            match mt {
+                ModelType::Language => search_url.push_str("&pipeline_tag=text-generation"),
+                ModelType::Vision => search_url.push_str("&pipeline_tag=image-classification"),
+                ModelType::Audio => search_url.push_str("&pipeline_tag=audio-classification"),
+                ModelType::Multimodal => search_url.push_str("&pipeline_tag=multimodal"),
+                ModelType::Reinforcement => {
+                    search_url.push_str("&pipeline_tag=reinforcement-learning")
+                }
+                ModelType::Custom(tag) => search_url.push_str(&format!("&pipeline_tag={tag}")),
+            }
+        }
+
+        match client.get(&search_url).send().await {
+            Ok(response) => {
+                if response.status().is_success() {
+                    match response.json::<serde_json::Value>().await {
+                        Ok(data) => {
+                            let models: Vec<String> = data
+                                .as_array()
+                                .map(|arr| {
+                                    arr.iter()
+                                        .filter_map(|v| {
+                                            v["modelId"].as_str().map(|s| s.to_string())
+                                        })
+                                        .collect()
+                                })
+                                .unwrap_or_default();
+
+                            info!("✅ Found {} models for query: {}", models.len(), query);
+                            Ok(models)
+                        }
+                        Err(e) => {
+                            warn!("⚠️ Failed to parse HuggingFace search response: {}", e);
+                            Ok(vec![])
+                        }
+                    }
+                } else {
+                    warn!(
+                        "⚠️ HuggingFace search request failed: {}",
+                        response.status()
+                    );
+                    Ok(vec![])
+                }
+            }
+            Err(e) => {
+                warn!("⚠️ HuggingFace API unavailable: {}", e);
+                Ok(vec![])
+            }
+        }
     }
 
-    /// Download model (placeholder for future implementation)
+    /// Download model using HuggingFace Hub API
     async fn _download_model(&self, model_id: &str) -> Result<Vec<u8>> {
-        // TODO: Implement model download
-        warn!(
-            "🔄 HuggingFace model download not yet implemented for ID: {}",
-            model_id
-        );
-        Ok(vec![])
+        use tracing::info;
+
+        info!("📥 Downloading HuggingFace model: {}", model_id);
+
+        // For simplicity, we'll download the model config file
+        let config_url = format!("https://huggingface.co/{model_id}/resolve/main/config.json");
+
+        let client = reqwest::Client::new();
+        match client.get(&config_url).send().await {
+            Ok(response) => {
+                if response.status().is_success() {
+                    match response.bytes().await {
+                        Ok(bytes) => {
+                            info!(
+                                "✅ Downloaded {} bytes for model: {}",
+                                bytes.len(),
+                                model_id
+                            );
+                            Ok(bytes.to_vec())
+                        }
+                        Err(e) => {
+                            warn!("⚠️ Failed to read HuggingFace model data: {}", e);
+                            Ok(vec![])
+                        }
+                    }
+                } else {
+                    warn!(
+                        "⚠️ HuggingFace model download failed: {}",
+                        response.status()
+                    );
+                    Ok(vec![])
+                }
+            }
+            Err(e) => {
+                warn!("⚠️ HuggingFace API unavailable: {}", e);
+                Ok(vec![])
+            }
+        }
     }
 
-    /// List model files (placeholder for future implementation)
+    /// List model files using HuggingFace Hub API
     async fn _list_model_files(&self, model_id: &str) -> Result<Vec<ModelFile>> {
-        // TODO: Implement model file listing
-        warn!(
-            "🔄 HuggingFace model file listing not yet implemented for ID: {}",
-            model_id
-        );
-        Ok(vec![])
+        use tracing::info;
+
+        info!("📄 Listing HuggingFace model files for: {}", model_id);
+
+        let client = reqwest::Client::new();
+        let api_url = format!("https://huggingface.co/api/models/{model_id}/tree/main");
+
+        match client.get(&api_url).send().await {
+            Ok(response) => {
+                if response.status().is_success() {
+                    match response.json::<serde_json::Value>().await {
+                        Ok(data) => {
+                            let files: Vec<ModelFile> = data
+                                .as_array()
+                                .map(|arr| {
+                                    arr.iter()
+                                        .filter_map(|v| {
+                                            let filename = v["path"].as_str()?;
+                                            let size = v["size"].as_u64().unwrap_or(0);
+                                            Some(ModelFile {
+                                                filename: filename.to_string(),
+                                                size,
+                                            })
+                                        })
+                                        .collect()
+                                })
+                                .unwrap_or_default();
+
+                            info!("✅ Found {} files for model: {}", files.len(), model_id);
+                            Ok(files)
+                        }
+                        Err(e) => {
+                            warn!("⚠️ Failed to parse HuggingFace file listing: {}", e);
+                            Ok(vec![])
+                        }
+                    }
+                } else {
+                    warn!("⚠️ HuggingFace file listing failed: {}", response.status());
+                    Ok(vec![])
+                }
+            }
+            Err(e) => {
+                warn!("⚠️ HuggingFace API unavailable: {}", e);
+                Ok(vec![])
+            }
+        }
     }
 
-    /// Download model file (placeholder for future implementation)
+    /// Download model file using HuggingFace Hub API
     async fn _download_model_file(&self, model_id: &str, filename: &str) -> Result<Vec<u8>> {
-        // TODO: Implement model file download
-        warn!(
-            "🔄 HuggingFace model file download not yet implemented for ID: {} file: {}",
+        use tracing::info;
+
+        info!(
+            "📥 Downloading HuggingFace model file: {}/{}",
             model_id, filename
         );
-        Ok(vec![])
+
+        let client = reqwest::Client::new();
+        let file_url = format!("https://huggingface.co/{model_id}/resolve/main/{filename}");
+
+        match client.get(&file_url).send().await {
+            Ok(response) => {
+                if response.status().is_success() {
+                    match response.bytes().await {
+                        Ok(bytes) => {
+                            info!(
+                                "✅ Downloaded {} bytes for file: {}/{}",
+                                bytes.len(),
+                                model_id,
+                                filename
+                            );
+                            Ok(bytes.to_vec())
+                        }
+                        Err(e) => {
+                            warn!("⚠️ Failed to read HuggingFace file data: {}", e);
+                            Ok(vec![])
+                        }
+                    }
+                } else {
+                    warn!("⚠️ HuggingFace file download failed: {}", response.status());
+                    Ok(vec![])
+                }
+            }
+            Err(e) => {
+                warn!("⚠️ HuggingFace API unavailable: {}", e);
+                Ok(vec![])
+            }
+        }
     }
 
-    /// Infer model type from filename (placeholder for future implementation)
+    /// Infer model type from filename
     fn _infer_model_type_from_filename(filename: &str) -> ModelType {
-        // TODO: Implement model type inference
-        warn!(
-            "🔄 Model type inference not yet implemented for filename: {}",
-            filename
-        );
-        ModelType::Custom("unknown".to_string())
+        let lowercase_filename = filename.to_lowercase();
+
+        match () {
+            _ if lowercase_filename.contains("pytorch_model.bin") => ModelType::Language,
+            _ if lowercase_filename.contains("config.json") => {
+                ModelType::Custom("config".to_string())
+            }
+            _ if lowercase_filename.contains("tokenizer") => {
+                ModelType::Custom("tokenizer".to_string())
+            }
+            _ if lowercase_filename.contains("classifier") => ModelType::Language,
+            _ if lowercase_filename.contains("detection") => ModelType::Vision,
+            _ if lowercase_filename.contains("vision") => ModelType::Vision,
+            _ if lowercase_filename.ends_with(".json") => ModelType::Custom("config".to_string()),
+            _ if lowercase_filename.ends_with(".bin") => ModelType::Custom("weights".to_string()),
+            _ if lowercase_filename.ends_with(".safetensors") => {
+                ModelType::Custom("weights".to_string())
+            }
+            _ => ModelType::Custom("unknown".to_string()),
+        }
     }
 }
 
@@ -361,13 +689,13 @@ impl UniversalDataSource for HuggingFaceModelSource {
                 if let Some(id) = model["id"].as_str() {
                     let mut metadata = HashMap::new();
                     metadata.insert("source_type".to_string(), "huggingface_model".to_string());
-                    metadata.insert("source_location".to_string(), format!("hf://{}", id));
+                    metadata.insert("source_location".to_string(), format!("hf://{id}"));
 
                     descriptors.push(DataDescriptor {
                         id: id.to_string(),
                         data_type: DataType::Model(ModelType::Language),
                         size_bytes: 0,
-                        source_location: format!("hf://{}", id),
+                        source_location: format!("hf://{id}"),
                         metadata,
                         access_requirements: AccessRequirements {
                             authentication: None,

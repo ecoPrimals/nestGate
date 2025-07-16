@@ -236,7 +236,7 @@ impl EcosystemDiscovery {
 
         // Create UDP socket for mDNS
         let socket = UdpSocket::bind("0.0.0.0:0").await.map_err(|e| {
-            crate::types::AutomationError::NetworkError(format!("Failed to bind UDP socket: {}", e))
+            crate::types::AutomationError::NetworkError(format!("Failed to bind UDP socket: {e}"))
         })?;
 
         // Join mDNS multicast group
@@ -251,7 +251,7 @@ impl EcosystemDiscovery {
             })
             .parse::<SocketAddr>()
             .map_err(|e| {
-                crate::types::AutomationError::NetworkError(format!("Invalid mDNS address: {}", e))
+                crate::types::AutomationError::NetworkError(format!("Invalid mDNS address: {e}"))
             })?;
 
         // Send mDNS query for _nestgate._tcp.local
@@ -364,7 +364,7 @@ impl EcosystemDiscovery {
 
             let task = tokio::spawn(async move {
                 for port in ports {
-                    let url = format!("http://{}:{}/api/v1/status", ip_string, port);
+                    let url = format!("http://{ip_string}:{port}/api/v1/status");
 
                     // Try to connect to see if there's a NestGate instance
                     match reqwest::Client::new()
@@ -381,8 +381,8 @@ impl EcosystemDiscovery {
                         Ok(response) if response.status().is_success() => {
                             // Found a potential NestGate instance
                             return Some(SongbirdInstance {
-                                instance_id: format!("discovered-{}-{}", ip_string, port),
-                                endpoint: format!("http://{}:{}", ip_string, port),
+                                instance_id: format!("discovered-{ip_string}-{port}"),
+                                endpoint: format!("http://{ip_string}:{port}"),
                                 version: "unknown".to_string(),
                                 capabilities: Vec::new(),
                                 last_seen: SystemTime::now(),

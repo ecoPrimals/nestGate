@@ -68,7 +68,7 @@ impl From<nestgate_core::NestGateError> for AutomationError {
             nestgate_core::NestGateError::Authentication(msg) => AutomationError::Service(msg),
             nestgate_core::NestGateError::Authorization(msg) => AutomationError::Service(msg),
             // Handle remaining variants with a catch-all
-            _ => AutomationError::Internal(format!("Unhandled error: {:?}", err)),
+            _ => AutomationError::Internal(format!("Unhandled error: {err:?}")),
         }
     }
 }

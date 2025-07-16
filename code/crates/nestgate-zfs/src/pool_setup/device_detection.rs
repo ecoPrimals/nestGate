@@ -77,19 +77,18 @@ impl DeviceScanner {
             .stderr(Stdio::piped())
             .output()
             .await
-            .map_err(|e| NestGateError::SystemError(format!("Failed to run lsblk: {}", e)))?;
+            .map_err(|e| NestGateError::SystemError(format!("Failed to run lsblk: {e}")))?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(NestGateError::SystemError(format!(
-                "lsblk failed: {}",
-                stderr
+                          return Err(NestGateError::SystemError(format!(
+                "lsblk failed: {stderr}"
             )));
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         let lsblk_output: serde_json::Value = serde_json::from_str(&stdout).map_err(|e| {
-            NestGateError::SystemError(format!("Failed to parse lsblk output: {}", e))
+            NestGateError::SystemError(format!("Failed to parse lsblk output: {e}"))
         })?;
 
         if let Some(blockdevices) = lsblk_output["blockdevices"].as_array() {
@@ -112,7 +111,7 @@ impl DeviceScanner {
         device: &serde_json::Value,
     ) -> CoreResult<Option<StorageDevice>> {
         let device_name = device["name"].as_str().unwrap_or("");
-        let device_path = format!("/dev/{}", device_name);
+        let device_path = format!("/dev/{device_name}");
 
         // Skip if not a disk device
         if device["type"].as_str() != Some("disk") {
@@ -147,9 +146,8 @@ impl DeviceScanner {
         // Check if device is in use
         let in_use = fstype.is_some() || mountpoint.is_some();
         let current_use = if in_use {
-            Some(format!(
-                "fstype: {:?}, mountpoint: {:?}",
-                fstype, mountpoint
+                          Some(format!(
+                "fstype: {fstype:?}, mountpoint: {mountpoint:?}"
             ))
         } else {
             None
@@ -203,7 +201,7 @@ impl DeviceScanner {
         };
 
         let number: f64 = number_part.parse().map_err(|_| {
-            NestGateError::SystemError(format!("Invalid size format: {}", size_str))
+            NestGateError::SystemError(format!("Invalid size format: {size_str}"))
         })?;
 
         let multiplier = match unit_part.to_uppercase().as_str() {
@@ -214,9 +212,8 @@ impl DeviceScanner {
             "T" | "TB" => 1024_u64.pow(4),
             "P" | "PB" => 1024_u64.pow(5),
             _ => {
-                return Err(NestGateError::SystemError(format!(
-                    "Unknown size unit: {}",
-                    unit_part
+                                  return Err(NestGateError::SystemError(format!(
+                    "Unknown size unit: {unit_part}"
                 )))
             }
         };
@@ -257,7 +254,7 @@ impl DeviceScanner {
             .take_while(|c| !c.is_ascii_digit())
             .collect::<String>();
 
-        let rotational_path = format!("/sys/block/{}/queue/rotational", base_device);
+        let rotational_path = format!("/sys/block/{base_device}/queue/rotational");
 
         match tokio::fs::read_to_string(&rotational_path).await {
             Ok(content) => {

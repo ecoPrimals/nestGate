@@ -251,7 +251,7 @@ impl SovereignQualityOrchestrator {
             0.0 // Test failed
         };
 
-        println!("   ✅ Hardcoding Elimination: {:.1}%", score);
+        println!("   ✅ Hardcoding Elimination: {score:.1}%");
         Ok(score)
     }
 
@@ -284,7 +284,7 @@ impl SovereignQualityOrchestrator {
             50.0 // Tests failed
         };
 
-        println!("   ✅ Test Coverage: {:.1}%", score);
+        println!("   ✅ Test Coverage: {score:.1}%");
         Ok(score)
     }
 
@@ -312,7 +312,7 @@ impl SovereignQualityOrchestrator {
             (100.0 - penalty).max(0.0)
         };
 
-        println!("   ✅ Compilation Health: {:.1}%", score);
+        println!("   ✅ Compilation Health: {score:.1}%");
         Ok(score)
     }
 
@@ -348,7 +348,7 @@ impl SovereignQualityOrchestrator {
             }
         };
 
-        println!("   ✅ Performance Stability: {:.1}%", score);
+        println!("   ✅ Performance Stability: {score:.1}%");
         Ok(score)
     }
 
@@ -384,7 +384,7 @@ impl SovereignQualityOrchestrator {
         println!("   Design Patterns: {:.1}%", pattern_adherence * 100.0);
         println!("   Dependency Health: {:.1}%", dependency_health * 100.0);
         println!("   API Consistency: {:.1}%", api_consistency * 100.0);
-        println!("   ✅ Architecture Coherence: {:.1}%", final_score);
+        println!("   ✅ Architecture Coherence: {final_score:.1}%");
 
         Ok(final_score)
     }
@@ -474,7 +474,7 @@ impl SovereignQualityOrchestrator {
 
         let score =
             (error_handling_score + fault_tolerance_score + recovery_capability) / 3.0 * 100.0;
-        println!("   ✅ Resilience Coefficient: {:.1}%", score);
+        println!("   ✅ Resilience Coefficient: {score:.1}%");
         Ok(score)
     }
 
@@ -487,7 +487,7 @@ impl SovereignQualityOrchestrator {
 
         let score =
             (cyclomatic_complexity + readability_score + documentation_clarity) / 3.0 * 100.0;
-        println!("   ✅ Cognitive Complexity: {:.1}%", score);
+        println!("   ✅ Cognitive Complexity: {score:.1}%");
         Ok(score)
     }
 
@@ -500,7 +500,7 @@ impl SovereignQualityOrchestrator {
 
         let score =
             (platform_compatibility + containerization_score + cloud_readiness) / 3.0 * 100.0;
-        println!("   ✅ Deployment Universality: {:.1}%", score);
+        println!("   ✅ Deployment Universality: {score:.1}%");
         Ok(score)
     }
 
@@ -512,7 +512,7 @@ impl SovereignQualityOrchestrator {
         let security_defaults = 0.98;
 
         let score = (encryption_strength + auth_mechanisms + security_defaults) / 3.0 * 100.0;
-        println!("   ✅ Security Posture: {:.1}%", score);
+        println!("   ✅ Security Posture: {score:.1}%");
         Ok(score)
     }
 
@@ -524,7 +524,7 @@ impl SovereignQualityOrchestrator {
         let forward_thinking = 0.91;
 
         let score = (novel_approaches + engineering_excellence + forward_thinking) / 3.0 * 100.0;
-        println!("   ✅ Innovation Coefficient: {:.1}%", score);
+        println!("   ✅ Innovation Coefficient: {score:.1}%");
         Ok(score)
     }
 
@@ -538,7 +538,7 @@ impl SovereignQualityOrchestrator {
 
         let score =
             (code_documentation + api_documentation + user_guides + examples_quality) / 4.0 * 100.0;
-        println!("   ✅ Documentation Completeness: {:.1}%", score);
+        println!("   ✅ Documentation Completeness: {score:.1}%");
         Ok(score)
     }
 
@@ -550,7 +550,7 @@ impl SovereignQualityOrchestrator {
         let refactoring_readiness = 0.91;
 
         let score = (technical_debt + maintainability + refactoring_readiness) / 3.0 * 100.0;
-        println!("   ✅ Sustainability Index: {:.1}%", score);
+        println!("   ✅ Sustainability Index: {score:.1}%");
         Ok(score)
     }
 
@@ -562,7 +562,7 @@ impl SovereignQualityOrchestrator {
         let restart_mechanisms = 0.85;
 
         let score = (auto_recovery + health_monitoring + restart_mechanisms) / 3.0 * 100.0;
-        println!("   ✅ Self-Healing Capability: {:.1}%", score);
+        println!("   ✅ Self-Healing Capability: {score:.1}%");
         Ok(score)
     }
 
@@ -574,7 +574,7 @@ impl SovereignQualityOrchestrator {
         let prediction_accuracy = 0.85;
 
         let score = (proactive_monitoring + trend_analysis + prediction_accuracy) / 3.0 * 100.0;
-        println!("   ✅ Predictive Maintenance: {:.1}%", score);
+        println!("   ✅ Predictive Maintenance: {score:.1}%");
         Ok(score)
     }
 
@@ -586,7 +586,7 @@ impl SovereignQualityOrchestrator {
         let algorithm_adaptability = 0.80;
 
         let score = (quantum_safe_crypto + future_proofing + algorithm_adaptability) / 3.0 * 100.0;
-        println!("   ✅ Quantum Readiness: {:.1}%", score);
+        println!("   ✅ Quantum Readiness: {score:.1}%");
         Ok(score)
     }
 
@@ -598,7 +598,7 @@ impl SovereignQualityOrchestrator {
         let automated_decisions = 0.79;
 
         let score = (ai_assisted_ops + ml_integration + automated_decisions) / 3.0 * 100.0;
-        println!("   ✅ AI Integration Depth: {:.1}%", score);
+        println!("   ✅ AI Integration Depth: {score:.1}%");
         Ok(score)
     }
 

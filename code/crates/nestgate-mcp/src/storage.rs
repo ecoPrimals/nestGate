@@ -147,7 +147,7 @@ impl McpStorageManager {
         volumes
             .get(name)
             .cloned()
-            .ok_or_else(|| Error::storage(format!("Volume not found: {}", name)))
+            .ok_or_else(|| Error::storage(format!("Volume not found: {name}")))
     }
 
     /// Mount a storage volume
@@ -157,13 +157,10 @@ impl McpStorageManager {
         let mut volumes = self.volumes.write().await;
         let volume = volumes
             .get_mut(name)
-            .ok_or_else(|| Error::storage(format!("Volume not found: {}", name)))?;
+            .ok_or_else(|| Error::storage(format!("Volume not found: {name}")))?;
 
         if volume.mounted {
-            return Err(Error::storage(format!(
-                "Volume {} is already mounted",
-                name
-            )));
+            return Err(Error::storage(format!("Volume {name} is already mounted")));
         }
 
         // Simulate mount operation
@@ -180,10 +177,10 @@ impl McpStorageManager {
         let mut volumes = self.volumes.write().await;
         let volume = volumes
             .get_mut(name)
-            .ok_or_else(|| Error::storage(format!("Volume not found: {}", name)))?;
+            .ok_or_else(|| Error::storage(format!("Volume not found: {name}")))?;
 
         if !volume.mounted {
-            return Err(Error::storage(format!("Volume {} is not mounted", name)));
+            return Err(Error::storage(format!("Volume {name} is not mounted")));
         }
 
         // Simulate unmount operation
@@ -200,12 +197,11 @@ impl McpStorageManager {
         let mut volumes = self.volumes.write().await;
         let volume = volumes
             .get(name)
-            .ok_or_else(|| Error::storage(format!("Volume not found: {}", name)))?;
+            .ok_or_else(|| Error::storage(format!("Volume not found: {name}")))?;
 
         if volume.mounted {
             return Err(Error::storage(format!(
-                "Cannot delete mounted volume: {}",
-                name
+                "Cannot delete mounted volume: {name}"
             )));
         }
 
@@ -240,7 +236,7 @@ impl McpStorageManager {
         // Parse size string to bytes
         let size_bytes = volume_spec
             .size_bytes()
-            .map_err(|e| Error::validation(format!("Invalid volume size: {}", e)))?;
+            .map_err(|e| Error::validation(format!("Invalid volume size: {e}")))?;
 
         // Convert biomeOS tier to MCP tier
         let mcp_tier = match volume_spec.tier.to_lowercase().as_str() {
@@ -311,13 +307,13 @@ impl McpStorageManager {
         biome_id: &str,
         volume_name: &str,
     ) -> Result<VolumeInfo> {
-        let volume_key = format!("biomeos-{}-{}", biome_id, volume_name);
+        let volume_key = format!("biomeos-{biome_id}-{volume_name}");
         self.get_volume(&volume_key).await
     }
 
     /// Delete biomeOS volume by biome ID and volume name
     pub async fn delete_biomeos_volume(&self, biome_id: &str, volume_name: &str) -> Result<()> {
-        let volume_key = format!("biomeos-{}-{}", biome_id, volume_name);
+        let volume_key = format!("biomeos-{biome_id}-{volume_name}");
         self.delete_volume(&volume_key).await
     }
 
@@ -328,7 +324,7 @@ impl McpStorageManager {
         let volumes = self.volumes.read().await;
         let biome_volumes: Vec<&VolumeInfo> = volumes
             .values()
-            .filter(|v| v.name.starts_with(&format!("biomeos-{}-", biome_id)))
+            .filter(|v| v.name.starts_with(&format!("biomeos-{biome_id}-")))
             .collect();
 
         let total_size = biome_volumes.iter().map(|v| v.size_bytes).sum();
@@ -357,12 +353,12 @@ impl McpStorageManager {
             biome_id, volume_name, new_size_bytes
         );
 
-        let volume_key = format!("biomeos-{}-{}", biome_id, volume_name);
+        let volume_key = format!("biomeos-{biome_id}-{volume_name}");
         let mut volumes = self.volumes.write().await;
 
         let volume = volumes
             .get_mut(&volume_key)
-            .ok_or_else(|| Error::storage(format!("Volume not found: {}", volume_key)))?;
+            .ok_or_else(|| Error::storage(format!("Volume not found: {volume_key}")))?;
 
         if new_size_bytes < volume.used_bytes {
             return Err(Error::storage(format!(
