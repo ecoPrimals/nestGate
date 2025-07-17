@@ -268,10 +268,11 @@ impl EventCoordinator {
         #[cfg(feature = "streaming-rpc")]
         {
             let _ws_event = crate::websocket::WebSocketEvent {
-                event_id: event.event_id.to_string(),
-                client_id: event.source.clone(),
+                event_id: event.event_id,
+                client_id: uuid::Uuid::new_v4(), // Generate a new UUID for client_id
                 event_type: crate::websocket::WebSocketEventType::Message,
                 data: event.data.clone(),
+                timestamp: std::time::SystemTime::now(),
             };
 
             // In a full implementation, this would be sent to the WebSocket manager

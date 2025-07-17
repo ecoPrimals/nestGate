@@ -9,22 +9,64 @@
 use std::{
     collections::HashMap,
     net::SocketAddr,
-    sync::Arc,
     time::{Duration, SystemTime},
 };
-use tokio::time::{sleep, timeout};
-use tracing::{error, info, warn};
-
-// Import hybrid communication components
+use tokio::time::sleep;
+use tracing::{error, info};
+use anyhow::Result;
 use nestgate_api::{
-    event_coordination::{
-        CoordinatedEvent, CoordinatedEventType, EventCoordinator, EventHandler, EventHandlerType,
-        EventSource, Priority,
-    },
-    mcp_streaming::{McpStreamType, McpStreamingManager, StreamConfig},
-    tarpc_service::{StorageOperation, TarpcClient, TarpcServer, ZfsOperation},
-    websocket::{ClientType, EventType, WebSocketEvent, WebSocketManager},
+    event_coordination::{CoordinatedEvent, CoordinatedEventType, EventCoordinator, EventHandler, Priority},
+    CommunicationManager,
 };
+use serde_json::json;
+use uuid::Uuid;
+use nestgate_core::performance::{StorageOperation, OperationType};
+
+// Mock tarpc types for demo purposes
+struct TarpcServer;
+struct TarpcClient;
+
+impl TarpcServer {
+    fn new(_addr: SocketAddr, _name: String) -> Self {
+        Self
+    }
+    
+    async fn start(&self) -> Result<(), Box<dyn std::error::Error>> {
+        // Mock implementation
+        Ok(())
+    }
+}
+
+impl TarpcClient {
+    fn new(_addr: SocketAddr) -> Self {
+        Self
+    }
+    
+    async fn connect(&self) -> Result<(), Box<dyn std::error::Error>> {
+        // Mock implementation
+        Ok(())
+    }
+    
+    async fn execute_storage_operation(&self, _operation: StorageOperation) -> Result<String, Box<dyn std::error::Error>> {
+        // Mock implementation
+        Ok("Operation completed successfully".to_string())
+    }
+    
+    async fn execute_zfs_operation(&self, _operation: String) -> Result<String, Box<dyn std::error::Error>> {
+        // Mock implementation
+        Ok("ZFS operation completed successfully".to_string())
+    }
+    
+    async fn get_service_health(&self) -> Result<String, Box<dyn std::error::Error>> {
+        // Mock implementation
+        Ok("Service health: OK".to_string())
+    }
+    
+    async fn get_metrics(&self) -> Result<String, Box<dyn std::error::Error>> {
+        // Mock implementation
+        Ok("Metrics: CPU: 25%, Memory: 45%".to_string())
+    }
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -34,19 +76,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("🚀 Starting NestGate Hybrid Communication System Demo");
 
     // Initialize all components
-    let websocket_manager = WebSocketManager::new();
-    let mcp_streaming_manager = McpStreamingManager::new();
-    let event_coordinator = EventCoordinator::new()
-        .with_websocket_manager(websocket_manager.clone())
-        .with_mcp_streaming_manager(mcp_streaming_manager.clone());
+    // let websocket_manager = WebSocketManager::new(); // Disabled - websocket module not available
+    let mcp_streaming_manager = nestgate_api::mcp_streaming::McpStreamingManager::new();
+    let event_coordinator = EventCoordinator::new();
 
     // Start background tasks
-    let _websocket_cleanup = websocket_manager.start_cleanup_task();
+    // let _websocket_cleanup = websocket_manager.start_cleanup_task(); // Disabled - websocket module not available
     let _mcp_cleanup = mcp_streaming_manager.start_cleanup_task();
 
     // Demo 1: WebSocket + JSON for External Client Communication
     info!("📡 Demo 1: WebSocket + JSON External Client Communication");
-    demo_websocket_communication(&websocket_manager).await?;
+    // demo_websocket_communication(&websocket_manager).await?; // Disabled - websocket module not available
 
     // Demo 2: tarpc for Internal Service Communication
     info!("🔧 Demo 2: tarpc Internal Service Communication");
@@ -62,18 +102,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Demo 5: Integrated Hybrid Communication
     info!("🎯 Demo 5: Integrated Hybrid Communication");
-    demo_integrated_hybrid_communication(
-        &websocket_manager,
-        &mcp_streaming_manager,
-        &event_coordinator,
-    )
-    .await?;
+    // demo_integrated_hybrid_communication(
+    //     &websocket_manager,
+    //     &mcp_streaming_manager,
+    //     &event_coordinator,
+    // )
+    // .await?; // Disabled - websocket module not available
 
     info!("✅ Hybrid Communication System Demo Complete!");
     Ok(())
 }
 
 /// Demo WebSocket + JSON communication for external clients
+// Disabled - websocket module not available
+/*
 async fn demo_websocket_communication(
     websocket_manager: &WebSocketManager,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -128,6 +170,7 @@ async fn demo_websocket_communication(
 
     Ok(())
 }
+*/
 
 /// Demo tarpc communication for internal services
 async fn demo_tarpc_communication() -> Result<(), Box<dyn std::error::Error>> {
@@ -148,26 +191,25 @@ async fn demo_tarpc_communication() -> Result<(), Box<dyn std::error::Error>> {
     sleep(Duration::from_millis(100)).await;
 
     // Connect client
-    let client = TarpcClient::connect(server_addr).await?;
+    let client = TarpcClient::new(server_addr);
+    client.connect().await?;
 
-    // Demo storage operations
-    let storage_op = StorageOperation::CreateVolume {
-        name: "demo-volume".to_string(),
-        size: 1073741824, // 1GB
-        tier: "warm".to_string(),
-        options: HashMap::new(),
-    };
+    // Simulate storage operation (without actual ZFS operations for simplicity)
+    info!("Simulating storage operation...");
+    
+    // Create mock storage operation data instead of actual ZFS operations
+    let storage_operation_data = json!({
+        "operation": "get_pool_status",
+        "pool_name": "rpool",
+        "include_status": true,
+        "result": {
+            "status": "ONLINE",
+            "capacity": "75%",
+            "health": "HEALTHY"
+        }
+    });
 
-    let storage_result = client.execute_storage_operation(storage_op).await?;
-    info!("Storage operation result: {:?}", storage_result);
-
-    // Demo ZFS operations
-    let zfs_op = ZfsOperation::GetPoolStatus {
-        pool: "storage-pool".to_string(),
-    };
-
-    let zfs_result = client.execute_zfs_operation(zfs_op).await?;
-    info!("ZFS operation result: {:?}", zfs_result);
+    info!("Storage operation result: {:?}", storage_operation_data);
 
     // Demo health check
     let health = client.get_service_health().await?;
@@ -185,41 +227,39 @@ async fn demo_tarpc_communication() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Demo MCP streaming capabilities
 async fn demo_mcp_streaming(
-    mcp_manager: &McpStreamingManager,
+    mcp_manager: &nestgate_api::mcp_streaming::McpStreamingManager,
 ) -> Result<(), Box<dyn std::error::Error>> {
     info!("Setting up MCP streaming demo...");
 
     // Create storage operation stream
-    let storage_config = StreamConfig {
-        stream_type: McpStreamType::StorageOperations,
-        source: "nestgate-zfs".to_string(),
-        target: "mcp-cluster".to_string(),
+    let storage_config = nestgate_api::mcp_streaming::StreamConfig {
+        stream_type: nestgate_api::mcp_streaming::StreamType::StorageMonitoring,
         buffer_size: 4096,
+        compression: true,
+        encryption: false,
         batch_size: 50,
         flush_interval: Duration::from_millis(100),
-        compression: true,
-        encryption: true,
         metadata: HashMap::new(),
     };
 
-    let storage_stream_id = mcp_manager.create_stream(storage_config).await?;
-    info!("Created storage stream: {}", storage_stream_id);
+    let storage_stream_info = mcp_manager.create_stream(storage_config).await
+        .map_err(|e| format!("Failed to create storage stream: {}", e))?;
+    info!("Created storage stream: {}", storage_stream_info.id);
 
     // Create metrics stream
-    let metrics_config = StreamConfig {
-        stream_type: McpStreamType::MetricsStream,
-        source: "nestgate-core".to_string(),
-        target: "monitoring-service".to_string(),
+    let metrics_config = nestgate_api::mcp_streaming::StreamConfig {
+        stream_type: nestgate_api::mcp_streaming::StreamType::MetricsStreaming,
         buffer_size: 2048,
-        batch_size: 25,
-        flush_interval: Duration::from_secs(1),
         compression: false,
         encryption: false,
+        batch_size: 25,
+        flush_interval: Duration::from_secs(1),
         metadata: HashMap::new(),
     };
 
-    let metrics_stream_id = mcp_manager.create_stream(metrics_config).await?;
-    info!("Created metrics stream: {}", metrics_stream_id);
+    let metrics_stream_info = mcp_manager.create_stream(metrics_config).await
+        .map_err(|e| format!("Failed to create metrics stream: {}", e))?;
+    info!("Created metrics stream: {}", metrics_stream_info.id);
 
     // Send data to streams
     let storage_data = serde_json::json!({
@@ -230,8 +270,9 @@ async fn demo_mcp_streaming(
     });
 
     mcp_manager
-        .send_to_stream(&storage_stream_id, storage_data)
-        .await?;
+        .send_to_stream(&storage_stream_info.id, storage_data)
+        .await
+        .map_err(|e| format!("Failed to send to storage stream: {}", e))?;
 
     let metrics_data = serde_json::json!({
         "cpu_usage": 45.6,
@@ -242,8 +283,9 @@ async fn demo_mcp_streaming(
     });
 
     mcp_manager
-        .send_to_stream(&metrics_stream_id, metrics_data)
-        .await?;
+        .send_to_stream(&metrics_stream_info.id, metrics_data)
+        .await
+        .map_err(|e| format!("Failed to send to metrics stream: {}", e))?;
 
     // Display stream statistics
     let stats = mcp_manager.get_stats();
@@ -254,8 +296,10 @@ async fn demo_mcp_streaming(
     info!("Active streams: {}", streams.len());
 
     // Close streams
-    mcp_manager.close_stream(&storage_stream_id).await?;
-    mcp_manager.close_stream(&metrics_stream_id).await?;
+    mcp_manager.close_stream(&storage_stream_info.id).await
+        .map_err(|e| format!("Failed to close storage stream: {}", e))?;
+    mcp_manager.close_stream(&metrics_stream_info.id).await
+        .map_err(|e| format!("Failed to close metrics stream: {}", e))?;
 
     Ok(())
 }
@@ -268,82 +312,98 @@ async fn demo_event_coordination(
 
     // Register event handlers
     let storage_handler = EventHandler {
-        handler_id: "storage-handler".to_string(),
-        handler_type: EventHandlerType::StorageOperation,
-        event_patterns: vec!["storage".to_string(), "zfs".to_string()],
+        id: Uuid::new_v4(),
+        name: "storage".to_string(),
+        patterns: vec!["storage".to_string(), "zfs".to_string()],
+        active: true,
         priority: Priority::High,
-        metadata: HashMap::new(),
+        config: serde_json::Value::Object(serde_json::Map::new()),
     };
 
-    event_coordinator.register_handler(storage_handler).await?;
+    event_coordinator.register_handler(storage_handler).await
+        .map_err(|e| format!("Failed to register storage handler: {}", e))?;
 
     let websocket_handler = EventHandler {
-        handler_id: "websocket-handler".to_string(),
-        handler_type: EventHandlerType::WebSocket,
-        event_patterns: vec!["all".to_string()],
+        id: Uuid::new_v4(),
+        name: "websocket".to_string(),
+        patterns: vec!["all".to_string()],
+        active: true,
         priority: Priority::Normal,
-        metadata: HashMap::new(),
+        config: serde_json::Value::Object(serde_json::Map::new()),
     };
 
     event_coordinator
         .register_handler(websocket_handler)
-        .await?;
+        .await
+        .map_err(|e| format!("Failed to register websocket handler: {}", e))?;
 
     let health_handler = EventHandler {
-        handler_id: "health-handler".to_string(),
-        handler_type: EventHandlerType::HealthMonitoring,
-        event_patterns: vec!["health".to_string()],
+        id: Uuid::new_v4(),
+        name: "health".to_string(),
+        patterns: vec!["health".to_string()],
+        active: true,
         priority: Priority::Critical,
-        metadata: HashMap::new(),
+        config: serde_json::Value::Object(serde_json::Map::new()),
     };
 
-    event_coordinator.register_handler(health_handler).await?;
+    event_coordinator.register_handler(health_handler).await
+        .map_err(|e| format!("Failed to register health handler: {}", e))?;
 
-    // Emit coordinated events
+    // Test event coordination with storage operation
     let storage_event = CoordinatedEvent {
-        event_id: "coord-storage-001".to_string(),
-        event_type: CoordinatedEventType::VolumeCreated,
-        source: EventSource::System {
-            component: "nestgate-zfs".to_string(),
-        },
-        timestamp: SystemTime::now(),
+        event_id: Uuid::new_v4(),
+        event_type: CoordinatedEventType::StorageOperation,
+        source: "demo_system".to_string(),
         data: serde_json::json!({
-            "volume_name": "production-data",
-            "size": "500GB",
-            "tier": "hot"
+            "operation": "create_volume",
+            "volume_name": "demo-volume",
+            "size": "10GB",
+            "metadata": {},
+            "correlation_id": "storage-op-001",
+            "priority": "high"
         }),
-        metadata: HashMap::new(),
-        correlation_id: Some("storage-op-001".to_string()),
-        priority: Priority::High,
+        timestamp: SystemTime::now(),
     };
 
-    event_coordinator.emit_event(storage_event).await?;
+    event_coordinator.emit_event(storage_event).await
+        .map_err(|e| anyhow::anyhow!("{}", e))?;
 
     let health_event = CoordinatedEvent {
-        event_id: "coord-health-001".to_string(),
-        event_type: CoordinatedEventType::HealthCheckPassed,
-        source: EventSource::System {
-            component: "nestgate-core".to_string(),
-        },
-        timestamp: SystemTime::now(),
+        event_id: Uuid::new_v4(),
+        event_type: CoordinatedEventType::HealthMonitoring,
+        source: "health_monitor".to_string(),
         data: serde_json::json!({
-            "component": "zfs-pool",
+            "check_type": "health_check_passed",
+            "component": "storage_system",
             "status": "healthy",
-            "details": "All disks online"
+            "metadata": {},
+            "correlation_id": null,
+            "priority": "normal"
         }),
-        metadata: HashMap::new(),
-        correlation_id: None,
-        priority: Priority::Normal,
+        timestamp: SystemTime::now(),
     };
 
-    event_coordinator.emit_event(health_event).await?;
+    event_coordinator.emit_event(health_event).await
+        .map_err(|e| anyhow::anyhow!("{}", e))?;
 
-    let alert_event = CoordinatedEvent::alert("warning", "Disk usage approaching 90% threshold");
+    // Create a simple alert event
+    let alert_event = CoordinatedEvent {
+        event_id: Uuid::new_v4(),
+        event_type: CoordinatedEventType::HealthMonitoring,
+        source: "disk_monitor".to_string(),
+        data: serde_json::json!({
+            "alert_type": "warning",
+            "message": "Disk usage approaching 90% threshold",
+            "severity": "warning",
+            "component": "storage"
+        }),
+        timestamp: SystemTime::now(),
+    };
 
-    event_coordinator.emit_event(alert_event).await?;
+    event_coordinator.emit_event(alert_event).await
+        .map_err(|e| anyhow::anyhow!("{}", e))?;
 
-    // Display event statistics
-    let stats = event_coordinator.get_stats();
+    let stats = event_coordinator.get_stats().await;
     info!("Event Coordination Stats: {:?}", stats);
 
     // List handlers
@@ -353,7 +413,9 @@ async fn demo_event_coordination(
     Ok(())
 }
 
-/// Demo integrated hybrid communication
+// Demo integrated hybrid communication
+// Disabled - websocket module not available
+/*
 async fn demo_integrated_hybrid_communication(
     websocket_manager: &WebSocketManager,
     mcp_manager: &McpStreamingManager,
@@ -365,9 +427,7 @@ async fn demo_integrated_hybrid_communication(
 
     // 1. Create MCP stream for storage operations
     let stream_config = StreamConfig {
-        stream_type: McpStreamType::StorageOperations,
-        source: "nestgate-api".to_string(),
-        target: "external-service".to_string(),
+        stream_type: StreamType::StorageMonitoring,
         buffer_size: 8192,
         batch_size: 100,
         flush_interval: Duration::from_millis(50),
@@ -380,68 +440,28 @@ async fn demo_integrated_hybrid_communication(
 
     // 2. Register integrated event handler
     let integrated_handler = EventHandler {
-        handler_id: "integrated-handler".to_string(),
-        handler_type: EventHandlerType::Custom("hybrid".to_string()),
-        event_patterns: vec!["all".to_string()],
+        id: Uuid::new_v4(),
+        name: "integrated-handler".to_string(),
+        patterns: vec!["all".to_string()],
         priority: Priority::High,
-        metadata: HashMap::new(),
+        active: true,
+        config: serde_json::json!({"type": "hybrid"}),
     };
 
     event_coordinator
         .register_handler(integrated_handler)
         .await?;
 
-    // 3. Subscribe to events
-    let mut event_receiver = event_coordinator.subscribe_to_events();
+    // 3. Event subscription removed - using handler-based approach instead
 
-    // 4. Start event processing task
-    let stream_id_clone = stream_id.clone();
-    let mcp_manager_clone = mcp_manager.clone();
-    let websocket_manager_clone = websocket_manager.clone();
-
-    let event_processor = tokio::spawn(async move {
-        while let Ok(event) = event_receiver.recv().await {
-            info!("Processing integrated event: {:?}", event.event_type);
-
-            // Stream to MCP
-            if let Err(e) = mcp_manager_clone
-                .send_to_stream(&stream_id_clone, event.data.clone())
-                .await
-            {
-                warn!("Failed to stream to MCP: {}", e);
-            }
-
-            // Broadcast to WebSocket clients
-            let ws_event = WebSocketEvent {
-                event_id: event.event_id.clone(),
-                event_type: EventType::StorageOperation {
-                    operation: "integrated".to_string(),
-                    path: "/integrated".to_string(),
-                },
-                timestamp: event
-                    .timestamp
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_secs(),
-                source: "integrated-handler".to_string(),
-                data: event.data,
-                targets: None,
-            };
-
-            if let Err(e) = websocket_manager_clone.broadcast_event(ws_event).await {
-                warn!("Failed to broadcast to WebSocket: {}", e);
-            }
-        }
-    });
+    // 4. Event processing through registered handlers (automatic via event coordinator)
 
     // 5. Simulate complex workflow
     for i in 0..5 {
         let workflow_event = CoordinatedEvent {
-            event_id: format!("workflow-{}", i),
-            event_type: CoordinatedEventType::StorageOperationStarted,
-            source: EventSource::System {
-                component: "integrated-demo".to_string(),
-            },
+            event_id: Uuid::new_v4(),
+            event_type: CoordinatedEventType::StorageOperation,
+            source: "integrated-demo".to_string(),
             timestamp: SystemTime::now(),
             data: serde_json::json!({
                 "workflow_step": i,
@@ -449,9 +469,6 @@ async fn demo_integrated_hybrid_communication(
                 "dataset": format!("storage/demo-{}", i),
                 "integrated": true
             }),
-            metadata: HashMap::new(),
-            correlation_id: Some(format!("workflow-{}", i)),
-            priority: Priority::Normal,
         };
 
         event_coordinator.emit_event(workflow_event).await?;
@@ -462,8 +479,7 @@ async fn demo_integrated_hybrid_communication(
 
     // 6. Wait for processing and cleanup
     sleep(Duration::from_secs(2)).await;
-    event_processor.abort();
-    mcp_manager.close_stream(&stream_id).await?;
+    mcp_manager.close_stream(&stream_id.id).await?;
 
     // 7. Display final statistics
     info!("=== FINAL HYBRID COMMUNICATION STATISTICS ===");
@@ -476,3 +492,4 @@ async fn demo_integrated_hybrid_communication(
 
     Ok(())
 }
+*/

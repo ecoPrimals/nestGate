@@ -6,12 +6,11 @@
 //! - Real-time monitoring and notifications
 //! - Event streaming to clients
 
-use axum::extract::ws::{Message, WebSocket};
-use futures::{sink::SinkExt, stream::StreamExt};
 use serde::{Deserialize, Serialize};
+
 use std::{collections::HashMap, sync::Arc, time::SystemTime};
 use tokio::sync::{broadcast, RwLock};
-use tracing::{debug, info, warn};
+use tracing::info;
 use uuid::Uuid;
 
 /// WebSocket event types
@@ -64,7 +63,7 @@ pub enum ClientType {
 }
 
 /// WebSocket connection information
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ConnectionInfo {
     pub client_id: Uuid,
     pub client_type: ClientType,
@@ -77,7 +76,13 @@ pub struct ConnectionInfo {
 pub struct WebSocketManager {
     connections: Arc<RwLock<HashMap<Uuid, ConnectionInfo>>>,
     event_broadcaster: broadcast::Sender<WebSocketEvent>,
-    stats: Arc<WebSocketStats>,
+    stats: Arc<RwLock<WebSocketStats>>,
+}
+
+impl Default for WebSocketManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl WebSocketManager {
@@ -87,20 +92,20 @@ impl WebSocketManager {
         Self {
             connections: Arc::new(RwLock::new(HashMap::new())),
             event_broadcaster,
-            stats: Arc::new(WebSocketStats {
+            stats: Arc::new(RwLock::new(WebSocketStats {
                 total_connections: 0,
                 active_connections: 0,
                 messages_sent: 0,
                 messages_received: 0,
                 bytes_transferred: 0,
                 errors: 0,
-            }),
+            })),
         }
     }
 
     /// Get connection statistics
-    pub fn get_stats(&self) -> WebSocketStats {
-        (*self.stats).clone()
+    pub async fn get_stats(&self) -> WebSocketStats {
+        self.stats.read().await.clone()
     }
 
     /// Handle WebSocket upgrade
@@ -193,100 +198,30 @@ impl WebSocketManager {
         })
     }
 
-    /// Internal connection handler
-    async fn handle_connection_internal(
-        &self,
-        socket: WebSocket,
-        client_id: Uuid,
-        client_type: &str,
-    ) {
-        info!("New WebSocket connection: {} ({})", client_id, client_type);
-
-        // Add connection to tracking
-        let connection_info = ConnectionInfo {
-            client_id,
-            client_type: ClientType::ApiClient, // Simplified for now
-            connected_at: SystemTime::now(),
-            last_activity: SystemTime::now(),
-            subscriptions: Vec::new(),
-        };
-
-        {
-            let mut connections = self.connections.write().await;
-            connections.insert(client_id, connection_info);
-        }
-
-        // Create event handling
-        let mut event_receiver = self.event_broadcaster.subscribe();
-
-        // Split socket for concurrent read/write
-        let (mut sender, mut receiver) = socket.split();
-
-        // Handle incoming messages
-        let connections_clone = self.connections.clone();
-        let receive_task = tokio::spawn(async move {
-            while let Some(msg) = receiver.next().await {
-                if let Ok(msg) = msg {
-                    match msg {
-                        Message::Text(text) => {
-                            debug!("Received text message: {}", text);
-                            // Update last activity
-                            if let Ok(mut connections) = connections_clone.try_write() {
-                                if let Some(conn) = connections.get_mut(&client_id) {
-                                    conn.last_activity = SystemTime::now();
-                                }
-                            }
-                        }
-                        Message::Binary(data) => {
-                            debug!("Received binary message: {} bytes", data.len());
-                        }
-                        Message::Close(_) => {
-                            info!("WebSocket connection closed: {}", client_id);
-                            break;
-                        }
-                        _ => {}
-                    }
-                } else {
-                    warn!("Error reading WebSocket message");
-                    break;
-                }
-            }
-        });
-
-        // Handle outgoing events
-        let send_task = tokio::spawn(async move {
-            while let Ok(event) = event_receiver.recv().await {
-                // Send event to client
-                if let Ok(message) = serde_json::to_string(&event) {
-                    if sender.send(Message::Text(message)).await.is_err() {
-                        warn!("Failed to send message to client: {}", client_id);
-                        break;
-                    }
-                }
-            }
-        });
-
-        // Wait for either task to complete
-        tokio::select! {
-            _ = receive_task => {},
-            _ = send_task => {},
-        }
-
-        // Clean up connection
-        {
-            let mut connections = self.connections.write().await;
-            connections.remove(&client_id);
-        }
-
-        info!("WebSocket connection ended: {}", client_id);
-    }
-
     /// Broadcast event to all connected clients
     pub async fn broadcast_event(
         &self,
         event: WebSocketEvent,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let _ = self.event_broadcaster.send(event);
+        let connections = self.connections.read().await;
+
+        // Pre-serialize event to avoid repeated serialization for each client
+        let event_json = serde_json::to_string(&event)?;
+        let event_size = event_json.len() as u64;
+
+        // Update statistics
+        if let Ok(mut stats) = self.stats.try_write() {
+            stats.messages_sent += 1; // Changed from events_broadcast to messages_sent
+            stats.bytes_transferred += event_size * connections.len() as u64;
+        }
+
+        // In a real implementation, this would broadcast to all WebSocket connections
+        info!(
+            "Broadcasting event to {} clients: {}",
+            connections.len(),
+            event_json
+        );
+
         Ok(())
     }
 

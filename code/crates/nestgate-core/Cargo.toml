@@ -31,6 +31,8 @@ toml = "0.8"
 fastrand = "2.0"
 num_cpus = "1.16"
 gethostname = "0.4"
+rand = "0.8"
+hex = "0.4"
 
 # Enhanced dependencies for advanced integration capabilities
 config = "0.14"

@@ -4,20 +4,18 @@
 //! covering both System Information (Sysinfo) and Compute Needs as specified.
 
 use chrono::Utc;
-use log::info;
 use nestgate_api::handlers::hardware_tuning::{
-    ComputeDiscovery, ComputePriority, PlatformInfo, ProcessManagement, RealtimeMetrics,
-    StorageOptimization, StorageOptimizationRequest, StorageProcessRequest,
-    StorageResourceAllocation, StorageResourceRequest, StorageWorkload, SystemHealth,
-    ToadstoolComputeClient, WorkloadExecution, WorkloadResourceRequirements,
+    ComputeDiscovery, PlatformInfo, RealtimeMetrics, StorageOptimizationRequest,
+    StorageProcessRequest, StorageResourceRequest, StorageWorkload, SystemHealth,
+    ToadstoolComputeClient, WorkloadResourceRequirements,
 };
 use std::collections::HashMap;
-use tokio;
+use tracing::info;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize logging
-    env_logger::init();
+    tracing_subscriber::fmt().with_env_filter("info").init();
 
     info!("🚀 Starting NestGate → ToadStool Integration Demo");
 
@@ -83,7 +81,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Demo Platform Detection: CPU, memory, storage capabilities
 async fn demo_platform_detection(
-    client: &ToadstoolComputeClient,
+    _client: &ToadstoolComputeClient,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("   → Detecting platform capabilities via ToadStool...");
 
@@ -139,7 +137,7 @@ async fn demo_platform_detection(
 
 /// Demo Resource Monitoring: Real-time system metrics
 async fn demo_resource_monitoring(
-    client: &ToadstoolComputeClient,
+    _client: &ToadstoolComputeClient,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("   → Getting real-time system metrics from ToadStool...");
 
@@ -191,7 +189,7 @@ async fn demo_resource_monitoring(
 
 /// Demo Hardware Discovery: Available compute resources
 async fn demo_hardware_discovery(
-    client: &ToadstoolComputeClient,
+    _client: &ToadstoolComputeClient,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("   → Discovering available compute resources...");
 
@@ -260,7 +258,7 @@ async fn demo_hardware_discovery(
 
 /// Demo Health Monitoring: System status and performance
 async fn demo_health_monitoring(
-    client: &ToadstoolComputeClient,
+    _client: &ToadstoolComputeClient,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("   → Checking system health status...");
 
@@ -315,7 +313,7 @@ async fn demo_health_monitoring(
 
 /// Demo Workload Execution: Running storage management processes
 async fn demo_workload_execution(
-    client: &ToadstoolComputeClient,
+    _client: &ToadstoolComputeClient,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("   → Executing storage management workload...");
 
@@ -363,7 +361,7 @@ async fn demo_workload_execution(
 
 /// Demo Resource Allocation: CPU and memory for storage operations
 async fn demo_resource_allocation(
-    client: &ToadstoolComputeClient,
+    _client: &ToadstoolComputeClient,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("   → Allocating resources for storage operations...");
 
@@ -393,7 +391,7 @@ async fn demo_resource_allocation(
 
 /// Demo Process Management: Managing ZFS and storage daemons
 async fn demo_process_management(
-    client: &ToadstoolComputeClient,
+    _client: &ToadstoolComputeClient,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("   → Managing ZFS and storage daemons...");
 
@@ -423,7 +421,7 @@ async fn demo_process_management(
 
 /// Demo Performance Optimization: Compute-intensive storage operations
 async fn demo_performance_optimization(
-    client: &ToadstoolComputeClient,
+    _client: &ToadstoolComputeClient,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("   → Optimizing storage performance...");
 

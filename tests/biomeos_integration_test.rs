@@ -346,6 +346,8 @@ templates:
     assert_eq!(ai_models_volume.provisioner, "nestgate");
     assert!(ai_models_volume
         .protocols
+        .as_ref()
+        .unwrap()
         .contains(&"coordination".to_string()));
 
     // Test enhanced service configuration
@@ -451,7 +453,11 @@ async fn test_volume_provisioning_with_universal_patterns() {
     assert_eq!(volume_spec.size, "1Ti");
     assert_eq!(volume_spec.tier, "warm");
     assert_eq!(volume_spec.provisioner, "nestgate");
-    assert!(volume_spec.protocols.contains(&"coordination".to_string()));
+    assert!(volume_spec
+        .protocols
+        .as_ref()
+        .unwrap()
+        .contains(&"coordination".to_string()));
     assert!(volume_spec.options.is_some());
 
     // Test size parsing
@@ -806,7 +812,11 @@ storage:
     // Verify all returned volumes have nestgate as provisioner
     for volume in nestgate_volumes {
         assert_eq!(volume.provisioner, "nestgate");
-        assert!(volume.protocols.contains(&"coordination".to_string()));
+        assert!(volume
+            .protocols
+            .as_ref()
+            .unwrap()
+            .contains(&"coordination".to_string()));
     }
 }
 

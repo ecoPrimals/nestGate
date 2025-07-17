@@ -126,7 +126,9 @@ impl InstallationWizard {
             })
             .interact_text()?;
 
-        self.config.api_port = port_input.parse().unwrap();
+        self.config.api_port = port_input
+            .parse()
+            .map_err(|e| anyhow::anyhow!("Invalid port number: {}", e))?;
 
         // Universal Primal Orchestration Integration
         let orchestration_integration = Confirm::new()

@@ -13,7 +13,6 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
-    net::SocketAddr,
     sync::{
         atomic::{AtomicU64, Ordering},
         Arc,
@@ -21,11 +20,10 @@ use std::{
     time::{Duration, SystemTime},
 };
 use tokio::{
-    net::{TcpListener, TcpStream},
     sync::{broadcast, RwLock},
-    time::{interval, sleep},
+    time::sleep,
 };
-use tracing::{error, info, warn};
+use tracing::info;
 use uuid::Uuid;
 
 /// Simplified WebSocket-style external communication
@@ -317,13 +315,13 @@ impl HybridCommunicationSystem {
         // Register internal services
         self.internal_manager
             .register_service("nestgate-core".to_string())
-            .await?;
+            .await.map_err(|e| anyhow::anyhow!("{}", e))?;
         self.internal_manager
             .register_service("nestgate-zfs".to_string())
-            .await?;
+            .await.map_err(|e| anyhow::anyhow!("{}", e))?;
         self.internal_manager
             .register_service("nestgate-network".to_string())
-            .await?;
+            .await.map_err(|e| anyhow::anyhow!("{}", e))?;
 
         // Register event coordinators
         self.event_coordinator
@@ -331,14 +329,14 @@ impl HybridCommunicationSystem {
                 "storage-coordinator".to_string(),
                 vec!["storage".to_string(), "zfs".to_string()],
             )
-            .await?;
+            .await.map_err(|e| anyhow::anyhow!("{}", e))?;
 
         self.event_coordinator
             .register_coordinator(
                 "health-coordinator".to_string(),
                 vec!["health".to_string(), "monitoring".to_string()],
             )
-            .await?;
+            .await.map_err(|e| anyhow::anyhow!("{}", e))?;
 
         info!("Hybrid communication system initialized");
         Ok(())
@@ -349,23 +347,23 @@ impl HybridCommunicationSystem {
 
         // Demo 1: External Client Communication (WebSocket + JSON)
         info!("📡 Demo 1: External Client Communication");
-        self.demo_external_communication().await?;
+        self.demo_external_communication().await.map_err(|e| anyhow::anyhow!("{}", e))?;
 
         // Demo 2: Internal Service Communication (tarpc)
         info!("🔧 Demo 2: Internal Service Communication");
-        self.demo_internal_communication().await?;
+        self.demo_internal_communication().await.map_err(|e| anyhow::anyhow!("{}", e))?;
 
         // Demo 3: MCP Streaming
         info!("🌊 Demo 3: MCP Streaming");
-        self.demo_mcp_streaming().await?;
+        self.demo_mcp_streaming().await.map_err(|e| anyhow::anyhow!("{}", e))?;
 
         // Demo 4: Event Coordination
         info!("⚡ Demo 4: Event Coordination");
-        self.demo_event_coordination().await?;
+        self.demo_event_coordination().await.map_err(|e| anyhow::anyhow!("{}", e))?;
 
         // Demo 5: Integrated Workflow
         info!("🎯 Demo 5: Integrated Hybrid Workflow");
-        self.demo_integrated_workflow().await?;
+        self.demo_integrated_workflow().await.map_err(|e| anyhow::anyhow!("{}", e))?;
 
         // Display final statistics
         self.display_statistics().await;
@@ -580,10 +578,10 @@ impl HybridCommunicationSystem {
     async fn demo_integrated_workflow(
         &self,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        // Subscribe to all communication channels
-        let mut external_receiver = self.external_manager.subscribe();
-        let mut stream_receiver = self.streaming_manager.subscribe();
-        let mut event_receiver = self.event_coordinator.subscribe();
+        // Subscribe to all communication channels for monitoring
+        let _external_receiver = self.external_manager.subscribe();
+        let _stream_receiver = self.streaming_manager.subscribe();
+        let _event_receiver = self.event_coordinator.subscribe();
 
         // Create integrated workflow
         let workflow_steps = vec![

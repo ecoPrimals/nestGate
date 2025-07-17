@@ -1,7 +1,7 @@
 //! # NestGate BYOB HTTP API
 //!
 //! REST API endpoints for BYOB storage operations.
-//! Handles storage requests from Songbird coordination layer.
+//! Handles storage requests from orchestration coordination layer.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -20,10 +20,20 @@ use tracing::{error, info, warn};
 use uuid::Uuid;
 
 use nestgate_zfs::byob::{
-    ByobStorageProvider, ByobStorageRequest, ServiceStorageRequirements, TeamStorageQuotas,
+    ByobManager, ByobStorageRequest, ByobStorageResponse,
 };
 
 use crate::routes::AppState;
+
+// Constants for common string values to avoid repeated allocations
+const DEFAULT_STORAGE_QUOTA: &str = "100G";
+const DEFAULT_COMPUTE_QUOTA: &str = "10 cores";
+const DEFAULT_WORKSPACE_QUOTA: &str = "10G";
+const DEFAULT_COMPRESSION: &str = "lz4";
+const ACTIVE_STATUS: &str = "active";
+const BYOB_NETWORK: &str = "byob-network";
+const HEALTHY_STATUS: &str = "healthy";
+const UNAVAILABLE_STATUS: &str = "unavailable";
 
 /// HTTP API error response
 #[derive(Debug, Serialize)]
@@ -282,7 +292,7 @@ fn create_byob_router(_storage_provider: Arc<dyn ByobStorageProvider>) -> Router
         .route("/workspaces/:workspace_id/volumes/:volume_id/projectspace", post(projectspace_workspace_volume))
 }
 
-/// Create BYOB service with ToadStool integration
+/// Create BYOB service with universal compute module integration
 pub fn create_byob_service(storage_provider: Arc<dyn ByobStorageProvider>) -> Router<AppState> {
     // Initialize the API state
     let state = ApiState {
@@ -387,10 +397,12 @@ pub async fn create_team(
     info!("👥 Creating new team: {}", request.name);
 
     let team_id = Uuid::new_v4().to_string();
-    let storage_quota = request.storage_quota.unwrap_or_else(|| "100G".to_string());
+    let storage_quota = request
+        .storage_quota
+        .unwrap_or_else(|| DEFAULT_STORAGE_QUOTA.to_string());
     let compute_quota = request
         .compute_quota
-        .unwrap_or_else(|| "10 cores".to_string());
+        .unwrap_or_else(|| DEFAULT_COMPUTE_QUOTA.to_string());
 
     // Create team state
     let team_state = TeamState {
@@ -644,8 +656,12 @@ pub async fn create_workspace(
 
     let workspace_id = Uuid::new_v4();
     let dataset_name = format!("nestpool/workspaces/{workspace_id}");
-    let storage_quota = request.storage_quota.unwrap_or_else(|| "10G".to_string());
-    let compression = request.compression.unwrap_or_else(|| "lz4".to_string());
+    let storage_quota = request
+        .storage_quota
+        .unwrap_or_else(|| DEFAULT_WORKSPACE_QUOTA.to_string());
+    let compression = request
+        .compression
+        .unwrap_or_else(|| DEFAULT_COMPRESSION.to_string());
 
     // Create ZFS dataset for workspace
     let zfs_args = vec![
@@ -675,7 +691,7 @@ pub async fn create_workspace(
                 id: workspace_id,
                 name: request.name.clone(),
                 team_id: request.team_id.clone(),
-                status: "active".to_string(),
+                status: ACTIVE_STATUS.to_string(),
                 dataset_name: dataset_name.clone(),
                 storage_quota: storage_quota.clone(),
                 compression: compression.clone(),
@@ -886,7 +902,7 @@ pub async fn get_storage_overview(State(_state): State<AppState>) -> impl IntoRe
 /// Get storage health
 pub async fn get_storage_health(State(_state): State<AppState>) -> impl IntoResponse {
     Json(serde_json::json!({
-        "health": "healthy",
+        "health": HEALTHY_STATUS,
         "uptime": "99.9%",
         "timestamp": chrono::Utc::now()
     }))
@@ -905,14 +921,14 @@ pub async fn health() -> impl IntoResponse {
     {
         Ok(output) => {
             let zfs_status = if output.status.success() {
-                "healthy"
+                HEALTHY_STATUS
             } else {
                 "degraded"
             };
             health_checks.insert("zfs".to_string(), zfs_status.to_string());
         }
         Err(_) => {
-            health_checks.insert("zfs".to_string(), "unavailable".to_string());
+            health_checks.insert("zfs".to_string(), UNAVAILABLE_STATUS.to_string());
         }
     }
 
@@ -924,25 +940,28 @@ pub async fn health() -> impl IntoResponse {
     {
         Ok(output) => {
             let disk_status = if output.status.success() {
-                "healthy"
+                HEALTHY_STATUS
             } else {
                 "degraded"
             };
             health_checks.insert("disk_space".to_string(), disk_status.to_string());
         }
         Err(_) => {
-            health_checks.insert("disk_space".to_string(), "unavailable".to_string());
+            health_checks.insert("disk_space".to_string(), UNAVAILABLE_STATUS.to_string());
         }
     }
 
     // Check biomeOS connectivity
-    health_checks.insert("biomeos_integration".to_string(), "healthy".to_string());
+    health_checks.insert(
+        "biomeos_integration".to_string(),
+        HEALTHY_STATUS.to_string(),
+    );
 
     // Check API state
-    health_checks.insert("api_state".to_string(), "healthy".to_string());
+    health_checks.insert("api_state".to_string(), HEALTHY_STATUS.to_string());
 
-    let overall_status = if health_checks.values().all(|v| v == "healthy") {
-        "healthy"
+    let overall_status = if health_checks.values().all(|v| v == HEALTHY_STATUS) {
+        HEALTHY_STATUS
     } else {
         "degraded"
     };
@@ -969,22 +988,14 @@ pub async fn provision_storage(
         _request.deployment_id
     );
 
-    // Create mock storage request for demonstration
+    // Create storage request for ZFS provisioning
     let _storage_request = ByobStorageRequest {
         deployment_id: _request.deployment_id,
         team_id: _request.team_id.clone(),
         deployment_name: _request.deployment_name.clone(),
         storage_requirements: _request.storage_requirements.clone(),
         team_quotas: _request.team_quotas.clone(),
-        network_config: nestgate_zfs::byob::StorageNetworkConfig {
-            network_name: "byob-network".to_string(),
-            nfs_config: Some(nestgate_zfs::byob::NfsExportConfig {
-                export_path: format!("/nestpool/teams/{}", _request.team_id),
-                allowed_hosts: vec!["*".to_string()],
-                options: std::collections::HashMap::new(),
-            }),
-            smb_config: None,
-        },
+        config: std::collections::HashMap::new(),
         created_at: Utc::now(),
     };
 
@@ -1047,13 +1058,42 @@ pub async fn list_storage(
     Query(query): Query<ListQuery>,
 ) -> impl IntoResponse {
     if let Some(team_id) = query.team_id {
-        // Mock team storage listing
-        let deployments = vec![serde_json::json!({
+        // Initialize ZFS manager for real storage listing
+        let zfs_config = nestgate_zfs::config::ZfsConfig::default();
+        let zfs_manager = match nestgate_zfs::ZfsManager::new(zfs_config).await {
+            Ok(manager) => manager,
+            Err(e) => {
+                tracing::error!("Failed to initialize ZFS manager: {}", e);
+                return ErrorResponse::new("ZFS_INIT_FAILED", &e.to_string()).into_response();
+            }
+        };
+
+        // List datasets for the team
+        let team_dataset_prefix = format!("teams/{}", team_id);
+        let datasets = match zfs_manager.dataset_manager.list_datasets().await {
+            Ok(datasets) => datasets,
+            Err(e) => {
+                tracing::error!("Failed to list datasets: {}", e);
+                return ErrorResponse::new("DATASET_LIST_FAILED", &e.to_string()).into_response();
+            }
+        };
+
+        // Filter datasets for this team and convert to deployments
+        let mut deployments = Vec::new();
+        for dataset in datasets {
+            if dataset.name.starts_with(&team_dataset_prefix) {
+                deployments.push(serde_json::json!({
             "deployment_id": uuid::Uuid::new_v4(),
             "team_id": team_id,
+                    "dataset_name": dataset.name,
             "status": "active",
+                    "used_space": dataset.used_space,
+                    "total_space": dataset.used_space + dataset.available_space,
             "timestamp": chrono::Utc::now()
-        })];
+                }));
+            }
+        }
+
         let limited_deployments = if let Some(limit) = query.limit {
             deployments.into_iter().take(limit as usize).collect()
         } else {
@@ -1099,7 +1139,7 @@ pub async fn get_storage_status(
                 .find(|ds| ds.name.contains(&deployment_id.to_string()))
                 .map(|ds| {
                     let health = if ds.tier == nestgate_core::StorageTier::Hot {
-                        "healthy"
+                        HEALTHY_STATUS
                     } else {
                         "degraded"
                     };
@@ -1142,9 +1182,69 @@ pub async fn remove_storage(
     State(_state): State<AppState>,
     Path(deployment_id): Path<Uuid>,
 ) -> impl IntoResponse {
-    // Mock storage removal
-    tracing::info!("Storage removed successfully (mock): {}", deployment_id);
+    // Initialize ZFS manager for real storage removal
+    let zfs_config = nestgate_zfs::config::ZfsConfig::default();
+    let zfs_manager = match nestgate_zfs::ZfsManager::new(zfs_config).await {
+        Ok(manager) => manager,
+        Err(e) => {
+            tracing::error!("Failed to initialize ZFS manager: {}", e);
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({
+                    "error": "ZFS initialization failed",
+                    "details": e.to_string()
+                })),
+            ).into_response();
+        }
+    };
+
+    // In a real implementation, we would need to map deployment_id to dataset name
+    // For now, we'll try to find and remove the dataset
+    let datasets = match zfs_manager.dataset_manager.list_datasets().await {
+        Ok(datasets) => datasets,
+        Err(e) => {
+            tracing::error!("Failed to list datasets for removal: {}", e);
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({
+                    "error": "Failed to list datasets",
+                    "details": e.to_string()
+                })),
+            ).into_response();
+        }
+    };
+
+    // Find dataset associated with this deployment (simplified approach)
+    let dataset_to_remove = datasets.iter()
+        .find(|dataset| dataset.name.contains(&deployment_id.to_string()));
+
+    if let Some(dataset) = dataset_to_remove {
+        match zfs_manager.dataset_manager.delete_dataset(&dataset.name).await {
+            Ok(_) => {
+                tracing::info!("Storage removed successfully: {}", deployment_id);
     StatusCode::NO_CONTENT.into_response()
+            }
+            Err(e) => {
+                tracing::error!("Failed to remove storage: {}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({
+                        "error": "Failed to remove storage",
+                        "details": e.to_string()
+                    })),
+                ).into_response()
+            }
+        }
+    } else {
+        tracing::warn!("Storage not found for deployment: {}", deployment_id);
+        (
+            StatusCode::NOT_FOUND,
+            Json(json!({
+                "error": "Storage not found",
+                "deployment_id": deployment_id
+            })),
+        ).into_response()
+    }
 }
 
 /// Get storage usage for a deployment
@@ -1152,16 +1252,71 @@ pub async fn get_storage_usage(
     State(_state): State<AppState>,
     Path(deployment_id): Path<Uuid>,
 ) -> impl IntoResponse {
-    // Mock storage usage response
+    // Initialize ZFS manager for real storage usage
+    let zfs_config = nestgate_zfs::config::ZfsConfig::default();
+    let zfs_manager = match nestgate_zfs::ZfsManager::new(zfs_config).await {
+        Ok(manager) => manager,
+        Err(e) => {
+            tracing::error!("Failed to initialize ZFS manager: {}", e);
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({
+                    "error": "ZFS initialization failed",
+                    "details": e.to_string()
+                })),
+            ).into_response();
+        }
+    };
+
+    // Get datasets and find the one for this deployment
+    let datasets = match zfs_manager.dataset_manager.list_datasets().await {
+        Ok(datasets) => datasets,
+        Err(e) => {
+            tracing::error!("Failed to list datasets for usage: {}", e);
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({
+                    "error": "Failed to list datasets",
+                    "details": e.to_string()
+                })),
+            ).into_response();
+        }
+    };
+
+    // Find dataset associated with this deployment
+    let dataset = datasets.iter()
+        .find(|dataset| dataset.name.contains(&deployment_id.to_string()));
+
+    if let Some(dataset) = dataset {
+        let total_gb = (dataset.used_space + dataset.available_space) / (1024 * 1024 * 1024);
+        let used_gb = dataset.used_space / (1024 * 1024 * 1024);
+        let available_gb = total_gb - used_gb;
+        let usage_percent = if total_gb > 0 {
+            (used_gb as f64 / total_gb as f64) * 100.0
+        } else {
+            0.0
+        };
+
     let usage = serde_json::json!({
         "deployment_id": deployment_id,
-        "total_gb": 100,
-        "used_gb": 45,
-        "available_gb": 55,
-        "usage_percent": 45.0,
+            "dataset_name": dataset.name,
+            "total_gb": total_gb,
+            "used_gb": used_gb,
+            "available_gb": available_gb,
+            "usage_percent": usage_percent,
+            "tier": dataset.tier,
         "timestamp": chrono::Utc::now()
     });
     Json(usage).into_response()
+    } else {
+        (
+            StatusCode::NOT_FOUND,
+            Json(json!({
+                "error": "Storage not found",
+                "deployment_id": deployment_id
+            })),
+        ).into_response()
+    }
 }
 
 /// Create a snapshot for a deployment
@@ -1885,7 +2040,7 @@ pub async fn share_workspace(
     Json(serde_json::json!({
         "status": "success",
         "share_id": "share-123",
-        "message": "Workspace shared (stub)"
+        "message": "Workspace sharing functionality not yet implemented"
     }))
 }
 
@@ -1895,7 +2050,7 @@ pub async fn unshare_workspace(
 ) -> impl IntoResponse {
     Json(serde_json::json!({
         "status": "success",
-        "message": "Workspace unshared (stub)"
+        "message": "Workspace unsharing functionality not yet implemented"
     }))
 }
 
@@ -1916,7 +2071,7 @@ pub async fn update_workspace_permissions(
 ) -> impl IntoResponse {
     Json(serde_json::json!({
         "status": "success",
-        "message": "Workspace permissions updated (stub)"
+        "message": "Workspace permissions functionality not yet implemented"
     }))
 }
 
@@ -1935,7 +2090,7 @@ pub async fn get_workspace_health(
     Path(_workspace_id): Path<Uuid>,
 ) -> impl IntoResponse {
     Json(serde_json::json!({
-        "status": "healthy",
+        "status": HEALTHY_STATUS,
         "last_check": "2024-01-01T00:00:00Z",
         "issues": []
     }))
@@ -2545,7 +2700,7 @@ pub async fn create_workspace_secret(
     Json(serde_json::json!({
         "status": "success",
         "secret_id": "secret-123",
-        "message": "Workspace secret created (stub)"
+        "message": "Workspace secret management functionality not yet implemented"
     }))
 }
 
@@ -2566,7 +2721,7 @@ pub async fn update_workspace_secret(
 ) -> impl IntoResponse {
     Json(serde_json::json!({
         "status": "success",
-        "message": "Workspace secret updated (stub)"
+        "message": "Workspace secret management functionality not yet implemented"
     }))
 }
 
@@ -2576,7 +2731,7 @@ pub async fn delete_workspace_secret(
 ) -> impl IntoResponse {
     Json(serde_json::json!({
         "status": "success",
-        "message": "Workspace secret deleted (stub)"
+        "message": "Workspace secret management functionality not yet implemented"
     }))
 }
 
@@ -2660,7 +2815,7 @@ pub async fn get_workspace_volume(
         "volume_id": volume_id,
         "name": "Volume 1",
         "size": "100GB",
-        "status": "healthy"
+        "status": HEALTHY_STATUS
     }))
 }
 
@@ -4073,6 +4228,23 @@ pub async fn delete_workspace_volume_project(
     }))
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApiError {
+    pub error: String,
+    pub message: String,
+    pub timestamp: String,
+}
+
+impl ApiError {
+    pub fn new(error: &str, message: &str) -> Self {
+        Self {
+            error: error.to_string(),
+            message: message.to_string(),
+            timestamp: chrono::Utc::now().to_rfc3339(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -4082,6 +4254,7 @@ mod tests {
     };
 
     // Mock storage provider for testing
+    #[allow(dead_code)]
     struct MockStorageProvider;
 
     #[async_trait::async_trait]

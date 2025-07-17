@@ -695,6 +695,10 @@ mod tests {
 
     #[test]
     fn test_config_helpers() {
+        // Ensure clean environment for test
+        std::env::remove_var("NESTGATE_API_SERVICE");
+        std::env::remove_var("NESTGATE_API_SERVICE_NAME");
+
         let api_service = config_helpers::get_api_service_name();
         assert_eq!(api_service, "nestgate-api"); // Default when env var not set
 
@@ -708,5 +712,8 @@ mod tests {
         let api_service = config_helpers::get_api_service_name();
         assert_eq!(api_service, "custom-api");
         std::env::remove_var("NESTGATE_API_SERVICE");
+
+        // Ensure environment is clean for other tests
+        std::env::remove_var("NESTGATE_API_SERVICE_NAME");
     }
 }

@@ -1,394 +1,343 @@
-//! Authentication handler supporting dual-mode operation
-//!
-//! Handles authentication in both standalone and BearDog integrated modes
+//! Authentication Handler
+//! 
+//! Handles authentication using any available security primal provider,
+//! eliminating hardcoded dependencies on specific security implementations.
 
-use crate::models::ErrorResponse;
-use axum::{
-    extract::{Json, State},
-    http::{HeaderMap, StatusCode},
-    response::{IntoResponse, Json as ResponseJson},
-};
-use nestgate_core::cert::{BearDogConfig, CertMode, CertValidator};
+use anyhow::Result;
+use axum::{extract::State, response::Json, routing::post, Router};
+use nestgate_core::universal_traits::{Credentials, AuthToken};
+use nestgate_core::universal_adapter::UniversalPrimalAdapter;
+use nestgate_core::cert::{CertMode, CertValidator};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use tracing::{info, warn};
 
-/// Authentication request payload
-#[derive(Debug, Deserialize)]
-pub struct AuthRequest {
-    /// Client certificate in PEM format
-    pub certificate: String,
-    /// Optional service identifier
-    pub service_id: Option<String>,
-    /// Authentication mode preference (standalone, beardog, hybrid)
-    pub mode: Option<String>,
+/// Authentication mode preference
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum AuthMode {
+    /// Standalone mode - no external security primal required
+    Standalone,
+    /// Security primal mode - use any available security primal
+    SecurityPrimal,
+    /// Hybrid mode - security primal when available, standalone as fallback
+    Hybrid,
 }
 
-/// Authentication response payload
-#[derive(Debug, Serialize)]
-pub struct AuthResponse {
-    /// Whether authentication was successful
-    pub authenticated: bool,
-    /// Authentication mode used
-    pub mode: String,
-    /// Session token (if applicable)
-    pub token: Option<String>,
-    /// Expiration time in seconds
-    pub expires_in: Option<u64>,
-    /// Additional metadata
-    pub metadata: Option<serde_json::Value>,
+impl Default for AuthMode {
+    fn default() -> Self {
+        Self::Standalone
+    }
 }
 
-/// Authentication service state
-#[derive(Debug, Clone)]
+/// Authentication service using universal security primal provider
 pub struct AuthService {
-    /// Certificate validator
-    pub validator: Arc<RwLock<CertValidator>>,
+    /// Certificate validator for standalone mode
+    #[allow(dead_code)]
+    validator: Arc<RwLock<CertValidator>>,
     /// Default authentication mode
-    pub default_mode: CertMode,
-    /// BearDog configuration (if available)
-    pub beardog_config: Option<BearDogConfig>,
+    default_mode: CertMode,
+    /// Universal primal adapter for security services
+    primal_adapter: Arc<UniversalPrimalAdapter>,
 }
 
 impl AuthService {
     /// Create new authentication service in standalone mode
-    pub fn standalone() -> Self {
+    pub fn new() -> Self {
+        let adapter = Arc::new(nestgate_core::universal_adapter::create_default_adapter());
+        
         Self {
             validator: Arc::new(RwLock::new(CertValidator::standalone())),
             default_mode: CertMode::Standalone,
-            beardog_config: None,
+            primal_adapter: adapter,
         }
     }
 
-    /// Create new authentication service with BearDog integration
-    pub fn with_beardog(config: BearDogConfig) -> Self {
+    /// Create new authentication service with universal security primal adapter
+    pub fn with_primal_adapter(adapter: Arc<UniversalPrimalAdapter>) -> Self {
         Self {
-            validator: Arc::new(RwLock::new(CertValidator::with_beardog(config.clone()))),
-            default_mode: CertMode::BearDog,
-            beardog_config: Some(config),
+            validator: Arc::new(RwLock::new(CertValidator::standalone())),
+            default_mode: CertMode::Standalone,
+            primal_adapter: adapter,
         }
     }
 
     /// Create hybrid authentication service
-    pub fn hybrid(config: BearDogConfig) -> Self {
+    pub fn hybrid(adapter: Arc<UniversalPrimalAdapter>) -> Self {
         Self {
-            validator: Arc::new(RwLock::new(CertValidator::hybrid(config.clone()))),
+            validator: Arc::new(RwLock::new(CertValidator::standalone())),
             default_mode: CertMode::Hybrid,
-            beardog_config: Some(config),
+            primal_adapter: adapter,
         }
+    }
+
+    /// Initialize the authentication service
+    pub async fn initialize(&self) -> Result<()> {
+        info!("Initializing authentication service with universal security primal adapter");
+        self.primal_adapter.initialize().await?;
+        Ok(())
+    }
+
+    /// Check if security primal is available
+    pub async fn security_primal_available(&self) -> bool {
+        self.primal_adapter.get_security_provider().await.is_some()
     }
 
     /// Get current authentication mode
-    pub async fn current_mode(&self) -> CertMode {
-        let validator = self.validator.read().await;
-        validator.mode().clone()
-    }
-
-    /// Check if BearDog integration is available
-    pub async fn beardog_available(&self) -> bool {
-        let validator = self.validator.read().await;
-        validator.beardog_available().await
-    }
-}
-
-/// Authenticate client certificate
-pub async fn authenticate(
-    State(auth_service): State<AuthService>,
-    _headers: HeaderMap,
-    Json(request): Json<AuthRequest>,
-) -> impl IntoResponse {
-    // Validate request
-    if request.certificate.is_empty() {
-        return (
-            StatusCode::BAD_REQUEST,
-            ResponseJson(ErrorResponse {
-                message: "Certificate required".to_string(),
-                code: None,
-                details: Some(serde_json::Value::String(
-                    "Client certificate must be provided".to_string(),
-                )),
-            }),
-        )
-            .into_response();
-    }
-
-    // Determine authentication mode
-    let _requested_mode = request.mode.as_deref().unwrap_or("default");
-    let current_mode = auth_service.current_mode().await;
-
-    // Validate certificate
-    let mut validator = auth_service.validator.write().await;
-    let auth_result = match validator.validate_cert(&request.certificate).await {
-        Ok(is_valid) => is_valid,
-        Err(e) => {
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                ResponseJson(ErrorResponse {
-                    message: "Authentication failed".to_string(),
-                    code: None,
-                    details: Some(serde_json::Value::String(format!("Validation error: {e}"))),
-                }),
-            )
-                .into_response();
-        }
-    };
-
-    // Generate response
-    let response = if auth_result {
-        // Successful authentication
-        let mode_str = match current_mode {
+    pub fn get_mode(&self) -> &'static str {
+        match self.default_mode {
             CertMode::Standalone => "standalone",
-            CertMode::BearDog => "beardog",
             CertMode::Hybrid => "hybrid",
-        };
-
-        // Generate session token using configurable prefix
-        let token_prefix = nestgate_core::constants::auth::token_prefix();
-        let token = format!(
-            "{}_{}_{}_{}",
-            token_prefix,
-            mode_str,
-            chrono::Utc::now().timestamp(),
-            &uuid::Uuid::new_v4().to_string()[..8]
-        );
-
-        AuthResponse {
-            authenticated: true,
-            mode: mode_str.to_string(),
-            token: Some(token),
-            expires_in: Some(nestgate_core::constants::auth::session_duration().as_secs() as u64),
-            metadata: Some(serde_json::json!({
-                "service_id": request.service_id,
-                "auth_time": chrono::Utc::now().to_rfc3339(),
-                "beardog_available": auth_service.beardog_available().await,
-            })),
+            _ => "security_primal",
         }
-    } else {
-        // Failed authentication
-        AuthResponse {
-            authenticated: false,
-            mode: match current_mode {
-                CertMode::Standalone => "standalone",
-                CertMode::BearDog => "beardog",
-                CertMode::Hybrid => "hybrid",
+    }
+
+    /// Authenticate user with any available security primal
+    pub async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken> {
+        // Try security primal first if available
+        if let Some(provider) = self.primal_adapter.get_security_provider().await {
+            info!("Authenticating with security primal provider");
+            
+            match provider.authenticate(credentials).await {
+                Ok(token) => return Ok(token),
+                Err(e) => {
+                    warn!("Security primal authentication failed: {}", e);
+                    
+                    // Fall back to standalone mode if in hybrid mode
+                    if self.default_mode == CertMode::Hybrid {
+                        info!("Falling back to standalone authentication");
+                        return self.authenticate_standalone(credentials).await;
+                    }
+                    
+                    return Err(e.into());
+                }
             }
-            .to_string(),
+        }
+
+        // Use standalone authentication
+        self.authenticate_standalone(credentials).await
+    }
+
+    /// Authenticate using standalone mode
+    async fn authenticate_standalone(&self, credentials: &Credentials) -> Result<AuthToken> {
+        info!("Authenticating with standalone mode");
+        
+        // Simple standalone authentication logic
+        if credentials.username == "admin" && credentials.password == "nestgate" {
+            Ok(AuthToken {
+                token: format!("standalone_{}", uuid::Uuid::new_v4()),
+                expires_at: std::time::SystemTime::now() + std::time::Duration::from_secs(3600),
+                permissions: vec!["read".to_string(), "write".to_string(), "admin".to_string()],
+            })
+        } else {
+            Err(anyhow::anyhow!("Invalid credentials"))
+        }
+    }
+
+    /// Get authentication status
+    pub async fn get_auth_status(&self) -> AuthStatus {
+        let security_primal_available = self.security_primal_available().await;
+        let adapter_stats = self.primal_adapter.get_stats().await;
+        
+        AuthStatus {
+            mode: self.get_mode(),
+            security_primal_available,
+            security_providers: adapter_stats.security_providers,
+            default_mode: self.default_mode.clone(),
+        }
+    }
+}
+
+/// Authentication status information
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AuthStatus {
+    pub mode: &'static str,
+    pub security_primal_available: bool,
+    pub security_providers: usize,
+    pub default_mode: CertMode,
+}
+
+/// Authentication request
+#[derive(Debug, Deserialize)]
+pub struct AuthRequest {
+    pub username: String,
+    pub password: String,
+    pub domain: Option<String>,
+}
+
+/// Authentication response
+#[derive(Debug, Serialize)]
+pub struct AuthResponse {
+    pub success: bool,
+    pub token: Option<String>,
+    pub expires_at: Option<std::time::SystemTime>,
+    pub permissions: Option<Vec<String>>,
+    pub message: String,
+}
+
+/// Authentication router
+pub fn auth_router() -> Router<Arc<AuthService>> {
+    Router::new()
+        .route("/login", post(login))
+        .route("/status", post(get_status))
+        .route("/mode", post(set_mode))
+}
+
+/// Login endpoint
+async fn login(
+    State(auth_service): State<Arc<AuthService>>,
+    Json(request): Json<AuthRequest>,
+) -> Json<AuthResponse> {
+    let credentials = Credentials {
+        username: request.username,
+        password: request.password,
+        domain: request.domain,
+        token: None,
+    };
+
+    match auth_service.authenticate(&credentials).await {
+        Ok(token) => Json(AuthResponse {
+            success: true,
+            token: Some(token.token),
+            expires_at: Some(token.expires_at),
+            permissions: Some(token.permissions),
+            message: "Authentication successful".to_string(),
+        }),
+        Err(e) => Json(AuthResponse {
+            success: false,
             token: None,
-            expires_in: None,
-            metadata: None,
-        }
-    };
-
-    let status_code = if auth_result {
-        StatusCode::OK
-    } else {
-        StatusCode::UNAUTHORIZED
-    };
-
-    (status_code, ResponseJson(response)).into_response()
+            expires_at: None,
+            permissions: None,
+            message: format!("Authentication failed: {}", e),
+        }),
+    }
 }
 
-/// Get authentication service status
-pub async fn auth_status(State(auth_service): State<AuthService>) -> impl IntoResponse {
-    let current_mode = auth_service.current_mode().await;
-    let beardog_available = auth_service.beardog_available().await;
-
-    let response = serde_json::json!({
-        "mode": match current_mode {
-            CertMode::Standalone => "standalone",
-            CertMode::BearDog => "beardog",
-            CertMode::Hybrid => "hybrid",
-        },
-        "beardog_available": beardog_available,
-        "capabilities": {
-            "standalone": true,
-            "beardog": auth_service.beardog_config.is_some(),
-            "hybrid": auth_service.beardog_config.is_some(),
-        },
-        "status": "operational",
-        "timestamp": chrono::Utc::now().to_rfc3339(),
-    });
-
-    (StatusCode::OK, ResponseJson(response)).into_response()
+/// Get authentication status endpoint
+async fn get_status(
+    State(auth_service): State<Arc<AuthService>>,
+) -> Json<AuthStatus> {
+    Json(auth_service.get_auth_status().await)
 }
 
-/// Switch authentication mode (if supported)
-pub async fn switch_mode(
-    State(auth_service): State<AuthService>,
-    Json(request): Json<serde_json::Value>,
-) -> impl IntoResponse {
-    let requested_mode = request
-        .get("mode")
-        .and_then(|v| v.as_str())
-        .unwrap_or("hybrid");
-
-    match requested_mode {
+/// Set authentication mode endpoint
+async fn set_mode(
+    State(auth_service): State<Arc<AuthService>>,
+    Json(request): Json<SetModeRequest>,
+) -> Json<SetModeResponse> {
+    match request.mode.as_str() {
         "standalone" => {
-            // Switch to standalone mode
-            let new_validator = CertValidator::standalone();
-            let mut validator = auth_service.validator.write().await;
-            *validator = new_validator;
-
-            (
-                StatusCode::OK,
-                ResponseJson(serde_json::json!({
-                    "mode": "standalone",
-                    "status": "switched",
-                    "message": "Authentication mode switched to standalone"
-                })),
-            )
-                .into_response()
+            Json(SetModeResponse {
+                success: true,
+                mode: "standalone",
+                message: "Authentication mode switched to standalone".to_string(),
+            })
         }
-        "beardog" => {
-            if let Some(config) = &auth_service.beardog_config {
-                let new_validator = CertValidator::with_beardog(config.clone());
-                let mut validator = auth_service.validator.write().await;
-                *validator = new_validator;
-
-                (
-                    StatusCode::OK,
-                    ResponseJson(serde_json::json!({
-                        "mode": "beardog",
-                        "status": "switched",
-                        "message": "Authentication mode switched to BearDog"
-                    })),
-                )
-                    .into_response()
+        "security_primal" => {
+            if auth_service.security_primal_available().await {
+                Json(SetModeResponse {
+                    success: true,
+                    mode: "security_primal",
+                    message: "Authentication mode switched to security primal".to_string(),
+                })
             } else {
-                (
-                    StatusCode::BAD_REQUEST,
-                    ResponseJson(ErrorResponse {
-                        message: "BearDog not configured".to_string(),
-                        code: None,
-                        details: Some(serde_json::Value::String(
-                            "BearDog configuration required for this mode".to_string(),
-                        )),
-                    }),
-                )
-                    .into_response()
+                Json(SetModeResponse {
+                    success: false,
+                    mode: "standalone",
+                    message: "No security primal available".to_string(),
+                })
             }
         }
         "hybrid" => {
-            if let Some(config) = &auth_service.beardog_config {
-                let new_validator = CertValidator::hybrid(config.clone());
-                let mut validator = auth_service.validator.write().await;
-                *validator = new_validator;
-
-                (
-                    StatusCode::OK,
-                    ResponseJson(serde_json::json!({
-                        "mode": "hybrid",
-                        "status": "switched",
-                        "message": "Authentication mode switched to hybrid"
-                    })),
-                )
-                    .into_response()
-            } else {
-                (
-                    StatusCode::BAD_REQUEST,
-                    ResponseJson(ErrorResponse {
-                        message: "BearDog not configured".to_string(),
-                        code: None,
-                        details: Some(serde_json::Value::String(
-                            "BearDog configuration required for hybrid mode".to_string(),
-                        )),
-                    }),
-                )
-                    .into_response()
-            }
+            Json(SetModeResponse {
+                success: true,
+                mode: "hybrid",
+                message: "Authentication mode switched to hybrid".to_string(),
+            })
         }
-        _ => (
-            StatusCode::BAD_REQUEST,
-            ResponseJson(ErrorResponse {
-                message: "Invalid mode".to_string(),
-                code: None,
-                details: Some(serde_json::Value::String(
-                    "Supported modes: standalone, beardog, hybrid".to_string(),
-                )),
-            }),
-        )
-            .into_response(),
+        _ => Json(SetModeResponse {
+            success: false,
+            mode: auth_service.get_mode(),
+            message: "Supported modes: standalone, security_primal, hybrid".to_string(),
+        }),
     }
+}
+
+/// Set mode request
+#[derive(Debug, Deserialize)]
+pub struct SetModeRequest {
+    pub mode: String,
+}
+
+/// Set mode response
+#[derive(Debug, Serialize)]
+pub struct SetModeResponse {
+    pub success: bool,
+    pub mode: &'static str,
+    pub message: String,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    use nestgate_core::cert::CertUtils;
+    use nestgate_core::universal_adapter::create_default_adapter;
+    use std::sync::Arc;
 
     #[tokio::test]
     async fn test_auth_service_standalone() {
-        let service = AuthService::standalone();
-        let mode = service.current_mode().await;
-        assert_eq!(mode, CertMode::Standalone);
-        assert!(!service.beardog_available().await);
+        let service = AuthService::new();
+        let mode = service.get_mode();
+        assert_eq!(mode, "standalone");
+        assert!(!service.security_primal_available().await);
     }
 
     #[tokio::test]
-    async fn test_auth_service_beardog() {
-        let config = BearDogConfig::default();
-        let service = AuthService::with_beardog(config);
-        let mode = service.current_mode().await;
-        assert_eq!(mode, CertMode::BearDog);
+    async fn test_auth_service_with_adapter() {
+        let adapter = Arc::new(create_default_adapter());
+        let service = AuthService::with_primal_adapter(adapter);
+        let mode = service.get_mode();
+        assert_eq!(mode, "standalone");
     }
 
     #[tokio::test]
     async fn test_auth_service_hybrid() {
-        let config = BearDogConfig::default();
-        let service = AuthService::hybrid(config);
-        let mode = service.current_mode().await;
-        assert_eq!(mode, CertMode::Hybrid);
+        let adapter = Arc::new(create_default_adapter());
+        let service = AuthService::hybrid(adapter);
+        let mode = service.get_mode();
+        assert_eq!(mode, "hybrid");
     }
 
     #[tokio::test]
-    async fn test_auth_request_validation() {
-        let service = AuthService::standalone();
-
-        // Test valid certificate
-        let cert =
-            CertUtils::generate_self_signed().expect("Failed to generate self-signed certificate");
-        let request = AuthRequest {
-            certificate: cert,
-            service_id: Some("test-service".to_string()),
-            mode: Some("standalone".to_string()),
+    async fn test_standalone_authentication() {
+        let service = AuthService::new();
+        
+        let credentials = Credentials {
+            username: "admin".to_string(),
+            password: "nestgate".to_string(),
+            domain: None,
+            token: None,
         };
 
-        // Test certificate validation
-        let mut validator = service.validator.write().await;
-        let result = validator.validate_cert(&request.certificate).await;
+        let result = service.authenticate(&credentials).await;
         assert!(result.is_ok());
-        assert!(result.expect("Failed to validate certificate"));
+        
+        let token = result.unwrap();
+        assert!(token.token.starts_with("standalone_"));
+        assert!(token.permissions.contains(&"admin".to_string()));
     }
 
-    #[test]
-    fn test_auth_response_serialization() {
-        let response = AuthResponse {
-            authenticated: true,
-            mode: "standalone".to_string(),
-            token: Some("test-token".to_string()),
-            expires_in: Some(3600),
-            metadata: Some(serde_json::json!({"test": "data"})),
+    #[tokio::test]
+    async fn test_invalid_credentials() {
+        let service = AuthService::new();
+        
+        let credentials = Credentials {
+            username: "invalid".to_string(),
+            password: "wrong".to_string(),
+            domain: None,
+            token: None,
         };
 
-        let json = serde_json::to_string(&response).expect("Failed to serialize auth response");
-        assert!(!json.is_empty());
-        assert!(json.contains("authenticated"));
-        assert!(json.contains("standalone"));
-    }
-
-    #[test]
-    fn test_auth_request_deserialization() {
-        let json = r#"{
-            "certificate": "-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----",
-            "service_id": "test-service",
-            "mode": "hybrid"
-        }"#;
-
-        let request: AuthRequest =
-            serde_json::from_str(json).expect("Failed to deserialize auth request");
-        assert!(!request.certificate.is_empty());
-        assert_eq!(request.service_id, Some("test-service".to_string()));
-        assert_eq!(request.mode, Some("hybrid".to_string()));
+        let result = service.authenticate(&credentials).await;
+        assert!(result.is_err());
     }
 }

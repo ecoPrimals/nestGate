@@ -19,10 +19,10 @@ use uuid::Uuid;
 use crate::{
     config::ZfsConfig,
     dataset::ZfsDatasetManager,
-    error::{ZfsError, ZfsResult},
+    error::{ZfsError, Result},
     pool::ZfsPoolManager,
 };
-use nestgate_core::{config::AlertThresholds, Result, StorageTier};
+use nestgate_core::{config::AlertThresholds, StorageTier};
 
 #[cfg(feature = "network-integration")]
 use crate::automation::{EcosystemDiscovery, ServiceConnectionPool};
@@ -2103,7 +2103,7 @@ impl PerformanceOptimizationEngine {
         }
     }
 
-    pub async fn get_trending_data(&self) -> ZfsResult<Vec<ZfsPerformanceMetrics>> {
+    pub async fn get_trending_data(&self) -> Result<Vec<ZfsPerformanceMetrics>> {
         let cache = self.performance_monitor.metrics_cache.read().await;
         Ok(cache.values().cloned().collect())
     }
@@ -2181,7 +2181,7 @@ impl RealTimePerformanceMonitor {
         &self,
         _pool_manager: &ZfsPoolManager,
         dataset_manager: &ZfsDatasetManager,
-    ) -> ZfsResult<()> {
+    ) -> Result<()> {
         debug!("📊 Collecting real-time performance metrics");
 
         // Collect comprehensive ZFS performance metrics with real system integration

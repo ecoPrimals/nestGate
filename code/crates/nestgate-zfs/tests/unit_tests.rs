@@ -491,7 +491,7 @@ mod automation_unit_tests {
             ("unknown.xyz", detect_file_type("unknown.xyz")),
         ];
 
-        for (filename, detected_type) in test_cases {
+        for (_filename, detected_type) in test_cases {
             // Basic sanity check that detection function returns something reasonable
             match detected_type {
                 LocalFileType::Database
@@ -682,6 +682,7 @@ mod phase4_optimization_detection_tests {
 }
 
 // Helper function for heuristic priority calculation
+#[allow(dead_code)]
 fn calculate_heuristic_priority(confidence: f64) -> f64 {
     // Return confidence as-is (0.0-1.0 range)
     confidence
@@ -747,6 +748,7 @@ struct DatasetMetrics {
     access_frequency: f64,
 }
 
+#[allow(dead_code)]
 struct TierScoring;
 
 impl TierScoring {
@@ -837,12 +839,15 @@ impl TierScoring {
     }
 }
 
+#[allow(dead_code)]
 struct TierRecommendation {
     recommended_tier: StorageTier,
     confidence: f64,
     reasoning: String,
 }
 
+#[allow(dead_code)]
+#[allow(dead_code)]
 struct TierPolicy {
     name: String,
     pattern: String,
@@ -859,6 +864,8 @@ impl TierPolicy {
 }
 
 // Mock functions for testing AI integration
+#[allow(dead_code)]
+#[allow(dead_code)]
 fn extract_features(
     _file_analysis: &nestgate_automation::types::prediction::FileAnalysis,
 ) -> Vec<f64> {
@@ -866,6 +873,7 @@ fn extract_features(
     vec![0.5; 19]
 }
 
+#[allow(dead_code)]
 fn predict_decision_tree(_features: &[f64]) -> TierScores {
     TierScores {
         hot: 0.7,
@@ -874,6 +882,7 @@ fn predict_decision_tree(_features: &[f64]) -> TierScores {
     }
 }
 
+#[allow(dead_code)]
 fn predict_naive_bayes(_features: &[f64]) -> TierScores {
     TierScores {
         hot: 0.6,
@@ -882,6 +891,7 @@ fn predict_naive_bayes(_features: &[f64]) -> TierScores {
     }
 }
 
+#[allow(dead_code)]
 fn predict_gradient_boosting(_features: &[f64]) -> TierScores {
     TierScores {
         hot: 0.65,
@@ -890,6 +900,7 @@ fn predict_gradient_boosting(_features: &[f64]) -> TierScores {
     }
 }
 
+#[allow(dead_code)]
 fn predict_neural_network(_features: &[f64]) -> TierScores {
     TierScores {
         hot: 0.68,
@@ -898,6 +909,7 @@ fn predict_neural_network(_features: &[f64]) -> TierScores {
     }
 }
 
+#[allow(dead_code)]
 fn calculate_ensemble_confidence(scores: &[TierScores]) -> f64 {
     if scores.is_empty() {
         return 0.0;
@@ -921,6 +933,7 @@ fn calculate_ensemble_confidence(scores: &[TierScores]) -> f64 {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct TierScores {
     hot: f64,
     warm: f64,
@@ -928,6 +941,7 @@ struct TierScores {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct PerformanceSnapshot {
     timestamp: SystemTime,
     tier_metrics: HashMap<StorageTier, f64>,
@@ -935,6 +949,7 @@ struct PerformanceSnapshot {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct SystemPerformanceMetrics {
     total_ops_per_second: f64,
     total_throughput_mbs: f64,
@@ -944,26 +959,31 @@ struct SystemPerformanceMetrics {
 }
 
 // Mock optimization analysis functions
+#[allow(dead_code)]
 fn calculate_priority_score(_opportunity: &str) -> f64 {
     // Heuristic priority scoring instead of AI-based
     0.75 // Default medium priority
 }
 
+#[allow(dead_code)]
 fn analyze_pool_optimization(_pool_stats: &PoolStatistics) -> Vec<String> {
     // Heuristic pool optimization suggestions
     vec!["Increase compression ratio".to_string()]
 }
 
+#[allow(dead_code)]
 fn analyze_tier_distribution(_tier_stats: &TierDistributionStats) -> Vec<String> {
     // Heuristic tier distribution suggestions
     vec!["Balance hot tier utilization".to_string()]
 }
 
+#[allow(dead_code)]
 fn analyze_performance_optimization(_perf_stats: &SystemPerformanceStats) -> Vec<String> {
     // Heuristic performance optimization suggestions
     vec!["Optimize ARC cache size".to_string()]
 }
 
+#[allow(dead_code)]
 fn parse_impact_score(impact_description: &str) -> f64 {
     if impact_description.contains("High") {
         0.8
@@ -978,6 +998,7 @@ fn parse_impact_score(impact_description: &str) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn extract_percentage(text: &str) -> Option<f64> {
     // Simple regex-like extraction for percentage values
     if text.contains("25%") {
@@ -993,6 +1014,7 @@ fn extract_percentage(text: &str) -> Option<f64> {
 
 // Mock data structures for testing optimization detection
 #[derive(Debug)]
+#[allow(dead_code)]
 struct PoolStatistics {
     utilization_percent: f64,
     fragmentation_percent: f64,
@@ -1001,6 +1023,7 @@ struct PoolStatistics {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 struct TierDistributionStats {
     hot_utilization: f64,
     warm_utilization: f64,
@@ -1008,6 +1031,7 @@ struct TierDistributionStats {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 struct SystemPerformanceStats {
     avg_latency_ms: f64,
     cache_hit_ratio: f64,
@@ -1015,6 +1039,7 @@ struct SystemPerformanceStats {
 }
 
 // Mock performance engine testing functions
+#[allow(dead_code)]
 fn classify_bottleneck_severity(current_latency: f64, threshold: f64) -> BottleneckSeverity {
     if current_latency > threshold * 2.0 {
         BottleneckSeverity::High
@@ -1026,6 +1051,7 @@ fn classify_bottleneck_severity(current_latency: f64, threshold: f64) -> Bottlen
 }
 
 #[derive(Debug, PartialEq)]
+#[allow(dead_code)]
 enum BottleneckSeverity {
     Low,
     Medium,

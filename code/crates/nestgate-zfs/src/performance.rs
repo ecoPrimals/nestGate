@@ -1085,6 +1085,22 @@ impl ZfsPerformanceMonitor {
 
     /// Get I/O statistics for a specific pool
     async fn get_pool_io_stats(pool_name: &str) -> CoreResult<PoolIoStats> {
+        debug!("Getting I/O stats for pool: {}", pool_name);
+
+        // Use mock mode if enabled
+        if crate::mock::is_mock_mode() {
+            return Ok(PoolIoStats {
+                read_ops: 1000,
+                write_ops: 500,
+                bytes_read: 1024 * 1024 * 1024, // 1GB
+                bytes_written: 512 * 1024 * 1024, // 512MB
+                read_latency_ms: 5.0,
+                write_latency_ms: 10.0,
+                queue_depth: 8,
+                utilization_percent: 65.0,
+            });
+        }
+
         let output = tokio::process::Command::new("zpool")
             .args(["iostat", "-v", pool_name, "1", "1"])
             .output()
@@ -1095,10 +1111,68 @@ impl ZfsPerformanceMonitor {
             return Ok(PoolIoStats::default());
         }
 
-        let _output_str = String::from_utf8_lossy(&output.stdout);
+        let output_str = String::from_utf8_lossy(&output.stdout);
+        let mut pool_stats = PoolIoStats::default();
+
         // Parse the iostat output to extract I/O statistics
-        // This is a simplified implementation
-        Ok(PoolIoStats::default())
+        // Skip header lines and find the pool data
+        let lines: Vec<&str> = output_str.lines().collect();
+        let mut found_pool = false;
+        
+        for line in lines {
+            // Look for the pool line (contains pool name)
+            if line.contains(pool_name) && !line.starts_with("pool:") {
+                found_pool = true;
+                let fields: Vec<&str> = line.split_whitespace().collect();
+                
+                // iostat format: pool_name  alloc  free  read  write  read  write
+                if fields.len() >= 7 {
+                    // Parse read and write operations (fields 3 and 4)
+                    if let Ok(read_ops) = fields[3].parse::<u64>() {
+                        pool_stats.read_ops = read_ops;
+                    }
+                    if let Ok(write_ops) = fields[4].parse::<u64>() {
+                        pool_stats.write_ops = write_ops;
+                    }
+                    
+                    // Parse read and write bandwidth (fields 5 and 6)
+                    if let Ok(read_bw) = Self::parse_iostat_bandwidth(fields[5]) {
+                        pool_stats.bytes_read = read_bw;
+                    }
+                    if let Ok(write_bw) = Self::parse_iostat_bandwidth(fields[6]) {
+                        pool_stats.bytes_written = write_bw;
+                    }
+                }
+                break;
+            }
+        }
+
+        if !found_pool {
+            debug!("Pool {} not found in iostat output", pool_name);
+        }
+
+        Ok(pool_stats)
+    }
+
+    /// Parse bandwidth values from iostat output (handles K, M, G suffixes)
+    fn parse_iostat_bandwidth(value: &str) -> Result<u64, std::num::ParseFloatError> {
+        let value = value.trim();
+        if value.is_empty() || value == "-" {
+            return Ok(0);
+        }
+
+        let (number, multiplier) = if value.ends_with('K') {
+            (value.trim_end_matches('K'), 1024_u64)
+        } else if value.ends_with('M') {
+            (value.trim_end_matches('M'), 1024_u64 * 1024)
+        } else if value.ends_with('G') {
+            (value.trim_end_matches('G'), 1024_u64 * 1024 * 1024)
+        } else {
+            (value, 1_u64)
+        };
+
+        let number: f64 = number.parse()?;
+        Ok((number * multiplier as f64) as u64)
     }
 
     /// Collect tier-specific metrics
@@ -1174,23 +1248,117 @@ impl ZfsPerformanceMonitor {
                 0.0
             },
             cache_hit_ratio,
-            queue_depth: 4, // Real queue depth would need system-level access
+            queue_depth: Self::get_real_queue_depth(tier).await.unwrap_or(4),
             utilization_percent: if dataset_count > 0.0 {
                 total_utilization / dataset_count
             } else {
                 0.0
             },
-            error_rate: 0.0, // Real error rate calculation would need pool status monitoring
+            error_rate: Self::get_real_error_rate(tier).await.unwrap_or(0.0),
         })
     }
 
     /// Get performance statistics for a specific dataset
     async fn get_dataset_performance_stats(
-        _dataset_name: &str,
+        dataset_name: &str,
     ) -> CoreResult<DatasetPerformanceStats> {
-        // This would typically use zfs get or other ZFS commands to get dataset-specific statistics
-        // For now, return default stats
-        Ok(DatasetPerformanceStats::default())
+        debug!("Collecting performance stats for dataset: {}", dataset_name);
+
+        // Use mock mode if enabled
+        if crate::mock::is_mock_mode() {
+            return Ok(DatasetPerformanceStats::default());
+        }
+
+        // Get real dataset statistics using ZFS commands
+        let mut stats = DatasetPerformanceStats::default();
+
+        // Get dataset properties for compression and dedup effectiveness
+        if let Ok(output) = tokio::process::Command::new("zfs")
+            .args(["get", "-H", "-p", "used,compressratio,dedup", dataset_name])
+            .output()
+            .await
+        {
+            if output.status.success() {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                for line in stdout.lines() {
+                    let fields: Vec<&str> = line.split('\t').collect();
+                    if fields.len() >= 4 {
+                        match fields[1] {
+                            "compressratio" => {
+                                if let Ok(ratio) = fields[2].trim_end_matches('x').parse::<f64>() {
+                                    stats.compression_effectiveness = ratio;
+                                }
+                            }
+                            "dedup" => {
+                                if fields[2] == "on" {
+                                    stats.deduplication_effectiveness = 1.2; // Estimate 20% dedup
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+        }
+
+        // Get I/O statistics from zpool iostat if available
+        if let Some(pool_name) = dataset_name.split('/').next() {
+            if let Ok(output) = tokio::process::Command::new("zpool")
+                .args(["iostat", "-v", pool_name, "1", "1"])
+                .output()
+                .await
+            {
+                if output.status.success() {
+                    let stdout = String::from_utf8_lossy(&output.stdout);
+                    // Parse iostat output to extract dataset-specific metrics
+                    let lines: Vec<&str> = stdout.lines().collect();
+                    
+                    // Look for dataset-specific line in iostat output
+                    for line in lines {
+                        if line.contains(dataset_name) {
+                            let fields: Vec<&str> = line.split_whitespace().collect();
+                            if fields.len() >= 7 {
+                                // Parse iostat fields: capacity, read_ops, write_ops, read_bw, write_bw
+                                if let Ok(read_ops) = fields[1].parse::<f64>() {
+                                    stats.read_iops = read_ops;
+                                }
+                                if let Ok(write_ops) = fields[2].parse::<f64>() {
+                                    stats.write_iops = write_ops;
+                                }
+                                if let Ok(read_bw) = fields[3].parse::<f64>() {
+                                    stats.read_throughput_mbs = read_bw / (1024.0 * 1024.0); // Convert to MB/s
+                                }
+                                if let Ok(write_bw) = fields[4].parse::<f64>() {
+                                    stats.write_throughput_mbs = write_bw / (1024.0 * 1024.0); // Convert to MB/s
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Calculate utilization based on I/O activity
+        let total_iops = stats.read_iops + stats.write_iops;
+        stats.utilization_percent = if total_iops > 0.0 {
+            (total_iops / 10000.0 * 100.0).min(100.0) // Assume 10K IOPS as 100% utilization
+        } else {
+            0.0
+        };
+
+        // Estimate latency based on IOPS (simplified calculation)
+        stats.read_latency_ms = if stats.read_iops > 0.0 {
+            (1000.0 / stats.read_iops).min(1000.0) // Cap at 1 second
+        } else {
+            0.0
+        };
+        stats.write_latency_ms = if stats.write_iops > 0.0 {
+            (1000.0 / stats.write_iops).min(1000.0) // Cap at 1 second
+        } else {
+            0.0
+        };
+
+        Ok(stats)
     }
 
     /// Start analysis task
@@ -1351,6 +1519,161 @@ impl ZfsPerformanceMonitor {
         } else {
             history.iter().cloned().collect()
         }
+    }
+
+    /// Get real queue depth for a storage tier
+    async fn get_real_queue_depth(tier: &StorageTier) -> CoreResult<u32> {
+        // Use mock mode if enabled
+        if crate::mock::is_mock_mode() {
+            return Ok(match tier {
+                StorageTier::Hot => 8,
+                StorageTier::Warm => 4,
+                StorageTier::Cold => 2,
+                StorageTier::Cache => 16, // High queue depth for cache tier
+            });
+        }
+
+        // Read queue depth from /sys/block for real devices
+        let queue_depth = match tier {
+            StorageTier::Hot => {
+                // Hot tier typically uses NVMe drives
+                Self::get_device_queue_depth("nvme").await.unwrap_or(32)
+            }
+            StorageTier::Warm => {
+                // Warm tier typically uses SSD drives
+                Self::get_device_queue_depth("ssd").await.unwrap_or(16)
+            }
+            StorageTier::Cold => {
+                // Cold tier typically uses HDD drives
+                Self::get_device_queue_depth("hdd").await.unwrap_or(8)
+            }
+            StorageTier::Cache => {
+                // Cache tier uses high-performance storage
+                Self::get_device_queue_depth("nvme").await.unwrap_or(64)
+            }
+        };
+
+        Ok(queue_depth)
+    }
+
+    /// Get real error rate for a storage tier
+    async fn get_real_error_rate(tier: &StorageTier) -> CoreResult<f64> {
+        // Use mock mode if enabled
+        if crate::mock::is_mock_mode() {
+            return Ok(match tier {
+                StorageTier::Hot => 0.001,   // 0.1% error rate
+                StorageTier::Warm => 0.002,  // 0.2% error rate
+                StorageTier::Cold => 0.001,  // 0.1% error rate
+                StorageTier::Cache => 0.0005, // 0.05% error rate (very low for cache)
+            });
+        }
+
+        // Calculate error rate from ZFS pool status
+        let mut total_errors = 0u64;
+        let mut total_operations = 0u64;
+
+        // Get pool status to check for errors
+        if let Ok(output) = tokio::process::Command::new("zpool")
+            .args(["status", "-v"])
+            .output()
+            .await
+        {
+            if output.status.success() {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                let mut _current_pool = None;
+                
+                for line in stdout.lines() {
+                    // Track current pool
+                    if line.starts_with("  pool:") {
+                        _current_pool = line.split_whitespace().nth(1).map(|s| s.to_string());
+                    }
+                    
+                    // Look for error counts
+                    if line.contains("errors:") {
+                        let fields: Vec<&str> = line.split_whitespace().collect();
+                        if let Some(errors_idx) = fields.iter().position(|&s| s == "errors:") {
+                            if let Some(error_str) = fields.get(errors_idx + 1) {
+                                if let Ok(errors) = error_str.parse::<u64>() {
+                                    total_errors += errors;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Get I/O statistics to calculate total operations
+        if let Ok(output) = tokio::process::Command::new("zpool")
+            .args(["iostat", "-v"])
+            .output()
+            .await
+        {
+            if output.status.success() {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                for line in stdout.lines() {
+                    let fields: Vec<&str> = line.split_whitespace().collect();
+                    if fields.len() >= 3 {
+                        // Parse read and write operations
+                        if let (Ok(read_ops), Ok(write_ops)) = (
+                            fields[1].parse::<u64>(),
+                            fields[2].parse::<u64>(),
+                        ) {
+                            total_operations += read_ops + write_ops;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Calculate error rate
+        let error_rate = if total_operations > 0 {
+            (total_errors as f64 / total_operations as f64) * 100.0
+        } else {
+            0.0
+        };
+
+        Ok(error_rate.min(100.0)) // Cap at 100%
+    }
+
+    /// Get device queue depth from /sys/block
+    async fn get_device_queue_depth(device_type: &str) -> CoreResult<u32> {
+        // List all block devices
+        let entries = match tokio::fs::read_dir("/sys/block").await {
+            Ok(entries) => entries,
+            Err(_) => return Ok(4), // Fallback default
+        };
+
+        let mut entries = entries;
+        while let Some(entry) = entries.next_entry().await.unwrap_or(None) {
+            let device_name = entry.file_name().to_string_lossy().to_string();
+            
+            // Match device type
+            let matches = match device_type {
+                "nvme" => device_name.starts_with("nvme"),
+                "ssd" => device_name.starts_with("sd") && !device_name.starts_with("nvme"),
+                "hdd" => device_name.starts_with("sd") && !device_name.starts_with("nvme"),
+                _ => false,
+            };
+
+            if matches {
+                // Try to read queue depth
+                let queue_file = format!("/sys/block/{}/queue/nr_requests", device_name);
+                if let Ok(content) = tokio::fs::read_to_string(queue_file).await {
+                    if let Ok(queue_depth) = content.trim().parse::<u32>() {
+                        return Ok(queue_depth);
+                    }
+                }
+            }
+        }
+
+        // Default values based on device type
+        Ok(match device_type {
+            "nvme" => 32,
+            "ssd" => 16,
+            "hdd" => 8,
+            _ => 4,
+        })
     }
 
     /// Get ZFS ARC cache hit ratio from /proc/spl/kstat/zfs/arcstats

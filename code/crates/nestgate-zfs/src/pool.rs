@@ -428,7 +428,7 @@ impl ZfsPoolManager {
             );
         }
 
-        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+        Ok(String::from_utf8_lossy(&output.stdout).into_owned())
     }
 
     /// Start a scrub operation on a pool

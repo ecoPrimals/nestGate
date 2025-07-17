@@ -1,19 +1,17 @@
-//! Enhanced Streaming and Bidirectional Communication Demo
+//! Enhanced Streaming Communication Demo
 //!
-//! This example demonstrates the complete streaming and bidirectional communication
-//! capabilities of NestGate, including:
+//! This demo showcases the enhanced streaming capabilities of NestGate, including:
+//! - Server-Sent Events (SSE) for real-time updates
+//! - WebSocket communication for bidirectional streaming
+//! - MCP (Message Channel Protocol) streaming for efficient data transfer
+//! - Event coordination and monitoring
 //!
-//! 1. Server-Sent Events (SSE) streaming for real-time data
-//! 2. Bidirectional RPC with tarpc for type-safe communication
-//! 3. WebSocket support for real-time bidirectional communication
-//! 4. MCP streaming for AI system integration
-//! 5. Event coordination across all communication layers
-//! 6. Performance metrics and monitoring
-//!
-//! This demo showcases the unified communication architecture that enables
-//! real-time, high-performance, and type-safe communication for modern
-//! distributed systems.
+//! Note: This demo requires the streaming-rpc feature to be enabled.
 
+#![allow(dead_code)]
+
+#[cfg(feature = "streaming-rpc")]
+mod streaming_demo {
 use std::{
     collections::HashMap,
     sync::Arc,
@@ -797,4 +795,13 @@ mod tests {
         assert!(capabilities.is_ok());
         assert!(capabilities.unwrap().bidirectional_support);
     }
+    }
+}
+
+#[cfg(not(feature = "streaming-rpc"))]
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    println!("Enhanced streaming demo is only available with streaming-rpc feature");
+    println!("Please enable the streaming-rpc feature to run this demo");
+    Ok(())
 }

@@ -13,7 +13,7 @@ use crate::{
     automation::DatasetAutomation,
     config::ZfsConfig,
     dataset::ZfsDatasetManager,
-    error::{ZfsError, ZfsResult as Result},
+    error::{ZfsError, Result},
     health::ZfsHealthMonitor,
     metrics::ZfsMetrics,
     migration::MigrationEngine,
@@ -306,15 +306,11 @@ impl ZfsManager {
 
         // Prepare enhanced service information
         let service_info = nestgate_mcp::protocol::ServiceInfo {
-            id: "nestgate-zfs-enhanced".to_string(),
-            name: "NestGate ZFS Enhanced".to_string(),
-            version: env!("CARGO_PKG_VERSION").to_string(),
-            provider: "nestgate-zfs".to_string(),
+            service_id: "nestgate-zfs-enhanced".to_string(),
+            service_name: "NestGate ZFS Enhanced".to_string(),
             service_type: "storage".to_string(),
-            endpoints: vec![
-                self.config.api_endpoint.clone(),
-                format!("{}/health", self.config.api_endpoint),
-            ],
+            endpoint: self.config.api_endpoint.clone(),
+            status: nestgate_mcp::protocol::ServiceStatus::Online,
             capabilities: vec![
                 "dataset_management".to_string(),
                 "snapshot_operations".to_string(),
@@ -323,23 +319,11 @@ impl ZfsManager {
                 "migration_services".to_string(),
                 "health_monitoring".to_string(),
                 "performance_monitoring".to_string(),
-                "ai_optimization".to_string(),
-                "predictive_analytics".to_string(),
-                "automated_tiering".to_string(),
             ],
             metadata: {
                 let mut metadata = std::collections::HashMap::new();
                 metadata.insert("version".to_string(), env!("CARGO_PKG_VERSION").to_string());
-                metadata.insert("tier_count".to_string(), "3".to_string()); // hot, warm, cold
-                metadata.insert("zfs_enabled".to_string(), cfg!(feature = "zfs").to_string());
-                metadata.insert(
-                    "ai_enabled".to_string(),
-                    "false".to_string(), // AI integration has been sunset
-                );
-                metadata.insert("performance_monitoring".to_string(), "enabled".to_string());
-                metadata.insert("migration_engine".to_string(), "enabled".to_string());
-                metadata.insert("snapshot_automation".to_string(), "enabled".to_string());
-                metadata.insert("ai_integration".to_string(), "sunset".to_string());
+                metadata.insert("provider".to_string(), "nestgate-zfs".to_string());
                 metadata
             },
         };
@@ -347,7 +331,7 @@ impl ZfsManager {
         // Register with orchestrator
         client.register_service(service_info).await.map_err(|e| {
             error!("Failed to register with orchestrator: {}", e);
-            ZfsError::Network(format!("Service registration: {}", e))
+            ZfsError::Network(format!("Service registration: {e}"))
         })?;
 
         self.orchestrator_client = Some(client);
@@ -515,25 +499,25 @@ impl ZfsManager {
             _file_path: file_path.to_string(),
             file_size: metadata.len(),
             _file_extension: file_extension.clone(),
-            file_type: self.classify_file_type(&file_extension),
+            file_type: self.classify_file_type(&file_extension).to_string(),
             estimated_access_frequency: self.estimate_access_frequency_heuristic(file_path),
             is_system_critical: self.is_system_critical_file(file_path),
             _estimated_compression_ratio: self.estimate_compression_ratio(&file_extension),
         })
     }
 
-    /// Classify file type based on extension
-    fn classify_file_type(&self, extension: &str) -> String {
+    /// Classify file type based on extension for storage optimization
+    fn classify_file_type(&self, extension: &str) -> &'static str {
         match extension {
-            "db" | "sqlite" | "sqlite3" => "database".to_string(),
-            "jpg" | "jpeg" | "png" | "gif" | "bmp" | "tiff" => "image".to_string(),
-            "mp4" | "avi" | "mkv" | "mov" | "webm" => "video".to_string(),
-            "mp3" | "wav" | "flac" | "ogg" => "audio".to_string(),
-            "pdf" | "doc" | "docx" | "txt" | "rtf" => "document".to_string(),
-            "zip" | "tar" | "gz" | "bz2" | "7z" | "rar" => "archive".to_string(),
-            "log" | "out" | "err" => "log".to_string(),
-            "bak" | "backup" => "backup".to_string(),
-            _ => "unknown".to_string(),
+            "db" | "sqlite" | "sqlite3" => "database",
+            "jpg" | "jpeg" | "png" | "gif" | "bmp" | "tiff" => "image",
+            "mp4" | "avi" | "mkv" | "mov" | "webm" => "video",
+            "mp3" | "wav" | "flac" | "ogg" => "audio",
+            "pdf" | "doc" | "docx" | "txt" | "rtf" => "document",
+            "zip" | "tar" | "gz" | "bz2" | "7z" | "rar" => "archive",
+            "log" | "out" | "err" => "log",
+            "bak" | "backup" => "backup",
+            _ => "unknown",
         }
     }
 
@@ -572,31 +556,26 @@ impl ZfsManager {
         frequent_dirs.iter().any(|&dir| file_path.starts_with(dir))
     }
 
-    /// Estimate access pattern for file
-    async fn _estimate_access_pattern(&self, file_path: &str, file_type: &str) -> String {
-        // Use file type and location to estimate access pattern
+    /// Estimate access pattern for file type optimization
+    async fn _estimate_access_pattern(&self, file_path: &str, file_type: &str) -> &'static str {
+        let _file_path = file_path; // Avoid unused variable warning
+
         match file_type {
-            "database" => "random_read_write".to_string(),
-            "vm_image" => "random_read_write".to_string(),
-            "media" => "sequential_read".to_string(),
-            "document" => "occasional_read".to_string(),
-            "source_code" => "frequent_read_write".to_string(),
-            "config" => "infrequent_read".to_string(),
-            "log" => "sequential_write".to_string(),
-            "archive" => "infrequent_read".to_string(),
-            "backup" => "write_once_read_rarely".to_string(),
-            _ => {
-                // Use path-based heuristics
-                if file_path.contains("/tmp") || file_path.contains("/cache") {
-                    "frequent_read_write".to_string()
-                } else if file_path.contains("/var/log") {
-                    "sequential_write".to_string()
-                } else if file_path.contains("/backup") || file_path.contains("/archive") {
-                    "write_once_read_rarely".to_string()
-                } else {
-                    "unknown".to_string()
-                }
-            }
+            "database" => "random_read_write",
+            "vm_image" => "random_read_write",
+            "media" => "sequential_read",
+            "document" => "occasional_read",
+            "source_code" => "frequent_read_write",
+            "config" => "infrequent_read",
+            "log" => "sequential_write",
+            "archive" => "infrequent_read",
+            "backup" => "write_once_read_rarely",
+            _ => match file_type {
+                _ if file_type.contains("read_write") => "frequent_read_write",
+                _ if file_type.contains("write") => "sequential_write",
+                _ if file_type.contains("rarely") => "write_once_read_rarely",
+                _ => "unknown",
+            },
         }
     }
 

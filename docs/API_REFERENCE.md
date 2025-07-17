@@ -12,11 +12,11 @@ http://localhost:8080/api/v1
 ### Standalone Mode
 In standalone mode, no authentication is required for local connections.
 
-### BearDog Integration
-When integrated with BearDog, all requests require authentication:
+### Universal Security Module Integration
+When integrated with any security module (BearDog, Vault, custom enterprise security), all requests require authentication:
 
 ```bash
-# Get authentication token
+# Get authentication token from integrated security module
 curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{
@@ -27,6 +27,17 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
 # Use token in subsequent requests
 curl -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   http://localhost:8080/api/v1/pools
+```
+
+### Security Module Status
+NestGate automatically integrates with available security modules within the ecosystem:
+
+```bash
+# Check available security capabilities
+curl http://localhost:8080/api/v1/modules/capabilities/security
+
+# Get current security module status
+curl http://localhost:8080/api/v1/modules/status/security
 ```
 
 ---
@@ -356,13 +367,42 @@ Get AI service status
 {
   "data": {
     "ai_enabled": true,
-    "squirrel_connected": true,
+    "ai_primals_connected": true,
+    "available_capabilities": ["tier_migration", "predictive_maintenance", "capacity_planning"],
+    "connected_primals": ["squirrel", "custom-ml-service"],
     "features": {
       "tier_migration": true,
       "predictive_maintenance": true,
       "capacity_planning": true
     },
     "last_analysis": "2024-01-26T10:00:00Z"
+  }
+}
+```
+
+### `GET /ai/modules/capabilities`
+Get available AI module capabilities
+
+**Response:**
+```json
+{
+  "data": {
+    "integrated_modules": [
+      {
+        "module_id": "squirrel-ai-001",
+        "module_type": "ai",
+        "capabilities": ["model_inference", "vector_storage", "mcp_protocol"],
+        "status": "integrated",
+        "version": "1.0.0"
+      },
+      {
+        "module_id": "custom-ml-module",
+        "module_type": "ai",
+        "capabilities": ["model_training", "data_analysis"],
+        "status": "integrated", 
+        "version": "2.1.0"
+      }
+    ]
   }
 }
 ```

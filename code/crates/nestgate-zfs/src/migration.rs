@@ -12,6 +12,7 @@ use std::time::{Duration, Instant, SystemTime};
 use tokio::sync::{mpsc, RwLock, Semaphore};
 use tokio::time::interval;
 use tracing::{debug, error, info, warn};
+use uuid;
 
 use crate::{
     automation::DatasetAnalyzer, config::ZfsConfig, dataset::ZfsDatasetManager,
@@ -84,10 +85,13 @@ pub struct MigrationJob {
     pub retry_count: u32,
     /// Maximum retries allowed
     pub max_retries: u32,
+    /// Job metadata (e.g., for performance tracking)
+    pub metadata: HashMap<String, String>,
 }
 
+/// Enhanced migration job with performance optimizations
 impl MigrationJob {
-    /// Create a new migration job
+    /// Create a new migration job with optimized settings
     pub fn new(
         source_path: PathBuf,
         source_tier: StorageTier,
@@ -95,14 +99,8 @@ impl MigrationJob {
         priority: MigrationPriority,
         file_size: u64,
     ) -> Self {
-        let id = format!(
-            "mig_{}_{}",
-            SystemTime::now()
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_millis(),
-            rand::random::<u32>()
-        );
+        let id = uuid::Uuid::new_v4().to_string();
+        let created_at = SystemTime::now();
 
         Self {
             id,
@@ -110,17 +108,38 @@ impl MigrationJob {
             source_tier,
             target_tier,
             priority,
+            file_size,
             status: MigrationStatus::Queued,
-            created_at: SystemTime::now(),
+            created_at,
             started_at: None,
             completed_at: None,
-            file_size,
             progress: 0.0,
             transfer_rate: 0.0,
             eta_seconds: None,
             error_message: None,
             retry_count: 0,
             max_retries: 3,
+            metadata: HashMap::new(),
+        }
+    }
+
+    /// Determine optimal migration priority based on tier transition
+    pub fn get_optimal_priority(
+        source_tier: &StorageTier,
+        target_tier: &StorageTier,
+    ) -> MigrationPriority {
+        match (source_tier, target_tier) {
+            // Moving to hot tier = high priority for performance
+            (_, StorageTier::Hot) => MigrationPriority::High,
+            // Moving from hot tier = normal priority unless to cold
+            (StorageTier::Hot, StorageTier::Cold) => MigrationPriority::High, // Free up hot storage
+            (StorageTier::Hot, _) => MigrationPriority::Normal,
+            // Moving to cold tier = low priority (archival)
+            (_, StorageTier::Cold) => MigrationPriority::Low,
+            // Cache operations = critical priority
+            (StorageTier::Cache, _) | (_, StorageTier::Cache) => MigrationPriority::Critical,
+            // Default = normal priority
+            _ => MigrationPriority::Normal,
         }
     }
 }
