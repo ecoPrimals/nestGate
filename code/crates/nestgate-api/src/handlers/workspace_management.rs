@@ -808,23 +808,23 @@ pub async fn optimize_workspace(
 
     // 2. Adjust compression settings based on file types
     if let Some(compression_opt) = optimize_compression(&dataset_name, &pattern_analysis).await {
-        optimizations.push(compression_opt.clone());
         info!("✅ Compression optimization: {}", compression_opt);
+        optimizations.push(compression_opt);
     }
 
     // 3. Optimize recordsize based on workload
     if let Some(recordsize_opt) = optimize_recordsize(&dataset_name, &pattern_analysis).await {
-        optimizations.push(recordsize_opt.clone());
         info!("✅ Recordsize optimization: {}", recordsize_opt);
+        optimizations.push(recordsize_opt);
     }
 
     // 4. Optimize cache settings
     if let Some(cache_opt) = optimize_cache_settings(&dataset_name, &pattern_analysis).await {
-        optimizations.push(cache_opt.clone());
         info!("✅ Cache optimization: {}", cache_opt);
+        optimizations.push(cache_opt);
     }
 
-    // 5. Delegate AI analysis to Squirrel via MCP (if available)
+            // 5. Delegate AI analysis to any available AI primal provider
     let ai_recommendations = request_ai_optimization(&dataset_name, &pattern_analysis).await;
     if let Some(ai_rec) = ai_recommendations {
         optimizations.push(format!("AI recommendations: {ai_rec}"));
@@ -834,8 +834,8 @@ pub async fn optimize_workspace(
     // 6. Apply deduplication if beneficial
     if pattern_analysis.duplicate_ratio > 0.1 {
         if let Some(dedup_opt) = optimize_deduplication(&dataset_name).await {
-            optimizations.push(dedup_opt.clone());
             info!("✅ Deduplication optimization: {}", dedup_opt);
+            optimizations.push(dedup_opt);
         }
     }
 
@@ -1011,40 +1011,42 @@ async fn optimize_deduplication(dataset_name: &str) -> Option<String> {
 }
 
 async fn request_ai_optimization(dataset_name: &str, pattern: &StoragePattern) -> Option<String> {
-    // Try to delegate AI analysis to Squirrel via MCP protocol
-    let squirrel_endpoint =
-        std::env::var("SQUIRREL_ENDPOINT").unwrap_or_else(|_| "http://localhost:8082".to_string());
+    // Try to use any available AI primal provider via universal adapter
+    let _adapter = nestgate_core::universal_adapter::UniversalPrimalAdapter::new(Default::default());
+    
+    // Use universal adapter to request AI optimization
+    if let Ok(ai_endpoint) = std::env::var("NESTGATE_AI_ENDPOINT") {
+        let request_data = serde_json::json!({
+            "dataset": dataset_name,
+            "pattern_analysis": {
+                "file_size_distribution": pattern.file_size_distribution,
+                "file_type_distribution": pattern.file_type_distribution,
+                "duplicate_ratio": pattern.duplicate_ratio,
+                "sequential_vs_random": pattern.sequential_vs_random,
+                "read_write_ratio": pattern.read_write_ratio
+            },
+            "optimization_context": "zfs_storage_optimization"
+        });
 
-    let request_data = serde_json::json!({
-        "dataset": dataset_name,
-        "pattern_analysis": {
-            "file_size_distribution": pattern.file_size_distribution,
-            "file_type_distribution": pattern.file_type_distribution,
-            "duplicate_ratio": pattern.duplicate_ratio,
-            "sequential_vs_random": pattern.sequential_vs_random,
-            "read_write_ratio": pattern.read_write_ratio
-        },
-        "optimization_context": "zfs_storage_optimization"
-    });
-
-    let client = reqwest::Client::new();
-    match client
-        .post(format!("{squirrel_endpoint}/api/v1/analyze/storage"))
-        .json(&request_data)
-        .send()
-        .await
-    {
-        Ok(response) => {
-            if response.status().is_success() {
-                if let Ok(ai_response) = response.json::<serde_json::Value>().await {
-                    if let Some(recommendations) = ai_response["recommendations"].as_str() {
-                        return Some(recommendations.to_string());
+        let client = reqwest::Client::new();
+        match client
+            .post(format!("{ai_endpoint}/api/v1/analyze/storage"))
+            .json(&request_data)
+            .send()
+            .await
+        {
+            Ok(response) => {
+                if response.status().is_success() {
+                    if let Ok(ai_response) = response.json::<serde_json::Value>().await {
+                        if let Some(recommendations) = ai_response["recommendations"].as_str() {
+                            return Some(recommendations.to_string());
+                        }
                     }
                 }
             }
-        }
-        Err(_) => {
-            // Squirrel not available, continue without AI recommendations
+            Err(_) => {
+                // AI provider not available, continue without AI recommendations
+            }
         }
     }
 
@@ -1098,13 +1100,13 @@ pub async fn share_workspace(Path(workspace_id): Path<String>) -> Result<Json<Va
     info!("🤝 Sharing workspace: {}", workspace_id);
 
     // STUB: Sharing is a collaboration feature that may be implemented later
-    // This involves user management (BearDog's domain) and UI (biomeOS's domain)
+    // This involves user management (security module's domain) and UI (biomeOS's domain)
 
     Ok(Json(json!({
         "status": "stub",
         "message": "Workspace sharing feature not yet implemented",
         "workspace_id": workspace_id,
-        "note": "This feature requires integration with BearDog (auth) and biomeOS (UI)"
+        "note": "This feature requires integration with security module (auth) and biomeOS (UI)"
     })))
 }
 
@@ -1481,22 +1483,22 @@ pub async fn apply_workspace_template(
 }
 
 // ========================================
-// SECRETS MANAGEMENT (DELEGATE TO BEARDOG)
+// SECRETS MANAGEMENT (DELEGATE TO SECURITY MODULE)
 // ========================================
 
-/// Create workspace secret (SECURITY FEATURE - DELEGATE TO BEARDOG)
+/// Create workspace secret (SECURITY FEATURE - DELEGATE TO SECURITY MODULE)
 pub async fn create_workspace_secret(
     Path(workspace_id): Path<String>,
 ) -> Result<Json<Value>, StatusCode> {
     info!("🔐 Creating workspace secret: {}", workspace_id);
 
-    // STUB: Secrets management should be delegated to BearDog
+    // STUB: Secrets management should be delegated to available security module
     // This is outside NestGate's storage focus
 
     Ok(Json(json!({
         "status": "stub",
         "message": "Workspace secret management not implemented",
         "workspace_id": workspace_id,
-        "note": "Secret management should be delegated to BearDog primal"
+        "note": "Secret management should be delegated to available security module"
     })))
 }

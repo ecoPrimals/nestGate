@@ -7,6 +7,7 @@ use std::env;
 use std::path::{Path, PathBuf};
 use std::process;
 use std::str::FromStr;
+use std::time::Duration;
 use tracing::error;
 // Use our local StorageTier enum instead
 // use nestgate_network::StorageTier;
@@ -94,6 +95,7 @@ impl FromStr for PerformancePreference {
 
 // Dummy placeholder types
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct McpMountRequest {
     node_id: String,
     mount_point: String,
@@ -105,6 +107,7 @@ struct McpMountRequest {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct McpMountResponse {
     mount_id: String,
     volume_id: String,
@@ -112,6 +115,7 @@ struct McpMountResponse {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct McpUnmountRequest {
     node_id: String,
     mount_id: String,
@@ -380,7 +384,7 @@ fn random_id() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap()
+        .unwrap_or_else(|_| Duration::from_secs(0))
         .as_millis();
     format!("{now:x}")
 }

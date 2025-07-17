@@ -95,10 +95,14 @@ impl ZfsMcpConfig {
     /// Validate the configuration settings
     pub fn validate(&self) -> Result<()> {
         if self.max_concurrent_operations == 0 {
-            return Err(NestGateError::InvalidInput("max_concurrent_operations must be greater than 0".to_string()));
+            return Err(NestGateError::InvalidInput(
+                "max_concurrent_operations must be greater than 0".to_string(),
+            ));
         }
         if self.max_concurrent_operations > 1000 {
-            return Err(NestGateError::InvalidInput("max_concurrent_operations must be less than or equal to 1000".to_string()));
+            return Err(NestGateError::InvalidInput(
+                "max_concurrent_operations must be less than or equal to 1000".to_string(),
+            ));
         }
         Ok(())
     }

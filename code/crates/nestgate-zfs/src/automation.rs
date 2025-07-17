@@ -964,9 +964,9 @@ impl DatasetAutomation {
         debug!("Getting dataset size for: {}", dataset_name);
 
         // Check if we're in mock mode
-        if std::env::var("ZFS_MOCK_MODE").unwrap_or_default() == "true" {
-            // Return mock value for testing
-            let mock_size = 1024 * 1024 * 1024; // 1GB
+        if crate::mock::is_mock_mode() {
+            // Return consistent mock value for testing
+            let mock_size = crate::mock::mock_dataset_size(dataset_name);
             debug!(
                 "Mock mode: returning {} bytes for dataset {}",
                 mock_size, dataset_name

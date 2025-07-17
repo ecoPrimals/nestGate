@@ -10,24 +10,21 @@
 //! - Event-driven notifications
 //! - Backpressure handling
 
-use std::collections::HashMap;
-use std::convert::Infallible;
-use std::sync::Arc;
-use std::time::{Duration, SystemTime};
-
+use anyhow::Result;
 use axum::{
     extract::{Query, State},
     http::HeaderMap,
     response::sse::{Event, Sse},
 };
-
-// Stream processing
-use futures::{stream, Stream, StreamExt};
+use futures::{Stream, StreamExt};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::convert::Infallible;
+use std::sync::Arc;
+use std::time::{Duration, SystemTime};
 use tokio::sync::{broadcast, RwLock};
 use tokio_stream::wrappers::BroadcastStream;
-
-use serde::{Deserialize, Serialize};
-use tracing::{debug, info, warn};
+use tracing::{debug, info, warn, error};
 use uuid::Uuid;
 
 use crate::event_coordination::EventCoordinator;
@@ -151,6 +148,12 @@ pub struct SseStats {
     pub last_reset: SystemTime,
 }
 
+impl Default for SseManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SseManager {
     /// Create a new SSE manager
     ///
@@ -223,7 +226,7 @@ impl SseManager {
         &self,
         params: SseParams,
         _headers: HeaderMap,
-    ) -> impl Stream<Item = Result<Event, Infallible>> {
+    ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, Infallible> {
         let connection_id = Uuid::new_v4();
         let client_id = params.client_id.clone();
 
@@ -278,19 +281,30 @@ impl SseManager {
                             }
                         }
 
+                        // Pre-serialize event data to avoid repeated serialization
+                        let event_data = serde_json::to_string(&sse_event).ok()?;
+                        let event_data_len = event_data.len() as u64;
+
                         // Update statistics
                         if let Ok(mut stats) = stats.try_write() {
                             stats.events_sent += 1;
-                            stats.bytes_transferred += serde_json::to_string(&sse_event)
-                                .map(|s| s.len() as u64)
-                                .unwrap_or(0);
+                            stats.bytes_transferred += event_data_len;
                         }
 
-                        // Convert to SSE event
-                        let event_data = serde_json::to_string(&sse_event).ok()?;
+                        // Convert to SSE event - optimize string operations
+                        let event_type_str = match sse_event.event_type {
+                            SseEventType::StorageOperation => "StorageOperation",
+                            SseEventType::SystemHealth => "SystemHealth",
+                            SseEventType::PerformanceMetrics => "PerformanceMetrics",
+                            SseEventType::HardwareTuning => "HardwareTuning",
+                            SseEventType::ZfsEvent => "ZfsEvent",
+                            SseEventType::AuthEvent => "AuthEvent",
+                            SseEventType::SystemEvent => "SystemEvent",
+                        };
+
                         let event = Event::default()
-                            .id(sse_event.id.to_string())
-                            .event(format!("{:?}", sse_event.event_type))
+                            .id(sse_event.id.as_hyphenated().to_string())
+                            .event(event_type_str)
                             .data(event_data);
 
                         Some(Ok(event))
@@ -304,15 +318,8 @@ impl SseManager {
             }
         });
 
-        // Add keep-alive events
-        let keep_alive_stream = stream::unfold((), move |_| async move {
-            tokio::time::sleep(config.keep_alive_interval).await;
-            let keep_alive_event = Event::default().event("keep-alive").data("ping");
-            Some((Ok(keep_alive_event), ()))
-        });
-
-        // Merge event stream with keep-alive stream
-        futures::stream::select(event_stream, keep_alive_stream)
+        // Return streaming response
+        Ok(Sse::new(event_stream))
     }
 
     /// Broadcast an event to all SSE clients
@@ -375,7 +382,9 @@ impl SseManager {
     }
 
     /// Create storage operations stream
-    pub async fn create_storage_stream(&self) -> impl Stream<Item = Result<Event, Infallible>> {
+    pub async fn create_storage_stream(
+        &self,
+    ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, Infallible> {
         let params = SseParams {
             stream: Some("storage".to_string()),
             client_id: Some("storage-client".to_string()),
@@ -388,7 +397,9 @@ impl SseManager {
     }
 
     /// Create system health stream
-    pub async fn create_health_stream(&self) -> impl Stream<Item = Result<Event, Infallible>> {
+    pub async fn create_health_stream(
+        &self,
+    ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, Infallible> {
         let params = SseParams {
             stream: Some("health".to_string()),
             client_id: Some("health-client".to_string()),
@@ -401,7 +412,9 @@ impl SseManager {
     }
 
     /// Create performance metrics stream
-    pub async fn create_metrics_stream(&self) -> impl Stream<Item = Result<Event, Infallible>> {
+    pub async fn create_metrics_stream(
+        &self,
+    ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, Infallible> {
         let params = SseParams {
             stream: Some("metrics".to_string()),
             client_id: Some("metrics-client".to_string()),
@@ -426,66 +439,81 @@ impl Clone for SseManager {
 }
 
 /// SSE endpoint handlers
-
 /// Generic SSE endpoint for all event types
 pub async fn sse_events(
     Query(params): Query<SseParams>,
     State(app_state): State<crate::routes::AppState>,
     _headers: HeaderMap,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    let stream = app_state
+    match app_state
         .sse_manager
         .create_stream(params, HeaderMap::new())
-        .await;
-
-    Sse::new(stream).keep_alive(
-        axum::response::sse::KeepAlive::new()
-            .interval(Duration::from_secs(30))
-            .text("keep-alive"),
-    )
+        .await
+    {
+        Ok(stream) => stream,
+        Err(e) => {
+            error!("Failed to create SSE stream: {}", e);
+            Sse::new(futures::stream::once(async {
+                Ok(Event::default()
+                    .event("error")
+                    .data("Failed to create stream"))
+            }))
+        }
+    }
 }
 
 /// Storage operations SSE endpoint
 pub async fn sse_storage(
     State(app_state): State<crate::routes::AppState>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    let stream = app_state.sse_manager.create_storage_stream().await;
-
-    Sse::new(stream).keep_alive(
-        axum::response::sse::KeepAlive::new()
-            .interval(Duration::from_secs(15))
-            .text("ping"),
-    )
+    match app_state.sse_manager.create_storage_stream().await {
+        Ok(stream) => stream,
+        Err(e) => {
+            error!("Failed to create storage SSE stream: {}", e);
+            Sse::new(futures::stream::once(async {
+                Ok(Event::default()
+                    .event("error")
+                    .data("Failed to create stream"))
+            }))
+        }
+    }
 }
 
-/// System health SSE endpoint
+/// Health monitoring SSE endpoint
 pub async fn sse_health(
     State(app_state): State<crate::routes::AppState>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    let stream = app_state.sse_manager.create_health_stream().await;
-
-    Sse::new(stream).keep_alive(
-        axum::response::sse::KeepAlive::new()
-            .interval(Duration::from_secs(30))
-            .text("ping"),
-    )
+    match app_state.sse_manager.create_health_stream().await {
+        Ok(stream) => stream,
+        Err(e) => {
+            error!("Failed to create health SSE stream: {}", e);
+            Sse::new(futures::stream::once(async {
+                Ok(Event::default()
+                    .event("error")
+                    .data("Failed to create stream"))
+            }))
+        }
+    }
 }
 
-/// Performance metrics SSE endpoint
+/// Metrics SSE endpoint
 pub async fn sse_metrics(
     State(app_state): State<crate::routes::AppState>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    let stream = app_state.sse_manager.create_metrics_stream().await;
-
-    Sse::new(stream).keep_alive(
-        axum::response::sse::KeepAlive::new()
-            .interval(Duration::from_secs(10))
-            .text("ping"),
-    )
+    match app_state.sse_manager.create_metrics_stream().await {
+        Ok(stream) => stream,
+        Err(e) => {
+            error!("Failed to create metrics SSE stream: {}", e);
+            Sse::new(futures::stream::once(async {
+                Ok(Event::default()
+                    .event("error")
+                    .data("Failed to create stream"))
+            }))
+        }
+    }
 }
 
 /// Utility functions for creating SSE events
-
 /// Create a storage operation SSE event
 pub fn create_storage_event(operation: &str, path: &str, data: serde_json::Value) -> SseEvent {
     SseEvent {

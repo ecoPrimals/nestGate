@@ -188,7 +188,7 @@ async fn test_crypto_lock_protection() -> Result<()> {
     }
 
     // Create and validate a crypto proof
-    let crypto_proof = CryptographicProof {
+    let _crypto_proof = CryptographicProof {
         beardog_key_id: "sovereign_user_key".to_string(),
         beardog_signature: "crypto_signature".to_string(),
         beardog_validation_token: "validation_token".to_string(),
@@ -235,12 +235,12 @@ async fn test_universal_data_sources() -> Result<()> {
     println!("   🌐 Testing universal data sources...");
 
     // Test NCBI Genome Source with correct initialization
-    let ncbi_source = NCBIGenomeSource::new(None);
+    let _ncbi_source = NCBIGenomeSource::new(None);
 
     println!("   ✅ NCBI Genome Source: Connected");
 
     // Test HuggingFace Model Source with correct initialization
-    let hf_source = HuggingFaceModelSource::new(None);
+    let _hf_source = HuggingFaceModelSource::new(None);
 
     println!("   ✅ HuggingFace Model Source: Connected");
 
@@ -445,7 +445,7 @@ async fn test_api_first_autonomous_operation() -> Result<()> {
     };
 
     let guardian = ExternalBoundaryGuardian::new(beardog_config_auto);
-    let protection_check = guardian
+    let _protection_check = guardian
         .check_external_boundary(
             "ai_system",
             "https://www.ncbi.nlm.nih.gov/",
@@ -630,7 +630,7 @@ async fn test_temporal_device_ecosystem() -> Result<()> {
         retry_attempts: 3,
     };
 
-    let guardian = ExternalBoundaryGuardian::new(beardog_config);
+    let _guardian = ExternalBoundaryGuardian::new(beardog_config);
 
     // Test device creation
     assert_eq!(punch_card.era, StorageEra::Prehistoric);
@@ -699,7 +699,7 @@ async fn test_beardog_comprehensive_protection() -> Result<()> {
         retry_attempts: 3,
     };
 
-    let guardian = ExternalBoundaryGuardian::new(beardog_config);
+    let _guardian = ExternalBoundaryGuardian::new(beardog_config);
 
     // Test hardware tuning
     let mut tuner = HardwareAgnosticTuner::new();
@@ -713,7 +713,7 @@ async fn test_beardog_comprehensive_protection() -> Result<()> {
     }
 
     // Test internal communication
-    let internal_comm = InternalPrimalCommunication;
+    let _internal_comm = InternalPrimalCommunication;
 
     println!("✅ BearDog protection system operational");
 
@@ -756,10 +756,10 @@ async fn test_data_source_integration() -> Result<()> {
     println!("🔬 Testing data source integration");
 
     // Create NCBI source with correct initialization
-    let ncbi_source = NCBIGenomeSource::new(None);
+    let _ncbi_source = NCBIGenomeSource::new(None);
 
     // Create HuggingFace source with correct initialization
-    let hf_source = HuggingFaceModelSource::new(None);
+    let _hf_source = HuggingFaceModelSource::new(None);
 
     // Test data type without parameters
     let genome_data = DataType::Genome;
@@ -826,9 +826,9 @@ async fn test_comprehensive_system_integration() -> Result<()> {
         .insert(StorageEra::Modern, vec![modern_device]);
 
     // Create data sources with correct initialization
-    let ncbi_source = NCBIGenomeSource::new(None);
+    let _ncbi_source = NCBIGenomeSource::new(None);
 
-    let hf_source = HuggingFaceModelSource::new(None);
+    let _hf_source = HuggingFaceModelSource::new(None);
 
     // Create guardian
     let beardog_config = BearDogConfig {

@@ -49,13 +49,31 @@ pub struct AppState {
     pub event_coordinator: EventCoordinator,
     #[cfg(feature = "streaming-rpc")]
     pub sse_manager: Arc<SseManager>,
-    pub api_state: Arc<crate::byob::ApiState>,
+    // pub api_state: Arc<crate::byob::ApiState>, // Temporarily disabled during universal architecture transition
     pub hardware_tuning_service: Arc<crate::handlers::hardware_tuning::HardwareTuningHandler>,
 }
 
 impl Default for AppState {
     fn default() -> Self {
-        Self::new()
+        #[cfg(feature = "streaming-rpc")]
+        {
+            Self::new(
+                WebSocketManager::new(),
+                McpStreamingManager::new(),
+                EventCoordinator::new(),
+            )
+        }
+        #[cfg(not(feature = "streaming-rpc"))]
+        {
+            Self {
+                mcp_streaming_manager: McpStreamingManager::new(),
+                event_coordinator: EventCoordinator::new(),
+                // api_state: Arc::new(crate::byob::ApiState::new()), // Temporarily disabled during universal architecture transition
+                hardware_tuning_service: Arc::new(
+                    crate::handlers::hardware_tuning::HardwareTuningHandler::new(),
+                ),
+            }
+        }
     }
 }
 
@@ -83,7 +101,7 @@ impl AppState {
         Self {
             mcp_streaming_manager: McpStreamingManager::new(),
             event_coordinator: EventCoordinator::new(),
-            api_state: Arc::new(crate::byob::ApiState::new()),
+            // api_state: Arc::new(crate::byob::ApiState::new()), // Temporarily disabled during universal architecture transition
             hardware_tuning_service: Arc::new(
                 crate::handlers::hardware_tuning::HardwareTuningHandler::new(),
             ),
@@ -201,7 +219,7 @@ async fn health_check() -> Json<serde_json::Value> {
 // Enhanced communication stats endpoint
 async fn get_communication_stats(State(state): State<AppState>) -> Json<serde_json::Value> {
     #[cfg(feature = "streaming-rpc")]
-    let websocket_stats = state.websocket_manager.get_stats();
+    let websocket_stats = state.websocket_manager.get_stats().await;
     #[cfg(not(feature = "streaming-rpc"))]
     let websocket_stats = serde_json::json!({
         "active_connections": 0,
@@ -225,7 +243,7 @@ async fn get_communication_stats(State(state): State<AppState>) -> Json<serde_js
     let total_active_connections = {
         #[cfg(feature = "streaming-rpc")]
         {
-            state.websocket_manager.get_stats().active_connections
+            state.websocket_manager.get_stats().await.active_connections
                 + state.sse_manager.get_stats().await.active_connections
         }
         #[cfg(not(feature = "streaming-rpc"))]
@@ -237,7 +255,7 @@ async fn get_communication_stats(State(state): State<AppState>) -> Json<serde_js
     let total_messages_sent = {
         #[cfg(feature = "streaming-rpc")]
         {
-            state.websocket_manager.get_stats().messages_sent
+            state.websocket_manager.get_stats().await.messages_sent
                 + state.sse_manager.get_stats().await.events_sent
         }
         #[cfg(not(feature = "streaming-rpc"))]

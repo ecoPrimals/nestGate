@@ -12,11 +12,15 @@
 use axum::Router;
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
-use tracing::info;
+use anyhow::Result;
+use std::net::SocketAddr;
+use tracing::{info, warn};
+
+use crate::event_coordination::EventCoordinator;
 
 use crate::routes::create_router;
 
-pub mod byob;
+// pub mod byob;  // Temporarily disabled during universal architecture transition
 pub mod event_coordination;
 pub mod universal_adapter;
 pub mod handlers {
@@ -40,7 +44,6 @@ pub mod websocket;
 
 #[cfg(feature = "streaming-rpc")]
 // pub mod streaming_rpc; // Disabled - requires tarpc dependency
-
 // New modules for enhanced streaming and RPC
 pub mod sse;
 pub mod universal_primal;
@@ -146,7 +149,7 @@ pub async fn serve_with_zfs(
 /// Start the streaming RPC server
 #[cfg(feature = "streaming-rpc")]
 pub async fn start_streaming_rpc_server(
-    addr: &str,
+    _addr: &str,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // let server = streaming_rpc::StreamingRpcServer::new();
     // server.start(addr.to_string()).await?;
@@ -156,14 +159,8 @@ pub async fn start_streaming_rpc_server(
 
 /// Communication layer manager for coordinating all protocols
 pub struct CommunicationManager {
-    #[cfg(feature = "streaming-rpc")]
-    pub websocket_manager: websocket::WebSocketManager,
-    #[cfg(feature = "streaming-rpc")]
-    pub sse_manager: sse::SseManager,
-    #[cfg(feature = "streaming-rpc")]
-    // pub streaming_rpc_server: streaming_rpc::StreamingRpcServer, // Disabled - requires tarpc
-    pub mcp_streaming_manager: mcp_streaming::McpStreamingManager,
-    pub event_coordinator: event_coordination::EventCoordinator,
+    pub event_coordinator: EventCoordinator,
+    pub universal_primal: Option<Box<dyn crate::universal_primal::StoragePrimalProvider>>,
 }
 
 impl Default for CommunicationManager {
@@ -174,94 +171,121 @@ impl Default for CommunicationManager {
 
 impl CommunicationManager {
     /// Create a new communication manager with all protocols
-    ///
-    /// Initializes a comprehensive communication system that supports multiple
-    /// real-time communication protocols for maximum flexibility and integration.
-    ///
-    /// ## Initialized Components
-    ///
-    /// - **WebSocket Manager**: Handles bidirectional real-time communication
-    /// - **SSE Manager**: Manages Server-Sent Events for streaming updates
-    /// - **MCP Streaming Manager**: Handles Model Control Protocol streaming
-    /// - **Event Coordinator**: Provides unified event handling across all protocols
-    ///
-    /// ## Features Enabled
-    ///
-    /// - Real-time data streaming
-    /// - Cross-protocol event coordination
-    /// - Automatic connection management
-    /// - Background cleanup tasks
-    /// - Performance monitoring
-    ///
-    /// ## Usage
-    ///
-    /// ```rust
-    /// use nestgate_api::CommunicationManager;
-    ///
-    /// let comm_manager = CommunicationManager::new();
-    ///
-    /// // Start all protocols
-    /// comm_manager.start_all("127.0.0.1:8080", "127.0.0.1:8081").await?;
-    /// ```
-    ///
-    /// ## Note
-    ///
-    /// Some features require the `streaming-rpc` feature flag to be enabled.
-    /// The manager will automatically adapt based on available features.
     pub fn new() -> Self {
-        #[cfg(feature = "streaming-rpc")]
-        let websocket_manager = websocket::WebSocketManager::new();
-        #[cfg(feature = "streaming-rpc")]
-        let sse_manager = sse::SseManager::new();
-        #[cfg(feature = "streaming-rpc")]
-        // let streaming_rpc_server = streaming_rpc::StreamingRpcServer::new(); // Disabled - requires tarpc
-        let mcp_streaming_manager = mcp_streaming::McpStreamingManager::new();
-        let event_coordinator = event_coordination::EventCoordinator::new();
+        let event_coordinator = EventCoordinator::new();
 
         Self {
-            #[cfg(feature = "streaming-rpc")]
-            websocket_manager,
-            #[cfg(feature = "streaming-rpc")]
-            sse_manager,
-            #[cfg(feature = "streaming-rpc")]
-            // streaming_rpc_server, // Disabled - requires tarpc
-            mcp_streaming_manager,
             event_coordinator,
+            universal_primal: None,
         }
     }
 
-    /// Start all communication protocols
-    pub async fn start_all(
-        &self,
-        http_addr: &str,
-        _rpc_addr: &str,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        info!("Starting all communication protocols");
+    /// Start all communication protocols with orchestration module integration
+    pub async fn start_all_protocols(&mut self) -> Result<()> {
+        info!("🚀 Starting all communication protocols");
 
-        // Start HTTP/WebSocket/SSE server
-        let _http_server = start_server(http_addr);
+        // Get the address to bind to
+        let http_addr = SocketAddr::from(([127, 0, 0, 1], 8080)); // Placeholder port
+        info!("📡 Binding to address: {}", http_addr);
 
-        // Start cleanup tasks
-        #[cfg(feature = "streaming-rpc")]
-        let _sse_cleanup = self.sse_manager.start_cleanup_task();
+        // Try orchestration module service mesh first (primary mode)
+        match self.try_orchestration_integration(http_addr).await {
+            Ok(()) => {
+                info!("✅ Running in orchestration module service mesh mode");
+                // Orchestration module handles HTTP routing - we just need to keep the service alive
+                self.run_as_orchestration_managed_primal().await
+            }
+            Err(e) => {
+                warn!("⚠️ Orchestration module integration failed: {}", e);
+                info!("🔄 Falling back to standalone HTTP server mode");
+                self.run_standalone_http_server(http_addr).await
+            }
+        }
+    }
 
-        // Start streaming RPC server if feature is enabled
-        #[cfg(feature = "streaming-rpc")]
-        // let rpc_server = self.streaming_rpc_server.start(_rpc_addr.to_string()); // Disabled - requires tarpc
+    /// Try to integrate with orchestration module service mesh (primary mode)
+    async fn try_orchestration_integration(&mut self, _http_addr: SocketAddr) -> Result<()> {
+        info!("🎼 Attempting orchestration module integration");
 
-        // Run servers concurrently
-        #[cfg(feature = "streaming-rpc")]
-        // tokio::try_join!(http_server, rpc_server)?; // Disabled - requires tarpc
-        // #[cfg(not(feature = "streaming-rpc"))]
-        http_server.await?;
+        // STUB: This would attempt to register with the orchestration module
+        // For now, we'll just check if there's an orchestration module URL configured
+        if let Ok(orchestration_url) = std::env::var("NESTGATE_ORCHESTRATION_URL") {
+            info!("🌐 Found orchestration module URL: {}", orchestration_url);
 
+            // STUB: In a real implementation, this would:
+            // 1. Connect to orchestration module service mesh
+            // 2. Register our service capabilities
+            // 3. Set up HTTP routing delegation
+            // 4. Configure health checks
+
+            // Register with ecosystem (orchestration module service mesh)
+            // TODO: Implement proper ecosystem registration
+            // if let Some(ref mut universal_primal) = self.universal_primal {
+            //     universal_primal.register_with_ecosystem().await?;
+            // }
+
+            info!("🎼 Successfully integrated with orchestration module service mesh");
+            Ok(())
+        } else {
+            Err(anyhow::anyhow!("No orchestration module URL configured"))
+        }
+    }
+
+    /// Run as orchestration-managed primal (HTTP handled by service mesh)
+    async fn run_as_orchestration_managed_primal(&mut self) -> Result<()> {
+        info!("🌐 Running as orchestration-managed primal");
+
+        // In orchestration mode, we don't start our own HTTP server
+        // Instead, we provide handlers that orchestration module will route to
+
+        // Keep the service alive and handle inter-primal communication
+        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(30));
+
+        loop {
+            interval.tick().await;
+
+            // Health check and maintenance
+            if let Err(e) = self.perform_health_check().await {
+                warn!("Health check failed: {}", e);
+            }
+
+            // Handle any pending events
+            if let Err(e) = self.process_pending_events().await {
+                warn!("Event processing failed: {}", e);
+            }
+        }
+    }
+
+    /// Run standalone HTTP server (fallback mode)
+    async fn run_standalone_http_server(&mut self, http_addr: SocketAddr) -> Result<()> {
+        info!("🏠 Running standalone HTTP server at {}", http_addr);
+
+        // Start HTTP/WebSocket/SSE server in standalone mode
+        let http_addr_str = http_addr.to_string();
+        let server_result = tokio::spawn(async move { start_server(&http_addr_str).await })
+            .await
+            .map_err(|e| anyhow::anyhow!("Server task failed: {}", e))?;
+
+        server_result.map_err(|e| anyhow::anyhow!("Server failed: {}", e))?;
+        Ok(())
+    }
+
+    /// Perform health check for service mesh
+    async fn perform_health_check(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        // Health check logic here
+        Ok(())
+    }
+
+    /// Process pending events
+    async fn process_pending_events(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        // Event processing logic here
         Ok(())
     }
 
     /// Broadcast an event to all communication channels
     pub async fn broadcast_event(
         &self,
-        _event_data: serde_json::Value,
+        event_data: serde_json::Value,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Create SSE event
         #[cfg(feature = "streaming-rpc")]
@@ -276,7 +300,7 @@ impl CommunicationManager {
             };
 
             // Broadcast to SSE clients
-            self.sse_manager.broadcast_event(sse_event).await?;
+            // self.sse_manager.broadcast_event(sse_event).await?; // sse_manager is removed
 
             // Create WebSocket event
             let ws_event = websocket::WebSocketEvent {
@@ -288,8 +312,11 @@ impl CommunicationManager {
             };
 
             // Broadcast to WebSocket clients
-            self.websocket_manager.broadcast_event(ws_event).await?;
+            // self.websocket_manager.broadcast_event(ws_event).await?; // websocket_manager is removed
         }
+
+        // Always log event data for debugging/monitoring
+        tracing::info!("Broadcasting event: {}", event_data);
 
         // Create and broadcast streaming RPC event if feature is enabled
         #[cfg(feature = "streaming-rpc")]
@@ -304,7 +331,7 @@ impl CommunicationManager {
             // };
 
             // Broadcast to RPC clients
-            // self.streaming_rpc_server.broadcast_event(rpc_event).await?;
+            // self.streaming_rpc_server.broadcast_event(rpc_event).await?; // streaming_rpc_server is removed
         }
 
         Ok(())

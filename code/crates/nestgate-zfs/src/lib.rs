@@ -16,6 +16,7 @@ pub mod manager;
 pub mod mcp_integration;
 pub mod metrics;
 pub mod migration;
+pub mod mock; // New centralized mock module
 pub mod orchestrator_integration;
 pub mod performance;
 pub mod performance_engine;
@@ -30,8 +31,7 @@ pub use advanced_features::{
 };
 pub use automation::{AutomationPolicy, DatasetAutomation, DatasetAutomationConfig};
 pub use byob::{
-    create_zfs_storage_provider, ByobStorageProvider, ByobStorageRequest, ByobStorageResponse,
-    ZfsStorageProvider,
+    ByobManager, ByobStorageRequest, ByobStorageResponse,
 };
 pub use command::{
     CommandResult, PoolStatus, ZfsCommand, ZfsDataset, ZfsOperations, ZfsPool, ZfsSnapshot,
@@ -40,11 +40,12 @@ pub use command::{
 // Type exports
 pub use config::{TierConfig, TierConfigurations, ZfsConfig};
 pub use dataset::{DatasetInfo, ZfsDatasetManager};
-pub use error::{ZfsError, ZfsResult as Result};
+pub use error::{ZfsError, Result};
 pub use health::ZfsHealthMonitor;
 pub use manager::ZfsManager;
 pub use mcp_integration::{ZfsMcpConfig, ZfsMcpStorageProvider};
 pub use migration::MigrationEngine as ZfsMigrationEngine;
+pub use mock::{is_mock_mode, mock_snapshots, mock_advanced_snapshots, mock_dataset_size, mock_dataset_info, mock_command_success, mock_command_success_nestgate, mock_command_with_output, mock_performance_metrics, MockSnapshotMetadata};
 pub use orchestrator_integration::*;
 pub use performance::ZfsPerformanceMonitor;
 pub use performance_engine::{AccessPattern, PerformanceOptimizationEngine};
@@ -81,7 +82,7 @@ pub use snapshot::{SnapshotInfo, ZfsSnapshotManager};
 pub use tier::TierManager as ZfsTierManager;
 pub use types::*;
 
-// Re-export Songbird integration
+// Re-export orchestration integration
 #[cfg(feature = "orchestrator")]
 pub use orchestrator_integration::{NestGateZfsService, ZfsHealthStatus, ZfsServiceConfig};
 
@@ -147,35 +148,46 @@ mod tests {
     fn test_zfs_config_creation() {
         let config = ZfsConfig::default();
 
-        // Test default tier configurations
+        // Test optimized tier configurations
         let hot_tier = config.get_tier_config(&nestgate_core::StorageTier::Hot);
         assert_eq!(hot_tier.name, "hot");
+        // Hot tier is optimized for maximum speed - no compression
         assert_eq!(
             hot_tier
                 .properties
                 .get("compression")
                 .expect("Hot tier should have compression property"),
-            "lz4"
+            "off"
         );
 
         let warm_tier = config.get_tier_config(&nestgate_core::StorageTier::Warm);
         assert_eq!(warm_tier.name, "warm");
+        // Warm tier uses fast lz4 compression for balance
         assert_eq!(
             warm_tier
                 .properties
                 .get("compression")
                 .expect("Warm tier should have compression property"),
-            "zstd"
+            "lz4"
         );
 
         let cold_tier = config.get_tier_config(&nestgate_core::StorageTier::Cold);
         assert_eq!(cold_tier.name, "cold");
+        // Cold tier uses zstd compression for maximum reliability and efficiency
         assert_eq!(
             cold_tier
                 .properties
                 .get("compression")
                 .expect("Cold tier should have compression property"),
-            "gzip-9"
+            "zstd"
+        );
+        // Cold tier always syncs for maximum reliability
+        assert_eq!(
+            cold_tier
+                .properties
+                .get("sync")
+                .expect("Cold tier should have sync property"),
+            "always"
         );
     }
 
@@ -188,7 +200,7 @@ mod tests {
         match ZfsManager::new(config).await {
             Ok(manager) => {
                 // Note: AI integration has been sunset - NestGate focuses on data management
-                // while Toadstool handles AI/GPU compute workloads
+                // while compute modules handle AI/GPU compute workloads
 
                 // Verify performance monitoring is available
                 let monitor = manager.performance_monitor.read().await;

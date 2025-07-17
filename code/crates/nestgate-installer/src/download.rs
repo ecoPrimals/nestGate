@@ -38,7 +38,7 @@ impl DownloadManager {
         pb.set_style(
             ProgressStyle::default_spinner()
                 .template("{spinner:.green} [{elapsed_precise}] {msg}")
-                .unwrap(),
+                .unwrap_or_else(|_| ProgressStyle::default_spinner()),
         );
         pb.set_message("Downloading...");
 

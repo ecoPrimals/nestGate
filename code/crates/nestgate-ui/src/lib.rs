@@ -1351,8 +1351,8 @@ impl NestGateApp {
 
         // System settings
         ui.label("System Settings:");
-        ui.label("• Remote access: Use Songbird orchestrator");
-        ui.label("• Security: BearDog integration available");
+                        ui.label("• Remote access: Use universal orchestration module");
+                ui.label("• Security: Universal security module integration available");
         ui.label("• Mode: Pure Rust native with zero web dependencies");
 
         ui.add_space(15.0);

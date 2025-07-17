@@ -586,10 +586,10 @@ impl StreamingRpcServer {
             loop {
                 interval.tick().await;
 
-                // Collect system metrics (simplified)
+                // Collect system metrics (simplified - real implementation would collect from system)
                 let metrics = SystemMetrics {
                     timestamp: SystemTime::now(),
-                    cpu_usage: 25.5, // Mock data
+                    cpu_usage: 25.5, // Placeholder - real implementation would use system metrics
                     memory_usage: 45.2,
                     disk_usage: 67.8,
                     network_io: NetworkMetrics {

@@ -427,9 +427,8 @@ impl ZfsDatasetManager {
         info!("Deleting dataset: {}", name);
 
         // Check if we should use mock mode
-        if std::env::var("ZFS_MOCK_MODE").unwrap_or_default() == "true" {
-            info!("Mock mode: Dataset {} deleted successfully", name);
-            return Ok(());
+        if crate::mock::is_mock_mode() {
+            return crate::mock::mock_command_success_nestgate("delete_dataset", name);
         }
 
         // Real implementation would use zfs destroy command

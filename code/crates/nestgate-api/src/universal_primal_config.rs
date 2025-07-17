@@ -1,7 +1,7 @@
 //! Universal Primal Configuration for NestGate
 //!
 //! This module provides configuration management for NestGate's integration
-//! with the universal primal ecosystem (beardog, squirrel, songbird, toadstool).
+//! with the universal primal ecosystem (security, AI, orchestration, compute modules).
 
 use crate::universal_primal::StorageCapability;
 use anyhow::Result;
@@ -435,9 +435,9 @@ impl Default for UniversalNestGateConfig {
 fn create_default_primal_integrations() -> HashMap<String, PrimalIntegrationConfig> {
     let mut integrations = HashMap::new();
 
-    // BearDog (Security) integration
+    // Security module integration (works with any security primal)
     integrations.insert(
-        "beardog".to_string(),
+        "security".to_string(),
         PrimalIntegrationConfig {
             enabled: true,
             endpoint: None, // Auto-discover
@@ -455,7 +455,7 @@ fn create_default_primal_integrations() -> HashMap<String, PrimalIntegrationConf
                 retry_delay_ms: 1000,
                 connection_pool_size: Some(10),
                 keep_alive_enabled: true,
-                compression_enabled: false, // BearDog handles its own compression
+                compression_enabled: false, // Security modules handle their own compression
                 tls_enabled: true,
                 certificate_validation: true,
                 mutual_tls: true,
@@ -463,9 +463,9 @@ fn create_default_primal_integrations() -> HashMap<String, PrimalIntegrationConf
         },
     );
 
-    // Squirrel (AI) integration
+    // AI module integration (works with any AI primal)
     integrations.insert(
-        "squirrel".to_string(),
+        "ai".to_string(),
         PrimalIntegrationConfig {
             enabled: true,
             endpoint: None, // Auto-discover
@@ -491,9 +491,9 @@ fn create_default_primal_integrations() -> HashMap<String, PrimalIntegrationConf
         },
     );
 
-    // Songbird (Distribution) integration
+    // Orchestration module integration (works with any orchestration primal)
     integrations.insert(
-        "songbird".to_string(),
+        "orchestration".to_string(),
         PrimalIntegrationConfig {
             enabled: true,
             endpoint: None, // Auto-discover
@@ -519,9 +519,9 @@ fn create_default_primal_integrations() -> HashMap<String, PrimalIntegrationConf
         },
     );
 
-    // Toadstool (Compute) integration
+    // Compute module integration (works with any compute primal)
     integrations.insert(
-        "toadstool".to_string(),
+        "compute".to_string(),
         PrimalIntegrationConfig {
             enabled: true,
             endpoint: None, // Auto-discover
@@ -579,10 +579,10 @@ impl UniversalNestGateConfig {
         config.nestgate.storage.encryption_enabled = true;
 
         // Enable all security integrations
-        if let Some(beardog_config) = config.primal_integrations.get_mut("beardog") {
-            beardog_config.settings.tls_enabled = true;
-            beardog_config.settings.certificate_validation = true;
-            beardog_config.settings.mutual_tls = true;
+        if let Some(security_config) = config.primal_integrations.get_mut("security") {
+            security_config.settings.tls_enabled = true;
+            security_config.settings.certificate_validation = true;
+            security_config.settings.mutual_tls = true;
         }
 
         config
