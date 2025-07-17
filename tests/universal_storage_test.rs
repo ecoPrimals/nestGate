@@ -53,7 +53,7 @@ async fn test_storage_request_coordination() {
     let request = StorageRequest::CreateFile {
         path: "/test/file.txt".to_string(),
         content: b"Hello, World!".to_vec(),
-        metadata: FileMetadata {
+        metadata: Box::new(FileMetadata {
             path: "/test/file.txt".to_string(),
             size: 13,
             created_at: chrono::Utc::now(),
@@ -64,7 +64,7 @@ async fn test_storage_request_coordination() {
             checksum: None,
             mime_type: Some("text/plain".to_string()),
             tags: HashMap::new(),
-        },
+        }),
     };
 
     let result = manager.coordinate_storage_request(request).await;

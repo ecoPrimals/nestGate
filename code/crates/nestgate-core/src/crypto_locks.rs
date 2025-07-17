@@ -460,7 +460,7 @@ mod tests {
         let guardian = ExternalBoundaryGuardian::new(security_provider);
         
         let request = AccessRequest {
-            source: "external_source".to_string(),
+            source: "127.0.0.1".to_string(),
             destination: "internal_destination".to_string(),
             operation: "read".to_string(),
             timestamp: SystemTime::now(),

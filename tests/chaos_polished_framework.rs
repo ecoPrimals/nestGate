@@ -3208,7 +3208,7 @@ async fn test_blazing_fast_chaos_10k_operations() {
     let results = framework
         .execute_chaos_test("Blazing Fast 10K Operations")
         .await;
-    let _actual_duration = start_time.elapsed();
+    let actual_duration = start_time.elapsed();
 
     print_production_chaos_results(&results);
 
@@ -3268,7 +3268,7 @@ async fn test_blazing_fast_chaos_100k_operations() {
     let results = framework
         .execute_chaos_test("Blazing Fast 100K Operations")
         .await;
-    let _actual_duration = start_time.elapsed();
+    let actual_duration = start_time.elapsed();
 
     print_production_chaos_results(&results);
 
@@ -3328,7 +3328,7 @@ async fn test_ludicrous_speed_chaos_1m_operations() {
     let results = framework
         .execute_chaos_test("Ludicrous Speed 1M Operations")
         .await;
-    let _actual_duration = start_time.elapsed();
+    let actual_duration = start_time.elapsed();
 
     print_production_chaos_results(&results);
 
@@ -3400,7 +3400,7 @@ async fn test_custom_chaos_builder_pattern() {
 
     let start_time = Instant::now();
     let results = framework.execute_chaos_test("Custom Builder Pattern").await;
-    let _actual_duration = start_time.elapsed();
+    let actual_duration = start_time.elapsed();
 
     print_production_chaos_results(&results);
 
@@ -3460,7 +3460,7 @@ async fn test_slow_but_steady_chaos_reliability() {
     let results = framework
         .execute_chaos_test("Slow But Steady Reliability")
         .await;
-    let _actual_duration = start_time.elapsed();
+    let actual_duration = start_time.elapsed();
 
     print_production_chaos_results(&results);
 
@@ -3667,7 +3667,7 @@ async fn test_environment_variable_configuration() {
     let results = framework
         .execute_chaos_test("Environment Variable Config")
         .await;
-    let _actual_duration = start_time.elapsed();
+    let actual_duration = start_time.elapsed();
 
     print_production_chaos_results(&results);
 
@@ -3752,7 +3752,7 @@ async fn test_genome_scale_chaos_10m_operations() {
     let results = framework
         .execute_chaos_test("Genome Scale 10M Operations")
         .await;
-    let _actual_duration = start_time.elapsed();
+    let actual_duration = start_time.elapsed();
 
     print_production_chaos_results(&results);
 
@@ -3817,7 +3817,7 @@ async fn test_configurable_extreme_stress_with_operations() {
 
     let start_time = Instant::now();
     let results = framework.execute_extreme_stress_benchmark(&config).await;
-    let _actual_duration = start_time.elapsed();
+    let actual_duration = start_time.elapsed();
 
     print_production_chaos_results(&results);
 
@@ -4279,7 +4279,7 @@ async fn test_network_saturation_2_5g_chaos() {
     let results = framework
         .execute_chaos_test("Network Saturation 2.5G")
         .await;
-    let _actual_duration = start_time.elapsed();
+    let actual_duration = start_time.elapsed();
 
     print_production_chaos_results(&results);
 
@@ -4348,7 +4348,7 @@ async fn test_network_saturation_10g_chaos() {
 
     let start_time = Instant::now();
     let results = framework.execute_chaos_test("Network Saturation 10G").await;
-    let _actual_duration = start_time.elapsed();
+    let actual_duration = start_time.elapsed();
 
     print_production_chaos_results(&results);
 
@@ -4417,7 +4417,7 @@ async fn test_network_saturation_25g_chaos() {
 
     let start_time = Instant::now();
     let results = framework.execute_chaos_test("Network Saturation 25G").await;
-    let _actual_duration = start_time.elapsed();
+    let actual_duration = start_time.elapsed();
 
     print_production_chaos_results(&results);
 
@@ -4486,7 +4486,7 @@ async fn test_home_connection_maxed_chaos() {
 
     let start_time = Instant::now();
     let results = framework.execute_chaos_test("Home Connection Maxed").await;
-    let _actual_duration = start_time.elapsed();
+    let actual_duration = start_time.elapsed();
 
     print_production_chaos_results(&results);
 
@@ -4549,7 +4549,7 @@ async fn test_comprehensive_network_saturation_suite() {
         let framework = PolishedChaosFramework::new(config.clone()).await;
         let start_time = Instant::now();
         let results = framework.execute_chaos_test(scenario_name).await;
-        let _actual_duration = start_time.elapsed();
+        let actual_duration = start_time.elapsed();
 
         // Calculate network throughput
         let network_throughput_mbs =
@@ -4636,7 +4636,7 @@ async fn test_storage_baseline_2_5g_benchmark() {
 
     let start_time = std::time::Instant::now();
     let results = framework.execute_chaos_test("NVMe-2.5G-Baseline").await;
-    let _actual_duration = start_time.elapsed();
+    let actual_duration = start_time.elapsed();
 
     println!("📊 2.5G Storage Baseline Results:");
     println!(
@@ -4693,7 +4693,7 @@ async fn test_storage_optimized_10g_benchmark() {
 
     let start_time = std::time::Instant::now();
     let results = framework.execute_chaos_test("NVMe-10G-Optimized").await;
-    let _actual_duration = start_time.elapsed();
+    let actual_duration = start_time.elapsed();
 
     println!("📊 10G Storage Optimized Results:");
     println!(

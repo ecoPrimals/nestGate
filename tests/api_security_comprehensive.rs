@@ -8,6 +8,7 @@ use axum::{
 use axum_test::TestServer;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+// use urlencoding;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -148,7 +149,7 @@ async fn rate_limited_endpoint(
 }
 
 // Input validation endpoint
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct InputData {
     name: String,
     email: String,
@@ -427,7 +428,7 @@ mod tests {
 
         for injection in &injection_attempts {
             let response = server
-                .get(&format!("/search?query={}", urlencoding::encode(injection)))
+                .get(&format!("/search?query={}", injection.replace(" ", "%20")))
                 .await;
             assert_eq!(
                 response.status_code(),
