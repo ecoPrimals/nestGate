@@ -32,6 +32,14 @@ pub enum NestGateError {
     #[error("Authorization error: {0}")]
     Authorization(String),
 
+    /// Authentication failed with invalid credentials
+    #[error("Authentication failed")]
+    AuthenticationFailed,
+
+    /// Security module unavailable
+    #[error("Security module unavailable")]
+    SecurityModuleUnavailable,
+
     /// Configuration error with enhanced handling
     #[error("Configuration error: {0}")]
     Configuration(String),
