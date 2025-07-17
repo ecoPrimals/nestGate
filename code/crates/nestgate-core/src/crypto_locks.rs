@@ -416,68 +416,11 @@ pub fn create_default_guardian(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Arc;
-    use async_trait::async_trait;
-    use crate::universal_traits::*;
-
-    // Mock security provider for testing
-    pub struct MockSecurityProvider;
-
-    #[async_trait]
-    impl SecurityPrimalProvider for MockSecurityProvider {
-        async fn authenticate(&self, _credentials: &Credentials) -> Result<AuthToken> {
-            Ok(AuthToken {
-                token: "mock_token".to_string(),
-                expires_at: SystemTime::now() + Duration::from_secs(3600),
-                permissions: vec!["read".to_string(), "write".to_string()],
-            })
-        }
-
-        async fn encrypt(&self, data: &[u8], _algorithm: &str) -> Result<Vec<u8>> {
-            Ok(data.to_vec())
-        }
-
-        async fn decrypt(&self, encrypted: &[u8], _algorithm: &str) -> Result<Vec<u8>> {
-            Ok(encrypted.to_vec())
-        }
-
-        async fn sign_data(&self, _data: &[u8]) -> Result<Signature> {
-            Ok(Signature {
-                algorithm: "RS256".to_string(),
-                signature: "mock_signature".to_string(),
-                key_id: "mock_key_id".to_string(),
-            })
-        }
-
-        async fn verify_signature(&self, _data: &[u8], _signature: &Signature) -> Result<bool> {
-            Ok(true)
-        }
-
-        async fn get_key_id(&self) -> Result<String> {
-            Ok("mock_key_id".to_string())
-        }
-
-        async fn validate_token(&self, _token: &str, _data: &[u8]) -> Result<bool> {
-            Ok(true)
-        }
-
-        async fn generate_validation_token(&self, _data: &[u8]) -> Result<String> {
-            Ok("mock_validation_token".to_string())
-        }
-
-        async fn evaluate_boundary_access(
-            &self,
-            _source: &str,
-            _destination: &str,
-            _operation: &str,
-        ) -> Result<SecurityDecision> {
-            Ok(SecurityDecision::Allow)
-        }
-    }
+    // Mock security provider replaced with production security provider in security_provider module
 
     #[tokio::test]
     async fn test_crypto_proof_creation() {
-        let security_provider: Arc<dyn SecurityPrimalProvider> = Arc::new(MockSecurityProvider);
+        let security_provider = crate::security_provider::create_security_provider().await.unwrap();
         let data = b"test_data";
         let context = "test_context";
         
@@ -496,7 +439,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_crypto_proof_validation() {
-        let security_provider: Arc<dyn SecurityPrimalProvider> = Arc::new(MockSecurityProvider);
+        let security_provider = crate::security_provider::create_security_provider().await.unwrap();
         let data = b"test_data";
         let context = "test_context";
         
@@ -513,7 +456,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_boundary_guardian() {
-        let security_provider: Arc<dyn SecurityPrimalProvider> = Arc::new(MockSecurityProvider);
+        let security_provider = crate::security_provider::create_security_provider().await.unwrap();
         let guardian = ExternalBoundaryGuardian::new(security_provider);
         
         let request = AccessRequest {
@@ -545,7 +488,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_internal_communication() {
-        let security_provider: Arc<dyn SecurityPrimalProvider> = Arc::new(MockSecurityProvider);
+        let security_provider = crate::security_provider::create_security_provider().await.unwrap();
         let guardian = ExternalBoundaryGuardian::new(security_provider);
         
         let request = AccessRequest {

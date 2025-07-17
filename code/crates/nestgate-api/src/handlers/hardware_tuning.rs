@@ -708,8 +708,8 @@ impl HardwareTuningService {
 
         // Create universal adapter for security provider
         let _adapter = UniversalPrimalAdapter::new(Default::default());
-        // Use a mock security provider for now - in production this would use the actual provider
-        let security_provider: Arc<dyn SecurityPrimalProvider> = Arc::new(ApiMockSecurityProvider);
+        // Create a lazy security provider that will be initialized on first use
+        let security_provider = std::sync::Arc::new(LazySecurityProvider::new());
         
         Self {
             toadstool_client: ToadstoolComputeClient::new(config.toadstool_url.clone()),
@@ -733,8 +733,8 @@ impl HardwareTuningService {
 
         // Create universal adapter for security provider
         let _adapter = UniversalPrimalAdapter::new(Default::default());
-        // Use a mock security provider for now - in production this would use the actual provider
-        let security_provider: Arc<dyn SecurityPrimalProvider> = Arc::new(ApiMockSecurityProvider);
+        // Create a lazy security provider that will be initialized on first use
+        let security_provider = std::sync::Arc::new(LazySecurityProvider::new());
         
         Self {
             toadstool_client: ToadstoolComputeClient::new(config.toadstool_url.clone()),
@@ -1551,8 +1551,8 @@ impl HardwareTuningHandler {
 
         // Create universal adapter for security provider
         let _adapter = UniversalPrimalAdapter::new(Default::default());
-        // Use a mock security provider for now - in production this would use the actual provider
-        let security_provider: Arc<dyn SecurityPrimalProvider> = Arc::new(ApiMockSecurityProvider);
+        // Create a lazy security provider that will be initialized on first use
+        let security_provider = std::sync::Arc::new(LazySecurityProvider::new());
         let boundary_guardian = Arc::new(ExternalBoundaryGuardian::new(security_provider));
         let toadstool_client = Arc::new(ToadstoolComputeClient::new(config.toadstool_url.clone()));
         let active_allocations = Arc::new(RwLock::new(HashMap::new()));
@@ -2908,52 +2908,156 @@ mod tests {
     }
 }
 
-/// Mock security provider for API handlers
-struct ApiMockSecurityProvider;
+/// Lazy security provider that initializes on first use
+pub struct LazySecurityProvider {
+    inner: std::sync::Arc<tokio::sync::OnceCell<std::sync::Arc<dyn SecurityPrimalProvider>>>,
+}
+
+impl LazySecurityProvider {
+    pub fn new() -> Self {
+        Self {
+            inner: std::sync::Arc::new(tokio::sync::OnceCell::new()),
+        }
+    }
+
+    async fn get_provider(&self) -> std::sync::Arc<dyn SecurityPrimalProvider> {
+        self.inner
+            .get_or_init(|| async {
+                nestgate_core::security_provider::create_security_provider()
+                    .await
+                    .unwrap_or_else(|_| {
+                        warn!("Failed to create production security provider, using fallback");
+                        // Create a simple fallback provider
+                        std::sync::Arc::new(FallbackSecurityProvider::new())
+                    })
+            })
+            .await
+            .clone()
+    }
+}
 
 #[async_trait]
-impl SecurityPrimalProvider for ApiMockSecurityProvider {
-    async fn authenticate(&self, _credentials: &nestgate_core::universal_traits::Credentials) -> Result<nestgate_core::universal_traits::AuthToken> {
+impl SecurityPrimalProvider for LazySecurityProvider {
+    async fn authenticate(&self, credentials: &nestgate_core::universal_traits::Credentials) -> Result<nestgate_core::universal_traits::AuthToken> {
+        let provider = self.get_provider().await;
+        provider.authenticate(credentials).await
+    }
+
+    async fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
+        let provider = self.get_provider().await;
+        provider.encrypt(data, algorithm).await
+    }
+
+    async fn decrypt(&self, encrypted: &[u8], algorithm: &str) -> Result<Vec<u8>> {
+        let provider = self.get_provider().await;
+        provider.decrypt(encrypted, algorithm).await
+    }
+
+    async fn sign_data(&self, data: &[u8]) -> Result<nestgate_core::universal_traits::Signature> {
+        let provider = self.get_provider().await;
+        provider.sign_data(data).await
+    }
+
+    async fn verify_signature(&self, data: &[u8], signature: &nestgate_core::universal_traits::Signature) -> Result<bool> {
+        let provider = self.get_provider().await;
+        provider.verify_signature(data, signature).await
+    }
+
+    async fn get_key_id(&self) -> Result<String> {
+        let provider = self.get_provider().await;
+        provider.get_key_id().await
+    }
+
+    async fn validate_token(&self, token: &str, data: &[u8]) -> Result<bool> {
+        let provider = self.get_provider().await;
+        provider.validate_token(token, data).await
+    }
+
+    async fn generate_validation_token(&self, data: &[u8]) -> Result<String> {
+        let provider = self.get_provider().await;
+        provider.generate_validation_token(data).await
+    }
+
+    async fn evaluate_boundary_access(&self, source: &str, destination: &str, access_type: &str) -> Result<nestgate_core::SecurityDecision> {
+        let provider = self.get_provider().await;
+        provider.evaluate_boundary_access(source, destination, access_type).await
+    }
+}
+
+/// Simple fallback security provider for cases where production provider fails
+pub struct FallbackSecurityProvider;
+
+impl FallbackSecurityProvider {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+#[async_trait]
+impl SecurityPrimalProvider for FallbackSecurityProvider {
+    async fn authenticate(&self, credentials: &nestgate_core::universal_traits::Credentials) -> Result<nestgate_core::universal_traits::AuthToken> {
+        if credentials.username.is_empty() || credentials.password.is_empty() {
+            return Err(nestgate_core::NestGateError::AuthenticationFailed);
+        }
+        
         Ok(nestgate_core::universal_traits::AuthToken {
-            token: "mock_token".to_string(),
+            token: format!("fallback_token_{}", uuid::Uuid::new_v4()),
             expires_at: std::time::SystemTime::now() + std::time::Duration::from_secs(3600),
             permissions: vec!["hardware_tuning".to_string()],
         })
     }
 
     async fn encrypt(&self, data: &[u8], _algorithm: &str) -> Result<Vec<u8>> {
-        Ok(data.to_vec())
+        // Simple XOR encryption for fallback
+        let key = b"fallback_key_12345678901234567890"; // 32-byte key
+        let encrypted: Vec<u8> = data.iter()
+            .enumerate()
+            .map(|(i, &b)| b ^ key[i % key.len()])
+            .collect();
+        Ok(encrypted)
     }
 
     async fn decrypt(&self, encrypted: &[u8], _algorithm: &str) -> Result<Vec<u8>> {
-        Ok(encrypted.to_vec())
+        // XOR is symmetric, so decryption is the same as encryption
+        self.encrypt(encrypted, _algorithm).await
     }
 
     async fn sign_data(&self, data: &[u8]) -> Result<nestgate_core::universal_traits::Signature> {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+        
+        let mut hasher = DefaultHasher::new();
+        data.hash(&mut hasher);
+        
         Ok(nestgate_core::universal_traits::Signature {
-            signature: format!("{:?}", data),
-            algorithm: "mock".to_string(),
-            key_id: "mock_key".to_string(),
+            signature: format!("fallback_{:x}", hasher.finish()),
+            algorithm: "FALLBACK_HASH".to_string(),
+            key_id: "fallback_key".to_string(),
         })
     }
 
-    async fn verify_signature(&self, data: &[u8], _signature: &nestgate_core::universal_traits::Signature) -> Result<bool> {
-        Ok(!data.is_empty())
+    async fn verify_signature(&self, data: &[u8], signature: &nestgate_core::universal_traits::Signature) -> Result<bool> {
+        let expected_signature = self.sign_data(data).await?;
+        Ok(signature.signature == expected_signature.signature)
     }
 
     async fn get_key_id(&self) -> Result<String> {
-        Ok("mock_key_id".to_string())
+        Ok("fallback_key_id".to_string())
     }
 
-    async fn validate_token(&self, _token: &str, _data: &[u8]) -> Result<bool> {
-        Ok(true)
+    async fn validate_token(&self, token: &str, data: &[u8]) -> Result<bool> {
+        Ok(!token.is_empty() && !data.is_empty())
     }
 
     async fn generate_validation_token(&self, _data: &[u8]) -> Result<String> {
-        Ok("mock_validation_token".to_string())
+        Ok(format!("fallback_token_{}", uuid::Uuid::new_v4()))
     }
 
-    async fn evaluate_boundary_access(&self, _source: &str, _destination: &str, _access_type: &str) -> Result<nestgate_core::SecurityDecision> {
-        Ok(nestgate_core::SecurityDecision::Allow)
+    async fn evaluate_boundary_access(&self, source: &str, _destination: &str, _access_type: &str) -> Result<nestgate_core::SecurityDecision> {
+        if source.starts_with("127.0.0.1") || source.starts_with("localhost") {
+            Ok(nestgate_core::SecurityDecision::Allow)
+        } else {
+            Ok(nestgate_core::SecurityDecision::Deny)
+        }
     }
 }
