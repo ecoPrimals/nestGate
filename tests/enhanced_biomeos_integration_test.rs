@@ -1,11 +1,10 @@
 use std::collections::HashMap;
 
 use nestgate_core::biomeos::{
-    AgentSpec, BackupConfig, BiomeManifest, BiomeMetadata, BiomeNetworking, BiomeResources,
-    BiomeSecurity, BiomeStorage, ComputeResources, CoordinationConfig, DiscoveryConfig,
-    EventCoordinationConfig, HealthCheckEndpoint, HealthChecksConfig, NetworkResources, PortSpec,
-    PrimalConfig, ResourceLimits, RetryConfig, SecurityLevel, ServiceConfig, ServiceMeshConfig,
-    StoragePolicies, StorageResources, VolumeSpec,
+    AgentSpec, BiomeManifest, BiomeMetadata, BiomeNetworking, BiomeResources, BiomeSecurity,
+    BiomeStorage, ComputeResources, CoordinationConfig, DiscoveryConfig, EventCoordinationConfig,
+    HealthCheckEndpoint, HealthChecksConfig, NetworkResources, PortSpec, PrimalConfig,
+    ResourceLimits, RetryConfig, SecurityLevel, ServiceMeshConfig, StorageResources, VolumeSpec,
 };
 
 #[tokio::test]
@@ -444,18 +443,50 @@ async fn test_cross_primal_integration() {
                 "orchestration-primal".to_string(),
                 PrimalConfig {
                     primal_type: "orchestration".to_string(),
-                    enabled: true,
-                    endpoint: Some("http://localhost:8080".to_string()),
-                    capabilities: vec!["discovery".to_string(), "coordination".to_string()],
+                    version: "1.0.0".to_string(),
+                    config: {
+                        let mut config = HashMap::new();
+                        config.insert("enabled".to_string(), serde_json::Value::Bool(true));
+                        config.insert(
+                            "endpoint".to_string(),
+                            serde_json::Value::String("http://localhost:8080".to_string()),
+                        );
+                        config.insert(
+                            "capabilities".to_string(),
+                            serde_json::Value::Array(vec![
+                                serde_json::Value::String("discovery".to_string()),
+                                serde_json::Value::String("coordination".to_string()),
+                            ]),
+                        );
+                        config
+                    },
+                    resources: None,
+                    dependencies: None,
                 },
             );
             primals.insert(
                 "ai-primal".to_string(),
                 PrimalConfig {
                     primal_type: "ai".to_string(),
-                    enabled: true,
-                    endpoint: Some("http://localhost:8081".to_string()),
-                    capabilities: vec!["optimization".to_string(), "analysis".to_string()],
+                    version: "1.0.0".to_string(),
+                    config: {
+                        let mut config = HashMap::new();
+                        config.insert("enabled".to_string(), serde_json::Value::Bool(true));
+                        config.insert(
+                            "endpoint".to_string(),
+                            serde_json::Value::String("http://localhost:8081".to_string()),
+                        );
+                        config.insert(
+                            "capabilities".to_string(),
+                            serde_json::Value::Array(vec![
+                                serde_json::Value::String("optimization".to_string()),
+                                serde_json::Value::String("analysis".to_string()),
+                            ]),
+                        );
+                        config
+                    },
+                    resources: None,
+                    dependencies: None,
                 },
             );
             primals

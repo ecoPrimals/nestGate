@@ -45,25 +45,35 @@
 //! ```rust
 //! use nestgate_core::{
 //!     temporal_storage::{TemporalStorageSystem, StorageEra},
-//!     crypto_locks::{ExternalBoundaryGuardian, BearDogConfig},
 //!     data_sources::{NCBIGenomeSource, HuggingFaceModelSource},
-//!     universal_storage::{UniversalStorageManager, StorageProtocol},
+//!     universal_adapter::UniversalPrimalAdapter,
+//!     universal_storage::UniversalStorageConfig,
+//!     universal_traits::SecurityPrimalProvider,
 //!     Result, NestGateError
 //! };
+//! use std::collections::HashMap;
+//! use std::time::SystemTime;
 //!
-//! // Initialize temporal storage
-//! let storage = TemporalStorageSystem::new();
+//! // Initialize temporal storage system
+//! let storage = TemporalStorageSystem {
+//!     devices: HashMap::new(),
+//!     current_time: SystemTime::now(),
+//!     era_mappings: HashMap::new(),
+//! };
 //!
-//! // Setup crypto locks
-//! let beardog_config = BearDogConfig::default();
-//! let guardian = ExternalBoundaryGuardian::new(beardog_config);
+//! // Setup universal adapter for primal integration
+//! let adapter = UniversalPrimalAdapter::new(Default::default());
 //!
 //! // Connect to data sources
-//! let ncbi = NCBIGenomeSource::new();
+//! let ncbi = NCBIGenomeSource::new(None);
 //! let hf = HuggingFaceModelSource::new(None);
 //!
-//! // Initialize universal storage
-//! let universal_storage = UniversalStorageManager::new().await?;
+//! // Storage configuration
+//! let storage_config = UniversalStorageConfig::default();
+//!
+//! // Universal adapter provides automatic primal discovery and integration
+//! // Real usage would initialize security providers, AI providers, etc.
+//! println!("NestGate core initialized with universal adapter support");
 //! ```
 //!
 //! ## Integration
@@ -123,6 +133,18 @@ pub mod utils;
 // Zero-copy optimization utilities
 pub mod zero_copy;
 
+// Universal primal architecture
+pub mod universal_traits;
+pub mod universal_adapter;
+
+// Hardware tuning types
+pub mod hardware_tuning;
+pub use hardware_tuning::{
+    HardwareAgnosticTuner, HardwareConfiguration, TuningProfile, TuningResult,
+    ExtractionLock, ExternalLockType, CryptographicProof, ExtractionRestrictions,
+    TimeRestrictions, CopyleftRequirements, StorageType
+};
+
 use serde::{Deserialize, Serialize};
 
 // Re-export commonly used types
@@ -133,6 +155,8 @@ pub use error::*;
 pub use temporal_storage::{StorageEra, TemporalStorageSystem};
 pub use types::*;
 pub use universal_storage::{StorageProtocol, UniversalStorageManager};
+pub use universal_traits::*;
+pub use universal_adapter::*;
 
 /// Initialize the NestGate core library with enhanced capabilities
 pub fn init() -> Result<()> {

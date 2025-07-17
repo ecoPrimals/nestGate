@@ -39,10 +39,7 @@ pub struct OptimizationOpportunity {
 /// Benchmark configuration creation
 fn bench_config_creation(c: &mut Criterion) {
     c.bench_function("config_creation", |b| {
-        b.iter(|| {
-            let config = black_box(ZfsMcpConfig::default());
-            config
-        })
+        b.iter(|| black_box(ZfsMcpConfig::default()))
     });
 }
 
@@ -63,7 +60,7 @@ fn bench_tier_config_access(c: &mut Criterion) {
     c.bench_function("tier_config_access", |b| {
         b.iter(|| {
             for tier in &tiers {
-                black_box(config.get_tier_config(&(*tier).into()));
+                black_box(config.get_tier_config(tier));
             }
         })
     });
@@ -72,10 +69,7 @@ fn bench_tier_config_access(c: &mut Criterion) {
 /// Benchmark performance metrics creation
 fn bench_performance_metrics(c: &mut Criterion) {
     c.bench_function("performance_metrics_creation", |b| {
-        b.iter(|| {
-            let metrics = black_box(crate::performance::CurrentPerformanceMetrics::default());
-            metrics
-        })
+        b.iter(|| black_box(crate::performance::CurrentPerformanceMetrics::default()))
     });
 }
 
@@ -90,7 +84,7 @@ fn bench_tier_metrics_generation(c: &mut Criterion) {
 
     for tier in &tiers {
         c.bench_with_input(
-            BenchmarkId::new("tier_metrics_generation", format!("{:?}", tier)),
+            BenchmarkId::new("tier_metrics_generation", format!("{tier:?}")),
             tier,
             |b, &tier| {
                 b.iter(|| {
@@ -180,7 +174,7 @@ fn bench_memory_allocation(c: &mut Criterion) {
         b.iter(|| {
             let mut map: HashMap<String, String> = HashMap::new();
             for i in 0..100 {
-                map.insert(format!("key_{}", i), format!("value_{}", i));
+                map.insert(format!("key_{i}"), format!("value_{i}"));
             }
             black_box(map)
         })
@@ -190,7 +184,7 @@ fn bench_memory_allocation(c: &mut Criterion) {
         b.iter(|| {
             let mut vec = Vec::new();
             for i in 0..100 {
-                vec.push(format!("item_{}", i));
+                vec.push(format!("item_{i}"));
             }
             black_box(vec)
         })
@@ -279,7 +273,7 @@ fn create_test_opportunities(count: usize) -> Vec<OptimizationOpportunity> {
         .map(|i| {
             OptimizationOpportunity {
                 optimization_type: OptimizationType::TierMigration,
-                description: format!("Optimization {}", i),
+                description: format!("Optimization {i}"),
                 expected_impact: (i as f64 * 3.7) % 100.0, // Pseudo-random impact
                 confidence: 0.5 + (i as f64 * 0.1) % 0.5,
                 complexity: OptimizationComplexity::Medium,

@@ -3,6 +3,8 @@
 //! Common types used across the ZFS system
 
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::time::SystemTime;
 
 /// Compression algorithms supported by ZFS
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -175,6 +177,202 @@ impl From<StorageTier> for nestgate_core::StorageTier {
             StorageTier::Warm => Self::Warm,
             StorageTier::Cold => Self::Cold,
             StorageTier::Cache => Self::Cache,
+        }
+    }
+}
+
+// Advanced features types
+
+/// Advanced configuration for ZFS features
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AdvancedConfig {
+    /// Enable AI-powered features
+    pub ai_enabled: bool,
+    /// Enable predictive analytics
+    pub predictive_analytics: bool,
+    /// Enable intelligent replication
+    pub intelligent_replication: bool,
+    /// Enable advanced snapshots
+    pub advanced_snapshots: bool,
+}
+
+impl Default for AdvancedConfig {
+    fn default() -> Self {
+        Self {
+            ai_enabled: false,
+            predictive_analytics: false,
+            intelligent_replication: false,
+            advanced_snapshots: false,
+        }
+    }
+}
+
+/// Capacity forecast results
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CapacityForecast {
+    /// Dataset name
+    pub dataset: String,
+    /// Predicted usage percentage
+    pub predicted_usage: f64,
+    /// Confidence level (0.0-1.0)
+    pub confidence: f64,
+    /// Time horizon in days
+    pub time_horizon: u64,
+}
+
+/// Bottleneck analysis report
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BottleneckReport {
+    /// Identified bottlenecks
+    pub bottlenecks: Vec<String>,
+    /// Severity level
+    pub severity: String,
+    /// Recommendations
+    pub recommendations: Vec<String>,
+}
+
+/// Maintenance plan
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MaintenancePlan {
+    /// Dataset name
+    pub dataset: String,
+    /// Scheduled tasks
+    pub scheduled_tasks: Vec<String>,
+    /// Priority level
+    pub priority: String,
+    /// Estimated duration in minutes
+    pub estimated_duration: u64,
+}
+
+/// Replication performance metrics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReplicationPerformance {
+    /// Transfer rate in MB/s
+    pub transfer_rate: f64,
+    /// Latency in milliseconds
+    pub latency: f64,
+    /// Error rate
+    pub error_rate: f64,
+    /// Throughput in operations per second
+    pub throughput: f64,
+}
+
+impl Default for ReplicationPerformance {
+    fn default() -> Self {
+        Self {
+            transfer_rate: 0.0,
+            latency: 0.0,
+            error_rate: 0.0,
+            throughput: 0.0,
+        }
+    }
+}
+
+/// Replication optimization recommendations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReplicationOptimization {
+    /// Source dataset
+    pub source: String,
+    /// Target datasets
+    pub targets: Vec<String>,
+    /// Recommended strategy
+    pub recommended_strategy: String,
+    /// Expected improvement percentage
+    pub expected_improvement: f64,
+    /// Implementation steps
+    pub implementation_steps: Vec<String>,
+}
+
+/// Snapshot optimization recommendations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SnapshotOptimization {
+    /// Dataset name
+    pub dataset: String,
+    /// Retention recommendations
+    pub retention_recommendations: Vec<String>,
+    /// Cleanup candidates
+    pub cleanup_candidates: Vec<String>,
+    /// Expected space savings in bytes
+    pub space_savings: u64,
+}
+
+/// Retention optimization recommendations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RetentionOptimization {
+    /// Dataset name
+    pub dataset: String,
+    /// Optimized retention policy
+    pub optimized_policy: RetentionPolicy,
+    /// Expected space savings in bytes
+    pub expected_savings: u64,
+    /// Implementation plan
+    pub implementation_plan: Vec<String>,
+}
+
+/// Retention policy configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RetentionPolicy {
+    /// Number of daily snapshots to keep
+    pub daily_snapshots: u32,
+    /// Number of weekly snapshots to keep
+    pub weekly_snapshots: u32,
+    /// Number of monthly snapshots to keep
+    pub monthly_snapshots: u32,
+    /// Number of yearly snapshots to keep
+    pub yearly_snapshots: u32,
+}
+
+impl Default for RetentionPolicy {
+    fn default() -> Self {
+        Self {
+            daily_snapshots: 7,
+            weekly_snapshots: 4,
+            monthly_snapshots: 12,
+            yearly_snapshots: 2,
+        }
+    }
+}
+
+/// Advanced feature analysis report
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AdvancedFeatureReport {
+    /// Pool name
+    pub pool: String,
+    /// Dataset name
+    pub dataset: String,
+    /// Features analyzed
+    pub features: Vec<String>,
+    /// Analysis results
+    pub analysis: HashMap<String, String>,
+    /// Recommendations
+    pub recommendations: Vec<String>,
+    /// Analysis timestamp
+    pub timestamp: SystemTime,
+}
+
+/// System information for analysis
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SystemInfo {
+    /// CPU usage percentage
+    pub cpu_usage: f64,
+    /// Memory usage percentage
+    pub memory_usage: f64,
+    /// Disk usage percentage
+    pub disk_usage: f64,
+    /// Network I/O rate
+    pub network_io: f64,
+    /// Timestamp
+    pub timestamp: SystemTime,
+}
+
+impl Default for SystemInfo {
+    fn default() -> Self {
+        Self {
+            cpu_usage: 0.0,
+            memory_usage: 0.0,
+            disk_usage: 0.0,
+            network_io: 0.0,
+            timestamp: SystemTime::now(),
         }
     }
 }

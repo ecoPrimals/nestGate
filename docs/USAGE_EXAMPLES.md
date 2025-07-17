@@ -142,17 +142,31 @@ curl -X POST http://localhost:8080/api/v1/byob/workspaces/team-bioinformatics/ac
 
 ## AI-Powered Optimization
 
+### Universal AI Module Integration
+
+```bash
+# Check integrated AI modules
+curl http://localhost:8080/api/v1/modules/status/ai
+
+# Check AI module capabilities
+curl http://localhost:8080/api/v1/modules/capabilities/ai
+
+# Get integrated AI modules configuration
+curl http://localhost:8080/api/v1/modules/config/ai
+```
+
 ### Intelligent Storage Tiering
 
 ```bash
-# Enable AI-powered tier migration
+# Enable AI-powered tier migration with integrated AI modules
 curl -X POST http://localhost:8080/api/v1/ai/tier-migration/enable \
   -H "Content-Type: application/json" \
   -d '{
     "enabled": true,
     "hot_threshold": 0.9,
     "cold_threshold": 0.1,
-    "analysis_window_days": 7
+    "analysis_window_days": 7,
+    "ai_module_preference": "auto"
   }'
 
 # Get AI recommendations for storage optimization
@@ -458,8 +472,14 @@ curl http://localhost:8080/api/v1/auth/user-info
 # Check AI service status
 curl http://localhost:8080/api/v1/ai/status
 
-# Verify Squirrel connection
-curl http://localhost:8080/api/v1/ai/squirrel/health
+# Verify AI module integration
+curl http://localhost:8080/api/v1/modules/health/ai
+
+# Check available AI module capabilities
+curl http://localhost:8080/api/v1/modules/capabilities/ai
+
+# Test AI module communication
+curl http://localhost:8080/api/v1/modules/test/ai
 ```
 
 ### Getting Help

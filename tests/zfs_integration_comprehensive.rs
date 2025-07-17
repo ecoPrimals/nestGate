@@ -1,6 +1,6 @@
 use nestgate_core::{NestGateError, Result, StorageTier};
 use nestgate_zfs::{config::ZfsConfig, ZfsManager};
-use serde_json::json;
+
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tempfile::TempDir;

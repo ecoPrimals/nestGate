@@ -909,6 +909,57 @@ mod providers {
                 ))
             }
         }
+
+        /// Fetch models from HuggingFace API
+        async fn fetch_huggingface_models(
+            &self,
+            base_url: &str,
+            api_key: &str,
+        ) -> Result<Vec<String>> {
+            let client = reqwest::Client::new();
+            let url = format!("{base_url}/api/models");
+
+            let mut request = client
+                .get(&url)
+                .header("User-Agent", "nestgate/1.0")
+                .query(&[("limit", "100")]);
+
+            if !api_key.is_empty() {
+                request = request.header("Authorization", format!("Bearer {api_key}"));
+            }
+
+            let response = request.send().await.map_err(|e| {
+                NestGateError::Network(format!("Failed to fetch models from HuggingFace: {e}"))
+            })?;
+
+            if !response.status().is_success() {
+                return Err(NestGateError::Network(format!(
+                    "HuggingFace API returned status: {}",
+                    response.status()
+                )));
+            }
+
+            let models_data: serde_json::Value = response.json().await.map_err(|e| {
+                NestGateError::Serialization(format!("Failed to parse HuggingFace response: {e}"))
+            })?;
+
+            let models = models_data
+                .as_array()
+                .ok_or_else(|| {
+                    NestGateError::InvalidInput(
+                        "Invalid response format from HuggingFace".to_string(),
+                    )
+                })?
+                .iter()
+                .filter_map(|model| {
+                    model
+                        .get("id")
+                        .and_then(|id| id.as_str().map(|s| s.to_string()))
+                })
+                .collect::<Vec<String>>();
+
+            Ok(models)
+        }
     }
 
     #[async_trait]
@@ -967,15 +1018,24 @@ mod providers {
             let base_url = self.get_base_url();
             let api_key = self.get_api_key()?;
 
-            // TODO: Implement actual HuggingFace model listing using base_url and api_key
-            // For now, return sample models based on config
-            let models = if self.config.model_filter.is_empty() {
-                vec!["gpt2".to_string(), "bert-base-uncased".to_string()]
-            } else {
-                self.config.model_filter.clone()
+            // Try to fetch models from HuggingFace API
+            let models = match self.fetch_huggingface_models(base_url, api_key).await {
+                Ok(models) => models,
+                Err(e) => {
+                    tracing::warn!("Failed to fetch models from HuggingFace API: {}", e);
+                    // Fallback to configured models or defaults
+                    if self.config.model_filter.is_empty() {
+                        vec!["gpt2".to_string(), "bert-base-uncased".to_string()]
+                    } else {
+                        self.config.model_filter.clone()
+                    }
+                }
             };
 
-            tracing::info!("Listing models from HuggingFace at {base_url}");
+            tracing::info!(
+                "Listing {} models from HuggingFace at {base_url}",
+                models.len()
+            );
             if !api_key.is_empty() {
                 tracing::info!("Using authenticated API access");
             }

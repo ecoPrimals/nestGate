@@ -11,13 +11,14 @@ status: PRODUCTION READY
 ## 🎯 **Quick Start - Essential Documents**
 
 ### **📋 Current Status & Overview**
-- **[CURRENT_STATUS.md](./CURRENT_STATUS.md)** - Complete production readiness overview
-- **[README.md](./README.md)** - Main project introduction and capabilities
-- **[specs/ARCHITECTURE_OVERVIEW.md](./specs/ARCHITECTURE_OVERVIEW.md)** - Production architecture v4.0
+- **[CURRENT_STATUS.md](./CURRENT_STATUS.md)** - Complete production readiness overview with 1.9 GB/s performance
+- **[README.md](./README.md)** - Main project introduction and lightning-fast capabilities
+- **[specs/ARCHITECTURE_OVERVIEW.md](./specs/ARCHITECTURE_OVERVIEW.md)** - Production architecture v4.0 with performance optimization
 
 ### **🔧 Technical Implementation**
-- **[specs/IMPLEMENTATION_GAPS_ANALYSIS.md](./specs/IMPLEMENTATION_GAPS_ANALYSIS.md)** - Resolved implementation status
-- **[specs/CURRENT_TECHNICAL_DEBT_ASSESSMENT.md](./specs/CURRENT_TECHNICAL_DEBT_ASSESSMENT.md)** - Technical debt resolution
+- **[specs/archive/PERFORMANCE_OPTIMIZATION_ARCHIVE.md](./specs/archive/PERFORMANCE_OPTIMIZATION_ARCHIVE.md)** - Lightning-fast performance achievements
+- **[specs/archive/project/technical-debt-analysis/](./specs/archive/project/technical-debt-analysis/)** - Resolved technical debt analysis
+- **[docs/IMPLEMENTATION_STATUS.md](./docs/IMPLEMENTATION_STATUS.md)** - Current production implementation status
 
 ---
 

@@ -43,6 +43,14 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 anyhow = "1.0"
 thiserror = "1.0"
+tokio.workspace = true
+tracing.workspace = true
+uuid.workspace = true
+
+# Test dependencies for root level tests
+axum.workspace = true
+axum-test = "15.0"
+reqwest.workspace = true
 
 # Main binary depends on all crates
 nestgate-core = { path = "code/crates/nestgate-core" }
@@ -56,14 +64,10 @@ nestgate-mcp = { path = "code/crates/nestgate-mcp" }
 nestgate-installer = { path = "code/crates/nestgate-installer" }
 nestgate-fsmonitor = { path = "code/crates/nestgate-fsmonitor" }
 nestgate-middleware = { path = "code/crates/nestgate-middleware" }
-uuid.workspace = true
 rand = "0.8"
 regex = "1.0"
-tokio = { version = "1.40", features = ["full"] }
 async-trait.workspace = true
 chrono = "0.4"
-reqwest.workspace = true
-tracing.workspace = true
 
 [dev-dependencies]
 tokio-test = "0.4"

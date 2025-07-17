@@ -435,9 +435,6 @@ impl fmt::Display for ErrorSeverity {
     }
 }
 
-/// Result type alias for ZFS operations
-pub type ZfsResult<T> = Result<T, ZfsError>;
-
 /// Macro for creating ZFS errors with context
 #[macro_export]
 macro_rules! zfs_error {
@@ -448,13 +445,13 @@ macro_rules! zfs_error {
 
 /// Trait for adding context to errors
 pub trait ZfsErrorExt<T> {
-    fn with_context(self, context: String) -> ZfsResult<T>;
-    fn with_operation(self, operation: &str) -> ZfsResult<T>;
-    fn with_component(self, component: &str) -> ZfsResult<T>;
+    fn with_context(self, context: String) -> Result<T>;
+    fn with_operation(self, operation: &str) -> Result<T>;
+    fn with_component(self, component: &str) -> Result<T>;
 }
 
-impl<T> ZfsErrorExt<T> for ZfsResult<T> {
-    fn with_context(self, context: String) -> ZfsResult<T> {
+impl<T> ZfsErrorExt<T> for Result<T> {
+    fn with_context(self, context: String) -> Result<T> {
         self.map_err(|e| match e {
             ZfsError::Internal { message } => ZfsError::Internal {
                 message: format!("{context}: {message}"),
@@ -463,11 +460,11 @@ impl<T> ZfsErrorExt<T> for ZfsResult<T> {
         })
     }
 
-    fn with_operation(self, operation: &str) -> ZfsResult<T> {
+    fn with_operation(self, operation: &str) -> Result<T> {
         self.with_context(format!("Operation: {operation}"))
     }
 
-    fn with_component(self, component: &str) -> ZfsResult<T> {
+    fn with_component(self, component: &str) -> Result<T> {
         self.with_context(format!("Component: {component}"))
     }
 }
@@ -481,6 +478,12 @@ impl From<std::io::Error> for ZfsError {
 impl From<serde_json::Error> for ZfsError {
     fn from(err: serde_json::Error) -> Self {
         ZfsError::SerializationError(err)
+    }
+}
+
+impl From<std::num::ParseIntError> for ZfsError {
+    fn from(err: std::num::ParseIntError) -> Self {
+        ZfsError::ParseError(err.to_string())
     }
 }
 
@@ -536,3 +539,6 @@ mod tests {
         assert_eq!(context.component, "pool_manager");
     }
 }
+
+/// Convenient Result type for ZFS operations
+pub type Result<T> = std::result::Result<T, ZfsError>;

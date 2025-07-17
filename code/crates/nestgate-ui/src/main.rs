@@ -7,7 +7,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("🚀 Starting NestGate - Production ZFS Storage Management");
     info!("💎 Pure Rust Native UI - Zero Web Dependencies");
-    info!("📡 Remote Access: Use Songbird/BearDog");
+    info!("📡 Remote Access: Use universal orchestration/security modules");
 
     // Run the egui application
     if let Err(e) = run_app() {

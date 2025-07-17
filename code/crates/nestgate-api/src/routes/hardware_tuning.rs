@@ -30,10 +30,10 @@ pub async fn auto_tune(
         Ok(result) => {
             info!(
                 "✅ Auto-tuning completed: {} optimizations applied",
-                result.optimizations_applied.len()
+                result.applied_settings.len()
             );
 
-            let performance_gain = result.estimated_performance_gain;
+            let performance_gain = result.performance_improvement;
 
             Ok(ResponseJson(HardwareTuningResponse {
                 session_id: Uuid::new_v4(),

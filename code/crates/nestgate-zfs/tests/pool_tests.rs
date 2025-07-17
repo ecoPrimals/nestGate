@@ -10,7 +10,7 @@ use nestgate_zfs::{
 use std::collections::HashMap;
 
 /// Create a sample pool for testing
-fn create_sample_pool(name: &str) -> PoolInfo {
+fn _create_sample_pool(name: &str) -> PoolInfo {
     PoolInfo {
         name: name.to_string(),
         state: PoolState::Online,

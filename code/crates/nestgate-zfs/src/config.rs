@@ -170,7 +170,7 @@ pub struct SecurityConfig {
     /// Enable encryption metadata tracking (encryption handled by external providers)
     /// Note: NestGate tracks encryption state but does not perform encryption itself
     pub enable_encryption: bool,
-    /// Default encryption algorithm hint for external providers (like BearDog)
+    /// Default encryption algorithm hint for external providers (like security modules)
     pub encryption_algorithm: String,
     /// Key management settings
     pub key_management: KeyManagementConfig,
@@ -661,14 +661,154 @@ impl ZfsConfig {
         Ok(())
     }
 
-    /// Get tier configuration by storage tier
-    pub fn get_tier_config(&self, tier: &StorageTier) -> &TierConfig {
+    /// Get optimized tier configuration for maximum performance
+    pub fn get_tier_config(&self, tier: &StorageTier) -> TierConfig {
         match tier {
-            StorageTier::Hot => &self.tiers.hot,
-            StorageTier::Warm => &self.tiers.warm,
-            StorageTier::Cold => &self.tiers.cold,
-            StorageTier::Cache => &self.tiers.hot, // Cache uses hot tier config
+            StorageTier::Hot => TierConfig {
+                name: "hot".to_string(),
+                pool_name: self.default_pool.clone(),
+                dataset_prefix: "hot".to_string(),
+                properties: Self::get_hot_tier_properties(),
+                performance_profile: PerformanceProfile::HighPerformance,
+                migration_rules: MigrationRules {
+                    age_threshold_days: 1,                    // Move to warm after 1 day
+                    access_frequency_threshold: 10.0,         // High access frequency
+                    size_threshold_bytes: 1024 * 1024 * 1024, // 1GB
+                    auto_migration_enabled: true,
+                    migration_schedule: Some("0 2 * * *".to_string()), // Daily at 2 AM
+                },
+                capacity_limits: CapacityLimits {
+                    max_utilization: 0.85,                   // 85% max for performance
+                    warning_threshold: 0.75,                 // Warning at 75%
+                    reserved_bytes: 10 * 1024 * 1024 * 1024, // 10GB reserved
+                },
+            },
+            StorageTier::Warm => TierConfig {
+                name: "warm".to_string(),
+                pool_name: self.default_pool.clone(),
+                dataset_prefix: "warm".to_string(),
+                properties: Self::get_warm_tier_properties(),
+                performance_profile: PerformanceProfile::Balanced,
+                migration_rules: MigrationRules {
+                    age_threshold_days: 30,                        // Move to cold after 30 days
+                    access_frequency_threshold: 1.0,               // Moderate access frequency
+                    size_threshold_bytes: 10 * 1024 * 1024 * 1024, // 10GB
+                    auto_migration_enabled: true,
+                    migration_schedule: Some("0 3 * * 0".to_string()), // Weekly on Sunday at 3 AM
+                },
+                capacity_limits: CapacityLimits {
+                    max_utilization: 0.90,                  // 90% max for balanced usage
+                    warning_threshold: 0.80,                // Warning at 80%
+                    reserved_bytes: 5 * 1024 * 1024 * 1024, // 5GB reserved
+                },
+            },
+            StorageTier::Cold => TierConfig {
+                name: "cold".to_string(),
+                pool_name: self.default_pool.clone(),
+                dataset_prefix: "cold".to_string(),
+                properties: Self::get_cold_tier_properties(),
+                performance_profile: PerformanceProfile::HighCompression,
+                migration_rules: MigrationRules {
+                    age_threshold_days: 365,                        // Archive after 1 year
+                    access_frequency_threshold: 0.1,                // Very low access frequency
+                    size_threshold_bytes: 100 * 1024 * 1024 * 1024, // 100GB
+                    auto_migration_enabled: true,
+                    migration_schedule: Some("0 4 1 * *".to_string()), // Monthly on 1st at 4 AM
+                },
+                capacity_limits: CapacityLimits {
+                    max_utilization: 0.95,                  // 95% max for cold storage
+                    warning_threshold: 0.85,                // Warning at 85%
+                    reserved_bytes: 2 * 1024 * 1024 * 1024, // 2GB reserved
+                },
+            },
+            StorageTier::Cache => TierConfig {
+                name: "cache".to_string(),
+                pool_name: self.default_pool.clone(),
+                dataset_prefix: "cache".to_string(),
+                properties: Self::get_hot_tier_properties(), // Cache uses hot tier properties
+                performance_profile: PerformanceProfile::HighPerformance,
+                migration_rules: MigrationRules {
+                    age_threshold_days: 1,                   // Very short cache time
+                    access_frequency_threshold: 50.0,        // Very high access frequency
+                    size_threshold_bytes: 512 * 1024 * 1024, // 512MB
+                    auto_migration_enabled: true,
+                    migration_schedule: Some("0 1 * * *".to_string()), // Daily at 1 AM
+                },
+                capacity_limits: CapacityLimits {
+                    max_utilization: 0.80,                  // 80% max for cache
+                    warning_threshold: 0.70,                // Warning at 70%
+                    reserved_bytes: 5 * 1024 * 1024 * 1024, // 5GB reserved
+                },
+            },
         }
+    }
+
+    /// Get lightning-fast hot tier properties optimized for maximum speed
+    fn get_hot_tier_properties() -> HashMap<String, String> {
+        let mut properties = HashMap::new();
+
+        // Performance optimizations for HOT tier - MAXIMUM SPEED
+        properties.insert("compression".to_string(), "off".to_string()); // No compression for max speed
+        properties.insert("recordsize".to_string(), "1M".to_string()); // Large records for throughput
+        properties.insert("primarycache".to_string(), "all".to_string()); // Cache everything in memory
+        properties.insert("secondarycache".to_string(), "all".to_string()); // Use L2ARC for speed
+        properties.insert("logbias".to_string(), "throughput".to_string()); // Optimize for throughput
+        properties.insert("sync".to_string(), "disabled".to_string()); // Disable sync for max speed
+        properties.insert("atime".to_string(), "off".to_string()); // No access time updates
+        properties.insert("redundant_metadata".to_string(), "most".to_string()); // Balance safety/speed
+        properties.insert("prefetch".to_string(), "all".to_string()); // Aggressive prefetching
+        properties.insert("dedup".to_string(), "off".to_string()); // No deduplication overhead
+        properties.insert("xattr".to_string(), "sa".to_string()); // System attributes in ZIL
+        properties.insert("dnodesize".to_string(), "auto".to_string()); // Optimize dnode size
+        properties.insert("special_small_blocks".to_string(), "32K".to_string()); // Use special vdev for small blocks
+
+        properties
+    }
+
+    /// Get balanced warm tier properties for general usage
+    fn get_warm_tier_properties() -> HashMap<String, String> {
+        let mut properties = HashMap::new();
+
+        // Balanced optimizations for WARM tier
+        properties.insert("compression".to_string(), "lz4".to_string()); // Fast compression
+        properties.insert("recordsize".to_string(), "128K".to_string()); // Balanced record size
+        properties.insert("primarycache".to_string(), "all".to_string()); // Cache in memory
+        properties.insert("secondarycache".to_string(), "all".to_string()); // Use L2ARC
+        properties.insert("logbias".to_string(), "latency".to_string()); // Balance latency/throughput
+        properties.insert("sync".to_string(), "standard".to_string()); // Standard sync
+        properties.insert("atime".to_string(), "off".to_string()); // No access time updates
+        properties.insert("redundant_metadata".to_string(), "all".to_string()); // Full metadata protection
+        properties.insert("prefetch".to_string(), "metadata".to_string()); // Metadata prefetching
+        properties.insert("dedup".to_string(), "off".to_string()); // No deduplication
+        properties.insert("xattr".to_string(), "sa".to_string()); // System attributes
+        properties.insert("dnodesize".to_string(), "auto".to_string()); // Auto dnode size
+
+        properties
+    }
+
+    /// Get cold tier properties optimized for maximum reliability and compression
+    fn get_cold_tier_properties() -> HashMap<String, String> {
+        let mut properties = HashMap::new();
+
+        // Reliability optimizations for COLD tier - MAXIMUM RELIABILITY
+        properties.insert("compression".to_string(), "zstd".to_string()); // High compression
+        properties.insert("recordsize".to_string(), "1M".to_string()); // Large records for compression
+        properties.insert("primarycache".to_string(), "metadata".to_string()); // Cache only metadata
+        properties.insert("secondarycache".to_string(), "metadata".to_string()); // L2ARC for metadata only
+        properties.insert("logbias".to_string(), "latency".to_string()); // Optimize for consistency
+        properties.insert("sync".to_string(), "always".to_string()); // Always sync for reliability
+        properties.insert("atime".to_string(), "off".to_string()); // No access time updates
+        properties.insert("redundant_metadata".to_string(), "all".to_string()); // Full metadata protection
+        properties.insert("prefetch".to_string(), "metadata".to_string()); // Metadata prefetching only
+        properties.insert("dedup".to_string(), "on".to_string()); // Enable deduplication
+        properties.insert("xattr".to_string(), "sa".to_string()); // System attributes
+        properties.insert("dnodesize".to_string(), "auto".to_string()); // Auto dnode size
+        properties.insert("checksum".to_string(), "sha256".to_string()); // Strong checksums
+        properties.insert("copies".to_string(), "2".to_string()); // Duplicate metadata
+        properties.insert("snapdev".to_string(), "visible".to_string()); // Visible snapshots
+        properties.insert("readonly".to_string(), "off".to_string()); // Allow writes
+
+        properties
     }
 
     /// Validate configuration
