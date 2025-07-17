@@ -387,16 +387,17 @@ async fn test_enhanced_biome_context_creation() {
         node_id: "node-001".to_string(),
         environment: "production".to_string(),
         security_context: SecurityContext {
+            user_id: "test_user".to_string(),
+            auth_token: Some("test_token".to_string()),
+            permissions: vec!["read".to_string(), "write".to_string()],
             security_level: SecurityLevel::High,
             encryption_enabled: true,
-            audit_enabled: true,
-            access_controls: HashMap::new(),
         },
         resource_constraints: nestgate_core::biomeos::ResourceConstraints {
-            max_cpu_cores: 16.0,
-            max_memory_mb: 32768,
-            max_storage_gb: 1000,
-            max_network_bandwidth_mbps: 10000,
+            max_cpu_cores: Some(16.0),
+            max_memory_mb: Some(32768),
+            max_storage_gb: Some(1000),
+            quotas: HashMap::new(),
         },
         integration_endpoints: {
             let mut endpoints = HashMap::new();
@@ -416,8 +417,7 @@ async fn test_enhanced_biome_context_creation() {
     assert_eq!(biome_context.biome_id, "test-biome-enhanced");
     assert_eq!(biome_context.environment, "production");
     assert!(biome_context.security_context.encryption_enabled);
-    assert!(biome_context.security_context.audit_enabled);
-    assert_eq!(biome_context.resource_constraints.max_cpu_cores, 16.0);
+    assert_eq!(biome_context.resource_constraints.max_cpu_cores, Some(16.0));
     assert_eq!(biome_context.integration_endpoints.len(), 5);
     assert!(biome_context
         .integration_endpoints
@@ -433,11 +433,11 @@ async fn test_volume_provisioning_with_universal_patterns() {
         provisioner: "nestgate".to_string(),
         mount_path: Some("/biome/ai-training".to_string()),
         access_mode: Some("ReadWriteMany".to_string()),
-        protocols: vec![
+        protocols: Some(vec![
             "nfs".to_string(),
             "smb".to_string(),
             "coordination".to_string(),
-        ],
+        ]),
         options: Some({
             let mut options = HashMap::new();
             options.insert("compression".to_string(), "gzip".to_string());
@@ -446,6 +446,7 @@ async fn test_volume_provisioning_with_universal_patterns() {
             options.insert("universal_patterns".to_string(), "true".to_string());
             options
         }),
+        backup_policy: Some("daily".to_string()),
     };
 
     // Test volume spec parsing
@@ -827,16 +828,17 @@ async fn test_integration_endpoints_validation() {
         node_id: "node-001".to_string(),
         environment: "production".to_string(),
         security_context: SecurityContext {
+            user_id: "test_user".to_string(),
+            auth_token: Some("test_token".to_string()),
+            permissions: vec!["read".to_string(), "write".to_string()],
             security_level: SecurityLevel::Enterprise,
             encryption_enabled: true,
-            audit_enabled: true,
-            access_controls: HashMap::new(),
         },
         resource_constraints: nestgate_core::biomeos::ResourceConstraints {
-            max_cpu_cores: 32.0,
-            max_memory_mb: 65536,
-            max_storage_gb: 2000,
-            max_network_bandwidth_mbps: 10000,
+            max_cpu_cores: Some(32.0),
+            max_memory_mb: Some(65536),
+            max_storage_gb: Some(2000),
+            quotas: HashMap::new(),
         },
         integration_endpoints: {
             let mut endpoints = HashMap::new();
@@ -887,16 +889,9 @@ async fn test_integration_endpoints_validation() {
         SecurityLevel::Enterprise
     );
     assert!(biome_context.security_context.encryption_enabled);
-    assert!(biome_context.security_context.audit_enabled);
 
     // Test resource constraints for enterprise deployment
-    assert_eq!(biome_context.resource_constraints.max_cpu_cores, 32.0);
-    assert_eq!(biome_context.resource_constraints.max_memory_mb, 65536);
-    assert_eq!(biome_context.resource_constraints.max_storage_gb, 2000);
-    assert_eq!(
-        biome_context
-            .resource_constraints
-            .max_network_bandwidth_mbps,
-        10000
-    );
+    assert_eq!(biome_context.resource_constraints.max_cpu_cores, Some(32.0));
+    assert_eq!(biome_context.resource_constraints.max_memory_mb, Some(65536));
+    assert_eq!(biome_context.resource_constraints.max_storage_gb, Some(2000));
 }

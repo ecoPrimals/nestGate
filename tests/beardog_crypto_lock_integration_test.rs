@@ -12,9 +12,9 @@ use std::time::Duration;
 use nestgate_core::{
     cert::{BearDogConfig, CertValidator},
     crypto_locks::{
-        AccessDecision, CopyleftRequirements, CryptographicProof, ExternalBoundaryGuardian,
-        ExternalLockType, ExtractionRestrictions,
+        AccessDecision, ExternalBoundaryGuardian,
     },
+    CopyleftRequirements, CryptographicProof, ExternalLockType, ExtractionRestrictions,
     Result,
 };
 
@@ -31,7 +31,8 @@ async fn test_beardog_exclusive_key_management() -> Result<()> {
         retry_attempts: 3,
     };
 
-    let guardian = ExternalBoundaryGuardian::new(beardog_config.clone());
+    let security_provider = nestgate_core::security_provider::create_security_provider().await?;
+    let guardian = ExternalBoundaryGuardian::new(security_provider);
     let cert_validator = CertValidator::with_beardog(beardog_config);
 
     // Test 1: Verify that all crypto locks are created through BearDog
@@ -157,7 +158,8 @@ async fn test_external_company_sovereign_lock() -> Result<()> {
         retry_attempts: 3,
     };
 
-    let guardian = ExternalBoundaryGuardian::new(beardog_config);
+    let security_provider = nestgate_core::security_provider::create_security_provider().await?;
+    let guardian = ExternalBoundaryGuardian::new(security_provider);
 
     // Create sovereign lock for external company
     let lock_id = guardian
@@ -269,7 +271,8 @@ async fn test_comprehensive_beardog_integration() -> Result<()> {
         retry_attempts: 3,
     };
 
-    let guardian = ExternalBoundaryGuardian::new(beardog_config);
+    let security_provider = nestgate_core::security_provider::create_security_provider().await?;
+    let guardian = ExternalBoundaryGuardian::new(security_provider);
 
     println!("🔐 Testing Comprehensive BearDog Integration");
 
@@ -372,7 +375,8 @@ async fn test_beardog_sovereignty_model() -> Result<()> {
         retry_attempts: 3,
     };
 
-    let guardian = ExternalBoundaryGuardian::new(beardog_config);
+    let security_provider = nestgate_core::security_provider::create_security_provider().await?;
+    let guardian = ExternalBoundaryGuardian::new(security_provider);
 
     // Scenario 1: Your ecosystem - completely free
     let ecosystem_comm = guardian
