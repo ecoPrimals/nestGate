@@ -303,7 +303,7 @@ pub struct BiomeSecurity {
 }
 
 /// Security levels
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum SecurityLevel {
     /// Basic security
     Basic,
