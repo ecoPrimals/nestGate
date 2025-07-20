@@ -210,8 +210,7 @@ impl UniversalOrchestrationManager {
                         self.register_service_standalone(service).await
                     } else {
                         Err(nestgate_core::NestGateError::Internal(format!(
-                            "Orchestration provider error: {}",
-                            e
+                            "Orchestration provider error: {e}"
                         )))
                     }
                 }
@@ -253,10 +252,7 @@ impl UniversalOrchestrationManager {
         if let Some(orchestrator) = self.primal_adapter.get_orchestration_provider().await {
             match orchestrator.discover_services(service_type).await {
                 Ok(universal_services) => {
-                    let services: Vec<ServiceInstance> = universal_services
-                        .into_iter()
-                        .map(ServiceInstance::from)
-                        .collect();
+                    let services: Vec<ServiceInstance> = universal_services.into_iter().collect();
 
                     // Update cache
                     let mut cache = self.service_cache.write().await;
@@ -280,8 +276,7 @@ impl UniversalOrchestrationManager {
                         self.discover_services_standalone(service_type).await
                     } else {
                         Err(nestgate_core::NestGateError::Internal(format!(
-                            "Service discovery error: {}",
-                            e
+                            "Service discovery error: {e}"
                         )))
                     }
                 }
@@ -347,18 +342,15 @@ impl UniversalOrchestrationManager {
                         self.allocate_port_standalone(service_name, port_type).await
                     } else {
                         Err(nestgate_core::NestGateError::Internal(format!(
-                            "Port allocation error: {}",
-                            e
+                            "Port allocation error: {e}"
                         )))
                     }
                 }
             }
+        } else if self.config.fallback_to_standalone {
+            self.allocate_port_standalone(service_name, port_type).await
         } else {
-            if self.config.fallback_to_standalone {
-                self.allocate_port_standalone(service_name, port_type).await
-            } else {
-                Ok(0)
-            }
+            Ok(0)
         }
     }
 
@@ -416,18 +408,14 @@ impl UniversalOrchestrationManager {
                         Ok(ServiceStatus::Unknown)
                     } else {
                         Err(nestgate_core::NestGateError::Internal(format!(
-                            "Health check error: {}",
-                            e
+                            "Health check error: {e}"
                         )))
                     }
                 }
             }
         } else {
-            if self.config.fallback_to_standalone {
-                Ok(ServiceStatus::Unknown)
-            } else {
-                Ok(ServiceStatus::Unknown)
-            }
+            // No orchestration provider available - return unknown status
+            Ok(ServiceStatus::Unknown)
         }
     }
 

@@ -1,3 +1,14 @@
+//! Installation Configuration Management
+//!
+//! This module handles configuration for the NestGate installation process,
+//! including default settings, user preferences, and installation paths.
+//!
+//! ## Features
+//! - Installation path configuration
+//! - Service configuration options
+//! - Default parameter management
+//! - Configuration validation
+
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;

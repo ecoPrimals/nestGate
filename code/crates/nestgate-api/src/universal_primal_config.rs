@@ -5,6 +5,9 @@
 
 use crate::universal_primal::StorageCapability;
 use anyhow::Result;
+use nestgate_core::config::defaults::{
+    NetworkAddressDefaults, NetworkPortDefaults, TimeoutDefaults,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
@@ -299,19 +302,42 @@ impl Default for UniversalNestGateConfig {
         Self {
             nestgate: NestGateCoreConfig {
                 server: ServerConfig {
-                    host: "0.0.0.0".to_string(),
-                    port: 8080,
-                    workers: Some(4),
-                    max_connections: Some(1000),
-                    request_timeout_ms: Some(30000),
+                    host: std::env::var("NESTGATE_SERVER_HOST")
+                        .unwrap_or_else(|_| NetworkAddressDefaults::get_bind_address()),
+                    port: std::env::var("NESTGATE_SERVER_PORT")
+                        .ok()
+                        .and_then(|p| p.parse().ok())
+                        .unwrap_or(NetworkPortDefaults::get_api_port()),
+                    workers: std::env::var("NESTGATE_SERVER_WORKERS")
+                        .ok()
+                        .and_then(|w| w.parse().ok())
+                        .or(Some(4)),
+                    max_connections: std::env::var("NESTGATE_MAX_CONNECTIONS")
+                        .ok()
+                        .and_then(|c| c.parse().ok())
+                        .or(Some(1000)),
+                    request_timeout_ms: std::env::var("NESTGATE_REQUEST_TIMEOUT_MS")
+                        .ok()
+                        .and_then(|t| t.parse().ok())
+                        .or(Some(TimeoutDefaults::get_request_timeout_ms())),
                 },
                 storage: StorageConfig {
-                    zfs_enabled: true,
-                    default_pool: None,
-                    auto_snapshots: true,
-                    compression_enabled: true,
-                    deduplication_enabled: true,
-                    encryption_enabled: false,
+                    zfs_enabled: std::env::var("NESTGATE_ZFS_ENABLED")
+                        .map(|v| v.parse().unwrap_or(true))
+                        .unwrap_or(true),
+                    default_pool: std::env::var("NESTGATE_DEFAULT_POOL").ok(),
+                    auto_snapshots: std::env::var("NESTGATE_AUTO_SNAPSHOTS")
+                        .map(|v| v.parse().unwrap_or(true))
+                        .unwrap_or(true),
+                    compression_enabled: std::env::var("NESTGATE_COMPRESSION_ENABLED")
+                        .map(|v| v.parse().unwrap_or(true))
+                        .unwrap_or(true),
+                    deduplication_enabled: std::env::var("NESTGATE_DEDUPLICATION_ENABLED")
+                        .map(|v| v.parse().unwrap_or(true))
+                        .unwrap_or(true),
+                    encryption_enabled: std::env::var("NESTGATE_ENCRYPTION_ENABLED")
+                        .map(|v| v.parse().unwrap_or(false))
+                        .unwrap_or(false),
                 },
                 performance: PerformanceConfig {
                     enable_caching: true,
@@ -376,12 +402,12 @@ impl Default for UniversalNestGateConfig {
                     interfaces: vec!["eth0".to_string(), "wlan0".to_string()],
                     port_ranges: vec![
                         PortRange {
-                            start: 8080,
-                            end: 8090,
+                            start: NetworkPortDefaults::discovery_port_start(),
+                            end: NetworkPortDefaults::discovery_port_end(),
                         },
                         PortRange {
-                            start: 3000,
-                            end: 3010,
+                            start: NetworkPortDefaults::http_port(),
+                            end: NetworkPortDefaults::http_port() + 10,
                         },
                     ],
                     protocols: vec!["mdns".to_string()],
@@ -477,8 +503,8 @@ fn create_default_primal_integrations() -> HashMap<String, PrimalIntegrationConf
             ],
             custom_config: HashMap::new(),
             settings: PrimalIntegrationSettings {
-                connection_timeout_ms: 3000,
-                request_timeout_ms: 30000, // AI operations can take longer
+                connection_timeout_ms: TimeoutDefaults::get_connection_timeout_ms(),
+                request_timeout_ms: TimeoutDefaults::get_request_timeout_ms(), // AI operations can take longer
                 retry_attempts: 2,
                 retry_delay_ms: 2000,
                 connection_pool_size: Some(5),

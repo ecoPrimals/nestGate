@@ -1,3 +1,14 @@
+//! Platform Detection and System Requirements
+//!
+//! This module provides cross-platform system detection and validation
+//! to ensure NestGate can be installed and run properly on the target system.
+//!
+//! ## Features
+//! - Operating system detection (Linux, Windows, macOS)
+//! - Architecture detection (x86_64, ARM64)
+//! - System requirements validation
+//! - Platform-specific installation paths
+
 use anyhow::Result;
 use std::path::Path;
 
