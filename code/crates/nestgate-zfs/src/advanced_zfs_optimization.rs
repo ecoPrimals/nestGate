@@ -8,6 +8,11 @@
 //! - **Predictive Cache Management**: AI-driven ARC cache optimization
 //! - **Intelligent Compression**: Adaptive compression algorithm selection
 //! - **Smart Tiering**: Automated hot/warm/cold data placement
+//!
+//! Note: This module contains advanced optimization features that are currently under
+//! development. Some methods and fields may not be actively used yet.
+
+#![allow(dead_code)] // Advanced optimization features under development
 //! - **Performance Forecasting**: Predicts and prevents performance degradation
 //! - **Resource Optimization**: Dynamic resource allocation based on workload patterns
 
@@ -278,16 +283,82 @@ impl AdvancedZfsOptimizer {
     }
 
     // Helper methods with simplified implementations
-    async fn calculate_storage_efficiency(&self, _stats: &PoolStats) -> Result<f64> {
-        Ok(0.85) // Mock implementation
+    async fn calculate_storage_efficiency(&self, stats: &PoolStats) -> Result<f64> {
+        // Calculate efficiency based on I/O performance metrics
+        // Higher ARC hit ratio indicates better memory efficiency
+        let arc_efficiency = stats.arc_hit_ratio;
+        
+        // Calculate composite efficiency from available metrics
+        let io_efficiency = if stats.read_ops > 0 || stats.write_ops > 0 {
+            // Balance read/write operations efficiency
+            let total_ops = stats.read_ops + stats.write_ops;
+            let total_bandwidth = stats.read_bandwidth + stats.write_bandwidth;
+            
+            if total_bandwidth > 0 {
+                (total_ops as f64) / (total_bandwidth as f64 * 1000.0) // Normalize
+            } else {
+                0.5
+            }
+        } else {
+            0.8 // Default when no I/O data
+        };
+        
+        // Combine ARC and I/O efficiency
+        let combined_efficiency = (arc_efficiency + io_efficiency) / 2.0;
+        Ok(combined_efficiency.min(1.0).max(0.1)) // Clamp between 0.1 and 1.0
     }
 
     async fn get_system_load(&self) -> Result<f64> {
-        Ok(0.7) // Placeholder
+        // Read system load average from /proc/loadavg
+        match std::fs::read_to_string("/proc/loadavg") {
+            Ok(content) => {
+                let load_avg = content
+                    .split_whitespace()
+                    .next()
+                    .and_then(|s| s.parse::<f64>().ok())
+                    .unwrap_or(0.0);
+
+                // Normalize to 0.0-1.0 range (assuming 4-core system as baseline)
+                Ok((load_avg / 4.0).min(1.0))
+            }
+            Err(_) => {
+                // Fallback for non-Linux systems or when /proc is not available
+                Ok(0.1) // Conservative estimate
+            }
+        }
     }
 
     async fn get_memory_pressure(&self) -> Result<f64> {
-        Ok(0.3) // Placeholder
+        // Read memory information from /proc/meminfo
+        match std::fs::read_to_string("/proc/meminfo") {
+            Ok(content) => {
+                let mut total_mem = 0u64;
+                let mut available_mem = 0u64;
+
+                for line in content.lines() {
+                    if let Some(value) = line.strip_prefix("MemTotal:") {
+                        if let Some(kb) = value.split_whitespace().next() {
+                            total_mem = kb.parse::<u64>().unwrap_or(0) * 1024; // Convert to bytes
+                        }
+                    } else if let Some(value) = line.strip_prefix("MemAvailable:") {
+                        if let Some(kb) = value.split_whitespace().next() {
+                            available_mem = kb.parse::<u64>().unwrap_or(0) * 1024;
+                            // Convert to bytes
+                        }
+                    }
+                }
+
+                if total_mem > 0 {
+                    let used_mem = total_mem - available_mem;
+                    Ok(used_mem as f64 / total_mem as f64)
+                } else {
+                    Ok(0.3) // Fallback
+                }
+            }
+            Err(_) => {
+                Ok(0.3) // Fallback for non-Linux systems
+            }
+        }
     }
 
     async fn analyze_io_trend(
@@ -328,7 +399,35 @@ impl AdvancedZfsOptimizer {
     }
 
     async fn calculate_optimal_arc_size(&self, _pool_name: &str) -> Result<u64> {
-        Ok(8 * 1024 * 1024 * 1024) // 8GB placeholder
+        // Calculate optimal ARC size based on system memory and pool usage
+        let memory_pressure = self.get_memory_pressure().await?;
+
+        // Get total system memory
+        let total_memory = match std::fs::read_to_string("/proc/meminfo") {
+            Ok(content) => {
+                content
+                    .lines()
+                    .find(|line| line.starts_with("MemTotal:"))
+                    .and_then(|line| line.split_whitespace().nth(1))
+                    .and_then(|s| s.parse::<u64>().ok())
+                    .map(|kb| kb * 1024) // Convert to bytes
+                    .unwrap_or(8 * 1024 * 1024 * 1024) // 8GB fallback
+            }
+            Err(_) => 8 * 1024 * 1024 * 1024, // 8GB fallback
+        };
+
+        // Calculate optimal ARC size as percentage of total memory
+        // - Low memory pressure: Use up to 50% of RAM for ARC
+        // - High memory pressure: Use only 25% of RAM for ARC
+        let base_percentage = if memory_pressure < 0.7 { 0.50 } else { 0.25 };
+
+        // Adjust based on pool activity (would use real metrics in production)
+        let pool_activity_factor = 1.0; // Placeholder for pool-specific adjustments
+
+        let optimal_size = (total_memory as f64 * base_percentage * pool_activity_factor) as u64;
+
+        // Ensure minimum of 1GB and maximum of 32GB
+        Ok(optimal_size.clamp(1024 * 1024 * 1024, 32 * 1024 * 1024 * 1024))
     }
 
     async fn select_optimal_compression_algorithm(
@@ -381,6 +480,12 @@ pub struct PerformanceHistory {
     optimization_history: Vec<OptimizationRecord>,
 }
 
+impl Default for PerformanceHistory {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PerformanceHistory {
     pub fn new() -> Self {
         Self {
@@ -392,7 +497,7 @@ impl PerformanceHistory {
     pub fn add_baseline_metrics(&mut self, metrics: BaselineMetrics) {
         self.baseline_metrics
             .entry(metrics.pool_name.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(metrics);
     }
 }
@@ -478,6 +583,12 @@ pub struct OptimizationState {
     pub optimizations_this_hour: u32,
 }
 
+impl Default for OptimizationState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl OptimizationState {
     pub fn new() -> Self {
         Self {
@@ -499,6 +610,12 @@ pub struct OptimizationStrategy {
 #[derive(Debug)]
 pub struct ZfsMetricsCollector {
     // Implementation for collecting ZFS metrics
+}
+
+impl Default for ZfsMetricsCollector {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ZfsMetricsCollector {
@@ -536,6 +653,12 @@ pub struct PerformanceAnalysis {
     pub io_trends: HashMap<String, IOTrend>,
     pub cache_trends: HashMap<String, CacheTrend>,
     pub efficiency_trends: HashMap<String, EfficiencyTrend>,
+}
+
+impl Default for PerformanceAnalysis {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl PerformanceAnalysis {

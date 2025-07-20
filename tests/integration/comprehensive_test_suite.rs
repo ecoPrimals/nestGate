@@ -486,10 +486,10 @@ async fn test_system_integration_stress() {
 
 #[tokio::test]
 async fn test_real_performance_engine_integration() -> Result<(), Box<dyn std::error::Error>> {
-    // Test real ZFS performance monitoring
-    let config = ZfsConfig::default();
+    // Test real ZFS performance monitoring with Arc optimization
+    let config = Arc::new(ZfsConfig::default());
     let pool_manager = Arc::new(ZfsPoolManager::new(&config).await?);
-    let dataset_manager = Arc::new(ZfsDatasetManager::new(config.clone(), pool_manager.clone()));
+    let dataset_manager = Arc::new(ZfsDatasetManager::with_shared_config(Arc::clone(&config), Arc::clone(&pool_manager)));
 
     let performance_config = PerformanceConfig::default();
     let engine = PerformanceOptimizationEngine::new(

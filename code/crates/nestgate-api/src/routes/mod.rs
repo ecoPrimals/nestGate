@@ -54,7 +54,7 @@ pub struct AppState {
     pub event_coordinator: EventCoordinator,
     #[cfg(feature = "streaming-rpc")]
     pub sse_manager: Arc<SseManager>,
-    // pub api_state: Arc<crate::byob::ApiState>, // Temporarily disabled during universal architecture transition
+    // BYOB API state integration planned for future release
     pub hardware_tuning_service: Arc<crate::handlers::hardware_tuning::HardwareTuningHandler>,
     /// Optional ZFS manager for universal storage operations
     pub zfs_manager: Option<Arc<ZfsManager>>,
@@ -75,7 +75,7 @@ impl Default for AppState {
             Self {
                 mcp_streaming_manager: McpStreamingManager::new(),
                 event_coordinator: EventCoordinator::new(),
-                // api_state: Arc::new(crate::byob::ApiState::new()), // Temporarily disabled during universal architecture transition
+                // BYOB API state integration planned for future release
                 hardware_tuning_service: Arc::new(
                     crate::handlers::hardware_tuning::HardwareTuningHandler::new(),
                 ),
@@ -97,7 +97,7 @@ impl AppState {
             mcp_streaming_manager,
             event_coordinator,
             sse_manager: Arc::new(SseManager::new()),
-            // api_state: Arc::new(crate::byob::ApiState::new()), // Temporarily disabled during universal architecture transition
+            // BYOB API state integration planned for future release
             hardware_tuning_service: Arc::new(
                 crate::handlers::hardware_tuning::HardwareTuningHandler::new(),
             ),

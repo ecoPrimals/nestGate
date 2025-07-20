@@ -172,7 +172,7 @@ async fn test_service_connection_pool_legacy_compatibility() {
 
     let best_squirrel = service_pool.get_best_squirrel();
     // Note: get_best_squirrel may return None if no healthy providers, which is expected behavior
-    println!("Best squirrel result: {:?}", best_squirrel);
+    println!("Best squirrel result: {best_squirrel:?}");
 
     // Test new universal methods work
     service_pool.add_ai_provider_with_capabilities(
@@ -269,7 +269,7 @@ fn test_health_monitoring_and_scoring() {
     let (_, _, slow_still_healthy, _) = &updated_stats["slow-provider"];
 
     // Health status should reflect the failure
-    println!("Provider health after failure: {}", slow_still_healthy);
+    println!("Provider health after failure: {slow_still_healthy}");
 
     println!("✅ Health monitoring and scoring test passed");
 }
@@ -329,14 +329,13 @@ async fn test_concurrent_operations() {
             ai_pool.get_best_ai_provider_with_capabilities(&["processing".to_string()]);
         assert!(
             provider_result.is_some(),
-            "Should find provider in iteration {}",
-            i
+            "Should find provider in iteration {i}"
         );
 
         // Simulate concurrent health updates
         let handle = tokio::spawn(async move {
             tokio::time::sleep(Duration::from_millis(1)).await;
-            format!("task-{}", i)
+            format!("task-{i}")
         });
         handles.push(handle);
     }
@@ -359,7 +358,7 @@ fn test_resource_management_under_load() {
     // Add many providers to test resource management
     for i in 0..100 {
         ai_pool.add_ai_provider_with_capabilities(
-            format!("provider-{}", i),
+            format!("provider-{i}"),
             format!("http://localhost:{}", 8000 + i),
             "ai".to_string(),
             vec!["capability".to_string()],
@@ -377,10 +376,7 @@ fn test_resource_management_under_load() {
     let duration = start.elapsed();
     let ops_per_second = 1000.0 / duration.as_secs_f64();
 
-    println!(
-        "Provider selection performance: {:.0} ops/sec",
-        ops_per_second
-    );
+    println!("Provider selection performance: {ops_per_second:.0} ops/sec");
     assert!(
         ops_per_second > 100.0,
         "Provider selection should be reasonably fast"
@@ -429,7 +425,7 @@ fn test_universal_architecture_summary() {
     let mut passed = 0;
     for (test_name, result) in &test_results {
         let status = if *result { "✅ PASS" } else { "❌ FAIL" };
-        println!("   {}: {}", test_name, status);
+        println!("   {test_name}: {status}");
         if *result {
             passed += 1;
         }

@@ -131,17 +131,17 @@ impl UniversalSecurityClient {
             .into_iter()
             .map(|result| SecurityServiceNode {
                 service_id: result.service_id,
-                endpoint: result.endpoints.first().unwrap_or(&"".to_string()).clone(),
+                endpoint: result.endpoints.first().cloned().unwrap_or_default(),
                 capabilities: result.capabilities,
                 public_key: result
                     .metadata
                     .get("public_key")
-                    .unwrap_or(&"".to_string())
-                    .clone(),
+                    .cloned()
+                    .unwrap_or_default(),
                 status: ServiceNodeStatus::Active,
                 last_seen: SystemTime::now()
                     .duration_since(SystemTime::UNIX_EPOCH)
-                    .unwrap()
+                    .unwrap_or(std::time::Duration::from_secs(0))
                     .as_secs() as i64,
                 priority: result.priority,
             })
@@ -232,7 +232,7 @@ impl UniversalSecurityClient {
             .unwrap_or(
                 SystemTime::now()
                     .duration_since(SystemTime::UNIX_EPOCH)
-                    .unwrap()
+                    .unwrap_or(std::time::Duration::from_secs(0))
                     .as_secs() as i64
                     + 3600,
             );
@@ -240,7 +240,10 @@ impl UniversalSecurityClient {
         Ok(AccessGrant {
             permissions: all_permissions,
             valid_until: consensus_expiry,
-            proof_hash: format!("{:x}", md5::compute(serde_json::to_string(proof).unwrap())),
+            proof_hash: format!(
+                "{:x}",
+                md5::compute(serde_json::to_string(proof).unwrap_or_else(|_| "{}".to_string()))
+            ),
             consensus_nodes: participating_nodes,
             consensus_percentage,
         })

@@ -50,17 +50,28 @@ pub struct NestGateServiceConfig {
 impl Default for NestGateServiceConfig {
     fn default() -> Self {
         Self {
-            service_name: "nestgate-storage".to_string(),
+            service_name: std::env::var("NESTGATE_SERVICE_NAME")
+                .unwrap_or_else(|_| "nestgate-storage".to_string()),
             version: env!("CARGO_PKG_VERSION").to_string(),
-            bind_address: "0.0.0.0".to_string(),
-            port: 8080,
+            bind_address: std::env::var("NESTGATE_BIND_ADDRESS")
+                .unwrap_or_else(|_| std::env::var("NESTGATE_BIND_HOST").unwrap_or_else(|_| "127.0.0.1".to_string())), // Secure default: localhost only
+            port: std::env::var("NESTGATE_SERVICE_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8080),
             maintainer: ContactInfo {
-                name: "NestGate Team".to_string(),
-                email: Some("team@nestgate.dev".to_string()),
-                organization: Some("EcoPrimals Foundation".to_string()),
+                name: std::env::var("NESTGATE_MAINTAINER_NAME")
+                    .unwrap_or_else(|_| "NestGate Team".to_string()),
+                email: std::env::var("NESTGATE_MAINTAINER_EMAIL").ok()
+                    .or_else(|| Some("team@nestgate.dev".to_string())),
+                organization: std::env::var("NESTGATE_ORGANIZATION").ok()
+                    .or_else(|| Some("EcoPrimals Foundation".to_string())),
             },
-            enable_discovery: true,
-            security_level: "standard".to_string(),
+            enable_discovery: std::env::var("NESTGATE_ENABLE_DISCOVERY")
+                .map(|v| v.parse().unwrap_or(true))
+                .unwrap_or(true),
+            security_level: std::env::var("NESTGATE_SECURITY_LEVEL")
+                .unwrap_or_else(|_| "standard".to_string()),
         }
     }
 }

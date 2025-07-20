@@ -150,7 +150,7 @@ impl WebSocketManager {
 
             // Send welcome message
             let welcome_msg = WebSocketEvent {
-                event_id: *get_or_create_uuid(&format!("websocket_welcome_{}", client_id)),
+                event_id: *get_or_create_uuid(&format!("websocket_welcome_{client_id}")),
                 client_id,
                 event_type: WebSocketEventType::ConnectionEstablished,
                 data: serde_json::json!({
@@ -174,8 +174,7 @@ impl WebSocketManager {
                         // Process text message
                         let event = WebSocketEvent {
                             event_id: *get_or_create_uuid(&format!(
-                                "websocket_message_{}",
-                                client_id
+                                "websocket_message_{client_id}"
                             )),
                             client_id,
                             event_type: WebSocketEventType::Message,

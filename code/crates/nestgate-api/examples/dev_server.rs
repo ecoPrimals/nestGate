@@ -4,6 +4,7 @@
 //! with full ZFS integration for development and testing purposes.
 
 use nestgate_api::{serve_with_zfs, Config};
+use nestgate_core::config::defaults::{NetworkAddressDefaults, NetworkPortDefaults};
 use nestgate_zfs::{config::ZfsConfig, ZfsManager};
 use std::sync::Arc;
 use tracing::{error, info, warn};
@@ -40,10 +41,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         }
     };
 
-    // Create API configuration
+    // Create API configuration with centralized defaults
+    let bind_addr = format!(
+        "{}:{}",
+        NetworkAddressDefaults::get_development_bind_address(),
+        NetworkPortDefaults::get_dev_server_port()
+    );
+
     let api_config = Config {
-        bind_addr: std::env::var("NESTGATE_DEV_SERVER_BIND")
-            .unwrap_or_else(|_| "0.0.0.0:3000".to_string()),
+        bind_addr: std::env::var("NESTGATE_DEV_SERVER_BIND").unwrap_or_else(|_| bind_addr),
         enable_zfs_api: true,
         enable_sse: true,
         enable_websockets: true,
@@ -74,7 +80,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 }
 
 fn print_available_endpoints() {
-    let port = std::env::var("NESTGATE_DEV_SERVER_PORT").unwrap_or_else(|_| "3000".to_string());
+    let port = NetworkPortDefaults::get_dev_server_port().to_string();
 
     info!("Development server running successfully!");
     info!("Available endpoints:");

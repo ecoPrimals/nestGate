@@ -104,24 +104,30 @@ impl Environment {
     fn detect_network_config(mode: &OperationMode) -> NetworkConfig {
         match mode {
             OperationMode::Standalone => NetworkConfig {
-                bind_interface: env::var("BIND_INTERFACE")
-                    .unwrap_or_else(|_| "127.0.0.1".to_string()),
-                port: env::var("PORT")
+                bind_interface: env::var("NESTGATE_BIND_INTERFACE")
+                    .unwrap_or_else(|_| "127.0.0.1".to_string()), // Secure default: localhost only
+                port: env::var("NESTGATE_PORT")
                     .unwrap_or_else(|_| "8080".to_string())
                     .parse()
                     .unwrap_or(8080),
-                service_name: "nestgate".to_string(),
-                discovery_enabled: false,
+                service_name: env::var("NESTGATE_SERVICE_NAME")
+                    .unwrap_or_else(|_| "nestgate".to_string()),
+                discovery_enabled: env::var("NESTGATE_DISCOVERY_ENABLED")
+                    .map(|v| v.parse().unwrap_or(false))
+                    .unwrap_or(false),
             },
             OperationMode::OrchestrationEnhanced => NetworkConfig {
-                bind_interface: env::var("BIND_INTERFACE")
-                    .unwrap_or_else(|_| "0.0.0.0".to_string()),
-                port: env::var("PORT")
-                    .unwrap_or_else(|_| "0".to_string())
+                bind_interface: env::var("NESTGATE_BIND_INTERFACE")
+                    .unwrap_or_else(|_| "127.0.0.1".to_string()), // Secure default: localhost only (even in orchestrated mode)
+                port: env::var("NESTGATE_PORT")
+                    .unwrap_or_else(|_| "8080".to_string()) // Use proper port instead of 0
                     .parse()
-                    .unwrap_or(0),
-                service_name: env::var("SERVICE_NAME").unwrap_or_else(|_| "nestgate".to_string()),
-                discovery_enabled: true,
+                    .unwrap_or(8080),
+                service_name: env::var("NESTGATE_SERVICE_NAME")
+                    .unwrap_or_else(|_| "nestgate".to_string()),
+                discovery_enabled: env::var("NESTGATE_DISCOVERY_ENABLED")
+                    .map(|v| v.parse().unwrap_or(true))
+                    .unwrap_or(true), // Enable discovery in orchestration mode
             },
         }
     }

@@ -207,6 +207,53 @@ pub fn global_cache_statistics() -> CacheStatistics {
     GLOBAL_UUID_CACHE.statistics()
 }
 
+/// High-level UUID manager with optimized patterns for common use cases
+pub struct UuidManager;
+
+impl UuidManager {
+    /// Create a new UUID manager
+    pub fn new() -> Self {
+        Self
+    }
+
+    /// Generate optimized workspace ID with format "ws-{uuid}"
+    pub fn workspace_id(&self) -> String {
+        format!("ws-{}", uuid::Uuid::new_v4().simple())
+    }
+
+    /// Generate optimized service ID  
+    pub fn service_id(&self) -> String {
+        uuid::Uuid::new_v4().to_string()
+    }
+
+    /// Generate optimized request ID for tracing
+    pub fn request_id(&self) -> String {
+        uuid::Uuid::new_v4().to_string()
+    }
+
+    /// Generate optimized event ID
+    pub fn event_id(&self) -> String {
+        uuid::Uuid::new_v4().to_string()
+    }
+
+    /// Generate optimized benchmark/test ID with format "bench-{short_uuid}"
+    pub fn benchmark_id(&self) -> String {
+        let uuid_str = uuid::Uuid::new_v4().simple().to_string();
+        format!("bench-{}", &uuid_str[..8])
+    }
+
+    /// Generate prefixed UUID (optimized)
+    pub fn generate_prefixed(&self, _key: &str, prefix: &str) -> String {
+        format!("{}-{}", prefix, uuid::Uuid::new_v4().simple())
+    }
+}
+
+impl Default for UuidManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -83,10 +83,31 @@ impl ZfsCommand {
             .await
             .with_context(|| format!("Failed to execute {command} command"))?;
 
+        // Use buffer pool for optimized command output processing
+        let stdout_result = if output.stdout.is_empty() {
+            String::new()
+        } else {
+            // Use command buffer pool to reduce allocation overhead
+            let mut cmd_buffer = nestgate_core::memory_pool::get_command_buffer();
+            cmd_buffer.clear();
+            cmd_buffer.extend_from_slice(&output.stdout);
+            nestgate_core::zero_copy::optimize_command_output(&cmd_buffer).into_owned()
+        };
+
+        let stderr_result = if output.stderr.is_empty() {
+            String::new()
+        } else {
+            // Use another command buffer for stderr
+            let mut cmd_buffer = nestgate_core::memory_pool::get_command_buffer();
+            cmd_buffer.clear();
+            cmd_buffer.extend_from_slice(&output.stderr);
+            nestgate_core::zero_copy::optimize_command_output(&cmd_buffer).into_owned()
+        };
+
         let result = CommandResult {
             success: output.status.success(),
-            stdout: nestgate_core::zero_copy::optimize_command_output(&output.stdout).into_owned(),
-            stderr: nestgate_core::zero_copy::optimize_command_output(&output.stderr).into_owned(),
+            stdout: stdout_result,
+            stderr: stderr_result,
             exit_code: output.status.code().unwrap_or(-1),
         };
 
@@ -448,7 +469,14 @@ mod tests {
         let available = ZfsCommand::check_zfs_available()
             .await
             .expect("Failed to check ZFS availability in test");
-        println!("ZFS available: {available}");
+        println!(
+            "🔍 ZFS availability check: {}",
+            if available {
+                "✅ Available"
+            } else {
+                "❌ Not available"
+            }
+        );
         // This test will pass regardless of ZFS availability
     }
 

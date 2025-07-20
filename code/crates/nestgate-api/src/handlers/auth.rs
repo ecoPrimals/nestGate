@@ -177,8 +177,15 @@ impl AuthService {
 
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
+            .map(|duration| duration.as_secs())
+            .unwrap_or_else(|e| {
+                tracing::error!(
+                    "System clock is before Unix epoch, using fallback timestamp: {}",
+                    e
+                );
+                // Fallback to a known good timestamp (Jan 1, 2024) to prevent auth failures
+                1704067200 // 2024-01-01 00:00:00 UTC
+            });
 
         // Create challenge hash from credentials and timestamp
         let mut hasher = Sha256::new();

@@ -40,10 +40,10 @@ impl SecurityPrimalProvider for MockSecurityProvider {
             Ok(AuthToken {
                 token: format!("{}-auth-token", self.name),
                 expires_at: SystemTime::now() + Duration::from_secs(3600),
-                scope: vec!["read".to_string(), "write".to_string()],
+                permissions: vec!["read".to_string(), "write".to_string()],
             })
         } else {
-            Err(nestgate_core::NestGateError::SecurityError(
+            Err(nestgate_core::NestGateError::Unauthorized(
                 "Provider unhealthy".to_string(),
             ))
         }
@@ -58,7 +58,7 @@ impl SecurityPrimalProvider for MockSecurityProvider {
             encrypted.extend_from_slice(data);
             Ok(encrypted)
         } else {
-            Err(nestgate_core::NestGateError::SecurityError(
+            Err(nestgate_core::NestGateError::Unauthorized(
                 "Encryption failed".to_string(),
             ))
         }
@@ -70,12 +70,12 @@ impl SecurityPrimalProvider for MockSecurityProvider {
             if let Some(data) = encrypted_str.strip_prefix(&format!("ENCRYPTED:{}:", self.name)) {
                 Ok(data.as_bytes().to_vec())
             } else {
-                Err(nestgate_core::NestGateError::SecurityError(
+                Err(nestgate_core::NestGateError::Unauthorized(
                     "Invalid encryption format".to_string(),
                 ))
             }
         } else {
-            Err(nestgate_core::NestGateError::SecurityError(
+            Err(nestgate_core::NestGateError::Unauthorized(
                 "Decryption failed".to_string(),
             ))
         }
@@ -90,7 +90,7 @@ impl SecurityPrimalProvider for MockSecurityProvider {
                 key_id: format!("{}-key", self.name),
             })
         } else {
-            Err(nestgate_core::NestGateError::SecurityError(
+            Err(nestgate_core::NestGateError::Unauthorized(
                 "Signing failed".to_string(),
             ))
         }
@@ -104,7 +104,7 @@ impl SecurityPrimalProvider for MockSecurityProvider {
         if self.healthy {
             Ok(signature.key_id == format!("{}-key", self.name))
         } else {
-            Err(nestgate_core::NestGateError::SecurityError(
+            Err(nestgate_core::NestGateError::Unauthorized(
                 "Verification failed".to_string(),
             ))
         }
@@ -114,7 +114,7 @@ impl SecurityPrimalProvider for MockSecurityProvider {
         if self.healthy {
             Ok(format!("{}-key", self.name))
         } else {
-            Err(nestgate_core::NestGateError::SecurityError(
+            Err(nestgate_core::NestGateError::Unauthorized(
                 "Key unavailable".to_string(),
             ))
         }
@@ -128,7 +128,7 @@ impl SecurityPrimalProvider for MockSecurityProvider {
         if self.healthy {
             Ok(format!("{}-validation-token", self.name))
         } else {
-            Err(nestgate_core::NestGateError::SecurityError(
+            Err(nestgate_core::NestGateError::Unauthorized(
                 "Token generation failed".to_string(),
             ))
         }
@@ -154,7 +154,7 @@ impl ComputePrimalProvider for MockComputeProvider {
             processed.extend_from_slice(&data);
             Ok(processed)
         } else {
-            Err(nestgate_core::NestGateError::ComputeError(
+            Err(nestgate_core::NestGateError::External(
                 "Processing failed".to_string(),
             ))
         }
@@ -168,7 +168,7 @@ impl ComputePrimalProvider for MockComputeProvider {
         if self.healthy {
             Ok(format!("{} executed task: {}", self.name, task))
         } else {
-            Err(nestgate_core::NestGateError::ComputeError(
+            Err(nestgate_core::NestGateError::External(
                 "Task execution failed".to_string(),
             ))
         }
@@ -201,7 +201,7 @@ async fn test_universal_adapter_creation() {
         },
     };
 
-    let adapter = UniversalPrimalAdapter::new(config).await;
+    let adapter = UniversalPrimalAdapter::new(config);
     assert!(adapter.is_ok());
     println!("✅ Universal adapter created successfully");
 }
@@ -209,7 +209,7 @@ async fn test_universal_adapter_creation() {
 #[tokio::test]
 async fn test_security_provider_registration_and_discovery() {
     let config = UniversalAdapterConfig::default();
-    let adapter = UniversalPrimalAdapter::new(config).await.unwrap();
+    let adapter = UniversalPrimalAdapter::new(config).unwrap();
 
     // Register multiple security providers with different capabilities
     let providers = vec![
@@ -254,7 +254,7 @@ async fn test_security_provider_registration_and_discovery() {
 #[tokio::test]
 async fn test_compute_provider_load_balancing() {
     let config = UniversalAdapterConfig::default();
-    let adapter = UniversalPrimalAdapter::new(config).await.unwrap();
+    let adapter = UniversalPrimalAdapter::new(config).unwrap();
 
     // Register multiple compute providers
     let providers = vec![
@@ -306,7 +306,7 @@ async fn test_compute_provider_load_balancing() {
 #[tokio::test]
 async fn test_provider_health_monitoring_and_failover() {
     let config = UniversalAdapterConfig::default();
-    let adapter = UniversalPrimalAdapter::new(config).await.unwrap();
+    let adapter = UniversalPrimalAdapter::new(config).unwrap();
 
     // Register healthy and unhealthy providers
     let healthy_provider = Arc::new(MockSecurityProvider {
@@ -346,7 +346,7 @@ async fn test_provider_health_monitoring_and_failover() {
 #[tokio::test]
 async fn test_capability_based_provider_matching() {
     let config = UniversalAdapterConfig::default();
-    let adapter = UniversalPrimalAdapter::new(config).await.unwrap();
+    let adapter = UniversalPrimalAdapter::new(config).unwrap();
 
     // Register providers with specific capabilities
     let compute_providers = vec![
@@ -419,7 +419,7 @@ async fn test_dynamic_provider_discovery() {
         discovery_interval: Duration::from_millis(100), // Fast discovery for testing
         ..UniversalAdapterConfig::default()
     };
-    let adapter = UniversalPrimalAdapter::new(config).await.unwrap();
+    let adapter = UniversalPrimalAdapter::new(config).unwrap();
 
     // Start discovery
     let discovery_result = adapter.start_discovery().await;
@@ -445,7 +445,7 @@ async fn test_fallback_mechanisms() {
         enable_fallback_providers: true,
         ..UniversalAdapterConfig::default()
     };
-    let adapter = UniversalPrimalAdapter::new(config).await.unwrap();
+    let adapter = UniversalPrimalAdapter::new(config).unwrap();
 
     // Initially, no providers registered - should fallback gracefully
     let provider = adapter.get_security_provider().await;
@@ -524,7 +524,7 @@ async fn test_universal_ai_connections_integration() {
 #[tokio::test]
 async fn test_provider_priority_and_scoring() {
     let config = UniversalAdapterConfig::default();
-    let adapter = UniversalPrimalAdapter::new(config).await.unwrap();
+    let adapter = UniversalPrimalAdapter::new(config).unwrap();
 
     // Register providers with different "performance characteristics"
     let providers = vec![
@@ -568,7 +568,7 @@ async fn test_provider_priority_and_scoring() {
 #[tokio::test]
 async fn test_concurrent_provider_operations() {
     let config = UniversalAdapterConfig::default();
-    let adapter = Arc::new(UniversalPrimalAdapter::new(config).await.unwrap());
+    let adapter = Arc::new(UniversalPrimalAdapter::new(config).unwrap());
 
     // Register a provider
     let provider = Arc::new(MockComputeProvider {
@@ -592,7 +592,7 @@ async fn test_concurrent_provider_operations() {
                     .process_data(format!("data-{}", i).into_bytes())
                     .await
             } else {
-                Err(nestgate_core::NestGateError::ComputeError(
+                Err(nestgate_core::NestGateError::External(
                     "No provider".to_string(),
                 ))
             }
@@ -642,7 +642,7 @@ async fn test_provider_configuration_migration() {
 #[tokio::test]
 async fn test_provider_selection_performance() {
     let config = UniversalAdapterConfig::default();
-    let adapter = UniversalPrimalAdapter::new(config).await.unwrap();
+    let adapter = UniversalPrimalAdapter::new(config).unwrap();
 
     // Register many providers
     for i in 0..100 {

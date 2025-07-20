@@ -28,7 +28,7 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
     info!("🚀 Starting Advanced Performance Optimization Demo");
-    info!("=".repeat(60));
+    info!("{}", "=".repeat(60));
 
     // Initialize the demonstration
     let demo = AdvancedPerformanceDemo::new().await?;
@@ -114,7 +114,7 @@ impl AdvancedPerformanceDemo {
     /// Phase 1: System Initialization
     async fn phase_1_system_initialization(&self) -> Result<()> {
         info!("🔧 Phase 1: System Initialization");
-        info!("-".repeat(40));
+        info!("{}", "-".repeat(40));
 
         // Start ZFS optimization engine
         info!("Starting Advanced ZFS Optimization Engine...");
@@ -133,7 +133,7 @@ impl AdvancedPerformanceDemo {
     /// Phase 2: Baseline Performance Collection
     async fn phase_2_baseline_collection(&self) -> Result<()> {
         info!("📊 Phase 2: Baseline Performance Collection");
-        info!("-".repeat(40));
+        info!("{}", "-".repeat(40));
 
         // Collect initial performance metrics
         info!("Collecting baseline performance metrics...");
@@ -190,7 +190,7 @@ impl AdvancedPerformanceDemo {
     /// Phase 3: Real-Time Monitoring Demonstration
     async fn phase_3_realtime_monitoring(&self) -> Result<()> {
         info!("📡 Phase 3: Real-Time Monitoring Demonstration");
-        info!("-".repeat(40));
+        info!("{}", "-".repeat(40));
 
         info!("Demonstrating real-time performance monitoring for 30 seconds...");
 
@@ -228,7 +228,7 @@ impl AdvancedPerformanceDemo {
     /// Phase 4: Optimization Engine Demonstration
     async fn phase_4_optimization_engine(&self) -> Result<()> {
         info!("🤖 Phase 4: AI-Driven Optimization Engine Demonstration");
-        info!("-".repeat(40));
+        info!("{}", "-".repeat(40));
 
         // Simulate performance analysis cycle
         info!("Running AI-driven performance analysis cycle...");
@@ -290,7 +290,7 @@ impl AdvancedPerformanceDemo {
     /// Phase 5: Predictive Analytics Demonstration
     async fn phase_5_predictive_analytics(&self) -> Result<()> {
         info!("🔮 Phase 5: Predictive Analytics Demonstration");
-        info!("-".repeat(40));
+        info!("{}", "-".repeat(40));
 
         // Generate performance forecast
         info!("Generating 7-day performance forecast...");
@@ -350,7 +350,7 @@ impl AdvancedPerformanceDemo {
     /// Phase 6: Integration Demonstration
     async fn phase_6_integration_demo(&self) -> Result<()> {
         info!("🔗 Phase 6: Integrated Optimization Demonstration");
-        info!("-".repeat(40));
+        info!("{}", "-".repeat(40));
 
         info!("Demonstrating integrated optimization workflow...");
 
@@ -538,7 +538,7 @@ impl AdvancedPerformanceDemo {
     /// Generate summary report
     async fn generate_summary_report(&self) -> Result<()> {
         info!("📄 Generating Performance Summary Report");
-        info!("=".repeat(60));
+        info!("{}", "=".repeat(60));
 
         let time_range = TimeRange::last_hour();
         let overview = self

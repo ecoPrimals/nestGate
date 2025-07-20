@@ -114,11 +114,12 @@ pub mod models;
 /// It organizes the routing structure for the web application.
 pub mod routes;
 #[cfg(feature = "streaming-rpc")]
-// pub mod tarpc_service; // Disabled - requires tarpc dependency
+pub mod streaming_rpc;
 pub mod websocket;
 
 #[cfg(feature = "streaming-rpc")]
-// pub mod streaming_rpc; // Disabled - requires tarpc dependency
+pub mod tarpc_service;
+
 // New modules for enhanced streaming and RPC
 pub mod sse;
 pub mod universal_primal;
@@ -205,7 +206,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            bind_addr: "0.0.0.0:8080".to_string(),
+            bind_addr: std::env::var("NESTGATE_BIND_ADDR").unwrap_or_else(|_| "0.0.0.0:8080".to_string()),
             enable_zfs_api: true,
             enable_sse: true,
             enable_websockets: true,
@@ -228,14 +229,23 @@ pub async fn serve_with_zfs(
     start_server(&config.bind_addr).await
 }
 
-/// Start the streaming RPC server
+/// Start the streaming RPC server with tarpc
 #[cfg(feature = "streaming-rpc")]
+pub async fn start_streaming_rpc_server(
+    addr: &str,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let server = streaming_rpc::RpcServer::new();
+    server.start(addr).await?;
+    info!("🚀 Streaming RPC server started on {}", addr);
+    Ok(())
+}
+
+/// Start the streaming RPC server (disabled version)
+#[cfg(not(feature = "streaming-rpc"))]
 pub async fn start_streaming_rpc_server(
     _addr: &str,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    // let server = streaming_rpc::StreamingRpcServer::new();
-    // server.start(addr.to_string()).await?;
-    info!("Streaming RPC server disabled - requires tarpc dependency");
+    info!("Streaming RPC server disabled - enable 'streaming-rpc' feature");
     Ok(())
 }
 
@@ -245,6 +255,9 @@ pub struct CommunicationManager {
     pub event_coordinator: EventCoordinator,
     /// Optional universal primal storage provider for unified storage operations
     pub universal_primal: Option<Box<dyn crate::universal_primal::StoragePrimalProvider>>,
+    /// Tarpc service manager for RPC operations
+    #[cfg(feature = "streaming-rpc")]
+    pub tarpc_manager: Option<crate::tarpc_service::TarpcServiceManager>,
 }
 
 impl Default for CommunicationManager {
@@ -256,11 +269,11 @@ impl Default for CommunicationManager {
 impl CommunicationManager {
     /// Create a new communication manager with all protocols
     pub fn new() -> Self {
-        let event_coordinator = EventCoordinator::new();
-
         Self {
-            event_coordinator,
+            event_coordinator: EventCoordinator::new(),
             universal_primal: None,
+            #[cfg(feature = "streaming-rpc")]
+            tarpc_manager: Some(crate::tarpc_service::create_production_service_manager()),
         }
     }
 
@@ -503,27 +516,25 @@ mod tests {
         println!("✅ Communication manager event broadcasting works");
     }
 
-    #[cfg(feature = "streaming-rpc")]
     #[tokio::test]
     async fn test_streaming_rpc_server() {
-        // let server = streaming_rpc::StreamingRpcServer::new();
+        #[cfg(feature = "streaming-rpc")]
+        {
+            use crate::streaming_rpc::NestGateRpc;
 
-        // Test health check
-        // let health = server
-        //     .health_check(tarpc::context::Context::current())
-        //     .await;
-        // assert!(health.is_ok());
-        println!("✅ Streaming RPC server test disabled - requires tarpc dependency");
+            let server = streaming_rpc::RpcServer::new();
 
-        // Test capabilities
-        // let capabilities = server
-        //     .get_capabilities(tarpc::context::Context::current())
-        //     .await;
-        // assert!(capabilities.is_ok());
+            // Test health check - call the trait method directly
+            let health = server
+                .health_check(tarpc::context::Context::current())
+                .await;
+            assert!(health.is_ok());
+            println!("✅ Streaming RPC server health check passed");
+        }
 
-        // let caps = capabilities.unwrap();
-        // assert!(caps.streaming_support);
-        // assert!(caps.bidirectional_support);
-        // println!("✅ Streaming RPC server capabilities correct");
+        #[cfg(not(feature = "streaming-rpc"))]
+        {
+            println!("✅ Streaming RPC server test disabled - feature not enabled");
+        }
     }
 }

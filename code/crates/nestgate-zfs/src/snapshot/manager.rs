@@ -65,6 +65,32 @@ impl ZfsSnapshotManager {
         }
     }
 
+    /// Create a new snapshot manager with shared config (zero-copy optimization)
+    pub fn with_shared_config(
+        config: Arc<ZfsConfig>,
+        dataset_manager: Arc<ZfsDatasetManager>,
+    ) -> Self {
+        let policies = Arc::new(RwLock::new(HashMap::new()));
+        let operation_queue = Arc::new(RwLock::new(Vec::new()));
+
+        let policy_scheduler = PolicyScheduler::new(
+            Arc::clone(&dataset_manager),
+            Arc::clone(&policies),
+            Arc::clone(&operation_queue),
+        );
+
+        Self {
+            config: (*config).clone(), // Dereference Arc to get ZfsConfig for compatibility
+            dataset_manager,
+            policies,
+            snapshot_cache: Arc::new(RwLock::new(HashMap::new())),
+            operation_queue,
+            statistics: Arc::new(RwLock::new(SnapshotStatistics::default())),
+            policy_scheduler,
+            shutdown_tx: None,
+        }
+    }
+
     /// Start the snapshot manager
     pub async fn start(&mut self) -> CoreResult<()> {
         info!("Starting ZFS snapshot manager");

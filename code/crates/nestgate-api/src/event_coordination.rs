@@ -477,7 +477,7 @@ impl EventCoordinator {
         data: serde_json::Value,
     ) -> CoordinatedEvent {
         CoordinatedEvent {
-            event_id: *get_or_create_uuid(&format!("websocket_event_{}", client_id)),
+            event_id: *get_or_create_uuid(&format!("websocket_event_{client_id}")),
             event_type: CoordinatedEventType::WebSocket,
             source: format!("websocket-{client_id}"),
             data,
@@ -488,7 +488,7 @@ impl EventCoordinator {
     /// Create an internal service event
     pub fn internal_service_event(service_name: &str, data: serde_json::Value) -> CoordinatedEvent {
         CoordinatedEvent {
-            event_id: *get_or_create_uuid(&format!("internal_service_event_{}", service_name)),
+            event_id: *get_or_create_uuid(&format!("internal_service_event_{service_name}")),
             event_type: CoordinatedEventType::InternalService,
             source: format!("service-{service_name}"),
             data,
@@ -499,7 +499,7 @@ impl EventCoordinator {
     /// Create an MCP stream event
     pub fn mcp_stream_event(stream_id: &str, data: serde_json::Value) -> CoordinatedEvent {
         CoordinatedEvent {
-            event_id: *get_or_create_uuid(&format!("mcp_stream_event_{}", stream_id)),
+            event_id: *get_or_create_uuid(&format!("mcp_stream_event_{stream_id}")),
             event_type: CoordinatedEventType::McpStream,
             source: format!("mcp-stream-{stream_id}"),
             data,
@@ -510,7 +510,7 @@ impl EventCoordinator {
     /// Create a storage operation event
     pub fn storage_operation(operation: &str, data: serde_json::Value) -> CoordinatedEvent {
         CoordinatedEvent {
-            event_id: *get_or_create_uuid(&format!("storage_operation_{}", operation)),
+            event_id: *get_or_create_uuid(&format!("storage_operation_{operation}")),
             event_type: CoordinatedEventType::StorageOperation,
             source: "storage-service".to_string(),
             data,

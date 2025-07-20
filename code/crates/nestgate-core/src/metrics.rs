@@ -44,7 +44,7 @@ impl MetricsCollector {
         let mut metrics = match self.metrics.write() {
             Ok(metrics) => metrics,
             Err(e) => {
-                eprintln!("Failed to acquire metrics lock for incrementing: {e}");
+                tracing::error!("Failed to acquire metrics lock for incrementing: {}", e);
                 return;
             }
         };
@@ -93,7 +93,7 @@ impl MetricsCollector {
         let metrics = match self.metrics.read() {
             Ok(metrics) => metrics,
             Err(e) => {
-                eprintln!("Failed to acquire metrics lock for reading: {e}");
+                tracing::error!("Failed to acquire metrics lock for reading: {}", e);
                 return None;
             }
         };
@@ -105,7 +105,7 @@ impl MetricsCollector {
         let metrics = match self.metrics.read() {
             Ok(metrics) => metrics,
             Err(e) => {
-                eprintln!("Failed to acquire metrics lock for reading all: {e}");
+                tracing::error!("Failed to acquire metrics lock for reading all: {}", e);
                 return Vec::new();
             }
         };
@@ -117,7 +117,7 @@ impl MetricsCollector {
         let mut metrics = match self.metrics.write() {
             Ok(metrics) => metrics,
             Err(e) => {
-                eprintln!("Failed to acquire metrics lock for clearing: {e}");
+                tracing::error!("Failed to acquire metrics lock for clearing: {}", e);
                 return;
             }
         };
@@ -128,7 +128,7 @@ impl MetricsCollector {
         let mut metrics = match self.metrics.write() {
             Ok(metrics) => metrics,
             Err(e) => {
-                eprintln!("Failed to acquire metrics lock for recording: {e}");
+                tracing::error!("Failed to acquire metrics lock for recording: {}", e);
                 return;
             }
         };
@@ -155,7 +155,7 @@ impl MetricsCollector {
         let mut metrics = match self.metrics.write() {
             Ok(metrics) => metrics,
             Err(e) => {
-                eprintln!("Failed to acquire metrics lock for adding: {e}");
+                tracing::error!("Failed to acquire metrics lock for adding: {}", e);
                 return;
             }
         };
@@ -166,7 +166,7 @@ impl MetricsCollector {
         let mut metrics = match self.metrics.write() {
             Ok(metrics) => metrics,
             Err(e) => {
-                eprintln!("Failed to acquire metrics lock for updating: {e}");
+                tracing::error!("Failed to acquire metrics lock for updating: {}", e);
                 return;
             }
         };

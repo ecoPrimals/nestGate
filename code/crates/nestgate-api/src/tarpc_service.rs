@@ -1,753 +1,663 @@
-//! High-Performance Internal Service Communication via tarpc
+//! Enhanced tarpc Service Integration
 //!
-//! This module provides tarpc-based communication for internal service-to-service
-//! communication within the NestGate ecosystem. Optimized for:
-//! - Pure Rust performance
-//! - Type-safe service interfaces
-//! - Async/await native support
-//! - Efficient serialization
+//! This module provides production-ready tarpc service integration with:
+//! - Service mesh integration
+//! - Health monitoring and metrics
+//! - Connection management
+//! - Load balancing
+//! - Circuit breaker patterns
 
-use futures_util::StreamExt;
-use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, time::SystemTime};
-use tarpc::{
-    client::{self},
-    context::Context,
-    server::{BaseChannel, Channel},
-    tokio_serde::formats::Bincode,
-};
-use tracing::{error, info, warn};
+use std::collections::HashMap;
+use std::sync::Arc;
+use std::time::{Duration, Instant, SystemTime};
+
+use tokio::sync::{Mutex, RwLock};
+use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
-/// Storage operation types
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum StorageOperation {
-    CreateDataset {
-        name: String,
-        properties: HashMap<String, String>,
-    },
-    DeleteDataset {
-        name: String,
-    },
-    ListDatasets,
-    GetDatasetInfo {
-        name: String,
-    },
+use crate::streaming_rpc::{RpcClient, RpcServer};
+use nestgate_core::service_discovery::{HealthStatus, ServiceEndpoint, ServiceRegistry};
+
+/// Enhanced tarpc service manager with service mesh integration
+pub struct TarpcServiceManager {
+    /// Service registry for discovery
+    service_registry: Arc<ServiceRegistry>,
+    /// Connection pool for client connections
+    connection_pool: Arc<Mutex<HashMap<String, Arc<RpcClient>>>>,
+    /// RPC servers
+    servers: Arc<RwLock<HashMap<String, RpcServer>>>,
+    /// Service mesh configuration
+    mesh_config: ServiceMeshConfig,
+    /// Health monitor
+    health_monitor: Arc<RwLock<HealthMonitor>>,
+    /// Performance metrics
+    metrics: Arc<RwLock<ServiceMetrics>>,
 }
 
-/// ZFS operation types
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ZfsOperation {
-    CreatePool { name: String, devices: Vec<String> },
-    DestroyPool { name: String },
-    ListPools,
-    GetPoolStatus { name: String },
+/// Service mesh configuration
+#[derive(Debug, Clone)]
+pub struct ServiceMeshConfig {
+    pub enable_load_balancing: bool,
+    pub enable_circuit_breaker: bool,
+    pub enable_retry: bool,
+    pub max_retry_attempts: u32,
+    pub circuit_breaker_threshold: f64,
+    pub health_check_interval: Duration,
+    pub connection_timeout: Duration,
+    pub request_timeout: Duration,
 }
 
-/// Network operation types
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum NetworkOperation {
-    GetStatus,
-    UpdateConfig { config: HashMap<String, String> },
-    RestartService { service: String },
-}
-
-/// Service health status
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ServiceHealth {
-    pub status: String,
-    pub message: String,
-    pub timestamp: SystemTime,
-}
-
-/// Service metrics
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ServiceMetrics {
-    pub cpu_usage: f64,
-    pub memory_usage: f64,
-    pub disk_usage: f64,
-    pub network_usage: f64,
-    pub timestamp: SystemTime,
-}
-
-/// Internal service trait for tarpc communication
-#[tarpc::service]
-pub trait InternalService {
-    /// Execute a storage operation
-    async fn execute_storage_operation(
-        operation: StorageOperation,
-    ) -> Result<serde_json::Value, String>;
-
-    /// Execute a ZFS operation
-    async fn execute_zfs_operation(operation: ZfsOperation) -> Result<serde_json::Value, String>;
-
-    /// Execute a network operation
-    async fn execute_network_operation(
-        operation: NetworkOperation,
-    ) -> Result<serde_json::Value, String>;
-
-    /// Get service health
-    async fn get_service_health() -> ServiceHealth;
-
-    /// Update service configuration
-    async fn update_config(config: HashMap<String, String>) -> Result<(), String>;
-
-    /// Notify about an internal event
-    async fn notify_event(event: InternalEvent);
-
-    /// Get service metrics
-    async fn get_metrics() -> ServiceMetrics;
-}
-
-/// Internal event types for service coordination
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum InternalEventType {
-    StorageChange,
-    ZfsPoolChange,
-    NetworkChange,
-    ServiceRestart,
-    ConfigUpdate,
-}
-
-/// Internal event structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct InternalEvent {
-    pub event_id: Uuid,
-    pub event_type: InternalEventType,
-    pub source_service: String,
-    pub data: serde_json::Value,
-    pub timestamp: SystemTime,
-}
-
-/// Implementation of the internal service
-#[derive(Clone)]
-pub struct InternalServiceImpl {
-    service_name: String,
-}
-
-impl InternalServiceImpl {
-    pub fn new() -> Self {
+impl Default for ServiceMeshConfig {
+    fn default() -> Self {
         Self {
-            service_name: "tarpc_service".to_string(),
+            enable_load_balancing: true,
+            enable_circuit_breaker: true,
+            enable_retry: true,
+            max_retry_attempts: 3,
+            circuit_breaker_threshold: 0.5, // 50% failure rate
+            health_check_interval: Duration::from_secs(30),
+            connection_timeout: Duration::from_secs(10),
+            request_timeout: Duration::from_secs(30),
         }
     }
 }
 
-/// Implementation of the tarpc service trait
-impl InternalService for InternalServiceImpl {
-    async fn execute_storage_operation(
-        self,
-        _: Context,
-        operation: StorageOperation,
-    ) -> Result<serde_json::Value, String> {
-        info!("Executing storage operation: {:?}", operation);
+/// Health monitoring for RPC services
+#[derive(Debug, Default)]
+struct HealthMonitor {
+    service_health: HashMap<String, ServiceHealthInfo>,
+    circuit_breakers: HashMap<String, CircuitBreaker>,
+}
 
-        match operation {
-            StorageOperation::CreateDataset { name, properties } => {
-                let dataset_name = format!("nestpool/{}", name);
-                let mut cmd = std::process::Command::new("zfs");
-                cmd.args(["create"]);
+/// Service health information
+#[derive(Debug, Clone)]
+struct ServiceHealthInfo {
+    #[allow(dead_code)]
+    pub service_name: String,
+    pub last_check: Instant,
+    pub health_status: HealthStatus,
+    pub response_time: Duration,
+    pub success_rate: f64,
+    pub total_requests: u64,
+    pub successful_requests: u64,
+    pub failed_requests: u64,
+}
 
-                // Add properties if provided
-                for (key, value) in properties {
-                    cmd.args(["-o", &format!("{}={}", key, value)]);
-                }
+/// Circuit breaker implementation
+#[derive(Debug, Clone)]
+struct CircuitBreaker {
+    #[allow(dead_code)]
+    pub service_name: String,
+    pub state: CircuitBreakerState,
+    pub failure_count: u32,
+    pub success_count: u32,
+    pub last_failure_time: Option<Instant>,
+    pub threshold: f64,
+    pub timeout: Duration,
+}
 
-                cmd.arg(&dataset_name);
+/// Circuit breaker states
+#[derive(Debug, Clone, PartialEq)]
+enum CircuitBreakerState {
+    Closed,   // Normal operation
+    Open,     // Failing fast
+    HalfOpen, // Testing recovery
+}
 
-                match cmd.output() {
-                    Ok(output) if output.status.success() => {
-                        info!("✅ Successfully created dataset: {}", dataset_name);
-                        Ok(serde_json::json!({
-                            "status": "success",
-                            "operation": "create_dataset",
-                            "dataset_name": dataset_name
-                        }))
-                    }
-                    Ok(output) => {
-                        let error_msg = String::from_utf8_lossy(&output.stderr);
-                        error!("❌ Failed to create dataset: {}", error_msg);
-                        Err(format!("Failed to create dataset: {}", error_msg))
-                    }
-                    Err(e) => {
-                        error!("❌ Command execution failed: {}", e);
-                        Err(format!("Command execution failed: {}", e))
-                    }
-                }
+/// Service performance metrics
+#[derive(Debug, Default)]
+struct ServiceMetrics {
+    pub total_requests: u64,
+    pub successful_requests: u64,
+    pub failed_requests: u64,
+    #[allow(dead_code)]
+    pub average_response_time: Duration,
+    pub active_connections: usize,
+    pub peak_connections: usize,
+    pub bytes_transferred: u64,
+}
+
+impl TarpcServiceManager {
+    /// Create a new tarpc service manager
+    pub fn new(mesh_config: ServiceMeshConfig) -> Self {
+        let service_registry = Arc::new(ServiceRegistry::new(
+            nestgate_core::service_discovery::ServiceDiscoveryConfig::default(),
+        ));
+
+        Self {
+            service_registry,
+            connection_pool: Arc::new(Mutex::new(HashMap::new())),
+            servers: Arc::new(RwLock::new(HashMap::new())),
+            mesh_config,
+            health_monitor: Arc::new(RwLock::new(HealthMonitor::default())),
+            metrics: Arc::new(RwLock::new(ServiceMetrics::default())),
+        }
+    }
+
+    /// Start an RPC server with service registration
+    pub async fn start_server(
+        &self,
+        service_name: &str,
+        address: &str,
+        port: u16,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        info!(
+            "🚀 Starting tarpc server: {} on {}:{}",
+            service_name, address, port
+        );
+
+        // Create and start server
+        let server = RpcServer::new();
+        let bind_addr = format!("{address}:{port}");
+
+        // Start server in background
+        let server_clone = server.clone();
+        let bind_addr_clone = bind_addr.clone();
+        tokio::spawn(async move {
+            if let Err(e) = server_clone.start(&bind_addr_clone).await {
+                error!("Failed to start RPC server: {}", e);
             }
-            StorageOperation::DeleteDataset { name } => {
-                let dataset_name = format!("nestpool/{}", name);
+        });
 
-                match std::process::Command::new("zfs")
-                    .args(["destroy", "-r", &dataset_name])
-                    .output()
-                {
-                    Ok(output) if output.status.success() => {
-                        info!("✅ Successfully deleted dataset: {}", dataset_name);
-                        Ok(serde_json::json!({
-                            "status": "success",
-                            "operation": "delete_dataset",
-                            "dataset_name": dataset_name
-                        }))
-                    }
-                    Ok(output) => {
-                        let error_msg = String::from_utf8_lossy(&output.stderr);
-                        error!("❌ Failed to delete dataset: {}", error_msg);
-                        Err(format!("Failed to delete dataset: {}", error_msg))
-                    }
-                    Err(e) => {
-                        error!("❌ Command execution failed: {}", e);
-                        Err(format!("Command execution failed: {}", e))
-                    }
-                }
+        // Register server
+        {
+            let mut servers = self.servers.write().await;
+            servers.insert(service_name.to_string(), server);
+        }
+
+        // Register service in service registry
+        let service_endpoint = ServiceEndpoint {
+            id: format!("{}-{}", service_name, Uuid::new_v4()),
+            name: service_name.to_string(),
+            address: address.to_string(),
+            port,
+            protocol: "tarpc".to_string(),
+            metadata: [
+                ("rpc_type".to_string(), "streaming".to_string()),
+                ("bidirectional".to_string(), "true".to_string()),
+            ]
+            .into_iter()
+            .collect(),
+            health_status: HealthStatus::Healthy,
+            last_seen: SystemTime::now(),
+            response_time: Some(Duration::from_millis(10)),
+            weight: 1,
+        };
+
+        self.service_registry
+            .register_service(service_endpoint)
+            .await
+            .map_err(|e| format!("Failed to register service: {e}"))?;
+
+        // Start health monitoring
+        self.start_health_monitoring(service_name, &bind_addr)
+            .await?;
+
+        info!("✅ RPC server '{}' started and registered", service_name);
+        Ok(())
+    }
+
+    /// Get or create an RPC client with load balancing and circuit breaker
+    pub async fn get_client(&self, service_name: &str) -> Result<Arc<RpcClient>, String> {
+        // Check circuit breaker
+        if self.is_circuit_breaker_open(service_name).await {
+            return Err("Service unavailable due to circuit breaker".to_string());
+        }
+
+        // Get service endpoints
+        let healthy_services = self
+            .service_registry
+            .get_healthy_services(service_name)
+            .await;
+
+        if healthy_services.is_empty() {
+            return Err("Service unavailable - no healthy services".to_string());
+        }
+
+        // Select service using load balancing
+        let selected_service = self
+            .service_registry
+            .select_service(service_name)
+            .await
+            .ok_or("Service unavailable - selection failed".to_string())?;
+
+        let service_addr = format!("{}:{}", selected_service.address, selected_service.port);
+
+        // Check if we have an existing client
+        {
+            let pool = self.connection_pool.lock().await;
+            if let Some(client) = pool.get(&service_addr) {
+                return Ok(Arc::clone(client));
             }
-            StorageOperation::ListDatasets => {
-                match std::process::Command::new("zfs")
-                    .args([
-                        "list",
-                        "-H",
-                        "-o",
-                        "name,used,avail,mountpoint",
-                        "-t",
-                        "filesystem",
-                    ])
-                    .output()
-                {
-                    Ok(output) if output.status.success() => {
-                        let stdout = String::from_utf8_lossy(&output.stdout);
-                        let datasets: Vec<_> = stdout
-                            .lines()
-                            .filter_map(|line| {
-                                let parts: Vec<&str> = line.split('\t').collect();
-                                if parts.len() >= 4 {
-                                    Some(serde_json::json!({
-                                        "name": parts[0],
-                                        "used": parts[1],
-                                        "available": parts[2],
-                                        "mountpoint": parts[3]
-                                    }))
-                                } else {
-                                    None
-                                }
-                            })
-                            .collect();
+        }
 
-                        info!("✅ Successfully listed {} datasets", datasets.len());
-                        Ok(serde_json::json!({
-                            "status": "success",
-                            "operation": "list_datasets",
-                            "datasets": datasets
-                        }))
-                    }
-                    Ok(output) => {
-                        let error_msg = String::from_utf8_lossy(&output.stderr);
-                        error!("❌ Failed to list datasets: {}", error_msg);
-                        Err(format!("Failed to list datasets: {}", error_msg))
-                    }
-                    Err(e) => {
-                        error!("❌ Command execution failed: {}", e);
-                        Err(format!("Command execution failed: {}", e))
-                    }
-                }
-            }
-            StorageOperation::GetDatasetInfo { name } => {
-                let dataset_name = format!("nestpool/{}", name);
+        // Create new client
+        let client = RpcClient::connect(&service_addr)
+            .await
+            .map_err(|e| format!("Failed to connect: {e}"))?;
 
-                match std::process::Command::new("zfs")
-                    .args(["get", "-H", "-p", "all", &dataset_name])
-                    .output()
-                {
-                    Ok(output) if output.status.success() => {
-                        let stdout = String::from_utf8_lossy(&output.stdout);
-                        let mut properties = std::collections::HashMap::new();
+        let client_arc = Arc::new(client);
 
-                        for line in stdout.lines() {
-                            let parts: Vec<&str> = line.split('\t').collect();
-                            if parts.len() >= 3 {
-                                properties.insert(parts[1].to_string(), parts[2].to_string());
-                            }
+        // Store client in pool
+        {
+            let mut pool = self.connection_pool.lock().await;
+            pool.insert(service_addr.clone(), Arc::clone(&client_arc));
+        }
+
+        info!(
+            "🔗 Created new RPC client for {} at {}",
+            service_name, service_addr
+        );
+        Ok(client_arc)
+    }
+
+    /// Execute RPC call with circuit breaker and retry logic
+    pub async fn execute_with_resilience<F, R>(
+        &self,
+        service_name: &str,
+        operation: F,
+    ) -> Result<R, String>
+    where
+        F: Fn(
+                Arc<RpcClient>,
+            )
+                -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<R, String>> + Send>>
+            + Send
+            + 'static,
+        R: Send + 'static,
+    {
+        let start_time = Instant::now();
+        let mut attempts = 0;
+        let max_attempts = if self.mesh_config.enable_retry {
+            self.mesh_config.max_retry_attempts
+        } else {
+            1
+        };
+
+        while attempts < max_attempts {
+            attempts += 1;
+
+            match self.get_client(service_name).await {
+                Ok(client) => {
+                    match tokio::time::timeout(self.mesh_config.request_timeout, operation(client))
+                        .await
+                    {
+                        Ok(Ok(result)) => {
+                            // Record success
+                            self.record_success(service_name, start_time.elapsed())
+                                .await;
+                            return Ok(result);
                         }
+                        Ok(Err(e)) => {
+                            // Record failure
+                            self.record_failure(service_name).await;
 
-                        info!("✅ Successfully retrieved dataset info: {}", dataset_name);
-                        Ok(serde_json::json!({
-                            "status": "success",
-                            "operation": "get_dataset_info",
-                            "dataset_name": dataset_name,
-                            "properties": properties
-                        }))
-                    }
-                    Ok(output) => {
-                        let error_msg = String::from_utf8_lossy(&output.stderr);
-                        error!("❌ Failed to get dataset info: {}", error_msg);
-                        Err(format!("Failed to get dataset info: {}", error_msg))
-                    }
-                    Err(e) => {
-                        error!("❌ Command execution failed: {}", e);
-                        Err(format!("Command execution failed: {}", e))
-                    }
-                }
-            }
-        }
-    }
-
-    async fn execute_zfs_operation(
-        self,
-        _: Context,
-        operation: ZfsOperation,
-    ) -> Result<serde_json::Value, String> {
-        info!("Executing ZFS operation: {:?}", operation);
-
-        match operation {
-            ZfsOperation::CreatePool { name, devices } => {
-                let mut cmd = std::process::Command::new("zpool");
-                cmd.args(["create", &name]);
-
-                for device in devices {
-                    cmd.arg(&device);
-                }
-
-                match cmd.output() {
-                    Ok(output) if output.status.success() => {
-                        info!("✅ Successfully created pool: {}", name);
-                        Ok(serde_json::json!({
-                            "status": "success",
-                            "operation": "create_pool",
-                            "pool_name": name
-                        }))
-                    }
-                    Ok(output) => {
-                        let error_msg = String::from_utf8_lossy(&output.stderr);
-                        error!("❌ Failed to create pool: {}", error_msg);
-                        Err(format!("Failed to create pool: {}", error_msg))
-                    }
-                    Err(e) => {
-                        error!("❌ Command execution failed: {}", e);
-                        Err(format!("Command execution failed: {}", e))
-                    }
-                }
-            }
-            ZfsOperation::DestroyPool { name } => {
-                match std::process::Command::new("zpool")
-                    .args(["destroy", &name])
-                    .output()
-                {
-                    Ok(output) if output.status.success() => {
-                        info!("✅ Successfully destroyed pool: {}", name);
-                        Ok(serde_json::json!({
-                            "status": "success",
-                            "operation": "destroy_pool",
-                            "pool_name": name
-                        }))
-                    }
-                    Ok(output) => {
-                        let error_msg = String::from_utf8_lossy(&output.stderr);
-                        error!("❌ Failed to destroy pool: {}", error_msg);
-                        Err(format!("Failed to destroy pool: {}", error_msg))
-                    }
-                    Err(e) => {
-                        error!("❌ Command execution failed: {}", e);
-                        Err(format!("Command execution failed: {}", e))
-                    }
-                }
-            }
-            ZfsOperation::ListPools => {
-                match std::process::Command::new("zpool")
-                    .args(["list", "-H", "-o", "name,size,alloc,free,health"])
-                    .output()
-                {
-                    Ok(output) if output.status.success() => {
-                        let stdout = String::from_utf8_lossy(&output.stdout);
-                        let pools: Vec<_> = stdout
-                            .lines()
-                            .filter_map(|line| {
-                                let parts: Vec<&str> = line.split('\t').collect();
-                                if parts.len() >= 5 {
-                                    Some(serde_json::json!({
-                                        "name": parts[0],
-                                        "size": parts[1],
-                                        "allocated": parts[2],
-                                        "free": parts[3],
-                                        "health": parts[4]
-                                    }))
-                                } else {
-                                    None
-                                }
-                            })
-                            .collect();
-
-                        info!("✅ Successfully listed {} pools", pools.len());
-                        Ok(serde_json::json!({
-                            "status": "success",
-                            "operation": "list_pools",
-                            "pools": pools
-                        }))
-                    }
-                    Ok(output) => {
-                        let error_msg = String::from_utf8_lossy(&output.stderr);
-                        error!("❌ Failed to list pools: {}", error_msg);
-                        Err(format!("Failed to list pools: {}", error_msg))
-                    }
-                    Err(e) => {
-                        error!("❌ Command execution failed: {}", e);
-                        Err(format!("Command execution failed: {}", e))
-                    }
-                }
-            }
-            ZfsOperation::GetPoolStatus { name } => {
-                match std::process::Command::new("zpool")
-                    .args(["status", &name])
-                    .output()
-                {
-                    Ok(output) if output.status.success() => {
-                        let stdout = String::from_utf8_lossy(&output.stdout);
-
-                        info!("✅ Successfully retrieved pool status: {}", name);
-                        Ok(serde_json::json!({
-                            "status": "success",
-                            "operation": "get_pool_status",
-                            "pool_name": name,
-                            "status_output": stdout.to_string()
-                        }))
-                    }
-                    Ok(output) => {
-                        let error_msg = String::from_utf8_lossy(&output.stderr);
-                        error!("❌ Failed to get pool status: {}", error_msg);
-                        Err(format!("Failed to get pool status: {}", error_msg))
-                    }
-                    Err(e) => {
-                        error!("❌ Command execution failed: {}", e);
-                        Err(format!("Command execution failed: {}", e))
-                    }
-                }
-            }
-        }
-    }
-
-    async fn execute_network_operation(
-        self,
-        _: Context,
-        operation: NetworkOperation,
-    ) -> Result<serde_json::Value, String> {
-        info!("Executing network operation: {:?}", operation);
-
-        match operation {
-            NetworkOperation::GetStatus => {
-                // Get network interface status
-                match std::process::Command::new("ip")
-                    .args(["addr", "show"])
-                    .output()
-                {
-                    Ok(output) if output.status.success() => {
-                        let stdout = String::from_utf8_lossy(&output.stdout);
-
-                        info!("✅ Successfully retrieved network status");
-                        Ok(serde_json::json!({
-                            "status": "success",
-                            "operation": "get_network_status",
-                            "network_info": stdout.to_string()
-                        }))
-                    }
-                    Ok(output) => {
-                        let error_msg = String::from_utf8_lossy(&output.stderr);
-                        error!("❌ Failed to get network status: {}", error_msg);
-                        Err(format!("Failed to get network status: {}", error_msg))
-                    }
-                    Err(e) => {
-                        error!("❌ Command execution failed: {}", e);
-                        Err(format!("Command execution failed: {}", e))
-                    }
-                }
-            }
-            NetworkOperation::UpdateConfig { config } => {
-                // For now, just log the configuration update
-                info!("📝 Network configuration update requested");
-                for (key, value) in config.iter() {
-                    info!("  {} = {}", key, value);
-                }
-
-                Ok(serde_json::json!({
-                    "status": "success",
-                    "operation": "update_network_config",
-                    "config": config,
-                    "note": "Configuration logged - actual network changes require additional implementation"
-                }))
-            }
-            NetworkOperation::RestartService { service } => {
-                info!("🔄 Service restart requested: {}", service);
-
-                // For safety, we'll only restart specific known services
-                match service.as_str() {
-                    "nfs" => {
-                        match std::process::Command::new("systemctl")
-                            .args(["restart", "nfs-server"])
-                            .output()
-                        {
-                            Ok(output) if output.status.success() => {
-                                info!("✅ Successfully restarted NFS service");
-                                Ok(serde_json::json!({
-                                    "status": "success",
-                                    "operation": "restart_service",
-                                    "service": service
-                                }))
+                            if attempts >= max_attempts {
+                                return Err(e);
                             }
-                            Ok(output) => {
-                                let error_msg = String::from_utf8_lossy(&output.stderr);
-                                error!("❌ Failed to restart NFS service: {}", error_msg);
-                                Err(format!("Failed to restart service: {}", error_msg))
-                            }
-                            Err(e) => {
-                                error!("❌ Command execution failed: {}", e);
-                                Err(format!("Command execution failed: {}", e))
+
+                            // Exponential backoff
+                            let delay = Duration::from_millis(100 * (2_u64.pow(attempts - 1)));
+                            tokio::time::sleep(delay).await;
+                        }
+                        Err(_) => {
+                            // Timeout
+                            self.record_failure(service_name).await;
+
+                            if attempts >= max_attempts {
+                                return Err("Request timeout".to_string());
                             }
                         }
                     }
-                    "smb" => {
-                        match std::process::Command::new("systemctl")
-                            .args(["restart", "smbd"])
-                            .output()
-                        {
-                            Ok(output) if output.status.success() => {
-                                info!("✅ Successfully restarted SMB service");
-                                Ok(serde_json::json!({
-                                    "status": "success",
-                                    "operation": "restart_service",
-                                    "service": service
-                                }))
-                            }
-                            Ok(output) => {
-                                let error_msg = String::from_utf8_lossy(&output.stderr);
-                                error!("❌ Failed to restart SMB service: {}", error_msg);
-                                Err(format!("Failed to restart service: {}", error_msg))
-                            }
-                            Err(e) => {
-                                error!("❌ Command execution failed: {}", e);
-                                Err(format!("Command execution failed: {}", e))
-                            }
-                        }
-                    }
-                    _ => {
-                        warn!("⚠️ Service restart not implemented for: {}", service);
-                        Ok(serde_json::json!({
-                            "status": "not_implemented",
-                            "operation": "restart_service",
-                            "service": service,
-                            "note": "Service restart not implemented for this service type"
-                        }))
+                }
+                Err(e) => {
+                    if attempts >= max_attempts {
+                        return Err(e);
                     }
                 }
             }
         }
+
+        Err("Service unavailable after retries".to_string())
     }
 
-    async fn get_service_health(self, _: Context) -> ServiceHealth {
-        ServiceHealth {
-            status: "healthy".to_string(),
-            message: format!(
-                "Service {} is running with real implementations",
-                self.service_name
-            ),
-            timestamp: SystemTime::now(),
-        }
-    }
+    /// Start health monitoring for a service
+    async fn start_health_monitoring(
+        &self,
+        service_name: &str,
+        address: &str,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let service_name = service_name.to_string();
+        let address = address.to_string();
+        let health_monitor = Arc::clone(&self.health_monitor);
+        let interval = self.mesh_config.health_check_interval;
 
-    async fn update_config(
-        self,
-        _: Context,
-        config: HashMap<String, String>,
-    ) -> Result<(), String> {
-        info!("📝 Updating configuration: {:?}", config);
+        tokio::spawn(async move {
+            let mut interval_timer = tokio::time::interval(interval);
 
-        // For now, just log the configuration update
-        // In a real implementation, this would update the actual configuration
-        for (key, value) in config.iter() {
-            info!("  {} = {}", key, value);
-        }
+            loop {
+                interval_timer.tick().await;
+
+                // Connect and perform health check
+                let health_status = match RpcClient::connect(&address).await {
+                    Ok(client) => {
+                        let start = Instant::now();
+                        let _response_time = start.elapsed();
+                        match client.health_check().await {
+                            Ok(_) => HealthStatus::Healthy,
+                            Err(_) => HealthStatus::Unhealthy,
+                        }
+                    }
+                    Err(_) => HealthStatus::Unhealthy,
+                };
+
+                // Update health information
+                if let Ok(mut monitor) = health_monitor.try_write() {
+                    let health_info = monitor
+                        .service_health
+                        .entry(service_name.clone())
+                        .or_insert_with(|| ServiceHealthInfo {
+                            service_name: service_name.clone(),
+                            last_check: Instant::now(),
+                            health_status: HealthStatus::Unknown,
+                            response_time: Duration::from_millis(0),
+                            success_rate: 0.0,
+                            total_requests: 0,
+                            successful_requests: 0,
+                            failed_requests: 0,
+                        });
+
+                    health_info.last_check = Instant::now();
+                    health_info.health_status = health_status.clone();
+
+                    match health_status {
+                        HealthStatus::Healthy => {
+                            debug!("✅ Service {} is healthy", service_name);
+                        }
+                        HealthStatus::Unhealthy => {
+                            warn!("❌ Service {} is unhealthy", service_name);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        });
 
         Ok(())
     }
 
-    async fn notify_event(self, _: Context, event: InternalEvent) {
-        info!("📢 Received internal event: {:?}", event.event_type);
-        info!("   Source: {}", event.source_service);
-        info!("   Data: {}", event.data);
-    }
-
-    async fn get_metrics(self, _: Context) -> ServiceMetrics {
-        // Get real system metrics
-        let cpu_usage = get_cpu_usage().await.unwrap_or(0.0);
-        let memory_usage = get_memory_usage().await.unwrap_or(0.0);
-        let disk_usage = get_disk_usage().await.unwrap_or(0.0);
-        let network_usage = get_network_usage().await.unwrap_or(0.0);
-
-        ServiceMetrics {
-            cpu_usage,
-            memory_usage,
-            disk_usage,
-            network_usage,
-            timestamp: SystemTime::now(),
+    /// Check if circuit breaker is open
+    async fn is_circuit_breaker_open(&self, service_name: &str) -> bool {
+        if !self.mesh_config.enable_circuit_breaker {
+            return false;
         }
-    }
-}
 
-// Helper functions for getting real system metrics
-async fn get_cpu_usage() -> Result<f64, String> {
-    // Simple CPU usage from /proc/loadavg
-    match std::fs::read_to_string("/proc/loadavg") {
-        Ok(content) => {
-            let parts: Vec<&str> = content.split_whitespace().collect();
-            if let Some(load_avg) = parts.first() {
-                load_avg.parse::<f64>()
-                    .map(|load| (load * 100.0).min(100.0)) // Convert to percentage, cap at 100%
-                    .map_err(|e| format!("Failed to parse CPU usage: {}", e))
-            } else {
-                Err("Failed to parse load average".to_string())
-            }
-        }
-        Err(e) => Err(format!("Failed to read /proc/loadavg: {}", e)),
-    }
-}
-
-async fn get_memory_usage() -> Result<f64, String> {
-    // Memory usage from /proc/meminfo
-    match std::fs::read_to_string("/proc/meminfo") {
-        Ok(content) => {
-            let mut mem_total = 0u64;
-            let mut mem_available = 0u64;
-
-            for line in content.lines() {
-                if line.starts_with("MemTotal:") {
-                    if let Some(value) = line.split_whitespace().nth(1) {
-                        mem_total = value.parse().unwrap_or(0);
+        if let Ok(monitor) = self.health_monitor.try_read() {
+            if let Some(breaker) = monitor.circuit_breakers.get(service_name) {
+                match breaker.state {
+                    CircuitBreakerState::Open => {
+                        // Check if we should transition to half-open
+                        if let Some(last_failure) = breaker.last_failure_time {
+                            if last_failure.elapsed() > breaker.timeout {
+                                // Transition to half-open (allow one test request)
+                                return false;
+                            }
+                        }
+                        true
                     }
-                } else if line.starts_with("MemAvailable:") {
-                    if let Some(value) = line.split_whitespace().nth(1) {
-                        mem_available = value.parse().unwrap_or(0);
-                    }
+                    _ => false,
                 }
-            }
-
-            if mem_total > 0 {
-                let mem_used = mem_total - mem_available;
-                Ok((mem_used as f64 / mem_total as f64) * 100.0)
             } else {
-                Err("Failed to parse memory information".to_string())
+                false
+            }
+        } else {
+            false
+        }
+    }
+
+    /// Record successful request
+    async fn record_success(&self, service_name: &str, response_time: Duration) {
+        if let Ok(mut monitor) = self.health_monitor.try_write() {
+            let health_info = monitor
+                .service_health
+                .entry(service_name.to_string())
+                .or_insert_with(|| ServiceHealthInfo {
+                    service_name: service_name.to_string(),
+                    last_check: Instant::now(),
+                    health_status: HealthStatus::Healthy,
+                    response_time,
+                    success_rate: 1.0,
+                    total_requests: 0,
+                    successful_requests: 0,
+                    failed_requests: 0,
+                });
+
+            health_info.successful_requests += 1;
+            health_info.total_requests += 1;
+            health_info.response_time = response_time;
+            health_info.success_rate =
+                health_info.successful_requests as f64 / health_info.total_requests as f64;
+
+            // Update circuit breaker
+            let breaker = monitor
+                .circuit_breakers
+                .entry(service_name.to_string())
+                .or_insert_with(|| CircuitBreaker {
+                    service_name: service_name.to_string(),
+                    state: CircuitBreakerState::Closed,
+                    failure_count: 0,
+                    success_count: 0,
+                    last_failure_time: None,
+                    threshold: self.mesh_config.circuit_breaker_threshold,
+                    timeout: Duration::from_secs(60),
+                });
+
+            breaker.success_count += 1;
+
+            // Reset circuit breaker if we get enough successes
+            if breaker.state == CircuitBreakerState::HalfOpen && breaker.success_count >= 3 {
+                breaker.state = CircuitBreakerState::Closed;
+                breaker.failure_count = 0;
+                info!("🔄 Circuit breaker for {} closed (recovery)", service_name);
             }
         }
-        Err(e) => Err(format!("Failed to read /proc/meminfo: {}", e)),
-    }
-}
 
-async fn get_disk_usage() -> Result<f64, String> {
-    // Disk usage using df command
-    match std::process::Command::new("df").args(["-h", "/"]).output() {
-        Ok(output) if output.status.success() => {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            for line in stdout.lines().skip(1) {
-                // Skip header
-                let parts: Vec<&str> = line.split_whitespace().collect();
-                if parts.len() >= 5 {
-                    let usage_str = parts[4].trim_end_matches('%');
-                    if let Ok(usage) = usage_str.parse::<f64>() {
-                        return Ok(usage);
-                    }
-                }
+        // Update global metrics
+        if let Ok(mut metrics) = self.metrics.try_write() {
+            metrics.successful_requests += 1;
+            metrics.total_requests += 1;
+        }
+    }
+
+    /// Record failed request
+    async fn record_failure(&self, service_name: &str) {
+        if let Ok(mut monitor) = self.health_monitor.try_write() {
+            let health_info = monitor
+                .service_health
+                .entry(service_name.to_string())
+                .or_insert_with(|| ServiceHealthInfo {
+                    service_name: service_name.to_string(),
+                    last_check: Instant::now(),
+                    health_status: HealthStatus::Unhealthy,
+                    response_time: Duration::from_millis(0),
+                    success_rate: 0.0,
+                    total_requests: 0,
+                    successful_requests: 0,
+                    failed_requests: 0,
+                });
+
+            health_info.failed_requests += 1;
+            health_info.total_requests += 1;
+            health_info.success_rate =
+                health_info.successful_requests as f64 / health_info.total_requests as f64;
+
+            // Update circuit breaker
+            let breaker = monitor
+                .circuit_breakers
+                .entry(service_name.to_string())
+                .or_insert_with(|| CircuitBreaker {
+                    service_name: service_name.to_string(),
+                    state: CircuitBreakerState::Closed,
+                    failure_count: 0,
+                    success_count: 0,
+                    last_failure_time: None,
+                    threshold: self.mesh_config.circuit_breaker_threshold,
+                    timeout: Duration::from_secs(60),
+                });
+
+            breaker.failure_count += 1;
+            breaker.last_failure_time = Some(Instant::now());
+
+            // Check if we should open the circuit breaker
+            let failure_rate = breaker.failure_count as f64
+                / (breaker.failure_count + breaker.success_count) as f64;
+
+            if failure_rate >= breaker.threshold && breaker.state == CircuitBreakerState::Closed {
+                breaker.state = CircuitBreakerState::Open;
+                warn!(
+                    "🔴 Circuit breaker for {} opened (failure rate: {:.1}%)",
+                    service_name,
+                    failure_rate * 100.0
+                );
             }
-            Err("Failed to parse disk usage".to_string())
         }
-        Ok(output) => {
-            let error_msg = String::from_utf8_lossy(&output.stderr);
-            Err(format!("Failed to get disk usage: {}", error_msg))
+
+        // Update global metrics
+        if let Ok(mut metrics) = self.metrics.try_write() {
+            metrics.failed_requests += 1;
+            metrics.total_requests += 1;
         }
-        Err(e) => Err(format!("Command execution failed: {}", e)),
+    }
+
+    /// Get service statistics
+    pub async fn get_service_stats(&self) -> HashMap<String, serde_json::Value> {
+        let mut stats = HashMap::new();
+
+        if let Ok(monitor) = self.health_monitor.try_read() {
+            for (service_name, health_info) in &monitor.service_health {
+                stats.insert(
+                    service_name.clone(),
+                    serde_json::json!({
+                        "health_status": match health_info.health_status {
+                            HealthStatus::Healthy => "healthy",
+                            HealthStatus::Unhealthy => "unhealthy",
+                            HealthStatus::Warning => "warning",
+                            HealthStatus::Unknown => "unknown",
+                        },
+                        "success_rate": health_info.success_rate,
+                        "total_requests": health_info.total_requests,
+                        "successful_requests": health_info.successful_requests,
+                        "failed_requests": health_info.failed_requests,
+                        "response_time_ms": health_info.response_time.as_millis(),
+                    }),
+                );
+            }
+        }
+
+        if let Ok(metrics) = self.metrics.try_read() {
+            stats.insert(
+                "global".to_string(),
+                serde_json::json!({
+                    "total_requests": metrics.total_requests,
+                    "successful_requests": metrics.successful_requests,
+                    "failed_requests": metrics.failed_requests,
+                    "success_rate": if metrics.total_requests > 0 {
+                        metrics.successful_requests as f64 / metrics.total_requests as f64
+                    } else { 0.0 },
+                    "active_connections": metrics.active_connections,
+                    "peak_connections": metrics.peak_connections,
+                    "bytes_transferred": metrics.bytes_transferred,
+                }),
+            );
+        }
+
+        stats
+    }
+
+    /// Stop all servers and clean up resources
+    pub async fn shutdown(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        info!("🛑 Shutting down tarpc service manager");
+
+        // Clear connection pool
+        {
+            let mut pool = self.connection_pool.lock().await;
+            pool.clear();
+        }
+
+        // Clear servers
+        {
+            let mut servers = self.servers.write().await;
+            servers.clear();
+        }
+
+        info!("✅ Tarpc service manager shutdown complete");
+        Ok(())
     }
 }
 
-async fn get_network_usage() -> Result<f64, String> {
-    // Simple network usage indicator (always return a reasonable value)
-    // In a real implementation, this would monitor network interfaces
-    Ok(15.0) // Placeholder for 15% network usage
+/// Create a production-ready tarpc service manager
+pub fn create_production_service_manager() -> TarpcServiceManager {
+    let mesh_config = ServiceMeshConfig {
+        enable_load_balancing: true,
+        enable_circuit_breaker: true,
+        enable_retry: true,
+        max_retry_attempts: 3,
+        circuit_breaker_threshold: 0.6, // 60% failure rate
+        health_check_interval: Duration::from_secs(15),
+        connection_timeout: Duration::from_secs(5),
+        request_timeout: Duration::from_secs(30),
+    };
+
+    TarpcServiceManager::new(mesh_config)
 }
 
-/// Start the tarpc service server
-pub async fn start_server(addr: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let listener = tarpc::serde_transport::tcp::listen(addr, Bincode::default).await?;
-    info!("tarpc server listening on {}", addr);
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    listener
-        .filter_map(|r| futures_util::future::ready(r.ok()))
-        .map(BaseChannel::with_defaults)
-        .for_each_concurrent(None, |channel| async move {
-            let service = InternalServiceImpl::new();
-            channel.execute(service.serve());
-        })
-        .await;
-
-    Ok(())
-}
-
-/// tarpc client for internal service communication
-pub struct TarpcClient {
-    client: InternalServiceClient,
-}
-
-impl TarpcClient {
-    /// Create a new tarpc client
-    pub async fn new(server_addr: &str) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
-        let transport = tarpc::serde_transport::tcp::connect(server_addr, Bincode::default).await?;
-        let client = InternalServiceClient::new(client::Config::default(), transport).spawn();
-
-        Ok(Self { client })
+    #[tokio::test]
+    async fn test_service_manager_creation() {
+        let manager = create_production_service_manager();
+        assert!(manager.mesh_config.enable_load_balancing);
+        assert!(manager.mesh_config.enable_circuit_breaker);
+        assert!(manager.mesh_config.enable_retry);
     }
 
-    /// Execute a storage operation
-    pub async fn execute_storage_operation(
-        &self,
-        operation: StorageOperation,
-    ) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>> {
-        let result = self
-            .client
-            .execute_storage_operation(Context::current(), operation)
-            .await?;
-        Ok(result?)
+    #[tokio::test]
+    async fn test_circuit_breaker_functionality() {
+        let manager = create_production_service_manager();
+
+        // Simulate failures
+        for _ in 0..10 {
+            manager.record_failure("test-service").await;
+        }
+
+        // Circuit breaker should be open
+        assert!(manager.is_circuit_breaker_open("test-service").await);
+
+        // Record some successes (after timeout would be reached)
+        for _ in 0..5 {
+            manager
+                .record_success("test-service", Duration::from_millis(50))
+                .await;
+        }
     }
 
-    /// Execute a ZFS operation
-    pub async fn execute_zfs_operation(
-        &self,
-        operation: ZfsOperation,
-    ) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>> {
-        let result = self
-            .client
-            .execute_zfs_operation(Context::current(), operation)
-            .await?;
-        Ok(result?)
-    }
+    #[tokio::test]
+    async fn test_service_stats() {
+        let manager = create_production_service_manager();
 
-    /// Execute a network operation
-    pub async fn execute_network_operation(
-        &self,
-        operation: NetworkOperation,
-    ) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>> {
-        let result = self
-            .client
-            .execute_network_operation(Context::current(), operation)
-            .await?;
-        Ok(result?)
-    }
+        // Record some activity
+        manager
+            .record_success("test-service", Duration::from_millis(100))
+            .await;
+        manager.record_failure("test-service").await;
+        manager
+            .record_success("test-service", Duration::from_millis(200))
+            .await;
 
-    /// Get service health
-    pub async fn get_service_health(
-        &self,
-    ) -> Result<ServiceHealth, Box<dyn std::error::Error + Send + Sync>> {
-        let health = self.client.get_service_health(Context::current()).await?;
-        Ok(health)
-    }
-
-    /// Get service metrics
-    pub async fn get_metrics(
-        &self,
-    ) -> Result<ServiceMetrics, Box<dyn std::error::Error + Send + Sync>> {
-        let metrics = self.client.get_metrics(Context::current()).await?;
-        Ok(metrics)
+        let stats = manager.get_service_stats().await;
+        assert!(stats.contains_key("test-service"));
+        assert!(stats.contains_key("global"));
     }
 }

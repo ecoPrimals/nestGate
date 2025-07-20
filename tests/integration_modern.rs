@@ -74,8 +74,10 @@ impl ModernIntegrationTestRunner {
     pub async fn run_basic_integration_test(&self) -> CoreResult<IntegrationTestResults> {
         println!("🔧 Running basic integration test");
 
-        let mut results = IntegrationTestResults::default();
-        results.test_start_time = std::time::Instant::now();
+        let mut results = IntegrationTestResults {
+            test_start_time: std::time::Instant::now(),
+            ..Default::default()
+        };
 
         // Test 1: Basic system health check
         if let Some(zfs_manager) = &self.zfs_manager {
