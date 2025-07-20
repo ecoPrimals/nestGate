@@ -130,17 +130,18 @@ fn create_desktop_shortcut_unix(install_path: &Path, name: &str) -> Result<()> {
         let binary_path = install_path.join("bin").join("nestgate");
 
         let desktop_entry = format!(
-            r#"[Desktop Entry]
+            r"[Desktop Entry]
 Version=1.0
 Type=Application
 Name={}
-Comment=NestGate Storage Management System
+Comment={}
 Exec={}
 Icon={}
 Terminal=false
 Categories=System;
-"#,
+",
             name,
+            "NestGate Storage Management System",
             binary_path.display(),
             install_path
                 .join("share")

@@ -17,13 +17,14 @@ use std::collections::HashMap;
 // Import all the modules we need for comprehensive testing
 use nestgate_core::{Result as CoreResult, NestGateError, StorageTier};
 use nestgate_mcp::security::{SecurityManager, SecurityConfig, AuthToken};
+use nestgate_network::{VlanConfig, VlanManager, SongbirdConnectionManager, ServiceInstance, ServiceStatus};
 use nestgate_zfs::{
     manager::ZfsManager,
     performance::ZfsPerformanceMonitor,
-    config::{ZfsConfig, PerformanceConfig},
+    config::ZfsConfig,
+    performance::PerformanceConfig,
     pool::ZfsPoolManager,
     dataset::ZfsDatasetManager,
-    ai_integration::ZfsAiManager,
 };
 use nestgate_automation::{
     prediction::{TierPredictor, FileAnalysis, AccessPattern},
@@ -31,8 +32,7 @@ use nestgate_automation::{
     types::AutomationConfig,
 };
 use nestgate_network::{
-    NetworkApi, Protocol, ProtocolConfig, VlanManager, VlanConfig,
-    ServiceInstance, ServiceStatus, SongbirdConnectionManager, ConnectionType,
+    api::NetworkApi, Protocol, ProtocolConfig, ConnectionType,
 };
 use nestgate_nas::{NasConfig, NasServer, ShareProtocol};
 use nestgate_ui::{NestGateApp, AppView, DataSource, TierStats};
@@ -49,7 +49,7 @@ async fn test_end_to_end_zfs_storage_workflow() -> CoreResult<()> {
     let config = ZfsConfig::default();
     let pool_manager = Arc::new(ZfsPoolManager::new(&config).await?);
     let dataset_manager = Arc::new(ZfsDatasetManager::new(config.clone(), pool_manager.clone()));
-    let ai_manager = ZfsAiManager::new(config.clone()).await?;
+    let _ai_manager = ZfsManager::new(config.clone()).await?;
 
     // Step 1: Pool Discovery and Health Check
     let pools = pool_manager.discover_pools().await?;

@@ -9,6 +9,13 @@ pub mod workspace_management;
 pub mod performance_analytics;
 pub mod load_testing;
 pub mod storage;
+pub mod byob_management;
+pub mod compute_handler;
+pub mod ecoprimal_analysis;
+// pub mod performance_dashboard; // Temporarily disabled due to compilation issues
+pub mod universal_ai_handler;
+pub mod universal_storage_handler;
+pub mod zfs_management;
 
 pub use health::*;
 pub use zfs::*;

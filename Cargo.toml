@@ -46,8 +46,6 @@ thiserror = "1.0"
 tokio.workspace = true
 tracing.workspace = true
 uuid.workspace = true
-
-# Test dependencies for root level tests
 axum.workspace = true
 axum-test = "15.0"
 reqwest.workspace = true
@@ -80,12 +78,31 @@ fastrand = "2.0"
 sysinfo = "0.30"
 num_cpus = "1.16"
 criterion = { version = "0.5", features = ["html_reports"] }
+async-trait.workspace = true
+rand = "0.8"
+reqwest = { workspace = true, features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+uuid = { workspace = true, features = ["v4"] }
 
 [features]
 default = []
+streaming-rpc = []
+
+# Criterion benchmarks configuration
+[[bench]]
+name = "native_perf_test"
+harness = false
 
 [[bench]]
-name = "performance_benchmarks"
+name = "decentralized_security_perf"
+harness = false
+
+[[bench]]
+name = "nestgate_operations_perf"
+harness = false
+
+[[bench]]
+name = "zero_copy_benchmarks"
 harness = false
 
 [workspace.dependencies]
@@ -112,6 +129,14 @@ indexmap = "2.0"
 reqwest = { version = "0.11", features = ["json"] }
 config = "0.14"
 ipnetwork = "0.20"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+# Note: criterion added for benchmarks
+
+# Benchmark configuration
+[[bench]]
+name = "a_plus_performance_validation"
+harness = false
 
 [workspace.lints.rust]
 unused_imports = "warn"

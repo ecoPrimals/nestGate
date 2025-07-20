@@ -101,7 +101,10 @@ impl ZfsService {
             service_id: self.node_id.clone(),
             service_type: "storage".to_string(),
             capabilities: self.config.capabilities.clone(),
-            endpoints: vec![format!("http://{}:{}", self.config.bind_address, self.config.port)],
+            endpoints: vec![format!(
+                "http://{}:{}",
+                self.config.bind_address, self.config.port
+            )],
             metadata: self.config.metadata.clone(),
         }
     }

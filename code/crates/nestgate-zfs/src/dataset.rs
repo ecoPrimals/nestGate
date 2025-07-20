@@ -62,13 +62,21 @@ pub struct DatasetInfo {
 #[derive(Debug)]
 #[allow(dead_code)] // Some fields are planned features not yet fully implemented
 pub struct ZfsDatasetManager {
-    config: ZfsConfig,
+    config: Arc<ZfsConfig>,
     pool_manager: Arc<ZfsPoolManager>,
 }
 
 impl ZfsDatasetManager {
     /// Create a new ZFS dataset manager
     pub fn new(config: ZfsConfig, pool_manager: Arc<ZfsPoolManager>) -> Self {
+        Self {
+            config: Arc::new(config),
+            pool_manager,
+        }
+    }
+
+    /// Create a new ZFS dataset manager with shared config (zero-copy)
+    pub fn with_shared_config(config: Arc<ZfsConfig>, pool_manager: Arc<ZfsPoolManager>) -> Self {
         Self {
             config,
             pool_manager,

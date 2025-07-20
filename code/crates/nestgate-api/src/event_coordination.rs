@@ -4,6 +4,7 @@
 //! system, enabling real-time coordination between WebSocket clients, internal
 //! services, and MCP streams.
 
+use nestgate_core::get_or_create_uuid;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::{broadcast, RwLock};
@@ -269,7 +270,7 @@ impl EventCoordinator {
         {
             let _ws_event = crate::websocket::WebSocketEvent {
                 event_id: event.event_id,
-                client_id: uuid::Uuid::new_v4(), // Generate a new UUID for client_id
+                client_id: *get_or_create_uuid("websocket_client_default"), // Use cached UUID for client_id
                 event_type: crate::websocket::WebSocketEventType::Message,
                 data: event.data.clone(),
                 timestamp: std::time::SystemTime::now(),
@@ -476,7 +477,7 @@ impl EventCoordinator {
         data: serde_json::Value,
     ) -> CoordinatedEvent {
         CoordinatedEvent {
-            event_id: Uuid::new_v4(),
+            event_id: *get_or_create_uuid(&format!("websocket_event_{}", client_id)),
             event_type: CoordinatedEventType::WebSocket,
             source: format!("websocket-{client_id}"),
             data,
@@ -487,7 +488,7 @@ impl EventCoordinator {
     /// Create an internal service event
     pub fn internal_service_event(service_name: &str, data: serde_json::Value) -> CoordinatedEvent {
         CoordinatedEvent {
-            event_id: Uuid::new_v4(),
+            event_id: *get_or_create_uuid(&format!("internal_service_event_{}", service_name)),
             event_type: CoordinatedEventType::InternalService,
             source: format!("service-{service_name}"),
             data,
@@ -498,7 +499,7 @@ impl EventCoordinator {
     /// Create an MCP stream event
     pub fn mcp_stream_event(stream_id: &str, data: serde_json::Value) -> CoordinatedEvent {
         CoordinatedEvent {
-            event_id: Uuid::new_v4(),
+            event_id: *get_or_create_uuid(&format!("mcp_stream_event_{}", stream_id)),
             event_type: CoordinatedEventType::McpStream,
             source: format!("mcp-stream-{stream_id}"),
             data,
@@ -507,9 +508,9 @@ impl EventCoordinator {
     }
 
     /// Create a storage operation event
-    pub fn storage_operation(_operation: &str, data: serde_json::Value) -> CoordinatedEvent {
+    pub fn storage_operation(operation: &str, data: serde_json::Value) -> CoordinatedEvent {
         CoordinatedEvent {
-            event_id: Uuid::new_v4(),
+            event_id: *get_or_create_uuid(&format!("storage_operation_{}", operation)),
             event_type: CoordinatedEventType::StorageOperation,
             source: "storage-service".to_string(),
             data,

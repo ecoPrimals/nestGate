@@ -10,7 +10,8 @@ use tracing::{info, warn};
 // Test imports
 use nestgate_core::{StorageTier, NestGateError};
 use nestgate_zfs::{
-    ZfsPoolManager, ZfsDatasetManager, ZfsConfig,
+    ZfsPoolManager, ZfsDatasetManager,
+    config::ZfsConfig,  // Correct import path
     performance::{ZfsPerformanceMonitor, PerformanceConfig},
     manager::ZfsManager,
 };
@@ -97,9 +98,9 @@ async fn test_zfs_real_command_integration() -> Result<(), Box<dyn std::error::E
     // Test dataset operations
     let test_dataset = "test-debt-elimination";
     let test_pool = if let Ok(pools) = pool_manager.list_pools().await {
-        pools.first().map(|p| p.name.as_str()).unwrap_or("testpool")
+        pools.first().map(|p| p.name.as_str()).unwrap_or("testpool").to_string()
     } else {
-        "testpool" // Fallback pool name
+        "testpool".to_string() // Fallback pool name
     };
 
     let dataset_result = dataset_manager.create_dataset(

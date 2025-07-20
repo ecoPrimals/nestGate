@@ -1,302 +1,237 @@
 ---
-title: NestGate Universal Primal Storage Architecture Overview
-description: Production-ready universal primal storage system with comprehensive ecosystem integration
-version: 4.0.0
-date: 2025-01-26
-status: PRODUCTION READY
+title: NestGate Universal Storage Architecture
+description: Universal, agnostic storage and data access system
+version: 2.0.0
+date: 2025-01-27
+status: ✅ PRODUCTION READY
+ecosystem: "Universal Primal Architecture"
 ---
 
-# NestGate Universal Primal Storage Architecture Overview
+# 🏠 NestGate Universal Storage Architecture
 
-This document provides an overview of the **production-ready** NestGate Universal Primal Storage system architecture, reflecting the current mature implementation with comprehensive ecosystem integration.
+## 🎯 **Mission Statement**
 
-## **Current Implementation Status**
+NestGate is a **universal, agnostic storage and data access system** that provides ZFS-based storage management, network protocols, and data orchestration with **zero hardcoded dependencies** on specific ecosystem components. Built on Universal Primal Architecture principles for maximum flexibility and future-proofing.
 
-🟢 **PRODUCTION READY** - NestGate has achieved full production readiness with:
-- ✅ **Zero compilation errors** across all components
-- ✅ **Complete ecosystem integration** with all primal services
-- ✅ **Real ZFS operations** with comprehensive storage management
-- ✅ **AI-powered features** via MCP integration with Squirrel primal
-- ✅ **Full BYOB workspace management** with backup/restore capabilities
-- ✅ **Data source integration** for NCBI and HuggingFace
-- ✅ **Advanced monitoring** and performance optimization
+## 🌟 **Core Principles**
 
-## **Universal Primal Architectural Philosophy**
+### **Universal Agnostic Design**
+- **Zero Hardcoding**: No hardcoded references to specific primals or services
+- **Auto-Discovery**: Automatic detection of compatible ecosystem components
+- **Graceful Degradation**: Continues full functionality when ecosystem components are unavailable
+- **Future-Proof**: New ecosystem components integrate without code changes
 
-NestGate implements the **Universal Primal Architecture** pattern with production-ready integrations:
+### **Capability-Based Integration**
+- **Dynamic Discovery**: Runtime detection of available capabilities
+- **Flexible Binding**: Connects to any compatible service providing needed capabilities
+- **Seamless Switching**: Hot-swap between equivalent capability providers
+- **Extensible Architecture**: New capabilities added without modification
 
-1. **Universal Interfaces**: ✅ **IMPLEMENTED** - Works with beardog, squirrel, songbird, and toadstool
-2. **Auto-Discovery**: ✅ **IMPLEMENTED** - Service registration and health monitoring
-3. **Capability-Based**: ✅ **IMPLEMENTED** - Dynamic feature negotiation with fallback
-4. **Future-Proof**: ✅ **IMPLEMENTED** - Extensible architecture for new primals
-5. **Agnostic Design**: ✅ **IMPLEMENTED** - No hardcoded dependencies
+## 🏗️ **Architecture Overview**
 
-## **Production System Components**
-
-### **Core Storage Engine**
-- **ZFS Manager** - Production-ready ZFS operations with real commands
-- **Tiered Storage** - Hot/warm/cold tier management with intelligent placement
-- **Performance Engine** - AI-guided optimization with real-time monitoring
-- **Backup System** - ZFS snapshot-based backup/restore with integrity checks
-
-### **Ecosystem Integration Layer**
-- **BearDog Security** - Real encryption and access control coordination
-- **Squirrel AI** - MCP integration for AI-powered analytics and optimization
-- **Songbird Network** - Distribution and replication management
-- **Toadstool Compute** - Volume provisioning and performance coordination
-
-### **Data Integration Layer**
-- **NCBI Integration** - E-utilities API for genome data access
-- **HuggingFace Integration** - Model Hub API for ML model management
-- **Universal Storage** - Multi-backend coordination with real-time synchronization
-
-### **BYOB Management Layer**
-- **Workspace Lifecycle** - Create, deploy, scale, cleanup with real ZFS operations
-- **Backup & Recovery** - Snapshot creation, restoration, and migration
-- **Advanced Features** - AI-guided optimization and health monitoring
-
-## **Production Architecture Diagram**
+### **Core System Components**
 
 ```mermaid
 ---
-title: NestGate Production Architecture (v4.0)
+title: NestGate Universal Storage Architecture
 ---
-flowchart TB
-    subgraph "Production Primal Ecosystem"
-        BEARDOG[BearDog Security<br/>✅ INTEGRATED]
-        SQUIRREL[Squirrel AI<br/>✅ MCP READY]
-        SONGBIRD[Songbird Distribution<br/>✅ INTEGRATED]
-        TOADSTOOL[ToadStool Compute<br/>✅ INTEGRATED]
+graph TB
+    subgraph "🏠 NestGate Core System"
+        CORE[Universal Storage Core]
+        ADAPTER[Universal Ecosystem Adapter]
+        DISCOVERY[Capability Discovery Engine]
+        CONFIG[Universal Configuration]
+        style CORE fill:#2d5a87,stroke:#fff,stroke-width:2px,color:#fff
+        style ADAPTER fill:#2d5a87,stroke:#fff,stroke-width:2px,color:#fff
+        style DISCOVERY fill:#2d5a87,stroke:#fff,stroke-width:2px,color:#fff
+        style CONFIG fill:#2d5a87,stroke:#fff,stroke-width:2px,color:#fff
     end
-
-    subgraph "External Data Sources"
-        NCBI[NCBI E-utilities<br/>✅ IMPLEMENTED]
-        HF[HuggingFace Hub<br/>✅ IMPLEMENTED]
-    end
-
-    subgraph "NestGate Core (Production Ready)"
-        API[REST API<br/>✅ COMPLETE]
-        BYOB[BYOB Management<br/>✅ PRODUCTION]
-        UNIVERSAL[Universal Storage<br/>✅ ACTIVE]
-        PERF[Performance Engine<br/>✅ AI-POWERED]
-    end
-
-    subgraph "ZFS Storage Layer (Production)"
-        ZFS[ZFS Manager<br/>✅ REAL OPERATIONS]
-        BACKUP[Backup System<br/>✅ SNAPSHOT-BASED]
-        TIERS[Tiered Storage<br/>✅ INTELLIGENT]
-        MONITOR[Real-time Monitoring<br/>✅ COMPREHENSIVE]
-    end
-
-    subgraph "Physical Storage"
-        HOT[Hot Tier<br/>NVMe Cache<br/>✅ ACTIVE]
-        WARM[Warm Tier<br/>Primary ZFS<br/>✅ ACTIVE]
-        COLD[Cold Tier<br/>Archive Storage<br/>✅ ACTIVE]
-    end
-
-    %% Production Integrations
-    API <--> BEARDOG
-    API <--> SQUIRREL
-    API <--> SONGBIRD
-    API <--> TOADSTOOL
     
-    %% Data Source Integration
-    UNIVERSAL <--> NCBI
-    UNIVERSAL <--> HF
-
-    %% Core System Flow
-    API --> BYOB
-    BYOB --> UNIVERSAL
-    UNIVERSAL --> PERF
-    PERF --> ZFS
-    ZFS --> BACKUP
-    BACKUP --> TIERS
-    TIERS --> MONITOR
-
-    %% Storage Tier Management
-    ZFS --> HOT
-    ZFS --> WARM
-    ZFS --> COLD
-
-    %% AI Integration
-    SQUIRREL -.-> PERF
-    SQUIRREL -.-> BACKUP
-    SQUIRREL -.-> TIERS
-
-    %% Security Integration
-    BEARDOG -.-> API
-    BEARDOG -.-> UNIVERSAL
-    BEARDOG -.-> ZFS
-
-    %% Network Integration
-    SONGBIRD -.-> UNIVERSAL
-    SONGBIRD -.-> BACKUP
-
-    %% Compute Integration
-    TOADSTOOL -.-> BYOB
-    TOADSTOOL -.-> PERF
-
-    %% Styling
-    classDef production fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px
-    classDef integrated fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-    classDef storage fill:#fff3e0,stroke:#f57c00,stroke-width:2px
-    classDef external fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-
-    class API,BYOB,UNIVERSAL,PERF,ZFS,BACKUP,TIERS,MONITOR production
-    class BEARDOG,SQUIRREL,SONGBIRD,TOADSTOOL integrated
-    class HOT,WARM,COLD storage
-    class NCBI,HF external
+    subgraph "🔄 Universal Interfaces"
+        STORAGE[Storage Provider Interface]
+        NETWORK[Network Protocol Interface]
+        SECURITY[Security Provider Interface]
+        ORCHESTRATION[Orchestration Interface]
+        style STORAGE fill:#4a90e2,stroke:#fff,stroke-width:2px,color:#fff
+        style NETWORK fill:#4a90e2,stroke:#fff,stroke-width:2px,color:#fff
+        style SECURITY fill:#4a90e2,stroke:#fff,stroke-width:2px,color:#fff
+        style ORCHESTRATION fill:#4a90e2,stroke:#fff,stroke-width:2px,color:#fff
+    end
+    
+    subgraph "🌐 Ecosystem Integration (Optional)"
+        ECOSYSTEM[Any Compatible Ecosystem]
+        PRIMAL_A[Service A<br/>Storage Orchestration]
+        PRIMAL_B[Service B<br/>Security Provider]
+        PRIMAL_C[Service C<br/>Network Management]
+        style ECOSYSTEM fill:#7ed321,stroke:#fff,stroke-width:2px,color:#fff
+        style PRIMAL_A fill:#7ed321,stroke:#fff,stroke-width:2px,color:#fff
+        style PRIMAL_B fill:#7ed321,stroke:#fff,stroke-width:2px,color:#fff
+        style PRIMAL_C fill:#7ed321,stroke:#fff,stroke-width:2px,color:#fff
+    end
+    
+    CORE --> ADAPTER
+    ADAPTER --> DISCOVERY
+    DISCOVERY --> CONFIG
+    
+    ADAPTER --> STORAGE
+    ADAPTER --> NETWORK
+    ADAPTER --> SECURITY
+    ADAPTER --> ORCHESTRATION
+    
+    STORAGE -.-> PRIMAL_A
+    SECURITY -.-> PRIMAL_B
+    NETWORK -.-> PRIMAL_C
+    
+    ECOSYSTEM --> PRIMAL_A
+    ECOSYSTEM --> PRIMAL_B
+    ECOSYSTEM --> PRIMAL_C
 ```
 
-## **Production Communication Flow**
+## 📋 **Core Responsibilities**
 
-### **BYOB Workspace Management (Production)**
+### **🏠 Storage & Data Access (Primary Focus)**
+- **ZFS Management**: Pool operations, dataset management, snapshot handling
+- **Network Protocols**: NFS, SMB, iSCSI, HTTP/REST data access
+- **Tiered Storage**: Hot (NVMe), Warm (SSD), Cold (HDD) management
+- **Data Orchestration**: Backup, replication, migration, archival
+- **Volume Management**: Dynamic provisioning, mounting, quota management
 
-```mermaid
----
-title: Production BYOB Workspace Flow
----
-sequenceDiagram
-    participant C as Client
-    participant API as NestGate API
-    participant ZFS as ZFS Manager
-    participant AI as Squirrel AI
-    participant SEC as BearDog Security
+### **🔄 Universal Integration**
+- **Ecosystem Discovery**: Automatic detection of compatible services
+- **Capability Negotiation**: Dynamic feature negotiation with ecosystem components
+- **Service Registration**: Universal service mesh integration
+- **API Standardization**: RESTful, GraphQL, and streaming APIs
 
-    C->>API: Create workspace request
-    API->>SEC: Validate permissions
-    SEC->>API: Authorization granted
-    API->>ZFS: Create ZFS dataset
-    ZFS->>ZFS: Execute zfs create command
-    ZFS->>API: Dataset created
-    API->>AI: Request optimization
-    AI->>API: Optimization parameters
-    API->>C: Workspace ready
+### **🛡️ Security & Compliance**
+- **Authentication**: Pluggable authentication with any compatible provider
+- **Authorization**: Role-based access control with external policy engines
+- **Encryption**: At-rest and in-transit encryption with key management
+- **Audit Logging**: Comprehensive audit trail for compliance
 
-    Note over C,SEC: Production-ready with real<br/>ZFS operations and security
+## 🚫 **Explicitly Delegated Responsibilities**
+
+### **🤖 AI/ML Processing** → **External AI Services**
+- ❌ Model inference and training
+- ❌ Machine learning predictions
+- ❌ AI-powered analytics
+- ✅ **Instead**: Provide storage for AI models and datasets
+- ✅ **Integration**: Accept optimization recommendations from AI services
+
+### **🎵 General Orchestration** → **Service Orchestrators**
+- ❌ General service mesh management
+- ❌ Cross-service load balancing
+- ❌ Global service discovery
+- ✅ **Instead**: Register with available orchestrators
+- ✅ **Integration**: Participate in ecosystem-wide coordination
+
+### **🔐 Security Policy Management** → **Security Providers**
+- ❌ Identity and access management
+- ❌ Threat detection and response
+- ❌ Compliance framework management
+- ✅ **Instead**: Implement security policies received from providers
+- ✅ **Integration**: Report security events to external systems
+
+## 🔧 **Universal Integration Patterns**
+
+### **Capability-Based Discovery**
+```rust
+// Universal capability discovery - no hardcoded services
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CapabilityProvider {
+    pub provider_id: String,
+    pub capabilities: Vec<ServiceCapability>,
+    pub endpoint: String,
+    pub health_status: HealthStatus,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ServiceCapability {
+    StorageOrchestration { features: Vec<String> },
+    SecurityProvider { methods: Vec<String> },
+    NetworkManagement { protocols: Vec<String> },
+    DataProcessing { engines: Vec<String> },
+    // Extensible for future capabilities
+}
 ```
 
-### **AI-Powered Optimization Flow (Production)**
-
-```mermaid
----
-title: Production AI Integration via MCP
----
-sequenceDiagram
-    participant ZFS as ZFS Manager
-    participant PERF as Performance Engine
-    participant MCP as MCP Client
-    participant AI as Squirrel AI
-
-    ZFS->>PERF: Performance metrics
-    PERF->>MCP: Request AI analysis
-    MCP->>AI: Send metrics via HTTP
-    AI->>MCP: Optimization recommendations
-    MCP->>PERF: AI recommendations
-    PERF->>ZFS: Apply optimizations
-    ZFS->>ZFS: Execute zfs set commands
-    ZFS->>PERF: Optimization complete
-
-    Note over ZFS,AI: Real HTTP communication<br/>with fallback mechanisms
+### **Universal Service Registration**
+```rust
+// Register with any compatible service mesh
+pub struct UniversalServiceRegistration {
+    pub service_id: String,
+    pub service_type: String, // "storage", "nas", "data-access"
+    pub capabilities: Vec<ServiceCapability>,
+    pub endpoints: HashMap<String, String>,
+    pub health_check: HealthCheckConfig,
+    pub metadata: HashMap<String, String>,
+}
 ```
 
-## **Production Features**
-
-### **✅ Implemented Core Features**
-- **Real ZFS Operations**: Uses actual `zfs` and `zpool` commands
-- **Comprehensive Backup**: Snapshot creation, restoration, and migration
-- **AI Integration**: MCP communication with Squirrel primal
-- **Security Integration**: BearDog encryption and access control
-- **Data Sources**: NCBI and HuggingFace API integration
-- **Performance Optimization**: Real-time monitoring and AI-guided tuning
-
-### **✅ Production-Ready Capabilities**
-- **Zero Compilation Errors**: All components compile successfully
-- **Comprehensive Testing**: Integration tests with real ZFS operations
-- **Error Handling**: Robust error handling with fallback mechanisms
-- **Health Monitoring**: Real-time health checks and metrics
-- **Audit Logging**: Complete audit trail for all operations
-
-### **✅ Ecosystem Integration**
-- **BearDog Security**: Real encryption and access control coordination
-- **Squirrel AI**: MCP integration for AI-powered features
-- **Songbird Network**: Distribution and replication management
-- **Toadstool Compute**: Volume provisioning and performance optimization
-
-## **Production Configuration**
-
-### **Current Production Configuration**
-```toml
-[nestgate]
-server.host = "0.0.0.0"
-server.port = 8080
-storage.pool_name = "nestpool"
-mode = "production"
-
-[primal_ecosystem]
-auto_discovery = true
-discovery_timeout = 30
-health_check_interval = 60
-
-[integrations.beardog]
-enabled = true
-security_requests = true
-encryption_level = "aes-256-gcm"
-endpoint = "http://beardog:8080"
-
-[integrations.squirrel]
-enabled = true
-ai_data_requests = true
-mcp_endpoint = "http://squirrel:8080"
-fallback_mode = true
-
-[integrations.songbird]
-enabled = true
-network_storage = true
-geo_distribution = true
-endpoint = "http://songbird:8080"
-
-[integrations.toadstool]
-enabled = true
-compute_provisioning = true
-endpoint = "http://toadstool:8080"
-
-[data_sources.ncbi]
-enabled = true
-api_base = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
-rate_limit = 10
-
-[data_sources.huggingface]
-enabled = true
-api_base = "https://huggingface.co/api"
-auth_token = "${HF_TOKEN}"
+### **Auto-Discovery Protocol**
+```rust
+// Automatic ecosystem component discovery
+#[async_trait]
+pub trait EcosystemDiscovery {
+    async fn discover_services(&self) -> Result<Vec<CapabilityProvider>>;
+    async fn negotiate_capabilities(&self, provider: &CapabilityProvider) -> Result<IntegrationConfig>;
+    async fn establish_connection(&self, config: IntegrationConfig) -> Result<ServiceConnection>;
+}
 ```
 
-## **Production Deployment Status**
+## 🎯 **Implementation Strategy**
 
-### **🟢 Ready for Production**
-- **Zero blocking issues** - All critical functionality implemented
-- **Comprehensive ecosystem integration** - All primal services connected
-- **Real storage operations** - ZFS operations validated and tested
-- **AI-powered features** - MCP integration with Squirrel primal
-- **Data source integration** - NCBI and HuggingFace fully implemented
-- **Advanced monitoring** - Real-time health and performance tracking
+### **Phase 1: Universal Core**
+1. **Remove AI Features**: Eliminate all AI model inference capabilities
+2. **Replace Hardcoded References**: Universal discovery and configuration
+3. **Implement Standard Traits**: `EcosystemIntegration` and `UniversalPrimalProvider`
+4. **Universal Configuration**: Dynamic configuration system
 
-### **🔄 Continuous Improvement**
-- **Performance optimization** - Fine-tuning existing implementations for optimal efficiency
-- **Enhanced monitoring** - Expanding observability features and metrics collection
-- **Advanced automation** - Leveraging AI for smarter autonomous operations
-- **Ecosystem expansion** - Supporting additional primal services as they become available
+### **Phase 2: Ecosystem Integration**
+1. **Capability System**: Implement capability-based service discovery
+2. **Dynamic Binding**: Runtime service binding and switching
+3. **Health Monitoring**: Universal health check and monitoring
+4. **Error Handling**: Graceful degradation and recovery
 
-## **Conclusion**
+### **Phase 3: Advanced Features**
+1. **Performance Optimization**: Zero-copy data paths
+2. **Scalability**: Horizontal scaling and load distribution
+3. **Security Hardening**: Advanced security features
+4. **Monitoring**: Comprehensive observability
 
-This architecture represents the current **production-ready** state of NestGate with comprehensive ecosystem integration, AI-powered features, and robust storage management capabilities.
+## 📊 **Success Metrics**
 
-### **Key Architectural Achievements**:
-- ✅ **Universal Primal Integration** - Complete ecosystem connectivity
-- ✅ **AI-Powered Optimization** - Intelligent storage management
-- ✅ **Production-Ready Operations** - Real ZFS commands and operations
-- ✅ **Research Data Integration** - NCBI and HuggingFace support
-- ✅ **Enterprise-Grade Security** - BearDog security coordination
+### **Universal Compatibility**
+- [ ] **Zero Hardcoded Dependencies**: No specific service references
+- [ ] **Auto-Discovery**: Automatic ecosystem integration
+- [ ] **Graceful Degradation**: 100% functionality without ecosystem
+- [ ] **Future-Proof**: New services integrate without code changes
 
-**NestGate v4.0** represents a mature, scalable, and production-ready universal storage platform that seamlessly integrates with the entire primal ecosystem while maintaining high performance, reliability, and security standards. 
+### **Performance & Reliability**
+- [ ] **Storage Performance**: >1.9 GB/s hot storage throughput
+- [ ] **API Response**: <100ms average response time
+- [ ] **Uptime**: 99.9% availability
+- [ ] **Zero Data Loss**: Comprehensive data protection
+
+### **Integration Success**
+- [ ] **Service Discovery**: <5 seconds to discover ecosystem
+- [ ] **Capability Negotiation**: <1 second feature negotiation
+- [ ] **Connection Establishment**: <2 seconds to establish links
+- [ ] **Hot Swapping**: <10 seconds to switch providers
+
+## 🔄 **Migration from Legacy Architecture**
+
+### **Immediate Actions**
+1. **Remove AI Code**: Delete all AI inference implementations
+2. **Universal Patterns**: Replace hardcoded service references
+3. **Capability System**: Implement universal capability discovery
+4. **Configuration**: Dynamic configuration system
+
+### **Validation Steps**
+1. **Standalone Operation**: Verify full functionality without ecosystem
+2. **Discovery Testing**: Test auto-discovery with various ecosystem configurations
+3. **Performance Testing**: Ensure no performance degradation
+4. **Integration Testing**: Verify compatibility with multiple ecosystem types
+
+---
+
+**This architecture ensures NestGate operates as a truly universal, agnostic storage system that can integrate with any compatible ecosystem while maintaining full standalone functionality.** 

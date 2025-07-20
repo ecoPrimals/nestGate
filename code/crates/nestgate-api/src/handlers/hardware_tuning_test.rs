@@ -5,6 +5,7 @@ mod tests {
     use uuid::Uuid;
     use chrono::Utc;
     use std::collections::HashMap;
+    use nestgate_core::{get_or_create_uuid};
 
     /// Mock Toadstool client for testing
     #[derive(Debug, Clone)]
@@ -81,7 +82,7 @@ mod tests {
             println!("🧪 Mock: Requesting {} cores, {} GB RAM", request.cpu_cores, request.memory_gb);
 
             let allocation = ComputeAllocation {
-                allocation_id: format!("mock-{}", Uuid::new_v4()),
+                allocation_id: format!("mock-{}", get_or_create_uuid("hardware_tuning_mock_allocation")),
                 cpu_cores: request.cpu_cores,
                 memory_gb: request.memory_gb,
                 gpu_allocation: if request.gpu_required {
@@ -199,7 +200,7 @@ mod tests {
         let mock_client = MockToadstoolComputeClient::new();
 
         let request = ComputeResourceRequest {
-            session_id: Uuid::new_v4(),
+            session_id: *get_or_create_uuid("test_compute_resource_allocation_session"),
             cpu_cores: 4,
             memory_gb: 8,
             gpu_required: true,
@@ -263,7 +264,7 @@ mod tests {
 
         // Request resources
         let request = ComputeResourceRequest {
-            session_id: Uuid::new_v4(),
+            session_id: *get_or_create_uuid("test_mock_resource_lifecycle_session"),
             cpu_cores: 2,
             memory_gb: 4,
             gpu_required: false,
@@ -294,7 +295,7 @@ mod tests {
     #[test]
     async fn test_mock_tuning_session_flow() {
         let mock_handler = MockHardwareTuningHandler::new();
-        let session_id = Uuid::new_v4();
+        let session_id = *get_or_create_uuid("test_mock_tuning_session_flow");
 
         // Create mock session
         let session = TuningSession {

@@ -90,9 +90,13 @@ impl Environment {
     /// Detect service configuration
     fn detect_service_config() -> ServiceConfig {
         ServiceConfig {
-            name: env::var("SERVICE_NAME").unwrap_or_else(|_| "nestgate".to_string()),
-            version: env::var("SERVICE_VERSION").unwrap_or_else(|_| "1.0.0".to_string()),
-            description: env::var("SERVICE_DESCRIPTION").unwrap_or_else(|_| "NestGate Universal Storage Primal".to_string()),
+            name: env::var("SERVICE_NAME")
+                .unwrap_or_else(|_| crate::constants::strings::DEFAULT_SERVICE_NAME.to_string()),
+            version: env::var("SERVICE_VERSION")
+                .unwrap_or_else(|_| crate::constants::strings::DEFAULT_SERVICE_VERSION.to_string()),
+            description: env::var("SERVICE_DESCRIPTION").unwrap_or_else(|_| {
+                crate::constants::strings::DEFAULT_SERVICE_DESCRIPTION.to_string()
+            }),
         }
     }
 
@@ -100,7 +104,8 @@ impl Environment {
     fn detect_network_config(mode: &OperationMode) -> NetworkConfig {
         match mode {
             OperationMode::Standalone => NetworkConfig {
-                bind_interface: env::var("BIND_INTERFACE").unwrap_or_else(|_| "127.0.0.1".to_string()),
+                bind_interface: env::var("BIND_INTERFACE")
+                    .unwrap_or_else(|_| "127.0.0.1".to_string()),
                 port: env::var("PORT")
                     .unwrap_or_else(|_| "8080".to_string())
                     .parse()
@@ -109,7 +114,8 @@ impl Environment {
                 discovery_enabled: false,
             },
             OperationMode::OrchestrationEnhanced => NetworkConfig {
-                bind_interface: env::var("BIND_INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string()),
+                bind_interface: env::var("BIND_INTERFACE")
+                    .unwrap_or_else(|_| "0.0.0.0".to_string()),
                 port: env::var("PORT")
                     .unwrap_or_else(|_| "0".to_string())
                     .parse()

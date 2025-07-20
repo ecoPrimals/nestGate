@@ -8,7 +8,6 @@ use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 use tokio::time::sleep;
 use futures::future::join_all;
-use rand::{Rng, thread_rng};
 
 /// Chaos testing configuration
 #[derive(Debug, Clone)]
@@ -166,10 +165,10 @@ impl ChaosTestRunner {
         let disk_io = Self::measure_disk_io().await;
 
         // Network I/O (simulated based on activity)
-        let network_io = thread_rng().gen_range(10.0..100.0);
+        let network_io = fastrand::f64(10.0..100.0);
 
         // Active connections (simulated)
-        let active_connections = thread_rng().gen_range(50..200);
+        let active_connections = fastrand::u64(50..200);
 
         // ZFS health check
         let zfs_health = Self::check_zfs_health().await;
@@ -212,7 +211,7 @@ impl ChaosTestRunner {
         }
 
         // Fallback to simulated CPU usage
-        thread_rng().gen_range(10.0..80.0)
+        fastrand::f64(10.0..80.0)
     }
 
     /// Get memory usage from system
@@ -244,7 +243,7 @@ impl ChaosTestRunner {
         }
 
         // Fallback to simulated memory usage
-        thread_rng().gen_range(30.0..70.0)
+        fastrand::f64(30.0..70.0)
     }
 
     /// Measure disk I/O activity
@@ -302,7 +301,7 @@ impl ChaosTestRunner {
     async fn measure_throughput() -> f64 {
         // Simulate throughput based on system load and randomness
         let base_throughput = 1000.0;
-        let variance = thread_rng().gen_range(0.7..1.3);
+        let variance = fastrand::f64(0.7..1.3);
         base_throughput * variance
     }
 
@@ -487,7 +486,7 @@ impl ChaosTestRunner {
 
         tokio::spawn(async move {
             while is_running.load(Ordering::SeqCst) {
-                if thread_rng().gen::<f64>() < failure_rate {
+                if fastrand::f64() < failure_rate {
                     // Inject random failure
                     Self::inject_random_failure(&error_counter).await;
                 }
@@ -507,12 +506,12 @@ impl ChaosTestRunner {
             "ZFS_DEGRADED_SIMULATION",
         ];
 
-        let failure_type = failure_types[thread_rng().gen_range(0..failure_types.len())];
+        let failure_type = failure_types[fastrand::usize(0..failure_types.len())];
 
         match failure_type {
             "NETWORK_TIMEOUT" => {
                 // Simulate network timeout
-                sleep(Duration::from_millis(thread_rng().gen_range(1000..5000))).await;
+                sleep(Duration::from_millis(fastrand::u64(1000..5000))).await;
             }
             "DISK_FULL_SIMULATION" => {
                 // Simulate disk full by creating large temp file

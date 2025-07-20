@@ -1,11 +1,58 @@
 //! Service discovery traits and types
 
-use std::collections::HashMap;
 use async_trait::async_trait;
 use futures_util::stream::Stream;
+use std::collections::HashMap;
 
 use crate::errors::Result;
-use crate::traits::service::{ServiceInfo, HealthStatus};
+use crate::traits_root::health::HealthStatus;
+use crate::traits_root::service::ServiceInfo;
+
+/// Service query for filtering discovered services
+#[derive(Debug, Clone)]
+pub struct ServiceQuery {
+    pub service_name: Option<String>,
+    pub tags: Vec<String>,
+    pub namespace: Option<String>,
+    pub healthy_only: bool,
+}
+
+impl ServiceQuery {
+    pub fn new() -> Self {
+        Self {
+            service_name: None,
+            tags: Vec::new(),
+            namespace: None,
+            healthy_only: true,
+        }
+    }
+
+    pub fn with_name<S: Into<String>>(mut self, name: S) -> Self {
+        self.service_name = Some(name.into());
+        self
+    }
+
+    pub fn with_tag<S: Into<String>>(mut self, tag: S) -> Self {
+        self.tags.push(tag.into());
+        self
+    }
+
+    pub fn in_namespace<S: Into<String>>(mut self, namespace: S) -> Self {
+        self.namespace = Some(namespace.into());
+        self
+    }
+
+    pub fn include_unhealthy(mut self) -> Self {
+        self.healthy_only = false;
+        self
+    }
+}
+
+impl Default for ServiceQuery {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 /// Service discovery trait for finding and managing services
 #[async_trait]
@@ -32,7 +79,11 @@ pub trait ServiceDiscovery: Send + Sync {
     async fn exists(&self, service_id: &str) -> Result<bool>;
 
     /// Update service metadata
-    async fn update_metadata(&self, service_id: &str, metadata: HashMap<String, String>) -> Result<()>;
+    async fn update_metadata(
+        &self,
+        service_id: &str,
+        metadata: HashMap<String, String>,
+    ) -> Result<()>;
 }
 
 /// Service event types for discovery notifications

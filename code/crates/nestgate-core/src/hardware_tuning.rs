@@ -3,10 +3,10 @@
 //! This module provides hardware-agnostic tuning capabilities that can be
 //! used by primals to optimize system performance.
 
+use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
-use crate::Result;
 
 /// Hardware-agnostic tuning engine
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -37,7 +37,7 @@ impl HardwareAgnosticTuner {
     /// Apply a tuning configuration
     pub fn apply_config(&mut self, config: HardwareConfiguration) -> Result<TuningResult> {
         self.active_config = Some(config.clone());
-        
+
         Ok(TuningResult {
             success: true,
             performance_improvement: 15.0,
@@ -135,9 +135,10 @@ pub struct StorageDevice {
 }
 
 /// Storage device type
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum StorageType {
     /// Solid State Drive
+    #[default]
     SSD,
     /// Hard Disk Drive
     HDD,
@@ -145,12 +146,6 @@ pub enum StorageType {
     NVMe,
     /// Network storage
     Network,
-}
-
-impl Default for StorageType {
-    fn default() -> Self {
-        StorageType::SSD
-    }
 }
 
 /// Tuning profile
@@ -211,20 +206,15 @@ impl Default for TuningResult {
 }
 
 /// External lock type for resource extraction
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum ExternalLockType {
     /// Sovereign external lock
+    #[default]
     SovereignExternal,
     /// Collaborative lock
     Collaborative,
     /// Temporary lock
     Temporary,
-}
-
-impl Default for ExternalLockType {
-    fn default() -> Self {
-        ExternalLockType::SovereignExternal
-    }
 }
 
 /// Extraction lock for resource access
@@ -269,7 +259,7 @@ impl Default for CryptographicProof {
 }
 
 /// Extraction restrictions
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ExtractionRestrictions {
     /// Maximum extraction size
     pub max_size: Option<u64>,
@@ -279,17 +269,6 @@ pub struct ExtractionRestrictions {
     pub geographic_restrictions: Vec<String>,
     /// Usage restrictions
     pub usage_restrictions: Vec<String>,
-}
-
-impl Default for ExtractionRestrictions {
-    fn default() -> Self {
-        Self {
-            max_size: None,
-            time_restrictions: None,
-            geographic_restrictions: Vec::new(),
-            usage_restrictions: Vec::new(),
-        }
-    }
 }
 
 /// Time-based restrictions
@@ -375,8 +354,11 @@ mod tests {
             restrictions: ExtractionRestrictions::default(),
             copyleft_requirements: CopyleftRequirements::default(),
         };
-        
+
         assert_eq!(lock.lock_id, "test_lock");
-        assert!(matches!(lock.lock_type, ExternalLockType::SovereignExternal));
+        assert!(matches!(
+            lock.lock_type,
+            ExternalLockType::SovereignExternal
+        ));
     }
-} 
+}
