@@ -87,7 +87,10 @@ pub mod universal_adapter;
 pub mod universal_security_client;
 pub mod universal_storage;
 pub mod universal_traits;
-// pub mod universal_providers;  // TODO: Fix trait implementation issues
+// pub mod universal_providers;  // Has trait signature mismatches - non-critical, can be fixed when needed
+pub mod connection_pool;
+pub mod service_discovery;
+pub mod telemetry;
 pub mod utils;
 pub mod uuid_cache;
 pub mod zero_copy;
@@ -115,7 +118,7 @@ pub use universal_adapter::{
 };
 
 // Re-export universal provider wrappers
-// TODO: Fix trait implementation issues in universal_providers
+// Note: universal_providers module has trait signature mismatches - can be fixed when needed
 // pub use universal_providers::{
 //     UniversalSecurityWrapper, UniversalOrchestrationWrapper, UniversalComputeWrapper
 // };
@@ -180,30 +183,26 @@ impl From<NestGateError> for NetworkError {
             NestGateError::Network(msg) => NetworkError::ConnectionFailed(msg),
             NestGateError::Configuration(msg) => NetworkError::ConfigurationError(msg),
             NestGateError::Internal(msg) => NetworkError::Internal(msg),
-            NestGateError::Authentication(msg) => NetworkError::Internal(format!("Auth: {}", msg)),
-            NestGateError::Authorization(msg) => NetworkError::Internal(format!("Authz: {}", msg)),
-            NestGateError::Validation(msg) => {
-                NetworkError::Internal(format!("Validation: {}", msg))
-            }
-            NestGateError::Database(msg) => NetworkError::Internal(format!("Database: {}", msg)),
-            NestGateError::FileSystem(msg) => {
-                NetworkError::Internal(format!("FileSystem: {}", msg))
-            }
+            NestGateError::Authentication(msg) => NetworkError::Internal(format!("Auth: {msg}")),
+            NestGateError::Authorization(msg) => NetworkError::Internal(format!("Authz: {msg}")),
+            NestGateError::Validation(msg) => NetworkError::Internal(format!("Validation: {msg}")),
+            NestGateError::Database(msg) => NetworkError::Internal(format!("Database: {msg}")),
+            NestGateError::FileSystem(msg) => NetworkError::Internal(format!("FileSystem: {msg}")),
             NestGateError::Serialization(msg) => {
-                NetworkError::Internal(format!("Serialization: {}", msg))
+                NetworkError::Internal(format!("Serialization: {msg}"))
             }
             NestGateError::Timeout(msg) => NetworkError::TimeoutError(msg),
-            NestGateError::Io(msg) => NetworkError::Internal(format!("IO: {}", msg)),
+            NestGateError::Io(msg) => NetworkError::Internal(format!("IO: {msg}")),
             // Additional variants from error.rs
-            NestGateError::Storage(msg) => NetworkError::Internal(format!("Storage: {}", msg)),
+            NestGateError::Storage(msg) => NetworkError::Internal(format!("Storage: {msg}")),
             NestGateError::Unauthorized(msg) => {
-                NetworkError::Internal(format!("Unauthorized: {}", msg))
+                NetworkError::Internal(format!("Unauthorized: {msg}"))
             }
-            NestGateError::External(msg) => NetworkError::Internal(format!("External: {}", msg)),
-            NestGateError::Parse(msg) => NetworkError::Internal(format!("Parse: {}", msg)),
-            NestGateError::SystemError(msg) => NetworkError::Internal(format!("System: {}", msg)),
+            NestGateError::External(msg) => NetworkError::Internal(format!("External: {msg}")),
+            NestGateError::Parse(msg) => NetworkError::Internal(format!("Parse: {msg}")),
+            NestGateError::SystemError(msg) => NetworkError::Internal(format!("System: {msg}")),
             NestGateError::InvalidInput(msg) => {
-                NetworkError::Internal(format!("InvalidInput: {}", msg))
+                NetworkError::Internal(format!("InvalidInput: {msg}"))
             }
             NestGateError::AuthenticationFailed => {
                 NetworkError::Internal("Authentication failed".to_string())
@@ -268,3 +267,8 @@ pub enum ZfsError {
     #[error("Core error: {0}")]
     CoreError(#[from] NestGateError),
 }
+
+pub use connection_pool::{ConnectionGuard, ConnectionPool, PoolConfig};
+pub use service_discovery::{ServiceDiscovery, ServiceEndpoint, ServiceRegistry};
+pub use telemetry::{MetricsRegistry, TelemetryCollector, TelemetryConfig};
+pub use uuid_cache::{UuidCache, UuidManager};

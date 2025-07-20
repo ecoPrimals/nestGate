@@ -16,6 +16,29 @@ use tracing::{debug, error, info, warn};
 use crate::universal_traits::*;
 use crate::{NestGateError, Result};
 
+/// Static capability constants for zero-copy string operations
+mod capability_constants {
+    // Security capabilities
+    pub const ENCRYPTION: &str = "encryption";
+    pub const AUTHENTICATION: &str = "authentication";
+    pub const ACCESS_CONTROL: &str = "access_control";
+
+    // AI capabilities
+    pub const MODEL_INFERENCE: &str = "model_inference";
+    pub const AGENT_FRAMEWORK: &str = "agent_framework";
+    pub const DATA_PROCESSING: &str = "data_processing";
+
+    // Orchestration capabilities
+    pub const SERVICE_DISCOVERY: &str = "service_discovery";
+    pub const LOAD_BALANCING: &str = "load_balancing";
+    pub const ROUTING: &str = "routing";
+
+    // Compute capabilities
+    pub const RESOURCE_ALLOCATION: &str = "resource_allocation";
+    pub const CONTAINER_RUNTIME: &str = "container_runtime";
+    pub const SCALING: &str = "scaling";
+}
+
 /// Universal Primal Adapter that coordinates between different primal providers
 pub struct UniversalPrimalAdapter {
     /// Security primal providers (any security implementation)
@@ -493,30 +516,33 @@ impl PrimalDiscoveryService {
             return None;
         };
 
-        // Extract capabilities based on primal type
-        let capabilities = match primal_type {
+        // Extract capabilities based on primal type (zero-copy optimization)
+        let capability_refs = match primal_type {
             "security" => vec![
-                "encryption".to_string(),
-                "authentication".to_string(),
-                "access_control".to_string(),
+                capability_constants::ENCRYPTION,
+                capability_constants::AUTHENTICATION,
+                capability_constants::ACCESS_CONTROL,
             ],
             "ai" => vec![
-                "model_inference".to_string(),
-                "agent_framework".to_string(),
-                "data_processing".to_string(),
+                capability_constants::MODEL_INFERENCE,
+                capability_constants::AGENT_FRAMEWORK,
+                capability_constants::DATA_PROCESSING,
             ],
             "orchestration" => vec![
-                "service_discovery".to_string(),
-                "load_balancing".to_string(),
-                "routing".to_string(),
+                capability_constants::SERVICE_DISCOVERY,
+                capability_constants::LOAD_BALANCING,
+                capability_constants::ROUTING,
             ],
             "compute" => vec![
-                "resource_allocation".to_string(),
-                "container_runtime".to_string(),
-                "scaling".to_string(),
+                capability_constants::RESOURCE_ALLOCATION,
+                capability_constants::CONTAINER_RUNTIME,
+                capability_constants::SCALING,
             ],
             _ => vec![],
         };
+
+        // Convert to owned strings only when needed for struct field
+        let capabilities: Vec<String> = capability_refs.iter().map(|&s| s.to_string()).collect();
 
         // Validate endpoint format
         if value.starts_with("http://") || value.starts_with("https://") {
@@ -541,14 +567,12 @@ impl PrimalDiscoveryService {
             debug!("Querying service registry: {}", endpoint);
 
             // Try to query the service registry
-            if let Ok(response) =
+            if let Ok(Ok(resp)) =
                 tokio::time::timeout(self.config.timeout, reqwest::get(endpoint)).await
             {
-                if let Ok(resp) = response {
-                    if resp.status().is_success() {
-                        debug!("Successfully queried service registry: {}", endpoint);
-                        // In a full implementation, parse the response and extract primal info
-                    }
+                if resp.status().is_success() {
+                    debug!("Successfully queried service registry: {}", endpoint);
+                    // In a full implementation, parse the response and extract primal info
                 }
             }
         }
@@ -566,7 +590,7 @@ impl PrimalDiscoveryService {
             // For localhost scanning, check common ports
             if range.starts_with("127.0.0.1") || range.starts_with("localhost") {
                 for port in &self.config.common_ports {
-                    let addr = format!("127.0.0.1:{}", port);
+                    let addr = format!("127.0.0.1:{port}");
                     if self.check_endpoint_responsive(&addr).await {
                         debug!("Found responsive endpoint: {}", addr);
 
@@ -616,18 +640,24 @@ impl PrimalDiscoveryService {
                     if let Some(ptype) = primal_type {
                         let capabilities = match ptype.as_str() {
                             "security" => {
-                                vec!["encryption".to_string(), "authentication".to_string()]
+                                vec![
+                                    capability_constants::ENCRYPTION.to_string(),
+                                    capability_constants::AUTHENTICATION.to_string(),
+                                ]
                             }
                             "ai" => {
-                                vec!["model_inference".to_string(), "agent_framework".to_string()]
+                                vec![
+                                    capability_constants::MODEL_INFERENCE.to_string(),
+                                    capability_constants::AGENT_FRAMEWORK.to_string(),
+                                ]
                             }
                             "orchestration" => vec![
-                                "service_discovery".to_string(),
-                                "load_balancing".to_string(),
+                                capability_constants::SERVICE_DISCOVERY.to_string(),
+                                capability_constants::LOAD_BALANCING.to_string(),
                             ],
                             "compute" => vec![
-                                "resource_allocation".to_string(),
-                                "container_runtime".to_string(),
+                                capability_constants::RESOURCE_ALLOCATION.to_string(),
+                                capability_constants::CONTAINER_RUNTIME.to_string(),
                             ],
                             _ => vec!["unknown".to_string()],
                         };
@@ -635,7 +665,7 @@ impl PrimalDiscoveryService {
                         return Some(DiscoveredPrimal {
                             primal_type: ptype,
                             capabilities,
-                            endpoint: format!("http://{}", addr),
+                            endpoint: format!("http://{addr}"),
                             version: "unknown".to_string(),
                             discovered_via: "network_scan".to_string(),
                             last_seen: SystemTime::now(),

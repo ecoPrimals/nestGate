@@ -74,6 +74,33 @@ impl MigrationEngine {
         }
     }
 
+    /// Create a new migration engine with shared config (zero-copy optimization)
+    pub fn with_shared_config(
+        config: MigrationConfig,
+        zfs_config: Arc<ZfsConfig>,
+        pool_manager: Arc<ZfsPoolManager>,
+        dataset_manager: Arc<ZfsDatasetManager>,
+        analyzer: Arc<DatasetAnalyzer>,
+    ) -> Self {
+        let migration_semaphore = Arc::new(Semaphore::new(config.max_concurrent_migrations));
+        let bandwidth_semaphore = Arc::new(Semaphore::new(config.total_bandwidth_limit as usize));
+
+        Self {
+            config,
+            zfs_config: SharedConfig::from_arc(zfs_config),
+            pool_manager,
+            dataset_manager,
+            analyzer,
+            job_queue: Arc::new(RwLock::new(VecDeque::new())),
+            active_migrations: Arc::new(RwLock::new(HashMap::new())),
+            migration_history: Arc::new(RwLock::new(Vec::new())),
+            statistics: Arc::new(RwLock::new(MigrationStatistics::default())),
+            migration_semaphore,
+            bandwidth_semaphore,
+            shutdown_tx: None,
+        }
+    }
+
     /// Start the migration engine
     pub async fn start(&mut self) -> CoreResult<()> {
         info!("Starting migration engine");

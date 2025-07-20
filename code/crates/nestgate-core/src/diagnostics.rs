@@ -639,10 +639,7 @@ impl DiagnosticsManager {
 
             Ok(())
         } else {
-            Err(NestGateError::NotFound(format!(
-                "Service {} not found",
-                name
-            )))
+            Err(NestGateError::NotFound(format!("Service {name} not found")))
         }
     }
 
@@ -711,10 +708,7 @@ impl DiagnosticsManager {
             service.cpu_usage = Some(cpu_usage);
             Ok(())
         } else {
-            Err(NestGateError::NotFound(format!(
-                "Service {} not found",
-                name
-            )))
+            Err(NestGateError::NotFound(format!("Service {name} not found")))
         }
     }
 

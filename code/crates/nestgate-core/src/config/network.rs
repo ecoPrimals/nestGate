@@ -543,10 +543,18 @@ mod tests {
     #[test]
     fn test_service_endpoints_default() {
         let endpoints = ServiceEndpoints::default();
-        assert!(endpoints.has_service("beardog"));
-        assert!(endpoints.has_service("songbird"));
-        assert!(endpoints.has_service("squirrel"));
-        assert!(endpoints.has_service("toadstool"));
+
+        // Universal architecture: External services are always available
+        assert!(endpoints.has_service("huggingface"));
+        assert!(endpoints.has_service("ncbi"));
+
+        // Primal services are only available when legacy endpoints are enabled
+        // By default, they should be discovered dynamically, not hardcoded
+        assert!(!endpoints.has_service("beardog"));
+        assert!(!endpoints.has_service("songbird"));
+        assert!(!endpoints.has_service("squirrel"));
+        assert!(!endpoints.has_service("toadstool"));
+
         assert!(!endpoints.has_service("nonexistent"));
     }
 
@@ -554,11 +562,23 @@ mod tests {
     fn test_service_endpoints_operations() {
         let mut endpoints = ServiceEndpoints::default();
 
-        // Test getting service URL
-        assert!(endpoints.get_service_url("beardog").is_some());
+        // Test getting external service URL (always available)
+        assert!(endpoints.get_service_url("huggingface").is_some());
+        assert!(endpoints.get_service_url("ncbi").is_some());
+
+        // Test that primal services are not hardcoded by default (universal architecture)
+        assert!(endpoints.get_service_url("beardog").is_none());
         assert!(endpoints.get_service_url("nonexistent").is_none());
 
-        // Test setting service URL
+        // Test setting service URL (for dynamic discovery)
+        endpoints.set_service_url("beardog".to_string(), "http://discovered:8001".to_string());
+        assert!(endpoints.has_service("beardog"));
+        assert_eq!(
+            endpoints.get_service_url("beardog"),
+            Some("http://discovered:8001")
+        );
+
+        // Test setting custom service URL
         endpoints.set_service_url("custom".to_string(), "http://localhost:9000".to_string());
         assert!(endpoints.has_service("custom"));
         assert_eq!(
@@ -571,10 +591,12 @@ mod tests {
         assert!(removed.is_some());
         assert!(!endpoints.has_service("custom"));
 
-        // Test service names
+        // Test service names include external services
         let names = endpoints.service_names();
+        assert!(names.contains(&"huggingface"));
+        assert!(names.contains(&"ncbi"));
+        // And dynamically added services
         assert!(names.contains(&"beardog"));
-        assert!(names.contains(&"songbird"));
     }
 
     #[test]

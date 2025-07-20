@@ -218,8 +218,7 @@ impl CertificateManager {
         }
 
         Err(NestGateError::Internal(format!(
-            "No valid certificate or security provider for integration: {:?}",
-            integration
+            "No valid certificate or security provider for integration: {integration:?}"
         )))
     }
 

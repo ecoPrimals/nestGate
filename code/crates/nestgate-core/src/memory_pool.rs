@@ -7,6 +7,14 @@
 //! - **Before**: 212,953 ns/iter (frequent allocations)
 //! - **Target**: <100,000 ns/iter (2x performance improvement)
 //! - **Strategy**: Pool and reuse memory buffers instead of frequent allocation/deallocation
+//!
+//! ## Zero-Copy Optimizations
+//!
+//! The memory pool implements several zero-copy patterns:
+//! - **Buffer Reuse**: Reduces allocation/deallocation overhead
+//! - **RAII Guards**: Automatic buffer return to pool
+//! - **Copy vs Clone**: Uses `Copy` for small types, avoids `Clone` where possible
+//! - **Reference Patterns**: Prefers borrowing over owned types when safe
 
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, RwLock};
@@ -43,9 +51,16 @@ where
 
         // Pre-populate pool with minimum buffers
         {
-            let mut pool_guard = pool.lock().unwrap();
-            for _ in 0..min_size {
-                pool_guard.push_back(Box::new(factory()));
+            match pool.lock() {
+                Ok(mut pool_guard) => {
+                    for _ in 0..min_size {
+                        pool_guard.push_back(Box::new(factory()));
+                    }
+                }
+                Err(e) => {
+                    tracing::error!("Failed to initialize memory pool: {}", e);
+                    // Continue with empty pool - this is a graceful degradation
+                }
             }
         }
 
@@ -64,8 +79,13 @@ where
 
         // Try to get buffer from pool
         let buffer = {
-            let mut pool_guard = self.pool.lock().unwrap();
-            pool_guard.pop_front()
+            match self.pool.lock() {
+                Ok(mut pool_guard) => pool_guard.pop_front(),
+                Err(e) => {
+                    tracing::error!("Memory pool mutex poisoned, creating new buffer: {}", e);
+                    None // Fall back to creating new buffer
+                }
+            }
         };
 
         let (buffer, from_pool) = match buffer {
@@ -109,39 +129,70 @@ where
         }
     }
 
-    /// Get current pool statistics
+    /// Get current pool statistics (returns a copy for thread safety)
     pub fn statistics(&self) -> PoolStatistics {
-        self.statistics.read().unwrap().clone()
+        self.statistics
+            .read()
+            .map(|stats| stats.clone()) // Clone required since PoolStatistics doesn't implement Copy
+            .unwrap_or_else(|e| {
+                tracing::error!("Failed to read pool statistics: {}", e);
+                PoolStatistics::new() // Return default statistics on error
+            })
     }
 
     /// Get current pool size
     pub fn size(&self) -> usize {
-        self.pool.lock().unwrap().len()
+        self.pool.lock().map(|pool| pool.len()).unwrap_or_else(|e| {
+            tracing::error!("Failed to get pool size: {}", e);
+            0 // Return 0 on error
+        })
     }
 
     /// Clear all buffers from pool
     pub fn clear(&self) {
-        let mut pool_guard = self.pool.lock().unwrap();
-        pool_guard.clear();
+        match self.pool.lock() {
+            Ok(mut pool_guard) => {
+                let cleared_count = pool_guard.len();
+                pool_guard.clear();
 
-        if let Ok(mut stats) = self.statistics.write() {
-            stats.total_cleared += pool_guard.len() as u64;
+                if let Ok(mut stats) = self.statistics.write() {
+                    stats.total_cleared += cleared_count as u64;
+                }
+            }
+            Err(e) => {
+                tracing::error!("Failed to clear memory pool: {}", e);
+                // Continue gracefully - pool may be in inconsistent state but won't panic
+            }
         }
     }
 
     /// Shrink pool to minimum size
     pub fn shrink_to_min(&self) {
-        let mut pool_guard = self.pool.lock().unwrap();
-        while pool_guard.len() > self.min_size {
-            pool_guard.pop_back();
+        match self.pool.lock() {
+            Ok(mut pool_guard) => {
+                while pool_guard.len() > self.min_size {
+                    pool_guard.pop_back();
+                }
+            }
+            Err(e) => {
+                tracing::error!("Failed to shrink memory pool: {}", e);
+                // Continue gracefully
+            }
         }
     }
 
     /// Ensure pool has at least minimum buffers
     pub fn ensure_min_capacity(&self) {
-        let mut pool_guard = self.pool.lock().unwrap();
-        while pool_guard.len() < self.min_size {
-            pool_guard.push_back(Box::new((self.factory)()));
+        match self.pool.lock() {
+            Ok(mut pool_guard) => {
+                while pool_guard.len() < self.min_size {
+                    pool_guard.push_back(Box::new((self.factory)()));
+                }
+            }
+            Err(e) => {
+                tracing::error!("Failed to ensure minimum pool capacity: {}", e);
+                // Continue gracefully
+            }
         }
     }
 }
@@ -172,18 +223,38 @@ where
     T: Send + 'static,
 {
     /// Get a reference to the buffer
+    ///
+    /// # Panics
+    /// Panics if the buffer has already been taken with `take()`. This indicates a logic error.
     pub fn get(&self) -> &T {
-        self.buffer.as_ref().unwrap()
+        self.buffer
+            .as_ref()
+            .expect("Buffer has been taken - this indicates a logic error in buffer usage")
     }
 
     /// Get a mutable reference to the buffer
+    ///
+    /// # Panics
+    /// Panics if the buffer has already been taken with `take()`. This indicates a logic error.
     pub fn get_mut(&mut self) -> &mut T {
-        self.buffer.as_mut().unwrap()
+        self.buffer
+            .as_mut()
+            .expect("Buffer has been taken - this indicates a logic error in buffer usage")
     }
 
     /// Take ownership of the buffer (prevents return to pool)
+    ///
+    /// # Panics
+    /// Panics if the buffer has already been taken. This indicates a logic error.
     pub fn take(mut self) -> Box<T> {
-        self.buffer.take().unwrap()
+        self.buffer
+            .take()
+            .expect("Buffer has already been taken - this indicates a logic error in buffer usage")
+    }
+
+    /// Check if the buffer is still available (not taken)
+    pub fn is_available(&self) -> bool {
+        self.buffer.is_some()
     }
 }
 
@@ -362,6 +433,27 @@ lazy_static::lazy_static! {
         20,  // min_size
         200  // max_size
     );
+
+    // Global command output buffer pool for ZFS operations (optimized for command output)
+    pub static ref GLOBAL_CMD_BUFFER_POOL: BufferPool = MemoryPool::new(
+        || Vec::with_capacity(16384),  // 16KB for command outputs
+        15,  // min_size
+        100  // max_size
+    );
+
+    // Global network buffer pool for WebSocket/SSE operations
+    pub static ref GLOBAL_NETWORK_BUFFER_POOL: BufferPool = MemoryPool::new(
+        || Vec::with_capacity(8192),   // 8KB for network data
+        25,  // min_size
+        150  // max_size
+    );
+
+    // Global JSON buffer pool for serialization operations
+    pub static ref GLOBAL_JSON_BUFFER_POOL: StringPool = MemoryPool::new(
+        || String::with_capacity(4096), // 4KB for JSON serialization
+        30,  // min_size
+        200  // max_size
+    );
 }
 
 /// Convenience functions for global buffer pools
@@ -381,8 +473,24 @@ pub fn get_string_buffer() -> PoolGuard<String> {
     GLOBAL_STRING_POOL.get()
 }
 
+/// Convenience functions for specialized buffer pools
+pub fn get_command_buffer() -> PoolGuard<Vec<u8>> {
+    GLOBAL_CMD_BUFFER_POOL.get()
+}
+
+pub fn get_network_buffer() -> PoolGuard<Vec<u8>> {
+    GLOBAL_NETWORK_BUFFER_POOL.get()
+}
+
+pub fn get_json_buffer() -> PoolGuard<String> {
+    GLOBAL_JSON_BUFFER_POOL.get()
+}
+
 /// Get global buffer pool statistics
 pub fn global_buffer_pool_stats() -> (
+    PoolStatistics,
+    PoolStatistics,
+    PoolStatistics,
     PoolStatistics,
     PoolStatistics,
     PoolStatistics,
@@ -393,6 +501,9 @@ pub fn global_buffer_pool_stats() -> (
         GLOBAL_64KB_BUFFER_POOL.statistics(),
         GLOBAL_1MB_BUFFER_POOL.statistics(),
         GLOBAL_STRING_POOL.statistics(),
+        GLOBAL_CMD_BUFFER_POOL.statistics(),
+        GLOBAL_NETWORK_BUFFER_POOL.statistics(),
+        GLOBAL_JSON_BUFFER_POOL.statistics(),
     )
 }
 
@@ -498,7 +609,7 @@ mod tests {
 
     #[test]
     fn test_pool_capacity_limits() {
-        let pool = MemoryPool::new(|| Vec::<u8>::new(), 0, 2);
+        let pool = MemoryPool::new(Vec::<u8>::new, 0, 2);
 
         // Fill pool to capacity
         let _guard1 = pool.get();
@@ -511,7 +622,7 @@ mod tests {
 
     #[test]
     fn test_concurrent_access() {
-        let pool = Arc::new(MemoryPool::new(|| Vec::<u8>::new(), 1, 10));
+        let pool = Arc::new(MemoryPool::new(Vec::<u8>::new, 1, 10));
         let mut handles = vec![];
 
         // Spawn multiple threads
@@ -551,7 +662,7 @@ mod tests {
 
     #[test]
     fn test_pool_statistics() {
-        let pool = MemoryPool::new(|| Vec::<u8>::new(), 1, 5);
+        let pool = MemoryPool::new(Vec::<u8>::new, 1, 5);
 
         // Perform operations
         let _buf1 = pool.get();
@@ -560,6 +671,6 @@ mod tests {
         let stats = pool.statistics();
         assert!(stats.hit_ratio() >= 0.0 && stats.hit_ratio() <= 1.0);
         assert!(stats.avg_acquisition_time().as_nanos() > 0);
-        assert!(stats.performance_assessment().len() > 0);
+        assert!(!stats.performance_assessment().is_empty());
     }
 }

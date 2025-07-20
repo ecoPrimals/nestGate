@@ -1,3 +1,14 @@
+//! Interactive Installation Wizard
+//!
+//! Provides an interactive command-line wizard for guiding users through
+//! the NestGate installation process with step-by-step configuration.
+//!
+//! ## Features
+//! - Interactive prompts for configuration options
+//! - Input validation and sanitization
+//! - Progress tracking and feedback
+//! - Recovery from installation errors
+
 use crate::config::InstallerConfig;
 use anyhow::Result;
 use dialoguer::{Confirm, Input};

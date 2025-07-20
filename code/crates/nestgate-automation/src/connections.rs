@@ -18,6 +18,8 @@ pub struct ServiceConnectionPool {
     pub nestgate_peers: HashMap<String, String>, // peer_id -> endpoint
     /// Health check timing
     last_health_check: SystemTime,
+    /// Health check interval - planned for future health monitoring feature
+    #[allow(dead_code)]
     health_check_interval: Duration,
 }
 
