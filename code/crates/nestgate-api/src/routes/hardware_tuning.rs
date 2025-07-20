@@ -5,7 +5,10 @@
 //! These routes provide external access to hardware tuning capabilities
 //! while enforcing crypto lock protection for commercial extraction.
 
-use crate::handlers::hardware_tuning::{HardwareTuningRequest, HardwareTuningResponse};
+use crate::handlers::hardware_tuning::{
+    HardwareTuningRequest, HardwareTuningResponse,
+    ExternalAccessStatus, TuningRecommendations,
+};
 use crate::routes::AppState;
 use axum::response::IntoResponse;
 use axum::{
@@ -42,11 +45,22 @@ pub async fn auto_tune(
                 hardware_config: None,
                 result: Some(result),
                 performance_improvement: Some(performance_gain),
-                external_access_status: None,
-                recommendations: vec![
-                    "Hardware tuning completed with live Toadstool data".to_string(),
-                    "Consider monitoring performance metrics".to_string(),
-                ],
+                external_access_status: ExternalAccessStatus {
+                    access_granted: true,
+                    access_level: "standard".to_string(),
+                    restrictions: vec![],
+                    expires_at: None,
+                },
+                recommendations: TuningRecommendations {
+                    cpu_recommendations: vec![
+                        "Hardware tuning completed with live Toadstool data".to_string(),
+                    ],
+                    memory_recommendations: vec![
+                        "Consider monitoring performance metrics".to_string(),
+                    ],
+                    storage_recommendations: vec![],
+                    network_recommendations: vec![],
+                },
                 warnings: vec![],
             }))
         }
@@ -124,7 +138,7 @@ pub async fn run_benchmark(
         Ok(result) => {
             info!(
                 "✅ Live benchmark '{}' completed (score: {})",
-                benchmark_name, result.metrics.overall_score
+                benchmark_name, result.score
             );
 
             Ok(ResponseJson(serde_json::json!({

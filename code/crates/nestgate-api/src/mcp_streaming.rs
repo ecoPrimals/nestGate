@@ -328,8 +328,8 @@ impl McpStreamingManager {
 impl Clone for McpStreamingManager {
     fn clone(&self) -> Self {
         Self {
-            active_streams: self.active_streams.clone(),
-            stats: self.stats.clone(),
+            active_streams: Arc::clone(&self.active_streams),
+            stats: Arc::clone(&self.stats),
             event_broadcaster: self.event_broadcaster.clone(),
         }
     }

@@ -26,6 +26,9 @@ futures = { workspace = true }
 futures-util = "0.3"
 async-trait = { workspace = true }
 
+# HTTP client for remote services
+reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
+
 # Streaming utilities
 tokio-stream = { version = "0.1", features = ["sync"] }
 
@@ -43,6 +46,9 @@ chrono = { workspace = true }
 fastrand = "2.0"
 toml = "0.8"
 
+# Cryptographic utilities for authentication
+sha2 = "0.10"
+
 # NestGate dependencies
 nestgate-core = { path = "../nestgate-core" }
 nestgate-zfs = { path = "../nestgate-zfs" }
@@ -58,7 +64,6 @@ warp = { workspace = true }
 # MCP dependencies
 rmp = "0.8"
 rmp-serde = "1.3"
-reqwest = { workspace = true }
 
 [dev-dependencies]
 # Testing framework

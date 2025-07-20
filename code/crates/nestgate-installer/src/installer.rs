@@ -107,12 +107,12 @@ impl NestGateInstaller {
         info!("Configuration written to: {}", config_path.display());
 
         // Add to PATH if requested
-        if config.add_to_path {
+        if config.integration.add_to_path {
             crate::platform::add_to_path(&install_path)?;
         }
 
         // Create desktop shortcut if requested
-        if config.create_desktop_shortcut {
+        if config.integration.create_desktop_entry {
             crate::platform::create_desktop_shortcut(&install_path, "NestGate")?;
         }
 
@@ -130,13 +130,13 @@ impl NestGateInstaller {
             data_path: install_path.join("data"),
             service_installed: as_service && self.platform.service_install_supported(),
             features: vec![
-                if config.enable_zfs {
+                if config.features.enable_zfs {
                     "zfs".to_string()
                 } else {
                     "".to_string()
                 },
-                if config.ai_enabled {
-                    "ai".to_string()
+                if config.features.enable_ui {
+                    "ui".to_string()
                 } else {
                     "".to_string()
                 },

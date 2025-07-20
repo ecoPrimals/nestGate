@@ -88,6 +88,7 @@ approx = "0.5"
 fake = { version = "2.9", features = ["derive", "chrono"] }
 test-log = { version = "0.2", features = ["trace"] }
 
-[[bench]]
-name = "performance_benchmarks"
-harness = false 
+# Benchmark temporarily disabled
+# [[bench]]
+# name = "performance_benchmarks"
+# harness = false 

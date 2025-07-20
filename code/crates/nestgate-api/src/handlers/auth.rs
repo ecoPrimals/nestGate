@@ -1,13 +1,13 @@
 //! Authentication Handler
-//! 
+//!
 //! Handles authentication using any available security primal provider,
 //! eliminating hardcoded dependencies on specific security implementations.
 
 use anyhow::Result;
 use axum::{extract::State, response::Json, routing::post, Router};
-use nestgate_core::universal_traits::{Credentials, AuthToken};
-use nestgate_core::universal_adapter::UniversalPrimalAdapter;
 use nestgate_core::cert::{CertMode, CertValidator};
+use nestgate_core::universal_adapter::UniversalPrimalAdapter;
+use nestgate_core::universal_traits::{AuthToken, Credentials};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -41,11 +41,17 @@ pub struct AuthService {
     primal_adapter: Arc<UniversalPrimalAdapter>,
 }
 
+impl Default for AuthService {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AuthService {
     /// Create new authentication service in standalone mode
     pub fn new() -> Self {
         let adapter = Arc::new(nestgate_core::universal_adapter::create_default_adapter());
-        
+
         Self {
             validator: Arc::new(RwLock::new(CertValidator::standalone())),
             default_mode: CertMode::Standalone,
@@ -97,40 +103,54 @@ impl AuthService {
         // Try security primal first if available
         if let Some(provider) = self.primal_adapter.get_security_provider().await {
             info!("Authenticating with security primal provider");
-            
+
             match provider.authenticate(credentials).await {
                 Ok(token) => return Ok(token),
                 Err(e) => {
                     warn!("Security primal authentication failed: {}", e);
-                    
-                    // Fall back to standalone mode if in hybrid mode
+
+                    // Fall back to decentralized mode (no centralized fallback)
                     if self.default_mode == CertMode::Hybrid {
-                        info!("Falling back to standalone authentication");
-                        return self.authenticate_standalone(credentials).await;
+                        info!("Falling back to decentralized authentication");
+                        return self.authenticate_decentralized(credentials).await;
                     }
-                    
+
                     return Err(e.into());
                 }
             }
         }
 
-        // Use standalone authentication
-        self.authenticate_standalone(credentials).await
+        // Use decentralized authentication (no centralized fallback)
+        self.authenticate_decentralized(credentials).await
     }
 
-    /// Authenticate using standalone mode
-    async fn authenticate_standalone(&self, credentials: &Credentials) -> Result<AuthToken> {
-        info!("Authenticating with standalone mode");
-        
-        // Simple standalone authentication logic
-        if credentials.username == "admin" && credentials.password == "nestgate" {
-            Ok(AuthToken {
-                token: format!("standalone_{}", uuid::Uuid::new_v4()),
-                expires_at: std::time::SystemTime::now() + std::time::Duration::from_secs(3600),
-                permissions: vec!["read".to_string(), "write".to_string(), "admin".to_string()],
-            })
-        } else {
-            Err(anyhow::anyhow!("Invalid credentials"))
+    /// Authenticate using decentralized consensus (replaces centralized standalone mode)
+    ///
+    /// This implementation follows the Universal Primal Architecture pattern,
+    /// delegating cryptographic proof generation to external security services
+    /// rather than implementing centralized authentication patterns.
+    async fn authenticate_decentralized(&self, credentials: &Credentials) -> Result<AuthToken> {
+        info!("Attempting decentralized authentication with capability-based security");
+
+        // Generate cryptographic challenge for external security service validation
+        let challenge = self.generate_auth_challenge(credentials).await?;
+
+        // Delegate to external security services for distributed validation
+        // This maintains our Universal Primal Architecture by not implementing
+        // centralized security patterns within NestGate itself
+        match self.validate_with_security_service(&challenge).await {
+            Ok(validated_token) => {
+                info!("Successfully authenticated via external security service");
+                Ok(validated_token)
+            }
+            Err(e) => {
+                warn!("Decentralized authentication failed: {}", e);
+                warn!("No external security service available for validation");
+
+                Err(anyhow::anyhow!(
+                    "Decentralized authentication required but no security service available. Install a security service providing capabilities: security.authentication.decentralized, security.consensus.distributed_validation"
+                ))
+            }
         }
     }
 
@@ -138,7 +158,7 @@ impl AuthService {
     pub async fn get_auth_status(&self) -> AuthStatus {
         let security_primal_available = self.security_primal_available().await;
         let adapter_stats = self.primal_adapter.get_stats().await;
-        
+
         AuthStatus {
             mode: self.get_mode(),
             security_primal_available,
@@ -146,6 +166,62 @@ impl AuthService {
             default_mode: self.default_mode.clone(),
         }
     }
+
+    /// Generate cryptographic challenge for external security service validation
+    ///
+    /// This creates a challenge that external security services can use for
+    /// distributed authentication validation without centralizing auth logic.
+    async fn generate_auth_challenge(&self, credentials: &Credentials) -> Result<AuthChallenge> {
+        use sha2::{Digest, Sha256};
+        use std::time::{SystemTime, UNIX_EPOCH};
+
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+
+        // Create challenge hash from credentials and timestamp
+        let mut hasher = Sha256::new();
+        hasher.update(credentials.username.as_bytes());
+        hasher.update(timestamp.to_be_bytes());
+        hasher.update(b"nestgate-auth-challenge");
+
+        let challenge_hash = format!("{:x}", hasher.finalize());
+
+        Ok(AuthChallenge {
+            challenge: challenge_hash,
+            timestamp,
+            expires_at: timestamp + 300, // 5 minutes
+        })
+    }
+
+    /// Validate authentication challenge with external security service
+    ///
+    /// This delegates to external security services following Universal Primal
+    /// Architecture patterns rather than implementing centralized validation.
+    async fn validate_with_security_service(
+        &self,
+        _challenge: &AuthChallenge,
+    ) -> Result<AuthToken> {
+        // In a real implementation, this would communicate with external security services
+        // For now, return an error to maintain the Universal Primal Architecture
+        // and prevent centralized authentication patterns
+
+        Err(anyhow::anyhow!(
+            "External security service validation not yet connected. This maintains Universal Primal Architecture."
+        ))
+    }
+}
+
+/// Authentication challenge for external security service validation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct AuthChallenge {
+    /// Challenge hash for validation
+    challenge: String,
+    /// Challenge creation timestamp
+    timestamp: u64,
+    /// Challenge expiration timestamp  
+    expires_at: u64,
 }
 
 /// Authentication status information
@@ -208,15 +284,13 @@ async fn login(
             token: None,
             expires_at: None,
             permissions: None,
-            message: format!("Authentication failed: {}", e),
+            message: format!("Authentication failed: {e}"),
         }),
     }
 }
 
 /// Get authentication status endpoint
-async fn get_status(
-    State(auth_service): State<Arc<AuthService>>,
-) -> Json<AuthStatus> {
+async fn get_status(State(auth_service): State<Arc<AuthService>>) -> Json<AuthStatus> {
     Json(auth_service.get_auth_status().await)
 }
 
@@ -226,13 +300,11 @@ async fn set_mode(
     Json(request): Json<SetModeRequest>,
 ) -> Json<SetModeResponse> {
     match request.mode.as_str() {
-        "standalone" => {
-            Json(SetModeResponse {
-                success: true,
-                mode: "standalone",
-                message: "Authentication mode switched to standalone".to_string(),
-            })
-        }
+        "standalone" => Json(SetModeResponse {
+            success: true,
+            mode: "standalone",
+            message: "Authentication mode switched to standalone".to_string(),
+        }),
         "security_primal" => {
             if auth_service.security_primal_available().await {
                 Json(SetModeResponse {
@@ -248,13 +320,11 @@ async fn set_mode(
                 })
             }
         }
-        "hybrid" => {
-            Json(SetModeResponse {
-                success: true,
-                mode: "hybrid",
-                message: "Authentication mode switched to hybrid".to_string(),
-            })
-        }
+        "hybrid" => Json(SetModeResponse {
+            success: true,
+            mode: "hybrid",
+            message: "Authentication mode switched to hybrid".to_string(),
+        }),
         _ => Json(SetModeResponse {
             success: false,
             mode: auth_service.get_mode(),
@@ -308,9 +378,9 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_standalone_authentication() {
+    async fn test_decentralized_authentication_denial() {
         let service = AuthService::new();
-        
+
         let credentials = Credentials {
             username: "admin".to_string(),
             password: "nestgate".to_string(),
@@ -318,18 +388,21 @@ mod tests {
             token: None,
         };
 
+        // With no security services available, decentralized auth should gracefully deny
         let result = service.authenticate(&credentials).await;
-        assert!(result.is_ok());
-        
-        let token = result.unwrap();
-        assert!(token.token.starts_with("standalone_"));
-        assert!(token.permissions.contains(&"admin".to_string()));
+        assert!(result.is_err());
+
+        let error_message = result
+            .expect_err("Expected authentication to fail")
+            .to_string();
+        assert!(error_message.contains("Decentralized authentication required"));
+        assert!(error_message.contains("security.authentication.decentralized"));
     }
 
     #[tokio::test]
     async fn test_invalid_credentials() {
         let service = AuthService::new();
-        
+
         let credentials = Credentials {
             username: "invalid".to_string(),
             password: "wrong".to_string(),

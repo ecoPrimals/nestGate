@@ -360,8 +360,8 @@ mod connection_manager_tests {
             metadata,
         };
 
-        assert_eq!(request.source_service, "nestgate-api");
-        assert_eq!(request.target_service, "nestgate-storage");
+        assert_eq!(request.source_service, "nestgate-api".to_string());
+        assert_eq!(request.target_service, "nestgate-storage".to_string());
         assert_eq!(request.connection_type, ConnectionType::Api);
         assert_eq!(request.required_capabilities.len(), 2);
         assert_eq!(request.metadata.len(), 1);
@@ -381,7 +381,7 @@ mod connection_manager_tests {
         };
 
         assert_eq!(response.connection_id, "conn-123");
-        assert_eq!(response.endpoint, "storage-node:8080");
+        assert_eq!(response.endpoint, "storage-node:8080".to_string());
         assert!(response.token.is_some());
         assert!(response.expires_at.is_some());
         assert_eq!(response.metadata.len(), 1);

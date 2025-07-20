@@ -6,7 +6,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::{Result, StorageTier};
+use crate::types::StorageTier;
+use crate::Result;
 
 /// biomeOS manifest structure for NestGate integration
 #[derive(Debug, Clone, Serialize, Deserialize)]

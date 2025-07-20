@@ -20,9 +20,10 @@ impl InstallationWizard {
 
         self.configure_installation_path()?;
         self.configure_service_mode()?;
+        // Configure basic options
         self.configure_features()?;
-        self.configure_networking()?;
-        self.configure_system_integration()?;
+
+        // Confirm and proceed
         self.confirm_installation()?;
 
         Ok(self.config.clone())
@@ -82,152 +83,153 @@ impl InstallationWizard {
     fn configure_features(&mut self) -> Result<()> {
         println!("\n⚙️  Feature Configuration");
 
-        // ZFS Support
-        self.config.enable_zfs = Confirm::new()
-            .with_prompt("Enable ZFS filesystem support?")
+        // ZFS Features
+        self.config.features.enable_zfs = Confirm::new()
+            .with_prompt("Enable ZFS storage management?")
             .default(true)
             .interact()?;
 
-        if self.config.enable_zfs {
-            println!("✅ ZFS support enabled");
-            println!("   - Advanced storage management");
-            println!("   - Snapshots and replication");
-            println!("   - Data integrity verification");
+        if self.config.features.enable_zfs {
+            println!("✅ ZFS features enabled");
+            println!("   - Pool management");
+            println!("   - Dataset operations");
+            println!("   - Snapshot management");
+            println!("   - Health monitoring");
         }
 
         // AI Features
-        self.config.ai_enabled = Confirm::new()
+        self.config.features.enable_ui = Confirm::new()
             .with_prompt("Enable AI-powered features?")
             .default(false)
             .interact()?;
 
-        if self.config.ai_enabled {
+        if self.config.features.enable_ui {
             println!("✅ AI features enabled");
-            println!("   - Intelligent data organization");
-            println!("   - Predictive storage optimization");
-            println!("   - Automated maintenance");
+            println!("   - Intelligent resource optimization");
+            println!("   - Predictive maintenance");
+            println!("   - Automated troubleshooting");
         }
 
-        Ok(())
-    }
-
-    fn configure_networking(&mut self) -> Result<()> {
-        println!("\n🌐 Network Configuration");
-
-        // API Port
-        let port_input: String = Input::new()
-            .with_prompt("API server port")
-            .default(self.config.api_port.to_string())
-            .validate_with(|input: &String| -> Result<(), &str> {
-                match input.parse::<u16>() {
-                    Ok(port) if port > 0 => Ok(()),
-                    _ => Err("Please enter a valid port number (1-65535)"),
-                }
-            })
-            .interact_text()?;
-
-        self.config.api_port = port_input
-            .parse()
-            .map_err(|e| anyhow::anyhow!("Invalid port number: {}", e))?;
-
-        // Universal Primal Orchestration Integration
-        let orchestration_integration = Confirm::new()
-            .with_prompt("Configure primal orchestration integration?")
-            .default(false)
-            .interact()?;
-
-        if orchestration_integration {
-            let orchestration_url: String = Input::new()
-                .with_prompt("Orchestration primal URL")
-                .default(
-                    std::env::var("NESTGATE_UI_URL")
-                        .unwrap_or_else(|_| "http://localhost:3000".to_string()),
-                )
-                .interact_text()?;
-
-            self.config.orchestration_url = Some(orchestration_url);
-
-            println!("✅ Primal orchestration integration configured");
-            println!("   - Cross-primal networking");
-            println!("   - Enhanced security");
-            println!("   - Multi-system coordination");
-        } else {
-            println!("ℹ️  Running in standalone mode");
-            println!("   - Local system access only");
-            println!("   - Direct network binding");
-        }
-
-        Ok(())
-    }
-
-    fn configure_system_integration(&mut self) -> Result<()> {
-        println!("\n🔗 System Integration");
-
-        // PATH integration
-        self.config.add_to_path = Confirm::new()
-            .with_prompt("Add NestGate to system PATH?")
+        // Network configuration
+        self.config.features.enable_network = Confirm::new()
+            .with_prompt("Enable network features?")
             .default(true)
             .interact()?;
 
-        if self.config.add_to_path {
-            println!("✅ Will add to PATH - you can run 'nestgate' from anywhere");
+        if self.config.features.enable_network {
+            println!("✅ Network features enabled");
+            println!("   - Remote management");
+            println!("   - Distributed storage");
+            println!("   - Service discovery");
         }
 
-        // Desktop shortcut
-        self.config.create_desktop_shortcut = Confirm::new()
+        // Advanced configuration
+        println!("\n🔧 Advanced Configuration:");
+        println!("Configure advanced features and integrations");
+
+        // Desktop integration
+        self.config.integration.create_desktop_entry = Confirm::new()
             .with_prompt("Create desktop shortcut?")
             .default(true)
             .interact()?;
 
-        if self.config.create_desktop_shortcut {
+        if self.config.integration.create_desktop_entry {
+            println!("✅ Desktop shortcut will be created");
+            println!("   - Quick access to NestGate");
+            println!("   - Integrated with system menu");
+        }
+
+        // PATH configuration
+        self.config.integration.add_to_path = Confirm::new()
+            .with_prompt("Add NestGate to system PATH?")
+            .default(true)
+            .interact()?;
+
+        if self.config.integration.add_to_path {
+            println!("✅ NestGate will be added to PATH");
+            println!("   - Access from any terminal");
+            println!("   - Global command availability");
+        }
+
+        Ok(())
+    }
+
+    #[allow(dead_code)]
+    fn configure_system_integration(&mut self) -> Result<()> {
+        println!("\n🔗 System Integration");
+
+        // PATH integration
+        self.config.integration.add_to_path = Confirm::new()
+            .with_prompt("Add NestGate to system PATH?")
+            .default(true)
+            .interact()?;
+
+        if self.config.integration.add_to_path {
+            println!("✅ Will add to PATH - you can run 'nestgate' from anywhere");
+        }
+
+        // Desktop shortcut
+        self.config.integration.create_desktop_entry = Confirm::new()
+            .with_prompt("Create desktop shortcut?")
+            .default(true)
+            .interact()?;
+
+        if self.config.integration.create_desktop_entry {
             println!("✅ Desktop shortcut will be created");
         }
 
         Ok(())
     }
 
-    fn confirm_installation(&self) -> Result<()> {
-        println!("\n📋 Installation Summary");
-        println!("━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        println!("Installation Path: {}", self.config.install_path.display());
+    fn confirm_installation(&self) -> Result<bool> {
+        println!("\n📋 Installation Summary:");
+        println!("========================");
+        println!("This will install NestGate with the following configuration:");
+        println!("  📂 Install Path: {}", self.config.install_path.display());
         println!(
-            "Service Mode: {}",
+            "  🔧 Service Mode: {}",
             if self.config.service_mode {
-                "Yes"
+                "Enabled"
             } else {
-                "No"
+                "Disabled"
             }
         );
         println!(
-            "ZFS Support: {}",
-            if self.config.enable_zfs { "Yes" } else { "No" }
+            "  💾 ZFS Support: {}",
+            if self.config.features.enable_zfs {
+                "Enabled"
+            } else {
+                "Disabled"
+            }
         );
         println!(
-            "AI Features: {}",
-            if self.config.ai_enabled { "Yes" } else { "No" }
+            "  🎨 UI Components: {}",
+            if self.config.features.enable_ui {
+                "Enabled"
+            } else {
+                "Disabled"
+            }
         );
-        println!("API Port: {}", self.config.api_port);
+        println!(
+            "  🌐 Network Features: {}",
+            if self.config.features.enable_network {
+                "Enabled"
+            } else {
+                "Disabled"
+            }
+        );
 
-        if let Some(url) = &self.config.orchestration_url {
-            println!("Orchestration URL: {url}");
+        if self.config.integration.create_desktop_entry {
+            println!("  🖥️  Desktop Entry: Will be created");
         } else {
-            println!("Orchestration: Standalone mode");
+            println!("  🖥️  Desktop Entry: Will not be created");
         }
 
-        println!(
-            "Add to PATH: {}",
-            if self.config.add_to_path { "Yes" } else { "No" }
-        );
-        println!(
-            "Desktop Shortcut: {}",
-            if self.config.create_desktop_shortcut {
-                "Yes"
-            } else {
-                "No"
-            }
-        );
-
-        println!("\n🚀 Ready to install NestGate with the above configuration.");
+        if self.config.integration.add_to_path {
+            println!("  🛤️  PATH: Will be added to system PATH");
+        } else {
+            println!("  🛤️  PATH: Will not be added to system PATH");
+        }
 
         if !Confirm::new()
             .with_prompt("Proceed with installation?")
@@ -237,7 +239,7 @@ impl InstallationWizard {
             anyhow::bail!("Installation cancelled by user");
         }
 
-        Ok(())
+        Ok(true)
     }
 }
 

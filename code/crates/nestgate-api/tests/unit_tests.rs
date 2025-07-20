@@ -3,7 +3,8 @@
 //! This test suite validates individual API components, handlers, and utilities
 //! in isolation using mocks and test doubles.
 
-use nestgate_api::handlers::zfs::*;
+// Import the required types
+use nestgate_api::handlers::zfs::types::*;
 use nestgate_core::StorageTier;
 use std::collections::HashMap;
 

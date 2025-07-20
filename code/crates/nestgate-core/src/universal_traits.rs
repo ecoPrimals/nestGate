@@ -98,31 +98,6 @@ pub enum SecurityDecision {
     RequireAuth,
 }
 
-/// Universal AI primal provider trait
-#[async_trait]
-pub trait AiPrimalProvider: Send + Sync {
-    /// Forecast storage capacity needs
-    async fn forecast_capacity(&self, metrics: &SystemMetrics) -> Result<CapacityForecast>;
-
-    /// Analyze performance bottlenecks
-    async fn analyze_bottlenecks(&self, performance: &PerformanceData) -> Result<BottleneckAnalysis>;
-
-    /// Plan maintenance schedules
-    async fn plan_maintenance(&self, health: &HealthData) -> Result<MaintenancePlan>;
-
-    /// Optimize replication strategies
-    async fn optimize_replication(&self, replication: &ReplicationData) -> Result<OptimizationPlan>;
-
-    /// Optimize snapshot retention
-    async fn optimize_snapshots(&self, snapshot_data: &SnapshotData) -> Result<SnapshotOptimization>;
-
-    /// Predict tier placement
-    async fn predict_tier_placement(&self, file_data: &FileAnalysis) -> Result<TierRecommendation>;
-
-    /// Analyze dataset patterns
-    async fn analyze_dataset(&self, dataset: &DatasetAnalysis) -> Result<DatasetInsights>;
-}
-
 /// Universal orchestration primal provider trait
 #[async_trait]
 pub trait OrchestrationPrimalProvider: Send + Sync {
@@ -145,7 +120,11 @@ pub trait OrchestrationPrimalProvider: Send + Sync {
     async fn get_service_health(&self, service: &str) -> Result<ServiceHealth>;
 
     /// Load balance across service instances
-    async fn load_balance(&self, service: &str, request: &ServiceRequest) -> Result<ServiceResponse>;
+    async fn load_balance(
+        &self,
+        service: &str,
+        request: &ServiceRequest,
+    ) -> Result<ServiceResponse>;
 }
 
 /// Universal compute primal provider trait
@@ -158,10 +137,17 @@ pub trait ComputePrimalProvider: Send + Sync {
     async fn execute_workload(&self, workload: &WorkloadSpec) -> Result<WorkloadResult>;
 
     /// Monitor performance metrics
-    async fn monitor_performance(&self, allocation: &ResourceAllocation) -> Result<PerformanceMetrics>;
+    async fn monitor_performance(
+        &self,
+        allocation: &ResourceAllocation,
+    ) -> Result<PerformanceMetrics>;
 
     /// Scale resources up or down
-    async fn scale_resources(&self, allocation: &ResourceAllocation, target: &ScalingTarget) -> Result<()>;
+    async fn scale_resources(
+        &self,
+        allocation: &ResourceAllocation,
+        target: &ScalingTarget,
+    ) -> Result<()>;
 
     /// Get resource utilization
     async fn get_resource_utilization(&self) -> Result<ResourceUtilization>;
@@ -170,7 +156,11 @@ pub trait ComputePrimalProvider: Send + Sync {
     async fn detect_platform(&self) -> Result<PlatformCapabilities>;
 
     /// Optimize resource allocation
-    async fn optimize_allocation(&self, current: &ResourceAllocation, metrics: &PerformanceMetrics) -> Result<OptimizationRecommendation>;
+    async fn optimize_allocation(
+        &self,
+        current: &ResourceAllocation,
+        metrics: &PerformanceMetrics,
+    ) -> Result<OptimizationRecommendation>;
 }
 
 // Supporting types and structures
@@ -375,8 +365,6 @@ pub struct Signature {
     pub key_id: String,
 }
 
-
-
 // AI-related types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemMetrics {
@@ -485,26 +473,6 @@ pub struct DatasetInsights {
 
 // Orchestration-related types
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ServiceRegistration {
-    pub name: String,
-    pub service_type: String,
-    pub version: String,
-    pub endpoints: Vec<String>,
-    pub capabilities: Vec<String>,
-    pub health_endpoint: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ServiceInstance {
-    pub id: String,
-    pub name: String,
-    pub address: String,
-    pub port: u16,
-    pub status: String,
-    pub last_heartbeat: SystemTime,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InterPrimalRequest {
     pub id: Uuid,
     pub source: String,
@@ -519,14 +487,6 @@ pub struct InterPrimalResponse {
     pub success: bool,
     pub payload: serde_json::Value,
     pub error: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ServiceHealth {
-    pub status: String,
-    pub uptime: u64,
-    pub last_check: SystemTime,
-    pub errors: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -618,4 +578,287 @@ pub struct OptimizationRecommendation {
     pub recommendations: Vec<String>,
     pub expected_improvement: f64,
     pub confidence: f64,
-} 
+}
+
+/// EcosystemIntegration trait for service mesh registration and discovery
+#[async_trait]
+pub trait EcosystemIntegration: Send + Sync {
+    /// Register this service with the ecosystem
+    async fn register_with_ecosystem(
+        &self,
+        service_info: &ServiceInfo,
+    ) -> Result<ServiceRegistration>;
+
+    /// Discover services by capability
+    async fn discover_services_by_capability(
+        &self,
+        capability: &str,
+    ) -> Result<Vec<ServiceInstance>>;
+
+    /// Get service health status
+    async fn get_service_health(&self, service_id: &str) -> Result<ServiceHealth>;
+
+    /// Update service capabilities
+    async fn update_capabilities(&self, capabilities: &[String]) -> Result<()>;
+
+    /// Deregister from ecosystem
+    async fn deregister_from_ecosystem(&self, service_id: &str) -> Result<()>;
+}
+
+/// UniversalPrimalProvider trait for capability advertisement
+#[async_trait]
+pub trait UniversalPrimalProvider: Send + Sync {
+    /// Get primal type identifier
+    fn primal_type(&self) -> &str;
+
+    /// Get available capabilities
+    fn get_capabilities(&self) -> Vec<String>;
+
+    /// Get service endpoints
+    fn get_endpoints(&self) -> std::collections::HashMap<String, String>;
+
+    /// Check if primal supports a specific capability
+    fn supports_capability(&self, capability: &str) -> bool;
+
+    /// Get capability-specific configuration
+    async fn get_capability_config(&self, capability: &str) -> Result<serde_json::Value>;
+
+    /// Execute capability-specific operation
+    async fn execute_capability(
+        &self,
+        capability: &str,
+        params: serde_json::Value,
+    ) -> Result<serde_json::Value>;
+}
+
+/// Service information for ecosystem registration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceInfo {
+    pub name: String,
+    pub version: String,
+    pub capabilities: Vec<String>,
+    pub endpoints: std::collections::HashMap<String, String>,
+    pub health_check_endpoint: Option<String>,
+    pub metadata: std::collections::HashMap<String, String>,
+}
+
+/// Service registration response
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceRegistration {
+    pub service_id: String,
+    pub registration_time: std::time::SystemTime,
+    pub ttl: u64,
+    pub refresh_endpoint: String,
+}
+
+/// Service instance discovered in ecosystem
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceInstance {
+    pub service_id: String,
+    pub name: String,
+    pub capabilities: Vec<String>,
+    pub endpoints: std::collections::HashMap<String, String>,
+    pub health_status: ServiceHealth,
+    pub last_seen: std::time::SystemTime,
+}
+
+/// Service health status
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ServiceHealth {
+    Healthy,
+    Degraded,
+    Unhealthy,
+    Unknown,
+}
+
+/// Auto-discovery configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AutoDiscoveryConfig {
+    pub enabled: bool,
+    pub discovery_methods: Vec<DiscoveryMethod>,
+    pub refresh_interval: u64,
+    pub timeout: u64,
+}
+
+/// Discovery methods for finding services
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum DiscoveryMethod {
+    Dns { domain: String },
+    Multicast { group: String, port: u16 },
+    Consul { endpoint: String },
+    Kubernetes { namespace: String },
+    Static { services: Vec<ServiceInstance> },
+}
+
+/// Capability-based service discovery manager
+pub struct CapabilityDiscoveryManager {
+    config: AutoDiscoveryConfig,
+    discovered_services:
+        std::sync::Arc<std::sync::RwLock<std::collections::HashMap<String, ServiceInstance>>>,
+}
+
+impl CapabilityDiscoveryManager {
+    pub fn new(config: AutoDiscoveryConfig) -> Self {
+        Self {
+            config,
+            discovered_services: std::sync::Arc::new(std::sync::RwLock::new(
+                std::collections::HashMap::new(),
+            )),
+        }
+    }
+
+    /// Find services with a specific capability
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the service discovery fails or if the RwLock is poisoned
+    pub fn find_services_with_capability(&self, capability: &str) -> Result<Vec<ServiceInstance>> {
+        let services = self.discovered_services.read().map_err(|_| {
+            crate::NestGateError::Internal("Service discovery lock poisoned".to_string())
+        })?;
+        let matching_services = services
+            .values()
+            .filter(|service| service.capabilities.contains(&capability.to_string()))
+            .cloned()
+            .collect();
+
+        Ok(matching_services)
+    }
+
+    /// Start the discovery process
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if discovery fails to start
+    pub fn start_discovery(&self) -> Result<()> {
+        // Log configured discovery methods
+        use tracing::info;
+        info!(
+            "🔍 Starting service discovery with config: {:?}",
+            self.config
+        );
+
+        // Implementation would start discovery based on configured methods
+        // For now, this is a placeholder that uses the config for logging
+        if self.config.enabled {
+            for method in &self.config.discovery_methods {
+                match method {
+                    DiscoveryMethod::Dns { domain } => {
+                        info!("🌐 DNS discovery enabled with domain: {}", domain);
+                    }
+                    DiscoveryMethod::Multicast { group, port } => {
+                        info!(
+                            "🌐 Multicast discovery enabled with group: {}, port: {}",
+                            group, port
+                        );
+                    }
+                    DiscoveryMethod::Consul { endpoint } => {
+                        info!("📋 Consul discovery enabled with endpoint: {}", endpoint);
+                    }
+                    DiscoveryMethod::Kubernetes { namespace } => {
+                        info!(
+                            "🔗 Kubernetes discovery enabled with namespace: {}",
+                            namespace
+                        );
+                    }
+                    DiscoveryMethod::Static { services } => {
+                        info!(
+                            "📌 Static discovery enabled with {} services",
+                            services.len()
+                        );
+                    }
+                }
+            }
+            info!(
+                "🔍 Service discovery refresh interval: {} seconds",
+                self.config.refresh_interval
+            );
+            info!(
+                "🔍 Service discovery timeout: {} seconds",
+                self.config.timeout
+            );
+        } else {
+            info!("🔍 Service discovery is disabled.");
+        }
+
+        Ok(())
+    }
+
+    /// Get the best service for a capability
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if no suitable service is found
+    pub fn get_best_service_for_capability(
+        &self,
+        capability: &str,
+    ) -> Result<Option<ServiceInstance>> {
+        let services = self.find_services_with_capability(capability)?;
+        // Return the first service for now - in a real implementation,
+        // you'd have logic to select the best service
+        Ok(services.into_iter().next())
+    }
+}
+
+/// Universal configuration system
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UniversalConfig {
+    pub service_name: String,
+    pub capabilities: Vec<String>,
+    pub auto_discovery: AutoDiscoveryConfig,
+    pub ecosystem_integration: EcosystemIntegrationConfig,
+}
+
+/// Ecosystem integration configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EcosystemIntegrationConfig {
+    pub enabled: bool,
+    pub registration_endpoint: Option<String>,
+    pub heartbeat_interval: u64,
+    pub capability_refresh_interval: u64,
+}
+
+impl Default for AutoDiscoveryConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            discovery_methods: vec![
+                DiscoveryMethod::Dns {
+                    domain: "local".to_string(),
+                },
+                DiscoveryMethod::Multicast {
+                    group: "239.1.1.1".to_string(),
+                    port: 9999,
+                },
+            ],
+            refresh_interval: 30,
+            timeout: 5,
+        }
+    }
+}
+
+impl Default for EcosystemIntegrationConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            registration_endpoint: None,
+            heartbeat_interval: 30,
+            capability_refresh_interval: 300,
+        }
+    }
+}
+
+impl Default for UniversalConfig {
+    fn default() -> Self {
+        Self {
+            service_name: "nestgate".to_string(),
+            capabilities: vec![
+                "storage".to_string(),
+                "zfs".to_string(),
+                "data_access".to_string(),
+            ],
+            auto_discovery: AutoDiscoveryConfig::default(),
+            ecosystem_integration: EcosystemIntegrationConfig::default(),
+        }
+    }
+}

@@ -453,28 +453,28 @@ impl TemporalDevice {
         let mut devices = Vec::new();
 
         // Detect legacy devices
-        devices.extend(Self::detect_legacy_devices().await?);
+        devices.extend(Self::detect_legacy_devices()?);
 
         // Detect modern devices
-        devices.extend(Self::detect_modern_devices().await?);
+        devices.extend(Self::detect_modern_devices()?);
 
         // Detect future devices
-        devices.extend(Self::detect_future_devices().await?);
+        devices.extend(Self::detect_future_devices()?);
 
         Ok(devices)
     }
 
-    async fn detect_legacy_devices() -> Result<Vec<TemporalDevice>> {
+    fn detect_legacy_devices() -> Result<Vec<TemporalDevice>> {
         // Placeholder for legacy device detection
         Ok(vec![])
     }
 
-    async fn detect_modern_devices() -> Result<Vec<TemporalDevice>> {
+    fn detect_modern_devices() -> Result<Vec<TemporalDevice>> {
         // Placeholder for modern device detection
         Ok(vec![])
     }
 
-    async fn detect_future_devices() -> Result<Vec<TemporalDevice>> {
+    fn detect_future_devices() -> Result<Vec<TemporalDevice>> {
         // Placeholder for future device detection
         Ok(vec![])
     }
@@ -486,7 +486,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_temporal_device_detection() {
-        let devices = TemporalDevice::auto_detect_any_storage().await.unwrap();
+        let devices = TemporalDevice::auto_detect_any_storage()
+            .await
+            .expect("Failed to detect temporal devices in test");
         // Test passes if no errors occur
         assert_eq!(devices.len(), 0); // Currently returns empty vec
     }
