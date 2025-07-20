@@ -101,7 +101,7 @@ fn check_ips_agnostic(file_path: &str, line_num: usize, line: &str, violations: 
 }
 
 fn check_urls_agnostic(file_path: &str, line_num: usize, line: &str, violations: &mut Vec<Violation>) {
-    let url_regex = Regex::new(r"https?://[^\s\"']+").unwrap();
+    let url_regex = Regex::new(r#"https?://[^\s"']+"#).unwrap();
 
     for url_match in url_regex.find_iter(line) {
         let url = url_match.as_str();

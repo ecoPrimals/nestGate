@@ -639,12 +639,101 @@ pub mod biomeos_defaults {
         pub const DEDUPLICATION: &str = "deduplication";
     }
 
-    /// Integration service names
+    /// Integration and discovery constants
     pub mod integrations {
-        pub const SONGBIRD_INTEGRATION: &str = "songbird_integration";
-        pub const BEARDOG_INTEGRATION: &str = "beardog_integration";
-        pub const SQUIRREL_INTEGRATION: &str = "squirrel_integration";
-        pub const TOADSTOOL_INTEGRATION: &str = "toadstool_integration";
+        /// Universal service discovery capability
+        pub const UNIVERSAL_SERVICE_DISCOVERY: &str = "universal_service_discovery";
+
+        /// Capability-based integration patterns
+        pub const CAPABILITY_SECURITY: &str = "security";
+        pub const CAPABILITY_ORCHESTRATION: &str = "orchestration";
+        pub const CAPABILITY_DISCOVERY: &str = "discovery";
+        pub const CAPABILITY_COMPUTE: &str = "compute";
+        pub const CAPABILITY_INTELLIGENCE: &str = "intelligence";
+
+        /// Universal protocol support
+        pub const PROTOCOL_HTTP: &str = "http";
+        pub const PROTOCOL_WEBSOCKET: &str = "websocket";
+        pub const PROTOCOL_GRPC: &str = "grpc";
+        pub const PROTOCOL_CUSTOM: &str = "custom";
+
+        /// Service categories
+        pub const CATEGORY_STORAGE: &str = "storage";
+        pub const CATEGORY_SECURITY: &str = "security";
+        pub const CATEGORY_COMPUTE: &str = "compute";
+        pub const CATEGORY_NETWORK: &str = "network";
+        pub const CATEGORY_ORCHESTRATION: &str = "orchestration";
+        pub const CATEGORY_INTELLIGENCE: &str = "intelligence";
+        pub const CATEGORY_CUSTOM: &str = "custom";
+    }
+}
+
+/// String constants to avoid repeated allocations
+pub mod strings {
+    use std::sync::Arc;
+
+    /// Default service configuration strings
+    pub const DEFAULT_SERVICE_NAME: &str = "nestgate";
+    pub const DEFAULT_SERVICE_VERSION: &str = "1.0.0";
+    pub const DEFAULT_SERVICE_DESCRIPTION: &str = "NestGate Universal Storage Primal";
+    pub const DEFAULT_BIND_INTERFACE: &str = "127.0.0.1";
+
+    /// Common protocol strings
+    pub const LOCALHOST: &str = "localhost";
+    pub const LOCALHOST_IP: &str = "127.0.0.1";
+    pub const DEFAULT_PROFILE: &str = "balanced";
+    pub const DEFAULT_BACKEND: &str = "filesystem";
+    pub const DEFAULT_PATH: &str = "/tmp/nestgate";
+
+    /// Security and crypto strings
+    pub const FALLBACK_HASH_ALGORITHM: &str = "FALLBACK_HASH";
+    pub const FALLBACK_KEY_ID: &str = "fallback_key";
+    pub const DEFAULT_TRUST_ANCHOR: &str = "system";
+    pub const DEFAULT_TIMEZONE: &str = "UTC";
+    pub const DEFAULT_LICENSE: &str = "AGPL-3.0";
+
+    /// Certificate and subject strings
+    pub const DEFAULT_CERT_SUBJECT: &str = "CN=NestGate";
+    pub const DEFAULT_CERT_ISSUER: &str = "CN=NestGate CA";
+    pub const DEFAULT_CERT_CN: &str = "NestGate";
+    pub const UNKNOWN_CN: &str = "Unknown";
+
+    /// Common key usage strings
+    pub const DIGITAL_SIGNATURE: &str = "digitalSignature";
+    pub const KEY_ENCIPHERMENT: &str = "keyEncipherment";
+    pub const SERVER_AUTH: &str = "serverAuth";
+    pub const CLIENT_AUTH: &str = "clientAuth";
+
+    /// Common permission strings
+    pub const PERMISSION_READ: &str = "read";
+    pub const PERMISSION_WRITE: &str = "write";
+    pub const PERMISSION_HARDWARE_TUNING: &str = "hardware_tuning";
+
+    /// OS and architecture strings
+    pub const UNKNOWN_OS: &str = "unknown";
+    pub const MACOS: &str = "macOS";
+    pub const WINDOWS: &str = "Windows";
+
+    /// Common CPU scaling options
+    pub const CPU_SCALING_ONDEMAND: &str = "ondemand";
+    pub const CPU_SCALING_PERFORMANCE: &str = "performance";
+    pub const CPU_SCALING_POWERSAVE: &str = "powersave";
+
+    /// Lazy shared strings for high-frequency usage
+    pub fn default_service_name() -> Arc<str> {
+        Arc::from(DEFAULT_SERVICE_NAME)
+    }
+
+    pub fn default_service_version() -> Arc<str> {
+        Arc::from(DEFAULT_SERVICE_VERSION)
+    }
+
+    pub fn localhost_ip() -> Arc<str> {
+        Arc::from(LOCALHOST_IP)
+    }
+
+    pub fn default_profile() -> Arc<str> {
+        Arc::from(DEFAULT_PROFILE)
     }
 }
 

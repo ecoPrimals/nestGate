@@ -1,22 +1,29 @@
-//! Production Readiness Test Suite
+//! Production Readiness Tests
 //!
-//! Comprehensive tests to verify NestGate is ready for production deployment
-//! Tests cover performance, reliability, security, and operational requirements
+//! Comprehensive test suite to validate production deployment readiness
 
-use std::time::{Duration, Instant};
+use std::sync::Arc;
+use std::time::Duration;
 use tokio::time::timeout;
 use tracing::{info, warn};
 
-use nestgate_core::{Result, NestGateError, StorageTier};
-use nestgate_zfs::{ZfsManager, config::ZfsConfig};
-use nestgate_api::create_app;
-use nestgate_network::NetworkManager;
+// Core imports
+use nestgate_core::{Result as CoreResult, NestGateError, StorageTier};
+use nestgate_zfs::{
+    manager::ZfsManager,
+    config::ZfsConfig,
+    pool::ZfsPoolManager,
+    dataset::ZfsDatasetManager,
+};
+// Network imports - use NetworkApi instead of NetworkManager
+use nestgate_network::api::NetworkApi;
+use nestgate_mcp::security::{SecurityManager, SecurityConfig};
 
 #[tokio::test]
-async fn test_system_startup_performance() -> Result<()> {
+async fn test_system_startup_performance() -> CoreResult<()> {
     info!("Testing system startup performance");
 
-    let start = Instant::now();
+    let start = std::time::Instant::now();
 
     // Initialize core components
     let config = ZfsConfig::default();
@@ -33,13 +40,13 @@ async fn test_system_startup_performance() -> Result<()> {
 }
 
 #[tokio::test]
-async fn test_api_response_times() -> Result<()> {
+async fn test_api_response_times() -> CoreResult<()> {
     info!("Testing API response times");
 
-    let app = create_app().await?;
+    let app = nestgate_api::create_app().await?;
 
     // Test health endpoint performance
-    let start = Instant::now();
+    let start = std::time::Instant::now();
     let response = timeout(
         Duration::from_millis(100),
         // Simulate health check call
@@ -54,7 +61,7 @@ async fn test_api_response_times() -> Result<()> {
 }
 
 #[tokio::test]
-async fn test_memory_usage_limits() -> Result<()> {
+async fn test_memory_usage_limits() -> CoreResult<()> {
     info!("Testing memory usage limits");
 
     let config = ZfsConfig::default();
@@ -72,7 +79,7 @@ async fn test_memory_usage_limits() -> Result<()> {
 }
 
 #[tokio::test]
-async fn test_concurrent_operations() -> Result<()> {
+async fn test_concurrent_operations() -> CoreResult<()> {
     info!("Testing concurrent operations handling");
 
     let config = ZfsConfig::default();
@@ -90,7 +97,7 @@ async fn test_concurrent_operations() -> Result<()> {
     }
 
     // Wait for all operations to complete
-    let start = Instant::now();
+    let start = std::time::Instant::now();
     for handle in handles {
         let result = handle.await.map_err(|e| NestGateError::Internal(e.to_string()))?;
         assert!(result.is_ok(), "Concurrent operation failed");
@@ -107,7 +114,7 @@ async fn test_concurrent_operations() -> Result<()> {
 }
 
 #[tokio::test]
-async fn test_error_handling_robustness() -> Result<()> {
+async fn test_error_handling_robustness() -> CoreResult<()> {
     info!("Testing error handling robustness");
 
     let config = ZfsConfig::default();
@@ -140,7 +147,7 @@ async fn test_error_handling_robustness() -> Result<()> {
 }
 
 #[tokio::test]
-async fn test_resource_cleanup() -> Result<()> {
+async fn test_resource_cleanup() -> CoreResult<()> {
     info!("Testing resource cleanup");
 
     let config = ZfsConfig::default();
@@ -169,7 +176,7 @@ async fn test_resource_cleanup() -> Result<()> {
 }
 
 #[tokio::test]
-async fn test_data_integrity() -> Result<()> {
+async fn test_data_integrity() -> CoreResult<()> {
     info!("Testing data integrity");
 
     let config = ZfsConfig::default();
@@ -191,7 +198,7 @@ async fn test_data_integrity() -> Result<()> {
 }
 
 #[tokio::test]
-async fn test_security_validation() -> Result<()> {
+async fn test_security_validation() -> CoreResult<()> {
     info!("Testing security validation");
 
     // Test input validation
@@ -230,7 +237,7 @@ async fn test_security_validation() -> Result<()> {
 }
 
 #[tokio::test]
-async fn test_scalability_limits() -> Result<()> {
+async fn test_scalability_limits() -> CoreResult<()> {
     info!("Testing scalability limits");
 
     let config = ZfsConfig::default();
@@ -238,7 +245,7 @@ async fn test_scalability_limits() -> Result<()> {
 
     // Test handling of large numbers of operations
     let operation_count = 100;
-    let start = Instant::now();
+    let start = std::time::Instant::now();
 
     for i in 0..operation_count {
         let _ = zfs_manager.get_zfs_health().await;
@@ -262,14 +269,14 @@ async fn test_scalability_limits() -> Result<()> {
 }
 
 #[tokio::test]
-async fn test_graceful_shutdown() -> Result<()> {
+async fn test_graceful_shutdown() -> CoreResult<()> {
     info!("Testing graceful shutdown");
 
     let config = ZfsConfig::default();
     let zfs_manager = ZfsManager::new(config).await?;
 
     // Test shutdown within time limit
-    let start = Instant::now();
+    let start = std::time::Instant::now();
     let shutdown_result = zfs_manager.shutdown().await;
     let shutdown_time = start.elapsed();
 
@@ -292,7 +299,7 @@ struct MemoryInfo {
     available_mb: u64,
 }
 
-async fn get_memory_usage() -> Result<MemoryInfo> {
+async fn get_memory_usage() -> CoreResult<MemoryInfo> {
     // Simplified memory usage check
     // In production, this would read from /proc/meminfo or use system APIs
     Ok(MemoryInfo {
@@ -302,7 +309,7 @@ async fn get_memory_usage() -> Result<MemoryInfo> {
 }
 
 #[tokio::test]
-async fn test_production_readiness_summary() -> Result<()> {
+async fn test_production_readiness_summary() -> CoreResult<()> {
     info!("🎯 PRODUCTION READINESS VERIFICATION COMPLETE");
     info!("=============================================");
     info!("✅ Performance: Sub-second response times verified");

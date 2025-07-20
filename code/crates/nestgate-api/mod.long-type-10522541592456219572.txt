@@ -1,0 +1,2 @@
+fn(axum::extract::State<types::ZfsApiState>, axum::extract::Path<std::string::String>) -> impl Future<Output = Json<types::ApiResponse<()>>> {basic::destroy_pool}
+fn(axum::extract::State<types::ZfsApiState>, axum::extract::Path<std::string::String>) -> impl Future<Output = Json<types::ApiResponse<()>>> {basic::destroy_pool}: Handler<_, _>

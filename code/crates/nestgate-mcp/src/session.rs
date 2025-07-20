@@ -9,7 +9,7 @@ use std::time::Duration;
 use tracing::debug;
 use uuid::Uuid;
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 
 /// Session state
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -140,7 +140,10 @@ impl SessionManager {
     /// Update a session
     pub fn update_session(&mut self, session: Session) -> Result<()> {
         if !self.sessions.contains_key(&session.id) {
-            return Err(Error::session(format!("Session not found: {}", session.id)));
+            return Err(
+                crate::error::Error::session(format!("Session not found: {}", session.id))
+                    .to_string(),
+            );
         }
 
         self.sessions.insert(session.id.clone(), session);
@@ -157,7 +160,7 @@ impl SessionManager {
             debug!("Closed session {}", id);
             Ok(())
         } else {
-            Err(Error::session(format!("Session not found: {id}")))
+            Err(crate::error::Error::session(format!("Session not found: {id}")).to_string())
         }
     }
 

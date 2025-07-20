@@ -2,155 +2,106 @@
 //!
 //! Enhanced error handling with enhanced NestGate capabilities
 
-use serde::{Deserialize, Serialize};
-use thiserror::Error;
+use std::fmt;
 
-/// Main error type for NestGate operations
-#[derive(Error, Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum NestGateError {
-    /// Generic internal error
-    #[error("Internal error: {0}")]
+    /// Internal system error
     Internal(String),
 
-    /// Invalid input provided
-    #[error("Invalid input: {0}")]
-    InvalidInput(String),
+    /// Validation error
+    Validation(String),
 
-    /// Network-related error
-    #[error("Network error: {0}")]
+    /// Configuration error
+    Configuration(String),
+
+    /// Network error
     Network(String),
 
+    /// Storage error
+    Storage(String),
+
+    /// Unauthorized access error
+    Unauthorized(String),
+
+    /// I/O error
+    Io(String),
+
+    /// Serialization error
+    Serialization(String),
+
+    /// External service error
+    External(String),
+
+    /// Parse error
+    Parse(String),
+
+    /// System error
+    SystemError(String),
+
+    /// File system error
+    FileSystem(String),
+
+    /// Invalid input error
+    InvalidInput(String),
+
+    /// Authentication failed error
+    AuthenticationFailed,
+
+    /// Security module unavailable error
+    SecurityModuleUnavailable,
+
+    /// Not found error
+    NotFound(String),
+
     /// Database error
-    #[error("Database error: {0}")]
     Database(String),
 
     /// Authentication error
-    #[error("Authentication error: {0}")]
     Authentication(String),
 
     /// Authorization error
-    #[error("Authorization error: {0}")]
     Authorization(String),
 
-    /// Authentication failed with invalid credentials
-    #[error("Authentication failed")]
-    AuthenticationFailed,
-
-    /// Security module unavailable
-    #[error("Security module unavailable")]
-    SecurityModuleUnavailable,
-
-    /// Configuration error with enhanced handling
-    #[error("Configuration error: {0}")]
-    Configuration(String),
-
-    /// Validation error with enhanced handling
-    #[error("Validation error: {0}")]
-    Validation(String),
-
-    /// System error with enhanced handling
-    #[error("System error: {0}")]
-    SystemError(String),
-
-    /// File system error with enhanced handling
-    #[error("File system error: {0}")]
-    FileSystem(String),
-
-    /// Serialization error with enhanced handling
-    #[error("Serialization error: {0}")]
-    Serialization(String),
-
-    /// Not found error (used in diagnostics)
-    #[error("Not found: {0}")]
-    NotFound(String),
-
     /// Timeout error
-    #[error("Operation timed out: {0}")]
     Timeout(String),
-
-    /// I/O error wrapper
-    #[error("I/O error: {0}")]
-    Io(String),
-
-    /// Resource exhausted error
-    #[error("Resource exhausted: {0}")]
-    ResourceExhausted(String),
-
-    /// External service error
-    #[error("External service error: {0}")]
-    ExternalService(String),
-
-    /// Cache error
-    #[error("Cache error: {0}")]
-    Cache(String),
-
-    /// Storage error
-    #[error("Storage error: {0}")]
-    Storage(String),
-
-    /// Compute error
-    #[error("Compute error: {0}")]
-    Compute(String),
-
-    /// Federation error
-    #[error("Federation error: {0}")]
-    Federation(String),
-
-    /// MCP error
-    #[error("MCP error: {0}")]
-    Mcp(String),
-
-    /// Parse error
-    #[error("Parse error: {0}")]
-    Parse(String),
-
-    /// Permission denied error
-    #[error("Permission denied: {0}")]
-    PermissionDenied(String),
-
-    /// Compression error
-    #[error("Compression error: {0}")]
-    CompressionError(String),
-
-    /// Connection error
-    #[error("Connection error: {0}")]
-    ConnectionError(String),
-
-    /// Configuration errors
-    #[error("Configuration error: {0}")]
-    Config(String),
-
-    /// Automation/AI errors
-    #[error("Automation error: {0}")]
-    Automation(String),
-
-    /// Data ingestion errors
-    #[error("Data ingestion error: {0}")]
-    DataIngestion(String),
-
-    /// Hardware-related errors
-    #[error("Hardware error: {0}")]
-    Hardware(String),
-
-    /// Service discovery errors
-    #[error("Service discovery error: {0}")]
-    ServiceDiscovery(String),
-
-    /// ZFS-specific errors
-    #[error("ZFS error: {0}")]
-    Zfs(String),
-
-    /// Generic errors
-    #[error("Generic error: {0}")]
-    Generic(String),
-
-    /// Permission errors
-    #[error("Permission error: {0}")]
-    Permission(String),
 }
+
+impl fmt::Display for NestGateError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            NestGateError::Internal(msg) => write!(f, "Internal error: {msg}"),
+            NestGateError::Validation(msg) => write!(f, "Validation error: {msg}"),
+            NestGateError::Configuration(msg) => write!(f, "Configuration error: {msg}"),
+            NestGateError::Network(msg) => write!(f, "Network error: {msg}"),
+            NestGateError::Storage(msg) => write!(f, "Storage error: {msg}"),
+            NestGateError::Unauthorized(msg) => write!(f, "Unauthorized: {msg}"),
+            NestGateError::Io(msg) => write!(f, "I/O error: {msg}"),
+            NestGateError::Serialization(msg) => write!(f, "Serialization error: {msg}"),
+            NestGateError::External(msg) => write!(f, "External service error: {msg}"),
+            NestGateError::Parse(msg) => write!(f, "Parse error: {msg}"),
+            NestGateError::SystemError(msg) => write!(f, "System error: {msg}"),
+            NestGateError::FileSystem(msg) => write!(f, "File system error: {msg}"),
+            NestGateError::InvalidInput(msg) => write!(f, "Invalid input: {msg}"),
+            NestGateError::AuthenticationFailed => write!(f, "Authentication failed"),
+            NestGateError::SecurityModuleUnavailable => write!(f, "Security module unavailable"),
+            NestGateError::NotFound(msg) => write!(f, "Not found: {msg}"),
+            NestGateError::Database(msg) => write!(f, "Database error: {msg}"),
+            NestGateError::Authentication(msg) => write!(f, "Authentication error: {msg}"),
+            NestGateError::Authorization(msg) => write!(f, "Authorization error: {msg}"),
+            NestGateError::Timeout(msg) => write!(f, "Timeout error: {msg}"),
+        }
+    }
+}
+
+impl std::error::Error for NestGateError {}
 
 /// Result type alias for NestGate operations
 pub type Result<T> = std::result::Result<T, NestGateError>;
+
+/// Universal result type for operations that may use different error types
+/// This provides a common interface across the entire codebase
+pub type UniversalResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 impl From<std::num::ParseIntError> for NestGateError {
     fn from(err: std::num::ParseIntError) -> Self {
@@ -172,6 +123,18 @@ impl From<reqwest::Error> for NestGateError {
 
 impl From<serde_json::Error> for NestGateError {
     fn from(err: serde_json::Error) -> Self {
-        NestGateError::Parse(err.to_string())
+        NestGateError::Serialization(err.to_string())
+    }
+}
+
+impl From<toml::de::Error> for NestGateError {
+    fn from(err: toml::de::Error) -> Self {
+        NestGateError::Serialization(err.to_string())
+    }
+}
+
+impl From<anyhow::Error> for NestGateError {
+    fn from(err: anyhow::Error) -> Self {
+        NestGateError::Internal(err.to_string())
     }
 }

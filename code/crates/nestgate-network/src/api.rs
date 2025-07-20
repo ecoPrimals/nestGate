@@ -74,7 +74,7 @@ impl SongbirdClient {
         } else {
             let error_msg = format!("Failed to register service: HTTP {}", response.status());
             error!("{}", error_msg);
-            Err(nestgate_core::NestGateError::Internal(error_msg))
+            Err(nestgate_core::NestGateError::Internal(error_msg).into())
         }
     }
 
@@ -113,7 +113,7 @@ impl SongbirdClient {
         } else {
             let error_msg = format!("Failed to allocate port: HTTP {}", response.status());
             error!("{}", error_msg);
-            Err(nestgate_core::NestGateError::Internal(error_msg))
+            Err(nestgate_core::NestGateError::Internal(error_msg).into())
         }
     }
 
@@ -183,7 +183,7 @@ impl SongbirdClient {
         } else {
             let error_msg = format!("Failed to send health status: HTTP {}", response.status());
             debug!("{}", error_msg);
-            Err(nestgate_core::NestGateError::Internal(error_msg))
+            Err(nestgate_core::NestGateError::Internal(error_msg).into())
         }
     }
 }
@@ -309,7 +309,8 @@ impl NetworkApi {
         } else {
             Err(nestgate_core::NestGateError::Internal(format!(
                 "Service not found: {service_name}"
-            )))
+            ))
+            .into())
         }
     }
 
@@ -334,34 +335,8 @@ impl Default for NetworkApi {
     }
 }
 
-/// API Response wrapper
-#[derive(Serialize)]
-pub struct ApiResponse<T> {
-    pub success: bool,
-    pub data: Option<T>,
-    pub error: Option<String>,
-    pub timestamp: chrono::DateTime<chrono::Utc>,
-}
-
-impl<T> ApiResponse<T> {
-    pub fn success(data: T) -> Self {
-        Self {
-            success: true,
-            data: Some(data),
-            error: None,
-            timestamp: chrono::Utc::now(),
-        }
-    }
-
-    pub fn error(message: String) -> Self {
-        Self {
-            success: false,
-            data: None,
-            error: Some(message),
-            timestamp: chrono::Utc::now(),
-        }
-    }
-}
+/// Re-export universal API response from nestgate-core to eliminate duplication
+pub use nestgate_core::ApiResponse;
 
 // API Handlers
 

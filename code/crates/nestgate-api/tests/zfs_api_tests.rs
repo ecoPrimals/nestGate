@@ -6,7 +6,7 @@
 //! Tests use real ZFS by default. To run with mock data, set USE_MOCK_ZFS=true
 
 use axum_test::TestServer;
-use nestgate_api::routes::create_router;
+use nestgate_api::create_app;
 use nestgate_zfs::{config::ZfsConfig, ZfsManager};
 use serde_json::{json, Value};
 use std::sync::Arc;
@@ -32,7 +32,7 @@ async fn create_test_zfs_manager() -> Arc<ZfsManager> {
 /// Test helper to create a test server with ZFS API
 async fn create_test_server() -> TestServer {
     let _zfs_manager = create_test_zfs_manager().await; // Keep for future use
-    let app = create_router();
+    let app = create_app(); // Use create_app() instead of create_router() to include CORS middleware
     TestServer::new(app).expect("Failed to create test server")
 }
 

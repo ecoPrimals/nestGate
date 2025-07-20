@@ -92,16 +92,21 @@ impl ByobManager {
         // Create the dataset
         match self.create_workspace_dataset(&dataset_name, &request).await {
             Ok(()) => {
-                info!("✅ Successfully created BYOB workspace: {}", request.workspace_name);
-                
+                info!(
+                    "✅ Successfully created BYOB workspace: {}",
+                    request.workspace_name
+                );
+
                 // Notify orchestration module if available
                 if let Some(ref orchestration_endpoint) = self.orchestration_endpoint {
-                    self.notify_orchestration_module(orchestration_endpoint, &request).await?;
+                    self.notify_orchestration_module(orchestration_endpoint, &request)
+                        .await?;
                 }
 
                 // Notify compute module if available
                 if let Some(ref compute_endpoint) = self.compute_endpoint {
-                    self.notify_compute_module(compute_endpoint, &request).await?;
+                    self.notify_compute_module(compute_endpoint, &request)
+                        .await?;
                 }
 
                 Ok(ByobStorageResponse {
@@ -145,35 +150,45 @@ impl ByobManager {
 
         // Extract parent and child from dataset name
         let parts: Vec<&str> = dataset_name.split('/').collect();
-        let parent = parts[0..parts.len()-1].join("/");
-        let child = parts[parts.len()-1];
+        let parent = parts[0..parts.len() - 1].join("/");
+        let child = parts[parts.len() - 1];
 
         // Create the dataset
         self.zfs_manager
-            .create_dataset(&child, &parent, tier)
+            .create_dataset(child, &parent, tier)
             .await?;
 
         // Set quota using zfs command directly if specified
         if request.storage_size_gb > 0 {
             let quota_bytes = request.storage_size_gb * 1024 * 1024 * 1024;
             let output = tokio::process::Command::new("zfs")
-                .args(["set", &format!("quota={}", quota_bytes), dataset_name])
+                .args(["set", &format!("quota={quota_bytes}"), dataset_name])
                 .output()
                 .await?;
 
             if !output.status.success() {
-                return Err(anyhow::anyhow!("Failed to set quota: {}", String::from_utf8_lossy(&output.stderr)));
+                return Err(anyhow::anyhow!(
+                    "Failed to set quota: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                ));
             }
         }
 
         // Set mount point using zfs command directly
         let output = tokio::process::Command::new("zfs")
-            .args(["set", &format!("mountpoint={}", request.mount_point), dataset_name])
+            .args([
+                "set",
+                &format!("mountpoint={}", request.mount_point),
+                dataset_name,
+            ])
             .output()
             .await?;
 
         if !output.status.success() {
-            return Err(anyhow::anyhow!("Failed to set mountpoint: {}", String::from_utf8_lossy(&output.stderr)));
+            return Err(anyhow::anyhow!(
+                "Failed to set mountpoint: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
         }
 
         Ok(())
@@ -198,7 +213,7 @@ impl ByobManager {
 
         // Send notification to orchestration module
         match reqwest::Client::new()
-            .post(format!("{}/api/v1/notifications", orchestration_endpoint))
+            .post(format!("{orchestration_endpoint}/api/v1/notifications"))
             .json(&notification)
             .send()
             .await
@@ -207,7 +222,10 @@ impl ByobManager {
                 if response.status().is_success() {
                     info!("✅ Successfully notified orchestration module");
                 } else {
-                    warn!("⚠️ Orchestration module notification failed: {}", response.status());
+                    warn!(
+                        "⚠️ Orchestration module notification failed: {}",
+                        response.status()
+                    );
                 }
             }
             Err(e) => {
@@ -237,7 +255,7 @@ impl ByobManager {
 
         // Send notification to compute module
         match reqwest::Client::new()
-            .post(format!("{}/api/v1/notifications", compute_endpoint))
+            .post(format!("{compute_endpoint}/api/v1/notifications"))
             .json(&notification)
             .send()
             .await
@@ -246,7 +264,10 @@ impl ByobManager {
                 if response.status().is_success() {
                     info!("✅ Successfully notified compute module");
                 } else {
-                    warn!("⚠️ Compute module notification failed: {}", response.status());
+                    warn!(
+                        "⚠️ Compute module notification failed: {}",
+                        response.status()
+                    );
                 }
             }
             Err(e) => {
@@ -261,7 +282,7 @@ impl ByobManager {
     pub async fn cleanup_workspace(&self, workspace_name: &str) -> Result<()> {
         info!("🧹 Cleaning up BYOB workspace: {}", workspace_name);
 
-        let dataset_name = format!("nestpool/byob/{}", workspace_name);
+        let dataset_name = format!("nestpool/byob/{workspace_name}");
 
         // Destroy the dataset using zfs command directly
         let output = tokio::process::Command::new("zfs")
@@ -270,28 +291,32 @@ impl ByobManager {
             .await?;
 
         if !output.status.success() {
-            return Err(anyhow::anyhow!("Failed to destroy dataset: {}", String::from_utf8_lossy(&output.stderr)));
+            return Err(anyhow::anyhow!(
+                "Failed to destroy dataset: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
         }
 
         // Notify modules about cleanup
         if let Some(ref orchestration_endpoint) = self.orchestration_endpoint {
-            self.notify_workspace_cleanup(orchestration_endpoint, workspace_name).await?;
+            self.notify_workspace_cleanup(orchestration_endpoint, workspace_name)
+                .await?;
         }
 
         if let Some(ref compute_endpoint) = self.compute_endpoint {
-            self.notify_workspace_cleanup(compute_endpoint, workspace_name).await?;
+            self.notify_workspace_cleanup(compute_endpoint, workspace_name)
+                .await?;
         }
 
-        info!("✅ Successfully cleaned up BYOB workspace: {}", workspace_name);
+        info!(
+            "✅ Successfully cleaned up BYOB workspace: {}",
+            workspace_name
+        );
         Ok(())
     }
 
     /// Notify modules about workspace cleanup
-    async fn notify_workspace_cleanup(
-        &self,
-        endpoint: &str,
-        workspace_name: &str,
-    ) -> Result<()> {
+    async fn notify_workspace_cleanup(&self, endpoint: &str, workspace_name: &str) -> Result<()> {
         let notification = serde_json::json!({
             "event": "workspace_destroyed",
             "workspace_name": workspace_name,
@@ -299,7 +324,7 @@ impl ByobManager {
         });
 
         match reqwest::Client::new()
-            .post(format!("{}/api/v1/notifications", endpoint))
+            .post(format!("{endpoint}/api/v1/notifications"))
             .json(&notification)
             .send()
             .await
@@ -308,7 +333,10 @@ impl ByobManager {
                 if response.status().is_success() {
                     info!("✅ Successfully notified module about cleanup");
                 } else {
-                    warn!("⚠️ Module cleanup notification failed: {}", response.status());
+                    warn!(
+                        "⚠️ Module cleanup notification failed: {}",
+                        response.status()
+                    );
                 }
             }
             Err(e) => {

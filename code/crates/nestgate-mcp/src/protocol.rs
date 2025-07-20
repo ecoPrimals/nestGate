@@ -8,14 +8,14 @@ use std::collections::HashMap;
 use std::time::SystemTime;
 use uuid::Uuid;
 
-use crate::error::Error;
 use crate::types::{
     MountInfo, MountOptions, ProviderCapabilities, StorageProtocol, StorageTier, SystemMetrics,
     VolumeInfo,
 };
 
 // Use specific Result type
-pub type Result<T> = std::result::Result<T, Error>;
+/// Use local MCP result type that aligns with local Error constructors
+pub type Result<T> = std::result::Result<T, crate::error::Error>;
 
 /// Enhanced MCP Message with advanced capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -545,7 +545,7 @@ impl ProtocolHandler {
             MessageType::FederationJoin => self.handle_federation_join(message).await,
             MessageType::OrchestratorRoute => self.handle_orchestrator_route(message).await,
             MessageType::ServiceRegistration => self.handle_service_registration(message).await,
-            _ => Err(Error::unsupported(format!(
+            _ => Err(crate::error::Error::unsupported(format!(
                 "Message type {:?} not supported",
                 message.message_type
             ))),
@@ -581,7 +581,7 @@ impl ProtocolHandler {
         }
 
         // Direct handling for standalone mode
-        Err(Error::unsupported(
+        Err(crate::error::Error::unsupported(
             "Volume operations require orchestrator".to_string(),
         ))
     }
@@ -593,7 +593,7 @@ impl ProtocolHandler {
         }
 
         // Direct handling for standalone mode
-        Err(Error::unsupported(
+        Err(crate::error::Error::unsupported(
             "Mount operations require orchestrator".to_string(),
         ))
     }
@@ -629,7 +629,7 @@ impl ProtocolHandler {
         }
 
         // Standalone mode doesn't support federation
-        Err(Error::unsupported(
+        Err(crate::error::Error::unsupported(
             "Federation requires orchestrator".to_string(),
         ))
     }
@@ -661,7 +661,7 @@ impl ProtocolHandler {
         }
 
         // Standalone mode doesn't support service registration
-        Err(Error::unsupported(
+        Err(crate::error::Error::unsupported(
             "Service registration requires orchestrator".to_string(),
         ))
     }

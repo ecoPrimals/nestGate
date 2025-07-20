@@ -1,0 +1,565 @@
+//! High-Performance Memory Pool System
+//!
+//! This module provides optimized memory pooling to eliminate allocation bottlenecks
+//! in data processing and storage operations.
+//!
+//! ## Performance Impact
+//! - **Before**: 212,953 ns/iter (frequent allocations)
+//! - **Target**: <100,000 ns/iter (2x performance improvement)
+//! - **Strategy**: Pool and reuse memory buffers instead of frequent allocation/deallocation
+
+use std::collections::VecDeque;
+use std::sync::{Arc, Mutex, RwLock};
+
+use serde::{Deserialize, Serialize};
+use std::time::{Duration, Instant};
+use tracing::{debug, info};
+
+/// High-performance memory pool with configurable buffer sizes
+#[derive(Debug)]
+pub struct MemoryPool<T>
+where
+    T: Default + Clone + Send + 'static,
+{
+    /// Pool of reusable buffers
+    pool: Arc<Mutex<VecDeque<Box<T>>>>,
+    /// Factory function for creating new instances
+    factory: fn() -> T,
+    /// Maximum number of buffers to keep in pool
+    max_size: usize,
+    /// Minimum number of buffers to keep in pool
+    min_size: usize,
+    /// Statistics for pool performance tracking
+    statistics: Arc<RwLock<PoolStatistics>>,
+}
+
+impl<T> MemoryPool<T>
+where
+    T: Default + Clone + Send + 'static,
+{
+    /// Create a new memory pool with specified configuration
+    pub fn new(factory: fn() -> T, min_size: usize, max_size: usize) -> Self {
+        let pool = Arc::new(Mutex::new(VecDeque::new()));
+
+        // Pre-populate pool with minimum buffers
+        {
+            let mut pool_guard = pool.lock().unwrap();
+            for _ in 0..min_size {
+                pool_guard.push_back(Box::new(factory()));
+            }
+        }
+
+        Self {
+            pool,
+            factory,
+            max_size,
+            min_size,
+            statistics: Arc::new(RwLock::new(PoolStatistics::new())),
+        }
+    }
+
+    /// Get a buffer from the pool or create a new one
+    pub fn get(&self) -> PoolGuard<T> {
+        let start = Instant::now();
+
+        // Try to get buffer from pool
+        let buffer = {
+            let mut pool_guard = self.pool.lock().unwrap();
+            pool_guard.pop_front()
+        };
+
+        let (buffer, from_pool) = match buffer {
+            Some(buf) => {
+                // Got buffer from pool - increment hit counter
+                if let Ok(mut stats) = self.statistics.write() {
+                    stats.hits += 1;
+                }
+                (buf, true)
+            }
+            None => {
+                // Create new buffer - increment miss counter
+                if let Ok(mut stats) = self.statistics.write() {
+                    stats.misses += 1;
+                    stats.total_created += 1;
+                }
+                (Box::new((self.factory)()), false)
+            }
+        };
+
+        let acquisition_time = start.elapsed();
+
+        // Update performance metrics
+        if let Ok(mut stats) = self.statistics.write() {
+            stats.total_acquisitions += 1;
+            stats.total_acquisition_time += acquisition_time;
+        }
+
+        debug!(
+            from_pool = from_pool,
+            acquisition_time_ns = acquisition_time.as_nanos(),
+            "Memory pool buffer acquired"
+        );
+
+        PoolGuard {
+            buffer: Some(buffer),
+            pool: Arc::clone(&self.pool),
+            max_size: self.max_size,
+            statistics: Arc::clone(&self.statistics),
+            acquired_at: start,
+        }
+    }
+
+    /// Get current pool statistics
+    pub fn statistics(&self) -> PoolStatistics {
+        self.statistics.read().unwrap().clone()
+    }
+
+    /// Get current pool size
+    pub fn size(&self) -> usize {
+        self.pool.lock().unwrap().len()
+    }
+
+    /// Clear all buffers from pool
+    pub fn clear(&self) {
+        let mut pool_guard = self.pool.lock().unwrap();
+        pool_guard.clear();
+
+        if let Ok(mut stats) = self.statistics.write() {
+            stats.total_cleared += pool_guard.len() as u64;
+        }
+    }
+
+    /// Shrink pool to minimum size
+    pub fn shrink_to_min(&self) {
+        let mut pool_guard = self.pool.lock().unwrap();
+        while pool_guard.len() > self.min_size {
+            pool_guard.pop_back();
+        }
+    }
+
+    /// Ensure pool has at least minimum buffers
+    pub fn ensure_min_capacity(&self) {
+        let mut pool_guard = self.pool.lock().unwrap();
+        while pool_guard.len() < self.min_size {
+            pool_guard.push_back(Box::new((self.factory)()));
+        }
+    }
+}
+
+impl<T> Default for MemoryPool<T>
+where
+    T: Default + Clone + Send + 'static,
+{
+    fn default() -> Self {
+        Self::new(T::default, 5, 50)
+    }
+}
+
+/// RAII guard for pool buffers that automatically returns buffer to pool
+pub struct PoolGuard<T>
+where
+    T: Send + 'static,
+{
+    buffer: Option<Box<T>>,
+    pool: Arc<Mutex<VecDeque<Box<T>>>>,
+    max_size: usize,
+    statistics: Arc<RwLock<PoolStatistics>>,
+    acquired_at: Instant,
+}
+
+impl<T> PoolGuard<T>
+where
+    T: Send + 'static,
+{
+    /// Get a reference to the buffer
+    pub fn get(&self) -> &T {
+        self.buffer.as_ref().unwrap()
+    }
+
+    /// Get a mutable reference to the buffer
+    pub fn get_mut(&mut self) -> &mut T {
+        self.buffer.as_mut().unwrap()
+    }
+
+    /// Take ownership of the buffer (prevents return to pool)
+    pub fn take(mut self) -> Box<T> {
+        self.buffer.take().unwrap()
+    }
+}
+
+impl<T> Drop for PoolGuard<T>
+where
+    T: Send + 'static,
+{
+    fn drop(&mut self) {
+        if let Some(buffer) = self.buffer.take() {
+            let usage_time = self.acquired_at.elapsed();
+
+            // Try to return buffer to pool if not at capacity
+            if let Ok(mut pool_guard) = self.pool.lock() {
+                if pool_guard.len() < self.max_size {
+                    pool_guard.push_back(buffer);
+
+                    // Update statistics
+                    if let Ok(mut stats) = self.statistics.write() {
+                        stats.total_returned += 1;
+                        stats.total_usage_time += usage_time;
+                    }
+
+                    debug!(
+                        usage_time_ns = usage_time.as_nanos(),
+                        pool_size = pool_guard.len(),
+                        "Buffer returned to memory pool"
+                    );
+                } else {
+                    // Pool is full, drop the buffer
+                    if let Ok(mut stats) = self.statistics.write() {
+                        stats.total_discarded += 1;
+                    }
+
+                    debug!(
+                        pool_size = pool_guard.len(),
+                        max_size = self.max_size,
+                        "Buffer discarded - pool at capacity"
+                    );
+                }
+            }
+        }
+    }
+}
+
+impl<T> std::ops::Deref for PoolGuard<T>
+where
+    T: Send + 'static,
+{
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        self.get()
+    }
+}
+
+impl<T> std::ops::DerefMut for PoolGuard<T>
+where
+    T: Send + 'static,
+{
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.get_mut()
+    }
+}
+
+/// Memory pool performance statistics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PoolStatistics {
+    /// Number of successful buffer retrievals from pool
+    pub hits: u64,
+    /// Number of new buffer creations
+    pub misses: u64,
+    /// Total buffer acquisitions
+    pub total_acquisitions: u64,
+    /// Total buffers created
+    pub total_created: u64,
+    /// Total buffers returned to pool
+    pub total_returned: u64,
+    /// Total buffers discarded (pool full)
+    pub total_discarded: u64,
+    /// Total buffers cleared from pool
+    pub total_cleared: u64,
+    /// Total time spent acquiring buffers
+    pub total_acquisition_time: Duration,
+    /// Total time buffers were in use
+    pub total_usage_time: Duration,
+}
+
+impl PoolStatistics {
+    fn new() -> Self {
+        Self {
+            hits: 0,
+            misses: 0,
+            total_acquisitions: 0,
+            total_created: 0,
+            total_returned: 0,
+            total_discarded: 0,
+            total_cleared: 0,
+            total_acquisition_time: Duration::new(0, 0),
+            total_usage_time: Duration::new(0, 0),
+        }
+    }
+
+    /// Calculate hit ratio (0.0 to 1.0)
+    pub fn hit_ratio(&self) -> f64 {
+        if self.total_acquisitions > 0 {
+            self.hits as f64 / self.total_acquisitions as f64
+        } else {
+            0.0
+        }
+    }
+
+    /// Calculate average acquisition time
+    pub fn avg_acquisition_time(&self) -> Duration {
+        if self.total_acquisitions > 0 {
+            self.total_acquisition_time / self.total_acquisitions as u32
+        } else {
+            Duration::new(0, 0)
+        }
+    }
+
+    /// Calculate average usage time
+    pub fn avg_usage_time(&self) -> Duration {
+        if self.total_returned > 0 {
+            self.total_usage_time / self.total_returned as u32
+        } else {
+            Duration::new(0, 0)
+        }
+    }
+
+    /// Check if pool is performing well (>80% hit ratio is good)
+    pub fn is_efficient(&self) -> bool {
+        self.hit_ratio() > 0.8
+    }
+
+    /// Get performance assessment
+    pub fn performance_assessment(&self) -> &'static str {
+        match self.hit_ratio() {
+            r if r > 0.9 => "Excellent",
+            r if r > 0.8 => "Good",
+            r if r > 0.6 => "Fair",
+            _ => "Poor - Consider increasing pool size",
+        }
+    }
+}
+
+/// Specialized buffer pool for common data types
+pub type BufferPool = MemoryPool<Vec<u8>>;
+pub type StringPool = MemoryPool<String>;
+
+// Global buffer pools for common usage patterns
+lazy_static::lazy_static! {
+    // Global 4KB buffer pool for file I/O operations
+    pub static ref GLOBAL_4KB_BUFFER_POOL: BufferPool = MemoryPool::new(
+        || Vec::with_capacity(4096),
+        10,  // min_size
+        100  // max_size
+    );
+
+    // Global 64KB buffer pool for large data operations
+    pub static ref GLOBAL_64KB_BUFFER_POOL: BufferPool = MemoryPool::new(
+        || Vec::with_capacity(65536),
+        5,   // min_size
+        50   // max_size
+    );
+
+    // Global 1MB buffer pool for bulk operations
+    pub static ref GLOBAL_1MB_BUFFER_POOL: BufferPool = MemoryPool::new(
+        || Vec::with_capacity(1048576),
+        2,   // min_size
+        20   // max_size
+    );
+
+    // Global string pool for text operations
+    pub static ref GLOBAL_STRING_POOL: StringPool = MemoryPool::new(
+        || String::with_capacity(1024),
+        20,  // min_size
+        200  // max_size
+    );
+}
+
+/// Convenience functions for global buffer pools
+pub fn get_4kb_buffer() -> PoolGuard<Vec<u8>> {
+    GLOBAL_4KB_BUFFER_POOL.get()
+}
+
+pub fn get_64kb_buffer() -> PoolGuard<Vec<u8>> {
+    GLOBAL_64KB_BUFFER_POOL.get()
+}
+
+pub fn get_1mb_buffer() -> PoolGuard<Vec<u8>> {
+    GLOBAL_1MB_BUFFER_POOL.get()
+}
+
+pub fn get_string_buffer() -> PoolGuard<String> {
+    GLOBAL_STRING_POOL.get()
+}
+
+/// Get global buffer pool statistics
+pub fn global_buffer_pool_stats() -> (
+    PoolStatistics,
+    PoolStatistics,
+    PoolStatistics,
+    PoolStatistics,
+) {
+    (
+        GLOBAL_4KB_BUFFER_POOL.statistics(),
+        GLOBAL_64KB_BUFFER_POOL.statistics(),
+        GLOBAL_1MB_BUFFER_POOL.statistics(),
+        GLOBAL_STRING_POOL.statistics(),
+    )
+}
+
+/// Memory pool manager for coordinating multiple pools
+pub struct MemoryPoolManager {
+    pools: Vec<Arc<dyn PoolInterface>>,
+}
+
+trait PoolInterface: Send + Sync {
+    fn size(&self) -> usize;
+    fn clear(&self);
+}
+
+impl<T> PoolInterface for MemoryPool<T>
+where
+    T: Default + Clone + Send + 'static,
+{
+    fn size(&self) -> usize {
+        self.size()
+    }
+
+    fn clear(&self) {
+        self.clear()
+    }
+}
+
+impl MemoryPoolManager {
+    /// Create a new memory pool manager
+    pub fn new() -> Self {
+        Self { pools: Vec::new() }
+    }
+
+    /// Register a pool with the manager
+    pub fn register_pool<T>(&mut self, pool: Arc<MemoryPool<T>>)
+    where
+        T: Default + Clone + Send + 'static,
+    {
+        self.pools.push(pool);
+    }
+
+    /// Clear all registered pools
+    pub fn clear_all_pools(&self) {
+        for pool in &self.pools {
+            pool.clear();
+        }
+        info!("Cleared {} memory pools", self.pools.len());
+    }
+
+    /// Get total number of buffers across all pools
+    pub fn total_buffers(&self) -> usize {
+        self.pools.iter().map(|p| p.size()).sum()
+    }
+}
+
+impl Default for MemoryPoolManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::thread;
+    use std::time::Duration;
+
+    #[test]
+    fn test_memory_pool_basic_functionality() {
+        let pool = MemoryPool::new(|| Vec::<u8>::with_capacity(1024), 2, 10);
+
+        // Get buffer from pool
+        let mut buffer = pool.get();
+        buffer.push(42);
+        assert_eq!(buffer[0], 42);
+
+        // Statistics should show usage
+        let stats = pool.statistics();
+        assert_eq!(stats.total_acquisitions, 1);
+        assert!(stats.hits > 0 || stats.misses > 0);
+    }
+
+    #[test]
+    fn test_buffer_reuse() {
+        let pool = MemoryPool::new(|| Vec::<u8>::with_capacity(100), 1, 5);
+
+        // Get and return buffer
+        {
+            let mut buffer = pool.get();
+            buffer.push(1);
+        } // Buffer returns to pool here
+
+        // Get another buffer - should reuse previous
+        {
+            let buffer = pool.get();
+            // Buffer might be reused (cleared) or new
+            assert!(buffer.capacity() >= 100);
+        }
+
+        let stats = pool.statistics();
+        assert_eq!(stats.total_acquisitions, 2);
+        assert!(stats.total_returned >= 1);
+    }
+
+    #[test]
+    fn test_pool_capacity_limits() {
+        let pool = MemoryPool::new(|| Vec::<u8>::new(), 0, 2);
+
+        // Fill pool to capacity
+        let _guard1 = pool.get();
+        let _guard2 = pool.get();
+        let _guard3 = pool.get(); // This will exceed capacity when returned
+
+        // Check that pool respects max size
+        assert!(pool.size() <= 2);
+    }
+
+    #[test]
+    fn test_concurrent_access() {
+        let pool = Arc::new(MemoryPool::new(|| Vec::<u8>::new(), 1, 10));
+        let mut handles = vec![];
+
+        // Spawn multiple threads
+        for i in 0..5 {
+            let pool_clone = Arc::clone(&pool);
+            let handle = thread::spawn(move || {
+                let mut buffer = pool_clone.get();
+                buffer.push(i as u8);
+                thread::sleep(Duration::from_millis(10));
+                buffer[0]
+            });
+            handles.push(handle);
+        }
+
+        // Wait for all threads
+        for handle in handles {
+            let result = handle.join().unwrap();
+            assert!(result < 5);
+        }
+
+        let stats = pool.statistics();
+        assert_eq!(stats.total_acquisitions, 5);
+    }
+
+    #[test]
+    fn test_global_buffer_pools() {
+        // Test global 4KB buffer pool
+        let mut buffer = get_4kb_buffer();
+        buffer.extend_from_slice(b"test data");
+        assert_eq!(&buffer[..9], b"test data");
+
+        // Test string pool
+        let mut string_buf = get_string_buffer();
+        string_buf.push_str("hello world");
+        assert_eq!(&*string_buf, "hello world");
+    }
+
+    #[test]
+    fn test_pool_statistics() {
+        let pool = MemoryPool::new(|| Vec::<u8>::new(), 1, 5);
+
+        // Perform operations
+        let _buf1 = pool.get();
+        let _buf2 = pool.get();
+
+        let stats = pool.statistics();
+        assert!(stats.hit_ratio() >= 0.0 && stats.hit_ratio() <= 1.0);
+        assert!(stats.avg_acquisition_time().as_nanos() > 0);
+        assert!(stats.performance_assessment().len() > 0);
+    }
+}

@@ -3,10 +3,22 @@
 //! Core universal service trait and related types
 
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-use chrono::{DateTime, Utc};
+
+/// Service status enumeration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub enum ServiceStatus {
+    Starting,
+    Running,
+    Stopping,
+    Stopped,
+    Failed,
+    #[default]
+    Unknown,
+}
 
 /// Universal service trait that can be implemented by any service
 ///
@@ -43,10 +55,14 @@ pub trait UniversalService: Send + Sync + 'static {
     async fn health_check(&self) -> std::result::Result<Self::Health, Self::Error>;
 
     /// Handle a service request
-    async fn handle_request(&self, request: ServiceRequest) -> std::result::Result<ServiceResponse, Self::Error>;
+    async fn handle_request(
+        &self,
+        request: ServiceRequest,
+    ) -> std::result::Result<ServiceResponse, Self::Error>;
 
     /// Update the service configuration
-    async fn update_config(&mut self, config: Self::Config) -> std::result::Result<(), Self::Error>;
+    async fn update_config(&mut self, config: Self::Config)
+        -> std::result::Result<(), Self::Error>;
 
     /// Get service metrics
     async fn get_metrics(&self) -> std::result::Result<ServiceMetrics, Self::Error>;
@@ -196,6 +212,9 @@ pub struct ServiceInfo {
 
     /// Service description
     pub description: String,
+
+    /// Current service status
+    pub status: ServiceStatus,
 
     /// Service endpoints
     pub endpoints: Vec<ServiceEndpoint>,
@@ -392,7 +411,7 @@ impl ServiceResponse {
             request_id: request_id.into(),
             status: ResponseStatus::Error {
                 code,
-                message: message.into()
+                message: message.into(),
             },
             headers: HashMap::new(),
             payload: serde_json::Value::Null,

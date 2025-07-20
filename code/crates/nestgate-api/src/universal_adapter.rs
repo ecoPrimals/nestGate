@@ -431,7 +431,8 @@ mod tests {
             },
         );
 
-        let adapter = NestGateUniversalAdapter::new(primal_configs).unwrap();
+        let adapter = NestGateUniversalAdapter::new(primal_configs)
+            .expect("Failed to create universal adapter in test");
         assert_eq!(adapter.primal_configs.len(), 1);
         assert!(adapter
             .nestgate_identity
@@ -441,7 +442,8 @@ mod tests {
 
     #[test]
     fn test_api_path_determination() {
-        let adapter = NestGateUniversalAdapter::new(HashMap::new()).unwrap();
+        let adapter = NestGateUniversalAdapter::new(HashMap::new())
+            .expect("Failed to create universal adapter in test");
 
         let compute_path = adapter.determine_api_path("example-compute", &["compute".to_string()]);
         assert_eq!(compute_path, "/api/v1/provision-storage");

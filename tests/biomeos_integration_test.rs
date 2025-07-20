@@ -137,6 +137,10 @@ security:
     user_permissions:
       admin: ["read", "write", "delete"]
       user: ["read", "write"]
+    group_permissions:
+      administrators: ["read", "write", "delete", "admin"]
+      users: ["read", "write"]
+      readonly: ["read"]
   audit_requirements:
     level: "detailed"
     retention_days: 90
@@ -892,6 +896,12 @@ async fn test_integration_endpoints_validation() {
 
     // Test resource constraints for enterprise deployment
     assert_eq!(biome_context.resource_constraints.max_cpu_cores, Some(32.0));
-    assert_eq!(biome_context.resource_constraints.max_memory_mb, Some(65536));
-    assert_eq!(biome_context.resource_constraints.max_storage_gb, Some(2000));
+    assert_eq!(
+        biome_context.resource_constraints.max_memory_mb,
+        Some(65536)
+    );
+    assert_eq!(
+        biome_context.resource_constraints.max_storage_gb,
+        Some(2000)
+    );
 }

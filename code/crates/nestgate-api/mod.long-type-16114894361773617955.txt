@@ -1,0 +1,2 @@
+fn(axum::extract::State<types::ZfsApiState>, Query<types::ListQuery>) -> impl Future<Output = Json<types::ApiResponse<Vec<{type error}, {type error}>>>> {basic::list_pools}
+fn(axum::extract::State<types::ZfsApiState>, Query<types::ListQuery>) -> impl Future<Output = Json<types::ApiResponse<Vec<{type error}, {type error}>>>> {basic::list_pools}: Handler<_, _>

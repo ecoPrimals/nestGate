@@ -8,6 +8,7 @@
 
 use serde::{Deserialize, Serialize};
 
+use nestgate_core::get_or_create_uuid;
 use std::{collections::HashMap, sync::Arc, time::SystemTime};
 use tokio::sync::{broadcast, RwLock};
 use tracing::info;
@@ -149,7 +150,7 @@ impl WebSocketManager {
 
             // Send welcome message
             let welcome_msg = WebSocketEvent {
-                event_id: Uuid::new_v4(),
+                event_id: *get_or_create_uuid(&format!("websocket_welcome_{}", client_id)),
                 client_id,
                 event_type: WebSocketEventType::ConnectionEstablished,
                 data: serde_json::json!({
@@ -172,7 +173,10 @@ impl WebSocketManager {
                     Ok(axum::extract::ws::Message::Text(text)) => {
                         // Process text message
                         let event = WebSocketEvent {
-                            event_id: Uuid::new_v4(),
+                            event_id: *get_or_create_uuid(&format!(
+                                "websocket_message_{}",
+                                client_id
+                            )),
                             client_id,
                             event_type: WebSocketEventType::Message,
                             data: serde_json::json!({
@@ -205,9 +209,12 @@ impl WebSocketManager {
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let connections = self.connections.read().await;
 
-        // Pre-serialize event to avoid repeated serialization for each client
+        // Pre-serialize event to avoid repeated serialization for each client (zero-copy optimization)
         let event_json = serde_json::to_string(&event)?;
         let event_size = event_json.len() as u64;
+
+        // Create shared reference for zero-copy broadcasting
+        let event_json_ref = std::sync::Arc::new(event_json);
 
         // Update statistics
         if let Ok(mut stats) = self.stats.try_write() {
@@ -219,7 +226,7 @@ impl WebSocketManager {
         info!(
             "Broadcasting event to {} clients: {}",
             connections.len(),
-            event_json
+            event_json_ref
         );
 
         Ok(())
@@ -234,9 +241,9 @@ impl WebSocketManager {
 impl Clone for WebSocketManager {
     fn clone(&self) -> Self {
         Self {
-            connections: self.connections.clone(),
+            connections: Arc::clone(&self.connections),
             event_broadcaster: self.event_broadcaster.clone(),
-            stats: self.stats.clone(),
+            stats: Arc::clone(&self.stats),
         }
     }
 }

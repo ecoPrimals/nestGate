@@ -1,18 +1,22 @@
 //! Communication Traits
 
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use chrono::{DateTime, Utc};
 use futures_util::Stream;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
-use crate::errors::{SongbirdError, Result};
+use crate::errors::Result;
 
 /// Communication layer trait
 #[async_trait]
 pub trait CommunicationLayer: Send + Sync {
     /// Send a message to a specific service
-    async fn send_message(&self, target: ServiceAddress, message: ServiceMessage) -> Result<CommunicationResponse>;
+    async fn send_message(
+        &self,
+        target: ServiceAddress,
+        message: ServiceMessage,
+    ) -> Result<CommunicationResponse>;
 
     /// Broadcast a message to all services
     async fn broadcast(&self, message: ServiceMessage) -> Result<Vec<CommunicationResponse>>;

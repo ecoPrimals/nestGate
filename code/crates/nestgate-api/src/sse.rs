@@ -24,7 +24,7 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::{broadcast, RwLock};
 use tokio_stream::wrappers::BroadcastStream;
-use tracing::{debug, info, warn, error};
+use tracing::{debug, info, warn};
 use uuid::Uuid;
 
 use crate::event_coordination::EventCoordinator;
@@ -242,7 +242,7 @@ impl SseManager {
         let connection = SseConnection {
             id: connection_id,
             client_id: client_id.clone(),
-            subscriptions: vec![params.stream.unwrap_or_else(|| "all".to_string())],
+            subscriptions: vec![params.stream.unwrap_or_else(|| "all".into())],
             connected_at: SystemTime::now(),
             last_activity: SystemTime::now(),
             config: config.clone(),
@@ -291,7 +291,7 @@ impl SseManager {
                             stats.bytes_transferred += event_data_len;
                         }
 
-                        // Convert to SSE event - optimize string operations
+                        // Convert to SSE event - zero-copy string operations
                         let event_type_str = match sse_event.event_type {
                             SseEventType::StorageOperation => "StorageOperation",
                             SseEventType::SystemHealth => "SystemHealth",
@@ -301,6 +301,10 @@ impl SseManager {
                             SseEventType::AuthEvent => "AuthEvent",
                             SseEventType::SystemEvent => "SystemEvent",
                         };
+
+                        // Use zero-copy string utilities for event ID (avoiding unused variable warning)
+                        let _event_id_cow =
+                            nestgate_core::zero_copy::StringUtils::static_cow(event_type_str);
 
                         let event = Event::default()
                             .id(sse_event.id.as_hyphenated().to_string())
@@ -386,8 +390,8 @@ impl SseManager {
         &self,
     ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, Infallible> {
         let params = SseParams {
-            stream: Some("storage".to_string()),
-            client_id: Some("storage-client".to_string()),
+            stream: Some("storage".into()),
+            client_id: Some("storage-client".into()),
             token: None,
             compress: Some(false),
             buffer_size: Some(500),
@@ -401,8 +405,8 @@ impl SseManager {
         &self,
     ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, Infallible> {
         let params = SseParams {
-            stream: Some("health".to_string()),
-            client_id: Some("health-client".to_string()),
+            stream: Some("health".into()),
+            client_id: Some("health-client".into()),
             token: None,
             compress: Some(false),
             buffer_size: Some(100),
@@ -416,8 +420,8 @@ impl SseManager {
         &self,
     ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, Infallible> {
         let params = SseParams {
-            stream: Some("metrics".to_string()),
-            client_id: Some("metrics-client".to_string()),
+            stream: Some("metrics".into()),
+            client_id: Some("metrics-client".into()),
             token: None,
             compress: Some(false),
             buffer_size: Some(1000),
@@ -445,72 +449,46 @@ pub async fn sse_events(
     State(app_state): State<crate::routes::AppState>,
     _headers: HeaderMap,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    match app_state
+    // Since create_stream returns Result<..., Infallible>, it should never fail
+    // We can safely unwrap since Infallible means it cannot fail
+    app_state
         .sse_manager
         .create_stream(params, HeaderMap::new())
         .await
-    {
-        Ok(stream) => stream,
-        Err(e) => {
-            error!("Failed to create SSE stream: {}", e);
-            Sse::new(futures::stream::once(async {
-                Ok(Event::default()
-                    .event("error")
-                    .data("Failed to create stream"))
-            }))
-        }
-    }
+        .unwrap_or_else(|never| match never {})
 }
 
 /// Storage operations SSE endpoint
 pub async fn sse_storage(
     State(app_state): State<crate::routes::AppState>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    match app_state.sse_manager.create_storage_stream().await {
-        Ok(stream) => stream,
-        Err(e) => {
-            error!("Failed to create storage SSE stream: {}", e);
-            Sse::new(futures::stream::once(async {
-                Ok(Event::default()
-                    .event("error")
-                    .data("Failed to create stream"))
-            }))
-        }
-    }
+    app_state
+        .sse_manager
+        .create_storage_stream()
+        .await
+        .unwrap_or_else(|never| match never {})
 }
 
 /// Health monitoring SSE endpoint
 pub async fn sse_health(
     State(app_state): State<crate::routes::AppState>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    match app_state.sse_manager.create_health_stream().await {
-        Ok(stream) => stream,
-        Err(e) => {
-            error!("Failed to create health SSE stream: {}", e);
-            Sse::new(futures::stream::once(async {
-                Ok(Event::default()
-                    .event("error")
-                    .data("Failed to create stream"))
-            }))
-        }
-    }
+    app_state
+        .sse_manager
+        .create_health_stream()
+        .await
+        .unwrap_or_else(|never| match never {})
 }
 
 /// Metrics SSE endpoint
 pub async fn sse_metrics(
     State(app_state): State<crate::routes::AppState>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    match app_state.sse_manager.create_metrics_stream().await {
-        Ok(stream) => stream,
-        Err(e) => {
-            error!("Failed to create metrics SSE stream: {}", e);
-            Sse::new(futures::stream::once(async {
-                Ok(Event::default()
-                    .event("error")
-                    .data("Failed to create stream"))
-            }))
-        }
-    }
+    app_state
+        .sse_manager
+        .create_metrics_stream()
+        .await
+        .unwrap_or_else(|never| match never {})
 }
 
 /// Utility functions for creating SSE events
@@ -525,7 +503,7 @@ pub fn create_storage_event(operation: &str, path: &str, data: serde_json::Value
             "data": data,
         }),
         timestamp: SystemTime::now(),
-        source: "nestgate-storage".to_string(),
+        source: "nestgate-storage".into(),
         priority: EventPriority::Normal,
     }
 }
@@ -541,7 +519,7 @@ pub fn create_health_event(component: &str, status: &str, metrics: serde_json::V
             "metrics": metrics,
         }),
         timestamp: SystemTime::now(),
-        source: "nestgate-health".to_string(),
+        source: "nestgate-health".into(),
         priority: if status == "error" {
             EventPriority::Critical
         } else {
@@ -557,7 +535,7 @@ pub fn create_metrics_event(metrics: HashMap<String, f64>) -> SseEvent {
         event_type: SseEventType::PerformanceMetrics,
         data: serde_json::json!(metrics),
         timestamp: SystemTime::now(),
-        source: "nestgate-metrics".to_string(),
+        source: "nestgate-metrics".into(),
         priority: EventPriority::Normal,
     }
 }

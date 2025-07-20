@@ -16,7 +16,7 @@ use nestgate_core::{NestGateError, Result};
 #[derive(Debug)]
 pub struct ZfsPoolManager {
     #[allow(dead_code)]
-    config: ZfsConfig,
+    config: Arc<ZfsConfig>,
     discovered_pools: Arc<DashMap<String, PoolInfo>>,
 }
 
@@ -62,13 +62,30 @@ impl ZfsPoolManager {
         info!("Initializing ZFS pool manager");
 
         let manager = Self {
-            config: config.clone(),
+            config: Arc::new(config.clone()),
             discovered_pools: Arc::new(DashMap::new()),
         };
 
         // Test ZFS availability
         if !crate::is_zfs_available().await {
-            warn!("ZFS not available");
+            warn!("ZFS not available, running in mock mode");
+        }
+
+        Ok(manager)
+    }
+
+    /// Create a new ZFS pool manager with owned config (zero-copy)
+    pub async fn with_owned_config(config: ZfsConfig) -> Result<Self> {
+        info!("Initializing ZFS pool manager with owned config");
+
+        let manager = Self {
+            config: Arc::new(config),
+            discovered_pools: Arc::new(DashMap::new()),
+        };
+
+        // Test ZFS availability
+        if !crate::is_zfs_available().await {
+            warn!("ZFS not available, running in mock mode");
         }
 
         Ok(manager)
@@ -77,7 +94,7 @@ impl ZfsPoolManager {
     /// Create a pool manager for testing and development (now uses real ZFS commands)
     pub fn new_for_testing() -> Self {
         Self {
-            config: ZfsConfig::default(),
+            config: Arc::new(ZfsConfig::default()),
             discovered_pools: Arc::new(DashMap::new()),
         }
     }
@@ -85,7 +102,7 @@ impl ZfsPoolManager {
     /// Create instance for real production use
     pub fn new_production(config: ZfsConfig) -> Self {
         Self {
-            config,
+            config: Arc::new(config),
             discovered_pools: Arc::new(DashMap::new()),
         }
     }
@@ -428,7 +445,7 @@ impl ZfsPoolManager {
             );
         }
 
-        Ok(String::from_utf8_lossy(&output.stdout).into_owned())
+        Ok(nestgate_core::zero_copy::optimize_command_output(&output.stdout).into_owned())
     }
 
     /// Start a scrub operation on a pool

@@ -1,25 +1,18 @@
-//! Configuration Provider Trait
-//!
-//! Defines the interface for pluggable configuration backends,
-//! supporting file-based, environment, Consul, and other configuration sources.
+//! Configuration traits for universal service orchestration
 
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
-use serde::de::DeserializeOwned;
-use std::collections::HashMap;
 use futures_util::Stream;
-use std::path::PathBuf;
+use serde::{Deserialize, Serialize};
 
-use crate::errors::{SongbirdError, Result};
-
-// Import all concrete config types from the config module
-pub use crate::config::*;
+use crate::config::federation::FederationConfig;
+use crate::config::network::{HttpConfig, WebSocketConfig};
+use crate::errors::Result;
 
 /// Configuration provider trait
 #[async_trait]
 pub trait ConfigProvider<T>: Send + Sync
 where
-    T: serde::de::DeserializeOwned + Clone + Send + Sync
+    T: serde::de::DeserializeOwned + Clone + Send + Sync,
 {
     /// Load configuration from the provider
     async fn load_config(&self) -> Result<T>;

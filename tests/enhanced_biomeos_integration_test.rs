@@ -260,10 +260,10 @@ async fn test_100_percent_compatibility() {
     };
 
     // Test that all required fields are present for 100% compatibility
-    assert!(manifest.api_version.len() > 0);
-    assert!(manifest.kind.len() > 0);
-    assert!(manifest.metadata.name.len() > 0);
-    assert!(manifest.metadata.version.len() > 0);
+    assert!(!manifest.api_version.is_empty());
+    assert!(!manifest.kind.is_empty());
+    assert!(!manifest.metadata.name.is_empty());
+    assert!(!manifest.metadata.version.is_empty());
     assert!(manifest.metadata.description.is_some());
     assert!(manifest.metadata.author.is_some());
     assert!(manifest.metadata.created_at.is_some());

@@ -10,7 +10,8 @@ use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 use uuid;
 
-use crate::{Result, ServiceInstance, ServiceStatus, SongbirdClient};
+use crate::api::SongbirdClient;
+use crate::Result;
 
 /// Songbird integration configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -125,7 +126,7 @@ pub struct SongbirdIntegration {
     /// Allocated ports
     allocated_ports: Arc<RwLock<HashMap<String, u16>>>,
     /// Discovered services
-    discovered_services: Arc<RwLock<HashMap<String, ServiceInstance>>>,
+    discovered_services: Arc<RwLock<HashMap<String, crate::types::ServiceInstance>>>,
     /// Background tasks
     background_tasks: Arc<RwLock<Vec<tokio::task::JoinHandle<()>>>>,
 }
@@ -168,12 +169,12 @@ impl SongbirdIntegration {
     pub async fn register_service(&self) -> Result<()> {
         info!("📝 Registering NestGate service with Songbird...");
 
-        let service = ServiceInstance {
+        let service = crate::api::ServiceInstance {
             id: uuid::Uuid::new_v4().to_string(),
             name: self.registration.name.clone(),
             host: format!("{}:{}", self.registration.address, self.registration.port),
             port: self.registration.port,
-            status: ServiceStatus::Running,
+            status: crate::api::ServiceStatus::Running,
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
         };
@@ -247,7 +248,7 @@ impl SongbirdIntegration {
 
                 // Implement actual health check
                 let _health_status = SongbirdIntegration::perform_health_check().await;
-                let _health_status = ServiceStatus::Running;
+                let _health_status = crate::api::ServiceStatus::Running;
 
                 debug!("💓 Sending health check to Songbird: {:?}", _health_status);
 
@@ -296,7 +297,7 @@ impl SongbirdIntegration {
     }
 
     /// Get all discovered services
-    pub async fn get_discovered_services(&self) -> HashMap<String, ServiceInstance> {
+    pub async fn get_discovered_services(&self) -> HashMap<String, crate::types::ServiceInstance> {
         let services = self.discovered_services.read().await;
         services.clone()
     }
@@ -336,7 +337,7 @@ impl SongbirdIntegration {
     }
 
     /// Perform health check
-    async fn perform_health_check() -> ServiceStatus {
+    async fn perform_health_check() -> crate::api::ServiceStatus {
         // Check system health indicators
         let mut healthy = true;
 
@@ -357,15 +358,15 @@ impl SongbirdIntegration {
 
         // Check if critical services are running
         if healthy {
-            ServiceStatus::Running
+            crate::api::ServiceStatus::Running
         } else {
-            ServiceStatus::Failed
+            crate::api::ServiceStatus::Failed
         }
     }
 
     /// Discover services from Songbird
     async fn discover_services(
-        discovered_services: &Arc<RwLock<HashMap<String, ServiceInstance>>>,
+        discovered_services: &Arc<RwLock<HashMap<String, crate::types::ServiceInstance>>>,
     ) {
         debug!("🔍 Discovering services from Songbird orchestrator...");
 
@@ -375,16 +376,20 @@ impl SongbirdIntegration {
         let mut services = discovered_services.write().await;
 
         // Example discovered service
-        let example_service = ServiceInstance {
+        let example_service = crate::types::ServiceInstance {
             id: "example-nestgate-1".to_string(),
             name: "nestgate".to_string(),
+            service_type: "storage".to_string(),
+            address: nestgate_core::constants::addresses::test_host_address(),
+            port: 8080,
             host: format!(
                 "{}:{}",
                 nestgate_core::constants::addresses::test_host_address(),
                 nestgate_core::constants::network::api_port()
             ),
-            port: 8080,
-            status: ServiceStatus::Running,
+            status: crate::types::ServiceStatus::Running,
+            metadata: std::collections::HashMap::new(),
+            last_seen: std::time::SystemTime::now(),
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
         };

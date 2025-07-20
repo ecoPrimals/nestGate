@@ -15,6 +15,7 @@ pub mod lifecycle;
 pub mod manager;
 pub mod prediction;
 pub mod types;
+pub mod universal_ai_connections;
 
 // Re-export main types and interfaces
 pub use analysis::*;
@@ -24,6 +25,7 @@ pub use lifecycle::DatasetLifecycleManager;
 pub use manager::IntelligentDatasetManager;
 pub use prediction::TierPredictor;
 pub use types::*;
+pub use universal_ai_connections::{UniversalAIConnection, UniversalAIConnectionPool};
 
 // Result type alias for convenience
 pub type Result<T> = std::result::Result<T, crate::types::AutomationError>;

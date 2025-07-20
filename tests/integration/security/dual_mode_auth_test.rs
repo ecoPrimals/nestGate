@@ -47,11 +47,10 @@ async fn test_standalone_full_workflow() {
 #[tokio::test]
 async fn test_beardog_integration_mode() {
     let config = BearDogConfig {
-        endpoint: "https://beardog.test:8443".to_string(),
-        api_key: "test-api-key-12345".to_string(),
-        trust_anchor: "system".to_string(),
+        discovery_timeout: Duration::from_secs(10),
         validation_timeout: nestgate_core::constants::test_defaults::TEST_SHORT_TIMEOUT,
         retry_attempts: 2,
+        fallback_to_standalone: false,
     };
 
     let mut validator = CertValidator::with_beardog(config);
@@ -89,9 +88,10 @@ async fn test_beardog_integration_mode() {
 #[tokio::test]
 async fn test_hybrid_mode_fallback() {
     let config = BearDogConfig {
-        endpoint: "https://invalid-beardog.test:8443".to_string(),
-        api_key: "invalid-key".to_string(),
-        ..Default::default()
+        discovery_timeout: Duration::from_secs(10),
+        validation_timeout: Duration::from_secs(30),
+        retry_attempts: 3,
+        fallback_to_standalone: true,
     };
 
     let mut validator = CertValidator::hybrid(config);

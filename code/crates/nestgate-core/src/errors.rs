@@ -45,7 +45,7 @@ pub enum Error {
 
     /// YAML serialization/deserialization error
     #[error("YAML error: {0}")]
-    Yaml(#[from] serde_yaml::Error),
+    Yaml(String),
 
     /// Configuration error
     #[error("Configuration error: {0}")]
@@ -78,4 +78,19 @@ pub enum Error {
     /// General error
     #[error("{0}")]
     General(String),
+
+    /// Songbird orchestrator error
+    #[error("Songbird error: {0}")]
+    Songbird(String),
+
+    /// Load balancer error
+    #[error("Load balancer error: {0}")]
+    LoadBalancer(String),
+
+    /// Not implemented error
+    #[error("Not implemented: {0}")]
+    NotImplemented(String),
 }
+
+/// Alias for SongbirdError for compatibility
+pub type SongbirdError = Error;

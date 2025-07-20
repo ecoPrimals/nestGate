@@ -304,8 +304,8 @@ impl From<tokio::time::error::Elapsed> for Error {
     }
 }
 
-/// Result type alias for convenience
-pub type Result<T> = std::result::Result<T, Error>;
+/// Use universal MCP result type from nestgate-core  
+pub type Result<T> = nestgate_core::McpResult<T>;
 
 /// Error Context for enhanced error tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]

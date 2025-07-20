@@ -219,8 +219,9 @@ fn print_help() {
     println!("ENVIRONMENT VARIABLES:");
     println!("    NESTGATE_PORT           API port (default: 8080)");
     println!("    NESTGATE_SERVICE_NAME   Service identifier (auto-generated if not set)");
-    println!("    ORCHESTRATION_URL       Enable distributed coordination (optional)");
-    println!("    SECURITY_URL            Enable encrypted federation (optional)");
+    println!("    SONGBIRD_URL            Enable distributed coordination (optional)");
+    println!("    BEARDOG_URL             Enable encrypted federation (optional)");
+    println!("    BEARDOG_ENABLED         Enable BearDog security features (optional)");
     println!();
     println!("EXAMPLES:");
     println!("    # Standalone mode (complete NAS functionality)");
@@ -229,11 +230,11 @@ fn print_help() {
     println!("    # Custom port");
     println!("    NESTGATE_PORT=9090 nestgate");
     println!();
-    println!("    # Distributed mode with orchestration module");
-    println!("    ORCHESTRATION_URL=http://orchestrator:8080 nestgate");
+    println!("    # Distributed mode with Songbird orchestration");
+    println!("    SONGBIRD_URL=http://songbird:8080 nestgate");
     println!();
-    println!("    # Full ecosystem with security module");
-    println!("    ORCHESTRATION_URL=http://orchestrator:8080 SECURITY_URL=https://security:8443 nestgate");
+    println!("    # Full ecosystem with BearDog security");
+    println!("    SONGBIRD_URL=http://songbird:8080 BEARDOG_URL=https://beardog:8443 nestgate");
     println!();
     println!("FEATURES:");
     println!("    ✅ ZFS pool management and tiered storage");
@@ -241,7 +242,7 @@ fn print_help() {
     println!("    ✅ Headless API with biomeOS UI integration");
     println!("    ✅ Snapshot and backup management");
     println!("    ✅ Performance monitoring and optimization");
-    println!("    🌐 Distributed coordination (with orchestration modules)");
-    println!("    🔐 Encrypted federation (with security modules)");
+    println!("    🌐 Distributed coordination (with Songbird orchestration)");
+    println!("    🔐 Encrypted federation (with BearDog security)");
     println!();
 }

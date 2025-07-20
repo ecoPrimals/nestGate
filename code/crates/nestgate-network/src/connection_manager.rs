@@ -1,18 +1,33 @@
-//! Connection Manager - ALL connections MUST go through Songbird
+//! Connection Manager - Universal network connection management
 //!
-//! This module enforces that every network connection, port allocation,
-//! and service communication goes through the Songbird orchestrator.
-//! NO DIRECT CONNECTIONS ALLOWED.
+//! This module provides universal connection management that can work
+//! with any orchestration provider or in standalone mode.
 
+use crate::{NetworkError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, error, info, warn};
 
-use crate::{Result, SongbirdClient};
+use crate::api::SongbirdClient;
 
-/// Connection types that must be managed by Songbird
+/// Universal connection manager for network services
+pub struct ConnectionManager;
+
+impl ConnectionManager {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl Default for ConnectionManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Connection types that can be managed universally
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ConnectionType {
     /// API service connection
@@ -334,7 +349,7 @@ impl SongbirdClient {
             );
             Ok(connection_response)
         } else {
-            Err(nestgate_core::NestGateError::Internal(format!(
+            Err(NetworkError::ConnectionFailed(format!(
                 "Connection request failed: HTTP {}",
                 response.status()
             )))

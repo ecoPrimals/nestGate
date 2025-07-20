@@ -4,15 +4,11 @@
 //! external dependencies or complex streaming protocols.
 
 use anyhow::Result;
-use futures::stream::StreamExt;
-use nestgate_api::{
-    event_coordination::{CoordinatedEvent, CoordinatedEventType, EventCoordinator},
-    CommunicationManager,
-};
+use nestgate_api::event_coordination::{CoordinatedEvent, CoordinatedEventType, EventCoordinator};
 use serde_json::{json, Value};
 use std::time::SystemTime;
 use tokio::time::{sleep, Duration};
-use tracing::{info, warn};
+use tracing::info;
 use uuid::Uuid;
 
 /// Simplified streaming client for demonstration
@@ -21,6 +17,12 @@ pub struct StreamingClient {
     event_coordinator: EventCoordinator,
     /// Client ID for tracking
     client_id: Uuid,
+}
+
+impl Default for StreamingClient {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl StreamingClient {
@@ -48,7 +50,7 @@ impl StreamingClient {
         info!("🔄 Starting storage event consumption...");
 
         // Simulate receiving storage events
-        let storage_events = vec![
+        let storage_events = [
             json!({
                 "event_type": "dataset_created",
                 "dataset": "/storage/demo-dataset",
@@ -71,7 +73,7 @@ impl StreamingClient {
 
         for (i, event_data) in storage_events.iter().enumerate() {
             info!("📦 Received storage event {}: {}", i + 1, event_data);
-            
+
             // Create coordinated event
             let coordinated_event = CoordinatedEvent {
                 event_id: Uuid::new_v4(),
@@ -82,13 +84,15 @@ impl StreamingClient {
             };
 
             // Process the event
-            self.event_coordinator.emit_event(coordinated_event).await
+            self.event_coordinator
+                .emit_event(coordinated_event)
+                .await
                 .map_err(|e| anyhow::anyhow!("Failed to emit event: {}", e))?;
 
             // Simulate processing time
             sleep(Duration::from_millis(200)).await;
         }
-        
+
         info!("✅ Storage event consumption completed");
         Ok(())
     }
@@ -96,9 +100,9 @@ impl StreamingClient {
     /// Simulate streaming metrics
     pub async fn consume_metrics_stream(&self) -> Result<()> {
         info!("📊 Starting metrics stream consumption...");
-        
+
         // Simulate receiving metrics
-        let metrics = vec![
+        let metrics = [
             json!({
                 "timestamp": SystemTime::now(),
                 "cpu_usage": 45.2,
@@ -133,15 +137,17 @@ impl StreamingClient {
                 data: metric.clone(),
                 timestamp: SystemTime::now(),
             };
-            
+
             // Process the metric
-            self.event_coordinator.emit_event(coordinated_event).await
+            self.event_coordinator
+                .emit_event(coordinated_event)
+                .await
                 .map_err(|e| anyhow::anyhow!("Failed to emit metric: {}", e))?;
-                
+
             // Simulate processing time
             sleep(Duration::from_millis(300)).await;
         }
-        
+
         info!("✅ Metrics stream consumption completed");
         Ok(())
     }
@@ -149,7 +155,7 @@ impl StreamingClient {
     /// Simulate executing storage operations
     pub async fn execute_storage_operation(&self, operation_type: &str) -> Result<Value> {
         info!("🔧 Executing storage operation: {}", operation_type);
-        
+
         // Simulate different storage operations
         let result = match operation_type {
             "create_dataset" => json!({
@@ -177,10 +183,10 @@ impl StreamingClient {
                 "message": format!("Unknown operation: {}", operation_type)
             }),
         };
-        
+
         // Simulate operation time
         sleep(Duration::from_millis(500)).await;
-        
+
         info!("✅ Storage operation completed: {}", result);
         Ok(result)
     }
@@ -188,7 +194,7 @@ impl StreamingClient {
     /// Get client statistics
     pub async fn get_stats(&self) -> Result<Value> {
         let stats = self.event_coordinator.get_stats().await;
-        
+
         Ok(json!({
             "client_id": self.client_id,
             "event_stats": {
@@ -204,10 +210,10 @@ impl StreamingClient {
     /// Disconnect from the streaming system
     pub async fn disconnect(&self) -> Result<()> {
         info!("Disconnecting streaming client {}", self.client_id);
-        
+
         // Simulate disconnection process
         sleep(Duration::from_millis(50)).await;
-        
+
         info!("✅ Streaming client disconnected");
         Ok(())
     }
@@ -225,7 +231,7 @@ async fn main() -> Result<()> {
 
     // Connect to streaming system
     client.connect().await?;
-    
+
     // Demo 1: Storage event consumption
     info!("📡 Demo 1: Storage Event Consumption");
     client.consume_storage_events().await?;
@@ -233,11 +239,11 @@ async fn main() -> Result<()> {
     // Demo 2: Metrics stream consumption
     info!("📊 Demo 2: Metrics Stream Consumption");
     client.consume_metrics_stream().await?;
-    
+
     // Demo 3: Storage operations
     info!("🔧 Demo 3: Storage Operations");
     let operations = vec!["create_dataset", "list_datasets", "get_pool_status"];
-    
+
     for operation in operations {
         client.execute_storage_operation(operation).await?;
     }
@@ -245,11 +251,14 @@ async fn main() -> Result<()> {
     // Demo 4: Client statistics
     info!("📈 Demo 4: Client Statistics");
     let stats = client.get_stats().await?;
-    info!("Client Statistics: {}", serde_json::to_string_pretty(&stats)?);
-    
+    info!(
+        "Client Statistics: {}",
+        serde_json::to_string_pretty(&stats)?
+    );
+
     // Disconnect
     client.disconnect().await?;
-    
+
     info!("🎉 Simplified Streaming Client Demo completed successfully!");
     Ok(())
 }
@@ -261,18 +270,18 @@ mod tests {
     #[tokio::test]
     async fn test_streaming_client_lifecycle() {
         let client = StreamingClient::new();
-        
+
         // Test connection
         assert!(client.connect().await.is_ok());
-        
+
         // Test storage operation
         let result = client.execute_storage_operation("get_pool_status").await;
         assert!(result.is_ok());
-        
+
         // Test statistics
         let stats = client.get_stats().await;
         assert!(stats.is_ok());
-        
+
         // Test disconnection
         assert!(client.disconnect().await.is_ok());
     }
@@ -280,10 +289,10 @@ mod tests {
     #[tokio::test]
     async fn test_event_consumption() {
         let client = StreamingClient::new();
-        
+
         // Test storage event consumption
         assert!(client.consume_storage_events().await.is_ok());
-        
+
         // Test metrics consumption
         assert!(client.consume_metrics_stream().await.is_ok());
     }

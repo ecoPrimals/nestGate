@@ -487,6 +487,9 @@ impl From<std::num::ParseIntError> for ZfsError {
     }
 }
 
+/// Convenient Result type for ZFS operations
+pub type Result<T> = std::result::Result<T, ZfsError>;
+
 // Add missing conversion for nestgate_core::NestGateError
 
 #[cfg(test)]
@@ -539,6 +542,3 @@ mod tests {
         assert_eq!(context.component, "pool_manager");
     }
 }
-
-/// Convenient Result type for ZFS operations
-pub type Result<T> = std::result::Result<T, ZfsError>;

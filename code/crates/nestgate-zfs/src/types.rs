@@ -184,40 +184,29 @@ impl From<StorageTier> for nestgate_core::StorageTier {
 // Advanced features types
 
 /// Advanced configuration for ZFS features
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AdvancedConfig {
-    /// Enable AI-powered features
-    pub ai_enabled: bool,
-    /// Enable predictive analytics
-    pub predictive_analytics: bool,
-    /// Enable intelligent replication
-    pub intelligent_replication: bool,
-    /// Enable advanced snapshots
-    pub advanced_snapshots: bool,
+    /// Enable compression analysis
+    pub compression_analysis: bool,
+    /// Enable cache performance monitoring
+    pub cache_monitoring: bool,
+    /// Enable replication analytics
+    pub replication_analytics: bool,
+    /// Enable snapshot analytics
+    pub snapshot_analytics: bool,
 }
 
-impl Default for AdvancedConfig {
-    fn default() -> Self {
-        Self {
-            ai_enabled: false,
-            predictive_analytics: false,
-            intelligent_replication: false,
-            advanced_snapshots: false,
-        }
-    }
-}
-
-/// Capacity forecast results
+/// Capacity monitoring report
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CapacityForecast {
+pub struct CapacityReport {
     /// Dataset name
     pub dataset: String,
-    /// Predicted usage percentage
-    pub predicted_usage: f64,
-    /// Confidence level (0.0-1.0)
-    pub confidence: f64,
-    /// Time horizon in days
-    pub time_horizon: u64,
+    /// Current usage percentage
+    pub current_usage: f64,
+    /// Growth rate (bytes per day)
+    pub growth_rate: f64,
+    /// Projected days until full (if growth continues)
+    pub projected_days_to_full: Option<u32>,
 }
 
 /// Bottleneck analysis report
@@ -231,9 +220,9 @@ pub struct BottleneckReport {
     pub recommendations: Vec<String>,
 }
 
-/// Maintenance plan
+/// Maintenance schedule based on system metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MaintenancePlan {
+pub struct MaintenanceSchedule {
     /// Dataset name
     pub dataset: String,
     /// Scheduled tasks
@@ -266,47 +255,6 @@ impl Default for ReplicationPerformance {
             throughput: 0.0,
         }
     }
-}
-
-/// Replication optimization recommendations
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ReplicationOptimization {
-    /// Source dataset
-    pub source: String,
-    /// Target datasets
-    pub targets: Vec<String>,
-    /// Recommended strategy
-    pub recommended_strategy: String,
-    /// Expected improvement percentage
-    pub expected_improvement: f64,
-    /// Implementation steps
-    pub implementation_steps: Vec<String>,
-}
-
-/// Snapshot optimization recommendations
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SnapshotOptimization {
-    /// Dataset name
-    pub dataset: String,
-    /// Retention recommendations
-    pub retention_recommendations: Vec<String>,
-    /// Cleanup candidates
-    pub cleanup_candidates: Vec<String>,
-    /// Expected space savings in bytes
-    pub space_savings: u64,
-}
-
-/// Retention optimization recommendations
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RetentionOptimization {
-    /// Dataset name
-    pub dataset: String,
-    /// Optimized retention policy
-    pub optimized_policy: RetentionPolicy,
-    /// Expected space savings in bytes
-    pub expected_savings: u64,
-    /// Implementation plan
-    pub implementation_plan: Vec<String>,
 }
 
 /// Retention policy configuration
@@ -361,8 +309,20 @@ pub struct SystemInfo {
     pub disk_usage: f64,
     /// Network I/O rate
     pub network_io: f64,
+    /// I/O wait percentage
+    pub io_wait: f64,
+    /// Used space in bytes
+    pub used_space: u64,
+    /// Total space in bytes
+    pub total_space: u64,
+    /// Days since last scrub
+    pub last_scrub_days: u32,
+    /// Number of snapshots
+    pub snapshot_count: u32,
+    /// Fragmentation percentage
+    pub fragmentation: f64,
     /// Timestamp
-    pub timestamp: SystemTime,
+    pub timestamp: u64,
 }
 
 impl Default for SystemInfo {
@@ -372,7 +332,16 @@ impl Default for SystemInfo {
             memory_usage: 0.0,
             disk_usage: 0.0,
             network_io: 0.0,
-            timestamp: SystemTime::now(),
+            io_wait: 0.0,
+            used_space: 0,
+            total_space: 1024 * 1024 * 1024 * 1024, // 1TB default
+            last_scrub_days: 0,
+            snapshot_count: 0,
+            fragmentation: 0.0,
+            timestamp: SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
         }
     }
 }

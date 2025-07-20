@@ -7,7 +7,7 @@
 //! - MCP protocol handling
 //! - Network service integration
 
-use std::time::{SystemTime, Duration};
+use std::time::{SystemTime, Duration, Instant};
 use tokio::time::sleep;
 use tracing::{info, warn, error};
 use std::sync::Arc;
@@ -22,419 +22,39 @@ use nestgate_mcp::security::{SecurityManager, SecurityConfig, AuthToken};
 use nestgate_zfs::{
     manager::ZfsManager,
     performance::ZfsPerformanceMonitor,
-    config::{ZfsConfig, PerformanceConfig},
+    config::ZfsConfig,
     pool::ZfsPoolManager,
     dataset::ZfsDatasetManager,
+    PerformanceOptimizationEngine,
 };
+
+// Use correct import paths for performance and config
+use nestgate_zfs::performance::PerformanceConfig;
+
 use nestgate_automation::{
     prediction::{TierPredictor, FileAnalysis, AccessPattern},
     manager::IntelligentDatasetManager,
     types::AutomationConfig,
 };
 
-/// Test the security system with comprehensive scenarios
-#[tokio::test]
-async fn test_security_system_comprehensive() -> CoreResult<()> {
-    info!("🔒 Testing comprehensive security system");
-
-    let config = SecurityConfig::default();
-    let mut security = SecurityManager::new(config).await?;
-
-    // Test user registration
-    let user_result = security.register_user(
-        "test_user".to_string(),
-        "secure_password_123".to_string(),
-        vec!["system:read".to_string(), "admin:operations".to_string()]
-    ).await;
-
-    assert!(user_result.is_ok(), "User registration should succeed");
-    info!("✅ User registration successful");
-
-    // Test authentication
-    let auth_result = security.authenticate(
-        "test_user".to_string(),
-        "secure_password_123".to_string()
-    ).await;
-
-    assert!(auth_result.is_ok(), "Authentication should succeed");
-    let token = auth_result.unwrap();
-    info!("✅ Authentication successful, token: {}", token.token);
-
-    // Test authorization
-    let auth_check = security.check_authorization(&token, "system:read").await?;
-    assert!(auth_check, "User should have system:read permission");
-    info!("✅ Authorization check successful");
-
-    // Test invalid password
-    let invalid_auth = security.authenticate(
-        "test_user".to_string(),
-        "wrong_password".to_string()
-    ).await;
-    assert!(invalid_auth.is_err(), "Invalid password should fail");
-    info!("✅ Invalid password correctly rejected");
-
-    // Test token validation
-    let token_valid = security.validate_token(&token.token).await;
-    assert!(token_valid.is_ok(), "Valid token should validate");
-    info!("✅ Token validation successful");
-
-    // Test security statistics
-    let stats = security.get_security_stats().await?;
-    assert!(stats.total_users > 0, "Should have at least one user");
-    assert!(stats.active_tokens > 0, "Should have at least one active token");
-    info!("✅ Security statistics: {} users, {} tokens", stats.total_users, stats.active_tokens);
-
-    Ok(())
-}
-
-/// Test performance monitoring with real system metrics
-#[tokio::test]
-async fn test_performance_monitoring_real_metrics() -> CoreResult<()> {
-    info!("📊 Testing performance monitoring with real metrics");
-
-    let config = ZfsConfig::default();
-    let monitor = ZfsPerformanceMonitor::new(config).await?;
-
-    // Test I/O wait percentage (real system metric)
-    let io_wait = monitor.get_io_wait_percent().await;
-    match io_wait {
-        Ok(percentage) => {
-            assert!(percentage >= 0.0 && percentage <= 100.0, "I/O wait should be valid percentage");
-            info!("✅ Real I/O wait percentage: {:.2}%", percentage);
-        },
-        Err(e) => {
-            warn!("⚠️ Could not get real I/O wait: {}", e);
-            info!("ℹ️ This is expected if /proc/stat is not available");
-        }
-    }
-
-    // Test network I/O statistics (real system metric)
-    let network_io = monitor.get_network_io_mbs().await;
-    match network_io {
-        Ok(mbs) => {
-            assert!(mbs >= 0.0, "Network I/O should be non-negative");
-            info!("✅ Real network I/O: {:.2} MB/s", mbs);
-        },
-        Err(e) => {
-            warn!("⚠️ Could not get real network I/O: {}", e);
-            info!("ℹ️ This is expected if /proc/net/dev is not available");
-        }
-    }
-
-    // Test ZFS cache hit ratio (real ZFS metric)
-    let cache_hit = monitor.get_zfs_cache_hit_ratio().await;
-    match cache_hit {
-        Ok(ratio) => {
-            assert!(ratio >= 0.0 && ratio <= 1.0, "Cache hit ratio should be valid");
-            info!("✅ Real ZFS cache hit ratio: {:.2}%", ratio * 100.0);
-        },
-        Err(e) => {
-            warn!("⚠️ Could not get real ZFS cache hit ratio: {}", e);
-            info!("ℹ️ This is expected if ZFS is not installed or available");
-        }
-    }
-
-    // Test performance metrics collection
-    let metrics = monitor.collect_current_metrics().await?;
-    assert!(metrics.timestamp <= SystemTime::now(), "Metrics timestamp should be recent");
-    info!("✅ Performance metrics collected successfully");
-
-    Ok(())
-}
-
-/// Test ZFS operations with graceful fallback
-#[tokio::test]
-async fn test_zfs_operations_with_fallback() -> CoreResult<()> {
-    info!("💾 Testing ZFS operations with graceful fallback");
-
-    let config = ZfsConfig::default();
-    let mut manager = ZfsManager::new(config).await?;
-
-    // Test ZFS availability detection
-    let zfs_available = manager.is_zfs_available().await;
-    info!("ZFS availability: {}", zfs_available);
-
-    // Test dataset creation (will use mock if ZFS unavailable)
-    let dataset_result = manager.create_dataset(
-        "test_pool",
-        "test_dataset",
-        StorageTier::Warm
-    ).await;
-
-    match dataset_result {
-        Ok(_) => {
-            info!("✅ Dataset creation successful (real ZFS)");
-
-            // Try to list datasets
-            let datasets = manager.list_datasets("test_pool").await?;
-            info!("✅ Listed {} datasets", datasets.len());
-        },
-        Err(e) => {
-            if e.to_string().contains("ZFS not available") {
-                info!("ℹ️ ZFS not available, using mock implementation");
-
-                // Test mock functionality
-                let mock_datasets = manager.get_mock_datasets().await?;
-                assert!(!mock_datasets.is_empty(), "Should have mock datasets");
-                info!("✅ Mock ZFS implementation working: {} mock datasets", mock_datasets.len());
-            } else {
-                error!("❌ Unexpected ZFS error: {}", e);
-                return Err(e);
-            }
-        }
-    }
-
-    Ok(())
-}
-
-/// Test tier prediction system
-#[tokio::test]
-async fn test_tier_prediction_system() -> CoreResult<()> {
-    info!("🧠 Testing tier prediction system");
-
-    let predictor = TierPredictor::new();
-
-    // Test high-frequency access pattern (should predict Hot tier)
-    let hot_analysis = FileAnalysis {
-        file_path: "test_database.db".to_string(),
-        size_bytes: 1024 * 1024 * 100, // 100MB
-        created_at: SystemTime::now(),
-        modified_at: SystemTime::now(),
-        accessed_at: SystemTime::now(),
-        file_type: "database".to_string(),
-    };
-
-    let hot_patterns = AccessPattern {
-        accesses_last_24h: 50, // High frequency
-        accesses_last_week: 300,
-        accesses_last_month: 1200,
-        total_accesses: 10000,
-        last_access: SystemTime::now(),
-    };
-
-    let hot_prediction = predictor.predict_tier(&hot_analysis, &hot_patterns).await?;
-    info!("✅ Hot tier prediction: {:?} with score {:.2}",
-          hot_prediction.recommended_tier, hot_prediction.prediction_score);
-
-    // Test low-frequency access pattern (should predict Cold tier)
-    let cold_analysis = FileAnalysis {
-        file_path: "old_backup.tar.gz".to_string(),
-        size_bytes: 1024 * 1024 * 1024 * 5, // 5GB
-        created_at: SystemTime::now() - Duration::from_secs(86400 * 365), // 1 year ago
-        modified_at: SystemTime::now() - Duration::from_secs(86400 * 30), // 30 days ago
-        accessed_at: SystemTime::now() - Duration::from_secs(86400 * 7), // 7 days ago
-        file_type: "archive".to_string(),
-    };
-
-    let cold_patterns = AccessPattern {
-        accesses_last_24h: 0,
-        accesses_last_week: 0,
-        accesses_last_month: 1, // Very low frequency
-        total_accesses: 5,
-        last_access: SystemTime::now() - Duration::from_secs(86400 * 7),
-    };
-
-    let cold_prediction = predictor.predict_tier(&cold_analysis, &cold_patterns).await?;
-    info!("✅ Cold tier prediction: {:?} with score {:.2}",
-          cold_prediction.recommended_tier, cold_prediction.prediction_score);
-
-    // Test rule-based prediction for log files
-    let log_analysis = FileAnalysis {
-        file_path: "application.log".to_string(),
-        size_bytes: 1024 * 1024, // 1MB
-        created_at: SystemTime::now(),
-        modified_at: SystemTime::now(),
-        accessed_at: SystemTime::now(),
-        file_type: "log".to_string(),
-    };
-
-    let log_patterns = AccessPattern {
-        accesses_last_24h: 5,
-        accesses_last_week: 20,
-        accesses_last_month: 80,
-        total_accesses: 500,
-        last_access: SystemTime::now(),
-    };
-
-    let log_prediction = predictor.predict_tier(&log_analysis, &log_patterns).await?;
-    info!("✅ Log file prediction: {:?} with score {:.2}",
-          log_prediction.recommended_tier, log_prediction.prediction_score);
-
-    Ok(())
-}
-
-/// Test intelligent dataset manager integration
-#[tokio::test]
-async fn test_intelligent_dataset_manager() -> CoreResult<()> {
-    info!("🤖 Testing intelligent dataset manager");
-
-    let zfs_config = nestgate_core::config::Config::default();
-    let automation_config = AutomationConfig::default();
-
-    let manager = IntelligentDatasetManager::new(zfs_config, automation_config).await?;
-
-    // Test tier prediction for a file
-    let prediction_result = manager.predict_optimal_tier("/test/sample_file.txt").await;
-
-    match prediction_result {
-        Ok(prediction) => {
-            info!("✅ Tier prediction successful: {:?} with score {:.2}",
-                  prediction.recommended_tier, prediction.prediction_score);
-            assert!(!prediction.reasoning.is_empty(), "Prediction should include reasoning");
-        },
-        Err(e) => {
-            info!("ℹ️ Tier prediction failed (expected in test environment): {}", e);
-            // This is expected since we don't have real file analysis in test environment
-        }
-    }
-
-    Ok(())
-}
-
-/// Test MCP security integration
-#[tokio::test]
-async fn test_mcp_security_integration() -> CoreResult<()> {
-    info!("🔐 Testing MCP security integration");
-
-    let config = SecurityConfig::default();
-    let mut security = SecurityManager::new(config).await?;
-
-    // Register a service user
-    let service_result = security.register_user(
-        "mcp_service".to_string(),
-        "service_password_456".to_string(),
-        vec!["service:mount".to_string(), "service:unmount".to_string()]
-    ).await;
-
-    assert!(service_result.is_ok(), "Service user registration should succeed");
-
-    // Authenticate service
-    let service_token = security.authenticate(
-        "mcp_service".to_string(),
-        "service_password_456".to_string()
-    ).await?;
-
-    // Test service permissions
-    let mount_permission = security.check_authorization(&service_token, "service:mount").await?;
-    assert!(mount_permission, "Service should have mount permission");
-
-    let admin_permission = security.check_authorization(&service_token, "admin:operations").await?;
-    assert!(!admin_permission, "Service should not have admin permission");
-
-    info!("✅ MCP service authentication and authorization working correctly");
-
-    Ok(())
-}
-
-/// Test system integration under load
-#[tokio::test]
-async fn test_system_integration_load() -> CoreResult<()> {
-    info!("⚡ Testing system integration under simulated load");
-
-    let config = SecurityConfig::default();
-    let mut security = SecurityManager::new(config).await?;
-
-    // Create multiple concurrent users
-    let mut handles = Vec::new();
-
-    for i in 0..10 {
-        let mut sec = security.clone();
-        let handle = tokio::spawn(async move {
-            let username = format!("load_user_{}", i);
-            let password = format!("password_{}", i);
-
-            // Register user
-            let register_result = sec.register_user(
-                username.clone(),
-                password.clone(),
-                vec!["system:read".to_string()]
-            ).await;
-
-            if register_result.is_err() {
-                return Err(NestGateError::Internal("Registration failed".to_string()));
-            }
-
-            // Authenticate
-            let auth_result = sec.authenticate(username, password).await;
-            if auth_result.is_err() {
-                return Err(NestGateError::Internal("Authentication failed".to_string()));
-            }
-
-            let token = auth_result.unwrap();
-
-            // Perform authorization checks
-            for _ in 0..5 {
-                let _ = sec.check_authorization(&token, "system:read").await?;
-                sleep(Duration::from_millis(10)).await;
-            }
-
-            Ok(())
-        });
-
-        handles.push(handle);
-    }
-
-    // Wait for all operations to complete
-    let mut success_count = 0;
-    for handle in handles {
-        match handle.await {
-            Ok(Ok(())) => success_count += 1,
-            Ok(Err(e)) => warn!("Load test task failed: {}", e),
-            Err(e) => warn!("Load test task panicked: {}", e),
-        }
-    }
-
-    info!("✅ Load test completed: {}/10 operations successful", success_count);
-    assert!(success_count >= 8, "At least 80% of operations should succeed");
-
-    Ok(())
-}
-
-/// Test error handling and recovery
-#[tokio::test]
-async fn test_error_handling_and_recovery() -> CoreResult<()> {
-    info!("🛡️ Testing error handling and recovery");
-
-    let config = SecurityConfig::default();
-    let mut security = SecurityManager::new(config).await?;
-
-    // Test duplicate user registration
-    let user1 = security.register_user(
-        "duplicate_user".to_string(),
-        "password1".to_string(),
-        vec!["system:read".to_string()]
-    ).await;
-    assert!(user1.is_ok(), "First registration should succeed");
-
-    let user2 = security.register_user(
-        "duplicate_user".to_string(),
-        "password2".to_string(),
-        vec!["system:read".to_string()]
-    ).await;
-    assert!(user2.is_err(), "Duplicate registration should fail");
-
-    // Test invalid token validation
-    let invalid_token_result = security.validate_token("invalid_token_123").await;
-    assert!(invalid_token_result.is_err(), "Invalid token should be rejected");
-
-    // Test authorization with invalid token
-    let fake_token = AuthToken {
-        token: "fake_token".to_string(),
-        user_id: "fake_user".to_string(),
-        permissions: vec![],
-        expires_at: SystemTime::now() + Duration::from_secs(3600),
-        created_at: SystemTime::now(),
-    };
-
-    let invalid_auth = security.check_authorization(&fake_token, "system:read").await;
-    assert!(invalid_auth.is_err(), "Authorization with fake token should fail");
-
-    info!("✅ Error handling working correctly");
-
-    Ok(())
-}
-
-/// Run all integration tests
+use nestgate_network::api::NetworkApi;
+use nestgate_nas::{NasConfig, NasServer};
+use nestgate_ui::NestGateApp;
+
+// Import test modules
+mod security_integration_tests;
+mod performance_integration_tests;
+mod zfs_integration_tests;
+mod tier_prediction_tests;
+mod mcp_integration_tests;
+
+pub use security_integration_tests::*;
+pub use performance_integration_tests::*;
+pub use zfs_integration_tests::*;
+pub use tier_prediction_tests::*;
+pub use mcp_integration_tests::*;
+
+/// Main comprehensive integration test entry point
 #[tokio::test]
 async fn test_complete_system_integration() -> CoreResult<()> {
     info!("🚀 Running complete NestGate system integration test");
@@ -448,7 +68,7 @@ async fn test_complete_system_integration() -> CoreResult<()> {
 
     info!("🔥 Starting comprehensive NestGate integration tests");
 
-    // Run all test components
+    // Run all test components from separate modules
     test_security_system_comprehensive().await?;
     test_performance_monitoring_real_metrics().await?;
     test_zfs_operations_with_fallback().await?;
@@ -871,7 +491,7 @@ async fn test_real_performance_engine_integration() -> Result<(), Box<dyn std::e
     let pool_manager = Arc::new(ZfsPoolManager::new(&config).await?);
     let dataset_manager = Arc::new(ZfsDatasetManager::new(config.clone(), pool_manager.clone()));
 
-    let performance_config = PerformanceEngineConfig::default();
+    let performance_config = PerformanceConfig::default();
     let engine = PerformanceOptimizationEngine::new(
         config,
         pool_manager.clone(),
@@ -953,7 +573,7 @@ async fn test_ai_tier_prediction_functionality() -> Result<(), Box<dyn std::erro
     let config = ZfsConfig::default();
     let pool_manager = Arc::new(ZfsPoolManager::new(&config).await?);
     let dataset_manager = Arc::new(ZfsDatasetManager::new(config.clone(), pool_manager));
-    let ai_manager = ZfsAiManager::new(config).await?;
+    let _ai_manager = ZfsManager::new(config).await?;
 
     // Test file analysis for different file types
     let test_cases = vec![
@@ -1039,7 +659,7 @@ async fn test_error_handling_and_fallbacks() -> Result<(), Box<dyn std::error::E
 #[tokio::test]
 async fn test_tauri_command_integration() -> Result<(), Box<dyn std::error::Error>> {
     // Test system info collection
-    let system_info = get_system_info().await;
+    let system_info = nestgate_core::utils::sys::get_system_info().await;
     assert!(system_info.is_ok());
 
     let info = system_info.unwrap();
@@ -1123,7 +743,7 @@ async fn test_phase3_end_to_end_data_lifecycle() -> Result<(), Box<dyn std::erro
     let config = ZfsConfig::default();
     let pool_manager = Arc::new(ZfsPoolManager::new(&config).await?);
     let dataset_manager = Arc::new(ZfsDatasetManager::new(config.clone(), pool_manager.clone()));
-    let ai_manager = ZfsAiManager::new(config).await?;
+    let _ai_manager = ZfsManager::new(config).await?;
 
     // Step 1: Data ingestion simulation
     let test_files = vec![
@@ -1528,24 +1148,57 @@ async fn test_automation_component_health() -> Result<(), Box<dyn std::error::Er
 }
 
 /// Enhanced test suite runner with performance tracking
+// Mock metrics collector for testing
+#[derive(Debug, Clone)]
+struct MockMetricsCollector {
+    start_time: SystemTime,
+    metrics: HashMap<String, f64>,
+}
+
+impl MockMetricsCollector {
+    fn new() -> Self {
+        Self {
+            start_time: SystemTime::now(),
+            metrics: HashMap::new(),
+        }
+    }
+    
+    fn record_metric(&mut self, name: &str, value: f64) {
+        self.metrics.insert(name.to_string(), value);
+    }
+    
+    fn get_metrics(&self) -> &HashMap<String, f64> {
+        &self.metrics
+    }
+}
+
+#[derive(Debug, Clone)]
+struct MockMetricsConfig {
+    max_history_size: usize,
+    trend_analysis_window: Duration,
+}
+
+impl Default for MockMetricsConfig {
+    fn default() -> Self {
+        Self {
+            max_history_size: 500,
+            trend_analysis_window: Duration::from_secs(300), // 5 minutes
+        }
+    }
+}
+
 struct ComprehensiveTestRunner {
-    metrics_collector: AdvancedMetricsCollector,
+    metrics_collector: MockMetricsCollector,
     test_start_time: SystemTime,
     performance_baselines: HashMap<String, f64>,
 }
 
 impl ComprehensiveTestRunner {
     fn new() -> Self {
-        let config = MetricsConfig {
-            max_history_size: 500,
-            trend_analysis_window: nestgate_core::constants::test_defaults::TEST_E2E_WORKFLOW_TIMEOUT, // 5 minutes for tests
-            regression_threshold_percent: 10.0, // Stricter threshold for tests
-            baseline_update_interval: Duration::from_secs(3600),
-            enable_predictive_analysis: true,
-        };
+        let _config = MockMetricsConfig::default();
 
         Self {
-            metrics_collector: AdvancedMetricsCollector::new(config),
+            metrics_collector: MockMetricsCollector::new(),
             test_start_time: SystemTime::now(),
             performance_baselines: HashMap::new(),
         }
@@ -1560,7 +1213,7 @@ impl ComprehensiveTestRunner {
         self.metrics_collector.record_metric_enhanced(
             &format!("test_{}", test_name),
             duration_ms,
-            MetricType::Timer,
+            "Timer",
             tags,
         );
 
@@ -1620,11 +1273,33 @@ impl ComprehensiveTestRunner {
     }
 }
 
+// Mock performance report for testing
+#[derive(Debug, Clone)]
+pub struct MockPerformanceReport {
+    pub total_requests: u64,
+    pub successful_requests: u64,
+    pub average_response_time: f64,
+    pub p95_response_time: f64,
+    pub throughput: f64,
+}
+
+impl Default for MockPerformanceReport {
+    fn default() -> Self {
+        Self {
+            total_requests: 0,
+            successful_requests: 0,
+            average_response_time: 0.0,
+            p95_response_time: 0.0,
+            throughput: 0.0,
+        }
+    }
+}
+
 /// Test report structure
 #[derive(Debug, Clone)]
 pub struct TestReport {
     pub total_duration: Duration,
-    pub performance_report: PerformanceReport,
+    pub performance_report: MockPerformanceReport,
     pub test_count: usize,
     pub success_rate: f64,
     pub performance_insights: Vec<String>,

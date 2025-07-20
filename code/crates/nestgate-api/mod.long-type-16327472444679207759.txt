@@ -1,0 +1,2 @@
+fn(axum::extract::State<types::ZfsApiState>, Json<types::CreateDatasetRequest>) -> impl Future<Output = Json<types::ApiResponse<()>>> {basic::create_dataset}
+fn(axum::extract::State<types::ZfsApiState>, Json<types::CreateDatasetRequest>) -> impl Future<Output = Json<types::ApiResponse<()>>> {basic::create_dataset}: Handler<_, _>

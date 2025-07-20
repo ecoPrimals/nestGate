@@ -10,12 +10,23 @@ pub struct DownloadManager {
 }
 
 impl DownloadManager {
+    /// Create a new download manager
+    #[must_use]
     pub fn new() -> Self {
         Self {
-            client: Client::new(),
+            client: reqwest::Client::new(),
         }
     }
 
+    /// Download a specific release to the target directory
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The release version is not found
+    /// - Network request fails
+    /// - File download fails
+    /// - Target directory cannot be created
     pub async fn download_release(&self, version: &str, target_dir: &PathBuf) -> Result<PathBuf> {
         let platform_info = crate::platform::PlatformInfo::detect();
         let _binary_name = platform_info.get_binary_name("nestgate");
@@ -61,12 +72,28 @@ impl DownloadManager {
         Ok(archive_path)
     }
 
+    /// Check for the latest available release version
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - GitHub API request fails
+    /// - Network connection issues
+    /// - Invalid API response format
     pub async fn check_latest_version(&self) -> Result<String> {
         // In production, this would query GitHub API
         // Retrieve actual latest version from release API
         Ok("0.9.2".to_string())
     }
 
+    /// Extract downloaded archive to target directory
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Archive file cannot be read
+    /// - Extraction fails
+    /// - Target directory cannot be created
     pub fn extract_archive(&self, _archive_path: &Path, target_dir: &Path) -> Result<()> {
         println!("Extracting archive to {}", target_dir.display());
 
@@ -103,6 +130,14 @@ impl DownloadManager {
         Ok(())
     }
 
+    /// Verify that the installation completed successfully
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Required files are missing
+    /// - Binary is not executable
+    /// - Configuration files are invalid
     pub fn verify_installation(&self, install_dir: &Path) -> Result<()> {
         let binary_path = install_dir.join("bin").join("nestgate");
         let config_path = install_dir.join("etc").join("nestgate.toml");

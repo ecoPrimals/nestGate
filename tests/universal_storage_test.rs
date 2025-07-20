@@ -98,11 +98,11 @@ async fn test_multi_protocol_support() {
 
     for protocol in protocols {
         let backend = StorageBackend {
-            name: format!("test-{:?}", protocol),
+            name: format!("test-{protocol:?}"),
             protocol: protocol.clone(),
             capabilities: vec![StorageCapability::ReadWrite],
             health_status: "healthy".to_string(),
-            endpoint: format!("/test/{:?}", protocol),
+            endpoint: format!("/test/{protocol:?}"),
         };
 
         let result = manager.register_storage_backend(backend).await;

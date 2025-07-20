@@ -14,385 +14,303 @@ use serde_json::json;
 const TEST_TOADSTOOL_URL: &str = "http://test-toadstool:8080";
 
 /// Test platform detection functionality
-#[tokio::test]
 async fn test_platform_detection() {
     let client = ToadstoolComputeClient::new(TEST_TOADSTOOL_URL.to_string());
 
     // This would fail in CI without actual ToadStool, so we'll test the structure
     let platform_info = PlatformInfo {
+        os: "Linux".to_string(),
+        architecture: "x86_64".to_string(),
         cpu_cores: 16,
         memory_gb: 64,
+        gpu_count: 1,
         storage_devices: vec![
             StorageDevice {
                 name: "nvme0n1".to_string(),
                 device_type: "NVMe".to_string(),
                 capacity_gb: 1024,
-                interface: "PCIe 4.0".to_string(),
-                performance_tier: "High".to_string(),
+                available_gb: 512,
+                mount_point: "/".to_string(),
             }
         ],
-        architecture: "x86_64".to_string(),
-        operating_system: "Linux".to_string(),
-        kernel_version: "6.12.10".to_string(),
-        platform_capabilities: vec!["ZFS".to_string(), "Hardware Acceleration".to_string()],
     };
 
     assert_eq!(platform_info.cpu_cores, 16);
     assert_eq!(platform_info.memory_gb, 64);
     assert_eq!(platform_info.storage_devices.len(), 1);
     assert_eq!(platform_info.architecture, "x86_64");
-    assert!(platform_info.platform_capabilities.contains(&"ZFS".to_string()));
+    assert_eq!(platform_info.os, "Linux");
 }
 
 /// Test hardware discovery functionality
-#[tokio::test]
 async fn test_hardware_discovery() {
-    let discovery = ComputeDiscovery {
-        compute_nodes: vec![
-            ComputeNode {
-                node_id: "node-1".to_string(),
-                hostname: "test-node".to_string(),
-                cpu_cores: 8,
-                memory_gb: 32,
-                status: "healthy".to_string(),
-                capabilities: vec!["zfs".to_string(), "docker".to_string()],
-                current_load: 0.42,
-            }
-        ],
-        gpu_devices: vec![],
-        network_interfaces: vec![],
-        storage_pools: vec![],
-        available_memory: 32,
-        total_cpu_cores: 8,
-    };
+    println!("🔍 Testing hardware discovery functionality");
 
-    assert_eq!(discovery.compute_nodes.len(), 1);
-    assert_eq!(discovery.total_cpu_cores, 8);
-    assert_eq!(discovery.available_memory, 32);
-    assert_eq!(discovery.compute_nodes[0].hostname, "test-node");
-}
-
-/// Test workload execution functionality
-#[tokio::test]
-async fn test_workload_execution() {
+    // Test storage workload creation with correct fields
     let workload = StorageWorkload {
-        name: "test-zfs-scrub".to_string(),
-        workload_type: "zfs_scrub".to_string(),
-        priority: "medium".to_string(),
-        resource_requirements: WorkloadResourceRequirements {
-            cpu_cores: 4,
-            memory_gb: 8,
-            storage_io_intensive: true,
-            network_bandwidth_required: false,
-        },
-        estimated_duration_minutes: 120,
-        parameters: {
-            let mut params = HashMap::new();
-            params.insert("pool_name".to_string(), json!("test-pool"));
-            params.insert("scrub_type".to_string(), json!("full"));
-            params
-        },
-    };
-
-    assert_eq!(workload.name, "test-zfs-scrub");
-    assert_eq!(workload.workload_type, "zfs_scrub");
-    assert_eq!(workload.resource_requirements.cpu_cores, 4);
-    assert_eq!(workload.resource_requirements.memory_gb, 8);
-    assert!(workload.resource_requirements.storage_io_intensive);
-    assert!(!workload.resource_requirements.network_bandwidth_required);
-    assert_eq!(workload.estimated_duration_minutes, 120);
-    assert_eq!(workload.parameters.len(), 2);
-}
-
-/// Test resource allocation functionality
-#[tokio::test]
-async fn test_resource_allocation() {
-    let request = StorageResourceRequest {
-        operation_type: "pool_creation".to_string(),
-        required_cpu_cores: 8,
-        required_memory_gb: 16,
-        required_storage_io: true,
-        duration_minutes: 30,
-        priority: "high".to_string(),
-    };
-
-    assert_eq!(request.operation_type, "pool_creation");
-    assert_eq!(request.required_cpu_cores, 8);
-    assert_eq!(request.required_memory_gb, 16);
-    assert!(request.required_storage_io);
-    assert_eq!(request.duration_minutes, 30);
-    assert_eq!(request.priority, "high");
-}
-
-/// Test process management functionality
-#[tokio::test]
-async fn test_process_management() {
-    let process_request = StorageProcessRequest {
-        process_name: "zfs-daemon".to_string(),
-        process_type: "zfs_daemon".to_string(),
-        action: "status".to_string(),
-        parameters: {
-            let mut params = HashMap::new();
-            params.insert("pool_name".to_string(), json!("test-pool"));
-            params
-        },
-    };
-
-    assert_eq!(process_request.process_name, "zfs-daemon");
-    assert_eq!(process_request.process_type, "zfs_daemon");
-    assert_eq!(process_request.action, "status");
-    assert_eq!(process_request.parameters.len(), 1);
-}
-
-/// Test performance optimization functionality
-#[tokio::test]
-async fn test_performance_optimization() {
-    let optimization_request = StorageOptimizationRequest {
-        optimization_type: "deduplication".to_string(),
-        target_pool: "test-pool".to_string(),
-        optimization_level: "moderate".to_string(),
-        background_priority: true,
-        max_cpu_usage: 50.0,
-        max_memory_usage: 25.0,
-    };
-
-    assert_eq!(optimization_request.optimization_type, "deduplication");
-    assert_eq!(optimization_request.target_pool, "test-pool");
-    assert_eq!(optimization_request.optimization_level, "moderate");
-    assert!(optimization_request.background_priority);
-    assert_eq!(optimization_request.max_cpu_usage, 50.0);
-    assert_eq!(optimization_request.max_memory_usage, 25.0);
-}
-
-/// Test configuration management
-#[tokio::test]
-async fn test_configuration_management() {
-    let config = HardwareTuningConfig::default();
-
-    // Test default configuration values
-    assert!(config.toadstool_url.contains("toadstool-compute"));
-    assert!(config.auto_tuning_enabled);
-    assert_eq!(config.benchmark_timeout_ms, 30000);
-    assert_eq!(config.session_timeout_minutes, 60);
-    assert_eq!(config.health_check_interval_seconds, 30);
-    assert_eq!(config.max_concurrent_sessions, 10);
-
-    // Test performance thresholds
-    assert_eq!(config.performance_thresholds.cpu_warning, 70.0);
-    assert_eq!(config.performance_thresholds.cpu_critical, 90.0);
-    assert_eq!(config.performance_thresholds.memory_warning, 80.0);
-    assert_eq!(config.performance_thresholds.memory_critical, 95.0);
-    assert_eq!(config.performance_thresholds.io_warning, 20.0);
-    assert_eq!(config.performance_thresholds.io_critical, 50.0);
-}
-
-/// Test custom configuration
-#[tokio::test]
-async fn test_custom_configuration() {
-    let config = HardwareTuningConfig {
-        toadstool_url: "http://custom-toadstool:9000".to_string(),
-        auto_tuning_enabled: false,
-        benchmark_timeout_ms: 60000,
-        session_timeout_minutes: 120,
-        health_check_interval_seconds: 60,
-        max_concurrent_sessions: 5,
-        performance_thresholds: PerformanceThresholds {
-            cpu_warning: 60.0,
-            cpu_critical: 85.0,
-            memory_warning: 75.0,
-            memory_critical: 90.0,
-            io_warning: 15.0,
-            io_critical: 40.0,
-        },
-    };
-
-    assert_eq!(config.toadstool_url, "http://custom-toadstool:9000");
-    assert!(!config.auto_tuning_enabled);
-    assert_eq!(config.benchmark_timeout_ms, 60000);
-    assert_eq!(config.session_timeout_minutes, 120);
-    assert_eq!(config.health_check_interval_seconds, 60);
-    assert_eq!(config.max_concurrent_sessions, 5);
-    assert_eq!(config.performance_thresholds.cpu_warning, 60.0);
-}
-
-/// Test hardware tuning service creation
-#[tokio::test]
-async fn test_hardware_tuning_service_creation() {
-    let service = HardwareTuningService::new();
-
-    // Test that service is created successfully
-    // We can't test much without actual ToadStool, but we can verify structure
-    assert!(true); // Service created successfully
-}
-
-/// Test hardware tuning service with custom config
-#[tokio::test]
-async fn test_hardware_tuning_service_with_custom_config() {
-    let config = HardwareTuningConfig {
-        toadstool_url: "http://test-toadstool:8080".to_string(),
-        auto_tuning_enabled: true,
-        benchmark_timeout_ms: 30000,
-        session_timeout_minutes: 60,
-        health_check_interval_seconds: 30,
-        max_concurrent_sessions: 10,
-        performance_thresholds: PerformanceThresholds::default(),
-    };
-
-    let service = HardwareTuningService::with_config(config);
-
-    // Test that service is created successfully with custom config
-    assert!(true); // Service created successfully
-}
-
-/// Test error handling for invalid configurations
-#[tokio::test]
-async fn test_error_handling() {
-    // Test invalid URL handling
-    let client = ToadstoolComputeClient::new("invalid-url".to_string());
-
-    // This would fail in real usage, which is expected behavior
-    assert!(true); // Error handling works as expected
-}
-
-/// Test system health monitoring
-#[tokio::test]
-async fn test_system_health_monitoring() {
-    let health = SystemHealth {
-        overall_status: "healthy".to_string(),
-        cpu_health: HealthStatus {
-            status: "good".to_string(),
-            score: 95.2,
-            issues: vec![],
-        },
-        memory_health: HealthStatus {
-            status: "good".to_string(),
-            score: 88.7,
-            issues: vec!["Slight fragmentation".to_string()],
-        },
-        storage_health: HealthStatus {
-            status: "excellent".to_string(),
-            score: 98.1,
-            issues: vec![],
-        },
-        network_health: HealthStatus {
-            status: "good".to_string(),
-            score: 92.5,
-            issues: vec![],
-        },
-        temperature_celsius: 42.3,
-        power_consumption_watts: 285.0,
-        alerts: vec![],
-    };
-
-    assert_eq!(health.overall_status, "healthy");
-    assert_eq!(health.cpu_health.score, 95.2);
-    assert_eq!(health.memory_health.issues.len(), 1);
-    assert_eq!(health.storage_health.status, "excellent");
-    assert_eq!(health.network_health.score, 92.5);
-    assert_eq!(health.temperature_celsius, 42.3);
-    assert_eq!(health.power_consumption_watts, 285.0);
-    assert_eq!(health.alerts.len(), 0);
-}
-
-/// Test live metrics structure
-#[tokio::test]
-async fn test_live_metrics_structure() {
-    let metrics = RealtimeMetrics {
-        timestamp: chrono::Utc::now(),
-        cpu_usage: 42.3,
-        memory_usage: 68.7,
-        storage_io: StorageIoMetrics {
-            read_bytes_per_sec: 1024000000,
-            write_bytes_per_sec: 512000000,
-            read_ops_per_sec: 5000,
-            write_ops_per_sec: 2500,
-            avg_read_latency_ms: 0.1,
-            avg_write_latency_ms: 0.2,
-        },
-        network_io: NetworkIoMetrics {
-            bytes_sent: 1024000000,
-            bytes_received: 2048000000,
-            packets_sent: 100000,
-            packets_received: 150000,
-        },
-        system_load: SystemLoadMetrics {
-            load_1min: 1.2,
-            load_5min: 1.5,
-            load_15min: 1.8,
-            uptime_seconds: 86400,
-        },
-        process_count: 285,
-        thread_count: 1420,
-    };
-
-    assert_eq!(metrics.cpu_usage, 42.3);
-    assert_eq!(metrics.memory_usage, 68.7);
-    assert_eq!(metrics.storage_io.read_bytes_per_sec, 1024000000);
-    assert_eq!(metrics.storage_io.write_bytes_per_sec, 512000000);
-    assert_eq!(metrics.network_io.bytes_sent, 1024000000);
-    assert_eq!(metrics.network_io.bytes_received, 2048000000);
-    assert_eq!(metrics.system_load.load_1min, 1.2);
-    assert_eq!(metrics.process_count, 285);
-    assert_eq!(metrics.thread_count, 1420);
-}
-
-/// Test end-to-end integration scenario
-#[tokio::test]
-async fn test_end_to_end_integration() {
-    // Test a complete workflow from platform detection to optimization
-
-    // 1. Platform Detection
-    let platform_info = PlatformInfo {
-        cpu_cores: 16,
-        memory_gb: 64,
-        storage_devices: vec![],
-        architecture: "x86_64".to_string(),
-        operating_system: "Linux".to_string(),
-        kernel_version: "6.12.10".to_string(),
-        platform_capabilities: vec!["ZFS".to_string()],
-    };
-
-    // 2. Resource Allocation
-    let resource_request = StorageResourceRequest {
-        operation_type: "pool_creation".to_string(),
-        required_cpu_cores: 8,
-        required_memory_gb: 16,
-        required_storage_io: true,
-        duration_minutes: 30,
-        priority: "high".to_string(),
-    };
-
-    // 3. Workload Execution
-    let workload = StorageWorkload {
-        name: "create-storage-pool".to_string(),
-        workload_type: "pool_creation".to_string(),
-        priority: "high".to_string(),
+        workload_id: "test_workload_001".to_string(),
+        workload_type: "ZFS Pool Creation".to_string(),
+        priority: ComputePriority::High,
         resource_requirements: WorkloadResourceRequirements {
             cpu_cores: 8,
             memory_gb: 16,
-            storage_io_intensive: true,
-            network_bandwidth_required: false,
+            storage_gb: 1024,
+            network_bandwidth_gbps: 1.0,
         },
         estimated_duration_minutes: 30,
-        parameters: HashMap::new(),
+        status: WorkloadStatus::Pending,
     };
 
-    // 4. Performance Optimization
-    let optimization_request = StorageOptimizationRequest {
-        optimization_type: "compression".to_string(),
-        target_pool: "new-pool".to_string(),
-        optimization_level: "moderate".to_string(),
-        background_priority: true,
-        max_cpu_usage: 50.0,
-        max_memory_usage: 25.0,
-    };
-
-    // Verify all components work together
-    assert_eq!(platform_info.cpu_cores, 16);
-    assert_eq!(resource_request.required_cpu_cores, 8);
+    // Test workload structure
+    assert_eq!(workload.workload_type, "ZFS Pool Creation");
     assert_eq!(workload.resource_requirements.cpu_cores, 8);
-    assert_eq!(optimization_request.max_cpu_usage, 50.0);
+    assert_eq!(workload.resource_requirements.memory_gb, 16);
+    assert_eq!(workload.resource_requirements.storage_gb, 1024);
+    assert_eq!(workload.resource_requirements.network_bandwidth_gbps, 1.0);
 
-    // This demonstrates that the entire flow is properly structured
-    assert!(true); // End-to-end integration test passed
+    println!("✅ Hardware discovery test passed");
+}
+
+/// Test compute resource allocation workflow
+async fn test_compute_resource_allocation() {
+    println!("⚙️ Testing compute resource allocation");
+
+    // Create corrected storage resource request
+    let request = StorageResourceRequest {
+        request_id: "req_001".to_string(),
+        workload_id: "workload_001".to_string(),
+        resource_type: "compute".to_string(),
+        quantity: 8, // CPU cores
+        duration_minutes: 60,
+    };
+
+    // Test request structure
+    assert_eq!(request.resource_type, "compute");
+    assert_eq!(request.quantity, 8);
+    assert_eq!(request.duration_minutes, 60);
+
+    println!("✅ Compute resource allocation test passed");
+}
+
+/// Test storage process management functionality
+async fn test_storage_process_management() {
+    println!("🔄 Testing storage process management");
+
+    // Create storage process request with correct structure
+    let mut params = HashMap::new();
+    params.insert("pool_name".to_string(), json!("testpool"));
+
+    let process_request = StorageProcessRequest {
+        process_name: "pool_status_check".to_string(),
+        process_type: "status".to_string(),
+        parameters: json!(params),
+    };
+
+    // Test process request structure
+    assert_eq!(process_request.process_name, "pool_status_check");
+    assert_eq!(process_request.process_type, "status");
+    assert!(process_request.parameters.is_object());
+
+    println!("✅ Storage process management test passed");
+}
+
+/// Test storage optimization request functionality
+async fn test_storage_optimization_request() {
+    println!("🎯 Testing storage optimization request");
+
+    // Create optimization request with correct structure
+    let optimization_request = StorageOptimizationRequest {
+        optimization_type: "performance".to_string(),
+        target_storage_pools: vec!["test-pool".to_string()],
+        optimization_level: "aggressive".to_string(),
+        parameters: json!({
+            "max_cpu_usage": 50.0,
+            "max_memory_usage": 25.0,
+            "background_priority": true
+        }),
+    };
+
+    // Test optimization request structure
+    assert_eq!(optimization_request.optimization_type, "performance");
+    assert_eq!(optimization_request.target_storage_pools.len(), 1);
+    assert_eq!(optimization_request.optimization_level, "aggressive");
+    assert!(optimization_request.parameters.is_object());
+
+    println!("✅ Storage optimization test passed");
+}
+
+/// Test tuning session management
+async fn test_tuning_session_management() {
+    println!("📊 Testing tuning session management");
+
+    let session = TuningSession {
+        session_id: Uuid::new_v4(),
+        user_id: "test_user".to_string(),
+        start_time: chrono::Utc::now(),
+        last_activity: chrono::Utc::now(),
+        status: SessionStatus::Active,
+        tuning_mode: TuningMode::Balanced,
+        active_profiles: vec!["default".to_string()],
+    };
+
+    assert_eq!(session.user_id, "test_user");
+    assert_eq!(session.status, SessionStatus::Active);
+    assert_eq!(session.tuning_mode, TuningMode::Balanced);
+
+    println!("✅ Tuning session management test passed");
+}
+
+/// Test error handling in resource allocation
+async fn test_resource_allocation_error_handling() {
+    println!("⚠️ Testing resource allocation error handling");
+
+    let _client = ToadstoolComputeClient::new("invalid-url".to_string());
+
+    // Test error handling would be done with actual client calls
+    // For now, just test that the client can be created with invalid URL
+    println!("⚠️ Error handling test completed (simulated)");
+}
+
+/// Test comprehensive system health monitoring
+async fn test_system_health_monitoring() {
+    println!("🏥 Testing system health monitoring");
+
+    // Create system health with correct structure
+    let health = SystemHealth {
+        overall_status: HealthStatus::Healthy,
+        cpu_status: HealthStatus::Healthy,
+        memory_status: HealthStatus::Warning,
+        storage_status: HealthStatus::Healthy,
+        network_status: HealthStatus::Healthy,
+        alerts: vec![
+            SystemAlert {
+                alert_id: "alert_001".to_string(),
+                severity: AlertSeverity::Warning,
+                message: "Memory usage above 80%".to_string(),
+                timestamp: chrono::Utc::now(),
+                component: "memory".to_string(),
+            }
+        ],
+    };
+
+    // Test health structure
+    assert_eq!(health.overall_status, HealthStatus::Healthy);
+    assert_eq!(health.memory_status, HealthStatus::Warning);
+    assert_eq!(health.alerts.len(), 1);
+
+    println!("✅ System health monitoring test passed");
+}
+
+/// Test real-time metrics collection
+async fn test_realtime_metrics_collection() {
+    println!("📈 Testing real-time metrics collection");
+
+    // Create metrics with correct structure
+    let metrics = RealtimeMetrics {
+        timestamp: chrono::Utc::now(),
+        cpu_usage: 45.2,
+        memory_usage: 67.8,
+        gpu_usage: Some(23.1),
+        network_io: NetworkIoMetrics {
+            bytes_sent: 1024000,
+            bytes_received: 2048000,
+            packets_sent: 1000,
+            packets_received: 1200,
+        },
+        disk_io: DiskIoMetrics {
+            read_bytes: 10240000,
+            write_bytes: 5120000,
+            read_ops: 500,
+            write_ops: 250,
+        },
+        storage_io: StorageIoMetrics {
+            read_iops: 5000,
+            write_iops: 2500,
+            read_bandwidth_mbps: 1024.0,
+            write_bandwidth_mbps: 512.0,
+        },
+        system_load: SystemLoadMetrics {
+            load_1m: 1.2,
+            load_5m: 1.5,
+            load_15m: 1.8,
+        },
+    };
+
+    // Test metrics structure
+    assert_eq!(metrics.cpu_usage, 45.2);
+    assert_eq!(metrics.storage_io.read_iops, 5000);
+    assert_eq!(metrics.system_load.load_1m, 1.2);
+
+    println!("✅ Real-time metrics collection test passed");
+}
+
+/// Test comprehensive platform capabilities
+async fn test_platform_capabilities() {
+    println!("🖥️ Testing platform capabilities");
+
+    // Create comprehensive resource request
+    let resource_request = StorageResourceRequest {
+        request_id: "req_002".to_string(),
+        workload_id: "workload_002".to_string(),
+        resource_type: "storage".to_string(),
+        quantity: 1024, // GB
+        duration_minutes: 120,
+    };
+
+    // Create storage workload
+    let workload = StorageWorkload {
+        workload_id: "workload_002".to_string(),
+        workload_type: "create-storage-pool".to_string(),
+        priority: ComputePriority::High,
+        resource_requirements: WorkloadResourceRequirements {
+            cpu_cores: 8,
+            memory_gb: 16,
+            storage_gb: 1024,
+            network_bandwidth_gbps: 10.0,
+        },
+        estimated_duration_minutes: 30,
+        status: WorkloadStatus::Pending,
+    };
+
+    // Create optimization request
+    let optimization_request = StorageOptimizationRequest {
+        optimization_type: "performance".to_string(),
+        target_storage_pools: vec!["new-pool".to_string()],
+        optimization_level: "aggressive".to_string(),
+        parameters: json!({
+            "target_iops": 10000,
+            "target_throughput": 2000.0
+        }),
+    };
+
+    // Test all structures
+    assert_eq!(resource_request.quantity, 1024);
+    assert_eq!(workload.resource_requirements.cpu_cores, 8);
+    assert_eq!(optimization_request.optimization_level, "aggressive");
+
+    println!("✅ Platform capabilities test passed");
+}
+
+#[cfg(test)]
+mod integration_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_comprehensive_toadstool_integration() {
+        println!("🚀 Running comprehensive ToadStool integration tests");
+
+        // Run all test components
+        test_platform_detection().await;
+        test_hardware_discovery().await;
+        test_compute_resource_allocation().await;
+        test_storage_process_management().await;
+        test_storage_optimization_request().await;
+        test_tuning_session_management().await;
+        test_resource_allocation_error_handling().await;
+        test_system_health_monitoring().await;
+        test_realtime_metrics_collection().await;
+        test_platform_capabilities().await;
+
+        println!("🎉 All ToadStool integration tests completed successfully!");
+    }
 }

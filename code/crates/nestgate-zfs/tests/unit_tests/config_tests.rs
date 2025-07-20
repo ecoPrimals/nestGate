@@ -1,0 +1,102 @@
+//! Configuration Unit Tests
+//!
+//! Tests for ZFS configuration settings and defaults
+
+use std::collections::HashMap;
+use std::path::PathBuf;
+use std::time::SystemTime;
+
+use nestgate_core::StorageTier as CoreStorageTier;
+use nestgate_zfs::performance::TierMetrics;
+use nestgate_zfs::performance::{AlertCondition, AlertMetric, AlertOperator, AlertSeverity};
+use nestgate_zfs::{
+    automation::{DatasetLifecycle, LifecycleRule, LifecycleStage},
+    config::ZfsConfig,
+    migration::{MigrationJob, MigrationPriority, MigrationStatus},
+    snapshot::*,
+    types::StorageTier,
+};
+
+#[cfg(test)]
+mod config_unit_tests {
+    use super::*;
+
+    #[test]
+    fn test_zfs_config_defaults() {
+        let config = ZfsConfig::default();
+
+        // Test configuration defaults (using actual field names from struct)
+        assert!(config.api_endpoint.starts_with("http://localhost:"));
+        assert_eq!(config.default_pool, "nestpool");
+        assert!(config.use_real_zfs);
+        assert_eq!(config.tiers.hot.name, "hot");
+        assert_eq!(config.tiers.warm.name, "warm");
+        assert_eq!(config.tiers.cold.name, "cold");
+        assert!(config.pool_discovery.auto_discovery);
+        assert!(config.health_monitoring.enabled);
+        assert_eq!(config.health_monitoring.check_interval_seconds, 30);
+        assert!(config.metrics.enabled);
+        assert_eq!(config.metrics.collection_interval_seconds, 60);
+        assert_eq!(config.monitoring_interval, 300);
+    }
+
+    #[test]
+    fn test_tier_config_hierarchy() {
+        let config = ZfsConfig::default();
+
+        let hot = config.get_tier_config(&CoreStorageTier::Hot);
+        let warm = config.get_tier_config(&CoreStorageTier::Warm);
+        let cold = config.get_tier_config(&CoreStorageTier::Cold);
+
+        // Verify compression algorithms
+        assert_eq!(hot.properties.get("compression").unwrap(), "lz4");
+        assert_eq!(warm.properties.get("compression").unwrap(), "zstd");
+        assert_eq!(cold.properties.get("compression").unwrap(), "gzip-9");
+
+        // Verify performance profiles
+        assert!(matches!(
+            hot.performance_profile,
+            nestgate_zfs::config::PerformanceProfile::HighPerformance
+        ));
+        assert!(matches!(
+            warm.performance_profile,
+            nestgate_zfs::config::PerformanceProfile::Balanced
+        ));
+        assert!(matches!(
+            cold.performance_profile,
+            nestgate_zfs::config::PerformanceProfile::HighCompression
+        ));
+    }
+
+    #[test]
+    fn test_migration_rules_thresholds() {
+        let config = ZfsConfig::default();
+
+        let hot = config.get_tier_config(&CoreStorageTier::Hot);
+        let warm = config.get_tier_config(&CoreStorageTier::Warm);
+        let cold = config.get_tier_config(&CoreStorageTier::Cold);
+
+        // Hot tier should migrate faster than warm
+        assert!(hot.migration_rules.age_threshold_days < warm.migration_rules.age_threshold_days);
+        assert!(warm.migration_rules.age_threshold_days < cold.migration_rules.age_threshold_days);
+
+        // Access frequency thresholds should decrease
+        assert!(
+            hot.migration_rules.access_frequency_threshold
+                > warm.migration_rules.access_frequency_threshold
+        );
+    }
+
+    #[test]
+    fn test_capacity_limits() {
+        let config = ZfsConfig::default();
+
+        let hot = config.get_tier_config(&CoreStorageTier::Hot);
+        let warm = config.get_tier_config(&CoreStorageTier::Warm);
+        let cold = config.get_tier_config(&CoreStorageTier::Cold);
+
+        // Cold tier should allow higher utilization
+        assert!(cold.capacity_limits.max_utilization > warm.capacity_limits.max_utilization);
+        assert!(warm.capacity_limits.max_utilization > hot.capacity_limits.max_utilization);
+    }
+} 
