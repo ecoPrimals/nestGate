@@ -5,10 +5,14 @@ use nestgate_core::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use tokio::sync::RwLock;
 use tokio::time::sleep;
-use tracing::{error, info, warn};
+// Removed unused tracing import
+use std::time::Duration;
+use tracing::error;
+use tracing::info;
+use tracing::warn;
 use uuid::Uuid;
 
 /// Load testing configuration
@@ -632,9 +636,12 @@ impl LoadTestManager {
         // Simulate occasional failures
         if fastrand::f32() < 0.05 {
             // 5% failure rate
-            return Err(nestgate_core::NestGateError::InvalidInput(format!(
-                "Simulated failure for {method} {endpoint}"
-            )));
+            return Err(nestgate_core::NestGateError::Internal {
+                message: format!("Simulated failure for {method} {endpoint}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
         info!(
@@ -662,9 +669,12 @@ impl LoadTestManager {
             info!("Load test {} completed successfully", test_id);
             Ok(())
         } else {
-            Err(nestgate_core::NestGateError::InvalidInput(format!(
-                "Test {test_id} not found in active tests"
-            )))
+            Err(nestgate_core::NestGateError::Internal {
+                message: format!("Test {test_id} not found in active tests"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })
         }
     }
 

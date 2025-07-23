@@ -19,7 +19,14 @@ async fn test_zfs_integration() -> Result<()> {
             println!("⏭️ Skipping ZFS integration test - ZFS not available");
             return Ok(());
         }
-        Err(e) => return Err(NestGateError::Internal(e.to_string())),
+        Err(e) => {
+            return Err(NestGateError::Internal {
+                message: e.to_string(),
+                location: Some(file!().to_string()),
+                debug_info: None,
+                is_bug: false,
+            })
+        }
     };
 
     println!("✅ ZFS manager created successfully");
@@ -127,9 +134,12 @@ async fn test_zfs_concurrent_operations() -> Result<()> {
 
     // Wait for all operations
     for handle in handles {
-        handle
-            .await
-            .map_err(|e| NestGateError::Internal(e.to_string()))??;
+        handle.await.map_err(|e| NestGateError::Internal {
+            message: e.to_string(),
+            location: Some(file!().to_string()),
+            debug_info: None,
+            is_bug: false,
+        })??;
     }
 
     println!("✅ All concurrent operations completed");
@@ -141,7 +151,7 @@ async fn test_zfs_error_handling() -> Result<()> {
     println!("❌ Testing ZFS error handling");
 
     let config = ZfsConfig {
-        default_pool: "nonexistent-pool".to_string(),
+        api_endpoint: "http://nonexistent-endpoint:8080".to_string(),
         ..Default::default()
     };
 
@@ -151,7 +161,14 @@ async fn test_zfs_error_handling() -> Result<()> {
             println!("⏭️ Skipping ZFS error handling test - ZFS not available");
             return Ok(());
         }
-        Err(e) => return Err(NestGateError::Internal(e.to_string())),
+        Err(e) => {
+            return Err(NestGateError::Internal {
+                message: e.to_string(),
+                location: Some(file!().to_string()),
+                debug_info: None,
+                is_bug: false,
+            })
+        }
     };
 
     // This should handle the error gracefully

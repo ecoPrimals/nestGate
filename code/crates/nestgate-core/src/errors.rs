@@ -1,7 +1,7 @@
-/*!
+// Removed unused error imports
+/**
  * Error types for the Port Manager
  */
-
 use std::io;
 use thiserror::Error;
 

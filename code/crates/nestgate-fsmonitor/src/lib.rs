@@ -5,15 +5,19 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 
 use futures::channel::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock};
-use tracing::{debug, error, info};
+// Removed unused tracing import
 
 use nestgate_core::{NestGateError, Result};
+use std::time::Duration;
+use tracing::debug;
+use tracing::error;
+use tracing::info;
 
 /// File system event types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -182,8 +186,11 @@ impl FsMonitor {
                 error!("Failed to send file system event: {}", e);
             }
         })
-        .map_err(|e| {
-            NestGateError::Internal(format!("Failed to create file system watcher: {e}"))
+        .map_err(|e| NestGateError::Internal {
+            message: format!("Failed to create file system watcher: {e}"),
+            location: Some(format!("{}:{}", file!(), line!())),
+            debug_info: None,
+            is_bug: false,
         })?;
 
         self.watcher = Some(Arc::new(Mutex::new(watcher)));
@@ -236,9 +243,14 @@ impl FsMonitor {
                 RecursiveMode::NonRecursive
             };
 
-            watcher.watch(path, mode).map_err(|e| {
-                NestGateError::Internal(format!("Failed to watch path {path:?}: {e}"))
-            })?;
+            watcher
+                .watch(path, mode)
+                .map_err(|e| NestGateError::Internal {
+                    message: format!("Failed to watch path {path:?}: {e}"),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                })?;
 
             info!("Added watch path: {:?}", path);
         }
@@ -250,8 +262,11 @@ impl FsMonitor {
     pub async fn remove_watch_path(&self, path: &Path) -> Result<()> {
         if let Some(watcher) = &self.watcher {
             let mut watcher = watcher.lock().await;
-            watcher.unwatch(path).map_err(|e| {
-                NestGateError::Internal(format!("Failed to unwatch path {path:?}: {e}"))
+            watcher.unwatch(path).map_err(|e| NestGateError::Internal {
+                message: format!("Failed to unwatch path {path:?}: {e}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
             })?;
 
             info!("Removed watch path: {:?}", path);
@@ -302,7 +317,12 @@ impl FsMonitor {
         let event_sender = self
             .event_sender
             .as_ref()
-            .ok_or_else(|| NestGateError::Internal("Event sender not initialized".to_string()))?
+            .ok_or_else(|| NestGateError::Internal {
+                message: "Event sender not initialized".to_string(),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })?
             .clone();
         let config = self.config.clone();
 
@@ -550,7 +570,10 @@ mod tests {
         let handler = LoggingEventHandler;
         let event = FsEvent {
             event_type: FsEventType::Created,
-            path: PathBuf::from("/tmp/test.txt"),
+            path: PathBuf::from(&format!(
+                "{}/test.txt",
+                std::env::var("NESTGATE_TEMP_DIR").unwrap_or_else(|_| "/tmp".to_string())
+            )),
             dest_path: None,
             timestamp: SystemTime::now(),
             file_size: Some(1024),
@@ -563,7 +586,10 @@ mod tests {
     #[tokio::test]
     async fn test_access_pattern_handler() {
         let handler = AccessPatternHandler::new();
-        let path = PathBuf::from("/tmp/test.txt");
+        let path = PathBuf::from(&format!(
+            "{}/test.txt",
+            std::env::var("NESTGATE_TEMP_DIR").unwrap_or_else(|_| "/tmp".to_string())
+        ));
 
         let event = FsEvent {
             event_type: FsEventType::Accessed,

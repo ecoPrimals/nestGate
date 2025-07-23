@@ -25,14 +25,8 @@ pub const DEFAULT_COMPUTE_QUOTA: &str = "10 cores";
 pub const DEFAULT_WORKSPACE_QUOTA: &str = "10G";
 /// Default compression algorithm (LZ4 for fast compression/decompression)
 pub const DEFAULT_COMPRESSION: &str = "lz4";
-/// Status string indicating an active state
-pub const ACTIVE_STATUS: &str = "active";
 /// Default network name for BYOB containers
 pub const BYOB_NETWORK: &str = "byob-network";
-/// Status string indicating a healthy state
-pub const HEALTHY_STATUS: &str = "healthy";
-/// Status string indicating an unavailable state
-pub const UNAVAILABLE_STATUS: &str = "unavailable";
 
 /// HTTP API error response
 #[derive(Debug, Serialize)]

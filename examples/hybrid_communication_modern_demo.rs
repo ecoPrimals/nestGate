@@ -1,22 +1,25 @@
-//! # NestGate Hybrid Communication Modern Demo
-//!
-//! A completely rebuilt, production-ready demonstration of NestGate's hybrid communication system.
-//! Showcases 4 communication layers with MODERN APIs:
-//! 1. WebSocket + JSON for external client communication
-//! 2. Internal service-to-service communication
-//! 3. Streaming capabilities for real-time data
-//! 4. Event system for reactive coordination
+use serde::{Serialize, Deserialize};
+use tracing::{info, warn, error};
+use tracing::{error, info};
+// # NestGate Hybrid Communication Modern Demo
+//
+// A completely rebuilt, production-ready demonstration of NestGate's hybrid communication system.
+// Showcases 4 communication layers with MODERN APIs:
+// 1. WebSocket + JSON for external client communication
+// 2. Internal service-to-service communication
+// 3. Streaming capabilities for real-time data
+// 4. Event system for reactive coordination
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::sync::{
     atomic::{AtomicU64, Ordering},
     Arc,
 };
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
 use tokio::sync::{mpsc, RwLock};
 use tokio::time::sleep;
-use tracing::{error, info, warn};
+// Removed unused tracing import
 use uuid::Uuid;
 
 // Modern communication message types
@@ -216,7 +219,10 @@ impl ModernStreamingSource {
                 "sequence": i,
                 "cpu_usage": 30.0 + (i as f64 * 2.5),
                 "memory_usage": 45.0 + (i as f64 * 1.8),
-                "timestamp": SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()
+                "timestamp": SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap_or_else(|_| std::time::Duration::from_secs(0)) // Fallback to epoch if clock is misconfigured
+                    .as_secs()
             });
 
             let message = ModernMessage {

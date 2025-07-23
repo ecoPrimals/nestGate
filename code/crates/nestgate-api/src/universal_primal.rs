@@ -16,6 +16,10 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+use tracing::debug;
+use tracing::info;
+use tracing::warn;
+
 /// Helper function to safely get current timestamp
 fn current_timestamp() -> u64 {
     std::time::SystemTime::now()
@@ -206,11 +210,11 @@ impl NestGateStoragePrimal {
             ],
             metadata: {
                 let mut metadata = HashMap::new();
-                metadata.insert("version".to_string(), "1.0.0".to_string());
-                metadata.insert("name".to_string(), "NestGate".to_string());
-                metadata.insert("description".to_string(), "ZFS Storage Primal".to_string());
-                metadata.insert("primal_type".to_string(), "storage".to_string());
-                metadata.insert("api_version".to_string(), "universal/v1".to_string());
+                metadata.insert("version".into(), "1.0.0".into());
+                metadata.insert("name".into(), "NestGate".into());
+                metadata.insert("description".into(), "ZFS Storage Primal".into());
+                metadata.insert("primal_type".into(), "storage".into());
+                metadata.insert("api_version".into(), "universal/v1".into());
                 metadata
             },
         }
@@ -291,7 +295,7 @@ impl StoragePrimalProvider for NestGateStoragePrimal {
     }
 
     async fn register_with_ecosystem(&self) -> Result<(), String> {
-        use tracing::{info, warn};
+        // Removed unused tracing import
 
         info!("🌐 Starting ecosystem registration for NestGate storage primal");
 
@@ -370,7 +374,7 @@ impl StoragePrimalProvider for NestGateStoragePrimal {
 impl NestGateStoragePrimal {
     /// Discover other primals on the local network
     async fn discover_local_primals(&self) -> Result<Vec<DiscoveredPrimal>, String> {
-        use tracing::{debug, info};
+        // Removed unused tracing import
 
         let mut discovered_primals = Vec::new();
 

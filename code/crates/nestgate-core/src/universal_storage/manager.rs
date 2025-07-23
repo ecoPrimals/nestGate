@@ -1,8 +1,8 @@
-//! Universal Storage Manager
-//!
-//! Main coordination hub for all storage protocols with real-time synchronization
-//! and distributed coordination capabilities.
-
+use crate::error::ConfigSource;
+/// Universal Storage Manager
+///
+/// Main coordination hub for all storage protocols with real-time synchronization
+/// and distributed coordination capabilities.
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -85,16 +85,22 @@ impl UniversalStorageManager {
         info!("Registering storage backend: {}", backend.name);
 
         // Validate backend configuration
-        if backend.name.is_empty() {
-            return Err(NestGateError::Configuration(
-                "Backend name cannot be empty".to_string(),
-            ));
+        if backend.name.trim().is_empty() {
+            return Err(NestGateError::Configuration {
+                message: "Backend name cannot be empty".to_string(),
+                config_source: ConfigSource::UserProvided,
+                field: Some("name".to_string()),
+                suggested_fix: Some("Provide a valid backend name".to_string()),
+            });
         }
 
-        if backend.endpoint.is_empty() {
-            return Err(NestGateError::Configuration(
-                "Backend endpoint cannot be empty".to_string(),
-            ));
+        if backend.endpoint.trim().is_empty() {
+            return Err(NestGateError::Configuration {
+                message: "Backend endpoint cannot be empty".to_string(),
+                config_source: ConfigSource::UserProvided,
+                field: Some("endpoint".to_string()),
+                suggested_fix: Some("Provide a valid backend endpoint URL".to_string()),
+            });
         }
 
         // Check if backend is healthy before registering

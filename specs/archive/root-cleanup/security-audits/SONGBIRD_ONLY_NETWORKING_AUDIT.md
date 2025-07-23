@@ -1,3 +1,15 @@
+# ⚠️ **DEPRECATED: Songbird-Only Networking Audit**
+
+**This document is DEPRECATED** and reflects outdated hardcoded Songbird-only architecture.
+
+**Current Architecture:** NestGate now uses Universal Adapter patterns that work with any orchestration primal (Songbird, Kubernetes, Consul, etc.) through capability-based discovery.
+
+**See Instead:**
+- `specs/UNIVERSAL_PRIMAL_ARCHITECTURE_SPEC.md` - Universal adapter architecture
+- `code/crates/nestgate-core/src/universal_adapter.rs` - Current implementation
+
+---
+
 # NestGate Songbird-Only Networking Audit Report
 
 ## 🎯 **Executive Summary**

@@ -8,7 +8,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
 use tokio::fs;
-use tracing::{debug, info, warn};
+use tracing::debug;
+use tracing::info;
+use tracing::warn;
 
 use crate::types::prediction::{DataPattern, FileType};
 use crate::types::{
@@ -164,8 +166,10 @@ impl FileAnalyzer {
         };
 
         // Large files are good candidates for deduplication
-        let is_dedupable =
-            size > 1024 * 1024 && matches!(file_type, FileType::Database | FileType::Archive);
+        let is_dedupable = size > {
+            use nestgate_core::config::StorageConstants;
+            StorageConstants::from_environment().file_sizes.small_file
+        } && matches!(file_type, FileType::Database | FileType::Archive);
 
         let is_frequently_accessed = matches!(file_type, FileType::Database | FileType::Document);
         let is_sequential_access = matches!(
@@ -395,7 +399,12 @@ impl DatasetAnalyzer {
 
         let large_files = file_analyses
             .iter()
-            .filter(|a| a.size > 100 * 1024 * 1024)
+            .filter(|a| {
+                a.size > {
+                    use nestgate_core::config::StorageConstants;
+                    StorageConstants::from_environment().file_sizes.large_file
+                }
+            })
             .count();
         let compressible_files = file_analyses
             .iter()

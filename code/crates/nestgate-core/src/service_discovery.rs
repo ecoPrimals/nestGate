@@ -1,23 +1,26 @@
-//! Enhanced Service Discovery and Ecosystem Integration
-//!
-//! Provides advanced service discovery, health monitoring, and ecosystem
-//! integration capabilities for the NestGate Universal Primal Architecture.
-//!
-//! ## Features
-//! - **Multi-Protocol Discovery**: HTTP, DNS, Consul, etcd support
-//! - **Health Monitoring**: Continuous health checks and failover
-//! - **Load Balancing**: Intelligent request distribution
-//! - **Service Mesh**: Advanced routing and traffic management
-//! - **Auto-Registration**: Automatic service registration and deregistration
-
+use crate::connection_pool::{ConnectionPool, PoolConfig};
+// Removed unused error imports
+use crate::Result;
+/// Enhanced Service Discovery and Ecosystem Integration
+///
+/// Provides advanced service discovery, health monitoring, and ecosystem
+/// integration capabilities for the NestGate Universal Primal Architecture.
+///
+/// ## Features
+/// - **Multi-Protocol Discovery**: HTTP, DNS, Consul, etcd support
+/// - **Health Monitoring**: Continuous health checks and failover
+/// - **Load Balancing**: Intelligent request distribution
+/// - **Service Mesh**: Advanced routing and traffic management
+/// - **Auto-Registration**: Automatic service registration and deregistration
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, Instant, SystemTime};
+use std::time::Duration;
+use std::time::{Instant, SystemTime};
 use tokio::sync::{broadcast, RwLock};
-use tracing::{debug, info, warn};
-
-use crate::connection_pool::{ConnectionPool, PoolConfig};
-use crate::Result;
+use tracing::debug;
+use tracing::info;
+use tracing::warn;
+// Removed unused tracing import
 
 /// Service discovery configuration
 #[derive(Debug, Clone)]

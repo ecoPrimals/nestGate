@@ -1,3 +1,5 @@
+// Removed unused tracing import
+use std::time::Duration;
 /*
  * This file is part of NestGate.
  *
@@ -12,11 +14,10 @@
  * Copyright (C) 2024 NestGate Contributors
  */
 
-//! Certificate validation and management for NestGate
-//!
-//! Supports both standalone operation and universal security provider integration
-//! for certificate validation and authentication.
-
+/// Certificate validation and management for NestGate
+///
+/// Supports both standalone operation and universal security provider integration
+/// for certificate validation and authentication.
 use crate::universal_adapter::{create_default_adapter, UniversalPrimalAdapter};
 use crate::universal_traits::Signature;
 use crate::{NestGateError, Result};
@@ -24,7 +25,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 use thiserror::Error;
 
 /// Certificate validation errors
@@ -217,28 +218,46 @@ impl CertificateManager {
             }
         }
 
-        Err(NestGateError::Internal(format!(
-            "No valid certificate or security provider for integration: {integration:?}"
-        )))
+        Err(NestGateError::Internal {
+            message: format!(
+                "No valid certificate or security provider for integration: {integration:?}"
+            ),
+            location: Some(file!().to_string()),
+            debug_info: None,
+            is_bug: false,
+        })
     }
 
     /// Validate individual certificate
     fn is_certificate_valid(&self, cert: &Certificate) -> Result<bool> {
         // Check expiration
         if cert.expires_at < SystemTime::now() {
-            return Err(NestGateError::Internal("Certificate expired".to_string()));
+            return Err(NestGateError::Internal {
+                message: "Certificate expired".to_string(),
+                location: Some(file!().to_string()),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
         // Verify signature using available security provider
         if !self.verify_signature(cert) {
-            return Err(NestGateError::Internal(
-                "Invalid certificate signature".to_string(),
-            ));
+            return Err(NestGateError::Internal {
+                message: "Invalid certificate signature".to_string(),
+                location: Some(file!().to_string()),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
         // Check revocation (would check against revocation list in real implementation)
         if self.is_revoked(cert) {
-            return Err(NestGateError::Internal("Certificate revoked".to_string()));
+            return Err(NestGateError::Internal {
+                message: "Certificate revoked".to_string(),
+                location: Some(file!().to_string()),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
         Ok(true)
@@ -529,9 +548,14 @@ impl CertValidator {
     /// Add certificate to trust store (standalone mode)
     pub fn add_trusted_cert(&mut self, cert_info: CertInfo) -> Result<()> {
         if matches!(self.mode, CertMode::UniversalSecurity) {
-            return Err(NestGateError::Internal(
-                "Cannot add certificates in universal security mode".to_string(),
-            ));
+            return Err(NestGateError::Internal {
+                message: "Cannot add certificates in universal security mode".to_string(),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: Some(
+                    "Universal security mode should handle certificates automatically".to_string(),
+                ),
+                is_bug: false,
+            });
         }
 
         self.trust_store
@@ -573,9 +597,16 @@ impl CertValidator {
 
     /// Universal security provider certificate validation
     async fn validate_universal_security(&self, cert_pem: &str) -> Result<bool> {
-        let adapter = self.security_adapter.as_ref().ok_or_else(|| {
-            NestGateError::Validation("Universal security adapter not set".to_string())
-        })?;
+        let adapter = self
+            .security_adapter
+            .as_ref()
+            .ok_or_else(|| NestGateError::Validation {
+                field: "security_adapter".to_string(),
+                message: "Universal security adapter not set".to_string(),
+                current_value: None,
+                expected: Some("configured security adapter".to_string()),
+                user_error: false,
+            })?;
 
         if let Some(security_provider) = adapter.get_security_provider().await {
             // Use universal security provider to validate certificate
@@ -617,7 +648,12 @@ impl CertValidator {
         // Real implementation would use proper X.509 parsing
 
         if cert_pem.is_empty() {
-            return Err(NestGateError::Internal("Empty certificate".to_string()));
+            return Err(NestGateError::Internal {
+                message: "Empty certificate".to_string(),
+                location: Some(file!().to_string()),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
         let fingerprint = self.calculate_fingerprint(cert_pem)?;

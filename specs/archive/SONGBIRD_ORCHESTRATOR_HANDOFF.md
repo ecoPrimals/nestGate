@@ -5,7 +5,19 @@ version: 1.0.0
 date: 2025-01-26
 author: Songbird Team → NestGate Team
 priority: CRITICAL
-status: HANDOFF_ACTIVE
+status: ❌ DEPRECATED - SUPERSEDED BY UNIVERSAL ADAPTER ARCHITECTURE
+---
+
+# ⚠️ **DEPRECATED DOCUMENT**
+
+**This document is DEPRECATED** and reflects outdated hardcoded architecture patterns.
+
+**Current Architecture:** NestGate now uses Universal Adapter patterns where each primal discovers others through capability-based discovery, not hardcoded dependencies.
+
+**See Instead:**
+- `specs/UNIVERSAL_PRIMAL_ARCHITECTURE_SPEC.md` - Current architecture
+- `specs/ECOSYSTEM_API_STANDARDIZATION_GUIDE.md` - Universal integration patterns
+
 ---
 
 # 🎼 Songbird Orchestrator → NestGate Handoff

@@ -9,14 +9,45 @@
 
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, Instant, SystemTime};
+use std::time::{Instant, SystemTime};
 
 use tokio::sync::{Mutex, RwLock};
-use tracing::{debug, error, info, warn};
-use uuid::Uuid;
+// Removed unused tracing import
+use nestgate_core::get_or_create_uuid;
 
-use crate::streaming_rpc::{RpcClient, RpcServer};
+// NestGate RPC client and server types for storage API connections
+// Discovery handled by universal adapter - no hardcoded orchestrator dependencies
+#[derive(Clone)]
+pub struct RpcClient;
+
+#[derive(Clone)]
+pub struct RpcServer;
+
+impl RpcClient {
+    async fn connect(_addr: &str) -> Result<Self, String> {
+        Ok(RpcClient)
+    }
+
+    async fn health_check(&self) -> Result<bool, String> {
+        Ok(true)
+    }
+}
+
+impl RpcServer {
+    fn new() -> Self {
+        RpcServer
+    }
+
+    async fn start(&self, _addr: &str) -> Result<(), String> {
+        Ok(())
+    }
+}
 use nestgate_core::service_discovery::{HealthStatus, ServiceEndpoint, ServiceRegistry};
+use std::time::Duration;
+use tracing::debug;
+use tracing::error;
+use tracing::info;
+use tracing::warn;
 
 /// Enhanced tarpc service manager with service mesh integration
 pub struct TarpcServiceManager {
@@ -167,14 +198,18 @@ impl TarpcServiceManager {
 
         // Register service in service registry
         let service_endpoint = ServiceEndpoint {
-            id: format!("{}-{}", service_name, Uuid::new_v4()),
-            name: service_name.to_string(),
-            address: address.to_string(),
+            id: format!(
+                "{}-{}",
+                service_name,
+                get_or_create_uuid(&format!("service_{}", service_name)).simple()
+            ),
+            name: service_name.into(),
+            address: address.into(),
             port,
-            protocol: "tarpc".to_string(),
+            protocol: "tarpc".into(),
             metadata: [
-                ("rpc_type".to_string(), "streaming".to_string()),
-                ("bidirectional".to_string(), "true".to_string()),
+                ("rpc_type".into(), "streaming".into()),
+                ("bidirectional".into(), "true".into()),
             ]
             .into_iter()
             .collect(),

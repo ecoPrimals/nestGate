@@ -5,6 +5,7 @@
 use axum::{extract::Json, http::StatusCode};
 use serde_json::{json, Value};
 use tracing::info;
+// Removed unused tracing import
 
 /// Get all teams
 pub async fn get_teams() -> Result<Json<Value>, StatusCode> {

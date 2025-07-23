@@ -1,0 +1,61 @@
+# Prometheus configuration for NestGate monitoring
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'nestgate-production'
+    environment: 'production'
+
+rule_files:
+  - "nestgate_alerts.yml"
+
+scrape_configs:
+  # NestGate main service
+  - job_name: 'nestgate'
+    static_configs:
+      - targets: ['nestgate:9090']
+    scrape_interval: 10s
+    metrics_path: /metrics
+    labels:
+      service: 'nestgate'
+      component: 'storage'
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    labels:
+      service: 'prometheus'
+      component: 'monitoring'
+
+  # Node Exporter (system metrics)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['host.docker.internal:9100']
+    labels:
+      service: 'node-exporter'
+      component: 'system'
+
+  # ZFS metrics (if available)
+  - job_name: 'zfs'
+    static_configs:
+      - targets: ['nestgate:9091']
+    scrape_interval: 30s
+    metrics_path: /metrics/zfs
+    labels:
+      service: 'nestgate'
+      component: 'zfs'
+
+  # Container metrics
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['host.docker.internal:9323']
+    labels:
+      service: 'docker'
+      component: 'container'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093 

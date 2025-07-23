@@ -6,6 +6,8 @@
 //! while enforcing crypto lock protection for commercial extraction.
 
 use crate::handlers::hardware_tuning::{
+use tracing::info;
+use tracing::error;
     HardwareTuningRequest, HardwareTuningResponse,
     ExternalAccessStatus, TuningRecommendations,
 };
@@ -17,7 +19,7 @@ use axum::{
     response::Json as ResponseJson,
 };
 use nestgate_core::ExtractionLock;
-use tracing::{error, info};
+// Removed unused tracing import
 use uuid::Uuid;
 
 /// Auto-tune hardware endpoint with live Toadstool integration

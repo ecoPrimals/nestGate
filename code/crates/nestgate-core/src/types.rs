@@ -1,7 +1,6 @@
-//! Core types and data structures for NestGate
-//!
-//! This module contains fundamental data types used throughout the system.
-
+/// Core types and data structures for NestGate
+///
+/// This module contains fundamental data types used throughout the system.
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display};

@@ -1,11 +1,11 @@
-//! Environment detection and configuration for NestGate
-//!
-//! Supports two primary modes:
-//! 1. **Orchestration-Enhanced**: All networking, ports, and service discovery handled by orchestration module
-//! 2. **Standalone**: Self-contained operation with direct network protocols
-//!
-//! The system automatically detects the environment and configures itself accordingly.
-
+// Removed unused error imports
+/// Environment detection and configuration for NestGate
+///
+/// Supports two primary modes:
+/// 1. **Orchestration-Enhanced**: All networking, ports, and service discovery handled by orchestration module
+/// 2. **Standalone**: Self-contained operation with direct network protocols
+///
+/// The system automatically detects the environment and configures itself accordingly.
 use std::collections::HashMap;
 use std::env;
 

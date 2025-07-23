@@ -1,3 +1,61 @@
+//! # NestGate UI Test Utilities
+//!
+//! **Testing utilities and helpers for UI components and interactions**
+//!
+//! This module provides comprehensive testing infrastructure for the NestGate UI,
+//! including mock data generators, UI interaction helpers, and testing fixtures
+//! for reliable and maintainable UI tests.
+//!
+//! ## Testing Infrastructure
+//!
+//! - **Mock Data Generation**: Realistic test data for all UI components
+//! - **UI Interaction Helpers**: Programmatic UI interaction simulation
+//! - **State Management**: Test state setup and validation utilities
+//! - **Snapshot Testing**: Visual regression testing support
+//! - **Performance Testing**: UI performance benchmarking utilities
+//! - **Accessibility Testing**: A11y compliance verification helpers
+//!
+//! ## Mock Data Providers
+//!
+//! The module includes generators for:
+//! - Storage pool data with realistic usage patterns
+//! - Performance metrics with historical trends
+//! - Network activity simulation
+//! - File system hierarchies and metadata
+//! - System status and health indicators
+//! - User notifications and alert scenarios
+//!
+//! ## UI Testing Patterns
+//!
+//! Supports common testing patterns:
+//! - **Component Isolation**: Testing individual components in isolation
+//! - **Integration Testing**: Full UI workflow testing
+//! - **Responsive Testing**: Multi-resolution UI validation
+//! - **Theme Testing**: Dark/light mode compatibility
+//! - **Error Scenario Testing**: Error state UI behavior
+//!
+//! ## Test Data Management
+//!
+//! - **Deterministic Data**: Reproducible test scenarios
+//! - **Edge Case Coverage**: Boundary conditions and error states
+//! - **Performance Profiles**: Various system load scenarios
+//! - **Configuration Variants**: Different system configurations
+//!
+//! ## Example Usage
+//!
+//! ```rust
+//! use nestgate_ui::test_utils::*;
+//!
+//! #[test]
+//! fn test_dashboard_rendering() {
+//!     let mock_app = create_mock_app();
+//!     let mock_data = generate_performance_data();
+//!     
+//!     // Test UI rendering with mock data
+//!     assert_ui_renders_correctly(&mock_app, &mock_data);
+//! }
+//! ```
+
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;

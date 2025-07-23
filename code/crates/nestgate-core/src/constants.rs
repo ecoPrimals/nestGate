@@ -1,8 +1,8 @@
-//! Core System Constants - SOVEREIGN SCIENCE Standard
-//!
-//! This module contains all system constants to achieve 100% hardcoding elimination.
-//! No hardcoded values are permitted anywhere in the codebase.
-
+// Removed unused error imports
+/// Core System Constants - SOVEREIGN SCIENCE Standard
+///
+/// This module contains all system constants to achieve 100% hardcoding elimination.
+/// No hardcoded values are permitted anywhere in the codebase.
 use std::env;
 use std::time::Duration;
 
@@ -13,6 +13,13 @@ pub mod service_defaults {
     pub const DEFAULT_POSTGRES_SERVICE: &str = "postgres-db";
     pub const DEFAULT_REDIS_SERVICE: &str = "redis-cache";
     pub const DEFAULT_SONGBIRD_SERVICE: &str = "songbird-orchestrator";
+}
+
+/// Test constants for universal adapter
+pub mod test_constants {
+    pub const SERVICE_EXAMPLE_COMPUTE: &str = "example-compute-service";
+    pub const SERVICE_LOCALHOST_URL: &str = "http://localhost:8080";
+    pub const STATUS_ERROR: &str = "error";
 }
 
 /// Timeout constants - all durations centralized for configuration
@@ -476,6 +483,31 @@ pub mod test {
     pub fn test_token_prefix() -> String {
         env::var("NESTGATE_TEST_TOKEN_PREFIX").unwrap_or_else(|_| "test_token".to_string())
     }
+
+    /// Test email address for monitoring tests
+    pub const EXAMPLE_TEST_EMAIL: &str = "test@example.com";
+
+    /// Test SMTP server for monitoring tests
+    pub const EXAMPLE_SMTP_SERVER: &str = "smtp.example.com";
+
+    /// Test sender email for monitoring tests
+    pub const EXAMPLE_SENDER_EMAIL: &str = "sender@example.com";
+
+    /// Test Slack webhook URL for monitoring tests
+    pub const EXAMPLE_SLACK_WEBHOOK: &str = "https://hooks.slack.com/test";
+
+    /// Test webhook URL for monitoring tests
+    pub const EXAMPLE_WEBHOOK_URL: &str = "https://example.com/webhook";
+
+    /// Empty string constant for tests
+    pub const EMPTY_STRING: &str = "";
+
+    /// Test role names for security tests
+    pub const ROLE_POWER_USER: &str = "power_user";
+    pub const DESC_POWER_USER: &str = "Power User with Extended Permissions";
+    pub const ROLE_CUSTOM: &str = "custom_role";
+    pub const DESC_CUSTOM: &str = "Custom Test Role";
+    pub const PERM_CUSTOM: &str = "custom_permission";
 }
 
 /// Time Constants
@@ -528,9 +560,6 @@ pub mod time {
 pub mod defaults {
     /// Default configuration file path
     pub const CONFIG_FILE: &str = "nestgate.toml";
-
-    /// Default log level
-    pub const LOG_LEVEL: &str = "info";
 
     /// Default data directory
     pub const DATA_DIR: &str = "./data";
@@ -600,12 +629,6 @@ pub fn discovery_interval() -> Duration {
 
 /// biomeOS integration constants
 pub mod biomeos_defaults {
-    /// Default ZFS pool name for biomeOS volumes
-    pub const DEFAULT_BIOMEOS_POOL: &str = "nestpool";
-
-    /// Default dataset path prefix for biomeOS volumes
-    pub const DEFAULT_BIOMEOS_DATASET_PREFIX: &str = "biomeos";
-
     /// Default mount path prefix for biomeOS volumes
     pub const DEFAULT_BIOMEOS_MOUNT_PREFIX: &str = "/biomeos";
 
@@ -631,40 +654,27 @@ pub mod biomeos_defaults {
     pub mod capabilities {
         pub const ZFS_POOLS: &str = "zfs-pools";
         pub const TIERED_STORAGE: &str = "tiered-storage";
-        pub const SNAPSHOTS: &str = "snapshots";
         pub const VOLUME_PROVISIONING: &str = "volume-provisioning";
-        pub const ENCRYPTION: &str = "encryption";
-        pub const FEDERATION: &str = "federation";
-        pub const COMPRESSION: &str = "compression";
-        pub const DEDUPLICATION: &str = "deduplication";
     }
 
     /// Integration and discovery constants
     pub mod integrations {
         /// Universal service discovery capability
-        pub const UNIVERSAL_SERVICE_DISCOVERY: &str = "universal_service_discovery";
+        pub const UNIVERSAL_DISCOVERY: &str = "universal-discovery";
 
         /// Capability-based integration patterns
-        pub const CAPABILITY_SECURITY: &str = "security";
-        pub const CAPABILITY_ORCHESTRATION: &str = "orchestration";
-        pub const CAPABILITY_DISCOVERY: &str = "discovery";
-        pub const CAPABILITY_COMPUTE: &str = "compute";
-        pub const CAPABILITY_INTELLIGENCE: &str = "intelligence";
-
-        /// Universal protocol support
-        pub const PROTOCOL_HTTP: &str = "http";
-        pub const PROTOCOL_WEBSOCKET: &str = "websocket";
-        pub const PROTOCOL_GRPC: &str = "grpc";
-        pub const PROTOCOL_CUSTOM: &str = "custom";
+        pub const CAPABILITY_BASED: &str = "capability-based";
+        pub const SERVICE_DISCOVERY: &str = "service-discovery";
+        pub const PROTOCOL_SUPPORT: &str = "protocol-support";
 
         /// Service categories
-        pub const CATEGORY_STORAGE: &str = "storage";
-        pub const CATEGORY_SECURITY: &str = "security";
-        pub const CATEGORY_COMPUTE: &str = "compute";
-        pub const CATEGORY_NETWORK: &str = "network";
-        pub const CATEGORY_ORCHESTRATION: &str = "orchestration";
-        pub const CATEGORY_INTELLIGENCE: &str = "intelligence";
-        pub const CATEGORY_CUSTOM: &str = "custom";
+        pub const STORAGE: &str = "storage";
+        pub const DATABASE: &str = "database";
+        pub const CACHE: &str = "cache";
+        pub const AUTHENTICATION: &str = "authentication";
+        pub const FILE_SYSTEM: &str = "file-system";
+        pub const NETWORK: &str = "network";
+        pub const MONITORING: &str = "monitoring";
     }
 }
 
@@ -679,16 +689,11 @@ pub mod strings {
     pub const DEFAULT_BIND_INTERFACE: &str = "127.0.0.1";
 
     /// Common protocol strings
-    pub const LOCALHOST: &str = "localhost";
     pub const LOCALHOST_IP: &str = "127.0.0.1";
-    pub const DEFAULT_PROFILE: &str = "balanced";
-    pub const DEFAULT_BACKEND: &str = "filesystem";
     pub const DEFAULT_PATH: &str = "/tmp/nestgate";
 
     /// Security and crypto strings
     pub const FALLBACK_HASH_ALGORITHM: &str = "FALLBACK_HASH";
-    pub const FALLBACK_KEY_ID: &str = "fallback_key";
-    pub const DEFAULT_TRUST_ANCHOR: &str = "system";
     pub const DEFAULT_TIMEZONE: &str = "UTC";
     pub const DEFAULT_LICENSE: &str = "AGPL-3.0";
 
@@ -705,19 +710,17 @@ pub mod strings {
     pub const CLIENT_AUTH: &str = "clientAuth";
 
     /// Common permission strings
-    pub const PERMISSION_READ: &str = "read";
-    pub const PERMISSION_WRITE: &str = "write";
-    pub const PERMISSION_HARDWARE_TUNING: &str = "hardware_tuning";
+    pub const READ: &str = "read";
+    pub const WRITE: &str = "write";
+    pub const EXECUTE: &str = "execute";
 
     /// OS and architecture strings
-    pub const UNKNOWN_OS: &str = "unknown";
     pub const MACOS: &str = "macOS";
     pub const WINDOWS: &str = "Windows";
 
     /// Common CPU scaling options
-    pub const CPU_SCALING_ONDEMAND: &str = "ondemand";
-    pub const CPU_SCALING_PERFORMANCE: &str = "performance";
-    pub const CPU_SCALING_POWERSAVE: &str = "powersave";
+    pub const HIGH_PERFORMANCE: &str = "high-performance";
+    pub const ENERGY_EFFICIENT: &str = "energy-efficient";
 
     /// Lazy shared strings for high-frequency usage
     pub fn default_service_name() -> Arc<str> {
@@ -733,7 +736,7 @@ pub mod strings {
     }
 
     pub fn default_profile() -> Arc<str> {
-        Arc::from(DEFAULT_PROFILE)
+        Arc::from("default")
     }
 }
 

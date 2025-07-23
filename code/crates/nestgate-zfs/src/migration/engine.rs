@@ -8,7 +8,8 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{mpsc, RwLock, Semaphore};
 use tokio::time::interval;
-use tracing::{error, info};
+use tracing::error;
+use tracing::info;
 
 use crate::{
     automation::DatasetAnalyzer, config::ZfsConfig, dataset::ZfsDatasetManager,

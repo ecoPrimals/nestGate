@@ -10,7 +10,7 @@ use axum::{
 };
 use chrono::Utc;
 use serde_json;
-use tracing::{error, info};
+// Removed unused tracing import
 use uuid::Uuid;
 
 use super::types::*;

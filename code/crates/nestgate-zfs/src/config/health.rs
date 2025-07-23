@@ -33,3 +33,20 @@ impl Default for HealthMonitoringConfig {
         }
     }
 }
+
+impl HealthMonitoringConfig {
+    /// Create production-optimized health monitoring configuration
+    pub fn production() -> Self {
+        Self {
+            enabled: true,
+            check_interval_seconds: 60,
+            failure_threshold: 3,
+            recovery_threshold: 1,
+            alerting_enabled: true,
+            alert_endpoints: vec![
+                "email:admin@localhost".to_string(),
+                "webhook:http://localhost:8080/alerts".to_string(),
+            ],
+        }
+    }
+}

@@ -6,7 +6,7 @@
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::time::SystemTime;
-use tracing::{debug, info, warn};
+// Removed unused tracing import
 
 use crate::handlers::zfs::universal_zfs::{
     config::RemoteConfig,
@@ -17,6 +17,7 @@ use crate::handlers::zfs::universal_zfs::{
         UniversalZfsResult,
     },
 };
+use tracing::{debug, info, warn};
 
 /// Remote ZFS service implementation
 #[derive(Debug, Clone)]

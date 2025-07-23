@@ -1,8 +1,8 @@
-//! Storage Coordinator
-//!
-//! Routes storage requests to appropriate backends and handles distributed operations.
-
+/// Storage Coordinator
+///
+/// Routes storage requests to appropriate backends and handles distributed operations.
 use super::types::*;
+// Removed unused error imports
 use crate::Result;
 use std::sync::Arc;
 

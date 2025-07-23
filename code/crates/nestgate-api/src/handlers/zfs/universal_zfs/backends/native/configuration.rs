@@ -2,11 +2,13 @@
 //!
 //! Contains configuration and utility operations for the native ZFS backend.
 
-use tracing::{info, warn};
+// Removed unused tracing import
 
 use crate::handlers::zfs::universal_zfs::types::{UniversalZfsError, UniversalZfsResult};
 
 use super::core::NativeZfsService;
+use tracing::info;
+use tracing::warn;
 
 /// Get service configuration
 pub async fn get_configuration(

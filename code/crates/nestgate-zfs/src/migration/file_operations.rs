@@ -6,11 +6,12 @@
 use std::path::PathBuf;
 use std::time::Instant;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tracing::debug;
+// Removed unused tracing import
 
 use nestgate_core::{NestGateError, Result as CoreResult};
 
 use super::types::MigrationJob;
+use tracing::debug;
 
 /// Copy file with progress tracking using zero-copy buffer
 pub async fn copy_file_with_progress(
@@ -18,13 +19,25 @@ pub async fn copy_file_with_progress(
     target_path: &PathBuf,
     job: &mut MigrationJob,
 ) -> CoreResult<()> {
-    let mut source_file = tokio::fs::File::open(source_path)
-        .await
-        .map_err(|e| NestGateError::Storage(format!("Failed to open source file: {e}")))?;
+    let mut source_file =
+        tokio::fs::File::open(source_path)
+            .await
+            .map_err(|e| NestGateError::System {
+                message: format!("Failed to open source file: {}", e),
+                resource: nestgate_core::error::SystemResource::Disk,
+                utilization: None,
+                recovery: nestgate_core::error::RecoveryStrategy::Retry,
+            })?;
 
-    let mut target_file = tokio::fs::File::create(target_path)
-        .await
-        .map_err(|e| NestGateError::Storage(format!("Failed to create target file: {e}")))?;
+    let mut target_file =
+        tokio::fs::File::create(target_path)
+            .await
+            .map_err(|e| NestGateError::System {
+                message: format!("Failed to create target file: {}", e),
+                resource: nestgate_core::error::SystemResource::Disk,
+                utilization: None,
+                recovery: nestgate_core::error::RecoveryStrategy::Retry,
+            })?;
 
     // Use zero-copy buffer management for better performance
     let buffer_size = 4 * 1024 * 1024; // 4MB buffer instead of 1MB
@@ -33,35 +46,51 @@ pub async fn copy_file_with_progress(
     static BUFFER_MANAGER: std::sync::OnceLock<
         std::sync::Arc<std::sync::Mutex<nestgate_core::zero_copy::BufferManager>>,
     > = std::sync::OnceLock::new();
-    let buffer_manager = BUFFER_MANAGER.get_or_init(|| {
+    let buffer_manager_arc = BUFFER_MANAGER.get_or_init(|| {
         std::sync::Arc::new(std::sync::Mutex::new(
-            nestgate_core::zero_copy::BufferManager::new(4),
+            nestgate_core::zero_copy::BufferManager::new(buffer_size),
         ))
     });
 
     let mut buffer = {
-        let mut manager = buffer_manager.lock().map_err(|e| {
-            NestGateError::Storage(format!("Failed to acquire buffer manager lock: {e}"))
-        })?;
-        manager.get_buffer(buffer_size)
+        let mut buffer_manager = buffer_manager_arc
+            .lock()
+            .map_err(|e| NestGateError::System {
+                message: format!("Failed to acquire buffer manager lock: {}", e),
+                resource: nestgate_core::error::SystemResource::Memory,
+                utilization: None,
+                recovery: nestgate_core::error::RecoveryStrategy::Retry,
+            })?;
+        buffer_manager.get_buffer(buffer_size)
     };
     let mut total_copied = 0u64;
     let start_time = Instant::now();
 
     loop {
-        let bytes_read = source_file
-            .read(&mut buffer)
-            .await
-            .map_err(|e| NestGateError::Storage(format!("Failed to read source file: {e}")))?;
+        let bytes_read =
+            source_file
+                .read(&mut buffer)
+                .await
+                .map_err(|e| NestGateError::System {
+                    message: format!("Failed to read source file: {}", e),
+                    resource: nestgate_core::error::SystemResource::Disk,
+                    utilization: None,
+                    recovery: nestgate_core::error::RecoveryStrategy::Retry,
+                })?;
 
         if bytes_read == 0 {
-            break; // EOF
+            break;
         }
 
         target_file
             .write_all(&buffer[..bytes_read])
             .await
-            .map_err(|e| NestGateError::Storage(format!("Failed to write target file: {e}")))?;
+            .map_err(|e| NestGateError::System {
+                message: format!("Failed to write target file: {}", e),
+                resource: nestgate_core::error::SystemResource::Disk,
+                utilization: None,
+                recovery: nestgate_core::error::RecoveryStrategy::Retry,
+            })?;
 
         total_copied += bytes_read as u64;
 
@@ -86,20 +115,28 @@ pub async fn copy_file_with_progress(
         }
     }
 
-    // Ensure all data is written to disk
+    // Flush to disk
     target_file
         .sync_all()
         .await
-        .map_err(|e| NestGateError::Storage(format!("Failed to sync target file: {e}")))?;
-
-    // Return buffer to pool for reuse (zero-copy optimization)
-    {
-        let mut manager = buffer_manager.lock().map_err(|e| {
-            NestGateError::Storage(format!(
-                "Failed to acquire buffer manager lock for return: {e}"
-            ))
+        .map_err(|e| NestGateError::System {
+            message: format!("Failed to sync target file: {}", e),
+            resource: nestgate_core::error::SystemResource::Disk,
+            utilization: None,
+            recovery: nestgate_core::error::RecoveryStrategy::Retry,
         })?;
-        manager.return_buffer(buffer);
+
+    // Return buffer to pool
+    {
+        let mut buffer_manager = buffer_manager_arc
+            .lock()
+            .map_err(|e| NestGateError::System {
+                message: format!("Failed to acquire buffer manager lock for return: {}", e),
+                resource: nestgate_core::error::SystemResource::Memory,
+                utilization: None,
+                recovery: nestgate_core::error::RecoveryStrategy::Retry,
+            })?;
+        buffer_manager.return_buffer(buffer);
     }
 
     Ok(())
@@ -107,38 +144,69 @@ pub async fn copy_file_with_progress(
 
 /// Verify file integrity after copy
 pub async fn verify_file_integrity(source_path: &PathBuf, target_path: &PathBuf) -> CoreResult<()> {
-    // Compare file sizes
-    let source_metadata = tokio::fs::metadata(source_path)
-        .await
-        .map_err(|e| NestGateError::Storage(format!("Failed to get source metadata: {e}")))?;
+    let source_metadata =
+        tokio::fs::metadata(source_path)
+            .await
+            .map_err(|e| NestGateError::System {
+                message: format!("Failed to get source metadata: {}", e),
+                resource: nestgate_core::error::SystemResource::Disk,
+                utilization: None,
+                recovery: nestgate_core::error::RecoveryStrategy::Retry,
+            })?;
 
-    let target_metadata = tokio::fs::metadata(target_path)
-        .await
-        .map_err(|e| NestGateError::Storage(format!("Failed to get target metadata: {e}")))?;
+    let target_metadata =
+        tokio::fs::metadata(target_path)
+            .await
+            .map_err(|e| NestGateError::System {
+                message: format!("Failed to get target metadata: {}", e),
+                resource: nestgate_core::error::SystemResource::Disk,
+                utilization: None,
+                recovery: nestgate_core::error::RecoveryStrategy::Retry,
+            })?;
 
     if source_metadata.len() != target_metadata.len() {
-        return Err(NestGateError::Storage(format!(
-            "File size mismatch: source {} bytes, target {} bytes",
-            source_metadata.len(),
-            target_metadata.len()
-        )));
+        return Err(NestGateError::System {
+            message: format!(
+                "File size mismatch: source {} bytes, target {} bytes",
+                source_metadata.len(),
+                target_metadata.len()
+            ),
+            resource: nestgate_core::error::SystemResource::Disk,
+            utilization: None,
+            recovery: nestgate_core::error::RecoveryStrategy::Retry,
+        });
     }
 
     // For small files, do a full content comparison
     if source_metadata.len() < 10 * 1024 * 1024 {
         // 10MB threshold
-        let source_content = tokio::fs::read(source_path).await.map_err(|e| {
-            NestGateError::Storage(format!("Failed to read source for verification: {e}"))
-        })?;
+        let source_content =
+            tokio::fs::read(source_path)
+                .await
+                .map_err(|e| NestGateError::System {
+                    message: format!("Failed to read source for verification: {}", e),
+                    resource: nestgate_core::error::SystemResource::Disk,
+                    utilization: None,
+                    recovery: nestgate_core::error::RecoveryStrategy::Retry,
+                })?;
 
-        let target_content = tokio::fs::read(target_path).await.map_err(|e| {
-            NestGateError::Storage(format!("Failed to read target for verification: {e}"))
-        })?;
+        let target_content =
+            tokio::fs::read(target_path)
+                .await
+                .map_err(|e| NestGateError::System {
+                    message: format!("Failed to read target for verification: {}", e),
+                    resource: nestgate_core::error::SystemResource::Disk,
+                    utilization: None,
+                    recovery: nestgate_core::error::RecoveryStrategy::Retry,
+                })?;
 
         if source_content != target_content {
-            return Err(NestGateError::Storage(
-                "File content mismatch after copy".to_string(),
-            ));
+            return Err(NestGateError::System {
+                message: "File content mismatch after copy".to_string(),
+                resource: nestgate_core::error::SystemResource::Disk,
+                utilization: None,
+                recovery: nestgate_core::error::RecoveryStrategy::Retry,
+            });
         }
     }
 

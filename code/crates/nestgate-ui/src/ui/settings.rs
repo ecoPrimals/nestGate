@@ -1,3 +1,48 @@
+//! # NestGate Settings UI Component
+//!
+//! **Comprehensive system configuration and preferences interface**
+//!
+//! This module provides the settings interface for NestGate, allowing users to
+//! configure system parameters, ZFS options, network settings, and user preferences.
+//!
+//! ## Settings Categories
+//!
+//! - **System Configuration**: Core system parameters and behavior
+//! - **Storage Settings**: ZFS pool configuration and storage policies
+//! - **Network Configuration**: Network interfaces and security settings
+//! - **User Preferences**: UI themes, notifications, and user experience
+//! - **Performance Tuning**: Cache settings and optimization parameters
+//! - **Security Options**: Authentication, encryption, and access control
+//!
+//! ## Configuration Management
+//!
+//! The settings system provides:
+//! - **Live Updates**: Changes applied immediately where possible
+//! - **Validation**: Input validation with helpful error messages
+//! - **Defaults**: Easy reset to factory defaults
+//! - **Import/Export**: Configuration backup and restore
+//! - **Profile Management**: Multiple configuration profiles
+//!
+//! ## Integration Points
+//!
+//! Settings integrate with all system components:
+//! - ZFS manager for storage configuration
+//! - Network layer for connectivity settings
+//! - Security subsystem for authentication
+//! - UI framework for theme and appearance
+//!
+//! ## Example Usage
+//!
+//! ```rust
+//! impl NestGateApp {
+//!     pub fn render_settings(&mut self, ui: &mut egui::Ui) {
+//!         // Renders tabbed settings interface
+//!         ui.heading("⚙️ Settings");
+//!         // ... implementation with tabs and validation
+//!     }
+//! }
+//! ```
+
 use crate::types::*;
 use eframe::egui::{self, RichText};
 use std::time::Duration;

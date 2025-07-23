@@ -13,9 +13,9 @@ use rand::{thread_rng, Rng};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use tokio::sync::RwLock;
-use tokio::time::sleep;
+use tokio::time::{sleep, Duration};
 use uuid::Uuid;
 
 /// Fault injection configuration

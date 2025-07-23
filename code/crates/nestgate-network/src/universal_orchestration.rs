@@ -8,7 +8,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, info, warn};
 use uuid;
 
 use nestgate_core::{
@@ -16,6 +15,9 @@ use nestgate_core::{
     universal_traits::{ServiceHealth, ServiceInfo, ServiceRegistration},
     Result, ServiceInstance, UniversalPrimalAdapter,
 };
+use tracing::debug;
+use tracing::info;
+use tracing::warn;
 
 use crate::ServiceStatus;
 
@@ -93,13 +95,17 @@ impl Default for NetworkServiceRegistration {
             address: std::env::var("NESTGATE_BIND_ADDRESS")
                 .unwrap_or_else(|_| "nestgate-nas".to_string()),
             port: 0,
-            endpoints: vec![
-                "/api/v1/zfs/pools".to_string(),
-                "/api/v1/zfs/datasets".to_string(),
-                "/api/v1/zfs/snapshots".to_string(),
-                "/api/v1/storage/info".to_string(),
-                "/health".to_string(),
-            ],
+            endpoints: {
+                use nestgate_core::config::ApiPathsConfig;
+                let api_paths = ApiPathsConfig::from_environment();
+                vec![
+                    api_paths.zfs.pools,
+                    api_paths.zfs.datasets,
+                    api_paths.zfs.snapshots,
+                    api_paths.storage.info,
+                    api_paths.health.health,
+                ]
+            },
             capabilities: vec![
                 "zfs_pools".to_string(),
                 "tiered_storage".to_string(),
@@ -209,9 +215,12 @@ impl UniversalOrchestrationManager {
                     if self.config.fallback_to_standalone {
                         self.register_service_standalone(service).await
                     } else {
-                        Err(nestgate_core::NestGateError::Internal(format!(
-                            "Orchestration provider error: {e}"
-                        )))
+                        Err(nestgate_core::NestGateError::Internal {
+                            message: format!("Orchestration provider error: {e}"),
+                            location: Some(format!("{}:{}", file!(), line!())),
+                            debug_info: None,
+                            is_bug: false,
+                        })
                     }
                 }
             }
@@ -220,9 +229,12 @@ impl UniversalOrchestrationManager {
             if self.config.fallback_to_standalone {
                 self.register_service_standalone(service).await
             } else {
-                Err(nestgate_core::NestGateError::Internal(
-                    "No orchestration provider available".to_string(),
-                ))
+                Err(nestgate_core::NestGateError::Internal {
+                    message: "No orchestration provider available".to_string(),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                })
             }
         }
     }
@@ -275,9 +287,12 @@ impl UniversalOrchestrationManager {
                     if self.config.fallback_to_standalone {
                         self.discover_services_standalone(service_type).await
                     } else {
-                        Err(nestgate_core::NestGateError::Internal(format!(
-                            "Service discovery error: {e}"
-                        )))
+                        Err(nestgate_core::NestGateError::Internal {
+                            message: format!("Service discovery error: {e}"),
+                            location: Some(format!("{}:{}", file!(), line!())),
+                            debug_info: None,
+                            is_bug: false,
+                        })
                     }
                 }
             }
@@ -341,9 +356,12 @@ impl UniversalOrchestrationManager {
                     if self.config.fallback_to_standalone {
                         self.allocate_port_standalone(service_name, port_type).await
                     } else {
-                        Err(nestgate_core::NestGateError::Internal(format!(
-                            "Port allocation error: {e}"
-                        )))
+                        Err(nestgate_core::NestGateError::Internal {
+                            message: format!("Port allocation error: {e}"),
+                            location: Some(format!("{}:{}", file!(), line!())),
+                            debug_info: None,
+                            is_bug: false,
+                        })
                     }
                 }
             }
@@ -407,9 +425,12 @@ impl UniversalOrchestrationManager {
                     if self.config.fallback_to_standalone {
                         Ok(ServiceStatus::Unknown)
                     } else {
-                        Err(nestgate_core::NestGateError::Internal(format!(
-                            "Health check error: {e}"
-                        )))
+                        Err(nestgate_core::NestGateError::Internal {
+                            message: format!("Health check error: {e}"),
+                            location: Some(format!("{}:{}", file!(), line!())),
+                            debug_info: None,
+                            is_bug: false,
+                        })
                     }
                 }
             }

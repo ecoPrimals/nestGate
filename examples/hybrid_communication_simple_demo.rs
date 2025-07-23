@@ -1,16 +1,18 @@
-//! Simplified Hybrid Communication System Demonstration
-//!
-//! This example demonstrates the core concepts of the hybrid communication approach:
-//! 1. WebSocket + JSON for external client communication
-//! 2. tarpc for internal service-to-service communication
-//! 3. Extended MCP protocol for streaming capabilities
-//! 4. Event system for reactive coordination
-//!
-//! This simplified version focuses on the core communication patterns
-//! without the complex routing and state management issues.
+use serde::{Serialize, Deserialize};
+use tracing::{error, info};
+// Simplified Hybrid Communication System Demonstration
+//
+// This example demonstrates the core concepts of the hybrid communication approach:
+// 1. WebSocket + JSON for external client communication
+// 2. tarpc for internal service-to-service communication
+// 3. Extended MCP protocol for streaming capabilities
+// 4. Event system for reactive coordination
+//
+// This simplified version focuses on the core communication patterns
+// without the complex routing and state management issues.
 
 use anyhow::Result;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::{
     collections::HashMap,
     sync::{
@@ -23,7 +25,7 @@ use tokio::{
     sync::{broadcast, RwLock},
     time::sleep,
 };
-use tracing::info;
+// Removed unused tracing import
 use uuid::Uuid;
 
 /// Simplified WebSocket-style external communication

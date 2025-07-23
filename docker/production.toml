@@ -1,0 +1,132 @@
+# ==============================================================================
+# NestGate Production Configuration
+# Optimized for containerized production deployment
+# ==============================================================================
+
+[system]
+log_level = "info"
+data_dir = "/opt/nestgate/data"
+temp_dir = "/tmp/nestgate"
+max_concurrent_ops = 1000
+environment = "production"
+
+[storage]
+cache_size = 2147483648  # 2GB - configurable via NESTGATE_DEFAULT_CACHE_SIZE
+max_file_size = 107374182400  # 100GB - configurable via NESTGATE_MAX_FILE_SIZE
+
+# Storage tier configuration for production
+[[storage.tiers]]
+name = "hot"
+tier_type = "hot"
+path = "/opt/nestgate/data/hot"
+capacity = 1099511627776  # 1TB
+
+[[storage.tiers]]
+name = "warm"
+tier_type = "warm"
+path = "/opt/nestgate/data/warm"
+capacity = 5497558138880  # 5TB
+
+[[storage.tiers]]
+name = "cold"
+tier_type = "cold"
+path = "/opt/nestgate/data/cold"
+capacity = 21990232555520  # 20TB
+
+[network]
+bind_address = "0.0.0.0:8000"  # Listen on all interfaces in container
+api_address = "0.0.0.0:8000"
+websocket_address = "0.0.0.0:8080"
+hostname = "nestgate"
+api_port = 8000
+websocket_port = 8080
+max_concurrent_connections = 1000
+connection_timeout_seconds = 30
+request_timeout_seconds = 60
+
+[security]
+auth_method = "jwt"
+encryption_algorithm = "aes-256-gcm"
+key_rotation_days = 30
+max_failed_attempts = 5
+
+[security.rbac]
+enabled = true
+default_role = "user"
+
+[security.network]
+default_bind_interface = "0.0.0.0"  # Container networking
+localhost_only = false
+max_bind_interfaces = 3
+
+[monitoring]
+metrics_interval = 30
+log_level = "info"
+log_file = "/opt/nestgate/logs/nestgate.log"
+log_rotation_size = 104857600  # 100MB
+log_retention_days = 30
+
+[monitoring.prometheus]
+enabled = true
+port = 9090
+path = "/metrics"
+
+[monitoring.alerts]
+enabled = true
+
+[monitoring.alerts.thresholds]
+cpu_threshold = 80.0
+memory_threshold = 85.0
+disk_threshold = 90.0
+latency_threshold = 1000.0
+error_rate_threshold = 5.0
+
+# Federation configuration for distributed deployments
+[federation]
+enabled = true
+cluster_name = "nestgate-production"
+discovery_interval = 30
+health_check_interval = 15
+
+# MCP integration for production
+[mcp]
+enabled = true
+discovery_timeout = 10
+max_retries = 3
+
+# API paths configuration
+[api_paths]
+api_version = "v1"
+
+[api_paths.zfs]
+pools = "/api/v1/zfs/pools"
+datasets = "/api/v1/zfs/datasets"
+snapshots = "/api/v1/zfs/snapshots"
+
+[api_paths.storage]
+info = "/api/v1/storage/info"
+capacity = "/api/v1/storage/capacity"
+
+[api_paths.health]
+health = "/health"
+metrics = "/metrics"
+diagnostics = "/diagnostics"
+
+# Storage constants for production optimization
+[storage_constants]
+
+[storage_constants.file_sizes]
+small_file = 1048576      # 1MB
+large_file = 104857600    # 100MB
+max_file_size = 107374182400  # 100GB
+archive_threshold = 1073741824  # 1GB
+
+[storage_constants.memory_limits]
+minimum_available_memory = 104857600    # 100MB
+default_cache_size = 2147483648         # 2GB
+max_cache_size = 8589934592            # 8GB
+
+[storage_constants.performance_thresholds]
+uuid_cache_max_nanos = 50000000      # 50ms
+memory_pool_max_nanos = 10000000     # 10ms
+io_operation_timeout_ms = 30000      # 30s 

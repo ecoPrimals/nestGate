@@ -12,6 +12,7 @@ use std::{
 };
 use tokio::sync::{broadcast, RwLock};
 use tracing::info;
+// Removed unused tracing import
 use uuid::Uuid;
 
 /// MCP streaming manager for extended MCP protocol support

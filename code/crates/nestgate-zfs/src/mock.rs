@@ -5,8 +5,11 @@
 
 use std::collections::HashMap;
 use std::sync::OnceLock;
+
 use std::time::SystemTime;
-use tracing::{debug, info};
+use tracing::debug;
+use tracing::info;
+// Removed unused tracing import
 
 /// Global mock mode state - computed once for performance
 static MOCK_MODE: OnceLock<bool> = OnceLock::new();

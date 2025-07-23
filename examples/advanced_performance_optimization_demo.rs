@@ -1,26 +1,26 @@
-//! Advanced Performance Optimization Demo
-//!
-//! This example demonstrates the advanced performance optimization capabilities
-//! of NestGate, including the AI-driven ZFS optimization engine and real-time
-//! performance dashboard.
-//!
-//! ## Features Demonstrated
-//! - Advanced ZFS optimization with machine learning patterns
-//! - Real-time performance monitoring and analytics
-//! - Predictive performance forecasting
-//! - Intelligent optimization recommendations
-//! - Comprehensive health scoring
+// Advanced Performance Optimization Demo
+//
+// This example demonstrates the advanced performance optimization capabilities
+// of NestGate, including the AI-driven ZFS optimization engine and real-time
+// performance dashboard.
+//
+// ## Features Demonstrated
+// - Advanced ZFS optimization with machine learning patterns
+// - Real-time performance monitoring and analytics
+// - Predictive performance forecasting
+// - Intelligent optimization recommendations
+// - Comprehensive health scoring
 
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
+use tracing::{error, info};
 
 use nestgate_api::handlers::performance_dashboard::{
     DashboardConfig, PerformanceDashboard, TimeRange,
 };
 use nestgate_core::{NestGateError, Result};
 use nestgate_zfs::advanced_zfs_optimization::{AdvancedZfsOptimizer, OptimizerConfig};
-use tracing::{error, info, warn};
 
 #[tokio::main]
 async fn main() -> Result<()> {

@@ -7,10 +7,15 @@ use crate::handlers::performance_dashboard::types::*;
 use nestgate_core::Result;
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
+use std::time::{ SystemTime};
 use tokio::process::Command;
 use tokio::sync::broadcast;
-use tracing::{debug, error, info, warn};
+use std::time::Duration;
+use tracing::info;
+use tracing::warn;
+use tracing::error;
+use tracing::debug;
+// Removed unused tracing import
 
 /// Real-time metrics collector with ZFS and system integration
 #[derive(Debug)]

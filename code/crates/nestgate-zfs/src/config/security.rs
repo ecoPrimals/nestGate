@@ -63,12 +63,62 @@ impl Default for KeyManagementConfig {
     }
 }
 
+impl KeyManagementConfig {
+    /// Create production-optimized key management configuration
+    pub fn production() -> Self {
+        Self {
+            key_storage_path: PathBuf::from("/etc/nestgate/zfs/keys/production"),
+            rotation_interval_days: 30,
+            backup_locations: vec![
+                PathBuf::from("/backup/nestgate/keys"),
+                PathBuf::from("/offsite/nestgate/keys"),
+            ],
+        }
+    }
+}
+
 impl Default for AccessControlConfig {
     fn default() -> Self {
         Self {
             default_permissions: "755".to_string(),
             user_rules: HashMap::new(),
             group_rules: HashMap::new(),
+        }
+    }
+}
+
+impl AccessControlConfig {
+    /// Create production-optimized access control configuration
+    pub fn production() -> Self {
+        let mut user_rules = HashMap::new();
+        user_rules.insert("zfs-admin".to_string(), vec!["all".to_string()]);
+        user_rules.insert("backup".to_string(), vec!["read".to_string()]);
+
+        let mut group_rules = HashMap::new();
+        group_rules.insert(
+            "zfs-operators".to_string(),
+            vec!["read", "create", "snapshot"]
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
+        );
+
+        Self {
+            default_permissions: "750".to_string(),
+            user_rules,
+            group_rules,
+        }
+    }
+}
+
+impl SecurityConfig {
+    /// Create production-optimized security configuration
+    pub fn production() -> Self {
+        Self {
+            enable_encryption: true,
+            encryption_algorithm: "aes-256-gcm".to_string(),
+            key_management: KeyManagementConfig::production(),
+            access_control: AccessControlConfig::production(),
         }
     }
 }

@@ -5,10 +5,13 @@
 
 use chrono::Utc;
 use serde_json::json;
-use tracing::{error, info};
+// Removed unused tracing import
 
 use super::types::*;
 use nestgate_core::NestGateError;
+
+use tracing::error;
+use tracing::info;
 
 type Result<T> = std::result::Result<T, NestGateError>;
 
@@ -80,9 +83,12 @@ impl ToadstoolComputeClient {
         } else {
             let error = response.text().await?;
             error!("❌ Failed to register with Toadstool: {}", error);
-            Err(NestGateError::Internal(format!(
-                "Toadstool registration failed: {error}"
-            )))
+            Err(NestGateError::Internal {
+                message: format!("Toadstool registration failed: {error}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })
         }
     }
 
@@ -110,9 +116,12 @@ impl ToadstoolComputeClient {
         } else {
             let error = response.text().await?;
             error!("❌ Failed to allocate compute resources: {}", error);
-            Err(NestGateError::Internal(format!(
-                "Toadstool allocation failed: {error}"
-            )))
+            Err(NestGateError::Internal {
+                message: format!("Toadstool allocation failed: {error}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })
         }
     }
 
@@ -129,9 +138,12 @@ impl ToadstoolComputeClient {
             Ok(metrics)
         } else {
             let error = response.text().await?;
-            Err(NestGateError::Internal(format!(
-                "Failed to get live metrics: {error}"
-            )))
+            Err(NestGateError::Internal {
+                message: format!("Failed to get live metrics: {error}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })
         }
     }
 
@@ -200,9 +212,12 @@ impl ToadstoolComputeClient {
             Ok(())
         } else {
             let error = response.text().await?;
-            Err(NestGateError::Internal(format!(
-                "Failed to release resources: {error}"
-            )))
+            Err(NestGateError::Internal {
+                message: format!("Failed to release resources: {error}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })
         }
     }
 
@@ -227,9 +242,12 @@ impl ToadstoolComputeClient {
             Ok(platform_info)
         } else {
             let error = response.text().await?;
-            Err(NestGateError::Internal(format!(
-                "Failed to get platform info: {error}"
-            )))
+            Err(NestGateError::Internal {
+                message: format!("Failed to get platform info: {error}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })
         }
     }
 
@@ -246,9 +264,12 @@ impl ToadstoolComputeClient {
             Ok(metrics)
         } else {
             let error = response.text().await?;
-            Err(NestGateError::Internal(format!(
-                "Failed to get realtime metrics: {error}"
-            )))
+            Err(NestGateError::Internal {
+                message: format!("Failed to get realtime metrics: {error}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })
         }
     }
 
@@ -268,9 +289,12 @@ impl ToadstoolComputeClient {
             Ok(discovery)
         } else {
             let error = response.text().await?;
-            Err(NestGateError::Internal(format!(
-                "Failed to discover compute resources: {error}"
-            )))
+            Err(NestGateError::Internal {
+                message: format!("Failed to discover compute resources: {error}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })
         }
     }
 
@@ -287,9 +311,12 @@ impl ToadstoolComputeClient {
             Ok(health)
         } else {
             let error = response.text().await?;
-            Err(NestGateError::Internal(format!(
-                "Failed to get system health: {error}"
-            )))
+            Err(NestGateError::Internal {
+                message: format!("Failed to get system health: {error}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })
         }
     }
 
@@ -316,9 +343,12 @@ impl ToadstoolComputeClient {
             Ok(execution)
         } else {
             let error = response.text().await?;
-            Err(NestGateError::Internal(format!(
-                "Failed to execute storage workload: {error}"
-            )))
+            Err(NestGateError::Internal {
+                message: format!("Failed to execute storage workload: {error}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })
         }
     }
 
@@ -348,9 +378,12 @@ impl ToadstoolComputeClient {
             Ok(allocation)
         } else {
             let error = response.text().await?;
-            Err(NestGateError::Internal(format!(
-                "Failed to allocate storage resources: {error}"
-            )))
+            Err(NestGateError::Internal {
+                message: format!("Failed to allocate storage resources: {error}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })
         }
     }
 
@@ -380,9 +413,12 @@ impl ToadstoolComputeClient {
             Ok(management)
         } else {
             let error = response.text().await?;
-            Err(NestGateError::Internal(format!(
-                "Failed to manage storage process: {error}"
-            )))
+            Err(NestGateError::Internal {
+                message: format!("Failed to manage storage process: {error}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })
         }
     }
 
@@ -409,9 +445,12 @@ impl ToadstoolComputeClient {
             Ok(optimization)
         } else {
             let error = response.text().await?;
-            Err(NestGateError::Internal(format!(
-                "Failed to optimize storage performance: {error}"
-            )))
+            Err(NestGateError::Internal {
+                message: format!("Failed to optimize storage performance: {error}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })
         }
     }
 }

@@ -1,14 +1,15 @@
-//! Cache management module for NestGate
-//!
-//! This module provides caching functionality for the NestGate system,
-//! supporting hot, warm, and cold storage tiers.
-
+// Removed unused error imports
+/// Cache management module for NestGate
+///
+/// This module provides caching functionality for the NestGate system,
+/// supporting hot, warm, and cold storage tiers.
 use chrono;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
+// Removed unused tracing import
 
 use crate::error::{NestGateError, Result};
 
@@ -167,12 +168,20 @@ impl CacheManager {
     pub fn get(&self, key: &str) -> Result<Option<PathBuf>> {
         let mut items = match self.items.write() {
             Ok(items) => items,
-            Err(_) => return Err(NestGateError::Internal("Cache lock poisoned".to_string())),
+            Err(poisoned) => {
+                tracing::warn!(
+                    "Cache lock was poisoned during put operation, attempting graceful recovery"
+                );
+                poisoned.into_inner()
+            }
         };
 
         let mut stats = match self.stats.write() {
             Ok(stats) => stats,
-            Err(_) => return Err(NestGateError::Internal("Stats lock poisoned".to_string())),
+            Err(poisoned) => {
+                tracing::warn!("Stats lock was poisoned, attempting recovery");
+                poisoned.into_inner()
+            }
         };
 
         if let Some(item) = items.get_mut(key) {
@@ -208,12 +217,18 @@ impl CacheManager {
     pub fn put(&self, key: &str, path: PathBuf, size: u64, _original_path: PathBuf) -> Result<()> {
         let mut items = match self.items.write() {
             Ok(items) => items,
-            Err(_) => return Err(NestGateError::Internal("Cache lock poisoned".to_string())),
+            Err(poisoned) => {
+                tracing::warn!("Cache lock was poisoned, attempting recovery");
+                poisoned.into_inner()
+            }
         };
 
         let mut stats = match self.stats.write() {
             Ok(stats) => stats,
-            Err(_) => return Err(NestGateError::Internal("Stats lock poisoned".to_string())),
+            Err(poisoned) => {
+                tracing::warn!("Stats lock was poisoned, attempting recovery");
+                poisoned.into_inner()
+            }
         };
 
         // Check if we need to evict items to make room
@@ -253,12 +268,18 @@ impl CacheManager {
     pub fn remove(&self, key: &str) -> Result<bool> {
         let mut items = match self.items.write() {
             Ok(items) => items,
-            Err(_) => return Err(NestGateError::Internal("Cache lock poisoned".to_string())),
+            Err(poisoned) => {
+                tracing::warn!("Cache lock was poisoned, attempting recovery");
+                poisoned.into_inner()
+            }
         };
 
         let mut stats = match self.stats.write() {
             Ok(stats) => stats,
-            Err(_) => return Err(NestGateError::Internal("Stats lock poisoned".to_string())),
+            Err(poisoned) => {
+                tracing::warn!("Stats lock was poisoned, attempting recovery");
+                poisoned.into_inner()
+            }
         };
 
         if let Some(item) = items.remove(key) {
@@ -276,7 +297,10 @@ impl CacheManager {
     pub fn mark_dirty(&self, key: &str) -> Result<bool> {
         let mut items = match self.items.write() {
             Ok(items) => items,
-            Err(_) => return Err(NestGateError::Internal("Cache lock poisoned".to_string())),
+            Err(poisoned) => {
+                tracing::warn!("Cache lock was poisoned, attempting recovery");
+                poisoned.into_inner()
+            }
         };
 
         if let Some(item) = items.get_mut(key) {
@@ -291,12 +315,18 @@ impl CacheManager {
     pub fn flush(&self) -> Result<u64> {
         let mut items = match self.items.write() {
             Ok(items) => items,
-            Err(_) => return Err(NestGateError::Internal("Cache lock poisoned".to_string())),
+            Err(poisoned) => {
+                tracing::warn!("Cache lock was poisoned, attempting recovery");
+                poisoned.into_inner()
+            }
         };
 
         let mut stats = match self.stats.write() {
             Ok(stats) => stats,
-            Err(_) => return Err(NestGateError::Internal("Stats lock poisoned".to_string())),
+            Err(poisoned) => {
+                tracing::warn!("Stats lock was poisoned, attempting recovery");
+                poisoned.into_inner()
+            }
         };
 
         let mut flushed = 0;
@@ -320,12 +350,18 @@ impl CacheManager {
     pub fn clear(&self) -> Result<u64> {
         let mut items = match self.items.write() {
             Ok(items) => items,
-            Err(_) => return Err(NestGateError::Internal("Cache lock poisoned".to_string())),
+            Err(poisoned) => {
+                tracing::warn!("Cache lock was poisoned, attempting recovery");
+                poisoned.into_inner()
+            }
         };
 
         let mut stats = match self.stats.write() {
             Ok(stats) => stats,
-            Err(_) => return Err(NestGateError::Internal("Stats lock poisoned".to_string())),
+            Err(poisoned) => {
+                tracing::warn!("Stats lock was poisoned, attempting recovery");
+                poisoned.into_inner()
+            }
         };
 
         let count = items.len() as u64;
@@ -344,7 +380,10 @@ impl CacheManager {
     pub fn stats(&self) -> Result<CacheStats> {
         let stats = match self.stats.read() {
             Ok(stats) => stats.clone(),
-            Err(_) => return Err(NestGateError::Internal("Stats lock poisoned".to_string())),
+            Err(poisoned) => {
+                tracing::warn!("Stats lock was poisoned, attempting recovery");
+                poisoned.into_inner().clone()
+            }
         };
 
         Ok(stats)
@@ -354,7 +393,10 @@ impl CacheManager {
     pub fn size(&self) -> Result<u64> {
         let items = match self.items.read() {
             Ok(items) => items,
-            Err(_) => return Err(NestGateError::Internal("Cache lock poisoned".to_string())),
+            Err(poisoned) => {
+                tracing::warn!("Cache lock was poisoned, attempting recovery");
+                poisoned.into_inner()
+            }
         };
 
         let size = items.values().map(|item| item.size).sum();
@@ -366,7 +408,10 @@ impl CacheManager {
     pub fn item_count(&self) -> Result<usize> {
         let items = match self.items.read() {
             Ok(items) => items,
-            Err(_) => return Err(NestGateError::Internal("Cache lock poisoned".to_string())),
+            Err(poisoned) => {
+                tracing::warn!("Cache lock was poisoned, attempting recovery");
+                poisoned.into_inner()
+            }
         };
 
         Ok(items.len())
@@ -376,12 +421,18 @@ impl CacheManager {
     fn evict_items(&self, bytes_needed: u64) -> Result<u64> {
         let mut items = match self.items.write() {
             Ok(items) => items,
-            Err(_) => return Err(NestGateError::Internal("Cache lock poisoned".to_string())),
+            Err(poisoned) => {
+                tracing::warn!("Cache lock was poisoned, attempting recovery");
+                poisoned.into_inner()
+            }
         };
 
         let mut stats = match self.stats.write() {
             Ok(stats) => stats,
-            Err(_) => return Err(NestGateError::Internal("Stats lock poisoned".to_string())),
+            Err(poisoned) => {
+                tracing::warn!("Stats lock was poisoned, attempting recovery");
+                poisoned.into_inner()
+            }
         };
 
         // Build a list of items sorted by access time (LRU)
@@ -547,9 +598,14 @@ impl MultiTierCache {
         let mut access_counts = match self.access_counts.write() {
             Ok(counts) => counts,
             Err(_) => {
-                return Err(NestGateError::Internal(
-                    "Access counts lock poisoned".to_string(),
-                ))
+                return Err(NestGateError::Internal {
+                    message: "Access counts lock poisoned".to_string(),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: Some(
+                        "Lock poisoning detected during metrics collection".to_string(),
+                    ),
+                    is_bug: false,
+                })
             }
         };
 
@@ -564,9 +620,12 @@ impl MultiTierCache {
         let access_counts = match self.access_counts.read() {
             Ok(counts) => counts,
             Err(_) => {
-                return Err(NestGateError::Internal(
-                    "Access counts lock poisoned".to_string(),
-                ))
+                return Err(NestGateError::Internal {
+                    message: "Access counts lock poisoned".to_string(),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                })
             }
         };
 
@@ -590,9 +649,12 @@ impl MultiTierCache {
         let mut access_counts = match self.access_counts.write() {
             Ok(counts) => counts,
             Err(_) => {
-                return Err(NestGateError::Internal(
-                    "Access counts lock poisoned".to_string(),
-                ))
+                return Err(NestGateError::Internal {
+                    message: "Access counts lock poisoned".to_string(),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                })
             }
         };
 

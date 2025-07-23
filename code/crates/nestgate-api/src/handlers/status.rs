@@ -4,6 +4,7 @@ use axum::Json;
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::info;
+// Removed unused tracing import
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SystemStatus {

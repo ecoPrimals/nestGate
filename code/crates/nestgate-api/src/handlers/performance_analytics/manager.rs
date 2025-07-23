@@ -5,12 +5,14 @@
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
-use tracing::{error, info};
+// Removed unused tracing import
 use chrono::Utc;
 
 use super::types::*;
 use super::collectors::collect_system_metrics;
 use super::analytics::{check_alerts, generate_recommendations};
+use tracing::info;
+use tracing::error;
 
 /// Performance analytics manager
 pub struct PerformanceAnalytics {

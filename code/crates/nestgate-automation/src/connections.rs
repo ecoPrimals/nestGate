@@ -4,9 +4,10 @@
 //! This module provides legacy compatibility while transitioning to universal AI provider architecture.
 
 use std::collections::HashMap;
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 
 use crate::universal_ai_connections::{UniversalAIConnection, UniversalAIConnectionPool};
+use std::time::Duration;
 
 /// Service connection pool for managing dynamic ecosystem connections
 /// This is now a compatibility wrapper around UniversalAIConnectionPool

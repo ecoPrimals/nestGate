@@ -105,9 +105,12 @@ impl PoolCreator {
         // Add pool properties with validation
         for (key, value) in &config.properties {
             if key.is_empty() || value.is_empty() {
-                return Err(NestGateError::Internal(format!(
-                    "Invalid property: {key}={value}"
-                )));
+                return Err(NestGateError::Internal {
+                    message: format!("Invalid property: {}={}", key, value),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                });
             }
             cmd.args(["-o", &format!("{key}={value}")]);
         }
@@ -153,17 +156,34 @@ impl PoolCreator {
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(300), // 5 minutes default
         );
+
         let output = tokio::time::timeout(timeout_duration, cmd.output())
             .await
-            .map_err(|_| NestGateError::Internal("Pool creation timed out".to_string()))?
-            .map_err(|e| NestGateError::Internal(format!("Failed to execute zpool create: {e}")))?;
+            .map_err(|_| NestGateError::Internal {
+                message: "Pool creation timed out".to_string(),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })?
+            .map_err(|e| NestGateError::Internal {
+                message: format!("Failed to execute zpool create: {}", e),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })?;
 
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
             let stdout_msg = String::from_utf8_lossy(&output.stdout);
-            return Err(NestGateError::Internal(format!(
-                "Pool creation failed: stderr: {error_msg}, stdout: {stdout_msg}"
-            )));
+            return Err(NestGateError::Internal {
+                message: format!(
+                    "Pool creation failed: stderr: {}, stdout: {}",
+                    error_msg, stdout_msg
+                ),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
         info!("Successfully created ZFS pool: {}", config.pool_name);
@@ -269,16 +289,24 @@ impl PoolCreator {
 
         cmd.arg(&dataset_name);
 
-        let output = cmd
-            .output()
-            .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to execute zfs create: {e}")))?;
+        let output = cmd.output().await.map_err(|e| NestGateError::Internal {
+            message: format!("Failed to execute zfs create: {}", e),
+            location: Some(format!("{}:{}", file!(), line!())),
+            debug_info: None,
+            is_bug: false,
+        })?;
 
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
-            return Err(NestGateError::Internal(format!(
-                "Failed to create tier dataset {dataset_name}: {error_msg}"
-            )));
+            return Err(NestGateError::Internal {
+                message: format!(
+                    "Failed to create tier dataset {}: {}",
+                    dataset_name, error_msg
+                ),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
         Ok(())
@@ -289,10 +317,14 @@ impl PoolCreator {
         info!("Destroying pool: {} (force: {})", pool_name, force);
 
         if !force && self.config.safety.require_confirmation {
-            return Err(NestGateError::Internal(
-                "Pool destruction requires explicit force flag when confirmation is required"
-                    .to_string(),
-            ));
+            return Err(NestGateError::Internal {
+                message:
+                    "Pool destruction requires explicit force flag when confirmation is required"
+                        .to_string(),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
         let mut cmd = Command::new("zpool");
@@ -304,15 +336,21 @@ impl PoolCreator {
 
         cmd.arg(pool_name);
 
-        let output = cmd.output().await.map_err(|e| {
-            NestGateError::Internal(format!("Failed to execute zpool destroy: {e}"))
+        let output = cmd.output().await.map_err(|e| NestGateError::Internal {
+            message: format!("Failed to execute zpool destroy: {}", e),
+            location: Some(format!("{}:{}", file!(), line!())),
+            debug_info: None,
+            is_bug: false,
         })?;
 
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
-            return Err(NestGateError::Internal(format!(
-                "Failed to destroy pool {pool_name}: {error_msg}"
-            )));
+            return Err(NestGateError::Internal {
+                message: format!("Failed to destroy pool {pool_name}: {error_msg}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
         info!("Successfully destroyed pool: {}", pool_name);
@@ -389,9 +427,12 @@ impl PoolCreator {
                     }
                     Err(e) => {
                         error!("❌ Failed to destroy pool during cleanup: {}", e);
-                        return Err(NestGateError::Internal(format!(
-                            "Cleanup destroy command failed: {e}"
-                        )));
+                        return Err(NestGateError::Internal {
+                            message: format!("Cleanup destroy command failed: {e}"),
+                            location: Some(format!("{}:{}", file!(), line!())),
+                            debug_info: None,
+                            is_bug: false,
+                        });
                     }
                 }
             }

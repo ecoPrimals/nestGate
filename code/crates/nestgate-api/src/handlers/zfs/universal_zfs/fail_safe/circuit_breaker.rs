@@ -5,9 +5,11 @@
 use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::sync::RwLock;
-use tracing::{info, warn};
+// Removed unused tracing import
 
 use crate::handlers::zfs::universal_zfs::config::CircuitBreakerConfig;
+use tracing::info;
+use tracing::warn;
 
 /// Circuit breaker states
 #[derive(Debug, Clone, PartialEq)]

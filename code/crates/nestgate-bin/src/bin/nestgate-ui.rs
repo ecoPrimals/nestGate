@@ -4,7 +4,9 @@
 //! Replaces the previous TypeScript/React implementation.
 
 use nestgate_ui::run_app;
+
 use tracing::error;
+// Removed unused tracing import
 
 #[tokio::main]
 async fn main() {

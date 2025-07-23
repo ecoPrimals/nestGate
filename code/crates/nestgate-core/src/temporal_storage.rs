@@ -1,7 +1,6 @@
-//! Temporal Storage System
-//!
-//! Universal storage system spanning all technology eras from punch cards to DNA storage
-
+/// Temporal Storage System
+///
+/// Universal storage system spanning all technology eras from punch cards to DNA storage
 use crate::Result;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};

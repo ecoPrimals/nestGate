@@ -2,16 +2,22 @@
 
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 use tokio::sync::{mpsc, RwLock};
 use tokio::time::interval;
-use tracing::{debug, error, info, warn};
+// Removed unused tracing import
 
 use crate::{ZfsDatasetManager, ZfsPoolManager};
 // StreamingProcReader has been replaced with simpler implementations
 use nestgate_core::{NestGateError, Result as CoreResult, StorageTier};
 
 use super::types::*;
+
+use std::time::Duration;
+use tracing::debug;
+use tracing::error;
+use tracing::info;
+use tracing::warn;
 
 impl ZfsPerformanceMonitor {
     /// Create a new performance monitor
@@ -267,7 +273,12 @@ impl ZfsPerformanceMonitor {
             .args(["iostat", "-v", "-y", "1", "1"])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to execute zpool iostat: {e}")))?;
+            .map_err(|e| NestGateError::Internal {
+                message: format!("Failed to execute zpool iostat: {}", e),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })?;
 
         if !iostat_output.status.success() {
             warn!("zpool iostat failed, using fallback metrics");
@@ -378,7 +389,12 @@ impl ZfsPerformanceMonitor {
             .args(["get", "all", pool_name])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to get pool properties: {e}")))?;
+            .map_err(|e| NestGateError::Internal {
+                message: format!("Failed to get pool properties: {}", e),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })?;
 
         if !output.status.success() {
             return Ok(PoolProperties::default());
@@ -436,9 +452,15 @@ impl ZfsPerformanceMonitor {
 
     /// Get CPU utilization from /proc/stat
     async fn get_cpu_utilization() -> CoreResult<f64> {
-        let stat_content = tokio::fs::read_to_string("/proc/stat")
-            .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to read /proc/stat: {e}")))?;
+        let stat_content =
+            tokio::fs::read_to_string("/proc/stat")
+                .await
+                .map_err(|e| NestGateError::Internal {
+                    message: format!("Failed to read /proc/stat: {}", e),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                })?;
 
         if let Some(cpu_line) = stat_content.lines().next() {
             let fields: Vec<&str> = cpu_line.split_whitespace().collect();
@@ -482,7 +504,12 @@ impl ZfsPerformanceMonitor {
     async fn get_load_average() -> CoreResult<f64> {
         let loadavg_content = tokio::fs::read_to_string("/proc/loadavg")
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to read /proc/loadavg: {e}")))?;
+            .map_err(|e| NestGateError::Internal {
+                message: format!("Failed to read /proc/loadavg: {}", e),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })?;
 
         if let Some(first_field) = loadavg_content.split_whitespace().next() {
             return Ok(first_field.parse().unwrap_or(0.0));
@@ -574,7 +601,12 @@ impl ZfsPerformanceMonitor {
             .args(["iostat", "-v", pool_name, "1", "1"])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to get pool I/O stats: {e}")))?;
+            .map_err(|e| NestGateError::Internal {
+                message: format!("Failed to get pool I/O stats: {}", e),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })?;
 
         if !output.status.success() {
             return Ok(PoolIoStats::default());

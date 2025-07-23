@@ -1,12 +1,12 @@
-//! Metrics collection and monitoring for NestGate core
-//!
-//! This module provides comprehensive metrics collection capabilities
-//! for monitoring system performance and health.
-
+/// Metrics collection and monitoring for NestGate core
+///
+/// This module provides comprehensive metrics collection capabilities
+/// for monitoring system performance and health.
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use std::time::SystemTime;
+// Removed unused tracing import
 
 /// Type of metric being collected
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

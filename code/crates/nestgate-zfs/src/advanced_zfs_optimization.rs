@@ -12,16 +12,20 @@
 //! Note: This module contains advanced optimization features that are currently under
 //! development. Some methods and fields may not be actively used yet.
 
-#![allow(dead_code)] // Advanced optimization features under development
-//! - **Performance Forecasting**: Predicts and prevents performance degradation
-//! - **Resource Optimization**: Dynamic resource allocation based on workload patterns
-
+#[allow(dead_code)] // Advanced optimization features under development
+// - **Performance Forecasting**: Predicts and prevents performance degradation
+// - **Resource Optimization**: Dynamic resource allocation based on workload patterns
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
+use std::time::SystemTime;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info};
+use tracing::debug;
+use tracing::error;
+use tracing::info;
+// Removed unused tracing import
 
 use crate::Result;
 
@@ -77,7 +81,7 @@ pub struct AdvancedZfsOptimizer {
     /// Configuration for optimization parameters
     config: OptimizerConfig,
     /// Active optimization strategies
-    active_strategies: Arc<RwLock<Vec<OptimizationStrategy>>>,
+
     /// Real-time metrics collector
     metrics_collector: Arc<ZfsMetricsCollector>,
 }
@@ -90,7 +94,7 @@ impl AdvancedZfsOptimizer {
             performance_history: Arc::new(RwLock::new(PerformanceHistory::new())),
             optimization_state: Arc::new(RwLock::new(OptimizationState::new())),
             config,
-            active_strategies: Arc::new(RwLock::new(Vec::new())),
+
             metrics_collector: Arc::new(ZfsMetricsCollector::new()),
         }
     }
@@ -152,7 +156,7 @@ impl AdvancedZfsOptimizer {
     }
 
     /// Main optimization monitoring loop
-    async fn optimization_monitor_loop(&self) {
+    pub async fn optimization_monitor_loop(&self) {
         let mut interval =
             tokio::time::interval(Duration::from_secs(self.config.monitoring_interval));
 
@@ -166,7 +170,7 @@ impl AdvancedZfsOptimizer {
     }
 
     /// Perform a complete optimization cycle
-    async fn perform_optimization_cycle(&self) -> Result<()> {
+    pub async fn perform_optimization_cycle(&self) -> Result<()> {
         debug!("🔄 Starting optimization cycle");
 
         // 1. Collect current performance metrics
@@ -201,7 +205,7 @@ impl AdvancedZfsOptimizer {
     }
 
     /// Collect current ZFS performance metrics
-    async fn collect_current_metrics(&self) -> Result<CurrentMetrics> {
+    pub async fn collect_current_metrics(&self) -> Result<CurrentMetrics> {
         Ok(CurrentMetrics {
             timestamp: SystemTime::now(),
             pool_metrics: HashMap::new(),
@@ -211,7 +215,7 @@ impl AdvancedZfsOptimizer {
     }
 
     /// Analyze performance trends using historical data
-    async fn analyze_performance_trends(
+    pub async fn analyze_performance_trends(
         &self,
         _current: &CurrentMetrics,
     ) -> Result<PerformanceAnalysis> {
@@ -219,7 +223,7 @@ impl AdvancedZfsOptimizer {
     }
 
     /// Generate optimization recommendations based on performance analysis
-    async fn generate_optimization_recommendations(
+    pub async fn generate_optimization_recommendations(
         &self,
         _analysis: &PerformanceAnalysis,
     ) -> Result<Vec<OptimizationRecommendation>> {
@@ -227,12 +231,15 @@ impl AdvancedZfsOptimizer {
     }
 
     /// Apply an optimization recommendation
-    async fn apply_optimization(&self, _recommendation: &OptimizationRecommendation) -> Result<()> {
+    pub async fn apply_optimization(
+        &self,
+        _recommendation: &OptimizationRecommendation,
+    ) -> Result<()> {
         Ok(())
     }
 
     /// Performance forecasting loop for predictive optimization
-    async fn performance_forecasting_loop(&self) {
+    pub async fn performance_forecasting_loop(&self) {
         let mut interval =
             tokio::time::interval(Duration::from_secs(self.config.forecasting_interval));
 
@@ -246,13 +253,13 @@ impl AdvancedZfsOptimizer {
     }
 
     /// Perform performance forecasting to predict future issues
-    async fn perform_performance_forecasting(&self) -> Result<()> {
+    pub async fn perform_performance_forecasting(&self) -> Result<()> {
         debug!("🔮 Performing performance forecasting");
         Ok(())
     }
 
     /// Adaptive cache management loop
-    async fn adaptive_cache_management_loop(&self) {
+    pub async fn adaptive_cache_management_loop(&self) {
         let mut interval =
             tokio::time::interval(Duration::from_secs(self.config.cache_adjustment_interval));
 
@@ -266,7 +273,7 @@ impl AdvancedZfsOptimizer {
     }
 
     /// Perform adaptive cache management
-    async fn perform_adaptive_cache_management(&self) -> Result<()> {
+    pub async fn perform_adaptive_cache_management(&self) -> Result<()> {
         debug!("🧠 Performing adaptive cache management");
         Ok(())
     }
@@ -287,13 +294,13 @@ impl AdvancedZfsOptimizer {
         // Calculate efficiency based on I/O performance metrics
         // Higher ARC hit ratio indicates better memory efficiency
         let arc_efficiency = stats.arc_hit_ratio;
-        
+
         // Calculate composite efficiency from available metrics
         let io_efficiency = if stats.read_ops > 0 || stats.write_ops > 0 {
             // Balance read/write operations efficiency
             let total_ops = stats.read_ops + stats.write_ops;
             let total_bandwidth = stats.read_bandwidth + stats.write_bandwidth;
-            
+
             if total_bandwidth > 0 {
                 (total_ops as f64) / (total_bandwidth as f64 * 1000.0) // Normalize
             } else {
@@ -302,13 +309,13 @@ impl AdvancedZfsOptimizer {
         } else {
             0.8 // Default when no I/O data
         };
-        
+
         // Combine ARC and I/O efficiency
         let combined_efficiency = (arc_efficiency + io_efficiency) / 2.0;
-        Ok(combined_efficiency.min(1.0).max(0.1)) // Clamp between 0.1 and 1.0
+        Ok(combined_efficiency.clamp(0.1, 1.0)) // Clamp between 0.1 and 1.0
     }
 
-    async fn get_system_load(&self) -> Result<f64> {
+    pub async fn get_system_load(&self) -> Result<f64> {
         // Read system load average from /proc/loadavg
         match std::fs::read_to_string("/proc/loadavg") {
             Ok(content) => {
@@ -328,7 +335,7 @@ impl AdvancedZfsOptimizer {
         }
     }
 
-    async fn get_memory_pressure(&self) -> Result<f64> {
+    pub async fn get_memory_pressure(&self) -> Result<f64> {
         // Read memory information from /proc/meminfo
         match std::fs::read_to_string("/proc/meminfo") {
             Ok(content) => {
@@ -361,7 +368,7 @@ impl AdvancedZfsOptimizer {
         }
     }
 
-    async fn analyze_io_trend(
+    pub async fn analyze_io_trend(
         &self,
         _current: &PoolMetrics,
         _historical: &[BaselineMetrics],
@@ -374,7 +381,7 @@ impl AdvancedZfsOptimizer {
         })
     }
 
-    async fn analyze_cache_trend(
+    pub async fn analyze_cache_trend(
         &self,
         _current: &PoolMetrics,
         _historical: &[BaselineMetrics],
@@ -386,7 +393,7 @@ impl AdvancedZfsOptimizer {
         })
     }
 
-    async fn analyze_efficiency_trend(
+    pub async fn analyze_efficiency_trend(
         &self,
         _current: &PoolMetrics,
         _historical: &[BaselineMetrics],
@@ -398,7 +405,7 @@ impl AdvancedZfsOptimizer {
         })
     }
 
-    async fn calculate_optimal_arc_size(&self, _pool_name: &str) -> Result<u64> {
+    pub async fn calculate_optimal_arc_size(&self, _pool_name: &str) -> Result<u64> {
         // Calculate optimal ARC size based on system memory and pool usage
         let memory_pressure = self.get_memory_pressure().await?;
 
@@ -430,21 +437,21 @@ impl AdvancedZfsOptimizer {
         Ok(optimal_size.clamp(1024 * 1024 * 1024, 32 * 1024 * 1024 * 1024))
     }
 
-    async fn select_optimal_compression_algorithm(
+    pub async fn select_optimal_compression_algorithm(
         &self,
         _io_trend: &IOTrend,
     ) -> Result<CompressionAlgorithm> {
         Ok(CompressionAlgorithm::Lz4)
     }
 
-    async fn log_manual_recommendation(
+    pub async fn log_manual_recommendation(
         &self,
         _recommendation: OptimizationRecommendation,
     ) -> Result<()> {
         Ok(())
     }
 
-    async fn update_optimization_state(&self, _metrics: &CurrentMetrics) -> Result<()> {
+    pub async fn update_optimization_state(&self, _metrics: &CurrentMetrics) -> Result<()> {
         Ok(())
     }
 }
@@ -477,7 +484,6 @@ impl Default for OptimizerConfig {
 #[derive(Debug)]
 pub struct PerformanceHistory {
     baseline_metrics: HashMap<String, Vec<BaselineMetrics>>,
-    optimization_history: Vec<OptimizationRecord>,
 }
 
 impl Default for PerformanceHistory {
@@ -490,7 +496,6 @@ impl PerformanceHistory {
     pub fn new() -> Self {
         Self {
             baseline_metrics: HashMap::new(),
-            optimization_history: Vec::new(),
         }
     }
 

@@ -1,0 +1,62 @@
+warning: unused import: `std::time::Duration`
+  --> code/crates/nestgate-core/src/ai_first.rs:16:5
+   |
+16 | use std::time::Duration;
+   |     ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: `nestgate-core` (lib) generated 1 warning (run `cargo fix --lib -p nestgate-core` to apply 1 suggestion)
+warning: unused variable: `dataset_info`
+   --> code/crates/nestgate-zfs/src/ai_confidence.rs:336:5
+    |
+336 |     dataset_info: Option<&DatasetInfo>,
+    |     ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_dataset_info`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: `nestgate-zfs` (lib) generated 1 warning
+   Compiling nestgate v0.9.2 (/home/eastgate/Development/ecoPrimals/nestgate)
+    Finished `bench` profile [optimized] target(s) in 1.12s
+     Running benches/native_perf_test.rs (target/release/deps/native_perf_test-c080eb878cf50154)
+Gnuplot not found, using plotters backend
+Benchmarking regular_clone
+Benchmarking regular_clone: Warming up for 3.0000 s
+Benchmarking regular_clone: Collecting 100 samples in estimated 5.0169 s (242k iterations)
+Benchmarking regular_clone: Analyzing
+regular_clone           time:   [19.807 µs 19.948 µs 20.148 µs]
+                        change: [-0.2067% +0.8089% +2.1402%] (p = 0.20 > 0.05)
+                        No change in performance detected.
+Found 12 outliers among 100 measurements (12.00%)
+  3 (3.00%) high mild
+  9 (9.00%) high severe
+
+Benchmarking arc_clone
+Benchmarking arc_clone: Warming up for 3.0000 s
+Benchmarking arc_clone: Collecting 100 samples in estimated 5.0415 s (550k iterations)
+Benchmarking arc_clone: Analyzing
+arc_clone               time:   [9.1618 µs 9.1874 µs 9.2311 µs]
+Found 11 outliers among 100 measurements (11.00%)
+  2 (2.00%) low mild
+  5 (5.00%) high mild
+  4 (4.00%) high severe
+
+Benchmarking hashmap_insert
+Benchmarking hashmap_insert: Warming up for 3.0000 s
+Benchmarking hashmap_insert: Collecting 100 samples in estimated 5.0224 s (227k iterations)
+Benchmarking hashmap_insert: Analyzing
+hashmap_insert          time:   [22.172 µs 22.414 µs 22.733 µs]
+Found 10 outliers among 100 measurements (10.00%)
+  2 (2.00%) high mild
+  8 (8.00%) high severe
+
+Benchmarking string_formatting
+Benchmarking string_formatting: Warming up for 3.0000 s
+Benchmarking string_formatting: Collecting 100 samples in estimated 5.1003 s (141k iterations)
+Benchmarking string_formatting: Analyzing
+string_formatting       time:   [36.320 µs 36.446 µs 36.601 µs]
+Found 12 outliers among 100 measurements (12.00%)
+  1 (1.00%) low mild
+  1 (1.00%) high mild
+  10 (10.00%) high severe
+

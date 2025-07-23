@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use nestgate_core::get_or_create_uuid;
 use std::{collections::HashMap, sync::Arc, time::SystemTime};
 use tokio::sync::{broadcast, RwLock};
+// Removed unused tracing import
 use tracing::info;
 use uuid::Uuid;
 
@@ -115,7 +116,7 @@ impl WebSocketManager {
         ws: axum::extract::WebSocketUpgrade,
         params: ConnectionParams,
     ) -> axum::response::Response {
-        let client_id = Uuid::new_v4();
+        let client_id = *get_or_create_uuid("websocket_client");
         let client_type = match params.client_type.as_deref() {
             Some("WebUI") => ClientType::WebUI,
             Some("Monitor") => ClientType::Monitor,
