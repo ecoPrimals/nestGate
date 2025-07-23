@@ -1,20 +1,24 @@
-//! Simplified Advanced Features Integration Demo
-//!
-//! This demo showcases the Advanced ZFS Optimization Engine working together with
-//! real-time monitoring capabilities, demonstrating the complete integration without
-//! relying on the API layer.
+use serde::{Serialize, Deserialize};
+use tracing::{error, info};
+use std::time::Duration;
+use std::time::Duration;
+// Simplified Advanced Features Integration Demo
+//
+// This demo showcases the Advanced ZFS Optimization Engine working together with
+// real-time monitoring capabilities, demonstrating the complete integration without
+// relying on the API layer.
 
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
-use tracing::info;
+// Removed unused tracing import
 
 // Import our advanced components
 use nestgate_core::{get_4kb_buffer, get_or_create_uuid, global_cache_statistics};
 use nestgate_zfs::advanced_zfs_optimization::{
     AdvancedZfsOptimizer, OptimizerConfig, Pool, PoolStats, ZfsOperations,
 };
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::collections::HashMap;
 
 #[tokio::main]
@@ -474,11 +478,11 @@ impl MockZfsOperations {
 
 #[async_trait::async_trait]
 impl ZfsOperations for MockZfsOperations {
-    async fn list_pools(&self) -> anyhow::Result<Vec<Pool>> {
+    async fn list_pools(&self) -> Result<Vec<Pool>, nestgate_zfs::ZfsError> {
         Ok(self.pools.clone())
     }
 
-    async fn get_pool_stats(&self, pool_name: &str) -> anyhow::Result<PoolStats> {
+    async fn get_pool_stats(&self, pool_name: &str) -> Result<PoolStats, nestgate_zfs::ZfsError> {
         // Generate mock stats based on pool name
         let base_ops = if pool_name == "tank" { 1000 } else { 200 };
         Ok(PoolStats {
@@ -505,11 +509,15 @@ impl ZfsOperations for MockZfsOperations {
         })
     }
 
-    async fn list_datasets(&self, _pool_name: &str) -> anyhow::Result<Vec<String>> {
+    async fn list_datasets(&self, pool_name: &str) -> Result<Vec<String>, nestgate_zfs::ZfsError> {
         Ok(vec!["data".to_string(), "logs".to_string()])
     }
 
-    async fn create_pool(&self, _name: &str, _devices: &[String]) -> anyhow::Result<Pool> {
+    async fn create_pool(
+        &self,
+        name: &str,
+        _vdevs: &[String],
+    ) -> Result<Pool, nestgate_zfs::ZfsError> {
         Ok(Pool {
             name: "test".to_string(),
             state: "ONLINE".to_string(),
@@ -523,15 +531,19 @@ impl ZfsOperations for MockZfsOperations {
         })
     }
 
-    async fn destroy_pool(&self, _name: &str) -> anyhow::Result<()> {
+    async fn destroy_pool(&self, _name: &str) -> Result<(), nestgate_zfs::ZfsError> {
         Ok(())
     }
 
-    async fn create_dataset(&self, _pool_name: &str, _dataset_name: &str) -> anyhow::Result<()> {
+    async fn create_dataset(&self, _pool: &str, _name: &str) -> Result<(), nestgate_zfs::ZfsError> {
         Ok(())
     }
 
-    async fn destroy_dataset(&self, _pool_name: &str, _dataset_name: &str) -> anyhow::Result<()> {
+    async fn destroy_dataset(
+        &self,
+        _pool: &str,
+        _name: &str,
+    ) -> Result<(), nestgate_zfs::ZfsError> {
         Ok(())
     }
 }

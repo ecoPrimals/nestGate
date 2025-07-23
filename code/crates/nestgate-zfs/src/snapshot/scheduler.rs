@@ -6,9 +6,9 @@
 use chrono::{Datelike, Timelike};
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
+// Removed unused tracing import
 
 use crate::dataset::ZfsDatasetManager;
 use nestgate_core::{NestGateError, Result as CoreResult};
@@ -16,6 +16,12 @@ use nestgate_core::{NestGateError, Result as CoreResult};
 use super::operations::SnapshotOperationType;
 use super::policy::{RetentionPolicy, ScheduleFrequency, SnapshotPolicy};
 use super::types::{SnapshotInfo, SnapshotOperation, SnapshotOperationStatus};
+use nestgate_core::error::ConfigSource;
+use std::time::Duration;
+use tracing::debug;
+use tracing::error;
+use tracing::info;
+use tracing::warn;
 
 /// Policy scheduler for managing automated snapshot creation
 #[derive(Debug)]
@@ -380,9 +386,12 @@ impl PolicyScheduler {
             ScheduleFrequency::Daily(_) => Ok(Duration::from_secs(86400)), // 24 hours
             ScheduleFrequency::Weekly { .. } => Ok(Duration::from_secs(604800)), // 7 days
             ScheduleFrequency::Monthly { .. } => Ok(Duration::from_secs(2629746)), // ~30.44 days
-            ScheduleFrequency::Cron(_) => Err(NestGateError::Configuration(
-                "Cron parsing not implemented".to_string(),
-            )),
+            ScheduleFrequency::Cron(_) => Err(NestGateError::Configuration {
+                message: "Cron parsing not implemented".to_string(),
+                config_source: ConfigSource::File("zfs.conf".to_string()),
+                field: None,
+                suggested_fix: None,
+            }),
         }
     }
 }

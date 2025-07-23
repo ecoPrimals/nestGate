@@ -60,7 +60,7 @@ pub enum ComputePriority {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LiveHardwareMetrics {
     pub timestamp: DateTime<Utc>,
-    pub cpu_usage: f64,
+    pub _cpu_usage: f64,
     pub memory_usage: f64,
     pub gpu_usage: Option<f64>,
     pub temperature: f64,
@@ -140,7 +140,7 @@ pub struct StorageDevice {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RealtimeMetrics {
     pub timestamp: DateTime<Utc>,
-    pub cpu_usage: f64,
+    pub _cpu_usage: f64,
     pub memory_usage: f64,
     pub gpu_usage: Option<f64>,
     pub network_io: NetworkIoMetrics,
@@ -499,7 +499,7 @@ pub struct TuningRecommendations {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LivePerformanceMetrics {
     pub timestamp: DateTime<Utc>,
-    pub cpu_usage: f64,
+    pub _cpu_usage: f64,
     pub memory_usage: f64,
     pub gpu_usage: Option<f64>,
     pub disk_io: DiskIoMetrics,

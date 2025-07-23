@@ -1,5 +1,6 @@
 //! Configuration types for automation system
 
+use nestgate_core::constants::strings::LOCALHOST_IP;
 use serde::{Deserialize, Serialize};
 
 /// Main automation configuration
@@ -36,7 +37,8 @@ impl Default for AutomationConfig {
             songbird_url: std::env::var("NESTGATE_SONGBIRD_URL")
                 .unwrap_or_else(|_| {
                     format!(
-                        "http://localhost:{}",
+                        "http://{}:{}",
+                        LOCALHOST_IP,
                         nestgate_core::constants::network::api_port()
                     )
                 })
@@ -45,7 +47,8 @@ impl Default for AutomationConfig {
             squirrel_mcp_url: std::env::var("NESTGATE_SQUIRREL_MCP_URL")
                 .unwrap_or_else(|_| {
                     format!(
-                        "http://localhost:{}",
+                        "http://{}:{}",
+                        LOCALHOST_IP,
                         std::env::var("NESTGATE_MCP_PORT").unwrap_or_else(|_| "8081".to_string())
                     )
                 })
@@ -54,7 +57,8 @@ impl Default for AutomationConfig {
             toadstool_compute_url: std::env::var("NESTGATE_TOADSTOOL_COMPUTE_URL")
                 .unwrap_or_else(|_| {
                     format!(
-                        "http://localhost:{}",
+                        "http://{}:{}",
+                        LOCALHOST_IP,
                         std::env::var("NESTGATE_PREDICTION_PORT")
                             .unwrap_or_else(|_| "8082".to_string())
                     )
@@ -64,7 +68,8 @@ impl Default for AutomationConfig {
             data_api_endpoint: std::env::var("NESTGATE_DATA_API_ENDPOINT")
                 .unwrap_or_else(|_| {
                     format!(
-                        "http://localhost:{}",
+                        "http://{}:{}",
+                        LOCALHOST_IP,
                         nestgate_core::constants::network::api_port()
                     )
                 })
@@ -72,7 +77,8 @@ impl Default for AutomationConfig {
             prediction_endpoint: std::env::var("NESTGATE_PREDICTION_ENDPOINT")
                 .unwrap_or_else(|_| {
                     format!(
-                        "http://localhost:{}",
+                        "http://{}:{}",
+                        LOCALHOST_IP,
                         std::env::var("NESTGATE_PREDICTION_PORT")
                             .unwrap_or_else(|_| "8082".to_string())
                     )
@@ -101,14 +107,16 @@ impl DiscoveryConfig {
                 config.songbird_url.clone(),
                 std::env::var("NESTGATE_SONGBIRD_BACKUP_URL_1").unwrap_or_else(|_| {
                     format!(
-                        "http://localhost:{}",
+                        "http://{}:{}",
+                        LOCALHOST_IP,
                         std::env::var("NESTGATE_SONGBIRD_BACKUP_PORT")
                             .unwrap_or_else(|_| "8080".to_string())
                     )
                 }),
                 std::env::var("NESTGATE_SONGBIRD_BACKUP_URL_2").unwrap_or_else(|_| {
                     format!(
-                        "http://localhost:{}",
+                        "http://{}:{}",
+                        LOCALHOST_IP,
                         std::env::var("NESTGATE_MCP_PORT").unwrap_or_else(|_| "8081".to_string())
                     )
                 }),

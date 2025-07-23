@@ -1,3 +1,4 @@
+use std::time::Duration;
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -225,7 +226,7 @@ mod tests {
         assert!(result.is_ok());
 
         let metrics = result.expect("Failed to get hardware metrics from mock client");
-        assert!(metrics.cpu_usage > 0.0);
+        assert!(metrics._cpu_usage > 0.0);
         assert!(metrics.memory_usage > 0.0);
         assert!(metrics.gpu_usage.is_some());
         assert!(metrics.temperature > 0.0);

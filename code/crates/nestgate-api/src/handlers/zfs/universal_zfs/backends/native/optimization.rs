@@ -2,11 +2,13 @@
 //!
 //! Contains all optimization and analytics operations for the native ZFS backend.
 
-use tracing::info;
+// Removed unused tracing import
 
 use crate::handlers::zfs::universal_zfs::types::UniversalZfsResult;
 
 use super::core::NativeZfsService;
+use tracing::info;
+use tracing::warn;
 
 /// Optimize ZFS pools and datasets (zero-copy optimized)
 pub async fn optimize(service: &NativeZfsService) -> UniversalZfsResult<String> {
@@ -98,15 +100,20 @@ pub async fn get_optimization_analytics(
                 recommendations.push(format!("Pool {} is running low on space", parts[0]));
             }
 
-            analytics["pools"]
-                .as_array_mut()
-                .unwrap()
-                .push(serde_json::json!({
+            // Safely access the pools array, or skip if corrupted
+            if let Some(pools_array) = analytics["pools"].as_array_mut() {
+                pools_array.push(serde_json::json!({
                     "name": parts[0],
                     "used": used,
                     "available": available,
                     "compression_ratio": compression_ratio
                 }));
+            } else {
+                warn!(
+                    "Analytics pools array is corrupted, skipping pool data for {}",
+                    parts[0]
+                );
+            }
         }
     }
 

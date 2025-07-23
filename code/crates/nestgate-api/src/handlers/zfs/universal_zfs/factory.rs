@@ -4,7 +4,7 @@
 //! with automatic backend detection and fail-safe wrapping.
 
 use std::sync::Arc;
-use tracing::{debug, error, info, warn};
+// Removed unused tracing import
 
 use crate::handlers::zfs::universal_zfs::{
     backends::MockZfsService,
@@ -13,6 +13,7 @@ use crate::handlers::zfs::universal_zfs::{
     traits::UniversalZfsService,
     types::UniversalZfsResult,
 };
+use tracing::{debug, error, info, warn};
 
 // Type alias to reduce complexity
 type ZfsServiceFuture = std::pin::Pin<
@@ -153,11 +154,7 @@ impl ZfsServiceFactory {
 
     /// Create a mock service with delays
     pub fn create_mock_service_with_delays() -> Arc<dyn UniversalZfsService> {
-        Arc::new(MockZfsService::with_config(
-            "mock-zfs-delayed",
-            "1.0.0",
-            true,
-        ))
+        Arc::new(MockZfsService::new())
     }
 
     /// Auto-detect the best available backend
@@ -232,11 +229,7 @@ impl ZfsServiceFactory {
             }
             ZfsBackend::Mock => {
                 // Use a different mock service as fallback
-                Ok(Arc::new(MockZfsService::with_config(
-                    "fallback-mock",
-                    "1.0.0",
-                    false,
-                )))
+                Ok(Arc::new(MockZfsService::new()))
             }
             ZfsBackend::Remote(_) => {
                 // Use mock service as fallback for remote backends
@@ -268,11 +261,7 @@ impl ZfsServiceFactory {
                     if response.status().is_success() {
                         info!("Found remote ZFS service at: {}", endpoint);
                         // Create remote service proxy - using mock service for now until RemoteZfsService is fully implemented
-                        return Some(Arc::new(MockZfsService::with_config(
-                            "remote-proxy",
-                            "1.0.0",
-                            true,
-                        )));
+                        return Some(Arc::new(MockZfsService::new()));
                     }
                 }
                 Ok(Err(e)) => {

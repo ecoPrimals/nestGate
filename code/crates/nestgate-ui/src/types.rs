@@ -1,7 +1,8 @@
 use eframe::egui::Color32;
 use nestgate_core::types::StorageTier;
 use std::collections::{HashMap, VecDeque};
-use std::time::{Duration, Instant};
+use std::time::Duration;
+use std::time::Instant;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum AppView {

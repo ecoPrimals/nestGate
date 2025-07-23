@@ -1,3 +1,32 @@
+//! # NestGate Installer Core
+//!
+//! **Complete installation and deployment system for NestGate**
+//!
+//! This module provides the core installation functionality for NestGate storage system,
+//! including interactive setup, automated deployment, and cross-platform installation.
+//!
+//! ## Key Features
+//!
+//! - **Cross-Platform Installation**: Supports Windows, macOS, and Linux
+//! - **Interactive Setup**: Guided wizard with configuration validation
+//! - **Automated Deployment**: Unattended installation for CI/CD
+//! - **Service Integration**: System service setup and configuration
+//! - **Dependency Management**: Automatic resolution and installation
+//!
+//! ## Usage
+//!
+//! ```rust
+//! use nestgate_installer::installer::NestGateInstaller;
+//! use nestgate_installer::config::InstallerConfig;
+//!
+//! # async fn example() -> anyhow::Result<()> {
+//! let config = InstallerConfig::default();
+//! let installer = NestGateInstaller::new(config).await?;
+//! installer.install().await?;
+//! # Ok(())
+//! # }
+//! ```
+
 use anyhow::{Context, Result};
 use console::Style;
 use dialoguer::Confirm;

@@ -1,6 +1,7 @@
-//! Configuration module for Universal Primal Architecture
-//!
-//! Re-exports configuration types and provides implementation modules.
+use crate::error::{NetworkError};
+/// Configuration module for Universal Primal Architecture
+///
+/// Re-exports configuration types and provides implementation modules.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

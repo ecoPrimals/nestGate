@@ -1,27 +1,30 @@
-//! High-Performance Memory Pool System
-//!
-//! This module provides optimized memory pooling to eliminate allocation bottlenecks
-//! in data processing and storage operations.
-//!
-//! ## Performance Impact
-//! - **Before**: 212,953 ns/iter (frequent allocations)
-//! - **Target**: <100,000 ns/iter (2x performance improvement)
-//! - **Strategy**: Pool and reuse memory buffers instead of frequent allocation/deallocation
-//!
-//! ## Zero-Copy Optimizations
-//!
-//! The memory pool implements several zero-copy patterns:
-//! - **Buffer Reuse**: Reduces allocation/deallocation overhead
-//! - **RAII Guards**: Automatic buffer return to pool
-//! - **Copy vs Clone**: Uses `Copy` for small types, avoids `Clone` where possible
-//! - **Reference Patterns**: Prefers borrowing over owned types when safe
-
+// Removed unused error imports
+/// High-Performance Memory Pool System
+///
+/// This module provides optimized memory pooling to eliminate allocation bottlenecks
+/// in data processing and storage operations.
+///
+/// ## Performance Impact
+/// - **Before**: 212,953 ns/iter (frequent allocations)
+/// - **Target**: <100,000 ns/iter (2x performance improvement)
+/// - **Strategy**: Pool and reuse memory buffers instead of frequent allocation/deallocation
+///
+/// ## Zero-Copy Optimizations
+///
+/// The memory pool implements several zero-copy patterns:
+/// - **Buffer Reuse**: Reduces allocation/deallocation overhead
+/// - **RAII Guards**: Automatic buffer return to pool
+/// - **Copy vs Clone**: Uses `Copy` for small types, avoids `Clone` where possible
+/// - **Reference Patterns**: Prefers borrowing over owned types when safe
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, RwLock};
+use std::time::Duration;
+// Removed unused tracing import
 
 use serde::{Deserialize, Serialize};
-use std::time::{Duration, Instant};
-use tracing::{debug, info};
+use std::time::Instant;
+use tracing::debug;
+use tracing::info;
 
 /// High-performance memory pool with configurable buffer sizes
 #[derive(Debug)]
@@ -352,8 +355,8 @@ impl PoolStatistics {
             total_returned: 0,
             total_discarded: 0,
             total_cleared: 0,
-            total_acquisition_time: Duration::new(0, 0),
-            total_usage_time: Duration::new(0, 0),
+            total_acquisition_time: Duration::from_secs(0),
+            total_usage_time: Duration::from_secs(0),
         }
     }
 
@@ -371,7 +374,7 @@ impl PoolStatistics {
         if self.total_acquisitions > 0 {
             self.total_acquisition_time / self.total_acquisitions as u32
         } else {
-            Duration::new(0, 0)
+            Duration::from_secs(0)
         }
     }
 
@@ -380,7 +383,7 @@ impl PoolStatistics {
         if self.total_returned > 0 {
             self.total_usage_time / self.total_returned as u32
         } else {
-            Duration::new(0, 0)
+            Duration::from_secs(0)
         }
     }
 

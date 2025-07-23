@@ -1,8 +1,8 @@
-//! Core traits for the Songbird Orchestrator
-//!
-//! This module defines the fundamental traits that enable universal service orchestration
-//! across different project types and deployment environments.
-
+// Removed unused error imports
+/// Core traits for the Songbird Orchestrator
+///
+/// This module defines the fundamental traits that enable universal service orchestration
+/// across different project types and deployment environments.
 pub mod communication;
 pub mod config;
 pub mod discovery;

@@ -287,7 +287,7 @@ pub struct ApplicationMetrics {
     /// Memory usage (bytes)
     pub memory_usage: u64,
     /// CPU usage percentage
-    pub cpu_usage: f64,
+    pub _cpu_usage: f64,
 }
 
 /// API-specific metrics

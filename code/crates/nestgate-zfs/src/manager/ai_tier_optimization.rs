@@ -6,9 +6,10 @@
 use super::types::{FileAnalysis, TierBenefits};
 use crate::error::{Result, ZfsError};
 use nestgate_automation::{Confidence, TierPrediction, TierType as AutoTierType};
-use tracing::debug;
+// Removed unused tracing import
 
 use super::ZfsManager;
+use tracing::debug;
 
 impl ZfsManager {
     /// Get heuristic tier recommendation for a file (replaces AI recommendations)

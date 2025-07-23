@@ -7,6 +7,7 @@
 use nestgate_api::handlers::zfs::types::*;
 use nestgate_core::StorageTier;
 use std::collections::HashMap;
+use std::fmt;
 
 /// Test the API response structure
 #[test]

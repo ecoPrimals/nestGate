@@ -6,10 +6,11 @@
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 use std::time::Duration;
-use tracing::debug;
+// Removed unused tracing import
 use uuid::Uuid;
 
 use crate::error::Result;
+use tracing::debug;
 
 /// Session state
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -140,10 +141,11 @@ impl SessionManager {
     /// Update a session
     pub fn update_session(&mut self, session: Session) -> Result<()> {
         if !self.sessions.contains_key(&session.id) {
-            return Err(
-                crate::error::Error::session(format!("Session not found: {}", session.id))
-                    .to_string(),
-            );
+            return Err(nestgate_core::McpError::Session {
+                session_id: session.id.clone(),
+                message: "Session not found".to_string(),
+                state: nestgate_core::SessionState::Error,
+            });
         }
 
         self.sessions.insert(session.id.clone(), session);
@@ -160,7 +162,11 @@ impl SessionManager {
             debug!("Closed session {}", id);
             Ok(())
         } else {
-            Err(crate::error::Error::session(format!("Session not found: {id}")).to_string())
+            Err(nestgate_core::McpError::Session {
+                session_id: id.to_string(),
+                message: "Session not found".to_string(),
+                state: nestgate_core::SessionState::Error,
+            })
         }
     }
 

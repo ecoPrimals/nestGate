@@ -1,14 +1,15 @@
-//! Universal Security Client for Capability-Based Decentralized Authentication
-//!
-//! This client works with any service that provides the required security capabilities,
-//! not hardcoded to any specific service implementation (like BearDog).
-
+/// Universal Security Client for Capability-Based Decentralized Authentication
+///
+/// This client works with any service that provides the required security capabilities,
+/// not hardcoded to any specific service implementation (like BearDog).
 use crate::config::security::DecentralizedSecurityConfig;
+// Removed unused error imports
 use crate::types::{AccessGrant, CryptographicProof, SecurityServiceNode, ServiceNodeStatus};
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
+use std::time::SystemTime;
 use tokio::time::timeout;
 
 /// Universal security client for capability-based authentication

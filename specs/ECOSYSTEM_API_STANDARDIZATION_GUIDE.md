@@ -25,21 +25,23 @@ This guide establishes the **unified API standard** for the entire ecoPrimals ec
 
 ## 📋 **The Unified API Standard**
 
-### **Core Principle: Songbird-Centric Communication**
-All ecosystem communication flows through Songbird's service mesh. No direct primal-to-primal communication.
+### **Core Principle: Universal Adapter Communication**
+All ecosystem communication flows through each primal's universal adapter. No hardcoded orchestrator dependencies.
 
 ```
-🌱 biomeOS (Universal OS) → 🎼 Songbird (Service Mesh) → All Primals
+🌱 biomeOS (Universal OS) → Universal Adapters → Discover Available Primals
                                     ↓
                         🍄 ToadStool + 🐻 BearDog + 🏠 NestGate + 🐿️ Squirrel
+                                    ↓
+            Any Orchestration Primal: Songbird | Kubernetes | Consul | Custom
 ```
 
-### **1. Service Registration Standard (Songbird)**
+### **1. Service Registration Standard (Universal Adapter)**
 
 **ALL PRIMALS MUST IMPLEMENT:**
 
 ```rust
-// File: src/songbird_integration.rs (in each primal)
+// File: src/universal_adapter.rs (in each primal)
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -427,15 +429,15 @@ pub struct FeatureFlags {
 
 ## 🔧 **Implementation Guide by Primal**
 
-### **🎼 Songbird Implementation**
+### **🎼 Orchestration Primal Implementation (Songbird Example)**
 **Status**: ✅ **REFERENCE IMPLEMENTATION** - Already compliant
 
-**Action Required**: None - Songbird is the gold standard
+**Action Required**: None - Available orchestration primals provide universal patterns
 
 **Key Files**:
 - `src/api/service_registration.rs` - Service registration patterns
 - `src/communication/protocol.rs` - Communication protocols
-- `src/discovery/service_mesh.rs` - Service mesh implementation
+- `src/discovery/universal_adapter.rs` - Universal discovery implementation
 
 ### **🍄 ToadStool Implementation**
 **Status**: ✅ **REFERENCE IMPLEMENTATION** - Already compliant
@@ -464,7 +466,7 @@ pub struct FeatureFlags {
 1. Implement `EcosystemIntegration` trait
 2. Add `UniversalPrimalProvider` implementation
 3. Standardize configuration format
-4. Add Songbird service registration
+4. Add universal adapter service registration
 
 **Implementation Template**:
 ```rust

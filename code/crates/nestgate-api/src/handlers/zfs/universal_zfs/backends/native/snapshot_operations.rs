@@ -3,11 +3,12 @@
 //! Contains all snapshot-related operations for the native ZFS backend.
 
 use std::collections::HashMap;
-use tracing::info;
+// Removed unused tracing import
 
 use crate::handlers::zfs::universal_zfs::types::{
     SnapshotConfig, SnapshotInfo, UniversalZfsError, UniversalZfsResult,
 };
+use tracing::info;
 
 use super::core::NativeZfsService;
 

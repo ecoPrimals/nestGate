@@ -1,17 +1,21 @@
-//! Authentication and authorization module for NestGate
-//!
-//! This module provides authentication and authorization functionality
-//! for the NestGate system.
+// Removed unused tracing import
+use crate::error::{NetworkError};
+/// Authentication and authorization module for NestGate
+///
+/// This module provides authentication and authorization functionality
+/// for the NestGate system.
 
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
-use std::time::{Duration, Instant};
-use std::fmt;
+// Removed unused tracing import
+use std::time::{ Instant};
+// Removed unused std import
 use thiserror::Error;
 use crate::error::{NestGateError, Result};
 use crate::security::{Role, Permission, AccessLevel, AuthContext};
+use std::time::Duration;
+use std::fmt;
 
 /// Authorization errors
 #[derive(Debug, Clone)]

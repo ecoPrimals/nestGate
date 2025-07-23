@@ -1,13 +1,13 @@
-//! High-Performance UUID Caching System
-//!
-//! This module provides optimized UUID caching to eliminate performance bottlenecks
-//! in service registration and identification operations.
-//!
-//! ## Performance Impact
-//! - **Before**: 274,587 ns/iter (frequent UUID generation)
-//! - **Target**: <50,000 ns/iter (5x performance improvement)
-//! - **Strategy**: Cache UUIDs using Arc&lt;Uuid&gt; for zero-copy sharing
-
+// Removed unused error imports
+/// High-Performance UUID Caching System
+///
+/// This module provides optimized UUID caching to eliminate performance bottlenecks
+/// in service registration and identification operations.
+///
+/// ## Performance Impact
+/// - **Before**: 274,587 ns/iter (frequent UUID generation)
+/// - **Target**: <50,000 ns/iter (5x performance improvement)
+/// - **Strategy**: Cache UUIDs using Arc&lt;Uuid&gt; for zero-copy sharing
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};

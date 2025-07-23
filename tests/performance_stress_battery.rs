@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
-use tokio::time::sleep;
+use std::time::Instant;
+use tokio::time::{sleep, Duration};
 
 /// Performance test configuration
 #[derive(Debug, Clone)]

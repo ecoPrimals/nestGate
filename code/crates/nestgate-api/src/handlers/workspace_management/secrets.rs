@@ -7,6 +7,7 @@
 use axum::{extract::Json, extract::Path, http::StatusCode};
 use serde_json::{json, Value};
 use tracing::info;
+// Removed unused tracing import
 
 /// Create workspace secret (SECURITY FEATURE - DELEGATE TO SECURITY MODULE)
 pub async fn create_workspace_secret(

@@ -1,3 +1,42 @@
+//! # NestGate UI Module
+//!
+//! **Complete user interface components for NestGate storage management**
+//!
+//! This module contains all UI components for the NestGate native application,
+//! providing a comprehensive graphical interface for storage system management.
+//!
+//! ## UI Components
+//!
+//! - **Dashboard**: System overview and key metrics display
+//! - **Storage**: ZFS pool management and storage operations
+//! - **Performance**: Real-time performance monitoring and analytics
+//! - **Browser**: File system browsing and management
+//! - **Settings**: System configuration and preferences
+//! - **Components**: Reusable UI widgets and controls
+//!
+//! ## Architecture
+//!
+//! Built with [`eframe`] and [`egui`] for native cross-platform UI:
+//! - Native performance with GPU acceleration
+//! - Responsive design with dark/light theme support
+//! - Real-time data updates and live metrics
+//! - Accessibility features and keyboard navigation
+//!
+//! ## Usage
+//!
+//! The UI module is typically accessed through the main application:
+//!
+//! ```rust
+//! use nestgate_ui::NestGateApp;
+//! use eframe::NativeOptions;
+//!
+//! # fn example() {
+//! let app = NestGateApp::new();
+//! let native_options = NativeOptions::default();
+//! eframe::run_native("NestGate", native_options, Box::new(|_cc| Box::new(app)));
+//! # }
+//! ```
+
 pub mod browser;
 pub mod components;
 pub mod dashboard;

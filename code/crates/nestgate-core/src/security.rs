@@ -1,12 +1,13 @@
-//! # Security utilities for NestGate
-//!
-//! This module provides security-related functionality including API key management,
-//! authentication, and authorization for NestGate operations.
-
+// Removed unused error imports
+/// # Security utilities for NestGate
+///
+/// This module provides security-related functionality including API key management,
+/// authentication, and authorization for NestGate operations.
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use uuid::Uuid;
+// Removed unused tracing import
+use crate::get_or_create_uuid;
 
 /// Security manager for authentication and authorization
 #[derive(Default)]
@@ -109,7 +110,7 @@ impl SecurityManager {
 
     /// Create authentication token
     pub fn create_token(&mut self, user_id: String, permissions: Vec<String>) -> String {
-        let token = Uuid::new_v4().to_string();
+        let token = get_or_create_uuid("security_token").to_string();
         let auth_token = AuthToken {
             token: token.clone(),
             expires_at: Utc::now() + chrono::Duration::hours(24),
@@ -281,7 +282,7 @@ impl EnhancedSecurityManager {
         severity: SecuritySeverity,
     ) {
         let event = SecurityEvent {
-            id: Uuid::new_v4().to_string(),
+            id: get_or_create_uuid("security_event").to_string(),
             timestamp: Utc::now(),
             event_type,
             details,

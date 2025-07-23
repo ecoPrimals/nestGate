@@ -5,9 +5,12 @@
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{error, info, warn};
+// Removed unused tracing import
 
 use nestgate_core::{NestGateError, Result};
+use tracing::error;
+use tracing::info;
+use tracing::warn;
 
 /// MCP Adapter Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -83,15 +86,21 @@ impl McpAdapter {
 
         // Validate configuration
         if self.config.name.is_empty() {
-            return Err(NestGateError::Internal(
-                "Adapter name cannot be empty".to_string(),
-            ));
+            return Err(NestGateError::Internal {
+                message: "Adapter name cannot be empty".to_string(),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
         if self.config.endpoint.is_empty() {
-            return Err(NestGateError::Internal(
-                "Adapter endpoint cannot be empty".to_string(),
-            ));
+            return Err(NestGateError::Internal {
+                message: "Adapter endpoint cannot be empty".to_string(),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
         // Initialize adapter state
@@ -134,7 +143,12 @@ impl McpAdapter {
         let mut state = self.state.write().await;
 
         if !state.connected {
-            return Err(NestGateError::Internal("Adapter not connected".to_string()));
+            return Err(NestGateError::Internal {
+                message: "Adapter not connected".to_string(),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
         state.last_heartbeat = std::time::SystemTime::now();

@@ -5,7 +5,7 @@
 
 use std::sync::Arc;
 use tokio::time::{sleep, Duration};
-use tracing::{info, warn};
+// Removed unused tracing import
 
 // Test imports
 use nestgate_core::{StorageTier, NestGateError};

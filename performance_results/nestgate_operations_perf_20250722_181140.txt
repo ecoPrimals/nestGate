@@ -1,0 +1,130 @@
+warning: unused import: `std::time::Duration`
+  --> code/crates/nestgate-core/src/ai_first.rs:16:5
+   |
+16 | use std::time::Duration;
+   |     ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: `nestgate-core` (lib) generated 1 warning (run `cargo fix --lib -p nestgate-core` to apply 1 suggestion)
+warning: unused variable: `dataset_info`
+   --> code/crates/nestgate-zfs/src/ai_confidence.rs:336:5
+    |
+336 |     dataset_info: Option<&DatasetInfo>,
+    |     ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_dataset_info`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: `nestgate-zfs` (lib) generated 1 warning
+    Finished `bench` profile [optimized] target(s) in 0.21s
+     Running benches/nestgate_operations_perf.rs (target/release/deps/nestgate_operations_perf-f7fac1a9ddf0013b)
+Gnuplot not found, using plotters backend
+Benchmarking service_creation
+Benchmarking service_creation: Warming up for 3.0000 s
+Benchmarking service_creation: Collecting 100 samples in estimated 5.0240 s (131k iterations)
+Benchmarking service_creation: Analyzing
+service_creation        time:   [36.722 µs 36.773 µs 36.827 µs]
+                        change: [+1.8093% +2.0047% +2.2003%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 3 outliers among 100 measurements (3.00%)
+  3 (3.00%) high mild
+
+Benchmarking config_serialization
+Benchmarking config_serialization: Warming up for 3.0000 s
+Benchmarking config_serialization: Collecting 100 samples in estimated 5.0128 s (288k iterations)
+Benchmarking config_serialization: Analyzing
+config_serialization    time:   [17.380 µs 17.579 µs 17.946 µs]
+                        change: [+0.2472% +0.8118% +1.7445%] (p = 0.01 < 0.05)
+                        Change within noise threshold.
+Found 11 outliers among 100 measurements (11.00%)
+  3 (3.00%) low mild
+  2 (2.00%) high mild
+  6 (6.00%) high severe
+
+Benchmarking pool_management
+Benchmarking pool_management: Warming up for 3.0000 s
+Benchmarking pool_management: Collecting 100 samples in estimated 5.0084 s (2.7M iterations)
+Benchmarking pool_management: Analyzing
+pool_management         time:   [1.7945 µs 1.8075 µs 1.8253 µs]
+                        change: [+0.3403% +0.9813% +1.6621%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 11 outliers among 100 measurements (11.00%)
+  5 (5.00%) high mild
+  6 (6.00%) high severe
+
+Benchmarking dataset_operations
+Benchmarking dataset_operations: Warming up for 3.0000 s
+Benchmarking dataset_operations: Collecting 100 samples in estimated 5.0060 s (1.2M iterations)
+Benchmarking dataset_operations: Analyzing
+dataset_operations      time:   [4.0935 µs 4.0990 µs 4.1063 µs]
+                        change: [+1.7395% +1.9694% +2.1995%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 12 outliers among 100 measurements (12.00%)
+  1 (1.00%) low severe
+  2 (2.00%) low mild
+  2 (2.00%) high mild
+  7 (7.00%) high severe
+
+Benchmarking config_parsing
+Benchmarking config_parsing: Warming up for 3.0000 s
+Benchmarking config_parsing: Collecting 100 samples in estimated 5.0975 s (187k iterations)
+Benchmarking config_parsing: Analyzing
+config_parsing          time:   [31.363 µs 32.801 µs 34.530 µs]
+                        change: [+15.757% +18.271% +21.596%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 12 outliers among 100 measurements (12.00%)
+  2 (2.00%) high mild
+  10 (10.00%) high severe
+
+Benchmarking uuid_generation
+Benchmarking uuid_generation: Warming up for 3.0000 s
+Benchmarking uuid_generation: Collecting 100 samples in estimated 5.3184 s (25k iterations)
+Benchmarking uuid_generation: Analyzing
+uuid_generation         time:   [210.50 µs 210.93 µs 211.39 µs]
+                        change: [+1.3138% +1.6351% +1.8769%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 7 outliers among 100 measurements (7.00%)
+  4 (4.00%) high mild
+  3 (3.00%) high severe
+
+Benchmarking data_processing
+Benchmarking data_processing: Warming up for 3.0000 s
+Benchmarking data_processing: Collecting 100 samples in estimated 5.0078 s (1.3M iterations)
+Benchmarking data_processing: Analyzing
+data_processing         time:   [5.1257 µs 5.3312 µs 5.5484 µs]
+                        change: [+42.249% +45.519% +49.381%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+
+Benchmarking concurrent_operations
+Benchmarking concurrent_operations: Warming up for 3.0000 s
+Benchmarking concurrent_operations: Collecting 100 samples in estimated 7.7059 s (10k iterations)
+Benchmarking concurrent_operations: Analyzing
+concurrent_operations   time:   [299.19 µs 319.15 µs 343.26 µs]
+                        change: [+167.02% +189.46% +215.41%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 6 outliers among 100 measurements (6.00%)
+  6 (6.00%) high mild
+
+Benchmarking memory_allocation_patterns
+Benchmarking memory_allocation_patterns: Warming up for 3.0000 s
+Benchmarking memory_allocation_patterns: Collecting 100 samples in estimated 5.3554 s (45k iterations)
+Benchmarking memory_allocation_patterns: Analyzing
+memory_allocation_patterns
+                        time:   [105.16 µs 107.84 µs 110.93 µs]
+                        change: [+10.444% +15.568% +22.090%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 18 outliers among 100 measurements (18.00%)
+  3 (3.00%) high mild
+  15 (15.00%) high severe
+
+Benchmarking string_operations
+Benchmarking string_operations: Warming up for 3.0000 s
+Benchmarking string_operations: Collecting 100 samples in estimated 5.0170 s (414k iterations)
+Benchmarking string_operations: Analyzing
+string_operations       time:   [11.290 µs 11.342 µs 11.406 µs]
+                        change: [+15.124% +17.386% +20.076%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 16 outliers among 100 measurements (16.00%)
+  2 (2.00%) high mild
+  14 (14.00%) high severe
+

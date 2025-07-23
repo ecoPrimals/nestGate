@@ -5,7 +5,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::timeout;
-use tracing::{info, warn};
+// Removed unused tracing import
 
 // Core imports
 use nestgate_core::{Result as CoreResult, NestGateError, StorageTier};
@@ -99,7 +99,12 @@ async fn test_concurrent_operations() -> CoreResult<()> {
     // Wait for all operations to complete
     let start = std::time::Instant::now();
     for handle in handles {
-        let result = handle.await.map_err(|e| NestGateError::Internal(e.to_string()))?;
+        let result = handle.await.map_err(|e| NestGateError::Internal {
+            message: e.to_string(),
+            location: Some(file!().to_string()),
+            debug_info: None,
+            is_bug: false,
+        })?;
         assert!(result.is_ok(), "Concurrent operation failed");
     }
 

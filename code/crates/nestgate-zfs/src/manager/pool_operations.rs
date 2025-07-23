@@ -4,9 +4,10 @@
 //! status checking, and maintenance operations like scrubbing.
 
 use crate::error::{Result, ZfsError};
-use tracing::info;
+// Removed unused tracing import
 
 use super::ZfsManager;
+use tracing::info;
 
 impl ZfsManager {
     /// Create a new ZFS pool

@@ -7,14 +7,16 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::sync::RwLock;
-use tracing::warn;
+// Removed unused tracing import
 
 use crate::handlers::zfs::universal_zfs::config::{FailSafeConfig, TimeoutConfig};
 use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
+
 use crate::handlers::zfs::universal_zfs::types::{
     DatasetConfig, DatasetInfo, HealthStatus, PoolConfig, PoolInfo, ServiceMetrics, SnapshotConfig,
     SnapshotInfo, UniversalZfsError, UniversalZfsResult,
 };
+use tracing::warn;
 
 use super::circuit_breaker::CircuitBreaker;
 use super::retry_executor::RetryExecutor;

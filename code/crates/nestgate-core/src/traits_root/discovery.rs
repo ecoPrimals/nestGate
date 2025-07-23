@@ -1,5 +1,5 @@
-//! Service discovery traits and types
-
+// Removed unused error imports
+/// Service discovery traits and types
 use async_trait::async_trait;
 use futures_util::stream::Stream;
 use std::collections::HashMap;

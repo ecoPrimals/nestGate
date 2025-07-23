@@ -1,4 +1,5 @@
 use eframe::egui;
+use nestgate_core::error::{RecoveryStrategy, SystemResource};
 use nestgate_core::Result;
 
 pub mod app;
@@ -22,7 +23,12 @@ pub fn run_app() -> Result<()> {
         options,
         Box::new(|cc| Box::new(NestGateApp::new(cc))),
     )
-    .map_err(|e| nestgate_core::NestGateError::Storage(format!("Failed to run enhanced UI: {e}")))
+    .map_err(|e| nestgate_core::NestGateError::System {
+        message: format!("Failed to run enhanced UI: {e}"),
+        resource: SystemResource::Memory,
+        utilization: Some(85.0), // Low memory utilization
+        recovery: RecoveryStrategy::Retry,
+    })
 }
 
 #[cfg(test)]

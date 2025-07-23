@@ -61,12 +61,21 @@ pub enum AutomationError {
 impl From<nestgate_core::NestGateError> for AutomationError {
     fn from(err: nestgate_core::NestGateError) -> Self {
         match err {
-            nestgate_core::NestGateError::Internal(msg) => AutomationError::Internal(msg),
-            nestgate_core::NestGateError::InvalidInput(msg) => AutomationError::Configuration(msg),
-            nestgate_core::NestGateError::Network(msg) => AutomationError::NetworkError(msg),
-            nestgate_core::NestGateError::Database(msg) => AutomationError::Internal(msg),
-            nestgate_core::NestGateError::Authentication(msg) => AutomationError::Service(msg),
-            nestgate_core::NestGateError::Authorization(msg) => AutomationError::Service(msg),
+            nestgate_core::NestGateError::Internal { message, .. } => {
+                AutomationError::Internal(message)
+            }
+            nestgate_core::NestGateError::Validation { message, .. } => {
+                AutomationError::Configuration(message)
+            }
+            nestgate_core::NestGateError::Network(network_data) => {
+                AutomationError::NetworkError(network_data.error.to_string())
+            }
+            nestgate_core::NestGateError::Configuration { message, .. } => {
+                AutomationError::Configuration(message)
+            }
+            nestgate_core::NestGateError::Security(security_data) => {
+                AutomationError::Service(security_data.error.to_string())
+            }
             // Handle remaining variants with a catch-all
             _ => AutomationError::Internal(format!("Unhandled error: {err:?}")),
         }

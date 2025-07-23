@@ -1,9 +1,9 @@
-//! Universal Interface Standards
-//!
-//! This module defines the standardized interfaces that eliminate inconsistency
-//! across all NestGate components. All services should implement these unified
-//! traits to ensure consistent API patterns.
-
+// Removed unused error imports
+/// Universal Interface Standards
+///
+/// This module defines the standardized interfaces that eliminate inconsistency
+/// across all NestGate components. All services should implement these unified
+/// traits to ensure consistent API patterns.
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -75,7 +75,7 @@ pub struct UnifiedServiceMetrics {
     /// 99th percentile response time
     pub p99_response_time_ms: f64,
     /// CPU usage percentage
-    pub cpu_usage: f64,
+    pub _cpu_usage: f64,
     /// Memory usage in bytes
     pub memory_usage: u64,
     /// Active connections

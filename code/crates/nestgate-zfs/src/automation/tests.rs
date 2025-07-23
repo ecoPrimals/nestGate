@@ -29,10 +29,10 @@ mod test_suite {
             learning_period_days: 7,
             default_policy: "balanced".to_string(),
             ai_settings: AiAutomationSettings {
-                enable_ai_predictions: false,
-                ai_confidence_threshold: 0.8,
-                learning_rate: 0.1,
-                learning_window_days: 30,
+                ai_enabled: false,
+                model_config: "test".to_string(),
+                monitoring_interval_seconds: 300,
+                confidence_threshold: 0.8,
             },
         }
     }
@@ -47,27 +47,13 @@ mod test_suite {
                     )
                 })
                 .to_string(),
-            default_pool: "test-pool".to_string(),
-            use_real_zfs: false,
             tiers: crate::config::TierConfigurations::default(),
             pool_discovery: crate::config::PoolDiscoveryConfig::default(),
             health_monitoring: crate::config::HealthMonitoringConfig::default(),
             metrics: crate::config::MetricsConfig::default(),
             migration: crate::config::MigrationConfig::default(),
             security: crate::config::SecurityConfig::default(),
-            enable_ai_integration: Some(false),
-            monitoring_interval: 60,
-            snapshot_policies_file: None,
-            automation: Some(create_test_config()),
-            ecosystem_orchestrator_url: std::env::var("NESTGATE_ORCHESTRATOR_URL")
-                .unwrap_or_else(|_| {
-                    format!(
-                        "http://localhost:{}",
-                        nestgate_core::constants::network::orchestrator_port()
-                    )
-                })
-                .to_string(),
-            enable_ecosystem_integration: false,
+            ai_automation: create_test_config().ai_settings,
         };
 
         let pool_manager = Arc::new(

@@ -5,10 +5,11 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::info;
+// Removed unused tracing import
 
 use crate::types::*;
 use crate::Result;
+use tracing::info;
 
 /// Performance metrics for a dataset
 #[derive(Debug, Clone)]

@@ -5,9 +5,10 @@
 
 use crate::error::{Result, ZfsError};
 use nestgate_core::StorageTier;
-use tracing::info;
+// Removed unused tracing import
 
 use super::ZfsManager;
+use tracing::info;
 
 impl ZfsManager {
     /// Create a new dataset

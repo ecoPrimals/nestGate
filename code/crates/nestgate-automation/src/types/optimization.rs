@@ -82,8 +82,14 @@ impl Default for TierThresholds {
 impl Default for SizeThresholds {
     fn default() -> Self {
         Self {
-            small_file: 1024 * 1024,       // 1MB
-            large_file: 100 * 1024 * 1024, // 100MB
+            small_file: {
+                use nestgate_core::config::StorageConstants;
+                StorageConstants::from_environment().file_sizes.small_file
+            },
+            large_file: {
+                use nestgate_core::config::StorageConstants;
+                StorageConstants::from_environment().file_sizes.large_file
+            },
         }
     }
 }

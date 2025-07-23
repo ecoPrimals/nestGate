@@ -9,6 +9,7 @@ use std::path::PathBuf;
 
 // Use nestgate_core for error handling
 use nestgate_core::{NestGateError, Result};
+use std::fmt;
 
 /// Supported network protocols
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

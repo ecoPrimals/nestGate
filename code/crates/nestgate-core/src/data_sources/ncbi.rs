@@ -1,7 +1,7 @@
-//! NCBI Data Source Implementation
-//!
-//! Provides access to NCBI's E-utilities API for genome data retrieval and analysis.
-
+use crate::error::{NetworkError, NetworkErrorData};
+/// NCBI Data Source Implementation
+///
+/// Provides access to NCBI's E-utilities API for genome data retrieval and analysis.
 use crate::temporal_storage::*;
 use crate::{NestGateError, Result};
 use async_trait::async_trait;
@@ -10,7 +10,9 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
+use tracing::info;
 use tracing::warn;
+// Removed unused tracing import
 
 /// NCBI Genome Database Source
 #[derive(Debug, Clone)]
@@ -42,7 +44,7 @@ impl NCBIGenomeSource {
 
     /// Search for genomes using NCBI E-utilities API
     async fn _search_genomes(&self, query: &str) -> Result<Vec<String>> {
-        use tracing::info;
+        // Removed unused tracing import
         use urlencoding;
 
         info!("🔍 Searching NCBI for genomes with query: {}", query);
@@ -89,7 +91,7 @@ impl NCBIGenomeSource {
 
     /// Fetch genome information using NCBI E-utilities API
     async fn _fetch_genome_info(&self, genome_id: &str) -> Result<GenomeInfo> {
-        use tracing::info;
+        // Removed unused tracing import
 
         info!("📄 Fetching NCBI genome info for ID: {}", genome_id);
 
@@ -173,7 +175,7 @@ impl NCBIGenomeSource {
 
     /// Download genome sequence using NCBI E-utilities API
     async fn _download_genome_sequence(&self, accession: &str) -> Result<Vec<u8>> {
-        use tracing::info;
+        // Removed unused tracing import
 
         info!(
             "📥 Downloading NCBI genome sequence for accession: {}",
@@ -219,7 +221,7 @@ impl NCBIGenomeSource {
         use flate2::read::GzDecoder;
         use std::io::Read;
 
-        use tracing::info;
+        // Removed unused tracing import
 
         info!("🗜️ Decompressing {} bytes of gzip data", data.len());
 
@@ -277,14 +279,30 @@ impl UniversalDataSource for NCBIGenomeSource {
             self.base_url
         );
 
-        let response = client
+        let response: serde_json::Value = client
             .get(&search_url)
             .send()
             .await
-            .map_err(|e| NestGateError::Network(e.to_string()))?
-            .json::<serde_json::Value>()
+            .map_err(|e| {
+                NestGateError::Network(Box::new(NetworkErrorData {
+                    error: NetworkError::Connection {
+                        endpoint: search_url.clone(),
+                        message: e.to_string(),
+                        last_attempt: std::time::SystemTime::now(),
+                        retry_count: 0,
+                    },
+                    context: None,
+                }))
+            })?
+            .json()
             .await
-            .map_err(|e| NestGateError::Parse(e.to_string()))?;
+            .map_err(|e| NestGateError::Validation {
+                field: "parsing".to_string(),
+                message: e.to_string(),
+                current_value: None,
+                expected: None,
+                user_error: false,
+            })?;
 
         let mut descriptors = Vec::new();
         if let Some(id_list) = response["esearchresult"]["idlist"].as_array() {
@@ -324,22 +342,37 @@ impl UniversalDataSource for NCBIGenomeSource {
             "{}/efetch.fcgi?db=nucleotide&id={}&retmode=json&rettype=fasta",
             self.base_url, descriptor.id
         );
-
-        let response = client
+        let response: String = client
             .get(&fetch_url)
             .send()
             .await
-            .map_err(|e| NestGateError::Network(e.to_string()))?
-            .bytes()
+            .map_err(|e| {
+                NestGateError::Network(Box::new(NetworkErrorData {
+                    error: NetworkError::Connection {
+                        endpoint: fetch_url.clone(),
+                        message: e.to_string(),
+                        last_attempt: std::time::SystemTime::now(),
+                        retry_count: 0,
+                    },
+                    context: None,
+                }))
+            })?
+            .text()
             .await
-            .map_err(|e| NestGateError::Network(e.to_string()))?;
+            .map_err(|e| NestGateError::Validation {
+                field: "response_parsing".to_string(),
+                message: format!("Failed to parse NCBI response: {e}"),
+                current_value: None,
+                expected: Some("valid text response".to_string()),
+                user_error: false,
+            })?;
 
         let checksum = format!("{:x}", md5::compute(&response));
 
         Ok(IngestedData {
             data_id: descriptor.id.clone(),
             original_descriptor: descriptor.clone(),
-            content: response.to_vec(),
+            content: response.into_bytes(),
             ingestion_metadata: IngestionMetadata {
                 ingestion_time: chrono::Utc::now(),
                 source_checksum: checksum,
@@ -356,15 +389,30 @@ impl UniversalDataSource for NCBIGenomeSource {
             "{}/esummary.fcgi?db=nucleotide&id={}&retmode=json",
             self.base_url, descriptor.id
         );
-
-        let response = client
+        let response: serde_json::Value = client
             .get(&url)
             .send()
             .await
-            .map_err(|e| NestGateError::Network(e.to_string()))?
+            .map_err(|e| {
+                NestGateError::Network(Box::new(NetworkErrorData {
+                    error: NetworkError::Connection {
+                        endpoint: url.clone(),
+                        message: e.to_string(),
+                        last_attempt: std::time::SystemTime::now(),
+                        retry_count: 0,
+                    },
+                    context: None,
+                }))
+            })?
             .json::<serde_json::Value>()
             .await
-            .map_err(|e| NestGateError::Parse(e.to_string()))?;
+            .map_err(|e| NestGateError::Validation {
+                field: "json_parsing".to_string(),
+                message: format!("Failed to parse NCBI metadata JSON: {e}"),
+                current_value: None,
+                expected: Some("valid JSON response".to_string()),
+                user_error: false,
+            })?;
 
         let metadata: HashMap<String, serde_json::Value> = response
             .as_object()

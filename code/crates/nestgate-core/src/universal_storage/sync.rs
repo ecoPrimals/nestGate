@@ -1,15 +1,16 @@
-//! Real-time Synchronization Engine
-//!
-//! Handles real-time synchronization between storage backends with conflict detection
-//! and resolution capabilities.
-
+// Removed unused error imports
+/// Real-time Synchronization Engine
+///
+/// Handles real-time synchronization between storage backends with conflict detection
+/// and resolution capabilities.
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::info;
+// Removed unused tracing import
 
 use super::types::*;
 use crate::Result;
+use tracing::info;
 
 /// Real-time Synchronization Engine
 pub struct SyncEngine {

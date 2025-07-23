@@ -64,15 +64,23 @@ impl ChaosSecurityProvider {
 
         // Check if forced failure
         if self.should_fail.load(Ordering::Relaxed) {
-            return Err(nestgate_core::NestGateError::SecurityError(
-                "Chaos failure".to_string(),
+            return Err(nestgate_core::NestGateError::security_simple(
+                nestgate_core::error::SecurityError::AuthenticationFailed {
+                    reason: "Chaos failure".to_string(),
+                    auth_method: "chaos".to_string(),
+                    user: Some("test".to_string()),
+                },
             ));
         }
 
         // Random failure based on failure rate
         if rand::random::<f64>() < self.failure_rate {
-            return Err(nestgate_core::NestGateError::SecurityError(
-                "Random chaos failure".to_string(),
+            return Err(nestgate_core::NestGateError::security_simple(
+                nestgate_core::error::SecurityError::AuthenticationFailed {
+                    reason: "Random chaos failure".to_string(),
+                    auth_method: "chaos".to_string(),
+                    user: Some("test".to_string()),
+                },
             ));
         }
 
@@ -87,7 +95,7 @@ impl SecurityPrimalProvider for ChaosSecurityProvider {
         Ok(AuthToken {
             token: format!("{}-chaos-token", self.name),
             expires_at: SystemTime::now() + Duration::from_secs(3600),
-            scope: vec!["chaos".to_string()],
+            permissions: vec!["chaos".to_string()],
         })
     }
 
@@ -102,8 +110,13 @@ impl SecurityPrimalProvider for ChaosSecurityProvider {
         if let Some(data) = encrypted_str.strip_prefix("CHAOS-ENCRYPTED:") {
             Ok(data.as_bytes().to_vec())
         } else {
-            Err(nestgate_core::NestGateError::SecurityError(
-                "Invalid chaos encryption format".to_string(),
+            Err(nestgate_core::NestGateError::security_simple(
+                nestgate_core::error::SecurityError::AuthorizationDenied {
+                    user: "chaos".to_string(),
+                    action: "decrypt".to_string(),
+                    resource: "encrypted_data".to_string(),
+                    required_role: Some("valid_format".to_string()),
+                },
             ))
         }
     }
@@ -111,7 +124,7 @@ impl SecurityPrimalProvider for ChaosSecurityProvider {
     async fn sign_data(&self, data: &[u8]) -> nestgate_core::Result<Signature> {
         self.maybe_fail().await?;
         Ok(Signature {
-            data: format!("CHAOS-SIG-{}", String::from_utf8_lossy(data)).into_bytes(),
+            signature: format!("CHAOS-SIG-{}", String::from_utf8_lossy(data)),
             algorithm: "CHAOS".to_string(),
             key_id: format!("{}-chaos-key", self.name),
         })
@@ -139,6 +152,22 @@ impl SecurityPrimalProvider for ChaosSecurityProvider {
     async fn generate_validation_token(&self, _data: &[u8]) -> nestgate_core::Result<String> {
         self.maybe_fail().await?;
         Ok(format!("{}-chaos-validation", self.name))
+    }
+
+    async fn evaluate_boundary_access(
+        &self,
+        _source: &str,
+        _destination: &str,
+        _operation: &str,
+    ) -> nestgate_core::Result<nestgate_core::universal_traits::SecurityDecision> {
+        self.maybe_fail().await?;
+        if rand::random::<f64>() < 0.8 {
+            Ok(nestgate_core::universal_traits::SecurityDecision::Allow)
+        } else if rand::random::<f64>() < 0.5 {
+            Ok(nestgate_core::universal_traits::SecurityDecision::RequireAuth)
+        } else {
+            Ok(nestgate_core::universal_traits::SecurityDecision::Deny)
+        }
     }
 }
 
@@ -174,40 +203,119 @@ impl ChaosComputeProvider {
 
 #[async_trait::async_trait]
 impl ComputePrimalProvider for ChaosComputeProvider {
-    async fn process_data(&self, data: Vec<u8>) -> nestgate_core::Result<Vec<u8>> {
-        self.call_count.fetch_add(1, Ordering::Relaxed);
-
-        if self.should_fail.load(Ordering::Relaxed) || rand::random::<f64>() < self.failure_rate {
-            return Err(nestgate_core::NestGateError::ComputeError(
-                "Chaos compute failure".to_string(),
-            ));
-        }
-
-        Ok(format!("CHAOS-PROCESSED:{}", String::from_utf8_lossy(&data)).into_bytes())
-    }
-
-    async fn execute_task(
+    async fn allocate_resources(
         &self,
-        task: &str,
-        _context: &PrimalContext,
-    ) -> nestgate_core::Result<String> {
+        _spec: &nestgate_core::ResourceSpec,
+    ) -> nestgate_core::Result<nestgate_core::ResourceAllocation> {
         self.call_count.fetch_add(1, Ordering::Relaxed);
 
         if self.should_fail.load(Ordering::Relaxed) || rand::random::<f64>() < self.failure_rate {
-            return Err(nestgate_core::NestGateError::ComputeError(
-                "Chaos task execution failure".to_string(),
-            ));
+            return Err(nestgate_core::NestGateError::Internal {
+                message: "Chaos resource allocation failure".to_string(),
+                location: Some(file!().to_string()),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
-        Ok(format!("CHAOS-EXECUTED:{}", task))
+        Ok(nestgate_core::ResourceAllocation {
+            id: "chaos-allocation".to_string(),
+            allocated_resources: nestgate_core::universal_traits::ResourceSpec {
+                cpu_cores: Some(2.0),
+                memory_mb: Some(1024),
+                disk_mb: Some(10240),
+                gpu_count: None,
+                network_bandwidth: Some(1000),
+            },
+            status: "allocated".to_string(),
+            created_at: SystemTime::now(),
+        })
     }
 
-    async fn get_capabilities(&self) -> nestgate_core::Result<Vec<String>> {
-        Ok(self.capabilities.clone())
+    async fn execute_workload(
+        &self,
+        _workload: &nestgate_core::WorkloadSpec,
+    ) -> nestgate_core::Result<nestgate_core::WorkloadResult> {
+        self.call_count.fetch_add(1, Ordering::Relaxed);
+
+        if self.should_fail.load(Ordering::Relaxed) || rand::random::<f64>() < self.failure_rate {
+            return Err(nestgate_core::NestGateError::Internal {
+                message: "Chaos workload execution failure".to_string(),
+                location: Some(file!().to_string()),
+                debug_info: None,
+                is_bug: false,
+            });
+        }
+
+        Ok(nestgate_core::WorkloadResult {
+            id: "chaos-workload".to_string(),
+            exit_code: 0,
+            stdout: "CHAOS-EXECUTED workload".to_string(),
+            stderr: "".to_string(),
+            execution_time: 1000, // milliseconds
+        })
     }
 
-    async fn health_check(&self) -> nestgate_core::Result<bool> {
-        Ok(!self.should_fail.load(Ordering::Relaxed))
+    async fn monitor_performance(
+        &self,
+        _allocation: &nestgate_core::ResourceAllocation,
+    ) -> nestgate_core::Result<nestgate_core::universal_traits::PerformanceMetrics> {
+        Ok(nestgate_core::universal_traits::PerformanceMetrics {
+            _cpu_usage: 0.8,
+            memory_usage: 0.6,
+            network_io: 200.0,
+            disk_io: 100.0,
+            timestamp: SystemTime::now(),
+        })
+    }
+
+    async fn scale_resources(
+        &self,
+        _allocation: &nestgate_core::ResourceAllocation,
+        _target: &nestgate_core::ScalingTarget,
+    ) -> nestgate_core::Result<()> {
+        if self.should_fail.load(Ordering::Relaxed) {
+            return Err(nestgate_core::NestGateError::Internal {
+                message: "Chaos scaling failure".to_string(),
+                location: Some(file!().to_string()),
+                debug_info: None,
+                is_bug: false,
+            });
+        }
+        Ok(())
+    }
+
+    async fn get_resource_utilization(
+        &self,
+    ) -> nestgate_core::Result<nestgate_core::ResourceUtilization> {
+        Ok(nestgate_core::ResourceUtilization {
+            cpu_percent: 0.7,
+            memory_percent: 0.5,
+            disk_percent: 0.3,
+            network_utilization: 0.2,
+        })
+    }
+
+    async fn detect_platform(&self) -> nestgate_core::Result<nestgate_core::PlatformCapabilities> {
+        Ok(nestgate_core::PlatformCapabilities {
+            architecture: "x86_64".to_string(),
+            os_type: "linux".to_string(),
+            container_runtime: "chaos".to_string(),
+            gpu_support: false,
+            features: vec!["chaos".to_string(), "testing".to_string()],
+        })
+    }
+
+    async fn optimize_allocation(
+        &self,
+        _current: &nestgate_core::ResourceAllocation,
+        _metrics: &nestgate_core::universal_traits::PerformanceMetrics,
+    ) -> nestgate_core::Result<nestgate_core::OptimizationRecommendation> {
+        Ok(nestgate_core::OptimizationRecommendation {
+            recommendations: vec!["Chaos optimization applied".to_string()],
+            expected_improvement: 0.1,
+            confidence: 0.85,
+        })
     }
 }
 
@@ -217,12 +325,14 @@ async fn test_chaos_provider_failover() {
     println!("🔥 Testing provider failover under chaos conditions...");
 
     let config = UniversalAdapterConfig {
-        enable_fallback_providers: true,
-        health_check_interval: Duration::from_millis(50),
+        auto_discovery: true,
+        discovery_interval: 1, // Fast discovery for testing
+        request_timeout: 5,
+        max_retries: 3,
         ..UniversalAdapterConfig::default()
     };
 
-    let adapter = UniversalPrimalAdapter::new(config).await.unwrap();
+    let adapter = UniversalPrimalAdapter::new(config);
 
     // Register multiple chaos providers
     let provider1 = Arc::new(ChaosSecurityProvider::new(
@@ -264,10 +374,7 @@ async fn test_chaos_provider_failover() {
 
     // Perform many operations to test failover
     for _ in 0..100 {
-        if let Some(provider) = adapter
-            .get_security_provider_with_capability("encryption")
-            .await
-        {
+        if let Some(provider) = adapter.get_security_provider().await {
             match provider.encrypt(b"test data", "AES").await {
                 Ok(_) => success_count += 1,
                 Err(_) => failure_count += 1,
@@ -299,7 +406,7 @@ async fn test_concurrent_chaos_stress() {
     println!("💥 Testing concurrent access under chaos stress...");
 
     let config = UniversalAdapterConfig::default();
-    let adapter = Arc::new(UniversalPrimalAdapter::new(config).await.unwrap());
+    let adapter = Arc::new(UniversalPrimalAdapter::new(config));
 
     // Register chaos providers
     for i in 0..5 {
@@ -329,8 +436,23 @@ async fn test_concurrent_chaos_stress() {
                 total_ops.fetch_add(1, Ordering::Relaxed);
 
                 if let Some(provider) = adapter_clone.get_compute_provider().await {
-                    let data = format!("worker-{}-task-{}", worker_id, i).into_bytes();
-                    if provider.process_data(data).await.is_ok() {
+                    let workload = nestgate_core::universal_traits::WorkloadSpec {
+                        id: format!("worker-{}-task-{}", worker_id, i),
+                        image: "test-image".to_string(),
+                        command: vec![
+                            "process".to_string(),
+                            format!("worker-{}-task-{}", worker_id, i),
+                        ],
+                        environment: std::collections::HashMap::new(),
+                        resources: nestgate_core::universal_traits::ResourceSpec {
+                            cpu_cores: Some(0.5),
+                            memory_mb: Some(256),
+                            disk_mb: Some(512),
+                            gpu_count: None,
+                            network_bandwidth: None,
+                        },
+                    };
+                    if provider.execute_workload(&workload).await.is_ok() {
                         successful_ops.fetch_add(1, Ordering::Relaxed);
                     }
                 }
@@ -442,14 +564,14 @@ async fn test_configuration_hot_swapping_chaos() {
     println!("🔧 Testing configuration hot-swapping under chaos...");
 
     let config = UniversalAdapterConfig {
-        enable_auto_discovery: true,
-        enable_capability_matching: true,
-        discovery_interval: Duration::from_millis(50),
-        health_check_interval: Duration::from_millis(100),
+        auto_discovery: true,
+        discovery_interval: 1, // Fast discovery for testing (1 second)
+        request_timeout: 5,
+        max_retries: 3,
         ..UniversalAdapterConfig::default()
     };
 
-    let adapter = Arc::new(UniversalPrimalAdapter::new(config).await.unwrap());
+    let adapter = Arc::new(UniversalPrimalAdapter::new(config));
 
     // Start background load
     let adapter_load = Arc::clone(&adapter);
@@ -511,7 +633,7 @@ async fn test_configuration_hot_swapping_chaos() {
 async fn test_network_partition_simulation() {
     println!("🌐 Testing network partition simulation...");
 
-    let mut service_pool = ServiceConnectionPool::new();
+    let mut service_pool = UniversalAIConnectionPool::new();
 
     // Create providers in different "network zones"
     let zones = vec![
@@ -595,11 +717,14 @@ async fn test_resource_exhaustion_chaos() {
     println!("🔋 Testing resource exhaustion chaos scenarios...");
 
     let config = UniversalAdapterConfig {
-        max_providers: 10, // Limited provider capacity
+        auto_discovery: true,
+        discovery_interval: 1,
+        request_timeout: 2, // Short timeout to trigger failures
+        max_retries: 1,     // Limited retries
         ..UniversalAdapterConfig::default()
     };
 
-    let adapter = UniversalPrimalAdapter::new(config).await.unwrap();
+    let adapter = UniversalPrimalAdapter::new(config);
     let mut ai_pool = UniversalAIConnectionPool::new();
 
     // Try to register more providers than the limit
@@ -659,12 +784,14 @@ async fn test_cascading_failure_scenarios() {
     println!("⚡ Testing cascading failure scenarios...");
 
     let config = UniversalAdapterConfig {
-        enable_fallback_providers: true,
-        health_check_interval: Duration::from_millis(50),
+        auto_discovery: true,
+        discovery_interval: 1, // Fast discovery for testing
+        request_timeout: 5,
+        max_retries: 3,
         ..UniversalAdapterConfig::default()
     };
 
-    let adapter = UniversalPrimalAdapter::new(config).await.unwrap();
+    let adapter = UniversalPrimalAdapter::new(config);
 
     // Create a chain of dependent providers
     let providers = vec![
@@ -694,10 +821,7 @@ async fn test_cascading_failure_scenarios() {
     // Test normal operation
     let mut success_count = 0;
     for _ in 0..50 {
-        if let Some(provider) = adapter
-            .get_security_provider_with_capability("encryption")
-            .await
-        {
+        if let Some(provider) = adapter.get_security_provider().await {
             if provider.encrypt(b"test", "AES").await.is_ok() {
                 success_count += 1;
             }
@@ -719,10 +843,7 @@ async fn test_cascading_failure_scenarios() {
     // Test that emergency provider handles the load
     let mut emergency_success = 0;
     for _ in 0..50 {
-        if let Some(provider) = adapter
-            .get_security_provider_with_capability("encryption")
-            .await
-        {
+        if let Some(provider) = adapter.get_security_provider().await {
             if provider.encrypt(b"test", "AES").await.is_ok() {
                 emergency_success += 1;
             }
@@ -752,7 +873,7 @@ async fn test_chaos_resilience_summary() {
 
     // Test basic adapter resilience
     let config = UniversalAdapterConfig::default();
-    let adapter = UniversalPrimalAdapter::new(config).await.unwrap();
+    let adapter = UniversalPrimalAdapter::new(config);
 
     // Score: Can handle no providers gracefully
     let no_provider_result = adapter.get_security_provider().await;
@@ -764,7 +885,7 @@ async fn test_chaos_resilience_summary() {
     // Score: Can handle repeated requests
     let mut repeated_requests_score = 0;
     for _ in 0..100 {
-        let _result = adapter.list_available_providers().await;
+        let _result = adapter.find_providers_by_capability("").await;
         repeated_requests_score += 1;
     }
     resilience_scores.insert("Repeated Requests", repeated_requests_score);
@@ -820,7 +941,7 @@ async fn test_chaos_resilience_summary() {
     // Performance under chaos test
     let start = std::time::Instant::now();
     for _ in 0..1000 {
-        let _adapter_check = adapter.list_available_providers().await;
+        let _adapter_check = adapter.find_providers_by_capability("").await;
     }
     let chaos_performance = start.elapsed();
     let ops_per_second = 1000.0 / chaos_performance.as_secs_f64();

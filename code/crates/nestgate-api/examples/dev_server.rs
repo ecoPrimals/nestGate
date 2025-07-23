@@ -7,7 +7,11 @@ use nestgate_api::{serve_with_zfs, Config};
 use nestgate_core::config::defaults::{NetworkAddressDefaults, NetworkPortDefaults};
 use nestgate_zfs::{config::ZfsConfig, ZfsManager};
 use std::sync::Arc;
-use tracing::{error, info, warn};
+// Removed unused tracing import
+use std::fmt;
+use tracing::error;
+use tracing::info;
+use tracing::warn;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]

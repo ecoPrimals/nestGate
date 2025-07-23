@@ -7,11 +7,13 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::broadcast;
-use tracing::{debug, info};
+// Removed unused tracing import
 
 use super::dashboard_types::{DashboardEvent, TimeRange};
 use super::metrics_collector::{PoolMetrics, IOMetricsPoint, CacheMetricsPoint, ComprehensiveMetricsPoint, CapacityMetricsPoint};
 use nestgate_core::Result;
+use tracing::info;
+use tracing::debug;
 
 /// Performance analyzer with trend detection and forecasting
 #[derive(Debug)]

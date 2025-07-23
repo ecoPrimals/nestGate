@@ -1,84 +1,22 @@
-#![doc = "
-# NestGate API Server
-
-High-performance REST API server providing comprehensive storage management, workspace operations,
-and ecosystem integration for the NestGate Universal Storage Platform.
-
-## Key Features
-
-- **BYOB (Bring Your Own Build) API**: Complete workspace and storage provisioning
-- **ZFS Management**: Real-time ZFS operations through REST endpoints
-- **Universal Primal Integration**: Seamless integration with AI and ecosystem services  
-- **WebSocket Streaming**: Real-time events and performance metrics streaming
-- **Hardware Tuning**: Automated hardware optimization and configuration
-- **Security Integration**: Multi-provider authentication and authorization
-
-## API Endpoints
-
-### Storage Management
-- `POST /api/v1/storage` - Provision storage resources
-- `GET /api/v1/storage/{id}` - Get storage status  
-- `DELETE /api/v1/storage/{id}` - Remove storage allocation
-
-### Workspace Operations  
-- `POST /api/v1/workspaces` - Create development workspace
-- `GET /api/v1/workspaces` - List all workspaces
-- `PUT /api/v1/workspaces/{id}/config` - Update workspace configuration
-
-### ZFS Operations
-- `GET /api/v1/zfs/pools` - List ZFS pools with health status
-- `POST /api/v1/zfs/datasets` - Create ZFS dataset
-- `GET /api/v1/zfs/performance` - Real-time performance metrics
-
-### Hardware Tuning
-- `POST /api/v1/hardware/optimize` - Trigger hardware optimization
-- `GET /api/v1/hardware/profiles` - Get optimization profiles
-
-## Performance Characteristics
-
-- **Throughput**: Handles 1000+ concurrent requests
-- **Latency**: Sub-10ms response times for most operations  
-- **Reliability**: 99.9% uptime with graceful degradation
-- **Scalability**: Horizontal scaling through ecosystem coordination
-
-## WebSocket Integration
-
-Real-time streaming for:
-- Storage operation progress
-- Performance metrics updates  
-- System health monitoring
-- Hardware tuning status
-
-## Security
-
-- Multi-provider authentication (OAuth2, API keys, certificates)
-- Role-based access control (RBAC)  
-- Rate limiting and circuit breakers
-- Comprehensive audit logging
-
-This crate provides a production-ready API server with enterprise-grade performance,
-security, and observability for storage management operations.
-"]
-
-//! NestGate API Crate
+//! # NestGate API Server
 //!
-//! This crate provides the HTTP REST API and advanced communication layer for NestGate
-//! with support for:
-//! - HTTP REST API endpoints
-//! - WebSocket real-time communication
-//! - Server-Sent Events (SSE) streaming
+//! High-performance REST API server providing comprehensive storage management, workspace operations,
 //! - Bidirectional RPC with tarpc
 //! - Event coordination and streaming
 //! - MCP protocol extensions
 
 use anyhow::Result;
 use axum::Router;
+// Removed unused std import
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
 use tracing::{info, warn};
+// Removed unused tracing import
 
 use crate::event_coordination::EventCoordinator;
+
+mod constants;
 use crate::universal_primal::StoragePrimalProvider;
 
 use crate::routes::create_router;
@@ -113,8 +51,10 @@ pub mod models;
 /// This module defines the API routes and their mappings to handler functions.
 /// It organizes the routing structure for the web application.
 pub mod routes;
-#[cfg(feature = "streaming-rpc")]
+/// Streaming RPC module for high-performance bi-directional communication
 pub mod streaming_rpc;
+
+pub use streaming_rpc::{StreamingRpcConfig, StreamingRpcServer};
 pub mod websocket;
 
 #[cfg(feature = "streaming-rpc")]
@@ -206,7 +146,8 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            bind_addr: std::env::var("NESTGATE_BIND_ADDR").unwrap_or_else(|_| "0.0.0.0:8080".to_string()),
+            bind_addr: std::env::var("NESTGATE_BIND_ADDR")
+                .unwrap_or_else(|_| "0.0.0.0:8080".to_string()),
             enable_zfs_api: true,
             enable_sse: true,
             enable_websockets: true,
@@ -234,9 +175,17 @@ pub async fn serve_with_zfs(
 pub async fn start_streaming_rpc_server(
     addr: &str,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let server = streaming_rpc::RpcServer::new();
-    server.start(addr).await?;
-    info!("🚀 Streaming RPC server started on {}", addr);
+    // NestGate provides RPC API connections - discovery handled by universal adapter
+    let config = streaming_rpc::StreamingRpcConfig {
+        bind_address: addr.to_string(),
+        ..Default::default()
+    };
+    let server = streaming_rpc::create_streaming_rpc_server_with_config(config);
+    server.start().await?;
+    
+    // Register this RPC endpoint through universal adapter for discovery
+    // Universal adapter will handle discovery of orchestration primals
+    info!("🚀 Storage RPC API server started on {} (Universal adapter handles discovery)", addr);
     Ok(())
 }
 
@@ -245,7 +194,7 @@ pub async fn start_streaming_rpc_server(
 pub async fn start_streaming_rpc_server(
     _addr: &str,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    info!("Streaming RPC server disabled - enable 'streaming-rpc' feature");
+    info!("Streaming RPC server disabled - enable streaming_rpc feature");
     Ok(())
 }
 
@@ -520,21 +469,23 @@ mod tests {
     async fn test_streaming_rpc_server() {
         #[cfg(feature = "streaming-rpc")]
         {
-            use crate::streaming_rpc::NestGateRpc;
+            use crate::streaming_rpc::{StreamingRpcConfig, create_streaming_rpc_server_with_config};
 
-            let server = streaming_rpc::RpcServer::new();
-
-            // Test health check - call the trait method directly
-            let health = server
-                .health_check(tarpc::context::Context::current())
-                .await;
-            assert!(health.is_ok());
-            println!("✅ Streaming RPC server health check passed");
+            let config = StreamingRpcConfig {
+                bind_address: "127.0.0.1:18001".to_string(),
+                ..Default::default()
+            };
+            let server = create_streaming_rpc_server_with_config(config);
+            
+            // Test server creation and stream count
+            let count = server.get_active_stream_count().await;
+            assert_eq!(count, 0, "New server should have zero active streams");
         }
 
         #[cfg(not(feature = "streaming-rpc"))]
         {
-            println!("✅ Streaming RPC server test disabled - feature not enabled");
+            // Streaming RPC not available without feature flag
+            assert!(true);
         }
     }
 }

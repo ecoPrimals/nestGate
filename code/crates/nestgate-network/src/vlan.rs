@@ -10,6 +10,7 @@ use tokio::sync::RwLock;
 
 // Use nestgate_core for error handling
 use nestgate_core::{NestGateError, Result};
+use tracing::info;
 
 /// VLAN configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

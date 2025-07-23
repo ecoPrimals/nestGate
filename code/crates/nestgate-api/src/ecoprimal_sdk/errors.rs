@@ -4,6 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::fmt;
+// Removed unused std import
 
 /// EcoPrimal error types
 #[derive(Debug, Clone, Serialize, Deserialize)]

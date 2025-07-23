@@ -8,9 +8,13 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
+// Removed unused tracing import
 
 use crate::api::SongbirdClient;
+use tracing::debug;
+use tracing::error;
+use tracing::info;
+use tracing::warn;
 
 /// Universal connection manager for network services
 pub struct ConnectionManager;
@@ -332,16 +336,24 @@ impl SongbirdClient {
             .json(request)
             .send()
             .await
-            .map_err(|e| {
-                nestgate_core::NestGateError::Internal(format!("Failed to request connection: {e}"))
+            .map_err(|e| nestgate_core::NestGateError::Internal {
+                message: format!("Failed to request connection: {e}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
             })?;
 
         if response.status().is_success() {
-            let connection_response: ConnectionResponse = response.json().await.map_err(|e| {
-                nestgate_core::NestGateError::Internal(format!(
-                    "Failed to parse connection response: {e}"
-                ))
-            })?;
+            let connection_response: ConnectionResponse =
+                response
+                    .json()
+                    .await
+                    .map_err(|e| nestgate_core::NestGateError::Internal {
+                        message: format!("Failed to parse connection response: {e}"),
+                        location: Some(format!("{}:{}", file!(), line!())),
+                        debug_info: None,
+                        is_bug: false,
+                    })?;
 
             info!(
                 "✅ Connection requested via Songbird: {}",
@@ -364,7 +376,12 @@ impl SongbirdClient {
         );
 
         let response = self.client.delete(&url).send().await.map_err(|e| {
-            nestgate_core::NestGateError::Internal(format!("Failed to release connection: {e}"))
+            nestgate_core::NestGateError::Internal {
+                message: format!("Failed to release connection: {e}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            }
         })?;
 
         if response.status().is_success() {
@@ -388,9 +405,12 @@ impl SongbirdClient {
         );
 
         let response = self.client.get(&url).send().await.map_err(|e| {
-            nestgate_core::NestGateError::Internal(format!(
-                "Failed to check connection health: {e}"
-            ))
+            nestgate_core::NestGateError::Internal {
+                message: format!("Failed to check connection health: {e}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            }
         })?;
 
         Ok(response.status().is_success())

@@ -5,9 +5,12 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
-use tracing::{debug, info, warn};
+// Removed unused tracing import
 
 use crate::Result;
+use tracing::debug;
+use tracing::info;
+use tracing::warn;
 
 /// Storage tier types for prediction
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -244,7 +247,13 @@ impl TierPredictor {
         };
 
         // Consider file size in the prediction
-        let adjusted_tier = if analysis.size_bytes > 1_000_000_000 && tier == TierType::Hot {
+        let adjusted_tier = if analysis.size_bytes > {
+            use nestgate_core::config::StorageConstants;
+            StorageConstants::from_environment()
+                .file_sizes
+                .archive_threshold
+        } && tier == TierType::Hot
+        {
             // Large files (>1GB) may be better in warm tier even with high access
             warn!(
                 "Large file {} adjusted from Hot to Warm tier",

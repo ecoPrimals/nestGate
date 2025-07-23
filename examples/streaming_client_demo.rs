@@ -1,14 +1,17 @@
-//! Simplified Streaming Client Demo
-//!
-//! This demo showcases basic streaming communication patterns without requiring
-//! external dependencies or complex streaming protocols.
+use tracing::{error, info};
+// Simplified Streaming Client Demo
+use std::time::Duration;
+use std::time::Duration;
+//
+// This demo showcases basic streaming communication patterns without requiring
+// external dependencies or complex streaming protocols.
 
 use anyhow::Result;
 use nestgate_api::event_coordination::{CoordinatedEvent, CoordinatedEventType, EventCoordinator};
 use serde_json::{json, Value};
 use std::time::SystemTime;
 use tokio::time::{sleep, Duration};
-use tracing::info;
+// Removed unused tracing import
 use uuid::Uuid;
 
 /// Simplified streaming client for demonstration
