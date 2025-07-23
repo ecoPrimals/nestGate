@@ -7,11 +7,14 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, info, warn};
+// Removed unused tracing import
 use uuid;
 
 use crate::api::SongbirdClient;
 use crate::Result;
+use tracing::debug;
+use tracing::info;
+use tracing::warn;
 
 /// Songbird integration configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -91,13 +94,17 @@ impl Default for ServiceRegistration {
             address: std::env::var("NESTGATE_BIND_ADDRESS")
                 .unwrap_or_else(|_| "nestgate-nas".to_string()),
             port: 0,
-            endpoints: vec![
-                "/api/v1/zfs/pools".to_string(),
-                "/api/v1/zfs/datasets".to_string(),
-                "/api/v1/zfs/snapshots".to_string(),
-                "/api/v1/storage/info".to_string(),
-                "/health".to_string(),
-            ],
+            endpoints: {
+                use nestgate_core::config::ApiPathsConfig;
+                let api_paths = ApiPathsConfig::from_environment();
+                vec![
+                    api_paths.zfs.pools,
+                    api_paths.zfs.datasets,
+                    api_paths.zfs.snapshots,
+                    api_paths.storage.info,
+                    api_paths.health.health,
+                ]
+            },
             capabilities: vec![
                 "zfs-pools".to_string(),
                 "tiered-storage".to_string(),
@@ -109,7 +116,11 @@ impl Default for ServiceRegistration {
                 "s3".to_string(),
             ],
             metadata,
-            health_endpoint: "/health".to_string(),
+            health_endpoint: {
+                use nestgate_core::config::ApiPathsConfig;
+                let api_paths = ApiPathsConfig::from_environment();
+                api_paths.health.health
+            },
         }
     }
 }

@@ -120,3 +120,16 @@ impl Default for MigrationConfig {
         }
     }
 }
+
+impl MigrationConfig {
+    /// Create production-optimized migration configuration
+    pub fn production() -> Self {
+        Self {
+            background_migration: true,
+            max_concurrent_migrations: 2,
+            bandwidth_limit_bps: None,
+            queue_size: 100,
+            retry_attempts: 3,
+        }
+    }
+}

@@ -4,7 +4,9 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::{Duration, SystemTime};
+use std::time::{ SystemTime};
+use std::time::Duration;
+use crate::error::SystemResource;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DashboardConfig {
@@ -101,7 +103,7 @@ pub struct PoolMetrics {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemMetrics {
-    pub cpu_usage: f64,
+    pub _cpu_usage: f64,
     pub memory_usage: f64,
     pub memory_total: u64,
     pub memory_available: u64,

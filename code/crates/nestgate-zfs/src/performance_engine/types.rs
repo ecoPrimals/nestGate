@@ -4,11 +4,12 @@
 //! performance optimization engine.
 
 use std::collections::HashMap;
-use std::time::{Duration, SystemTime};
-
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::time::Duration;
+use std::time::SystemTime;
 
 use nestgate_core::StorageTier;
+use serde::de;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// Performance engine configuration
 #[derive(Debug, Clone)]
@@ -339,7 +340,7 @@ pub mod system_time_serde {
     use super::*;
     use std::time::UNIX_EPOCH;
 
-    pub fn serialize<S>(time: &SystemTime, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(time: &SystemTime, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -349,11 +350,12 @@ pub mod system_time_serde {
         serializer.serialize_u64(duration.as_secs())
     }
 
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<SystemTime, D::Error>
+    pub fn deserialize<'de, D>(deserializer: D) -> std::result::Result<SystemTime, D::Error>
     where
         D: Deserializer<'de>,
     {
-        let secs = u64::deserialize(deserializer)?;
+        let secs = u64::deserialize(deserializer)
+            .map_err(|e| de::Error::custom(format!("deserialization error: {}", e)))?;
         Ok(UNIX_EPOCH + std::time::Duration::from_secs(secs))
     }
 }

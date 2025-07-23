@@ -10,6 +10,7 @@ use axum::{
 use serde_json::{json, Value};
 use tokio::process::Command;
 use tracing::{error, info, warn};
+// Removed unused tracing import
 
 /// Get all workspaces with real ZFS integration
 pub async fn get_workspaces() -> Result<Json<Value>, StatusCode> {

@@ -115,9 +115,9 @@ mod pool_manager_tests {
             Err(e) => {
                 println!("get_pool_info failed as expected: {e}");
                 match e {
-                    NestGateError::NotFound(_)
-                    | NestGateError::Internal(_)
-                    | NestGateError::Io(_) => {
+                    NestGateError::Zfs(_)
+                    | NestGateError::Internal { .. }
+                    | NestGateError::Io { .. } => {
                         // These are appropriate error types
                     }
                     _ => println!("Unexpected error type for get_pool_info: {e:?}"),

@@ -2,8 +2,11 @@
 //!
 //! Comprehensive error handling for all ZFS operations
 
-use std::fmt;
 use thiserror::Error;
+
+use std::fmt;
+
+use nestgate_core::error::{ConfigSource, SecurityError};
 
 /// Main ZFS error type
 #[derive(Error, Debug)]
@@ -392,16 +395,37 @@ impl ZfsError {
     pub fn to_nestgate_error(&self) -> nestgate_core::NestGateError {
         match self {
             ZfsError::PoolError(PoolError::NotFound { pool_name }) => {
-                nestgate_core::NestGateError::NotFound(format!("Pool not found: {pool_name}"))
+                nestgate_core::NestGateError::api_simple(nestgate_core::ApiError::NotFound {
+                    resource_type: "Pool".to_string(),
+                    resource_id: pool_name.clone(),
+                })
             }
             ZfsError::DatasetError(DatasetError::NotFound { dataset_name }) => {
-                nestgate_core::NestGateError::NotFound(format!("Dataset not found: {dataset_name}"))
+                nestgate_core::NestGateError::api_simple(nestgate_core::ApiError::NotFound {
+                    resource_type: "Dataset".to_string(),
+                    resource_id: dataset_name.clone(),
+                })
             }
-            ZfsError::PermissionError(msg) => {
-                nestgate_core::NestGateError::Authorization(msg.clone())
+            ZfsError::PermissionError(_msg) => {
+                nestgate_core::NestGateError::security_simple(SecurityError::AuthorizationDenied {
+                    user: "system".to_string(),
+                    action: "zfs_operation".to_string(),
+                    resource: "zfs_pool".to_string(),
+                    required_role: Some("zfs_admin".to_string()),
+                })
             }
-            ZfsError::ConfigError(msg) => nestgate_core::NestGateError::Configuration(msg.clone()),
-            _ => nestgate_core::NestGateError::Internal(self.to_string()),
+            ZfsError::ConfigError(msg) => nestgate_core::NestGateError::Configuration {
+                message: msg.clone(),
+                config_source: ConfigSource::File("zfs.conf".to_string()),
+                field: None,
+                suggested_fix: Some("Check ZFS configuration parameters".to_string()),
+            },
+            _ => nestgate_core::NestGateError::Internal {
+                message: self.to_string(),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: Some(format!("{:?}", self)),
+                is_bug: false,
+            },
         }
     }
 }

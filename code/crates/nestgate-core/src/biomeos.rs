@@ -1,8 +1,8 @@
-//! biomeOS Integration Types and Manifest Processing
-//!
-//! This module provides the core types and functionality for integrating
-//! NestGate with biomeOS, including manifest parsing and automated provisioning.
-
+// Removed unused error imports
+/// biomeOS Integration Types and Manifest Processing
+///
+/// This module provides the core types and functionality for integrating
+/// NestGate with biomeOS, including manifest parsing and automated provisioning.
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -620,14 +620,23 @@ pub enum VolumeStatus {
 impl BiomeManifest {
     /// Parse biome.yaml from string
     pub fn from_yaml(yaml_content: &str) -> Result<Self> {
-        serde_yaml::from_str(yaml_content)
-            .map_err(|e| crate::NestGateError::Internal(format!("Failed to parse biome.yaml: {e}")))
+        serde_yaml::from_str(yaml_content).map_err(|e| crate::NestGateError::Internal {
+            message: format!("Failed to parse biome.yaml: {e}"),
+            location: Some(format!("{}:{}", file!(), line!())),
+            debug_info: Some(format!("YAML parsing error: {e:?}")),
+            is_bug: false,
+        })
     }
 
     /// Parse biome.yaml from file
     pub async fn from_file(file_path: &str) -> Result<Self> {
         let content = tokio::fs::read_to_string(file_path).await.map_err(|e| {
-            crate::NestGateError::Internal(format!("Failed to read biome.yaml: {e}"))
+            crate::NestGateError::Internal {
+                message: format!("Failed to read biome.yaml: {e}"),
+                location: Some(file!().to_string()),
+                debug_info: None,
+                is_bug: false,
+            }
         })?;
 
         Self::from_yaml(&content)
@@ -682,10 +691,12 @@ impl VolumeSpec {
             "warm" => Ok(StorageTier::Warm),
             "cold" => Ok(StorageTier::Cold),
             "cache" => Ok(StorageTier::Cache),
-            _ => Err(crate::NestGateError::Internal(format!(
-                "Unknown storage tier: {}",
-                self.tier
-            ))),
+            _ => Err(crate::NestGateError::Internal {
+                message: format!("Unknown storage tier: {}", self.tier),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: Some("Available tiers: hot, warm, cold, archive".to_string()),
+                is_bug: false,
+            }),
         }
     }
 }
@@ -696,26 +707,52 @@ fn parse_size(size_str: &str) -> Result<u64> {
 
     if size_str.ends_with("Gi") || size_str.ends_with("gi") {
         let num_str = &size_str[..size_str.len() - 2];
-        let num: f64 = num_str.parse().map_err(|_| {
-            crate::NestGateError::Internal(format!("Invalid size format: {size_str}"))
-        })?;
+        let num: f64 = num_str
+            .parse()
+            .map_err(|_parse_err| crate::NestGateError::Validation {
+                field: "size_format".to_string(),
+                message: format!("Invalid size format: {size_str}"),
+                current_value: Some(size_str.to_string()),
+                expected: Some("Valid format: <number>Gi (e.g., '4.5Gi')".to_string()),
+                user_error: true,
+            })?;
         Ok((num * 1024.0 * 1024.0 * 1024.0) as u64)
     } else if size_str.ends_with("Ti") || size_str.ends_with("ti") {
         let num_str = &size_str[..size_str.len() - 2];
-        let num: f64 = num_str.parse().map_err(|_| {
-            crate::NestGateError::Internal(format!("Invalid size format: {size_str}"))
-        })?;
+        let num: f64 = num_str
+            .parse()
+            .map_err(|_parse_err| crate::NestGateError::Validation {
+                field: "size_format".to_string(),
+                message: format!("Invalid size format: {size_str}"),
+                current_value: Some(size_str.to_string()),
+                expected: Some("Valid format: <number>Ti (e.g., '2.5Ti')".to_string()),
+                user_error: true,
+            })?;
         Ok((num * 1024.0 * 1024.0 * 1024.0 * 1024.0) as u64)
     } else if size_str.ends_with("Mi") || size_str.ends_with("mi") {
         let num_str = &size_str[..size_str.len() - 2];
-        let num: f64 = num_str.parse().map_err(|_| {
-            crate::NestGateError::Internal(format!("Invalid size format: {size_str}"))
-        })?;
+        let num: f64 = num_str
+            .parse()
+            .map_err(|_parse_err| crate::NestGateError::Validation {
+                field: "size_format".to_string(),
+                message: format!("Invalid size format: {size_str}"),
+                current_value: Some(size_str.to_string()),
+                expected: Some("Valid format: <number>Mi (e.g., '512Mi')".to_string()),
+                user_error: true,
+            })?;
         Ok((num * 1024.0 * 1024.0) as u64)
     } else {
         // Assume bytes if no suffix
         size_str
             .parse()
-            .map_err(|_| crate::NestGateError::Internal(format!("Invalid size format: {size_str}")))
+            .map_err(|_parse_err| crate::NestGateError::Validation {
+                field: "size_format".to_string(),
+                message: format!("Invalid size format: {size_str}"),
+                current_value: Some(size_str.to_string()),
+                expected: Some(
+                    "Valid format: number, <number>Mi, <number>Gi, or <number>Ti".to_string(),
+                ),
+                user_error: true,
+            })
     }
 }

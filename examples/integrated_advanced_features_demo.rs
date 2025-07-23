@@ -1,13 +1,16 @@
-//! Integrated Advanced Features Demo
-//!
-//! This demo showcases the Advanced ZFS Optimization Engine and Real-Time Performance
-//! Dashboard working together to provide intelligent storage optimization with comprehensive
-//! monitoring and analytics.
+use tracing::{error, info};
+// Integrated Advanced Features Demo
+use std::time::Duration;
+use std::time::Duration;
+//
+// This demo showcases the Advanced ZFS Optimization Engine and Real-Time Performance
+// Dashboard working together to provide intelligent storage optimization with comprehensive
+// monitoring and analytics.
 
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
-use tracing::info;
+// Removed unused tracing import
 
 // Import our advanced components
 use nestgate_api::handlers::performance_dashboard::{
@@ -463,11 +466,11 @@ impl MockZfsOperations {
 
 #[async_trait::async_trait]
 impl ZfsOperations for MockZfsOperations {
-    async fn list_pools(&self) -> Result<Vec<Pool>, anyhow::Error> {
+    async fn list_pools(&self) -> Result<Vec<Pool>, nestgate_zfs::ZfsError> {
         Ok(self.pools.clone())
     }
 
-    async fn get_pool_stats(&self, _pool_name: &str) -> Result<PoolStats, anyhow::Error> {
+    async fn get_pool_stats(&self, pool_name: &str) -> Result<PoolStats, nestgate_zfs::ZfsError> {
         // Return mock statistics that show good performance
         Ok(PoolStats {
             read_ops: 2500,
@@ -483,37 +486,32 @@ impl ZfsOperations for MockZfsOperations {
         })
     }
 
-    async fn list_datasets(&self, _pool_name: &str) -> Result<Vec<String>, anyhow::Error> {
-        Ok(vec![
-            "main-storage/data".to_string(),
-            "main-storage/home".to_string(),
-            "main-storage/projects".to_string(),
-            "main-storage/backups".to_string(),
-        ])
+    async fn list_datasets(&self, pool_name: &str) -> Result<Vec<String>, nestgate_zfs::ZfsError> {
+        Ok(vec!["data".to_string(), "logs".to_string()])
     }
 
     // Mock implementations for remaining methods
-    async fn create_pool(&self, _name: &str, _devices: &[String]) -> Result<Pool, anyhow::Error> {
+    async fn create_pool(
+        &self,
+        name: &str,
+        _vdevs: &[String],
+    ) -> Result<Pool, nestgate_zfs::ZfsError> {
         Err(anyhow::anyhow!("create_pool not implemented in demo"))
     }
 
-    async fn destroy_pool(&self, _name: &str) -> Result<(), anyhow::Error> {
-        Err(anyhow::anyhow!("destroy_pool not implemented in demo"))
+    async fn destroy_pool(&self, _name: &str) -> Result<(), nestgate_zfs::ZfsError> {
+        Ok(())
     }
 
-    async fn create_dataset(
-        &self,
-        _pool_name: &str,
-        _dataset_name: &str,
-    ) -> Result<(), anyhow::Error> {
-        Err(anyhow::anyhow!("create_dataset not implemented in demo"))
+    async fn create_dataset(&self, _pool: &str, _name: &str) -> Result<(), nestgate_zfs::ZfsError> {
+        Ok(())
     }
 
     async fn destroy_dataset(
         &self,
-        _pool_name: &str,
-        _dataset_name: &str,
-    ) -> Result<(), anyhow::Error> {
-        Err(anyhow::anyhow!("destroy_dataset not implemented in demo"))
+        _pool: &str,
+        _name: &str,
+    ) -> Result<(), nestgate_zfs::ZfsError> {
+        Ok(())
     }
 }

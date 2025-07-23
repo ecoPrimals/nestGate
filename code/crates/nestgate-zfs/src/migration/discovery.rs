@@ -7,12 +7,16 @@ use std::collections::VecDeque;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, info};
+// Removed unused tracing import
 
 use crate::{automation::DatasetAnalyzer, types::StorageTier};
 use nestgate_core::{NestGateError, Result as CoreResult};
 
 use super::types::*;
+
+const MAX_DEPTH: usize = 10;
+use tracing::debug;
+use tracing::info;
 
 /// Discover files that should be migrated based on access patterns
 pub async fn discover_migration_candidates(
@@ -121,26 +125,33 @@ fn scan_directory_recursive(
             return Ok(());
         }
 
-        let mut entries = tokio::fs::read_dir(&dir_path).await.map_err(|e| {
-            NestGateError::Storage(format!("Failed to read directory {dir_path:?}: {e}"))
-        })?;
+        let mut dir_reader =
+            tokio::fs::read_dir(&dir_path)
+                .await
+                .map_err(|e| NestGateError::System {
+                    message: format!("Failed to read directory {:?}: {}", dir_path, e),
+                    resource: nestgate_core::error::SystemResource::Disk,
+                    utilization: None,
+                    recovery: nestgate_core::error::RecoveryStrategy::Retry,
+                })?;
 
-        while let Some(entry) = entries
-            .next_entry()
-            .await
-            .map_err(|e| NestGateError::Storage(format!("Failed to read directory entry: {e}")))?
+        while let Some(entry) =
+            dir_reader
+                .next_entry()
+                .await
+                .map_err(|e| NestGateError::System {
+                    message: format!("Failed to read directory entry: {}", e),
+                    resource: nestgate_core::error::SystemResource::Disk,
+                    utilization: None,
+                    recovery: nestgate_core::error::RecoveryStrategy::Retry,
+                })?
         {
             let path = entry.path();
-
             if path.is_file() {
                 files.push(path);
-
-                // Limit total files to prevent memory issues
-                if files.len() >= 1000 {
-                    break;
-                }
-            } else if path.is_dir() {
-                scan_directory_recursive(path, files, depth + 1).await?;
+            } else if path.is_dir() && depth < MAX_DEPTH {
+                // Recursively scan subdirectory
+                scan_directory_recursive(path, files, depth + 1).await.ok();
             }
         }
 
@@ -158,13 +169,23 @@ async fn analyze_migration_candidate(
     let _characteristics = analyzer
         .analyze_file(&file_path.to_string_lossy())
         .await
-        .map_err(|e| NestGateError::Internal(format!("File analysis failed: {e}")))?;
+        .map_err(|e| NestGateError::System {
+            message: format!("File analysis failed: {}", e),
+            resource: nestgate_core::error::SystemResource::Disk,
+            utilization: None,
+            recovery: nestgate_core::error::RecoveryStrategy::Retry,
+        })?;
 
     // Get tier recommendation
     let recommendation = analyzer
         .predict_optimal_tier(&file_path.to_string_lossy())
         .await
-        .map_err(|e| NestGateError::Internal(format!("Tier recommendation failed: {e}")))?;
+        .map_err(|e| NestGateError::System {
+            message: format!("Tier recommendation failed: {}", e),
+            resource: nestgate_core::error::SystemResource::Disk,
+            utilization: None,
+            recovery: nestgate_core::error::RecoveryStrategy::Retry,
+        })?;
 
     // Convert from nestgate_core::StorageTier to types::StorageTier
     let recommended_tier = match recommendation {

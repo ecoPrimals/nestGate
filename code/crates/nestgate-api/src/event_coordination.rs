@@ -8,8 +8,12 @@ use nestgate_core::get_or_create_uuid;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::{broadcast, RwLock};
-use tracing::{debug, info};
+// Removed unused tracing import
 use uuid::Uuid;
+
+use tracing::info;
+
+use tracing::debug;
 
 /// Event coordinator for managing reactive communication between components
 pub struct EventCoordinator {

@@ -1,5 +1,6 @@
 use super::federation::McpConfig;
 use super::*;
+// Removed unused tracing import
 use uuid;
 
 /// Network port defaults with environment variable support
@@ -206,6 +207,8 @@ impl Default for Config {
             mcp: Some(mcp_config),
             federation: Some(FederationConfig::default()),
             endpoints: ServiceEndpoints::default(),
+            api_paths: ApiPathsConfig::from_environment(),
+            storage_constants: StorageConstants::from_environment(),
         }
     }
 }

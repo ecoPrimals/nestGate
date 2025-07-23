@@ -21,10 +21,12 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::Infallible;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
+use std::time::SystemTime;
 use tokio::sync::{broadcast, RwLock};
 use tokio_stream::wrappers::BroadcastStream;
 use tracing::{debug, info, warn};
+// Removed unused tracing import
 use uuid::Uuid;
 
 use crate::event_coordination::EventCoordinator;

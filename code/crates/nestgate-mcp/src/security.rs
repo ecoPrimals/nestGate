@@ -6,10 +6,13 @@ use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use tracing::{debug, warn};
+use std::time::{SystemTime, UNIX_EPOCH};
+// Removed unused tracing import
 
 use crate::{Error, Result};
+use std::time::Duration;
+use tracing::debug;
+use tracing::warn;
 
 /// Authentication token
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -622,7 +625,7 @@ fn generate_token() -> String {
     let mut rng = thread_rng();
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap()
+        .unwrap_or_else(|_| std::time::Duration::from_secs(0)) // Fallback to epoch if clock is misconfigured
         .as_nanos();
 
     format!("nestgate-{:x}-{:016x}", timestamp, rng.gen::<u64>())

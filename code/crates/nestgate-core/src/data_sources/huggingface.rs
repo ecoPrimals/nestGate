@@ -1,7 +1,7 @@
-//! HuggingFace Data Source Implementation
-//!
-//! Provides access to HuggingFace Model Hub for AI model discovery and download.
-
+use crate::error::{NetworkError, NetworkErrorData};
+/// HuggingFace Data Source Implementation
+///
+/// Provides access to HuggingFace Model Hub for AI model discovery and download.
 use crate::temporal_storage::*;
 use crate::{NestGateError, Result};
 use async_trait::async_trait;
@@ -10,7 +10,9 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
+use tracing::info;
 use tracing::warn;
+// Removed unused tracing import
 
 /// HuggingFace Model Hub Source
 #[derive(Debug, Clone)]
@@ -48,7 +50,7 @@ impl HuggingFaceModelSource {
         query: &str,
         model_type: Option<ModelType>,
     ) -> Result<Vec<String>> {
-        use tracing::info;
+        // Removed unused tracing import
         use urlencoding;
 
         info!(
@@ -117,7 +119,7 @@ impl HuggingFaceModelSource {
 
     /// Download model using HuggingFace Hub API
     async fn _download_model(&self, model_id: &str) -> Result<Vec<u8>> {
-        use tracing::info;
+        // Removed unused tracing import
 
         info!("📥 Downloading HuggingFace model: {}", model_id);
 
@@ -159,7 +161,7 @@ impl HuggingFaceModelSource {
 
     /// List model files using HuggingFace Hub API
     async fn _list_model_files(&self, model_id: &str) -> Result<Vec<ModelFile>> {
-        use tracing::info;
+        // Removed unused tracing import
 
         info!("📄 Listing HuggingFace model files for: {}", model_id);
 
@@ -209,7 +211,7 @@ impl HuggingFaceModelSource {
 
     /// Download model file using HuggingFace Hub API
     async fn _download_model_file(&self, model_id: &str, filename: &str) -> Result<Vec<u8>> {
-        use tracing::info;
+        // Removed unused tracing import
 
         info!(
             "📥 Downloading HuggingFace model file: {}/{}",
@@ -325,10 +327,26 @@ impl UniversalDataSource for HuggingFaceModelSource {
             .get(search_url)
             .send()
             .await
-            .map_err(|e| NestGateError::Network(e.to_string()))?
+            .map_err(|e| {
+                NestGateError::Network(Box::new(NetworkErrorData {
+                    error: NetworkError::Connection {
+                        endpoint: "huggingface_api".to_string(),
+                        message: e.to_string(),
+                        last_attempt: std::time::SystemTime::now(),
+                        retry_count: 0,
+                    },
+                    context: None,
+                }))
+            })?
             .json::<serde_json::Value>()
             .await
-            .map_err(|e| NestGateError::Parse(e.to_string()))?;
+            .map_err(|e| NestGateError::Validation {
+                field: "parsing".to_string(),
+                message: e.to_string(),
+                current_value: None,
+                expected: None,
+                user_error: false,
+            })?;
 
         let mut descriptors = Vec::new();
         if let Some(models) = response.as_array() {
@@ -365,15 +383,30 @@ impl UniversalDataSource for HuggingFaceModelSource {
     async fn ingest_data(&self, descriptor: &DataDescriptor) -> Result<IngestedData> {
         let client = reqwest::Client::new();
         let model_url = format!("https://huggingface.co/api/models/{}", descriptor.id);
-
         let model_info = client
             .get(&model_url)
             .send()
             .await
-            .map_err(|e| NestGateError::Network(e.to_string()))?
+            .map_err(|e| {
+                NestGateError::Network(Box::new(NetworkErrorData {
+                    error: NetworkError::Connection {
+                        endpoint: model_url.clone(),
+                        message: e.to_string(),
+                        last_attempt: std::time::SystemTime::now(),
+                        retry_count: 0,
+                    },
+                    context: None,
+                }))
+            })?
             .json::<serde_json::Value>()
             .await
-            .map_err(|e| NestGateError::Parse(e.to_string()))?;
+            .map_err(|e| NestGateError::Validation {
+                field: "parsing".to_string(),
+                message: e.to_string(),
+                current_value: None,
+                expected: None,
+                user_error: false,
+            })?;
 
         let data = model_info.to_string().into_bytes();
         let checksum = format!("{:x}", md5::compute(&data));
@@ -394,16 +427,30 @@ impl UniversalDataSource for HuggingFaceModelSource {
 
     async fn get_metadata(&self, descriptor: &DataDescriptor) -> Result<Metadata> {
         let client = reqwest::Client::new();
-        let url = format!("https://huggingface.co/api/models/{}", descriptor.id);
-
         let response = client
-            .get(&url)
+            .get(&descriptor.source_location)
             .send()
             .await
-            .map_err(|e| NestGateError::Network(e.to_string()))?
+            .map_err(|e| {
+                NestGateError::Network(Box::new(NetworkErrorData {
+                    error: NetworkError::Connection {
+                        endpoint: descriptor.source_location.clone(),
+                        message: e.to_string(),
+                        last_attempt: std::time::SystemTime::now(),
+                        retry_count: 0,
+                    },
+                    context: None,
+                }))
+            })?
             .json::<serde_json::Value>()
             .await
-            .map_err(|e| NestGateError::Parse(e.to_string()))?;
+            .map_err(|e| NestGateError::Validation {
+                field: "parsing".to_string(),
+                message: e.to_string(),
+                current_value: None,
+                expected: None,
+                user_error: false,
+            })?;
 
         let metadata: HashMap<String, serde_json::Value> = response
             .as_object()

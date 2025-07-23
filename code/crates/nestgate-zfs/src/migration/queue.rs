@@ -7,12 +7,14 @@ use chrono::Timelike;
 use std::sync::Arc;
 use std::time::Instant;
 
-use tracing::{error, info};
+// Removed unused tracing import
 
 use crate::{dataset::ZfsDatasetManager, pool::ZfsPoolManager};
 use nestgate_core::{NestGateError, Result as CoreResult};
 
 use super::types::*;
+use tracing::error;
+use tracing::info;
 
 /// Process the migration queue
 pub async fn process_migration_queue(context: MigrationContext<'_>) -> CoreResult<()> {
@@ -38,9 +40,17 @@ pub async fn process_migration_queue(context: MigrationContext<'_>) -> CoreResul
         }
 
         // Acquire migration permit
-        let _permit = context.migration_semaphore.acquire().await.map_err(|e| {
-            NestGateError::Internal(format!("Failed to acquire migration permit: {e}"))
-        })?;
+        let _permit =
+            context
+                .migration_semaphore
+                .acquire()
+                .await
+                .map_err(|e| NestGateError::Internal {
+                    message: format!("Failed to acquire migration permit: {}", e),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                })?;
 
         // Start migration
         job.status = MigrationStatus::Running;
@@ -141,10 +151,12 @@ async fn execute_migration(
 
     // 1. Validate source file exists
     if !job.source_path.exists() {
-        return Err(NestGateError::Storage(format!(
-            "Source file does not exist: {:?}",
-            job.source_path
-        )));
+        return Err(NestGateError::System {
+            message: format!("Source file does not exist: {:?}", job.source_path),
+            resource: nestgate_core::error::SystemResource::Disk,
+            utilization: None,
+            recovery: nestgate_core::error::RecoveryStrategy::Retry,
+        });
     }
 
     // 2. Get target dataset path based on tier
@@ -161,9 +173,14 @@ async fn execute_migration(
 
     // 4. Ensure target directory exists
     if let Some(parent) = target_path.parent() {
-        tokio::fs::create_dir_all(parent).await.map_err(|e| {
-            NestGateError::Storage(format!("Failed to create target directory: {e}"))
-        })?;
+        tokio::fs::create_dir_all(parent)
+            .await
+            .map_err(|e| NestGateError::System {
+                message: format!("Failed to create target directory: {}", e),
+                resource: nestgate_core::error::SystemResource::Disk,
+                utilization: None,
+                recovery: nestgate_core::error::RecoveryStrategy::Retry,
+            })?;
     }
 
     // 5. Copy file to target tier with progress tracking
@@ -181,7 +198,12 @@ async fn execute_migration(
     if super::utilities::get_tier_from_path(&job.source_path)? != job.target_tier {
         tokio::fs::remove_file(&job.source_path)
             .await
-            .map_err(|e| NestGateError::Storage(format!("Failed to remove source file: {e}")))?;
+            .map_err(|e| NestGateError::System {
+                message: format!("Failed to remove source file: {}", e),
+                resource: nestgate_core::error::SystemResource::Disk,
+                utilization: None,
+                recovery: nestgate_core::error::RecoveryStrategy::Retry,
+            })?;
     }
 
     let duration = start_time.elapsed();

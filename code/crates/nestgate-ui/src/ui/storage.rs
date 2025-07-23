@@ -1,7 +1,46 @@
+//! # NestGate Storage Management UI
+//!
+//! **Comprehensive ZFS storage pool and dataset management interface**
+//!
+//! This module provides the complete storage management interface for NestGate,
+//! including ZFS pool operations, dataset management, and storage tier control.
+//!
+//! ## Storage Features
+//!
+//! - **Pool Management**: Create, configure, and monitor ZFS pools
+//! - **Dataset Operations**: Dataset creation, snapshots, and properties
+//! - **Tier Management**: Hot, warm, cold storage tier visualization
+//! - **Capacity Planning**: Usage analytics and growth projections
+//! - **Health Monitoring**: Pool health, scrub status, and device monitoring
+//!
+//! ## ZFS Operations
+//!
+//! The interface supports full ZFS functionality:
+//! - Pool creation with various topologies (mirror, RAID-Z)
+//! - Dataset management with compression and quotas
+//! - Snapshot creation and management
+//! - Scrub operations and health checks
+//! - Device replacement and resilvering
+//!
+//! ## Storage Tiers
+//!
+//! Visual management of multi-tier storage:
+//! - **Hot Tier**: NVMe SSDs for active data
+//! - **Warm Tier**: SATA SSDs for frequently accessed data
+//! - **Cold Tier**: HDDs for archival storage
+//!
+//! ## Interactive Features
+//!
+//! - Drag-and-drop dataset operations
+//! - Real-time capacity and performance monitoring
+//! - Visual pool topology representation
+//! - One-click maintenance operations
+
 use crate::types::*;
 use eframe::egui::{self, Color32, RichText, Stroke};
 use std::time::Duration;
 use tracing::info;
+// Removed unused tracing import
 
 impl NestGateApp {
     pub fn render_enhanced_tiered_storage(&mut self, ui: &mut egui::Ui) {

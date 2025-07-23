@@ -2,6 +2,8 @@
 //!
 //! Comprehensive ZFS pool setup with device detection, validation, and creation
 
+use tracing::info;
+use tracing::warn;
 pub mod config;
 pub mod creation;
 pub mod device_detection;
@@ -14,7 +16,7 @@ pub use device_detection::{DeviceScanner, DeviceType, SpeedClass, StorageDevice}
 pub use validation::{PoolSetupConfig, PoolSetupValidator, PoolTopology, ValidationResult};
 
 use std::collections::HashMap;
-use tracing::{error, info, warn};
+// Removed unused tracing import
 
 use nestgate_core::{NestGateError, Result as CoreResult, StorageTier};
 
@@ -148,9 +150,12 @@ impl ZfsPoolSetup {
         let available_devices = self.get_available_devices();
 
         if available_devices.is_empty() {
-            return Err(NestGateError::Internal(
-                "No available devices found".to_string(),
-            ));
+            return Err(NestGateError::Internal {
+                message: "No available devices found".to_string(),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
         info!(
@@ -223,10 +228,11 @@ impl ZfsPoolSetup {
             let primary_type = device_types
                 .iter()
                 .next()
-                .ok_or_else(|| {
-                    NestGateError::Internal(
-                        "No device types available for tier configuration".to_string(),
-                    )
+                .ok_or_else(|| NestGateError::Internal {
+                    message: "No device types available for tier configuration".to_string(),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
                 })?
                 .clone();
             tier_mappings.insert(StorageTier::Hot, vec![primary_type.clone()]);
@@ -266,9 +272,12 @@ impl ZfsPoolSetup {
                 if let Some(device_type) = device_types.iter().next() {
                     warm_types = vec![device_type.clone()];
                 } else {
-                    return Err(NestGateError::Internal(
-                        "No device types available for warm tier".to_string(),
-                    ));
+                    return Err(NestGateError::Internal {
+                        message: "No device types available for warm tier".to_string(),
+                        location: Some(format!("{}:{}", file!(), line!())),
+                        debug_info: None,
+                        is_bug: false,
+                    });
                 }
             }
             if cold_types.is_empty() {
@@ -298,10 +307,15 @@ impl ZfsPoolSetup {
         // Pre-flight validation
         let validation = self.validate_pool_config(config);
         if !validation.is_valid {
-            return Err(NestGateError::Internal(format!(
-                "Pool configuration validation failed: {:?}",
-                validation.issues
-            )));
+            return Err(NestGateError::Internal {
+                message: format!(
+                    "Pool configuration validation failed: {:?}",
+                    validation.issues
+                ),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
         self.creator.create_pool_safe(config).await

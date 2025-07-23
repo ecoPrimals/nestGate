@@ -1,0 +1,243 @@
+warning: unused import: `std::time::Duration`
+  --> code/crates/nestgate-core/src/ai_first.rs:16:5
+   |
+16 | use std::time::Duration;
+   |     ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: `nestgate-core` (lib) generated 1 warning (run `cargo fix --lib -p nestgate-core` to apply 1 suggestion)
+warning: unused variable: `dataset_info`
+   --> code/crates/nestgate-zfs/src/ai_confidence.rs:336:5
+    |
+336 |     dataset_info: Option<&DatasetInfo>,
+    |     ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_dataset_info`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: `nestgate-zfs` (lib) generated 1 warning
+warning: fields `name`, `version`, `endpoints`, and `metadata` are never read
+  --> benches/a_plus_performance_validation.rs:22:5
+   |
+21 | struct ServiceConfig {
+   |        ------------- fields in this struct
+22 |     name: String,
+   |     ^^^^
+23 |     version: String,
+   |     ^^^^^^^
+24 |     endpoints: Vec<String>,
+   |     ^^^^^^^^^
+25 |     metadata: std::collections::HashMap<String, String>,
+   |     ^^^^^^^^
+   |
+   = note: `ServiceConfig` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` on by default
+
+warning: `nestgate` (bench "a_plus_performance_validation") generated 1 warning
+    Finished `bench` profile [optimized] target(s) in 0.18s
+     Running benches/a_plus_performance_validation.rs (target/release/deps/a_plus_performance_validation-79619f81cc96f221)
+Gnuplot not found, using plotters backend
+Benchmarking uuid_operations/traditional_uuid_generation
+Benchmarking uuid_operations/traditional_uuid_generation: Warming up for 3.0000 s
+Benchmarking uuid_operations/traditional_uuid_generation: Collecting 100 samples in estimated 5.0004 s (26M iterations)
+Benchmarking uuid_operations/traditional_uuid_generation: Analyzing
+uuid_operations/traditional_uuid_generation
+                        time:   [198.30 ns 201.32 ns 205.01 ns]
+                        change: [-2.8990% -0.5403% +1.3725%] (p = 0.68 > 0.05)
+                        No change in performance detected.
+Found 17 outliers among 100 measurements (17.00%)
+  1 (1.00%) low severe
+  6 (6.00%) high mild
+  10 (10.00%) high severe
+Benchmarking uuid_operations/cached_uuid_lookup
+Benchmarking uuid_operations/cached_uuid_lookup: Warming up for 3.0000 s
+Benchmarking uuid_operations/cached_uuid_lookup: Collecting 100 samples in estimated 5.0001 s (173M iterations)
+Benchmarking uuid_operations/cached_uuid_lookup: Analyzing
+uuid_operations/cached_uuid_lookup
+                        time:   [28.585 ns 28.613 ns 28.648 ns]
+                        change: [-1.5558% -0.9114% -0.4934%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 15 outliers among 100 measurements (15.00%)
+  4 (4.00%) low severe
+  3 (3.00%) low mild
+  2 (2.00%) high mild
+  6 (6.00%) high severe
+Benchmarking uuid_operations/cached_uuid_varied_keys
+Benchmarking uuid_operations/cached_uuid_varied_keys: Warming up for 3.0000 s
+Benchmarking uuid_operations/cached_uuid_varied_keys: Collecting 100 samples in estimated 5.0001 s (108M iterations)
+Benchmarking uuid_operations/cached_uuid_varied_keys: Analyzing
+uuid_operations/cached_uuid_varied_keys
+                        time:   [46.315 ns 46.336 ns 46.357 ns]
+                        change: [-2.1929% -1.9245% -1.7213%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 4 outliers among 100 measurements (4.00%)
+  3 (3.00%) high mild
+  1 (1.00%) high severe
+Benchmarking uuid_operations/uuid_cache_hit
+Benchmarking uuid_operations/uuid_cache_hit: Warming up for 3.0000 s
+Benchmarking uuid_operations/uuid_cache_hit: Collecting 100 samples in estimated 5.0001 s (176M iterations)
+Benchmarking uuid_operations/uuid_cache_hit: Analyzing
+uuid_operations/uuid_cache_hit
+                        time:   [28.373 ns 28.457 ns 28.601 ns]
+                        change: [-3.8035% -1.6875% +0.4606%] (p = 0.13 > 0.05)
+                        No change in performance detected.
+Found 20 outliers among 100 measurements (20.00%)
+  4 (4.00%) low severe
+  1 (1.00%) low mild
+  15 (15.00%) high severe
+
+Benchmarking memory_operations/traditional_vec_allocation
+Benchmarking memory_operations/traditional_vec_allocation: Warming up for 3.0000 s
+Benchmarking memory_operations/traditional_vec_allocation: Collecting 100 samples in estimated 5.0001 s (147M iterations)
+Benchmarking memory_operations/traditional_vec_allocation: Analyzing
+memory_operations/traditional_vec_allocation
+                        time:   [33.770 ns 34.064 ns 34.514 ns]
+                        thrpt:  [110.53 GiB/s 111.99 GiB/s 112.96 GiB/s]
+                 change:
+                        time:   [-2.8098% -2.2270% -1.3664%] (p = 0.00 < 0.05)
+                        thrpt:  [+1.3853% +2.2777% +2.8910%]
+                        Performance has improved.
+Found 12 outliers among 100 measurements (12.00%)
+  1 (1.00%) low severe
+  4 (4.00%) low mild
+  3 (3.00%) high mild
+  4 (4.00%) high severe
+Benchmarking memory_operations/memory_pool_allocation
+Benchmarking memory_operations/memory_pool_allocation: Warming up for 3.0000 s
+Benchmarking memory_operations/memory_pool_allocation: Collecting 100 samples in estimated 5.0004 s (48M iterations)
+Benchmarking memory_operations/memory_pool_allocation: Analyzing
+memory_operations/memory_pool_allocation
+                        time:   [104.31 ns 104.62 ns 105.03 ns]
+                        thrpt:  [36.319 GiB/s 36.462 GiB/s 36.572 GiB/s]
+                 change:
+                        time:   [-0.7813% -0.5619% -0.2883%] (p = 0.00 < 0.05)
+                        thrpt:  [+0.2891% +0.5650% +0.7874%]
+                        Change within noise threshold.
+Found 13 outliers among 100 measurements (13.00%)
+  2 (2.00%) low severe
+  2 (2.00%) low mild
+  5 (5.00%) high mild
+  4 (4.00%) high severe
+Benchmarking memory_operations/large_buffer_traditional
+Benchmarking memory_operations/large_buffer_traditional: Warming up for 3.0000 s
+Benchmarking memory_operations/large_buffer_traditional: Collecting 100 samples in estimated 5.0001 s (84M iterations)
+Benchmarking memory_operations/large_buffer_traditional: Analyzing
+memory_operations/large_buffer_traditional
+                        time:   [59.673 ns 59.744 ns 59.815 ns]
+                        thrpt:  [1020.4 GiB/s 1021.6 GiB/s 1022.8 GiB/s]
+                 change:
+                        time:   [-6.9763% -6.8529% -6.7253%] (p = 0.00 < 0.05)
+                        thrpt:  [+7.2102% +7.3571% +7.4994%]
+                        Performance has improved.
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) low mild
+Benchmarking memory_operations/large_buffer_pooled
+Benchmarking memory_operations/large_buffer_pooled: Warming up for 3.0000 s
+Benchmarking memory_operations/large_buffer_pooled: Collecting 100 samples in estimated 5.0003 s (38M iterations)
+Benchmarking memory_operations/large_buffer_pooled: Analyzing
+memory_operations/large_buffer_pooled
+                        time:   [130.65 ns 130.78 ns 130.92 ns]
+                        thrpt:  [466.19 GiB/s 466.69 GiB/s 467.18 GiB/s]
+                 change:
+                        time:   [-3.1770% -3.0479% -2.9278%] (p = 0.00 < 0.05)
+                        thrpt:  [+3.0161% +3.1437% +3.2812%]
+                        Performance has improved.
+Found 7 outliers among 100 measurements (7.00%)
+  2 (2.00%) low mild
+  5 (5.00%) high mild
+
+Benchmarking service_registration/traditional_config_cloning
+Benchmarking service_registration/traditional_config_cloning: Warming up for 3.0000 s
+Benchmarking service_registration/traditional_config_cloning: Collecting 100 samples in estimated 5.0399 s (172k iterations)
+Benchmarking service_registration/traditional_config_cloning: Analyzing
+service_registration/traditional_config_cloning
+                        time:   [29.362 µs 29.403 µs 29.440 µs]
+                        change: [-0.7977% -0.5845% -0.3903%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 7 outliers among 100 measurements (7.00%)
+  5 (5.00%) low mild
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+Benchmarking service_registration/arc_config_sharing
+Benchmarking service_registration/arc_config_sharing: Warming up for 3.0000 s
+Benchmarking service_registration/arc_config_sharing: Collecting 100 samples in estimated 5.0017 s (5.1M iterations)
+Benchmarking service_registration/arc_config_sharing: Analyzing
+service_registration/arc_config_sharing
+                        time:   [984.29 ns 985.48 ns 986.93 ns]
+                        change: [-0.0950% +0.1331% +0.3730%] (p = 0.30 > 0.05)
+                        No change in performance detected.
+Found 13 outliers among 100 measurements (13.00%)
+  4 (4.00%) low severe
+  3 (3.00%) low mild
+  2 (2.00%) high mild
+  4 (4.00%) high severe
+
+Benchmarking string_operations/traditional_string_building
+Benchmarking string_operations/traditional_string_building: Warming up for 3.0000 s
+Benchmarking string_operations/traditional_string_building: Collecting 100 samples in estimated 5.0054 s (3.5M iterations)
+Benchmarking string_operations/traditional_string_building: Analyzing
+string_operations/traditional_string_building
+                        time:   [1.4397 µs 1.4509 µs 1.4655 µs]
+                        change: [+0.0952% +1.2967% +2.4257%] (p = 0.03 < 0.05)
+                        Change within noise threshold.
+Found 12 outliers among 100 measurements (12.00%)
+  5 (5.00%) high mild
+  7 (7.00%) high severe
+Benchmarking string_operations/string_pool_building
+Benchmarking string_operations/string_pool_building: Warming up for 3.0000 s
+Benchmarking string_operations/string_pool_building: Collecting 100 samples in estimated 5.0000 s (3.7M iterations)
+Benchmarking string_operations/string_pool_building: Analyzing
+string_operations/string_pool_building
+                        time:   [1.3447 µs 1.3484 µs 1.3534 µs]
+Found 5 outliers among 100 measurements (5.00%)
+  3 (3.00%) high mild
+  2 (2.00%) high severe
+
+Benchmarking throughput_validation/realistic_workload_traditional
+Benchmarking throughput_validation/realistic_workload_traditional: Warming up for 3.0000 s
+Benchmarking throughput_validation/realistic_workload_traditional: Collecting 100 samples in estimated 5.1288 s (15k iterations)
+Benchmarking throughput_validation/realistic_workload_traditional: Analyzing
+throughput_validation/realistic_workload_traditional
+                        time:   [319.62 µs 320.71 µs 322.05 µs]
+                        thrpt:  [3.1051 Melem/s 3.1180 Melem/s 3.1287 Melem/s]
+Found 9 outliers among 100 measurements (9.00%)
+  4 (4.00%) high mild
+  5 (5.00%) high severe
+Benchmarking throughput_validation/realistic_workload_optimized
+Benchmarking throughput_validation/realistic_workload_optimized: Warming up for 3.0000 s
+Benchmarking throughput_validation/realistic_workload_optimized: Collecting 100 samples in estimated 5.7193 s (35k iterations)
+Benchmarking throughput_validation/realistic_workload_optimized: Analyzing
+throughput_validation/realistic_workload_optimized
+                        time:   [160.29 µs 160.75 µs 161.39 µs]
+                        thrpt:  [6.1961 Melem/s 6.2208 Melem/s 6.2386 Melem/s]
+Found 7 outliers among 100 measurements (7.00%)
+  1 (1.00%) low mild
+  2 (2.00%) high mild
+  4 (4.00%) high severe
+
+Benchmarking regression_guard/uuid_cache_target
+Benchmarking regression_guard/uuid_cache_target: Warming up for 3.0000 s
+Benchmarking regression_guard/uuid_cache_target: Collecting 100 samples in estimated 5.0002 s (131M iterations)
+Benchmarking regression_guard/uuid_cache_target: Analyzing
+regression_guard/uuid_cache_target
+                        time:   [42.255 ns 43.052 ns 43.928 ns]
+Found 19 outliers among 100 measurements (19.00%)
+  1 (1.00%) high mild
+  18 (18.00%) high severe
+Benchmarking regression_guard/memory_pool_target
+Benchmarking regression_guard/memory_pool_target: Warming up for 3.0000 s
+Benchmarking regression_guard/memory_pool_target: Collecting 100 samples in estimated 5.0004 s (40M iterations)
+Benchmarking regression_guard/memory_pool_target: Analyzing
+regression_guard/memory_pool_target
+                        time:   [121.53 ns 122.96 ns 124.73 ns]
+Found 19 outliers among 100 measurements (19.00%)
+  1 (1.00%) low mild
+  2 (2.00%) high mild
+  16 (16.00%) high severe
+Benchmarking regression_guard/arc_pattern_target
+Benchmarking regression_guard/arc_pattern_target: Warming up for 3.0000 s
+Benchmarking regression_guard/arc_pattern_target: Collecting 100 samples in estimated 5.0009 s (9.6M iterations)
+Benchmarking regression_guard/arc_pattern_target: Analyzing
+regression_guard/arc_pattern_target
+                        time:   [503.74 ns 509.08 ns 514.58 ns]
+

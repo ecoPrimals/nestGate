@@ -10,7 +10,7 @@ use crate::error::Result;
 use crate::types::{
     AdvancedConfig, AdvancedFeatureReport, ReplicationPerformance, RetentionPolicy, SystemInfo,
 };
-use nestgate_core::NestGateError;
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
@@ -48,13 +48,14 @@ pub async fn monitor_capacity_usage(
         .unwrap_or(0.0);
 
     let growth_rate = if historical_data.len() > 1 {
-        let recent = historical_data
-            .last()
-            .ok_or_else(|| NestGateError::Internal("No recent data available".to_string()))?;
-        let previous = &historical_data[historical_data.len() - 2];
-        let time_diff = recent.timestamp - previous.timestamp;
-        if time_diff > 0 {
-            (recent.used_space as f64 - previous.used_space as f64) / time_diff as f64
+        if let Some(recent) = historical_data.last() {
+            let previous = &historical_data[historical_data.len() - 2];
+            let time_diff = recent.timestamp - previous.timestamp;
+            if time_diff > 0 {
+                (recent.used_space as f64 - previous.used_space as f64) / time_diff as f64
+            } else {
+                0.0
+            }
         } else {
             0.0
         }
@@ -85,7 +86,7 @@ pub async fn detect_performance_bottlenecks(
 
     if let Some(latest) = performance_data.last() {
         // CPU bottleneck detection
-        if latest.cpu_usage > 80.0 {
+        if latest._cpu_usage > 80.0 {
             bottlenecks.push("High CPU usage".to_string());
             recommendations.push("Consider CPU upgrade or workload optimization".to_string());
         }

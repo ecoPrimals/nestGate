@@ -1,15 +1,16 @@
-//! Distributed Replication Manager
-//!
-//! Manages data replication across multiple storage backends with conflict resolution
-//! and health monitoring.
-
+// Removed unused error imports
+/// Distributed Replication Manager
+///
+/// Manages data replication across multiple storage backends with conflict resolution
+/// and health monitoring.
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::info;
+// Removed unused tracing import
 
 use super::types::*;
 use crate::{NestGateError, Result};
+use tracing::info;
 
 /// Distributed Replication Manager
 pub struct ReplicationManager {
@@ -51,9 +52,12 @@ impl ReplicationManager {
         if let Some(task) = replications.get(task_id) {
             Ok(task.status.clone())
         } else {
-            Err(NestGateError::Internal(format!(
-                "Replication task {task_id} not found"
-            )))
+            Err(NestGateError::Internal {
+                message: format!("Replication task {task_id} not found"),
+                location: Some(file!().to_string()),
+                debug_info: None,
+                is_bug: false,
+            })
         }
     }
 

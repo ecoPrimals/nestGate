@@ -1,17 +1,20 @@
-//! Enhanced Utility Functions for NestGate v2
-//!
-//! Integrates advanced utilities with v2 system utilities
-//! Provides comprehensive helper functions for the NestGate system
-
+// Removed unused error imports
+/// Enhanced Utility Functions for NestGate v2
+///
+/// Integrates advanced utilities with v2 system utilities
+/// Provides comprehensive helper functions for the NestGate system
 use chrono::{DateTime, TimeZone, Utc};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs as stdfs;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::path::{Path, PathBuf};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 
+use crate::error::RecoveryStrategy;
+use crate::error::SystemResource;
 use crate::error::{NestGateError, Result};
+use std::time::Duration;
 
 /// Enhanced file system utilities with advanced capabilities
 pub mod fs {
@@ -256,7 +259,12 @@ pub mod sys {
         gethostname::gethostname()
             .to_str()
             .map(|s| s.to_string())
-            .ok_or_else(|| NestGateError::SystemError("Failed to get hostname".to_string()))
+            .ok_or_else(|| NestGateError::System {
+                message: "Failed to get hostname".to_string(),
+                resource: SystemResource::Cpu,
+                utilization: None,
+                recovery: RecoveryStrategy::Retry,
+            })
     }
 
     /// Get total system memory in bytes
@@ -293,9 +301,12 @@ pub mod sys {
         // In a real implementation, you'd want to check specific mount points
         match stdfs::metadata("/") {
             Ok(_) => Ok(1024 * 1024 * 1024 * 1024), // Default to 1TB
-            Err(e) => Err(NestGateError::SystemError(format!(
-                "Failed to get disk info: {e}"
-            ))),
+            Err(e) => Err(NestGateError::System {
+                message: format!("Failed to get disk info: {e}"),
+                resource: SystemResource::Disk,
+                utilization: None,
+                recovery: RecoveryStrategy::Fallback,
+            }),
         }
     }
 
@@ -317,19 +328,20 @@ pub mod sys {
                             return Ok(Duration::from_secs_f64(seconds));
                         }
                     }
-                    Err(NestGateError::SystemError(
-                        "Failed to parse /proc/uptime".to_string(),
-                    ))
+                    Err(NestGateError::System {
+                        message: "Failed to parse /proc/uptime".to_string(),
+                        resource: SystemResource::Cpu,
+                        utilization: None,
+                        recovery: RecoveryStrategy::Retry,
+                    })
                 }
-                Err(e) => Err(NestGateError::SystemError(format!(
-                    "Failed to read /proc/uptime: {e}"
-                ))),
+                Err(e) => Err(NestGateError::System {
+                    message: format!("Failed to read /proc/uptime: {e}"),
+                    resource: SystemResource::Cpu,
+                    utilization: None,
+                    recovery: RecoveryStrategy::Retry,
+                }),
             }
-        }
-        #[cfg(not(target_os = "linux"))]
-        {
-            // Fallback for non-Linux systems
-            Ok(Duration::from_secs(3600)) // Default to 1 hour uptime
         }
     }
 }
@@ -385,8 +397,13 @@ pub mod time {
 
     /// Parse a timestamp string
     pub fn parse_timestamp(s: &str) -> Result<i64> {
-        s.parse::<i64>()
-            .map_err(|e| NestGateError::InvalidInput(format!("Invalid timestamp: {e}")))
+        s.parse::<i64>().map_err(|e| NestGateError::Validation {
+            field: "input".to_string(),
+            message: format!("Invalid timestamp: {e}"),
+            current_value: None,
+            expected: None,
+            user_error: false,
+        })
     }
 
     /// Get elapsed time since a timestamp
@@ -468,30 +485,54 @@ pub mod network {
     pub fn parse_cidr(cidr: &str) -> Result<(IpAddr, u8)> {
         let parts: Vec<&str> = cidr.split('/').collect();
         if parts.len() != 2 {
-            return Err(NestGateError::InvalidInput(format!(
-                "Invalid CIDR notation: {cidr}"
-            )));
+            return Err(NestGateError::Validation {
+                field: "input".to_string(),
+                message: format!("Invalid CIDR notation: {cidr}"),
+                current_value: Some(cidr.to_string()),
+                expected: Some("ip/prefix format".to_string()),
+                user_error: true,
+            });
         }
 
-        let ip = parts[0].parse::<IpAddr>().map_err(|_| {
-            NestGateError::InvalidInput(format!("Invalid IP address: {}", parts[0]))
-        })?;
+        let ip = parts[0]
+            .parse::<IpAddr>()
+            .map_err(|_| NestGateError::Validation {
+                field: "input".to_string(),
+                message: format!("Invalid IP address: {}", parts[0]),
+                current_value: None,
+                expected: None,
+                user_error: true,
+            })?;
 
-        let prefix = parts[1].parse::<u8>().map_err(|_| {
-            NestGateError::InvalidInput(format!("Invalid prefix length: {}", parts[1]))
-        })?;
+        let prefix = parts[1]
+            .parse::<u8>()
+            .map_err(|_| NestGateError::Validation {
+                field: "input".to_string(),
+                message: format!("Invalid prefix length: {}", parts[1]),
+                current_value: None,
+                expected: None,
+                user_error: true,
+            })?;
 
-        // Validate prefix length
+        // Validate prefix length based on IP address type
         match ip {
             IpAddr::V4(_) if prefix > 32 => {
-                return Err(NestGateError::InvalidInput(format!(
-                    "Invalid IPv4 prefix length: {prefix}"
-                )));
+                return Err(NestGateError::Validation {
+                    field: "prefix".to_string(),
+                    message: format!("Invalid IPv4 prefix length: {prefix}"),
+                    current_value: Some(prefix.to_string()),
+                    expected: Some("0-32".to_string()),
+                    user_error: true,
+                });
             }
             IpAddr::V6(_) if prefix > 128 => {
-                return Err(NestGateError::InvalidInput(format!(
-                    "Invalid IPv6 prefix length: {prefix}"
-                )));
+                return Err(NestGateError::Validation {
+                    field: "prefix".to_string(),
+                    message: format!("Invalid IPv6 prefix length: {prefix}"),
+                    current_value: Some(prefix.to_string()),
+                    expected: Some("0-128".to_string()),
+                    user_error: true,
+                });
             }
             _ => {}
         }
@@ -528,308 +569,369 @@ pub mod network {
         let addr = format!("{}:{}", crate::constants::addresses::localhost(), port);
         (tokio::net::TcpListener::bind(&addr).await).is_ok()
     }
-}
 
-/// File system-related utilities (v2 compatibility)
-pub mod filesys {
-    use super::*;
+    /// File system-related utilities (v2 compatibility)
+    pub mod filesys {
+        use super::*;
 
-    /// Check if a path exists
-    pub fn path_exists(path: &Path) -> bool {
-        path.exists()
+        /// Check if a path exists
+        pub fn path_exists(path: &Path) -> bool {
+            path.exists()
+        }
+
+        /// Check if a path is a directory
+        pub fn is_directory(path: &Path) -> bool {
+            path.is_dir()
+        }
+
+        /// Check if a path is a file
+        pub fn is_file(path: &Path) -> bool {
+            path.is_file()
+        }
+
+        /// Check if a path is readable (delegated to fs module)
+        pub fn is_readable(path: &Path) -> bool {
+            fs::is_readable(path)
+        }
+
+        /// Check if a path is writable (delegated to fs module)
+        pub fn is_writable(path: &Path) -> bool {
+            fs::is_writable(path)
+        }
+
+        /// Get file size
+        pub fn file_size(path: &Path) -> Result<u64> {
+            fs::get_file_size(path).map_err(|e| NestGateError::Io {
+                operation: "filesystem".to_string(),
+                error_message: format!("Failed to get file size: {e}"),
+                resource: Some("file".to_string()),
+                retryable: true,
+            })
+        }
+
+        /// Create directory
+        pub fn create_dir_all(path: &Path) -> Result<()> {
+            fs::ensure_dir(path).map_err(|e| NestGateError::Io {
+                operation: "filesystem".to_string(),
+                error_message: format!("Failed to create directory: {e}"),
+                resource: Some("directory".to_string()),
+                retryable: true,
+            })?;
+            Ok(())
+        }
+
+        /// Remove file
+        pub fn remove_file(path: &Path) -> Result<()> {
+            stdfs::remove_file(path).map_err(|e| NestGateError::Io {
+                operation: "filesystem".to_string(),
+                error_message: format!("Failed to remove file: {e}"),
+                resource: Some("file".to_string()),
+                retryable: false,
+            })?;
+            Ok(())
+        }
+
+        /// Remove directory
+        pub fn remove_dir_all(path: &Path) -> Result<()> {
+            stdfs::remove_dir_all(path).map_err(|e| NestGateError::Io {
+                operation: "filesystem".to_string(),
+                error_message: format!("Failed to remove directory: {e}"),
+                resource: Some("directory".to_string()),
+                retryable: false,
+            })?;
+            Ok(())
+        }
+
+        /// Get temp directory
+        pub fn temp_dir() -> PathBuf {
+            std::env::temp_dir()
+        }
+
+        /// Create temp directory
+        pub fn create_temp_dir() -> Result<PathBuf> {
+            let temp_dir = temp_dir().join(format!("nestgate-{}", uuid::Uuid::new_v4()));
+            create_dir_all(&temp_dir)?;
+            Ok(temp_dir)
+        }
+
+        /// Calculate directory size
+        pub fn directory_size(path: &Path) -> Result<u64> {
+            fs::get_directory_size(path).map_err(|e| NestGateError::Io {
+                operation: "filesystem".to_string(),
+                error_message: format!("Failed to calculate directory size: {e}"),
+                resource: None,
+                retryable: true,
+            })
+        }
     }
 
-    /// Check if a path is a directory
-    pub fn is_directory(path: &Path) -> bool {
-        path.is_dir()
-    }
+    /// String-related utilities
+    pub mod string {
+        use fastrand;
 
-    /// Check if a path is a file
-    pub fn is_file(path: &Path) -> bool {
-        path.is_file()
-    }
-
-    /// Check if a path is readable (delegated to fs module)
-    pub fn is_readable(path: &Path) -> bool {
-        fs::is_readable(path)
-    }
-
-    /// Check if a path is writable (delegated to fs module)
-    pub fn is_writable(path: &Path) -> bool {
-        fs::is_writable(path)
-    }
-
-    /// Get file size
-    pub fn file_size(path: &Path) -> Result<u64> {
-        fs::get_file_size(path)
-            .map_err(|e| NestGateError::FileSystem(format!("Failed to get file size: {e}")))
-    }
-
-    /// Create directory
-    pub fn create_dir_all(path: &Path) -> Result<()> {
-        fs::ensure_dir(path)
-            .map_err(|e| NestGateError::FileSystem(format!("Failed to create directory: {e}")))
-    }
-
-    /// Remove file
-    pub fn remove_file(path: &Path) -> Result<()> {
-        stdfs::remove_file(path)
-            .map_err(|e| NestGateError::FileSystem(format!("Failed to remove file: {e}")))
-    }
-
-    /// Remove directory
-    pub fn remove_dir_all(path: &Path) -> Result<()> {
-        stdfs::remove_dir_all(path)
-            .map_err(|e| NestGateError::FileSystem(format!("Failed to remove directory: {e}")))
-    }
-
-    /// Get temp directory
-    pub fn temp_dir() -> PathBuf {
-        std::env::temp_dir()
-    }
-
-    /// Create temp directory
-    pub fn create_temp_dir() -> Result<PathBuf> {
-        let temp_dir = temp_dir().join(format!("nestgate-{}", uuid::Uuid::new_v4()));
-        create_dir_all(&temp_dir)?;
-        Ok(temp_dir)
-    }
-
-    /// Calculate directory size
-    pub fn directory_size(path: &Path) -> Result<u64> {
-        fs::get_directory_size(path).map_err(|e| {
-            NestGateError::FileSystem(format!("Failed to calculate directory size: {e}"))
-        })
-    }
-}
-
-/// String-related utilities
-pub mod string {
-    use fastrand;
-
-    /// Generate a random string of specified length
-    pub fn random_string(length: usize) -> String {
-        const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+        /// Generate a random string of specified length
+        pub fn random_string(length: usize) -> String {
+            const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
                                 abcdefghijklmnopqrstuvwxyz\
                                 0123456789";
-        (0..length)
-            .map(|_| {
-                let idx = fastrand::usize(..CHARSET.len());
-                CHARSET[idx] as char
-            })
-            .collect()
-    }
-
-    /// Truncate a string to a maximum length
-    pub fn truncate(s: &str, max_len: usize) -> String {
-        if s.len() <= max_len {
-            s.to_string()
-        } else {
-            format!("{}...", &s[..max_len.saturating_sub(3)])
+            (0..length)
+                .map(|_| {
+                    let idx = fastrand::usize(..CHARSET.len());
+                    CHARSET[idx] as char
+                })
+                .collect()
         }
-    }
 
-    /// Check if a string contains only alphanumeric characters
-    pub fn is_alphanumeric(s: &str) -> bool {
-        !s.is_empty() && s.chars().all(|c| c.is_ascii_alphanumeric())
-    }
+        /// Truncate a string to a maximum length
+        pub fn truncate(s: &str, max_len: usize) -> String {
+            if s.len() <= max_len {
+                s.to_string()
+            } else {
+                format!("{}...", &s[..max_len.saturating_sub(3)])
+            }
+        }
 
-    /// Check if a string contains only alphabetic characters
-    pub fn is_alphabetic(s: &str) -> bool {
-        !s.is_empty() && s.chars().all(|c| c.is_ascii_alphabetic())
-    }
+        /// Check if a string contains only alphanumeric characters
+        pub fn is_alphanumeric(s: &str) -> bool {
+            !s.is_empty() && s.chars().all(|c| c.is_ascii_alphanumeric())
+        }
 
-    /// Check if a string contains only numeric characters
-    pub fn is_numeric(s: &str) -> bool {
-        !s.is_empty() && s.chars().all(|c| c.is_ascii_digit())
-    }
+        /// Check if a string contains only alphabetic characters
+        pub fn is_alphabetic(s: &str) -> bool {
+            !s.is_empty() && s.chars().all(|c| c.is_ascii_alphabetic())
+        }
 
-    /// Convert string to snake_case
-    pub fn to_snake_case(input: &str) -> String {
-        let mut result = String::new();
-        let chars = input.chars();
+        /// Check if a string contains only numeric characters
+        pub fn is_numeric(s: &str) -> bool {
+            !s.is_empty() && s.chars().all(|c| c.is_ascii_digit())
+        }
 
-        for c in chars {
-            if c.is_ascii_uppercase() {
-                if !result.is_empty() {
-                    result.push('_');
-                }
-                if let Some(lowercase_char) = c.to_lowercase().next() {
+        /// Convert string to snake_case
+        pub fn to_snake_case(input: &str) -> String {
+            let mut result = String::new();
+            let chars = input.chars();
+
+            for c in chars {
+                if c.is_ascii_uppercase() {
+                    if !result.is_empty() {
+                        result.push('_');
+                    }
+                    if let Some(lowercase_char) = c.to_lowercase().next() {
+                        result.push(lowercase_char);
+                    }
+                } else if let Some(lowercase_char) = c.to_lowercase().next() {
                     result.push(lowercase_char);
                 }
-            } else if let Some(lowercase_char) = c.to_lowercase().next() {
-                result.push(lowercase_char);
             }
+
+            result
         }
 
-        result
-    }
+        /// Convert string to camelCase
+        pub fn to_camel_case(input: &str) -> String {
+            let mut result = String::new();
+            let mut capitalize_next = false;
 
-    /// Convert string to camelCase
-    pub fn to_camel_case(input: &str) -> String {
-        let mut result = String::new();
-        let mut capitalize_next = false;
-
-        for c in input.chars() {
-            if c == '_' || c == '-' {
-                capitalize_next = true;
-            } else if capitalize_next {
-                if let Some(uppercase_char) = c.to_uppercase().next() {
-                    result.push(uppercase_char);
+            for c in input.chars() {
+                if c == '_' || c == '-' {
+                    capitalize_next = true;
+                } else if capitalize_next {
+                    if let Some(uppercase_char) = c.to_uppercase().next() {
+                        result.push(uppercase_char);
+                    }
+                    capitalize_next = false;
+                } else if let Some(lowercase_char) = c.to_lowercase().next() {
+                    result.push(lowercase_char);
                 }
-                capitalize_next = false;
-            } else if let Some(lowercase_char) = c.to_lowercase().next() {
-                result.push(lowercase_char);
+            }
+
+            result
+        }
+
+        /// Convert string to PascalCase
+        pub fn to_pascal_case(s: &str) -> String {
+            let camel = to_camel_case(s);
+            if let Some(first_char) = camel.chars().next() {
+                format!("{}{}", first_char.to_uppercase(), &camel[1..])
+            } else {
+                camel
             }
         }
 
-        result
-    }
-
-    /// Convert string to PascalCase
-    pub fn to_pascal_case(s: &str) -> String {
-        let camel = to_camel_case(s);
-        if let Some(first_char) = camel.chars().next() {
-            format!("{}{}", first_char.to_uppercase(), &camel[1..])
-        } else {
-            camel
+        /// Convert string to kebab-case
+        pub fn to_kebab_case(s: &str) -> String {
+            to_snake_case(s).replace('_', "-")
         }
     }
 
-    /// Convert string to kebab-case
-    pub fn to_kebab_case(s: &str) -> String {
-        to_snake_case(s).replace('_', "-")
-    }
-}
+    /// Serialization utilities
+    pub mod serialization {
+        use super::*;
 
-/// Serialization utilities
-pub mod serialization {
-    use super::*;
+        /// Serialize to JSON
+        pub fn to_json<T: Serialize>(value: &T) -> Result<String> {
+            serde_json::to_string(value).map_err(|e| NestGateError::Validation {
+                field: "serialization".to_string(),
+                message: format!("JSON serialization failed: {e}"),
+                current_value: None,
+                expected: Some("serializable data".to_string()),
+                user_error: false,
+            })
+        }
 
-    /// Serialize to JSON
-    pub fn to_json<T: Serialize>(value: &T) -> Result<String> {
-        serde_json::to_string(value).map_err(|e| NestGateError::Serialization(e.to_string()))
-    }
+        /// Serialize to pretty JSON
+        pub fn to_json_pretty<T: Serialize>(value: &T) -> Result<String> {
+            serde_json::to_string_pretty(value).map_err(|e| NestGateError::Validation {
+                field: "serialization".to_string(),
+                message: format!("Pretty JSON serialization failed: {e}"),
+                current_value: None,
+                expected: Some("serializable data".to_string()),
+                user_error: false,
+            })
+        }
 
-    /// Serialize to pretty JSON
-    pub fn to_json_pretty<T: Serialize>(value: &T) -> Result<String> {
-        serde_json::to_string_pretty(value).map_err(|e| NestGateError::Serialization(e.to_string()))
-    }
+        /// Deserialize from JSON
+        pub fn from_json<T: for<'de> Deserialize<'de>>(json: &str) -> Result<T> {
+            serde_json::from_str(json).map_err(|e| NestGateError::Validation {
+                field: "serialization".to_string(),
+                message: format!("JSON deserialization failed: {e}"),
+                current_value: Some(json.to_string()),
+                expected: Some("valid JSON string".to_string()),
+                user_error: false,
+            })
+        }
 
-    /// Deserialize from JSON
-    pub fn from_json<T: for<'de> Deserialize<'de>>(json: &str) -> Result<T> {
-        serde_json::from_str(json).map_err(|e| NestGateError::Serialization(e.to_string()))
-    }
+        /// Serialize to YAML
+        pub fn to_yaml<T: Serialize>(value: &T) -> Result<String> {
+            serde_yaml::to_string(value).map_err(|e| NestGateError::Validation {
+                field: "serialization".to_string(),
+                message: format!("YAML serialization failed: {e}"),
+                current_value: None,
+                expected: Some("serializable data".to_string()),
+                user_error: false,
+            })
+        }
 
-    /// Serialize to YAML
-    pub fn to_yaml<T: Serialize>(value: &T) -> Result<String> {
-        serde_yaml::to_string(value).map_err(|e| NestGateError::Serialization(e.to_string()))
-    }
-
-    /// Deserialize from YAML
-    pub fn from_yaml<T: for<'de> Deserialize<'de>>(yaml: &str) -> Result<T> {
-        serde_yaml::from_str(yaml).map_err(|e| NestGateError::Serialization(e.to_string()))
-    }
-}
-
-/// System-related utilities
-pub mod system {
-    use super::*;
-
-    /// Get system hostname (delegated to sys module)
-    pub fn get_hostname() -> Result<String> {
-        sys::get_hostname()
-    }
-
-    /// Get CPU count (delegated to sys module)
-    pub fn get_cpu_count() -> usize {
-        sys::get_cpu_count()
-    }
-
-    /// Get system uptime (delegated to sys module)
-    pub fn get_uptime() -> Result<Duration> {
-        sys::get_uptime()
-    }
-
-    /// Get memory information (total, free)
-    pub fn get_memory_info() -> Result<(u64, u64)> {
-        let total = sys::get_total_memory()?;
-        let free = sys::get_free_memory()?;
-        Ok((total, free))
-    }
-}
-
-/// Configuration-related utilities
-pub mod config {
-    use super::*;
-
-    /// Load configuration from file
-    pub fn load_config<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<T> {
-        let content = stdfs::read_to_string(path)
-            .map_err(|e| NestGateError::FileSystem(format!("Failed to read config file: {e}")))?;
-
-        if path.extension().and_then(|s| s.to_str()) == Some("yaml")
-            || path.extension().and_then(|s| s.to_str()) == Some("yml")
-        {
-            serialization::from_yaml(&content)
-        } else {
-            serialization::from_json(&content)
+        /// Deserialize from YAML
+        pub fn from_yaml<T: for<'de> Deserialize<'de>>(yaml: &str) -> Result<T> {
+            serde_yaml::from_str(yaml).map_err(|e| NestGateError::Validation {
+                field: "serialization".to_string(),
+                message: format!("YAML deserialization failed: {e}"),
+                current_value: Some(yaml.to_string()),
+                expected: Some("valid YAML string".to_string()),
+                user_error: false,
+            })
         }
     }
 
-    /// Save configuration to file
-    pub fn save_config<T: Serialize>(value: &T, path: &Path) -> Result<()> {
-        let content = if path.extension().and_then(|s| s.to_str()) == Some("yaml")
-            || path.extension().and_then(|s| s.to_str()) == Some("yml")
-        {
-            serialization::to_yaml(value)?
-        } else {
-            serialization::to_json_pretty(value)?
-        };
+    /// System-related utilities
+    pub mod system {
+        use super::*;
 
-        if let Some(parent) = path.parent() {
-            filesys::create_dir_all(parent)?;
+        /// Get system hostname (delegated to sys module)
+        pub fn get_hostname() -> Result<String> {
+            sys::get_hostname()
         }
 
-        stdfs::write(path, content)
-            .map_err(|e| NestGateError::FileSystem(format!("Failed to write config file: {e}")))
+        /// Get CPU count (delegated to sys module)
+        pub fn get_cpu_count() -> usize {
+            sys::get_cpu_count()
+        }
+
+        /// Get system uptime (delegated to sys module)
+        pub fn get_uptime() -> Result<Duration> {
+            sys::get_uptime()
+        }
+
+        /// Get memory information (total, free)
+        pub fn get_memory_info() -> Result<(u64, u64)> {
+            let total = sys::get_total_memory()?;
+            let free = sys::get_free_memory()?;
+            Ok((total, free))
+        }
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::io::Write;
-    use tempfile::tempdir;
+    /// Configuration-related utilities
+    pub mod config {
+        use super::*;
 
-    #[tokio::test]
-    async fn test_filesystem_operations() {
-        let dir = tempdir().expect("Failed to create temporary directory for filesystem test");
-        let file_path = dir.path().join("test.txt");
-        let dir_path = dir.path().join("subdir");
+        /// Load configuration from file
+        pub fn load_config<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<T> {
+            let content = stdfs::read_to_string(path).map_err(|e| NestGateError::Io {
+                operation: "filesystem".to_string(),
+                error_message: format!("Failed to read config file: {e}"),
+                resource: Some("config_file".to_string()),
+                retryable: true,
+            })?;
 
-        // Test file creation and size
-        stdfs::File::create(&file_path)
-            .expect("Failed to create test file")
-            .write_all(b"test")
-            .expect("Failed to write test data to file");
+            if path.extension().and_then(|s| s.to_str()) == Some("yaml")
+                || path.extension().and_then(|s| s.to_str()) == Some("yml")
+            {
+                serialization::from_yaml(&content)
+            } else {
+                serialization::from_json(&content)
+            }
+        }
 
-        assert_eq!(
-            fs::get_file_size(&file_path).expect("Failed to get file size"),
-            4
-        );
+        /// Save configuration to file
+        pub fn save_config<T: Serialize>(value: &T, path: &Path) -> Result<()> {
+            let content = if path.extension().and_then(|s| s.to_str()) == Some("yaml")
+                || path.extension().and_then(|s| s.to_str()) == Some("yml")
+            {
+                serialization::to_yaml(value)?
+            } else {
+                serialization::to_json_pretty(value)?
+            };
 
-        // Test directory creation
-        fs::ensure_dir(&dir_path).expect("Failed to create test directory");
-        assert!(dir_path.exists());
+            if let Some(parent) = path.parent() {
+                filesys::create_dir_all(parent)?;
+            }
 
-        // Test file removal
-        fs::remove_path(&file_path).expect("Failed to remove test file");
-        assert!(!file_path.exists());
+            stdfs::write(path, content).map_err(|e| NestGateError::Io {
+                operation: "filesystem".to_string(),
+                error_message: format!("Failed to write config file: {e}"),
+                resource: Some("config_file".to_string()),
+                retryable: true,
+            })?;
+            Ok(())
+        }
+    }
 
-        // Test directory removal
-        fs::remove_path(&dir_path).expect("Failed to remove test directory");
-        assert!(!dir_path.exists());
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use std::io::Write;
+        use tempfile::tempdir;
+
+        #[tokio::test]
+        async fn test_filesystem_operations() {
+            let dir = tempdir().expect("Failed to create temporary directory for filesystem test");
+            let file_path = dir.path().join("test.txt");
+            let dir_path = dir.path().join("subdir");
+
+            // Test file creation and size
+            stdfs::File::create(&file_path)
+                .expect("Failed to create test file")
+                .write_all(b"test")
+                .expect("Failed to write test data to file");
+
+            assert_eq!(
+                fs::get_file_size(&file_path).expect("Failed to get file size"),
+                4
+            );
+
+            // Test directory creation
+            fs::ensure_dir(&dir_path).expect("Failed to create test directory");
+            assert!(dir_path.exists());
+
+            // Test file removal
+            fs::remove_path(&file_path).expect("Failed to remove test file");
+            assert!(!file_path.exists());
+
+            // Test directory removal
+            fs::remove_path(&dir_path).expect("Failed to remove test directory");
+            assert!(!dir_path.exists());
+        }
     }
 
     #[test]

@@ -1,12 +1,13 @@
-//! Health monitoring traits for Universal Primal Architecture
-//!
-//! This module provides health monitoring capabilities that can be implemented
-//! by any service in the ecosystem for status reporting and diagnostics.
-
+// Removed unused error imports
+/// Health monitoring traits for Universal Primal Architecture
+///
+/// This module provides health monitoring capabilities that can be implemented
+/// by any service in the ecosystem for status reporting and diagnostics.
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
+use std::time::SystemTime;
 
 /// Health status levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

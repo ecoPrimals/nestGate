@@ -9,9 +9,12 @@ use std::time::Duration;
 
 use tokio::sync::RwLock;
 use tokio::time::interval;
-use tracing::{debug, error, info};
+// Removed unused tracing import
 
 use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, error::Result, pool::ZfsPoolManager};
+use tracing::debug;
+use tracing::error;
+use tracing::info;
 
 #[cfg(feature = "network-integration")]
 use crate::automation::{EcosystemDiscovery, ServiceConnectionPool};

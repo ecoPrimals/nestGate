@@ -10,6 +10,9 @@ use tokio::sync::RwLock;
 
 // Use nestgate_core for error handling
 use nestgate_core::{NestGateError, Result};
+use tracing::info;
+use tracing::warn;
+use tracing::error;
 
 /// SMB share configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -298,7 +301,8 @@ impl SmbServer {
         // Move temp file to /etc/samba/smb.conf (requires root privileges)
         use std::process::Command;
         let mv_output = Command::new("sudo")
-            .args(["cp", &temp_path, "/etc/samba/smb.conf"])
+            .args(["cp", &temp_path, &format!("{}/samba/smb.conf", 
+                std::env::var("NESTGATE_CONFIG_DIR").unwrap_or_else(|_| "/etc".to_string()))])
             .output()
             .map_err(|e| NestGateError::Network(format!("Failed to update smb.conf: {e}")))?;
 

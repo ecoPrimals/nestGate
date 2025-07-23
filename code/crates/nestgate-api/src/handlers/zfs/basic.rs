@@ -12,6 +12,7 @@ use axum::{
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{error, info, warn};
+// Removed unused tracing import
 
 use crate::handlers::zfs::types::{
     CreateDatasetRequest, CreatePoolRequest, CreateSnapshotRequest, TierPredictionRequest,
@@ -199,31 +200,25 @@ pub async fn get_zfs_dataset(
     Path(name): Path<String>,
 ) -> impl IntoResponse {
     match get_zfs_service(&state).await {
-        Ok(service) => {
-            match service
-                .dataset_manager
-                .get_dataset_info_with_fallback(&name)
-                .await
-            {
-                Ok(dataset) => {
-                    info!("Retrieved info for dataset {}", name);
-                    (
-                        StatusCode::OK,
-                        Json(serde_json::json!({
-                            "status": "success",
-                            "data": dataset
-                        })),
-                    )
-                }
-                Err(e) => {
-                    error!("Failed to get dataset {}: {:?}", name, e);
-                    (
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        ResponseBuilder::error_json(format!("Failed to get dataset: {e}")),
-                    )
-                }
+        Ok(service) => match service.dataset_manager.get_dataset_info(&name).await {
+            Ok(dataset) => {
+                info!("Retrieved info for dataset {}", name);
+                (
+                    StatusCode::OK,
+                    Json(serde_json::json!({
+                        "status": "success",
+                        "data": dataset
+                    })),
+                )
             }
-        }
+            Err(e) => {
+                error!("Failed to get dataset {}: {:?}", name, e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    ResponseBuilder::error_json(format!("Failed to get dataset: {e}")),
+                )
+            }
+        },
         Err(e) => {
             error!("ZFS service error: {}", e);
             (

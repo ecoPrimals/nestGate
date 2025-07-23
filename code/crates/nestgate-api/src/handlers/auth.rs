@@ -11,7 +11,10 @@ use nestgate_core::universal_traits::{AuthToken, Credentials};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{info, warn};
+use tracing::info;
+use tracing::warn;
+
+// Removed unused tracing import
 
 /// Authentication mode preference
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -157,7 +160,7 @@ impl AuthService {
     /// Get authentication status
     pub async fn get_auth_status(&self) -> AuthStatus {
         let security_primal_available = self.security_primal_available().await;
-        let adapter_stats = self.primal_adapter.get_stats().await;
+        let adapter_stats = (*self.primal_adapter).get_stats().await;
 
         AuthStatus {
             mode: self.get_mode(),

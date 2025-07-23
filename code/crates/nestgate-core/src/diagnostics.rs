@@ -1,17 +1,18 @@
-//! Diagnostics module for NestGate
-//!
-//! This module provides system diagnostics and monitoring functionality
-//! for the NestGate system.
-
+// Removed unused error imports
+/// Diagnostics module for NestGate
+///
+/// This module provides system diagnostics and monitoring functionality
+/// for the NestGate system.
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fmt;
+// Removed unused std import
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 use tokio::sync::broadcast;
 
 use crate::error::{NestGateError, Result};
+use std::fmt;
 
 /// System diagnostic level
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -190,7 +191,7 @@ impl fmt::Display for HealthStatus {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemMetrics {
     /// CPU usage percentage (0-100)
-    pub cpu_usage: f64,
+    pub _cpu_usage: f64,
 
     /// Memory usage in bytes
     pub memory_used: u64,
@@ -235,7 +236,7 @@ pub struct SystemMetrics {
 impl Default for SystemMetrics {
     fn default() -> Self {
         Self {
-            cpu_usage: 0.0,
+            _cpu_usage: 0.0,
             memory_used: 0,
             memory_total: 0,
             storage_used: 0,
@@ -426,9 +427,12 @@ impl DiagnosticsManager {
             let mut diagnostics = match self.diagnostics.write() {
                 Ok(d) => d,
                 Err(_) => {
-                    return Err(NestGateError::Internal(
-                        "Diagnostics lock poisoned".to_string(),
-                    ))
+                    return Err(NestGateError::Internal {
+                        message: "Diagnostics lock poisoned".to_string(),
+                        location: Some(file!().to_string()),
+                        debug_info: None,
+                        is_bug: false,
+                    })
                 }
             };
 
@@ -446,9 +450,12 @@ impl DiagnosticsManager {
         let diagnostics = match self.diagnostics.read() {
             Ok(d) => d.clone(),
             Err(_) => {
-                return Err(NestGateError::Internal(
-                    "Diagnostics lock poisoned".to_string(),
-                ))
+                return Err(NestGateError::Internal {
+                    message: "Diagnostics lock poisoned".to_string(),
+                    location: Some(file!().to_string()),
+                    debug_info: None,
+                    is_bug: false,
+                })
             }
         };
 
@@ -460,9 +467,12 @@ impl DiagnosticsManager {
         let diagnostics = match self.diagnostics.read() {
             Ok(d) => d.clone(),
             Err(_) => {
-                return Err(NestGateError::Internal(
-                    "Diagnostics lock poisoned".to_string(),
-                ))
+                return Err(NestGateError::Internal {
+                    message: "Diagnostics lock poisoned".to_string(),
+                    location: Some(file!().to_string()),
+                    debug_info: None,
+                    is_bug: false,
+                })
             }
         };
 
@@ -473,6 +483,7 @@ impl DiagnosticsManager {
     }
 
     /// Get diagnostics by component
+    /// Get diagnostics by component
     pub fn get_diagnostics_by_component(
         &self,
         component: ComponentType,
@@ -480,9 +491,12 @@ impl DiagnosticsManager {
         let diagnostics = match self.diagnostics.read() {
             Ok(d) => d.clone(),
             Err(_) => {
-                return Err(NestGateError::Internal(
-                    "Diagnostics lock poisoned".to_string(),
-                ))
+                return Err(NestGateError::Internal {
+                    message: "Diagnostics lock poisoned".to_string(),
+                    location: Some(file!().to_string()),
+                    debug_info: None,
+                    is_bug: false,
+                })
             }
         };
 
@@ -497,32 +511,16 @@ impl DiagnosticsManager {
         let diagnostics = match self.diagnostics.read() {
             Ok(d) => d.clone(),
             Err(_) => {
-                return Err(NestGateError::Internal(
-                    "Diagnostics lock poisoned".to_string(),
-                ))
+                return Err(NestGateError::Internal {
+                    message: "Diagnostics lock poisoned".to_string(),
+                    location: Some(file!().to_string()),
+                    debug_info: None,
+                    is_bug: false,
+                })
             }
         };
 
         Ok(diagnostics.into_iter().filter(|d| !d.resolved).collect())
-    }
-
-    /// Resolve a diagnostic by ID
-    pub fn resolve_diagnostic(&self, id: &str) -> Result<bool> {
-        let mut diagnostics = match self.diagnostics.write() {
-            Ok(d) => d,
-            Err(_) => {
-                return Err(NestGateError::Internal(
-                    "Diagnostics lock poisoned".to_string(),
-                ))
-            }
-        };
-
-        if let Some(diagnostic) = diagnostics.iter_mut().find(|d| d.id == id) {
-            diagnostic.resolve();
-            Ok(true)
-        } else {
-            Ok(false)
-        }
     }
 
     /// Add system metrics
@@ -532,9 +530,12 @@ impl DiagnosticsManager {
             let mut history = match self.metrics_history.write() {
                 Ok(h) => h,
                 Err(_) => {
-                    return Err(NestGateError::Internal(
-                        "Metrics history lock poisoned".to_string(),
-                    ))
+                    return Err(NestGateError::Internal {
+                        message: "Metrics history lock poisoned".to_string(),
+                        location: Some(file!().to_string()),
+                        debug_info: None,
+                        is_bug: false,
+                    })
                 }
             };
 
@@ -560,9 +561,12 @@ impl DiagnosticsManager {
         let history = match self.metrics_history.read() {
             Ok(h) => h,
             Err(_) => {
-                return Err(NestGateError::Internal(
-                    "Metrics history lock poisoned".to_string(),
-                ))
+                return Err(NestGateError::Internal {
+                    message: "Metrics history lock poisoned".to_string(),
+                    location: Some(file!().to_string()),
+                    debug_info: None,
+                    is_bug: false,
+                })
             }
         };
 
@@ -570,47 +574,33 @@ impl DiagnosticsManager {
     }
 
     /// Get metrics history
+    /// Get metrics history
     pub fn get_metrics_history(&self) -> Result<Vec<SystemMetrics>> {
         let history = match self.metrics_history.read() {
             Ok(h) => h.clone(),
             Err(_) => {
-                return Err(NestGateError::Internal(
-                    "Metrics history lock poisoned".to_string(),
-                ))
+                return Err(NestGateError::Internal {
+                    message: "Metrics history lock poisoned".to_string(),
+                    location: Some(file!().to_string()),
+                    debug_info: None,
+                    is_bug: false,
+                })
             }
         };
 
         Ok(history)
     }
-
-    /// Get metrics history for a time range
-    pub fn get_metrics_history_range(&self, duration: Duration) -> Result<Vec<SystemMetrics>> {
-        let history = match self.metrics_history.read() {
-            Ok(h) => h.clone(),
-            Err(_) => {
-                return Err(NestGateError::Internal(
-                    "Metrics history lock poisoned".to_string(),
-                ))
-            }
-        };
-
-        let now = SystemTime::now();
-        let cutoff = now - duration;
-
-        Ok(history
-            .into_iter()
-            .filter(|m| m.timestamp >= cutoff)
-            .collect())
-    }
-
     /// Update a service's status
     pub fn update_service_status(&self, name: &str, status: ServiceStatus) -> Result<()> {
         let mut services = match self.services.write() {
             Ok(s) => s,
             Err(_) => {
-                return Err(NestGateError::Internal(
-                    "Services lock poisoned".to_string(),
-                ))
+                return Err(NestGateError::Internal {
+                    message: "Services lock poisoned".to_string(),
+                    location: Some(file!().to_string()),
+                    debug_info: None,
+                    is_bug: false,
+                })
             }
         };
 
@@ -639,7 +629,13 @@ impl DiagnosticsManager {
 
             Ok(())
         } else {
-            Err(NestGateError::NotFound(format!("Service {name} not found")))
+            Err(NestGateError::Validation {
+                field: "service_name".to_string(),
+                message: format!("Service {name} not found"),
+                current_value: Some(name.to_string()),
+                expected: Some("registered service name".to_string()),
+                user_error: true,
+            })
         }
     }
 
@@ -648,9 +644,12 @@ impl DiagnosticsManager {
         let mut services = match self.services.write() {
             Ok(s) => s,
             Err(_) => {
-                return Err(NestGateError::Internal(
-                    "Services lock poisoned".to_string(),
-                ))
+                return Err(NestGateError::Internal {
+                    message: "Services lock poisoned".to_string(),
+                    location: Some(file!().to_string()),
+                    debug_info: None,
+                    is_bug: false,
+                })
             }
         };
 
@@ -659,28 +658,17 @@ impl DiagnosticsManager {
         Ok(())
     }
 
-    /// Get service information
-    pub fn get_service(&self, name: &str) -> Result<Option<ServiceInfo>> {
-        let services = match self.services.read() {
-            Ok(s) => s,
-            Err(_) => {
-                return Err(NestGateError::Internal(
-                    "Services lock poisoned".to_string(),
-                ))
-            }
-        };
-
-        Ok(services.get(name).cloned())
-    }
-
     /// Get all service information
     pub fn get_all_services(&self) -> Result<Vec<ServiceInfo>> {
         let services = match self.services.read() {
             Ok(s) => s.clone(),
             Err(_) => {
-                return Err(NestGateError::Internal(
-                    "Services lock poisoned".to_string(),
-                ))
+                return Err(NestGateError::Internal {
+                    message: "Services lock poisoned".to_string(),
+                    location: Some(file!().to_string()),
+                    debug_info: None,
+                    is_bug: false,
+                })
             }
         };
 
@@ -692,23 +680,30 @@ impl DiagnosticsManager {
         &self,
         name: &str,
         memory_usage: u64,
-        cpu_usage: f64,
+        _cpu_usage: f64,
     ) -> Result<()> {
         let mut services = match self.services.write() {
             Ok(s) => s,
             Err(_) => {
-                return Err(NestGateError::Internal(
-                    "Services lock poisoned".to_string(),
-                ))
+                return Err(NestGateError::Internal {
+                    message: "Services lock poisoned".to_string(),
+                    location: Some(file!().to_string()),
+                    debug_info: None,
+                    is_bug: false,
+                })
             }
         };
-
         if let Some(service) = services.get_mut(name) {
             service.memory_usage = Some(memory_usage);
-            service.cpu_usage = Some(cpu_usage);
             Ok(())
         } else {
-            Err(NestGateError::NotFound(format!("Service {name} not found")))
+            Err(NestGateError::Validation {
+                field: "service_name".to_string(),
+                message: "Service not found".to_string(),
+                current_value: Some(name.to_string()),
+                expected: Some("registered service name".to_string()),
+                user_error: true,
+            })
         }
     }
 

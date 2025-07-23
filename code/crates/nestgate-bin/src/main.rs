@@ -1,13 +1,15 @@
-/*!
+/**
  * NestGate Main Binary
  *
  * NestGate NAS system - runs as standalone service with optional Songbird enhancement
  * 🔧 STANDALONE: Full local functionality with direct network access
  * 🎼 SONGBIRD-ENHANCED: Extended functionality with orchestrated networking
  */
-
 use std::sync::Arc;
-use tracing::{info, warn};
+
+use tracing::info;
+use tracing::warn;
+// Removed unused tracing import
 
 // Core NestGate services
 use nestgate_core::config::Config as NestGateConfig;
@@ -194,7 +196,13 @@ async fn try_ecosystem_integration(
     info!("🎼 Attempting Songbird connection...");
 
     // Simulate ecosystem check (in real implementation, this would be actual network calls)
-    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    tokio::time::sleep(std::time::Duration::from_millis(
+        std::env::var("NESTGATE_STARTUP_DELAY_MS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(100),
+    ))
+    .await;
 
     // For now, return an error to demonstrate fallback
     // In real implementation, this would do actual Songbird/BearDog integration

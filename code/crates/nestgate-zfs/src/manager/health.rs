@@ -6,9 +6,11 @@
 use super::types::*;
 use crate::error::{Result, ZfsError};
 use std::time::SystemTime;
-use tracing::debug;
+// Removed unused tracing import
 
 use super::ZfsManager;
+use tracing::debug;
+use tracing::info;
 
 impl ZfsManager {
     /// Get comprehensive service status including AI and performance metrics
@@ -184,7 +186,7 @@ impl ZfsManager {
 
     /// Initialize ZFS system
     pub async fn initialize_system(&self) -> Result<()> {
-        use tracing::info;
+        // Removed unused tracing import
 
         info!("Initializing ZFS system");
 

@@ -5,10 +5,12 @@
 //! requirements, and policy rules.
 
 use std::time::SystemTime;
-use tracing::{debug, info};
+// Removed unused tracing import
 
 use super::types::{AutomationPolicy, DatasetMetadata};
 use nestgate_core::{Result, StorageTier};
+use tracing::debug;
+use tracing::info;
 
 /// Intelligent tier scoring system for dataset placement
 #[derive(Debug)]

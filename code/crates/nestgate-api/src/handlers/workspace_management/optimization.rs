@@ -5,7 +5,9 @@
 
 use axum::{extract::Json, extract::Path, http::StatusCode};
 use serde_json::{json, Value};
+
 use tracing::info;
+// Removed unused tracing import
 
 /// Optimize workspace storage (STORAGE FOCUSED)
 pub async fn optimize_workspace(

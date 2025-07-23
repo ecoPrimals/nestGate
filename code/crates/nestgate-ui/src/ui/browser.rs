@@ -1,3 +1,47 @@
+//! # NestGate File Browser UI Component
+//!
+//! **Comprehensive file system browsing and management interface**
+//!
+//! This module provides the file browser component for NestGate, offering intuitive
+//! file and folder navigation with ZFS-aware functionality and metadata display.
+//!
+//! ## Browser Features
+//!
+//! - **Multi-View Support**: List, grid, and thumbnail view modes
+//! - **Path Navigation**: Breadcrumb navigation and manual path entry
+//! - **File Operations**: Copy, move, delete, rename operations
+//! - **Search & Filter**: Real-time file search and filtering
+//! - **ZFS Integration**: Snapshot browsing and dataset navigation
+//! - **Metadata Display**: File properties, permissions, and ZFS attributes
+//!
+//! ## File Operations
+//!
+//! The browser supports comprehensive file management:
+//! - Drag-and-drop file operations
+//! - Multi-selection for batch operations
+//! - Context menus with relevant actions
+//! - Preview for common file types
+//! - Quick access to recent locations
+//!
+//! ## Performance
+//!
+//! - **Lazy Loading**: Only loads visible items for large directories
+//! - **Background Operations**: Non-blocking file operations
+//! - **Caching**: Intelligent metadata and thumbnail caching
+//! - **Responsive UI**: Smooth scrolling and interaction
+//!
+//! ## Example Usage
+//!
+//! ```rust
+//! impl NestGateApp {
+//!     pub fn render_file_browser(&mut self, ui: &mut egui::Ui) {
+//!         // Renders the complete file browser interface
+//!         ui.heading("📁 File Browser");
+//!         // ... implementation
+//!     }
+//! }
+//! ```
+
 use crate::types::*;
 use eframe::egui::{self, Color32, RichText, Stroke};
 use std::time::Duration;

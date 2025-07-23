@@ -9,11 +9,14 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::sync::RwLock;
-use tracing::{error, info, warn};
+// Removed unused tracing import
 
 use crate::types::StorageTier;
 use crate::ZfsManager;
 use nestgate_core::{NestGateError, Result};
+use tracing::error;
+use tracing::info;
+use tracing::warn;
 
 /// MCP mount request
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -95,15 +98,25 @@ impl ZfsMcpConfig {
     /// Validate the configuration settings
     pub fn validate(&self) -> Result<()> {
         if self.max_concurrent_operations == 0 {
-            return Err(NestGateError::InvalidInput(
-                "max_concurrent_operations must be greater than 0".to_string(),
-            ));
+            return Err(NestGateError::Validation {
+                field: "input".to_string(),
+                message: "max_concurrent_operations must be greater than 0".to_string(),
+                current_value: None,
+                expected: None,
+                user_error: true,
+            });
         }
+
         if self.max_concurrent_operations > 1000 {
-            return Err(NestGateError::InvalidInput(
-                "max_concurrent_operations must be less than or equal to 1000".to_string(),
-            ));
+            return Err(NestGateError::Validation {
+                field: "input".to_string(),
+                message: "max_concurrent_operations must be less than or equal to 1000".to_string(),
+                current_value: None,
+                expected: None,
+                user_error: true,
+            });
         }
+
         Ok(())
     }
 
@@ -210,9 +223,12 @@ impl ZfsMcpStorageProvider {
                     "Failed to create dataset for mount {}: {}",
                     request.mount_id, e
                 );
-                Err(nestgate_core::NestGateError::Internal(format!(
-                    "Dataset creation failed: {e}"
-                )))
+                Err(nestgate_core::NestGateError::Internal {
+                    message: format!("Dataset creation failed: {}", e),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                })
             }
         }
     }
@@ -234,16 +250,22 @@ impl ZfsMcpStorageProvider {
                 }
                 Err(e) => {
                     error!("Failed to destroy dataset for mount {}: {}", mount_id, e);
-                    Err(nestgate_core::NestGateError::Internal(format!(
-                        "Dataset destruction failed: {e}"
-                    )))
+                    Err(nestgate_core::NestGateError::Internal {
+                        message: format!("Dataset destruction failed: {}", e),
+                        location: Some(format!("{}:{}", file!(), line!())),
+                        debug_info: None,
+                        is_bug: false,
+                    })
                 }
             }
         } else {
             warn!("Mount not found: {}", mount_id);
-            Err(nestgate_core::NestGateError::NotFound(format!(
-                "Mount not found: {mount_id}"
-            )))
+            Err(nestgate_core::NestGateError::api_simple(
+                nestgate_core::ApiError::NotFound {
+                    resource_type: "Resource".to_string(),
+                    resource_id: format!("Mount not found: {}", mount_id),
+                },
+            ))
         }
     }
 
@@ -289,9 +311,12 @@ impl ZfsMcpStorageProvider {
                     "Failed to create dataset for volume {}: {}",
                     request.volume_id, e
                 );
-                Err(nestgate_core::NestGateError::Internal(format!(
-                    "Dataset creation failed: {e}"
-                )))
+                Err(nestgate_core::NestGateError::Internal {
+                    message: format!("Dataset creation failed: {}", e),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                })
             }
         }
     }
@@ -313,16 +338,22 @@ impl ZfsMcpStorageProvider {
                 }
                 Err(e) => {
                     error!("Failed to destroy dataset for volume {}: {}", volume_id, e);
-                    Err(nestgate_core::NestGateError::Internal(format!(
-                        "Dataset destruction failed: {e}"
-                    )))
+                    Err(nestgate_core::NestGateError::Internal {
+                        message: format!("Dataset destruction failed: {}", e),
+                        location: Some(format!("{}:{}", file!(), line!())),
+                        debug_info: None,
+                        is_bug: false,
+                    })
                 }
             }
         } else {
             warn!("Volume not found: {}", volume_id);
-            Err(nestgate_core::NestGateError::NotFound(format!(
-                "Volume not found: {volume_id}"
-            )))
+            Err(nestgate_core::NestGateError::api_simple(
+                nestgate_core::ApiError::NotFound {
+                    resource_type: "Resource".to_string(),
+                    resource_id: format!("Volume not found: {}", volume_id),
+                },
+            ))
         }
     }
 
@@ -335,9 +366,12 @@ impl ZfsMcpStorageProvider {
     /// Trigger AI optimization
     pub async fn trigger_ai_optimization(&self) -> Result<()> {
         if !self.config.enable_ai_optimization {
-            return Err(nestgate_core::NestGateError::Internal(
-                "AI optimization not enabled".to_string(),
-            ));
+            return Err(nestgate_core::NestGateError::Internal {
+                message: "AI optimization not enabled".to_string(),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
         info!("Triggering AI optimization for MCP resources");

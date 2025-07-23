@@ -1,12 +1,13 @@
-//! Hardware tuning types and configurations for NestGate
-//!
-//! This module provides hardware-agnostic tuning capabilities that can be
-//! used by primals to optimize system performance.
-
+// Removed unused error imports
+/// Hardware tuning types and configurations for NestGate
+///
+/// This module provides hardware-agnostic tuning capabilities that can be
+/// used by primals to optimize system performance.
 use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
+use std::time::SystemTime;
 
 /// Hardware-agnostic tuning engine
 #[derive(Debug, Clone, Serialize, Deserialize)]

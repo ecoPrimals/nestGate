@@ -5,10 +5,12 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{info, warn};
+// Removed unused tracing import
 
 use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager};
 use nestgate_core::{Result, StorageTier};
+use tracing::info;
+use tracing::warn;
 
 /// Manages tiered storage operations
 #[derive(Debug)]

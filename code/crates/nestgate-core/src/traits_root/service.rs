@@ -1,7 +1,7 @@
-//! Service Traits
-//!
-//! Core universal service trait and related types
-
+// Removed unused error imports
+/// Service Traits
+///
+/// Core universal service trait and related types
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -286,7 +286,7 @@ pub struct ServiceMetrics {
     pub p99_response_time_ms: f64,
 
     /// Current CPU usage (0.0 to 1.0)
-    pub cpu_usage: f64,
+    pub _cpu_usage: f64,
 
     /// Current memory usage in bytes
     pub memory_usage: u64,
@@ -321,7 +321,7 @@ impl Default for ServiceMetrics {
             avg_response_time_ms: 0.0,
             p95_response_time_ms: 0.0,
             p99_response_time_ms: 0.0,
-            cpu_usage: 0.0,
+            _cpu_usage: 0.0,
             memory_usage: 0,
             active_connections: 0,
             queue_depth: 0,

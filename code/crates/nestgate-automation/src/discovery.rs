@@ -5,11 +5,13 @@
 use std::collections::HashMap;
 use std::net::{Ipv4Addr, SocketAddr};
 use std::process::Command;
-use std::time::{Duration, SystemTime};
-use tracing::error;
+use std::time::SystemTime;
+// Removed unused tracing import
 
 use crate::types::*;
 use crate::Result;
+use std::time::Duration;
+use tracing::error;
 
 /// Configuration for ecosystem discovery
 #[derive(Debug, Clone)]

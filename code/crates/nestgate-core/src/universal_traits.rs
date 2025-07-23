@@ -1,15 +1,16 @@
-//! Universal Primal Traits
-//!
-//! This module defines universal traits that any primal can implement,
-//! eliminating hardcoded dependencies on specific primal implementations.
-
+/// Universal Primal Traits
+///
+/// This module defines universal traits that any primal can implement,
+/// eliminating hardcoded dependencies on specific primal implementations.
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
+// Removed unused tracing import
 use uuid::Uuid;
 
 use crate::Result;
+use tracing::info;
 
 /// Universal primal provider trait that any primal can implement
 #[async_trait]
@@ -368,7 +369,7 @@ pub struct Signature {
 // AI-related types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemMetrics {
-    pub cpu_usage: f64,
+    pub _cpu_usage: f64,
     pub memory_usage: f64,
     pub disk_usage: f64,
     pub network_io: f64,
@@ -541,7 +542,7 @@ pub struct WorkloadResult {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMetrics {
-    pub cpu_usage: f64,
+    pub _cpu_usage: f64,
     pub memory_usage: f64,
     pub disk_io: f64,
     pub network_io: f64,
@@ -713,9 +714,13 @@ impl CapabilityDiscoveryManager {
     ///
     /// Returns an error if the service discovery fails or if the RwLock is poisoned
     pub fn find_services_with_capability(&self, capability: &str) -> Result<Vec<ServiceInstance>> {
-        let services = self.discovered_services.read().map_err(|_| {
-            crate::NestGateError::Internal("Service discovery lock poisoned".to_string())
-        })?;
+        let services = match self.discovered_services.read() {
+            Ok(guard) => guard,
+            Err(poisoned) => {
+                tracing::warn!("Lock was poisoned, attempting recovery");
+                poisoned.into_inner()
+            }
+        };
         let matching_services = services
             .values()
             .filter(|service| service.capabilities.contains(&capability.to_string()))
@@ -732,7 +737,7 @@ impl CapabilityDiscoveryManager {
     /// Returns an error if discovery fails to start
     pub fn start_discovery(&self) -> Result<()> {
         // Log configured discovery methods
-        use tracing::info;
+        // Removed unused tracing import
         info!(
             "🔍 Starting service discovery with config: {:?}",
             self.config

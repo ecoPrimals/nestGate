@@ -1,8 +1,8 @@
-//! Security Provider Module
-//!
-//! Provides security provider functionality for NestGate core services.
-//! This module handles security provider creation and management.
-
+// Removed unused error imports
+/// Security Provider Module
+///
+/// Provides security provider functionality for NestGate core services.
+/// This module handles security provider creation and management.
 use crate::error::{NestGateError, Result};
 use crate::universal_traits::SecurityPrimalProvider;
 use crate::universal_traits::{AuthToken, Credentials, SecurityDecision, Signature};
@@ -10,6 +10,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Duration;
 
 /// Security provider configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -48,10 +49,19 @@ impl SecurityProvider {
 impl SecurityPrimalProvider for SecurityProvider {
     async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken> {
         // Basic implementation for testing
-        use std::time::{Duration, SystemTime};
+        use std::time::SystemTime;
 
         if credentials.username.is_empty() {
-            return Err(NestGateError::Authentication("Empty username".to_string()));
+            return Err(NestGateError::Security(Box::new(
+                crate::error::SecurityErrorData {
+                    error: crate::error::SecurityError::AuthenticationFailed {
+                        reason: "Empty username provided".to_string(),
+                        auth_method: "password".to_string(),
+                        user: None,
+                    },
+                    context: None,
+                },
+            )));
         }
 
         Ok(AuthToken {

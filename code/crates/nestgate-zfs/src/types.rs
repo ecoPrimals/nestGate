@@ -4,6 +4,8 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use std::time::Duration;
 use std::time::SystemTime;
 
 /// Compression algorithms supported by ZFS
@@ -302,7 +304,7 @@ pub struct AdvancedFeatureReport {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemInfo {
     /// CPU usage percentage
-    pub cpu_usage: f64,
+    pub _cpu_usage: f64,
     /// Memory usage percentage
     pub memory_usage: f64,
     /// Disk usage percentage
@@ -328,7 +330,7 @@ pub struct SystemInfo {
 impl Default for SystemInfo {
     fn default() -> Self {
         Self {
-            cpu_usage: 0.0,
+            _cpu_usage: 0.0,
             memory_usage: 0.0,
             disk_usage: 0.0,
             network_io: 0.0,
@@ -340,7 +342,7 @@ impl Default for SystemInfo {
             fragmentation: 0.0,
             timestamp: SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
-                .unwrap()
+                .unwrap_or_else(|_| Duration::from_secs(0))
                 .as_secs(),
         }
     }

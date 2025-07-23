@@ -5,6 +5,9 @@
 //! regulatory compliance (GDPR, HIPAA, SOX, etc.).
 
 use axum::{
+use std::time::Duration;
+use tracing::info;
+use tracing::warn;
     extract::{Path, Query, State},
     http::StatusCode,
     response::Json,
@@ -15,7 +18,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{info, warn, error};
+// Removed unused tracing import
 use uuid::Uuid;
 use chrono::{DateTime, Utc, Duration};
 

@@ -14,9 +14,9 @@ use std::sync::{
     atomic::{AtomicBool, AtomicU64, Ordering},
     Arc,
 };
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use tokio::sync::{RwLock, Semaphore};
-use tokio::time::sleep;
+use tokio::time::{sleep, Duration};
 
 use nestgate_api::Config as ApiConfig;
 use nestgate_automation::discovery::EcosystemDiscovery;

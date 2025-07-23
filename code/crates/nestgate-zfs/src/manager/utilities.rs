@@ -5,9 +5,11 @@
 
 use super::types::CapacityInfo;
 use crate::error::{Result, ZfsError};
-use tracing::{debug, warn};
+// Removed unused tracing import
 
 use super::ZfsManager;
+use tracing::debug;
+use tracing::warn;
 
 impl ZfsManager {
     /// Calculate system utilization as percentage

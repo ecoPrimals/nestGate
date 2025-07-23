@@ -4,12 +4,12 @@
 //! across the test infrastructure to eliminate duplication and provide consistent behavior.
 
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
+use std::time::{ SystemTime};
 use tokio::sync::RwLock;
-use tracing::{debug, info, warn};
+// Removed unused tracing import
 use uuid::Uuid;
 
 use nestgate_core::{NestGateError, Result, StorageTier, UniversalService};
@@ -469,7 +469,12 @@ pub mod helpers {
             tokio::time::sleep(check_interval).await;
         }
 
-        Err(NestGateError::Internal("Condition timeout".to_string()))
+        Err(NestGateError::Internal {
+            message: "Condition timeout".to_string(),
+            location: Some(file!().to_string()),
+            debug_info: None,
+            is_bug: false,
+        })
     }
 }
 

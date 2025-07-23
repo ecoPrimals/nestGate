@@ -3,11 +3,12 @@
 //! Contains all dataset-related operations for the native ZFS backend.
 
 use std::collections::HashMap;
-use tracing::info;
+// Removed unused tracing import
 
 use crate::handlers::zfs::universal_zfs::types::{
     DatasetConfig, DatasetInfo, DatasetType, UniversalZfsError, UniversalZfsResult,
 };
+use tracing::info;
 
 use super::core::NativeZfsService;
 

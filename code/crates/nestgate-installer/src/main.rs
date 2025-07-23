@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use tracing::info;
+// Removed unused tracing import
 
 mod config;
 mod download;

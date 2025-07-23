@@ -4,12 +4,13 @@
 
 use std::collections::HashMap;
 use std::time::SystemTime;
-use tracing::info;
+// Removed unused tracing import
 
 use crate::handlers::zfs::universal_zfs::types::{
     PoolCapacity, PoolConfig, PoolHealth, PoolInfo, PoolState, ScrubStatus, UniversalZfsError,
     UniversalZfsResult,
 };
+use tracing::info;
 
 use super::core::NativeZfsService;
 

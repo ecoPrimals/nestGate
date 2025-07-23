@@ -1,8 +1,8 @@
-//! Universal Response Utilities
-//!
-//! Centralized response creation and handling utilities to eliminate code duplication
-//! across all NestGate crates. Provides consistent response formats for APIs.
-
+// Removed unused error imports
+/// Universal Response Utilities
+///
+/// Centralized response creation and handling utilities to eliminate code duplication
+/// across all NestGate crates. Provides consistent response formats for APIs.
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Json},

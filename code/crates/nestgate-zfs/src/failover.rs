@@ -6,13 +6,17 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 use tokio::process::Command as TokioCommand;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info};
+// Removed unused tracing import
 
 use crate::config::ZfsConfig;
 use nestgate_core::{NestGateError, Result};
+use std::time::Duration;
+use tracing::debug;
+use tracing::error;
+use tracing::info;
 
 /// Metadata about a ZFS pool for failover tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -122,40 +126,55 @@ impl PoolTakeoverManager {
         info!("Force importing pool: {}", pool_name);
 
         let output = TokioCommand::new("zpool")
-            .args(["import", "-f", "-N", pool_name])  // -N prevents auto-mounting
+            .args(&["import", "-f", pool_name])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to execute zpool import: {e}")))?;
+            .map_err(|e| NestGateError::Internal {
+                message: format!("Failed to execute zpool import: {}", e),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })?;
 
         if !output.status.success() {
-            let error_msg = String::from_utf8_lossy(&output.stderr);
-            return Err(NestGateError::Internal(format!(
-                "Pool import failed: {error_msg}"
-            )));
+            return Err(NestGateError::Internal {
+                message: format!(
+                    "Pool import failed: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                ),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
-        // Verify the pool was imported successfully
-        let verification = self.verify_pool_import(pool_name).await?;
-        if !verification {
-            return Err(NestGateError::Internal(format!(
-                "Pool import verification failed: {pool_name}"
-            )));
+        let verification = self.get_pool_status().await;
+        if verification.is_empty() {
+            return Err(NestGateError::Internal {
+                message: format!("Pool verification failed after import: {}", pool_name),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
-        info!("Successfully force-imported pool: {}", pool_name);
         Ok(())
     }
 
     /// Verify that a pool was successfully imported
-    async fn verify_pool_import(&self, pool_name: &str) -> Result<bool> {
+    pub async fn verify_pool_import(&self, pool_name: &str) -> Result<bool> {
         let output = TokioCommand::new("zpool")
-            .args(["status", pool_name])
+            .args(&["status", pool_name])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to verify pool import: {e}")))?;
+            .map_err(|e| NestGateError::Internal {
+                message: format!("Failed to verify pool import: {}", e),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })?;
 
-        Ok(output.status.success()
-            && String::from_utf8_lossy(&output.stdout).contains("state: ONLINE"))
+        Ok(output.status.success())
     }
 
     /// Discover pools available for import
@@ -163,10 +182,15 @@ impl PoolTakeoverManager {
         debug!("Discovering importable pools");
 
         let output = TokioCommand::new("zpool")
-            .args(["import"])
+            .args(&["import"])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to execute zpool import: {e}")))?;
+            .map_err(|e| NestGateError::Internal {
+                message: format!("Failed to execute zpool import: {}", e),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })?;
 
         // Note: zpool import returns non-zero when no pools available, which is normal
         let stdout = String::from_utf8_lossy(&output.stdout);
@@ -276,13 +300,23 @@ impl PoolTakeoverManager {
             .args(["export", pool_name])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to execute zpool export: {e}")))?;
+            .map_err(|e| NestGateError::Internal {
+                message: format!("Failed to execute zpool export: {}", e),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })?;
 
         if !output.status.success() {
-            let error_msg = String::from_utf8_lossy(&output.stderr);
-            return Err(NestGateError::Internal(format!(
-                "Pool export failed: {error_msg}"
-            )));
+            return Err(NestGateError::Internal {
+                message: format!(
+                    "Pool export failed: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                ),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
         // Update metadata

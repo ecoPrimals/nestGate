@@ -11,7 +11,10 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::{error, info, warn};
+use tracing::error;
+use tracing::info;
+use tracing::warn;
+// Removed unused tracing import
 
 /// BYOB storage manager
 pub struct ByobManager {

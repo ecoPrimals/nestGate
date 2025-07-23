@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use tokio::net::TcpListener;
 use tracing::info;
+// Removed unused tracing import
 
 /// NAS server configuration
 #[derive(Debug, Clone)]
@@ -83,7 +84,12 @@ impl NasServer {
         if !self.config.share_root.exists() {
             tokio::fs::create_dir_all(&self.config.share_root)
                 .await
-                .map_err(|e| nestgate_core::NestGateError::Io(e.to_string()))?;
+                .map_err(|e| nestgate_core::NestGateError::Io {
+                    operation: "operation".to_string(),
+                    error_message: e.to_string(),
+                    resource: None,
+                    retryable: true,
+                })?;
             info!(
                 "📁 Created share root directory: {:?}",
                 self.config.share_root
@@ -147,9 +153,14 @@ impl NasServer {
 
         // Validate share path exists
         if !share.path.exists() {
-            tokio::fs::create_dir_all(&share.path)
-                .await
-                .map_err(|e| nestgate_core::NestGateError::Io(e.to_string()))?;
+            tokio::fs::create_dir_all(&share.path).await.map_err(|e| {
+                nestgate_core::NestGateError::Io {
+                    operation: "operation".to_string(),
+                    error_message: e.to_string(),
+                    resource: None,
+                    retryable: true,
+                }
+            })?;
             info!("📁 Created share directory: {:?}", share.path);
         }
 
@@ -197,11 +208,14 @@ impl SmbServer {
 
     async fn start(&mut self) -> nestgate_core::Result<()> {
         let bind_addr = format!("{}:{}", self.config.bind_address, self.config.smb_port);
-        self.listener = Some(
-            TcpListener::bind(&bind_addr)
-                .await
-                .map_err(|e| nestgate_core::NestGateError::Io(e.to_string()))?,
-        );
+        self.listener = Some(TcpListener::bind(&bind_addr).await.map_err(|e| {
+            nestgate_core::NestGateError::Io {
+                operation: "operation".to_string(),
+                error_message: e.to_string(),
+                resource: None,
+                retryable: true,
+            }
+        })?);
         info!("📁 SMB server listening on {}", bind_addr);
 
         // Start accepting connections in background
@@ -260,11 +274,14 @@ impl HttpServer {
 
     async fn start(&mut self) -> nestgate_core::Result<()> {
         let bind_addr = format!("{}:{}", self.config.bind_address, self.config.http_port);
-        self.listener = Some(
-            TcpListener::bind(&bind_addr)
-                .await
-                .map_err(|e| nestgate_core::NestGateError::Io(e.to_string()))?,
-        );
+        self.listener = Some(TcpListener::bind(&bind_addr).await.map_err(|e| {
+            nestgate_core::NestGateError::Io {
+                operation: "operation".to_string(),
+                error_message: e.to_string(),
+                resource: None,
+                retryable: true,
+            }
+        })?);
         info!("🌐 HTTP server listening on {}", bind_addr);
 
         // Start HTTP service in background

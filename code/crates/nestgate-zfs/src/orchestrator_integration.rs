@@ -12,12 +12,16 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tracing::{debug, info, warn};
+// Removed unused tracing import
 use uuid::Uuid;
 
 // use nestgate::orchestration_integration::{NestGateServiceInfo, NestGateHealth};  // Commented out until available
 
 use crate::error::ZfsError;
+
+use tracing::debug;
+use tracing::info;
+use tracing::warn;
 
 /// Service registration information
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,3 +1,4 @@
+use crate::error::{NetworkError};
 use std::path::PathBuf;
 use std::marker::PhantomData;
 use async_trait::async_trait;
@@ -5,6 +6,7 @@ use serde::de::DeserializeOwned;
 
 use crate::errors::Result;
 use crate::traits::config::ConfigProvider;
+use serde::Deserialize;
 
 #[derive(Debug, Clone)]
 pub enum ConfigFormat {

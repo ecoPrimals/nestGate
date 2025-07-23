@@ -39,3 +39,16 @@ impl Default for MetricsConfig {
         }
     }
 }
+
+impl MetricsConfig {
+    /// Create production-optimized metrics configuration
+    pub fn production() -> Self {
+        Self {
+            enabled: true,
+            collection_interval_seconds: 30,
+            retention_days: 90,
+            storage_path: Some(PathBuf::from("/var/lib/nestgate/metrics")),
+            export_format: MetricsFormat::Prometheus,
+        }
+    }
+}

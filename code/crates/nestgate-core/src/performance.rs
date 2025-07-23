@@ -1,13 +1,14 @@
-//! Performance optimization module for NestGate Core
-//!
-//! This module provides optimized patterns and implementations for
-//! performance-critical paths in storage operations.
-
+// Removed unused error imports
+/// Performance optimization module for NestGate Core
+///
+/// This module provides optimized patterns and implementations for
+/// performance-critical paths in storage operations.
 use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
+use std::time::Instant;
 use tokio::sync::{RwLock, Semaphore};
 
 /// High-performance storage operation coordinator
@@ -41,7 +42,12 @@ impl PerformanceOptimizedCoordinator {
     ) -> Result<OperationResult> {
         // Acquire semaphore permit to limit concurrency
         let _permit = self.operation_semaphore.acquire().await.map_err(|_| {
-            crate::NestGateError::Internal("Failed to acquire operation permit".to_string())
+            crate::NestGateError::Internal {
+                message: "Failed to acquire operation permit".to_string(),
+                location: Some(file!().to_string()),
+                debug_info: None,
+                is_bug: false,
+            }
         })?;
 
         let start = Instant::now();

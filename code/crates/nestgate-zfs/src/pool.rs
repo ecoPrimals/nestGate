@@ -7,10 +7,13 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::process::Command as TokioCommand;
-use tracing::{debug, info, warn};
+// Removed unused tracing import
 
 use crate::{config::ZfsConfig, error::PoolError};
 use nestgate_core::{NestGateError, Result};
+use tracing::debug;
+use tracing::info;
+use tracing::warn;
 
 /// ZFS Pool Manager - handles pool discovery and management
 #[derive(Debug)]
@@ -115,13 +118,21 @@ impl ZfsPoolManager {
             .args(["list", "-H", "-o", "name,size,alloc,free,cap,health"])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to execute zpool list: {e}")))?;
+            .map_err(|e| NestGateError::Internal {
+                message: format!("Failed to execute zpool list: {}", e),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })?;
 
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
-            return Err(NestGateError::Internal(format!(
-                "zpool list failed: {error_msg}"
-            )));
+            return Err(NestGateError::Internal {
+                message: format!("zpool list failed: {}", error_msg),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);

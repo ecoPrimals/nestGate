@@ -1,4 +1,71 @@
-// Unit tests for nestgate-nas functionality
+//! # NestGate NAS Unit Tests
+//!
+//! **Comprehensive unit tests for the NestGate Network Attached Storage functionality**
+//!
+//! This module contains unit tests for all NAS-specific components, validating
+//! network sharing protocols, file system operations, access control, and
+//! storage management functionality.
+//!
+//! ## Test Coverage Areas
+//!
+//! - **Network Protocols**: SMB/CIFS, NFS, and FTP protocol implementations
+//! - **File System Operations**: File I/O, directory operations, and metadata handling
+//! - **Access Control**: User authentication, permissions, and sharing policies
+//! - **Storage Management**: Volume management, quota enforcement, and space allocation
+//! - **Performance**: Throughput testing, concurrent access, and resource utilization
+//! - **Reliability**: Error handling, recovery mechanisms, and data integrity
+//!
+//! ## Protocol Testing
+//!
+//! Validates network sharing protocols:
+//! - **SMB/CIFS**: Windows-compatible file sharing
+//! - **NFS**: Unix/Linux network file system
+//! - **FTP/SFTP**: File transfer protocols
+//! - **WebDAV**: Web-based distributed authoring
+//! - **HTTP REST**: API-based file access
+//!
+//! ## Security Testing
+//!
+//! Comprehensive security validation:
+//! - Authentication mechanisms and token management
+//! - Authorization checks and access control lists
+//! - Encryption of data in transit and at rest
+//! - Audit logging and security event tracking
+//! - Vulnerability prevention and input sanitization
+//!
+//! ## Performance Characteristics
+//!
+//! Tests validate performance requirements:
+//! - Concurrent user handling capacity
+//! - File transfer throughput optimization  
+//! - Memory usage and resource management
+//! - Network protocol efficiency
+//! - Storage backend integration performance
+//!
+//! ## Integration Points
+//!
+//! Tests cover integration with:
+//! - ZFS storage backend
+//! - Network layer components
+//! - User authentication systems
+//! - System monitoring and logging
+//! - Configuration management
+//!
+//! ## Example Test Structure
+//!
+//! ```rust
+//! #[test]
+//! fn test_smb_share_creation() {
+//!     let nas_service = create_test_nas();
+//!     let share_config = ShareConfig::new("test_share", "/data/test");
+//!     let result = nas_service.create_smb_share(share_config);
+//!     assert!(result.is_ok());
+//!     assert!(nas_service.share_exists("test_share"));
+//! }
+//! ```
+
+use serde::Deserialize;
+use serde::Serialize;
 use std::path::PathBuf;
 
 #[cfg(test)]

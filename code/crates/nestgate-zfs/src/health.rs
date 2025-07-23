@@ -10,10 +10,13 @@ use std::time::SystemTime;
 
 use serde::{Deserialize, Serialize};
 
-use tracing::{debug, info};
+// Removed unused tracing import
 
 use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager};
 use nestgate_core::Result;
+
+use tracing::debug;
+use tracing::info;
 
 /// Health status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -119,8 +122,9 @@ impl ZfsHealthMonitor {
 
         // Start pool health monitoring task
         let pool_monitor_handle = tokio::spawn(async move {
-            let mut interval =
-                tokio::time::interval(tokio::time::Duration::from_secs(config.monitoring_interval));
+            let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(
+                config.health_monitoring.check_interval_seconds,
+            ));
 
             loop {
                 interval.tick().await;
@@ -162,7 +166,9 @@ impl ZfsHealthMonitor {
 
         let dataset_monitor_handle = tokio::spawn(async move {
             let mut interval = tokio::time::interval(
-                tokio::time::Duration::from_secs(dataset_config.monitoring_interval * 2), // Less frequent
+                tokio::time::Duration::from_secs(
+                    dataset_config.health_monitoring.check_interval_seconds * 2,
+                ), // Less frequent
             );
 
             loop {

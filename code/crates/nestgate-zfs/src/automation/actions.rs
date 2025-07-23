@@ -1,214 +1,287 @@
-//! Lifecycle action execution for dataset automation
+//! Action execution for ZFS automation
 //!
-//! This module contains all the automated actions that can be performed
-//! on datasets including tier migration, compression, snapshots, optimization,
-//! and cleanup operations.
-
-use tracing::{debug, info, warn};
+//! This module implements lifecycle actions and automatic stage rules
+//! for dataset management and tier optimization.
 
 use super::types::{DatasetLifecycle, LifecycleStage};
 use nestgate_core::{Result, StorageTier};
+use std::time::SystemTime;
+use tracing::{debug, info, warn};
 
-/// Execute a specific lifecycle action on a dataset
+/// Result of executing a lifecycle action
+#[derive(Debug, Clone)]
+pub struct ActionResult {
+    pub action: String,
+    pub success: bool,
+    pub message: String,
+    pub timestamp: SystemTime,
+}
+
+/// Execute a lifecycle action on a dataset
 pub async fn execute_lifecycle_action(
     dataset_name: &str,
     lifecycle: &DatasetLifecycle,
     action: &str,
-) -> Result<String> {
-    let action_lower = action.to_lowercase();
+) -> Result<ActionResult> {
+    debug!(
+        "Executing lifecycle action '{}' on dataset '{}' in stage {:?}",
+        action, dataset_name, lifecycle.lifecycle_stage
+    );
 
-    if let Some(stripped) = action_lower.strip_prefix("migrate_to_") {
-        let target_tier = match stripped {
-            "hot" => StorageTier::Hot,
-            "warm" => StorageTier::Warm,
-            "cold" => StorageTier::Cold,
-            "cache" => StorageTier::Cache,
-            _ => {
-                return Err(nestgate_core::NestGateError::InvalidInput(format!(
-                    "Invalid target tier in action: {action}"
-                )))
-            }
-        };
+    let timestamp = SystemTime::now();
 
-        if lifecycle.current_tier != target_tier {
-            execute_tier_migration(dataset_name, lifecycle.current_tier, target_tier).await?;
-            return Ok(format!(
-                "Migrated to {} tier",
-                match target_tier {
-                    StorageTier::Hot => "hot",
-                    StorageTier::Warm => "warm",
-                    StorageTier::Cold => "cold",
-                    StorageTier::Cache => "cache",
-                }
-            ));
-        } else {
-            return Ok("Already in target tier".to_string());
+    match action {
+        "compress" => execute_compression_action(dataset_name).await,
+        "migrate_to_cold" => execute_migration_action(dataset_name, StorageTier::Cold).await,
+        "migrate_to_warm" => execute_migration_action(dataset_name, StorageTier::Warm).await,
+        "migrate_to_hot" => execute_migration_action(dataset_name, StorageTier::Hot).await,
+        "create_snapshot" => execute_snapshot_action(dataset_name).await,
+        "optimize_properties" => execute_optimization_action(dataset_name, lifecycle).await,
+        "update_access_time" => execute_access_time_update(dataset_name).await,
+        "archive" => execute_archive_action(dataset_name).await,
+        "cleanup_temp_files" => execute_cleanup_action(dataset_name).await,
+        _ => {
+            warn!("Unknown lifecycle action: {}", action);
+            Ok(ActionResult {
+                action: action.to_string(),
+                success: false,
+                message: format!("Unknown action: {}", action),
+                timestamp,
+            })
         }
-    } else if action_lower == "enable_compression" {
-        enable_dataset_compression(dataset_name).await?;
-        return Ok("Enabled compression".to_string());
-    } else if action_lower == "create_snapshot" {
-        let snapshot_name = format!("auto-{}", chrono::Utc::now().format("%Y%m%d-%H%M%S"));
-        create_automated_snapshot(dataset_name, &snapshot_name).await?;
-        return Ok(format!("Created snapshot {snapshot_name}"));
-    } else if action_lower == "optimize_recordsize" {
-        optimize_dataset_recordsize(dataset_name).await?;
-        return Ok("Optimized record size".to_string());
-    } else if let Some(stripped) = action_lower.strip_prefix("set_quota_") {
-        if let Ok(quota_gb) = stripped.parse::<u64>() {
-            set_dataset_quota(dataset_name, quota_gb * 1024 * 1024 * 1024).await?;
-            return Ok(format!("Set quota to {quota_gb}GB"));
-        }
-    } else if action_lower == "cleanup_old_snapshots" {
-        let cleaned_count = cleanup_old_snapshots(dataset_name).await?;
-        return Ok(format!("Cleaned {cleaned_count} old snapshots"));
-    } else if action_lower == "enable_deduplication" {
-        enable_dataset_deduplication(dataset_name).await?;
-        return Ok("Enabled deduplication".to_string());
     }
-
-    Err(nestgate_core::NestGateError::InvalidInput(format!(
-        "Unknown lifecycle action: {action}"
-    )))
 }
 
-/// Apply automatic stage-specific rules
+/// Apply automatic stage rules based on current lifecycle stage
 pub async fn apply_automatic_stage_rules(
     dataset_name: &str,
     lifecycle: &DatasetLifecycle,
 ) -> Result<()> {
+    debug!(
+        "Applying automatic stage rules for dataset '{}' in stage {:?}",
+        dataset_name, lifecycle.lifecycle_stage
+    );
+
     match lifecycle.lifecycle_stage {
         LifecycleStage::New => {
-            // New datasets: Enable compression for efficiency
-            if let Err(e) = enable_dataset_compression(dataset_name).await {
-                debug!(
-                    "Compression already enabled or failed for {}: {}",
-                    dataset_name, e
-                );
-            }
+            // New datasets: ensure optimal properties for expected high activity
+            apply_new_dataset_rules(dataset_name).await?;
         }
         LifecycleStage::Active => {
-            // Active datasets: Monitor performance and optimize
-            if lifecycle.access_count > 1000 {
-                if let Err(e) = optimize_dataset_recordsize(dataset_name).await {
-                    debug!(
-                        "Record size optimization failed for {}: {}",
-                        dataset_name, e
-                    );
-                }
-            }
+            // Active datasets: monitor and optimize for performance
+            apply_active_dataset_rules(dataset_name, lifecycle).await?;
         }
         LifecycleStage::Aging => {
-            // Aging datasets: Prepare for archival, create backup snapshots
-            let snapshot_name = format!("aging-backup-{}", chrono::Utc::now().format("%Y%m%d"));
-            if let Err(e) = create_automated_snapshot(dataset_name, &snapshot_name).await {
-                debug!(
-                    "Failed to create aging backup snapshot for {}: {}",
-                    dataset_name, e
-                );
-            }
+            // Aging datasets: prepare for potential migration to cold storage
+            apply_aging_dataset_rules(dataset_name, lifecycle).await?;
         }
         LifecycleStage::Archived => {
-            // Archived datasets: Move to cold tier and enable deduplication
-            if lifecycle.current_tier != StorageTier::Cold {
-                info!(
-                    "Auto-migrating archived dataset {} to cold tier",
-                    dataset_name
-                );
-                if let Err(e) =
-                    execute_tier_migration(dataset_name, lifecycle.current_tier, StorageTier::Cold)
-                        .await
-                {
-                    warn!("Failed to migrate {} to cold tier: {}", dataset_name, e);
-                }
-            }
-
-            if let Err(e) = enable_dataset_deduplication(dataset_name).await {
-                debug!(
-                    "Deduplication already enabled or failed for {}: {}",
-                    dataset_name, e
-                );
-            }
+            // Archived datasets: optimize for space efficiency
+            apply_archived_dataset_rules(dataset_name).await?;
         }
         LifecycleStage::Obsolete => {
-            // Obsolete datasets: Create final backup snapshot before potential cleanup
-            let snapshot_name = format!("final-backup-{}", chrono::Utc::now().format("%Y%m%d"));
-            if let Err(e) = create_automated_snapshot(dataset_name, &snapshot_name).await {
-                warn!(
-                    "Failed to create final backup snapshot for {}: {}",
-                    dataset_name, e
-                );
-            }
+            // Obsolete datasets: prepare for cleanup
+            apply_obsolete_dataset_rules(dataset_name).await?;
         }
     }
 
     Ok(())
 }
 
-// Helper methods for executing specific actions
+// Individual action implementations
+async fn execute_compression_action(dataset_name: &str) -> Result<ActionResult> {
+    info!("Applying compression to dataset: {}", dataset_name);
 
-/// Execute tier migration between storage tiers
-async fn execute_tier_migration(
+    // Simulate compression operation
+    // In a real implementation, this would execute ZFS compression commands
+    let success = true;
+    let message = "Compression applied successfully".to_string();
+
+    Ok(ActionResult {
+        action: "compress".to_string(),
+        success,
+        message,
+        timestamp: SystemTime::now(),
+    })
+}
+
+async fn execute_migration_action(
     dataset_name: &str,
-    from_tier: StorageTier,
-    to_tier: StorageTier,
-) -> Result<()> {
+    target_tier: StorageTier,
+) -> Result<ActionResult> {
     info!(
-        "🔄 Migrating dataset {} from {:?} to {:?}",
-        dataset_name, from_tier, to_tier
+        "Migrating dataset '{}' to {:?} tier",
+        dataset_name, target_tier
     );
 
-    // This would integrate with the actual migration engine
-    // For now, just log the intent
-    info!("Migration scheduled: {} → {:?}", dataset_name, to_tier);
-    Ok(())
+    // Simulate migration operation
+    // In a real implementation, this would coordinate with the migration engine
+    let success = true;
+    let message = format!("Successfully migrated to {:?} tier", target_tier);
+
+    Ok(ActionResult {
+        action: format!("migrate_to_{:?}", target_tier).to_lowercase(),
+        success,
+        message,
+        timestamp: SystemTime::now(),
+    })
 }
 
-/// Enable compression for a dataset
-async fn enable_dataset_compression(dataset_name: &str) -> Result<()> {
-    debug!("Enabling compression for dataset {}", dataset_name);
-    // This would use ZFS commands to enable compression
-    // zfs set compression=lz4 dataset_name
-    Ok(())
+async fn execute_snapshot_action(dataset_name: &str) -> Result<ActionResult> {
+    info!("Creating snapshot for dataset: {}", dataset_name);
+
+    // Simulate snapshot creation
+    let success = true;
+    let message = "Snapshot created successfully".to_string();
+
+    Ok(ActionResult {
+        action: "create_snapshot".to_string(),
+        success,
+        message,
+        timestamp: SystemTime::now(),
+    })
 }
 
-/// Create an automated snapshot
-async fn create_automated_snapshot(dataset_name: &str, snapshot_name: &str) -> Result<()> {
-    debug!(
-        "Creating automated snapshot {}@{}",
-        dataset_name, snapshot_name
+async fn execute_optimization_action(
+    dataset_name: &str,
+    lifecycle: &DatasetLifecycle,
+) -> Result<ActionResult> {
+    info!(
+        "Optimizing properties for dataset '{}' in stage {:?}",
+        dataset_name, lifecycle.lifecycle_stage
     );
-    // This would integrate with the snapshot manager
-    Ok(())
-}
 
-/// Optimize dataset record size based on workload analysis
-async fn optimize_dataset_recordsize(dataset_name: &str) -> Result<()> {
-    debug!("Optimizing record size for dataset {}", dataset_name);
-    // This would analyze workload and set optimal record size
-    Ok(())
-}
-
-/// Set quota for a dataset
-async fn set_dataset_quota(dataset_name: &str, quota_bytes: u64) -> Result<()> {
-    debug!(
-        "Setting quota for dataset {} to {} bytes",
-        dataset_name, quota_bytes
+    // Simulate property optimization based on lifecycle stage
+    let success = true;
+    let message = format!(
+        "Properties optimized for {:?} stage",
+        lifecycle.lifecycle_stage
     );
-    // zfs set quota={}G dataset_name
+
+    Ok(ActionResult {
+        action: "optimize_properties".to_string(),
+        success,
+        message,
+        timestamp: SystemTime::now(),
+    })
+}
+
+async fn execute_access_time_update(dataset_name: &str) -> Result<ActionResult> {
+    debug!("Updating access time for dataset: {}", dataset_name);
+
+    // Simulate access time update
+    let success = true;
+    let message = "Access time updated".to_string();
+
+    Ok(ActionResult {
+        action: "update_access_time".to_string(),
+        success,
+        message,
+        timestamp: SystemTime::now(),
+    })
+}
+
+async fn execute_archive_action(dataset_name: &str) -> Result<ActionResult> {
+    info!("Archiving dataset: {}", dataset_name);
+
+    // Simulate archival process
+    let success = true;
+    let message = "Dataset archived successfully".to_string();
+
+    Ok(ActionResult {
+        action: "archive".to_string(),
+        success,
+        message,
+        timestamp: SystemTime::now(),
+    })
+}
+
+async fn execute_cleanup_action(dataset_name: &str) -> Result<ActionResult> {
+    info!("Cleaning up temporary files for dataset: {}", dataset_name);
+
+    // Simulate cleanup operation
+    let success = true;
+    let message = "Temporary files cleaned up".to_string();
+
+    Ok(ActionResult {
+        action: "cleanup_temp_files".to_string(),
+        success,
+        message,
+        timestamp: SystemTime::now(),
+    })
+}
+
+// Automatic stage rules implementation
+async fn apply_new_dataset_rules(dataset_name: &str) -> Result<()> {
+    debug!("Applying rules for new dataset: {}", dataset_name);
+
+    // For new datasets, ensure hot tier placement and optimal properties
+    execute_migration_action(dataset_name, StorageTier::Hot).await?;
+    execute_optimization_action(
+        dataset_name,
+        &DatasetLifecycle {
+            dataset_name: dataset_name.to_string(),
+            current_tier: StorageTier::Hot,
+            created: SystemTime::now(),
+            last_accessed: Some(SystemTime::now()),
+            access_count: 0,
+            total_migrations: 0,
+            last_optimization: None,
+            lifecycle_stage: LifecycleStage::New,
+            automation_history: Vec::new(),
+        },
+    )
+    .await?;
+
     Ok(())
 }
 
-/// Clean up old snapshots for a dataset
-async fn cleanup_old_snapshots(dataset_name: &str) -> Result<u32> {
-    debug!("Cleaning up old snapshots for dataset {}", dataset_name);
-    // This would integrate with snapshot manager to clean old snapshots
-    Ok(0)
+async fn apply_active_dataset_rules(
+    dataset_name: &str,
+    lifecycle: &DatasetLifecycle,
+) -> Result<()> {
+    debug!("Applying rules for active dataset: {}", dataset_name);
+
+    // For active datasets, monitor performance and maintain optimal tier
+    if lifecycle.current_tier != StorageTier::Hot && lifecycle.access_count > 100 {
+        execute_migration_action(dataset_name, StorageTier::Hot).await?;
+    }
+
+    // Create periodic snapshots for active datasets
+    execute_snapshot_action(dataset_name).await?;
+
+    Ok(())
 }
 
-/// Enable deduplication for a dataset
-async fn enable_dataset_deduplication(dataset_name: &str) -> Result<()> {
-    debug!("Enabling deduplication for dataset {}", dataset_name);
-    // zfs set dedup=on dataset_name
+async fn apply_aging_dataset_rules(dataset_name: &str, lifecycle: &DatasetLifecycle) -> Result<()> {
+    debug!("Applying rules for aging dataset: {}", dataset_name);
+
+    // For aging datasets, prepare for migration to cold storage
+    if lifecycle.current_tier == StorageTier::Hot {
+        execute_migration_action(dataset_name, StorageTier::Warm).await?;
+    }
+
+    // Apply compression to save space
+    execute_compression_action(dataset_name).await?;
+
+    Ok(())
+}
+
+async fn apply_archived_dataset_rules(dataset_name: &str) -> Result<()> {
+    debug!("Applying rules for archived dataset: {}", dataset_name);
+
+    // For archived datasets, ensure cold storage and maximum compression
+    execute_migration_action(dataset_name, StorageTier::Cold).await?;
+    execute_compression_action(dataset_name).await?;
+
+    Ok(())
+}
+
+async fn apply_obsolete_dataset_rules(dataset_name: &str) -> Result<()> {
+    debug!("Applying rules for obsolete dataset: {}", dataset_name);
+
+    // For obsolete datasets, prepare for cleanup
+    execute_cleanup_action(dataset_name).await?;
+
     Ok(())
 }

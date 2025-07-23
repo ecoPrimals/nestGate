@@ -1,6 +1,4 @@
-//! Automation Configuration Module
-//!
-//! Configuration for dataset automation and AI-driven optimization.
+//! AI Automation Configuration for ZFS automation
 
 use serde::{Deserialize, Serialize};
 
@@ -22,14 +20,14 @@ pub struct DatasetAutomationConfig {
 /// AI-powered automation settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AiAutomationSettings {
-    /// Enable AI-driven tier predictions
-    pub enable_ai_predictions: bool,
-    /// Confidence threshold for AI decisions
-    pub ai_confidence_threshold: f64,
-    /// Learning rate for access pattern prediction
-    pub learning_rate: f64,
-    /// Historical data window for learning (days)
-    pub learning_window_days: u32,
+    /// Enable AI-powered optimizations
+    pub ai_enabled: bool,
+    /// Tier prediction model configuration
+    pub model_config: String,
+    /// Performance monitoring interval
+    pub monitoring_interval_seconds: u64,
+    /// AI confidence threshold for recommendations
+    pub confidence_threshold: f64,
 }
 
 impl Default for DatasetAutomationConfig {
@@ -40,11 +38,34 @@ impl Default for DatasetAutomationConfig {
             learning_period_days: 7,
             default_policy: "balanced_performance".to_string(),
             ai_settings: AiAutomationSettings {
-                enable_ai_predictions: true,
-                ai_confidence_threshold: 0.8,
-                learning_rate: 0.1,
-                learning_window_days: 30,
+                ai_enabled: false,
+                model_config: "default".to_string(),
+                monitoring_interval_seconds: 300, // 5 minutes
+                confidence_threshold: 0.8,
             },
+        }
+    }
+}
+
+impl Default for AiAutomationSettings {
+    fn default() -> Self {
+        Self {
+            ai_enabled: false,
+            model_config: "default".to_string(),
+            monitoring_interval_seconds: 300, // 5 minutes
+            confidence_threshold: 0.8,
+        }
+    }
+}
+
+impl AiAutomationSettings {
+    /// Create production-optimized AI automation settings
+    pub fn production() -> Self {
+        Self {
+            ai_enabled: true,
+            model_config: "production-optimized".to_string(),
+            monitoring_interval_seconds: 120, // 2 minutes
+            confidence_threshold: 0.9,
         }
     }
 }

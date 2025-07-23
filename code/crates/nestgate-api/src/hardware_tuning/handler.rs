@@ -63,7 +63,12 @@ impl HardwareTuningHandler {
         sessions
             .get(&session_id)
             .cloned()
-            .ok_or_else(|| NestGateError::NotFound(format!("Session not found: {session_id}")))
+            .ok_or_else(|| NestGateError::Internal {
+                message: format!("Session not found: {session_id}"),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })
     }
 
     /// Auto-tune hardware
@@ -72,7 +77,7 @@ impl HardwareTuningHandler {
         let metrics = self.toadstool_client.get_live_hardware_metrics().await?;
 
         // Calculate performance improvement based on current metrics
-        let performance_improvement = if metrics.cpu_usage > 80.0 {
+        let performance_improvement = if metrics._cpu_usage > 80.0 {
             25.0 // High CPU usage -> more improvement potential
         } else if metrics.memory_usage > 80.0 {
             20.0 // High memory usage -> moderate improvement
@@ -113,9 +118,9 @@ impl HardwareTuningHandler {
         let metrics = self.toadstool_client.get_live_hardware_metrics().await?;
 
         let overall_score = match benchmark_name {
-            "cpu" => 100.0 - metrics.cpu_usage,
+            "cpu" => 100.0 - metrics._cpu_usage,
             "memory" => 100.0 - metrics.memory_usage,
-            "overall" => (100.0 - metrics.cpu_usage + 100.0 - metrics.memory_usage) / 2.0,
+            "overall" => (100.0 - metrics._cpu_usage + 100.0 - metrics.memory_usage) / 2.0,
             _ => 50.0,
         };
 
@@ -125,7 +130,7 @@ impl HardwareTuningHandler {
             score: overall_score,
             duration_ms: 1000,
             metadata: serde_json::json!({
-                "cpu_usage": metrics.cpu_usage,
+                "cpu_usage": metrics._cpu_usage,
                 "memory_usage": metrics.memory_usage
             }),
         })

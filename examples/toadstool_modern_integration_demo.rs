@@ -1,16 +1,19 @@
-//! # NestGate ⚡ ToadStool Modern Integration Demo
-//!
-//! A completely rebuilt, production-ready demonstration of NestGate-ToadStool integration
-//! showcasing System Information (Sysinfo) and Compute Needs with MODERN APIs.
-//!
-//! This replaces the legacy broken demo with a robust, working implementation.
+use serde::{Serialize, Deserialize};
+use tracing::{info, warn, error};
+use tracing::{error, info};
+// # NestGate ⚡ ToadStool Modern Integration Demo
+//
+// A completely rebuilt, production-ready demonstration of NestGate-ToadStool integration
+// showcasing System Information (Sysinfo) and Compute Needs with MODERN APIs.
+//
+// This replaces the legacy broken demo with a robust, working implementation.
 
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use tokio::time::sleep;
-use tracing::{error, info, warn};
+// Removed unused tracing import
 
 // Modern integration structures using current API patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -7,7 +7,7 @@ use async_trait::async_trait;
 use std::collections::HashMap;
 use std::time::SystemTime;
 use tokio::process::Command;
-use tracing::debug;
+// Removed unused tracing import
 
 use crate::handlers::zfs::universal_zfs::{
     traits::UniversalZfsService,
@@ -16,6 +16,7 @@ use crate::handlers::zfs::universal_zfs::{
         UniversalZfsResult,
     },
 };
+use tracing::debug;
 
 /// Native ZFS service implementation
 #[derive(Debug, Clone)]

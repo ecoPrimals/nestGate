@@ -1,16 +1,20 @@
-//! Crypto Locks System
-//!
-//! Universal crypto locks that work with any security primal provider,
-//! eliminating hardcoded dependencies on specific security implementations.
-
+// Removed unused error imports
+/// Crypto Locks System
+///
+/// Universal crypto locks that work with any security primal provider,
+/// eliminating hardcoded dependencies on specific security implementations.
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
+// Removed unused tracing import
 
 use serde::{Deserialize, Serialize};
-use tracing::{debug, info, warn};
 
 use crate::universal_traits::{SecurityPrimalProvider, Signature};
 use crate::{NestGateError, Result};
+use std::time::Duration;
+use tracing::debug;
+use tracing::info;
+use tracing::warn;
 
 /// Cryptographic proof - managed by any security primal provider
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -131,7 +135,12 @@ impl CryptoProof {
         hasher.update(
             SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
-                .map_err(|e| NestGateError::Internal(format!("Time error: {e}")))?
+                .map_err(|e| NestGateError::Internal {
+                    message: format!("Time error: {e}"),
+                    location: Some(file!().to_string()),
+                    debug_info: None,
+                    is_bug: false,
+                })?
                 .as_secs()
                 .to_be_bytes(),
         );

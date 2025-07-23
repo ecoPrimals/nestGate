@@ -439,7 +439,7 @@ pub struct PerformanceConfig {
 pub struct SystemMetrics {
     pub timestamp: SystemTime,
     pub node_id: String,
-    pub cpu_usage: f64,    // 0.0 - 100.0
+    pub _cpu_usage: f64,   // 0.0 - 100.0
     pub memory_usage: f64, // 0.0 - 100.0
     pub disk_usage: f64,   // 0.0 - 100.0
     pub network_io: NetworkIo,
@@ -454,7 +454,7 @@ impl SystemMetrics {
         Ok(Self {
             timestamp: SystemTime::now(),
             node_id: gethostname::gethostname().to_string_lossy().to_string(),
-            cpu_usage: Self::collect_cpu_usage().await?,
+            _cpu_usage: Self::collect_cpu_usage().await?,
             memory_usage: Self::collect_memory_usage().await?,
             disk_usage: Self::collect_disk_usage().await?,
             network_io: NetworkIo::collect().await?,

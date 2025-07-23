@@ -4,7 +4,10 @@
 //! and intelligent configuration recommendations.
 
 use nestgate_zfs::pool_setup::ZfsPoolSetup;
-use tracing::{error, info, warn};
+use tracing::error;
+use tracing::info;
+use tracing::warn;
+// Removed unused tracing import
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

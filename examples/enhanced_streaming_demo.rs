@@ -1,20 +1,20 @@
-//! Enhanced Streaming Communication Demo
-//!
-//! This demo showcases the enhanced streaming capabilities of NestGate, including:
-//! - Server-Sent Events (SSE) for real-time updates
-//! - WebSocket communication for bidirectional streaming
-//! - MCP (Message Channel Protocol) streaming for efficient data transfer
-//! - Event coordination and monitoring
-//!
-//! Note: This demo requires the streaming-rpc feature to be enabled.
+use tracing::{error, info};
+// Enhanced Streaming Communication Demo
+//
+// This demo showcases the enhanced streaming capabilities of NestGate, including:
+// - Server-Sent Events (SSE) for real-time updates
+// - WebSocket communication for bidirectional streaming
+// - MCP (Message Channel Protocol) streaming for efficient data transfer
+// - Event coordination and monitoring
+//
+// Note: This demo requires the streaming-rpc feature to be enabled.
 
-#![allow(dead_code)]
-
+#[allow(dead_code)]
 #[cfg(feature = "streaming-rpc")]
 mod streaming_demo {
     use std::sync::Arc;
 
-    use tracing::info;
+    // Removed unused tracing import
 
     // Import all communication components
     use nestgate_api::CommunicationManager;

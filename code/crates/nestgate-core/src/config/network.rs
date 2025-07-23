@@ -1,6 +1,8 @@
+// Removed unused error imports
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::SocketAddr;
+// Removed unused std import
 
 /// WebSocket configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,9 +1,52 @@
+//! # NestGate Application Core
+//!
+//! **Main application logic and state management for NestGate UI**
+//!
+//! This module contains the core application structure and implementation for the
+//! NestGate native user interface. It manages application state, handles user
+//! interactions, and coordinates between different UI components.
+//!
+//! ## Key Components
+//!
+//! - **Application State**: Central state management for all UI data
+//! - **Event Handling**: User input processing and system events
+//! - **Data Flow**: Coordination between backend services and UI
+//! - **Performance Tracking**: Real-time metrics and historical data
+//! - **Theme Management**: Dark/light mode and customization
+//!
+//! ## State Management
+//!
+//! The application uses a centralized state pattern with:
+//! - Reactive updates for real-time data
+//! - Performance history tracking
+//! - Storage tier statistics
+//! - System health monitoring
+//!
+//! ## Integration
+//!
+//! The app integrates with:
+//! - **NestGate Core**: Backend storage operations
+//! - **ZFS Manager**: Storage pool management  
+//! - **Performance Monitor**: System metrics
+//! - **Network Services**: Remote operations
+//!
+//! ## Usage
+//!
+//! ```rust
+//! use nestgate_ui::app::NestGateApp;
+//!
+//! let app = NestGateApp::default();
+//! // App is ready for eframe integration
+//! ```
+
 use crate::types::*;
 use eframe::egui::{self, Color32};
 use nestgate_core::types::StorageTier;
 use std::collections::{HashMap, VecDeque};
-use std::time::{Duration, Instant};
+use std::time::Duration;
+use std::time::Instant;
 use tracing::info;
+// Removed unused tracing import
 
 impl Default for NestGateApp {
     fn default() -> Self {

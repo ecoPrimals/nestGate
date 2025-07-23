@@ -5,10 +5,11 @@
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use tracing::info;
+// Removed unused tracing import
 
 use crate::{dataset::ZfsDatasetManager, types::StorageTier};
 use nestgate_core::{NestGateError, Result as CoreResult};
+use tracing::info;
 
 /// Get target dataset name for a tier
 pub fn get_target_dataset_for_tier(tier: &StorageTier) -> CoreResult<String> {
@@ -25,7 +26,12 @@ pub fn construct_target_path(source_path: &Path, target_dataset: &str) -> CoreRe
     // Extract relative path from source
     let file_name = source_path
         .file_name()
-        .ok_or_else(|| NestGateError::Storage("Invalid source file path".to_string()))?;
+        .ok_or_else(|| NestGateError::System {
+            message: "Invalid source file path".to_string(),
+            resource: nestgate_core::error::SystemResource::Disk,
+            utilization: None,
+            recovery: nestgate_core::error::RecoveryStrategy::Retry,
+        })?;
 
     // Construct target path: /mnt/{dataset}/{filename}
     let target_path = PathBuf::from("/mnt").join(target_dataset).join(file_name);
@@ -42,7 +48,12 @@ pub async fn ensure_target_dataset_exists(
     let datasets = dataset_manager
         .list_datasets()
         .await
-        .map_err(|e| NestGateError::Storage(format!("Failed to list datasets: {e}")))?;
+        .map_err(|e| NestGateError::System {
+            message: format!("Failed to list datasets: {}", e),
+            resource: nestgate_core::error::SystemResource::Disk,
+            utilization: None,
+            recovery: nestgate_core::error::RecoveryStrategy::Retry,
+        })?;
 
     let dataset_exists = datasets.iter().any(|d| d.name == dataset_name);
 
@@ -82,7 +93,12 @@ pub async fn ensure_target_dataset_exists(
         dataset_manager
             .create_dataset(dataset_name, "storage", core_tier)
             .await
-            .map_err(|e| NestGateError::Storage(format!("Failed to create dataset: {e}")))?;
+            .map_err(|e| NestGateError::System {
+                message: format!("Failed to create dataset: {}", e),
+                resource: nestgate_core::error::SystemResource::Disk,
+                utilization: None,
+                recovery: nestgate_core::error::RecoveryStrategy::Retry,
+            })?;
     }
 
     Ok(())

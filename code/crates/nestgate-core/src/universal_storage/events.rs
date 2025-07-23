@@ -1,15 +1,16 @@
-//! Storage Event Broadcasting System
-//!
-//! Real-time event broadcasting and subscription system for coordinating storage operations.
-
+// Removed unused error imports
+/// Storage Event Broadcasting System
+///
+/// Real-time event broadcasting and subscription system for coordinating storage operations.
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::broadcast;
-use tracing::warn;
+// Removed unused tracing import
 
 use super::types::*;
 use crate::Result;
+use tracing::warn;
 
 /// Real-time Event Broadcasting System
 pub struct StorageEventBroadcaster {

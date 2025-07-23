@@ -659,7 +659,7 @@ pub struct ServiceMetrics {
     /// Service ID
     pub service_id: Uuid,
     /// CPU usage percentage
-    pub cpu_usage: f64,
+    pub _cpu_usage: f64,
     /// Memory usage in bytes
     pub memory_usage: u64,
     /// Network I/O statistics

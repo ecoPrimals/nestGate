@@ -1,19 +1,24 @@
-//! High-Performance Connection Pool System
-//!
-//! Provides optimized connection pooling for database and network operations
-//! to handle high-concurrency scenarios efficiently.
-//!
-//! ## Performance Impact
-//! - **Connection Reuse**: Eliminates connection establishment overhead
-//! - **Configurable Limits**: Prevents resource exhaustion under load
-//! - **Health Monitoring**: Automatic cleanup of stale connections
-//! - **Load Balancing**: Distributes requests across available connections
-
+use crate::error::ConfigSource;
+use crate::error::{NetworkError, NetworkErrorData};
+/// High-Performance Connection Pool System
+///
+/// Provides optimized connection pooling for database and network operations
+/// to handle high-concurrency scenarios efficiently.
+///
+/// ## Performance Impact
+/// - **Connection Reuse**: Eliminates connection establishment overhead
+/// - **Configurable Limits**: Prevents resource exhaustion under load
+/// - **Health Monitoring**: Automatic cleanup of stale connections
+/// - **Load Balancing**: Distributes requests across available connections
 use std::collections::VecDeque;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
+use std::time::Instant;
 use tokio::sync::{Mutex, RwLock, Semaphore};
-use tracing::{debug, info, warn};
+use tracing::debug;
+use tracing::info;
+use tracing::warn;
+// Removed unused tracing import
 
 /// Type alias for connection factory function
 type ConnectionFactory<T> = Arc<dyn Fn() -> Result<T> + Send + Sync>;
@@ -147,12 +152,19 @@ where
         // Wait for available slot with timeout
         let permit = tokio::time::timeout(self.config.acquire_timeout, self.semaphore.acquire())
             .await
-            .map_err(|_| {
-                NestGateError::Internal("Connection pool acquisition timeout".to_string())
+            .map_err(|_| NestGateError::Internal {
+                message: "Connection pool acquisition timeout".to_string(),
+                location: Some(file!().to_string()),
+                debug_info: None,
+                is_bug: false,
             })?;
 
-        let _permit = permit
-            .map_err(|_| NestGateError::Internal("Connection pool semaphore error".to_string()))?;
+        let _permit = permit.map_err(|_| NestGateError::Internal {
+            message: "Connection pool semaphore error".to_string(),
+            location: Some(file!().to_string()),
+            debug_info: None,
+            is_bug: false,
+        })?;
 
         // Try to get existing connection from pool
         let connection = {
@@ -298,16 +310,26 @@ where
 {
     /// Get reference to the connection
     pub fn connection(&self) -> Result<&T> {
-        self.connection.as_ref().ok_or_else(|| {
-            crate::NestGateError::Configuration("Connection has been consumed".to_string())
-        })
+        self.connection
+            .as_ref()
+            .ok_or_else(|| crate::NestGateError::Configuration {
+                message: "Connection has been consumed".to_string(),
+                config_source: ConfigSource::Defaults,
+                field: None,
+                suggested_fix: None,
+            })
     }
 
     /// Get mutable reference to the connection
     pub fn connection_mut(&mut self) -> Result<&mut T> {
-        self.connection.as_mut().ok_or_else(|| {
-            crate::NestGateError::Configuration("Connection has been consumed".to_string())
-        })
+        self.connection
+            .as_mut()
+            .ok_or_else(|| crate::NestGateError::Configuration {
+                message: "Connection has been consumed".to_string(),
+                config_source: ConfigSource::Defaults,
+                field: None,
+                suggested_fix: None,
+            })
     }
 }
 
@@ -368,7 +390,18 @@ pub fn create_http_pool(config: Option<PoolConfig>) -> HttpConnectionPool {
             let client = reqwest::Client::builder()
                 .timeout(Duration::from_secs(30))
                 .build()
-                .map_err(|e| NestGateError::Network(format!("HTTP client creation failed: {e}")))?;
+                .map_err(|e| {
+                    NestGateError::Network(Box::new(NetworkErrorData {
+                        error: NetworkError::Connection {
+                            endpoint: "unknown".to_string(),
+                            message: format!("HTTP client creation failed: {e}"),
+                            last_attempt: std::time::SystemTime::now(),
+                            retry_count: 0,
+                        },
+                        context: None,
+                    }))
+                })?;
+
             Ok(client)
         },
         |client| {
@@ -376,9 +409,15 @@ pub fn create_http_pool(config: Option<PoolConfig>) -> HttpConnectionPool {
             if client.get("http://127.0.0.1").build().is_ok() {
                 Ok(())
             } else {
-                Err(NestGateError::Network(
-                    "HTTP client health check failed".to_string(),
-                ))
+                Err(NestGateError::Network(Box::new(NetworkErrorData {
+                    error: NetworkError::Connection {
+                        endpoint: "unknown".to_string(),
+                        message: "HTTP client health check failed".to_string(),
+                        last_attempt: std::time::SystemTime::now(),
+                        retry_count: 0,
+                    },
+                    context: None,
+                })))
             }
         },
         config,
@@ -412,7 +451,12 @@ mod tests {
                 if conn.healthy.load(Ordering::SeqCst) {
                     Ok(())
                 } else {
-                    Err(NestGateError::Internal("Unhealthy connection".to_string()))
+                    Err(NestGateError::Internal {
+                        message: "Unhealthy connection".to_string(),
+                        location: Some(file!().to_string()),
+                        debug_info: None,
+                        is_bug: false,
+                    })
                 }
             },
             PoolConfig::default(),
@@ -423,6 +467,9 @@ mod tests {
             let conn = pool.acquire().await.unwrap();
             assert_eq!(conn.connection().unwrap().id, 0);
         }
+
+        // Give time for async drop to complete
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
 
         // Connection should be returned to pool
         let stats = pool.stats().await;
@@ -447,7 +494,12 @@ mod tests {
                 if conn.healthy.load(Ordering::SeqCst) {
                     Ok(())
                 } else {
-                    Err(NestGateError::Internal("Unhealthy connection".to_string()))
+                    Err(NestGateError::Internal {
+                        message: "Unhealthy connection".to_string(),
+                        location: Some(file!().to_string()),
+                        debug_info: None,
+                        is_bug: false,
+                    })
                 }
             },
             PoolConfig {

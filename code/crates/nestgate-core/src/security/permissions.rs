@@ -1,9 +1,10 @@
-//! Permissions module for NestGate
-//!
-//! This module provides permission-related functionality for the NestGate system.
+use crate::error::{NetworkError};
+/// Permissions module for NestGate
+///
+/// This module provides permission-related functionality for the NestGate system.
 
 use std::collections::{HashMap, HashSet};
-use std::fmt;
+// Removed unused std import
 
 use crate::security::{Role, Permission, AccessLevel};
 

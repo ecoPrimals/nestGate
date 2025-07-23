@@ -1,3 +1,33 @@
+//! # NestGate Dashboard UI Component
+//!
+//! **System overview and metrics dashboard for NestGate storage management**
+//!
+//! This module provides the main dashboard interface showing system status,
+//! storage pool health, performance metrics, and key operational indicators.
+//!
+//! ## Dashboard Features
+//!
+//! - **System Overview**: High-level status and health indicators
+//! - **Storage Pools**: ZFS pool status and capacity visualization
+//! - **Performance Metrics**: Real-time CPU, memory, disk I/O charts
+//! - **Alert Summary**: Critical notifications and warnings
+//! - **Quick Actions**: Common operations accessible from dashboard
+//!
+//! ## Real-Time Updates
+//!
+//! The dashboard continuously updates with:
+//! - Live performance data every second
+//! - Storage pool status monitoring
+//! - Network activity and throughput
+//! - System resource utilization
+//!
+//! ## Visual Components
+//!
+//! - Progress bars for capacity and health
+//! - Time-series charts for performance trends
+//! - Status indicators with color coding
+//! - Interactive widgets for system control
+
 use crate::types::*;
 use eframe::egui::{self, RichText};
 use std::time::Duration;

@@ -7,9 +7,14 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
+// Removed unused tracing import
 
+use crate::errors::NetworkError;
 use crate::Result;
+use tracing::debug;
+use tracing::error;
+use tracing::info;
+use tracing::warn;
 
 /// Service status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -65,7 +70,12 @@ impl SongbirdClient {
             .send()
             .await
             .map_err(|e| {
-                nestgate_core::NestGateError::Internal(format!("Failed to register service: {e}"))
+                NetworkError::NestGate(nestgate_core::NestGateError::Internal {
+                    message: format!("Failed to register service: {e}"),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                })
             })?;
 
         if response.status().is_success() {
@@ -74,7 +84,14 @@ impl SongbirdClient {
         } else {
             let error_msg = format!("Failed to register service: HTTP {}", response.status());
             error!("{}", error_msg);
-            Err(nestgate_core::NestGateError::Internal(error_msg).into())
+            Err(NetworkError::NestGate(
+                nestgate_core::NestGateError::Internal {
+                    message: error_msg,
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                },
+            ))
         }
     }
 
@@ -95,14 +112,22 @@ impl SongbirdClient {
             .send()
             .await
             .map_err(|e| {
-                nestgate_core::NestGateError::Internal(format!("Failed to allocate port: {e}"))
+                NetworkError::NestGate(nestgate_core::NestGateError::Internal {
+                    message: format!("Failed to allocate port: {e}"),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                })
             })?;
 
         if response.status().is_success() {
             let allocation: PortAllocationResponse = response.json().await.map_err(|e| {
-                nestgate_core::NestGateError::Internal(format!(
-                    "Failed to parse port allocation response: {e}"
-                ))
+                NetworkError::NestGate(nestgate_core::NestGateError::Internal {
+                    message: format!("Failed to parse port allocation response: {e}"),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                })
             })?;
 
             info!(
@@ -113,7 +138,14 @@ impl SongbirdClient {
         } else {
             let error_msg = format!("Failed to allocate port: HTTP {}", response.status());
             error!("{}", error_msg);
-            Err(nestgate_core::NestGateError::Internal(error_msg).into())
+            Err(NetworkError::NestGate(
+                nestgate_core::NestGateError::Internal {
+                    message: error_msg,
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                },
+            ))
         }
     }
 
@@ -133,7 +165,12 @@ impl SongbirdClient {
             .send()
             .await
             .map_err(|e| {
-                nestgate_core::NestGateError::Internal(format!("Failed to release port: {e}"))
+                NetworkError::NestGate(nestgate_core::NestGateError::Internal {
+                    message: format!("Failed to release port: {e}"),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                })
             })?;
 
         if response.status().is_success() {
@@ -171,7 +208,12 @@ impl SongbirdClient {
             .send()
             .await
             .map_err(|e| {
-                nestgate_core::NestGateError::Internal(format!("Failed to send health status: {e}"))
+                NetworkError::NestGate(nestgate_core::NestGateError::Internal {
+                    message: format!("Failed to send health status: {e}"),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                })
             })?;
 
         if response.status().is_success() {
@@ -183,7 +225,14 @@ impl SongbirdClient {
         } else {
             let error_msg = format!("Failed to send health status: HTTP {}", response.status());
             debug!("{}", error_msg);
-            Err(nestgate_core::NestGateError::Internal(error_msg).into())
+            Err(NetworkError::NestGate(
+                nestgate_core::NestGateError::Internal {
+                    message: error_msg,
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                },
+            ))
         }
     }
 }
@@ -266,9 +315,12 @@ impl NetworkApi {
     pub async fn allocate_port(&self, service_name: &str, port_type: &str) -> Result<u16> {
         // ✅ SONGBIRD IS MANDATORY - NO LOCAL FALLBACK
         let songbird = self.songbird.as_ref()
-            .ok_or_else(|| nestgate_core::NestGateError::Internal(
-                "Songbird orchestrator is required for port allocation. Initialize with initialize_with_songbird() first.".to_string()
-            ))?;
+            .ok_or_else(|| NetworkError::NestGate(nestgate_core::NestGateError::Internal {
+                message: "Songbird orchestrator is required for port allocation. Initialize with initialize_with_songbird() first.".to_string(),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            }))?;
 
         let port = songbird.allocate_port(service_name, port_type).await?;
 
@@ -289,9 +341,12 @@ impl NetworkApi {
         if let Some(port) = port {
             // ✅ SONGBIRD IS MANDATORY - NO LOCAL FALLBACK
             let songbird = self.songbird.as_ref().ok_or_else(|| {
-                nestgate_core::NestGateError::Internal(
-                    "Songbird orchestrator is required for port release.".to_string(),
-                )
+                NetworkError::NestGate(nestgate_core::NestGateError::Internal {
+                    message: "Songbird orchestrator is required for port release.".to_string(),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                })
             })?;
 
             songbird.release_port(service_name, port).await?;
@@ -307,10 +362,14 @@ impl NetworkApi {
         if let Some(service) = services.get(service_name) {
             Ok(service.status.clone())
         } else {
-            Err(nestgate_core::NestGateError::Internal(format!(
-                "Service not found: {service_name}"
+            Err(NetworkError::NestGate(
+                nestgate_core::NestGateError::Internal {
+                    message: format!("Service not found: {service_name}"),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    debug_info: None,
+                    is_bug: false,
+                },
             ))
-            .into())
         }
     }
 

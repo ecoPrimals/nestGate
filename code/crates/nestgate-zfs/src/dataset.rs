@@ -14,7 +14,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::process::Command;
-use tracing::{debug, info, warn};
+use tracing::debug;
+use tracing::info;
+use tracing::warn;
 
 /// ZFS Dataset configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -116,22 +118,36 @@ impl ZfsDatasetManager {
 
         cmd.arg(&dataset_path);
 
-        let output = cmd
-            .output()
-            .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to execute zfs create: {e}")))?;
+        let output = cmd.output().await.map_err(|e| NestGateError::Internal {
+            message: format!("Failed to execute zfs create: {}", e),
+            location: Some(format!("{}:{}", file!(), line!())),
+            debug_info: None,
+            is_bug: false,
+        })?;
 
         if !output.status.success() {
-            let error_msg = String::from_utf8_lossy(&output.stderr);
-            return Err(NestGateError::Internal(format!(
-                "ZFS create failed: {error_msg}"
-            )));
+            return Err(NestGateError::Internal {
+                message: format!(
+                    "ZFS create command failed: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                ),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
-        info!("Successfully created dataset: {}", dataset_path);
-
-        // Return dataset info
-        self.get_dataset_info_with_fallback(&dataset_path).await
+        // Return basic dataset info
+        Ok(DatasetInfo {
+            name: name.to_string(),
+            mount_point: format!("/{}", name.replace('/', "_")),
+            used_space: 0,
+            available_space: 0,
+            file_count: None,
+            compression_ratio: None,
+            tier,
+            properties: HashMap::new(),
+        })
     }
 
     /// Create a dataset with fallback for testing/development environments
@@ -190,23 +206,22 @@ impl ZfsDatasetManager {
         }
     }
 
-    /// Get dataset information with improved error handling
-    pub async fn get_dataset_info_with_fallback(&self, name: &str) -> Result<DatasetInfo> {
-        debug!("Getting dataset info for: {}", name);
+    /// Get dataset info with fallback for testing environments
+    pub async fn get_dataset_info(&self, name: &str) -> Result<DatasetInfo> {
+        self.get_dataset_info_with_fallback(name).await
+    }
 
-        // Execute ZFS list command to get dataset info
-        let output = tokio::process::Command::new("zfs")
-            .args([
-                "list",
-                "-H",
-                "-p",
-                "-o",
-                "name,used,avail,mountpoint,compression",
-                name,
-            ])
-            .output()
-            .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to execute zfs list: {e}")))?;
+    async fn get_dataset_info_with_fallback(&self, name: &str) -> Result<DatasetInfo> {
+        let mut cmd = Command::new("zfs");
+        cmd.args(&["list", "-H", "-o", "name,used,avail,mountpoint"]);
+        cmd.arg(name);
+
+        let output = cmd.output().await.map_err(|e| NestGateError::Internal {
+            message: format!("Failed to execute zfs list: {}", e),
+            location: Some(format!("{}:{}", file!(), line!())),
+            debug_info: None,
+            is_bug: false,
+        })?;
 
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
@@ -301,7 +316,7 @@ impl ZfsDatasetManager {
             .await
             .map_err(|e| {
                 ZfsError::DatasetError(DatasetError::CreationFailed {
-                    reason: format!("Failed to execute zfs create: {e}"),
+                    reason: format!("Failed to execute zfs create: {}", e),
                 })
             })?;
 
@@ -328,7 +343,7 @@ impl ZfsDatasetManager {
             .await
             .map_err(|_e| {
                 ZfsError::DatasetError(DatasetError::PropertyError {
-                    reason: format!("Failed to get dataset properties: {_e}"),
+                    reason: format!("Failed to get dataset properties: {}", _e),
                 })
             })?;
 
@@ -364,7 +379,7 @@ impl ZfsDatasetManager {
                 .await
                 .map_err(|e| {
                     ZfsError::DatasetError(DatasetError::PropertyError {
-                        reason: format!("Failed to set property {key}={value}: {e}"),
+                        reason: format!("Failed to set property {key}={value}: {}", e),
                     })
                 })?;
 
@@ -467,13 +482,23 @@ impl ZfsDatasetManager {
             ])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal(format!("Failed to list snapshots: {e}")))?;
+            .map_err(|e| NestGateError::Internal {
+                message: format!("Failed to list snapshots: {}", e),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            })?;
 
         if !output.status.success() {
-            return Err(NestGateError::Internal(format!(
-                "ZFS list snapshots failed: {}",
-                String::from_utf8_lossy(&output.stderr)
-            )));
+            return Err(NestGateError::Internal {
+                message: format!(
+                    "ZFS list snapshots failed: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                ),
+                location: Some(format!("{}:{}", file!(), line!())),
+                debug_info: None,
+                is_bug: false,
+            });
         }
 
         let mut snapshots = Vec::new();

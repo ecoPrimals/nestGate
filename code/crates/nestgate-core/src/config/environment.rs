@@ -373,6 +373,77 @@ pub fn decentralized_consensus_threshold() -> f64 {
         .unwrap_or(0.66) // Require 66% consensus by default
 }
 
+/// Get configurable temporary directory for tests
+pub fn test_temp_dir() -> PathBuf {
+    std::env::var("NESTGATE_TEST_TEMP_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            let base_temp = default_temp_dir();
+            base_temp.join("tests")
+        })
+}
+
+/// Get configurable NFS exports directory
+pub fn nfs_exports_dir() -> PathBuf {
+    std::env::var("NESTGATE_NFS_EXPORTS_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            let base_temp = default_temp_dir();
+            base_temp.join("nfs_exports")
+        })
+}
+
+/// Get configurable ZFS temporary directory
+pub fn zfs_temp_dir() -> PathBuf {
+    std::env::var("NESTGATE_ZFS_TEMP_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            let base_temp = default_temp_dir();
+            base_temp.join("zfs")
+        })
+}
+
+/// Get configurable cache temporary directory
+pub fn cache_temp_dir() -> PathBuf {
+    std::env::var("NESTGATE_CACHE_TEMP_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            let base_temp = default_temp_dir();
+            base_temp.join("cache")
+        })
+}
+
+/// Get configurable upload temporary directory
+pub fn upload_temp_dir() -> PathBuf {
+    std::env::var("NESTGATE_UPLOAD_TEMP_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            let base_temp = default_temp_dir();
+            base_temp.join("uploads")
+        })
+}
+
+/// Create all necessary temporary directories
+pub fn ensure_temp_directories() -> Result<(), std::io::Error> {
+    let dirs = [
+        default_temp_dir(),
+        test_temp_dir(),
+        nfs_exports_dir(),
+        zfs_temp_dir(),
+        cache_temp_dir(),
+        upload_temp_dir(),
+    ];
+
+    for dir in &dirs {
+        if !dir.exists() {
+            std::fs::create_dir_all(dir)?;
+            tracing::debug!("Created temporary directory: {:?}", dir);
+        }
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

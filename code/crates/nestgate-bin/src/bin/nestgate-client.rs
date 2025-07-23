@@ -3,12 +3,15 @@
 //! Command-line tool for managing and monitoring the NestGate NAS node
 
 use clap::{arg, Args, Parser, Subcommand};
+
 use std::env;
+
 use std::path::{Path, PathBuf};
 use std::process;
 use std::str::FromStr;
 use std::time::Duration;
 use tracing::error;
+// Removed unused tracing import
 // Use our local StorageTier enum instead
 // use nestgate_network::StorageTier;
 
@@ -314,7 +317,7 @@ impl DummyClient {
         // This would make an actual API call
         Ok(MetricsResponse {
             timestamp: chrono::Utc::now(),
-            cpu_usage: 15.5,
+            _cpu_usage: 15.5,
             memory_usage: 28.3,
             network_throughput: 120.5,
             io_operations: 250.0,
@@ -418,7 +421,7 @@ struct ConnectionInfo {
 #[derive(Debug, serde::Serialize)]
 struct MetricsResponse {
     timestamp: chrono::DateTime<chrono::Utc>,
-    cpu_usage: f64,          // percentage
+    _cpu_usage: f64,         // percentage
     memory_usage: f64,       // percentage
     network_throughput: f64, // MB/s
     io_operations: f64,      // IOPS
@@ -460,9 +463,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Get config path
     let config_path = cli.config.unwrap_or_else(|| {
-        PathBuf::from(
-            env::var("NESTGATE_CONFIG").unwrap_or_else(|_| "/etc/nestgate/config.toml".to_string()),
-        )
+        PathBuf::from(env::var("NESTGATE_CONFIG").unwrap_or_else(|_| {
+            use nestgate_core::config::default_config_dir;
+            format!("{}/config.toml", default_config_dir().to_string_lossy())
+        }))
     });
 
     // Create client
@@ -620,7 +624,7 @@ async fn show_metrics(
                 "Timestamp: {}",
                 metrics.timestamp.format("%Y-%m-%d %H:%M:%S")
             );
-            println!("CPU Usage: {:.1}%", metrics.cpu_usage);
+            println!("CPU Usage: {:.1}%", metrics._cpu_usage);
             println!("Memory Usage: {:.1}%", metrics.memory_usage);
             println!("Network Throughput: {:.1} MB/s", metrics.network_throughput);
             println!("IO Operations: {:.1} IOPS", metrics.io_operations);

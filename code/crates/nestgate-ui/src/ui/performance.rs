@@ -1,3 +1,60 @@
+//! # NestGate Performance Monitoring UI
+//!
+//! **Real-time performance analytics and system monitoring dashboard**
+//!
+//! This module provides comprehensive performance monitoring capabilities for
+//! NestGate, displaying real-time metrics, historical data, and system analytics
+//! through interactive charts and visualizations.
+//!
+//! ## Performance Metrics
+//!
+//! The performance interface monitors and displays:
+//! - **CPU Usage**: Per-core utilization and load averages
+//! - **Memory Statistics**: RAM usage, cache, buffers, and ZFS ARC
+//! - **Disk I/O**: Read/write throughput, IOPS, and queue depth
+//! - **Network Activity**: Interface statistics and transfer rates
+//! - **ZFS Performance**: Pool statistics, compression ratios, and dedup
+//! - **Temperature & Power**: Hardware sensors and power consumption
+//!
+//! ## Visualization Features
+//!
+//! - **Real-Time Charts**: Live updating performance graphs
+//! - **Historical Data**: Time-series data with configurable timeframes
+//! - **Interactive Controls**: Zoom, pan, and data point inspection
+//! - **Alerting Indicators**: Visual alerts for performance issues
+//! - **Export Capabilities**: Data export for external analysis
+//! - **Customizable Views**: User-configurable dashboard layouts
+//!
+//! ## Data Collection
+//!
+//! Performance data is collected through:
+//! - System `/proc` and `/sys` interfaces
+//! - ZFS native statistics APIs
+//! - Hardware monitoring sensors
+//! - Network interface statistics
+//! - Application-level metrics
+//!
+//! ## Performance Optimization
+//!
+//! The monitoring system itself is optimized for:
+//! - **Minimal Overhead**: Low-impact data collection
+//! - **Efficient Updates**: Smart update intervals based on data volatility
+//! - **Memory Management**: Circular buffers for historical data
+//! - **Rendering Performance**: GPU-accelerated chart rendering
+//!
+//! ## Example Usage
+//!
+//! ```rust
+//! impl NestGateApp {
+//!     pub fn render_performance(&mut self, ui: &mut egui::Ui) {
+//!         // Render performance dashboard with multiple charts
+//!         ui.heading("📊 Performance Monitor");
+//!         self.render_cpu_chart(ui);
+//!         self.render_memory_usage(ui);
+//!         self.render_disk_io(ui);
+//!     }
+//! }
+
 use crate::types::*;
 use eframe::egui::{self, Color32, Pos2, Rect, RichText, Stroke, Vec2};
 

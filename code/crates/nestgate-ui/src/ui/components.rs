@@ -1,3 +1,49 @@
+//! # NestGate UI Components Library
+//!
+//! **Reusable UI components and widgets for the NestGate interface**
+//!
+//! This module contains all reusable UI components used throughout the NestGate
+//! application. These components provide consistent styling, behavior, and
+//! functionality across different parts of the interface.
+//!
+//! ## Component Categories
+//!
+//! - **Data Display**: Charts, graphs, progress bars, and meters
+//! - **Input Controls**: Custom text inputs, sliders, and selectors
+//! - **Navigation**: Tabs, menus, and navigation helpers
+//! - **Status Indicators**: Health badges, alert indicators, and status lights
+//! - **Layout Components**: Panels, containers, and responsive layouts
+//! - **Interactive Elements**: Buttons, toggles, and action controls
+//!
+//! ## Design System
+//!
+//! All components follow the NestGate design system:
+//! - **Consistent Colors**: Unified color palette across all components
+//! - **Typography**: Standardized font sizes and weights
+//! - **Spacing**: Consistent margins and padding
+//! - **Theming**: Full dark/light mode support
+//! - **Accessibility**: Keyboard navigation and screen reader support
+//!
+//! ## Performance Considerations
+//!
+//! Components are optimized for:
+//! - **Minimal Redraws**: Efficient update patterns to minimize CPU usage
+//! - **Memory Efficiency**: Proper cleanup and resource management
+//! - **Responsive Updates**: Smooth animations and transitions
+//! - **State Management**: Clean separation of UI state and business logic
+//!
+//! ## Example Usage
+//!
+//! ```rust
+//! use nestgate_ui::ui::components::*;
+//!
+//! // Render a status indicator
+//! status_indicator(ui, "ZFS Pool", SystemStatus::Healthy);
+//!
+//! // Show a progress meter
+//! progress_meter(ui, "Storage Usage", 0.75, "750 GB / 1 TB");
+//! ```
+
 use crate::types::*;
 use eframe::egui::{self, Color32, RichText, Stroke, Vec2};
 use nestgate_core::types::StorageTier;

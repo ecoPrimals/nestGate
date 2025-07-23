@@ -2,9 +2,9 @@
 //! 
 //! Focused security system integration tests extracted from comprehensive suite
 
-use std::time::{SystemTime, Duration, Instant};
+use std::time::{SystemTime Instant};
 use tokio::time::sleep;
-use tracing::{info, warn, error};
+// Removed unused tracing import
 use std::sync::Arc;
 use tokio::time::timeout;
 use std::collections::HashMap;

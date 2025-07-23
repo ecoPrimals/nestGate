@@ -5,7 +5,10 @@
 
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
+use tracing::debug;
+use tracing::error;
+use tracing::info;
+use tracing::warn;
 
 use crate::{
     automation::DatasetAutomation,
@@ -108,14 +111,9 @@ impl ZfsManager {
         let metrics = Arc::new(ZfsMetrics::new());
 
         // Initialize automation if requested
-        let automation = if shared_config
-            .automation
-            .as_ref()
-            .map(|a| a.enabled)
-            .unwrap_or(true)
-        {
+        let automation = if shared_config.ai_automation.ai_enabled {
             // Note: AI integration sunset - using heuristic automation only
-            let automation_config = shared_config.automation.clone().unwrap_or_default();
+            let automation_config = crate::config::DatasetAutomationConfig::default();
             match DatasetAutomation::new(
                 pool_manager.clone(),
                 dataset_manager.clone(),

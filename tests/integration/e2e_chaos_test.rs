@@ -4,7 +4,7 @@
 //! failure modes, and recovery mechanisms under stress conditions.
 
 use std::sync::{Arc, atomic::{AtomicBool, AtomicU64, Ordering}};
-use std::time::{Duration, Instant};
+use std::time::{ Instant};
 use tokio::sync::RwLock;
 use tokio::time::sleep;
 use futures::future::join_all;
@@ -43,7 +43,7 @@ impl Default for ChaosConfig {
 #[derive(Debug, Clone)]
 pub struct ChaosMetrics {
     pub timestamp: Instant,
-    pub cpu_usage: f64,
+    pub _cpu_usage: f64,
     pub memory_usage: f64,
     pub disk_io: f64,
     pub network_io: f64,

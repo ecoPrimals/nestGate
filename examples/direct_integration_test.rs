@@ -1,12 +1,13 @@
-//! Direct Integration Test
-//!
-//! A simple test to demonstrate integration with direct println output
+// Direct Integration Test
+//
+// A simple test to demonstrate integration with direct println output
 
+use async_trait::async_trait;
+use nestgate_core::config::ZfsConfig;
 use nestgate_core::{get_4kb_buffer, get_or_create_uuid, global_cache_statistics};
-use nestgate_zfs::advanced_zfs_optimization::{
-    AdvancedZfsOptimizer, OptimizerConfig, Pool, PoolStats, ZfsOperations,
-};
+use nestgate_zfs::{advanced_zfs_optimization::*, ZfsError, ZfsManager};
 use std::sync::Arc;
+use tokio::time::{sleep, Duration};
 
 #[tokio::main]
 async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -100,52 +101,75 @@ impl MockZfs {
 
 #[async_trait::async_trait]
 impl ZfsOperations for MockZfs {
-    async fn list_pools(&self) -> anyhow::Result<Vec<Pool>> {
-        Ok(self.pools.clone())
-    }
-
-    async fn get_pool_stats(&self, _pool_name: &str) -> anyhow::Result<PoolStats> {
-        Ok(PoolStats {
-            read_ops: 1000,
-            write_ops: 500,
-            read_bandwidth: 1024000,
-            write_bandwidth: 512000,
-            arc_hit_ratio: 0.95,
-            l2arc_hit_ratio: 0.80,
-            l2arc_enabled: true,
-            fragmentation: 15.0,
-            free_space: 4_000_000_000_000,
-            used_space: 6_000_000_000_000,
+    async fn get_pool_info(&self, _pool_name: &str) -> Result<Pool, ZfsError> {
+        // Return mock statistics that show good performance
+        Ok(Pool {
+            name: "mock_pool".to_string(),
+            state: "ONLINE".to_string(),
+            size: 1_000_000_000_000,    // 1TB
+            allocated: 500_000_000_000, // 500GB used
+            free: 500_000_000_000,      // 500GB free
+            fragmentation: Some(5),     // 5% fragmentation
+            capacity: Some(50),         // 50% capacity used
+            health: "ONLINE".to_string(),
+            altroot: None,
         })
     }
 
-    async fn list_datasets(&self, _pool_name: &str) -> anyhow::Result<Vec<String>> {
-        Ok(vec!["data".to_string()])
-    }
-
-    async fn create_pool(&self, name: &str, _devices: &[String]) -> anyhow::Result<Pool> {
+    async fn create_pool(&self, _name: &str, _devices: &[String]) -> Result<Pool, ZfsError> {
         Ok(Pool {
-            name: name.to_string(),
+            name: "test_pool".to_string(),
             state: "ONLINE".to_string(),
             size: 1_000_000_000_000,
             allocated: 0,
             free: 1_000_000_000_000,
             fragmentation: Some(0),
             capacity: Some(0),
-            health: "HEALTHY".to_string(),
+            health: "ONLINE".to_string(),
             altroot: None,
         })
     }
 
-    async fn destroy_pool(&self, _name: &str) -> anyhow::Result<()> {
+    async fn destroy_pool(&self, _name: &str) -> Result<(), ZfsError> {
         Ok(())
     }
 
-    async fn create_dataset(&self, _pool_name: &str, _dataset_name: &str) -> anyhow::Result<()> {
+    async fn create_dataset(&self, _pool: &str, _name: &str) -> Result<(), ZfsError> {
         Ok(())
     }
 
-    async fn destroy_dataset(&self, _pool_name: &str, _dataset_name: &str) -> anyhow::Result<()> {
+    async fn destroy_dataset(&self, _pool: &str, _name: &str) -> Result<(), ZfsError> {
         Ok(())
+    }
+
+    // Mock implementations for remaining methods
+    async fn get_dataset_info(&self, _pool: &str, _name: &str) -> Result<Dataset, ZfsError> {
+        Ok(Dataset {
+            name: "mock_dataset".to_string(),
+            used: 1000000,
+            available: 9000000,
+            compression_ratio: 1.5,
+            mountpoint: Some("/mock".to_string()),
+            properties: std::collections::HashMap::new(),
+        })
+    }
+
+    async fn set_dataset_property(
+        &self,
+        _pool: &str,
+        _dataset: &str,
+        _property: &str,
+        _value: &str,
+    ) -> Result<(), ZfsError> {
+        Ok(())
+    }
+
+    async fn get_dataset_property(
+        &self,
+        _pool: &str,
+        _dataset: &str,
+        _property: &str,
+    ) -> Result<String, ZfsError> {
+        Ok("mock_value".to_string())
     }
 }

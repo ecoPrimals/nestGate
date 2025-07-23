@@ -78,7 +78,7 @@ async fn test_dataset_manager_creation() {
     let _dataset_manager = ZfsDatasetManager::new(config.clone(), pool_manager_arc);
 
     // Just test that we can create the manager
-    assert_eq!(config.default_pool, "nestpool");
+    assert_eq!(config.pool_discovery.default_pool, "nestpool");
 }
 
 #[test]
@@ -122,7 +122,7 @@ fn test_configuration_defaults() {
     let config = ZfsConfig::default();
 
     // Test default values
-    assert_eq!(config.default_pool, "nestpool");
+    assert_eq!(config.pool_discovery.default_pool, "nestpool");
     assert!(config.pool_discovery.auto_discovery);
     assert!(config.health_monitoring.enabled);
     assert_eq!(config.health_monitoring.check_interval_seconds, 30);

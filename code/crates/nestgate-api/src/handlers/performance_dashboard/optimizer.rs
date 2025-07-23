@@ -5,6 +5,7 @@
 use crate::handlers::performance_dashboard::types::*;
 use nestgate_core::Result;
 use tracing::debug;
+// Removed unused tracing import
 
 /// Optimization engine interface
 #[derive(Debug)]

@@ -1,14 +1,15 @@
-//! Quick Integration Test
-//!
-//! A simple test to demonstrate integration between Advanced ZFS Optimization,
-//! Real-time monitoring, and performance caching systems.
+use tracing::{error, info};
+// Quick Integration Test
+//
+// A simple test to demonstrate integration between Advanced ZFS Optimization,
+// Real-time monitoring, and performance caching systems.
 
 use nestgate_core::{get_4kb_buffer, get_or_create_uuid, global_cache_statistics};
 use nestgate_zfs::advanced_zfs_optimization::{
     AdvancedZfsOptimizer, OptimizerConfig, Pool, PoolStats, ZfsOperations,
 };
 use std::sync::Arc;
-use tracing::info;
+// Removed unused tracing import
 
 #[tokio::main]
 async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {

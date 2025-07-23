@@ -3,10 +3,11 @@
 //! Provides retry logic for fail-safe operations.
 
 use std::time::Duration;
-use tracing::debug;
+// Removed unused tracing import
 
 use crate::handlers::zfs::universal_zfs::config::RetryPolicy;
 use crate::handlers::zfs::universal_zfs::types::UniversalZfsResult;
+use tracing::debug;
 
 /// Retry executor for operations
 #[derive(Debug, Clone)]

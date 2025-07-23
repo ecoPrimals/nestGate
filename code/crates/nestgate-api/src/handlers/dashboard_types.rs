@@ -4,8 +4,9 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::{Duration, SystemTime};
+use std::time::{ SystemTime};
 use tokio::sync::RwLock;
+use std::time::Duration;
 
 /// Time range configuration for performance queries
 #[derive(Debug, Clone, Serialize, Deserialize)]

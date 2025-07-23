@@ -8,7 +8,7 @@ use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::{mpsc, RwLock};
 use tokio::time::interval;
-use tracing::{debug, error, info};
+// Removed unused tracing import
 
 use crate::{config::ZfsConfig, dataset::ZfsDatasetManager};
 use nestgate_core::{Result as CoreResult, StorageTier};
@@ -17,6 +17,9 @@ use super::operations::SnapshotOperationType;
 use super::policy::{RetentionPolicy, ScheduleFrequency, SnapshotPolicy};
 use super::scheduler::PolicyScheduler;
 use super::types::{SnapshotInfo, SnapshotOperation, SnapshotOperationStatus, SnapshotStatistics};
+use tracing::debug;
+use tracing::error;
+use tracing::info;
 
 /// ZFS Snapshot Manager
 #[derive(Debug)]

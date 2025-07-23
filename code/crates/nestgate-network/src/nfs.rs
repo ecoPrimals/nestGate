@@ -10,6 +10,9 @@ use tokio::sync::RwLock;
 
 // Use nestgate_core for error handling
 use nestgate_core::{NestGateError, Result};
+use tracing::info;
+use tracing::warn;
+use tracing::error;
 
 /// NFS export configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -265,7 +268,9 @@ impl NfsServer {
         }
 
         // Write to temporary file first, then move to /etc/exports
-        let temp_path = "/tmp/nestgate_exports";
+        let temp_path = std::env::var("NESTGATE_NFS_EXPORTS_DIR")
+            .unwrap_or_else(|_| format!("{}/nestgate_exports", 
+                std::env::var("NESTGATE_TEMP_DIR").unwrap_or_else(|_| "/tmp".to_string())));
         {
             let mut file = OpenOptions::new()
                 .create(true)

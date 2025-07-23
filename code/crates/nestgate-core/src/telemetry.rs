@@ -1,22 +1,25 @@
-//! Comprehensive Telemetry and Metrics Collection System
-//!
-//! Provides advanced telemetry collection, metrics aggregation, and
-//! observability features for the NestGate storage system.
-//!
-//! ## Features
-//! - **Real-time Metrics**: Live collection of system and application metrics
-//! - **Time Series Data**: Historical metrics with configurable retention
-//! - **Custom Metrics**: Application-specific metric collection
-//! - **Health Monitoring**: Automated health status tracking
-//! - **Export Formats**: Prometheus, JSON, and custom format support
-
+// Removed unused error imports
+use crate::Result;
+/// Comprehensive Telemetry and Metrics Collection System
+///
+/// Provides advanced telemetry collection, metrics aggregation, and
+/// observability features for the NestGate storage system.
+///
+/// ## Features
+/// - **Real-time Metrics**: Live collection of system and application metrics
+/// - **Time Series Data**: Historical metrics with configurable retention
+/// - **Custom Metrics**: Application-specific metric collection
+/// - **Health Monitoring**: Automated health status tracking
+/// - **Export Formats**: Prometheus, JSON, and custom format support
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
+use std::time::SystemTime;
 use tokio::sync::RwLock;
-use tracing::{debug, info, warn};
-
-use crate::Result;
+use tracing::debug;
+use tracing::info;
+use tracing::warn;
+// Removed unused tracing import
 
 /// Telemetry configuration
 #[derive(Debug, Clone)]
@@ -261,24 +264,26 @@ impl TelemetryCollector {
 
     /// Set a gauge metric value
     pub async fn set_gauge(&self, name: &str, value: f64, labels: HashMap<String, String>) {
-        let mut registry = self.metrics_registry.write().await;
+        {
+            let mut registry = self.metrics_registry.write().await;
 
-        let gauge = registry
-            .gauges
-            .entry(name.to_string())
-            .or_insert_with(|| GaugeMetric {
-                name: name.to_string(),
-                help: format!("Gauge metric: {name}"),
-                value: 0.0,
-                labels: labels.clone(),
-                last_updated: SystemTime::now(),
-            });
+            let gauge = registry
+                .gauges
+                .entry(name.to_string())
+                .or_insert_with(|| GaugeMetric {
+                    name: name.to_string(),
+                    help: format!("Gauge metric: {name}"),
+                    value: 0.0,
+                    labels: labels.clone(),
+                    last_updated: SystemTime::now(),
+                });
 
-        gauge.value = value;
-        gauge.last_updated = SystemTime::now();
-        gauge.labels = labels;
+            gauge.value = value;
+            gauge.last_updated = SystemTime::now();
+            gauge.labels = labels;
+        } // Release the write lock here
 
-        // Also add to time series for historical tracking
+        // Add to time series for historical tracking (with separate lock acquisition)
         self.add_to_time_series(name, value).await;
     }
 
@@ -611,8 +616,6 @@ impl TelemetryCollector {
         Ok(0.0)
     }
 }
-
-
 
 impl TimeSeries {
     /// Get recent data points within a time window

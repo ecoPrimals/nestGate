@@ -2,9 +2,9 @@
 //! 
 //! Focused ZFS operations integration tests
 
-use std::time::{Duration, Instant};
+use std::time::{ Instant};
 use tokio::time::sleep;
-use tracing::{info, warn};
+// Removed unused tracing import
 use std::sync::Arc;
 
 use nestgate_core::{Result as CoreResult, StorageTier};
