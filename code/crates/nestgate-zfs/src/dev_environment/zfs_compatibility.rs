@@ -112,7 +112,7 @@ impl DevEnvironmentZfsService {
             return Err(ZfsError::SystemUnavailable(format!(
                 "Failed to create base directory: {}",
                 e
-            )));
+            )).into());
         }
 
         info!("✅ Development environment initialized");
