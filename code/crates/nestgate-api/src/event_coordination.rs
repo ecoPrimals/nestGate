@@ -4,7 +4,7 @@
 //! system, enabling real-time coordination between WebSocket clients, internal
 //! services, and MCP streams.
 
-use nestgate_core::get_or_create_uuid;
+use nestgate_core::uuid_cache::get_or_create_uuid;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::{broadcast, RwLock};
@@ -163,7 +163,6 @@ impl EventCoordinator {
                 let _ = self.handle_event_with_handler(event.clone(), handler).await;
             }
         }
-
         Ok(())
     }
 
@@ -341,7 +340,6 @@ impl EventCoordinator {
             let mut stats = self.stats.write().await;
             stats.events_processed += 1;
         }
-
         Ok(())
     }
 
@@ -396,7 +394,6 @@ impl EventCoordinator {
             let mut stats = self.stats.write().await;
             stats.events_processed += 1;
         }
-
         Ok(())
     }
 
@@ -470,7 +467,6 @@ impl EventCoordinator {
             let mut stats = self.stats.write().await;
             stats.events_processed += 1;
         }
-
         Ok(())
     }
 

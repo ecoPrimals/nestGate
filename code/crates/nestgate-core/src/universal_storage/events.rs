@@ -57,7 +57,6 @@ impl StorageEventBroadcaster {
                 );
             }
         }
-
         Ok(())
     }
 }

@@ -1,0 +1,4 @@
+code/crates/nestgate-core/src/optimized/simd_ops.rs:192:44: replace + with - in SIMDStringOps::find_byte_simd
+code/crates/nestgate-core/src/biomeos.rs:731:17: replace * with / in parse_size
+code/crates/nestgate-core/src/config/monitoring.rs:408:9: replace AlertThresholds::get_threshold -> Option<f64> with Some(1.0)
+code/crates/nestgate-core/src/config/storage.rs:194:9: replace StorageConfig::tier_names -> Vec<&str> with vec![""]

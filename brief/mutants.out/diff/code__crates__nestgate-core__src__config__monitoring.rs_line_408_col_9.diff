@@ -1,0 +1,28 @@
+--- code/crates/nestgate-core/src/config/monitoring.rs
++++ replace AlertThresholds::get_threshold -> Option<f64> with Some(1.0)
+@@ -400,24 +400,17 @@
+             "latency" => value > self.latency_threshold,
+             "error_rate" => value > self.error_rate_threshold,
+             _ => false,
+         }
+     }
+ 
+     /// Get threshold value for a metric
+     pub fn get_threshold(&self, metric: &str) -> Option<f64> {
+-        match metric {
+-            "cpu" => Some(self.cpu_threshold),
+-            "memory" => Some(self.memory_threshold),
+-            "disk" => Some(self.disk_threshold),
+-            "latency" => Some(self.latency_threshold),
+-            "error_rate" => Some(self.error_rate_threshold),
+-            _ => None,
+-        }
++        Some(1.0) /* ~ changed by cargo-mutants ~ */
+     }
+ 
+     /// Set threshold value for a metric
+     pub fn set_threshold(&mut self, metric: &str, value: f64) -> Result<(), String> {
+         if value < 0.0 {
+             return Err(ERROR_THRESHOLD_NEGATIVE.to_string());
+         }
+ 

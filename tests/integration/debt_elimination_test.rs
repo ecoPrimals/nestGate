@@ -1,7 +1,8 @@
-//! Comprehensive debt elimination validation tests
-//!
-//! This test suite validates that mock implementations have been replaced
-//! with real functionality and identifies any remaining technical debt.
+use nestgate_core::error::NestGateError;
+/// Comprehensive debt elimination validation tests
+///
+/// This test suite validates that mock implementations have been replaced
+/// with real functionality and identifies any remaining technical debt.
 
 use std::sync::Arc;
 use tokio::time::{sleep, Duration};
@@ -17,11 +18,11 @@ use nestgate_zfs::{
 };
 
 #[tokio::test]
-async fn test_real_system_performance_monitoring() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_real_system_performance_monitoring() -> Result<(), nestgate_core::error::NestGateError> {
     info!("🧪 Testing real system performance monitoring...");
 
     let perf_config = PerformanceConfig::default();
-    let zfs_config = ZfsConfig::default();
+    let zfs_config = UnifiedZfsConfig::default();
     let pool_manager = Arc::new(ZfsPoolManager::new(&zfs_config).await?);
     let dataset_manager = Arc::new(ZfsDatasetManager::new(zfs_config, pool_manager.clone()));
 
@@ -70,10 +71,10 @@ async fn test_real_system_performance_monitoring() -> Result<(), Box<dyn std::er
 }
 
 #[tokio::test]
-async fn test_zfs_real_command_integration() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_zfs_real_command_integration() -> Result<(), nestgate_core::error::NestGateError> {
     info!("🧪 Testing ZFS real command integration...");
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let pool_manager = Arc::new(ZfsPoolManager::new(&config).await?);
     let dataset_manager = Arc::new(ZfsDatasetManager::new(config, pool_manager.clone()));
 
@@ -129,10 +130,10 @@ async fn test_zfs_real_command_integration() -> Result<(), Box<dyn std::error::E
 }
 
 #[tokio::test]
-async fn test_ai_tier_prediction_functionality() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_ai_tier_prediction_functionality() -> Result<(), nestgate_core::error::NestGateError> {
     info!("🧪 Testing AI tier prediction functionality...");
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let pool_manager = Arc::new(ZfsPoolManager::new(&config).await?);
     let dataset_manager = Arc::new(ZfsDatasetManager::new(config.clone(), pool_manager));
     let manager = ZfsManager::new(config).await?;
@@ -194,10 +195,10 @@ async fn test_ai_tier_prediction_functionality() -> Result<(), Box<dyn std::erro
 }
 
 #[tokio::test]
-async fn test_health_monitoring_real_implementation() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_health_monitoring_real_implementation() -> Result<(), nestgate_core::error::NestGateError> {
     info!("🧪 Testing health monitoring real implementation...");
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let pool_manager = Arc::new(ZfsPoolManager::new(&config).await?);
     let dataset_manager = Arc::new(ZfsDatasetManager::new(config, pool_manager.clone()));
 
@@ -248,13 +249,13 @@ async fn test_health_monitoring_real_implementation() -> Result<(), Box<dyn std:
 }
 
 #[tokio::test]
-async fn test_error_handling_robustness() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_error_handling_robustness() -> Result<(), nestgate_core::error::NestGateError> {
     info!("🧪 Testing error handling robustness...");
 
     // Test graceful degradation when ZFS is unavailable
     std::env::set_var("ZFS_MOCK_MODE", "true");
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let pool_manager = Arc::new(ZfsPoolManager::new(&config).await?);
 
     // Should create fallback pool data when ZFS unavailable
@@ -279,10 +280,10 @@ async fn test_error_handling_robustness() -> Result<(), Box<dyn std::error::Erro
 }
 
 #[tokio::test]
-async fn test_performance_under_load() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_performance_under_load() -> Result<(), nestgate_core::error::NestGateError> {
     info!("🧪 Testing performance under load...");
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let manager = ZfsManager::new(config).await?;
 
     // Test concurrent tier predictions
@@ -324,7 +325,7 @@ async fn test_performance_under_load() -> Result<(), Box<dyn std::error::Error>>
 }
 
 #[tokio::test]
-async fn test_debt_elimination_completeness() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_debt_elimination_completeness() -> Result<(), nestgate_core::error::NestGateError> {
     info!("🧪 Testing debt elimination completeness...");
 
     // Verify no critical TODOs remain in core functionality
@@ -343,7 +344,7 @@ async fn test_debt_elimination_completeness() -> Result<(), Box<dyn std::error::
 
     // 1. Performance monitoring
     let perf_config = PerformanceConfig::default();
-    let zfs_config = ZfsConfig::default();
+    let zfs_config = UnifiedZfsConfig::default();
     let pool_manager = Arc::new(ZfsPoolManager::new(&zfs_config).await?);
     let dataset_manager = Arc::new(ZfsDatasetManager::new(zfs_config, pool_manager.clone()));
     let monitor = ZfsPerformanceMonitor::new(perf_config, pool_manager, dataset_manager);
@@ -353,7 +354,7 @@ async fn test_debt_elimination_completeness() -> Result<(), Box<dyn std::error::
     assert!(system_test.is_ok(), "System info should be implemented");
 
     // 2. ZFS operations
-    let test_manager = ZfsManager::new(ZfsConfig::default()).await?;
+    let test_manager = ZfsManager::new(UnifiedZfsConfig::default()).await?;
     let status = test_manager.get_status().await;
     assert!(status.is_ok(), "Status should be implemented");
 
@@ -367,11 +368,11 @@ async fn test_debt_elimination_completeness() -> Result<(), Box<dyn std::error::
 }
 
 #[tokio::test]
-async fn test_integration_stability() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_integration_stability() -> Result<(), nestgate_core::error::NestGateError> {
     info!("🧪 Testing integration stability...");
 
     // Test that components work together without crashes
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let manager = ZfsManager::new(config).await?;
 
     // Start full system

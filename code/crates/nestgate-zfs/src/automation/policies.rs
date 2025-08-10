@@ -4,7 +4,7 @@
 //! including tier assignment rules, lifecycle management policies,
 //! migration rules, and performance thresholds.
 
-use nestgate_core::StorageTier;
+use nestgate_core::types::StorageTier;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

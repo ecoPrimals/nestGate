@@ -1,12 +1,14 @@
 // Removed unused error imports
 /// Service discovery traits and types
+/// 
+/// **MIGRATION NOTE**: This module has been updated to use canonical trait types
 use async_trait::async_trait;
 use futures_util::stream::Stream;
 use std::collections::HashMap;
 
-use crate::errors::Result;
-use crate::traits_root::health::HealthStatus;
-use crate::traits_root::service::ServiceInfo;
+use crate::error::Result;
+use crate::unified_enums::service_types::UnifiedServiceState as HealthStatus;
+use crate::traits::ServiceRegistration as ServiceInfo;
 
 /// Service query for filtering discovered services
 #[derive(Debug, Clone)]

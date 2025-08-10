@@ -58,103 +58,159 @@ pub trait StoragePrimalProvider: Send + Sync {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum StorageCapability {
     // Core storage capabilities
+    /// ZFS pool management and administration
     ZfsPoolManagement,
+    /// Multi-tier storage optimization
     TieredStorage,
+    /// Dataset creation and management operations
     DatasetOperations,
+    /// Snapshot creation and management
     SnapshotManagement,
+    /// Volume provisioning and allocation
     VolumeProvisioning,
 
     // Protocol support
+    /// Network File System protocol support
     NfsProtocol,
+    /// Server Message Block protocol support
     SmbProtocol,
+    /// Internet Small Computer Systems Interface protocol
     IscsiProtocol,
+    /// HTTP-based storage access protocol
     HttpProtocol,
 
     // Advanced features
+    /// Data compression capabilities
     Compression,
+    /// Data deduplication features
     Deduplication,
+    /// Data replication across systems
     Replication,
+    /// Backup and restore functionality
     BackupRestore,
+    /// Performance optimization features
     PerformanceOptimization,
 
     // Universal integration capabilities
+    /// Universal API for cross-system integration
     UniversalApi,
+    /// Real-time data streaming capabilities
     RealTimeStreaming,
+    /// System metrics collection and reporting
     MetricsCollection,
+    /// Event broadcasting and notification system
     EventBroadcasting,
 
     // AI integration capabilities (for any AI module)
+    /// AI-powered data optimization and analysis
     AiDataOptimization,
+    /// Intelligent storage tier management
     IntelligentTiering,
+    /// Predictive analytics for system optimization
     PredictiveAnalytics,
 
     // Security integration capabilities (for any security module)
+    /// Encryption and decryption support
     EncryptionSupport,
+    /// Access control and permission management
     AccessControl,
+    /// Audit logging and compliance tracking
     AuditLogging,
 
     // Distribution capabilities (for any orchestration module)
+    /// Service discovery and registration
     ServiceDiscovery,
+    /// Load balancing and traffic distribution
     LoadBalancing,
+    /// Health monitoring and status tracking
     HealthMonitoring,
 
     // Compute integration capabilities (for any compute module)
+    /// Volume attachment and storage mounting
     VolumeAttachment,
+    /// Resource allocation and management
     ResourceAllocation,
+    /// Performance monitoring and metrics
     PerformanceMonitoring,
 }
 
 /// Universal primal types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PrimalType {
-    Storage,  // NestGate
-    Security, // Any security module
-    AI,       // Any AI module
-    Compute,  // Any compute module
-    Network,  // Any orchestration module
+    /// Storage services (NestGate)
+    Storage,
+    /// Security services (Any security module)
+    Security,
+    /// AI services (Any AI module)
+    AI,
+    /// Compute services (Any compute module)
+    Compute,
+    /// Network orchestration services (Any orchestration module)
+    Network,
 }
 
 /// Universal request structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UniversalRequest {
+    /// Unique request identifier
     pub id: String,
+    /// Operation to be performed
     pub operation: String,
+    /// Request parameters as key-value pairs
     pub parameters: HashMap<String, serde_json::Value>,
+    /// Identity of the requester
     pub requester: String,
+    /// Request timestamp (Unix epoch)
     pub timestamp: u64,
 }
 
 /// Universal response structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UniversalResponse {
+    /// Response identifier matching the request
     pub id: String,
+    /// Whether the operation succeeded
     pub success: bool,
+    /// Response data payload
     pub data: serde_json::Value,
+    /// Error message if operation failed
     pub error: Option<String>,
+    /// Response timestamp (Unix epoch)
     pub timestamp: u64,
 }
 
 /// Health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthStatus {
+    /// Current health status (e.g., "healthy", "degraded", "unhealthy")
     pub status: String,
+    /// System uptime in seconds
     pub uptime: u64,
+    /// Memory usage in bytes
     pub memory_usage: u64,
+    /// Disk usage in bytes
     pub disk_usage: u64,
+    /// Number of active connections
     pub active_connections: u32,
 }
 
 /// Discovered primal information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiscoveredPrimal {
+    /// Unique primal identifier
     pub id: String,
+    /// Type of primal service
     pub primal_type: PrimalType,
+    /// Network endpoint for communication
     pub endpoint: String,
+    /// List of supported capabilities
     pub capabilities: Vec<String>,
+    /// Additional metadata about the primal
     pub metadata: HashMap<String, String>,
 }
 
 impl PrimalType {
+    /// Convert primal type to string representation
     pub fn as_str(&self) -> &'static str {
         match self {
             PrimalType::Storage => "storage",
@@ -168,17 +224,24 @@ impl PrimalType {
 
 /// NestGate Universal Storage Primal
 pub struct NestGateStoragePrimal {
+    /// Primal configuration settings
     pub config: NestGatePrimalConfig,
+    /// Storage capabilities provided by this primal
     pub capabilities: Vec<StorageCapability>,
+    /// Additional metadata about this primal instance
     pub metadata: HashMap<String, String>,
 }
 
 /// Configuration for NestGate primal
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NestGatePrimalConfig {
+    /// Host address for the primal service
     pub host: String,
+    /// Port number for the primal service
     pub port: u16,
+    /// Whether primal discovery is enabled
     pub discovery_enabled: bool,
+    /// Optional endpoint for primal registry
     pub primal_registry_endpoint: Option<String>,
 }
 
@@ -194,7 +257,7 @@ impl NestGateStoragePrimal {
         Self {
             config: NestGatePrimalConfig {
                 host: "127.0.0.1".to_string(),
-                port: 8080,
+                port: nestgate_core::config::defaults::NetworkPortDefaults::get_api_port(),
                 discovery_enabled: true,
                 primal_registry_endpoint: None,
             },
@@ -356,7 +419,7 @@ impl StoragePrimalProvider for NestGateStoragePrimal {
                         primal.endpoint
                     );
                 }
-                Ok(())
+                Ok(()) // Success - we logged the discovered primals
             }
             Err(e) => {
                 warn!("⚠️ Local discovery failed: {}", e);

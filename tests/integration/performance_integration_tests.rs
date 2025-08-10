@@ -1,6 +1,6 @@
-//! Performance Integration Tests
-//! 
-//! Focused performance monitoring integration tests
+/// Performance Integration Tests
+/// 
+/// Focused performance monitoring integration tests
 
 use std::time::{ Instant};
 use tokio::time::sleep;

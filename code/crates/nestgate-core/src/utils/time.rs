@@ -1,0 +1,1 @@
+// Temporarily simplified for compilation

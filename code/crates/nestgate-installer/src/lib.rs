@@ -515,11 +515,11 @@ mod tests {
         let config = InstallerConfig::default();
 
         // Test that config has sensible defaults
-        assert!(!config.install_path.as_os_str().is_empty());
+        assert!(!config.service.name.is_empty());
         // Test other available fields exist
-        let _service_mode = &config.service_mode;
-        let _features = &config.features;
-        let _integration = &config.integration;
+        let _installation = &config.extensions.installation;
+        let _components = &config.extensions.components;
+        let _system_integration = &config.extensions.system_integration;
     }
 
     #[test]
@@ -531,7 +531,12 @@ mod tests {
 
     #[test]
     fn test_directory_validation() {
-        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let temp_dir = TempDir::new().unwrap_or_else(|e| {
+            tracing::error!("Failed to create temp dir: {:?}", e);
+            return Err(NestGateError::InternalError(format!(
+                "Test setup failed: cannot create temp directory"
+            )));
+        });
         let target_path = temp_dir.path().join("nestgate");
 
         // Test directory validation

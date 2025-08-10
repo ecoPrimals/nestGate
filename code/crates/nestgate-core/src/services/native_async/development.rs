@@ -1,0 +1,151 @@
+/// Development Service Implementations
+/// Extracted from native_async_final_services.rs to maintain file size compliance
+/// Contains development/testing implementations of native async service traits
+use std::collections::HashMap;
+use std::time::{Duration, SystemTime};
+
+use crate::Result;
+
+use super::traits::NativeAsyncLoadBalancer;
+use super::types::{LoadBalancerStats, ServiceRequest, ServiceResponse, ServiceStats};
+use crate::service_discovery::types::ServiceInfo;
+use uuid::Uuid;
+
+/// Development load balancer for testing
+pub struct DevelopmentLoadBalancer {
+    service_count: std::sync::Arc<std::sync::atomic::AtomicUsize>,
+}
+
+impl Default for DevelopmentLoadBalancer {
+    fn default() -> Self {
+        Self {
+            service_count: std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0)),
+        }
+    }
+}
+
+impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
+    type ServiceInfo = ServiceInfo;
+    type ServiceRequest = ServiceRequest;
+    type ServiceResponse = ServiceResponse;
+    type LoadBalancerStats = LoadBalancerStats;
+    type ServiceStats = ServiceStats;
+
+    async fn add_service(&self, service: Self::ServiceInfo) -> Result<()> {
+        // Development service addition - always succeed
+        self.service_count
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        println!("DEV: Added service {service:?}");
+        Ok(())
+    }
+
+    async fn remove_service(&self, service_id: &str) -> Result<()> {
+        self.service_count
+            .fetch_sub(1, std::sync::atomic::Ordering::Relaxed);
+        println!("DEV: Removed service {service_id}");
+        Ok(())
+    }
+
+    async fn route_request(&self, _request: Self::ServiceRequest) -> Result<Self::ServiceResponse> {
+        // Mock routing for development
+        Ok(ServiceResponse {
+            success: true,
+            data: b"Development response".to_vec(),
+            request_id: Some("dev-request-123".to_string()),
+            status: crate::traits::UniversalResponseStatus::Success,
+            headers: HashMap::new(),
+            payload: serde_json::json!({"status": "dev_success"}),
+            timestamp: SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs(),
+            duration: Duration::from_millis(1),
+            processing_time: 1,
+            tags: HashMap::new(),
+            error_details: None,
+            correlation_id: Some("dev-correlation".to_string()),
+            trace_id: Some("dev-trace".to_string()),
+        })
+    }
+
+    async fn get_stats(&self) -> Result<Self::LoadBalancerStats> {
+        // Mock stats for development
+        Ok(LoadBalancerStats {
+            total_requests: 100,
+            successful_requests: 95,
+            failed_requests: 5,
+            average_response_time: 1.5,
+            service_stats: HashMap::new(),
+            algorithm: "dev_mock".to_string(),
+            health_aware: false,
+            uptime_seconds: 300,
+        })
+    }
+
+    async fn get_service_stats(&self, _service_id: &str) -> Result<Self::ServiceStats> {
+        // Mock service stats
+        Ok(ServiceStats {
+            requests: 10,
+            successful_requests: 9,
+            failed_requests: 1,
+            average_response_time: 1.2,
+            current_load: 0.1,
+            health_score: 0.9,
+            last_request_time: Some(SystemTime::now()),
+        })
+    }
+
+    async fn health_check_all(&self) -> Result<Vec<(String, bool)>> {
+        // Mock health check - all services healthy in development
+        Ok(vec![
+            ("dev-service-1".to_string(), true),
+            ("dev-service-2".to_string(), true),
+        ])
+    }
+
+    async fn update_service_weight(&self, service_id: &str, weight: f64) -> Result<()> {
+        println!("DEV: Updated service {service_id} weight to {weight}");
+        Ok(())
+    }
+
+    async fn list_services(&self) -> Result<Vec<Self::ServiceInfo>> {
+        // Mock service list
+        Ok(vec![])
+    }
+
+    async fn get_service(&self, service_id: &str) -> Result<Option<Self::ServiceInfo>> {
+        if service_id == "dev-service" {
+            Ok(Some(ServiceInfo {
+                service_id: Uuid::new_v4(),
+                metadata: crate::service_discovery::types::ServiceMetadata {
+                    name: "dev-service".to_string(),
+                    category: crate::service_discovery::types::ServiceCategory::Development,
+                    version: "1.0.0".to_string(),
+                    description: "Development service".to_string(),
+                    health_endpoint: Some("/health".to_string()),
+                    metrics_endpoint: Some("/metrics".to_string()),
+                },
+                capabilities: vec![crate::service_discovery::types::ServiceCapability::Custom {
+                    namespace: "nestgate".to_string(),
+                    capability: "development".to_string(),
+                    version: "1.0.0".to_string(),
+                }],
+                endpoints: vec![crate::service_discovery::types::ServiceEndpoint {
+                    url: "http://localhost:8080".to_string(),
+                    protocol: crate::service_discovery::types::CommunicationProtocol::HTTP,
+                    health_check: Some("/health".to_string()),
+                }],
+                last_seen: SystemTime::now(),
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
+    async fn service_exists(&self, _service_id: &str) -> Result<bool> {
+        Ok(true) // Always exists in development
+    }
+}
+
+/// Type aliases for development use
+pub type DevelopmentServiceLoadBalancer = DevelopmentLoadBalancer;

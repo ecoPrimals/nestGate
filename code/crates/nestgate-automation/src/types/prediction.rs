@@ -130,6 +130,7 @@ impl From<StorageTier> for TierType {
             StorageTier::Warm => TierType::Warm,
             StorageTier::Cold => TierType::Cold,
             StorageTier::Cache => TierType::Hot, // Map cache to hot tier
+            StorageTier::Archive => TierType::Cold, // Map archive to cold tier
         }
     }
 }
@@ -157,6 +158,7 @@ impl From<StorageTier> for TierClassification {
             StorageTier::Warm => TierClassification::Capacity,
             StorageTier::Cold => TierClassification::Archive,
             StorageTier::Cache => TierClassification::Performance, // Map cache to performance
+            StorageTier::Archive => TierClassification::Archive,   // Map archive to archive
         }
     }
 }

@@ -1,7 +1,7 @@
-//! Unit tests for UniversalService trait
-//!
-//! Tests the core service trait functionality including lifecycle management,
-//! health checks, request handling, and metrics collection.
+/// Unit tests for UniversalService trait
+///
+/// Tests the core service trait functionality including lifecycle management,
+/// health checks, request handling, and metrics collection.
 
 use std::time::Duration;
 use tokio::time::timeout;
@@ -42,7 +42,7 @@ async fn test_service_health_check() {
 
 #[tokio::test]
 async fn test_service_request_handling() {
-    use songbird_orchestrator::traits::service::{ServiceRequest, AuthInfo, ClientInfo};
+    use nestgate_core::traits::{UniversalServiceRequest, UniversalServiceResponse};
     use chrono::Utc;
     use std::collections::HashMap;
 
@@ -134,7 +134,7 @@ async fn test_service_load_handling() {
 
 #[tokio::test]
 async fn test_service_error_simulation() {
-    use songbird_orchestrator::traits::service::{ServiceRequest, AuthInfo, ClientInfo, ResponseStatus};
+    use nestgate_core::traits::{UniversalServiceRequest, UniversalServiceResponse};
     use chrono::Utc;
     use std::collections::HashMap;
 
@@ -198,7 +198,7 @@ async fn test_service_config_update() {
 
 #[tokio::test]
 async fn test_service_response_timing() {
-    use songbird_orchestrator::traits::service::{ServiceRequest, AuthInfo, ClientInfo};
+    use nestgate_core::traits::{UniversalServiceRequest, UniversalServiceResponse};
     use chrono::Utc;
     use std::collections::HashMap;
     use std::time::Instant;
@@ -246,7 +246,7 @@ async fn test_service_response_timing() {
 
 #[tokio::test]
 async fn test_concurrent_requests() {
-    use songbird_orchestrator::traits::service::{ServiceRequest, AuthInfo, ClientInfo};
+    use nestgate_core::traits::{UniversalServiceRequest, UniversalServiceResponse};
     use chrono::Utc;
     use std::collections::HashMap;
     use tokio::time::Instant;

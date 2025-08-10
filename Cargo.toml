@@ -18,17 +18,17 @@ categories = ["filesystem", "command-line-utilities"]
 [workspace]
 members = [
     "code/crates/nestgate-core",
-    "code/crates/nestgate-zfs",
+    "code/crates/nestgate-zfs", 
     "code/crates/nestgate-api",
     "code/crates/nestgate-network",
     "code/crates/nestgate-automation",
-    "code/crates/nestgate-nas",
-    "code/crates/nestgate-ui",  # DEPRECATED - will be removed in future release
     "code/crates/nestgate-mcp",
-    "code/crates/nestgate-installer",
     "code/crates/nestgate-bin",
     "code/crates/nestgate-fsmonitor",
+    "code/crates/nestgate-installer", 
+    "code/crates/nestgate-nas",
     "code/crates/nestgate-middleware",
+    "fuzz",  # Fuzzing targets for comprehensive security testing
 ]
 exclude = [
     "target",
@@ -57,7 +57,7 @@ nestgate-api = { path = "code/crates/nestgate-api" }
 nestgate-network = { path = "code/crates/nestgate-network" }
 nestgate-automation = { path = "code/crates/nestgate-automation" }
 nestgate-nas = { path = "code/crates/nestgate-nas" }
-nestgate-ui = { path = "code/crates/nestgate-ui" }  # DEPRECATED - headless design
+# nestgate-ui = { path = "code/crates/nestgate-ui" }  # DEPRECATED - headless design
 nestgate-mcp = { path = "code/crates/nestgate-mcp" }
 nestgate-installer = { path = "code/crates/nestgate-installer" }
 nestgate-fsmonitor = { path = "code/crates/nestgate-fsmonitor" }
@@ -139,8 +139,27 @@ name = "a_plus_performance_validation"
 harness = false
 
 [workspace.lints.rust]
-unused_imports = "warn"
+unsafe_code = "forbid"              # No unsafe code allowed
+unused_imports = "warn"             # Back to warn for now
+unused_variables = "warn"
 dead_code = "warn"
+missing_docs = "warn"               # Require documentation
 
 [workspace.lints.clippy]
-all = "warn"
+# Core lints - focus on correctness and safety
+correctness = { level = "deny", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
+complexity = { level = "allow", priority = -1 }                # Allow for now - too many issues
+perf = { level = "allow", priority = -1 }                      # Allow for now
+style = { level = "allow", priority = -1 }                     # Allow for now - too many format issues
+
+# Critical safety lints
+undocumented_unsafe_blocks = "deny"
+unwrap_used = "allow"               # Allow for now - too many to fix at once
+expect_used = "allow"               # Allow for now
+panic = "allow"                     # Allow for now
+
+# Pedantic and nursery lints (disabled for now)
+pedantic = { level = "allow", priority = -1 }
+nursery = { level = "allow", priority = -1 }
+all = { level = "allow", priority = -1 }

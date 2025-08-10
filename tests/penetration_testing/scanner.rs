@@ -1,4 +1,4 @@
-//! Penetration Testing Scanner Module
+/// Penetration Testing Scanner Module
 
 // Placeholder implementation - would contain vulnerability scanners
 pub struct VulnerabilityScanner;

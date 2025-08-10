@@ -18,7 +18,7 @@ use crate::handlers::zfs::types::{
     CreateDatasetRequest, CreatePoolRequest, CreateSnapshotRequest, TierPredictionRequest,
 };
 use crate::routes::AppState;
-use nestgate_core::ResponseBuilder;
+use nestgate_core::response::ResponseBuilder;
 
 /// Get ZFS service instance
 async fn get_zfs_service(state: &AppState) -> Result<Arc<nestgate_zfs::ZfsManager>, String> {
@@ -241,7 +241,7 @@ pub async fn create_zfs_dataset(
                 .create_dataset(
                     &request.name,
                     &request.parent,
-                    nestgate_core::StorageTier::Hot,
+                    nestgate_core::types::StorageTier::Hot,
                 )
                 .await
             {

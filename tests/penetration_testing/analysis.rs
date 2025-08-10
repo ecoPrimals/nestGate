@@ -1,4 +1,4 @@
-//! Penetration Testing Analysis
+/// Penetration Testing Analysis
 
 // Placeholder implementation - would contain analysis and reporting logic
 pub struct AnalysisEngine;

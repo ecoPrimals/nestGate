@@ -8,7 +8,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use nestgate_core::get_or_create_uuid;
+use nestgate_core::uuid_cache::get_or_create_uuid;
 use std::{collections::HashMap, sync::Arc, time::SystemTime};
 use tokio::sync::{broadcast, RwLock};
 // Removed unused tracing import
@@ -18,59 +18,88 @@ use uuid::Uuid;
 /// WebSocket event types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum WebSocketEventType {
+    /// A new WebSocket connection was established
     ConnectionEstablished,
+    /// A message was sent or received
     Message,
+    /// A WebSocket connection was closed
     Disconnection,
+    /// An error occurred during WebSocket communication
     Error,
+    /// A ping frame was sent or received
     Ping,
+    /// A pong frame was sent or received
     Pong,
 }
 
 /// WebSocket event structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WebSocketEvent {
+    /// Unique identifier for this event
     pub event_id: Uuid,
+    /// Client that triggered this event
     pub client_id: Uuid,
+    /// Type of WebSocket event
     pub event_type: WebSocketEventType,
+    /// Event data payload
     pub data: serde_json::Value,
+    /// Event occurrence timestamp
     pub timestamp: SystemTime,
 }
 
 /// Connection parameters for WebSocket upgrade
 #[derive(Debug, Deserialize)]
 pub struct ConnectionParams {
+    /// Optional client type specification
     pub client_type: Option<String>,
+    /// Optional client identifier
     pub client_id: Option<String>,
 }
 
 /// WebSocket connection statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WebSocketStats {
+    /// Total number of connections established
     pub total_connections: u64,
+    /// Number of currently active connections
     pub active_connections: u64,
+    /// Total messages sent through all connections
     pub messages_sent: u64,
+    /// Total messages received from all connections
     pub messages_received: u64,
+    /// Total bytes transferred through WebSocket connections
     pub bytes_transferred: u64,
+    /// Number of errors encountered
     pub errors: u64,
 }
 
 /// WebSocket client types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ClientType {
+    /// Web-based user interface client
     WebUI,
+    /// System monitoring client
     Monitor,
+    /// Third-party integration client
     Integration,
+    /// Mobile application client
     Mobile,
+    /// API client for programmatic access
     ApiClient,
 }
 
 /// WebSocket connection information
 #[derive(Debug, Clone, Serialize)]
 pub struct ConnectionInfo {
+    /// Unique client identifier
     pub client_id: Uuid,
+    /// Type of WebSocket client
     pub client_type: ClientType,
+    /// Timestamp when connection was established
     pub connected_at: SystemTime,
+    /// Timestamp of last client activity
     pub last_activity: SystemTime,
+    /// List of subscribed channels or topics
     pub subscriptions: Vec<String>,
 }
 
@@ -88,6 +117,7 @@ impl Default for WebSocketManager {
 }
 
 impl WebSocketManager {
+    /// Create a new WebSocket manager
     pub fn new() -> Self {
         let (event_broadcaster, _) = broadcast::channel(1000);
 
@@ -228,7 +258,6 @@ impl WebSocketManager {
             connections.len(),
             event_json_ref
         );
-
         Ok(())
     }
 

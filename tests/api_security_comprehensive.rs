@@ -233,69 +233,86 @@ mod tests {
 
     #[tokio::test]
     async fn test_authentication_bypass_protection() {
-        let app = create_test_app();
-        let server = TestServer::new(app).unwrap();
+        use crate::common::{assert_equals, create_test_server, TestResult};
 
-        // Test access to protected resource without token
-        let response = server
-            .get("/resources/00000000-0000-0000-0000-000000000000")
-            .await;
-        assert_eq!(response.status_code(), StatusCode::UNAUTHORIZED);
+        async fn run_test() -> TestResult<()> {
+            let app = create_test_app();
+            let server = create_test_server(app, "authentication_bypass_protection")?;
 
-        // Test access with invalid token
-        let response = server
-            .get("/resources/00000000-0000-0000-0000-000000000000")
-            .add_header("authorization", "Bearer invalid_token")
-            .await;
-        assert_eq!(response.status_code(), StatusCode::UNAUTHORIZED);
+            // Test access to protected resource without token
+            let response = server
+                .get("/resources/00000000-0000-0000-0000-000000000000")
+                .await;
+            assert_equals(
+                response.status_code(),
+                StatusCode::UNAUTHORIZED,
+                "Access without token should be unauthorized",
+            )?;
 
-        // Test access with malformed authorization header
-        let response = server
-            .get("/resources/00000000-0000-0000-0000-000000000000")
-            .add_header("authorization", "InvalidFormat")
-            .await;
-        assert_eq!(response.status_code(), StatusCode::UNAUTHORIZED);
+            // Test access with invalid token
+            let response = server
+                .get("/resources/00000000-0000-0000-0000-000000000000")
+                .add_header("authorization", "Bearer invalid_token")
+                .await;
+            assert_equals(
+                response.status_code(),
+                StatusCode::UNAUTHORIZED,
+                "Access with invalid token should be unauthorized",
+            )?;
+
+            Ok(())
+        }
+
+        safe_test!("test_authentication_bypass_protection", run_test());
     }
 
     #[tokio::test]
     async fn test_authorization_boundary_enforcement() {
-        let app = create_test_app();
-        let server = TestServer::new(app).unwrap();
+        use crate::common::{assert_equals, create_test_server, TestResult};
 
-        // Login as user
-        let login_response = server
-            .post("/auth/login")
-            .json(&json!({
-                "username": "user",
-                "password": "user123"
-            }))
-            .await;
-        assert_eq!(login_response.status_code(), StatusCode::OK);
+        async fn run_test() -> TestResult<()> {
+            let app = create_test_app();
+            let server = create_test_server(app, "authorization_boundary_enforcement")?;
 
-        let auth_data: AuthResponse = login_response.json();
-        let _user_token = &auth_data.token;
+            // Login as user
+            let login_response = server
+                .post("/auth/login")
+                .json(&json!({
+                    "username": "user",
+                    "password": "user123"
+                }))
+                .await;
+            assert_eq!(login_response.status_code(), StatusCode::OK);
 
-        // Login as admin to get admin's resource ID
-        let admin_login_response = server
-            .post("/auth/login")
-            .json(&json!({
-                "username": "admin",
-                "password": "admin123"
-            }))
-            .await;
-        let admin_auth_data: AuthResponse = admin_login_response.json();
-        let admin_token = &admin_auth_data.token;
+            let auth_data: AuthResponse = login_response.json();
+            let _user_token = &auth_data.token;
 
-        // Admin should be able to access any resource
-        let response = server
-            .get("/resources/00000000-0000-0000-0000-000000000001")
-            .add_header("authorization", &format!("Bearer {admin_token}"))
-            .await;
-        // This will return NOT_FOUND since we're using a fake UUID, but not FORBIDDEN
-        assert!(response.status_code() == StatusCode::NOT_FOUND);
+            // Login as admin to get admin's resource ID
+            let admin_login_response = server
+                .post("/auth/login")
+                .json(&json!({
+                    "username": "admin",
+                    "password": "admin123"
+                }))
+                .await;
+            let admin_auth_data: AuthResponse = admin_login_response.json();
+            let admin_token = &admin_auth_data.token;
 
-        // User should not be able to access admin's resources (if we had real UUIDs)
-        // This tests the authorization logic
+            // Admin should be able to access any resource
+            let response = server
+                .get("/resources/00000000-0000-0000-0000-000000000001")
+                .add_header("authorization", &format!("Bearer {admin_token}"))
+                .await;
+            // This will return NOT_FOUND since we're using a fake UUID, but not FORBIDDEN
+            assert!(response.status_code() == StatusCode::NOT_FOUND);
+
+            // User should not be able to access admin's resources (if we had real UUIDs)
+            // This tests the authorization logic
+
+            Ok(())
+        }
+
+        safe_test!("test_authorization_boundary_enforcement", run_test());
     }
 
     #[tokio::test]
@@ -407,34 +424,46 @@ mod tests {
 
     #[tokio::test]
     async fn test_sql_injection_protection() {
-        let app = create_test_app();
-        let server = TestServer::new(app).unwrap();
+        use crate::common::{assert_equals, create_test_server, TestResult};
 
-        // Test normal query
-        let response = server.get("/search?query=hello").await;
-        assert_eq!(response.status_code(), StatusCode::OK);
+        async fn run_test() -> TestResult<()> {
+            let app = create_test_app();
+            let server = create_test_server(app, "sql_injection_protection")?;
 
-        // Test SQL injection attempts
-        let injection_attempts = [
-            "'; DROP TABLE users; --",
-            "1' OR '1'='1",
-            "UNION SELECT * FROM users",
-            "admin'--",
-            "' OR 1=1 --",
-            "'; INSERT INTO users VALUES",
-            "1'; UPDATE users SET",
-        ];
-
-        for injection in &injection_attempts {
-            let response = server
-                .get(&format!("/search?query={}", injection.replace(" ", "%20")))
-                .await;
-            assert_eq!(
+            // Test normal query
+            let response = server.get("/search?query=hello").await;
+            assert_equals(
                 response.status_code(),
-                StatusCode::BAD_REQUEST,
-                "Failed to block injection: {injection}"
-            );
+                StatusCode::OK,
+                "Normal query should succeed",
+            )?;
+
+            // Test SQL injection attempts
+            let injection_attempts = [
+                "'; DROP TABLE users; --",
+                "1' OR '1'='1",
+                "UNION SELECT * FROM users",
+                "admin'--",
+                "' OR 1=1 --",
+                "'; INSERT INTO users VALUES",
+                "1'; UPDATE users SET",
+            ];
+
+            for injection in &injection_attempts {
+                let response = server
+                    .get(&format!("/search?query={}", injection.replace(" ", "%20")))
+                    .await;
+                assert_equals(
+                    response.status_code(),
+                    StatusCode::BAD_REQUEST,
+                    &format!("Failed to block injection: {}", injection),
+                )?;
+            }
+
+            Ok(())
         }
+
+        safe_test!("test_sql_injection_protection", run_test());
     }
 
     #[tokio::test]

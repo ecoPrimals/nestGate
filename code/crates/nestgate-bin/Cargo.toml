@@ -20,7 +20,6 @@ nestgate-zfs = { path = "../nestgate-zfs" }
 nestgate-network = { path = "../nestgate-network" }
 nestgate-api = { path = "../nestgate-api" }
 nestgate-mcp = { path = "../nestgate-mcp" }
-nestgate-ui = { path = "../nestgate-ui" }
 
 # Note: Songbird runs as separate service - no compilation dependency needed
 

@@ -133,10 +133,11 @@ where
     }
 
     /// Get current pool statistics (returns a copy for thread safety)
+    /// Zero-copy optimization: PoolStatistics implements Copy
     pub fn statistics(&self) -> PoolStatistics {
         self.statistics
             .read()
-            .map(|stats| stats.clone()) // Clone required since PoolStatistics doesn't implement Copy
+            .map(|stats| *stats) // Zero-copy access - PoolStatistics is Copy
             .unwrap_or_else(|e| {
                 tracing::error!("Failed to read pool statistics: {}", e);
                 PoolStatistics::new() // Return default statistics on error
@@ -323,7 +324,8 @@ where
 }
 
 /// Memory pool performance statistics
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Optimized for zero-copy access - all fields are Copy types
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct PoolStatistics {
     /// Number of successful buffer retrievals from pool
     pub hits: u64,
@@ -642,7 +644,13 @@ mod tests {
 
         // Wait for all threads
         for handle in handles {
-            let result = handle.join().unwrap();
+            let result = handle.join().unwrap_or_else(|e| {
+    tracing::error!("Unwrap failed: {:?}", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed: {:?}", e)
+).into())
+});
             assert!(result < 5);
         }
 

@@ -1,0 +1,27 @@
+--- code/crates/nestgate-core/src/universal_storage/types.rs
++++ replace StorageLoadBalancer::select_backend -> Result<StorageBackend> with Ok(Default::default())
+@@ -445,23 +445,17 @@
+ }
+ 
+ impl StorageLoadBalancer {
+     pub fn new() -> Self {
+         Self
+     }
+ 
+     pub async fn select_backend(&self, _request: &StorageRequest) -> Result<StorageBackend> {
+-        Ok(StorageBackend {
+-            name: "default".to_string(),
+-            protocol: StorageProtocol::FileSystem,
+-            capabilities: vec![StorageCapability::ReadWrite],
+-            health_status: "healthy".to_string(),
+-            endpoint: "local://default".to_string(),
+-        })
++        Ok(Default::default()) /* ~ changed by cargo-mutants ~ */
+     }
+ }
+ 
+ impl ConsistencyManager {
+     pub fn new() -> Result<Self> {
+         Ok(Self)
+     }
+ 

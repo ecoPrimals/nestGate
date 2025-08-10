@@ -8,6 +8,15 @@ use std::time::SystemTime;
 
 use crate::Result;
 
+/// Allocation status for resources
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum AllocationStatus {
+    Active,
+    Inactive,
+    Pending,
+    Failed,
+}
+
 /// Storage tier enum for tiered storage management
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum StorageTier {
@@ -19,6 +28,8 @@ pub enum StorageTier {
     Cold,
     /// Fast cache storage for temporary data
     Cache,
+    /// Long-term archival storage for rarely accessed data
+    Archive,
 }
 
 impl Display for StorageTier {
@@ -28,6 +39,7 @@ impl Display for StorageTier {
             StorageTier::Warm => write!(f, "Warm"),
             StorageTier::Cold => write!(f, "Cold"),
             StorageTier::Cache => write!(f, "Cache"),
+            StorageTier::Archive => write!(f, "Archive"),
         }
     }
 }
@@ -40,6 +52,7 @@ impl StorageTier {
             StorageTier::Warm,
             StorageTier::Cold,
             StorageTier::Cache,
+            StorageTier::Archive,
         ]
     }
 
@@ -50,12 +63,24 @@ impl StorageTier {
             StorageTier::Warm => 2,
             StorageTier::Cold => 3,
             StorageTier::Cache => 0, // Special case - cache has unique priority
+            StorageTier::Archive => 4, // Lowest priority for long-term storage
         }
     }
 
     /// Check if this tier is suitable for caching
     pub fn is_cache_tier(&self) -> bool {
         matches!(self, StorageTier::Cache | StorageTier::Hot)
+    }
+
+    /// Get the string representation of the storage tier
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            StorageTier::Hot => "hot",
+            StorageTier::Warm => "warm",
+            StorageTier::Cold => "cold",
+            StorageTier::Cache => "cache",
+            StorageTier::Archive => "archive",
+        }
     }
 }
 
@@ -295,23 +320,75 @@ pub enum ManagerStatus {
     Error,
 }
 
-/// Universal service trait for lightweight service components
-#[async_trait]
-pub trait UniversalService: Send + Sync {
-    /// Service name
-    fn service_name(&self) -> &str;
+// REMOVED: Deprecated UniversalService trait eliminated
+// All implementations migrated to nestgate_core::traits::UniversalService
 
-    /// Service version
-    fn service_version(&self) -> &str;
+/// **RESOURCE ALLOCATION** - manages system resource assignments
+#[derive(Debug, Clone)]
+pub struct ResourceAllocation {
+    pub id: String,
+    pub resource_type: String,
+    pub status: String,
+    pub amount: u64,
+    pub cpu_cores: u32,
+    pub memory_mb: u64,
+    pub disk_gb: u64,
+    pub network_bandwidth_mbps: u32,
+    pub allocated_at: std::time::SystemTime,
+    pub expires_at: Option<std::time::SystemTime>,
+    pub metadata: std::collections::HashMap<String, String>,
+}
 
-    /// Start the service
-    async fn start(&mut self) -> Result<()>;
+impl Default for ResourceAllocation {
+    fn default() -> Self {
+        Self {
+            id: uuid::Uuid::new_v4().to_string(),
+            resource_type: "compute".to_string(),
+            status: "available".to_string(),
+            amount: 1,
+            cpu_cores: 1,
+            memory_mb: 512,
+            disk_gb: 10,
+            network_bandwidth_mbps: 100,
+            allocated_at: std::time::SystemTime::now(),
+            expires_at: None,
+            metadata: std::collections::HashMap::new(),
+        }
+    }
+}
 
-    /// Stop the service
-    async fn stop(&mut self) -> Result<()>;
+/// **WORKLOAD RESULT** - represents the result of a workload execution
+#[derive(Debug, Clone)]
+pub struct WorkloadResult {
+    pub workload_id: String,
+    pub success: bool,
+    pub status: String,
+    pub message: String,
+    pub execution_time_ms: u64,
+    pub resources_used: ResourceAllocation,
+    pub result_data: serde_json::Value,
+    pub metrics: std::collections::HashMap<String, f64>,
+    pub started_at: std::time::SystemTime,
+    pub completed_at: Option<std::time::SystemTime>,
+    pub error_message: Option<String>,
+}
 
-    /// Check if service is healthy
-    async fn is_healthy(&self) -> bool;
+impl Default for WorkloadResult {
+    fn default() -> Self {
+        Self {
+            workload_id: uuid::Uuid::new_v4().to_string(),
+            success: true,
+            status: "completed".to_string(),
+            message: "Workload completed successfully".to_string(),
+            execution_time_ms: 0,
+            resources_used: ResourceAllocation::default(),
+            result_data: serde_json::Value::Null,
+            metrics: std::collections::HashMap::new(),
+            started_at: std::time::SystemTime::now(),
+            completed_at: Some(std::time::SystemTime::now()),
+            error_message: None,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -347,37 +424,76 @@ mod tests {
     }
 
     #[test]
-    fn test_storage_tier_serialization() {
+    fn test_storage_tier_serialization() -> crate::Result<()> {
         for tier in StorageTier::all() {
-            let serialized = serde_json::to_string(&tier).unwrap();
-            let deserialized: StorageTier = serde_json::from_str(&serialized).unwrap();
+            let serialized = serde_json::to_string(&tier).map_err(|e| {
+                tracing::error!("JSON serialization failed: {}", e);
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("JSON serialization error: {}", e),
+                )
+            })?;
+            let deserialized: StorageTier = serde_json::from_str(&serialized).map_err(|e| {
+                tracing::error!("JSON parsing failed: {}", e);
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("JSON parsing error: {}", e),
+                )
+            })?;
             assert_eq!(tier, deserialized);
         }
+        Ok(())
     }
 
     #[test]
-    fn test_health_status() {
+    fn test_health_status() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let health = HealthStatus::default();
         assert!(health.overall_healthy);
         assert!(!health.services_running.is_empty());
 
         // Test serialization
-        let serialized = serde_json::to_string(&health).unwrap();
-        let deserialized: HealthStatus = serde_json::from_str(&serialized).unwrap();
+        let serialized = serde_json::to_string(&health).map_err(|e| {
+            tracing::error!("JSON serialization failed: {}", e);
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("JSON serialization error: {}", e),
+            )
+        })?;
+        let deserialized: HealthStatus = serde_json::from_str(&serialized).map_err(|e| {
+            tracing::error!("JSON parsing failed: {}", e);
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("JSON parsing error: {}", e),
+            )
+        })?;
         assert_eq!(health.overall_healthy, deserialized.overall_healthy);
+        Ok(())
     }
 
     #[test]
-    fn test_system_info() {
+    fn test_system_info() -> crate::Result<()> {
         let info = SystemInfo::default();
         assert!(!info.hostname.is_empty());
         assert!(info.total_memory > 0);
         assert!(info.cpu_cores > 0);
 
         // Test serialization
-        let serialized = serde_json::to_string(&info).unwrap();
-        let deserialized: SystemInfo = serde_json::from_str(&serialized).unwrap();
+        let serialized = serde_json::to_string(&info).map_err(|e| {
+            tracing::error!("JSON serialization failed: {}", e);
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("JSON serialization error: {}", e),
+            )
+        })?;
+        let deserialized: SystemInfo = serde_json::from_str(&serialized).map_err(|e| {
+            tracing::error!("JSON parsing failed: {}", e);
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("JSON parsing error: {}", e),
+            )
+        })?;
         assert_eq!(info.hostname, deserialized.hostname);
+        Ok(())
     }
 
     #[test]
@@ -392,7 +508,12 @@ mod tests {
     }
 
     #[test]
-    fn test_access_pattern_serialization() {
+    fn test_access_pattern_serialization() -> crate::Result<()> {
+        Ok(())
+    }
+
+    #[test]
+    fn test_serialization_backup() -> crate::Result<()> {
         let patterns = vec![
             AccessPattern::Sequential,
             AccessPattern::Random,
@@ -402,11 +523,101 @@ mod tests {
         ];
 
         for pattern in patterns {
-            let serialized = serde_json::to_string(&pattern).unwrap();
-            let _deserialized: AccessPattern = serde_json::from_str(&serialized).unwrap();
+            let serialized = serde_json::to_string(&pattern).map_err(|e| {
+                tracing::error!("JSON serialization failed: {}", e);
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("JSON serialization error: {}", e),
+                )
+            })?;
+            let _deserialized: AccessPattern = serde_json::from_str(&serialized).map_err(|e| {
+                tracing::error!("JSON parsing failed: {}", e);
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("JSON parsing error: {}", e),
+                )
+            })?;
             // Note: We can't use PartialEq on AccessPattern in the current setup
             // but serialization/deserialization should work
             assert!(!serialized.is_empty());
         }
+        Ok(())
+    }
+}
+
+// ==================== NETWORK TYPES ====================
+
+/// Network statistics for monitoring and diagnostics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NetworkStats {
+    pub bytes_sent: u64,
+    pub bytes_received: u64,
+    pub packets_sent: u64,
+    pub packets_received: u64,
+    pub connections_active: u32,
+    pub connections_total: u64,
+    pub errors: u64,
+    pub timestamp: SystemTime,
+}
+
+impl Default for NetworkStats {
+    fn default() -> Self {
+        Self {
+            bytes_sent: 0,
+            bytes_received: 0,
+            packets_sent: 0,
+            packets_received: 0,
+            connections_active: 0,
+            connections_total: 0,
+            errors: 0,
+            timestamp: SystemTime::now(),
+        }
+    }
+}
+
+/// Service instance information for discovery
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceInstance {
+    pub id: String,
+    pub name: String,
+    pub version: String,
+    pub endpoint: String,
+    pub port: u16,
+    pub status: ServiceStatus,
+    pub capabilities: Vec<String>,
+    pub metadata: std::collections::HashMap<String, String>,
+    pub last_seen: SystemTime,
+}
+
+impl Default for ServiceInstance {
+    fn default() -> Self {
+        Self {
+            id: uuid::Uuid::new_v4().to_string(),
+            name: "unknown".to_string(),
+            version: "0.1.0".to_string(),
+            endpoint: "localhost".to_string(),
+            port: 8080,
+            status: ServiceStatus::Unknown,
+            capabilities: vec![],
+            metadata: std::collections::HashMap::new(),
+            last_seen: SystemTime::now(),
+        }
+    }
+}
+
+/// Service status enumeration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum ServiceStatus {
+    Running,
+    Stopped,
+    Error,
+    Unknown,
+    Healthy,
+    Unhealthy,
+}
+
+impl Default for ServiceStatus {
+    fn default() -> Self {
+        Self::Unknown
     }
 }

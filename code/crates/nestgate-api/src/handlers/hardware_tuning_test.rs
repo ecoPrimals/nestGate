@@ -5,7 +5,8 @@ mod tests {
     use tokio::test;
     use uuid::Uuid;
     use chrono::Utc;
-    use std::collections::HashMap;
+    use nestgate_core::hardware_tuning::TuningResult;
+use std::collections::HashMap;
     use nestgate_core::{get_or_create_uuid};
 
     /// Mock Toadstool client for testing
@@ -76,7 +77,6 @@ mod tests {
 
         pub async fn register_tuning_service(&self, service: &TuningServiceRegistration) -> Result<()> {
             println!("🧪 Mock: Registering service: {}", service.name);
-            Ok(())
         }
 
         pub async fn request_compute_resources(&self, request: &ComputeResourceRequest) -> Result<ComputeAllocation> {
@@ -109,12 +109,10 @@ mod tests {
 
         pub async fn subscribe_to_hardware_feed(&self, _callback: Box<dyn Fn(HardwareEvent) + Send + Sync>) -> Result<()> {
             println!("🧪 Mock: Subscribed to hardware feed");
-            Ok(())
         }
 
         pub async fn release_compute_resources(&self, allocation_id: &str) -> Result<()> {
             println!("🧪 Mock: Released allocation: {}", allocation_id);
-            Ok(())
         }
     }
 
@@ -212,7 +210,13 @@ mod tests {
         let result = mock_client.request_compute_resources(&request).await;
         assert!(result.is_ok());
 
-        let allocation = result.expect("Failed to get compute allocation from mock client");
+        let allocation = result.unwrap_or_else(|e| {
+    tracing::error!("Expect failed ({}): {:?}", "Failed to get compute allocation from mock client", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed - {}: {:?}", "Failed to get compute allocation from mock client", e)
+).into())
+});
         assert_eq!(allocation.cpu_cores, 4);
         assert_eq!(allocation.memory_gb, 8);
         assert!(allocation.gpu_allocation.is_some());
@@ -225,7 +229,13 @@ mod tests {
         let result = mock_client.get_live_hardware_metrics().await;
         assert!(result.is_ok());
 
-        let metrics = result.expect("Failed to get hardware metrics from mock client");
+        let metrics = result.unwrap_or_else(|e| {
+    tracing::error!("Expect failed ({}): {:?}", "Failed to get hardware metrics from mock client", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed - {}: {:?}", "Failed to get hardware metrics from mock client", e)
+).into())
+});
         assert!(metrics._cpu_usage > 0.0);
         assert!(metrics.memory_usage > 0.0);
         assert!(metrics.gpu_usage.is_some());
@@ -240,7 +250,13 @@ mod tests {
         let tuning_result = mock_handler.mock_auto_tune().await;
         assert!(tuning_result.is_ok());
 
-        let result = tuning_result.expect("Failed to get tuning result");
+        let result = tuning_result.unwrap_or_else(|e| {
+    tracing::error!("Expect failed ({}): {:?}", "Failed to get tuning result", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed - {}: {:?}", "Failed to get tuning result", e)
+).into())
+});
         assert_eq!(result.profile_name, "mock_performance");
         assert!(!result.optimizations_applied.is_empty());
         assert!(result.estimated_performance_gain > 0.0);
@@ -253,7 +269,13 @@ mod tests {
         let benchmark_result = mock_handler.mock_benchmark("cpu_intensive").await;
         assert!(benchmark_result.is_ok());
 
-        let result = benchmark_result.expect("Failed to get benchmark result");
+        let result = benchmark_result.unwrap_or_else(|e| {
+    tracing::error!("Expect failed ({}): {:?}", "Failed to get benchmark result", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed - {}: {:?}", "Failed to get benchmark result", e)
+).into())
+});
         assert_eq!(result.name, "cpu_intensive");
         assert!(result.metrics.overall_score > 0.0);
         assert!(result.baseline_comparison.is_some());
@@ -273,7 +295,13 @@ mod tests {
             priority: ComputePriority::Low,
         };
 
-        let allocation = mock_client.request_compute_resources(&request).await.expect("Failed to allocate compute resources");
+        let allocation = mock_client.request_compute_resources(&request).await.unwrap_or_else(|e| {
+    tracing::error!("Expect failed ({}): {:?}", "Failed to allocate compute resources", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed - {}: {:?}", "Failed to allocate compute resources", e)
+).into())
+});
         assert!(!allocation.allocation_id.is_empty());
 
         // Release resources
@@ -328,7 +356,13 @@ mod tests {
         }
 
         // Mock tuning process
-        let tuning_result = mock_handler.mock_auto_tune().await.expect("Failed to auto-tune hardware");
+        let tuning_result = mock_handler.mock_auto_tune().await.unwrap_or_else(|e| {
+    tracing::error!("Expect failed ({}): {:?}", "Failed to auto-tune hardware", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed - {}: {:?}", "Failed to auto-tune hardware", e)
+).into())
+});
         assert!(tuning_result.estimated_performance_gain > 0.0);
     }
 }

@@ -71,26 +71,46 @@ pub struct ServiceMetadata {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ServiceCategory {
     /// Computational services
-    Compute { specialties: Vec<String> },
+    Compute {
+        /// Specialized compute capabilities
+        specialties: Vec<String>,
+    },
 
     /// Storage and data services
-    Storage { types: Vec<String> },
+    Storage {
+        /// Storage service types
+        types: Vec<String>,
+    },
 
     /// Security and identity services
-    Security { domains: Vec<String> },
+    Security {
+        /// Security domains and specializations
+        domains: Vec<String>,
+    },
 
     /// Network and communication services
-    Network { layers: Vec<String> },
+    Network {
+        /// Network protocol layers
+        layers: Vec<String>,
+    },
 
     /// Orchestration and coordination services
-    Orchestration { scopes: Vec<String> },
+    Orchestration {
+        /// Orchestration scopes and areas
+        scopes: Vec<String>,
+    },
 
     /// Artificial intelligence services
-    Intelligence { modalities: Vec<String> },
+    Intelligence {
+        /// AI modalities and capabilities
+        modalities: Vec<String>,
+    },
 
     /// Community-defined custom categories
     Custom {
+        /// Custom category name
         category: String,
+        /// Custom subcategories
         subcategories: Vec<String>,
     },
 }
@@ -100,50 +120,71 @@ pub enum ServiceCategory {
 pub enum ServiceCapability {
     /// Computational capabilities
     Computation {
+        /// Types of computational services offered
         types: Vec<String>,
+        /// Available compute resources
         resources: ComputeResources,
+        /// Resource constraints and limitations
         constraints: Vec<String>,
     },
 
     /// Data management capabilities
     DataManagement {
+        /// Supported data operations
         operations: Vec<String>,
+        /// Data consistency level
         consistency: ConsistencyLevel,
+        /// Data durability guarantees
         durability: DurabilityLevel,
     },
 
     /// Security capabilities
     Security {
+        /// Security functions provided
         functions: Vec<String>,
+        /// Compliance standards supported
         compliance: Vec<String>,
+        /// Trust levels offered
         trust_levels: Vec<String>,
     },
 
     /// Network capabilities
     Networking {
+        /// Supported network protocols
         protocols: Vec<String>,
+        /// Network topologies supported
         topologies: Vec<String>,
+        /// Quality of Service levels available
         qos_levels: Vec<String>,
     },
 
     /// Coordination capabilities
     Coordination {
+        /// Coordination patterns supported
         patterns: Vec<String>,
+        /// Consistency model used
         consistency: String,
+        /// Fault tolerance approach
         fault_tolerance: String,
     },
 
     /// AI/ML capabilities
     ArtificialIntelligence {
+        /// AI/ML models available
         models: Vec<String>,
+        /// Tasks that can be performed
         tasks: Vec<String>,
+        /// Available interfaces for AI services
         interfaces: Vec<String>,
     },
 
     /// Custom capabilities (community extensible)
     Custom {
+        /// Domain or category of the custom capability
         domain: String,
+        /// Specific capability name
         capability: String,
+        /// Custom parameters for the capability
         parameters: HashMap<String, serde_json::Value>,
     },
 }
@@ -166,18 +207,26 @@ pub struct ServiceEndpoint {
 /// Endpoint types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EndpointType {
+    /// HTTP/REST endpoint
     Http,
+    /// WebSocket endpoint for real-time communication
     WebSocket,
+    /// gRPC endpoint for high-performance RPC
     Grpc,
+    /// Custom endpoint type
     Custom(String),
 }
 
 /// Security requirements for endpoints
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityRequirements {
+    /// Whether TLS encryption is required
     pub tls_required: bool,
+    /// Whether authentication is required
     pub authentication_required: bool,
+    /// Whether authorization checks are required
     pub authorization_required: bool,
+    /// Whether audit logging is enabled
     pub audit_logging: bool,
 }
 
@@ -199,42 +248,59 @@ pub struct ResourceSpec {
 /// GPU requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GpuRequirements {
+    /// Number of GPUs required
     pub gpu_count: u32,
+    /// GPU memory required in GB
     pub gpu_memory_gb: u32,
+    /// Specific GPU type required (optional)
     pub gpu_type: Option<String>,
 }
 
 /// Integration preferences
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IntegrationPreferences {
+    /// Preferred service discovery methods
     pub discovery_methods: Vec<DiscoveryMethod>,
+    /// Supported communication protocols
     pub communication_protocols: Vec<CommunicationProtocol>,
+    /// Security requirements and preferences
     pub security_preferences: SecurityPreferences,
 }
 
 /// Discovery methods
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DiscoveryMethod {
+    /// Service registry-based discovery
     Registry,
+    /// DNS-based service discovery
     Dns,
+    /// Multicast-based discovery
     Multicast,
+    /// Custom discovery method
     Custom(String),
 }
 
 /// Communication protocols
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CommunicationProtocol {
+    /// HTTP/REST protocol
     Http,
+    /// WebSocket protocol for real-time communication
     WebSocket,
+    /// gRPC protocol for high-performance RPC
     Grpc,
+    /// Custom communication protocol
     Custom(String),
 }
 
 /// Security preferences
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityPreferences {
+    /// Preferred authentication methods
     pub preferred_auth_methods: Vec<String>,
+    /// Required encryption level
     pub encryption_requirements: EncryptionLevel,
+    /// Whether certificate validation is required
     pub certificate_validation: bool,
 }
 
@@ -286,10 +352,20 @@ pub struct UniversalResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response status for ecosystem requests
 pub enum ResponseStatus {
+    /// Request completed successfully
     Success,
-    Error { code: String, message: String },
+    /// Request failed with error details
+    Error {
+        /// Error code identifier
+        code: String,
+        /// Human-readable error message
+        message: String,
+    },
+    /// Request timed out
     Timeout,
+    /// Service is currently unavailable
     ServiceUnavailable,
 }
 
@@ -309,55 +385,85 @@ pub struct SecurityContext {
     pub security_level: SecurityLevel,
 }
 
+/// Security level for access control
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SecurityLevel {
+    /// Public access - no restrictions
     Public,
+    /// Internal access - within organization
     Internal,
+    /// Restricted access - limited users
     Restricted,
+    /// Confidential access - highest security
     Confidential,
 }
 
 // Supporting types
+/// Contact information for service maintainers
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContactInfo {
+    /// Contact person's name
     pub name: String,
+    /// Contact email address
     pub email: Option<String>,
+    /// Organization or company name
     pub organization: Option<String>,
 }
 
+/// Compute resource requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComputeResources {
+    /// Number of CPU cores required
     pub cpu_cores: f64,
+    /// Memory requirement in GB
     pub memory_gb: u32,
+    /// Storage requirement in GB (optional)
     pub storage_gb: Option<u32>,
 }
 
+/// Data consistency level requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ConsistencyLevel {
+    /// Eventual consistency - data will be consistent eventually
     Eventual,
+    /// Strong consistency - immediate consistency guaranteed
     Strong,
+    /// Causal consistency - causally related operations are consistent
     Causal,
 }
 
+/// Data durability level requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DurabilityLevel {
+    /// In-memory only - data lost on restart
     Memory,
+    /// Persistent to disk - survives restarts
     Persistent,
+    /// Replicated across multiple nodes
     Replicated,
 }
 
+/// Encryption level requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EncryptionLevel {
+    /// No encryption required
     None,
+    /// Basic encryption (e.g., TLS)
     Basic,
+    /// Strong encryption (e.g., AES-256)
     Strong,
 }
 
+/// Health check configuration for services
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheckConfig {
+    /// Health check endpoint URL
     pub endpoint: String,
+    /// Interval between health checks in seconds
     pub interval_seconds: u32,
+    /// Timeout for health check requests in seconds
     pub timeout_seconds: u32,
+    /// Number of failures before marking unhealthy
     pub failure_threshold: u32,
 }
 
@@ -674,10 +780,11 @@ pub struct ServiceMetrics {
     pub timestamp: DateTime<Utc>,
 }
 
-/// Songbird integration trait
+/// Universal orchestration integration trait (capability-based)
+/// Replaces: SongbirdIntegration
 #[async_trait::async_trait]
-pub trait SongbirdIntegration {
-    /// Register service with Songbird
+pub trait OrchestrationIntegration {
+    /// Register service with orchestration capability
     async fn register_service(
         &self,
         registration: &UniversalServiceRegistration,

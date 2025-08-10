@@ -1,41 +1,94 @@
-//! Modern Integration Testing Suite
-//!
-//! Clean, working integration tests that use the current NestGate API
-//! instead of legacy broken APIs.
-
+use chrono::{DateTime, Utc};
+use nestgate_core::error::NestGateError;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+/// Modern Integration Testing Suite
+///
+/// Clean, working integration tests that use the current NestGate API
+/// instead of legacy broken APIs.
 use std::sync::Arc;
 use tokio::time::{sleep, Duration};
+use uuid::Uuid;
 
+// 🚀 ECOSYSTEM UNIFICATION: Use centralized unified test config system
+use crate::common::test_config::{
+    ExternalServiceConfig, TestEnvironmentSettings as TestEnvironmentConfig,
+    TestIntegrationSettings as TestIntegrationConfig, TestIsolationLevel, UnifiedTestConfig,
+    UnifiedTestConfigBuilder,
+};
 use nestgate_core::{Result as CoreResult, StorageTier};
-use nestgate_zfs::{config::ZfsConfig, manager::ZfsManager, pool::ZfsPoolManager};
+use nestgate_zfs::{config::UnifiedZfsConfig, manager::ZfsManager, pool::ZfsPoolManager};
 
-/// Modern integration test configuration
-#[derive(Debug, Clone)]
-pub struct IntegrationTestConfig {
-    pub test_pool_name: String,
-    pub test_dataset_name: String,
-    pub cleanup_after_test: bool,
+/// Create ZFS-specific integration test configuration using unified system
+pub fn create_zfs_integration_config() -> UnifiedTestConfig {
+    let mut external_services = HashMap::new();
+    external_services.insert(
+        "zfs-manager".to_string(),
+        ExternalServiceConfig {
+            service_name: "zfs-test-manager".to_string(),
+            endpoint: "internal://zfs-manager".to_string(),
+            health_check_endpoint: Some("internal://zfs-manager/health".to_string()),
+            required_for_test: true,
+            startup_timeout: std::time::Duration::from_secs(30),
+            config_overrides: {
+                let mut overrides = HashMap::new();
+                overrides.insert(
+                    "test_pool_name".to_string(),
+                    serde_json::json!(format!("test_pool_{}", chrono::Utc::now().timestamp())),
+                );
+                overrides.insert(
+                    "test_dataset_name".to_string(),
+                    serde_json::json!("test_dataset"),
+                );
+                overrides.insert("cleanup_after_test".to_string(), serde_json::json!(true));
+                overrides
+            },
+        },
+    );
+
+    UnifiedTestConfigBuilder::new()
+        .with_test_name("zfs-integration-test".to_string())
+        .with_test_description("Modern ZFS integration testing with unified config".to_string())
+        .with_integration_config(TestIntegrationConfig {
+            external_services,
+            service_dependencies: vec!["zfs-manager".to_string()],
+            data_setup_scripts: vec!["setup_zfs_test_pool.sh".to_string()],
+            data_cleanup_scripts: vec!["cleanup_zfs_test_pool.sh".to_string()],
+        })
+        .with_environment_config(TestEnvironmentConfig {
+            isolated: true, // ZFS needs container isolation
+            test_storage_dir: "/tmp/nestgate_zfs_test".to_string(),
+            env_vars: HashMap::new(),
+            port_range: (20000, 21000),
+            custom_env_vars: {
+                let mut env_vars = HashMap::new();
+                env_vars.insert("ZFS_TEST_MODE".to_string(), "true".to_string());
+                env_vars.insert("ZFS_DEBUG".to_string(), "false".to_string());
+                env_vars
+            },
+        })
+        .build()
+        .expect("Failed to build ZFS integration test config")
 }
 
-impl Default for IntegrationTestConfig {
-    fn default() -> Self {
-        Self {
-            test_pool_name: format!("test_pool_{}", chrono::Utc::now().timestamp()),
-            test_dataset_name: "test_dataset".to_string(),
-            cleanup_after_test: true,
-        }
-    }
-}
-
-/// Modern integration test runner
+/// Modern integration test runner using unified configuration
 pub struct ModernIntegrationTestRunner {
-    config: IntegrationTestConfig,
+    config: UnifiedTestConfig,
     zfs_manager: Option<Arc<ZfsManager>>,
     pool_manager: Option<Arc<ZfsPoolManager>>,
 }
 
 impl ModernIntegrationTestRunner {
-    pub fn new(config: IntegrationTestConfig) -> Self {
+    pub fn new() -> Self {
+        Self {
+            config: create_zfs_integration_config(),
+            zfs_manager: None,
+            pool_manager: None,
+        }
+    }
+
+    /// Create with custom unified config
+    pub fn with_config(config: UnifiedTestConfig) -> Self {
         Self {
             config,
             zfs_manager: None,
@@ -43,9 +96,19 @@ impl ModernIntegrationTestRunner {
         }
     }
 
+    /// Get ZFS-specific config from unified config
+    fn get_zfs_config(&self) -> HashMap<String, serde_json::Value> {
+        self.config
+            .integration
+            .external_services
+            .get("zfs-manager")
+            .map(|service| service.config_overrides.clone())
+            .unwrap_or_default()
+    }
+
     pub async fn initialize(&mut self) -> CoreResult<()> {
         // Initialize managers
-        let zfs_config = ZfsConfig::default();
+        let zfs_config = UnifiedZfsConfig::default();
 
         // Try to initialize ZFS manager
         match ZfsManager::new(zfs_config.clone()).await {
@@ -144,7 +207,7 @@ impl ModernIntegrationTestRunner {
 
     async fn test_configuration_validation(&self) -> CoreResult<()> {
         // Test configuration loading and validation
-        let _config = ZfsConfig::default();
+        let _config = UnifiedZfsConfig::default();
 
         // Validate config has expected defaults
         println!("  ✓ Configuration validation passed");
@@ -166,8 +229,8 @@ impl ModernIntegrationTestRunner {
 
     pub async fn run_comprehensive_test_suite(
         &self,
-    ) -> Result<IntegrationTestResults, Box<dyn std::error::Error>> {
-        let results = IntegrationTestResults {
+    ) -> Result<IntegrationTestResults, nestgate_core::error::NestGateError> {
+        let mut results = IntegrationTestResults {
             test_start_time: std::time::Instant::now(),
             ..Default::default()
         };
@@ -175,25 +238,49 @@ impl ModernIntegrationTestRunner {
         // Actually use the config field to eliminate dead code
         tracing::info!(
             "Starting comprehensive integration tests with pool: {}",
-            self.config.test_pool_name
+            self.config.integration.external_services["zfs-manager"].config_overrides
+                ["test_pool_name"]
+                .as_str()
+                .unwrap()
         );
 
-        // ZFS Integration Test - use existing method
-        if let Err(e) = self.run_basic_integration_test().await {
-            tracing::error!("Integration test failed: {}", e);
-            return Ok(IntegrationTestResults {
-                test_start_time: std::time::Instant::now(),
-                total_duration: std::time::Duration::from_secs(0),
-                tests_passed: 0,
-                tests_failed: 1,
-                success_rate: 0.0,
-                health_check_passed: false,
-                config_validation_passed: false,
-                storage_tiers_passed: false,
-                concurrent_operations_passed: false,
-                error_handling_passed: false,
-            });
+        // Run basic integration tests first (3 tests)
+        let basic_results = self.run_basic_integration_test().await?;
+        results.tests_passed += basic_results.tests_passed;
+        results.tests_failed += basic_results.tests_failed;
+        results.health_check_passed = basic_results.health_check_passed;
+        results.config_validation_passed = basic_results.config_validation_passed;
+        results.storage_tiers_passed = basic_results.storage_tiers_passed;
+
+        // Run additional comprehensive tests
+        // Test 4: Concurrent operations
+        match self.test_concurrent_operations().await {
+            Ok(_) => {
+                results.tests_passed += 1;
+                results.concurrent_operations_passed = true;
+            }
+            Err(_) => {
+                results.tests_failed += 1;
+            }
         }
+
+        // Test 5: Error handling
+        match self.test_error_handling().await {
+            Ok(_) => {
+                results.tests_passed += 1;
+                results.error_handling_passed = true;
+            }
+            Err(_) => {
+                results.tests_failed += 1;
+            }
+        }
+
+        results.total_duration = results.test_start_time.elapsed();
+        results.success_rate = if results.tests_passed + results.tests_failed > 0 {
+            results.tests_passed as f64 / (results.tests_passed + results.tests_failed) as f64
+        } else {
+            0.0
+        };
 
         Ok(results)
     }
@@ -227,7 +314,7 @@ impl ModernIntegrationTestRunner {
     /// Comprehensive integration test (alias for run_comprehensive_test_suite)
     pub async fn run_comprehensive_integration_test(
         &self,
-    ) -> Result<IntegrationTestResults, Box<dyn std::error::Error>> {
+    ) -> Result<IntegrationTestResults, nestgate_core::error::NestGateError> {
         self.run_comprehensive_test_suite().await
     }
 }
@@ -270,10 +357,9 @@ impl Default for IntegrationTestResults {
 mod tests {
     use super::*;
 
-    #[tokio::test]
+    #[tokio::test(flavor = "multi_thread")]
     async fn test_basic_integration_functionality() {
-        let config = IntegrationTestConfig::default();
-        let mut runner = ModernIntegrationTestRunner::new(config);
+        let mut runner = ModernIntegrationTestRunner::new();
 
         runner
             .initialize()
@@ -295,10 +381,9 @@ mod tests {
         println!("Basic integration test results: {results:?}");
     }
 
-    #[tokio::test]
+    #[tokio::test(flavor = "multi_thread")]
     async fn test_comprehensive_integration_functionality() {
-        let config = IntegrationTestConfig::default();
-        let mut runner = ModernIntegrationTestRunner::new(config);
+        let mut runner = ModernIntegrationTestRunner::new();
 
         runner
             .initialize()
@@ -365,10 +450,9 @@ mod tests {
         println!("✅ Comprehensive integration test passed all criteria!");
     }
 
-    #[tokio::test]
+    #[tokio::test(flavor = "multi_thread")]
     async fn test_storage_tier_operations() {
-        let config = IntegrationTestConfig::default();
-        let runner = ModernIntegrationTestRunner::new(config);
+        let mut runner = ModernIntegrationTestRunner::new();
 
         // Test storage tier operations specifically
         runner
@@ -379,10 +463,9 @@ mod tests {
         println!("✅ Storage tier operations test passed!");
     }
 
-    #[tokio::test]
+    #[tokio::test(flavor = "multi_thread")]
     async fn test_concurrent_operations_handling() {
-        let config = IntegrationTestConfig::default();
-        let runner = ModernIntegrationTestRunner::new(config);
+        let mut runner = ModernIntegrationTestRunner::new();
 
         // Test concurrent operations handling
         runner

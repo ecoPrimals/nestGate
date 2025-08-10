@@ -1,11 +1,11 @@
-//! SOVEREIGN SCIENCE Quality Assurance Framework
-//!
-//! This framework implements testing standards that exceed 100% industry requirements.
-//! We target 100.1% quality assurance - the absolute pinnacle of software engineering.
-//!
-//! CRITICAL: This framework must practice what it preaches - NO HARDCODED VALUES!
-
+/// SOVEREIGN SCIENCE Quality Assurance Framework
+///
+/// This framework implements testing standards that exceed 100% industry requirements.
+/// We target 100.1% quality assurance - the absolute pinnacle of software engineering.
+///
+/// CRITICAL: This framework must practice what it preaches - NO HARDCODED VALUES!
 use nestgate_core::constants::{test_defaults, timeout_defaults};
+use nestgate_core::error::NestGateError;
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 use tokio::time::timeout;
@@ -142,7 +142,7 @@ impl SovereignQualityOrchestrator {
     /// Execute comprehensive SOVEREIGN SCIENCE quality assessment
     pub async fn execute_sovereign_assessment(
         &self,
-    ) -> Result<SovereignQualityMetrics, Box<dyn std::error::Error>> {
+    ) -> Result<SovereignQualityMetrics, nestgate_core::error::NestGateError> {
         println!("🚀 INITIATING SOVEREIGN SCIENCE QUALITY ASSESSMENT");
         println!("════════════════════════════════════════════════════");
         println!(
@@ -204,7 +204,9 @@ impl SovereignQualityOrchestrator {
         Ok(metrics)
     }
 
-    async fn assess_hardcoding_elimination(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn assess_hardcoding_elimination(
+        &self,
+    ) -> Result<f64, nestgate_core::error::NestGateError> {
         println!("🎯 Assessing Hardcoding Elimination...");
 
         // Run the actual enhanced hardcoding elimination test
@@ -255,7 +257,7 @@ impl SovereignQualityOrchestrator {
         Ok(score)
     }
 
-    async fn assess_test_coverage(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn assess_test_coverage(&self) -> Result<f64, nestgate_core::error::NestGateError> {
         println!("📋 Assessing Test Coverage...");
 
         // Run actual test suite with coverage analysis
@@ -288,7 +290,7 @@ impl SovereignQualityOrchestrator {
         Ok(score)
     }
 
-    async fn assess_compilation_health(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn assess_compilation_health(&self) -> Result<f64, nestgate_core::error::NestGateError> {
         println!("🔧 Assessing Compilation Health...");
 
         let output = timeout(
@@ -316,7 +318,9 @@ impl SovereignQualityOrchestrator {
         Ok(score)
     }
 
-    async fn assess_performance_stability(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn assess_performance_stability(
+        &self,
+    ) -> Result<f64, nestgate_core::error::NestGateError> {
         println!("⚡ Assessing Performance Stability...");
 
         // Run actual performance benchmarks
@@ -352,7 +356,9 @@ impl SovereignQualityOrchestrator {
         Ok(score)
     }
 
-    async fn analyze_architecture_coherence(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn analyze_architecture_coherence(
+        &self,
+    ) -> Result<f64, nestgate_core::error::NestGateError> {
         println!("🏗️  Analyzing Architecture Coherence...");
 
         let mut coherence_score = 0.0;
@@ -389,7 +395,7 @@ impl SovereignQualityOrchestrator {
         Ok(final_score)
     }
 
-    async fn measure_module_consistency(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn measure_module_consistency(&self) -> Result<f64, nestgate_core::error::NestGateError> {
         // Count actual modules and check structure
         let output = tokio::process::Command::new("find")
             .args(["code/crates", "-name", "lib.rs", "-o", "-name", "main.rs"])
@@ -409,7 +415,7 @@ impl SovereignQualityOrchestrator {
         }
     }
 
-    async fn measure_pattern_adherence(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn measure_pattern_adherence(&self) -> Result<f64, nestgate_core::error::NestGateError> {
         // Check for consistent error handling patterns
         let error_pattern_output = tokio::process::Command::new("grep")
             .args(["-r", "Result<", "code/crates", "--include=*.rs"])
@@ -436,7 +442,7 @@ impl SovereignQualityOrchestrator {
         }
     }
 
-    async fn measure_dependency_health(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn measure_dependency_health(&self) -> Result<f64, nestgate_core::error::NestGateError> {
         // Count dependencies and assess version specification
         let total_deps = 25; // Placeholder - would count actual dependencies
         let version_specs = 20; // Placeholder - would count version-specified deps
@@ -452,7 +458,7 @@ impl SovereignQualityOrchestrator {
         }
     }
 
-    async fn measure_api_consistency(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn measure_api_consistency(&self) -> Result<f64, nestgate_core::error::NestGateError> {
         // Count public APIs and assess consistency
         let pub_fns = 45; // Placeholder - would count actual public functions
         let pub_structs = 15; // Placeholder - would count actual public structs
@@ -465,7 +471,9 @@ impl SovereignQualityOrchestrator {
     }
 
     // Add the missing methods that are called in execute_sovereign_assessment
-    async fn assess_resilience_coefficient(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn assess_resilience_coefficient(
+        &self,
+    ) -> Result<f64, nestgate_core::error::NestGateError> {
         println!("🛡️  Assessing Resilience Coefficient...");
         // Analyze error handling, retry mechanisms, circuit breakers
         let error_handling_score = 0.92;
@@ -478,7 +486,9 @@ impl SovereignQualityOrchestrator {
         Ok(score)
     }
 
-    async fn analyze_cognitive_complexity(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn analyze_cognitive_complexity(
+        &self,
+    ) -> Result<f64, nestgate_core::error::NestGateError> {
         println!("🧠 Analyzing Cognitive Complexity...");
         // Analyze code readability, cyclomatic complexity, documentation clarity
         let cyclomatic_complexity = 0.85;
@@ -491,7 +501,9 @@ impl SovereignQualityOrchestrator {
         Ok(score)
     }
 
-    async fn assess_deployment_universality(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn assess_deployment_universality(
+        &self,
+    ) -> Result<f64, nestgate_core::error::NestGateError> {
         println!("🌍 Assessing Deployment Universality...");
         // Check cross-platform compatibility, containerization, cloud readiness
         let platform_compatibility = 0.95;
@@ -504,7 +516,7 @@ impl SovereignQualityOrchestrator {
         Ok(score)
     }
 
-    async fn assess_security_posture(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn assess_security_posture(&self) -> Result<f64, nestgate_core::error::NestGateError> {
         println!("🔒 Assessing Security Posture...");
         // Analyze security measures, encryption, authentication, authorization
         let encryption_strength = 0.96;
@@ -516,7 +528,9 @@ impl SovereignQualityOrchestrator {
         Ok(score)
     }
 
-    async fn assess_innovation_coefficient(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn assess_innovation_coefficient(
+        &self,
+    ) -> Result<f64, nestgate_core::error::NestGateError> {
         println!("🚀 Assessing Innovation Coefficient...");
         // Analyze novel approaches, engineering excellence, forward-thinking design
         let novel_approaches = 0.93;
@@ -528,7 +542,9 @@ impl SovereignQualityOrchestrator {
         Ok(score)
     }
 
-    async fn assess_documentation_completeness(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn assess_documentation_completeness(
+        &self,
+    ) -> Result<f64, nestgate_core::error::NestGateError> {
         println!("📚 Assessing Documentation Completeness...");
         // Analyze code documentation, API docs, user guides, examples
         let code_documentation = 0.94;
@@ -542,7 +558,9 @@ impl SovereignQualityOrchestrator {
         Ok(score)
     }
 
-    async fn assess_sustainability_index(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn assess_sustainability_index(
+        &self,
+    ) -> Result<f64, nestgate_core::error::NestGateError> {
         println!("♻️  Assessing Sustainability Index...");
         // Analyze technical debt, maintainability, refactoring readiness
         let technical_debt = 0.89;
@@ -554,7 +572,7 @@ impl SovereignQualityOrchestrator {
         Ok(score)
     }
 
-    async fn analyze_self_healing(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn analyze_self_healing(&self) -> Result<f64, nestgate_core::error::NestGateError> {
         println!("🔄 Analyzing Self-Healing Capability...");
         // Analyze automatic error recovery, health checks, restart mechanisms
         let auto_recovery = 0.87;
@@ -566,7 +584,9 @@ impl SovereignQualityOrchestrator {
         Ok(score)
     }
 
-    async fn analyze_predictive_maintenance(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn analyze_predictive_maintenance(
+        &self,
+    ) -> Result<f64, nestgate_core::error::NestGateError> {
         println!("🔮 Analyzing Predictive Maintenance...");
         // Analyze proactive monitoring, trend analysis, prediction accuracy
         let proactive_monitoring = 0.88;
@@ -578,7 +598,7 @@ impl SovereignQualityOrchestrator {
         Ok(score)
     }
 
-    async fn assess_quantum_readiness(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn assess_quantum_readiness(&self) -> Result<f64, nestgate_core::error::NestGateError> {
         println!("⚛️  Assessing Quantum Readiness...");
         // Analyze quantum-safe cryptography, future-proofing measures
         let quantum_safe_crypto = 0.82;
@@ -590,7 +610,7 @@ impl SovereignQualityOrchestrator {
         Ok(score)
     }
 
-    async fn assess_ai_integration(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    async fn assess_ai_integration(&self) -> Result<f64, nestgate_core::error::NestGateError> {
         println!("🤖 Assessing AI Integration Depth...");
         // Analyze AI-assisted operations, machine learning integration, automated decision making
         let ai_assisted_ops = 0.83;
@@ -606,7 +626,7 @@ impl SovereignQualityOrchestrator {
         &self,
         metrics: &SovereignQualityMetrics,
         total_time: Duration,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), nestgate_core::error::NestGateError> {
         println!();
         println!("════════════════════════════════════════════════════════════════");
         println!("🏆 SOVEREIGN SCIENCE QUALITY ASSESSMENT COMPLETE");

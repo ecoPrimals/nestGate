@@ -43,16 +43,24 @@ impl InstallationWizard {
     fn configure_installation_path(&mut self) -> Result<()> {
         println!("📁 Installation Directory");
 
-        let default_path = self.config.install_path.to_string_lossy().to_string();
+        let default_path = self
+            .config
+            .extensions
+            .installation
+            .install_dir
+            .to_string_lossy()
+            .to_string();
         let custom_path: String = Input::new()
             .with_prompt("Installation directory")
             .default(default_path)
             .interact_text()?;
 
-        self.config.install_path = PathBuf::from(custom_path);
+        self.config.extensions.installation.install_dir = PathBuf::from(custom_path);
 
         // Validate the path
-        if let Err(e) = self.config.validate() {
+        if let Err(e) =
+            crate::config::validation::config_validation::validate_installer_config(&self.config)
+        {
             println!("⚠️  Warning: {e}");
             if !Confirm::new()
                 .with_prompt("Continue with this path anyway?")
@@ -72,12 +80,12 @@ impl InstallationWizard {
         let platform_info = crate::platform::PlatformInfo::detect();
 
         if platform_info.service_install_supported() {
-            self.config.service_mode = Confirm::new()
+            self.config.extensions.system_integration.install_as_service = Confirm::new()
                 .with_prompt("Install as system service?")
                 .default(true)
                 .interact()?;
 
-            if self.config.service_mode {
+            if self.config.extensions.system_integration.install_as_service {
                 println!("✅ NestGate will be installed as a system service");
                 println!("   - Automatic startup on boot");
                 println!("   - Background operation");
@@ -85,7 +93,7 @@ impl InstallationWizard {
             }
         } else {
             println!("ℹ️  System service installation not supported on this platform");
-            self.config.service_mode = false;
+            self.config.extensions.system_integration.install_as_service = false;
         }
 
         Ok(())
@@ -95,12 +103,22 @@ impl InstallationWizard {
         println!("\n⚙️  Feature Configuration");
 
         // ZFS Features
-        self.config.features.enable_zfs = Confirm::new()
+        self.config
+            .extensions
+            .components
+            .selected_components
+            .install_zfs = Confirm::new()
             .with_prompt("Enable ZFS storage management?")
             .default(true)
             .interact()?;
 
-        if self.config.features.enable_zfs {
+        if self
+            .config
+            .extensions
+            .components
+            .selected_components
+            .install_zfs
+        {
             println!("✅ ZFS features enabled");
             println!("   - Pool management");
             println!("   - Dataset operations");
@@ -108,26 +126,46 @@ impl InstallationWizard {
             println!("   - Health monitoring");
         }
 
-        // AI Features
-        self.config.features.enable_ui = Confirm::new()
-            .with_prompt("Enable AI-powered features?")
+        // UI Features
+        self.config
+            .extensions
+            .components
+            .selected_components
+            .install_ui = Confirm::new()
+            .with_prompt("Enable UI features?")
             .default(false)
             .interact()?;
 
-        if self.config.features.enable_ui {
-            println!("✅ AI features enabled");
+        if self
+            .config
+            .extensions
+            .components
+            .selected_components
+            .install_ui
+        {
+            println!("✅ UI features enabled");
             println!("   - Intelligent resource optimization");
             println!("   - Predictive maintenance");
             println!("   - Automated troubleshooting");
         }
 
         // Network configuration
-        self.config.features.enable_network = Confirm::new()
+        self.config
+            .extensions
+            .components
+            .selected_components
+            .install_network = Confirm::new()
             .with_prompt("Enable network features?")
             .default(true)
             .interact()?;
 
-        if self.config.features.enable_network {
+        if self
+            .config
+            .extensions
+            .components
+            .selected_components
+            .install_network
+        {
             println!("✅ Network features enabled");
             println!("   - Remote management");
             println!("   - Distributed storage");
@@ -139,24 +177,32 @@ impl InstallationWizard {
         println!("Configure advanced features and integrations");
 
         // Desktop integration
-        self.config.integration.create_desktop_entry = Confirm::new()
+        self.config
+            .extensions
+            .system_integration
+            .desktop_integration = Confirm::new()
             .with_prompt("Create desktop shortcut?")
             .default(true)
             .interact()?;
 
-        if self.config.integration.create_desktop_entry {
+        if self
+            .config
+            .extensions
+            .system_integration
+            .desktop_integration
+        {
             println!("✅ Desktop shortcut will be created");
             println!("   - Quick access to NestGate");
             println!("   - Integrated with system menu");
         }
 
         // PATH configuration
-        self.config.integration.add_to_path = Confirm::new()
+        self.config.extensions.system_integration.add_to_path = Confirm::new()
             .with_prompt("Add NestGate to system PATH?")
             .default(true)
             .interact()?;
 
-        if self.config.integration.add_to_path {
+        if self.config.extensions.system_integration.add_to_path {
             println!("✅ NestGate will be added to PATH");
             println!("   - Access from any terminal");
             println!("   - Global command availability");
@@ -170,22 +216,30 @@ impl InstallationWizard {
         println!("\n🔗 System Integration");
 
         // PATH integration
-        self.config.integration.add_to_path = Confirm::new()
+        self.config.extensions.system_integration.add_to_path = Confirm::new()
             .with_prompt("Add NestGate to system PATH?")
             .default(true)
             .interact()?;
 
-        if self.config.integration.add_to_path {
+        if self.config.extensions.system_integration.add_to_path {
             println!("✅ Will add to PATH - you can run 'nestgate' from anywhere");
         }
 
         // Desktop shortcut
-        self.config.integration.create_desktop_entry = Confirm::new()
+        self.config
+            .extensions
+            .system_integration
+            .desktop_integration = Confirm::new()
             .with_prompt("Create desktop shortcut?")
             .default(true)
             .interact()?;
 
-        if self.config.integration.create_desktop_entry {
+        if self
+            .config
+            .extensions
+            .system_integration
+            .desktop_integration
+        {
             println!("✅ Desktop shortcut will be created");
         }
 
@@ -196,10 +250,13 @@ impl InstallationWizard {
         println!("\n📋 Installation Summary:");
         println!("========================");
         println!("This will install NestGate with the following configuration:");
-        println!("  📂 Install Path: {}", self.config.install_path.display());
         println!(
-            "  🔧 Service Mode: {}",
-            if self.config.service_mode {
+            "  📂 Install Path: {}",
+            self.config.extensions.installation.install_dir.display()
+        );
+        println!(
+            "  �� Service Mode: {}",
+            if self.config.extensions.system_integration.install_as_service {
                 "Enabled"
             } else {
                 "Disabled"
@@ -207,7 +264,13 @@ impl InstallationWizard {
         );
         println!(
             "  💾 ZFS Support: {}",
-            if self.config.features.enable_zfs {
+            if self
+                .config
+                .extensions
+                .components
+                .selected_components
+                .install_zfs
+            {
                 "Enabled"
             } else {
                 "Disabled"
@@ -215,7 +278,13 @@ impl InstallationWizard {
         );
         println!(
             "  🎨 UI Components: {}",
-            if self.config.features.enable_ui {
+            if self
+                .config
+                .extensions
+                .components
+                .selected_components
+                .install_ui
+            {
                 "Enabled"
             } else {
                 "Disabled"
@@ -223,20 +292,31 @@ impl InstallationWizard {
         );
         println!(
             "  🌐 Network Features: {}",
-            if self.config.features.enable_network {
+            if self
+                .config
+                .extensions
+                .components
+                .selected_components
+                .install_network
+            {
                 "Enabled"
             } else {
                 "Disabled"
             }
         );
 
-        if self.config.integration.create_desktop_entry {
+        if self
+            .config
+            .extensions
+            .system_integration
+            .desktop_integration
+        {
             println!("  🖥️  Desktop Entry: Will be created");
         } else {
             println!("  🖥️  Desktop Entry: Will not be created");
         }
 
-        if self.config.integration.add_to_path {
+        if self.config.extensions.system_integration.add_to_path {
             println!("  🛤️  PATH: Will be added to system PATH");
         } else {
             println!("  🛤️  PATH: Will not be added to system PATH");

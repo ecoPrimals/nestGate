@@ -1,0 +1,227 @@
+# NestGate Canonical Configuration Example
+# This demonstrates the canonical configuration system:
+# - Entirely configurable but easy to set up
+# - Sensible defaults for everything
+# - Environment-aware with overrides
+# - Simple, clear structure (not like k8s!)
+
+[system]
+instance_name = "my-nestgate-instance"
+environment = "Development"  # Development, Testing, Staging, Production
+log_level = "info"           # trace, debug, info, warn, error
+data_dir = "./data"
+config_dir = "./config"
+dev_mode = true
+
+[network]
+# API server configuration
+[network.api]
+host = "127.0.0.1"          # Secure default - only localhost
+port = 8080
+max_connections = 1000
+timeout = "30s"
+http2 = true
+
+# Internal service communication
+[network.internal]
+port_range = [9000, 9100]
+
+[network.internal.health_check]
+interval = "30s"
+timeout = "5s"
+retries = 3
+
+# Service discovery (optional)
+[network.discovery]
+enabled = false
+method = "dns"              # dns, consul, etcd, kubernetes
+refresh_interval = "30s"
+
+[storage]
+default_backend = "Filesystem"
+
+# Global storage settings
+[storage.global]
+compression = true
+encryption = false          # Handled by external systems like BearDog
+deduplication = false
+auto_snapshots = true
+
+[storage.global.snapshot_retention]
+daily = 7
+weekly = 4
+monthly = 12
+yearly = 5
+
+# Storage backends configuration
+[storage.backends.default]
+backend_type = "Filesystem"
+
+[storage.backends.default.performance]
+cache_size = 1048576        # 1MB
+buffer_size = 65536         # 64KB
+concurrent_ops = 10
+
+# ZFS configuration (optional)
+# [storage.zfs]
+# pools = ["tank", "backup"]
+# compression = "lz4"
+# deduplication = true
+
+[security]
+# Authentication
+[security.auth]
+enabled = false             # Simple default for development
+method = "none"             # none, basic, oauth2, mutual_tls
+providers = []
+
+# Authorization
+[security.authz]
+enabled = false
+
+# Encryption (metadata only - actual encryption handled externally)
+[security.encryption]
+enabled = false
+algorithm = "aes256"
+
+# Audit logging
+[security.audit]
+enabled = false
+log_file = "./logs/audit.log"
+retention_days = 90
+
+# Rate limiting
+[security.rate_limiting]
+enabled = false
+requests_per_minute = 1000
+burst_size = 100
+
+[performance]
+# Caching
+[performance.cache]
+enabled = true
+size_mb = 512
+ttl_seconds = 3600
+
+# Thread configuration
+[performance.threads]
+api_workers = 4             # Defaults to CPU count
+io_workers = 8              # Defaults to CPU count * 2
+background_workers = 4
+
+# Memory management
+[performance.memory]
+max_heap_mb = 1024
+gc_threshold = 0.8
+
+# I/O optimization
+[performance.io]
+buffer_size = 65536
+concurrent_ops = 10
+sync_writes = false
+
+[monitoring]
+# Metrics collection
+[monitoring.metrics]
+enabled = true
+endpoint = "/metrics"
+interval_seconds = 15
+
+# Health checks
+[monitoring.health]
+enabled = true
+endpoint = "/health"
+checks = ["storage", "network"]
+
+# Alerting
+[monitoring.alerts]
+enabled = false
+# webhook_url = "https://alerts.example.com/webhook"
+
+# Tracing
+[monitoring.tracing]
+enabled = false
+sample_rate = 0.1
+# endpoint = "http://jaeger:14268/api/traces"
+
+[integrations]
+# Primal ecosystem integration (optional)
+# [integrations.primal_ecosystem]
+# enabled = true
+# primal_id = "nestgate"
+# capabilities = ["zfs_storage", "high_performance", "data_protection"]
+
+[environment]
+env_type = "Development"
+
+# Feature flags
+[environment.feature_flags]
+experimental_features = false
+beta_apis = false
+debug_endpoints = true
+
+# Debug settings
+[environment.debug]
+enabled = true
+verbose_logging = false
+performance_metrics = true
+
+# Environment-specific overrides (can override any setting above)
+[environment.overrides]
+# Example: override log level in production
+# "system.log_level" = "warn"
+# "security.auth.enabled" = true
+
+# ==================== ENVIRONMENT-SPECIFIC EXAMPLES ====================
+
+# For production, create a separate file: nestgate.production.toml
+# [system]
+# environment = "Production"
+# log_level = "warn"
+# dev_mode = false
+# 
+# [network.api]
+# host = "0.0.0.0"          # Bind to all interfaces in production
+# 
+# [security.auth]
+# enabled = true
+# method = "oauth2"
+# 
+# [security.encryption]
+# enabled = true
+# 
+# [monitoring.alerts]
+# enabled = true
+# webhook_url = "https://alerts.company.com/webhook"
+
+# ==================== EASY SETUP EXAMPLES ====================
+
+# Minimal setup - just override what you need:
+# [system]
+# instance_name = "my-app"
+# 
+# [network.api]
+# port = 3000
+# 
+# Everything else uses sensible defaults!
+
+# Development setup with debugging:
+# [system]
+# environment = "Development"
+# log_level = "debug"
+# 
+# [environment.debug]
+# enabled = true
+# verbose_logging = true
+
+# Production-ready setup:
+# [system]
+# environment = "Production"
+# log_level = "warn"
+# 
+# [security]
+# [security.auth]
+# enabled = true
+# 
+# [monitoring.alerts]
+# enabled = true 

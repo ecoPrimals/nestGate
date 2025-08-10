@@ -118,7 +118,7 @@ impl SessionManager {
     pub fn new() -> Self {
         Self {
             sessions: HashMap::new(),
-            timeout: nestgate_core::constants::time::HOUR,
+            timeout: nestgate_core::constants::timeouts::REQUEST_DEFAULT,
         }
     }
 
@@ -141,11 +141,10 @@ impl SessionManager {
     /// Update a session
     pub fn update_session(&mut self, session: Session) -> Result<()> {
         if !self.sessions.contains_key(&session.id) {
-            return Err(nestgate_core::McpError::Session {
-                session_id: session.id.clone(),
-                message: "Session not found".to_string(),
-                state: nestgate_core::SessionState::Error,
-            });
+            return Err(nestgate_core::NestGateError::invalid_input(
+                "session_id".to_string(),
+                format!("Session not found: {}", session.id),
+            ));
         }
 
         self.sessions.insert(session.id.clone(), session);
@@ -162,11 +161,10 @@ impl SessionManager {
             debug!("Closed session {}", id);
             Ok(())
         } else {
-            Err(nestgate_core::McpError::Session {
-                session_id: id.to_string(),
-                message: "Session not found".to_string(),
-                state: nestgate_core::SessionState::Error,
-            })
+            Err(nestgate_core::NestGateError::invalid_input(
+                "session_id".to_string(),
+                format!("Session not found: {}", id),
+            ))
         }
     }
 
@@ -177,7 +175,6 @@ impl SessionManager {
         for id in ids {
             self.close_session(&id)?;
         }
-
         Ok(())
     }
 
@@ -248,7 +245,7 @@ mod tests {
 
         let retrieved = manager
             .get_session(&session.id)
-            .expect("Session should exist after creation");
+            .unwrap_or_else(|| panic!("Expected session to exist"));
         assert_eq!(retrieved.id, session.id);
     }
 

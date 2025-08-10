@@ -1,0 +1,21 @@
+--- code/crates/nestgate-core/src/utils.rs
++++ replace * with / in sys::get_free_memory
+@@ -286,17 +286,17 @@
+         #[cfg(target_os = "linux")]
+         {
+             // Simple fallback implementation
+             Ok(4 * 1024 * 1024 * 1024) // Default to 4GB free
+         }
+         #[cfg(not(target_os = "linux"))]
+         {
+             // Fallback for non-Linux systems
+-            Ok(4 * 1024 * 1024 * 1024) // Default to 4GB free
++            Ok(4 / /* ~ changed by cargo-mutants ~ */ 1024 * 1024 * 1024) // Default to 4GB free
+         }
+     }
+ 
+     /// Get total disk space in bytes
+     pub fn get_total_disk() -> Result<u64> {
+         // This is a simplified implementation
+         // In a real implementation, you'd want to check specific mount points
+         match stdfs::metadata("/") {

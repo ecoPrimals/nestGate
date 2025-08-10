@@ -44,14 +44,37 @@ fn test_create_pool_request_serialization() {
         }),
     };
 
-    let json_str = serde_json::to_string(&request).expect("Failed to serialize");
-    let parsed: CreatePoolRequest = serde_json::from_str(&json_str).expect("Failed to deserialize");
+    let json_str = serde_json::to_string(&request).unwrap_or_else(|e| {
+        tracing::error!("Expect failed ({}): {:?}", "Failed to serialize", e);
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!(
+                "Operation failed - {}: {:?}",
+                "{}", "Failed to serialize", e
+            ),
+        )
+        .into());
+    });
+    let parsed: CreatePoolRequest = serde_json::from_str(&json_str).map_err(|e| {
+        tracing::error!("JSON parsing failed ({}): {}", "Failed to deserialize", e);
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("JSON parsing error ({}): {}", "Failed to deserialize", e),
+        )
+    })?;
 
     assert_eq!(parsed.name, "test_pool");
     assert_eq!(parsed.devices.len(), 2);
     assert!(parsed.config.is_some());
 
-    let config = parsed.config.unwrap();
+    let config = parsed.config.unwrap_or_else(|e| {
+        tracing::error!("Unwrap failed: {:?}", e);
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!("Operation failed: {:?}", e),
+        )
+        .into());
+    });
     assert_eq!(config.raid_level, Some("mirror".to_string()));
     assert_eq!(config.compression, Some("lz4".to_string()));
     assert_eq!(config.dedup, Some(false));
@@ -72,16 +95,38 @@ fn test_create_dataset_request_serialization() {
         }),
     };
 
-    let json_str = serde_json::to_string(&request).expect("Failed to serialize");
-    let parsed: CreateDatasetRequest =
-        serde_json::from_str(&json_str).expect("Failed to deserialize");
+    let json_str = serde_json::to_string(&request).unwrap_or_else(|e| {
+        tracing::error!("Expect failed ({}): {:?}", "Failed to serialize", e);
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!(
+                "Operation failed - {}: {:?}",
+                "{}", "Failed to serialize", e
+            ),
+        )
+        .into());
+    });
+    let parsed: CreateDatasetRequest = serde_json::from_str(&json_str).map_err(|e| {
+        tracing::error!("JSON parsing failed ({}): {}", "Failed to deserialize", e);
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("JSON parsing error ({}): {}", "Failed to deserialize", e),
+        )
+    })?;
 
     assert_eq!(parsed.name, "test_dataset");
     assert_eq!(parsed.parent, "test_pool");
     assert_eq!(parsed.tier, StorageTier::Warm);
     assert!(parsed.properties.is_some());
 
-    let props = parsed.properties.unwrap();
+    let props = parsed.properties.unwrap_or_else(|e| {
+        tracing::error!("Unwrap failed: {:?}", e);
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!("Operation failed: {:?}", e),
+        )
+        .into());
+    });
     assert_eq!(props.get("compression"), Some(&"lz4".to_string()));
     assert_eq!(props.get("recordsize"), Some(&"128K".to_string()));
 }
@@ -99,9 +144,24 @@ fn test_create_snapshot_request_serialization() {
         }),
     };
 
-    let json_str = serde_json::to_string(&request).expect("Failed to serialize");
-    let parsed: CreateSnapshotRequest =
-        serde_json::from_str(&json_str).expect("Failed to deserialize");
+    let json_str = serde_json::to_string(&request).unwrap_or_else(|e| {
+        tracing::error!("Expect failed ({}): {:?}", "Failed to serialize", e);
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!(
+                "Operation failed - {}: {:?}",
+                "{}", "Failed to serialize", e
+            ),
+        )
+        .into());
+    });
+    let parsed: CreateSnapshotRequest = serde_json::from_str(&json_str).map_err(|e| {
+        tracing::error!("JSON parsing failed ({}): {}", "Failed to deserialize", e);
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("JSON parsing error ({}): {}", "Failed to deserialize", e),
+        )
+    })?;
 
     assert_eq!(parsed.name, "test_snapshot");
     assert_eq!(parsed.dataset, "test_dataset");
@@ -119,9 +179,24 @@ fn test_tier_migration_request_serialization() {
         force: Some(false),
     };
 
-    let json_str = serde_json::to_string(&request).expect("Failed to serialize");
-    let parsed: TierMigrationRequest =
-        serde_json::from_str(&json_str).expect("Failed to deserialize");
+    let json_str = serde_json::to_string(&request).unwrap_or_else(|e| {
+        tracing::error!("Expect failed ({}): {:?}", "Failed to serialize", e);
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!(
+                "Operation failed - {}: {:?}",
+                "{}", "Failed to serialize", e
+            ),
+        )
+        .into());
+    });
+    let parsed: TierMigrationRequest = serde_json::from_str(&json_str).map_err(|e| {
+        tracing::error!("JSON parsing failed ({}): {}", "Failed to deserialize", e);
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("JSON parsing error ({}): {}", "Failed to deserialize", e),
+        )
+    })?;
 
     assert_eq!(parsed.dataset_path, "/test/dataset");
     assert_eq!(parsed.source_tier, StorageTier::Hot);
@@ -139,8 +214,24 @@ fn test_list_query_serialization() {
         tier: Some(StorageTier::Warm),
     };
 
-    let json_str = serde_json::to_string(&query).expect("Failed to serialize");
-    let parsed: ListQuery = serde_json::from_str(&json_str).expect("Failed to deserialize");
+    let json_str = serde_json::to_string(&query).unwrap_or_else(|e| {
+        tracing::error!("Expect failed ({}): {:?}", "Failed to serialize", e);
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!(
+                "Operation failed - {}: {:?}",
+                "{}", "Failed to serialize", e
+            ),
+        )
+        .into());
+    });
+    let parsed: ListQuery = serde_json::from_str(&json_str).map_err(|e| {
+        tracing::error!("JSON parsing failed ({}): {}", "Failed to deserialize", e);
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("JSON parsing error ({}): {}", "Failed to deserialize", e),
+        )
+    })?;
 
     assert_eq!(parsed.limit, Some(10));
     assert_eq!(parsed.skip, Some(5));
@@ -154,9 +245,24 @@ fn test_tier_prediction_request_serialization() {
         file_path: "/test/file.txt".to_string(),
     };
 
-    let json_str = serde_json::to_string(&request).expect("Failed to serialize");
-    let parsed: TierPredictionRequest =
-        serde_json::from_str(&json_str).expect("Failed to deserialize");
+    let json_str = serde_json::to_string(&request).unwrap_or_else(|e| {
+        tracing::error!("Expect failed ({}): {:?}", "Failed to serialize", e);
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!(
+                "Operation failed - {}: {:?}",
+                "{}", "Failed to serialize", e
+            ),
+        )
+        .into());
+    });
+    let parsed: TierPredictionRequest = serde_json::from_str(&json_str).map_err(|e| {
+        tracing::error!("JSON parsing failed ({}): {}", "Failed to deserialize", e);
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("JSON parsing error ({}): {}", "Failed to deserialize", e),
+        )
+    })?;
 
     assert_eq!(parsed.file_path, "/test/file.txt");
 }
@@ -186,9 +292,31 @@ fn test_storage_tier_serialization() {
     ];
 
     for tier in tiers {
-        let json_str = serde_json::to_string(&tier).expect("Failed to serialize tier");
-        let parsed: StorageTier =
-            serde_json::from_str(&json_str).expect("Failed to deserialize tier");
+        let json_str = serde_json::to_string(&tier).unwrap_or_else(|e| {
+            tracing::error!("Expect failed ({}): {:?}", "Failed to serialize tier", e);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!(
+                    "Operation failed - {}: {:?}",
+                    "{}", "Failed to serialize tier", e
+                ),
+            )
+            .into());
+        });
+        let parsed: StorageTier = serde_json::from_str(&json_str).map_err(|e| {
+            tracing::error!(
+                "JSON parsing failed ({}): {}",
+                "Failed to deserialize tier",
+                e
+            );
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!(
+                    "JSON parsing error ({}): {}",
+                    "Failed to deserialize tier", e
+                ),
+            )
+        })?;
         assert_eq!(parsed, tier);
     }
 }
@@ -198,8 +326,20 @@ fn test_storage_tier_serialization() {
 fn test_optional_fields_handling() {
     // Test CreatePoolRequest with minimal fields
     let minimal_json = r#"{"name": "test_pool", "devices": ["/dev/sda"]}"#;
-    let parsed: CreatePoolRequest =
-        serde_json::from_str(minimal_json).expect("Failed to parse minimal request");
+    let parsed: CreatePoolRequest = serde_json::from_str(minimal_json).map_err(|e| {
+        tracing::error!(
+            "JSON parsing failed ({}): {}",
+            "Failed to parse minimal request",
+            e
+        );
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!(
+                "JSON parsing error ({}): {}",
+                "Failed to parse minimal request", e
+            ),
+        )
+    })?;
 
     assert_eq!(parsed.name, "test_pool");
     assert_eq!(parsed.devices.len(), 1);
@@ -207,8 +347,20 @@ fn test_optional_fields_handling() {
 
     // Test CreateDatasetRequest with minimal fields
     let minimal_json = r#"{"name": "test_dataset", "parent": "test_pool", "tier": "Warm"}"#;
-    let parsed: CreateDatasetRequest =
-        serde_json::from_str(minimal_json).expect("Failed to parse minimal request");
+    let parsed: CreateDatasetRequest = serde_json::from_str(minimal_json).map_err(|e| {
+        tracing::error!(
+            "JSON parsing failed ({}): {}",
+            "Failed to parse minimal request",
+            e
+        );
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!(
+                "JSON parsing error ({}): {}",
+                "Failed to parse minimal request", e
+            ),
+        )
+    })?;
 
     assert_eq!(parsed.name, "test_dataset");
     assert_eq!(parsed.parent, "test_pool");
@@ -227,9 +379,21 @@ fn test_api_response_timestamp_format() {
     assert!(timestamp_str.contains('Z') || timestamp_str.contains('+'));
 
     // Should be parseable as DateTime
-    let _parsed_time: chrono::DateTime<chrono::Utc> = timestamp_str
-        .parse()
-        .expect("Timestamp should be valid ISO 8601");
+    let _parsed_time: chrono::DateTime<chrono::Utc> = timestamp_str.parse().unwrap_or_else(|e| {
+        tracing::error!(
+            "Expect failed ({}): {:?}",
+            "Timestamp should be valid ISO 8601",
+            e
+        );
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!(
+                "Operation failed - {}: {:?}",
+                "{}", "Timestamp should be valid ISO 8601", e
+            ),
+        )
+        .into());
+    });
 }
 
 /// Test edge cases and boundary conditions
@@ -242,8 +406,24 @@ fn test_edge_cases() {
         config: None,
     };
 
-    let json_str = serde_json::to_string(&request).expect("Failed to serialize");
-    let parsed: CreatePoolRequest = serde_json::from_str(&json_str).expect("Failed to deserialize");
+    let json_str = serde_json::to_string(&request).unwrap_or_else(|e| {
+        tracing::error!("Expect failed ({}): {:?}", "Failed to serialize", e);
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!(
+                "Operation failed - {}: {:?}",
+                "{}", "Failed to serialize", e
+            ),
+        )
+        .into());
+    });
+    let parsed: CreatePoolRequest = serde_json::from_str(&json_str).map_err(|e| {
+        tracing::error!("JSON parsing failed ({}): {}", "Failed to deserialize", e);
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("JSON parsing error ({}): {}", "Failed to deserialize", e),
+        )
+    })?;
     assert!(parsed.devices.is_empty());
 
     // Test very long names
@@ -254,8 +434,24 @@ fn test_edge_cases() {
         config: None,
     };
 
-    let json_str = serde_json::to_string(&request).expect("Failed to serialize");
-    let parsed: CreatePoolRequest = serde_json::from_str(&json_str).expect("Failed to deserialize");
+    let json_str = serde_json::to_string(&request).unwrap_or_else(|e| {
+        tracing::error!("Expect failed ({}): {:?}", "Failed to serialize", e);
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!(
+                "Operation failed - {}: {:?}",
+                "{}", "Failed to serialize", e
+            ),
+        )
+        .into());
+    });
+    let parsed: CreatePoolRequest = serde_json::from_str(&json_str).map_err(|e| {
+        tracing::error!("JSON parsing failed ({}): {}", "Failed to deserialize", e);
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("JSON parsing error ({}): {}", "Failed to deserialize", e),
+        )
+    })?;
     assert_eq!(parsed.name, long_name);
 }
 
@@ -274,9 +470,27 @@ fn test_data_structure_consistency() {
         }),
     };
 
-    let json = serde_json::to_string(&pool_request).unwrap();
-    let parsed: CreatePoolRequest = serde_json::from_str(&json).unwrap();
-    let json2 = serde_json::to_string(&parsed).unwrap();
+    let json = serde_json::to_string(&pool_request).map_err(|e| {
+        tracing::error!("JSON serialization failed: {}", e);
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("JSON serialization error: {}", e),
+        )
+    })?;
+    let parsed: CreatePoolRequest = serde_json::from_str(&json).map_err(|e| {
+        tracing::error!("JSON parsing failed: {}", e);
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("JSON parsing error: {}", e),
+        )
+    })?;
+    let json2 = serde_json::to_string(&parsed).map_err(|e| {
+        tracing::error!("JSON serialization failed: {}", e);
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("JSON serialization error: {}", e),
+        )
+    })?;
 
     // Should be identical after round-trip
     assert_eq!(json, json2);
@@ -317,12 +531,27 @@ fn test_serialization_performance() {
     };
 
     let start = std::time::Instant::now();
-    let json_str = serde_json::to_string(&large_request).expect("Failed to serialize");
+    let json_str = serde_json::to_string(&large_request).unwrap_or_else(|e| {
+        tracing::error!("Expect failed ({}): {:?}", "Failed to serialize", e);
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!(
+                "Operation failed - {}: {:?}",
+                "{}", "Failed to serialize", e
+            ),
+        )
+        .into());
+    });
     let serialize_time = start.elapsed();
 
     let start = std::time::Instant::now();
-    let _parsed: CreateDatasetRequest =
-        serde_json::from_str(&json_str).expect("Failed to deserialize");
+    let _parsed: CreateDatasetRequest = serde_json::from_str(&json_str).map_err(|e| {
+        tracing::error!("JSON parsing failed ({}): {}", "Failed to deserialize", e);
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("JSON parsing error ({}): {}", "Failed to deserialize", e),
+        )
+    })?;
     let deserialize_time = start.elapsed();
 
     // Serialization should be reasonably fast (less than 10ms for 1000 properties)

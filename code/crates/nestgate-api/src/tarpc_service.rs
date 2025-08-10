@@ -9,17 +9,29 @@
 
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Instant, SystemTime};
+use std::time::Instant;
 
 use tokio::sync::{Mutex, RwLock};
 // Removed unused tracing import
-use nestgate_core::get_or_create_uuid;
+use nestgate_core::service_discovery::registry::{
+    InMemoryServiceRegistry, UniversalServiceRegistry,
+};
+use nestgate_core::service_discovery::types::ServiceEndpoint;
+use nestgate_core::unified_enums::UnifiedHealthStatus as HealthStatus;
+use std::time::Duration;
+use tracing::debug;
+use tracing::error;
+use tracing::info;
+use tracing::warn;
 
 // NestGate RPC client and server types for storage API connections
 // Discovery handled by universal adapter - no hardcoded orchestrator dependencies
+
+/// RPC client for connecting to remote NestGate services
 #[derive(Clone)]
 pub struct RpcClient;
 
+/// RPC server for hosting NestGate services
 #[derive(Clone)]
 pub struct RpcServer;
 
@@ -42,17 +54,11 @@ impl RpcServer {
         Ok(())
     }
 }
-use nestgate_core::service_discovery::{HealthStatus, ServiceEndpoint, ServiceRegistry};
-use std::time::Duration;
-use tracing::debug;
-use tracing::error;
-use tracing::info;
-use tracing::warn;
 
 /// Enhanced tarpc service manager with service mesh integration
 pub struct TarpcServiceManager {
     /// Service registry for discovery
-    service_registry: Arc<ServiceRegistry>,
+    service_registry: Arc<InMemoryServiceRegistry>,
     /// Connection pool for client connections
     connection_pool: Arc<Mutex<HashMap<String, Arc<RpcClient>>>>,
     /// RPC servers
@@ -68,13 +74,21 @@ pub struct TarpcServiceManager {
 /// Service mesh configuration
 #[derive(Debug, Clone)]
 pub struct ServiceMeshConfig {
+    /// Enable load balancing across service instances
     pub enable_load_balancing: bool,
+    /// Enable circuit breaker pattern for fault tolerance
     pub enable_circuit_breaker: bool,
+    /// Enable automatic retry on failed requests
     pub enable_retry: bool,
+    /// Maximum number of retry attempts
     pub max_retry_attempts: u32,
+    /// Circuit breaker failure threshold (0.0-1.0)
     pub circuit_breaker_threshold: f64,
+    /// Interval between health checks
     pub health_check_interval: Duration,
+    /// Connection timeout duration
     pub connection_timeout: Duration,
+    /// Request timeout duration
     pub request_timeout: Duration,
 }
 
@@ -151,9 +165,7 @@ struct ServiceMetrics {
 impl TarpcServiceManager {
     /// Create a new tarpc service manager
     pub fn new(mesh_config: ServiceMeshConfig) -> Self {
-        let service_registry = Arc::new(ServiceRegistry::new(
-            nestgate_core::service_discovery::ServiceDiscoveryConfig::default(),
-        ));
+        let service_registry = Arc::new(InMemoryServiceRegistry::new());
 
         Self {
             service_registry,
@@ -198,29 +210,33 @@ impl TarpcServiceManager {
 
         // Register service in service registry
         let service_endpoint = ServiceEndpoint {
-            id: format!(
-                "{}-{}",
-                service_name,
-                get_or_create_uuid(&format!("service_{}", service_name)).simple()
-            ),
-            name: service_name.into(),
-            address: address.into(),
-            port,
-            protocol: "tarpc".into(),
-            metadata: [
-                ("rpc_type".into(), "streaming".into()),
-                ("bidirectional".into(), "true".into()),
-            ]
-            .into_iter()
-            .collect(),
-            health_status: HealthStatus::Healthy,
-            last_seen: SystemTime::now(),
-            response_time: Some(Duration::from_millis(10)),
-            weight: 1,
+            url: format!("http://{}:{}", address, port),
+            protocol: nestgate_core::service_discovery::types::CommunicationProtocol::HTTP,
+            health_check: Some(format!("http://{}:{}/health", address, port)),
         };
 
+        // Create service registration
+        let service_registration =
+            nestgate_core::service_discovery::types::UniversalServiceRegistration {
+                service_id: uuid::Uuid::new_v4(),
+                metadata: nestgate_core::service_discovery::types::ServiceMetadata {
+                    name: service_name.to_string(),
+                    category: nestgate_core::service_discovery::types::ServiceCategory::Network,
+                    version: "1.0.0".to_string(),
+                    description: "RPC service".to_string(),
+                    health_endpoint: Some(format!("http://{}:{}/health", address, port)),
+                    metrics_endpoint: None,
+                },
+                capabilities: vec![],
+                resources: nestgate_core::service_discovery::types::ResourceSpec::default(),
+                endpoints: vec![service_endpoint],
+                integration:
+                    nestgate_core::service_discovery::types::IntegrationPreferences::default(),
+                extensions: std::collections::HashMap::new(),
+            };
+
         self.service_registry
-            .register_service(service_endpoint)
+            .register_service(service_registration)
             .await
             .map_err(|e| format!("Failed to register service: {e}"))?;
 
@@ -239,24 +255,30 @@ impl TarpcServiceManager {
             return Err("Service unavailable due to circuit breaker".to_string());
         }
 
-        // Get service endpoints
+        // Get service endpoints - using discover_by_role as placeholder
+        let storage_role = nestgate_core::service_discovery::create_storage_role();
         let healthy_services = self
             .service_registry
-            .get_healthy_services(service_name)
-            .await;
+            .discover_by_role(storage_role)
+            .await
+            .unwrap_or_default();
 
         if healthy_services.is_empty() {
             return Err("Service unavailable - no healthy services".to_string());
         }
 
-        // Select service using load balancing
-        let selected_service = self
-            .service_registry
-            .select_service(service_name)
-            .await
+        // Select service using load balancing - just take the first available service for now
+        let selected_service = healthy_services
+            .first()
             .ok_or("Service unavailable - selection failed".to_string())?;
 
-        let service_addr = format!("{}:{}", selected_service.address, selected_service.port);
+        // Use the first endpoint from the selected service
+        let service_endpoint = selected_service
+            .endpoints
+            .first()
+            .ok_or("Service has no endpoints".to_string())?;
+
+        let service_addr = service_endpoint.url.clone();
 
         // Check if we have an existing client
         {
@@ -417,7 +439,6 @@ impl TarpcServiceManager {
                 }
             }
         });
-
         Ok(())
     }
 
@@ -575,9 +596,17 @@ impl TarpcServiceManager {
                     serde_json::json!({
                         "health_status": match health_info.health_status {
                             HealthStatus::Healthy => "healthy",
+                            HealthStatus::Degraded => "degraded",
                             HealthStatus::Unhealthy => "unhealthy",
-                            HealthStatus::Warning => "warning",
+                            HealthStatus::Offline => "offline",
+                            HealthStatus::Starting => "starting",
+                            HealthStatus::Stopping => "stopping",
+                            HealthStatus::Maintenance => "maintenance",
                             HealthStatus::Unknown => "unknown",
+                            HealthStatus::Warning => "warning",
+                            HealthStatus::Critical => "critical",
+                            HealthStatus::Error => "error",
+                            HealthStatus::Custom(ref status) => status.as_str(),
                         },
                         "success_rate": health_info.success_rate,
                         "total_requests": health_info.total_requests,

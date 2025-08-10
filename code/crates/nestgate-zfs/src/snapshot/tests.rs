@@ -35,7 +35,11 @@ fn test_retention_policy_default() {
         assert_eq!(monthly_months, 12);
         assert_eq!(yearly_years, 5);
     } else {
-        panic!("Invalid retention policy type - expected Custom");
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Invalid retention policy type - expected Custom".to_string(),
+        )
+        .into());
     }
 }
 
@@ -65,7 +69,13 @@ fn test_schedule_frequency_hours() {
 
     match schedule {
         ScheduleFrequency::Hours(hours) => assert_eq!(hours, 6),
-        _ => panic!("Expected Hours schedule frequency"),
+        _ => {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Expected Hours schedule frequency".to_string(),
+            )
+            .into())
+        }
     }
 }
 
@@ -75,7 +85,13 @@ fn test_schedule_frequency_daily() {
 
     match schedule {
         ScheduleFrequency::Daily(hour) => assert_eq!(hour, 2),
-        _ => panic!("Expected Daily schedule frequency"),
+        _ => {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Expected Daily schedule frequency".to_string(),
+            )
+            .into())
+        }
     }
 }
 

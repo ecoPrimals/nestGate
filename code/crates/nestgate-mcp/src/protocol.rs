@@ -9,9 +9,9 @@ use std::time::SystemTime;
 use uuid::Uuid;
 
 use crate::types::{
-    MountInfo, MountOptions, ProviderCapabilities, StorageProtocol, StorageTier, SystemMetrics,
-    VolumeInfo,
+    MountInfo, MountOptions, ProviderCapabilities, StorageProtocol, StorageTier, VolumeInfo,
 };
+use nestgate_core::diagnostics::SystemMetrics;
 
 // Use specific Result type
 /// Use local MCP result type that aligns with local Error constructors
@@ -611,7 +611,7 @@ impl ProtocolHandler {
     async fn handle_health_check(&self, message: Message) -> Result<Response> {
         let health_status = HealthStatus {
             status: ServiceStatus::Online,
-            uptime: nestgate_core::constants::time::HOUR,
+            uptime: nestgate_core::constants::timeouts::REQUEST_DEFAULT,
             last_check: SystemTime::now(),
             details: HashMap::new(),
         };
@@ -630,7 +630,7 @@ impl ProtocolHandler {
 
         // Standalone mode doesn't support federation
         Err(crate::error::Error::unsupported(
-            "Federation requires orchestrator".to_string(),
+            "Federation join not yet implemented".to_string(),
         ))
     }
 
@@ -662,7 +662,7 @@ impl ProtocolHandler {
 
         // Standalone mode doesn't support service registration
         Err(crate::error::Error::unsupported(
-            "Service registration requires orchestrator".to_string(),
+            "Service registration not yet implemented".to_string(),
         ))
     }
 

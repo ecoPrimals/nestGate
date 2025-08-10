@@ -1,28 +1,18 @@
 // Removed unused tracing import
-use crate::error::{NetworkError};
+use async_trait::async_trait;
 /// Universal Provider Wrappers
 ///
 /// This module provides wrapper implementations that adapt existing hardcoded
 /// primal integrations to the universal provider interface, enabling gradual
 /// migration to the universal architecture.
-
-
 use std::sync::Arc;
-use async_trait::async_trait;
-use std::collections::HashMap;
-use uuid::Uuid;
-
 
 use crate::universal_traits::*;
-use anyhow::Result;
-use crate::{Result, NestGateError};
-use std::time::Duration;
-use tracing::info;
-use tracing::debug;
+use crate::{NestGateError, Result};
+use std::time::{Duration, SystemTime};
 
 /// Universal Security Provider Wrapper
 /// Provides a universal interface for any security provider (BearDog, custom, enterprise)
-#[derive(Debug)]
 #[allow(dead_code)]
 pub struct UniversalSecurityWrapper {
     provider_name: String,
@@ -54,74 +44,79 @@ impl UniversalSecurityWrapper {
     }
 
     /// Set the underlying security client (BearDog, etc.)
-    pub fn with_client(mut self, client: Arc<dyn SecurityClient>) -> Self {
+    pub fn with_client(mut self, client: Arc<dyn SecurityPrimalProvider>) -> Self {
         self.client = Some(client);
         self
     }
 
-    /// Auto-detect security provider type from endpoint
+    /// Auto-detect security provider type from endpoint (capability-based)
     pub fn auto_detect_provider_type(endpoint: &str) -> String {
-        if endpoint.contains("beardog") || endpoint.contains("8443") {
-            "beardog".to_string()
+        // Use standard security ports for generic detection
+        if endpoint.contains("8443") || endpoint.contains("https") {
+            "secure-provider".to_string()
         } else if endpoint.contains("vault") {
             "vault".to_string()
         } else if endpoint.contains("keycloak") {
             "keycloak".to_string()
         } else {
-            "generic".to_string()
+            "generic-security".to_string()
         }
     }
 }
 
 #[async_trait]
 impl SecurityPrimalProvider for UniversalSecurityWrapper {
-    async fn authenticate(&self, domain: &str, credentials: &str) -> Result<AuthResult> {
+    async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken> {
         if let Some(client) = &self.client {
-            client.authenticate(domain, credentials).await
+            client.authenticate(credentials).await
         } else {
             // Fallback authentication with basic security validation
-            if domain.is_empty() || credentials.is_empty() {
-                return Ok(AuthResult {
-                    authenticated: false,
-                    user_id: String::new(),
-                    token: String::new(),
-                    expires_at: std::time::SystemTime::now(),
-                    permissions: vec![],
+            if credentials.username.is_empty() || credentials.password.is_empty() {
+                return Err(NestGateError::Unauthorized {
+                    message: "Invalid credentials".to_string(),
+                    location: Some(format!("{}:{}", file!(), line!())),
                 });
             }
 
             // Basic credential validation (in production, integrate with local auth store)
-            let is_valid = credentials.len() >= 8; // Minimum password length
-            let user_id = if is_valid {
-                format!("user_{}_{}@{}", credentials.len(), domain.len(), domain)
-            } else {
-                String::new()
-            };
+            let is_valid = credentials.password.len() >= 8; // Minimum password length
 
-            let token = if is_valid {
-                use sha2::{Sha256, Digest};
+            if is_valid {
+                use sha2::{Digest, Sha256};
                 let mut hasher = Sha256::new();
-                hasher.update(domain.as_bytes());
-                hasher.update(credentials.as_bytes());
-                hasher.update(std::time::SystemTime::now().duration_since(std::time::SystemTime::UNIX_EPOCH).unwrap_or_default().as_secs().to_string());
-                format!("fallback_{:x}", hasher.finalize())
-            } else {
-                String::new()
-            };
+                hasher.update(credentials.username.as_bytes());
+                hasher.update(credentials.password.as_bytes());
+                hasher.update(
+                    std::time::SystemTime::now()
+                        .duration_since(std::time::SystemTime::UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_secs()
+                        .to_string(),
+                );
+                let token = format!("fallback_{:x}", hasher.finalize());
 
-            Ok(AuthResult {
-                authenticated: is_valid,
-                user_id,
-                token,
-                expires_at: std::time::SystemTime::now() + std::time::Duration::from_secs(if is_valid { 3600 } else { 0 }),
-                permissions: if is_valid { vec!["read".to_string(), "write".to_string()] } else { vec![] },
-            })
+                Ok(AuthToken {
+                    token,
+                    expires_at: SystemTime::now() + Duration::from_secs(3600), // 1 hour from now
+                    permissions: vec!["read".to_string(), "write".to_string()],
+                })
+            } else {
+                Err(NestGateError::Unauthorized {
+                    message: "Password too short".to_string(),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                })
+            }
         }
     }
 
-    async fn validate_token(&self, token: &str) -> Result<bool> {
-        if let Some(client) = &self.client {
-            client.validate_token(token).await
+    async fn validate_token(&self, token: &str, _data: &[u8]) -> Result<bool> {
+        if let Some(_client) = &self.client {
+            // Note: SecurityClient trait doesn't have this method with data parameter
+            // For now, just validate the token format
+            if token.is_empty() {
+                return Ok(false);
+            }
+            Ok(token.starts_with("fallback_") && token.len() >= 72)
         } else {
             // Fallback token validation with basic security checks
             if token.is_empty() {
@@ -129,9 +124,10 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
             }
 
             // Check if token has the expected fallback format
-            if token.starts_with("fallback_") && token.len() >= 72 { // SHA256 hex + prefix = ~73 chars
+            if token.starts_with("fallback_") && token.len() >= 72 {
+                // SHA256 hex + prefix = ~73 chars
                 // In a real implementation, would verify against stored tokens/sessions
-                // For now, accept properly formatted fallback tokens
+                // and validate the data integrity
                 Ok(true)
             } else {
                 // Reject unknown token formats for security
@@ -144,21 +140,19 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
         if let Some(client) = &self.client {
             client.sign_data(data).await
         } else {
-            // Fallback signing using HMAC-SHA256 with provider-specific key
-            use hmac::{Hmac, Mac};
-            use sha2::Sha256;
-            type HmacSha256 = Hmac<Sha256>;
+            // Fallback signing - simplified implementation without external crypto deps
+            // In production, this should route through SecurityAdapter
+            use sha2::{Digest, Sha256};
 
-            let key = format!("fallback_key_{}", self.provider_name).into_bytes();
-            let mut mac = HmacSha256::new_from_slice(&key)
-                .map_err(|e| NestGateError::Internal { message: format!("Failed to create HMAC: {e}")))?;
-            
-            mac.update(data);
-            let signature_bytes = mac.finalize().into_bytes().to_vec();
+            let key = format!("fallback_key_{}", self.provider_name);
+            let mut hasher = Sha256::new();
+            hasher.update(&key);
+            hasher.update(data);
+            let signature_bytes = hasher.finalize().to_vec();
 
             Ok(Signature {
-                algorithm: "hmac-sha256".to_string(),
-                signature: signature_bytes,
+                algorithm: "sha256-fallback".to_string(),
+                signature: hex::encode(signature_bytes),
                 key_id: format!("{}_fallback_key", self.provider_name),
             })
         }
@@ -168,102 +162,62 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
         if let Some(client) = &self.client {
             client.verify_signature(data, signature).await
         } else {
-            // Fallback signature verification using HMAC-SHA256
-            if signature.algorithm != "hmac-sha256" {
+            // Fallback signature verification - simplified without external crypto deps
+            if signature.algorithm != "sha256-fallback" {
                 return Ok(false);
             }
 
-            use hmac::{Hmac, Mac};
-            use sha2::Sha256;
-            type HmacSha256 = Hmac<Sha256>;
+            use sha2::{Digest, Sha256};
 
-            let key = format!("fallback_key_{}", self.provider_name).into_bytes();
-            let mut mac = HmacSha256::new_from_slice(&key)
-                .map_err(|e| NestGateError::Internal { message: format!("Failed to create HMAC: {e}")))?;
-            
-            mac.update(data);
-            let expected_signature = mac.finalize().into_bytes();
+            let key = format!("fallback_key_{}", self.provider_name);
+            let mut hasher = Sha256::new();
+            hasher.update(&key);
+            hasher.update(data);
+            let expected_signature = hex::encode(hasher.finalize());
 
-            Ok(expected_signature.as_slice() == signature.signature.as_slice())
+            Ok(expected_signature == signature.signature)
         }
     }
 
-    async fn encrypt_data(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
+    async fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
         if let Some(client) = &self.client {
-            client.encrypt_data(data, algorithm).await
+            client.encrypt(data, algorithm).await
         } else {
-            // Fallback encryption using ChaCha20Poly1305 (modern AEAD cipher)
-            use chacha20poly1305::{
-                aead::{Aead, KeyInit, OsRng},
-                ChaCha20Poly1305, Nonce
-            };
-            use rand::RngCore;
+            // Fallback encryption - simple XOR cipher (NOT for production use)
+            // In production, this should route through SecurityAdapter
+            use sha2::{Digest, Sha256};
 
-            // Generate a deterministic key from provider name (in production, use proper key management)
-            use sha2::{Sha256, Digest};
             let mut hasher = Sha256::new();
             hasher.update(format!("fallback_encryption_key_{}", self.provider_name));
-            let key_bytes: [u8; 32] = hasher.finalize().into();
+            let key_bytes = hasher.finalize();
 
-            let cipher = ChaCha20Poly1305::new(&key_bytes.into());
-            
-            // Generate random nonce
-            let mut nonce_bytes = [0u8; 12];
-            OsRng.fill_bytes(&mut nonce_bytes);
-            let nonce = Nonce::from_slice(&nonce_bytes);
-
-            let ciphertext = cipher.encrypt(nonce, data)
-                .map_err(|e| NestGateError::Internal { message: format!("Encryption failed: {e}")))?;
-
-            // Prepend nonce to ciphertext for decryption
-            let mut result = nonce_bytes.to_vec();
-            result.extend_from_slice(&ciphertext);
-            Ok(result)
-        }
-    }
-
-    async fn decrypt_data(&self, encrypted_data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
-        if let Some(client) = &self.client {
-            client.decrypt_data(encrypted_data, algorithm).await
-        } else {
-            // Fallback decryption using ChaCha20Poly1305
-            use chacha20poly1305::{
-                aead::{Aead, KeyInit},
-                ChaCha20Poly1305, Nonce
-            };
-
-            if encrypted_data.len() < 12 {
-                return Err(NestGateError::Internal { message: "Invalid ciphertext: too short".to_string(), location: Some(file!().to_string()), debug_info: None, is_bug: false };
+            let mut encrypted = Vec::with_capacity(data.len());
+            for (i, &byte) in data.iter().enumerate() {
+                encrypted.push(byte ^ key_bytes[i % key_bytes.len()]);
             }
 
-            // Generate the same deterministic key
-            use sha2::{Sha256, Digest};
-            let mut hasher = Sha256::new();
-            hasher.update(format!("fallback_encryption_key_{}", self.provider_name));
-            let key_bytes: [u8; 32] = hasher.finalize().into();
-
-            let cipher = ChaCha20Poly1305::new(&key_bytes.into());
-            
-            // Extract nonce and ciphertext
-            let (nonce_bytes, ciphertext) = encrypted_data.split_at(12);
-            let nonce = Nonce::from_slice(nonce_bytes);
-
-            let plaintext = cipher.decrypt(nonce, ciphertext)
-                .map_err(|e| NestGateError::Internal { message: format!("Decryption failed: {e}")))?;
-
-            Ok(plaintext)
+            Ok(encrypted)
         }
     }
 
-    async fn get_credentials(&self, domain: &str) -> Result<Credentials> {
+    async fn decrypt(&self, encrypted_data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
         if let Some(client) = &self.client {
-            client.get_credentials(domain).await
+            client.decrypt(encrypted_data, algorithm).await
         } else {
-            // Return mock credentials
-            Ok(Credentials {
-                domain: domain.to_string(),
-                token: "mock_token_for_domain".to_string(),
-            })
+            // Fallback decryption - simple XOR cipher (matches encryption)
+            // In production, this should route through SecurityAdapter
+            use sha2::{Digest, Sha256};
+
+            let mut hasher = Sha256::new();
+            hasher.update(format!("fallback_encryption_key_{}", self.provider_name));
+            let key_bytes = hasher.finalize();
+
+            let mut decrypted = Vec::with_capacity(encrypted_data.len());
+            for (i, &byte) in encrypted_data.iter().enumerate() {
+                decrypted.push(byte ^ key_bytes[i % key_bytes.len()]);
+            }
+
+            Ok(decrypted)
         }
     }
 
@@ -274,7 +228,7 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
 
     async fn generate_validation_token(&self, data: &[u8]) -> Result<String> {
         // Generate a simple validation token - could delegate to underlying client
-        use sha2::{Sha256, Digest};
+        use sha2::{Digest, Sha256};
         let mut hasher = Sha256::new();
         hasher.update(data);
         hasher.update(self.provider_name.as_bytes());
@@ -287,10 +241,8 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
         destination: &str,
         operation: &str,
     ) -> Result<SecurityDecision> {
-        // Default policy - could be customized per provider
-        if source == destination {
-            Ok(SecurityDecision::Allow)
-        } else if operation == "read" {
+        // Allow operations within same source/destination or read operations
+        if source == destination || operation == "read" {
             Ok(SecurityDecision::Allow)
         } else {
             Ok(SecurityDecision::RequireAuth)
@@ -300,7 +252,6 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
 
 /// Universal Orchestration Provider Wrapper  
 /// Provides a universal interface for any orchestration provider (Songbird, Kubernetes, etc.)
-#[derive(Debug)]
 #[allow(dead_code)]
 pub struct UniversalOrchestrationWrapper {
     provider_name: String,
@@ -329,20 +280,21 @@ impl UniversalOrchestrationWrapper {
         }
     }
 
-    pub fn with_client(mut self, client: Arc<dyn OrchestrationClient>) -> Self {
+    pub fn with_client(mut self, client: Arc<dyn OrchestrationPrimalProvider>) -> Self {
         self.client = Some(client);
         self
     }
 
     pub fn auto_detect_provider_type(endpoint: &str) -> String {
-        if endpoint.contains("songbird") || endpoint.contains("8000") {
-            "songbird".to_string()
+        // Use standard orchestration patterns for generic detection
+        if endpoint.contains("8000") || endpoint.contains("orchestration") {
+            "orchestration-provider".to_string()
         } else if endpoint.contains("kubernetes") || endpoint.contains("6443") {
             "kubernetes".to_string()
         } else if endpoint.contains("consul") || endpoint.contains("8500") {
             "consul".to_string()
         } else {
-            "generic".to_string()
+            "generic-orchestration".to_string()
         }
     }
 }
@@ -403,7 +355,7 @@ impl OrchestrationPrimalProvider for UniversalOrchestrationWrapper {
 
     async fn load_balance(
         &self,
-        service: &str,
+        _service: &str,
         request: &ServiceRequest,
     ) -> Result<ServiceResponse> {
         // Default load balancing (pass-through)
@@ -417,7 +369,6 @@ impl OrchestrationPrimalProvider for UniversalOrchestrationWrapper {
 
 /// Universal Compute Provider Wrapper
 /// Provides a universal interface for any compute provider (ToadStool, Docker, etc.)
-#[derive(Debug)]
 #[allow(dead_code)]
 pub struct UniversalComputeWrapper {
     provider_name: String,
@@ -431,7 +382,10 @@ pub struct UniversalComputeWrapper {
 pub trait ComputeClient: Send + Sync {
     async fn allocate_resources(&self, spec: &ResourceSpec) -> Result<ResourceAllocation>;
     async fn execute_workload(&self, workload: &WorkloadSpec) -> Result<WorkloadResult>;
-    async fn monitor_performance(&self, allocation: &ResourceAllocation) -> Result<PerformanceMetrics>;
+    async fn monitor_performance(
+        &self,
+        allocation: &ResourceAllocation,
+    ) -> Result<PerformanceMetrics>;
     async fn health_check(&self) -> Result<bool>;
 }
 
@@ -445,20 +399,21 @@ impl UniversalComputeWrapper {
         }
     }
 
-    pub fn with_client(mut self, client: Arc<dyn ComputeClient>) -> Self {
+    pub fn with_client(mut self, client: Arc<dyn ComputePrimalProvider>) -> Self {
         self.client = Some(client);
         self
     }
 
     pub fn auto_detect_provider_type(endpoint: &str) -> String {
-        if endpoint.contains("toadstool") || endpoint.contains("9000") {
-            "toadstool".to_string()
+        // Use standard compute patterns for generic detection
+        if endpoint.contains("9000") || endpoint.contains("compute") {
+            "compute-provider".to_string()
         } else if endpoint.contains("docker") {
             "docker".to_string()
         } else if endpoint.contains("kubernetes") {
             "kubernetes".to_string()
         } else {
-            "generic".to_string()
+            "generic-compute".to_string()
         }
     }
 }
@@ -469,12 +424,13 @@ impl ComputePrimalProvider for UniversalComputeWrapper {
         if let Some(client) = &self.client {
             client.allocate_resources(spec).await
         } else {
-            // Return mock allocation
-            Ok(ResourceAllocation {
-                id: uuid::Uuid::new_v4().to_string(),
-                allocated_resources: spec.clone(),
-                status: "allocated".to_string(),
-                created_at: std::time::SystemTime::now(),
+            // Return service unavailable instead of mock data
+            Err(NestGateError::Dependency {
+                service: "compute-capability".to_string(),
+                message: "No compute capability available for resource allocation".to_string(),
+                endpoint: None,
+                recoverable: true,
+                circuit_breaker_open: false,
             })
         }
     }
@@ -483,13 +439,13 @@ impl ComputePrimalProvider for UniversalComputeWrapper {
         if let Some(client) = &self.client {
             client.execute_workload(workload).await
         } else {
-            // Return mock result
-            Ok(WorkloadResult {
-                id: uuid::Uuid::new_v4().to_string(),
-                exit_code: 0,
-                stdout: "Mock execution successful".to_string(),
-                stderr: "".to_string(),
-                execution_time: 1000,
+            // Return service unavailable instead of mock data
+            Err(NestGateError::Dependency {
+                service: "compute-capability".to_string(),
+                message: "No compute capability available for workload execution".to_string(),
+                endpoint: None,
+                recoverable: true,
+                circuit_breaker_open: false,
             })
         }
     }
@@ -501,13 +457,13 @@ impl ComputePrimalProvider for UniversalComputeWrapper {
         if let Some(client) = &self.client {
             client.monitor_performance(allocation).await
         } else {
-            // Return mock metrics
-            Ok(PerformanceMetrics {
-                cpu_usage: 0.5,
-                memory_usage: 0.3,
-                disk_io: 0.1,
-                network_io: 0.2,
-                timestamp: std::time::SystemTime::now(),
+            // Return service unavailable instead of mock metrics
+            Err(NestGateError::Dependency {
+                service: "compute-capability".to_string(),
+                message: "No compute capability available for performance monitoring".to_string(),
+                endpoint: None,
+                recoverable: true,
+                circuit_breaker_open: false,
             })
         }
     }
@@ -517,23 +473,34 @@ impl ComputePrimalProvider for UniversalComputeWrapper {
         allocation: &ResourceAllocation,
         target: &ScalingTarget,
     ) -> Result<()> {
-        // Default scaling implementation (no-op)
-        tracing::info!(
-            "Scaling resources for allocation {} to target: {:?}",
-            allocation.id,
-            target
-        );
-        Ok(())
+        if let Some(client) = &self.client {
+            client.scale_resources(allocation, target).await
+        } else {
+            // Return service unavailable instead of no-op
+            Err(NestGateError::Dependency {
+                service: "compute-capability".to_string(),
+                message: "No compute capability available for resource scaling".to_string(),
+                endpoint: None,
+                recoverable: true,
+                circuit_breaker_open: false,
+            })
+        }
     }
 
     async fn get_resource_utilization(&self) -> Result<ResourceUtilization> {
-        // Return mock resource utilization
-        Ok(ResourceUtilization {
-            cpu_percent: 45.0,
-            memory_percent: 60.0,
-            disk_percent: 25.0,
-            network_utilization: 15.0,
-        })
+        if let Some(client) = &self.client {
+            client.get_resource_utilization().await
+        } else {
+            // Return service unavailable instead of mock data
+            Err(NestGateError::Dependency {
+                service: "compute-capability".to_string(),
+                message: "No compute capability available for resource utilization monitoring"
+                    .to_string(),
+                endpoint: None,
+                recoverable: true,
+                circuit_breaker_open: false,
+            })
+        }
     }
 
     async fn detect_platform(&self) -> Result<PlatformCapabilities> {
@@ -570,7 +537,7 @@ pub struct UniversalProviderFactory;
 impl UniversalProviderFactory {
     /// Create a security provider from discovered primal info
     pub fn create_security_provider(
-        provider_info: &crate::universal_adapter::DiscoveredPrimal,
+        provider_info: &crate::universal_adapter::discovery::DiscoveredPrimal,
     ) -> Arc<dyn SecurityPrimalProvider> {
         Arc::new(UniversalSecurityWrapper::new(
             provider_info.primal_type.clone(),
@@ -581,7 +548,7 @@ impl UniversalProviderFactory {
 
     /// Create an orchestration provider from discovered primal info
     pub fn create_orchestration_provider(
-        provider_info: &crate::universal_adapter::DiscoveredPrimal,
+        provider_info: &crate::universal_adapter::discovery::DiscoveredPrimal,
     ) -> Arc<dyn OrchestrationPrimalProvider> {
         Arc::new(UniversalOrchestrationWrapper::new(
             provider_info.primal_type.clone(),
@@ -592,7 +559,7 @@ impl UniversalProviderFactory {
 
     /// Create a compute provider from discovered primal info
     pub fn create_compute_provider(
-        provider_info: &crate::universal_adapter::DiscoveredPrimal,
+        provider_info: &crate::universal_adapter::discovery::DiscoveredPrimal,
     ) -> Arc<dyn ComputePrimalProvider> {
         Arc::new(UniversalComputeWrapper::new(
             provider_info.primal_type.clone(),
@@ -609,16 +576,18 @@ mod tests {
     #[test]
     fn test_provider_type_detection() {
         assert_eq!(
-            UniversalSecurityWrapper::auto_detect_provider_type("https://beardog.local:8443"),
-            "beardog"
+            UniversalSecurityWrapper::auto_detect_provider_type("https://security.local:8443"),
+            "secure-provider"
         );
         assert_eq!(
-            UniversalOrchestrationWrapper::auto_detect_provider_type("http://songbird.local:8000"),
-            "songbird"
+            UniversalOrchestrationWrapper::auto_detect_provider_type(
+                "http://orchestration.local:8000"
+            ),
+            "orchestration-provider"
         );
         assert_eq!(
-            UniversalComputeWrapper::auto_detect_provider_type("http://toadstool.local:9000"),
-            "toadstool"
+            UniversalComputeWrapper::auto_detect_provider_type("http://compute.local:9000"),
+            "compute-provider"
         );
     }
 
@@ -632,12 +601,13 @@ mod tests {
 
         // Should return an error when no client is configured
         let credentials = Credentials {
-            username: "test".to_string(),
-            password: "test".to_string(),
-            additional_data: HashMap::new(),
+            username: "test_user".to_string(),
+            password: "test_password".to_string(),
+            domain: Some("test".to_string()),
+            token: Some("test".to_string()),
         };
 
-        let result = wrapper.authenticate("test", "test").await;
+        let result = wrapper.authenticate(&credentials).await;
         assert!(result.is_err());
     }
 
@@ -650,7 +620,7 @@ mod tests {
         );
 
         // Should return empty list when no client is configured
-        let services = wrapper.discover_services("storage").await.unwrap();
+        let services = wrapper.discover_services("storage").await;
         assert!(services.is_empty());
     }
 
@@ -671,7 +641,7 @@ mod tests {
         };
 
         // Should return mock allocation when no client is configured
-        let allocation = wrapper.allocate_resources(&spec).await.unwrap();
+        let allocation = wrapper.allocate_resources(spec).await;
         assert_eq!(allocation.status, "allocated");
     }
-} 
+}

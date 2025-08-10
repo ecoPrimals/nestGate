@@ -1,6 +1,6 @@
-//! Security Integration Tests
-//! 
-//! Focused security system integration tests extracted from comprehensive suite
+/// Security Integration Tests
+/// 
+/// Focused security system integration tests extracted from comprehensive suite
 
 use std::time::{SystemTime Instant};
 use tokio::time::sleep;

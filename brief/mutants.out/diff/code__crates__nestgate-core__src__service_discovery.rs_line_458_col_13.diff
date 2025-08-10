@@ -1,0 +1,23 @@
+--- code/crates/nestgate-core/src/service_discovery.rs
++++ delete match arm DiscoveryMethod::Http{endpoints} in ServiceDiscovery::start
+@@ -450,19 +450,17 @@
+     pub async fn start(&self) -> Result<()> {
+         info!("🔍 Starting enhanced service discovery system");
+ 
+         // Start health monitoring
+         self.registry.start_health_monitoring().await?;
+ 
+         // Start discovery based on method
+         match &self.registry.config.discovery_method {
+-            DiscoveryMethod::Http { endpoints } => {
+-                self.start_http_discovery(endpoints.clone()).await?;
+-            }
++             /* ~ changed by cargo-mutants ~ */
+             DiscoveryMethod::Consul { agent_url } => {
+                 self.start_consul_discovery(agent_url.clone()).await?;
+             }
+             DiscoveryMethod::Static { services } => {
+                 self.start_static_discovery(services.clone()).await?;
+             }
+             _ => {
+                 warn!("Discovery method not yet implemented, using static mode");

@@ -8,6 +8,7 @@
 
 use crate::manager::ZfsManager;
 use anyhow::Result;
+use nestgate_core::types::StorageTier as CoreStorageTier;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -145,10 +146,10 @@ impl ByobManager {
 
         // Create dataset with appropriate settings based on tier
         let tier = match request.tier.as_str() {
-            "hot" => nestgate_core::StorageTier::Hot,
-            "warm" => nestgate_core::StorageTier::Warm,
-            "cold" => nestgate_core::StorageTier::Cold,
-            _ => nestgate_core::StorageTier::Warm,
+            "hot" => CoreStorageTier::Hot,
+            "warm" => CoreStorageTier::Warm,
+            "cold" => CoreStorageTier::Cold,
+            _ => CoreStorageTier::Warm,
         };
 
         // Extract parent and child from dataset name
@@ -158,7 +159,7 @@ impl ByobManager {
 
         // Create the dataset
         self.zfs_manager
-            .create_dataset(child, &parent, tier)
+            .create_dataset(child, &parent, tier.into())
             .await?;
 
         // Set quota using zfs command directly if specified
@@ -315,6 +316,7 @@ impl ByobManager {
             "✅ Successfully cleaned up BYOB workspace: {}",
             workspace_name
         );
+
         Ok(())
     }
 

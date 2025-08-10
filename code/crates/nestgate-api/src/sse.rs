@@ -85,9 +85,13 @@ pub struct SseEvent {
 /// Event priority for SSE streaming
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum EventPriority {
+    /// Low priority events (background updates)
     Low = 1,
+    /// Normal priority events (standard notifications)
     Normal = 2,
+    /// High priority events (important alerts)
     High = 3,
+    /// Critical priority events (urgent system alerts)
     Critical = 4,
 }
 

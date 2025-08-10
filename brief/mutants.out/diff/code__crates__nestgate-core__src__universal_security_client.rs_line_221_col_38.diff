@@ -1,0 +1,21 @@
+--- code/crates/nestgate-core/src/universal_security_client.rs
++++ replace * with / in UniversalSecurityClient::authenticate_with_consensus
+@@ -213,17 +213,17 @@
+         let consensus_percentage = crate::consensus_math::calculate_consensus_percentage(
+             successful_verifications.len(), 
+             active_nodes.len()
+         );
+ 
+         // ✅ PURE FUNCTION: Comparison logic separated from business logic
+         if !crate::consensus_math::is_consensus_achieved(consensus_percentage, self.config.min_consensus) {
+             return Err(UniversalSecurityError::ConsensusNotAchieved(
+-                consensus_percentage * 100.0,
++                consensus_percentage / /* ~ changed by cargo-mutants ~ */ 100.0,
+                 self.config.min_consensus * 100.0,
+             ));
+         }
+ 
+         // Aggregate permissions from successful verifications
+         let mut all_permissions = Vec::new();
+         for verification in &successful_verifications {
+             all_permissions.extend(verification.permissions.clone());

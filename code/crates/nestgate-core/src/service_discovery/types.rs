@@ -1,0 +1,584 @@
+/// Universal Service Discovery Types
+/// Extracted from universal_service_discovery.rs to maintain file size compliance
+/// Contains all type definitions for the Universal Primal Architecture Standard
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use uuid::Uuid;
+
+/// Universal service registration following the Universal Primal Architecture Standard
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UniversalServiceRegistration {
+    /// Unique service identifier (generated)
+    pub service_id: Uuid,
+    /// Service metadata
+    pub metadata: ServiceMetadata,
+    /// Capabilities this service provides
+    pub capabilities: Vec<ServiceCapability>,
+    /// Resource requirements and limits
+    pub resources: ResourceSpec,
+    /// API endpoints (dynamically discovered)
+    pub endpoints: Vec<ServiceEndpoint>,
+    /// Integration preferences
+    pub integration: IntegrationPreferences,
+    /// Extension points for custom data
+    pub extensions: HashMap<String, serde_json::Value>,
+}
+
+/// Service metadata information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceMetadata {
+    /// Human-readable service name
+    pub name: String,
+    /// Service category (open enumeration)
+    pub category: ServiceCategory,
+    /// Version information
+    pub version: String,
+    /// Description of service functionality
+    pub description: String,
+    /// Health status endpoint
+    pub health_endpoint: Option<String>,
+    /// Metrics endpoint
+    pub metrics_endpoint: Option<String>,
+}
+
+/// Service category enumeration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum ServiceCategory {
+    /// Storage and persistence services
+    Storage,
+    /// AI and machine learning services
+    AI,
+    /// Security and authentication services
+    Security,
+    /// Network and communication services
+    Network,
+    /// Orchestration and workflow services
+    Orchestration,
+    /// Monitoring and observability services
+    Monitoring,
+    /// User interface and visualization services
+    UI,
+    /// Data processing and analytics services
+    DataProcessing,
+    /// Integration and adapter services
+    Integration,
+    /// Development and tooling services
+    Development,
+    /// Custom category (specify in description)
+    Custom(String),
+}
+
+/// Service capability enumeration - what a service can do
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum ServiceCapability {
+    /// Storage capabilities
+    Storage(StorageType),
+    /// AI capabilities  
+    AI(AIModality),
+    /// Security capabilities
+    Security(SecurityFunction),
+    /// Orchestration capabilities
+    Orchestration(OrchestrationScope),
+    /// Network capabilities
+    Network(CommunicationProtocol),
+    /// Custom capability
+    Custom {
+        namespace: String,
+        capability: String,
+        version: String,
+    },
+}
+
+/// Storage type capabilities
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum StorageType {
+    /// Object storage (S3-compatible)
+    Object,
+    /// Block storage
+    Block,
+    /// File system storage
+    FileSystem,
+    /// Database storage
+    Database,
+    /// Cache storage
+    Cache,
+    /// Archive storage
+    Archive,
+}
+
+/// Security domain capabilities
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum SecurityDomain {
+    /// Authentication services
+    Authentication,
+    /// Authorization services
+    Authorization,
+    /// Encryption services
+    Encryption,
+    /// Certificate management
+    CertificateManagement,
+    /// Audit and compliance
+    Audit,
+    /// Threat detection
+    ThreatDetection,
+}
+
+/// Integration type capabilities
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum IntegrationType {
+    /// API integration
+    API,
+    /// Event-driven integration
+    EventDriven,
+    /// Batch integration
+    Batch,
+    /// Real-time streaming
+    Streaming,
+    /// File-based integration
+    File,
+}
+
+/// Integration pattern capabilities
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum IntegrationPattern {
+    /// Request-response pattern
+    RequestResponse,
+    /// Publisher-subscriber pattern
+    PubSub,
+    /// Event sourcing pattern
+    EventSourcing,
+    /// Command query responsibility segregation
+    CQRS,
+    /// Microservices pattern
+    Microservices,
+}
+
+/// Communication protocol capabilities
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum CommunicationProtocol {
+    /// HTTP/HTTPS protocol
+    HTTP,
+    /// gRPC protocol
+    GRPC,
+    /// WebSocket protocol
+    WebSocket,
+    /// TCP protocol
+    TCP,
+    /// UDP protocol
+    UDP,
+    /// Message queue protocols
+    MessageQueue,
+}
+
+/// Resource specification
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ResourceSpec {
+    /// CPU requirements (cores)
+    pub cpu_cores: Option<f64>,
+    /// Memory requirements (MB)
+    pub memory_mb: Option<u64>,
+    /// Disk space requirements (GB)
+    pub disk_gb: Option<u64>,
+    /// Network bandwidth requirements (Mbps)
+    pub network_mbps: Option<u64>,
+    /// Resource constraints
+    pub constraints: ResourceConstraints,
+}
+
+/// Integration preferences
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IntegrationPreferences {
+    /// Preferred integration types
+    pub preferred_types: Vec<IntegrationType>,
+    /// Preferred patterns
+    pub preferred_patterns: Vec<IntegrationPattern>,
+    /// Preferred protocols
+    pub preferred_protocols: Vec<CommunicationProtocol>,
+    /// Cost sensitivity
+    pub cost_sensitivity: CostSensitivity,
+}
+
+/// Resource constraints
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ResourceConstraints {
+    /// Maximum CPU cores
+    pub max_cpu_cores: Option<f64>,
+    /// Maximum memory (MB)
+    pub max_memory_mb: Option<u64>,
+    /// Maximum disk space (GB)
+    pub max_disk_gb: Option<u64>,
+    /// Performance requirements
+    pub performance: PerformanceRequirements,
+}
+
+/// Performance requirements
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PerformanceRequirements {
+    /// Maximum latency (milliseconds)
+    pub max_latency_ms: Option<u64>,
+    /// Minimum throughput (requests per second)
+    pub min_throughput_rps: Option<u64>,
+    /// Availability requirement (percentage)
+    pub availability_percent: Option<f64>,
+}
+
+/// Cost sensitivity levels
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum CostSensitivity {
+    /// Cost is not a concern
+    None,
+    /// Low cost sensitivity
+    Low,
+    /// Medium cost sensitivity
+    Medium,
+    /// High cost sensitivity (optimize for cost)
+    High,
+}
+
+/// Data operation capabilities
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum DataOperation {
+    /// Read operations
+    Read,
+    /// Write operations
+    Write,
+    /// Update operations
+    Update,
+    /// Delete operations
+    Delete,
+    /// Query operations
+    Query,
+    /// Analytics operations
+    Analytics,
+}
+
+/// Consistency level requirements
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ConsistencyLevel {
+    /// Strong consistency
+    Strong,
+    /// Eventual consistency
+    Eventual,
+    /// Session consistency
+    Session,
+}
+
+/// Durability level requirements
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum DurabilityLevel {
+    /// No durability guarantees
+    None,
+    /// Memory-based durability
+    Memory,
+    /// Disk-based durability
+    Disk,
+    /// Replicated durability
+    Replicated,
+}
+
+/// Security function capabilities
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum SecurityFunction {
+    /// User authentication
+    Authentication,
+    /// Access authorization
+    Authorization,
+    /// Data encryption
+    Encryption,
+    /// Certificate management
+    CertificateManagement,
+    /// Security auditing
+    Auditing,
+    /// Intrusion detection
+    IntrusionDetection,
+}
+
+/// Compliance framework requirements
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum ComplianceFramework {
+    /// GDPR compliance
+    GDPR,
+    /// HIPAA compliance
+    HIPAA,
+    /// SOC2 compliance
+    SOC2,
+    /// ISO27001 compliance
+    ISO27001,
+    /// PCI DSS compliance
+    PCIDSS,
+}
+
+/// Trust level requirements
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum TrustLevel {
+    /// Public (no trust required)
+    Public,
+    /// Internal (organization trust)
+    Internal,
+    /// Confidential (high trust)
+    Confidential,
+    /// Restricted (maximum trust)
+    Restricted,
+}
+
+/// Orchestration scope capabilities
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum OrchestrationScope {
+    /// Single service orchestration
+    Service,
+    /// Multi-service orchestration
+    Workflow,
+    /// Cross-system orchestration
+    System,
+    /// Infrastructure orchestration
+    Infrastructure,
+}
+
+/// Coordination pattern capabilities
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum CoordinationPattern {
+    /// Centralized coordination
+    Centralized,
+    /// Decentralized coordination
+    Decentralized,
+    /// Hierarchical coordination
+    Hierarchical,
+    /// Peer-to-peer coordination
+    PeerToPeer,
+}
+
+/// Consistency model requirements
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum ConsistencyModel {
+    /// Linearizable consistency
+    Linearizable,
+    /// Sequential consistency
+    Sequential,
+    /// Causal consistency
+    Causal,
+    /// Eventual consistency
+    Eventual,
+}
+
+/// Fault tolerance level requirements
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum FaultToleranceLevel {
+    /// No fault tolerance
+    None,
+    /// Basic fault tolerance
+    Basic,
+    /// High fault tolerance
+    High,
+    /// Maximum fault tolerance
+    Maximum,
+}
+
+/// AI modality capabilities
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum AIModality {
+    /// Natural language processing
+    NLP,
+    /// Computer vision
+    Vision,
+    /// Speech processing
+    Speech,
+    /// Machine learning
+    MachineLearning,
+    /// Deep learning
+    DeepLearning,
+    /// Reinforcement learning
+    ReinforcementLearning,
+}
+
+/// AI model type capabilities
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum AIModelType {
+    /// Large language model
+    LLM,
+    /// Convolutional neural network
+    CNN,
+    /// Recurrent neural network
+    RNN,
+    /// Transformer model
+    Transformer,
+    /// Decision tree
+    DecisionTree,
+    /// Support vector machine
+    SVM,
+}
+
+/// AI task capabilities
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum AITask {
+    /// Text generation
+    TextGeneration,
+    /// Text classification
+    TextClassification,
+    /// Image recognition
+    ImageRecognition,
+    /// Speech recognition
+    SpeechRecognition,
+    /// Prediction
+    Prediction,
+    /// Recommendation
+    Recommendation,
+}
+
+/// AI interface capabilities
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum AIInterface {
+    /// REST API interface
+    REST,
+    /// gRPC interface
+    GRPC,
+    /// WebSocket interface
+    WebSocket,
+    /// Command line interface
+    CLI,
+    /// Library interface
+    Library,
+}
+
+/// Development context capabilities
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum DevelopmentContext {
+    /// Local development
+    Local,
+    /// Testing environment
+    Testing,
+    /// Staging environment
+    Staging,
+    /// Production environment
+    Production,
+    /// CI/CD pipeline
+    CICD,
+}
+
+/// Service role definition
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceRole {
+    /// Role name
+    pub name: String,
+    /// Required capabilities for this role
+    pub required_capabilities: Vec<ServiceCapability>,
+    /// Optional capabilities
+    pub optional_capabilities: Vec<ServiceCapability>,
+    /// Resource requirements
+    pub resource_requirements: ResourceSpec,
+    /// Performance requirements
+    pub performance_requirements: PerformanceRequirements,
+}
+
+/// Capability requirement
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CapabilityRequirement {
+    /// Required capability
+    pub capability: ServiceCapability,
+    /// Whether this requirement is optional
+    pub optional: bool,
+    /// Version constraints
+    pub version_constraint: Option<String>,
+    /// Additional parameters
+    pub parameters: HashMap<String, serde_json::Value>,
+}
+
+/// Service handle for external references
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceHandle {
+    pub service_id: Uuid,
+    pub name: String,
+    pub endpoints: Vec<ServiceEndpoint>,
+}
+
+/// Service information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceInfo {
+    pub service_id: Uuid,
+    pub metadata: ServiceMetadata,
+    pub capabilities: Vec<ServiceCapability>,
+    pub endpoints: Vec<ServiceEndpoint>,
+    pub last_seen: std::time::SystemTime,
+}
+
+/// Service endpoint definition
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceEndpoint {
+    pub url: String,
+    pub protocol: CommunicationProtocol,
+    pub health_check: Option<String>,
+}
+
+/// Service requirements for discovery
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceRequirements {
+    pub capabilities: Vec<ServiceCapability>,
+    pub resource_constraints: Option<ResourceConstraints>,
+    pub performance_requirements: Option<PerformanceRequirements>,
+}
+
+/// Selection preferences for service discovery
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SelectionPreferences {
+    pub prefer_local: bool,
+    pub cost_sensitivity: CostSensitivity,
+    pub performance_priority: bool,
+}
+
+// ==================== DEFAULT IMPLEMENTATIONS ====================
+
+impl Default for PerformanceRequirements {
+    fn default() -> Self {
+        Self {
+            max_latency_ms: None,
+            min_throughput_rps: None,
+            availability_percent: Some(99.9),
+        }
+    }
+}
+
+impl Default for IntegrationPreferences {
+    fn default() -> Self {
+        Self {
+            preferred_types: vec![IntegrationType::API],
+            preferred_patterns: vec![IntegrationPattern::RequestResponse],
+            preferred_protocols: vec![CommunicationProtocol::HTTP],
+            cost_sensitivity: CostSensitivity::Medium,
+        }
+    }
+}
+
+impl Default for SelectionPreferences {
+    fn default() -> Self {
+        Self {
+            prefer_local: true,
+            cost_sensitivity: CostSensitivity::Medium,
+            performance_priority: false,
+        }
+    }
+}
+
+/// Discovered service information for network layer
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiscoveredService {
+    pub id: String,
+    pub name: String,
+    pub endpoint: String,
+    pub port: u16,
+    pub capabilities: Vec<String>,
+    pub metadata: HashMap<String, String>,
+    pub discovered_at: std::time::SystemTime,
+}
+
+impl Default for DiscoveredService {
+    fn default() -> Self {
+        Self {
+            id: Uuid::new_v4().to_string(),
+            name: "unknown".to_string(),
+            endpoint: "localhost".to_string(),
+            port: 8080,
+            capabilities: vec![],
+            metadata: HashMap::new(),
+            discovered_at: std::time::SystemTime::now(),
+        }
+    }
+}

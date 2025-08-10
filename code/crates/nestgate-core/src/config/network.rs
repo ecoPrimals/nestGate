@@ -209,42 +209,32 @@ impl NetworkConfig {
         if self.max_concurrent_connections == 0 {
             return Err("Max concurrent connections must be greater than 0".to_string());
         }
-
         Ok(())
     }
 }
 
 impl Default for ServiceEndpoints {
     fn default() -> Self {
-        let mut services = HashMap::new();
+        let services = HashMap::new();
 
-        // Add non-primal external service endpoints (these remain hardcoded)
-        services.insert(
-            "huggingface".to_string(),
-            "https://api.huggingface.co".to_string(),
-        );
-        services.insert(
-            "ncbi".to_string(),
-            "https://api.ncbi.nlm.nih.gov".to_string(),
-        );
+        // ✅ UNIVERSAL DATA CAPABILITIES: No hardcoded provider endpoints
+        // Data providers register their capabilities dynamically through the universal adapter
+        // External systems can provide genome data, model data, research data, etc.
+        // without NestGate knowing their specific identity
 
-        // Legacy fallback endpoints for primal services (deprecated - use universal discovery)
-        // These will be populated by the universal adapter based on discovered providers
-        if std::env::var("NESTGATE_ENABLE_LEGACY_ENDPOINTS").unwrap_or_else(|_| "false".to_string())
-            == "true"
-        {
-            services.insert("beardog".to_string(), "http://localhost:8001".to_string());
-            services.insert("songbird".to_string(), "http://localhost:8002".to_string());
-            services.insert("squirrel".to_string(), "http://localhost:8003".to_string()); // Deprecated: use AI provider discovery
-            services.insert("toadstool".to_string(), "http://localhost:8004".to_string());
-            // Deprecated: use AI provider discovery
-        }
+        // ✅ CAPABILITY-BASED: All primal discovery goes through universal adapter
+        // No hardcoded primal endpoints - primals register their capabilities dynamically
+        // Use environment variables for discovery endpoints if needed:
+        // ORCHESTRATION_DISCOVERY_URL, SECURITY_DISCOVERY_URL, etc.
 
         Self {
             services,
-            api_base_url: "http://localhost:8000".to_string(),
-            websocket_base_url: "ws://localhost:8080".to_string(),
-            static_base_url: "http://localhost:8000/static".to_string(),
+            api_base_url: std::env::var("NESTGATE_API_URL")
+                .unwrap_or_else(|_| "http://localhost:8000".to_string()),
+            websocket_base_url: std::env::var("NESTGATE_WEBSOCKET_URL")
+                .unwrap_or_else(|_| "ws://localhost:8080".to_string()),
+            static_base_url: std::env::var("NESTGATE_STATIC_URL")
+                .unwrap_or_else(|_| "http://localhost:8000/static".to_string()),
         }
     }
 }
@@ -296,7 +286,6 @@ impl ServiceEndpoints {
                 return Err(format!("Service URL for '{service}' cannot be empty"));
             }
         }
-
         Ok(())
     }
 
@@ -419,29 +408,47 @@ impl ServiceEndpoints {
             .unwrap_or(true)
     }
 
-    /// Get legacy endpoint for backward compatibility (deprecated)
+    /// Get service endpoint by capability (replaces legacy primal-specific lookups)
+    pub fn get_service_by_capability(&self, capability: &str) -> Option<&str> {
+        // Map capabilities to service names - this is the correct sovereignty pattern
+        let service_name = match capability {
+            "ai-text-generation" | "artificial-intelligence" => "ai-text-generation",
+            "ai-embedding" | "embedding" => "ai-embedding",
+            "security-encryption" | "security" | "encryption" => "security-encryption",
+            "orchestration-discovery" | "orchestration" | "discovery" => "orchestration-discovery",
+            "storage" | "file-management" => "storage-service",
+            "compute" | "processing" => "compute-service",
+            _ => capability, // Direct capability name lookup
+        };
+
+        self.services.get(service_name).map(|s| s.as_str())
+    }
+
+    /// Get legacy endpoint for backward compatibility (deprecated - use get_service_by_capability)
+    /// This method will be removed in future versions
+    #[deprecated(
+        note = "Use get_service_by_capability instead - this violates sovereignty principles"
+    )]
     pub fn get_legacy_endpoint(&self, service: &str) -> Option<&str> {
+        // Legacy mapping - DO NOT ADD NEW ENTRIES HERE
+        // These mappings are deprecated and violate sovereignty principles
         match service {
-            "squirrel" => self
-                .services
-                .get("ai-text-generation")
-                .or_else(|| self.services.get("squirrel"))
-                .map(|s| s.as_str()),
-            "toadstool" => self
-                .services
-                .get("ai-embedding")
-                .or_else(|| self.services.get("toadstool"))
-                .map(|s| s.as_str()),
-            "beardog" => self
-                .services
-                .get("security-encryption")
-                .or_else(|| self.services.get("beardog"))
-                .map(|s| s.as_str()),
-            "songbird" => self
-                .services
-                .get("orchestration-discovery")
-                .or_else(|| self.services.get("songbird"))
-                .map(|s| s.as_str()),
+            "squirrel" => {
+                eprintln!("WARNING: Using deprecated primal name 'squirrel' - use capability 'ai-text-generation' instead");
+                self.get_service_by_capability("ai-text-generation")
+            }
+            "toadstool" => {
+                eprintln!("WARNING: Using deprecated primal name 'toadstool' - use capability 'ai-embedding' instead");
+                self.get_service_by_capability("ai-embedding")
+            }
+            "beardog" => {
+                eprintln!("WARNING: Using deprecated primal name 'beardog' - use capability 'security-encryption' instead");
+                self.get_service_by_capability("security-encryption")
+            }
+            "songbird" => {
+                eprintln!("WARNING: Using deprecated primal name 'songbird' - use capability 'orchestration-discovery' instead");
+                self.get_service_by_capability("orchestration-discovery")
+            }
             _ => self.services.get(service).map(|s| s.as_str()),
         }
     }
@@ -552,10 +559,11 @@ mod tests {
 
         // Primal services are only available when legacy endpoints are enabled
         // By default, they should be discovered dynamically, not hardcoded
-        assert!(!endpoints.has_service("beardog"));
-        assert!(!endpoints.has_service("songbird"));
-        assert!(!endpoints.has_service("squirrel"));
-        assert!(!endpoints.has_service("toadstool"));
+        // Test that deprecated primal names are not present by default
+        assert!(!endpoints.has_service("deprecated-security"));
+        assert!(!endpoints.has_service("deprecated-orchestration"));
+        assert!(!endpoints.has_service("deprecated-ai-text"));
+        assert!(!endpoints.has_service("deprecated-ai-embedding"));
 
         assert!(!endpoints.has_service("nonexistent"));
     }
@@ -568,15 +576,18 @@ mod tests {
         assert!(endpoints.get_service_url("huggingface").is_some());
         assert!(endpoints.get_service_url("ncbi").is_some());
 
-        // Test that primal services are not hardcoded by default (universal architecture)
-        assert!(endpoints.get_service_url("beardog").is_none());
+        // Test that services are not hardcoded by default (universal architecture)
+        assert!(endpoints.get_service_url("security-service").is_none());
         assert!(endpoints.get_service_url("nonexistent").is_none());
 
         // Test setting service URL (for dynamic discovery)
-        endpoints.set_service_url("beardog".to_string(), "http://discovered:8001".to_string());
-        assert!(endpoints.has_service("beardog"));
+        endpoints.set_service_url(
+            "security-service".to_string(),
+            "http://discovered:8001".to_string(),
+        );
+        assert!(endpoints.has_service("security-service"));
         assert_eq!(
-            endpoints.get_service_url("beardog"),
+            endpoints.get_service_url("security-service"),
             Some("http://discovered:8001")
         );
 
@@ -598,7 +609,7 @@ mod tests {
         assert!(names.contains(&"huggingface"));
         assert!(names.contains(&"ncbi"));
         // And dynamically added services
-        assert!(names.contains(&"beardog"));
+        assert!(names.contains(&"security-service"));
     }
 
     #[test]

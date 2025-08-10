@@ -10,7 +10,7 @@ use tokio::sync::RwLock;
 // Removed unused tracing import
 
 use crate::{automation::DatasetAnalyzer, types::StorageTier};
-use nestgate_core::{NestGateError, Result as CoreResult};
+use nestgate_core::{types::StorageTier as CoreStorageTier, NestGateError, Result as CoreResult};
 
 use super::types::*;
 
@@ -96,7 +96,6 @@ pub async fn discover_migration_candidates(
         let mut stats = statistics.write().await;
         stats.queued_migrations += queued_count as u32;
     }
-
     Ok(())
 }
 
@@ -154,7 +153,6 @@ fn scan_directory_recursive(
                 scan_directory_recursive(path, files, depth + 1).await.ok();
             }
         }
-
         Ok(())
     })
 }
@@ -176,23 +174,39 @@ async fn analyze_migration_candidate(
             recovery: nestgate_core::error::RecoveryStrategy::Retry,
         })?;
 
-    // Get tier recommendation
-    let recommendation = analyzer
-        .predict_optimal_tier(&file_path.to_string_lossy())
+    // Get file metadata for heuristic analysis
+    let metadata = tokio::fs::metadata(file_path)
         .await
         .map_err(|e| NestGateError::System {
-            message: format!("Tier recommendation failed: {}", e),
+            message: format!("Failed to get file metadata: {}", e),
             resource: nestgate_core::error::SystemResource::Disk,
             utilization: None,
             recovery: nestgate_core::error::RecoveryStrategy::Retry,
         })?;
 
+    let file_size = metadata.len();
+    let access_time = metadata
+        .accessed()
+        .unwrap_or_else(|_| std::time::SystemTime::now());
+
+    // Get tier recommendation - using simple heuristic since predict_optimal_tier doesn't exist
+    let recommendation = if file_size > 1024 * 1024 * 1024 {
+        // > 1GB
+        CoreStorageTier::Cold // Large files go to cold storage
+    } else if access_time.elapsed().unwrap_or_default().as_secs() < 24 * 3600 {
+        // < 24 hours
+        CoreStorageTier::Hot // Recently accessed files stay hot
+    } else {
+        CoreStorageTier::Warm // Default to warm storage
+    };
+
     // Convert from nestgate_core::StorageTier to types::StorageTier
     let recommended_tier = match recommendation {
-        nestgate_core::StorageTier::Hot => StorageTier::Hot,
-        nestgate_core::StorageTier::Warm => StorageTier::Warm,
-        nestgate_core::StorageTier::Cold => StorageTier::Cold,
-        nestgate_core::StorageTier::Cache => StorageTier::Hot, // Map Cache to Hot
+        CoreStorageTier::Hot => StorageTier::Hot,
+        CoreStorageTier::Warm => StorageTier::Warm,
+        CoreStorageTier::Cold => StorageTier::Cold,
+        CoreStorageTier::Cache => StorageTier::Hot, // Map Cache to Hot
+        CoreStorageTier::Archive => StorageTier::Cold, // Map Archive to Cold
     };
 
     Ok(Some(recommended_tier))

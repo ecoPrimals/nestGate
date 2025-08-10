@@ -73,7 +73,6 @@ impl PerformanceDashboard {
         });
 
         info!("✅ Performance Dashboard started successfully");
-        Ok(())
     }
 
     /// Get comprehensive dashboard overview
