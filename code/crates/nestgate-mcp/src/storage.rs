@@ -11,6 +11,7 @@ use nestgate_core::biomeos::{BiomeContext, VolumeSpec};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::SystemTime;
 use tokio::sync::RwLock;
 use tracing::debug;
 use tracing::info;
@@ -90,22 +91,22 @@ impl McpStorageManager {
 
         // Validate configuration
         if config.name.is_empty() {
-            return Err(Error::validation("Volume name cannot be empty".to_string()));
+            return Err(Error::validation("Volume name cannot be empty".to_string()).into());
         }
 
         if config.size_bytes == 0 {
-            return Err(Error::validation(
-                "Volume size must be greater than zero".to_string(),
-            ));
+            return Err(
+                Error::validation("Volume size must be greater than zero".to_string()).into(),
+            );
         }
 
         // Check if volume already exists
         let volumes = self.volumes.read().await;
         if volumes.contains_key(&config.name) {
-            return Err(Error::storage(format!(
-                "Volume {} already exists",
-                config.name
-            )));
+            return Err(nestgate_core::NestGateError::Storage {
+                operation: "create_volume".to_string(),
+                details: format!("Volume {} already exists", config.name),
+            });
         }
         drop(volumes);
 
@@ -148,7 +149,10 @@ impl McpStorageManager {
         volumes
             .get(name)
             .cloned()
-            .ok_or_else(|| Error::storage(format!("Volume not found: {name}")))
+            .ok_or_else(|| nestgate_core::NestGateError::Storage {
+                operation: "storage_operation".to_string(),
+                details: "Storage operation failed".to_string(),
+            })
     }
 
     /// Mount a storage volume
@@ -156,12 +160,19 @@ impl McpStorageManager {
         info!("Mounting storage volume: {}", name);
 
         let mut volumes = self.volumes.write().await;
-        let volume = volumes
-            .get_mut(name)
-            .ok_or_else(|| Error::storage(format!("Volume not found: {name}")))?;
+        let volume =
+            volumes
+                .get_mut(name)
+                .ok_or_else(|| nestgate_core::NestGateError::Storage {
+                    operation: "mount_volume".to_string(),
+                    details: format!("Volume not found: {name}"),
+                })?;
 
         if volume.mounted {
-            return Err(Error::storage(format!("Volume {name} is already mounted")));
+            return Err(nestgate_core::NestGateError::Storage {
+                operation: "storage_operation".to_string(),
+                details: "Storage operation failed".to_string(),
+            });
         }
 
         // Simulate mount operation
@@ -176,12 +187,19 @@ impl McpStorageManager {
         info!("Unmounting storage volume: {}", name);
 
         let mut volumes = self.volumes.write().await;
-        let volume = volumes
-            .get_mut(name)
-            .ok_or_else(|| Error::storage(format!("Volume not found: {name}")))?;
+        let volume =
+            volumes
+                .get_mut(name)
+                .ok_or_else(|| nestgate_core::NestGateError::Storage {
+                    operation: "unmount_volume".to_string(),
+                    details: format!("Volume not found: {name}"),
+                })?;
 
         if !volume.mounted {
-            return Err(Error::storage(format!("Volume {name} is not mounted")));
+            return Err(nestgate_core::NestGateError::Storage {
+                operation: "unmount_volume".to_string(),
+                details: format!("Volume {name} is not mounted"),
+            });
         }
 
         // Simulate unmount operation
@@ -198,12 +216,13 @@ impl McpStorageManager {
         let mut volumes = self.volumes.write().await;
         let volume = volumes
             .get(name)
-            .ok_or_else(|| Error::storage(format!("Volume not found: {name}")))?;
+            .ok_or_else(|| nestgate_core::NestGateError::Storage {
+                operation: "delete_volume".to_string(),
+                details: format!("Volume not found: {name}"),
+            })?;
 
         if volume.mounted {
-            return Err(Error::storage(format!(
-                "Cannot delete mounted volume: {name}"
-            )));
+            return Err(Error::storage(format!("Cannot delete mounted volume: {name}")).into());
         }
 
         volumes.remove(name);
@@ -218,7 +237,6 @@ impl McpStorageManager {
 
         // In a real implementation, this would scan for existing volumes
         // For now, we'll start with an empty volume set
-
         Ok(())
     }
 
@@ -235,9 +253,16 @@ impl McpStorageManager {
         );
 
         // Parse size string to bytes
-        let size_bytes = volume_spec
-            .size_bytes()
-            .map_err(|e| Error::validation(format!("Invalid volume size: {e}")))?;
+        let size_bytes =
+            volume_spec
+                .size_bytes()
+                .map_err(|e| nestgate_core::NestGateError::Validation {
+                    field: "volume_size".to_string(),
+                    message: format!("Invalid volume size: {e}"),
+                    current_value: None,
+                    expected: Some("Valid size format (e.g., 100GB, 1TB)".to_string()),
+                    user_error: true,
+                })?;
 
         // Convert biomeOS tier to MCP tier
         let mcp_tier = match volume_spec.tier.to_lowercase().as_str() {
@@ -249,7 +274,8 @@ impl McpStorageManager {
                 return Err(Error::validation(format!(
                     "Unknown storage tier: {}",
                     volume_spec.tier
-                )))
+                ))
+                .into())
             }
         };
 
@@ -357,15 +383,20 @@ impl McpStorageManager {
         let volume_key = format!("biomeos-{biome_id}-{volume_name}");
         let mut volumes = self.volumes.write().await;
 
-        let volume = volumes
-            .get_mut(&volume_key)
-            .ok_or_else(|| Error::storage(format!("Volume not found: {volume_key}")))?;
+        let volume =
+            volumes
+                .get_mut(&volume_key)
+                .ok_or_else(|| nestgate_core::NestGateError::Storage {
+                    operation: "storage_operation".to_string(),
+                    details: "Storage operation failed".to_string(),
+                })?;
 
         if new_size_bytes < volume.used_bytes {
             return Err(Error::storage(format!(
                 "Cannot shrink volume below used space: {} < {}",
                 new_size_bytes, volume.used_bytes
-            )));
+            ))
+            .into());
         }
 
         volume.size_bytes = new_size_bytes;
@@ -402,18 +433,15 @@ impl StorageAdapter {
         tracing::info!(
             "Mounting volume: {} to {}",
             request.volume_id,
-            request.mount_path.display()
+            request.mount_point.display()
         );
         Ok(MountInfo {
             id: format!("mount_{}", request.volume_id),
             volume_id: request.volume_id.clone(),
-            mount_path: request.mount_path.clone(),
-            status: crate::types::MountStatus {
-                code: "mounted".to_string(),
-                message: "Volume successfully mounted".to_string(),
-                created_at: chrono::Utc::now().to_rfc3339(),
-                updated_at: chrono::Utc::now().to_rfc3339(),
-            },
+            node_id: request.node_id.clone(),
+            mount_point: request.mount_point.clone(),
+            protocol: request.protocol.clone(),
+            created_at: SystemTime::now(),
         })
     }
 }

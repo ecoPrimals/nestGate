@@ -129,6 +129,4 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("  1. Ensure the device is not in use");
     info!("  2. Run with sudo privileges");
     info!("  3. Use the setup_production_zfs() function");
-
-    Ok(())
 }

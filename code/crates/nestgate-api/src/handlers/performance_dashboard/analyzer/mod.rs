@@ -14,6 +14,7 @@ use std::time::Duration;
 use tracing::info;
 use tracing::error;
 use tracing::debug;
+use tracing::warn;
 // Removed unused tracing import
 
 // Sub-modules for organized functionality
@@ -237,15 +238,86 @@ impl PerformanceAnalyzer {
 
 impl Default for PerformanceAnalyzer {
     fn default() -> Self {
-        // This would be an error in real usage - can't call async in default
-        // But we need it for compatibility
+        // ⚠️ WARNING: Default implementation uses minimal functionality
+        // For production, use PerformanceAnalyzer::new_production() instead
+        warn!("Using default PerformanceAnalyzer - prefer new_production() for real metrics");
+        
+        // Create a real ZFS manager with default config for fallback scenarios
+        let zfs_config = nestgate_zfs::ZfsConfig::default();
+        let zfs_manager = Arc::new(
+            nestgate_zfs::ZfsManager::new(zfs_config)
+                .unwrap_or_else(|_| {
+                    warn!("Failed to create real ZFS manager, using minimal fallback");
+                    nestgate_zfs::ZfsManager::new_minimal()
+                })
+        );
+        
         Self {
-            zfs_manager: Arc::new(nestgate_zfs::ZfsManager::mock()),
+            zfs_manager: zfs_manager.clone(),
             analysis_cache: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
             system_collector: SystemMetricsCollector::new(),
-            zfs_analyzer: ZfsAnalyzer::mock(),
-            risk_forecaster: RiskForecaster::mock(),
+            zfs_analyzer: ZfsAnalyzer::new(zfs_manager.clone()), // Use real constructor
+            risk_forecaster: RiskForecaster::new(zfs_manager.clone()), // Use real constructor
             insights_generator: InsightsGenerator::new(),
         }
+    }
+}
+
+impl PerformanceAnalyzer {
+    /// Create a production-ready performance analyzer with real metrics
+    pub async fn new_production() -> Result<Self> {
+        info!("Creating production performance analyzer with real metrics");
+        
+        // Create real ZFS manager
+        let config = nestgate_zfs::ZfsConfig::default();
+        let zfs_manager = Arc::new(
+            nestgate_zfs::ZfsManager::new(config)
+                .await
+                .map_err(|e| crate::error::ApiError::InternalError(
+                    format!("Failed to create ZFS manager: {}", e)
+                ))?
+        );
+        
+        // Create real system metrics collector
+        let system_collector = SystemMetricsCollector::new();
+        
+        // Create ZFS analyzer with real ZFS manager
+        let zfs_analyzer = ZfsAnalyzer::new(zfs_manager.clone());
+        
+        // Create risk forecaster with real ZFS manager
+        let risk_forecaster = RiskForecaster::new(zfs_manager.clone());
+        
+        Ok(Self {
+            zfs_manager,
+            analysis_cache: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
+            system_collector,
+            zfs_analyzer,
+            risk_forecaster,
+            insights_generator: InsightsGenerator::new(),
+        })
+    }
+    
+    /// Create for development environment (uses real metrics but with dev-friendly settings)
+    pub async fn new_development() -> Result<Self> {
+        info!("Creating development performance analyzer");
+        
+        // Use development-friendly ZFS manager
+        let config = nestgate_zfs::ZfsConfig::default();
+        let zfs_manager = Arc::new(
+            nestgate_zfs::ZfsManager::new(config)
+                .await
+                .map_err(|e| crate::error::ApiError::InternalError(
+                    format!("Failed to create ZFS manager for development: {}", e)
+                ))?
+        );
+        
+        Ok(Self {
+            zfs_manager: zfs_manager.clone(),
+            analysis_cache: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
+            system_collector: SystemMetricsCollector::new(),
+            zfs_analyzer: ZfsAnalyzer::new(zfs_manager.clone()),
+            risk_forecaster: RiskForecaster::new(zfs_manager.clone()),
+            insights_generator: InsightsGenerator::new(),
+        })
     }
 } 

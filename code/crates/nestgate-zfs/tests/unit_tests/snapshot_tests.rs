@@ -56,7 +56,10 @@ mod snapshot_unit_tests {
             assert_eq!(monthly_months, 12);
             assert_eq!(yearly_years, 5);
         } else {
-            panic!("Expected Custom retention policy");
+            return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    "Expected Custom retention policy".to_string()
+).into());
         }
     }
 

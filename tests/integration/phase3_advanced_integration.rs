@@ -1,12 +1,12 @@
-//! Phase 3 Advanced Integration Tests - Achieving 100% Test Coverage
-//!
-//! This file implements the final 25% test coverage to reach 100% as outlined in Phase 3.
-//! Focus areas:
-//! - Advanced Integration Tests: Cross-crate component interaction testing
-//! - End-to-End Test Scenarios: Full system workflow validation
-//! - Performance & Load Testing: Stress testing under production conditions
-//! - Security Integration Testing: Complete security audit test coverage
-//! - Production Readiness Validation: Final deployment-ready verification
+/// Phase 3 Advanced Integration Tests - Achieving 100% Test Coverage
+///
+/// This file implements the final 25% test coverage to reach 100% as outlined in Phase 3.
+/// Focus areas:
+/// - Advanced Integration Tests: Cross-crate component interaction testing
+/// - End-to-End Test Scenarios: Full system workflow validation
+/// - Performance & Load Testing: Stress testing under production conditions
+/// - Security Integration Testing: Complete security audit test coverage
+/// - Production Readiness Validation: Final deployment-ready verification
 
 use std::time::{SystemTime Instant};
 use tokio::time::{sleep, timeout};
@@ -17,7 +17,7 @@ use std::collections::HashMap;
 // Import all the modules we need for comprehensive testing
 use nestgate_core::{Result as CoreResult, NestGateError, StorageTier};
 use nestgate_mcp::security::{SecurityManager, SecurityConfig, AuthToken};
-use nestgate_network::{VlanConfig, VlanManager, SongbirdConnectionManager, ServiceInstance, ServiceStatus};
+use nestgate_network::{VlanConfig, VlanManager, UniversalConnectionManager, ServiceInstance, ServiceStatus};
 use nestgate_zfs::{
     manager::ZfsManager,
     performance::ZfsPerformanceMonitor,
@@ -31,8 +31,12 @@ use nestgate_automation::{
     manager::IntelligentDatasetManager,
     types::AutomationConfig,
 };
-use nestgate_network::{
-    api::NetworkApi, Protocol, ProtocolConfig, ConnectionType,
+use nestgate_core::{
+    api::NetworkApi, Protocol, ConnectionType,
+    traits::UniversalService,
+    unified_types::UnifiedNetworkConfig,
+    error::Result,
+    telemetry::TelemetryCollector,
 };
 use nestgate_nas::{NasConfig, NasServer, ShareProtocol};
 use nestgate_ui::{NestGateApp, AppView, DataSource, TierStats};
@@ -46,7 +50,7 @@ async fn test_end_to_end_zfs_storage_workflow() -> CoreResult<()> {
     info!("🔄 Testing end-to-end ZFS storage workflow with real pool integration");
 
     // Initialize ZFS components
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let pool_manager = Arc::new(ZfsPoolManager::new(&config).await?);
     let dataset_manager = Arc::new(ZfsDatasetManager::new(config.clone(), pool_manager.clone()));
     let _ai_manager = ZfsManager::new(config.clone()).await?;
@@ -109,7 +113,7 @@ async fn test_cross_component_security_integration() -> CoreResult<()> {
     let mut security = SecurityManager::new(security_config).await?;
 
     // Step 1: Create secured ZFS environment
-    let zfs_config = ZfsConfig::default();
+    let zfs_config = UnifiedZfsConfig::default();
     let mut zfs_manager = ZfsManager::new(zfs_config).await?;
 
     // Step 2: User authentication for storage operations
@@ -171,7 +175,7 @@ async fn test_network_storage_tier_integration() -> CoreResult<()> {
     // Step 1: Initialize network components
     let mut network_api = NetworkApi::new();
     let vlan_manager = VlanManager::new();
-    let songbird_manager = SongbirdConnectionManager::new(
+    let orchestration_manager = UniversalConnectionManager::new(
         "http://localhost:8080".to_string(),
         "phase3-test-service".to_string()
     );
@@ -208,13 +212,14 @@ async fn test_network_storage_tier_integration() -> CoreResult<()> {
     ];
 
     for (protocol, description) in protocols {
-        let config = ProtocolConfig {
-            protocol: protocol.clone(),
-            options: HashMap::new(),
-            performance: nestgate_network::PerformancePreference::Speed,
-            encryption: true,
-            timeout: 30,
-            max_retries: 3,
+        let config = UnifiedNetworkConfig {
+            bind_address: "192.168.10.1".parse().unwrap(),
+            port: 8080,
+            connection_timeout: std::time::Duration::from_secs(30),
+            enable_tls: false,
+            max_retries: Some(3),
+            protocol_version: Some("http/1.1".to_string()),
+            ..Default::default()
         };
 
         info!("✅ Configured {} protocol: {}", protocol, description);
@@ -235,7 +240,7 @@ async fn test_network_storage_tier_integration() -> CoreResult<()> {
     if register_result.is_ok() {
         info!("✅ Successfully registered storage service");
     } else {
-        info!("ℹ️ Service registration test completed (Songbird not available)");
+        info!("ℹ️ Service registration test completed (orchestration service not available)");
     }
 
     Ok(())
@@ -247,7 +252,7 @@ async fn test_performance_load_testing() -> CoreResult<()> {
     info!("⚡ Testing performance under production load conditions");
 
     // Step 1: Initialize performance monitoring
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let pool_manager = Arc::new(ZfsPoolManager::new(&config).await?);
     let dataset_manager = Arc::new(ZfsDatasetManager::new(config.clone(), pool_manager.clone()));
     let perf_config = PerformanceConfig::default();
@@ -408,7 +413,7 @@ async fn test_nas_zfs_protocol_integration() -> CoreResult<()> {
     }
 
     // Step 3: Test ZFS integration
-    let zfs_config = ZfsConfig::default();
+    let zfs_config = UnifiedZfsConfig::default();
     let zfs_manager = ZfsManager::new(zfs_config).await?;
 
     // Verify ZFS availability for NAS backend
@@ -473,7 +478,7 @@ async fn test_automation_system_integration() -> CoreResult<()> {
     }
 
     // Step 3: Test automated dataset management
-    let zfs_config = ZfsConfig::default();
+    let zfs_config = UnifiedZfsConfig::default();
     let pool_manager = Arc::new(ZfsPoolManager::new(&zfs_config).await?);
     let dataset_manager = Arc::new(ZfsDatasetManager::new(zfs_config, pool_manager));
 
@@ -556,7 +561,7 @@ async fn test_production_readiness_validation() -> CoreResult<()> {
 // Helper health check functions
 
 async fn test_zfs_health_check() -> CoreResult<()> {
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let manager = ZfsManager::new(config).await?;
     let _ = manager.is_zfs_available().await;
     Ok(())
@@ -602,7 +607,7 @@ async fn test_comprehensive_error_recovery() -> CoreResult<()> {
     info!("🔄 Testing comprehensive error recovery mechanisms");
 
     // Test 1: ZFS Connection Loss Recovery
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let mut manager = ZfsManager::new(config).await?;
 
     // Simulate connection loss by requesting non-existent pool
@@ -647,7 +652,7 @@ async fn test_comprehensive_error_recovery() -> CoreResult<()> {
 async fn test_real_zfs_pool_integration() -> CoreResult<()> {
     info!("💾 Testing real ZFS pool integration (1.81TB nestpool)");
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let pool_manager = Arc::new(ZfsPoolManager::new(&config).await?);
 
     // Step 1: Discover real pools

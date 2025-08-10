@@ -1,8 +1,21 @@
-/*!
-NestGate Middleware Components
+/// NestGate Middleware Library
+/// Provides comprehensive middleware functionality for HTTP request processing
+pub mod config;
+pub mod unified_middleware_config;
 
-This crate provides middleware functionality for the NestGate NAS system.
-*/
+// Re-export unified configuration for easy access
+pub use unified_middleware_config::{
+    MiddlewareAuthSettings, MiddlewareAuthorizationSettings, MiddlewareCacheSettings,
+    MiddlewareChainSettings, MiddlewareCompressionSettings, MiddlewareCorsSettings,
+    MiddlewareErrorHandlerSettings, MiddlewareLoggingSettings, MiddlewareRateLimitSettings,
+    MiddlewareSecuritySettings, MiddlewareTransformSettings, MiddlewareValidationSettings,
+    UnifiedMiddlewareConfig, UnifiedMiddlewareConfigExt, UnifiedMiddlewareExtensions,
+};
+
+// Re-export types for backward compatibility
+pub use config::types::{
+    ConditionType, HttpResponseFormat, MiddlewareCondition, MiddlewareConfiguration, MiddlewareType,
+};
 
 #[cfg(test)]
 mod additional_tests {

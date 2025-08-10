@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-use crate::errors::{Result, ConfigurationError};
+use crate::error::{Result, NestGateError as ConfigurationError};
 
 // Re-export config provider
 pub use crate::traits::config::ConfigProvider;

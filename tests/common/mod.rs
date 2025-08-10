@@ -1,354 +1,151 @@
-//! Common Test Infrastructure for Universal Primal Architecture
-//!
-//! Provides shared utilities, mock services, and test helpers
+pub use nestgate_core::unified_enums::UnifiedServiceType;
+pub use nestgate_core::unified_types::UnifiedConfig;
+/// Clean, rebuilt common test infrastructure
+/// Eliminates duplicate definitions and import conflicts
+// Re-export core types we need for testing - avoid conflicts by being explicit
+pub use nestgate_core::{NestGateError, Result};
 
-use async_trait::async_trait;
-use serde::{Deserialize};
-use std::collections::HashMap;
-use std::sync::Arc;
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
-use tokio::sync::RwLock;
 
-use nestgate_core::{
-    UniversalService, PrimalError, Result, utils,
-};
-use tempfile::TempDir;
+// Declare submodules
+pub mod config;
+pub mod helpers;
+pub mod mocks;
 
-// Consolidated mock infrastructure
-pub mod consolidated_mocks;
+// Re-export key utilities for convenience
+pub use config::CompleteTestConfig;
+pub use helpers::{TestHelpers, TestSetup};
+pub use mocks::{MockServiceRegistry, MockStorageService, MockUniversalService};
 
-// Test configuration system
-pub mod test_config;
-
-// Re-export consolidated mock infrastructure
-pub use consolidated_mocks::*;
-
-// Re-export test configuration
-pub use test_config::*;
-
-/// Mock service for testing
-pub struct MockService {
-    pub id: String,
-    pub config: Option<MockConfig>,
-    pub started: Arc<RwLock<bool>>,
-    pub request_count: Arc<RwLock<u64>>,
-    pub error_rate: Arc<RwLock<f64>>,
-    pub health_status: Arc<RwLock<MockHealth>>,
-}
-
+/// Clean test configuration without conflicts
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MockConfig {
+pub struct CleanTestConfig {
     pub name: String,
-    pub port: u16,
-    pub enable_errors: bool,
-    pub response_delay_ms: u64,
+    pub timeout: Duration,
+    pub max_concurrent: usize,
+    pub enable_chaos: bool,
 }
 
-#[derive(Debug, Serialize)]
-pub struct MockHealth {
-    pub status: String,
-    pub requests_handled: u64,
-    pub uptime_seconds: u64,
-    pub memory_usage_bytes: u64,
-}
-
-impl Default for MockConfig {
+impl Default for CleanTestConfig {
     fn default() -> Self {
         Self {
-            name: "mock-service".to_string(),
-            port: 8080,
-            enable_errors: false,
-            response_delay_ms: 10,
+            name: "default_test".to_string(),
+            timeout: Duration::from_secs(30),
+            max_concurrent: 10,
+            enable_chaos: false,
         }
     }
 }
 
-impl Default for MockHealth {
-    fn default() -> Self {
+/// Simple test service for mocking
+#[derive(Debug, Clone)]
+pub struct SimpleTestService {
+    pub service_type: UnifiedServiceType,
+    pub name: String,
+    pub enabled: bool,
+}
+
+impl SimpleTestService {
+    pub fn new(service_type: UnifiedServiceType, name: String) -> Self {
         Self {
-            status: "healthy".to_string(),
-            requests_handled: 0,
-            uptime_seconds: 0,
-            memory_usage_bytes: 1024 * 1024, // 1MB
+            service_type,
+            name,
+            enabled: true,
         }
+    }
+
+    pub fn storage(name: String) -> Self {
+        Self::new(UnifiedServiceType::Storage, name)
+    }
+
+    pub fn network(name: String) -> Self {
+        Self::new(UnifiedServiceType::Network, name)
+    }
+
+    pub fn security(name: String) -> Self {
+        Self::new(UnifiedServiceType::Security, name)
     }
 }
 
-impl MockService {
-    pub fn new(id: impl Into<String>) -> Self {
+/// Test result tracking
+#[derive(Debug, Clone)]
+pub struct TestResult {
+    pub test_name: String,
+    pub success: bool,
+    pub duration: Duration,
+    pub error: Option<String>,
+}
+
+impl TestResult {
+    pub fn success(test_name: String, duration: Duration) -> Self {
         Self {
-            id: id.into(),
-            config: None,
-            started: Arc::new(RwLock::new(false)),
-            request_count: Arc::new(RwLock::new(0)),
-            error_rate: Arc::new(RwLock::new(0.0)),
-            health_status: Arc::new(RwLock::new(MockHealth::default())),
+            test_name,
+            success: true,
+            duration,
+            error: None,
         }
     }
 
-    pub async fn set_error_rate(&self, rate: f64) {
-        *self.error_rate.write().await = rate;
-    }
-
-    pub async fn get_request_count(&self) -> u64 {
-        *self.request_count.read().await
-    }
-
-    pub async fn is_started(&self) -> bool {
-        *self.started.read().await
+    pub fn failure(test_name: String, duration: Duration, error: String) -> Self {
+        Self {
+            test_name,
+            success: false,
+            duration,
+            error: Some(error),
+        }
     }
 }
 
-#[async_trait]
-impl UniversalService for MockService {
-    type Config = MockConfig;
-    type Health = MockHealth;
-    type Error = Box<dyn std::error::Error + Send + Sync>;
+/// Test utilities
+pub struct TestUtils;
 
-    async fn initialize(&mut self, config: Self::Config) -> Result<(), Self::Error> {
-        self.config = Some(config);
-        Ok(())
+impl TestUtils {
+    /// Create a test configuration with custom timeout
+    pub fn config_with_timeout(timeout_secs: u64) -> CleanTestConfig {
+        CleanTestConfig {
+            timeout: Duration::from_secs(timeout_secs),
+            ..Default::default()
+        }
     }
 
-    async fn start(&mut self) -> Result<(), Self::Error> {
-        *self.started.write().await = true;
-        Ok(())
+    /// Generate a unique test name
+    pub fn unique_test_name(prefix: &str) -> String {
+        use std::time::{SystemTime, UNIX_EPOCH};
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis();
+        format!("{}_{}", prefix, timestamp)
     }
 
-    async fn stop(&mut self) -> Result<(), Self::Error> {
-        *self.started.write().await = false;
-        Ok(())
+    /// Create a simple unified config for testing
+    pub fn simple_unified_config() -> UnifiedConfig {
+        UnifiedConfig::default()
     }
 
-    async fn health_check(&self) -> Result<Self::Health, Self::Error> {
-        let mut health = self.health_status.write().await;
-        health.requests_handled = *self.request_count.read().await;
-        Ok(health.clone())
-    }
+    /// Wait for a condition with timeout
+    pub async fn wait_for_condition<F, Fut>(
+        condition: F,
+        timeout: Duration,
+        check_interval: Duration,
+    ) -> Result<()>
+    where
+        F: Fn() -> Fut,
+        Fut: std::future::Future<Output = bool>,
+    {
+        let start = std::time::Instant::now();
 
-    async fn handle_request(&self, request: nestgate_core::ServiceRequest) -> Result<nestgate_core::ServiceResponse, Self::Error> {
-        *self.request_count.write().await += 1;
-
-        // Simulate response delay
-        if let Some(config) = &self.config {
-            if config.response_delay_ms > 0 {
-                tokio::time::sleep(Duration::from_millis(config.response_delay_ms)).await;
+        while start.elapsed() < timeout {
+            if condition().await {
+                return Ok(());
             }
+            tokio::time::sleep(check_interval).await;
         }
 
-        // Simulate errors based on error rate
-        let error_rate = *self.error_rate.read().await;
-        if error_rate > 0.0 && rand::random::<f64>() < error_rate {
-            return Ok(nestgate_core::ServiceResponse::error(request.id, 500, "Simulated error"));
-        }
-
-        Ok(nestgate_core::ServiceResponse::success(
-            request.id,
-            serde_json::json!({
-                "service_id": self.id,
-                "method": request.method,
-                "path": request.path,
-                "timestamp": chrono::Utc::now(),
-                "request_count": *self.request_count.read().await
-            })
+        Err(NestGateError::internal_error(
+            "Condition not met within timeout".to_string(),
+            "test_utils".to_string(),
         ))
-    }
-
-    async fn update_config(&mut self, config: Self::Config) -> Result<(), Self::Error> {
-        self.config = Some(config);
-        Ok(())
-    }
-
-    async fn get_metrics(&self) -> Result<nestgate_core::ServiceMetrics, Self::Error> {
-        Ok(nestgate_core::ServiceMetrics {
-            request_count: *self.request_count.read().await,
-            error_count: 0,
-            avg_response_time_ms: 10.0,
-            p95_response_time_ms: 15.0,
-            p99_response_time_ms: 20.0,
-            cpu_usage: 0.1,
-            memory_usage: 1024 * 1024,
-            active_connections: 5,
-            queue_depth: 0,
-            throughput_rps: 100.0,
-            error_rate: *self.error_rate.read().await,
-            uptime_seconds: 3600,
-            last_updated: chrono::Utc::now(),
-            custom_metrics: HashMap::new(),
-        })
-    }
-
-    fn service_info(&self) -> nestgate_core::ServiceInfo {
-        nestgate_core::ServiceInfo {
-            id: self.id.clone(),
-            name: format!("Mock Service {}", self.id),
-            version: "1.0.0".to_string(),
-            service_type: "mock".to_string(),
-            description: "Mock service for testing".to_string(),
-            endpoints: vec![],
-            capabilities: vec!["http".to_string(), "testing".to_string()],
-            tags: HashMap::new(),
-            metadata: HashMap::new(),
-        }
-    }
-
-    async fn can_handle_load(&self) -> Result<bool, Self::Error> {
-        Ok(*self.started.read().await)
-    }
-
-    async fn get_load_factor(&self) -> Result<f64, Self::Error> {
-        let request_count = *self.request_count.read().await;
-        // Simulate increasing load factor based on request count
-        Ok((request_count as f64 / 1000.0).min(1.0))
-    }
-}
-
-/// Test configuration builder
-pub struct TestConfigBuilder {
-    config: nestgate_core::PrimalConfig<MockConfig>,
-}
-
-impl TestConfigBuilder {
-    pub fn new() -> Self {
-        Self {
-            config: nestgate_core::PrimalConfig::default(),
-        }
-    }
-
-    pub fn with_port(mut self, port: u16) -> Self {
-        self.config.primal.port = port;
-        self
-    }
-
-    pub fn with_max_services(mut self, max_services: usize) -> Self {
-        self.config.primal.max_services = max_services;
-        self
-    }
-
-    pub fn with_health_check_interval(mut self, interval: Duration) -> Self {
-        self.config.primal.health_check_interval = interval;
-        self
-    }
-
-    pub fn build(self) -> nestgate_core::PrimalConfig<MockConfig> {
-        self.config
-    }
-}
-
-impl Default for TestConfigBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-/// Test primal setup
-pub async fn setup_test_primal() -> Result<nestgate_core::Primal, PrimalError> {
-    let config = TestConfigBuilder::new()
-        .with_port(0) // Use random available port
-        .with_health_check_interval(Duration::from_millis(100))
-        .build();
-
-    nestgate_core::Primal::new(config).await
-}
-
-/// Create multiple mock services for testing
-pub fn create_mock_services(count: usize) -> Vec<MockService> {
-    (0..count)
-        .map(|i| MockService::new(format!("mock-service-{}", i)))
-        .collect()
-}
-
-/// Wait for condition with timeout
-pub async fn wait_for_condition<F, Fut>(
-    condition: F,
-    timeout: Duration,
-    check_interval: Duration,
-) -> Result<(), &'static str>
-where
-    F: Fn() -> Fut,
-    Fut: std::future::Future<Output = bool>,
-{
-    let start = std::time::Instant::now();
-
-    while start.elapsed() < timeout {
-        if condition().await {
-            return Ok(());
-        }
-        tokio::time::sleep(check_interval).await;
-    }
-
-    Err("Condition timeout")
-}
-
-/// Trait for load testing
-#[async_trait]
-pub trait LoadTestable {
-    async fn simulate_load(&self, requests_per_second: u64, duration: Duration) -> LoadTestResults;
-}
-
-#[derive(Debug)]
-pub struct LoadTestResults {
-    pub total_requests: u64,
-    pub successful_requests: u64,
-    pub failed_requests: u64,
-    pub average_latency_ms: f64,
-    pub p95_latency_ms: f64,
-    pub p99_latency_ms: f64,
-    pub requests_per_second: f64,
-    pub error_rate: f64,
-}
-
-/// Create an error response
-pub fn create_error_response(request_id: String, error: String) -> nestgate_core::ServiceResponse {
-    nestgate_core::ServiceResponse::error(request_id, 500, error)
-}
-
-/// Test primal fixture for comprehensive testing
-pub struct TestPrimal {
-    primal: nestgate_core::Primal,
-    _temp_dir: Option<TempDir>,
-}
-
-impl TestPrimal {
-    /// Create a new test primal with default configuration
-    pub async fn new() -> Result<Self> {
-        let config = nestgate_core::PrimalConfig::default();
-        let primal = nestgate_core::Primal::new(config).await?;
-
-        Ok(Self {
-            primal,
-            _temp_dir: None,
-        })
-    }
-
-    /// Create a test primal with custom configuration
-    pub async fn with_config(config: nestgate_core::PrimalConfig) -> Result<Self> {
-        let primal = nestgate_core::Primal::new(config).await?;
-
-        Ok(Self {
-            primal,
-            _temp_dir: None,
-        })
-    }
-
-    /// Get a reference to the primal
-    pub fn primal(&self) -> &nestgate_core::Primal {
-        &self.primal
-    }
-
-    /// Create a test service info
-    pub fn create_test_service(&self, id: &str, service_type: &str) -> nestgate_core::ServiceInfo {
-        utils::create_test_service_info(id, id, service_type)
-    }
-
-    /// Create a test request
-    pub fn create_test_request(&self, method: &str, path: &str) -> nestgate_core::ServiceRequest {
-        utils::create_test_request(method, path)
-    }
-
-    /// Cleanup resources
-    pub async fn cleanup(&self) -> Result<()> {
-        // Perform any necessary cleanup
-        Ok(())
     }
 }

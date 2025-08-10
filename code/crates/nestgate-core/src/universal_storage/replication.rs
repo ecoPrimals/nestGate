@@ -10,7 +10,6 @@ use tokio::sync::RwLock;
 
 use super::types::*;
 use crate::{NestGateError, Result};
-use tracing::info;
 
 /// Distributed Replication Manager
 pub struct ReplicationManager {
@@ -31,8 +30,8 @@ impl ReplicationManager {
 
     /// Start the replication manager
     pub fn start(&self) -> Result<()> {
-        info!("Starting replication manager");
-        // Start background replication tasks
+        // Implementation would start replication service
+        // For now, this is a placeholder
         Ok(())
     }
 

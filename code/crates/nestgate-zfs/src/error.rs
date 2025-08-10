@@ -2,13 +2,25 @@
 //!
 //! Comprehensive error handling for all ZFS operations
 
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
+
+// Import the unified error system
+use nestgate_core::error::{
+    domain_errors::{ZfsErrorData, ZfsOperation},
+    NestGateError,
+};
 
 use std::fmt;
 
-use nestgate_core::error::{ConfigSource, SecurityError};
+use nestgate_core::error::{ApiErrorData, SecurityErrorData, UnifiedConfigSource};
 
-/// Main ZFS error type
+/// **DEPRECATED**: Use nestgate_core::error::NestGateError::Zfs instead
+/// This ZFS-specific error enum has been superseded by the unified error system
+#[deprecated(
+    since = "2.1.0",
+    note = "Use nestgate_core::error::NestGateError::Zfs instead"
+)]
 #[derive(Error, Debug)]
 pub enum ZfsError {
     /// Pool-related errors
@@ -395,28 +407,30 @@ impl ZfsError {
     pub fn to_nestgate_error(&self) -> nestgate_core::NestGateError {
         match self {
             ZfsError::PoolError(PoolError::NotFound { pool_name }) => {
-                nestgate_core::NestGateError::api_simple(nestgate_core::ApiError::NotFound {
-                    resource_type: "Pool".to_string(),
-                    resource_id: pool_name.clone(),
-                })
+                nestgate_core::NestGateError::api_error(
+                    &format!("Pool not found: {}", pool_name),
+                    Some("GET"),
+                    Some(&format!("/pools/{pool_name}")),
+                    Some(404),
+                )
             }
             ZfsError::DatasetError(DatasetError::NotFound { dataset_name }) => {
-                nestgate_core::NestGateError::api_simple(nestgate_core::ApiError::NotFound {
-                    resource_type: "Dataset".to_string(),
-                    resource_id: dataset_name.clone(),
-                })
+                nestgate_core::NestGateError::api_error(
+                    &format!("Dataset not found: {}", dataset_name),
+                    Some("GET"),
+                    Some(&format!("/datasets/{dataset_name}")),
+                    Some(404),
+                )
             }
-            ZfsError::PermissionError(_msg) => {
-                nestgate_core::NestGateError::security_simple(SecurityError::AuthorizationDenied {
-                    user: "system".to_string(),
-                    action: "zfs_operation".to_string(),
-                    resource: "zfs_pool".to_string(),
-                    required_role: Some("zfs_admin".to_string()),
-                })
-            }
+            ZfsError::PermissionError(_msg) => nestgate_core::NestGateError::security_error(
+                "Insufficient privileges for ZFS operations",
+                "zfs_operation",
+                Some("zfs_pool"),
+                None,
+            ),
             ZfsError::ConfigError(msg) => nestgate_core::NestGateError::Configuration {
                 message: msg.clone(),
-                config_source: ConfigSource::File("zfs.conf".to_string()),
+                config_source: UnifiedConfigSource::File("zfs.conf".to_string()),
                 field: None,
                 suggested_fix: Some("Check ZFS configuration parameters".to_string()),
             },
@@ -430,12 +444,7 @@ impl ZfsError {
     }
 }
 
-/// Convert ZfsError to NestGateError
-impl From<ZfsError> for nestgate_core::NestGateError {
-    fn from(error: ZfsError) -> Self {
-        error.to_nestgate_error()
-    }
-}
+// Removed duplicate From implementation - using the one at the end of the file
 
 /// Error severity levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -564,5 +573,241 @@ mod tests {
         let context = ZfsError::create_context("pool_creation", "pool_manager");
         assert_eq!(context.operation, "pool_creation");
         assert_eq!(context.component, "pool_manager");
+    }
+}
+
+// ==================== NESTGATE ERROR INTEGRATION ====================
+
+/// Convert ZfsError to unified NestGateError
+impl From<ZfsError> for NestGateError {
+    fn from(zfs_error: ZfsError) -> Self {
+        let (message, operation, pool, dataset, snapshot, command, error_code) = match &zfs_error {
+            ZfsError::PoolError(pool_err) => match pool_err {
+                PoolError::NotFound { pool_name } => (
+                    format!("Pool not found: {}", pool_name),
+                    ZfsOperation::PoolCreate,
+                    Some(pool_name.clone()),
+                    None,
+                    None,
+                    None,
+                    None,
+                ),
+                PoolError::AlreadyExists { pool_name } => (
+                    format!("Pool already exists: {}", pool_name),
+                    ZfsOperation::PoolCreate,
+                    Some(pool_name.clone()),
+                    None,
+                    None,
+                    None,
+                    None,
+                ),
+                PoolError::CreationFailed {
+                    pool_name,
+                    reason: _,
+                } => (
+                    format!("Pool creation failed: {}", pool_name),
+                    ZfsOperation::PoolCreate,
+                    Some(pool_name.clone()),
+                    None,
+                    None,
+                    None,
+                    None,
+                ),
+                PoolError::DestructionFailed {
+                    pool_name,
+                    reason: _,
+                } => (
+                    format!("Pool destruction failed: {}", pool_name),
+                    ZfsOperation::PoolDestroy,
+                    Some(pool_name.clone()),
+                    None,
+                    None,
+                    None,
+                    None,
+                ),
+                _ => (
+                    format!("Pool error: {}", pool_err),
+                    ZfsOperation::SystemCheck,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                ),
+            },
+            ZfsError::DatasetError(dataset_err) => match dataset_err {
+                DatasetError::NotFound { dataset_name } => (
+                    format!("Dataset not found: {}", dataset_name),
+                    ZfsOperation::DatasetCreate,
+                    None,
+                    Some(dataset_name.clone()),
+                    None,
+                    None,
+                    None,
+                ),
+                DatasetError::CreationFailed { reason } => (
+                    format!("Dataset creation failed: {}", reason),
+                    ZfsOperation::DatasetCreate,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                ),
+                DatasetError::DeletionFailed { reason } => (
+                    format!("Dataset deletion failed: {}", reason),
+                    ZfsOperation::DatasetDestroy,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                ),
+                _ => (
+                    format!("Dataset error: {}", dataset_err),
+                    ZfsOperation::SystemCheck,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                ),
+            },
+            ZfsError::SnapshotError(snapshot_err) => match snapshot_err {
+                SnapshotError::NotFound { snapshot_name } => (
+                    format!("Snapshot not found: {}", snapshot_name),
+                    ZfsOperation::SnapshotCreate,
+                    None,
+                    None,
+                    Some(snapshot_name.clone()),
+                    None,
+                    None,
+                ),
+                SnapshotError::CreationFailed {
+                    dataset,
+                    snapshot,
+                    reason: _,
+                } => (
+                    format!("Snapshot creation failed: {}@{}", dataset, snapshot),
+                    ZfsOperation::SnapshotCreate,
+                    None,
+                    Some(dataset.clone()),
+                    Some(snapshot.clone()),
+                    None,
+                    None,
+                ),
+                _ => (
+                    format!("Snapshot error: {}", snapshot_err),
+                    ZfsOperation::SystemCheck,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                ),
+            },
+            ZfsError::CommandFailed { command, error } => (
+                format!("ZFS command failed: {} - {}", command, error),
+                ZfsOperation::Command,
+                None,
+                None,
+                None,
+                Some(command.clone()),
+                None,
+            ),
+            ZfsError::SystemUnavailable(msg) => (
+                msg.clone(),
+                ZfsOperation::SystemCheck,
+                None,
+                None,
+                None,
+                None,
+                None,
+            ),
+            ZfsError::ConfigError(msg) => (
+                msg.clone(),
+                ZfsOperation::Configuration,
+                None,
+                None,
+                None,
+                None,
+                None,
+            ),
+            ZfsError::PermissionError(msg) => (
+                msg.clone(),
+                ZfsOperation::Permission,
+                None,
+                None,
+                None,
+                None,
+                None,
+            ),
+            ZfsError::Network(msg) => (
+                msg.clone(),
+                ZfsOperation::Network,
+                None,
+                None,
+                None,
+                None,
+                None,
+            ),
+            ZfsError::Storage { message } => (
+                message.clone(),
+                ZfsOperation::Storage,
+                None,
+                None,
+                None,
+                None,
+                None,
+            ),
+            ZfsError::Internal { message } => (
+                message.clone(),
+                ZfsOperation::SystemCheck,
+                None,
+                None,
+                None,
+                None,
+                None,
+            ),
+            _ => (
+                format!("{}", zfs_error),
+                ZfsOperation::SystemCheck,
+                None,
+                None,
+                None,
+                None,
+                None,
+            ),
+        };
+
+        let recovery_suggestions = match &zfs_error {
+            ZfsError::PoolError(PoolError::NotFound { .. }) => vec![
+                "Check if the pool name is correct".to_string(),
+                "Use 'zpool import' to import the pool".to_string(),
+                "Verify pool devices are accessible".to_string(),
+            ],
+            ZfsError::PermissionError(_) => vec![
+                "Check user permissions for ZFS operations".to_string(),
+                "Ensure user is in the correct groups".to_string(),
+                "Run with appropriate privileges".to_string(),
+            ],
+            ZfsError::Storage { .. } => vec![
+                "Check available disk space".to_string(),
+                "Verify storage device health".to_string(),
+                "Consider expanding storage capacity".to_string(),
+            ],
+            _ => vec![],
+        };
+
+        NestGateError::Zfs(Box::new(ZfsErrorData {
+            message,
+            operation,
+            pool,
+            dataset,
+            snapshot,
+            command,
+            error_code,
+            recovery_suggestions,
+        }))
     }
 }

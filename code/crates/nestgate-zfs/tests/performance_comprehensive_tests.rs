@@ -428,13 +428,27 @@ mod tuning_tests {
         let recordsize_rec = recommendations
             .iter()
             .find(|r| r.parameter == "recordsize")
-            .unwrap();
+            .unwrap_or_else(|e| {
+                tracing::error!("Unwrap failed: {:?}", e);
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("Operation failed: {:?}", e),
+                )
+                .into());
+            });
         assert_eq!(recordsize_rec.recommended_value, "1M");
 
         let compression_rec = recommendations
             .iter()
             .find(|r| r.parameter == "compression")
-            .unwrap();
+            .unwrap_or_else(|e| {
+                tracing::error!("Unwrap failed: {:?}", e);
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("Operation failed: {:?}", e),
+                )
+                .into());
+            });
         assert_eq!(compression_rec.recommended_value, "zstd");
     }
 }

@@ -173,8 +173,9 @@ impl ZfsServiceFactory {
             return Ok(remote_service);
         }
 
-        // Fall back to mock service
+        // Fall back to mock service only if no real backend is available
         warn!("No ZFS backend detected, falling back to mock service");
+        info!("Consider installing ZFS or configuring a remote ZFS service for production use");
         Ok(Arc::new(MockZfsService::new()))
     }
 
@@ -204,9 +205,12 @@ impl ZfsServiceFactory {
 
     /// Create native ZFS service
     async fn create_native_service() -> UniversalZfsResult<Arc<dyn UniversalZfsService>> {
-        // For now, return mock service as native implementation is not ready
-        warn!("Native ZFS service not yet implemented, using mock service");
-        Ok(Arc::new(MockZfsService::new()))
+        // Use the real native ZFS implementation
+        debug!("Creating native ZFS service");
+        let service =
+            crate::handlers::zfs::universal_zfs::backends::native_real::NativeZfsService::new();
+        info!("Successfully created native ZFS service");
+        Ok(Arc::new(service) as Arc<dyn UniversalZfsService>)
     }
 
     /// Create remote ZFS service

@@ -3,9 +3,85 @@
 use super::{DatasetContext, ServiceHealth, StorageContext, TaskPriority};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::SystemTime;
+use uuid::Uuid;
 
-use nestgate_core::types::StorageTier;
+/// Ecosystem integration configuration (capability-based)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EcosystemConfig {
+    /// Universal adapter endpoint for capability discovery
+    pub adapter_endpoint: Option<String>,
+    /// Capability discovery timeout in seconds
+    pub discovery_timeout: u64,
+    /// Enable automatic capability detection
+    pub auto_discovery: bool,
+    /// Fallback to standalone mode if no capabilities found
+    pub standalone_fallback: bool,
+    /// Required capabilities for operation
+    pub required_capabilities: Vec<String>,
+    /// Optional capabilities that enhance functionality
+    pub optional_capabilities: Vec<String>,
+}
+
+impl Default for EcosystemConfig {
+    fn default() -> Self {
+        Self {
+            adapter_endpoint: std::env::var("ECOSYSTEM_ADAPTER_URL").ok(),
+            discovery_timeout: 30,
+            auto_discovery: true,
+            standalone_fallback: true,
+            required_capabilities: vec!["storage".to_string()],
+            optional_capabilities: vec![
+                "orchestration".to_string(),
+                "security".to_string(),
+                "artificial_intelligence".to_string(),
+                "compute".to_string(),
+            ],
+        }
+    }
+}
+
+/// Capability provider information (discovered dynamically)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CapabilityProvider {
+    /// Unique service identifier
+    pub service_id: Uuid,
+    /// Service endpoint
+    pub endpoint: String,
+    /// Capabilities provided by this service
+    pub capabilities: Vec<String>,
+    /// Service category
+    pub category: ServiceCategory,
+    /// Service metadata
+    pub metadata: HashMap<String, String>,
+    /// Last seen timestamp
+    pub last_seen: std::time::SystemTime,
+}
+
+/// Service category enumeration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ServiceCategory {
+    Storage,
+    Orchestration,
+    Security,
+    ArtificialIntelligence,
+    Compute,
+    Custom(String),
+}
+
+/// Ecosystem integration status
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IntegrationStatus {
+    /// Is ecosystem integration active
+    pub active: bool,
+    /// Connected capability providers
+    pub providers: Vec<CapabilityProvider>,
+    /// Available capabilities
+    pub capabilities: Vec<String>,
+    /// Integration health score (0.0 - 1.0)
+    pub health_score: f64,
+    /// Last update timestamp
+    pub updated_at: std::time::SystemTime,
+}
 
 /// Service plan for dynamic task execution
 #[derive(Debug, Clone)]
@@ -54,7 +130,7 @@ pub struct SongbirdInstance {
     pub version: String,
     pub capabilities: Vec<String>,
     #[serde(with = "system_time_serde")]
-    pub last_seen: SystemTime,
+    pub last_seen: std::time::SystemTime,
     pub is_ephemeral: bool, // True for LAN, false for internet
 }
 
@@ -103,7 +179,7 @@ pub struct TierDiscoveryRequest {
 /// Tier discovery response
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TierDiscoveryResponse {
-    pub recommended_tier: StorageTier,
+    pub recommended_tier: crate::types::StorageTier,
     pub reasoning: String,
 }
 
@@ -111,7 +187,7 @@ pub struct TierDiscoveryResponse {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetCreatedNotification {
     pub dataset_name: String,
-    pub tier: StorageTier,
+    pub tier: crate::types::StorageTier,
     pub mount_point: String,
     pub service_id: String,
 }
@@ -130,7 +206,7 @@ pub struct McpTierPredictionTask {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct McpOptimizationTask {
     pub dataset_name: String,
-    pub current_tier: StorageTier,
+    pub current_tier: crate::types::StorageTier,
     pub request_id: String,
     pub storage_context: DatasetContext,
 }

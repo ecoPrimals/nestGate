@@ -159,7 +159,17 @@ mod protocol_tests {
             if let Ok(json_str) = json {
                 let deserialized: Result<Protocol, _> = serde_json::from_str(&json_str);
                 assert!(deserialized.is_ok());
-                assert_eq!(deserialized.unwrap(), protocol);
+                assert_eq!(
+                    deserialized.unwrap_or_else(|e| {
+                        tracing::error!("Unwrap failed: {:?}", e);
+                        return Err(std::io::Error::new(
+                            std::io::ErrorKind::Other,
+                            format!("Operation failed: {:?}", e),
+                        )
+                        .into());
+                    }),
+                    protocol
+                );
             }
         }
     }
@@ -253,7 +263,17 @@ mod access_mode_tests {
             if let Ok(json_str) = json {
                 let deserialized: Result<AccessMode, _> = serde_json::from_str(&json_str);
                 assert!(deserialized.is_ok());
-                assert_eq!(deserialized.unwrap(), mode);
+                assert_eq!(
+                    deserialized.unwrap_or_else(|e| {
+                        tracing::error!("Unwrap failed: {:?}", e);
+                        return Err(std::io::Error::new(
+                            std::io::ErrorKind::Other,
+                            format!("Operation failed: {:?}", e),
+                        )
+                        .into());
+                    }),
+                    mode
+                );
             }
         }
     }

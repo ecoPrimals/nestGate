@@ -79,8 +79,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         error!("API server failed: {}", e);
         return Err(e);
     }
-
-    Ok(())
 }
 
 fn print_available_endpoints() {

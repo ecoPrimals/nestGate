@@ -63,7 +63,6 @@ impl VlanManager {
         tracing::info!("Adding VLAN {}: {}", vlan.vlan_id, vlan.name);
         vlans.insert(vlan.vlan_id, vlan);
 
-        Ok(())
     }
 
     /// Remove a VLAN
@@ -74,7 +73,6 @@ impl VlanManager {
         }
 
         tracing::info!("Removed VLAN {}", vlan_id);
-        Ok(())
     }
 
     /// Get a VLAN configuration
@@ -108,7 +106,6 @@ impl VlanManager {
         tracing::info!("Updating VLAN {}: {}", vlan_id, updated_vlan.name);
         vlans.insert(vlan_id, updated_vlan);
 
-        Ok(())
     }
 
     /// Enable a VLAN
@@ -117,7 +114,6 @@ impl VlanManager {
         if let Some(vlan) = vlans.get_mut(&vlan_id) {
             vlan.enabled = true;
             tracing::info!("Enabled VLAN {}", vlan_id);
-            Ok(())
         } else {
             Err(NestGateError::NotFound(format!("VLAN {vlan_id} not found")))
         }
@@ -129,7 +125,6 @@ impl VlanManager {
         if let Some(vlan) = vlans.get_mut(&vlan_id) {
             vlan.enabled = false;
             tracing::info!("Disabled VLAN {}", vlan_id);
-            Ok(())
         } else {
             Err(NestGateError::NotFound(format!("VLAN {vlan_id} not found")))
         }

@@ -1,7 +1,6 @@
-//! Penetration Testing Module
-//!
-//! Split from sovereign_science_penetration_suite.rs for file size compliance
-
+/// Penetration Testing Module
+///
+/// Split from sovereign_science_penetration_suite.rs for file size compliance
 pub mod analysis;
 pub mod attacks;
 pub mod config;

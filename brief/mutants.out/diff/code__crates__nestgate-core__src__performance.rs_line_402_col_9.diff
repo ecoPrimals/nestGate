@@ -1,0 +1,56 @@
+--- code/crates/nestgate-core/src/performance.rs
++++ replace benchmarks::benchmark_storage_operations -> Result<BenchmarkResults> with Ok(Default::default())
+@@ -394,52 +394,17 @@
+ /// Performance benchmarking utilities
+ pub mod benchmarks {
+     use super::*;
+ 
+     /// Benchmark storage operations
+     pub async fn benchmark_storage_operations(
+         coordinator: &PerformanceOptimizedCoordinator,
+     ) -> Result<BenchmarkResults> {
+-        let mut results = BenchmarkResults::default();
+-
+-        // Benchmark individual operations
+-        let start = Instant::now();
+-        for i in 0..1000 {
+-            let operation = StorageOperation {
+-                operation_type: OperationType::Read,
+-                backend: "test".to_string(),
+-                path: format!("/test/file_{i}"),
+-                data: None,
+-                metadata: HashMap::new(),
+-            };
+-
+-            coordinator.execute_optimized_operation(operation).await?;
+-        }
+-        results.individual_ops_time = start.elapsed();
+-
+-        // Benchmark batched operations
+-        let start = Instant::now();
+-        let mut batch_tasks = Vec::new();
+-        for i in 0..1000 {
+-            let operation = StorageOperation {
+-                operation_type: OperationType::Read,
+-                backend: "test".to_string(),
+-                path: format!("/test/batch_file_{i}"),
+-                data: None,
+-                metadata: HashMap::new(),
+-            };
+-
+-            batch_tasks.push(coordinator.execute_optimized_operation(operation));
+-        }
+-
+-        futures::future::join_all(batch_tasks).await;
+-        results.batched_ops_time = start.elapsed();
+-
+-        Ok(results)
++        Ok(Default::default()) /* ~ changed by cargo-mutants ~ */
+     }
+ 
+     /// Benchmark results
+     #[derive(Debug, Clone, Default)]
+     pub struct BenchmarkResults {
+         pub individual_ops_time: Duration,
+         pub batched_ops_time: Duration,
+     }

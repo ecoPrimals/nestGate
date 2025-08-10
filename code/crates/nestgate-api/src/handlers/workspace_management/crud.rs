@@ -122,7 +122,7 @@ pub async fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>,
         .unwrap_or("unnamed-workspace");
 
     // Generate workspace ID
-    let uuid_manager = nestgate_core::UuidManager::new();
+    let uuid_manager = nestgate_core::uuid_cache::UuidManager::new();
     let workspace_id = uuid_manager.workspace_id();
 
     let pool_name =

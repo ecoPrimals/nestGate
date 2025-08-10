@@ -2,17 +2,15 @@
 //!
 //! Handles authentication, authorization, and security policies
 
+use std::collections::HashMap;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
 use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::collections::HashMap;
-use std::time::{SystemTime, UNIX_EPOCH};
-// Removed unused tracing import
+use tracing::{debug, warn};
 
-use crate::{Error, Result};
-use std::time::Duration;
-use tracing::debug;
-use tracing::warn;
+use crate::{error::Error, Result};
 
 /// Authentication token
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -227,8 +225,8 @@ impl SecurityManager {
     pub fn new(config: SecurityConfig) -> Self {
         let security_manager = Self {
             config: config.clone(),
-            tokens: std::sync::Arc::new(std::sync::RwLock::new(HashMap::new())),
-            users: std::sync::Arc::new(std::sync::RwLock::new(HashMap::new())),
+            tokens: std::sync::Arc::new(std::sync::RwLock::new(HashMap::new()).into()),
+            users: std::sync::Arc::new(std::sync::RwLock::new(HashMap::new()).into()),
         };
 
         // Create default admin user if authentication is enabled
@@ -269,10 +267,17 @@ impl SecurityManager {
 
     /// Create default admin user
     fn create_default_admin(&self) -> Result<()> {
-        let mut users = self
-            .users
-            .write()
-            .map_err(|_| Error::internal("Failed to acquire users lock".to_string()))?;
+        let mut users =
+            self.users
+                .write()
+                .map_err(|_: std::sync::PoisonError<_>| -> crate::NestGateError {
+                    crate::NestGateError::Internal {
+                        message: "Failed to acquire users lock".to_string(),
+                        location: Some("mcp_security".to_string()),
+                        debug_info: None,
+                        is_bug: false,
+                    }
+                })?;
 
         // Only create if no admin exists
         if !users.values().any(|u| u.role == Role::Admin) {
@@ -291,7 +296,6 @@ impl SecurityManager {
             warn!("⚠️  SECURITY: Change this password immediately after first login!");
             warn!("💡 Use: nestgate user change-password admin");
         }
-
         Ok(())
     }
 
@@ -307,19 +311,29 @@ impl SecurityManager {
             return Err(Error::authentication(format!(
                 "Password must be at least {} characters",
                 self.config.min_password_length
-            )));
+            ))
+            .into());
         }
 
-        let role = role.unwrap_or_else(|| self.config.default_role.clone());
+        let role = role
+            .unwrap_or_else(|| self.config.default_role.clone())
+            .into();
         let credentials = UserCredentials::new(user_id.clone(), username, password, role)?;
 
-        let mut users = self
-            .users
-            .write()
-            .map_err(|_| Error::internal("Failed to acquire users lock".to_string()))?;
+        let mut users =
+            self.users
+                .write()
+                .map_err(|_: std::sync::PoisonError<_>| -> crate::NestGateError {
+                    crate::NestGateError::Internal {
+                        message: "Failed to acquire users lock".to_string(),
+                        location: Some("mcp_security".to_string()),
+                        debug_info: None,
+                        is_bug: false,
+                    }
+                })?;
 
         if users.contains_key(&user_id) {
-            return Err(Error::authentication("User already exists".to_string()));
+            return Err(Error::authentication("User already exists".to_string()).into());
         }
 
         users.insert(user_id.clone(), credentials);
@@ -327,7 +341,6 @@ impl SecurityManager {
         if self.config.enable_audit_logging {
             debug!("User registered: {}", user_id);
         }
-
         Ok(())
     }
 
@@ -347,31 +360,48 @@ impl SecurityManager {
             });
         }
 
-        let users = self
-            .users
-            .read()
-            .map_err(|_| Error::internal("Failed to acquire users lock".to_string()))?;
+        let users =
+            self.users
+                .read()
+                .map_err(|_: std::sync::PoisonError<_>| -> crate::NestGateError {
+                    crate::NestGateError::Internal {
+                        message: "Failed to acquire users lock".to_string(),
+                        location: Some("mcp_security".to_string()),
+                        debug_info: None,
+                        is_bug: false,
+                    }
+                })?;
 
-        let credentials = users
-            .get(user_id)
-            .ok_or_else(|| Error::authentication("Invalid credentials".to_string()))?;
+        let credentials = users.get(user_id).ok_or_else(|| -> crate::NestGateError {
+            crate::NestGateError::Unauthorized {
+                message: "Invalid credentials".to_string(),
+                location: Some("security::authenticate".to_string()),
+            }
+        })?;
 
         if !credentials.is_active {
-            return Err(Error::authentication("Account is disabled".to_string()));
+            return Err(Error::authentication("Account is disabled".to_string()).into());
         }
 
         if !credentials.verify_password(password)? {
             if self.config.enable_audit_logging {
                 warn!("Authentication failed for user: {}", user_id);
             }
-            return Err(Error::authentication("Invalid credentials".to_string()));
+            return Err(Error::authentication("Invalid credentials".to_string()).into());
         }
 
         // Check token limit
-        let tokens = self
-            .tokens
-            .read()
-            .map_err(|_| Error::internal("Failed to acquire tokens lock".to_string()))?;
+        let tokens =
+            self.tokens
+                .read()
+                .map_err(|_: std::sync::PoisonError<_>| -> crate::NestGateError {
+                    crate::NestGateError::Internal {
+                        message: "Failed to acquire tokens lock".to_string(),
+                        location: Some("mcp_security".to_string()),
+                        debug_info: None,
+                        is_bug: false,
+                    }
+                })?;
         let user_token_count = tokens
             .values()
             .filter(|t| t.user_id == user_id && t.is_valid())
@@ -380,7 +410,8 @@ impl SecurityManager {
         if user_token_count >= self.config.max_tokens_per_user {
             return Err(Error::authentication(
                 "Maximum number of active tokens reached".to_string(),
-            ));
+            )
+            .into());
         }
         drop(tokens);
 
@@ -395,15 +426,22 @@ impl SecurityManager {
             expires_at: self
                 .config
                 .token_expiration
-                .map(|exp| SystemTime::now() + Duration::from_secs(exp)),
+                .map(|exp| SystemTime::now() + Duration::from_secs(exp))
+                .into(),
             is_active: true,
         };
 
         // Store token
-        let mut tokens = self
-            .tokens
-            .write()
-            .map_err(|_| Error::internal("Failed to acquire tokens lock".to_string()))?;
+        let mut tokens = self.tokens.write().map_err(
+            |_: std::sync::PoisonError<_>| -> crate::NestGateError {
+                crate::NestGateError::Internal {
+                    message: "Failed to acquire tokens lock".to_string(),
+                    location: Some("mcp_security".to_string()),
+                    debug_info: None,
+                    is_bug: false,
+                }
+            },
+        )?;
         tokens.insert(token.token.clone(), token.clone());
 
         if self.config.enable_audit_logging {
@@ -429,19 +467,29 @@ impl SecurityManager {
             });
         }
 
-        let tokens = self
-            .tokens
-            .read()
-            .map_err(|_| Error::internal("Failed to acquire tokens lock".to_string()))?;
+        let tokens =
+            self.tokens
+                .read()
+                .map_err(|_: std::sync::PoisonError<_>| -> crate::NestGateError {
+                    crate::NestGateError::Internal {
+                        message: "Failed to acquire tokens lock".to_string(),
+                        location: Some("mcp_security".to_string()),
+                        debug_info: None,
+                        is_bug: false,
+                    }
+                })?;
 
         let token = tokens
             .get(token_value)
-            .ok_or_else(|| Error::authentication("Invalid token".to_string()))?;
+            .ok_or_else(|| -> crate::NestGateError {
+                crate::NestGateError::Unauthorized {
+                    message: "Invalid token".to_string(),
+                    location: Some("security::validate_token".to_string()),
+                }
+            })?;
 
         if !token.is_valid() {
-            return Err(Error::authentication(
-                "Token expired or inactive".to_string(),
-            ));
+            return Err(Error::authentication("Token expired or inactive".to_string()).into());
         }
 
         Ok(token.clone())
@@ -481,10 +529,17 @@ impl SecurityManager {
         };
 
         // Find active token for user
-        let tokens = self
-            .tokens
-            .read()
-            .map_err(|_| Error::internal("Failed to acquire tokens lock".to_string()))?;
+        let tokens =
+            self.tokens
+                .read()
+                .map_err(|_: std::sync::PoisonError<_>| -> crate::NestGateError {
+                    crate::NestGateError::Internal {
+                        message: "Failed to acquire tokens lock".to_string(),
+                        location: Some("mcp_security".to_string()),
+                        debug_info: None,
+                        is_bug: false,
+                    }
+                })?;
 
         let user_token = tokens
             .values()
@@ -498,10 +553,16 @@ impl SecurityManager {
 
     /// Revoke a specific token
     pub async fn revoke_token(&self, token_value: &str) -> Result<()> {
-        let mut tokens = self
-            .tokens
-            .write()
-            .map_err(|_| Error::internal("Failed to acquire tokens lock".to_string()))?;
+        let mut tokens = self.tokens.write().map_err(
+            |_: std::sync::PoisonError<_>| -> crate::NestGateError {
+                crate::NestGateError::Internal {
+                    message: "Failed to acquire tokens lock".to_string(),
+                    location: Some("mcp_security".to_string()),
+                    debug_info: None,
+                    is_bug: false,
+                }
+            },
+        )?;
 
         if let Some(token) = tokens.get_mut(token_value) {
             token.is_active = false;
@@ -509,16 +570,21 @@ impl SecurityManager {
                 debug!("Token revoked: {}", token.user_id);
             }
         }
-
         Ok(())
     }
 
     /// Revoke all tokens for a user
     pub async fn revoke_user_tokens(&self, user_id: &str) -> Result<()> {
-        let mut tokens = self
-            .tokens
-            .write()
-            .map_err(|_| Error::internal("Failed to acquire tokens lock".to_string()))?;
+        let mut tokens = self.tokens.write().map_err(
+            |_: std::sync::PoisonError<_>| -> crate::NestGateError {
+                crate::NestGateError::Internal {
+                    message: "Failed to acquire tokens lock".to_string(),
+                    location: Some("mcp_security".to_string()),
+                    debug_info: None,
+                    is_bug: false,
+                }
+            },
+        )?;
 
         let mut revoked_count = 0;
         for token in tokens.values_mut() {
@@ -531,16 +597,21 @@ impl SecurityManager {
         if self.config.enable_audit_logging {
             debug!("Revoked {} tokens for user: {}", revoked_count, user_id);
         }
-
         Ok(())
     }
 
     /// Clean up expired tokens
     pub async fn cleanup_expired_tokens(&self) -> Result<()> {
-        let mut tokens = self
-            .tokens
-            .write()
-            .map_err(|_| Error::internal("Failed to acquire tokens lock".to_string()))?;
+        let mut tokens = self.tokens.write().map_err(
+            |_: std::sync::PoisonError<_>| -> crate::NestGateError {
+                crate::NestGateError::Internal {
+                    message: "Failed to acquire tokens lock".to_string(),
+                    location: Some("mcp_security".to_string()),
+                    debug_info: None,
+                    is_bug: false,
+                }
+            },
+        )?;
 
         let initial_count = tokens.len();
         tokens.retain(|_, token| token.is_valid());
@@ -549,16 +620,22 @@ impl SecurityManager {
         if cleaned_count > 0 && self.config.enable_audit_logging {
             debug!("Cleaned up {} expired tokens", cleaned_count);
         }
-
         Ok(())
     }
 
     /// Get active token count for a user
     pub async fn get_user_token_count(&self, user_id: &str) -> Result<usize> {
-        let tokens = self
-            .tokens
-            .read()
-            .map_err(|_| Error::internal("Failed to acquire tokens lock".to_string()))?;
+        let tokens =
+            self.tokens
+                .read()
+                .map_err(|_: std::sync::PoisonError<_>| -> crate::NestGateError {
+                    crate::NestGateError::Internal {
+                        message: "Failed to acquire tokens lock".to_string(),
+                        location: Some("mcp_security".to_string()),
+                        debug_info: None,
+                        is_bug: false,
+                    }
+                })?;
 
         let count = tokens
             .values()
@@ -570,14 +647,28 @@ impl SecurityManager {
 
     /// Get security statistics
     pub async fn get_security_stats(&self) -> Result<SecurityStats> {
-        let tokens = self
-            .tokens
-            .read()
-            .map_err(|_| Error::internal("Failed to acquire tokens lock".to_string()))?;
-        let users = self
-            .users
-            .read()
-            .map_err(|_| Error::internal("Failed to acquire users lock".to_string()))?;
+        let tokens =
+            self.tokens
+                .read()
+                .map_err(|_: std::sync::PoisonError<_>| -> crate::NestGateError {
+                    crate::NestGateError::Internal {
+                        message: "Failed to acquire tokens lock".to_string(),
+                        location: Some("mcp_security".to_string()),
+                        debug_info: None,
+                        is_bug: false,
+                    }
+                })?;
+        let users =
+            self.users
+                .read()
+                .map_err(|_: std::sync::PoisonError<_>| -> crate::NestGateError {
+                    crate::NestGateError::Internal {
+                        message: "Failed to acquire users lock".to_string(),
+                        location: Some("mcp_security".to_string()),
+                        debug_info: None,
+                        is_bug: false,
+                    }
+                })?;
 
         let active_tokens = tokens.values().filter(|t| t.is_valid()).count();
         let expired_tokens = tokens.len() - active_tokens;
@@ -625,8 +716,8 @@ fn generate_token() -> String {
     let mut rng = thread_rng();
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap_or_else(|_| std::time::Duration::from_secs(0)) // Fallback to epoch if clock is misconfigured
-        .as_nanos();
+        .unwrap_or_else(|_| std::time::Duration::from_secs(0))
+        .as_secs();
 
     format!("nestgate-{:x}-{:016x}", timestamp, rng.gen::<u64>())
 }
@@ -652,7 +743,9 @@ mod tests {
     #[tokio::test]
     async fn test_user_registration_and_authentication() {
         let manager = SecurityManager::with_defaults();
-        manager.initialize().await.unwrap();
+        manager.initialize().await.map_err(|e| {
+            crate::error::McpError::InternalError(format!("Failed in Internal operation: {}", e))
+        })?;
 
         // Register user
         manager
@@ -663,25 +756,39 @@ mod tests {
                 Some(Role::User),
             )
             .await
-            .unwrap();
+            .map_err(|e| {
+                crate::error::McpError::InternalError(format!(
+                    "Failed in Internal operation: {}",
+                    e
+                ))
+            })?;
 
         // Authenticate
         let token = manager
             .authenticate("test_user", "test_password_123")
             .await
-            .unwrap();
+            .map_err(|e| {
+                crate::error::McpError::InternalError(format!(
+                    "Failed in Internal operation: {}",
+                    e
+                ))
+            })?;
         assert_eq!(token.user_id, "test_user");
         assert_eq!(token.role, Role::User);
 
         // Validate token
-        let validated = manager.validate_token(&token.token).await.unwrap();
+        let validated = manager.validate_token(&token.token).await.map_err(|e| {
+            crate::error::McpError::InternalError(format!("Failed in Internal operation: {}", e))
+        })?;
         assert_eq!(validated.user_id, "test_user");
     }
 
     #[tokio::test]
     async fn test_authorization() {
         let manager = SecurityManager::with_defaults();
-        manager.initialize().await.unwrap();
+        manager.initialize().await.map_err(|e| {
+            crate::error::McpError::InternalError(format!("Failed in Internal operation: {}", e))
+        })?;
 
         // Register user with limited permissions
         manager
@@ -692,26 +799,46 @@ mod tests {
                 Some(Role::ReadOnly),
             )
             .await
-            .unwrap();
+            .map_err(|e| {
+                crate::error::McpError::InternalError(format!(
+                    "Failed in Internal operation: {}",
+                    e
+                ))
+            })?;
 
         // Authenticate to get a token (needed for authorization checks)
         let _token = manager
             .authenticate("limited_user", "password123")
             .await
-            .unwrap();
+            .map_err(|e| {
+                crate::error::McpError::InternalError(format!(
+                    "Failed in Internal operation: {}",
+                    e
+                ))
+            })?;
 
         // Should not have write permissions
         let has_write = manager
             .check_authorization("limited_user", "system:write")
             .await
-            .unwrap();
+            .map_err(|e| {
+                crate::error::McpError::InternalError(format!(
+                    "Failed in Internal operation: {}",
+                    e
+                ))
+            })?;
         assert!(!has_write);
 
         // Should have read permissions
         let has_read = manager
             .check_authorization("limited_user", "system:read")
             .await
-            .unwrap();
+            .map_err(|e| {
+                crate::error::McpError::InternalError(format!(
+                    "Failed in Internal operation: {}",
+                    e
+                ))
+            })?;
         assert!(has_read);
     }
 
@@ -723,7 +850,9 @@ mod tests {
         };
 
         let manager = SecurityManager::new(config);
-        manager.initialize().await.unwrap();
+        manager.initialize().await.map_err(|e| {
+            crate::error::McpError::InternalError(format!("Failed in Internal operation: {}", e))
+        })?;
 
         manager
             .register_user(
@@ -733,18 +862,28 @@ mod tests {
                 Some(Role::User),
             )
             .await
-            .unwrap();
+            .map_err(|e| {
+                crate::error::McpError::InternalError(format!(
+                    "Failed in Internal operation: {}",
+                    e
+                ))
+            })?;
 
         let token = manager
             .authenticate("expire_user", "password123")
             .await
-            .unwrap();
+            .map_err(|e| {
+                crate::error::McpError::InternalError(format!(
+                    "Failed in Internal operation: {}",
+                    e
+                ))
+            })?;
 
         // Token should be valid initially
         assert!(manager.validate_token(&token.token).await.is_ok());
 
         // Wait for expiration
-        tokio::time::sleep(nestgate_core::constants::timeouts::retry_interval()).await;
+        tokio::time::sleep(nestgate_core::unified_constants::timeouts::HEARTBEAT_INTERVAL).await;
 
         // Token should be expired now
         assert!(manager.validate_token(&token.token).await.is_err());

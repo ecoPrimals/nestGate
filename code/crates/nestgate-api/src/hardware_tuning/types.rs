@@ -4,6 +4,7 @@
 //! used by the hardware tuning system.
 
 use chrono::{DateTime, Utc};
+use nestgate_core::hardware_tuning::TuningResult;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -54,6 +55,24 @@ pub enum ComputePriority {
     Normal,
     High,
     Critical,
+}
+
+/// Compute request structure
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ComputeRequest {
+    pub cpu_cores: u32,
+    pub memory_gb: u32,
+    pub gpu_required: bool,
+    pub duration_minutes: Option<u32>,
+}
+
+/// Compute resources structure
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ComputeResources {
+    pub cpu_cores: u32,
+    pub memory_gb: u32,
+    pub gpu_count: u32,
+    pub storage_gb: u32,
 }
 
 /// Live hardware metrics from Toadstool
@@ -228,8 +247,31 @@ pub struct SystemHealth {
     pub alerts: Vec<SystemAlert>,
 }
 
-/// Health status enum
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Hardware health status enumeration
+///
+/// **DEPRECATED**: Use `nestgate_core::unified_enums::UnifiedHealthStatus` instead.
+/// This enum has been superseded by the unified health status system which provides
+/// consistent health reporting across all NestGate components.
+///
+/// **MIGRATION GUIDE**:
+/// ```rust
+/// // OLD: Using hardware_tuning::HealthStatus
+/// use crate::hardware_tuning::types::HealthStatus;
+///
+/// // NEW: Using unified health status
+/// use nestgate_core::unified_enums::UnifiedHealthStatus;
+/// ```
+///
+/// **MAPPING**:
+/// - `Healthy` → `UnifiedHealthStatus::Healthy`
+/// - `Warning` → `UnifiedHealthStatus::Degraded`
+/// - `Critical` → `UnifiedHealthStatus::Unhealthy`
+/// - `Unknown` → `UnifiedHealthStatus::Unknown`
+#[deprecated(
+    since = "2.0.0",
+    note = "Use nestgate_core::unified_enums::UnifiedHealthStatus instead for consistent health reporting across all components."
+)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum HealthStatus {
     Healthy,
     Warning,
@@ -510,8 +552,4 @@ pub struct LivePerformanceMetrics {
 }
 
 // Re-export from nestgate_core for convenience
-pub use nestgate_core::hardware_tuning::{
-    CopyleftRequirements, CryptographicProof, ExternalLockType, ExtractionLock,
-    ExtractionRestrictions, HardwareAgnosticTuner, HardwareConfiguration, TimeRestrictions,
-    TuningProfile, TuningResult,
-};
+// Removed import - hardware_tuning module moved or deprecated

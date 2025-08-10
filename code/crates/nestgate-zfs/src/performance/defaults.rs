@@ -5,30 +5,10 @@ use std::time::SystemTime;
 
 use super::types::*;
 
-use nestgate_core::StorageTier;
+use crate::types::StorageTier;
 
-impl Default for PerformanceConfig {
-    fn default() -> Self {
-        Self {
-            collection_interval: 30,     // 30 seconds
-            analysis_interval: 300,      // 5 minutes
-            alert_interval: 60,          // 1 minute
-            history_retention_hours: 24, // 24 hours
-            max_history_entries: 2880,   // 24 hours at 30-second intervals
-            enable_alerting: true,
-            enable_trend_analysis: true,
-            prometheus_endpoint: Some(
-                std::env::var("NESTGATE_PROMETHEUS_ENDPOINT").unwrap_or_else(|_| {
-                    format!(
-                        "http://localhost:{}",
-                        std::env::var("NESTGATE_PROMETHEUS_PORT")
-                            .unwrap_or_else(|_| "9090".to_string())
-                    )
-                }),
-            ),
-        }
-    }
-}
+// PerformanceConfig removed - using ZfsConfig.extensions.performance instead
+// Default implementation moved to unified configuration system
 
 impl Default for CurrentPerformanceMetrics {
     fn default() -> Self {
@@ -229,6 +209,26 @@ impl TierMetrics {
                 },
                 sla_compliance: SlaCompliance::default(),
             },
+            StorageTier::Archive => Self {
+                tier,
+                read_iops: 500.0,
+                write_iops: 100.0,
+                read_throughput_mbs: 100.0,
+                write_throughput_mbs: 50.0,
+                avg_read_latency_ms: 100.0,
+                avg_write_latency_ms: 200.0,
+                queue_depth: 1.0,
+                cache_hit_ratio: 10.0,     // Low cache hit for archive
+                utilization_percent: 95.0, // High utilization for cost efficiency
+                targets: TierPerformanceTargets {
+                    target_iops: 500.0,
+                    target_throughput_mbs: 100.0,
+                    target_latency_ms: 100.0,
+                    target_utilization_percent: 95.0,
+                    target_availability_percent: 98.0,
+                },
+                sla_compliance: SlaCompliance::default(),
+            },
         }
     }
 }
@@ -246,16 +246,12 @@ mod tests {
     use std::time::Duration;
 
     #[test]
-    fn test_performance_config_default() {
-        let config = PerformanceConfig::default();
+    fn test_performance_metrics_defaults() {
+        // Test that performance metrics can be created with defaults
+        let metrics = CurrentPerformanceMetrics::default();
 
-        assert_eq!(config.collection_interval, 30);
-        assert_eq!(config.analysis_interval, 300);
-        assert_eq!(config.alert_interval, 60);
-        assert_eq!(config.history_retention_hours, 24);
-        assert_eq!(config.max_history_entries, 2880);
-        assert!(config.enable_alerting);
-        assert!(config.enable_trend_analysis);
+        assert_eq!(metrics.pool_metrics.len(), 0);
+        assert_eq!(metrics.dataset_metrics.len(), 0);
     }
 
     #[test]

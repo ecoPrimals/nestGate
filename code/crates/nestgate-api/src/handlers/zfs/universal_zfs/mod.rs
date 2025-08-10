@@ -10,6 +10,7 @@ pub mod factory;
 pub mod fail_safe;
 pub mod traits;
 pub mod types;
+pub mod universal_storage_bridge;
 
 // Re-export main types for convenience
 pub use backends::{MockZfsService, NativeZfsService, RemoteZfsService};
@@ -21,3 +22,4 @@ pub use types::{
     DatasetConfig, DatasetInfo, HealthStatus, PoolInfo, ServiceMetrics, SnapshotConfig,
     SnapshotInfo, UniversalZfsError, UniversalZfsResult,
 };
+pub use universal_storage_bridge::UniversalStorageBridge;

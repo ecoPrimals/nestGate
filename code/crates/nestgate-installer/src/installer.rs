@@ -106,10 +106,11 @@ impl NestGateInstaller {
         };
 
         // Validate configuration
-        config.validate()?;
+        crate::config::validation::config_validation::validate_installer_config(&config)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidInput, e))?;
 
         // Determine installation paths
-        let install_path = config.install_path.clone();
+        let install_path = config.extensions.installation.install_dir.clone();
 
         // Create directories
         fs::create_dir_all(&install_path)?;
@@ -132,16 +133,18 @@ impl NestGateInstaller {
 
         // Create configuration files
         let config_path = install_path.join("etc").join("nestgate.toml");
-        fs::write(&config_path, config.to_nestgate_config())?;
+        let config_toml = toml::to_string(&config)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+        fs::write(&config_path, config_toml)?;
         info!("Configuration written to: {}", config_path.display());
 
         // Add to PATH if requested
-        if config.integration.add_to_path {
+        if config.extensions.system_integration.add_to_path {
             crate::platform::add_to_path(&install_path)?;
         }
 
         // Create desktop shortcut if requested
-        if config.integration.create_desktop_entry {
+        if config.extensions.system_integration.desktop_integration {
             crate::platform::create_desktop_shortcut(&install_path, "NestGate")?;
         }
 
@@ -159,12 +162,12 @@ impl NestGateInstaller {
             data_path: install_path.join("data"),
             service_installed: as_service && self.platform.service_install_supported(),
             features: vec![
-                if config.features.enable_zfs {
+                if config.extensions.components.selected_components.install_zfs {
                     "zfs".to_string()
                 } else {
                     "".to_string()
                 },
-                if config.features.enable_ui {
+                if config.extensions.components.selected_components.install_ui {
                     "ui".to_string()
                 } else {
                     "".to_string()
@@ -202,7 +205,6 @@ impl NestGateInstaller {
                 install_path.join("bin").join("nestgate").display()
             );
         }
-
         Ok(())
     }
 
@@ -287,7 +289,6 @@ impl NestGateInstaller {
             "{}",
             yellow.apply_to("✅ NestGate uninstalled successfully")
         );
-
         Ok(())
     }
 
@@ -368,7 +369,6 @@ impl NestGateInstaller {
             "✅ Update completed successfully to version {}",
             updated_info.version
         );
-
         Ok(())
     }
 
@@ -387,7 +387,6 @@ impl NestGateInstaller {
         } else {
             println!("Configuration file does not exist.");
         }
-
         Ok(())
     }
 
@@ -400,13 +399,14 @@ impl NestGateInstaller {
         let config = wizard.run_interactive()?;
 
         // Save new configuration
-        fs::write(&installation_info.config_path, config.to_nestgate_config())?;
+        let config_toml = toml::to_string(&config)
+            .map_err(|e| anyhow::anyhow!("Failed to serialize config: {}", e))?;
+        fs::write(&installation_info.config_path, config_toml)?;
 
         println!(
             "✅ Configuration updated: {}",
             installation_info.config_path.display()
         );
-
         Ok(())
     }
 
@@ -475,7 +475,6 @@ impl NestGateInstaller {
         } else {
             println!("{} {} issues found", red.apply_to("❌"), issues);
         }
-
         Ok(())
     }
 

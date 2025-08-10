@@ -1,5 +1,4 @@
-//! Comprehensive Suite Module
-
+/// Comprehensive Suite Module
 pub mod config;
 pub mod tests;
 

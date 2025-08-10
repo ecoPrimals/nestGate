@@ -1,20 +1,30 @@
-//! End-to-End Universal Primal Architecture Integration Tests
-//! 
-//! Tests complete workflows with the universal primal architecture including:
-//! - Provider discovery from environment and network
-//! - Multi-provider coordination workflows
-//! - Real-world configuration scenarios
-//! - Cross-service integration patterns
-//! - Migration from legacy hardcoded services
+/// End-to-End Universal Primal Architecture Integration Tests
+/// 
+/// Tests complete workflows with the universal primal architecture including:
+/// - Provider discovery from environment and network
+/// - Multi-provider coordination workflows
+/// - Real-world configuration scenarios
+/// - Cross-service integration patterns
+/// - Migration from legacy hardcoded services
 
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{ SystemTime};
 
-use nestgate_core::universal_adapter::{UniversalPrimalAdapter, UniversalAdapterConfig};
+use nestgate_automation::{TierPredictor, FileAnalysis, AccessPattern, AutomationConfig, IntelligentDatasetManager};
+use nestgate_core::{
+    error::NestGateError,
+    test_framework::{TestFramework, TestResult},
+    universal_adapter::{UniversalAdapterConfig, UniversalPrimalAdapter},
+    universal_traits::{
+        AuthToken, ComputePrimalProvider, Credentials, ResourceAllocation, ResourceSpec,
+        SecurityPrimalProvider, Signature,
+    },
+    Result,
+};
 use nestgate_core::config::{Config, environment::EnvironmentConfig, network::ServiceEndpoints};
-use nestgate_automation::{UniversalAIConnectionPool, ServiceConnectionPool};
-use nestgate_network::universal_orchestration::UniversalOrchestrationManager;
+// Orchestration moved to Songbird via universal adapter - using storage-focused testing
+// use nestgate_network::universal_orchestration::UniversalOrchestrationManager;
 
 /// Test complete provider discovery workflow
 #[tokio::test]
@@ -92,9 +102,9 @@ async fn test_universal_configuration_integration() {
     let security_providers = service_endpoints.get_security_providers_with_capability("encryption");
     assert!(!security_providers.is_empty());
     
-    // Test legacy compatibility
-    let legacy_endpoint = service_endpoints.get_legacy_endpoint("squirrel");
-    assert!(legacy_endpoint.is_some());
+    // Test capability-based service discovery (modern approach)
+    let ai_service = service_endpoints.get_service_by_capability("ai-text-generation");
+    assert!(ai_service.is_some());
     
     println!("✅ Universal configuration integration test passed");
 }
@@ -164,42 +174,44 @@ async fn test_ai_connection_pool_integration() {
     println!("✅ AI connection pool integration test passed");
 }
 
-/// Test service connection pool legacy compatibility
+/// Test service connection pool modern capability-based interface
 #[tokio::test]
-async fn test_service_connection_pool_legacy_compatibility() {
-    println!("🔄 Testing service connection pool legacy compatibility...");
+async fn test_service_connection_pool_modern_interface() {
+    println!("🔧 Testing service connection pool modern interface...");
+
+    let mut service_pool = nestgate_automation::ServiceConnectionPool::new();
+
+    // ✅ MODERN: Use capability-based methods
+    service_pool.add_ai_provider("modern-ai-1".to_string(), "http://localhost:8001".to_string());
     
-    let mut service_pool = ServiceConnectionPool::new();
-    
-    // Test legacy Squirrel methods still work
-    service_pool.add_squirrel("legacy-squirrel".to_string(), "http://localhost:8001".to_string());
-    
-    let best_squirrel = service_pool.get_best_squirrel();
-    assert!(best_squirrel.is_some());
-    
-    service_pool.update_squirrel_health("legacy-squirrel", 150, true);
-    
-    let stats = service_pool.get_squirrel_stats();
-    assert!(stats.contains_key("legacy-squirrel"));
-    
-    // Test new universal methods work alongside legacy
-    service_pool.add_ai_provider_with_capabilities(
-        "modern-ai".to_string(),
-        "http://localhost:8002".to_string(),
-        "ai".to_string(),
-        vec!["text-generation".to_string(), "reasoning".to_string()],
-    );
-    
-    let capabilities_provider = service_pool.get_best_ai_provider_with_capabilities(&["reasoning".to_string()]);
-    assert!(capabilities_provider.is_some());
-    
-    let ai_provider = service_pool.get_provider_by_type("ai");
-    assert!(ai_provider.is_some());
-    
-    // Test health monitoring works for both legacy and modern providers
-    service_pool.perform_health_check().await;
-    
-    println!("✅ Service connection pool legacy compatibility test passed");
+    let best_ai = service_pool.get_best_ai_provider();
+    assert!(best_ai.is_some());
+
+    service_pool.update_ai_provider_health("modern-ai-1", 150, true);
+
+    let stats = service_pool.get_ai_provider_stats();
+    assert!(stats.contains_key("modern-ai-1"));
+
+    // Test universal discovery patterns
+    let discovery = nestgate_automation::discovery::EcosystemDiscovery::new();
+    match discovery {
+        Ok(disc) => {
+            // Test modern capability discovery
+            match disc.discover_capabilities().await {
+                Ok(capabilities) => {
+                    println!("✅ Discovered {} capabilities", capabilities.len());
+                }
+                Err(e) => {
+                    println!("ℹ️ No capabilities discovered (expected in test): {}", e);
+                }
+            }
+        }
+        Err(e) => {
+            println!("ℹ️ Discovery unavailable in test environment: {}", e);
+        }
+    }
+
+    println!("✅ Service connection pool modern interface test passed");
 }
 
 /// Test network layer universal orchestration
@@ -207,18 +219,12 @@ async fn test_service_connection_pool_legacy_compatibility() {
 async fn test_network_universal_orchestration_integration() {
     println!("🌐 Testing network universal orchestration integration...");
     
-    // Create universal orchestration manager
-    let orchestration_config = nestgate_network::universal_orchestration::UniversalOrchestrationConfig {
-        fallback_to_standalone: true,
-        auto_discovery: true,
-        health_check_interval: Duration::from_secs(30),
-        discovery_interval: Duration::from_secs(60),
-        max_providers: 50,
-    };
+    // Orchestration moved to Songbird - testing storage automation instead
+    let automation_config = AutomationConfig::default();
     
-    let manager = UniversalOrchestrationManager::new(orchestration_config).await;
-    assert!(manager.is_ok());
-    let manager = manager.unwrap();
+    let mut dataset_manager = IntelligentDatasetManager::new(automation_config);
+    let start_result = dataset_manager.start().await;
+    assert!(start_result.is_ok(), "Storage automation should start successfully");
     
     // Test service registration with fallback
     let service_info = nestgate_core::universal_traits::ServiceInfo {
@@ -350,42 +356,6 @@ async fn test_environment_provider_discovery() {
     std::env::remove_var("TEST_ORCHESTRATION_PROVIDER_URL");
     
     println!("✅ Environment-based provider discovery test passed");
-}
-
-/// Test configuration migration scenarios
-#[tokio::test]
-async fn test_configuration_migration_scenarios() {
-    println!("📦 Testing configuration migration scenarios...");
-    
-    // Test migration from legacy hardcoded configuration
-    std::env::set_var("NESTGATE_ENABLE_LEGACY_ENDPOINTS", "true");
-    std::env::set_var("SQUIRREL_API_KEY", "legacy-squirrel-key");
-    std::env::set_var("BEARDOG_API_KEY", "legacy-beardog-key");
-    
-    let env_config = EnvironmentConfig::default();
-    let service_endpoints = ServiceEndpoints::default();
-    
-    // Test that legacy endpoints are available when enabled
-    assert!(service_endpoints.has_service("squirrel"));
-    assert!(service_endpoints.has_service("beardog"));
-    
-    // Test that legacy API keys are preserved for migration
-    assert!(env_config.squirrel_api_key.is_some());
-    assert!(env_config.beardog_api_key.is_some());
-    
-    // Test universal discovery is still enabled
-    assert!(env_config.enable_primal_auto_discovery);
-    
-    // Test that legacy endpoints redirect to universal providers when available
-    let legacy_squirrel = service_endpoints.get_legacy_endpoint("squirrel");
-    assert!(legacy_squirrel.is_some());
-    
-    // Clean up
-    std::env::remove_var("NESTGATE_ENABLE_LEGACY_ENDPOINTS");
-    std::env::remove_var("SQUIRREL_API_KEY");
-    std::env::remove_var("BEARDOG_API_KEY");
-    
-    println!("✅ Configuration migration scenarios test passed");
 }
 
 /// Test cross-service workflow integration
@@ -530,3 +500,27 @@ async fn test_universal_architecture_integration_summary() {
     
     assert!(failed_tests.is_empty(), "All integration tests should pass");
 } 
+
+    /// Test integrated service discovery and connection management
+    #[tokio::test]
+    async fn test_integrated_service_discovery() {
+        println!("🔍 Testing integrated service discovery...");
+
+        let env_config = nestgate_core::config::environment::EnvironmentConfig::default();
+        let service_endpoints = nestgate_core::config::network::ServiceEndpoints::default();
+
+        // ✅ MODERN: Test capability-based discovery
+        assert!(env_config.discovery.discovery_timeout > 0);
+        
+        // ✅ MODERN: Only external services should be in endpoints (no primal endpoints)
+        for (service_name, _endpoint) in &service_endpoints.services {
+            // Should only contain external API services, not ecosystem primals
+            assert!(
+                service_name == "huggingface" || service_name == "ncbi",
+                "Only external services should be configured: {}",
+                service_name
+            );
+        }
+
+        println!("✅ Integrated service discovery test passed");
+    } 

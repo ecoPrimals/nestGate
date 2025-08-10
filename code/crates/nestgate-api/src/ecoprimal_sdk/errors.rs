@@ -4,9 +4,15 @@
 
 use serde::{Deserialize, Serialize};
 use std::fmt;
-// Removed unused std import
 
-/// EcoPrimal error types
+// Import the unified error system
+use nestgate_core::error::{
+    domain_errors::{PrimalErrorData, PrimalOperation},
+    NestGateError,
+};
+use std::collections::HashMap;
+
+/// Primal SDK Error
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PrimalError {
     /// Configuration errors
@@ -67,3 +73,38 @@ impl fmt::Display for PrimalError {
 }
 
 impl std::error::Error for PrimalError {}
+
+// ==================== NESTGATE ERROR INTEGRATION ====================
+
+/// Convert PrimalError to unified NestGateError
+impl From<PrimalError> for NestGateError {
+    fn from(primal_error: PrimalError) -> Self {
+        let (message, operation) = match primal_error {
+            PrimalError::Configuration(msg) => (msg, PrimalOperation::Configuration),
+            PrimalError::Initialization(msg) => (msg, PrimalOperation::Initialization),
+            PrimalError::RequestProcessing(msg) => (msg, PrimalOperation::RequestProcessing),
+            PrimalError::Resource(msg) => (msg, PrimalOperation::Resource),
+            PrimalError::Network(msg) => (msg, PrimalOperation::Network),
+            PrimalError::Authentication(msg) => (msg, PrimalOperation::Authentication),
+            PrimalError::Authorization(msg) => (msg, PrimalOperation::Authorization),
+            PrimalError::Timeout(msg) => (msg, PrimalOperation::Timeout),
+            PrimalError::Internal(msg) => (msg, PrimalOperation::Internal),
+            PrimalError::ExternalDependency(msg) => (msg, PrimalOperation::ExternalDependency),
+            PrimalError::Validation(msg) => (msg, PrimalOperation::Validation),
+            PrimalError::NotFound(msg) => (msg, PrimalOperation::NotFound),
+            PrimalError::Conflict(msg) => (msg, PrimalOperation::Conflict),
+            PrimalError::RateLimit(msg) => (msg, PrimalOperation::RateLimit),
+            PrimalError::ServiceUnavailable(msg) => (msg, PrimalOperation::ServiceUnavailable),
+            PrimalError::Unknown(msg) => (msg, PrimalOperation::Internal),
+        };
+
+        NestGateError::Primal(Box::new(PrimalErrorData {
+            message,
+            operation,
+            primal_id: None,
+            request_context: None,
+            capability: None,
+            metadata: HashMap::new(),
+        }))
+    }
+}

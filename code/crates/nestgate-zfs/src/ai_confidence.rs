@@ -332,7 +332,7 @@ impl Default for PerformanceImpact {
 pub fn generate_operation_recommendations(
     operation: &str,
     pool_info: Option<&PoolInfo>,
-    dataset_info: Option<&DatasetInfo>,
+    _dataset_info: Option<&DatasetInfo>,
 ) -> Vec<String> {
     let mut recommendations = vec![];
 

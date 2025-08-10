@@ -2,8 +2,8 @@
 //!
 //! Automated dataset lifecycle management and optimization scheduling
 
-use crate::types::*;
 use crate::Result;
+use nestgate_core::error::NestGateError;
 use nestgate_core::types::StorageTier;
 use std::collections::HashMap;
 use std::time::Duration;
@@ -269,7 +269,6 @@ impl DatasetLifecycleManager {
 
         // Trigger initial evaluation
         self.evaluate_dataset(dataset_name).await?;
-
         Ok(())
     }
 
@@ -293,7 +292,7 @@ impl DatasetLifecycleManager {
         let current_state = {
             let states = self.dataset_states.read().await;
             states.get(dataset_name).cloned().ok_or_else(|| {
-                AutomationError::Internal(format!(
+                NestGateError::automation_error(format!(
                     "Dataset {dataset_name} not found in lifecycle management"
                 ))
             })?
@@ -379,7 +378,6 @@ impl DatasetLifecycleManager {
         // Update statistics
         let mut stats = self.stats.write().await;
         stats.total_actions_executed += 1;
-
         Ok(())
     }
 
@@ -447,7 +445,6 @@ impl DatasetLifecycleManager {
                 }
             }
         });
-
         Ok(())
     }
 
@@ -462,7 +459,7 @@ impl DatasetLifecycleManager {
                     from_stage: LifecycleStage::Created,
                     to_stage: LifecycleStage::Active,
                     conditions: vec![TransitionCondition::AgeExceeds(
-                        nestgate_core::constants::time::HOUR,
+                        nestgate_core::constants::timeouts::HOUR,
                     )], // 1 hour
                     min_stage_duration: Duration::from_secs(
                         std::env::var("NESTGATE_LIFECYCLE_MIN_STAGE_DURATION_SECS")
@@ -530,7 +527,7 @@ impl DatasetLifecycleManager {
                 from_stage: LifecycleStage::Created,
                 to_stage: LifecycleStage::Archived,
                 conditions: vec![TransitionCondition::AgeExceeds(
-                    nestgate_core::constants::time::HOUR,
+                    nestgate_core::constants::timeouts::HOUR,
                 )], // 1 hour
                 min_stage_duration: Duration::from_secs(
                     std::env::var("NESTGATE_BACKUP_LIFECYCLE_MIN_STAGE_DURATION_SECS")
@@ -557,7 +554,6 @@ impl DatasetLifecycleManager {
         };
 
         self.add_policy(backup_policy).await?;
-
         Ok(())
     }
 

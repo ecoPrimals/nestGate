@@ -28,12 +28,13 @@ pub use nestgate_automation::{
 };
 
 // Re-export ecosystem integration types (when network integration is enabled)
+pub use nestgate_automation::discovery::EcosystemDiscovery;
 #[cfg(feature = "network-integration")]
 pub use nestgate_automation::{
-    DatasetCreatedNotification, EcosystemDiscovery, EcosystemService, ServiceConnectionPool,
-    ServicePlan, ServiceRegistration, SquirrelConnection, TierDiscoveryRequest,
-    TierDiscoveryResponse,
+    DatasetCreatedNotification, EcosystemService, ServiceConnectionPool, ServicePlan,
+    ServiceRegistration, TierDiscoveryRequest, TierDiscoveryResponse,
 };
+// Note: SquirrelConnection removed as it's no longer available
 
 // Legacy compatibility types that some existing code might still reference
 pub use nestgate_automation::{

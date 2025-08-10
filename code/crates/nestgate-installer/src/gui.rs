@@ -17,13 +17,14 @@ pub async fn run_gui_installer() -> Result<()> {
 
     // For now, fall back to CLI installer
     let config = InstallerConfig::default();
-    let mut installer = NestGateInstaller::new(Some(config.install_path.clone()))?;
+    let mut installer =
+        NestGateInstaller::new(Some(config.extensions.installation.install_dir.clone()))?;
     installer
         .install(
-            false,               // force
-            config.service_mode, // as_service
-            false,               // skip_zfs
-            true,                // yes (auto-confirm)
+            false,                                                   // force
+            config.extensions.system_integration.install_as_service, // as_service
+            false,                                                   // skip_zfs
+            true,                                                    // yes (auto-confirm)
         )
         .await?;
 

@@ -231,8 +231,9 @@ async fn optimize_deduplication(dataset_name: &str) -> Option<String> {
 
 async fn request_ai_optimization(dataset_name: &str, pattern: &StoragePattern) -> Option<String> {
     // Try to use any available AI primal provider via universal adapter
-    let _adapter =
-        nestgate_core::universal_adapter::UniversalPrimalAdapter::new(Default::default());
+    let _adapter = nestgate_core::ecosystem_integration::UniversalAdapter::new(
+        nestgate_core::ecosystem_integration::create_default_adapter_config(),
+    );
 
     // Use universal adapter to request AI optimization
     if let Ok(ai_endpoint) = std::env::var("NESTGATE_AI_ENDPOINT") {

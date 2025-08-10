@@ -1,13 +1,12 @@
-//! Hardware Tuning Module
+//! Universal Hardware Tuning and Compute Integration
 //!
-//! This module provides hardware tuning capabilities for NestGate,
-//! including client integration with ToadStool compute services.
+//! ✅ **MODERNIZED**: Capability-based compute service integration with universal adapter pattern
 
+pub mod adapter;
 pub mod client;
-pub mod handler;
 pub mod types;
 
-// Re-export main types and clients for convenience
-pub use client::ToadstoolComputeClient;
-pub use handler::HardwareTuningHandler;
+// ✅ MODERN: Universal compute integration (capability-based)
+pub use adapter::HardwareTuningAdapter;
+pub use client::UniversalComputeClient;
 pub use types::*;

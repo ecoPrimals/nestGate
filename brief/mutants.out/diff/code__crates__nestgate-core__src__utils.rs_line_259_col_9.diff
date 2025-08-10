@@ -1,0 +1,29 @@
+--- code/crates/nestgate-core/src/utils.rs
++++ replace sys::get_hostname -> Result<String> with Ok("xyzzy".into())
+@@ -251,25 +251,17 @@
+ 
+     /// Get the number of CPU cores
+     pub fn get_cpu_count() -> usize {
+         num_cpus::get()
+     }
+ 
+     /// Get system hostname
+     pub fn get_hostname() -> Result<String> {
+-        gethostname::gethostname()
+-            .to_str()
+-            .map(|s| s.to_string())
+-            .ok_or_else(|| NestGateError::System {
+-                message: "Failed to get hostname".to_string(),
+-                resource: SystemResource::Cpu,
+-                utilization: None,
+-                recovery: RecoveryStrategy::Retry,
+-            })
++        Ok("xyzzy".into()) /* ~ changed by cargo-mutants ~ */
+     }
+ 
+     /// Get total system memory in bytes
+     pub fn get_total_memory() -> Result<u64> {
+         #[cfg(target_os = "linux")]
+         {
+             // Simple fallback implementation
+             Ok(8 * 1024 * 1024 * 1024) // Default to 8GB

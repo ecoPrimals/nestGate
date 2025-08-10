@@ -1,12 +1,23 @@
-// Removed unused error imports
-/// Universal Data Source Implementations
-///
-/// Concrete implementations of data sources for research databases and AI platforms.
-/// This module provides modular data source implementations, each in their own submodule
-/// for better organization and maintainability.
-pub mod huggingface;
-pub mod ncbi;
+//! Universal Data Source Capabilities
+//!
+//! NestGate doesn't know about specific data providers like NCBI or HuggingFace.
+//! Instead, it defines universal capabilities that any data provider can implement.
+//! This enables true ecosystem agnosticism - we can leverage any data structure
+//! without hardcoding specific providers.
 
-// Re-export the main data source implementations for backward compatibility
-pub use huggingface::HuggingFaceModelSource;
-pub use ncbi::NCBIGenomeSource;
+pub mod universal_data_adapter;
+pub mod data_capabilities;
+pub mod providers;
+
+// Re-export the universal interfaces
+pub use universal_data_adapter::UniversalDataAdapter;
+pub use data_capabilities::{
+    DataCapability, DataRequest, DataResponse, 
+    GenomeDataCapability, ModelDataCapability, ResearchDataCapability
+};
+
+// Re-export example providers
+pub use providers::{
+    UniversalGenomeProvider, UniversalHttpProvider,
+    // Other providers will be added as they're implemented
+};

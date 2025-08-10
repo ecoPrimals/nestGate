@@ -2,7 +2,7 @@
 //!
 //! Core data structures for snapshot information, operations, and statistics.
 
-use nestgate_core::StorageTier;
+use crate::types::StorageTier;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;

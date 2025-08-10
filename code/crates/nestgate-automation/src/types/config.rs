@@ -1,6 +1,6 @@
 //! Configuration types for automation system
 
-use nestgate_core::constants::strings::LOCALHOST_IP;
+use nestgate_core::constants::network::addresses::LOCALHOST_IP;
 use serde::{Deserialize, Serialize};
 
 /// Main automation configuration
@@ -12,13 +12,13 @@ pub struct AutomationConfig {
     pub prediction_cache_ttl_hours: u64,
     pub min_confidence_threshold: f64,
 
-    // Ecosystem service URLs (only available with network-integration feature)
+    // Ecosystem capability endpoints (only available with network-integration feature)
     #[cfg(feature = "network-integration")]
-    pub songbird_url: String,
+    pub orchestration_endpoint: String,
     #[cfg(feature = "network-integration")]
-    pub squirrel_mcp_url: String,
+    pub intelligence_endpoint: String,
     #[cfg(feature = "network-integration")]
-    pub toadstool_compute_url: String,
+    pub compute_endpoint: String,
 
     pub data_api_endpoint: String,
     pub prediction_endpoint: String,
@@ -34,17 +34,17 @@ impl Default for AutomationConfig {
             min_confidence_threshold: 0.7,
 
             #[cfg(feature = "network-integration")]
-            songbird_url: std::env::var("NESTGATE_SONGBIRD_URL")
+            orchestration_endpoint: std::env::var("NESTGATE_ORCHESTRATION_ENDPOINT")
                 .unwrap_or_else(|_| {
                     format!(
                         "http://{}:{}",
                         LOCALHOST_IP,
-                        nestgate_core::constants::network::api_port()
+                        nestgate_core::constants::configurable::api_port()
                     )
                 })
                 .to_string(),
             #[cfg(feature = "network-integration")]
-            squirrel_mcp_url: std::env::var("NESTGATE_SQUIRREL_MCP_URL")
+            intelligence_endpoint: std::env::var("NESTGATE_INTELLIGENCE_ENDPOINT")
                 .unwrap_or_else(|_| {
                     format!(
                         "http://{}:{}",
@@ -54,7 +54,7 @@ impl Default for AutomationConfig {
                 })
                 .to_string(),
             #[cfg(feature = "network-integration")]
-            toadstool_compute_url: std::env::var("NESTGATE_TOADSTOOL_COMPUTE_URL")
+            compute_endpoint: std::env::var("NESTGATE_COMPUTE_ENDPOINT")
                 .unwrap_or_else(|_| {
                     format!(
                         "http://{}:{}",
@@ -70,7 +70,7 @@ impl Default for AutomationConfig {
                     format!(
                         "http://{}:{}",
                         LOCALHOST_IP,
-                        nestgate_core::constants::network::api_port()
+                        nestgate_core::constants::configurable::api_port()
                     )
                 })
                 .to_string(),
@@ -92,7 +92,7 @@ impl Default for AutomationConfig {
 #[cfg(feature = "network-integration")]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiscoveryConfig {
-    pub known_songbird_endpoints: Vec<String>,
+    pub known_orchestration_endpoints: Vec<String>,
     pub discovery_timeout_ms: u64,
     pub health_check_interval_ms: u64,
     pub multicast_enabled: bool,
@@ -103,17 +103,17 @@ pub struct DiscoveryConfig {
 impl DiscoveryConfig {
     pub fn from_automation_config(config: &AutomationConfig) -> Self {
         Self {
-            known_songbird_endpoints: vec![
-                config.songbird_url.clone(),
-                std::env::var("NESTGATE_SONGBIRD_BACKUP_URL_1").unwrap_or_else(|_| {
+            known_orchestration_endpoints: vec![
+                config.orchestration_endpoint.clone(),
+                std::env::var("NESTGATE_ORCHESTRATION_BACKUP_ENDPOINT_1").unwrap_or_else(|_| {
                     format!(
                         "http://{}:{}",
                         LOCALHOST_IP,
-                        std::env::var("NESTGATE_SONGBIRD_BACKUP_PORT")
+                        std::env::var("NESTGATE_ORCHESTRATION_BACKUP_PORT")
                             .unwrap_or_else(|_| "8080".to_string())
                     )
                 }),
-                std::env::var("NESTGATE_SONGBIRD_BACKUP_URL_2").unwrap_or_else(|_| {
+                std::env::var("NESTGATE_ORCHESTRATION_BACKUP_ENDPOINT_2").unwrap_or_else(|_| {
                     format!(
                         "http://{}:{}",
                         LOCALHOST_IP,

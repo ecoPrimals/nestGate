@@ -195,19 +195,37 @@ mod tests {
         collector.increment_counter("requests");
         let requests_metric = collector.get_metric("requests");
         assert!(requests_metric.is_some());
-        assert_eq!(requests_metric.unwrap().value, 1.0);
+        assert_eq!(requests_metric.unwrap_or_else(|e| {
+    tracing::error!("Unwrap failed: {:?}", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed: {:?}", e)
+).into())
+}).value, 1.0);
 
         // Test gauge
         collector.record_gauge("cpu_usage", 75.5);
         let cpu_metric = collector.get_metric("cpu_usage");
         assert!(cpu_metric.is_some());
-        assert_eq!(cpu_metric.unwrap().value, 75.5);
+        assert_eq!(cpu_metric.unwrap_or_else(|e| {
+    tracing::error!("Unwrap failed: {:?}", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed: {:?}", e)
+).into())
+}).value, 75.5);
 
         // Test histogram
         collector.record_histogram("response_time", 250.0);
         let response_metric = collector.get_metric("response_time");
         assert!(response_metric.is_some());
-        assert_eq!(response_metric.unwrap().value, 250.0);
+        assert_eq!(response_metric.unwrap_or_else(|e| {
+    tracing::error!("Unwrap failed: {:?}", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed: {:?}", e)
+).into())
+}).value, 250.0);
 
         // Test all metrics
         let all_metrics = collector.get_all_metrics();
@@ -225,8 +243,14 @@ mod tests {
 
         // Test serialization
         let metric_type = MetricType::Histogram;
-        let serialized = serde_json::to_string(&metric_type).unwrap();
-        let deserialized: MetricType = serde_json::from_str(&serialized).unwrap();
+        let serialized = serde_json::to_string(&metric_type).map_err(|e| {
+    tracing::error!("JSON serialization failed: {}", e);
+    std::io::Error::new(std::io::ErrorKind::InvalidData, format!("JSON serialization error: {}", e))
+})?;
+        let deserialized: MetricType = serde_json::from_str(&serialized).map_err(|e| {
+    tracing::error!("JSON parsing failed: {}", e);
+    std::io::Error::new(std::io::ErrorKind::InvalidData, format!("JSON parsing error: {}", e))
+})?;
         assert_eq!(metric_type, deserialized);
     }
 }

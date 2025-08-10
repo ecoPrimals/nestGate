@@ -4,7 +4,7 @@
 //! and snapshot management.
 
 use crate::error::{Result, ZfsError};
-use nestgate_core::StorageTier;
+use crate::types::StorageTier;
 // Removed unused tracing import
 
 use super::ZfsManager;
@@ -25,7 +25,7 @@ impl ZfsManager {
 
         let result = self
             .dataset_manager
-            .create_dataset(name, parent, tier)
+            .create_dataset(name, parent, tier.into())
             .await
             .map_err(|e| ZfsError::Internal {
                 message: format!("Failed to create dataset: {e}"),

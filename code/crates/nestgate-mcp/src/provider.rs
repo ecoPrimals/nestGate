@@ -2,14 +2,14 @@
 //!
 //! Provider management for MCP integration
 
-use crate::{types::StorageTier, Error, Result};
+use crate::{error, Result};
 
 /// Provider information
 #[derive(Debug, Clone)]
 pub struct ProviderInfo {
     pub id: String,
     pub name: String,
-    pub tier: StorageTier,
+    pub tier: crate::types::StorageTier,
     pub capacity: u64,
     pub available: u64,
 }
@@ -53,20 +53,19 @@ impl ProviderManager {
         // Check if we can access basic file system operations
         let temp_dir = std::env::temp_dir();
         if !temp_dir.exists() {
-            return Err(Error::validation(
-                "Temporary directory not accessible".to_string(),
-            ));
+            return Err(
+                error::Error::validation("Temporary directory not accessible".to_string()).into(),
+            );
         }
 
         // Check if we have basic memory available
         let available_memory = self.get_available_memory().await?;
         if available_memory < 100_000_000 {
             // 100MB minimum
-            return Err(Error::validation(
-                "Insufficient memory available".to_string(),
-            ));
+            return Err(
+                error::Error::validation("Insufficient memory available".to_string()).into(),
+            );
         }
-
         Ok(())
     }
 
@@ -113,30 +112,26 @@ impl ProviderManager {
     }
 
     /// Parse storage tier from provider ID
-    fn parse_storage_tier_from_id(&self, id: &str) -> Result<StorageTier> {
-        match id.to_lowercase().as_str() {
-            id if id.contains("hot") => Ok(StorageTier::Hot),
-            id if id.contains("warm") => Ok(StorageTier::Warm),
-            id if id.contains("cold") => Ok(StorageTier::Cold),
-            id if id.contains("archive") => Ok(StorageTier::Archive),
-            _ => {
-                tracing::debug!(
-                    "Unknown provider ID format '{}', defaulting to Hot tier",
-                    id
-                );
-                Ok(StorageTier::Hot) // Default to hot tier
-            }
+    fn parse_storage_tier_from_id(&self, storage_id: &str) -> Result<crate::types::StorageTier> {
+        match storage_id.to_lowercase().as_str() {
+            id if id.contains("hot") => Ok(crate::types::StorageTier::Hot),
+            id if id.contains("warm") => Ok(crate::types::StorageTier::Warm),
+            id if id.contains("cold") => Ok(crate::types::StorageTier::Cold),
+            id if id.contains("archive") => Ok(crate::types::StorageTier::Cold), // Archive maps to Cold tier
+            id if id.contains("cache") => Ok(crate::types::StorageTier::Cache),
+            _ => Ok(crate::types::StorageTier::Warm), // Default to warm tier
         }
     }
 
     /// Get capacity information for a storage tier
-    async fn get_tier_capacity(&self, tier: &StorageTier) -> Result<(u64, u64)> {
+    async fn get_tier_capacity(&self, tier: &crate::types::StorageTier) -> Result<(u64, u64)> {
         // In a real implementation, this would query actual storage systems
         let (base_capacity, availability_factor) = match tier {
-            StorageTier::Hot => (10_737_418_240_u64, 0.7), // 10GB, 70% available
-            StorageTier::Warm => (107_374_182_400_u64, 0.85), // 100GB, 85% available
-            StorageTier::Cold => (1_073_741_824_000_u64, 0.95), // 1TB, 95% available
-            StorageTier::Archive => (10_737_418_240_000_u64, 0.98), // 10TB, 98% available
+            crate::types::StorageTier::Hot => (10_737_418_240_u64, 0.7), // 10GB, 70% available
+            crate::types::StorageTier::Warm => (107_374_182_400_u64, 0.85), // 100GB, 85% available
+            crate::types::StorageTier::Cold => (1_073_741_824_000_u64, 0.95), // 1TB, 95% available
+            crate::types::StorageTier::Archive => (10_737_418_240_000_u64, 0.98), // 10TB, 98% available
+            crate::types::StorageTier::Cache => (1_073_741_824_000_u64, 0.98), // 1TB, 98% available
         };
 
         let available = (base_capacity as f64 * availability_factor) as u64;

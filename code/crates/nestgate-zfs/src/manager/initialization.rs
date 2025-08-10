@@ -18,7 +18,7 @@ use crate::{
     health::ZfsHealthMonitor,
     metrics::ZfsMetrics,
     migration::MigrationEngine,
-    performance::{PerformanceConfig, ZfsPerformanceMonitor},
+    performance::ZfsPerformanceMonitor,
     pool::ZfsPoolManager,
     snapshot::ZfsSnapshotManager,
     tier::TierManager,
@@ -72,9 +72,7 @@ impl ZfsManager {
         ));
 
         // Initialize performance monitor with RwLock
-        let performance_config = PerformanceConfig::default();
         let performance_monitor = Arc::new(RwLock::new(ZfsPerformanceMonitor::new(
-            performance_config,
             pool_manager.clone(),
             dataset_manager.clone(),
         )));
@@ -111,7 +109,11 @@ impl ZfsManager {
         let metrics = Arc::new(ZfsMetrics::new());
 
         // Initialize automation if requested
-        let automation = if shared_config.ai_automation.ai_enabled {
+        let automation = if shared_config
+            .extensions
+            .ai_automation
+            .enable_ai_optimization
+        {
             // Note: AI integration sunset - using heuristic automation only
             let automation_config = crate::config::DatasetAutomationConfig::default();
             match DatasetAutomation::new(
@@ -193,11 +195,13 @@ impl ZfsManager {
         ));
 
         // Prepare enhanced service information
+        // SOVEREIGNTY FIX: Use dynamic service ID based on capability registration
         let service_info = nestgate_mcp::protocol::ServiceInfo {
-            service_id: "nestgate-zfs-enhanced".to_string(),
+            service_id: std::env::var("NESTGATE_ZFS_SERVICE_ID")
+                .unwrap_or_else(|_| format!("zfs-storage-{}", uuid::Uuid::new_v4().simple())),
             service_name: "NestGate ZFS Enhanced".to_string(),
             service_type: "storage".to_string(),
-            endpoint: self.config.api_endpoint.clone(),
+            endpoint: self.config.network.bind_address.to_string(),
             status: nestgate_mcp::protocol::ServiceStatus::Online,
             capabilities: vec![
                 "dataset_management".to_string(),

@@ -6,15 +6,78 @@ use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::sync::{mpsc, RwLock};
 
+use crate::types::StorageTier;
 use crate::{ZfsDatasetManager, ZfsPoolManager};
-use nestgate_core::StorageTier;
+// Removed unused import: StorageTier as CoreStorageTier
 use std::time::Duration;
+
+/// System performance metrics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SystemPerformanceMetrics {
+    pub memory_utilization_percent: f64,
+    pub cpu_utilization_percent: f64,
+    pub disk_queue_depth: u64,
+    pub network_throughput_mbs: f64,
+    pub system_load_average: f64,
+}
+
+/// Memory information structure
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MemoryInfo {
+    pub utilization_percent: f64,
+    pub total_mb: u64,
+    pub available_mb: u64,
+    pub used_mb: u64,
+}
+
+impl Default for SystemPerformanceMetrics {
+    fn default() -> Self {
+        Self {
+            memory_utilization_percent: 0.0,
+            cpu_utilization_percent: 0.0,
+            disk_queue_depth: 0,
+            network_throughput_mbs: 0.0,
+            system_load_average: 0.0,
+        }
+    }
+}
+
+impl Default for MemoryInfo {
+    fn default() -> Self {
+        Self {
+            utilization_percent: 0.0,
+            total_mb: 0,
+            available_mb: 0,
+            used_mb: 0,
+        }
+    }
+}
+
+/// Disk I/O statistics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiskIoStats {
+    pub queue_depth: u64,
+    pub throughput_mbs: f64,
+    pub read_iops: u64,
+    pub write_iops: u64,
+}
+
+impl Default for DiskIoStats {
+    fn default() -> Self {
+        Self {
+            queue_depth: 0,
+            throughput_mbs: 0.0,
+            read_iops: 0,
+            write_iops: 0,
+        }
+    }
+}
 
 /// ZFS performance monitor
 #[derive(Debug)]
 #[allow(dead_code)] // Fields used in comprehensive performance monitoring
 pub struct ZfsPerformanceMonitor {
-    pub config: PerformanceConfig,
+    // config removed - using shared ZfsConfig instead
     pub pool_manager: Arc<ZfsPoolManager>,
     pub dataset_manager: Arc<ZfsDatasetManager>,
 
@@ -40,7 +103,8 @@ pub struct ZfsPerformanceMonitor {
 
 /// Performance monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PerformanceConfig {
+// REMOVED: PerformanceConfig eliminated - use ZfsConfig.extensions.performance instead
+pub struct _RemovedPerformanceConfig {
     /// Metrics collection interval in seconds
     pub collection_interval: u64,
     /// Analysis interval in seconds

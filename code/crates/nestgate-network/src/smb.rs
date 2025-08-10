@@ -63,7 +63,6 @@ impl SmbServer {
         self.setup_authentication().await?;
 
         tracing::info!("SMB server started");
-        Ok(())
     }
 
     /// Stop the SMB server
@@ -80,7 +79,6 @@ impl SmbServer {
         self.stop_samba_daemon().await?;
 
         tracing::info!("SMB server stopped");
-        Ok(())
     }
 
     /// Add an SMB share
@@ -93,7 +91,6 @@ impl SmbServer {
         // Update SMB configuration
         self.update_smb_config().await?;
 
-        Ok(())
     }
 
     /// Remove an SMB share
@@ -106,7 +103,6 @@ impl SmbServer {
         // Update SMB configuration
         self.update_smb_config().await?;
 
-        Ok(())
     }
 
     /// List all shares
@@ -151,7 +147,6 @@ impl SmbServer {
         }
 
         tracing::info!("Samba daemon services started successfully");
-        Ok(())
     }
 
     /// Stop Samba daemon services
@@ -183,7 +178,6 @@ impl SmbServer {
         }
 
         tracing::info!("Samba daemon services stopped");
-        Ok(())
     }
 
     /// Configure SMB shares
@@ -199,7 +193,6 @@ impl SmbServer {
         // In a production environment, this would integrate with proper user management
 
         tracing::info!("SMB authentication setup complete");
-        Ok(())
     }
 
     /// Update Samba configuration
@@ -339,7 +332,6 @@ impl SmbServer {
         let _ = std::fs::remove_file(&temp_path);
 
         tracing::info!("Samba configuration updated successfully");
-        Ok(())
     }
 }
 
@@ -454,5 +446,4 @@ async fn perform_smb_mount(
         );
     }
 
-    Ok(())
 }

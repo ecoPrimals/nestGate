@@ -4,7 +4,7 @@
 //! the automation system including policies, lifecycle management, events,
 //! and status tracking.
 
-use nestgate_core::StorageTier;
+use crate::types::StorageTier;
 use serde::{Deserialize, Serialize};
 
 use std::time::SystemTime;

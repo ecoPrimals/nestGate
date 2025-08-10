@@ -44,7 +44,10 @@ where
             
             // Use serde_json::Value as placeholder for failed operations
             let null_data: T = serde_json::from_value(serde_json::Value::Null)
-                .unwrap_or_else(|_| panic!("Cannot create null value for type"));
+                .unwrap_or_else(|_| return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    "Cannot create null value for type".to_string()
+).into()));
             
             AIFirstResponse::error(ai_error, request_id, processing_time_ms, confidence_score)
                 .with_suggested_actions(suggested_actions)
@@ -434,7 +437,13 @@ mod tests {
         assert!(response.error.is_some());
         assert_eq!(response.confidence_score, 0.3);
         
-        let error = response.error.unwrap();
+        let error = response.error.unwrap_or_else(|e| {
+    tracing::error!("Unwrap failed: {:?}", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed: {:?}", e)
+).into())
+});
         assert_eq!(error.code, "NETWORK_DISCOVERY_TIMEOUT");
         assert!(matches!(error.category, AIErrorCategory::Transient));
     }

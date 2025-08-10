@@ -42,27 +42,8 @@ pub async fn copy_file_with_progress(
     // Use zero-copy buffer management for better performance
     let buffer_size = 4 * 1024 * 1024; // 4MB buffer instead of 1MB
 
-    // Use buffer pooling to reduce allocations
-    static BUFFER_MANAGER: std::sync::OnceLock<
-        std::sync::Arc<std::sync::Mutex<nestgate_core::zero_copy::BufferManager>>,
-    > = std::sync::OnceLock::new();
-    let buffer_manager_arc = BUFFER_MANAGER.get_or_init(|| {
-        std::sync::Arc::new(std::sync::Mutex::new(
-            nestgate_core::zero_copy::BufferManager::new(buffer_size),
-        ))
-    });
-
-    let mut buffer = {
-        let mut buffer_manager = buffer_manager_arc
-            .lock()
-            .map_err(|e| NestGateError::System {
-                message: format!("Failed to acquire buffer manager lock: {}", e),
-                resource: nestgate_core::error::SystemResource::Memory,
-                utilization: None,
-                recovery: nestgate_core::error::RecoveryStrategy::Retry,
-            })?;
-        buffer_manager.get_buffer(buffer_size)
-    };
+    // Allocate a buffer for file operations
+    let mut buffer = vec![0u8; buffer_size];
     let mut total_copied = 0u64;
     let start_time = Instant::now();
 
@@ -126,19 +107,7 @@ pub async fn copy_file_with_progress(
             recovery: nestgate_core::error::RecoveryStrategy::Retry,
         })?;
 
-    // Return buffer to pool
-    {
-        let mut buffer_manager = buffer_manager_arc
-            .lock()
-            .map_err(|e| NestGateError::System {
-                message: format!("Failed to acquire buffer manager lock for return: {}", e),
-                resource: nestgate_core::error::SystemResource::Memory,
-                utilization: None,
-                recovery: nestgate_core::error::RecoveryStrategy::Retry,
-            })?;
-        buffer_manager.return_buffer(buffer);
-    }
-
+    // Buffer will be automatically dropped
     Ok(())
 }
 
@@ -209,7 +178,6 @@ pub async fn verify_file_integrity(source_path: &PathBuf, target_path: &PathBuf)
             });
         }
     }
-
     Ok(())
 }
 
@@ -232,6 +200,5 @@ pub async fn update_file_metadata(target_path: &PathBuf, job: &MigrationJob) -> 
         "Recording migration metadata for {:?} -> {:?}",
         job.source_path, target_path
     );
-
     Ok(())
 }

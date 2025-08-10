@@ -21,6 +21,23 @@ impl ZfsAnalyzer {
         Self { zfs_manager }
     }
 
+    /// Create with default configuration - PRODUCTION READY
+    /// Replaces mock() with real ZFS integration
+    pub async fn new_with_default_config() -> Result<Self> {
+        let config = nestgate_zfs::ZfsConfig::default();
+        let zfs_manager = Arc::new(ZfsManager::new(config).await.map_err(|e| {
+            NestGateError::Internal {
+                message: format!("Failed to initialize ZFS manager for analytics: {}", e),
+                location: Some(file!().to_string()),
+                debug_info: None,
+                is_bug: false,
+            }
+        })?);
+        Ok(Self { zfs_manager })
+    }
+
+    /// Create mock instance for testing only
+    #[cfg(test)]
     pub fn mock() -> Self {
         Self {
             zfs_manager: Arc::new(nestgate_zfs::ZfsManager::mock()),

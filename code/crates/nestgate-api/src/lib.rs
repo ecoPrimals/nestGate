@@ -7,19 +7,17 @@
 
 use anyhow::Result;
 use axum::Router;
-// Removed unused std import
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
 use tracing::{info, warn};
-// Removed unused tracing import
 
 use crate::event_coordination::EventCoordinator;
 
 mod constants;
 use crate::universal_primal::StoragePrimalProvider;
 
-use crate::routes::create_router;
+use crate::routes::create_router_with_state;
 
 pub mod byob;
 pub mod event_coordination;
@@ -63,7 +61,7 @@ pub mod tarpc_service;
 // New modules for enhanced streaming and RPC
 pub mod sse;
 pub mod universal_primal;
-pub mod universal_primal_config;
+// universal_primal_config removed - use unified_api_config instead
 
 // Standards implementation modules
 // pub mod ai_first_api; // Temporarily disabled - file removed
@@ -95,8 +93,8 @@ pub mod ecosystem_integration;
 /// #[tokio::main]
 /// async fn main() {
 ///     let app = create_app();
-///     let listener = tokio::net::TcpListener::bind("127.0.0.1:8080").await.unwrap();
-///     axum::serve(listener, app).await.unwrap();
+///     let listener = tokio::net::TcpListener::bind("127.0.0.1:8080").await?;
+///     axum::serve(listener, app).await?;
 /// }
 /// ```
 ///
@@ -104,11 +102,11 @@ pub mod ecosystem_integration;
 ///
 /// Returns a configured `Router` with all communication layers and middleware
 /// ready for deployment.
-pub fn create_app() -> Router {
+pub async fn create_app() -> Router {
     info!("Creating NestGate API application with enhanced communication layers");
 
     // Create the router with built-in state management
-    let router = create_router();
+    let router = create_router_with_state().await;
 
     // Add CORS middleware
     router.layer(CorsLayer::permissive())
@@ -116,7 +114,7 @@ pub fn create_app() -> Router {
 
 /// Start the API server with all communication protocols
 pub async fn start_server(addr: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let app = create_app();
+    let app = create_app().await;
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
     info!(
@@ -124,7 +122,7 @@ pub async fn start_server(addr: &str) -> Result<(), Box<dyn std::error::Error + 
         addr
     );
 
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app.into_make_service()).await?;
     Ok(())
 }
 
@@ -146,8 +144,12 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            bind_addr: std::env::var("NESTGATE_BIND_ADDR")
-                .unwrap_or_else(|_| "0.0.0.0:8080".to_string()),
+            bind_addr: std::env::var("NESTGATE_BIND_ADDR").unwrap_or_else(|_| {
+                format!(
+                    "0.0.0.0:{}",
+                    nestgate_core::config::defaults::NetworkPortDefaults::get_api_port()
+                )
+            }),
             enable_zfs_api: true,
             enable_sse: true,
             enable_websockets: true,
@@ -182,10 +184,13 @@ pub async fn start_streaming_rpc_server(
     };
     let server = streaming_rpc::create_streaming_rpc_server_with_config(config);
     server.start().await?;
-    
+
     // Register this RPC endpoint through universal adapter for discovery
     // Universal adapter will handle discovery of orchestration primals
-    info!("🚀 Storage RPC API server started on {} (Universal adapter handles discovery)", addr);
+    info!(
+        "🚀 Storage RPC API server started on {} (Universal adapter handles discovery)",
+        addr
+    );
     Ok(())
 }
 
@@ -231,7 +236,10 @@ impl CommunicationManager {
         info!("🚀 Starting all communication protocols");
 
         // Get the address to bind to
-        let http_addr = SocketAddr::from(([127, 0, 0, 1], 8080)); // Placeholder port
+        let http_addr = SocketAddr::from((
+            [127, 0, 0, 1],
+            nestgate_core::config::defaults::NetworkPortDefaults::get_api_port(),
+        ));
         info!("📡 Binding to address: {}", http_addr);
 
         // Try orchestration module service mesh first (primary mode)
@@ -270,14 +278,13 @@ impl CommunicationManager {
             // Create or get universal primal instance
             if self.universal_primal.is_none() {
                 // Initialize universal primal system
-                let _primal_config =
-                    crate::universal_primal_config::UniversalNestGateConfig::default();
+                // let _primal_config = crate::config::Config::development();
 
                 // Create NestGate storage primal
                 let storage_primal = crate::universal_primal::NestGateStoragePrimal {
                     config: crate::universal_primal::NestGatePrimalConfig {
                         host: "127.0.0.1".to_string(),
-                        port: 8080,
+                        port: nestgate_core::config::defaults::NetworkPortDefaults::get_api_port(),
                         discovery_enabled: true,
                         primal_registry_endpoint: std::env::var(
                             "NESTGATE_PRIMAL_REGISTRY_ENDPOINT",
@@ -430,7 +437,6 @@ impl CommunicationManager {
             // Broadcast to RPC clients
             // self.streaming_rpc_server.broadcast_event(rpc_event).await?; // streaming_rpc_server is removed
         }
-
         Ok(())
     }
 }
@@ -440,13 +446,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_toadstool_integration() {
-        // Test that Toadstool integration is properly initialized
-        let toadstool_url = std::env::var("NESTGATE_TOADSTOOL_COMPUTE_URL")
-            .unwrap_or_else(|_| "http://localhost:8080".to_string());
+    fn test_compute_integration() {
+        // Test that compute integration is properly initialized
+        let compute_url = std::env::var("NESTGATE_COMPUTE_URL").unwrap_or_else(|_| {
+            nestgate_core::config::defaults::NetworkPortDefaults::get_api_base_url()
+        });
 
-        assert!(!toadstool_url.is_empty());
-        println!("✅ Toadstool integration configured: {toadstool_url}");
+        assert!(!compute_url.is_empty());
+        println!("✅ Compute service integration configured: {compute_url}");
     }
 
     #[tokio::test]
@@ -469,14 +476,16 @@ mod tests {
     async fn test_streaming_rpc_server() {
         #[cfg(feature = "streaming-rpc")]
         {
-            use crate::streaming_rpc::{StreamingRpcConfig, create_streaming_rpc_server_with_config};
+            use crate::streaming_rpc::{
+                create_streaming_rpc_server_with_config, StreamingRpcConfig,
+            };
 
             let config = StreamingRpcConfig {
                 bind_address: "127.0.0.1:18001".to_string(),
                 ..Default::default()
             };
             let server = create_streaming_rpc_server_with_config(config);
-            
+
             // Test server creation and stream count
             let count = server.get_active_stream_count().await;
             assert_eq!(count, 0, "New server should have zero active streams");

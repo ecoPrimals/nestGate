@@ -14,19 +14,42 @@
 
 pub mod automation;
 pub mod health;
-pub mod main;
 pub mod metrics;
 pub mod migration;
 pub mod pool;
 pub mod security;
 pub mod tiers;
+pub mod unified_zfs_config;
 
 // Re-export main types for backward compatibility
+use serde::{Deserialize, Serialize};
+
+/// Pool type configuration
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub enum PoolType {
+    #[default]
+    Standard,
+    Mirror,
+    RaidZ1,
+    RaidZ2,
+    RaidZ3,
+}
+
+/// Compression type configuration
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub enum CompressionType {
+    #[default]
+    None,
+    Lz4,
+    Gzip,
+    Zstd,
+}
+
 pub use automation::{AiAutomationSettings, DatasetAutomationConfig};
 pub use health::HealthMonitoringConfig;
-pub use main::ZfsConfig;
 pub use metrics::{MetricsConfig, MetricsFormat};
 pub use migration::{CapacityLimits, MigrationConfig, MigrationRules};
 pub use pool::PoolDiscoveryConfig;
 pub use security::{AccessControlConfig, KeyManagementConfig, SecurityConfig};
 pub use tiers::{PerformanceProfile, TierConfig, TierConfigurations};
+pub use unified_zfs_config::ZfsConfig;
