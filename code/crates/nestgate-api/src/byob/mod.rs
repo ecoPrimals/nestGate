@@ -3,16 +3,19 @@
 //! This module provides REST API endpoints for BYOB storage operations.
 //! It handles storage requests from orchestration coordination layer.
 
-use crate::constants::*;
 use async_trait::async_trait;
 use axum::{
     routing::{delete, get, post, put},
     Router,
 };
 use chrono::{DateTime, Utc};
+use nestgate_core::unified_constants::api::*;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
+
+// Missing constants - TODO: Move to unified constants
+const ACTIVE_STATUS: &str = "active";
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{error, info};

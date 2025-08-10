@@ -1,456 +1,202 @@
-//! Toadstool Compute Client
+//! Universal Compute Service Client
 //!
-//! This module provides the client implementation for interacting with
-//! Toadstool compute services for hardware tuning operations.
+//! ✅ **MODERNIZED**: Capability-based compute service integration
+//! ❌ **DEPRECATED**: Legacy primal-specific client implementations
 
-use chrono::Utc;
-use serde_json::json;
-// Removed unused tracing import
+use crate::hardware_tuning::types::*;
+use nestgate_core::ecosystem_integration::universal_adapter::UniversalAdapter;
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+use tracing::{debug, info, warn};
 
-use super::types::*;
-use nestgate_core::NestGateError;
-
-use tracing::error;
-use tracing::info;
-
-type Result<T> = std::result::Result<T, NestGateError>;
-
-/// Toadstool compute organization client for hardware tuning
+/// Universal compute service client (capability-based)
 #[derive(Debug, Clone)]
-pub struct ToadstoolComputeClient {
-    /// Base URL for Toadstool compute service
-    pub base_url: String,
-    /// HTTP client for API requests
-    client: reqwest::Client,
-    /// Service authentication
-    auth_token: Option<String>,
+pub struct UniversalComputeClient {
+    adapter: Arc<UniversalAdapter>,
+    timeout_seconds: u64,
 }
 
-impl ToadstoolComputeClient {
-    /// Create new Toadstool compute client
-    pub fn new(base_url: String) -> Self {
-        info!("🐸 Creating Toadstool Compute Client");
-        info!("🐸 Toadstool URL: {}", base_url);
-
+impl UniversalComputeClient {
+    /// Create new universal compute client
+    pub fn new(adapter: Arc<UniversalAdapter>) -> Self {
         Self {
-            base_url,
-            client: reqwest::Client::new(),
-            auth_token: None,
+            adapter,
+            timeout_seconds: 30,
         }
     }
 
-    /// Create new Toadstool compute client with authentication
-    pub fn new_with_auth(base_url: String, auth_token: String) -> Self {
-        info!("🐸 Creating Toadstool Compute Client with authentication");
-        info!("🐸 Toadstool URL: {}", base_url);
-
-        Self {
-            base_url,
-            client: reqwest::Client::new(),
-            auth_token: Some(auth_token),
-        }
-    }
-
-    /// Add authentication header to request if token is available
-    fn add_auth_header(&self, request: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
-        if let Some(token) = &self.auth_token {
-            request.header("Authorization", format!("Bearer {token}"))
-        } else {
-            request
-        }
-    }
-
-    /// Register hardware tuning service with Toadstool
-    pub async fn register_tuning_service(&self, service: &TuningServiceRegistration) -> Result<()> {
-        info!(
-            "🐸 Registering hardware tuning service with Toadstool: {}",
-            service.name
-        );
-
-        let request = self
-            .client
-            .post(format!("{}/compute/services/register", self.base_url))
-            .json(service);
-
-        let response = self.add_auth_header(request).send().await?;
-
-        if response.status().is_success() {
-            info!(
-                "✅ Hardware tuning service registered with Toadstool: {}",
-                service.name
-            );
-            Ok(())
-        } else {
-            let error = response.text().await?;
-            error!("❌ Failed to register with Toadstool: {}", error);
-            Err(NestGateError::Internal {
-                message: format!("Toadstool registration failed: {error}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            })
-        }
-    }
-
-    /// Request compute resources from Toadstool
+    /// Request compute resources through discovered compute capability
     pub async fn request_compute_resources(
         &self,
-        request: &ComputeResourceRequest,
-    ) -> Result<ComputeAllocation> {
-        info!("🐸 Requesting compute resources from Toadstool");
+        request: ComputeRequest,
+    ) -> Result<ComputeAllocation, ComputeError> {
+        info!("🧮 Requesting compute resources: {:?}", request);
 
-        let response = self
-            .client
-            .post(format!("{}/compute/resources/allocate", self.base_url))
-            .json(request)
+        // ✅ CAPABILITY-BASED: Discover compute service dynamically
+        let capability_request =
+            nestgate_core::ecosystem_integration::universal_adapter::types::CapabilityRequest {
+                request_id: uuid::Uuid::new_v4().to_string(),
+                capability_id: "compute".to_string(),
+                payload: vec![],
+                metadata: std::collections::HashMap::new(),
+                performance_requirements: None,
+                timeout: Some(std::time::Duration::from_secs(30)),
+                priority: 1,
+                requires_encryption: false,
+            };
+        let compute_service = self
+            .adapter
+            .execute_capability(capability_request)
+            .await
+            .map_err(|e| {
+                ComputeError::DiscoveryError(format!("No compute capability found: {}", e))
+            })?;
+
+        debug!("✅ Using compute service: {:?}", compute_service);
+
+        // Make request to discovered compute service
+        let client = reqwest::Client::new();
+        let response = client
+            .post(&format!(
+                "{}/api/v1/compute/allocate",
+                String::from_utf8_lossy(&compute_service.payload).trim_matches('"')
+            ))
+            .json(&request)
+            .timeout(std::time::Duration::from_secs(self.timeout_seconds))
             .send()
-            .await?;
+            .await
+            .map_err(|e| ComputeError::NetworkError(e.to_string()))?;
 
         if response.status().is_success() {
-            let allocation: ComputeAllocation = response.json().await?;
-            info!(
-                "✅ Compute resources allocated by Toadstool: {} cores, {} GB RAM",
-                allocation.cpu_cores, allocation.memory_gb
-            );
+            let allocation = response
+                .json::<ComputeAllocation>()
+                .await
+                .map_err(|e| ComputeError::ParseError(e.to_string()))?;
+
+            info!("✅ Compute resources allocated: {:?}", allocation);
             Ok(allocation)
         } else {
-            let error = response.text().await?;
-            error!("❌ Failed to allocate compute resources: {}", error);
-            Err(NestGateError::Internal {
-                message: format!("Toadstool allocation failed: {error}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            })
+            let error_msg = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
+            Err(ComputeError::ServiceError(error_msg))
         }
     }
 
-    /// Get live hardware metrics from Toadstool
-    pub async fn get_live_hardware_metrics(&self) -> Result<LiveHardwareMetrics> {
-        let response = self
-            .client
-            .get(format!("{}/compute/metrics/live", self.base_url))
-            .send()
-            .await?;
+    /// Release compute resources
+    pub async fn release_compute_resources(&self, allocation_id: &str) -> Result<(), ComputeError> {
+        info!("🔄 Releasing compute resources: {}", allocation_id);
 
-        if response.status().is_success() {
-            let metrics: LiveHardwareMetrics = response.json().await?;
-            Ok(metrics)
-        } else {
-            let error = response.text().await?;
-            Err(NestGateError::Internal {
-                message: format!("Failed to get live metrics: {error}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            })
-        }
-    }
+        let capability_request =
+            nestgate_core::ecosystem_integration::universal_adapter::types::CapabilityRequest {
+                request_id: uuid::Uuid::new_v4().to_string(),
+                capability_id: "compute".to_string(),
+                payload: vec![],
+                metadata: std::collections::HashMap::new(),
+                performance_requirements: None,
+                timeout: Some(std::time::Duration::from_secs(30)),
+                priority: 1,
+                requires_encryption: false,
+            };
+        let compute_service = self
+            .adapter
+            .execute_capability(capability_request)
+            .await
+            .map_err(|e| {
+                ComputeError::DiscoveryError(format!("No compute capability found: {}", e))
+            })?;
 
-    /// Subscribe to live hardware data feed
-    pub async fn subscribe_to_hardware_feed(
-        &self,
-        callback: Box<dyn Fn(HardwareEvent) + Send + Sync>,
-    ) -> Result<()> {
-        info!("🐸 Subscribing to Toadstool hardware data feed");
-
-        // Set up WebSocket connection for live feeds
-        let _ws_url = format!(
-            "{}/compute/metrics/stream",
-            self.base_url.replace("http", "ws")
-        );
-
-        // In a real implementation, this would establish a WebSocket connection
-        // and handle incoming hardware events
-        tokio::spawn(async move {
-            // This is where the live data feed would be processed
-            // For now, simulate with periodic updates
-            let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(1));
-
-            loop {
-                interval.tick().await;
-
-                // In production, this would be real data from Toadstool
-                let event = HardwareEvent {
-                    timestamp: Utc::now(),
-                    event_type: HardwareEventType::MetricsUpdate,
-                    data: json!({
-                        "cpu_usage": 45.2,
-                        "memory_usage": 67.8,
-                        "temperature": 42.1
-                    }),
-                };
-
-                callback(event);
-            }
-        });
-
-        Ok(())
-    }
-
-    /// Release compute resources back to Toadstool
-    pub async fn release_compute_resources(&self, allocation_id: &str) -> Result<()> {
-        info!(
-            "🐸 Releasing compute resources to Toadstool: {}",
-            allocation_id
-        );
-
-        let response = self
-            .client
-            .delete(format!(
-                "{}/compute/resources/{}",
-                self.base_url, allocation_id
-            ))
-            .send()
-            .await?;
-
-        if response.status().is_success() {
-            info!(
-                "✅ Compute resources released to Toadstool: {}",
+        let client = reqwest::Client::new();
+        let response = client
+            .delete(&format!(
+                "{}/api/v1/compute/{}",
+                String::from_utf8_lossy(&compute_service.payload).trim_matches('"'),
                 allocation_id
-            );
+            ))
+            .timeout(std::time::Duration::from_secs(self.timeout_seconds))
+            .send()
+            .await
+            .map_err(|e| ComputeError::NetworkError(e.to_string()))?;
+
+        if response.status().is_success() {
+            info!("✅ Compute resources released: {}", allocation_id);
             Ok(())
         } else {
-            let error = response.text().await?;
-            Err(NestGateError::Internal {
-                message: format!("Failed to release resources: {error}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            })
+            let error_msg = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
+            Err(ComputeError::ServiceError(error_msg))
         }
     }
 
-    /// Get platform information from ToadStool
-    pub async fn get_platform_info(&self) -> Result<PlatformInfo> {
-        info!("🐸 Getting platform information from ToadStool");
+    /// Get compute service status
+    pub async fn get_compute_status(&self) -> Result<ComputeStatus, ComputeError> {
+        let capability_request =
+            nestgate_core::ecosystem_integration::universal_adapter::types::CapabilityRequest {
+                request_id: uuid::Uuid::new_v4().to_string(),
+                capability_id: "compute".to_string(),
+                payload: vec![],
+                metadata: std::collections::HashMap::new(),
+                performance_requirements: None,
+                timeout: Some(std::time::Duration::from_secs(30)),
+                priority: 1,
+                requires_encryption: false,
+            };
+        let compute_service = self
+            .adapter
+            .execute_capability(capability_request)
+            .await
+            .map_err(|e| {
+                ComputeError::DiscoveryError(format!("No compute capability found: {}", e))
+            })?;
 
-        let response = self
-            .client
-            .get(format!("{}/sysinfo/platform", self.base_url))
-            .send()
-            .await?;
-
-        if response.status().is_success() {
-            let platform_info: PlatformInfo = response.json().await?;
-            info!(
-                "✅ Platform detected: {} cores, {} GB RAM, {} storage devices",
-                platform_info.cpu_cores,
-                platform_info.memory_gb,
-                platform_info.storage_devices.len()
-            );
-            Ok(platform_info)
-        } else {
-            let error = response.text().await?;
-            Err(NestGateError::Internal {
-                message: format!("Failed to get platform info: {error}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            })
-        }
-    }
-
-    /// Get real-time system metrics
-    pub async fn get_realtime_metrics(&self) -> Result<RealtimeMetrics> {
-        let response = self
-            .client
-            .get(format!("{}/sysinfo/metrics/realtime", self.base_url))
-            .send()
-            .await?;
-
-        if response.status().is_success() {
-            let metrics: RealtimeMetrics = response.json().await?;
-            Ok(metrics)
-        } else {
-            let error = response.text().await?;
-            Err(NestGateError::Internal {
-                message: format!("Failed to get realtime metrics: {error}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            })
-        }
-    }
-
-    /// Discover available compute resources
-    pub async fn discover_compute_resources(&self) -> Result<ComputeDiscovery> {
-        info!("🔍 Discovering available compute resources via ToadStool");
-
-        let response = self
-            .client
-            .get(format!("{}/sysinfo/compute/discovery", self.base_url))
-            .send()
-            .await?;
-
-        if response.status().is_success() {
-            let discovery: ComputeDiscovery = response.json().await?;
-            info!("✅ Discovered {} compute nodes", discovery.nodes.len());
-            Ok(discovery)
-        } else {
-            let error = response.text().await?;
-            Err(NestGateError::Internal {
-                message: format!("Failed to discover compute resources: {error}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            })
-        }
-    }
-
-    /// Get system health information
-    pub async fn get_system_health(&self) -> Result<SystemHealth> {
-        let response = self
-            .client
-            .get(format!("{}/sysinfo/health", self.base_url))
-            .send()
-            .await?;
-
-        if response.status().is_success() {
-            let health: SystemHealth = response.json().await?;
-            Ok(health)
-        } else {
-            let error = response.text().await?;
-            Err(NestGateError::Internal {
-                message: format!("Failed to get system health: {error}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            })
-        }
-    }
-
-    /// Execute storage workload
-    pub async fn execute_storage_workload(
-        &self,
-        workload: &StorageWorkload,
-    ) -> Result<WorkloadExecution> {
-        info!(
-            "🚀 Executing storage workload via ToadStool: {}",
-            workload.workload_id
-        );
-
-        let response = self
-            .client
-            .post(format!("{}/compute/workload/execute", self.base_url))
-            .json(workload)
-            .send()
-            .await?;
-
-        if response.status().is_success() {
-            let execution: WorkloadExecution = response.json().await?;
-            info!("✅ Storage workload '{}' executing", workload.workload_id);
-            Ok(execution)
-        } else {
-            let error = response.text().await?;
-            Err(NestGateError::Internal {
-                message: format!("Failed to execute storage workload: {error}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            })
-        }
-    }
-
-    /// Allocate storage resources
-    pub async fn allocate_storage_resources(
-        &self,
-        allocation_request: &StorageResourceRequest,
-    ) -> Result<StorageResourceAllocation> {
-        info!("💾 Allocating storage resources via ToadStool");
-
-        let response = self
-            .client
-            .post(format!(
-                "{}/compute/resources/storage/allocate",
-                self.base_url
+        let client = reqwest::Client::new();
+        let response = client
+            .get(&format!(
+                "{}/api/v1/compute/status",
+                String::from_utf8_lossy(&compute_service.payload).trim_matches('"')
             ))
-            .json(allocation_request)
+            .timeout(std::time::Duration::from_secs(self.timeout_seconds))
             .send()
-            .await?;
+            .await
+            .map_err(|e| ComputeError::NetworkError(e.to_string()))?;
 
         if response.status().is_success() {
-            let allocation: StorageResourceAllocation = response.json().await?;
-            info!(
-                "✅ Storage resources allocated: {} quantity",
-                allocation.allocated_quantity
-            );
-            Ok(allocation)
+            let status = response
+                .json::<ComputeStatus>()
+                .await
+                .map_err(|e| ComputeError::ParseError(e.to_string()))?;
+            Ok(status)
         } else {
-            let error = response.text().await?;
-            Err(NestGateError::Internal {
-                message: format!("Failed to allocate storage resources: {error}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            })
+            let error_msg = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
+            Err(ComputeError::ServiceError(error_msg))
         }
     }
+}
 
-    /// Manage storage process
-    pub async fn manage_storage_process(
-        &self,
-        process_request: &StorageProcessRequest,
-    ) -> Result<ProcessManagement> {
-        info!(
-            "⚙️ Managing storage process via ToadStool: {}",
-            process_request.process_name
-        );
+/// Compute error types
+#[derive(Debug, thiserror::Error)]
+pub enum ComputeError {
+    #[error("Discovery error: {0}")]
+    DiscoveryError(String),
+    #[error("Network error: {0}")]
+    NetworkError(String),
+    #[error("Service error: {0}")]
+    ServiceError(String),
+    #[error("Parse error: {0}")]
+    ParseError(String),
+}
 
-        let response = self
-            .client
-            .post(format!("{}/compute/process/manage", self.base_url))
-            .json(process_request)
-            .send()
-            .await?;
-
-        if response.status().is_success() {
-            let management: ProcessManagement = response.json().await?;
-            info!(
-                "✅ Storage process '{}' managed: {}",
-                process_request.process_name, management.status
-            );
-            Ok(management)
-        } else {
-            let error = response.text().await?;
-            Err(NestGateError::Internal {
-                message: format!("Failed to manage storage process: {error}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            })
-        }
-    }
-
-    /// Optimize storage performance
-    pub async fn optimize_storage_performance(
-        &self,
-        optimization_request: &StorageOptimizationRequest,
-    ) -> Result<StorageOptimization> {
-        info!("🔧 Optimizing storage performance via ToadStool");
-
-        let response = self
-            .client
-            .post(format!("{}/compute/optimization/storage", self.base_url))
-            .json(optimization_request)
-            .send()
-            .await?;
-
-        if response.status().is_success() {
-            let optimization: StorageOptimization = response.json().await?;
-            info!(
-                "✅ Storage performance optimized: {}% improvement",
-                optimization.performance_improvement
-            );
-            Ok(optimization)
-        } else {
-            let error = response.text().await?;
-            Err(NestGateError::Internal {
-                message: format!("Failed to optimize storage performance: {error}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            })
-        }
-    }
+/// Compute service status
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ComputeStatus {
+    pub available_resources: ComputeResources,
+    pub allocated_resources: ComputeResources,
+    pub active_allocations: u32,
+    pub service_health: f64,
 }

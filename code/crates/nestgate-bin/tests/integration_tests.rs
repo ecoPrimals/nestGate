@@ -54,7 +54,21 @@ async fn test_binary_help_output() {
     let output = Command::new("cargo")
         .args(["run", "--bin", "nestgate", "--", "--help"])
         .output()
-        .expect("Failed to execute nestgate binary");
+        .unwrap_or_else(|e| {
+            tracing::error!(
+                "Expect failed ({}): {:?}",
+                "Failed to execute nestgate binary",
+                e
+            );
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!(
+                    "Operation failed - {}: {:?}",
+                    "{}", "Failed to execute nestgate binary", e
+                ),
+            )
+            .into());
+        });
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -79,7 +93,21 @@ async fn test_binary_starts_successfully() {
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .expect("Failed to start nestgate binary");
+        .unwrap_or_else(|e| {
+            tracing::error!(
+                "Expect failed ({}): {:?}",
+                "Failed to start nestgate binary",
+                e
+            );
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!(
+                    "Operation failed - {}: {:?}",
+                    "{}", "Failed to start nestgate binary", e
+                ),
+            )
+            .into());
+        });
 
     // Give it time to start
     tokio::time::sleep(Duration::from_secs(
@@ -92,12 +120,24 @@ async fn test_binary_starts_successfully() {
 
     // Check if process is still running (didn't crash)
     match child.try_wait() {
-        Ok(Some(status)) => panic!("Process exited unexpectedly with status: {status}"),
+        Ok(Some(status)) => {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Process exited unexpectedly with status: {status}".to_string(),
+            )
+            .into())
+        }
         Ok(None) => {
             // Process is still running, which is good
             println!("✅ Binary started successfully and is running");
         }
-        Err(e) => panic!("Error checking process status: {e}"),
+        Err(e) => {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Error checking process status: {e}".to_string(),
+            )
+            .into())
+        }
     }
 
     // Clean up
@@ -115,7 +155,17 @@ async fn test_binary_with_invalid_config() {
     std::env::set_var("NESTGATE_PORT", "invalid_port");
 
     // Test that we can detect invalid configuration without running the binary
-    let port_value = std::env::var("NESTGATE_PORT").unwrap();
+    let port_value = std::env::var("NESTGATE_PORT").map_err(|e| {
+        tracing::error!(
+            "Environment variable '{}' not found: {}",
+            "NESTGATE_PORT",
+            e
+        );
+        std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            format!("Missing environment variable: {}", "NESTGATE_PORT"),
+        )
+    })?;
     assert_eq!(port_value, "invalid_port");
 
     // Test port parsing logic
@@ -131,7 +181,21 @@ async fn test_client_binary_help() {
     let output = Command::new("cargo")
         .args(["run", "--bin", "nestgate-client", "--", "--help"])
         .output()
-        .expect("Failed to execute nestgate-client binary");
+        .unwrap_or_else(|e| {
+            tracing::error!(
+                "Expect failed ({}): {:?}",
+                "Failed to execute nestgate-client binary",
+                e
+            );
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!(
+                    "Operation failed - {}: {:?}",
+                    "{}", "Failed to execute nestgate-client binary", e
+                ),
+            )
+            .into());
+        });
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -184,7 +248,14 @@ mod cli_tests {
 
         for (key, value) in test_cases {
             std::env::set_var(key, value);
-            let retrieved = std::env::var(key).unwrap();
+            let retrieved = std::env::var(key).unwrap_or_else(|e| {
+                tracing::error!("Unwrap failed: {:?}", e);
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("Operation failed: {:?}", e),
+                )
+                .into());
+            });
             assert_eq!(retrieved, value);
             std::env::remove_var(key);
         }
@@ -220,7 +291,17 @@ mod configuration_tests {
         // Test that environment variables override defaults
         std::env::set_var("NESTGATE_PORT", "9090");
 
-        let port = std::env::var("NESTGATE_PORT").unwrap();
+        let port = std::env::var("NESTGATE_PORT").map_err(|e| {
+            tracing::error!(
+                "Environment variable '{}' not found: {}",
+                "NESTGATE_PORT",
+                e
+            );
+            std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                format!("Missing environment variable: {}", "NESTGATE_PORT"),
+            )
+        })?;
         assert_eq!(port, "9090");
 
         std::env::remove_var("NESTGATE_PORT");
@@ -237,48 +318,71 @@ mod integration_mode_tests {
         std::env::remove_var("BEARDOG_URL");
 
         // In standalone mode, these should be None
-        assert!(std::env::var("SONGBIRD_URL").is_err());
-        assert!(std::env::var("BEARDOG_URL").is_err());
+        // ✅ SOVEREIGNTY COMPLIANT: Check capability-based environment variables
+        assert!(std::env::var("ORCHESTRATION_ENDPOINT").is_err());
+        assert!(std::env::var("SECURITY_ENDPOINT").is_err());
     }
 
     #[test]
     fn test_ecosystem_mode_configuration() {
-        // Test ecosystem mode (with external URLs)
+        // ✅ SOVEREIGNTY COMPLIANT: Test capability-based configuration
         std::env::set_var(
-            "SONGBIRD_URL",
+            "ORCHESTRATION_ENDPOINT",
             format!(
                 "http://{}:{}",
-                nestgate_core::constants::services::orchestrator_service_name(),
-                nestgate_core::constants::network::orchestrator_port()
+                nestgate_core::constants::addresses::localhost(),
+                nestgate_core::constants::addresses::orchestrator_port()
             ),
         );
+        // ✅ SOVEREIGNTY COMPLIANT: Using capability-based endpoints
         std::env::set_var(
-            "BEARDOG_URL",
+            "SECURITY_ENDPOINT",
             format!(
                 "http://{}:{}",
-                nestgate_core::constants::services::beardog_service_name(),
-                nestgate_core::constants::network::beardog_port()
+                nestgate_core::constants::addresses::localhost(),
+                nestgate_core::constants::addresses::DEFAULT_PORT
             ),
         );
 
         assert_eq!(
-            std::env::var("SONGBIRD_URL").unwrap(),
+            std::env::var("ORCHESTRATION_ENDPOINT").map_err(|e| {
+                tracing::error!(
+                    "Environment variable '{}' not found: {}",
+                    "ORCHESTRATION_ENDPOINT",
+                    e
+                );
+                std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    format!("Missing environment variable: {}", "ORCHESTRATION_ENDPOINT"),
+                )
+            })?,
             format!(
                 "http://{}:{}",
-                nestgate_core::constants::services::orchestrator_service_name(),
-                nestgate_core::constants::network::orchestrator_port()
+                nestgate_core::constants::addresses::localhost(),
+                nestgate_core::constants::addresses::orchestrator_port()
             )
         );
         assert_eq!(
-            std::env::var("BEARDOG_URL").unwrap(),
+            std::env::var("SECURITY_ENDPOINT").map_err(|e| {
+                tracing::error!(
+                    "Environment variable '{}' not found: {}",
+                    "SECURITY_ENDPOINT",
+                    e
+                );
+                std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    format!("Missing environment variable: {}", "SECURITY_ENDPOINT"),
+                )
+            })?,
             format!(
                 "http://{}:{}",
-                nestgate_core::constants::services::beardog_service_name(),
-                nestgate_core::constants::network::beardog_port()
+                nestgate_core::constants::addresses::localhost(),
+                nestgate_core::constants::addresses::DEFAULT_PORT
             )
         );
 
-        std::env::remove_var("SONGBIRD_URL");
-        std::env::remove_var("BEARDOG_URL");
+        // Cleanup capability-based environment variables
+        std::env::remove_var("ORCHESTRATION_ENDPOINT");
+        std::env::remove_var("SECURITY_ENDPOINT");
     }
 }

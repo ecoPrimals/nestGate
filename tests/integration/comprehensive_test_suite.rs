@@ -1,6 +1,6 @@
-//! Comprehensive Integration Test Suite
-//! 
-//! Split into smaller modules for maintainability
+/// Comprehensive Integration Test Suite
+/// 
+/// Split into smaller modules for maintainability
 
 mod comprehensive_integration;
 

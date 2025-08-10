@@ -3,7 +3,7 @@
 //! Contains all the data structures used by the ZFS manager including
 //! service information, tier analysis, performance metrics, and status reporting.
 
-use nestgate_core::StorageTier;
+use crate::types::StorageTier;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;

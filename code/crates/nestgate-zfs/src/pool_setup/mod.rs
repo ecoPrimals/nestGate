@@ -18,7 +18,8 @@ pub use validation::{PoolSetupConfig, PoolSetupValidator, PoolTopology, Validati
 use std::collections::HashMap;
 // Removed unused tracing import
 
-use nestgate_core::{NestGateError, Result as CoreResult, StorageTier};
+use crate::types::StorageTier;
+use nestgate_core::{types::StorageTier as CoreStorageTier, NestGateError, Result as CoreResult};
 
 /// Pool setup specific errors
 #[derive(Debug, thiserror::Error)]
@@ -126,7 +127,6 @@ impl ZfsPoolSetup {
                 // Not a fatal error - ZFS might not be installed
             }
         }
-
         Ok(())
     }
 
@@ -288,7 +288,6 @@ impl ZfsPoolSetup {
             tier_mappings.insert(StorageTier::Warm, warm_types);
             tier_mappings.insert(StorageTier::Cold, cold_types);
         }
-
         Ok(())
     }
 

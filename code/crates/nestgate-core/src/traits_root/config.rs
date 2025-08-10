@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::federation::FederationConfig;
 use crate::config::network::{HttpConfig, WebSocketConfig};
-use crate::errors::Result;
+use crate::error::Result;
 
 /// Configuration provider trait
 #[async_trait]

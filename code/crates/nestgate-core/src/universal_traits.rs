@@ -2,6 +2,7 @@
 ///
 /// This module defines universal traits that any primal can implement,
 /// eliminating hardcoded dependencies on specific primal implementations.
+use crate::biomeos::ServiceCategory;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -12,11 +13,16 @@ use uuid::Uuid;
 use crate::Result;
 use tracing::info;
 
-/// Universal primal provider trait that any primal can implement
+/// **DEPRECATED**: Use nestgate_core::traits::UniversalService instead
+/// This trait has been superseded by the canonical UniversalService trait
+#[deprecated(
+    since = "2.1.0",
+    note = "Use nestgate_core::traits::UniversalService instead"
+)]
 #[async_trait]
 pub trait PrimalProvider: Send + Sync {
-    /// Unique primal identifier (e.g., "beardog", "nestgate", "squirrel", "toadstool")
-    fn primal_id(&self) -> &str;
+    /// Unique service identifier (UUID-based, not name-based)
+    fn service_id(&self) -> Uuid;
 
     /// Instance identifier for multi-instance support
     fn instance_id(&self) -> &str;
@@ -24,31 +30,31 @@ pub trait PrimalProvider: Send + Sync {
     /// User/device context this primal instance serves
     fn context(&self) -> &PrimalContext;
 
-    /// Primal type category
-    fn primal_type(&self) -> PrimalType;
+    /// Service category this provider implements
+    fn service_category(&self) -> ServiceCategory;
 
-    /// Capabilities this primal provides
+    /// Capabilities this service provides
     fn capabilities(&self) -> Vec<PrimalCapability>;
 
-    /// What this primal needs from other primals
+    /// What capabilities this service needs from other services
     fn dependencies(&self) -> Vec<PrimalDependency>;
 
-    /// Health check for this primal
+    /// Health check for this service
     async fn health_check(&self) -> PrimalHealth;
 
-    /// Get primal API endpoints
+    /// Get service API endpoints
     fn endpoints(&self) -> PrimalEndpoints;
 
-    /// Handle inter-primal communication
-    async fn handle_primal_request(&self, request: PrimalRequest) -> Result<PrimalResponse>;
+    /// Handle inter-service communication
+    async fn handle_service_request(&self, request: PrimalRequest) -> Result<PrimalResponse>;
 
-    /// Initialize the primal with configuration
+    /// Initialize the service with configuration
     async fn initialize(&mut self, config: serde_json::Value) -> Result<()>;
 
-    /// Shutdown the primal gracefully
+    /// Shutdown the service gracefully
     async fn shutdown(&mut self) -> Result<()>;
 
-    /// Check if this primal can serve the given context
+    /// Check if this service can serve the given context
     fn can_serve_context(&self, context: &PrimalContext) -> bool;
 }
 

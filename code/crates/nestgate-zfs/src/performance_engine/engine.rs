@@ -173,7 +173,6 @@ impl PerformanceOptimizationEngine {
                 }
             }
         });
-
         Ok(())
     }
 
@@ -196,7 +195,6 @@ impl PerformanceOptimizationEngine {
                 }
             }
         });
-
         Ok(())
     }
 
@@ -220,7 +218,6 @@ impl PerformanceOptimizationEngine {
                 debug!("Running bottleneck detection...");
             }
         });
-
         Ok(())
     }
 }

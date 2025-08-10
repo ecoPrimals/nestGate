@@ -1,0 +1,88 @@
+# Cargo.toml is generated automatically by the `cargo fuzz` command.
+# If you change it manually, run `cargo fuzz build` to validate the changes.
+
+[package]
+name = "nestgate-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+arbitrary = { version = "1.0", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+
+[dependencies.nestgate-api]
+path = "../code/crates/nestgate-api"
+
+[dependencies.nestgate-core] 
+path = "../code/crates/nestgate-core"
+
+[dependencies.nestgate-zfs]
+path = "../code/crates/nestgate-zfs"
+
+[dependencies.nestgate-automation]
+path = "../code/crates/nestgate-automation"
+
+# Working fuzz targets
+[[bin]]
+name = "fuzz_path_validation"
+path = "fuzz_targets/fuzz_path_validation.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_serialization"
+path = "fuzz_targets/fuzz_serialization.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_network_protocols"
+path = "fuzz_targets/fuzz_network_protocols.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_universal_adapter"
+path = "fuzz_targets/fuzz_universal_adapter.rs"
+test = false
+doc = false
+
+# Fuzz targets with basic dependencies (should work now)
+[[bin]]
+name = "fuzz_api_endpoints"
+path = "fuzz_targets/fuzz_api_endpoints.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_biomeos_manifests"
+path = "fuzz_targets/fuzz_biomeos_manifests.rs"
+test = false
+doc = false
+
+# Temporarily disabled - need specialized fuzz config types
+# [[bin]]
+# name = "fuzz_config_parsing"
+# path = "fuzz_targets/fuzz_config_parsing.rs"
+# test = false
+# doc = false
+
+# [[bin]]
+# name = "fuzz_unified_config_example"
+# path = "fuzz_targets/fuzz_unified_config_example.rs"
+# test = false
+# doc = false
+
+# [[bin]]
+# name = "fuzz_zfs_commands"
+# path = "fuzz_targets/fuzz_zfs_commands.rs"
+# test = false
+# doc = false
+

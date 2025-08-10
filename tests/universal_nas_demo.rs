@@ -1,6 +1,6 @@
-//! Universal NAS Demonstration
-//!
-//! Complete demonstration of NestGate's time-agnostic universal storage system
+/// Universal NAS Demonstration
+///
+/// Complete demonstration of NestGate's time-agnostic universal storage system
 
 /// Comprehensive demonstration of universal storage capabilities
 #[tokio::test]

@@ -6,7 +6,7 @@ use futures_util::Stream;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::errors::Result;
+use crate::error::Result;
 
 /// Communication layer trait
 #[async_trait]

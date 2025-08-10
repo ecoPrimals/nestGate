@@ -51,9 +51,27 @@ mod performance_unit_tests {
         assert_eq!(cold_config.name, "cold");
 
         // Verify compression settings
-        assert_eq!(hot_config.properties.get("compression").unwrap(), "lz4");
-        assert_eq!(warm_config.properties.get("compression").unwrap(), "zstd");
-        assert_eq!(cold_config.properties.get("compression").unwrap(), "gzip-9");
+        assert_eq!(hot_config.properties.get("compression").unwrap_or_else(|e| {
+    tracing::error!("Unwrap failed: {:?}", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed: {:?}", e)
+).into())
+}), "lz4");
+        assert_eq!(warm_config.properties.get("compression").unwrap_or_else(|e| {
+    tracing::error!("Unwrap failed: {:?}", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed: {:?}", e)
+).into())
+}), "zstd");
+        assert_eq!(cold_config.properties.get("compression").unwrap_or_else(|e| {
+    tracing::error!("Unwrap failed: {:?}", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed: {:?}", e)
+).into())
+}), "gzip-9");
     }
 
     #[test]

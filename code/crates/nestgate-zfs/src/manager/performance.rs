@@ -5,7 +5,7 @@
 
 use super::types::{OptimizationResult, PerformanceAnalytics};
 use crate::error::{Result, ZfsError};
-use nestgate_core::StorageTier;
+use crate::types::StorageTier;
 use std::time::SystemTime;
 // Removed unused tracing import
 

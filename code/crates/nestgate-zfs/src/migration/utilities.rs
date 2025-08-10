@@ -8,7 +8,7 @@ use std::sync::Arc;
 // Removed unused tracing import
 
 use crate::{dataset::ZfsDatasetManager, types::StorageTier};
-use nestgate_core::{NestGateError, Result as CoreResult};
+use nestgate_core::{types::StorageTier as CoreStorageTier, NestGateError, Result as CoreResult};
 use tracing::info;
 
 /// Get target dataset name for a tier
@@ -18,6 +18,7 @@ pub fn get_target_dataset_for_tier(tier: &StorageTier) -> CoreResult<String> {
         StorageTier::Warm => Ok("storage/warm".to_string()),
         StorageTier::Cold => Ok("storage/cold".to_string()),
         StorageTier::Cache => Ok("storage/cache".to_string()),
+        StorageTier::Archive => Ok("storage/archive".to_string()),
     }
 }
 
@@ -80,14 +81,19 @@ pub async fn ensure_target_dataset_exists(
                 _properties.insert("compression".to_string(), "off".to_string());
                 _properties.insert("recordsize".to_string(), "64K".to_string());
             }
+            StorageTier::Archive => {
+                _properties.insert("compression".to_string(), "gzip-9".to_string());
+                _properties.insert("recordsize".to_string(), "2M".to_string());
+            }
         }
 
         // Convert tier to nestgate_core::StorageTier
         let core_tier = match tier {
-            StorageTier::Hot => nestgate_core::StorageTier::Hot,
-            StorageTier::Warm => nestgate_core::StorageTier::Warm,
-            StorageTier::Cold => nestgate_core::StorageTier::Cold,
-            StorageTier::Cache => nestgate_core::StorageTier::Cache,
+            StorageTier::Hot => CoreStorageTier::Hot,
+            StorageTier::Warm => CoreStorageTier::Warm,
+            StorageTier::Cold => CoreStorageTier::Cold,
+            StorageTier::Cache => CoreStorageTier::Cache,
+            StorageTier::Archive => CoreStorageTier::Archive,
         };
 
         dataset_manager
@@ -100,7 +106,6 @@ pub async fn ensure_target_dataset_exists(
                 recovery: nestgate_core::error::RecoveryStrategy::Retry,
             })?;
     }
-
     Ok(())
 }
 

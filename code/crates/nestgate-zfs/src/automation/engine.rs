@@ -22,8 +22,9 @@ use super::{
     },
 };
 use crate::config::DatasetAutomationConfig;
+use crate::types::StorageTier;
 use crate::{dataset::ZfsDatasetManager, migration::MigrationEngine, pool::ZfsPoolManager};
-use nestgate_core::{Result, StorageTier};
+use nestgate_core::Result;
 
 /// Intelligent dataset automation engine
 #[derive(Debug)]
@@ -226,7 +227,7 @@ impl DatasetAutomation {
         }
 
         // Apply stage-specific automatic rules
-        actions::apply_automatic_stage_rules(dataset_name, lifecycle).await?;
+        actions::apply_automatic_stage_rules(dataset_name, &lifecycle).await?;
 
         Ok(())
     }

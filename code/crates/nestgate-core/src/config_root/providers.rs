@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 use async_trait::async_trait;
 use serde::de::DeserializeOwned;
 
-use crate::errors::Result;
+use crate::error::Result;
 use crate::traits::config::ConfigProvider;
 use serde::Deserialize;
 

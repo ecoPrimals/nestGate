@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use nestgate_core::StorageTier;
+use nestgate_core::types::StorageTier;
 use nestgate_zfs::manager::ZfsManager;
 
 /// ZFS API state container
@@ -96,11 +96,12 @@ pub struct ListQuery {
 }
 
 /// Re-export universal API response from nestgate-core to eliminate duplication
-pub use nestgate_core::ApiResponse;
+pub use nestgate_core::response::ApiResponse;
 
 /// Tier prediction request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierPredictionRequest {
+    /// Path to the file for tier prediction
     pub file_path: String,
 }
 

@@ -65,9 +65,11 @@ impl Default for McpConfig {
         );
 
         Self {
-            enabled: false, // Disabled by default - Songbird manages MCP
+            enabled: false, // Disabled by default - orchestration service manages MCP
             cluster_endpoint: std::env::var("NESTGATE_CLUSTER_ENDPOINT")
-                .unwrap_or_else(|_| "localhost:8080".to_string()),
+                // SOVEREIGNTY FIX: Use environment-based cluster endpoint discovery
+            .unwrap_or_else(|_| std::env::var("NESTGATE_CLUSTER_ENDPOINT")
+                .unwrap_or_else(|_| "dynamic://cluster-capability".to_string())),
             node_id,
             federation_enabled: false,
             capabilities: McpCapabilitiesConfig::default(),
@@ -89,10 +91,10 @@ impl Default for McpCapabilitiesConfig {
 impl Default for FederationConfig {
     fn default() -> Self {
         Self {
-            enabled: false,                 // Disabled by default - Songbird manages federation
-            cluster_name: "".to_string(),   // Empty - Songbird provides cluster name
+            enabled: false, // Disabled by default - orchestration service manages federation
+            cluster_name: "".to_string(), // Empty - orchestration service provides cluster name
             mode: "standalone".to_string(), // Default to standalone
-            peers: vec![],                  // Empty - Songbird discovers peers
+            peers: vec![],  // Empty - orchestration service discovers peers
             heartbeat_interval: 30,
         }
     }
@@ -125,15 +127,12 @@ impl McpConfig {
             if self.cluster_endpoint.is_empty() {
                 return Err("Cluster endpoint cannot be empty when MCP is enabled".to_string());
             }
-
             if self.node_id.is_empty() {
                 return Err("Node ID cannot be empty when MCP is enabled".to_string());
             }
-
             // Validate capabilities
             self.capabilities.validate()?;
         }
-
         Ok(())
     }
 }
@@ -190,7 +189,6 @@ impl McpCapabilitiesConfig {
         if self.storage_tiers.is_empty() {
             return Err("At least one storage tier must be supported".to_string());
         }
-
         Ok(())
     }
 }
@@ -264,7 +262,6 @@ impl FederationConfig {
                 return Err("Peer nodes must be configured for non-standalone mode".to_string());
             }
         }
-
         Ok(())
     }
 }
@@ -279,7 +276,11 @@ mod tests {
         assert!(!config.is_enabled());
         assert!(!config.is_federation_enabled());
         assert!(!config.node_id().is_empty());
-        assert_eq!(config.cluster_endpoint(), "localhost:8080");
+        // SOVEREIGNTY FIX: Updated test to use dynamic endpoint pattern
+        assert!(
+            config.cluster_endpoint().contains("cluster-capability")
+                || config.cluster_endpoint().contains("localhost")
+        );
     }
 
     #[test]
@@ -358,7 +359,9 @@ mod tests {
         assert!(config.validate().is_err());
 
         // Empty node ID should fail
-        config.cluster_endpoint = "localhost:8080".to_string();
+        // SOVEREIGNTY FIX: Use environment-based endpoint in tests
+        config.cluster_endpoint =
+            std::env::var("TEST_CLUSTER_ENDPOINT").unwrap_or_else(|_| "localhost:8080".to_string());
         config.node_id = "".to_string();
         assert!(config.validate().is_err());
     }

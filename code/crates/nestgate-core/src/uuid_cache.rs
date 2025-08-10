@@ -309,7 +309,12 @@ mod tests {
         // Collect results
         let mut results = vec![];
         for handle in handles {
-            results.push(handle.join().unwrap());
+            results.push(handle.join().map_err(|e| {
+                crate::error::NestGateError::internal_error(
+                    format!("Expected Internal operation but failed: {:?}", e),
+                    "uuid_cache_test".to_string(),
+                )
+            })?);
         }
 
         // Should have at most 3 different UUIDs (since we used i % 3)
@@ -329,7 +334,15 @@ mod tests {
         // Test get function
         let uuid3 = get_uuid("global-test");
         assert!(uuid3.is_some());
-        assert_eq!(uuid1.to_string(), uuid3.unwrap().to_string());
+        assert_eq!(
+            uuid1.to_string(),
+            uuid3
+                .unwrap_or_else(|| {
+                    tracing::error!("Expected valid UUID");
+                    Arc::new(Uuid::new_v4()) // Return a new UUID instead of panicking
+                })
+                .to_string()
+        );
     }
 
     #[test]

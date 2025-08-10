@@ -319,15 +319,29 @@ pub trait DataStream: Send + Sync {
     fn seek(&mut self, position: u64) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
 }
 
-/// Data source types
+/// Data source types (capability-based, not provider-specific)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DataSourceType {
-    LocalDevice { device_path: String },
-    RemoteAPI { api_type: APIType, endpoint: String },
-    ResearchDatabase { database: ResearchDatabase },
-    CloudStorage { provider: CloudProvider },
-    LegacyMedia { media_type: LegacyMediaType },
-    FutureStorage { technology: FutureTechnology },
+    LocalDevice {
+        device_path: String,
+    },
+    RemoteAPI {
+        api_type: APIType,
+        endpoint: String,
+    },
+    DataCapability {
+        capability_type: String,
+        provider_metadata: HashMap<String, String>,
+    },
+    CloudStorage {
+        provider: CloudProvider,
+    },
+    LegacyMedia {
+        media_type: LegacyMediaType,
+    },
+    FutureStorage {
+        technology: FutureTechnology,
+    },
 }
 
 /// API types
@@ -340,51 +354,15 @@ pub enum APIType {
     Custom(String),
 }
 
-/// Research databases
+/// Universal data capability types (what we can do, not who provides it)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ResearchDatabase {
-    NCBI { database: NCBIDatabase },
-    HuggingFace { model_type: Option<String> },
-    ArXiv { category: ArXivCategory },
-    PubMed { search_type: PubMedSearchType },
-    UniProt { organism: Option<String> },
-    Ensembl { species: String },
-    GRpc,
-}
-
-/// NCBI databases
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum NCBIDatabase {
-    GenBank,
-    RefSeq,
-    SRA,
-    DbSnp,
-    ClinVar,
-    PubMed,
-    Taxonomy,
-    Protein,
-    Nucleotide,
-    Structure,
-}
-
-/// ArXiv categories
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ArXivCategory {
-    Physics,
-    Mathematics,
-    ComputerScience,
-    Biology,
-    Other(String),
-}
-
-/// PubMed search types
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum PubMedSearchType {
-    Title,
-    Abstract,
-    Author,
-    Keywords,
-    MeSH,
+pub enum DataCapabilityType {
+    GenomeData { organism_filter: Option<String> },
+    ModelData { model_type_filter: Option<String> },
+    ResearchData { domain_filter: Option<String> },
+    TimeSeriesData { frequency: Option<String> },
+    ImageData { format_filter: Option<String> },
+    Custom { capability_name: String },
 }
 
 /// Cloud providers
@@ -487,7 +465,21 @@ mod tests {
     async fn test_temporal_device_detection() {
         let devices = TemporalDevice::auto_detect_any_storage()
             .await
-            .expect("Failed to detect temporal devices in test");
+            .unwrap_or_else(|e| {
+                tracing::error!(
+                    "Expect failed ({}): {:?}",
+                    "Failed to detect temporal devices in test",
+                    e
+                );
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!(
+                        "Operation failed - {}: {:?}",
+                        "Failed to detect temporal devices in test", e
+                    ),
+                )
+                .into());
+            });
         // Test passes if no errors occur
         assert_eq!(devices.len(), 0); // Currently returns empty vec
     }

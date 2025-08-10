@@ -12,9 +12,9 @@ use chrono::{DateTime, Utc};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 // Removed unused tracing import
-use crate::constants::*;
+use nestgate_core::unified_constants::api::{capabilities::*, endpoints::*};
 
-use nestgate_core::{get_or_create_uuid, NestGateError, Result};
+use nestgate_core::{uuid_cache::get_or_create_uuid, NestGateError, Result};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdapterStats {
@@ -28,6 +28,12 @@ use tracing::info;
 use tracing::warn;
 
 // ===== ZERO-COPY UNIVERSAL ADAPTER STRING OPTIMIZATION CONSTANTS =====
+
+// Missing constants - TODO: Move to unified constants
+const FEATURE_POOLED_STORAGE: &str = "pooled_storage";
+const FEATURE_COMPRESSION: &str = "compression";
+const FEATURE_DEDUPLICATION: &str = "deduplication";
+const PROTOCOL_HTTP: &str = "http";
 // These constants eliminate .to_string() calls and improve performance by 15-25%
 
 // Core Capability Constants
@@ -61,7 +67,7 @@ use tracing::warn;
 // Storage Protocol Constants
 const PROTOCOL_NFS: &str = "NFS";
 const PROTOCOL_SMB: &str = "SMB";
-const PROTOCOL_HTTP: &str = "HTTP";
+// PROTOCOL_HTTP already defined above
 const PROTOCOL_ZFS: &str = "ZFS";
 
 // Storage Tier Constants
@@ -161,21 +167,21 @@ impl NestGateUniversalAdapter {
                 get_or_create_uuid("service_instance").simple()
             ),
             capabilities: vec![
-                CAPABILITY_STORAGE,
-                CAPABILITY_DATA,
-                CAPABILITY_ORCHESTRATION,
-                CAPABILITY_AI,
-                CAPABILITY_SECURITY,
-                CAPABILITY_TIERED_STORAGE,
-                CAPABILITY_REPLICATION,
-                CAPABILITY_SNAPSHOTS,
-                CAPABILITY_ENCRYPTION,
-                CAPABILITY_MONITORING,
-                CAPABILITY_AUTOMATION,
-                CAPABILITY_PERFORMANCE,
-                CAPABILITY_FEDERATION,
-                CAPABILITY_ECOSYSTEM,
-                CAPABILITY_UNIVERSAL_COORDINATION,
+                STORAGE,
+                DATA,
+                ORCHESTRATION,
+                AI,
+                SECURITY,
+                TIERED_STORAGE,
+                REPLICATION,
+                SNAPSHOTS,
+                ENCRYPTION,
+                MONITORING,
+                AUTOMATION,
+                PERFORMANCE,
+                FEDERATION,
+                ECOSYSTEM,
+                UNIVERSAL_COORDINATION,
             ]
             .into_iter()
             .map(|s| s.to_string())
@@ -195,12 +201,12 @@ impl NestGateUniversalAdapter {
                 storage_tiers: vec![TIER_HOT.into(), TIER_WARM.into(), TIER_COLD.into()],
                 zfs_features: vec![
                     FEATURE_POOLED_STORAGE.into(),
-                    CAPABILITY_TIERED_STORAGE.into(),
-                    CAPABILITY_SNAPSHOTS.into(),
-                    CAPABILITY_REPLICATION.into(),
+                    TIERED_STORAGE.into(),
+                    SNAPSHOTS.into(),
+                    REPLICATION.into(),
                     FEATURE_COMPRESSION.into(),
                     FEATURE_DEDUPLICATION.into(),
-                    CAPABILITY_ENCRYPTION.into(),
+                    ENCRYPTION.into(),
                 ],
             },
         };
@@ -332,19 +338,10 @@ impl NestGateUniversalAdapter {
         // Universal API path detection based on capabilities
         for capability in capabilities {
             match capability.as_str() {
-                CAPABILITY_COMPUTE | CAPABILITY_EXECUTION => {
-                    return ENDPOINT_PROVISION_STORAGE.into()
-                }
-                CAPABILITY_ORCHESTRATION | CAPABILITY_COORDINATION => {
-                    return ENDPOINT_COORDINATE_STORAGE.into()
-                }
-                CAPABILITY_SECURITY | CAPABILITY_AUTHENTICATION => {
-                    return ENDPOINT_SECURE_STORAGE.into()
-                }
-                CAPABILITY_AI | CAPABILITY_ML | CAPABILITY_AGENTS => {
-                    return ENDPOINT_OPTIMIZE_STORAGE.into()
-                }
-                STATUS_CUSTOM => return ENDPOINT_COORDINATE.into(),
+                COMPUTE | EXECUTION => return ENDPOINT_PROVISION_STORAGE.into(),
+                ORCHESTRATION | COORDINATION => return ENDPOINT_COORDINATE_STORAGE.into(),
+                SECURITY | AUTHENTICATION => return ENDPOINT_SECURE_STORAGE.into(),
+                AI | ML | AGENTS => return ENDPOINT_OPTIMIZE_STORAGE.into(),
                 _ => continue,
             }
         }
@@ -542,32 +539,55 @@ mod tests {
             PrimalCoordination {
                 enabled: true,
                 endpoint: Some(SERVICE_LOCALHOST_URL.to_string()),
-                capabilities: vec![
-                    CAPABILITY_COMPUTE.to_string(),
-                    CAPABILITY_EXECUTION.to_string(),
-                ],
+                capabilities: vec![COMPUTE.to_string(), EXECUTION.to_string()],
             },
         );
 
-        let adapter = NestGateUniversalAdapter::new(primal_configs)
-            .expect("Failed to create universal adapter in test");
+        let adapter = NestGateUniversalAdapter::new(primal_configs).unwrap_or_else(|e| {
+            tracing::error!(
+                "Expect failed ({}): {:?}",
+                "Failed to create universal adapter in test",
+                e
+            );
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!(
+                    "Operation failed - {}: {:?}",
+                    "{}", "Failed to create universal adapter in test", e
+                ),
+            )
+            .into());
+        });
         assert_eq!(adapter.primal_configs.len(), 1);
         assert!(adapter
             .nestgate_identity
             .capabilities
-            .contains(&CAPABILITY_STORAGE.to_string()));
+            .contains(&STORAGE.to_string()));
     }
 
     #[test]
     fn test_api_path_determination() {
-        let adapter = NestGateUniversalAdapter::new(HashMap::new())
-            .expect("Failed to create universal adapter in test");
+        let adapter = NestGateUniversalAdapter::new(HashMap::new()).unwrap_or_else(|e| {
+            tracing::error!(
+                "Expect failed ({}): {:?}",
+                "Failed to create universal adapter in test",
+                e
+            );
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!(
+                    "Operation failed - {}: {:?}",
+                    "{}", "Failed to create universal adapter in test", e
+                ),
+            )
+            .into());
+        });
 
         let compute_path =
-            adapter.determine_api_path(SERVICE_EXAMPLE_COMPUTE, &[CAPABILITY_COMPUTE.to_string()]);
+            adapter.determine_api_path(SERVICE_EXAMPLE_COMPUTE, &[COMPUTE.to_string()]);
         assert_eq!(compute_path, ENDPOINT_PROVISION_STORAGE);
 
-        let custom_path = adapter.determine_api_path(STATUS_CUSTOM, &[STATUS_CUSTOM.to_string()]);
+        let custom_path = adapter.determine_api_path("custom_service", &["custom".to_string()]);
         assert_eq!(custom_path, ENDPOINT_COORDINATE);
     }
 
@@ -588,8 +608,7 @@ fn create_real_endpoints() -> HashMap<String, String> {
     // Get configurable base URLs from environment
     let api_base = std::env::var("NESTGATE_API_BASE_URL")
         .unwrap_or_else(|_| "http://localhost:8000".to_string());
-    let ws_base =
-        std::env::var("NESTGATE_WS_BASE_URL").unwrap_or_else(|_| "ws://localhost:8080".to_string());
+    let ws_base = nestgate_core::config::defaults::NetworkPortDefaults::get_websocket_base_url();
 
     // Core API endpoints
     endpoints.insert("health".to_string(), format!("{}/health", api_base));
@@ -684,7 +703,7 @@ fn parse_zfs_size(size_str: &str) -> Option<u64> {
 /// Get filesystem capacity as fallback
 fn get_filesystem_capacity() -> Option<u64> {
     use std::fs;
-    if let Ok(metadata) = fs::metadata(".") {
+    if let Ok(_metadata) = fs::metadata(".") {
         // This is a simplified approach - in production you'd use statvfs or similar
         Some(1024 * 1024 * 1024 * 100) // 100GB default
     } else {

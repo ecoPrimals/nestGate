@@ -14,7 +14,7 @@ use uuid;
 use super::types::{
     AutomationEvent, AutomationEventType, AutomationPolicy, DatasetLifecycle, LifecycleStage,
 };
-use nestgate_core::Result;
+use nestgate_core::{types::StorageTier as CoreStorageTier, Result};
 
 /// Update lifecycle stage based on policy rules
 pub async fn update_lifecycle_stage(
@@ -47,6 +47,12 @@ pub async fn update_lifecycle_stage(
             }
         }
     };
+
+    // Keep current stage if no progression needed
+    debug!(
+        "Dataset {} remains in stage {:?} (age: {} days)",
+        lifecycle.dataset_name, lifecycle.lifecycle_stage, age_days
+    );
 
     Ok(())
 }
@@ -155,7 +161,10 @@ pub async fn transition_lifecycle_stage(
             "✅ Transitioned dataset {} from {:?} to {:?}",
             dataset_name, old_stage, new_stage
         );
+    } else {
+        warn!("Dataset {} not found in lifecycle tracker", dataset_name);
     }
+
     Ok(())
 }
 
@@ -170,7 +179,7 @@ pub fn get_or_create_lifecycle(
         // Create new lifecycle tracking
         DatasetLifecycle {
             dataset_name: dataset_name.to_string(),
-            current_tier: nestgate_core::StorageTier::Warm, // Default to warm
+            current_tier: CoreStorageTier::Warm.into(), // Default to warm
             created: SystemTime::now(),
             last_accessed: None,
             access_count: 0,
