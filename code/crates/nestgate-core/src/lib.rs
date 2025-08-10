@@ -91,6 +91,12 @@ pub mod universal_primal_discovery; // Still used by cert/utils
 // Re-export commonly used types
 pub use error::{NestGateError, Result};
 
+// Re-export canonical traits for external use
+pub use traits::{
+    ServiceHealth, ServiceRegistration, UniversalService, UniversalServiceRequest,
+    UniversalServiceResponse, UniversalResponseStatus,
+};
+
 // Re-export adapters for external use
 pub use intelligence_adapter::{
     AIInferenceRequest, AIInferenceResponse, AnalysisResults, AnalysisTask, IntelligenceAdapter,
