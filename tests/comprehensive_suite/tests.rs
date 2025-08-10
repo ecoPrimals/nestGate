@@ -1,5 +1,4 @@
-//! Comprehensive Suite Tests
-
+/// Comprehensive Suite Tests
 use crate::ComprehensiveSuiteConfig;
 
 #[cfg(test)]

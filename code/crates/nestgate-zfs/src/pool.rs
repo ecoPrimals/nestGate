@@ -181,7 +181,6 @@ impl ZfsPoolManager {
                     .insert(pool_info.name.clone(), pool_info);
             }
         }
-
         Ok(())
     }
 
@@ -456,7 +455,7 @@ impl ZfsPoolManager {
             );
         }
 
-        Ok(nestgate_core::zero_copy::optimize_command_output(&output.stdout).into_owned())
+        Ok(String::from_utf8_lossy(&output.stdout).into_owned())
     }
 
     /// Start a scrub operation on a pool

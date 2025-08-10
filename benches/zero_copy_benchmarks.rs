@@ -8,20 +8,8 @@ use std::borrow::Cow;
 use std::sync::Arc;
 use std::time::Duration;
 
-#[derive(Debug, Clone)]
-struct BenchmarkConfig {
-    _timeout: Duration,
-    _buffer_size: usize,
-}
-
-impl Default for BenchmarkConfig {
-    fn default() -> Self {
-        Self {
-            _timeout: Duration::from_secs(30),
-            _buffer_size: 8192,
-        }
-    }
-}
+// Use the unified benchmark configuration system
+use nestgate_core::unified_benchmark_config::{BenchmarkZeroCopySettings, UnifiedBenchmarkConfig};
 
 // Zero-copy string operations using Cow
 fn process_string_zerocopy(input: &str) -> Cow<str> {

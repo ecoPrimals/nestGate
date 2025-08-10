@@ -7,6 +7,10 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use std::collections::HashMap;
 use std::sync::Arc;
 
+// Use the unified benchmark configuration system
+use nestgate_core::unified_benchmark_config::{BenchmarkMockConfiguration, UnifiedBenchmarkConfig};
+
+// Simple mock config for demonstration
 #[derive(Clone)]
 struct MockConfig {
     name: String,

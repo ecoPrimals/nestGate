@@ -7,9 +7,9 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-use super::client::ToadstoolComputeClient;
+use super::adapter::HardwareTuningAdapter;
 use super::types::*;
-use nestgate_core::NestGateError;
+use nestgate_core::{hardware_tuning::TuningResult, NestGateError};
 
 type Result<T> = std::result::Result<T, NestGateError>;
 
@@ -17,7 +17,7 @@ type Result<T> = std::result::Result<T, NestGateError>;
 #[derive(Clone)]
 pub struct HardwareTuningHandler {
     session_manager: Arc<RwLock<HashMap<Uuid, TuningSession>>>,
-    toadstool_client: Arc<ToadstoolComputeClient>,
+    compute_adapter: Arc<HardwareTuningAdapter>,
 }
 
 impl Default for HardwareTuningHandler {
@@ -27,14 +27,11 @@ impl Default for HardwareTuningHandler {
 }
 
 impl HardwareTuningHandler {
-    /// Create a new hardware tuning handler
+    /// Create a new hardware tuning handler with universal adapter
     pub fn new() -> Self {
-        let toadstool_url = std::env::var("NESTGATE_TOADSTOOL_COMPUTE_URL")
-            .unwrap_or_else(|_| "http://toadstool-compute:8080".to_string());
-
         Self {
             session_manager: Arc::new(RwLock::new(HashMap::new())),
-            toadstool_client: Arc::new(ToadstoolComputeClient::new(toadstool_url)),
+            compute_adapter: Arc::new(HardwareTuningAdapter::new()),
         }
     }
 
@@ -74,7 +71,7 @@ impl HardwareTuningHandler {
     /// Auto-tune hardware
     pub async fn auto_tune(&self) -> Result<TuningResult> {
         // Get live hardware metrics
-        let metrics = self.toadstool_client.get_live_hardware_metrics().await?;
+        let metrics = self.compute_adapter.get_live_hardware_metrics().await?;
 
         // Calculate performance improvement based on current metrics
         let performance_improvement = if metrics._cpu_usage > 80.0 {
@@ -109,13 +106,13 @@ impl HardwareTuningHandler {
         Ok(serde_json::json!({
             "service": "hardware_tuning",
             "version": "1.0.0",
-            "toadstool_integration": true
+            "compute_capability_integration": true
         }))
     }
 
     /// Run benchmark
     pub async fn benchmark(&self, benchmark_name: &str) -> Result<BenchmarkResult> {
-        let metrics = self.toadstool_client.get_live_hardware_metrics().await?;
+        let metrics = self.compute_adapter.get_live_hardware_metrics().await?;
 
         let overall_score = match benchmark_name {
             "cpu" => 100.0 - metrics._cpu_usage,

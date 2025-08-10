@@ -8,13 +8,22 @@ repository = "https://github.com/strandgeek/nestgate"
 keywords = ["zfs", "storage", "nas", "automation"]
 
 [features]
-default = ["zfs", "network-integration"]
+default = ["dev-environment-fallbacks"]
 zfs = []
 orchestrator = []
 network-integration = ["nestgate-automation/network-integration"]
 advanced = ["zfs", "network-integration"]
 ai = ["advanced", "network-integration"]  
 performance = ["zfs"]
+
+# Development environment support
+dev-environment-fallbacks = []
+# Hardware detection capabilities  
+hardware-detection = []
+# Container environment support
+container-support = []
+# Verbose development logging
+dev-verbose-logging = []
 
 [dependencies]
 # Core dependencies
@@ -92,3 +101,5 @@ test-log = { version = "0.2", features = ["trace"] }
 # [[bench]]
 # name = "performance_benchmarks"
 # harness = false 
+
+num_cpus = "1.16" 

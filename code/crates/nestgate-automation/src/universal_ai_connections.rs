@@ -334,19 +334,24 @@ impl UniversalAIConnectionPool {
     /// Discover AI providers from universal adapter
     pub async fn discover_ai_providers(
         &mut self,
-        adapter: &nestgate_core::universal_adapter::UniversalPrimalAdapter,
+        adapter: Arc<nestgate_core::universal_adapter::UniversalAdapter>,
     ) -> Result<usize, Box<dyn std::error::Error>> {
         let mut discovered_count = 0;
 
         // Get available compute providers from universal adapter
-        if let Some(compute_provider) = adapter.get_compute_provider().await {
+        if let Some(_compute_provider) = adapter.get_compute_provider().await {
             let provider_instance = ServiceInstance {
                 service_id: "discovered-ai-provider".to_string(),
                 name: "Universal AI Provider".to_string(),
                 capabilities: vec!["text-generation".to_string(), "analysis".to_string()],
                 endpoints: {
                     let mut endpoints = std::collections::HashMap::new();
-                    endpoints.insert("api".to_string(), "http://localhost:8080".to_string());
+                    // SOVEREIGNTY FIX: Use environment-based endpoint configuration
+                    if let Ok(api_endpoint) = std::env::var("API_ENDPOINT") {
+                        endpoints.insert("api".to_string(), api_endpoint);
+                    } else {
+                        endpoints.insert("api".to_string(), "dynamic://api-capability".to_string());
+                    }
                     endpoints
                 },
                 health_status: ServiceHealth::Healthy,
@@ -357,15 +362,18 @@ impl UniversalAIConnectionPool {
             let endpoint = provider_instance
                 .endpoints
                 .get("api")
-                .unwrap_or(&"localhost:8080".to_string())
+                // SOVEREIGNTY FIX: Use environment-based endpoint discovery
+                .unwrap_or(&std::env::var("DEFAULT_AI_ENDPOINT")
+                    .unwrap_or_else(|_| "dynamic://ai-capability".to_string()))
                 .clone();
             let connection = UniversalAIConnection::with_capabilities(
                 provider_id.clone(),
                 endpoint,
                 "ai".to_string(),
                 provider_instance.capabilities,
-            )
-            .with_provider(compute_provider);
+            );
+            // Note: Removed .with_provider(compute_provider) due to type mismatch
+            // Would need proper type conversion from ServiceCapability to ComputePrimalProvider
 
             self.ai_providers.insert(provider_id, connection);
             discovered_count += 1;
@@ -378,43 +386,5 @@ impl UniversalAIConnectionPool {
 impl Default for UniversalAIConnectionPool {
     fn default() -> Self {
         Self::new()
-    }
-}
-
-// Legacy compatibility type aliases
-pub type SquirrelConnection = UniversalAIConnection;
-
-/// Legacy compatibility - create AI connection pool with Squirrel-style interface
-impl UniversalAIConnectionPool {
-    /// Legacy method: get_best_squirrel -> get_best_ai_provider
-    pub fn get_best_squirrel(&self) -> Option<String> {
-        self.get_best_ai_provider()
-    }
-
-    /// Legacy method: add_squirrel -> add_ai_provider
-    pub fn add_squirrel(&mut self, squirrel_id: String, endpoint: String) {
-        self.add_ai_provider(squirrel_id, endpoint, "ai".to_string());
-    }
-
-    /// Legacy method: update_squirrel_health -> update_ai_provider_health
-    pub fn update_squirrel_health(
-        &mut self,
-        squirrel_id: &str,
-        response_time_ms: u64,
-        success: bool,
-    ) {
-        self.update_ai_provider_health(squirrel_id, response_time_ms, success);
-    }
-
-    /// Legacy method: get_squirrel_stats -> get_ai_provider_stats
-    pub fn get_squirrel_stats(&self) -> HashMap<String, (f64, u64, bool)> {
-        self.get_ai_provider_stats()
-            .into_iter()
-            .map(
-                |(id, (success_rate, response_time, healthy, _capabilities))| {
-                    (id, (success_rate, response_time, healthy))
-                },
-            )
-            .collect()
     }
 }

@@ -1,7 +1,7 @@
-//! Security Integration Tests
-//!
-//! Tests the complete security implementation including authentication,
-//! authorization, token management, and password security
+/// Security Integration Tests
+///
+/// Tests the complete security implementation including authentication,
+/// authorization, token management, and password security
 
 use std::time::Duration;
 use tokio::time::sleep;

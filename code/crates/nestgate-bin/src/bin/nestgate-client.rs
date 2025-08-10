@@ -463,10 +463,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Get config path
     let config_path = cli.config.unwrap_or_else(|| {
-        PathBuf::from(env::var("NESTGATE_CONFIG").unwrap_or_else(|_| {
-            use nestgate_core::config::default_config_dir;
-            format!("{}/config.toml", default_config_dir().to_string_lossy())
-        }))
+        let default_path = env::var("NESTGATE_CONFIG").unwrap_or_else(|_| {
+            // Use current directory as fallback
+            "./nestgate-config.toml".to_string()
+        });
+        PathBuf::from(default_path)
     });
 
     // Create client

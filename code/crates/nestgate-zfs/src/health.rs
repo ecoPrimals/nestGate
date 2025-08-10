@@ -123,7 +123,11 @@ impl ZfsHealthMonitor {
         // Start pool health monitoring task
         let pool_monitor_handle = tokio::spawn(async move {
             let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(
-                config.health_monitoring.check_interval_seconds,
+                config
+                    .extensions
+                    .health_monitoring
+                    .health_check_frequency
+                    .as_secs(),
             ));
 
             loop {
@@ -167,7 +171,12 @@ impl ZfsHealthMonitor {
         let dataset_monitor_handle = tokio::spawn(async move {
             let mut interval = tokio::time::interval(
                 tokio::time::Duration::from_secs(
-                    dataset_config.health_monitoring.check_interval_seconds * 2,
+                    dataset_config
+                        .extensions
+                        .health_monitoring
+                        .health_check_frequency
+                        .as_secs()
+                        * 2,
                 ), // Less frequent
             );
 

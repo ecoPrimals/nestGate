@@ -1,6 +1,6 @@
-//! Production Readiness Tests
-//!
-//! Comprehensive test suite to validate production deployment readiness
+/// Production Readiness Tests
+///
+/// Comprehensive test suite to validate production deployment readiness
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -26,7 +26,7 @@ async fn test_system_startup_performance() -> CoreResult<()> {
     let start = std::time::Instant::now();
 
     // Initialize core components
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let zfs_manager = ZfsManager::new(config).await?;
 
     let startup_time = start.elapsed();
@@ -64,7 +64,7 @@ async fn test_api_response_times() -> CoreResult<()> {
 async fn test_memory_usage_limits() -> CoreResult<()> {
     info!("Testing memory usage limits");
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let _zfs_manager = ZfsManager::new(config).await?;
 
     // Get current memory usage (simplified check)
@@ -82,7 +82,7 @@ async fn test_memory_usage_limits() -> CoreResult<()> {
 async fn test_concurrent_operations() -> CoreResult<()> {
     info!("Testing concurrent operations handling");
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let zfs_manager = ZfsManager::new(config).await?;
 
     // Spawn multiple concurrent operations
@@ -122,7 +122,7 @@ async fn test_concurrent_operations() -> CoreResult<()> {
 async fn test_error_handling_robustness() -> CoreResult<()> {
     info!("Testing error handling robustness");
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let zfs_manager = ZfsManager::new(config).await?;
 
     // Test error scenarios
@@ -155,7 +155,7 @@ async fn test_error_handling_robustness() -> CoreResult<()> {
 async fn test_resource_cleanup() -> CoreResult<()> {
     info!("Testing resource cleanup");
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let zfs_manager = ZfsManager::new(config).await?;
 
     // Create temporary resources
@@ -184,7 +184,7 @@ async fn test_resource_cleanup() -> CoreResult<()> {
 async fn test_data_integrity() -> CoreResult<()> {
     info!("Testing data integrity");
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let zfs_manager = ZfsManager::new(config).await?;
 
     // Test data operations maintain integrity
@@ -215,7 +215,7 @@ async fn test_security_validation() -> CoreResult<()> {
         "a".repeat(10000), // Very long input
     ];
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let zfs_manager = ZfsManager::new(config).await?;
 
     for input in malicious_inputs {
@@ -245,7 +245,7 @@ async fn test_security_validation() -> CoreResult<()> {
 async fn test_scalability_limits() -> CoreResult<()> {
     info!("Testing scalability limits");
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let zfs_manager = ZfsManager::new(config).await?;
 
     // Test handling of large numbers of operations
@@ -277,7 +277,7 @@ async fn test_scalability_limits() -> CoreResult<()> {
 async fn test_graceful_shutdown() -> CoreResult<()> {
     info!("Testing graceful shutdown");
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let zfs_manager = ZfsManager::new(config).await?;
 
     // Test shutdown within time limit

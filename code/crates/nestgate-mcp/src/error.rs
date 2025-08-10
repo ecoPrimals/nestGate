@@ -4,11 +4,15 @@
 //! with v2 orchestrator error management
 
 use serde::{Deserialize, Serialize};
-// Removed unused std import
 use std::fmt;
 use std::time::SystemTime;
 
-/// Enhanced Error type integrating enhanced NestGate capabilities
+/// **DEPRECATED**: Use nestgate_core::error::NestGateError instead
+/// This custom error type has been superseded by the unified error system
+#[deprecated(
+    since = "2.1.0",
+    note = "Use nestgate_core::error::NestGateError::Mcp variant instead"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Error {
     pub error_type: ErrorType,
@@ -20,7 +24,11 @@ pub struct Error {
 }
 
 impl Error {
-    /// Create a new error
+    /// **DEPRECATED**: Use nestgate_core::error::NestGateError::Mcp instead
+    #[deprecated(
+        since = "2.1.0",
+        note = "Use nestgate_core::error::NestGateError::Mcp instead"
+    )]
     pub fn new(error_type: ErrorType, message: String) -> Self {
         Self {
             error_type,
@@ -305,8 +313,85 @@ impl From<tokio::time::error::Elapsed> for Error {
     }
 }
 
+impl From<Error> for nestgate_core::NestGateError {
+    fn from(err: Error) -> Self {
+        match err.error_type {
+            ErrorType::Network => {
+                let network_data = nestgate_core::error::NetworkErrorData {
+                    message: err.message.clone(),
+                    endpoint: Some("MCP".to_string()),
+                    operation: "mcp_connection".to_string(),
+                    context: Some({
+                        let mut context_map = std::collections::HashMap::new();
+                        context_map.insert("operation".to_string(), "mcp_connection".to_string());
+                        context_map.insert("component".to_string(), "mcp_network".to_string());
+                        context_map.insert(
+                            "timestamp".to_string(),
+                            std::time::SystemTime::now()
+                                .duration_since(std::time::UNIX_EPOCH)
+                                .unwrap_or_default()
+                                .as_secs()
+                                .to_string(),
+                        );
+                        context_map
+                    }),
+                };
+                nestgate_core::NestGateError::Network(Box::new(network_data))
+            }
+            ErrorType::Auth => {
+                // Use Security error since Auth variant doesn't exist
+                let security_data = nestgate_core::error::SecurityErrorData {
+                    message: err.message.clone(),
+                    operation: "mcp_authentication".to_string(),
+                    resource: Some("MCP".to_string()),
+                    principal: None,
+                    context: Some({
+                        let mut context_map = std::collections::HashMap::new();
+                        context_map.insert("operation".to_string(), "mcp_auth".to_string());
+                        context_map.insert("component".to_string(), "mcp_security".to_string());
+                        context_map
+                    }),
+                };
+                nestgate_core::NestGateError::Security(Box::new(security_data))
+            }
+            ErrorType::Storage => {
+                let zfs_data = nestgate_core::error::ZfsErrorData {
+                    message: err.message,
+                    operation: nestgate_core::error::domain_errors::ZfsOperation::Storage,
+                    pool: Some("MCP Volume".to_string()),
+                    dataset: None,
+                    snapshot: None,
+                    command: None,
+                    error_code: None,
+                    recovery_suggestions: Vec::new(),
+                };
+                nestgate_core::NestGateError::Zfs(Box::new(zfs_data))
+            }
+            ErrorType::Validation => nestgate_core::NestGateError::Validation {
+                field: "mcp_validation".to_string(),
+                message: err.message,
+                current_value: None,
+                expected: None,
+                user_error: true,
+            },
+            ErrorType::InternalError => nestgate_core::NestGateError::Internal {
+                message: err.message,
+                location: None,
+                debug_info: None,
+                is_bug: false,
+            },
+            _ => nestgate_core::NestGateError::Internal {
+                message: err.message,
+                location: None,
+                debug_info: None,
+                is_bug: false,
+            },
+        }
+    }
+}
+
 /// Use universal MCP result type from nestgate-core  
-pub type Result<T> = nestgate_core::McpResult<T>;
+pub type Result<T> = nestgate_core::Result<T>;
 
 /// Error Context for enhanced error tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]

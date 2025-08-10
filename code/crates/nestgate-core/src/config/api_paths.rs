@@ -281,7 +281,6 @@ impl ApiPathsConfig {
         if self.api_version.is_empty() {
             return Err("API version cannot be empty".to_string());
         }
-
         Ok(())
     }
 

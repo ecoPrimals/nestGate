@@ -18,69 +18,8 @@ pub use optimization::{
 };
 pub use prediction::*;
 
-/// Main error type for automation operations
-#[derive(Debug, thiserror::Error)]
-pub enum AutomationError {
-    /// Configuration error
-    #[error("Configuration error: {0}")]
-    Configuration(String),
-
-    /// Discovery error
-    #[error("Discovery error: {0}")]
-    Discovery(String),
-
-    /// Connection error
-    #[error("Connection error: {0}")]
-    Connection(String),
-
-    /// Network error
-    #[error("Network error: {0}")]
-    NetworkError(String),
-
-    /// File analysis error
-    #[error("File analysis error: {0}")]
-    FileAnalysis(String),
-
-    /// Service error
-    #[error("Service error: {0}")]
-    Service(String),
-
-    /// Internal error
-    #[error("Internal error: {0}")]
-    Internal(String),
-
-    /// Analysis related errors
-    #[error("Analysis error: {0}")]
-    AnalysisError(String),
-
-    /// Cache related errors
-    #[error("Cache error: {0}")]
-    Cache(String),
-}
-
-impl From<nestgate_core::NestGateError> for AutomationError {
-    fn from(err: nestgate_core::NestGateError) -> Self {
-        match err {
-            nestgate_core::NestGateError::Internal { message, .. } => {
-                AutomationError::Internal(message)
-            }
-            nestgate_core::NestGateError::Validation { message, .. } => {
-                AutomationError::Configuration(message)
-            }
-            nestgate_core::NestGateError::Network(network_data) => {
-                AutomationError::NetworkError(network_data.error.to_string())
-            }
-            nestgate_core::NestGateError::Configuration { message, .. } => {
-                AutomationError::Configuration(message)
-            }
-            nestgate_core::NestGateError::Security(security_data) => {
-                AutomationError::Service(security_data.error.to_string())
-            }
-            // Handle remaining variants with a catch-all
-            _ => AutomationError::Internal(format!("Unhandled error: {err:?}")),
-        }
-    }
-}
+// **REMOVED**: Deprecated AutomationError enum and all its implementations eliminated
+// All automation errors now use nestgate_core::error::NestGateError with AutomationErrorData
 
 /// Access type for tracking file operations
 #[derive(Debug, Clone, Serialize, Deserialize)]

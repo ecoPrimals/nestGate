@@ -55,11 +55,10 @@ impl IntelligentDatasetManager {
 
         #[cfg(feature = "network-integration")]
         {
-            let ecosystem_discovery = Arc::new(crate::discovery::EcosystemDiscovery::new(
-                &automation_config,
-            )?);
-            let service_connections =
-                Arc::new(RwLock::new(crate::connections::ServiceConnectionPool::new()));
+            let ecosystem_discovery = Arc::new(crate::discovery::EcosystemDiscovery::new()?);
+            let service_connections = Arc::new(RwLock::new(
+                crate::connections::ServiceConnectionPool::new(automation_config.clone()),
+            ));
 
             Ok(Self {
                 config: automation_config,

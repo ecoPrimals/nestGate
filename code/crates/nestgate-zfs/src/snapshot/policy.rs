@@ -3,7 +3,7 @@
 //! Configuration types for snapshot policies including retention rules,
 //! scheduling frequencies, and policy definitions.
 
-use nestgate_core::StorageTier;
+use crate::types::StorageTier;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 

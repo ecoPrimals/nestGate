@@ -109,7 +109,14 @@ mod nas_share_tests {
 
     #[test]
     fn test_nas_share_creation() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().unwrap_or_else(|e| {
+            tracing::error!("Unwrap failed: {:?}", e);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Operation failed: {:?}", e),
+            )
+            .into());
+        });
 
         let share = NasShare {
             name: "test_share".to_string(),
@@ -130,7 +137,14 @@ mod nas_share_tests {
 
     #[test]
     fn test_nas_share_read_only() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().unwrap_or_else(|e| {
+            tracing::error!("Unwrap failed: {:?}", e);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Operation failed: {:?}", e),
+            )
+            .into());
+        });
 
         let share = NasShare {
             name: "readonly_share".to_string(),
@@ -150,7 +164,14 @@ mod nas_share_tests {
 
     #[test]
     fn test_nas_share_multiple_protocols() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().unwrap_or_else(|e| {
+            tracing::error!("Unwrap failed: {:?}", e);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Operation failed: {:?}", e),
+            )
+            .into());
+        });
 
         let share = NasShare {
             name: "multi_protocol_share".to_string(),
@@ -168,7 +189,14 @@ mod nas_share_tests {
 
     #[test]
     fn test_nas_share_no_users() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().unwrap_or_else(|e| {
+            tracing::error!("Unwrap failed: {:?}", e);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Operation failed: {:?}", e),
+            )
+            .into());
+        });
 
         let share = NasShare {
             name: "public_share".to_string(),
@@ -238,7 +266,14 @@ mod nas_server_tests {
 
     #[tokio::test]
     async fn test_nas_server_initialization() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().unwrap_or_else(|e| {
+            tracing::error!("Unwrap failed: {:?}", e);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Operation failed: {:?}", e),
+            )
+            .into());
+        });
 
         let config = NasConfig {
             smb_enabled: false,  // Disable to avoid port conflicts
@@ -260,7 +295,14 @@ mod nas_server_tests {
 
     #[tokio::test]
     async fn test_nas_server_add_share() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().unwrap_or_else(|e| {
+            tracing::error!("Unwrap failed: {:?}", e);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Operation failed: {:?}", e),
+            )
+            .into());
+        });
         let share_dir = temp_dir.path().join("test_share");
 
         let config = NasConfig {
@@ -297,7 +339,14 @@ mod integration_validation_tests {
 
     #[tokio::test]
     async fn test_complete_nas_workflow() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().unwrap_or_else(|e| {
+            tracing::error!("Unwrap failed: {:?}", e);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Operation failed: {:?}", e),
+            )
+            .into());
+        });
 
         // Create NAS configuration
         let config = NasConfig {
@@ -339,7 +388,14 @@ mod integration_validation_tests {
 
     #[test]
     fn test_protocol_combinations() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().unwrap_or_else(|e| {
+            tracing::error!("Unwrap failed: {:?}", e);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Operation failed: {:?}", e),
+            )
+            .into());
+        });
 
         // Test all possible protocol combinations
         let combinations = [

@@ -7,88 +7,33 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
-// Mock structures for benchmarking
-#[derive(Clone, Debug)]
-struct MockService {
-    id: String,
-    name: String,
-    version: String,
-    endpoints: Vec<String>,
-    metadata: HashMap<String, String>,
-}
-
-impl MockService {
-    // Method to use all fields and eliminate dead code
-    fn compute_hash(&self) -> u64 {
-        let id_hash = self.id.len() as u64;
-        let name_hash = self.name.len() as u64 * 2;
-        let version_hash = self.version.len() as u64 * 3;
-        let endpoints_hash = self.endpoints.len() as u64 * 4;
-        let metadata_hash = self.metadata.len() as u64 * 5;
-        id_hash + name_hash + version_hash + endpoints_hash + metadata_hash
-    }
-}
-
-impl Default for MockService {
-    fn default() -> Self {
-        Self {
-            id: Uuid::new_v4().to_string(),
-            name: "nestgate-service".to_string(),
-            version: "1.0.0".to_string(),
-            endpoints: vec!["http://localhost:8080".to_string()],
-            metadata: HashMap::new(),
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-struct MockConfiguration {
-    service_name: String,
-    database_url: String,
-    port: u16,
-    debug_mode: bool,
-    features: Vec<String>,
-    environment: String,
-}
-
-impl MockConfiguration {
-    // Method to use all fields and eliminate dead code
-    fn compute_score(&self) -> u64 {
-        let name_score = self.service_name.len() as u64;
-        let url_score = self.database_url.len() as u64 * 2;
-        let port_score = self.port as u64;
-        let debug_score = if self.debug_mode { 1000 } else { 0 };
-        let features_score = self.features.len() as u64 * 10;
-        let env_score = self.environment.len() as u64 * 3;
-        name_score + url_score + port_score + debug_score + features_score + env_score
-    }
-}
-
-impl Default for MockConfiguration {
-    fn default() -> Self {
-        Self {
-            service_name: "nestgate".to_string(),
-            database_url: "postgresql://localhost/nestgate".to_string(),
-            port: 8080,
-            debug_mode: false,
-            features: vec!["api".to_string(), "web".to_string()],
-            environment: "development".to_string(),
-        }
-    }
-}
+// Use the unified benchmark configuration system
+use nestgate_core::unified_benchmark_config::{
+    BenchmarkMockConfiguration, BenchmarkMockService, UnifiedBenchmarkConfig,
+};
 
 fn bench_service_creation(c: &mut Criterion) {
     c.bench_function("service_creation", |b| {
         b.iter(|| {
             let services: Vec<_> = (0..100)
-                .map(|i| MockService {
+                .map(|i| BenchmarkMockService {
                     id: format!("service_{i}"),
                     name: format!("NestGate Service {i}"),
-                    ..MockService::default()
+                    ..BenchmarkMockService::default()
                 })
                 .collect();
             // Actually use all fields to eliminate dead code
-            let total_hash: u64 = services.iter().map(|s| s.compute_hash()).sum();
+            let total_hash: u64 = services
+                .iter()
+                .map(|s| {
+                    let id_hash = s.id.len() as u64;
+                    let name_hash = s.name.len() as u64 * 2;
+                    let version_hash = s.version.len() as u64 * 3;
+                    let endpoints_hash = s.endpoints.len() as u64 * 4;
+                    let metadata_hash = s.metadata.len() as u64 * 5;
+                    id_hash + name_hash + version_hash + endpoints_hash + metadata_hash
+                })
+                .sum();
             black_box(total_hash);
         })
     });
@@ -98,14 +43,25 @@ fn bench_config_serialization(c: &mut Criterion) {
     c.bench_function("config_serialization", |b| {
         b.iter(|| {
             let configs: Vec<_> = (0..100)
-                .map(|i| MockConfiguration {
+                .map(|i| BenchmarkMockConfiguration {
                     service_name: format!("service_{i}"),
                     port: 8080 + i as u16,
-                    ..MockConfiguration::default()
+                    ..BenchmarkMockConfiguration::default()
                 })
                 .collect();
             // Actually use all fields to eliminate dead code
-            let total_score: u64 = configs.iter().map(|c| c.compute_score()).sum();
+            let total_score: u64 = configs
+                .iter()
+                .map(|c| {
+                    let name_score = c.service_name.len() as u64;
+                    let url_score = c.database_url.len() as u64 * 2;
+                    let port_score = c.port as u64;
+                    let debug_score = if c.debug_mode { 1000 } else { 0 };
+                    let features_score = c.features.len() as u64 * 10;
+                    let env_score = c.environment.len() as u64 * 3;
+                    name_score + url_score + port_score + debug_score + features_score + env_score
+                })
+                .sum();
             black_box(total_score);
         })
     });
@@ -209,12 +165,13 @@ fn bench_concurrent_operations(c: &mut Criterion) {
                             let value = thread_id * 10 + i;
 
                             {
-                                let mut map = data.lock().unwrap();
+                                let mut map =
+                                    nestgate_core::safe_operations::safe_mutex_lock(&data)?;
                                 map.insert(key.clone(), value);
                             }
 
                             {
-                                let map = data.lock().unwrap();
+                                let map = nestgate_core::safe_operations::safe_mutex_lock(&data)?;
                                 black_box(map.get(&key).copied());
                             }
                         }

@@ -69,15 +69,30 @@ mod tests {
     use tempfile::TempDir;
 
     fn create_test_certs() -> (TempDir, TlsConfig) {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().unwrap_or_else(|e| {
+    tracing::error!("Unwrap failed: {:?}", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed: {:?}", e)
+).into())
+});
         let ca_cert = temp_dir.path().join("ca.pem");
         let client_cert = temp_dir.path().join("client.pem");
         let client_key = temp_dir.path().join("key.pem");
 
         // Create dummy cert files
-        std::fs::write(&ca_cert, "-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgAwIBAgIJAJC1\n-----END CERTIFICATE-----").unwrap();
-        std::fs::write(&client_cert, "-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgAwIBAgIJAJC1\n-----END CERTIFICATE-----").unwrap();
-        std::fs::write(&client_key, "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC\n-----END PRIVATE KEY-----").unwrap();
+        std::fs::write(&ca_cert, "-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgAwIBAgIJAJC1\n-----END CERTIFICATE-----").map_err(|e| {
+    tracing::error!("Failed to write file: {}", e);
+    e
+})?;
+        std::fs::write(&client_cert, "-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgAwIBAgIJAJC1\n-----END CERTIFICATE-----").map_err(|e| {
+    tracing::error!("Failed to write file: {}", e);
+    e
+})?;
+        std::fs::write(&client_key, "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC\n-----END PRIVATE KEY-----").map_err(|e| {
+    tracing::error!("Failed to write file: {}", e);
+    e
+})?;
 
         let config = TlsConfig {
             ca_cert,
@@ -142,7 +157,10 @@ mod tests {
         assert!(result.is_err());
         match result {
             Err(Error::ConfigError(msg)) => assert!(msg.contains("TLS configuration not provided")),
-            _ => panic!("Expected ConfigError"),
+            _ => return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    "Expected ConfigError".to_string()
+).into()),
         }
     }
 
@@ -160,7 +178,10 @@ mod tests {
         assert!(result.is_err());
         match result {
             Err(Error::ConfigError(msg)) => assert!(msg.contains("Failed to open CA cert")),
-            _ => panic!("Expected ConfigError"),
+            _ => return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    "Expected ConfigError".to_string()
+).into()),
         }
     }
 

@@ -13,7 +13,7 @@ use tokio::sync::RwLock;
 
 use crate::types::StorageTier;
 use crate::ZfsManager;
-use nestgate_core::{NestGateError, Result};
+use nestgate_core::{error::ApiErrorData, NestGateError, Result};
 use tracing::error;
 use tracing::info;
 use tracing::warn;
@@ -116,7 +116,6 @@ impl ZfsMcpConfig {
                 user_error: true,
             });
         }
-
         Ok(())
     }
 
@@ -146,6 +145,12 @@ impl ZfsMcpConfig {
                 cache_enabled: true,
                 compression: false,
                 replication: 3,
+            },
+            StorageTier::Archive => TierConfig {
+                priority: 4,
+                cache_enabled: false,
+                compression: true,
+                replication: 1,
             },
         }
     }
@@ -260,11 +265,11 @@ impl ZfsMcpStorageProvider {
             }
         } else {
             warn!("Mount not found: {}", mount_id);
-            Err(nestgate_core::NestGateError::api_simple(
-                nestgate_core::ApiError::NotFound {
-                    resource_type: "Resource".to_string(),
-                    resource_id: format!("Mount not found: {}", mount_id),
-                },
+            Err(nestgate_core::NestGateError::api_error(
+                &format!("Mount not found: {}", mount_id),
+                Some("GET"),
+                Some(&format!("/mounts/{mount_id}")),
+                Some(404),
             ))
         }
     }
@@ -348,11 +353,11 @@ impl ZfsMcpStorageProvider {
             }
         } else {
             warn!("Volume not found: {}", volume_id);
-            Err(nestgate_core::NestGateError::api_simple(
-                nestgate_core::ApiError::NotFound {
-                    resource_type: "Resource".to_string(),
-                    resource_id: format!("Volume not found: {}", volume_id),
-                },
+            Err(nestgate_core::NestGateError::api_error(
+                &format!("Volume not found: {}", volume_id),
+                Some("GET"),
+                Some(&format!("/volumes/{volume_id}")),
+                Some(404),
             ))
         }
     }

@@ -43,16 +43,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             info!("🔧 STANDALONE MODE: Full sovereign operation");
             info!("   ✅ Complete ZFS NAS functionality");
             info!("   ✅ Local web UI and direct network access");
-            info!("   💡 Set SONGBIRD_URL to enable distributed features");
+            info!("   💡 Set ORCHESTRATION_ENDPOINT to enable distributed features");
         }
         EcosystemMode::Distributed {
-            songbird_url,
-            beardog_available,
+            orchestration_endpoint,
+            security_capability_available,
         } => {
             info!("🌐 ECOSYSTEM MODE: Enhanced distributed operation");
-            info!("   ✅ Songbird orchestration: {}", songbird_url);
-            if *beardog_available {
-                info!("   ✅ BearDog security: Encrypted federation enabled");
+            info!("   ✅ Orchestration endpoint: {}", orchestration_endpoint);
+            if *security_capability_available {
+                info!("   ✅ Security capability: Encrypted federation enabled");
             }
             info!("   ✅ All standalone features PLUS distributed coordination");
         }
@@ -100,8 +100,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 enum EcosystemMode {
     Standalone,
     Distributed {
-        songbird_url: String,
-        beardog_available: bool,
+        orchestration_endpoint: String,
+        security_capability_available: bool,
     },
 }
 
@@ -112,17 +112,17 @@ struct NetworkConfig {
 }
 
 fn detect_ecosystem_integration() -> EcosystemMode {
-    // Check for Songbird orchestrator
-    if let Ok(songbird_url) = std::env::var("SONGBIRD_URL") {
-        // Check for BearDog security
-        let beardog_available = std::env::var("BEARDOG_URL").is_ok()
-            || std::env::var("BEARDOG_ENABLED")
+    // Check for orchestration capability (replaces hardcoded Songbird)
+    if let Ok(orchestration_endpoint) = std::env::var("ORCHESTRATION_ENDPOINT") {
+        // Check for security capability (replaces hardcoded BearDog)
+        let security_capability_available = std::env::var("SECURITY_ENDPOINT").is_ok()
+            || std::env::var("SECURITY_CAPABILITY_ENABLED")
                 .map(|v| v == "true")
                 .unwrap_or(false);
 
         EcosystemMode::Distributed {
-            songbird_url,
-            beardog_available,
+            orchestration_endpoint,
+            security_capability_available,
         }
     } else {
         EcosystemMode::Standalone
@@ -156,13 +156,19 @@ async fn initialize_networking(
             })
         }
         EcosystemMode::Distributed {
-            songbird_url,
-            beardog_available,
+            orchestration_endpoint,
+            security_capability_available,
         } => {
             info!("🌐 Initializing ecosystem networking...");
 
             // Try ecosystem integration with graceful fallback
-            match try_ecosystem_integration(service_name, songbird_url, *beardog_available).await {
+            match try_ecosystem_integration(
+                service_name,
+                orchestration_endpoint,
+                *security_capability_available,
+            )
+            .await
+            {
                 Ok(config) => {
                     info!("✅ Ecosystem integration successful");
                     Ok(config)
@@ -172,7 +178,7 @@ async fn initialize_networking(
                     warn!("🔄 Gracefully falling back to standalone mode");
 
                     // Fallback to standalone
-                    let api_port = nestgate_core::constants::network::api_port();
+                    let api_port = nestgate_core::constants::configurable::api_port();
                     let bind_addr = format!("0.0.0.0:{api_port}");
 
                     Ok(NetworkConfig {
@@ -187,13 +193,13 @@ async fn initialize_networking(
 
 async fn try_ecosystem_integration(
     _service_name: &str,
-    _songbird_url: &str,
-    _beardog_available: bool,
+    _orchestration_endpoint: &str,
+    _security_capability_available: bool,
 ) -> Result<NetworkConfig, Box<dyn std::error::Error + Send + Sync>> {
     // This is where ecosystem integration would go
     // For now, we'll implement a placeholder that demonstrates the pattern
 
-    info!("🎼 Attempting Songbird connection...");
+    info!("🌐 Attempting orchestration capability connection...");
 
     // Simulate ecosystem check (in real implementation, this would be actual network calls)
     tokio::time::sleep(std::time::Duration::from_millis(
@@ -225,11 +231,11 @@ fn print_help() {
     println!("    -h, --help              Print this help message");
     println!();
     println!("ENVIRONMENT VARIABLES:");
-    println!("    NESTGATE_PORT           API port (default: 8080)");
-    println!("    NESTGATE_SERVICE_NAME   Service identifier (auto-generated if not set)");
-    println!("    SONGBIRD_URL            Enable distributed coordination (optional)");
-    println!("    BEARDOG_URL             Enable encrypted federation (optional)");
-    println!("    BEARDOG_ENABLED         Enable BearDog security features (optional)");
+    println!("    NESTGATE_PORT              API port (default: 8080)");
+    println!("    NESTGATE_SERVICE_NAME      Service identifier (auto-generated if not set)");
+    println!("    ORCHESTRATION_ENDPOINT     Enable distributed coordination (optional)");
+    println!("    SECURITY_ENDPOINT          Enable encrypted federation (optional)");
+    println!("    SECURITY_CAPABILITY_ENABLED  Enable security capability features (optional)");
     println!();
     println!("EXAMPLES:");
     println!("    # Standalone mode (complete NAS functionality)");
@@ -238,11 +244,11 @@ fn print_help() {
     println!("    # Custom port");
     println!("    NESTGATE_PORT=9090 nestgate");
     println!();
-    println!("    # Distributed mode with Songbird orchestration");
-    println!("    SONGBIRD_URL=http://songbird:8080 nestgate");
+    println!("    # Distributed mode with orchestration capability");
+    println!("    ORCHESTRATION_ENDPOINT=http://orchestration:8080 nestgate");
     println!();
-    println!("    # Full ecosystem with BearDog security");
-    println!("    SONGBIRD_URL=http://songbird:8080 BEARDOG_URL=https://beardog:8443 nestgate");
+    println!("    # Full ecosystem with security capability");
+    println!("    ORCHESTRATION_ENDPOINT=http://orchestration:8080 SECURITY_ENDPOINT=https://security:8443 nestgate");
     println!();
     println!("FEATURES:");
     println!("    ✅ ZFS pool management and tiered storage");
@@ -250,7 +256,7 @@ fn print_help() {
     println!("    ✅ Headless API with biomeOS UI integration");
     println!("    ✅ Snapshot and backup management");
     println!("    ✅ Performance monitoring and optimization");
-    println!("    🌐 Distributed coordination (with Songbird orchestration)");
-    println!("    🔐 Encrypted federation (with BearDog security)");
+    println!("    🌐 Distributed coordination (via orchestration capability)");
+    println!("    🔐 Encrypted federation (via security capability)");
     println!();
 }

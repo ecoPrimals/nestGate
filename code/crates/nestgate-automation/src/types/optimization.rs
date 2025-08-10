@@ -83,12 +83,12 @@ impl Default for SizeThresholds {
     fn default() -> Self {
         Self {
             small_file: {
-                use nestgate_core::config::StorageConstants;
-                StorageConstants::from_environment().file_sizes.small_file
+                use nestgate_core::constants::storage::sizes;
+                sizes::SMALL_FILE_BYTES
             },
             large_file: {
-                use nestgate_core::config::StorageConstants;
-                StorageConstants::from_environment().file_sizes.large_file
+                use nestgate_core::constants::storage::sizes;
+                sizes::LARGE_FILE_BYTES
             },
         }
     }

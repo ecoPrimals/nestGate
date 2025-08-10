@@ -8,10 +8,12 @@
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use nestgate_core::{
-    // Memory Pool optimizations
-    memory_pool::{get_4kb_buffer, get_64kb_buffer, get_string_buffer},
-    // UUID Cache optimizations
-    uuid_cache::{get_or_create_uuid, UuidCache},
+    get_4kb_pool,
+    memory_pool::PoolStatistics,
+    performance::PerformanceMetrics,
+    storage::{storage_types::StorageTier, unified_storage::UnifiedStorage},
+    zero_cost::composition::*,
+    NestGateError, Result,
 };
 use std::sync::Arc;
 use uuid::Uuid;
@@ -101,7 +103,7 @@ fn memory_performance_comparison(c: &mut Criterion) {
     // Memory pool optimization (our improvement)
     group.bench_function("memory_pool_allocation", |b| {
         b.iter(|| {
-            let mut buffer = black_box(get_4kb_buffer());
+            let mut buffer = black_box(get_4kb_pool().acquire_mut().await?);
             buffer.clear(); // Clear any existing data
             buffer.extend_from_slice(&[42u8; 1024]);
             black_box(&*buffer);
@@ -220,7 +222,7 @@ fn throughput_validation(c: &mut Criterion) {
                 let _uuid = black_box(get_or_create_uuid(&key));
 
                 // Pooled memory
-                let mut buffer = black_box(get_4kb_buffer());
+                let mut buffer = black_box(get_4kb_pool().acquire_mut().await?);
                 buffer.clear();
                 buffer.extend_from_slice(&[i as u8; 100]);
 
@@ -251,7 +253,7 @@ fn performance_regression_guard(c: &mut Criterion) {
     // Memory pools should show measurable improvement
     group.bench_function("memory_pool_target", |b| {
         b.iter(|| {
-            let mut buffer = black_box(get_4kb_buffer());
+            let mut buffer = black_box(get_4kb_pool().acquire_mut().await?);
             buffer.clear();
             buffer.extend_from_slice(b"performance test data");
             black_box(&*buffer);

@@ -2,7 +2,7 @@
 //!
 //! Configuration structures and defaults for ZFS pool setup operations
 
-use nestgate_core::StorageTier;
+use crate::types::StorageTier;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

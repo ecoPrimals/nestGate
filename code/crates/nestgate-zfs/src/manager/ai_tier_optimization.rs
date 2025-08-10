@@ -6,6 +6,7 @@
 use super::types::{FileAnalysis, TierBenefits};
 use crate::error::{Result, ZfsError};
 use nestgate_automation::{Confidence, TierPrediction, TierType as AutoTierType};
+use nestgate_core::types::StorageTier as CoreStorageTier;
 // Removed unused tracing import
 
 use super::ZfsManager;
@@ -27,10 +28,11 @@ impl ZfsManager {
 
         // Convert core StorageTier to automation TierType
         let tier_type = match recommended_tier {
-            nestgate_core::StorageTier::Hot => AutoTierType::Hot,
-            nestgate_core::StorageTier::Warm => AutoTierType::Warm,
-            nestgate_core::StorageTier::Cold => AutoTierType::Cold,
-            nestgate_core::StorageTier::Cache => AutoTierType::Hot,
+            CoreStorageTier::Hot => AutoTierType::Hot,
+            CoreStorageTier::Warm => AutoTierType::Warm,
+            CoreStorageTier::Cold => AutoTierType::Cold,
+            CoreStorageTier::Cache => AutoTierType::Hot,
+            CoreStorageTier::Archive => AutoTierType::Cold,
         };
 
         Ok(Some(TierPrediction {
@@ -69,41 +71,38 @@ impl ZfsManager {
     }
 
     /// Simple heuristic tier recommendation
-    fn get_heuristic_tier_recommendation(
-        &self,
-        file_analysis: &FileAnalysis,
-    ) -> nestgate_core::StorageTier {
+    fn get_heuristic_tier_recommendation(&self, file_analysis: &FileAnalysis) -> CoreStorageTier {
         // Heuristic tier recommendation based on file characteristics
 
         // System critical files go to hot tier
         if file_analysis.is_system_critical {
-            return nestgate_core::StorageTier::Hot;
+            return CoreStorageTier::Hot;
         }
 
         // High access frequency files go to hot tier
         if file_analysis.estimated_access_frequency > 8.0 {
-            return nestgate_core::StorageTier::Hot;
+            return CoreStorageTier::Hot;
         }
 
         // Large files with low access frequency go to cold tier
         if file_analysis.file_size > 100 * 1024 * 1024
             && file_analysis.estimated_access_frequency < 1.0
         {
-            return nestgate_core::StorageTier::Cold;
+            return CoreStorageTier::Cold;
         }
 
         // Archive and backup files go to cold tier
         if matches!(file_analysis.file_type.as_str(), "archive" | "backup") {
-            return nestgate_core::StorageTier::Cold;
+            return CoreStorageTier::Cold;
         }
 
         // Database files go to hot tier
         if file_analysis.file_type == "database" {
-            return nestgate_core::StorageTier::Hot;
+            return CoreStorageTier::Hot;
         }
 
         // Default to warm tier
-        nestgate_core::StorageTier::Warm
+        CoreStorageTier::Warm
     }
 
     /// Estimate benefits of placing file in recommended tier
@@ -129,6 +128,11 @@ impl ZfsManager {
                 performance_improvement: 50.0, // Fastest
                 cost_savings: -20.0,           // Most expensive
                 storage_efficiency: 5.0,
+            },
+            crate::types::StorageTier::Archive => TierBenefits {
+                performance_improvement: -10.0, // Slower for archival
+                cost_savings: 50.0,             // Very cost-effective
+                storage_efficiency: 60.0,       // Excellent compression
             },
         }
     }

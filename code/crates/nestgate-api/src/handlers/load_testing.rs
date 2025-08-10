@@ -326,7 +326,6 @@ impl LoadTestManager {
 
         // Complete the test
         self.complete_test(test_id, duration_seconds).await?;
-
         Ok(())
     }
 
@@ -357,7 +356,6 @@ impl LoadTestManager {
                 warn!("User session task failed: {:?}", e);
             }
         }
-
         Ok(())
     }
 
@@ -460,7 +458,6 @@ impl LoadTestManager {
                 warn!("Stress test worker failed: {:?}", e);
             }
         }
-
         Ok(())
     }
 
@@ -520,7 +517,6 @@ impl LoadTestManager {
                 warn!("ZFS operations worker failed: {:?}", e);
             }
         }
-
         Ok(())
     }
 
@@ -599,7 +595,6 @@ impl LoadTestManager {
         if let Err(e) = storage_result {
             warn!("Storage operations test failed: {}", e);
         }
-
         Ok(())
     }
 
@@ -617,7 +612,6 @@ impl LoadTestManager {
 
         // Custom test implementation based on parameters
         // This can be extended based on specific requirements
-
         Ok(())
     }
 
