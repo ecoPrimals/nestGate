@@ -119,7 +119,6 @@ impl PerformanceAnalytics {
         });
 
         self.collection_task = Some(collection_task);
-        Ok(())
     }
 
     /// Stop performance monitoring

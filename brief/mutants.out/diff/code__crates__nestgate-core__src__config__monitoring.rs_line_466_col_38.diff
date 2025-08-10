@@ -1,0 +1,21 @@
+--- code/crates/nestgate-core/src/config/monitoring.rs
++++ replace || with && in AlertThresholds::validate
+@@ -458,17 +458,17 @@
+         if self.cpu_threshold < 0.0 || self.cpu_threshold > 100.0 {
+             return Err(ERROR_CPU_THRESHOLD_RANGE.to_string());
+         }
+ 
+         if self.memory_threshold < 0.0 || self.memory_threshold > 100.0 {
+             return Err(ERROR_MEMORY_THRESHOLD_RANGE.to_string());
+         }
+ 
+-        if self.disk_threshold < 0.0 || self.disk_threshold > 100.0 {
++        if self.disk_threshold < 0.0 && /* ~ changed by cargo-mutants ~ */ self.disk_threshold > 100.0 {
+             return Err(ERROR_DISK_THRESHOLD_RANGE.to_string());
+         }
+ 
+         if self.latency_threshold < 0.0 {
+             return Err(ERROR_LATENCY_THRESHOLD_POSITIVE.to_string());
+         }
+ 
+         if self.error_rate_threshold < 0.0 || self.error_rate_threshold > 100.0 {

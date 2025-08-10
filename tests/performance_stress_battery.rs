@@ -1,8 +1,7 @@
-//! 🚀 NestGate Performance Stress Battery
-//!
-//! Comprehensive performance testing suite that validates system performance
-//! under various stress conditions and load patterns.
-
+/// 🚀 NestGate Performance Stress Battery
+///
+/// Comprehensive performance testing suite that validates system performance
+/// under various stress conditions and load patterns.
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -10,29 +9,14 @@ use std::sync::Arc;
 use std::time::Instant;
 use tokio::time::{sleep, Duration};
 
-/// Performance test configuration
-#[derive(Debug, Clone)]
-pub struct PerformanceConfig {
-    pub test_duration_seconds: u64,
-    pub concurrent_threads: usize,
-    pub target_ops_per_second: u64,
-    pub memory_stress_enabled: bool,
-    pub cpu_stress_enabled: bool,
-    pub io_stress_enabled: bool,
-}
+// Use the unified benchmark configuration system for performance testing
+use nestgate_core::unified_benchmark_config::{
+    BenchmarkPerformanceSettings, BenchmarkResults as UnifiedBenchmarkResults,
+    UnifiedBenchmarkConfig,
+};
 
-impl Default for PerformanceConfig {
-    fn default() -> Self {
-        Self {
-            test_duration_seconds: 60,
-            concurrent_threads: 50,
-            target_ops_per_second: 1000,
-            memory_stress_enabled: true,
-            cpu_stress_enabled: true,
-            io_stress_enabled: true,
-        }
-    }
-}
+// **DEPRECATED CONFIGURATION REMOVED**
+// Use UnifiedBenchmarkConfig with BenchmarkPerformanceSettings for all performance testing.
 
 /// Performance test results with detailed metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]

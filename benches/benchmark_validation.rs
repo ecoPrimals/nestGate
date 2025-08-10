@@ -116,7 +116,7 @@ fn validate_uuid_cache_if_exists(c: &mut Criterion) {
         }
 
         fn get_or_create(&self, key: &str) -> Arc<Uuid> {
-            let mut cache = self.cache.lock().unwrap();
+            let mut cache = nestgate_core::safe_operations::safe_mutex_lock(&self.cache)?;
             cache
                 .entry(key.to_string())
                 .or_insert_with(|| Arc::new(Uuid::new_v4()))
@@ -175,7 +175,7 @@ fn validate_memory_pool_concept(c: &mut Criterion) {
         }
 
         fn get_buffer(&self) -> Vec<u8> {
-            let mut buffers = self.buffers.lock().unwrap();
+            let mut buffers = nestgate_core::safe_operations::safe_mutex_lock(&self.buffers)?;
             if let Some(mut buf) = buffers.pop() {
                 buf.clear();
                 buf.reserve(self.size);
@@ -186,7 +186,7 @@ fn validate_memory_pool_concept(c: &mut Criterion) {
         }
 
         fn return_buffer(&self, buffer: Vec<u8>) {
-            let mut buffers = self.buffers.lock().unwrap();
+            let mut buffers = nestgate_core::safe_operations::safe_mutex_lock(&self.buffers)?;
             if buffers.len() < 10 {
                 // Limit pool size
                 buffers.push(buffer);

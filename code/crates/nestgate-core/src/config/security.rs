@@ -107,7 +107,7 @@ pub struct SecurityConfig {
     /// Authentication method to use
     pub auth_method: String,
 
-    /// Encryption algorithm preference (for external providers like BearDog)
+    /// Encryption algorithm preference (for external security providers)
     /// Note: NestGate itself does not perform encryption - this is a hint for external systems
     pub encryption_algorithm: String,
 
@@ -235,8 +235,8 @@ pub struct NetworkSecurityConfig {
 /// Service endpoint configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EndpointConfig {
-    /// Songbird service endpoints
-    pub songbird_endpoints: Vec<String>,
+    /// Orchestration service endpoints (discovered via universal adapter)
+    pub orchestration_endpoints: Vec<String>,
 
     /// Discovery service endpoints
     pub discovery_endpoints: Vec<String>,
@@ -390,8 +390,8 @@ impl Default for NetworkSecurityConfig {
 impl Default for EndpointConfig {
     fn default() -> Self {
         Self {
-            songbird_endpoints: vec![],  // Must be configured explicitly
-            discovery_endpoints: vec![], // Must be configured explicitly
+            orchestration_endpoints: vec![], // Discovered via universal adapter
+            discovery_endpoints: vec![],     // Must be configured explicitly
             health_endpoints: HashMap::new(),
             default_ports: {
                 let mut ports = HashMap::new();
@@ -502,9 +502,10 @@ impl SecurityConfig {
             if !self.rbac.roles.contains_key(&self.rbac.default_role) {
                 return Err(ERROR_RBAC_DEFAULT_ROLE_MISSING.to_string());
             }
+            Ok(())
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 }
 

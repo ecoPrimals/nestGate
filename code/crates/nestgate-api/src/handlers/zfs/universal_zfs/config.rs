@@ -11,13 +11,21 @@ use std::time::Duration;
 /// Main configuration for ZFS service
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsServiceConfig {
+    /// Name of the ZFS service instance
     pub service_name: String,
+    /// Version of the ZFS service
     pub service_version: String,
+    /// Backend configuration for ZFS operations
     pub backend: ZfsBackend,
+    /// Fail-safe and resilience configuration
     pub fail_safe: FailSafeConfig,
+    /// Observability and monitoring configuration
     pub observability: ObservabilityConfig,
+    /// Performance optimization settings
     pub performance: PerformanceConfig,
+    /// Security configuration and policies
     pub security: SecurityConfig,
+    /// Custom properties for service configuration
     pub custom_properties: HashMap<String, String>,
 }
 
@@ -96,12 +104,15 @@ pub enum ZfsBackend {
     LoadBalanced(Vec<ZfsBackend>),
     /// Use primary backend with fallback
     Failover {
+        /// Primary backend to use first
         primary: Box<ZfsBackend>,
+        /// Fallback backend if primary fails
         fallback: Box<ZfsBackend>,
     },
 }
 
 impl ZfsBackend {
+    /// Validates the ZFS backend configuration
     pub fn validate(&self) -> Result<(), String> {
         match self {
             ZfsBackend::Auto | ZfsBackend::Native | ZfsBackend::Mock => Ok(()),
@@ -127,8 +138,11 @@ impl ZfsBackend {
 /// Remote service configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RemoteConfig {
+    /// Remote service endpoint URL
     pub endpoint: String,
+    /// Request timeout duration
     pub timeout: Duration,
+    /// Authentication configuration (optional)
     pub auth: Option<AuthConfig>,
 }
 
@@ -147,19 +161,33 @@ impl RemoteConfig {
 /// Authentication configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AuthConfig {
+    /// No authentication required
     None,
+    /// API key authentication
     ApiKey(String),
+    /// Bearer token authentication
     Bearer(String),
-    Basic { username: String, password: String },
+    /// Basic username/password authentication
+    Basic {
+        /// Username for basic auth
+        username: String,
+        /// Password for basic auth
+        password: String,
+    },
 }
 
 /// Fail-safe configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FailSafeConfig {
+    /// Circuit breaker configuration
     pub circuit_breaker: CircuitBreakerConfig,
+    /// Retry policy configuration
     pub retry_policy: RetryPolicy,
+    /// Timeout configuration
     pub timeout: TimeoutConfig,
+    /// Enable graceful degradation on failures
     pub graceful_degradation: bool,
+    /// Enable fallback mechanisms
     pub fallback_enabled: bool,
 }
 
@@ -203,9 +231,13 @@ impl FailSafeConfig {
 /// Circuit breaker configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CircuitBreakerConfig {
+    /// Number of failures before opening the circuit
     pub failure_threshold: u32,
+    /// Time to wait before attempting recovery
     pub recovery_timeout: Duration,
+    /// Maximum calls allowed in half-open state
     pub half_open_max_calls: u32,
+    /// Whether circuit breaker is enabled
     pub enabled: bool,
 }
 
@@ -262,10 +294,15 @@ impl CircuitBreakerConfig {
 /// Retry policy configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RetryPolicy {
+    /// Maximum number of retry attempts
     pub max_attempts: u32,
+    /// Initial delay before first retry
     pub initial_delay: Duration,
+    /// Maximum delay between retries
     pub max_delay: Duration,
+    /// Multiplier for exponential backoff
     pub backoff_multiplier: f64,
+    /// Whether retry policy is enabled
     pub enabled: bool,
 }
 
@@ -326,9 +363,13 @@ impl RetryPolicy {
 /// Timeout configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeoutConfig {
+    /// Timeout for ZFS operations
     pub operation_timeout: Duration,
+    /// Timeout for establishing connections
     pub connection_timeout: Duration,
+    /// Timeout for read operations
     pub read_timeout: Duration,
+    /// Timeout for write operations
     pub write_timeout: Duration,
 }
 
@@ -373,10 +414,15 @@ impl TimeoutConfig {
 /// Observability configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ObservabilityConfig {
+    /// Enable metrics collection
     pub metrics_enabled: bool,
+    /// Enable distributed tracing
     pub tracing_enabled: bool,
+    /// Interval between health checks
     pub health_check_interval: Duration,
+    /// Logging level (trace, debug, info, warn, error)
     pub log_level: String,
+    /// Enable structured JSON logging
     pub structured_logging: bool,
 }
 
@@ -426,10 +472,15 @@ impl ObservabilityConfig {
 /// Performance configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceConfig {
+    /// Size of the connection pool
     pub connection_pool_size: u32,
+    /// Maximum number of concurrent operations
     pub max_concurrent_operations: u32,
+    /// Enable caching for improved performance
     pub cache_enabled: bool,
+    /// Cache time-to-live duration
     pub cache_ttl: Duration,
+    /// Batch size for bulk operations
     pub batch_size: u32,
 }
 
@@ -486,9 +537,13 @@ impl PerformanceConfig {
 /// Security configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityConfig {
+    /// Enable TLS encryption
     pub tls_enabled: bool,
+    /// Require authentication for access
     pub auth_required: bool,
+    /// Rate limiting configuration
     pub rate_limiting: RateLimitConfig,
+    /// List of allowed CORS origins
     pub allowed_origins: Vec<String>,
 }
 
@@ -528,9 +583,13 @@ impl SecurityConfig {
 /// Rate limiting configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RateLimitConfig {
+    /// Enable rate limiting
     pub enabled: bool,
+    /// Maximum requests per second
     pub requests_per_second: u32,
+    /// Burst capacity for traffic spikes
     pub burst_size: u32,
+    /// Time window for rate limiting
     pub window: Duration,
 }
 

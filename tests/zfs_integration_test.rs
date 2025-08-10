@@ -1,9 +1,9 @@
-//! ZFS Integration Test
-//!
-//! Real integration tests for ZFS functionality
-
+/// ZFS Integration Test
+///
+/// Real integration tests for ZFS functionality
 use nestgate_core::{NestGateError, Result};
-use nestgate_zfs::{config::ZfsConfig, ZfsManager};
+use nestgate_core::unified_config_consolidation::UnifiedZfsConfig;
+use nestgate_zfs::ZfsManager;
 use std::sync::Arc;
 use tokio::time::Duration;
 
@@ -12,7 +12,7 @@ async fn test_zfs_integration() -> Result<()> {
     println!("🚀 Starting ZFS integration test");
 
     // Create ZFS manager
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let manager = match ZfsManager::new(config).await {
         Ok(m) => m,
         Err(e) if e.to_string().contains("ZFS modules cannot be auto-loaded") => {
@@ -50,7 +50,7 @@ async fn test_zfs_integration() -> Result<()> {
 async fn test_zfs_pool_operations() -> Result<()> {
     println!("🔄 Testing ZFS pool operations");
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let manager = ZfsManager::new(config).await?;
 
     // Test pool manager operations
@@ -67,7 +67,7 @@ async fn test_zfs_pool_operations() -> Result<()> {
 async fn test_zfs_dataset_operations() -> Result<()> {
     println!("🗂️ Testing ZFS dataset operations");
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let manager = ZfsManager::new(config).await?;
 
     // Test dataset creation
@@ -89,7 +89,7 @@ async fn test_zfs_dataset_operations() -> Result<()> {
 async fn test_zfs_performance_monitoring() -> Result<()> {
     println!("📈 Testing ZFS performance monitoring");
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let manager = ZfsManager::new(config).await?;
 
     // Test performance metrics
@@ -111,7 +111,7 @@ async fn test_zfs_performance_monitoring() -> Result<()> {
 async fn test_zfs_concurrent_operations() -> Result<()> {
     println!("🔄 Testing concurrent ZFS operations");
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let manager = Arc::new(ZfsManager::new(config).await?);
 
     // Test concurrent operations
@@ -189,7 +189,7 @@ async fn test_zfs_error_handling() -> Result<()> {
 async fn test_zfs_timeout_handling() -> Result<()> {
     println!("⏱️ Testing ZFS timeout handling");
 
-    let config = ZfsConfig::default();
+    let config = UnifiedZfsConfig::default();
     let manager = ZfsManager::new(config).await?;
 
     // Test with timeout

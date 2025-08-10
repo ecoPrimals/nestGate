@@ -30,9 +30,9 @@ impl Default for NasConfig {
             http_enabled: true,
             bind_address: std::env::var("NESTGATE_NAS_BIND_ADDRESS")
                 .unwrap_or_else(|_| "192.168.1.100".to_string()),
-            smb_port: nestgate_core::constants::network::smb_port(),
-            nfs_port: nestgate_core::constants::network::nfs_port(),
-            http_port: nestgate_core::constants::network::api_port(),
+            smb_port: nestgate_core::constants::network::ports::SMB,
+            nfs_port: nestgate_core::constants::network::ports::NFS,
+            http_port: nestgate_core::constants::network::ports::API_DEFAULT,
             share_root: PathBuf::from("/nas/shares"),
         }
     }
@@ -85,9 +85,9 @@ impl NasServer {
             tokio::fs::create_dir_all(&self.config.share_root)
                 .await
                 .map_err(|e| nestgate_core::NestGateError::Io {
-                    operation: "operation".to_string(),
+                    operation: "create_share_root".to_string(),
                     error_message: e.to_string(),
-                    resource: None,
+                    resource: Some(self.config.share_root.to_string_lossy().to_string()),
                     retryable: true,
                 })?;
             info!(
@@ -155,9 +155,9 @@ impl NasServer {
         if !share.path.exists() {
             tokio::fs::create_dir_all(&share.path).await.map_err(|e| {
                 nestgate_core::NestGateError::Io {
-                    operation: "operation".to_string(),
+                    operation: "create_share_directory".to_string(),
                     error_message: e.to_string(),
-                    resource: None,
+                    resource: Some(share.path.to_string_lossy().to_string()),
                     retryable: true,
                 }
             })?;
@@ -210,9 +210,9 @@ impl SmbServer {
         let bind_addr = format!("{}:{}", self.config.bind_address, self.config.smb_port);
         self.listener = Some(TcpListener::bind(&bind_addr).await.map_err(|e| {
             nestgate_core::NestGateError::Io {
-                operation: "operation".to_string(),
+                operation: "bind_smb_listener".to_string(),
                 error_message: e.to_string(),
-                resource: None,
+                resource: Some(bind_addr.clone()),
                 retryable: true,
             }
         })?);
@@ -224,7 +224,6 @@ impl SmbServer {
             // For now, just log connections
             info!("SMB server ready to accept connections");
         });
-
         Ok(())
     }
 
@@ -276,9 +275,9 @@ impl HttpServer {
         let bind_addr = format!("{}:{}", self.config.bind_address, self.config.http_port);
         self.listener = Some(TcpListener::bind(&bind_addr).await.map_err(|e| {
             nestgate_core::NestGateError::Io {
-                operation: "operation".to_string(),
+                operation: "bind_http_listener".to_string(),
                 error_message: e.to_string(),
-                resource: None,
+                resource: Some(bind_addr.clone()),
                 retryable: true,
             }
         })?);
@@ -288,7 +287,6 @@ impl HttpServer {
         tokio::spawn(async move {
             info!("HTTP file server ready");
         });
-
         Ok(())
     }
 

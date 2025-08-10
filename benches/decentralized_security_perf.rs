@@ -44,12 +44,12 @@ impl DistributedSecurityManager {
     }
 
     fn authenticate(&self, token: &str) -> bool {
-        let contexts = self.contexts.lock().unwrap();
+        let contexts = nestgate_core::safe_operations::safe_mutex_lock(&self.contexts)?;
         contexts.values().any(|ctx| ctx.auth_token == token)
     }
 
     fn authorize(&self, user_id: &str, permission: &str) -> bool {
-        let contexts = self.contexts.lock().unwrap();
+        let contexts = nestgate_core::safe_operations::safe_mutex_lock(&self.contexts)?;
         if let Some(ctx) = contexts.get(user_id) {
             ctx.permissions.contains(&permission.to_string())
         } else {
@@ -58,7 +58,7 @@ impl DistributedSecurityManager {
     }
 
     fn add_context(&self, user_id: String, context: SecurityContext) {
-        let mut contexts = self.contexts.lock().unwrap();
+        let mut contexts = nestgate_core::safe_operations::safe_mutex_lock(&self.contexts)?;
         contexts.insert(user_id, context);
     }
 }

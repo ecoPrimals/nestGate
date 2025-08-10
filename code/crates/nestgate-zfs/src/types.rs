@@ -4,9 +4,8 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-use std::time::Duration;
-use std::time::SystemTime;
+use std::path::PathBuf;
+use std::time::{Duration, SystemTime};
 
 /// Compression algorithms supported by ZFS
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -60,35 +59,8 @@ impl DatasetProperty {
     }
 }
 
-/// Storage tier for data classification
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum StorageTier {
-    /// Hot storage for frequently accessed data
-    Hot,
-    /// Warm storage for moderately accessed data
-    Warm,
-    /// Cold storage for infrequently accessed data
-    Cold,
-    /// Cache storage for ultra-fast access
-    Cache,
-}
-
-impl Default for StorageTier {
-    fn default() -> Self {
-        Self::Warm
-    }
-}
-
-impl std::fmt::Display for StorageTier {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Hot => write!(f, "hot"),
-            Self::Warm => write!(f, "warm"),
-            Self::Cold => write!(f, "cold"),
-            Self::Cache => write!(f, "cache"),
-        }
-    }
-}
+// Re-export canonical StorageTier from nestgate-core for unified type system
+pub use nestgate_core::types::StorageTier;
 
 /// ZFS capabilities and feature support
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -160,34 +132,15 @@ impl Default for TierPerformanceTarget {
     }
 }
 
-// Conversion between nestgate-core::StorageTier and crate::types::StorageTier
-impl From<nestgate_core::StorageTier> for StorageTier {
-    fn from(tier: nestgate_core::StorageTier) -> Self {
-        match tier {
-            nestgate_core::StorageTier::Hot => Self::Hot,
-            nestgate_core::StorageTier::Warm => Self::Warm,
-            nestgate_core::StorageTier::Cold => Self::Cold,
-            nestgate_core::StorageTier::Cache => Self::Cache,
-        }
-    }
-}
-
-impl From<StorageTier> for nestgate_core::StorageTier {
-    fn from(tier: StorageTier) -> Self {
-        match tier {
-            StorageTier::Hot => Self::Hot,
-            StorageTier::Warm => Self::Warm,
-            StorageTier::Cold => Self::Cold,
-            StorageTier::Cache => Self::Cache,
-        }
-    }
-}
+// Note: From<StorageTier> for nestgate_core::types::StorageTier is already implemented above
+// using the full type path. This duplicate implementation is removed to avoid conflicts.
 
 // Advanced features types
 
 /// Advanced configuration for ZFS features
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct AdvancedConfig {
+// REMOVED: AdvancedConfig eliminated - use ZfsConfig.extensions.advanced instead
+pub struct _RemovedAdvancedConfig {
     /// Enable compression analysis
     pub compression_analysis: bool,
     /// Enable cache performance monitoring

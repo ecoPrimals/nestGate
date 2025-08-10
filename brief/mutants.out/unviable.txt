@@ -1,0 +1,4 @@
+code/crates/nestgate-core/src/optimized/zero_copy_traits.rs:560:9: replace Config<'a>::data -> &ConfigData with Box::leak(Box::new(Default::default()))
+code/crates/nestgate-core/src/service_discovery.rs:264:9: replace ServiceRegistry::select_service -> Option<ServiceEndpoint> with Some(Default::default())
+code/crates/nestgate-core/src/traits_root/health.rs:129:9: replace HealthState::unhealthy -> HealthStateBuilder with Default::default()
+code/crates/nestgate-core/src/universal_storage/types.rs:453:9: replace StorageLoadBalancer::select_backend -> Result<StorageBackend> with Ok(Default::default())

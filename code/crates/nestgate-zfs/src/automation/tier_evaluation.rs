@@ -8,7 +8,8 @@ use std::time::SystemTime;
 // Removed unused tracing import
 
 use super::types::{AutomationPolicy, DatasetMetadata};
-use nestgate_core::{Result, StorageTier};
+use crate::types::StorageTier;
+use nestgate_core::Result;
 use tracing::debug;
 use tracing::info;
 
@@ -162,6 +163,9 @@ pub async fn evaluate_tier_by_intelligent_rules(
                     StorageTier::Cache => {
                         tier_score.add_hot_weight(0.3, &format!("Cache Policy {policy_id}"))
                     }
+                    StorageTier::Archive => {
+                        tier_score.add_cold_weight(0.1, &format!("Archive Policy {policy_id}"))
+                    }
                 }
             }
         }
@@ -178,6 +182,7 @@ pub async fn evaluate_tier_by_intelligent_rules(
             StorageTier::Warm => "Warm",
             StorageTier::Cold => "Cold",
             StorageTier::Cache => "Cache",
+            StorageTier::Archive => "Archive",
         },
         tier_score.hot_score,
         tier_score.warm_score,

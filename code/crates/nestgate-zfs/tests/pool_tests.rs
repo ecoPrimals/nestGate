@@ -74,7 +74,14 @@ mod pool_manager_tests {
 
         // Should always succeed with valid structure
         assert!(result.is_ok(), "Should be able to get overall status");
-        let status = result.unwrap();
+        let status = result.unwrap_or_else(|e| {
+            tracing::error!("Unwrap failed: {:?}", e);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Operation failed: {:?}", e),
+            )
+            .into());
+        });
 
         // Verify status structure
         // These are always true for unsigned integers, but kept for documentation
@@ -159,7 +166,14 @@ mod pool_manager_tests {
             "Should fail to create pool with invalid device"
         );
 
-        let error = result.err().unwrap();
+        let error = result.err().unwrap_or_else(|e| {
+            tracing::error!("Unwrap failed: {:?}", e);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Operation failed: {:?}", e),
+            )
+            .into());
+        });
         println!("Pool creation failed as expected: {error}");
     }
 
@@ -271,7 +285,14 @@ mod concurrent_operations_tests {
             let result = task.await;
             assert!(result.is_ok(), "Concurrent operation should not panic");
 
-            match result.unwrap() {
+            match result.unwrap_or_else(|e| {
+                tracing::error!("Unwrap failed: {:?}", e);
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("Operation failed: {:?}", e),
+                )
+                .into());
+            }) {
                 Ok(_) => println!("Concurrent operation succeeded"),
                 Err(_) => println!("Concurrent operation failed as expected"),
             }

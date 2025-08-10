@@ -29,7 +29,7 @@ pub async fn auto_tune(
 ) -> std::result::Result<ResponseJson<HardwareTuningResponse>, StatusCode> {
     let service = &state.hardware_tuning_service;
 
-    info!("🚀 Auto-tuning hardware with live Toadstool integration");
+    info!("🚀 Auto-tuning hardware with live compute integration");
 
     match service.auto_tune().await {
         Ok(result) => {
@@ -55,7 +55,7 @@ pub async fn auto_tune(
                 },
                 recommendations: TuningRecommendations {
                     cpu_recommendations: vec![
-                        "Hardware tuning completed with live Toadstool data".to_string(),
+                        "Hardware tuning completed with live compute data".to_string(),
                     ],
                     memory_recommendations: vec![
                         "Consider monitoring performance metrics".to_string(),
@@ -79,7 +79,7 @@ pub async fn get_config(
 ) -> std::result::Result<ResponseJson<serde_json::Value>, StatusCode> {
     let service = &state.hardware_tuning_service;
 
-    info!("📊 Getting hardware configuration with live Toadstool data");
+    info!("📊 Getting hardware configuration with live compute data");
 
     match service.get_config().await {
         Ok(config) => {
@@ -99,17 +99,17 @@ pub async fn get_profiles(
 ) -> std::result::Result<ResponseJson<serde_json::Value>, StatusCode> {
     let service = &state.hardware_tuning_service;
 
-    info!("📋 Getting tuning profiles from Toadstool");
+    info!("📋 Getting tuning profiles from compute service");
 
     match service.get_profiles().await {
         Ok(profiles) => {
             info!(
-                "✅ Retrieved {} tuning profiles from Toadstool",
+                "✅ Retrieved {} tuning profiles from compute service",
                 profiles.len()
             );
             Ok(ResponseJson(serde_json::json!({
                 "profiles": profiles,
-                "source": "toadstool_live_data",
+                "source": "compute_service_data",
                 "timestamp": chrono::Utc::now()
             })))
         }
@@ -132,7 +132,7 @@ pub async fn run_benchmark(
         .unwrap_or("overall");
 
     info!(
-        "🏁 Running live benchmark '{}' with Toadstool resources",
+        "🏁 Running live benchmark '{}' with compute resources",
         benchmark_name
     );
 
@@ -145,7 +145,7 @@ pub async fn run_benchmark(
 
             Ok(ResponseJson(serde_json::json!({
                 "benchmark_result": result,
-                "source": "toadstool_live_compute",
+                "source": "compute_service_live",
                 "timestamp": chrono::Utc::now()
             })))
         }
@@ -181,7 +181,7 @@ pub async fn generate_extraction_lock(
 
     match service.generate_extraction_lock(source, destination).await {
         Ok(lock) => {
-            info!("✅ Extraction lock generated with BearDog cryptographic proof");
+            info!("✅ Extraction lock generated with cryptographic proof");
             Ok(ResponseJson(lock))
         }
         Err(e) => {
@@ -216,7 +216,7 @@ pub async fn verify_extraction_lock(
             Ok(ResponseJson(serde_json::json!({
                 "valid": valid,
                 "lock_id": lock_id,
-                "verified_by": "beardog_cryptographic_proof",
+                "verified_by": "cryptographic_proof",
                 "timestamp": chrono::Utc::now()
             })))
         }

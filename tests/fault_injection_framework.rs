@@ -1,14 +1,13 @@
-//! Fault Injection Testing Framework
-//!
-//! This module implements comprehensive fault injection testing to validate system resilience:
-//! - Network failures and partitions
-//! - Disk failures and I/O errors
-//! - Memory pressure and OOM conditions
-//! - CPU exhaustion scenarios
-//! - ZFS-specific failures
-//! - Service dependency failures
-//! - Time-based fault scenarios
-
+/// Fault Injection Testing Framework
+///
+/// This module implements comprehensive fault injection testing to validate system resilience:
+/// - Network failures and partitions
+/// - Disk failures and I/O errors
+/// - Memory pressure and OOM conditions
+/// - CPU exhaustion scenarios
+/// - ZFS-specific failures
+/// - Service dependency failures
+/// - Time-based fault scenarios
 use rand::{thread_rng, Rng};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};

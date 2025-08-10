@@ -1,0 +1,48 @@
+use nestgate_core::smart_abstractions::prelude::*;
+/// **WORKFLOWS MODULE**
+/// Workflow engine configuration - extracted from monolithic config
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::time::Duration;
+
+/// Workflow settings
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkflowSettings {
+    /// Enable workflows
+    pub enabled: bool,
+    /// Workflow definitions
+    pub workflows: HashMap<String, WorkflowDefinition>,
+    /// Default timeout
+    pub default_timeout: Duration,
+    /// Max concurrent workflows
+    pub max_concurrent: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkflowDefinition {
+    /// Workflow name
+    pub name: String,
+    /// Workflow enabled
+    pub enabled: bool,
+    /// Workflow steps
+    pub steps: Vec<String>,
+    /// Workflow timeout
+    pub timeout: Duration,
+}
+
+impl SmartDefault for WorkflowSettings {
+    fn smart_default() -> Self {
+        Self {
+            enabled: true,
+            workflows: HashMap::smart_default(),
+            default_timeout: Duration::from_secs(300),
+            max_concurrent: 10,
+        }
+    }
+}
+
+impl Default for WorkflowSettings {
+    fn default() -> Self {
+        Self::smart_default()
+    }
+}

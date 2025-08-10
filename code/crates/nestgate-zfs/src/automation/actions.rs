@@ -4,7 +4,8 @@
 //! for dataset management and tier optimization.
 
 use super::types::{DatasetLifecycle, LifecycleStage};
-use nestgate_core::{Result, StorageTier};
+use crate::types::StorageTier;
+use nestgate_core::Result;
 use std::time::SystemTime;
 use tracing::{debug, info, warn};
 

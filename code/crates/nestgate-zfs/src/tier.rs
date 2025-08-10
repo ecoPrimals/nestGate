@@ -7,8 +7,10 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 // Removed unused tracing import
 
-use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager};
-use nestgate_core::{Result, StorageTier};
+use crate::{
+    config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager, types::StorageTier,
+};
+use nestgate_core::{types::StorageTier as CoreStorageTier, Result};
 use tracing::info;
 use tracing::warn;
 

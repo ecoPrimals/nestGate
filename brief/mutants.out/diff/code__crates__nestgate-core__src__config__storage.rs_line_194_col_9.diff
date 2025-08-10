@@ -1,0 +1,21 @@
+--- code/crates/nestgate-core/src/config/storage.rs
++++ replace StorageConfig::tier_names -> Vec<&str> with vec![""]
+@@ -186,17 +186,17 @@
+             Some(self.tiers.remove(pos))
+         } else {
+             None
+         }
+     }
+ 
+     /// Get all tier names
+     pub fn tier_names(&self) -> Vec<&str> {
+-        self.tiers.iter().map(|tier| tier.name.as_str()).collect()
++        vec![""] /* ~ changed by cargo-mutants ~ */
+     }
+ 
+     /// Get total storage capacity across all tiers
+     pub fn total_capacity(&self) -> u64 {
+         self.tiers.iter().map(|tier| tier.capacity).sum()
+     }
+ 
+     /// Check if a protocol is enabled

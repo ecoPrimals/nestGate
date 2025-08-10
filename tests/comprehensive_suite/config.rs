@@ -1,5 +1,4 @@
-//! Configuration for Comprehensive Suite
-
+/// Configuration for Comprehensive Suite
 pub use super::ComprehensiveSuiteConfig;
 
 // Suite-specific configuration

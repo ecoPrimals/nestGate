@@ -176,7 +176,6 @@ impl ZfsService {
         // For now, just mark as registered
         self.registered_with_orchestrator = true;
         info!("✅ Successfully registered with orchestration module");
-
         Ok(())
     }
 

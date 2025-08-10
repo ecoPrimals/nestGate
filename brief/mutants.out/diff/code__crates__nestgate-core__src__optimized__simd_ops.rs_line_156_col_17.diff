@@ -1,0 +1,21 @@
+--- code/crates/nestgate-core/src/optimized/simd_ops.rs
++++ replace += with -= in SIMDArrayOps::dot_simd_chunk
+@@ -148,17 +148,17 @@
+     #[inline]
+     fn dot_simd_chunk(a: &[f32], b: &[f32]) -> f32 {
+         debug_assert_eq!(a.len(), 8);
+         debug_assert_eq!(b.len(), 8);
+ 
+         let mut sum = 0.0;
+         // Compiler vectorizes this loop
+         for i in 0..8 {
+-            sum += a[i] * b[i];
++            sum -= /* ~ changed by cargo-mutants ~ */ a[i] * b[i];
+         }
+         sum
+     }
+ 
+     /// Matrix multiplication using SIMD (simplified 4x4)
+     pub fn matrix_mult_4x4(a: &[[f32; 4]; 4], b: &[[f32; 4]; 4]) -> [[f32; 4]; 4] {
+         let mut result = [[0.0; 4]; 4];
+ 

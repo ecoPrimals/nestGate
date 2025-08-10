@@ -1,0 +1,21 @@
+--- code/crates/nestgate-core/src/memory_pool.rs
++++ replace > with < in MemoryPool<T>::shrink_to_min
+@@ -168,17 +168,17 @@
+             }
+         }
+     }
+ 
+     /// Shrink pool to minimum size
+     pub fn shrink_to_min(&self) {
+         match self.pool.lock() {
+             Ok(mut pool_guard) => {
+-                while pool_guard.len() > self.min_size {
++                while pool_guard.len() < /* ~ changed by cargo-mutants ~ */ self.min_size {
+                     pool_guard.pop_back();
+                 }
+             }
+             Err(e) => {
+                 tracing::error!("Failed to shrink memory pool: {}", e);
+                 // Continue gracefully
+             }
+         }

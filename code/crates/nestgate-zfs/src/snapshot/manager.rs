@@ -10,8 +10,8 @@ use tokio::sync::{mpsc, RwLock};
 use tokio::time::interval;
 // Removed unused tracing import
 
-use crate::{config::ZfsConfig, dataset::ZfsDatasetManager};
-use nestgate_core::{Result as CoreResult, StorageTier};
+use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, types::StorageTier};
+use nestgate_core::{types::StorageTier as CoreStorageTier, Result as CoreResult};
 
 use super::operations::SnapshotOperationType;
 use super::policy::{RetentionPolicy, ScheduleFrequency, SnapshotPolicy};
@@ -159,7 +159,6 @@ impl ZfsSnapshotManager {
 
         let mut policies = self.policies.write().await;
         policies.insert(policy.name.clone(), policy);
-
         Ok(())
     }
 
@@ -366,7 +365,6 @@ impl ZfsSnapshotManager {
                 }
             }
         });
-
         Ok(())
     }
 

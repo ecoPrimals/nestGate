@@ -244,7 +244,7 @@ impl Default for PrometheusConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            port: 0, // Let OS assign port - Songbird manages routing
+            port: 0, // Let OS assign port - orchestration service manages routing
             path: PROMETHEUS_METRICS_PATH.to_string(),
         }
     }
@@ -361,7 +361,6 @@ impl MonitoringConfig {
         if self.alerts.enabled {
             self.alerts.validate()?;
         }
-
         Ok(())
     }
 }
@@ -385,7 +384,6 @@ impl AlertConfig {
         }
 
         self.notifications.validate()?;
-
         Ok(())
     }
 }
@@ -449,7 +447,6 @@ impl AlertThresholds {
             }
             _ => return Err(format!("Unknown metric: {metric}")),
         }
-
         Ok(())
     }
 
@@ -474,7 +471,6 @@ impl AlertThresholds {
         if self.error_rate_threshold < 0.0 || self.error_rate_threshold > 100.0 {
             return Err(ERROR_ERROR_RATE_RANGE.to_string());
         }
-
         Ok(())
     }
 }
@@ -511,7 +507,6 @@ impl NotificationConfig {
         if let Some(webhook) = &self.webhook {
             webhook.validate()?;
         }
-
         Ok(())
     }
 }
@@ -534,7 +529,6 @@ impl EmailConfig {
         if self.to_addresses.is_empty() {
             return Err(ERROR_RECIPIENT_REQUIRED.to_string());
         }
-
         Ok(())
     }
 }
@@ -553,7 +547,6 @@ impl SlackConfig {
         if self.username.is_empty() {
             return Err(ERROR_SLACK_USERNAME_EMPTY.to_string());
         }
-
         Ok(())
     }
 }
@@ -572,7 +565,6 @@ impl WebhookConfig {
         if self.timeout == 0 {
             return Err(ERROR_TIMEOUT_ZERO.to_string());
         }
-
         Ok(())
     }
 }

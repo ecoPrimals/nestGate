@@ -28,10 +28,10 @@ impl Default for AdapterConfig {
             name: "nestgate-mcp".to_string(),
             endpoint: format!(
                 "http://{}:{}",
-                nestgate_core::constants::addresses::localhost(),
-                nestgate_core::constants::network::api_port()
+                nestgate_core::constants::network::addresses::LOCALHOST,
+                nestgate_core::constants::network::ports::NESTGATE_API
             ),
-            timeout_seconds: nestgate_core::constants::timeouts::request_timeout().as_secs() as u64,
+            timeout_seconds: nestgate_core::constants::timeouts::REQUEST_TIMEOUT_SECS,
             retry_attempts: 3,
             capabilities: vec![
                 "storage".to_string(),
@@ -171,7 +171,6 @@ impl McpAdapter {
             error!("MCP adapter exceeded retry limit, disconnecting");
             state.connected = false;
         }
-
         Ok(())
     }
 }

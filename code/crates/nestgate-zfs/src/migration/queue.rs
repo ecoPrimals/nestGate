@@ -131,7 +131,6 @@ pub async fn process_migration_queue(context: MigrationContext<'_>) -> CoreResul
             }
         });
     }
-
     Ok(())
 }
 
@@ -214,6 +213,5 @@ async fn execute_migration(
         job.id,
         transfer_rate / (1024.0 * 1024.0)
     );
-
     Ok(())
 }

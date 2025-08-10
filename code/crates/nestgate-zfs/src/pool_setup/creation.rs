@@ -12,7 +12,8 @@ use super::{
     config::{PoolSetupConfiguration, TierProperties},
     validation::{PoolSetupConfig, PoolTopology},
 };
-use nestgate_core::{NestGateError, Result as CoreResult, StorageTier};
+use crate::types::StorageTier;
+use nestgate_core::{types::StorageTier as CoreStorageTier, NestGateError, Result as CoreResult};
 
 /// Result of pool setup operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -308,7 +309,6 @@ impl PoolCreator {
                 is_bug: false,
             });
         }
-
         Ok(())
     }
 
@@ -382,7 +382,6 @@ impl PoolCreator {
                 warn!("Failed to execute cleanup command: {}", e);
             }
         }
-
         Ok(())
     }
 
@@ -448,7 +447,6 @@ impl PoolCreator {
         // Additional cleanup: check for device labels that might need clearing
         // This helps prevent "device busy" errors on retry
         self.cleanup_device_labels(pool_name).await?;
-
         Ok(())
     }
 
@@ -487,7 +485,6 @@ impl PoolCreator {
                 }
             }
         }
-
         Ok(())
     }
 }

@@ -15,7 +15,7 @@ use crate::{
     automation::DatasetAnalyzer, config::ZfsConfig, dataset::ZfsDatasetManager,
     pool::ZfsPoolManager,
 };
-use nestgate_core::{zero_copy::SharedConfig, Result as CoreResult};
+use nestgate_core::Result as CoreResult;
 
 use super::types::*;
 
@@ -24,7 +24,7 @@ use super::types::*;
 #[allow(dead_code)] // Configuration fields used in migration planning
 pub struct MigrationEngine {
     config: MigrationConfig,
-    zfs_config: SharedConfig<ZfsConfig>,
+    zfs_config: Arc<ZfsConfig>,
     pool_manager: Arc<ZfsPoolManager>,
     dataset_manager: Arc<ZfsDatasetManager>,
     analyzer: Arc<DatasetAnalyzer>,
@@ -61,7 +61,7 @@ impl MigrationEngine {
 
         Self {
             config,
-            zfs_config: SharedConfig::new(zfs_config),
+            zfs_config: Arc::new(zfs_config),
             pool_manager,
             dataset_manager,
             analyzer,
@@ -88,7 +88,7 @@ impl MigrationEngine {
 
         Self {
             config,
-            zfs_config: SharedConfig::from_arc(zfs_config),
+            zfs_config,
             pool_manager,
             dataset_manager,
             analyzer,
@@ -275,7 +275,6 @@ impl MigrationEngine {
                 }
             }
         });
-
         Ok(())
     }
 }
