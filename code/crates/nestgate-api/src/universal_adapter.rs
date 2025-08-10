@@ -29,40 +29,13 @@ use tracing::warn;
 
 // ===== ZERO-COPY UNIVERSAL ADAPTER STRING OPTIMIZATION CONSTANTS =====
 
-// Missing constants - TODO: Move to unified constants
-const FEATURE_POOLED_STORAGE: &str = "pooled_storage";
-const FEATURE_COMPRESSION: &str = "compression";
-const FEATURE_DEDUPLICATION: &str = "deduplication";
-const PROTOCOL_HTTP: &str = "http";
-// These constants eliminate .to_string() calls and improve performance by 15-25%
+// Use unified constants for zero-copy string optimization (15-25% performance improvement)
+use nestgate_core::unified_constants::capabilities::{
+    FEATURE_POOLED_STORAGE, FEATURE_COMPRESSION, FEATURE_DEDUPLICATION,
+};
+use nestgate_core::unified_constants::protocols::PROTOCOL_HTTP;
 
-// Core Capability Constants
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-
-// Role/Provider Constants
-// Removed unused constant (role_constant_cleanup)
-// Removed unused constant (role_constant_cleanup)
-// Removed unused constant (role_constant_cleanup)
-// Removed unused constant (role_constant_cleanup)
-// Removed unused constant (role_constant_cleanup)
-// Removed unused constant (role_constant_cleanup)
-// Removed unused constant (role_constant_cleanup)
-// Removed unused constant (role_constant_cleanup)
+// Core capability constants are now imported from unified constants system
 
 // Storage Protocol Constants
 const PROTOCOL_NFS: &str = "NFS";
