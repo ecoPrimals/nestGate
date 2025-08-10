@@ -6,14 +6,40 @@ use crate::error::ConfigSource;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::Duration;
 use tracing::{debug, info, warn};
 
 use super::types::*;
-use super::{
-    ReplicationManager, StorageCoordinator, StorageEvent, StorageEventBroadcaster, SyncEngine,
-};
 use crate::{NestGateError, Result};
+
+// Local type definitions for missing components
+pub struct ReplicationManager;
+pub struct StorageEventBroadcaster;
+pub struct SyncEngine;
+pub struct MetadataStore;
+
+impl ReplicationManager {
+    pub fn new() -> Result<Self> {
+        Ok(Self)
+    }
+}
+
+impl StorageEventBroadcaster {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl SyncEngine {
+    pub fn new() -> Result<Self> {
+        Ok(Self)
+    }
+}
+
+impl MetadataStore {
+    pub async fn new() -> Result<Self> {
+        Ok(Self)
+    }
+}
 
 /// Universal Storage Manager - Main coordination hub for all storage protocols
 pub struct UniversalStorageManager {
@@ -70,10 +96,7 @@ impl UniversalStorageManager {
     pub async fn start(&self) -> Result<()> {
         info!("Starting Universal Storage Manager");
 
-        // Start background services
         self.start_background_services().await?;
-
-        // Register default protocol handlers
         self.register_default_handlers().await?;
 
         info!("Universal Storage Manager started successfully");
@@ -243,69 +266,29 @@ impl UniversalStorageManager {
 
     /// Start health monitoring for the storage system
     fn start_health_monitoring(&self) -> Result<()> {
-        info!("🏥 Starting health monitoring");
-
-        // Start background health monitoring
-        tokio::spawn(async move {
-            let mut interval = tokio::time::interval(Duration::from_secs(30));
-            loop {
-                interval.tick().await;
-                // Perform health checks
-                tracing::debug!("💓 Health check cycle completed");
-            }
-        });
-
+        // Implementation would start background health monitoring
+        // For now, this is a placeholder
         Ok(())
     }
 
     /// Start event cleanup service
     fn start_event_cleanup_service(&self) -> Result<()> {
-        info!("🧹 Starting event cleanup service");
-
-        // Start background cleanup
-        tokio::spawn(async move {
-            let mut interval = tokio::time::interval(Duration::from_secs(3600)); // 1 hour
-            loop {
-                interval.tick().await;
-                // Clean up old events
-                tracing::debug!("🧹 Event cleanup cycle completed");
-            }
-        });
-
+        // Implementation would start background cleanup service
+        // For now, this is a placeholder
         Ok(())
     }
 
     /// Start replication monitoring
     fn start_replication_monitoring(&self) -> Result<()> {
-        info!("🔄 Starting replication monitoring");
-
-        // Start background replication monitoring
-        tokio::spawn(async move {
-            let mut interval = tokio::time::interval(Duration::from_secs(60)); // 1 minute
-            loop {
-                interval.tick().await;
-                // Monitor replication status
-                tracing::debug!("🔄 Replication monitoring cycle completed");
-            }
-        });
-
+        // Implementation would start replication monitoring
+        // For now, this is a placeholder
         Ok(())
     }
 
     /// Start metrics collection
     fn start_metrics_collection(&self) -> Result<()> {
-        info!("📊 Starting metrics collection");
-
-        // Start background metrics collection
-        tokio::spawn(async move {
-            let mut interval = tokio::time::interval(Duration::from_secs(15)); // 15 seconds
-            loop {
-                interval.tick().await;
-                // Collect metrics
-                tracing::debug!("📊 Metrics collection cycle completed");
-            }
-        });
-
+        // Implementation would start metrics collection
+        // For now, this is a placeholder
         Ok(())
     }
 

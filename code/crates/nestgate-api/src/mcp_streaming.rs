@@ -28,22 +28,34 @@ pub struct McpStreamingManager {
 /// Stream statistics snapshot
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StreamStatsSnapshot {
+    /// Total number of streams created
     pub total_streams: u64,
+    /// Number of currently active streams
     pub active_streams: u64,
+    /// Total bytes transferred across all streams
     pub bytes_transferred: u64,
+    /// Total messages sent across all streams
     pub messages_sent: u64,
+    /// Total messages received across all streams
     pub messages_received: u64,
+    /// Total number of errors encountered
     pub errors: u64,
 }
 
 /// Stream statistics (real-time)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StreamStats {
+    /// Bytes transferred through this stream
     pub bytes_transferred: u64,
+    /// Messages sent through this stream
     pub messages_sent: u64,
+    /// Messages received through this stream
     pub messages_received: u64,
+    /// Number of errors on this stream
     pub errors: u64,
+    /// Timestamp when the stream was created
     pub created_at: SystemTime,
+    /// Timestamp of last activity on the stream
     pub last_activity: SystemTime,
 }
 
@@ -82,40 +94,60 @@ pub enum StreamType {
 /// Stream configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StreamConfig {
+    /// Type of MCP stream
     pub stream_type: StreamType,
+    /// Buffer size for the stream in bytes
     pub buffer_size: usize,
+    /// Whether to enable compression
     pub compression: bool,
+    /// Whether to enable encryption
     pub encryption: bool,
+    /// Batch size for message processing
     pub batch_size: usize,
+    /// Interval for flushing buffered data
     pub flush_interval: Duration,
+    /// Additional stream metadata
     pub metadata: HashMap<String, String>,
 }
 
 /// Stream status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum StreamStatus {
+    /// Stream is actively processing data
     Active,
+    /// Stream is temporarily paused
     Paused,
+    /// Stream has been stopped
     Stopped,
+    /// Stream encountered an error
     Error(String),
 }
 
 /// Stream events
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StreamEvent {
+    /// Unique identifier for the stream
     pub stream_id: Uuid,
+    /// Type of stream event that occurred
     pub event_type: StreamEventType,
+    /// Event data payload
     pub _data: serde_json::Value,
+    /// Event occurrence timestamp
     pub timestamp: SystemTime,
 }
 
 /// Stream event types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum StreamEventType {
+    /// A new stream was created
     StreamCreated,
+    /// An existing stream was closed
     StreamClosed,
+    /// Data was received on the stream
     DataReceived,
+    /// Data was sent through the stream
     DataSent,
+    /// An error occurred on the stream
     Error,
 }
 

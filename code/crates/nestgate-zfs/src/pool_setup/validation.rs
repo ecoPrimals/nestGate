@@ -9,7 +9,8 @@ use super::{
     config::PoolSetupConfiguration,
     device_detection::{DeviceType, StorageDevice},
 };
-use nestgate_core::StorageTier;
+use crate::types::StorageTier;
+use nestgate_core::types::StorageTier as CoreStorageTier;
 
 /// Result of validation operations
 #[derive(Debug, Clone, Serialize, Deserialize)]

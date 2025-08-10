@@ -164,6 +164,18 @@ async fn test_concurrent_operations() {
     for task in tasks {
         let result = task.await;
         assert!(result.is_ok(), "Concurrent operation should not panic");
-        assert!(result.unwrap().is_ok(), "Configuration should be valid");
+        assert!(
+            result
+                .unwrap_or_else(|e| {
+                    tracing::error!("Unwrap failed: {:?}", e);
+                    return Err(std::io::Error::new(
+                        std::io::ErrorKind::Other,
+                        format!("Operation failed: {:?}", e),
+                    )
+                    .into());
+                })
+                .is_ok(),
+            "Configuration should be valid"
+        );
     }
 }

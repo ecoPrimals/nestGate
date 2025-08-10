@@ -19,64 +19,16 @@ use std::collections::HashMap;
 use std::borrow::Cow;
 use uuid::Uuid;
 
-// ===== ZERO-COPY STRING OPTIMIZATION CONSTANTS =====
-// These constants eliminate .to_string() calls and improve performance by 15-25%
+// **CONSTANTS MOVED TO UNIFIED SYSTEM**
+// All constants have been moved to nestgate_core::unified_constants for consistency
+use nestgate_core::unified_constants::{
+    services::defaults::{SERVICE_NAME as DEFAULT_SERVICE_NAME, MAINTAINER_NAME as DEFAULT_MAINTAINER_NAME, 
+                        MAINTAINER_EMAIL as DEFAULT_MAINTAINER_EMAIL, ORGANIZATION as DEFAULT_ORGANIZATION},
+    protocols::filesystem::{NFS_V3 as PROTOCOL_NFS_V3, NFS_V4 as PROTOCOL_NFS_V4, 
+                           SMB_V2 as PROTOCOL_SMB_V2, SMB_V3 as PROTOCOL_SMB_V3},
+};
 
-// Service Configuration Constants
-const DEFAULT_SERVICE_NAME: &str = "nestgate-storage";
 const DEFAULT_BIND_ADDRESS: &str = "127.0.0.1";
-const DEFAULT_MAINTAINER_NAME: &str = "NestGate Team";
-const DEFAULT_MAINTAINER_EMAIL: &str = "team@nestgate.dev";
-const DEFAULT_ORGANIZATION: &str = "EcoPrimals Foundation";
-// Removed unused constant (generic_constant_cleanup)
-
-// Storage Operation Constants
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-
-// Domain and Capability Constants
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-
-// Parameter Constants
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-
-// Network Protocol Constants
-const PROTOCOL_NFS_V3: &str = "nfs_v3";
-const PROTOCOL_NFS_V4: &str = "nfs_v4";
-const PROTOCOL_SMB_V2: &str = "smb_v2";
-const PROTOCOL_SMB_V3: &str = "smb_v3";
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-
-// Topology and QoS Constants
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
-// Removed unused constant (generic_constant_cleanup)
 
 // Performance and Storage Constants
 // Removed unused constant (generic_constant_cleanup)
@@ -194,7 +146,7 @@ impl Default for NestGateServiceConfig {
             port: std::env::var("NESTGATE_SERVICE_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(8080),
+                .unwrap_or(nestgate_core::config::defaults::NetworkPortDefaults::get_api_port()),
             maintainer: ContactInfo {
                 name: std::env::var("NESTGATE_MAINTAINER_NAME")
                     .unwrap_or_else(|_| DEFAULT_MAINTAINER_NAME.to_string()),
@@ -476,7 +428,6 @@ impl UniversalServiceProvider for NestGateUniversalService {
             registration.capabilities = self.capabilities.clone();
         }
         
-        Ok(())
     }
     
     async fn handle_universal_request(&self, request: serde_json::Value) -> Result<serde_json::Value, String> {
@@ -661,7 +612,13 @@ mod tests {
         let service = NestGateUniversalService::new(config);
         
         // Test service registration creation
-        let registration = service.create_registration().await.unwrap();
+        let registration = service.create_registration().await.unwrap_or_else(|e| {
+    tracing::error!("Unwrap failed: {:?}", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed: {:?}", e)
+).into())
+});
         assert_eq!(registration.metadata.name, "nestgate-storage");
         assert!(!registration.capabilities.is_empty());
         assert!(!registration.endpoints.is_empty());
@@ -680,7 +637,13 @@ mod tests {
             }
         ];
         
-        service.update_capabilities(new_capabilities.clone()).await.unwrap();
+        service.update_capabilities(new_capabilities.clone()).await.unwrap_or_else(|e| {
+    tracing::error!("Unwrap failed: {:?}", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed: {:?}", e)
+).into())
+});
         assert_eq!(service.capabilities, new_capabilities);
     }
     
@@ -693,7 +656,13 @@ mod tests {
             "operation": OP_CREATE_VOLUME
         });
         
-        let response = service.handle_universal_request(request).await.unwrap();
+        let response = service.handle_universal_request(request).await.unwrap_or_else(|e| {
+    tracing::error!("Unwrap failed: {:?}", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed: {:?}", e)
+).into())
+});
         assert!(response.get("status").is_some());
     }
 } 

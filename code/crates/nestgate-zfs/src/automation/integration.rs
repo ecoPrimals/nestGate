@@ -24,7 +24,7 @@ pub async fn initialize_zfs_automation_with_config(
 /// Check if ecosystem services are available for ZFS automation
 #[cfg(feature = "network-integration")]
 pub async fn check_zfs_ecosystem_availability() -> bool {
-    nestgate_automation::check_ecosystem_availability().await
+    nestgate_automation::check_ecosystem_capabilities().await
 }
 
 #[cfg(not(feature = "network-integration"))]

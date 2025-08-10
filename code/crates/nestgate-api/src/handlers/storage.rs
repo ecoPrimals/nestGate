@@ -38,84 +38,312 @@ pub struct StorageSnapshot {
     pub dataset: String,
     pub size: u64,
     pub created: String,
+    /// Referenced data size in bytes
     pub referenced: u64,
 }
 
 /// Storage metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageMetrics {
+    /// Total number of storage pools
     pub total_pools: u32,
+    /// Total number of datasets
     pub total_datasets: u32,
+    /// Total number of snapshots
     pub total_snapshots: u32,
+    /// Total storage capacity in bytes
     pub total_storage: u64,
+    /// Used storage space in bytes
     pub used_storage: u64,
+    /// Available storage space in bytes
     pub available_storage: u64,
+    /// Input/output operations per second
     pub iops: f64,
+    /// Bandwidth in megabits per second
     pub bandwidth_mbps: f64,
+    /// Overall health status of storage system
     pub health_status: String,
 }
 
-/// Get storage pools
+/// Get storage pools - Real filesystem data instead of mocks
 pub async fn get_storage_pools() -> impl IntoResponse {
-    info!("Getting storage pools");
+    info!("🔍 Getting real storage pools from local filesystem");
 
-    // Mock data for now - would be replaced with real ZFS pool data
-    let pools = vec![
-        StoragePool {
-            name: "tank".to_string(),
-            status: "ONLINE".to_string(),
-            size: 1000 * 1024 * 1024 * 1024,     // 1TB
-            used: 500 * 1024 * 1024 * 1024,      // 500GB
-            available: 500 * 1024 * 1024 * 1024, // 500GB
-            health: "HEALTHY".to_string(),
-            pool_type: "RAIDZ1".to_string(),
-        },
-        StoragePool {
-            name: "backup".to_string(),
-            status: "ONLINE".to_string(),
-            size: 2000 * 1024 * 1024 * 1024,      // 2TB
-            used: 100 * 1024 * 1024 * 1024,       // 100GB
-            available: 1900 * 1024 * 1024 * 1024, // 1.9TB
-            health: "HEALTHY".to_string(),
-            pool_type: "MIRROR".to_string(),
-        },
-    ];
+    // Collect real storage information from the system
+    let pools = match collect_real_storage_pools().await {
+        Ok(real_pools) => {
+            info!("✅ Collected {} real storage pools", real_pools.len());
+            real_pools
+        }
+        Err(e) => {
+            warn!(
+                "⚠️ Could not collect real storage pools: {}, using fallback",
+                e
+            );
+            vec![create_fallback_root_pool().await]
+        }
+    };
 
     Json(serde_json::json!({
         "status": "success",
-        "pools": pools
+        "pools": pools,
+        "data_source": "filesystem"
     }))
 }
 
-/// Get storage datasets
-pub async fn get_storage_datasets() -> impl IntoResponse {
-    info!("Getting storage datasets");
+/// Collect real storage pools from system mount points
+async fn collect_real_storage_pools(
+) -> Result<Vec<StoragePool>, Box<dyn std::error::Error + Send + Sync>> {
+    use std::process::Command;
+    use std::str;
 
-    // Mock data for now - would be replaced with real ZFS dataset data
-    let datasets = vec![
-        StorageDataset {
-            name: "tank/data".to_string(),
-            pool: "tank".to_string(),
-            size: 400 * 1024 * 1024 * 1024,      // 400GB
-            used: 200 * 1024 * 1024 * 1024,      // 200GB
-            available: 200 * 1024 * 1024 * 1024, // 200GB
-            mount_point: "/tank/data".to_string(),
-            compression: "lz4".to_string(),
-        },
-        StorageDataset {
-            name: "tank/home".to_string(),
-            pool: "tank".to_string(),
-            size: 100 * 1024 * 1024 * 1024,     // 100GB
-            used: 50 * 1024 * 1024 * 1024,      // 50GB
-            available: 50 * 1024 * 1024 * 1024, // 50GB
-            mount_point: "/tank/home".to_string(),
-            compression: "gzip".to_string(),
-        },
+    let mut pools = Vec::new();
+
+    // Get filesystem information using df command
+    let output = Command::new("df")
+        .args(&["-h", "--output=source,fstype,size,used,avail,pcent,target"])
+        .output()?;
+
+    let stdout = str::from_utf8(&output.stdout)?;
+
+    for line in stdout.lines().skip(1) {
+        // Skip header
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        if parts.len() >= 7 {
+            let source = parts[0];
+            let fstype = parts[1];
+            let size_str = parts[2];
+            let used_str = parts[3];
+            let avail_str = parts[4];
+            let mount_point = parts[6];
+
+            // Skip temporary filesystems and focus on real storage
+            if should_include_filesystem(source, fstype, mount_point) {
+                let size = parse_size_string(size_str).unwrap_or(0);
+                let used = parse_size_string(used_str).unwrap_or(0);
+                let available = parse_size_string(avail_str).unwrap_or(0);
+
+                pools.push(StoragePool {
+                    name: format!("{} ({})", source, mount_point),
+                    status: "ONLINE".to_string(),
+                    size,
+                    used,
+                    available,
+                    health: "HEALTHY".to_string(),
+                    pool_type: fstype.to_uppercase(),
+                });
+            }
+        }
+    }
+
+    if pools.is_empty() {
+        // Fallback to root filesystem if nothing found
+        pools.push(create_fallback_root_pool().await);
+    }
+
+    Ok(pools)
+}
+
+/// Create fallback pool representing the root filesystem
+async fn create_fallback_root_pool() -> StoragePool {
+    use std::process::Command;
+
+    // Get root filesystem info
+    let (size, used, available) =
+        if let Ok(output) = Command::new("df").args(&["-B1", "/"]).output() {
+            if let Ok(stdout) = std::str::from_utf8(&output.stdout) {
+                if let Some(line) = stdout.lines().nth(1) {
+                    let parts: Vec<&str> = line.split_whitespace().collect();
+                    if parts.len() >= 4 {
+                        let size = parts[1].parse::<u64>().unwrap_or(0);
+                        let used = parts[2].parse::<u64>().unwrap_or(0);
+                        let avail = parts[3].parse::<u64>().unwrap_or(0);
+                        (size, used, avail)
+                    } else {
+                        (0, 0, 0)
+                    }
+                } else {
+                    (0, 0, 0)
+                }
+            } else {
+                (0, 0, 0)
+            }
+        } else {
+            (0, 0, 0)
+        };
+
+    StoragePool {
+        name: "root (/)".to_string(),
+        status: "ONLINE".to_string(),
+        size,
+        used,
+        available,
+        health: "HEALTHY".to_string(),
+        pool_type: "FILESYSTEM".to_string(),
+    }
+}
+
+/// Determine if we should include this filesystem in our pools
+fn should_include_filesystem(source: &str, fstype: &str, mount_point: &str) -> bool {
+    // Include real storage devices and important mount points
+    !source.starts_with("tmpfs")
+        && !source.starts_with("udev")
+        && !source.starts_with("devpts")
+        && !source.starts_with("sysfs")
+        && !source.starts_with("proc")
+        && !source.starts_with("cgroup")
+        && !fstype.contains("tmpfs")
+        && !mount_point.starts_with("/proc")
+        && !mount_point.starts_with("/sys")
+        && !mount_point.starts_with("/dev")
+        && (mount_point == "/"
+            || mount_point.starts_with("/home")
+            || mount_point.starts_with("/mnt")
+            || mount_point.starts_with("/media"))
+}
+
+/// Parse size strings like "1.2G", "500M", "2.1T" to bytes
+fn parse_size_string(size_str: &str) -> Option<u64> {
+    if size_str == "-" {
+        return Some(0);
+    }
+
+    let size_str = size_str.trim();
+    let (number_part, unit) = if let Some(pos) = size_str.chars().position(|c| c.is_alphabetic()) {
+        let (num, unit) = size_str.split_at(pos);
+        (num, unit)
+    } else {
+        (size_str, "")
+    };
+
+    if let Ok(number) = number_part.parse::<f64>() {
+        let multiplier = match unit.to_uppercase().as_str() {
+            "K" | "KB" => 1024,
+            "M" | "MB" => 1024 * 1024,
+            "G" | "GB" => 1024 * 1024 * 1024,
+            "T" | "TB" => 1024_u64.pow(4),
+            "P" | "PB" => 1024_u64.pow(5),
+            _ => 1,
+        };
+        Some((number * multiplier as f64) as u64)
+    } else {
+        None
+    }
+}
+
+/// Collect real storage datasets (important directories) from system
+async fn collect_real_storage_datasets(
+) -> Result<Vec<StorageDataset>, Box<dyn std::error::Error + Send + Sync>> {
+    use std::process::Command;
+    use std::str;
+
+    let mut datasets = Vec::new();
+
+    // Important directories to monitor as "datasets"
+    let important_dirs = vec![
+        "/home", "/var", "/usr", "/opt", "/tmp", "/mnt", "/media", "/srv",
     ];
+
+    for dir in important_dirs {
+        if std::path::Path::new(dir).exists() {
+            if let Ok((size, used, available)) = get_directory_usage(dir).await {
+                datasets.push(StorageDataset {
+                    name: format!("local{}", dir),
+                    pool: "root".to_string(),
+                    size,
+                    used,
+                    available,
+                    mount_point: dir.to_string(),
+                    compression: "none".to_string(),
+                });
+            }
+        }
+    }
+
+    // Also add the current user's home directory specifically
+    if let Ok(home_dir) = std::env::var("HOME") {
+        if let Ok((size, used, available)) = get_directory_usage(&home_dir).await {
+            datasets.push(StorageDataset {
+                name: format!("user_home"),
+                pool: "root".to_string(),
+                size,
+                used,
+                available,
+                mount_point: home_dir,
+                compression: "none".to_string(),
+            });
+        }
+    }
+
+    if datasets.is_empty() {
+        datasets.push(create_fallback_home_dataset().await);
+    }
+
+    Ok(datasets)
+}
+
+/// Get directory usage statistics
+async fn get_directory_usage(
+    dir: &str,
+) -> Result<(u64, u64, u64), Box<dyn std::error::Error + Send + Sync>> {
+    use std::process::Command;
+
+    // Use df to get filesystem stats for the directory
+    let output = Command::new("df").args(&["-B1", dir]).output()?;
+
+    let stdout = std::str::from_utf8(&output.stdout)?;
+    if let Some(line) = stdout.lines().nth(1) {
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        if parts.len() >= 4 {
+            let size = parts[1].parse::<u64>().unwrap_or(0);
+            let used = parts[2].parse::<u64>().unwrap_or(0);
+            let available = parts[3].parse::<u64>().unwrap_or(0);
+            return Ok((size, used, available));
+        }
+    }
+
+    Ok((0, 0, 0))
+}
+
+/// Create fallback dataset for user home directory
+async fn create_fallback_home_dataset() -> StorageDataset {
+    let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/home".to_string());
+    let (size, used, available) = get_directory_usage(&home_dir).await.unwrap_or((0, 0, 0));
+
+    StorageDataset {
+        name: "user_home".to_string(),
+        pool: "root".to_string(),
+        size,
+        used,
+        available,
+        mount_point: home_dir,
+        compression: "none".to_string(),
+    }
+}
+
+/// Get storage datasets - Real directory information instead of mocks
+pub async fn get_storage_datasets() -> impl IntoResponse {
+    info!("🔍 Getting real storage datasets from local filesystem");
+
+    // Collect real directory information from the system
+    let datasets = match collect_real_storage_datasets().await {
+        Ok(real_datasets) => {
+            info!("✅ Collected {} real storage datasets", real_datasets.len());
+            real_datasets
+        }
+        Err(e) => {
+            warn!(
+                "⚠️ Could not collect real storage datasets: {}, using fallback",
+                e
+            );
+            vec![create_fallback_home_dataset().await]
+        }
+    };
 
     Json(serde_json::json!({
         "status": "success",
-        "datasets": datasets
+        "datasets": datasets,
+        "data_source": "filesystem"
     }))
 }
 

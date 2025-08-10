@@ -10,7 +10,6 @@ use tokio::sync::RwLock;
 
 use super::types::*;
 use crate::Result;
-use tracing::info;
 
 /// Real-time Synchronization Engine
 pub struct SyncEngine {
@@ -31,8 +30,8 @@ impl SyncEngine {
 
     /// Start the sync service
     pub fn start(&self) -> Result<()> {
-        info!("Starting synchronization engine");
-        // Start background sync tasks
+        // Implementation would start sync service
+        // For now, this is a placeholder
         Ok(())
     }
 

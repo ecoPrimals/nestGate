@@ -1,7 +1,6 @@
-//! Sovereign Science Comprehensive Test Suite
-//!
-//! High-level integration testing across all components
-
+/// Sovereign Science Comprehensive Test Suite
+///
+/// High-level integration testing across all components
 mod comprehensive_suite;
 
 // Re-export functionality

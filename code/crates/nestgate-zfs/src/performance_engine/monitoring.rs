@@ -17,7 +17,7 @@ use crate::{
     error::{Result, ZfsError},
     pool::ZfsPoolManager,
 };
-use nestgate_core::config::AlertThresholds;
+use nestgate_core::config::monitoring::AlertThresholds;
 
 use super::types::*;
 
@@ -354,7 +354,6 @@ impl RealTimePerformanceMonitor {
             metrics.pool_metrics.len(),
             metrics.dataset_metrics.len()
         );
-
         Ok(())
     }
 
@@ -439,7 +438,6 @@ impl RealTimePerformanceMonitor {
         } else if *current_memory_usage > 0.85 {
             warn!("⚠️ High memory usage: {:.1}%", current_memory_usage * 100.0);
         }
-
         Ok(())
     }
 

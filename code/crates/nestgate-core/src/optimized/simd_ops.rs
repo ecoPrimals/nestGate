@@ -49,8 +49,16 @@ impl SIMDHasher {
         // This pattern compiles to efficient SIMD instructions
         let mut chunk_data = [0u64; 4];
 
-        for (i, chunk_bytes) in chunk.chunks_exact(8).enumerate() {
-            chunk_data[i] = u64::from_le_bytes(chunk_bytes.try_into().unwrap());
+        for (i, _) in chunk.chunks_exact(8).enumerate() {
+            let start_idx = i * 8;
+            let end_idx = (i + 1) * 8;
+            if end_idx <= chunk.len() {
+                let chunk_bytes: &[u8] = &chunk[start_idx..end_idx];
+                chunk_data[i] = u64::from_le_bytes(chunk_bytes.try_into().unwrap_or_else(|_| {
+                    tracing::error!("Failed to convert bytes to u64 array");
+                    [0u8; 8] // Return zero array as fallback
+                }));
+            }
         }
 
         for i in 0..4 {

@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 use std::time::SystemTime;
 
-use nestgate_core::StorageTier;
+use crate::types::StorageTier;
 use serde::de;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 

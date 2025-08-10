@@ -8,7 +8,7 @@ use crate::{
     pool::ZfsPoolManager,
     types::{CompressionAlgorithm, DatasetProperty},
 };
-use nestgate_core::{NestGateError, Result, StorageTier};
+use nestgate_core::{types::StorageTier as CoreStorageTier, NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -20,13 +20,14 @@ use tracing::warn;
 
 /// ZFS Dataset configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DatasetConfig {
+// REMOVED: DatasetConfig eliminated - use ZfsConfig.extensions.datasets instead
+pub struct _RemovedDatasetConfig {
     /// Dataset name
     pub name: String,
     /// Parent pool or dataset
     pub parent: String,
     /// Storage tier
-    pub tier: StorageTier,
+    pub tier: CoreStorageTier,
     /// Compression algorithm
     pub compression: CompressionAlgorithm,
     /// Record size in bytes
@@ -55,7 +56,7 @@ pub struct DatasetInfo {
     /// Mount point
     pub mount_point: String,
     /// Storage tier
-    pub tier: StorageTier,
+    pub tier: CoreStorageTier,
     /// Properties
     pub properties: HashMap<String, String>,
 }
@@ -90,30 +91,43 @@ impl ZfsDatasetManager {
         &self,
         name: &str,
         parent: &str,
-        tier: nestgate_core::StorageTier,
+        tier: CoreStorageTier,
     ) -> Result<DatasetInfo> {
         info!("Creating dataset: {}/{} on tier: {:?}", parent, name, tier);
 
         let dataset_path = format!("{parent}/{name}");
 
-        // Convert core tier to ZFS tier
-        let zfs_tier = match tier {
-            nestgate_core::StorageTier::Hot => StorageTier::Hot,
-            nestgate_core::StorageTier::Warm => StorageTier::Warm,
-            nestgate_core::StorageTier::Cold => StorageTier::Cold,
-            nestgate_core::StorageTier::Cache => StorageTier::Hot, // Map cache to hot
-        };
-
-        // Get tier configuration for properties
-        let tier_config = self.config.get_tier_config(&zfs_tier);
-
         // Execute ZFS create command
         let mut cmd = tokio::process::Command::new("zfs");
         cmd.args(["create"]);
 
-        // Apply tier-specific properties
-        for (key, value) in &tier_config.properties {
-            cmd.args(["-o", &format!("{key}={value}")]);
+        // Apply tier-specific properties based on tier type
+        match tier {
+            CoreStorageTier::Hot => {
+                // Hot tier: optimized for performance
+                cmd.args(["-o", "compression=off"]);
+                cmd.args(["-o", "recordsize=128K"]);
+            }
+            CoreStorageTier::Warm => {
+                // Warm tier: balanced performance and compression
+                cmd.args(["-o", "compression=lz4"]);
+                cmd.args(["-o", "recordsize=128K"]);
+            }
+            CoreStorageTier::Cold => {
+                // Cold tier: optimized for space efficiency
+                cmd.args(["-o", "compression=zstd"]);
+                cmd.args(["-o", "recordsize=1M"]);
+            }
+            CoreStorageTier::Cache => {
+                // Cache tier: ultra-fast, no compression
+                cmd.args(["-o", "compression=off"]);
+                cmd.args(["-o", "recordsize=64K"]);
+            }
+            CoreStorageTier::Archive => {
+                // Archive tier: maximum compression
+                cmd.args(["-o", "compression=gzip-9"]);
+                cmd.args(["-o", "recordsize=1M"]);
+            }
         }
 
         cmd.arg(&dataset_path);
@@ -156,7 +170,7 @@ impl ZfsDatasetManager {
         &self,
         name: &str,
         pool: &str,
-        tier: StorageTier,
+        tier: CoreStorageTier,
     ) -> Result<DatasetInfo> {
         info!("Creating dataset: {}/{} on tier: {:?}", pool, name, tier);
 
@@ -239,11 +253,11 @@ impl ZfsDatasetManager {
 
                 // Try to determine tier from dataset name or properties
                 let tier = if name.contains("hot") {
-                    StorageTier::Hot
+                    CoreStorageTier::Hot
                 } else if name.contains("cold") {
-                    StorageTier::Cold
+                    CoreStorageTier::Cold
                 } else {
-                    StorageTier::Warm
+                    CoreStorageTier::Warm
                 };
 
                 return Ok(DatasetInfo {
@@ -273,38 +287,62 @@ impl ZfsDatasetManager {
             file_count: None,
             compression_ratio: Some(1.5),
             mount_point: format!("/{name}"),
-            tier: StorageTier::Warm,
+            tier: CoreStorageTier::Warm,
             properties: HashMap::new(),
         })
     }
 
     /// Create a new dataset with full configuration
-    pub async fn create_dataset_with_config(&self, config: DatasetConfig) -> Result<()> {
-        tracing::info!("Creating dataset with config: {}", config.name);
+    pub async fn create_dataset_with_config(&self, name: &str, parent: &str) -> Result<()> {
+        tracing::info!("Creating dataset: {}/{}", parent, name);
 
-        let full_name = format!("{}/{}", config.parent, config.name);
+        let full_name = format!("{}/{}", parent, name);
 
-        // Build the zfs create command with properties
+        // Build the zfs create command with properties from unified config
         let mut args = vec!["create"];
+        let mut options = Vec::new();
 
-        // Add compression property
-        let compression_opt = format!("compression={}", config.compression);
-        args.extend(&["-o", &compression_opt]);
+        // Add compression property from config
+        let compression_opt = format!(
+            "compression={:?}",
+            self.config.extensions.datasets.default_compression
+        )
+        .to_lowercase();
+        options.push(compression_opt);
 
-        // Add record size
-        let recordsize_opt = format!("recordsize={}", config.record_size);
-        args.extend(&["-o", &recordsize_opt]);
-
-        // Add quota if specified
-        let quota_opt = config.quota.map(|q| format!("quota={q}"));
-        if let Some(ref quota_str) = quota_opt {
-            args.extend(&["-o", quota_str]);
+        // Add record size from default properties
+        if let Some(record_size) = self
+            .config
+            .extensions
+            .datasets
+            .default_properties
+            .get("recordsize")
+        {
+            let recordsize_opt = format!("recordsize={}", record_size);
+            options.push(recordsize_opt);
         }
 
-        // Add reservation if specified
-        let reservation_opt = config.reservation.map(|r| format!("reservation={r}"));
-        if let Some(ref reservation_str) = reservation_opt {
-            args.extend(&["-o", reservation_str]);
+        // Add quota if specified in config
+        if self.config.extensions.datasets.default_quota_bytes > 0 {
+            let quota_opt = format!(
+                "quota={}",
+                self.config.extensions.datasets.default_quota_bytes
+            );
+            options.push(quota_opt);
+        }
+
+        // Add reservation if specified in config
+        if self.config.extensions.datasets.default_reservation_bytes > 0 {
+            let reservation_opt = format!(
+                "reservation={}",
+                self.config.extensions.datasets.default_reservation_bytes
+            );
+            options.push(reservation_opt);
+        }
+
+        // Add all options to args
+        for option in &options {
+            args.extend(&["-o", option.as_str()]);
         }
 
         // Add the dataset name
@@ -436,7 +474,7 @@ impl ZfsDatasetManager {
                     file_count: None,
                     compression_ratio: None,
                     mount_point,
-                    tier: StorageTier::Warm, // Default tier, would need tier detection logic
+                    tier: CoreStorageTier::Warm, // Default tier, would need tier detection logic
                     properties: HashMap::new(),
                 });
             }
@@ -529,7 +567,7 @@ impl ZfsDatasetManager {
                     compression_ratio: 1.0,   // Default value
                     properties: std::collections::HashMap::new(),
                     policy: None,
-                    tier: nestgate_core::StorageTier::Warm, // Default tier
+                    tier: CoreStorageTier::Warm, // Default tier
                     protected: false,
                     tags: Vec::new(),
                 });

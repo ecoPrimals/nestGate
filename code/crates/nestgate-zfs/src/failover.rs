@@ -419,7 +419,14 @@ mod tests {
         monitor.update_node_heartbeat("node1").await;
 
         // Should not detect as failed immediately
-        let failed_nodes = monitor.detect_failed_nodes().await.unwrap();
+        let failed_nodes = monitor.detect_failed_nodes().await.unwrap_or_else(|e| {
+            tracing::error!("Unwrap failed: {:?}", e);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Operation failed: {:?}", e),
+            )
+            .into());
+        });
         assert!(failed_nodes.is_empty());
 
         // Simulate passage of time by manually setting old heartbeat
@@ -437,7 +444,14 @@ mod tests {
         }
 
         // Now should detect as failed
-        let failed_nodes = monitor.detect_failed_nodes().await.unwrap();
+        let failed_nodes = monitor.detect_failed_nodes().await.unwrap_or_else(|e| {
+            tracing::error!("Unwrap failed: {:?}", e);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Operation failed: {:?}", e),
+            )
+            .into());
+        });
         assert_eq!(failed_nodes.len(), 1);
         assert_eq!(failed_nodes[0].node_id, "node1");
     }

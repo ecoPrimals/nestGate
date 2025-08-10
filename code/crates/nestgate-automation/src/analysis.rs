@@ -13,10 +13,9 @@ use tracing::info;
 use tracing::warn;
 
 use crate::types::prediction::{DataPattern, FileType};
-use crate::types::{
-    AccessEvent, AccessPatterns, AccessType, AutomationError, FileAnalysis, FileCharacteristics,
-};
+use crate::types::{AccessEvent, AccessPatterns, AccessType, FileAnalysis, FileCharacteristics};
 use crate::Result as AutomationResult;
+use nestgate_core::error::NestGateError;
 use nestgate_core::types::StorageTier;
 
 /// File analyzer for extracting metadata and characteristics
@@ -41,7 +40,7 @@ impl FileAnalyzer {
 
         let path = Path::new(file_path);
         let metadata = fs::metadata(path).await.map_err(|e| {
-            AutomationError::FileAnalysis(format!("Failed to get metadata for {file_path}: {e}"))
+            NestGateError::automation_error(format!("Failed to get metadata for {file_path}: {e}"))
         })?;
 
         let size = metadata.len();
@@ -167,8 +166,8 @@ impl FileAnalyzer {
 
         // Large files are good candidates for deduplication
         let is_dedupable = size > {
-            use nestgate_core::config::StorageConstants;
-            StorageConstants::from_environment().file_sizes.small_file
+            use nestgate_core::constants::storage::sizes;
+            sizes::SMALL_FILE_BYTES
         } && matches!(file_type, FileType::Database | FileType::Archive);
 
         let is_frequently_accessed = matches!(file_type, FileType::Database | FileType::Document);
@@ -279,7 +278,7 @@ impl DatasetAnalyzer {
         let path = Path::new(dataset_path);
 
         if !path.exists() {
-            return Err(AutomationError::Discovery(format!(
+            return Err(NestGateError::automation_error(format!(
                 "Dataset not found: {dataset_path}"
             )));
         }
@@ -401,8 +400,8 @@ impl DatasetAnalyzer {
             .iter()
             .filter(|a| {
                 a.size > {
-                    use nestgate_core::config::StorageConstants;
-                    StorageConstants::from_environment().file_sizes.large_file
+                    use nestgate_core::constants::storage::sizes;
+                    sizes::LARGE_FILE_BYTES
                 }
             })
             .count();

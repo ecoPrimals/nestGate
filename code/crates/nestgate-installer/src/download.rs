@@ -123,10 +123,11 @@ impl DownloadManager {
         // Create default configuration
         let config_path = target_dir.join("etc").join("nestgate.toml");
         let default_config = crate::config::InstallerConfig::default();
-        std::fs::write(&config_path, default_config.to_nestgate_config())?;
+        let config_toml = toml::to_string(&default_config)
+            .map_err(|e| anyhow::anyhow!("Failed to serialize config: {}", e))?;
+        std::fs::write(&config_path, config_toml)?;
 
         println!("Configuration created: {}", config_path.display());
-
         Ok(())
     }
 
@@ -159,7 +160,6 @@ impl DownloadManager {
             Ok(output) if output.status.success() => {
                 let version = String::from_utf8_lossy(&output.stdout);
                 println!("Installation verified: {}", version.trim());
-                Ok(())
             }
             Ok(output) => {
                 let error = String::from_utf8_lossy(&output.stderr);
@@ -169,6 +169,8 @@ impl DownloadManager {
                 anyhow::bail!("Failed to execute binary: {}", e);
             }
         }
+
+        Ok(())
     }
 }
 

@@ -49,15 +49,22 @@ use crate::{
 #[derive(Clone)]
 pub struct AppState {
     #[cfg(feature = "streaming-rpc")]
+    /// WebSocket connection manager for real-time communication
     pub websocket_manager: WebSocketManager,
+    /// MCP streaming manager for protocol communication
     pub mcp_streaming_manager: McpStreamingManager,
+    /// Event coordination service for system-wide events
     pub event_coordinator: EventCoordinator,
     #[cfg(feature = "streaming-rpc")]
+    /// Server-Sent Events manager for streaming updates
     pub sse_manager: Arc<SseManager>,
     // BYOB API state integration planned for future release
-    pub hardware_tuning_service: Arc<crate::handlers::hardware_tuning::HardwareTuningHandler>,
+    /// Hardware tuning service adapter
+    pub hardware_tuning_service: Arc<crate::handlers::hardware_tuning::HardwareTuningAdapter>,
     /// Optional ZFS manager for universal storage operations
     pub zfs_manager: Option<Arc<ZfsManager>>,
+    /// Universal Storage Bridge for storage-agnostic operations
+    pub universal_storage_bridge: Option<Arc<crate::handlers::zfs::UniversalStorageBridge>>,
 }
 
 impl Default for AppState {
@@ -80,6 +87,7 @@ impl Default for AppState {
                     crate::handlers::hardware_tuning::HardwareTuningHandler::new(),
                 ),
                 zfs_manager: None, // Will be initialized if ZFS is available
+                universal_storage_bridge: None, // Will be initialized for storage-agnostic operations
             }
         }
     }
@@ -87,6 +95,7 @@ impl Default for AppState {
 
 impl AppState {
     #[cfg(feature = "streaming-rpc")]
+    /// Create new application state with streaming services enabled
     pub fn new_with_streaming(
         websocket_manager: WebSocketManager,
         mcp_streaming_manager: McpStreamingManager,
@@ -99,13 +108,19 @@ impl AppState {
             sse_manager: Arc::new(SseManager::new()),
             // BYOB API state integration planned for future release
             hardware_tuning_service: Arc::new(
-                crate::handlers::hardware_tuning::HardwareTuningHandler::new(),
+                crate::handlers::hardware_tuning::HardwareTuningAdapter::new(
+                    Arc::new(nestgate_core::ecosystem_integration::universal_adapter::adapter::UniversalAdapter::new(
+                        nestgate_core::ecosystem_integration::universal_adapter::config::AdapterConfig::default()
+                    )),
+                    "hardware-tuning".to_string()
+                ),
             ),
             zfs_manager: None, // Will be initialized if ZFS is available
+            universal_storage_bridge: None, // Will be initialized for storage-agnostic operations
         }
     }
 
-    /// Initialize ZFS manager if available - graceful degradation
+    /// Initialize storage systems - ZFS manager and Universal Storage Bridge
     pub async fn with_zfs_manager(mut self) -> Self {
         // Try to initialize ZFS manager, but continue gracefully if it fails
         match self.try_init_zfs_manager().await {
@@ -121,6 +136,35 @@ impl AppState {
                 // Continue without ZFS manager - graceful degradation
             }
         }
+
+        // Initialize Universal Storage Bridge for storage-agnostic operations
+        match crate::handlers::zfs::UniversalStorageBridge::new().await {
+            Ok(mut bridge) => {
+                // Detect and configure the best available storage backend
+                match bridge.detect_best_backend().await {
+                    Ok(backend) => {
+                        tracing::info!(
+                            "✅ Universal Storage Bridge initialized with backend: {}",
+                            backend
+                        );
+                        self.universal_storage_bridge = Some(Arc::new(bridge));
+                    }
+                    Err(e) => {
+                        tracing::warn!(
+                            "⚠️ Universal Storage Bridge backend detection failed: {}",
+                            e
+                        );
+                        // Still initialize the bridge - it can use fallback modes
+                        self.universal_storage_bridge = Some(Arc::new(bridge));
+                    }
+                }
+            }
+            Err(e) => {
+                tracing::warn!("Failed to initialize Universal Storage Bridge: {}", e);
+                // Continue without bridge - graceful degradation
+            }
+        }
+
         self
     }
 
@@ -152,7 +196,11 @@ impl AppState {
     }
 }
 
-pub fn create_router() -> Router {
+/// Create a new router with default application state
+pub fn create_router() -> Router<AppState> {
+    // This is a backward compatibility function that uses default state
+    // In practice, you should use create_router_with_state() for proper initialization
+
     let router = Router::new()
         .route("/health", get(health_check))
 
@@ -192,10 +240,118 @@ pub fn create_router() -> Router {
         .route("/api/v1/storage/snapshots", get(get_storage_snapshots))
         .route("/api/v1/storage/metrics", get(get_storage_metrics))
 
-        // ZFS routes
-        .route("/api/v1/zfs/pools", get(get_zfs_pools))
+        // ZFS routes (now universal storage-agnostic)
+        .route("/api/v1/zfs/pools", get(crate::handlers::zfs::list_universal_pools))
         .route("/api/v1/zfs/pools", post(create_zfs_pool))
+        .route("/api/v1/zfs/pools/:pool_name", get(crate::handlers::zfs::get_universal_pool))
+        .route("/api/v1/zfs/pools/:pool_name", delete(delete_zfs_pool))
+        .route("/api/v1/zfs/datasets", get(get_zfs_dataset))
+        .route("/api/v1/zfs/datasets", post(create_zfs_dataset))
+        .route("/api/v1/zfs/datasets/:dataset_name", get(get_zfs_datasets))
+        .route("/api/v1/zfs/datasets/:dataset_name", delete(delete_zfs_dataset))
+        .route("/api/v1/zfs/snapshots", get(get_zfs_snapshots))
+        .route("/api/v1/zfs/snapshots", post(create_zfs_snapshot))
+        .route("/api/v1/zfs/snapshots/:snapshot_name", delete(delete_zfs_snapshot))
+        .route("/api/v1/zfs/properties/:dataset_name", get(get_dataset_properties))
+        .route("/api/v1/zfs/health", get(get_zfs_health))
         .route("/api/v1/zfs/pools/:pool_name", get(get_zfs_pool))
+        .route("/api/v1/zfs/pools", get(get_zfs_pools))
+        .route("/api/v1/zfs/optimization/analytics", get(get_zfs_optimization_analytics))
+
+        // Universal Primal Integration routes (commented out until module is available)
+        // .route("/api/v1/universal-primal/connect", post(universal_primal::connect_to_ecosystem))
+        // .route("/api/v1/universal-primal/status", get(universal_primal::get_ecosystem_status))
+
+        // BYOB routes (commented out until create_router is available)
+        // .nest("/api/v1/byob", crate::byob::create_router())
+
+        // Workspace management routes
+        .route("/api/v1/workspaces", post(create_workspace))
+        .route("/api/v1/workspaces", get(get_workspaces))
+        .route("/api/v1/workspaces/:workspace_id", get(get_workspace))
+        .route("/api/v1/workspaces/:workspace_id", patch(update_workspace_config))
+        .route("/api/v1/workspaces/:workspace_id", delete(delete_workspace))
+
+        // Team management routes
+        .route("/api/v1/teams", post(create_team));
+
+    // Add streaming routes conditionally
+    #[cfg(feature = "streaming-rpc")]
+    let router = router
+        .route("/api/v1/communication/websocket", get(websocket_handler))
+        .route("/api/v1/sse/events", get(sse_events))
+        .route("/api/v1/sse/storage", get(sse_storage))
+        .route("/api/v1/sse/health", get(sse_health));
+
+    router
+}
+
+/// Create a router with initialized application state
+pub async fn create_router_with_state() -> Router {
+    let app_state = {
+        #[cfg(feature = "streaming-rpc")]
+        {
+            AppState::new_with_streaming(
+                WebSocketManager::new(),
+                McpStreamingManager::new(),
+                EventCoordinator::new(),
+            )
+            .with_zfs_manager()
+            .await
+        }
+        #[cfg(not(feature = "streaming-rpc"))]
+        {
+            AppState::new().with_zfs_manager().await
+        }
+    };
+
+    create_router_with_initialized_state(app_state)
+}
+
+fn create_router_with_initialized_state(app_state: AppState) -> Router {
+    let router = Router::new()
+        .route("/health", get(health_check))
+
+        // Hardware tuning routes
+        .route("/hardware/tune", post(|| async {
+            Json(serde_json::json!({
+                "status": "success",
+                "message": "Hardware tuning not implemented yet"
+            }))
+        }))
+        .route("/hardware/config", get(|| async {
+            Json(serde_json::json!({
+                "status": "success",
+                "config": {},
+                "message": "Hardware config not implemented yet"
+            }))
+        }))
+
+        // Communication routes
+        .route("/api/v1/communication/stats", get(get_communication_stats))
+        .route("/api/v1/events", get(get_events))
+
+        // Performance analytics routes
+        .route("/api/v1/analytics/performance", get(get_performance_metrics))
+        .route("/api/v1/analytics/alerts", get(get_performance_alerts))
+        .route("/api/v1/analytics/recommendations", get(get_performance_recommendations))
+
+        // Load testing routes
+        .route("/api/v1/load-testing/start", post(start_load_test))
+        .route("/api/v1/load-testing/results", get(get_load_test_results))
+        .route("/api/v1/load-testing/history", get(get_load_test_history))
+        .route("/api/v1/load-testing/baselines", get(get_performance_baselines))
+
+        // Storage routes
+        .route("/api/v1/storage/pools", get(get_storage_pools))
+        .route("/api/v1/storage/datasets", get(get_storage_datasets))
+        .route("/api/v1/storage/snapshots", get(get_storage_snapshots))
+        .route("/api/v1/storage/metrics", get(get_storage_metrics))
+
+        // ZFS routes (now universal storage-agnostic)
+        .route("/api/v1/zfs/pools", get(crate::handlers::zfs::list_universal_pools))
+        .route("/api/v1/zfs/pools", post(create_zfs_pool))
+        .route("/api/v1/zfs/pools/:pool_name", get(crate::handlers::zfs::get_universal_pool))
         .route("/api/v1/zfs/pools/:pool_name", delete(delete_zfs_pool))
         .route("/api/v1/zfs/pools/:pool_name/scrub", post(scrub_zfs_pool))
         .route("/api/v1/zfs/datasets", get(get_zfs_datasets))
@@ -210,11 +366,18 @@ pub fn create_router() -> Router {
         .route("/api/v1/zfs/snapshots", get(get_zfs_snapshots))
         .route("/api/v1/zfs/snapshots", post(create_zfs_snapshot))
         .route("/api/v1/zfs/snapshots/:snapshot_name", delete(delete_zfs_snapshot))
-        .route("/api/v1/zfs/health", get(get_zfs_health))
+        .route("/api/v1/zfs/health", get(crate::handlers::zfs::get_universal_storage_health))
         .route("/api/v1/zfs/status", get(get_zfs_status))
         .route("/api/v1/zfs/optimization/analytics", get(get_zfs_optimization_analytics))
         .route("/api/v1/zfs/optimization/trigger", post(trigger_zfs_optimization))
         .route("/api/v1/zfs/ai/tier-prediction", post(predict_zfs_tier))
+
+        // Universal Primal Integration routes (commented out until module is available)
+        // .route("/api/v1/universal-primal/connect", post(universal_primal::connect_to_ecosystem))
+        // .route("/api/v1/universal-primal/status", get(universal_primal::get_ecosystem_status))
+
+        // BYOB routes (commented out until create_router is available)
+        // .nest("/api/v1/byob", crate::byob::create_router())
 
         // Workspace management routes
         .route("/api/v1/workspaces", get(get_workspaces))
@@ -234,20 +397,7 @@ pub fn create_router() -> Router {
         .route("/api/v1/sse/storage", get(sse_storage))
         .route("/api/v1/sse/health", get(sse_health));
 
-    router.with_state({
-        #[cfg(feature = "streaming-rpc")]
-        {
-            AppState::new_with_streaming(
-                WebSocketManager::new(),
-                McpStreamingManager::new(),
-                EventCoordinator::new(),
-            )
-        }
-        #[cfg(not(feature = "streaming-rpc"))]
-        {
-            AppState::new()
-        }
-    })
+    router.with_state(app_state)
 }
 
 async fn health_check() -> Json<serde_json::Value> {

@@ -1,0 +1,21 @@
+--- code/crates/nestgate-core/src/optimized/simd_ops.rs
++++ replace + with - in SIMDStringOps::find_byte_simd
+@@ -184,17 +184,17 @@
+     /// Find first occurrence of byte using SIMD
+     pub fn find_byte_simd(haystack: &[u8], needle: u8) -> Option<usize> {
+         let chunks = haystack.chunks_exact(16);
+         let remainder = chunks.remainder();
+ 
+         // Process 16-byte chunks with SIMD
+         for (chunk_idx, chunk) in chunks.enumerate() {
+             if let Some(pos) = Self::find_byte_in_chunk(chunk, needle) {
+-                return Some(chunk_idx * 16 + pos);
++                return Some(chunk_idx * 16 - /* ~ changed by cargo-mutants ~ */ pos);
+             }
+         }
+ 
+         // Check remainder
+         for (i, &byte) in remainder.iter().enumerate() {
+             if byte == needle {
+                 return Some(haystack.len() - remainder.len() + i);
+             }

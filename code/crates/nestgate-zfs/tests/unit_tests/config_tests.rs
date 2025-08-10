@@ -49,9 +49,27 @@ mod config_unit_tests {
         let cold = config.get_tier_config(&CoreStorageTier::Cold);
 
         // Verify compression algorithms
-        assert_eq!(hot.properties.get("compression").unwrap(), "lz4");
-        assert_eq!(warm.properties.get("compression").unwrap(), "zstd");
-        assert_eq!(cold.properties.get("compression").unwrap(), "gzip-9");
+        assert_eq!(hot.properties.get("compression").unwrap_or_else(|e| {
+    tracing::error!("Unwrap failed: {:?}", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed: {:?}", e)
+).into())
+}), "lz4");
+        assert_eq!(warm.properties.get("compression").unwrap_or_else(|e| {
+    tracing::error!("Unwrap failed: {:?}", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed: {:?}", e)
+).into())
+}), "zstd");
+        assert_eq!(cold.properties.get("compression").unwrap_or_else(|e| {
+    tracing::error!("Unwrap failed: {:?}", e);
+    return Err(std::io::Error::new(
+    std::io::ErrorKind::Other,
+    format!("Operation failed: {:?}", e)
+).into())
+}), "gzip-9");
 
         // Verify performance profiles
         assert!(matches!(
