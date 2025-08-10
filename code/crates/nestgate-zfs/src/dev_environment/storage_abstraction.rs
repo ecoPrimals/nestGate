@@ -108,7 +108,7 @@ impl DevEnvironmentStorageService {
             return Err(ZfsError::SystemUnavailable(format!(
                 "Failed to create storage directory: {}",
                 e
-            )));
+            )).into());
         }
 
         // Create pools directory
@@ -118,7 +118,7 @@ impl DevEnvironmentStorageService {
             return Err(ZfsError::SystemUnavailable(format!(
                 "Failed to create pools directory: {}",
                 e
-            )));
+            )).into());
         }
 
         // Create datasets directory
@@ -128,7 +128,7 @@ impl DevEnvironmentStorageService {
             return Err(ZfsError::SystemUnavailable(format!(
                 "Failed to create datasets directory: {}",
                 e
-            )));
+            )).into());
         }
 
         info!("✅ Development storage abstraction initialized");
@@ -155,7 +155,7 @@ impl DevEnvironmentStorageService {
             return Err(ZfsError::SystemUnavailable(format!(
                 "Failed to create pool directory: {}",
                 e
-            )));
+            )).into());
         }
 
         let pool = SimulatedPool {
@@ -208,7 +208,7 @@ impl DevEnvironmentStorageService {
             return Err(ZfsError::SystemUnavailable(format!(
                 "Failed to create dataset directory: {}",
                 e
-            )));
+            )).into());
         }
 
         if let Err(e) = tokio::fs::create_dir_all(&mount_point).await {
@@ -216,7 +216,7 @@ impl DevEnvironmentStorageService {
             return Err(ZfsError::SystemUnavailable(format!(
                 "Failed to create mount point: {}",
                 e
-            )));
+            )).into());
         }
 
         let dataset = SimulatedDataset {
