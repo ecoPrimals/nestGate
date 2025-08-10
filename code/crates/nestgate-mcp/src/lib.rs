@@ -48,6 +48,10 @@ pub use client::{HttpOrchestratorClient, OrchestratorClient};
 pub use config::{EnhancedMcpConfig, McpConfig, RetryConfig};
 // Use unified error system instead of deprecated local error types
 pub use nestgate_core::error::{NestGateError, Result};
+
+// Deprecated re-export for backward compatibility
+#[deprecated(since = "2.1.0", note = "Use nestgate_core::Result and NestGateError instead")]
+pub use error::{Error as McpError, Result as McpResult};
 pub use service::EnhancedMcpService;
 
 // Re-export key types from sub-modules

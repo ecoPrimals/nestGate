@@ -397,7 +397,10 @@ pub use command::{
 // Type exports
 pub use config::{TierConfig, TierConfigurations, ZfsConfig};
 pub use dataset::{DatasetInfo, ZfsDatasetManager};
-pub use error::{Result, ZfsError};
+// Use unified error system (deprecated ZfsError)
+#[deprecated(since = "2.1.0", note = "Use nestgate_core::Result and NestGateError instead")]
+pub use error::{Result as ZfsResult, ZfsError};
+pub use nestgate_core::Result;
 pub use health::ZfsHealthMonitor;
 pub use manager::ZfsManager;
 pub use mcp_integration::{ZfsMcpConfig, ZfsMcpStorageProvider};
