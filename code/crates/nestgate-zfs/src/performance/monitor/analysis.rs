@@ -1,4 +1,3 @@
-/// ZFS Performance Analysis
 /// Trend analysis, performance evaluation, and predictive monitoring
 use std::collections::VecDeque;
 use std::sync::Arc;
@@ -10,6 +9,42 @@ use tracing::{debug, error};
 use nestgate_core::Result as CoreResult;
 
 use super::super::types::*;
+
+// Type alias for complex metrics history type
+type MetricsHistoryQueue = Arc<RwLock<VecDeque<PerformanceSnapshot>>>;
+
+/// Performance analysis engine
+pub struct PerformanceAnalyzer;
+
+impl PerformanceAnalyzer {
+    /// Analyze performance trends
+    /// **CANONICAL MODERNIZATION**: Use metrics_history parameter
+    pub async fn analyze_trends(
+        metrics_history: &MetricsHistoryQueue,
+    ) -> Result<AnalysisReport, Box<dyn std::error::Error>> {
+        // Analyze performance trends from metrics history
+        let history = metrics_history.read().await;
+        if history.len() >= 2 {
+            let latest = history.back().unwrap();
+            let previous = history.get(history.len() - 2).unwrap();
+
+            tracing::debug!(
+                "Performance trend: Score {} -> {}, Timestamp {:?} -> {:?}",
+                previous.performance_score,
+                latest.performance_score,
+                previous.timestamp,
+                latest.timestamp
+            );
+        }
+        Ok(AnalysisReport::default())
+    }
+}
+
+/// Analysis report structure
+#[derive(Default)]
+pub struct AnalysisReport {
+    // ... existing fields
+}
 
 impl ZfsPerformanceMonitor {
     /// Start analysis task
@@ -38,7 +73,7 @@ impl ZfsPerformanceMonitor {
     /// Analyze performance trends
     pub(super) async fn analyze_trends(
         current_metrics: &Arc<RwLock<CurrentPerformanceMetrics>>,
-        metrics_history: &Arc<RwLock<VecDeque<PerformanceSnapshot>>>,
+        metrics_history: &MetricsHistoryQueue,
     ) -> CoreResult<()> {
         debug!("Analyzing performance trends");
 

@@ -1,8 +1,7 @@
-//! AI confidence scoring for ZFS operations
-//!
-//! This module provides confidence scoring for ZFS operations based on system state,
-//! resource availability, and historical performance data. It enables AI agents to
-//! make informed decisions about storage operations with uncertainty quantification.
+//
+// This module provides confidence scoring for ZFS operations based on system state,
+// resource availability, and historical performance data. It enables AI agents to
+// make informed decisions about storage operations with uncertainty quantification.
 
 use crate::dataset::DatasetInfo;
 use crate::pool::{PoolHealth, PoolInfo};

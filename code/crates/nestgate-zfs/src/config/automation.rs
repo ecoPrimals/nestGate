@@ -1,4 +1,3 @@
-//! AI Automation Configuration for ZFS automation
 
 use serde::{Deserialize, Serialize};
 

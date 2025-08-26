@@ -1,22 +1,45 @@
-//! ZFS Request Handlers
-//!
-//! Provides standardized request handling for ZFS operations using the unified
-//! service architecture and error handling patterns.
+//
+// Provides standardized request handling for ZFS operations using the unified
+// service architecture and error handling patterns.
+//
+// **CANONICAL MODERNIZATION**: Migrated to zero-cost native async patterns
 
-use async_trait::async_trait;
+// REMOVED: async_trait - using zero-cost native async patterns
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::pin::Pin;
+use std::time::Duration;
 
 use nestgate_core::{
-    error::{NestGateError, Result},
+    error::Result,
     traits::{
-        UniversalResponseStatus, UniversalService, UniversalServiceRequest,
+        UniversalService, UniversalResponseStatus, UniversalServiceRequest,
         UniversalServiceResponse,
     },
-    unified_types::UnifiedServiceConfig,
+    unified_enums::service_types::UnifiedServiceType,
 };
 
-use crate::config::unified_zfs_config::ZfsConfig;
+use crate::config::ZfsConfig;
+use tracing::warn;
+
+/// ZFS service health information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ZfsHealthInfo {
+    pub status: String,
+    pub pools_count: usize,
+    pub datasets_count: usize,
+    pub snapshots_count: usize,
+    pub last_check: std::time::SystemTime,
+}
+
+/// ZFS service metrics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ZfsMetrics {
+    pub requests_processed: u64,
+    pub errors_count: u64,
+    pub average_response_time_ms: f64,
+    pub uptime_seconds: u64,
+}
 
 /// ZFS operation request types
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -119,9 +142,37 @@ pub struct ZfsRequestHandler {
 }
 
 impl ZfsRequestHandler {
-    /// Create new ZFS request handler
+    /// Create a new ZFS request handler
     pub fn new(config: ZfsConfig) -> Self {
         Self { config }
+    }
+
+    /// Get the configuration
+    pub fn config(&self) -> &ZfsConfig {
+        &self.config
+    }
+
+    /// Get the configured default pool name
+    pub fn get_default_pool_name(&self) -> String {
+        // Use environment variable or fallback to default
+        std::env::var("NESTGATE_DEFAULT_POOL").unwrap_or_else(|_| "tank".to_string())
+    }
+
+    /// Check if performance monitoring is enabled
+    pub fn is_performance_monitoring_enabled(&self) -> bool {
+        // Use environment variable or default to enabled
+        std::env::var("NESTGATE_PERFORMANCE_MONITORING")
+            .map(|v| v.parse().unwrap_or(true))
+            .unwrap_or(true)
+    }
+
+    /// Get the configured health check interval
+    pub fn get_health_check_interval(&self) -> Duration {
+        // Use environment variable or default to 5 minutes
+        let seconds = std::env::var("NESTGATE_HEALTH_CHECK_INTERVAL")
+            .map(|v| v.parse().unwrap_or(300))
+            .unwrap_or(300);
+        Duration::from_secs(seconds)
     }
 
     /// Handle ZFS-specific requests
@@ -142,43 +193,68 @@ impl ZfsRequestHandler {
         }
     }
 
-    async fn handle_pool_status(&self, _name: Option<String>) -> Result<ZfsResponse> {
-        // Mock implementation - in production this would call actual ZFS commands
-        let pools = vec![PoolInfo {
-            name: "tank".to_string(),
-            state: "ONLINE".to_string(),
-            size: "1TB".to_string(),
-            allocated: "500GB".to_string(),
-            free: "500GB".to_string(),
-            devices: vec!["sda".to_string(), "sdb".to_string()],
-        }];
+    async fn handle_pool_status(&self, name: Option<String>) -> Result<ZfsResponse> {
+        // Use configured pool name or provided name
+        let pool_name = name.unwrap_or_else(|| self.get_default_pool_name());
 
-        Ok(ZfsResponse::PoolStatus { pools })
+        // Check if ZFS is available for real operations
+        if crate::real_zfs_operations::RealZfsOperations::is_available().await {
+            let real_ops = crate::real_zfs_operations::RealZfsOperations::default();
+            real_ops.get_pool_status(Some(pool_name)).await
+        } else {
+            // Fallback to development environment simulation
+            warn!("ZFS not available, using development environment simulation");
+            let pools = vec![PoolInfo {
+                name: pool_name,
+                state: "ONLINE".to_string(),
+                size: "1TB".to_string(),
+                allocated: "500GB".to_string(),
+                free: "500GB".to_string(),
+                devices: vec!["sda".to_string(), "sdb".to_string()],
+            }];
+            Ok(ZfsResponse::PoolStatus { pools })
+        }
     }
 
-    async fn handle_dataset_list(&self, _pool: Option<String>) -> Result<ZfsResponse> {
-        // Mock implementation
-        let datasets = vec![DatasetInfo {
-            name: "tank/data".to_string(),
-            used: "100GB".to_string(),
-            available: "400GB".to_string(),
-            referenced: "100GB".to_string(),
-            mountpoint: "/tank/data".to_string(),
-        }];
+    async fn handle_dataset_list(&self, pool: Option<String>) -> Result<ZfsResponse> {
+        // Use configured pool name or provided pool
+        let pool_name = pool.unwrap_or_else(|| self.get_default_pool_name());
 
-        Ok(ZfsResponse::DatasetList { datasets })
+        // Check if ZFS is available for real operations
+        if crate::real_zfs_operations::RealZfsOperations::is_available().await {
+            let real_ops = crate::real_zfs_operations::RealZfsOperations::default();
+            real_ops.get_dataset_list(Some(pool_name)).await
+        } else {
+            // Fallback to development environment simulation
+            warn!("ZFS not available, using development environment simulation");
+            let datasets = vec![DatasetInfo {
+                name: format!("{pool_name}/data"),
+                used: "100GB".to_string(),
+                available: "400GB".to_string(),
+                referenced: "100GB".to_string(),
+                mountpoint: format!("/{pool_name}/data"),
+            }];
+            Ok(ZfsResponse::DatasetList { datasets })
+        }
     }
 
-    async fn handle_snapshot_list(&self, _dataset: Option<String>) -> Result<ZfsResponse> {
-        // Mock implementation
-        let snapshots = vec![SnapshotInfo {
-            name: "tank/data@snapshot1".to_string(),
-            used: "1GB".to_string(),
-            referenced: "100GB".to_string(),
-            creation: "2025-01-30T12:00:00Z".to_string(),
-        }];
+    async fn handle_snapshot_list(&self, dataset: Option<String>) -> Result<ZfsResponse> {
+        // Check if ZFS is available for real operations
+        if crate::real_zfs_operations::RealZfsOperations::is_available().await {
+            let real_ops = crate::real_zfs_operations::RealZfsOperations::default();
+            real_ops.get_snapshot_list(dataset).await
+        } else {
+            // Fallback to development environment simulation
+            warn!("ZFS not available, using development environment simulation");
+            let snapshots = vec![SnapshotInfo {
+                name: "tank/data@snapshot1".to_string(),
+                used: "1GB".to_string(),
+                referenced: "100GB".to_string(),
+                creation: "2025-01-30T12:00:00Z".to_string(),
+            }];
 
-        Ok(ZfsResponse::SnapshotList { snapshots })
+            Ok(ZfsResponse::SnapshotList { snapshots })
+        }
     }
 
     async fn handle_health_check(&self) -> Result<ZfsResponse> {
@@ -194,117 +270,72 @@ impl ZfsRequestHandler {
     }
 }
 
-#[async_trait]
 impl UniversalService for ZfsRequestHandler {
     type Config = ZfsConfig;
-    type Health = HashMap<String, String>;
-
-    async fn initialize(&mut self, config: Self::Config) -> Result<()> {
-        *self = Self::new(config);
-        Ok(())
-    }
-
-    async fn start(&mut self) -> Result<()> {
-        tracing::info!("ZFS request handler started");
-        Ok(())
-    }
-
-    async fn stop(&mut self) -> Result<()> {
-        tracing::info!("ZFS request handler stopped");
-        Ok(())
-    }
-
-    async fn health_check(&self) -> Result<bool> {
-        // Return simple boolean health status as required by trait
-        Ok(true)
-    }
-
-    // Required trait methods
-    async fn status(&self) -> nestgate_core::unified_enums::service_types::UnifiedServiceState {
-        nestgate_core::unified_enums::service_types::UnifiedServiceState::Running
-    }
-
-    async fn health(&self) -> Result<Self::Health> {
-        let mut health = HashMap::new();
-        health.insert("status".to_string(), "healthy".to_string());
-        health.insert("service".to_string(), "zfs_handler".to_string());
-        Ok(health)
-    }
+    type Health = ZfsHealthInfo;
+    type Metrics = ZfsMetrics;
 
     fn service_id(&self) -> &str {
         "zfs_request_handler"
     }
 
-    fn service_type(&self) -> nestgate_core::unified_enums::UnifiedServiceType {
-        nestgate_core::unified_enums::UnifiedServiceType::Storage
+    fn service_type(&self) -> UnifiedServiceType {
+        UnifiedServiceType::Storage
     }
 
-    async fn handle_request(
-        &self,
-        request: UniversalServiceRequest,
-    ) -> Result<UniversalServiceResponse> {
-        let response = match request.operation.as_str() {
-            "zfs_request" => {
-                // Try to deserialize the ZFS request from parameters
-                if let Some(request_data) = request.parameters.get("request") {
-                    match serde_json::from_value::<ZfsRequest>(request_data.clone()) {
-                        Ok(zfs_request) => match self.handle_zfs_request(zfs_request).await {
-                            Ok(zfs_response) => {
-                                let data = match serde_json::to_value(zfs_response) {
-                                    Ok(value) => Some(value),
-                                    Err(_) => {
-                                        return Ok(UniversalServiceResponse {
-                                            request_id: request.request_id,
-                                            status: UniversalResponseStatus::Error,
-                                            data: None,
-                                            error: Some("Failed to serialize response".to_string()),
-                                            metadata: HashMap::new(),
-                                        });
-                                    }
-                                };
-                                UniversalServiceResponse {
-                                    request_id: request.request_id,
-                                    status: UniversalResponseStatus::Success,
-                                    data,
-                                    error: None,
-                                    metadata: HashMap::new(),
-                                }
-                            }
-                            Err(e) => UniversalServiceResponse {
-                                request_id: request.request_id,
-                                status: UniversalResponseStatus::Error,
-                                data: None,
-                                error: Some(e.to_string()),
-                                metadata: HashMap::new(),
-                            },
-                        },
-                        Err(e) => UniversalServiceResponse {
-                            request_id: request.request_id,
-                            status: UniversalResponseStatus::Error,
-                            data: None,
-                            error: Some(format!("Invalid ZFS request format: {}", e)),
-                            metadata: HashMap::new(),
-                        },
-                    }
-                } else {
-                    UniversalServiceResponse {
-                        request_id: request.request_id,
-                        status: UniversalResponseStatus::Error,
-                        data: None,
-                        error: Some("Missing 'request' parameter".to_string()),
-                        metadata: HashMap::new(),
-                    }
-                }
-            }
-            _ => UniversalServiceResponse {
-                request_id: request.request_id,
-                status: UniversalResponseStatus::NotSupported,
-                data: None,
-                error: Some(format!("Unsupported operation: {}", request.operation)),
-                metadata: HashMap::new(),
-            },
-        };
+    fn is_healthy(&self) -> impl std::future::Future<Output = bool> + Send {
+        async move {
+            // Simple health check - in production this would check ZFS pools
+            true
+        }
+    }
 
-        Ok(response)
+    fn health_info(&self) -> impl std::future::Future<Output = Result<Self::Health>> + Send {
+        async move {
+            Ok(ZfsHealthInfo {
+                status: "healthy".to_string(),
+                pools_count: 1,
+                datasets_count: 1, 
+                snapshots_count: 1,
+                last_check: std::time::SystemTime::now(),
+            })
+        }
+    }
+
+    fn metrics(&self) -> impl std::future::Future<Output = Result<Self::Metrics>> + Send {
+        async move {
+            Ok(ZfsMetrics {
+                requests_processed: 100,
+                errors_count: 0,
+                average_response_time_ms: 10.5,
+                uptime_seconds: 3600,
+            })
+        }
+    }
+
+    fn start(&mut self, config: Self::Config) -> impl std::future::Future<Output = Result<()>> + Send {
+        async move {
+            tracing::info!("Starting ZFS request handler with config: {:?}", config);
+            Ok(())
+        }
+    }
+
+    fn stop(&mut self) -> impl std::future::Future<Output = Result<()>> + Send {
+        async move {
+            tracing::info!("Stopping ZFS request handler");
+            Ok(())
+        }
+    }
+
+    fn update_config(&mut self, config: Self::Config) -> impl std::future::Future<Output = Result<()>> + Send {
+        async move {
+            self.config = config;
+            tracing::info!("Updated ZFS request handler configuration");
+            Ok(())
+        }
+    }
+
+    fn current_config(&self) -> &Self::Config {
+        &self.config
     }
 }

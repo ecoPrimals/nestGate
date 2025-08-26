@@ -1,10 +1,9 @@
-//! Orchestration Capability Adapter
-//!
-//! This module provides capability-based orchestration integration through the universal adapter pattern.
-//! ✅ ARCHITECTURE COMPLIANCE: No hardcoded primal names, uses capability discovery.
+//
+// This module provides capability-based orchestration integration through the universal adapter pattern.
+// ✅ ARCHITECTURE COMPLIANCE: No hardcoded primal names, uses capability discovery.
 
-use nestgate_core::ecosystem_integration::universal_adapter::UniversalAdapter;
-use nestgate_core::error::Result;
+use nestgate_core::error::{IdioResult, NestGateError};
+use nestgate_core::universal_adapter::CanonicalUniversalAdapter as UniversalAdapter;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{debug, info, warn};
@@ -51,22 +50,19 @@ impl OrchestrationAdapter {
     }
 
     /// Discover available orchestration services through universal adapter
-    pub async fn discover_orchestration_services(&self) -> Result<Vec<OrchestrationService>> {
+    pub async fn discover_orchestration_services(&self) -> IdioResult<Vec<OrchestrationService, NestGateError>> {
         debug!("🔍 Discovering orchestration capabilities");
 
         // ✅ CAPABILITY-BASED: Use universal adapter for discovery
         // Create a proper CapabilityRequest
-        let capability_request =
-            nestgate_core::ecosystem_integration::universal_adapter::types::CapabilityRequest {
-                request_id: uuid::Uuid::new_v4().to_string(),
-                capability_id: "orchestration".to_string(),
-                payload: vec![],
-                metadata: std::collections::HashMap::new(),
-                performance_requirements: None,
-                timeout: Some(std::time::Duration::from_secs(30)),
-                priority: 1,
-                requires_encryption: false,
-            };
+        let capability_request = nestgate_core::ecosystem_integration::CapabilityRequest {
+            request_id: uuid::Uuid::new_v4().to_string(),
+            target_service: None,
+            capability: "orchestration".to_string(),
+            parameters: std::collections::HashMap::new(),
+            metadata: std::collections::HashMap::new(),
+            timeout: Some(std::time::Duration::from_secs(30)),
+        };
 
         match self
             .universal_adapter
@@ -74,7 +70,7 @@ impl OrchestrationAdapter {
             .await
         {
             Ok(response) => {
-                let endpoint = format!("http://localhost:8080"); // Default endpoint from response
+                let _endpoint = "http://localhost:8080".to_string(); // Default endpoint from response
                 info!("✅ Orchestration capability discovered: {:?}", response);
                 Ok(vec![OrchestrationService {
                     endpoint,
@@ -103,7 +99,7 @@ impl OrchestrationAdapter {
     pub async fn coordinate_services(
         &self,
         request: ServiceCoordinationRequest,
-    ) -> Result<ServiceCoordinationResponse> {
+    ) -> IdioResult<ServiceCoordinationResponse, NestGateError> {
         debug!("🎯 Requesting service coordination");
 
         // ✅ CAPABILITY-BASED: Discover orchestration service dynamically

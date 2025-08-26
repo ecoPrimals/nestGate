@@ -1,6 +1,5 @@
-//! Insights Generator Module
-//!
-//! Handles generation of comprehensive system insights and actionable recommendations.
+//
+// Handles generation of comprehensive system insights and actionable recommendations.
 
 use crate::handlers::performance_dashboard::types::*;
 use nestgate_core::Result;

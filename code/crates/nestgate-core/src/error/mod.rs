@@ -1,3 +1,5 @@
+use crate::NestGateError;
+use std::collections::HashMap;
 /// NestGate Unified Error Handling System
 /// This module provides comprehensive error handling for the entire NestGate ecosystem
 /// with rich context, proper error chains, and consistent patterns.
@@ -6,8 +8,49 @@ pub mod conversions;
 pub mod core;
 pub mod domain_errors;
 pub mod unified_error_consolidation;
+pub mod phase4_ecosystem_adoption;
+pub mod legacy_result_consolidation;
+pub mod idiomatic_evolution;
+pub mod enhanced_ergonomics;
 
-// Re-export all public types for backwards compatibility
+// ==================== IDIOMATIC RESULT TYPES (PRIMARY) ====================
+
+// Re-export all idiomatic Result types as primary exports
+pub use idiomatic_evolution::{
+    // Primary idiomatic Result types
+    IdioResult,
+    
+    // Domain-specific Result types (PREFERRED)
+    ValidationResult, StorageResult, SecurityResult,
+    ZfsResult, ApiResult, McpResult,
+    
+    // Ecosystem integration types
+    AnyhowResult, BoxedResult, StdResult,
+    
+    // Domain-specific error types
+    ValidationError, StorageError, SecurityError,
+    ZfsError, ApiError, McpError,
+    
+    // Migration and utility traits
+    IdioResultExt, WithDomainContext,
+};
+
+// Re-export Phase 4 ecosystem adoption types
+pub use phase4_ecosystem_adoption::{
+    EcosystemAdoptionManager, AdoptionStats, DeprecationWarning, PerformanceBenchmark,
+    MigrationProgress, MigrationStatus, EcosystemStatus, DeprecationCategory,
+    BenchmarkCategory, BenchmarkError, AdoptionReport,
+};
+
+// Re-export Phase 3 legacy consolidation types
+pub use legacy_result_consolidation::{
+    LegacyResultConsolidationManager, ConsolidationStats, ConsolidationWarning,
+    BinError, InstallerError, NotificationError, AIError,
+};
+
+// ==================== CORE ERROR SYSTEM ====================
+
+// Re-export all core error types for backwards compatibility
 pub use core::{
     ErrorContext, NestGateError, RecoveryStrategy, RetryInfo, SystemResource, TestAssertionDetails,
     UnifiedConfigSource,
@@ -19,11 +62,16 @@ pub use domain_errors::{
 };
 pub use unified_error_consolidation::{ConsolidatedOperationError, ErrorCategory};
 
-/// **THE** unified Result type for all NestGate operations
-/// This is the primary Result type that should be used throughout the codebase
-pub type Result<T> = std::result::Result<T, NestGateError>;
+// ==================== COMPATIBILITY ALIASES ====================
 
-// ========== ERROR CONVERSION TRAITS FOR UNIFICATION ==========
+/// **CANONICAL RESULT** - Preferred alias for IdioResult with NestGateError
+/// This provides a clear, non-deprecated way to use the unified error system
+pub type CanonicalResult<T> = IdioResult<T, NestGateError>;
+
+/// **UNIFIED RESULT** - Alternative alias for ecosystem integration
+pub type UnifiedResult<T> = IdioResult<T, NestGateError>;
+
+// ==================== ERROR CONVERSION TRAITS FOR UNIFICATION ====================
 
 /// Trait for converting errors to NestGateError with context
 pub trait IntoNestGateError {
@@ -154,95 +202,95 @@ impl IntoNestGateError for reqwest::Error {
     }
 }
 
-/// Convenience extension trait for Result types
-pub trait ResultExt<T> {
-    /// Convert any error to NestGateError
-    fn into_nestgate_result(self) -> Result<T>;
-
-    /// Convert any error to NestGateError with context
-    fn into_nestgate_result_with_context(self, context: &str) -> Result<T>;
-
-    /// Map error with context (for chaining)
-    fn with_context(self, context: &str) -> Result<T>;
+/// Extension trait for converting any Result into NestGateError context
+pub trait IntoNestGateResult<T, E> {
+    /// Convert this result into a NestGateError result
+    fn into_nestgate_result(self) -> CanonicalResult<T>;
+    
+    /// Convert this result into a NestGateError result with additional context
+    fn into_nestgate_result_with_context(self, context: &str) -> CanonicalResult<T>;
+    
+    /// Add context to this result
+    fn with_context(self, context: &str) -> CanonicalResult<T>;
 }
 
-impl<T, E> ResultExt<T> for std::result::Result<T, E>
+impl<T, E> IntoNestGateResult<T, E> for std::result::Result<T, E>
 where
-    E: IntoNestGateError,
+    E: std::error::Error + Send + Sync + 'static,
 {
-    fn into_nestgate_result(self) -> Result<T> {
-        self.map_err(|e| e.into_nestgate_error())
+    fn into_nestgate_result(self) -> CanonicalResult<T> {
+        self.map_err(|e| NestGateError::internal_error(e.to_string(), "conversion".to_string()))
     }
 
-    fn into_nestgate_result_with_context(self, context: &str) -> Result<T> {
-        self.map_err(|e| e.into_nestgate_error_with_context(context))
+    fn into_nestgate_result_with_context(self, context: &str) -> CanonicalResult<T> {
+        self.map_err(|e| NestGateError::internal_error(format!("{}: {}", context, e), context.to_string()))
     }
 
-    fn with_context(self, context: &str) -> Result<T> {
-        self.map_err(|e| e.into_nestgate_error_with_context(context))
+    fn with_context(self, context: &str) -> CanonicalResult<T> {
+        self.map_err(|e| NestGateError::internal_error(format!("{}: {}", context, e), context.to_string()))
     }
 }
 
 // ========== LEGACY ERROR TYPE CONVERSIONS ==========
 
-/// Convert from other crate-specific error types
-impl From<crate::unified_types::error_types::UnifiedErrorType> for NestGateError {
-    fn from(error_type: crate::unified_types::error_types::UnifiedErrorType) -> Self {
-        use crate::unified_types::error_types::UnifiedErrorType;
+// /// Convert from other crate-specific error types (TEMPORARILY DISABLED)
+// impl From<crate::unified_types::UnifiedErrorType> for NestGateError {
+    // fn from(error_type: crate::unified_types::UnifiedErrorType) -> Self {
+    //     use crate::unified_types::UnifiedErrorType;
 
-        match error_type {
-            UnifiedErrorType::Authentication => {
-                NestGateError::Security(Box::new(SecurityErrorData {
-                    message: "Authentication failed".to_string(),
-                    operation: "authentication".to_string(),
-                    resource: None,
-                    principal: None,
-                    context: None,
-                }))
-            }
-            UnifiedErrorType::Authorization => {
-                NestGateError::Security(Box::new(SecurityErrorData {
-                    message: "Authorization failed".to_string(),
-                    operation: "authorization".to_string(),
-                    resource: Some("unknown".to_string()),
-                    principal: None,
-                    context: None,
-                }))
-            }
-            UnifiedErrorType::Validation => NestGateError::Validation {
-                field: "unknown".to_string(),
-                message: "Validation failed".to_string(),
-                current_value: None,
-                expected: None,
-                user_error: true,
-            },
-            UnifiedErrorType::Configuration => NestGateError::Configuration {
-                message: "Configuration error".to_string(),
-                config_source: UnifiedConfigSource::File("unknown".to_string()),
-                field: None,
-                suggested_fix: None,
-            },
-            UnifiedErrorType::Network => NestGateError::Network(Box::new(NetworkErrorData {
-                message: "Network error".to_string(),
-                endpoint: Some("unknown".to_string()),
-                operation: "connection".to_string(),
-                context: None,
-            })),
-            UnifiedErrorType::Timeout => NestGateError::Timeout {
-                operation: "unknown".to_string(),
-                duration: std::time::Duration::from_secs(30),
-                retryable: true,
-                suggested_timeout: Some(std::time::Duration::from_secs(60)),
-            },
-            _ => NestGateError::Internal {
-                message: format!("Unhandled error type: {error_type:?}"),
-                location: Some("error conversion".to_string()),
-                debug_info: None,
-                is_bug: false,
-            },
-        }
-    }
-}
+    //     match error_type {
+    //         UnifiedErrorType::Authentication => {
+    //             NestGateError::Security(Box::new(SecurityErrorData {
+    //                 message: "Authentication failed".to_string(),
+    //                 operation: "authentication".to_string(),
+    //                 resource: None,
+    //                 principal: None,
+    //                 context: None,
+    //             }))
+    //         }
+    //         UnifiedErrorType::Authorization => {
+    //             NestGateError::Security(Box::new(SecurityErrorData {
+    //                 message: "Authorization failed".to_string(),
+    //                 operation: "authorization".to_string(),
+    //                 resource: Some("unknown".to_string()),
+    //                 principal: None,
+    //                 context: None,
+    //             }))
+    //         }
+    //         UnifiedErrorType::Validation => NestGateError::Validation {
+    //             field: "unknown".to_string(),
+    //             message: "Validation failed".to_string(),
+    //             current_value: None,
+    //             expected: None,
+    //             user_error: true,
+    //         },
+    //         UnifiedErrorType::Configuration => NestGateError::Configuration {
+    //             message: "Configuration error".to_string(),
+    //             config_source: UnifiedConfigSource::File("unknown".to_string()),
+    //             field: None,
+    //             suggested_fix: None,
+    //         },
+    //         UnifiedErrorType::Network => NestGateError::Network(Box::new(NetworkErrorData {
+    //             message: "Network error".to_string(),
+    //             endpoint: Some("unknown".to_string()),
+    //             operation: "connection".to_string(),
+    //             context: None,
+    //         })),
+    //         UnifiedErrorType::Timeout => NestGateError::Timeout {
+    //             operation: "unknown".to_string(),
+    //             duration: std::time::Duration::from_secs(30),
+    //             retryable: true,
+    //             suggested_timeout: Some(std::time::Duration::from_secs(60)),
+    //         },
+    //         _ => NestGateError::Internal {
+    //             message: format!("Unhandled error type: {error_type:?}"),
+    //             location: Some("error conversion".to_string()),
+    //             debug_info: None,
+    //             is_bug: false,
+    //         },
+    //     }
+    // }
+// }
 
 /// Convert from NetworkErrorData to NestGateError
 impl From<NetworkErrorData> for NestGateError {
@@ -319,6 +367,16 @@ impl NestGateError {
         }))
     }
 
+    /// Create a simple storage error
+    pub fn storage_error(message: &str, operation: &str, path: Option<&str>) -> Self {
+        Self::Io {
+            operation: operation.to_string(),
+            error_message: message.to_string(),
+            resource: path.map(|s| s.to_string()),
+            retryable: false,
+        }
+    }
+
     /// Create an automation error
     pub fn automation_error(message: String) -> Self {
         Self::Validation {
@@ -358,6 +416,51 @@ impl NestGateError {
             duration,
             retryable: true,
             suggested_timeout: Some(duration * 2), // Suggest double the timeout
+        }
+    }
+
+    /// Add context to any NestGateError variant
+    pub fn add_context(&mut self, key: &str, value: &str) {
+        use std::collections::HashMap;
+        
+        match self {
+            NestGateError::Network(ref mut data) => {
+                if data.context.is_none() {
+                    data.context = Some(HashMap::new());
+                }
+                if let Some(ref mut context) = data.context {
+                    context.insert(key.to_string(), value.to_string());
+                }
+            }
+            NestGateError::Api(ref mut data) => {
+                if data.context.is_none() {
+                    data.context = Some(HashMap::new());
+                }
+                if let Some(ref mut context) = data.context {
+                    context.insert(key.to_string(), value.to_string());
+                }
+            }
+            NestGateError::Security(ref mut data) => {
+                if data.context.is_none() {
+                    data.context = Some(HashMap::new());
+                }
+                if let Some(ref mut context) = data.context {
+                    context.insert(key.to_string(), value.to_string());
+                }
+            }
+            NestGateError::Mcp(ref mut data) => {
+                if data.context.is_none() {
+                    data.context = Some(HashMap::new());
+                }
+                if let Some(ref mut context) = data.context {
+                    context.insert(key.to_string(), value.to_string());
+                }
+            }
+            // For variants without context fields, this is a no-op
+            // Future enhancement: Could extend other error types to include context
+            _ => {
+                // No context field available for this error variant
+            }
         }
     }
 }

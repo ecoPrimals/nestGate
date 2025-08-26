@@ -8,7 +8,7 @@
 /// - Cross-crate component interaction validation
 
 use std::collections::HashMap;
-use std::sync::Arc;
+
 use std::time::{Duration, SystemTime};
 use tokio::time::{sleep, timeout};
 use uuid::Uuid;

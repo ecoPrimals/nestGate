@@ -1,9 +1,8 @@
-//! # Hardware Tuning API Routes
-//!
-//! **REST API endpoints for hardware-agnostic tuning**
-//!
-//! These routes provide external access to hardware tuning capabilities
-//! while enforcing crypto lock protection for commercial extraction.
+//
+// **REST API endpoints for hardware-agnostic tuning**
+//
+// These routes provide external access to hardware tuning capabilities
+// while enforcing crypto lock protection for commercial extraction.
 
 use crate::handlers::hardware_tuning::{
 use tracing::info;

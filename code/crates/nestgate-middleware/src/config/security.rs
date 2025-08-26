@@ -1,4 +1,3 @@
-/// Middleware Security Configuration
 /// All security-related middleware settings (auth, CORS, rate limiting, etc.)
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -7,7 +6,7 @@ use std::time::Duration;
 
 // ==================== SECURITY SETTINGS ====================
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MiddlewareSecuritySettings {
     /// Authentication middleware config
     pub authentication: AuthenticationMiddlewareSettings,
@@ -25,7 +24,7 @@ pub struct MiddlewareSecuritySettings {
 
 // ==================== AUTHENTICATION ====================
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AuthenticationMiddlewareSettings {
     /// Enable authentication
     pub enabled: bool,
@@ -212,7 +211,7 @@ pub enum SameSitePolicy {
     None,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MfaSettings {
     /// Enable MFA
     pub enabled: bool,
@@ -388,7 +387,7 @@ pub enum FrameOptions {
 
 // ==================== SANITIZATION ====================
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SanitizationSettings {
     /// Enable input sanitization
     pub enabled: bool,
@@ -429,19 +428,6 @@ pub struct XssSettings {
 }
 
 // ==================== DEFAULT IMPLEMENTATIONS ====================
-
-impl Default for MiddlewareSecuritySettings {
-    fn default() -> Self {
-        Self {
-            authentication: AuthenticationMiddlewareSettings::default(),
-            authorization: AuthorizationMiddlewareSettings::default(),
-            cors: CorsSettings::default(),
-            rate_limiting: RateLimitingSettings::default(),
-            security_headers: SecurityHeadersSettings::default(),
-            sanitization: SanitizationSettings::default(),
-        }
-    }
-}
 
 impl MiddlewareSecuritySettings {
     /// Development security settings
@@ -514,17 +500,6 @@ impl MiddlewareSecuritySettings {
 }
 
 // Additional default implementations for nested structures
-impl Default for AuthenticationMiddlewareSettings {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            providers: Vec::new(),
-            jwt: JwtSettings::default(),
-            session: SessionSettings::default(),
-            mfa: MfaSettings::default(),
-        }
-    }
-}
 
 impl Default for JwtSettings {
     fn default() -> Self {
@@ -557,15 +532,6 @@ impl Default for CookieSettings {
             secure: false,
             http_only: true,
             same_site: SameSitePolicy::Lax,
-        }
-    }
-}
-
-impl Default for MfaSettings {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            providers: Vec::new(),
         }
     }
 }
@@ -619,17 +585,6 @@ impl Default for SecurityHeadersSettings {
             frame_options: Some(FrameOptions::SameOrigin),
             content_type_options: false,
             custom_headers: HashMap::new(),
-        }
-    }
-}
-
-impl Default for SanitizationSettings {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            html: HtmlSanitizationSettings::default(),
-            sql_injection: SqlInjectionSettings::default(),
-            xss: XssSettings::default(),
         }
     }
 }

@@ -2,7 +2,7 @@
 ///
 /// Comprehensive test suite to validate production deployment readiness
 
-use std::sync::Arc;
+
 use std::time::Duration;
 use tokio::time::timeout;
 // Removed unused tracing import

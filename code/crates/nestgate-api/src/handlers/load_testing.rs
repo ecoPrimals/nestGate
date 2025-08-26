@@ -1,4 +1,3 @@
-use axum::extract::Query;
 use axum::response::IntoResponse;
 use axum::Json;
 use nestgate_core::Result;
@@ -69,6 +68,7 @@ pub struct LoadTestResults {
     pub test_id: Uuid,
     /// Start and end times
     pub start_time: String,
+    /// Timestamp when the load test completed
     pub end_time: String,
     /// Total duration
     pub duration_seconds: f64,

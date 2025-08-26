@@ -1,6 +1,5 @@
-//! Risk Forecasting Module
-//!
-//! Handles risk assessment and performance forecasting based on ZFS analytics and system trends.
+//
+// Handles risk assessment and performance forecasting based on ZFS analytics and system trends.
 
 use crate::handlers::performance_dashboard::types::*;
 use nestgate_core::Result;

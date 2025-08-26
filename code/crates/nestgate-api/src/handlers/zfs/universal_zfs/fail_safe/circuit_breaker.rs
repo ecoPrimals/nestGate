@@ -1,6 +1,5 @@
-//! Circuit Breaker Implementation
-//!
-//! Provides circuit breaker functionality for fail-safe operations.
+//
+// Provides circuit breaker functionality for fail-safe operations.
 
 use std::sync::Arc;
 use std::time::SystemTime;
@@ -14,8 +13,11 @@ use tracing::warn;
 /// Circuit breaker states
 #[derive(Debug, Clone, PartialEq)]
 pub enum CircuitBreakerState {
+    /// Circuit is closed, requests flow through normally
     Closed,
+    /// Circuit is open, requests are blocked due to failures
     Open,
+    /// Circuit is half-open, testing if service has recovered
     HalfOpen,
 }
 
@@ -30,6 +32,13 @@ pub struct CircuitBreaker {
 }
 
 impl CircuitBreaker {
+    /// Create a new circuit breaker with the specified configuration
+    ///
+    /// # Arguments
+    /// * `config` - Configuration settings for the circuit breaker
+    ///
+    /// # Returns
+    /// * New circuit breaker instance in the closed state
     pub fn new(config: CircuitBreakerConfig) -> Self {
         Self {
             config,
@@ -40,6 +49,10 @@ impl CircuitBreaker {
         }
     }
 
+    /// Check if the circuit breaker is currently in the open state
+    ///
+    /// # Returns
+    /// * `true` if the circuit is open (blocking requests), `false` otherwise
     pub async fn is_open(&self) -> bool {
         if !self.config.enabled {
             return false;
@@ -49,6 +62,10 @@ impl CircuitBreaker {
         matches!(*state, CircuitBreakerState::Open)
     }
 
+    /// Check if the circuit breaker allows execution of operations
+    ///
+    /// # Returns
+    /// * `true` if operations can be executed, `false` if they should be blocked
     pub async fn can_execute(&self) -> bool {
         if !self.config.enabled {
             return true;
@@ -79,6 +96,11 @@ impl CircuitBreaker {
         }
     }
 
+    /// Record a successful operation
+    ///
+    /// Updates the circuit breaker state based on a successful operation.
+    /// In half-open state, this will transition back to closed.
+    /// In closed state, this resets the failure count.
     pub async fn record_success(&self) {
         if !self.config.enabled {
             return;
@@ -101,6 +123,11 @@ impl CircuitBreaker {
         }
     }
 
+    /// Record a failed operation
+    ///
+    /// Updates the circuit breaker state based on a failed operation.
+    /// Increments failure count and may trigger state transitions
+    /// if failure threshold is exceeded.
     pub async fn record_failure(&self) {
         if !self.config.enabled {
             return;
@@ -128,6 +155,10 @@ impl CircuitBreaker {
         }
     }
 
+    /// Get the current state of the circuit breaker
+    ///
+    /// # Returns
+    /// * Current circuit breaker state (Closed, Open, or HalfOpen)
     pub async fn get_state(&self) -> CircuitBreakerState {
         self.state.read().await.clone()
     }

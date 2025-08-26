@@ -1,4 +1,3 @@
-/// **TIER ASSIGNMENT SETTINGS MODULE**
 /// Contains all configuration related to intelligent tier assignment
 /// Extracted from unified_automation_config.rs for better maintainability
 

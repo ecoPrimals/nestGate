@@ -1,15 +1,14 @@
-//! Intelligent tier evaluation and recommendation system
-//!
-//! This module provides sophisticated algorithms for evaluating the optimal
-//! storage tier for datasets based on access patterns, size, performance
-//! requirements, and policy rules.
+//
+// This module provides sophisticated algorithms for evaluating the optimal
+// storage tier for datasets based on access patterns, size, performance
+// requirements, and policy rules.
 
 use std::time::SystemTime;
 // Removed unused tracing import
 
 use super::types::{AutomationPolicy, DatasetMetadata};
 use crate::types::StorageTier;
-use nestgate_core::Result;
+use crate::types::ZfsResult as Result;
 use tracing::debug;
 use tracing::info;
 

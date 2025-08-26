@@ -1,7 +1,6 @@
-//! Standards Integration Example
-//!
-//! This example demonstrates how all three ecosystem standards work together
-//! to create a comprehensive universal primal system.
+//
+// This example demonstrates how all three ecosystem standards work together
+// to create a comprehensive universal primal system.
 
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -65,7 +64,7 @@ impl StandardsIntegrationDemo {
     pub async fn initialize_with_orchestration(
         &mut self,
         orchestration_endpoint: String,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Create orchestration client
         let orchestration_client = SongbirdClient::new(
             orchestration_endpoint,
@@ -85,7 +84,7 @@ impl StandardsIntegrationDemo {
     }
 
     /// Demonstrate AI-First API usage
-    pub async fn demo_ai_first_api(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn demo_ai_first_api(&self) -> std::result::Result<(), Box<dyn std::error::Error>> {
         println!("🤖 AI-First API Demo");
 
         // Create a sample ZFS pool list request
@@ -172,7 +171,7 @@ impl StandardsIntegrationDemo {
     }
 
     /// Demonstrate Ecosystem Integration
-    pub async fn demo_ecosystem_integration(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn demo_ecosystem_integration(&self) -> std::result::Result<(), Box<dyn std::error::Error>> {
         println!("🌐 Ecosystem Integration Demo");
 
         let registration = &self.ecosystem_manager.service_registration;
@@ -206,7 +205,7 @@ impl StandardsIntegrationDemo {
     }
 
     /// Demonstrate Songbird Service Mesh Integration
-    pub async fn demo_songbird_integration(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn demo_songbird_integration(&self) -> std::result::Result<(), Box<dyn std::error::Error>> {
         println!("🎼 Songbird Service Mesh Demo");
 
         if let Some(songbird_client) = &self.songbird_client {
@@ -245,7 +244,7 @@ impl StandardsIntegrationDemo {
     }
 
     /// Demonstrate EcoPrimal SDK Integration
-    pub async fn demo_ecoprimal_sdk(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn demo_ecoprimal_sdk(&self) -> std::result::Result<(), Box<dyn std::error::Error>> {
         println!("🌱 EcoPrimal SDK Demo");
 
         // Display primal metadata
@@ -316,7 +315,7 @@ impl StandardsIntegrationDemo {
     }
 
     /// Run comprehensive demonstration of all standards
-    pub async fn run_comprehensive_demo(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn run_comprehensive_demo(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>> {
         println!("🌟 Comprehensive Universal Standards Demo");
         println!("=========================================");
         println!();

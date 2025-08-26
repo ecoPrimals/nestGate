@@ -1,7 +1,6 @@
-//! ZFS Pool Setup Demo
-//!
-//! Demonstrates the pure Rust ZFS pool setup functionality with hardware detection
-//! and intelligent configuration recommendations.
+//
+// Demonstrates the pure Rust ZFS pool setup functionality with hardware detection
+// and intelligent configuration recommendations.
 
 use nestgate_zfs::pool_setup::ZfsPoolSetup;
 use tracing::error;
@@ -10,7 +9,7 @@ use tracing::warn;
 // Removed unused tracing import
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Initialize logging
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)

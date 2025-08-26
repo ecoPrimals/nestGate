@@ -1,6 +1,5 @@
-//! Health Monitoring Configuration Module
-//!
-//! Configuration for ZFS health monitoring, alerting, and failure thresholds.
+//
+// Configuration for ZFS health monitoring, alerting, and failure thresholds.
 
 use serde::{Deserialize, Serialize};
 

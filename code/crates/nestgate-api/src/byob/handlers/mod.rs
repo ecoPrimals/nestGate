@@ -1,19 +1,14 @@
-//! BYOB API Handler Modules
-//!
-//! This module contains all the HTTP handlers for BYOB operations,
-//! organized by functionality.
+//
+// Canonical modernized handlers for BYOB operations integrated with
+// the unified storage system for workspace functionality.
 
 pub mod datasets;
 pub mod projects;
 pub mod snapshots;
-pub mod storage;
 pub mod teams;
-pub mod workspaces;
 
-// Re-export all handlers for convenience
+// Re-export for convenience
 pub use datasets::*;
 pub use projects::*;
 pub use snapshots::*;
-pub use storage::*;
 pub use teams::*;
-pub use workspaces::*;

@@ -1,7 +1,6 @@
-//! Workspace Storage Optimization
-//!
-//! Advanced ZFS optimization including compression, recordsize, cache settings,
-//! deduplication, and AI-assisted optimization recommendations.
+//
+// Advanced ZFS optimization including compression, recordsize, cache settings,
+// deduplication, and AI-assisted optimization recommendations.
 
 use axum::{extract::Json, extract::Path, http::StatusCode};
 use serde_json::{json, Value};
@@ -232,8 +231,8 @@ async fn optimize_deduplication(dataset_name: &str) -> Option<String> {
 async fn request_ai_optimization(dataset_name: &str, pattern: &StoragePattern) -> Option<String> {
     // Try to use any available AI primal provider via universal adapter
     let _adapter = nestgate_core::ecosystem_integration::UniversalAdapter::new(
-        nestgate_core::ecosystem_integration::create_default_adapter_config(),
-    );
+        nestgate_core::universal_adapter::canonical::CanonicalAdapterConfig::default()
+    ).ok()?;
 
     // Use universal adapter to request AI optimization
     if let Ok(ai_endpoint) = std::env::var("NESTGATE_AI_ENDPOINT") {
@@ -258,7 +257,7 @@ async fn request_ai_optimization(dataset_name: &str, pattern: &StoragePattern) -
         {
             Ok(response) => {
                 if response.status().is_success() {
-                    if let Ok(ai_response) = response.json::<serde_json::Value>().await {
+                    if let Ok(ai_response) = response.json::<Value>().await {
                         if let Some(recommendations) = ai_response["recommendations"].as_str() {
                             return Some(recommendations.to_string());
                         }
@@ -274,7 +273,7 @@ async fn request_ai_optimization(dataset_name: &str, pattern: &StoragePattern) -
     None
 }
 
-async fn get_optimization_stats(dataset_name: &str) -> serde_json::Value {
+async fn get_optimization_stats(dataset_name: &str) -> Value {
     // Get final statistics after optimization
     let stats_result = std::process::Command::new("zfs")
         .args([

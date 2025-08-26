@@ -1,4 +1,5 @@
-/// Native Async Service Types
+use std::collections::HashMap;
+use std::future::Future;
 /// Extracted from native_async_final_services.rs to maintain file size compliance
 /// Contains data structures, enums, and type definitions for native async services
 use serde::{Deserialize, Serialize};
@@ -7,12 +8,8 @@ use std::time::SystemTime;
 
 use crate::traits::UniversalResponseStatus;
 
-/// Service request type
-#[derive(Debug, Clone)]
-pub struct ServiceRequest {
-    pub service_name: String,
-    pub data: Vec<u8>,
-}
+/// Service request type - re-export from canonical traits
+pub use crate::traits::UniversalServiceRequest as ServiceRequest;
 
 /// Service response type
 #[derive(Debug, Clone)]

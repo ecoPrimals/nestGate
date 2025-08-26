@@ -1,6 +1,5 @@
-//! Tests for Advanced ZFS Features
-//!
-//! Simplified tests for basic functionality without ecosystem integration
+//
+// Simplified tests for basic functionality without ecosystem integration
 
 use nestgate_zfs::performance_engine::BottleneckSeverity;
 use std::collections::HashMap;

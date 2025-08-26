@@ -1,6 +1,5 @@
-//! Snapshot Data Types
-//!
-//! Core data structures for snapshot information, operations, and statistics.
+//
+// Core data structures for snapshot information, operations, and statistics.
 
 use crate::types::StorageTier;
 use serde::{Deserialize, Serialize};

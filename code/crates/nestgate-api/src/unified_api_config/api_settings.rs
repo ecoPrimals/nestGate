@@ -1,10 +1,9 @@
-//! **UNIFIED API CONFIGURATION - SETTINGS MODULE**
-//!
-//! Contains all individual API configuration setting structs.
-//! This file has been restructured into focused sub-modules for better maintainability
-//! and adherence to the 1000-line file size limit.
-//!
-//! Originally 902 lines, now split into focused modules under `settings/`.
+//
+// Contains all individual API configuration setting structs.
+// This file has been restructured into focused sub-modules for better maintainability
+// and adherence to the 1000-line file size limit.
+//
+// Originally 902 lines, now split into focused modules under `settings/`.
 
 // Re-export all settings from the organized sub-modules
 pub use settings::*;

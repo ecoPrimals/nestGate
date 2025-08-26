@@ -1,4 +1,3 @@
-/// Performance Benchmarks for NestGate ZFS
 /// Benchmarks to validate performance characteristics and identify bottlenecks
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::collections::HashMap;
@@ -37,13 +36,13 @@ pub struct OptimizationOpportunity {
 /// Benchmark configuration creation
 fn bench_config_creation(c: &mut Criterion) {
     c.bench_function("config_creation", |b| {
-        b.iter(|| black_box(ZfsUnifiedMcpConfig::default()))
+        b.iter(|| black_box(ZfsUnifiedUnifiedMcpConfig::default()))
     });
 }
 
 /// Benchmark configuration validation
 fn bench_config_validation(c: &mut Criterion) {
-    let config = ZfsUnifiedMcpConfig::default();
+    let config = ZfsUnifiedUnifiedMcpConfig::default();
 
     c.bench_function("config_validation", |b| {
         b.iter(|| {
@@ -61,7 +60,7 @@ fn bench_config_validation(c: &mut Criterion) {
 
 /// Benchmark tier configuration access
 fn bench_tier_config_access(c: &mut Criterion) {
-    let config = ZfsUnifiedMcpConfig::default();
+    let config = ZfsUnifiedUnifiedMcpConfig::default();
     let tiers = [StorageTier::Hot, StorageTier::Warm, StorageTier::Cold];
 
     c.bench_function("tier_config_access", |b| {
@@ -231,19 +230,23 @@ fn bench_error_handling(c: &mut Criterion) {
 
     c.bench_function("error_creation", |b| {
         b.iter(|| {
-            black_box(ZfsError::PoolError(PoolError::NotFound {
-                pool_name: "test".to_string(),
-            }))
+            black_box(ZfsError::PoolError {
+                message: "Pool 'test' not found".to_string(),
+            })
         })
     });
 
     c.bench_function("error_retryability_check", |b| {
         let errors = vec![
-            ZfsError::Timeout("timeout".to_string()),
-            ZfsError::SystemUnavailable("unavailable".to_string()),
-            ZfsError::PoolError(PoolError::NotFound {
-                pool_name: "test".to_string(),
-            }),
+            ZfsError::ConfigError {
+                message: "timeout".to_string(),
+            },
+            ZfsError::CommandError {
+                message: "unavailable".to_string(),
+            },
+            ZfsError::PoolError {
+                message: "Pool 'test' not found".to_string(),
+            },
         ];
 
         b.iter(|| {
@@ -256,7 +259,7 @@ fn bench_error_handling(c: &mut Criterion) {
 
 /// Benchmark serialization performance
 fn bench_serialization(c: &mut Criterion) {
-    let config = ZfsUnifiedMcpConfig::default();
+    let config = ZfsUnifiedUnifiedMcpConfig::default();
     let metrics = crate::performance::CurrentPerformanceMetrics::default();
 
     let mut group = c.benchmark_group("serialization");

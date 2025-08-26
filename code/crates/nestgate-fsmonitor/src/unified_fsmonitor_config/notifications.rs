@@ -1,4 +1,3 @@
-/// **NOTIFICATIONS MODULE**
 /// Notification and alerting configuration - extracted from monolithic config
 /// Handles all notification channels, formatting, throttling, and routing
 use serde::{Deserialize, Serialize};
@@ -60,7 +59,7 @@ pub struct NotificationThrottlingSettings {
     pub burst_limit: u32,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NotificationRoutingSettings {
     /// Enable routing
     pub enabled: bool,
@@ -113,16 +112,6 @@ impl Default for NotificationThrottlingSettings {
             window_duration: Duration::from_secs(5 * 60),
             max_notifications_per_window: 10,
             burst_limit: 3,
-        }
-    }
-}
-
-impl Default for NotificationRoutingSettings {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            rules: Vec::new(),
-            default_route: None,
         }
     }
 }

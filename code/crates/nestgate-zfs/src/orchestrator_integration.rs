@@ -1,13 +1,12 @@
-//! Universal Orchestration Module Integration
-//!
-//! This module provides integration with any orchestration module for
-//! distributed ZFS storage management and coordination.
-//!
-//! Features:
-//! - Service registration with orchestration modules
-//! - Health reporting and monitoring
-//! - Load balancing coordination
-//! - Distributed storage management
+//
+// This module provides integration with any orchestration module for
+// distributed ZFS storage management and coordination.
+//
+// Features:
+// - Service registration with orchestration modules
+// - Health reporting and monitoring
+// - Load balancing coordination
+// - Distributed storage management
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -17,7 +16,8 @@ use uuid::Uuid;
 
 // use nestgate::orchestration_integration::{NestGateServiceInfo, NestGateHealth};  // Commented out until available
 
-use crate::error::ZfsError;
+use nestgate_core::error::conversions::create_zfs_error;
+use nestgate_core::error::domain_errors::ZfsOperation;
 
 use tracing::debug;
 use tracing::info;
@@ -59,8 +59,9 @@ impl Default for ZfsServiceConfig {
     fn default() -> Self {
         Self {
             service_name: "nestgate-zfs".to_string(),
-            bind_address: "localhost".to_string(),
-            port: 8080,
+            bind_address: nestgate_core::sovereignty_config::migration_helpers::get_bind_address()
+                .to_string(),
+            port: nestgate_core::sovereignty_config::migration_helpers::get_api_port(),
             orchestrator_endpoints: vec![],
             health_check_interval: 30,
             capabilities: vec![
@@ -187,8 +188,11 @@ impl ZfsService {
             .args(["status", "-x"])
             .output()
             .await
-            .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to check pool status: {e}"),
+            .map_err(|e| {
+                modern_zfs::internal_error(
+                    &format!("Failed to check pool status: {e}"),
+                    ZfsOperation::SystemCheck,
+                )
             })?;
 
         if !output.status.success() {
@@ -216,8 +220,11 @@ impl ZfsService {
             .args(["list", "-H", "-o", "name,available,used"])
             .output()
             .await
-            .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to list datasets: {e}"),
+            .map_err(|e| {
+                modern_zfs::internal_error(
+                    &format!("Failed to list datasets: {e}"),
+                    ZfsOperation::SystemCheck,
+                )
             })?;
 
         if !output.status.success() {
@@ -254,8 +261,11 @@ impl ZfsService {
     async fn check_memory_health(&self) -> Result<bool> {
         let memory_info = tokio::fs::read_to_string("/proc/meminfo")
             .await
-            .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to read memory info: {e}"),
+            .map_err(|e| {
+                modern_zfs::internal_error(
+                    &format!("Failed to read memory info: {e}"),
+                    ZfsOperation::SystemCheck,
+                )
             })?;
 
         let mut total_memory = 0u64;
@@ -294,8 +304,11 @@ impl ZfsService {
     async fn check_zfs_module(&self) -> Result<bool> {
         let modules_info = tokio::fs::read_to_string("/proc/modules")
             .await
-            .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to read modules info: {e}"),
+            .map_err(|e| {
+                modern_zfs::internal_error(
+                    &format!("Failed to read modules info: {e}"),
+                    ZfsOperation::SystemCheck,
+                )
             })?;
 
         if modules_info.contains("zfs ") {

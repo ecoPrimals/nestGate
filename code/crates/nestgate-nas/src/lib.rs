@@ -1,6 +1,5 @@
-//! NestGate NAS
-//!
-//! Network Attached Storage functionality for NestGate
+//
+// Network Attached Storage functionality for NestGate
 
 use nestgate_core::Result;
 use std::collections::HashMap;
@@ -30,9 +29,9 @@ impl Default for NasConfig {
             http_enabled: true,
             bind_address: std::env::var("NESTGATE_NAS_BIND_ADDRESS")
                 .unwrap_or_else(|_| "192.168.1.100".to_string()),
-            smb_port: nestgate_core::constants::network::ports::SMB,
-            nfs_port: nestgate_core::constants::network::ports::NFS,
-            http_port: nestgate_core::constants::network::ports::API_DEFAULT,
+            smb_port: 445,   // SMB default port
+            nfs_port: 2049,  // NFS default port
+            http_port: 8080, // Default API port
             share_root: PathBuf::from("/nas/shares"),
         }
     }
@@ -322,7 +321,8 @@ mod tests {
             smb_enabled: false,
             nfs_enabled: true,
             http_enabled: false,
-            bind_address: "127.0.0.1".to_string(),
+            bind_address: nestgate_core::sovereignty_config::migration_helpers::get_bind_address()
+                .to_string(),
             smb_port: 8445,
             nfs_port: 8049,
             http_port: 9080,
@@ -444,7 +444,8 @@ mod tests {
             smb_enabled: false,
             nfs_enabled: true,
             http_enabled: false,
-            bind_address: "127.0.0.1".to_string(),
+            bind_address: nestgate_core::sovereignty_config::migration_helpers::get_bind_address()
+                .to_string(),
             smb_port: 8445,
             nfs_port: 8049,
             http_port: 9080,

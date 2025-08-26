@@ -1,6 +1,5 @@
-//! Error types for EcoPrimal SDK
-//!
-//! This module defines all error types used throughout the EcoPrimal ecosystem.
+//
+// This module defines all error types used throughout the EcoPrimal ecosystem.
 
 use serde::{Deserialize, Serialize};
 use std::fmt;

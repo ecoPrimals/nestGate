@@ -1,34 +1,32 @@
-//! NestGate Network Module
-//!
-//! Provides network communication, service discovery, and orchestration integration
-//! using universal provider patterns for maximum compatibility.
+//
+// Provides network services and connection management
 
-pub mod api;
 pub mod connection_manager;
-pub mod orchestration_adapter; // ✅ CAPABILITY-BASED: No hardcoded primal names
-pub mod universal_orchestration;
+pub mod real_network_service;
+
+// **CANONICAL MODERNIZATION**: Use canonical trait system
+pub use nestgate_core::traits::{UniversalService, ServiceRegistration};
+pub use connection_manager::{OrchestrationClient, ConnectionManager};
 
 // Re-export key types for external use
-pub use orchestration_adapter::{OrchestrationAdapter, OrchestrationConfig, OrchestrationService};
-pub use universal_orchestration::UniversalOrchestrationConfig;
+// Note: orchestration_adapter module needs to be implemented
+// Removed unresolved universal_orchestration import
 
 // Re-exports for universal orchestration
-pub use universal_orchestration::{
-    create_default_orchestration_manager, create_orchestration_manager_with_config,
-    NetworkServiceRegistration, OrchestrationStats, UniversalOrchestrationManager,
-};
+// Removed unresolved universal_orchestration imports - these need to be implemented or removed
 
 // Legacy compatibility re-exports (migrated to universal patterns)
-pub use universal_orchestration::{SongbirdConfig, SongbirdConnectionManager};
+// Removed unresolved universal_orchestration imports
 
 // Common types and utilities
-pub use connection_manager::ConnectionManager;
-pub use nestgate_core::error::{NetworkErrorData, Result};
-pub use nestgate_core::service_discovery::{DiscoveredService, ServiceDiscovery};
-pub use nestgate_core::types::{NetworkStats, ServiceInstance, ServiceStatus};
+// Removed unresolved error imports - use nestgate_core::error instead
+// Re-export core error types
+
+// Re-export core types - using correct paths
+pub use nestgate_core::types::ServiceInstance;
 
 // Re-export universal provider traits
-pub use nestgate_core::universal_traits::OrchestrationPrimalProvider;
+// Note: OrchestrationPrimalProvider path needs verification
 
 /// Default network configuration
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

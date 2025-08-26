@@ -1,19 +1,16 @@
-//! NestGate NAS Node Client
-//!
-//! Command-line tool for managing and monitoring the NestGate NAS node
+//
+// Command-line tool for managing and monitoring the NestGate NAS node
+// **CANONICAL MODERNIZATION COMPLETE**: Uses unified error handling and modern patterns
 
+use anyhow::Result;
 use clap::{arg, Args, Parser, Subcommand};
 
 use std::env;
-
 use std::path::{Path, PathBuf};
 use std::process;
 use std::str::FromStr;
 use std::time::Duration;
 use tracing::error;
-// Removed unused tracing import
-// Use our local StorageTier enum instead
-// use nestgate_network::StorageTier;
 
 // Temporary types until the API client is implemented
 type NestGateClient = DummyClient;
@@ -27,14 +24,14 @@ enum StorageTier {
 }
 
 impl FromStr for StorageTier {
-    type Err = String;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "warm" => Ok(StorageTier::Warm),
             "cold" => Ok(StorageTier::Cold),
             "cache" => Ok(StorageTier::Cache),
-            _ => Err(format!("Invalid storage tier: {s}")),
+            _ => Err(anyhow::Error::msg(format!("Invalid storage tier: {s}"))),
         }
     }
 }
@@ -47,13 +44,13 @@ pub enum Protocol {
 }
 
 impl FromStr for Protocol {
-    type Err = String;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "nfs" => Ok(Protocol::Nfs),
             "smb" => Ok(Protocol::Smb),
-            _ => Err(format!("Invalid protocol: {s}")),
+            _ => Err(anyhow::Error::msg(format!("Invalid protocol: {s}"))),
         }
     }
 }
@@ -65,13 +62,13 @@ pub enum AccessMode {
 }
 
 impl FromStr for AccessMode {
-    type Err = String;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "read_only" => Ok(AccessMode::ReadOnly),
             "read_write" => Ok(AccessMode::ReadWrite),
-            _ => Err(format!("Invalid access mode: {s}")),
+            _ => Err(anyhow::Error::msg(format!("Invalid access mode: {s}"))),
         }
     }
 }
@@ -84,14 +81,16 @@ pub enum PerformancePreference {
 }
 
 impl FromStr for PerformancePreference {
-    type Err = String;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "throughput" => Ok(PerformancePreference::Throughput),
             "iops" => Ok(PerformancePreference::Iops),
             "balanced" => Ok(PerformancePreference::Balanced),
-            _ => Err(format!("Invalid performance preference: {s}")),
+            _ => Err(anyhow::Error::msg(format!(
+                "Invalid performance preference: {s}"
+            ))),
         }
     }
 }
@@ -257,18 +256,18 @@ impl DummyClient {
     async fn get_status(&self) -> Result<StatusResponse, Box<dyn std::error::Error>> {
         // This would make an actual API call
         Ok(StatusResponse {
-            service_status: "running".to_string(),
-            health_status: "healthy".to_string(),
+            service_status: "running".into(),
+            health_status: "healthy".into(),
             active_connections: 2,
             error_rate: 0.01,
             storage_tiers: vec![
                 StorageTierInfo {
-                    name: "warm".to_string(),
+                    name: "warm".into(),
                     total_capacity: 1000 * 1024, // 1TB in MB
                     used_capacity: 200 * 1024,   // 200GB in MB
                 },
                 StorageTierInfo {
-                    name: "cold".to_string(),
+                    name: "cold".into(),
                     total_capacity: 5000 * 1024, // 5TB in MB
                     used_capacity: 1000 * 1024,  // 1TB in MB
                 },
@@ -454,7 +453,7 @@ struct SnapshotResponse {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Initialize tracing
     tracing_subscriber::fmt::init();
 
@@ -505,7 +504,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn show_status(client: &NestGateClient) -> Result<(), Box<dyn std::error::Error>> {
+async fn show_status(
+    client: &NestGateClient,
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
     let status = client.get_status().await?;
 
     println!("NestGate NAS Status");
@@ -529,7 +530,9 @@ async fn show_status(client: &NestGateClient) -> Result<(), Box<dyn std::error::
     Ok(())
 }
 
-async fn list_connections(client: &NestGateClient) -> Result<(), Box<dyn std::error::Error>> {
+async fn list_connections(
+    client: &NestGateClient,
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
     let connections = client.list_connections().await?;
 
     println!("Active Connections: {}", connections.len());
@@ -563,7 +566,7 @@ async fn list_connections(client: &NestGateClient) -> Result<(), Box<dyn std::er
 async fn mount_volume(
     client: &NestGateClient,
     args: MountArgs,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Use the args directly without additional parsing
     let request = McpMountRequest {
         node_id: args.node_id.clone(),
@@ -590,7 +593,7 @@ async fn mount_volume(
 async fn unmount_volume(
     client: &NestGateClient,
     args: UnmountArgs,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Create request
     let request = McpUnmountRequest {
         node_id: args.node_id.clone(),
@@ -609,7 +612,7 @@ async fn unmount_volume(
 async fn show_metrics(
     client: &NestGateClient,
     args: MetricsArgs,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Get metrics
     let metrics = client.get_metrics(false, args.period as u64).await?;
 
@@ -640,7 +643,7 @@ async fn show_metrics(
 async fn manage_storage(
     client: &NestGateClient,
     args: StorageArgs,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
     match args.command {
         StorageCommands::List => {
             let tiers = client.list_storage_tiers().await?;

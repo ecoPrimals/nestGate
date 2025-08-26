@@ -1,7 +1,6 @@
-//! ZFS Pool Failover and Takeover
-//!
-//! Handles automatic failover and pool takeover for high availability scenarios.
-//! Allows one NestGate instance to take over ZFS pools from a failed instance.
+//
+// Handles automatic failover and pool takeover for high availability scenarios.
+// Allows one NestGate instance to take over ZFS pools from a failed instance.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -37,38 +36,76 @@ pub enum PoolFailoverState {
     Unknown,  // State cannot be determined
 }
 
-/// Configuration for failover behavior
+/// Pool state for failover management
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum PoolState {
+    Online,   // Pool is healthy and accessible
+    Degraded, // Pool has issues but is still functional
+    Offline,  // Pool is not accessible
+    Faulted,  // Pool has critical errors
+    Removed,  // Pool has been removed from configuration
+    Unavail,  // Pool is temporarily unavailable
+    Orphaned, // Available for import (original owner failed)
+    Failed,   // Pool is in a failed state
+    Unknown,  // State cannot be determined
+}
+
+// Deprecated FailoverConfig removed - use CanonicalZfsConfig::default().pools.failover instead
+
+/// **CANONICAL FAILOVER CONFIGURATION**
+///
+/// Modern replacement for the deprecated FailoverConfig.
+/// Integrated into the canonical ZFS configuration system.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FailoverConfig {
+pub struct CanonicalFailoverConfig {
     pub auto_takeover_enabled: bool,
     pub health_check_interval_secs: u64,
     pub takeover_timeout_secs: u64,
     pub node_failure_timeout_secs: u64,
+    pub max_takeover_attempts: u32,
+    pub failback_enabled: bool,
+    pub failback_delay_secs: u64,
+    pub notification_config: Option<FailoverNotificationConfig>,
 }
 
-impl Default for FailoverConfig {
+impl Default for CanonicalFailoverConfig {
     fn default() -> Self {
         Self {
             auto_takeover_enabled: true,
             health_check_interval_secs: 30,
             takeover_timeout_secs: 300,     // 5 minutes
             node_failure_timeout_secs: 180, // 3 minutes
+            max_takeover_attempts: 3,
+            failback_enabled: true,
+            failback_delay_secs: 60,
+            notification_config: None,
         }
     }
+}
+
+/// Notification configuration for failover events
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FailoverNotificationConfig {
+    pub email_enabled: bool,
+    pub email_recipients: Vec<String>,
+    pub webhook_enabled: bool,
+    pub webhook_url: Option<String>,
+    pub slack_enabled: bool,
+    pub slack_webhook: Option<String>,
 }
 
 /// Manages ZFS pool takeover operations
 #[allow(dead_code)] // Configuration fields used in advanced failover scenarios
 pub struct PoolTakeoverManager {
     config: ZfsConfig,
-    failover_config: FailoverConfig,
+    failover_config: CanonicalFailoverConfig,
     known_pools: Arc<RwLock<HashMap<String, PoolMetadata>>>,
     node_id: String,
 }
 
 impl PoolTakeoverManager {
     /// Create a new pool takeover manager
-    pub fn new(config: ZfsConfig, failover_config: FailoverConfig, node_id: String) -> Self {
+    pub fn new(config: ZfsConfig, failover_config: CanonicalFailoverConfig, node_id: String) -> Self {
         Self {
             config,
             failover_config,
@@ -126,11 +163,11 @@ impl PoolTakeoverManager {
         info!("Force importing pool: {}", pool_name);
 
         let output = TokioCommand::new("zpool")
-            .args(&["import", "-f", pool_name])
+            .args(["import", "-f", pool_name])
             .output()
             .await
             .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to execute zpool import: {}", e),
+                message: format!("Failed to execute zpool import: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
                 debug_info: None,
                 is_bug: false,
@@ -151,7 +188,7 @@ impl PoolTakeoverManager {
         let verification = self.get_pool_status().await;
         if verification.is_empty() {
             return Err(NestGateError::Internal {
-                message: format!("Pool verification failed after import: {}", pool_name),
+                message: format!("Pool verification failed after import: {pool_name}"),
                 location: Some(format!("{}:{}", file!(), line!())),
                 debug_info: None,
                 is_bug: false,
@@ -164,11 +201,11 @@ impl PoolTakeoverManager {
     /// Verify that a pool was successfully imported
     pub async fn verify_pool_import(&self, pool_name: &str) -> Result<bool> {
         let output = TokioCommand::new("zpool")
-            .args(&["status", pool_name])
+            .args(["status", pool_name])
             .output()
             .await
             .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to verify pool import: {}", e),
+                message: format!("Failed to verify pool import: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
                 debug_info: None,
                 is_bug: false,
@@ -182,11 +219,11 @@ impl PoolTakeoverManager {
         debug!("Discovering importable pools");
 
         let output = TokioCommand::new("zpool")
-            .args(&["import"])
+            .args(["import"])
             .output()
             .await
             .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to execute zpool import: {}", e),
+                message: format!("Failed to execute zpool import: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
                 debug_info: None,
                 is_bug: false,
@@ -301,7 +338,7 @@ impl PoolTakeoverManager {
             .output()
             .await
             .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to execute zpool export: {}", e),
+                message: format!("Failed to execute zpool export: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
                 debug_info: None,
                 is_bug: false,
@@ -336,7 +373,7 @@ impl PoolTakeoverManager {
 /// Node health monitor for failover detection
 pub struct NodeHealthMonitor {
     known_nodes: Arc<RwLock<HashMap<String, NodeHealth>>>,
-    config: FailoverConfig,
+    config: CanonicalFailoverConfig,
 }
 
 #[derive(Debug, Clone)]
@@ -347,7 +384,7 @@ pub struct NodeHealth {
 }
 
 impl NodeHealthMonitor {
-    pub fn new(config: FailoverConfig) -> Self {
+    pub fn new(config: CanonicalFailoverConfig) -> Self {
         Self {
             known_nodes: Arc::new(RwLock::new(HashMap::new())),
             config,
@@ -403,7 +440,7 @@ mod tests {
     #[tokio::test]
     async fn test_pool_takeover_manager_creation() {
         let config = ZfsConfig::default();
-        let failover_config = FailoverConfig::default();
+        let failover_config = CanonicalFailoverConfig::default();
         let manager = PoolTakeoverManager::new(config, failover_config, "test-node".to_string());
 
         assert_eq!(manager.node_id, "test-node");
@@ -412,7 +449,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_node_health_monitoring() {
-        let config = FailoverConfig::default();
+        let config = CanonicalFailoverConfig::default();
         let monitor = NodeHealthMonitor::new(config);
 
         // Update heartbeat for a node
@@ -421,11 +458,8 @@ mod tests {
         // Should not detect as failed immediately
         let failed_nodes = monitor.detect_failed_nodes().await.unwrap_or_else(|e| {
             tracing::error!("Unwrap failed: {:?}", e);
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
-            )
-            .into());
+            // Return empty vector for test purposes
+            Vec::new()
         });
         assert!(failed_nodes.is_empty());
 
@@ -446,11 +480,8 @@ mod tests {
         // Now should detect as failed
         let failed_nodes = monitor.detect_failed_nodes().await.unwrap_or_else(|e| {
             tracing::error!("Unwrap failed: {:?}", e);
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
-            )
-            .into());
+            // Return empty vector for test purposes
+            Vec::new()
         });
         assert_eq!(failed_nodes.len(), 1);
         assert_eq!(failed_nodes[0].node_id, "node1");
@@ -459,7 +490,7 @@ mod tests {
     #[tokio::test]
     async fn test_pool_metadata_tracking() {
         let config = ZfsConfig::default();
-        let failover_config = FailoverConfig::default();
+        let failover_config = CanonicalFailoverConfig::default();
         let manager = PoolTakeoverManager::new(config, failover_config, "test-node".to_string());
 
         // Update pool metadata

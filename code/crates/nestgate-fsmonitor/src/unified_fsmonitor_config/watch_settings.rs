@@ -1,4 +1,3 @@
-/// **WATCH SETTINGS MODULE**
 /// File watching configuration and patterns - extracted from monolithic config
 /// Handles all aspects of file system watching behavior
 use serde::{Deserialize, Serialize};

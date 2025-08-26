@@ -1,4 +1,3 @@
-/// **FILTERS MODULE**
 /// Filtering and pattern matching configuration - extracted from monolithic config
 /// Handles file patterns, type filters, size filters, time filters, and custom filters
 use serde::{Deserialize, Serialize};

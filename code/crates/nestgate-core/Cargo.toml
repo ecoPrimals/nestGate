@@ -27,10 +27,11 @@ config = "0.14"
 futures = "0.3"
 futures-util = "0.3"
 log = "0.4"
+lru = "0.12"
 
 # System dependencies for cross-platform functionality
 libc = "0.2"
-users = "0.11"  # ✅ SAFE: Replace unsafe libc calls with safe user/group lookups
+uzers = "0.11"  # ✅ SAFE: Actively maintained fork of users crate, fixes security vulnerabilities
 url = "2.4"
 
 # Zero-copy optimization dependencies
@@ -68,4 +69,12 @@ name = "performance_validation"
 harness = false
 
 [features]
-default = [] 
+default = []
+zfs-advanced-features = []
+legacy-data-sources = []
+experimental-zero-cost = []
+# **CANONICAL MODERNIZATION** - Advanced feature flags
+zero-cost-optimizations = []
+advanced-monitoring = []
+security-scanning = []
+experimental-features = [] 

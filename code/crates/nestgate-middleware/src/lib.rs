@@ -1,21 +1,10 @@
-/// NestGate Middleware Library
-/// Provides comprehensive middleware functionality for HTTP request processing
+// Clean, debt-free middleware system with unified configuration
+
+// Core modules (canonical implementation)
 pub mod config;
-pub mod unified_middleware_config;
 
-// Re-export unified configuration for easy access
-pub use unified_middleware_config::{
-    MiddlewareAuthSettings, MiddlewareAuthorizationSettings, MiddlewareCacheSettings,
-    MiddlewareChainSettings, MiddlewareCompressionSettings, MiddlewareCorsSettings,
-    MiddlewareErrorHandlerSettings, MiddlewareLoggingSettings, MiddlewareRateLimitSettings,
-    MiddlewareSecuritySettings, MiddlewareTransformSettings, MiddlewareValidationSettings,
-    UnifiedMiddlewareConfig, UnifiedMiddlewareConfigExt, UnifiedMiddlewareExtensions,
-};
-
-// Re-export types for backward compatibility
-pub use config::types::{
-    ConditionType, HttpResponseFormat, MiddlewareCondition, MiddlewareConfiguration, MiddlewareType,
-};
+// Re-export core types (clean, no conflicts)
+pub use config::*;
 
 #[cfg(test)]
 mod additional_tests {

@@ -10,32 +10,32 @@ pub mod security;
 pub mod storage;
 
 // **UNIFIED DYNAMIC DISCOVERY SYSTEM** - PRIMARY ARCHITECTURE
-pub mod unified_dynamic_config;
+// **MODULARIZED CONFIGURATION** - Split from 909-line monolithic file
+pub mod config;
+
+// unified_dynamic_config has been removed - use modular config/ structure instead
 
 // **SUPPORTING MODULES**
 // Temporarily disabled example code while updating to new API
 // pub mod unified_config_example;
 
 // Re-export capability discovery managers
-pub use ai::AiCapabilityDiscovery;
+pub use crate::capabilities::discovery::ai::AiCapabilityDiscovery;
 pub use orchestration::OrchestrationCapabilityDiscovery;
 pub use security::SecurityCapabilityDiscovery;
 pub use storage::StorageCapabilityDiscovery;
 
 // **PRIMARY UNIFIED DISCOVERY EXPORTS**
-pub use unified_dynamic_config::{
-    CacheConfiguration, EnvironmentConfiguration, NetworkConfiguration, SecurityConfiguration,
-    StorageConfiguration, TimeoutConfiguration, UnifiedDynamicDiscoveryConfig,
-    UnifiedDynamicDiscoveryExtensions, UnifiedDynamicDiscoveryManager,
-};
+// unified_dynamic_config removed - use modular config/ structure instead
+pub use config::*;
 
 /// **UNIFIED DISCOVERY CONFIGURATION** - THE CANONICAL TYPE
 /// Single entry point for all discovery configuration patterns
-pub type DiscoveryConfig = UnifiedDynamicDiscoveryConfig;
+pub type DiscoveryConfig = UnifiedDynamicDiscoveryExtensions;
 
-/// **UNIFIED DISCOVERY MANAGER** - THE CANONICAL TYPE
+/// **UNIFIED DISCOVERY MANAGER** - THE CANONICAL TYPE  
 /// Single entry point for all discovery management operations
-pub type DiscoveryManager = UnifiedDynamicDiscoveryManager;
+pub type DiscoveryManager = UnifiedDynamicDiscoveryExtensions;
 
 // ==================== CAPABILITY DISCOVERY API ====================
 

@@ -62,236 +62,97 @@ pub enum ApiStatus {
     Error { code: String, message: String },
 }
 
-/// **ZERO-COST POOL HANDLER**
-/// High-performance ZFS pool management handler
-pub struct ZeroCostPoolHandler<
-    const MAX_CONCURRENT_REQUESTS: usize = 1000,
-    const REQUEST_TIMEOUT_MS: u64 = 30000,
-> {
-    pool_manager: Arc<dyn ZeroCostPoolManager>,
-    request_cache: Arc<RwLock<HashMap<String, CachedResponse>>>,
-    _phantom: PhantomData<()>,
+/// **ZERO-COST POOL HANDLER WITH COMPILE-TIME CONFIGURATION**
+/// **PERFORMANCE**: Const generics eliminate runtime configuration overhead
+pub struct ZeroCostPoolHandler<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64> {
+    /// Request cache with compile-time capacity
+    request_cache: Arc<RwLock<HashMap<String, CachedRequest>>>,
+    /// Configuration phantom
+    _config: PhantomData<()>,
 }
 
-#[derive(Debug, Clone)]
-struct CachedResponse {
-    response: String,
-    created_at: std::time::Instant,
-    ttl: Duration,
-}
-
-impl CachedResponse {
-    fn new(response: String, ttl: Duration) -> Self {
-        Self {
-            response,
-            created_at: std::time::Instant::now(),
-            ttl,
-        }
-    }
-
-    fn is_expired(&self) -> bool {
-        self.created_at.elapsed() > self.ttl
-    }
-}
-
-/// Pool management operations trait
-pub trait ZeroCostPoolManager: Send + Sync {
-    type Pool: Clone + Send + Sync + 'static;
-    type Error: Send + Sync + 'static;
-
-    /// List pools - native async
-    fn list_pools(&self) -> impl std::future::Future<Output = Result<Vec<Self::Pool>, Self::Error>> + Send;
-
-    /// Get pool by name - zero-cost abstraction
-    fn get_pool(&self, name: &str) -> impl std::future::Future<Output = Result<Option<Self::Pool>, Self::Error>> + Send;
-
-    /// Create pool - direct method call
-    fn create_pool(&self, config: &PoolConfig) -> impl std::future::Future<Output = Result<Self::Pool, Self::Error>> + Send;
-
-    /// Delete pool - compile-time specialization
-    fn delete_pool(&self, name: &str) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send;
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PoolConfig {
-    pub name: String,
-    pub devices: Vec<String>,
-    pub properties: HashMap<String, String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PoolInfo {
-    pub name: String,
-    pub size: u64,
-    pub used: u64,
-    pub available: u64,
-    pub health: String,
-    pub created_at: std::time::SystemTime,
-}
-
-impl<const MAX_CONCURRENT_REQUESTS: usize, const REQUEST_TIMEOUT_MS: u64>
-    ZeroCostPoolHandler<MAX_CONCURRENT_REQUESTS, REQUEST_TIMEOUT_MS>
-{
+impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64> ZeroCostPoolHandler<MAX_REQUESTS, TIMEOUT_MS> {
     /// Create new pool handler with compile-time configuration
-    pub fn new(pool_manager: Arc<dyn ZeroCostPoolManager<Pool = PoolInfo>>) -> Self {
+    pub const fn new() -> Self {
         Self {
-            pool_manager,
-            request_cache: Arc::new(RwLock::new(HashMap::with_capacity(MAX_CONCURRENT_REQUESTS))),
-            _phantom: PhantomData,
+            request_cache: Arc::new(RwLock::const_new(HashMap::new())),
+            _config: PhantomData,
         }
     }
 
-    /// Get request timeout at compile-time
-    pub const fn request_timeout() -> Duration {
-        Duration::from_millis(REQUEST_TIMEOUT_MS)
+    /// Get maximum requests (compile-time constant)
+    pub const fn max_requests() -> usize {
+        MAX_REQUESTS
     }
 
-    /// Get max concurrent requests at compile-time
-    pub const fn max_concurrent_requests() -> usize {
-        MAX_CONCURRENT_REQUESTS
+    /// Get timeout (compile-time constant)
+    pub const fn timeout_ms() -> u64 {
+        TIMEOUT_MS
     }
 
-    /// Check cache for response
-    async fn get_cached_response(&self, cache_key: &str) -> Option<String> {
-        let cache = self.request_cache.read().await;
-        if let Some(cached) = cache.get(cache_key) {
-            if !cached.is_expired() {
-                return Some(cached.response.clone());
-            }
-        }
-        None
-    }
-
-    /// Store response in cache
-    async fn cache_response(&self, cache_key: String, response: String, ttl: Duration) {
-        let mut cache = self.request_cache.write().await;
+    /// Process request with compile-time limits
+    pub async fn process_request<T>(&self, request: ZeroCostApiRequest<T>) -> Result<ZeroCostApiResponse<T>, ApiError>
+    where
+        T: Send + Sync + Clone + 'static,
+    {
+        let start_time = std::time::Instant::now();
         
-        // Evict expired entries if at capacity
-        if cache.len() >= MAX_CONCURRENT_REQUESTS {
-            cache.retain(|_, cached| !cached.is_expired());
-        }
+        // Compile-time timeout check
+        let timeout_duration = Duration::from_millis(TIMEOUT_MS);
         
-        // If still at capacity, remove oldest entry
-        if cache.len() >= MAX_CONCURRENT_REQUESTS {
-            if let Some(oldest_key) = cache.iter()
-                .min_by_key(|(_, cached)| cached.created_at)
-                .map(|(k, _)| k.clone())
+        // Process with timeout
+        let result = tokio::time::timeout(timeout_duration, async {
+            // Cache management with compile-time limits
             {
-                cache.remove(&oldest_key);
+                let mut cache = self.request_cache.write().await;
+                if cache.len() >= MAX_REQUESTS {
+                    // Remove oldest entry
+                    if let Some((oldest_key, _)) = cache.iter().min_by_key(|(_, v)| v.timestamp) {
+                        let oldest_key = oldest_key.clone();
+                        cache.remove(&oldest_key);
+                    }
+                }
+                
+                cache.insert(request.request_id.clone(), CachedRequest {
+                    timestamp: request.timestamp,
+                    metadata: request.metadata.clone(),
+                });
             }
+            
+            // Simulate processing
+            Ok(request.data)
+        }).await;
+
+        let processing_time = start_time.elapsed().as_millis() as u64;
+
+        match result {
+            Ok(Ok(data)) => Ok(ZeroCostApiResponse {
+                data,
+                request_id: request.request_id,
+                status: ApiStatus::Success,
+                processing_time_ms: processing_time,
+                metadata: HashMap::new(),
+            }),
+            Ok(Err(_)) => Err(ApiError::ProcessingFailed),
+            Err(_) => Err(ApiError::Timeout),
         }
-        
-        cache.insert(cache_key, CachedResponse::new(response, ttl));
     }
+}
 
-    /// Handle list pools request
-    pub async fn handle_list_pools(&self) -> Result<Json<Vec<PoolInfo>>, ApiError> {
-        let cache_key = "list_pools".to_string();
-        
-        // Check cache first
-        if let Some(cached) = self.get_cached_response(&cache_key).await {
-            if let Ok(pools) = serde_json::from_str::<Vec<PoolInfo>>(&cached) {
-                return Ok(Json(pools));
-            }
-        }
-
-        // Fetch from pool manager with timeout
-        let pools = tokio::time::timeout(
-            Self::request_timeout(),
-            self.pool_manager.list_pools()
-        )
-        .await
-        .map_err(|_| ApiError::Timeout)?
-        .map_err(|e| ApiError::Internal(format!("Pool manager error: {:?}", e)))?;
-
-        // Cache the response
-        if let Ok(response_json) = serde_json::to_string(&pools) {
-            self.cache_response(cache_key, response_json, Duration::from_secs(30)).await;
-        }
-
-        Ok(Json(pools))
-    }
-
-    /// Handle get pool request
-    pub async fn handle_get_pool(&self, pool_name: String) -> Result<Json<Option<PoolInfo>>, ApiError> {
-        let cache_key = format!("pool_{}", pool_name);
-        
-        // Check cache first
-        if let Some(cached) = self.get_cached_response(&cache_key).await {
-            if let Ok(pool) = serde_json::from_str::<Option<PoolInfo>>(&cached) {
-                return Ok(Json(pool));
-            }
-        }
-
-        // Fetch from pool manager with timeout
-        let pool = tokio::time::timeout(
-            Self::request_timeout(),
-            self.pool_manager.get_pool(&pool_name)
-        )
-        .await
-        .map_err(|_| ApiError::Timeout)?
-        .map_err(|e| ApiError::Internal(format!("Pool manager error: {:?}", e)))?;
-
-        // Cache the response
-        if let Ok(response_json) = serde_json::to_string(&pool) {
-            self.cache_response(cache_key, response_json, Duration::from_secs(60)).await;
-        }
-
-        Ok(Json(pool))
-    }
-
-    /// Handle create pool request
-    pub async fn handle_create_pool(&self, config: PoolConfig) -> Result<Json<PoolInfo>, ApiError> {
-        // Validate configuration
-        if config.name.is_empty() {
-            return Err(ApiError::BadRequest("Pool name cannot be empty".to_string()));
-        }
-        
-        if config.devices.is_empty() {
-            return Err(ApiError::BadRequest("Pool must have at least one device".to_string()));
-        }
-
-        // Create pool with timeout
-        let pool = tokio::time::timeout(
-            Self::request_timeout(),
-            self.pool_manager.create_pool(&config)
-        )
-        .await
-        .map_err(|_| ApiError::Timeout)?
-        .map_err(|e| ApiError::Internal(format!("Pool creation failed: {:?}", e)))?;
-
-        // Invalidate list cache
-        let mut cache = self.request_cache.write().await;
-        cache.remove("list_pools");
-
-        Ok(Json(pool))
-    }
-
-    /// Handle delete pool request
-    pub async fn handle_delete_pool(&self, pool_name: String) -> Result<StatusCode, ApiError> {
-        // Delete pool with timeout
-        tokio::time::timeout(
-            Self::request_timeout(),
-            self.pool_manager.delete_pool(&pool_name)
-        )
-        .await
-        .map_err(|_| ApiError::Timeout)?
-        .map_err(|e| ApiError::Internal(format!("Pool deletion failed: {:?}", e)))?;
-
-        // Invalidate caches
-        let mut cache = self.request_cache.write().await;
-        cache.remove("list_pools");
-        cache.remove(&format!("pool_{}", pool_name));
-
-        Ok(StatusCode::NO_CONTENT)
-    }
+/// **CACHED REQUEST STRUCTURE**
+#[derive(Debug, Clone)]
+struct CachedRequest {
+    timestamp: std::time::SystemTime,
+    metadata: HashMap<String, String>,
 }
 
 /// **ZERO-COST DATASET HANDLER**
 /// High-performance ZFS dataset management handler
 pub struct ZeroCostDatasetHandler<
-    const MAX_CONCURRENT_REQUESTS: usize = 1000,
-    const REQUEST_TIMEOUT_MS: u64 = 30000,
+    const MAX_CONCURRENT_REQUESTS: usize = 
+        nestgate_core::canonical_modernization::canonical_constants::performance::MAX_CONCURRENT_CONNECTIONS,
+    const REQUEST_TIMEOUT_MS: u64 = 
+        nestgate_core::canonical_modernization::canonical_constants::performance::REQUEST_TIMEOUT_MS,
 > {
     dataset_manager: Arc<dyn ZeroCostDatasetManager>,
     request_cache: Arc<RwLock<HashMap<String, CachedResponse>>>,
@@ -343,35 +204,55 @@ pub struct DatasetInfo {
 }
 
 /// **API ERROR TYPES**
-/// Consolidated error handling for API operations
-#[derive(Debug, Clone)]
+#[derive(Debug, thiserror::Error)]
 pub enum ApiError {
-    BadRequest(String),
-    NotFound(String),
-    Internal(String),
+    #[error("Request processing failed")]
+    ProcessingFailed,
+    #[error("Request timeout")]
     Timeout,
-    TooManyRequests,
+    #[error("Validation error: {0}")]
+    Validation(String),
+    #[error("Internal error: {0}")]
+    Internal(String),
 }
 
-impl IntoResponse for ApiError {
-    fn into_response(self) -> axum::response::Response {
-        let (status, message) = match self {
-            ApiError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
-            ApiError::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
-            ApiError::Internal(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
-            ApiError::Timeout => (StatusCode::REQUEST_TIMEOUT, "Request timed out".to_string()),
-            ApiError::TooManyRequests => (StatusCode::TOO_MANY_REQUESTS, "Too many requests".to_string()),
-        };
+/// **COMPILE-TIME OPTIMIZED HANDLER CONFIGURATIONS**
+/// Pre-defined handler types for different use cases
 
-        let error_response = serde_json::json!({
-            "error": message,
-            "timestamp": std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_secs()
-        });
+/// Development handler: Small limits, short timeout
+pub type DevelopmentPoolHandler = ZeroCostPoolHandler<100, 5000>; // 100 requests, 5s timeout
 
-        (status, Json(error_response)).into_response()
+/// Production handler: Medium limits, standard timeout  
+pub type ProductionPoolHandler = ZeroCostPoolHandler<1000, 10000>; // 1k requests, 10s timeout
+
+/// Enterprise handler: Large limits, extended timeout
+pub type EnterprisePoolHandler = ZeroCostPoolHandler<10000, 30000>; // 10k requests, 30s timeout
+
+/// High-throughput handler: Very large limits, longer timeout
+pub type HighThroughputPoolHandler = ZeroCostPoolHandler<50000, 60000>; // 50k requests, 60s timeout
+
+/// **ZERO-COST TRAIT IMPLEMENTATION**
+/// Implements the zero-cost API handler trait with compile-time optimization
+impl<T, const MAX_REQUESTS: usize, const TIMEOUT_MS: u64> ZeroCostApiHandler<ZeroCostApiRequest<T>, ZeroCostApiResponse<T>> 
+    for ZeroCostPoolHandler<MAX_REQUESTS, TIMEOUT_MS>
+where
+    T: Send + Sync + Clone + 'static,
+{
+    type Error = ApiError;
+
+    fn handle(&self, request: ZeroCostApiRequest<T>) -> impl std::future::Future<Output = Result<ZeroCostApiResponse<T>, Self::Error>> + Send {
+        self.process_request(request)
+    }
+
+    fn validate(&self, _request: &ZeroCostApiRequest<T>) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send {
+        async move {
+            // Compile-time validation can be added here
+            Ok(())
+        }
+    }
+
+    fn transform_response(&self, response: ZeroCostApiResponse<T>) -> impl std::future::Future<Output = ZeroCostApiResponse<T>> + Send {
+        async move { response }
     }
 }
 
@@ -452,21 +333,6 @@ impl<const MAX_ROUTES: usize, const MAX_MIDDLEWARE: usize>
             .route("/api/v1/health", get(|| async { "OK" }))
     }
 }
-
-/// **TYPE ALIASES FOR COMMON CONFIGURATIONS**
-/// Pre-configured handlers for different use cases
-
-/// Development API handler: Small limits, fast timeout
-pub type DevelopmentPoolHandler = ZeroCostPoolHandler<100, 10000>; // 100 requests, 10s timeout
-
-/// Production API handler: Large limits, standard timeout
-pub type ProductionPoolHandler = ZeroCostPoolHandler<10000, 30000>; // 10k requests, 30s timeout
-
-/// Testing API handler: Tiny limits, very fast timeout
-pub type TestingPoolHandler = ZeroCostPoolHandler<10, 5000>; // 10 requests, 5s timeout
-
-/// High-throughput API handler: Very large limits, longer timeout
-pub type HighThroughputPoolHandler = ZeroCostPoolHandler<50000, 60000>; // 50k requests, 60s timeout
 
 /// **MIGRATION UTILITIES**
 /// Help migrate from async_trait API handlers to zero-cost patterns

@@ -1,4 +1,4 @@
-use crate::common::test_config::{PerformanceThresholds, TestPerformanceSettings, UnifiedTestConfig};
+use crate::common::config::{PerformanceThresholds, TestPerformanceSettings, UnifiedTestConfig};
 use nestgate_core::{NestGateError, Result};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -21,7 +21,7 @@ pub async fn execute_performance_tests(config: &UnifiedTestConfig) -> Result<Per
     println!("🏁 Starting performance tests");
     let start_time = Instant::now();
     
-    let perf_settings = &config.extensions.performance;
+    let perf_settings = &config.performance;
     
     let mut results = PerformanceTestResults {
         total_operations: perf_settings.concurrent_operations * perf_settings.operations_per_test.unwrap_or(10),

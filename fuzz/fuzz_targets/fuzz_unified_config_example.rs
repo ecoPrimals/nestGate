@@ -4,7 +4,7 @@
 use libfuzzer_sys::fuzz_target;
 
 // Use the unified fuzz configuration system
-use nestgate_core::unified_config_consolidation::{
+use nestgate_core::unified_final_config::{
     FuzzConfigParsingSettings, MaliciousContent, UnifiedFuzzConfig,
 };
 

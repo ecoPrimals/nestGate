@@ -1,8 +1,7 @@
-//! Replication Analytics Module
-//!
-//! ZFS replication analysis and optimization recommendations
+//
+// ZFS replication analysis and optimization recommendations
 
-use crate::error::Result;
+use crate::error::CanonicalResult as Result;
 use crate::types::ReplicationPerformance;
 use serde::{Deserialize, Serialize};
 use tracing::debug;

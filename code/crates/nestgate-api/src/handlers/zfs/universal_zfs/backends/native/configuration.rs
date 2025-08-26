@@ -1,6 +1,5 @@
-//! Configuration Operations for Native ZFS Backend
-//!
-//! Contains configuration and utility operations for the native ZFS backend.
+//
+// Contains configuration and utility operations for the native ZFS backend.
 
 // Removed unused tracing import
 

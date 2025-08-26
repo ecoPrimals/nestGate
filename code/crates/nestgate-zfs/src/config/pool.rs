@@ -1,6 +1,5 @@
-//! Pool Discovery Configuration Module
-//!
-//! Configuration for ZFS pool discovery, validation, and management.
+//
+// Configuration for ZFS pool discovery, validation, and management.
 
 use serde::{Deserialize, Serialize};
 

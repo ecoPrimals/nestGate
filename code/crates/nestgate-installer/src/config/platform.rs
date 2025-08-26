@@ -1,8 +1,10 @@
-/// Installer Platform Configuration
 /// Platform-specific installation settings, component selection, and system integration
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
+
+// Type alias to reduce complexity
+type ComponentConfigMap = HashMap<String, HashMap<String, String>>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstallationSettings {
@@ -35,7 +37,7 @@ pub struct ComponentSettings {
     /// Optional components
     pub optional_components: Vec<String>,
     /// Component-specific configurations
-    pub component_configs: HashMap<String, HashMap<String, String>>,
+    pub component_configs: ComponentConfigMap,
     /// Enable component validation
     pub validate_components: bool,
 }

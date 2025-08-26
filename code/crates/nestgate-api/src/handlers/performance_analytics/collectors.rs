@@ -1,6 +1,5 @@
-//! Performance Analytics Collectors
-//!
-//! System metrics collection functionality for performance monitoring.
+//
+// System metrics collection functionality for performance monitoring.
 
 use chrono::Utc;
 use std::collections::HashMap;

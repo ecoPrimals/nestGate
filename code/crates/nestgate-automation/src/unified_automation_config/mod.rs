@@ -1,8 +1,8 @@
-use nestgate_core::smart_abstractions::prelude::*;
-/// **UNIFIED AUTOMATION CONFIGURATION - MODULAR ARCHITECTURE**
 /// Smart refactoring of 1,265-line monolith into focused, maintainable modules.
 /// Each module handles a specific automation concern with clear boundaries.
-use nestgate_core::unified_config_consolidation::StandardDomainConfig;
+
+use nestgate_core::config::defaults::NetworkPortDefaults as StandardDomainConfig;
+use nestgate_core::smart_abstractions::prelude::SmartDefault;
 use serde::{Deserialize, Serialize};
 
 // Import all module components
@@ -37,7 +37,8 @@ pub struct UnifiedAutomationExtensions {
 
 /// **UNIFIED AUTOMATION CONFIGURATION**
 /// The main configuration type following StandardDomainConfig pattern
-pub type UnifiedAutomationConfig = StandardDomainConfig<UnifiedAutomationExtensions>;
+/// CANONICAL MODERNIZATION: Simplified type alias without type parameters
+pub type UnifiedAutomationConfig = StandardDomainConfig;
 
 impl SmartDefault for UnifiedAutomationExtensions {
     fn smart_default() -> Self {

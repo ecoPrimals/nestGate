@@ -1,58 +1,57 @@
-//! # NestGate MCP Security Tests  
-//!
-//! **Comprehensive security testing for MCP (Model Context Protocol) integration**
-//!
-//! This module contains security-focused tests for the NestGate MCP adapter,
-//! validating authentication, authorization, encryption, and secure communication
-//! protocols for AI model integration.
-//!
-//! ## Security Test Areas
-//!
-//! - **Authentication**: Token validation, session management, and identity verification
-//! - **Authorization**: Permission checking, role-based access, and privilege escalation prevention
-//! - **Encryption**: Data encryption, key management, and secure transmission
-//! - **Input Validation**: Parameter sanitization, injection prevention, and boundary checking
-//! - **Communication Security**: TLS/SSL, certificate validation, and secure channels
-//! - **Audit Logging**: Security event logging and monitoring
-//!
-//! ## Threat Model Validation
-//!
-//! Tests validate security against common attack vectors:
-//! - **Injection Attacks**: SQL, command, and code injection prevention
-//! - **Authentication Bypass**: Token manipulation and session hijacking
-//! - **Privilege Escalation**: Unauthorized access to protected resources  
-//! - **Data Exfiltration**: Unauthorized data access and transmission
-//! - **Man-in-the-Middle**: Communication interception and tampering
-//! - **Denial of Service**: Resource exhaustion and availability attacks
-//!
-//! ## Cryptographic Testing
-//!
-//! Validates cryptographic implementations:
-//! - Key generation and entropy quality
-//! - Encryption algorithm correctness
-//! - Hash function integrity
-//! - Digital signature verification
-//! - Certificate chain validation
-//!
-//! ## Compliance Testing
-//!
-//! Ensures compliance with security standards:
-//! - OWASP security guidelines
-//! - Industry best practices
-//! - Regulatory requirements
-//! - Internal security policies
-//!
-//! ## Example Security Test
-//!
-//! ```rust
-//! #[test]
-//! fn test_token_validation_rejects_invalid_tokens() {
-//!     let invalid_token = "malicious_token";
-//!     let result = validate_security_token(invalid_token);
-//!     assert!(result.is_err());
-//!     assert_eq!(result.unwrap_err().kind(), SecurityErrorKind::InvalidToken);
-//! }
-//! ```
+//
+// **Comprehensive security testing for MCP (Model Context Protocol) integration**
+//
+// This module contains security-focused tests for the NestGate MCP adapter,
+// validating authentication, authorization, encryption, and secure communication
+// protocols for AI model integration.
+//
+// ## Security Test Areas
+//
+// - **Authentication**: Token validation, session management, and identity verification
+// - **Authorization**: Permission checking, role-based access, and privilege escalation prevention
+// - **Encryption**: Data encryption, key management, and secure transmission
+// - **Input Validation**: Parameter sanitization, injection prevention, and boundary checking
+// - **Communication Security**: TLS/SSL, certificate validation, and secure channels
+// - **Audit Logging**: Security event logging and monitoring
+//
+// ## Threat Model Validation
+//
+// Tests validate security against common attack vectors:
+// - **Injection Attacks**: SQL, command, and code injection prevention
+// - **Authentication Bypass**: Token manipulation and session hijacking
+// - **Privilege Escalation**: Unauthorized access to protected resources  
+// - **Data Exfiltration**: Unauthorized data access and transmission
+// - **Man-in-the-Middle**: Communication interception and tampering
+// - **Denial of Service**: Resource exhaustion and availability attacks
+//
+// ## Cryptographic Testing
+//
+// Validates cryptographic implementations:
+// - Key generation and entropy quality
+// - Encryption algorithm correctness
+// - Hash function integrity
+// - Digital signature verification
+// - Certificate chain validation
+//
+// ## Compliance Testing
+//
+// Ensures compliance with security standards:
+// - OWASP security guidelines
+// - Industry best practices
+// - Regulatory requirements
+// - Internal security policies
+//
+// ## Example Security Test
+//
+// ```rust
+// #[test]
+// fn test_token_validation_rejects_invalid_tokens() {
+//     let invalid_token = "malicious_token";
+//     let result = validate_security_token(invalid_token);
+//     assert!(result.is_err());
+//     assert_eq!(result.unwrap_err().kind(), SecurityErrorKind::InvalidToken);
+// }
+// ```
 
 use super::*;
 use std::path::PathBuf;

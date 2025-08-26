@@ -1,8 +1,7 @@
-//! Workspace Collaboration Features
-//!
-//! Sharing and collaboration functionality for workspaces.
-//! These are stub implementations that can be extended when
-//! user management and UI components are available.
+//
+// Sharing and collaboration functionality for workspaces.
+// These are stub implementations that can be extended when
+// user management and UI components are available.
 
 use axum::{extract::Json, extract::Path, http::StatusCode};
 use serde_json::{json, Value};

@@ -1,19 +1,18 @@
-//! Development Environment Hardware Abstraction
-//!
-//! This module provides production-ready fallbacks for development environments
-//! that don't have dedicated ZFS storage hardware available.
-//!
-//! ## When This Module Is Used
-//! - Development laptops without ZFS pools
-//! - Container environments (Docker, Podman)
-//! - CI/CD systems without storage hardware
-//! - Testing environments that need storage API compatibility
-//!
-//! ## Important: This is NOT Test Code
-//! These implementations are production-ready abstractions that allow
-//! the full NestGate system to run in environments without dedicated
-//! storage hardware. They provide real functionality through alternative
-//! means (filesystem operations, system calls, etc.).
+//
+// This module provides production-ready fallbacks for development environments
+// that don't have dedicated ZFS storage hardware available.
+//
+// ## When This Module Is Used
+// - Development laptops without ZFS pools
+// - Container environments (Docker, Podman)
+// - CI/CD systems without storage hardware
+// - Testing environments that need storage API compatibility
+//
+// ## Important: This is NOT Test Code
+// These implementations are production-ready abstractions that allow
+// the full NestGate system to run in environments without dedicated
+// storage hardware. They provide real functionality through alternative
+// means (filesystem operations, system calls, etc.).
 
 #[cfg(feature = "dev-environment-fallbacks")]
 pub mod hardware_detector;
@@ -37,8 +36,8 @@ pub fn is_dev_environment() -> bool {
 
 /// Get the appropriate storage service for the current environment
 #[cfg(feature = "dev-environment-fallbacks")]
-pub async fn create_storage_service() -> crate::Result<std::sync::Arc<DevEnvironmentStorageService>>
-{
+pub async fn create_storage_service(
+) -> crate::error::CanonicalResult<std::sync::Arc<DevEnvironmentStorageService>> {
     match HardwareEnvironmentDetector::detect_capabilities().await {
         HardwareCapabilities::NativeZfs => {
             tracing::info!("🔧 Native ZFS hardware detected");

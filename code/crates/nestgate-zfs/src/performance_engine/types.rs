@@ -1,7 +1,6 @@
-//! Performance Engine Types and Data Structures
-//!
-//! This module contains all the data structures, enums, and types used by the
-//! performance optimization engine.
+//
+// This module contains all the data structures, enums, and types used by the
+// performance optimization engine.
 
 use std::collections::HashMap;
 use std::time::Duration;
@@ -340,7 +339,8 @@ pub mod system_time_serde {
     use super::*;
     use std::time::UNIX_EPOCH;
 
-    pub fn serialize<S>(time: &SystemTime, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    #[allow(clippy::type_complexity)]
+    pub fn serialize<S>(time: &SystemTime, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -355,7 +355,7 @@ pub mod system_time_serde {
         D: Deserializer<'de>,
     {
         let secs = u64::deserialize(deserializer)
-            .map_err(|e| de::Error::custom(format!("deserialization error: {}", e)))?;
+            .map_err(|e| de::Error::custom(format!("deserialization error: {e}")))?;
         Ok(UNIX_EPOCH + std::time::Duration::from_secs(secs))
     }
 }

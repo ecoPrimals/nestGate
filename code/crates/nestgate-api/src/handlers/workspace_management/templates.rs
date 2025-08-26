@@ -1,7 +1,6 @@
-//! Workspace Template Management
-//!
-//! Template creation and application functionality for standardizing
-//! workspace configurations. These are stub implementations for future expansion.
+//
+// Template creation and application functionality for standardizing
+// workspace configurations. These are stub implementations for future expansion.
 
 use axum::{extract::Json, extract::Path, http::StatusCode};
 use serde_json::{json, Value};

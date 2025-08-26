@@ -1,11 +1,10 @@
-//! AI-First API Example Handler
-//! 
-//! This module demonstrates how to use the AI-First response format
-//! and provides examples of ecosystem-compliant API endpoints.
-//!
-//! **ECOSYSTEM COMPLIANCE**: 85%+ AI-First Citizen API Standard
-//! **AUTO-CONVERSION**: Middleware automatically wraps responses
-//! **MANUAL CONTROL**: Direct AIFirstResponse construction when needed
+// 
+// This module demonstrates how to use the AI-First response format
+// and provides examples of ecosystem-compliant API endpoints.
+//
+// **ECOSYSTEM COMPLIANCE**: 85%+ AI-First Citizen API Standard
+// **AUTO-CONVERSION**: Middleware automatically wraps responses
+// **MANUAL CONTROL**: Direct AIFirstResponse construction when needed
 
 use axum::{
     extract::{Query, Path},
@@ -14,7 +13,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use nestgate_core::ai_first_refactored::{
+// use nestgate_core::ai_first_refactored::{  // Missing module
     AIFirstResponse, AIFirstResponseBuilder, SuggestedAction, ActionType,
     ai_success, ai_success_with_confidence, ai_response_with_actions,
 };

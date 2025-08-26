@@ -51,6 +51,8 @@ pids/
 
 # Test coverage
 /coverage/
+/coverage-reports/
+/coverage-analysis/
 
 # Temporary files
 /tmp/
@@ -68,9 +70,6 @@ pids/
 /backups/
 /backup/
 
-# Old v1 repository (exclude from v2)
-
-
 # Archive directory (moved root files)
 /archive/
 
@@ -87,6 +86,7 @@ nestgate-port-manager-*.tar.gz
 
 # Criterion benchmark results
 /target/criterion/
+/performance_results/
 
 # Test reports and HTML artifacts
 /test-reports/
@@ -113,6 +113,7 @@ nestgate-port-manager-*.tar.gz
 # Configuration backups
 *.backup
 *.bak
+/config-migration-backup/
 
 # IDE specific
 .cargo/
@@ -129,4 +130,19 @@ nestgate-port-manager-*.tar.gz
 
 # Exclude any large binaries
 **/target/debug/deps/
-**/target/release/deps/ 
+**/target/release/deps/
+
+# Mutation testing artifacts
+/mutants.out/
+/brief/mutants.out/
+
+# Monitoring and observability
+/monitoring/
+
+# Modernization artifacts
+/unwrap-migrator/target/
+/sporeHandoff/
+
+# Fuzz testing
+/fuzz/artifacts/
+/fuzz/corpus/ 

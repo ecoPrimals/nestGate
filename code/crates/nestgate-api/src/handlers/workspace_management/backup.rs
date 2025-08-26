@@ -1,6 +1,5 @@
-//! Backup and Recovery Operations
-//!
-//! ZFS snapshot-based backup and restore functionality for workspace data protection.
+//
+// ZFS snapshot-based backup and restore functionality for workspace data protection.
 
 use axum::{extract::Json, extract::Path, http::StatusCode};
 use serde_json::{json, Value};

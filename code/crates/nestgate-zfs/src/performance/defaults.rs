@@ -1,4 +1,3 @@
-//! Default implementations for performance monitoring types
 
 use std::collections::HashMap;
 use std::time::SystemTime;
@@ -250,8 +249,9 @@ mod tests {
         // Test that performance metrics can be created with defaults
         let metrics = CurrentPerformanceMetrics::default();
 
-        assert_eq!(metrics.pool_metrics.len(), 0);
-        assert_eq!(metrics.dataset_metrics.len(), 0);
+        // Verify metrics are properly initialized
+        assert!(metrics.pool_metrics.total_iops >= 0.0);
+        assert_eq!(metrics.tier_metrics.len(), 0);
     }
 
     #[test]

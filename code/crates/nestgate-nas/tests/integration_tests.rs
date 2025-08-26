@@ -1,6 +1,5 @@
-//! NAS Integration Tests for NestGate
-//!
-//! Tests the actual NAS functionality with real types
+//
+// Tests the actual NAS functionality with real types
 
 use nestgate_nas::{NasConfig, NasServer, NasShare, ShareProtocol};
 use std::path::PathBuf;
@@ -108,15 +107,11 @@ mod nas_share_tests {
     use super::*;
 
     #[test]
-    fn test_nas_share_creation() {
-        let temp_dir = TempDir::new().unwrap_or_else(|e| {
-            tracing::error!("Unwrap failed: {:?}", e);
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
-            )
-            .into());
-        });
+    fn test_nas_share_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = TempDir::new().map_err(|e| {
+            tracing::error!("TempDir creation failed: {:?}", e);
+            format!("TempDir creation failed: {:?}", e)
+        })?;
 
         let share = NasShare {
             name: "test_share".to_string(),
@@ -133,18 +128,15 @@ mod nas_share_tests {
         assert_eq!(share.protocols.len(), 2);
         assert!(share.protocols.contains(&ShareProtocol::SMB));
         assert!(share.protocols.contains(&ShareProtocol::NFS));
+        Ok(())
     }
 
     #[test]
-    fn test_nas_share_read_only() {
-        let temp_dir = TempDir::new().unwrap_or_else(|e| {
-            tracing::error!("Unwrap failed: {:?}", e);
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
-            )
-            .into());
-        });
+    fn test_nas_share_read_only() -> std::result::Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = TempDir::new().map_err(|e| {
+            tracing::error!("TempDir creation failed: {:?}", e);
+            format!("TempDir creation failed: {:?}", e)
+        })?;
 
         let share = NasShare {
             name: "readonly_share".to_string(),
@@ -160,18 +152,18 @@ mod nas_share_tests {
         assert_eq!(share.allowed_users[0], "readonly_user");
         assert_eq!(share.protocols.len(), 1);
         assert_eq!(share.protocols[0], ShareProtocol::HTTP);
+        Ok(())
     }
 
     #[test]
-    fn test_nas_share_multiple_protocols() {
-        let temp_dir = TempDir::new().unwrap_or_else(|e| {
-            tracing::error!("Unwrap failed: {:?}", e);
-            return Err(std::io::Error::new(
+    fn test_nas_share_multiple_protocols() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = TempDir::new().map_err(|e| {
+            tracing::error!("TempDir creation failed: {:?}", e);
+            std::io::Error::new(
                 std::io::ErrorKind::Other,
                 format!("Operation failed: {:?}", e),
             )
-            .into());
-        });
+        })?;
 
         let share = NasShare {
             name: "multi_protocol_share".to_string(),
@@ -185,18 +177,19 @@ mod nas_share_tests {
         assert!(share.protocols.contains(&ShareProtocol::SMB));
         assert!(share.protocols.contains(&ShareProtocol::NFS));
         assert!(share.protocols.contains(&ShareProtocol::HTTP));
+
+        Ok(())
     }
 
     #[test]
-    fn test_nas_share_no_users() {
-        let temp_dir = TempDir::new().unwrap_or_else(|e| {
-            tracing::error!("Unwrap failed: {:?}", e);
-            return Err(std::io::Error::new(
+    fn test_nas_share_no_users() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = TempDir::new().map_err(|e| {
+            tracing::error!("TempDir creation failed: {:?}", e);
+            std::io::Error::new(
                 std::io::ErrorKind::Other,
                 format!("Operation failed: {:?}", e),
             )
-            .into());
-        });
+        })?;
 
         let share = NasShare {
             name: "public_share".to_string(),
@@ -210,6 +203,8 @@ mod nas_share_tests {
         assert!(share.read_only);
         assert!(share.allowed_users.is_empty());
         assert_eq!(share.protocols.len(), 1);
+
+        Ok(())
     }
 }
 
@@ -265,15 +260,14 @@ mod nas_server_tests {
     }
 
     #[tokio::test]
-    async fn test_nas_server_initialization() {
-        let temp_dir = TempDir::new().unwrap_or_else(|e| {
-            tracing::error!("Unwrap failed: {:?}", e);
-            return Err(std::io::Error::new(
+    async fn test_nas_server_initialization() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = TempDir::new().map_err(|e| {
+            tracing::error!("TempDir creation failed: {:?}", e);
+            std::io::Error::new(
                 std::io::ErrorKind::Other,
                 format!("Operation failed: {:?}", e),
             )
-            .into());
-        });
+        })?;
 
         let config = NasConfig {
             smb_enabled: false,  // Disable to avoid port conflicts
@@ -291,18 +285,19 @@ mod nas_server_tests {
         // Initialize should succeed
         let result = server.initialize().await;
         assert!(result.is_ok());
+
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_nas_server_add_share() {
-        let temp_dir = TempDir::new().unwrap_or_else(|e| {
-            tracing::error!("Unwrap failed: {:?}", e);
-            return Err(std::io::Error::new(
+    async fn test_nas_server_add_share() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = TempDir::new().map_err(|e| {
+            tracing::error!("TempDir creation failed: {:?}", e);
+            std::io::Error::new(
                 std::io::ErrorKind::Other,
                 format!("Operation failed: {:?}", e),
             )
-            .into());
-        });
+        })?;
         let share_dir = temp_dir.path().join("test_share");
 
         let config = NasConfig {
@@ -330,6 +325,8 @@ mod nas_server_tests {
         // Add share should succeed
         let result = server.add_share(share).await;
         assert!(result.is_ok());
+
+        Ok(())
     }
 }
 
@@ -338,15 +335,14 @@ mod integration_validation_tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_complete_nas_workflow() {
-        let temp_dir = TempDir::new().unwrap_or_else(|e| {
-            tracing::error!("Unwrap failed: {:?}", e);
-            return Err(std::io::Error::new(
+    async fn test_complete_nas_workflow() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = TempDir::new().map_err(|e| {
+            tracing::error!("TempDir creation failed: {:?}", e);
+            std::io::Error::new(
                 std::io::ErrorKind::Other,
                 format!("Operation failed: {:?}", e),
             )
-            .into());
-        });
+        })?;
 
         // Create NAS configuration
         let config = NasConfig {
@@ -468,5 +464,7 @@ mod integration_validation_tests {
             let _server = NasServer::new(config);
             // Server creation should succeed
         }
+
+        Ok(())
     }
 }

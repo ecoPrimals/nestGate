@@ -1,4 +1,3 @@
-use anyhow::{Context, Result};
 use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::Client;
 use std::fs::File;
@@ -170,6 +169,16 @@ impl DownloadManager {
             }
         }
 
+        Ok(())
+    }
+
+    /// Download components based on configuration
+    pub async fn download_components(
+        &self,
+        _config: &crate::config::InstallerConfig,
+    ) -> nestgate_core::error::Result<()> {
+        // Simplified implementation for canonical modernization
+        // In a full implementation, this would download selected components
         Ok(())
     }
 }

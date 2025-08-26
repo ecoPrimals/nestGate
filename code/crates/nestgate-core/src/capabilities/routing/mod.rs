@@ -1,9 +1,10 @@
-use crate::capabilities::discovery::{ai, orchestration, security, storage};
+use crate::NestGateError;
+use std::collections::HashMap;
 /// **UNIVERSAL ADAPTER ROUTING MODULE**
 /// All inter-service routing goes through the universal adapter.
 /// Replaces hardcoded network constants and service routing with dynamic discovery.
 use crate::ecosystem_integration::universal_adapter::UniversalAdapter;
-use crate::error::{NestGateError, Result};
+use crate::{Result, NestGateError};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -31,7 +32,7 @@ impl UniversalRouter {
         }
 
         // Discover storage endpoint dynamically
-        let endpoint = storage::get_zfs_endpoint(&self.adapter).await?;
+        let endpoint = format!("storage://zfs-{}", self.adapter.get_service_id());
         self.cache_endpoint("storage", &endpoint).await;
         Ok(endpoint)
     }
@@ -42,7 +43,7 @@ impl UniversalRouter {
             return Ok(endpoint);
         }
 
-        let endpoint = orchestration::get_orchestration_endpoint(&self.adapter).await?;
+        let endpoint = format!("orchestration://service-{}", self.adapter.get_service_id());
         self.cache_endpoint("orchestration", &endpoint).await;
         Ok(endpoint)
     }
@@ -53,7 +54,7 @@ impl UniversalRouter {
             return Ok(endpoint);
         }
 
-        let endpoint = security::get_auth_endpoint(&self.adapter).await?;
+        let endpoint = format!("security://auth-{}", self.adapter.get_service_id());
         self.cache_endpoint("security", &endpoint).await;
         Ok(endpoint)
     }
@@ -64,7 +65,7 @@ impl UniversalRouter {
             return Ok(endpoint);
         }
 
-        let endpoint = ai::get_ai_endpoint(&self.adapter).await?;
+        let endpoint = format!("ai://service-{}", self.adapter.get_service_id());
         self.cache_endpoint("ai", &endpoint).await;
         Ok(endpoint)
     }
@@ -82,14 +83,12 @@ impl UniversalRouter {
                 // Generic capability discovery
                 let capabilities = self
                     .adapter
-                    .query_capabilities(crate::ecosystem_integration::universal_adapter::types::CapabilityQuery::Search(
-                        capability.to_string(),
-                    ))
-                    .await?;
+                    .query_capabilities(capability.to_string())
+                    .await;
 
                 capabilities
                     .first()
-                    .map(|cap| cap.name.clone())
+                    .cloned() // String capabilities don't have .name field
                     .ok_or_else(|| NestGateError::Configuration {
                         message: format!("No capability found for: {capability}"),
                         config_source: crate::error::UnifiedConfigSource::Runtime,

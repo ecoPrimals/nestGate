@@ -8,7 +8,7 @@
 /// - Concurrent access during tier changes
 
 use std::collections::HashMap;
-use std::sync::Arc;
+
 use std::time::{Duration, SystemTime};
 use tokio::time::{sleep, timeout};
 

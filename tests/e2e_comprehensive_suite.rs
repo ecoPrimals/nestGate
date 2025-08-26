@@ -12,7 +12,7 @@ async fn test_complete_zfs_storage_lifecycle() -> Result<(), Box<dyn std::error:
     println!("🧪 E2E: Complete ZFS Storage Lifecycle");
 
     // 1. Initialize storage system
-    let storage_config = json!({
+    let _storage_config = json!({
         "pool_name": "test_pool_e2e",
         "tier_config": {
             "hot": {"compression": "lz4", "cache_size": "1GB"},
@@ -112,7 +112,7 @@ async fn test_performance_under_load() -> Result<(), Box<dyn std::error::Error>>
         let handle = tokio::spawn(async move {
             // Simulate concurrent operations
             sleep(Duration::from_millis(10 + i % 20)).await;
-            format!("Operation {} completed", i)
+            format!("Operation {i} completed")
         });
         handles.push(handle);
     }

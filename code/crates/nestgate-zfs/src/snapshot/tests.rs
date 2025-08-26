@@ -1,6 +1,5 @@
-//! Snapshot Management Tests
-//!
-//! Unit tests for snapshot policies, operations, and management functionality.
+//
+// Unit tests for snapshot policies, operations, and management functionality.
 
 use super::operations::SnapshotOperationType;
 use super::policy::{RetentionPolicy, ScheduleFrequency, SnapshotPolicy};
@@ -18,7 +17,7 @@ fn test_snapshot_policy_default() {
 }
 
 #[test]
-fn test_retention_policy_default() {
+fn test_retention_policy_default() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let retention = RetentionPolicy::default();
 
     if let RetentionPolicy::Custom {
@@ -34,12 +33,13 @@ fn test_retention_policy_default() {
         assert_eq!(weekly_weeks, 12);
         assert_eq!(monthly_months, 12);
         assert_eq!(yearly_years, 5);
+        Ok(())
     } else {
-        return Err(std::io::Error::new(
+        Err(std::io::Error::new(
             std::io::ErrorKind::Other,
             "Invalid retention policy type - expected Custom".to_string(),
         )
-        .into());
+        .into())
     }
 }
 
@@ -64,34 +64,36 @@ async fn test_snapshot_operation_creation() {
 }
 
 #[test]
-fn test_schedule_frequency_hours() {
+fn test_schedule_frequency_hours() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let schedule = ScheduleFrequency::Hours(6);
 
     match schedule {
-        ScheduleFrequency::Hours(hours) => assert_eq!(hours, 6),
-        _ => {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Expected Hours schedule frequency".to_string(),
-            )
-            .into())
+        ScheduleFrequency::Hours(hours) => {
+            assert_eq!(hours, 6);
+            Ok(())
         }
+        _ => Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Expected Hours schedule frequency".to_string(),
+        )
+        .into()),
     }
 }
 
 #[test]
-fn test_schedule_frequency_daily() {
+fn test_schedule_frequency_daily() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let schedule = ScheduleFrequency::Daily(2);
 
     match schedule {
-        ScheduleFrequency::Daily(hour) => assert_eq!(hour, 2),
-        _ => {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Expected Daily schedule frequency".to_string(),
-            )
-            .into())
+        ScheduleFrequency::Daily(hour) => {
+            assert_eq!(hour, 2);
+            Ok(())
         }
+        _ => Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Expected Daily schedule frequency".to_string(),
+        )
+        .into()),
     }
 }
 

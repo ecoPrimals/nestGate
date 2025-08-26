@@ -1,4 +1,3 @@
-//! Optimization types for dataset optimization and performance improvements
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -83,12 +82,12 @@ impl Default for SizeThresholds {
     fn default() -> Self {
         Self {
             small_file: {
-                use nestgate_core::constants::storage::sizes;
-                sizes::SMALL_FILE_BYTES
+                use nestgate_core::canonical_modernization::canonical_constants::storage::SMALL_FILE_BYTES;
+                SMALL_FILE_BYTES
             },
             large_file: {
-                use nestgate_core::constants::storage::sizes;
-                sizes::LARGE_FILE_BYTES
+                use nestgate_core::canonical_modernization::canonical_constants::storage::LARGE_FILE_BYTES;
+                LARGE_FILE_BYTES
             },
         }
     }

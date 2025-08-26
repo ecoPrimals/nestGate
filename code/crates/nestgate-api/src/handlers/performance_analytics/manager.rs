@@ -1,6 +1,5 @@
-//! Performance Analytics Manager
-//!
-//! Main performance analytics manager struct with lifecycle management.
+//
+// Main performance analytics manager struct with lifecycle management.
 
 use std::sync::Arc;
 use std::time::Duration;

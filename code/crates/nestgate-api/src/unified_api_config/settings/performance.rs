@@ -1,6 +1,5 @@
-//! Performance and Resilience Configuration Settings
-//!
-//! Performance tuning and resilience configuration types for the NestGate API.
+//
+// Performance tuning and resilience configuration types for the NestGate API.
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;

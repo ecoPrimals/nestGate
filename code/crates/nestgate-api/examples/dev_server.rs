@@ -1,7 +1,6 @@
-//! Development server for NestGate API
-//!
-//! This example demonstrates how to set up and run the NestGate API server
-//! with full ZFS integration for development and testing purposes.
+//
+// This example demonstrates how to set up and run the NestGate API server
+// with full ZFS integration for development and testing purposes.
 
 use nestgate_api::{serve_with_zfs, Config};
 use nestgate_core::config::defaults::{NetworkAddressDefaults, NetworkPortDefaults};

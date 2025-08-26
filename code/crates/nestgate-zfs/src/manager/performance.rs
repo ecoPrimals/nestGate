@@ -1,11 +1,12 @@
-//! ZFS Manager Performance - Performance monitoring and optimization
-//!
-//! Contains all performance-related operations including analytics collection,
-//! storage optimization, and tier optimization based on performance metrics.
+//
+// Contains all performance-related operations including analytics collection,
+// storage optimization, and tier optimization based on performance metrics.
 
 use super::types::{OptimizationResult, PerformanceAnalytics};
-use crate::error::{Result, ZfsError};
+use nestgate_core::error::conversions::create_zfs_error;
+use nestgate_core::error::domain_errors::ZfsOperation;
 use crate::types::StorageTier;
+use nestgate_core::Result;
 use std::time::SystemTime;
 // Removed unused tracing import
 
@@ -95,21 +96,23 @@ impl ZfsManager {
         let mut recommendations = Vec::new();
 
         // Get current pool status
-        let pools = self
-            .pool_manager
-            .list_pools()
-            .await
-            .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to list pools: {e}"),
-            })?;
+        let pools = self.pool_manager.list_pools().await.map_err(|e| {
+            create_zfs_error(
+                format!("Failed to list pools: {e}"),
+                ZfsOperation::SystemCheck
+            )
+        })?;
 
         for pool in &pools {
             let status = self
                 .pool_manager
                 .get_pool_status(&pool.name)
                 .await
-                .map_err(|e| ZfsError::Internal {
-                    message: format!("Failed to get pool status: {e}"),
+                .map_err(|e| {
+                    create_zfs_error(
+                        format!("Failed to get pool status: {e}"),
+                        ZfsOperation::PoolCreate
+                    )
                 })?;
 
             // Parse basic pool status for optimization recommendations

@@ -1,11 +1,10 @@
-/// NAS Configuration - Share management and access control
 /// Enhanced with unified configuration pattern for better maintainability
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
 
-use nestgate_core::unified_config_consolidation::StandardDomainConfig;
+use nestgate_core::unified_final_config::supporting_types::StandardDomainConfig;
 
 /// User access levels for NAS shares
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -144,7 +143,8 @@ impl Default for PerformanceSettings {
 ///
 /// This replaces the deprecated ShareConfig struct with a unified configuration
 /// approach using StandardDomainConfig pattern.
-pub type UnifiedNasShareConfig = StandardDomainConfig<NasShareExtensions>;
+/// CANONICAL MODERNIZATION: Simplified type alias without type parameters
+pub type UnifiedNasShareConfig = StandardDomainConfig;
 
 impl UnifiedNasShareConfig {
     /// Create NAS share config for development environment

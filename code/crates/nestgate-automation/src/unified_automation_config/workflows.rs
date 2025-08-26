@@ -1,4 +1,3 @@
-use nestgate_core::smart_abstractions::prelude::*;
 /// **WORKFLOWS MODULE**
 /// Workflow engine configuration - extracted from monolithic config
 use serde::{Deserialize, Serialize};
@@ -34,7 +33,7 @@ impl SmartDefault for WorkflowSettings {
     fn smart_default() -> Self {
         Self {
             enabled: true,
-            workflows: HashMap::smart_default(),
+            workflows: HashMap::default(),
             default_timeout: Duration::from_secs(300),
             max_concurrent: 10,
         }

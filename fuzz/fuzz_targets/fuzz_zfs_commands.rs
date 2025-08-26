@@ -4,7 +4,7 @@ use arbitrary::Arbitrary;
 use libfuzzer_sys::fuzz_target;
 
 // Import ZFS-related functionality for fuzzing
-use nestgate_core::unified_config_consolidation::UnifiedZfsConfig;
+use nestgate_core::unified_final_config::DomainConfigs;
 use nestgate_zfs::config::ZfsConfig;
 // Removed unused StorageTier import
 use std::collections::HashMap;
@@ -181,7 +181,7 @@ fn validate_raw_command(cmd: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn create_fuzz_config(input: &FuzzZfsCommand) -> UnifiedZfsConfig {
+fn create_fuzz_config(input: &FuzzZfsCommand) -> ZfsConfig {
     // Create a config that might have malformed values
     let mut config = UnifiedZfsConfig::default();
 

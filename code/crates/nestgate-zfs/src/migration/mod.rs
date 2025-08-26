@@ -1,14 +1,13 @@
-//! ZFS Tier Migration Engine
-//!
-//! Automated data migration system for moving files between storage tiers
-//! based on access patterns, performance requirements, and system policies.
-//!
-//! This module provides comprehensive tier migration capabilities with:
-//! - Intelligent migration job scheduling and queue management
-//! - Automated discovery of migration candidates based on access patterns
-//! - High-performance file operations with progress tracking
-//! - Integrity verification and metadata preservation
-//! - Configurable policies and performance limits
+//
+// Automated data migration system for moving files between storage tiers
+// based on access patterns, performance requirements, and system policies.
+//
+// This module provides comprehensive tier migration capabilities with:
+// - Intelligent migration job scheduling and queue management
+// - Automated discovery of migration candidates based on access patterns
+// - High-performance file operations with progress tracking
+// - Integrity verification and metadata preservation
+// - Configurable policies and performance limits
 
 // Module declarations
 pub mod discovery;

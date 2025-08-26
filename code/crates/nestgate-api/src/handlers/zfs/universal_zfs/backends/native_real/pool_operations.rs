@@ -1,6 +1,5 @@
-//! Pool Operations Module
-//!
-//! Single responsibility: ZFS pool management operations
+//
+// Single responsibility: ZFS pool management operations
 
 use super::core::NativeZfsService;
 use super::parsing;
@@ -9,6 +8,10 @@ use crate::handlers::zfs::universal_zfs::types::{
 };
 use tracing::info;
 
+/// Lists all ZFS pools on the system
+///
+/// Returns a vector of `PoolInfo` structures containing details about each pool
+/// including name, size, usage, and health status.
 pub async fn list_pools(service: &NativeZfsService) -> UniversalZfsResult<Vec<PoolInfo>> {
     info!("📊 Listing all ZFS pools");
 
@@ -25,6 +28,14 @@ pub async fn list_pools(service: &NativeZfsService) -> UniversalZfsResult<Vec<Po
     Ok(pools)
 }
 
+/// Gets detailed information about a specific ZFS pool
+///
+/// # Arguments
+/// * `service` - The native ZFS service instance
+/// * `pool_name` - Name of the pool to query
+///
+/// # Returns
+/// Detailed `PoolInfo` including properties, capacity, and health status
 pub async fn get_pool_info(
     service: &NativeZfsService,
     pool_name: &str,
@@ -68,6 +79,17 @@ pub async fn get_pool_info(
     Ok(pool_info)
 }
 
+/// Creates a new ZFS pool with the specified configuration
+///
+/// # Arguments
+/// * `service` - The native ZFS service instance
+/// * `config` - Pool configuration including name and devices
+///
+/// # Returns
+/// Information about the newly created pool
+///
+/// # Errors
+/// Returns error if pool creation fails or devices are invalid
 pub async fn create_pool(
     service: &NativeZfsService,
     config: &PoolConfig,
@@ -91,6 +113,18 @@ pub async fn create_pool(
     get_pool_info(service, &config.name).await
 }
 
+/// Destroy a ZFS storage pool
+///
+/// Removes a ZFS pool and all its contained datasets from the system.
+/// This is a destructive operation that cannot be undone.
+///
+/// # Arguments
+/// * `service` - The native ZFS service instance
+/// * `pool_name` - Name of the pool to destroy
+/// * `force` - Whether to force destruction even if pool is in use
+///
+/// # Returns
+/// * `UniversalZfsResult<()>` - Success or error result
 pub async fn destroy_pool(
     service: &NativeZfsService,
     pool_name: &str,
@@ -108,6 +142,17 @@ pub async fn destroy_pool(
     Ok(())
 }
 
+/// Get information about a specific ZFS pool
+///
+/// Retrieves detailed information about a ZFS pool including
+/// its capacity, health status, and configuration.
+///
+/// # Arguments
+/// * `service` - The native ZFS service instance
+/// * `name` - Name of the pool to query
+///
+/// # Returns
+/// * `UniversalZfsResult<Option<PoolInfo>>` - Pool info or None if not found
 pub async fn get_pool(
     service: &NativeZfsService,
     name: &str,
@@ -119,6 +164,17 @@ pub async fn get_pool(
     }
 }
 
+/// Start a scrub operation on a ZFS pool
+///
+/// Initiates a data integrity check (scrub) on the specified pool.
+/// This verifies all data and metadata for consistency and repairs any errors found.
+///
+/// # Arguments
+/// * `service` - The native ZFS service instance
+/// * `name` - Name of the pool to scrub
+///
+/// # Returns
+/// * `UniversalZfsResult<()>` - Success or error result
 pub async fn scrub_pool(service: &NativeZfsService, name: &str) -> UniversalZfsResult<()> {
     info!("🧹 Starting scrub for pool: {}", name);
     service
@@ -127,6 +183,17 @@ pub async fn scrub_pool(service: &NativeZfsService, name: &str) -> UniversalZfsR
     Ok(())
 }
 
+/// Get the current status of a ZFS pool
+///
+/// Retrieves detailed status information about a pool including
+/// device health, error counts, and ongoing operations.
+///
+/// # Arguments
+/// * `service` - The native ZFS service instance
+/// * `name` - Name of the pool to get status for
+///
+/// # Returns
+/// * `UniversalZfsResult<String>` - Pool status information
 pub async fn get_pool_status(service: &NativeZfsService, name: &str) -> UniversalZfsResult<String> {
     service
         .execute_zfs_command("zpool", &["status", name])

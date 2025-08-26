@@ -25,10 +25,10 @@ fn bench_hashmap_operations(c: &mut Criterion) {
         b.iter(|| {
             let mut map = HashMap::new();
             for i in 0..1000 {
-                map.insert(black_box(i), black_box(i * 2));
+                map.insert(black_box(i), black_box(format!("value_{i}")));
             }
-            black_box(map);
-        });
+            black_box(map)
+        })
     });
 }
 
@@ -41,7 +41,7 @@ fn bench_string_operations(c: &mut Criterion) {
                 result.push_str(&format!("item_{}", black_box(i)));
             }
             black_box(result);
-        });
+        })
     });
 }
 

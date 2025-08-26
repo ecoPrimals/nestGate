@@ -1,7 +1,6 @@
-//! Performance Engine Module
-//!
-//! This module provides comprehensive ZFS performance monitoring and optimization
-//! capabilities, organized into logical sub-modules for maintainability.
+//
+// This module provides comprehensive ZFS performance monitoring and optimization
+// capabilities, organized into logical sub-modules for maintainability.
 
 pub mod engine;
 pub mod monitoring;

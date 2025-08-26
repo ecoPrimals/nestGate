@@ -1,5 +1,5 @@
 /// Simple test to validate type unification fixes
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 
 // Test the unified types work correctly
 use nestgate_automation::prediction::{AccessPattern, FileAnalysis, TierType};
@@ -21,7 +21,7 @@ async fn test_unified_types_compile() -> Result<()> {
 
     // Test TierType enum (unified definition)
     let tier_type = TierType::Hot;
-    println!("✅ TierType::Hot = {:?}", tier_type);
+    println!("✅ TierType::Hot = {tier_type:?}");
 
     // Test AccessPattern struct (unified definition)
     let access_pattern = AccessPattern {
@@ -30,6 +30,8 @@ async fn test_unified_types_compile() -> Result<()> {
         accesses_last_month: 200,
         total_accesses: 1000,
         last_access: SystemTime::now(),
+        peak_access_times: vec![9, 14], // Hours in 24h format (u8)
+        read_write_ratio: 0.8,
     };
 
     println!("✅ FileAnalysis path: {}", file_analysis.file_path);

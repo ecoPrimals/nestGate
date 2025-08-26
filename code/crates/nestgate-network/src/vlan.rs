@@ -1,6 +1,5 @@
-//! VLAN (Virtual LAN) management
-//!
-//! This module provides VLAN configuration and management functionality
+//
+// This module provides VLAN configuration and management functionality
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

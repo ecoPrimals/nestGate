@@ -1,4 +1,3 @@
-/// Middleware Configuration Types
 /// Basic enums and supporting types split from the main config file
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
