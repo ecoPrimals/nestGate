@@ -1,8 +1,7 @@
-//! Universal ZFS Service Abstraction
-//!
-//! This module provides a universal, agnostic, and fail-safe abstraction layer
-//! for ZFS operations that can work with multiple backends (native, mock, remote)
-//! and provides comprehensive error handling, circuit breakers, and observability.
+//
+// This module provides a universal, agnostic, and fail-safe abstraction layer
+// for ZFS operations that can work with multiple backends (native, mock, remote)
+// and provides comprehensive error handling, circuit breakers, and observability.
 
 pub mod backends;
 pub mod config;

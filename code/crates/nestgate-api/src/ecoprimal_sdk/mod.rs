@@ -1,7 +1,6 @@
-//! EcoPrimal SDK Module Organization
-//!
-//! This module contains the modularized EcoPrimal SDK implementation,
-//! broken down into focused, maintainable components.
+//
+// This module contains the modularized EcoPrimal SDK implementation,
+// broken down into focused, maintainable components.
 
 // Core type definitions and structures
 pub mod config;

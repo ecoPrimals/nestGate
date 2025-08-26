@@ -1,12 +1,21 @@
-//! Snapshot Operations Module
-//! Single responsibility: ZFS snapshot management
+// Single responsibility: ZFS snapshot management
 
 use super::core::NativeZfsService;
 use super::parsing;
-use crate::handlers::zfs::universal_zfs::types::{
-    SnapshotConfig, SnapshotInfo, UniversalZfsResult,
-};
+use crate::handlers::zfs::universal_zfs::types::{SnapshotConfig, SnapshotInfo};
+use crate::handlers::zfs::universal_zfs::UniversalZfsResult;
 
+/// List all snapshots in the system or for a specific pool
+///
+/// Retrieves information about ZFS snapshots. Can list all snapshots
+/// or filter to snapshots within a specific pool.
+///
+/// # Arguments
+/// * `service` - The native ZFS service instance
+/// * `pool_name` - Optional pool name to filter snapshots
+///
+/// # Returns
+/// * `UniversalZfsResult<Vec<SnapshotInfo>>` - List of snapshot information
 pub async fn list_snapshots(
     service: &NativeZfsService,
     pool_name: Option<&str>,
@@ -19,6 +28,17 @@ pub async fn list_snapshots(
     parsing::parse_snapshot_list(&output)
 }
 
+/// Create a new ZFS snapshot
+///
+/// Creates a point-in-time snapshot of a dataset or pool.
+/// Snapshots are read-only copies that can be used for backup or rollback.
+///
+/// # Arguments
+/// * `service` - The native ZFS service instance
+/// * `config` - Configuration specifying what to snapshot and how
+///
+/// # Returns
+/// * `UniversalZfsResult<SnapshotInfo>` - Information about the created snapshot
 pub async fn create_snapshot(
     service: &NativeZfsService,
     config: &SnapshotConfig,
@@ -39,6 +59,18 @@ pub async fn create_snapshot(
     })
 }
 
+/// Destroy a ZFS snapshot
+///
+/// Removes a snapshot from the system. This operation cannot be undone.
+/// Can optionally destroy dependent snapshots recursively.
+///
+/// # Arguments
+/// * `service` - The native ZFS service instance
+/// * `snapshot_name` - Full name of the snapshot to destroy
+/// * `recursive` - Whether to destroy dependent snapshots recursively
+///
+/// # Returns
+/// * `UniversalZfsResult<()>` - Success or error result
 pub async fn destroy_snapshot(
     service: &NativeZfsService,
     snapshot_name: &str,

@@ -1,36 +1,45 @@
-//! Real-time Performance Monitoring
-//!
-//! This module provides real-time ZFS performance monitoring capabilities,
-//! including metrics collection, trend analysis, and alerting.
+//
+// This module provides real-time ZFS performance monitoring capabilities,
+// including metrics collection, trend analysis, and alerting.
 
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::SystemTime;
 
 use tokio::sync::RwLock;
+
+// Placeholder type until AlertThresholds is available
+#[derive(Debug, Default)]
+pub struct AlertThresholds {
+    pub cpu_threshold: f32,
+    pub memory_threshold: f32,
+    pub disk_threshold: f32,
+}
 use tracing::debug;
 use tracing::error;
 use tracing::warn;
 
-use crate::{
-    dataset::ZfsDatasetManager,
-    error::{Result, ZfsError},
-    pool::ZfsPoolManager,
-};
-use nestgate_core::config::monitoring::AlertThresholds;
+use crate::{dataset::ZfsDatasetManager, error::Result, pool::ZfsPoolManager};
+// Removed unresolved monitoring import - using local types
 
 use super::types::*;
+
+// **CANONICAL MODERNIZATION**: Type aliases to fix clippy complexity warnings
+type PoolMetricsMap = Arc<RwLock<HashMap<String, ZfsPoolMetrics>>>;
+type DatasetMetricsMap = Arc<RwLock<HashMap<String, ZfsDatasetMetrics>>>;
+type MetricsCacheMap = Arc<RwLock<HashMap<String, ZfsPerformanceMetrics>>>;
+type AlertThresholdsArc = Arc<RwLock<AlertThresholds>>;
 
 /// Real-time performance monitor
 #[derive(Debug)]
 pub struct RealTimePerformanceMonitor {
     #[allow(dead_code)]
-    pool_metrics: Arc<RwLock<HashMap<String, ZfsPoolMetrics>>>,
+    pool_metrics: PoolMetricsMap,
     #[allow(dead_code)]
-    dataset_metrics: Arc<RwLock<HashMap<String, ZfsDatasetMetrics>>>,
+    dataset_metrics: DatasetMetricsMap,
     #[allow(dead_code)]
-    alert_thresholds: Arc<RwLock<AlertThresholds>>,
-    metrics_cache: Arc<RwLock<HashMap<String, ZfsPerformanceMetrics>>>,
+    alert_thresholds: AlertThresholdsArc,
+    metrics_cache: MetricsCacheMap,
 }
 
 impl Default for RealTimePerformanceMonitor {
@@ -48,11 +57,14 @@ impl RealTimePerformanceMonitor {
                 cpu_threshold: 80.0,
                 memory_threshold: 90.0,
                 disk_threshold: 85.0,
-                latency_threshold: 100.0,
-                error_rate_threshold: 5.0,
             })),
             metrics_cache: Arc::new(RwLock::new(HashMap::new())),
         }
+    }
+
+    /// Get access to metrics cache for testing
+    pub fn get_metrics_cache(&self) -> MetricsCacheMap {
+        self.metrics_cache.clone()
     }
 
     /// Calculate trend from a series of values
@@ -341,9 +353,9 @@ impl RealTimePerformanceMonitor {
         // Get metrics for trending
         let cache = self.metrics_cache.read().await;
         if cache.is_empty() {
-            return Err(ZfsError::Internal {
-                message: "No metrics available for trending".to_string(),
-            });
+            return Err(crate::error::ZfsErrorBuilder::new(
+                "No metrics available for trending",
+            ));
         }
 
         // Perform real-time analytics and alerts
@@ -444,15 +456,41 @@ impl RealTimePerformanceMonitor {
     /// Parse ZFS size values (e.g., "128K", "1M", "2G")
     fn parse_size_value(size_str: &str) -> Result<u64> {
         if let Some(num_str) = size_str.strip_suffix('K') {
-            Ok(num_str.parse::<u64>()? * 1024)
+            Ok(num_str.parse::<u64>().map_err(|e| {
+                crate::error::ZfsErrorBuilder::new(&format!(
+                    "Failed to parse size value '{num_str}K': {e}"
+                ))
+            })? * 1024)
         } else if let Some(num_str) = size_str.strip_suffix('M') {
-            Ok(num_str.parse::<u64>()? * 1024 * 1024)
+            Ok(num_str.parse::<u64>().map_err(|e| {
+                crate::error::ZfsErrorBuilder::new(&format!(
+                    "Failed to parse size value '{num_str}M': {e}"
+                ))
+            })? * 1024
+                * 1024)
         } else if let Some(num_str) = size_str.strip_suffix('G') {
-            Ok(num_str.parse::<u64>()? * 1024 * 1024 * 1024)
+            Ok(num_str.parse::<u64>().map_err(|e| {
+                crate::error::ZfsErrorBuilder::new(&format!(
+                    "Failed to parse size value '{num_str}G': {e}"
+                ))
+            })? * 1024
+                * 1024
+                * 1024)
         } else if let Some(num_str) = size_str.strip_suffix('T') {
-            Ok(num_str.parse::<u64>()? * 1024 * 1024 * 1024 * 1024)
+            Ok(num_str.parse::<u64>().map_err(|e| {
+                crate::error::ZfsErrorBuilder::new(&format!(
+                    "Failed to parse size value '{num_str}T': {e}"
+                ))
+            })? * 1024
+                * 1024
+                * 1024
+                * 1024)
         } else {
-            Ok(size_str.parse::<u64>()?)
+            Ok(size_str.parse::<u64>().map_err(|e| {
+                crate::error::ZfsErrorBuilder::new(&format!(
+                    "Failed to parse size value '{size_str}': {e}"
+                ))
+            })?)
         }
     }
 

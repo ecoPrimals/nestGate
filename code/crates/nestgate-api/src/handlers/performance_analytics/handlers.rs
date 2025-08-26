@@ -1,6 +1,5 @@
-//! Performance Analytics HTTP Handlers
-//!
-//! HTTP endpoint handlers for performance analytics API.
+//
+// HTTP endpoint handlers for performance analytics API.
 
 use axum::{
     extract::{Path, Query, State},

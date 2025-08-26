@@ -1,11 +1,11 @@
-//! Enhanced MCP Protocol Implementation
-//!
-//! Advanced MCP protocol handling integrating enhanced NestGate capabilities
-//! with v2 orchestrator-centric architecture
+//
+// Advanced MCP protocol handling integrating enhanced NestGate capabilities
+// with v2 orchestrator-centric architecture
 
+use nestgate_core::error::{IdioResult, NestGateError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::SystemTime;
+use thiserror::Error;
 use uuid::Uuid;
 
 use crate::types::{
@@ -13,15 +13,56 @@ use crate::types::{
 };
 use nestgate_core::diagnostics::SystemMetrics;
 
-// Use specific Result type
-/// Use local MCP result type that aligns with local Error constructors
-pub type Result<T> = std::result::Result<T, crate::error::Error>;
+// ==================== CANONICAL MODERNIZATION ====================
+
+/// **CANONICAL**: MCP protocol-specific Result type using IdioResult
+/// This follows the canonical Result<T,E> pattern with domain-specific error type
+pub type McpResult<T> = IdioResult<T, McpProtocolError>;
+
+// **CANONICAL MODERNIZATION COMPLETE**: Deprecated Result type alias removed
+// Use McpResult<T> for domain-specific MCP errors
+
+/// Convenience Result type for internal use in this crate
+pub type Result<T> = McpResult<T>;
+
+// ==================== MCP PROTOCOL TYPES ====================
+
+/// MCP message structure
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct McpMessage {
+    pub message_type: String,
+    pub payload: serde_json::Value,
+    pub metadata: HashMap<String, String>,
+}
+
+/// MCP session information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct McpSession {
+    pub session_id: String,
+    pub client_info: ClientInfo,
+    pub server_capabilities: ServerCapabilities,
+}
+
+/// Client information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClientInfo {
+    pub name: String,
+    pub version: String,
+}
+
+/// Server capabilities
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServerCapabilities {
+    pub tools: Vec<String>,
+    pub resources: Vec<String>,
+    pub prompts: Vec<String>,
+}
 
 /// Enhanced MCP Message with advanced capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Message {
     pub id: String,
-    pub timestamp: SystemTime,
+    pub timestamp: std::time::SystemTime,
     pub source: String,
     pub destination: Option<String>,
     pub message_type: MessageType,
@@ -33,7 +74,7 @@ impl Message {
     pub fn new(message_type: MessageType, payload: MessagePayload) -> Self {
         Self {
             id: Uuid::new_v4().to_string(),
-            timestamp: SystemTime::now(),
+            timestamp: std::time::SystemTime::now(),
             source: "nestgate-v2".to_string(),
             destination: None,
             message_type,
@@ -136,7 +177,7 @@ pub enum MessagePayload {
 pub struct Response {
     pub id: String,
     pub request_id: String,
-    pub timestamp: SystemTime,
+    pub timestamp: std::time::SystemTime,
     pub status: ResponseStatus,
     pub payload: Option<ResponsePayload>,
     pub error: Option<ErrorPayload>,
@@ -148,7 +189,7 @@ impl Response {
         Self {
             id: Uuid::new_v4().to_string(),
             request_id,
-            timestamp: SystemTime::now(),
+            timestamp: std::time::SystemTime::now(),
             status: ResponseStatus::Success,
             payload: Some(payload),
             error: None,
@@ -160,7 +201,7 @@ impl Response {
         Self {
             id: Uuid::new_v4().to_string(),
             request_id,
-            timestamp: SystemTime::now(),
+            timestamp: std::time::SystemTime::now(),
             status: ResponseStatus::Error,
             payload: None,
             error: Some(error),
@@ -239,7 +280,7 @@ pub struct LoadBalancingInfo {
 pub struct HealthStatus {
     pub status: ServiceStatus,
     pub uptime: std::time::Duration,
-    pub last_check: SystemTime,
+    pub last_check: std::time::SystemTime,
     pub details: HashMap<String, String>,
 }
 
@@ -369,8 +410,8 @@ pub struct MetricsQueryPayload {
 /// Time Range for queries
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeRange {
-    pub start: SystemTime,
-    pub end: SystemTime,
+    pub start: std::time::SystemTime,
+    pub end: std::time::SystemTime,
 }
 
 /// Metric Types
@@ -441,7 +482,7 @@ pub enum FederationSyncType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FederationHeartbeatPayload {
     pub node_id: String,
-    pub timestamp: SystemTime,
+    pub timestamp: std::time::SystemTime,
     pub status: ServiceStatus,
 }
 
@@ -491,7 +532,7 @@ pub struct ErrorPayload {
     pub error_code: String,
     pub error_message: String,
     pub details: HashMap<String, String>,
-    pub timestamp: SystemTime,
+    pub timestamp: std::time::SystemTime,
 }
 
 /// Acknowledgment Payload
@@ -508,6 +549,83 @@ pub enum AcknowledmentType {
     Processed,
     Completed,
     Failed,
+}
+
+/// MCP protocol-specific error types with rich context
+#[derive(Error, Debug, Clone, Serialize, Deserialize)]
+pub enum McpProtocolError {
+    #[error("Protocol error: {message}")]
+    ProtocolError { message: String },
+    
+    #[error("Connection error: {message}")]
+    ConnectionError { message: String },
+    
+    #[error("Message parsing error: {message}")]
+    MessageParsingError { message: String },
+    
+    #[error("Authentication error: {message}")]
+    AuthenticationError { message: String },
+    
+    #[error("Session error: {message}")]
+    SessionError { message: String },
+}
+
+// ==================== CONVERSION TRAITS ====================
+
+impl From<McpProtocolError> for NestGateError {
+    fn from(err: McpProtocolError) -> Self {
+        match err {
+            McpProtocolError::ProtocolError { message } => {
+                NestGateError::simple(format!("MCP protocol error: {}", message))
+            }
+            McpProtocolError::ConnectionError { message } => {
+                NestGateError::network("mcp_connection", message)
+            }
+            McpProtocolError::MessageParsingError { message } => {
+                NestGateError::simple(format!("MCP message parsing error: {}", message))
+            }
+            McpProtocolError::AuthenticationError { message } => {
+                NestGateError::simple(format!("MCP authentication error: {}", message))
+            }
+            McpProtocolError::SessionError { message } => {
+                NestGateError::simple(format!("MCP session error: {}", message))
+            }
+        }
+    }
+}
+
+// ==================== CONVENIENCE CONSTRUCTORS ====================
+
+impl McpProtocolError {
+    pub fn protocol_error(message: impl Into<String>) -> Self {
+        Self::ProtocolError {
+            message: message.into(),
+        }
+    }
+    
+    pub fn connection_error(message: impl Into<String>) -> Self {
+        Self::ConnectionError {
+            message: message.into(),
+        }
+    }
+    
+    pub fn message_parsing_error(message: impl Into<String>) -> Self {
+        Self::MessageParsingError {
+            message: message.into(),
+        }
+    }
+    
+    pub fn authentication_error(message: impl Into<String>) -> Self {
+        Self::AuthenticationError {
+            message: message.into(),
+        }
+    }
+    
+    pub fn session_error(message: impl Into<String>) -> Self {
+        Self::SessionError {
+            message: message.into(),
+        }
+    }
 }
 
 /// Enhanced Protocol Handler with advanced integration with v2 orchestrator
@@ -612,7 +730,7 @@ impl ProtocolHandler {
         let health_status = HealthStatus {
             status: ServiceStatus::Online,
             uptime: nestgate_core::constants::timeouts::REQUEST_DEFAULT,
-            last_check: SystemTime::now(),
+            last_check: std::time::SystemTime::now(),
             details: HashMap::new(),
         };
 
@@ -648,7 +766,7 @@ impl ProtocolHandler {
                     error_code: "invalid_payload".to_string(),
                     error_message: "Invalid orchestrator route payload".to_string(),
                     details: HashMap::new(),
-                    timestamp: SystemTime::now(),
+                    timestamp: std::time::SystemTime::now(),
                 },
             )),
         }

@@ -1,135 +1,116 @@
-//! Migration Configuration Module
-//!
-//! Configuration for data migration between tiers, capacity limits, and migration rules.
+//
+// Configuration structures for ZFS tier migration operations.
 
 use serde::{Deserialize, Serialize};
 
-/// Migration rules between tiers
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MigrationRules {
-    /// Age threshold for migration (in days)
-    pub age_threshold_days: u32,
-    /// Access frequency threshold
-    pub access_frequency_threshold: f64,
-    /// Size threshold for migration
-    pub size_threshold_bytes: u64,
-    /// Enable automatic migration
-    pub auto_migration_enabled: bool,
-    /// Migration schedule (cron-like expression)
-    pub migration_schedule: Option<String>,
-}
-
-/// Capacity limits for tiers
+/// Capacity limits for migration operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapacityLimits {
-    /// Maximum capacity percentage (0.0 - 1.0)
-    pub max_utilization: f64,
-    /// Warning threshold percentage
-    pub warning_threshold: f64,
-    /// Reserved space in bytes
-    pub reserved_bytes: u64,
-}
-
-/// Migration configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MigrationConfig {
-    /// Enable background migration
-    pub background_migration: bool,
-    /// Maximum concurrent migrations
+    /// Maximum number of concurrent migrations
     pub max_concurrent_migrations: u32,
-    /// Migration bandwidth limit (bytes per second)
-    pub bandwidth_limit_bps: Option<u64>,
-    /// Migration queue size
-    pub queue_size: u32,
-    /// Retry attempts for failed migrations
-    pub retry_attempts: u32,
+    /// Maximum bandwidth for migration operations (bytes/sec)
+    pub max_bandwidth_bytes_per_sec: u64,
 }
 
-impl MigrationRules {
-    /// Default migration rules for hot tier
-    pub fn hot_tier_defaults() -> Self {
+impl Default for CapacityLimits {
+    fn default() -> Self {
         Self {
-            age_threshold_days: 7,                    // Move to warm after 7 days
-            access_frequency_threshold: 10.0,         // 10+ accesses per day to stay hot
-            size_threshold_bytes: 1024 * 1024 * 1024, // 1GB threshold
-            auto_migration_enabled: true,
-            migration_schedule: Some("0 2 * * *".to_string()), // Daily at 2 AM
-        }
-    }
-
-    /// Default migration rules for warm tier
-    pub fn warm_tier_defaults() -> Self {
-        Self {
-            age_threshold_days: 30,                        // Move to cold after 30 days
-            access_frequency_threshold: 2.0,               // 2+ accesses per day to stay warm
-            size_threshold_bytes: 10 * 1024 * 1024 * 1024, // 10GB threshold
-            auto_migration_enabled: true,
-            migration_schedule: Some("0 3 * * 0".to_string()), // Weekly at 3 AM on Sunday
-        }
-    }
-
-    /// Default migration rules for cold tier
-    pub fn cold_tier_defaults() -> Self {
-        Self {
-            age_threshold_days: 365,                        // Archive after 1 year
-            access_frequency_threshold: 0.1,                // Very low access threshold
-            size_threshold_bytes: 100 * 1024 * 1024 * 1024, // 100GB threshold
-            auto_migration_enabled: false,                  // Manual migration for cold tier
-            migration_schedule: None,
+            max_concurrent_migrations: 4,
+            max_bandwidth_bytes_per_sec: 100 * 1024 * 1024, // 100MB/s
         }
     }
 }
 
 impl CapacityLimits {
-    /// Default capacity limits for hot tier
+    /// Hot tier capacity limits (high performance)
     pub fn hot_tier_defaults() -> Self {
         Self {
-            max_utilization: 0.8,                    // 80% max utilization
-            warning_threshold: 0.7,                  // Warning at 70%
-            reserved_bytes: 10 * 1024 * 1024 * 1024, // Reserve 10GB
+            max_concurrent_migrations: 8,
+            max_bandwidth_bytes_per_sec: 500 * 1024 * 1024, // 500MB/s
         }
     }
-
-    /// Default capacity limits for warm tier
+    
+    /// Warm tier capacity limits (balanced)
     pub fn warm_tier_defaults() -> Self {
         Self {
-            max_utilization: 0.85,                   // 85% max utilization
-            warning_threshold: 0.75,                 // Warning at 75%
-            reserved_bytes: 50 * 1024 * 1024 * 1024, // Reserve 50GB
+            max_concurrent_migrations: 4,
+            max_bandwidth_bytes_per_sec: 200 * 1024 * 1024, // 200MB/s
         }
     }
-
-    /// Default capacity limits for cold tier
+    
+    /// Cold tier capacity limits (storage optimized)
     pub fn cold_tier_defaults() -> Self {
         Self {
-            max_utilization: 0.9,                     // 90% max utilization
-            warning_threshold: 0.8,                   // Warning at 80%
-            reserved_bytes: 100 * 1024 * 1024 * 1024, // Reserve 100GB
+            max_concurrent_migrations: 2,
+            max_bandwidth_bytes_per_sec: 50 * 1024 * 1024, // 50MB/s
         }
     }
+}
+
+/// Migration rules and policies
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MigrationRules {
+    /// Enable automatic migration based on access patterns
+    pub auto_migration_enabled: bool,
+    /// Minimum age before considering migration (hours)
+    pub min_age_hours: u32,
+    /// Access threshold for tier changes
+    pub access_threshold: u32,
+}
+
+impl Default for MigrationRules {
+    fn default() -> Self {
+        Self {
+            auto_migration_enabled: true,
+            min_age_hours: 24,
+            access_threshold: 10,
+        }
+    }
+}
+
+impl MigrationRules {
+    /// Hot tier migration rules (frequent access)
+    pub fn hot_tier_defaults() -> Self {
+        Self {
+            auto_migration_enabled: true,
+            min_age_hours: 1,
+            access_threshold: 100,
+        }
+    }
+    
+    /// Warm tier migration rules (moderate access)
+    pub fn warm_tier_defaults() -> Self {
+        Self {
+            auto_migration_enabled: true,
+            min_age_hours: 24,
+            access_threshold: 10,
+        }
+    }
+    
+    /// Cold tier migration rules (infrequent access)
+    pub fn cold_tier_defaults() -> Self {
+        Self {
+            auto_migration_enabled: true,
+            min_age_hours: 168, // 1 week
+            access_threshold: 1,
+        }
+    }
+}
+
+/// Complete migration configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MigrationConfig {
+    /// Migration rules and policies
+    pub rules: MigrationRules,
+    /// Capacity limits for operations
+    pub limits: CapacityLimits,
 }
 
 impl Default for MigrationConfig {
     fn default() -> Self {
         Self {
-            background_migration: true,
-            max_concurrent_migrations: 2,
-            bandwidth_limit_bps: None,
-            queue_size: 100,
-            retry_attempts: 3,
+            rules: MigrationRules::default(),
+            limits: CapacityLimits::default(),
         }
     }
-}
-
-impl MigrationConfig {
-    /// Create production-optimized migration configuration
-    pub fn production() -> Self {
-        Self {
-            background_migration: true,
-            max_concurrent_migrations: 2,
-            bandwidth_limit_bps: None,
-            queue_size: 100,
-            retry_attempts: 3,
-        }
-    }
-}
+} 

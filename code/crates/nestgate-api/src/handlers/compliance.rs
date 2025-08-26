@@ -1,8 +1,7 @@
-//! Compliance Framework for NestGate
-//!
-//! This module implements comprehensive compliance features for enterprise storage systems
-//! including data retention policies, access control compliance, audit logging, and
-//! regulatory compliance (GDPR, HIPAA, SOX, etc.).
+//
+// This module implements comprehensive compliance features for enterprise storage systems
+// including data retention policies, access control compliance, audit logging, and
+// regulatory compliance (GDPR, HIPAA, SOX, etc.).
 
 use axum::{
 use std::time::Duration;

@@ -1,6 +1,5 @@
-//! Performance Unit Tests
-//!
-//! Tests for performance metrics and tier functionality
+//
+// Tests for performance metrics and tier functionality
 
 use std::collections::HashMap;
 use std::path::PathBuf;

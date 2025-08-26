@@ -5,7 +5,7 @@ pub mod tests;
 
 // 🚀 ECOSYSTEM UNIFICATION: Use centralized unified test config system
 // Migration from fragmented ComprehensiveTestConfig to unified system
-pub use crate::common::test_config::{
+pub use crate::common::config::{
     UnifiedTestConfig, UnifiedTestConfigBuilder, TestExecutionSettings as TestExecutionConfig,
     TestPerformanceSettings as TestPerformanceConfig, TestIntegrationSettings as TestIntegrationConfig
 };

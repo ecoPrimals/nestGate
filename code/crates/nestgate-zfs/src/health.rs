@@ -1,6 +1,5 @@
-//! ZFS Health Monitor - Health monitoring and alerting
-//!
-//! This module will be fully implemented in Week 2
+//
+// This module will be fully implemented in Week 2
 
 use std::collections::HashMap;
 use std::collections::VecDeque;
@@ -55,6 +54,20 @@ pub struct Alert {
     pub component: String,
 }
 
+// ==================== TYPE ALIASES FOR CLARITY ====================
+
+/// Type alias for health data storage
+pub type HealthDataMap = Arc<tokio::sync::RwLock<HashMap<String, HealthReport>>>;
+
+/// Type alias for monitoring task handles
+pub type MonitoringTasks = Option<(tokio::task::JoinHandle<()>, tokio::task::JoinHandle<()>)>;
+
+/// Type alias for health status storage
+pub type HealthStatusMap = Arc<tokio::sync::RwLock<HashMap<String, HealthStatus>>>;
+
+/// Type alias for background task storage
+pub type BackgroundTasks = Arc<tokio::sync::RwLock<Vec<tokio::task::JoinHandle<()>>>>;
+
 /// ZFS Health Monitor - monitors system health
 #[derive(Debug)]
 #[allow(dead_code)] // Fields used in comprehensive health monitoring system
@@ -62,12 +75,12 @@ pub struct ZfsHealthMonitor {
     config: ZfsConfig,
     pool_manager: Arc<ZfsPoolManager>,
     dataset_manager: Arc<ZfsDatasetManager>,
-    health_data: Arc<tokio::sync::RwLock<HashMap<String, HealthReport>>>,
-    monitoring_tasks: Option<(tokio::task::JoinHandle<()>, tokio::task::JoinHandle<()>)>,
-    health_status: Arc<tokio::sync::RwLock<HashMap<String, HealthStatus>>>,
+    health_data: HealthDataMap,
+    monitoring_tasks: MonitoringTasks,
+    health_status: HealthStatusMap,
     alert_history: Arc<tokio::sync::RwLock<VecDeque<Alert>>>,
     monitoring_active: Arc<AtomicBool>,
-    background_tasks: Arc<tokio::sync::RwLock<Vec<tokio::task::JoinHandle<()>>>>,
+    background_tasks: BackgroundTasks,
 }
 
 impl HealthStatus {
@@ -115,20 +128,14 @@ impl ZfsHealthMonitor {
         info!("🏥 Starting ZFS health monitoring...");
 
         // Initialize monitoring tasks
-        let config = self.config.clone();
+        let _config = self.config.clone();
         let pool_manager = self.pool_manager.clone();
         let _dataset_manager = self.dataset_manager.clone();
         let health_data = self.health_data.clone();
 
         // Start pool health monitoring task
         let pool_monitor_handle = tokio::spawn(async move {
-            let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(
-                config
-                    .extensions
-                    .health_monitoring
-                    .health_check_frequency
-                    .as_secs(),
-            ));
+            let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(600)); // 10 minutes canonical default
 
             loop {
                 interval.tick().await;
@@ -163,22 +170,13 @@ impl ZfsHealthMonitor {
         });
 
         // Start dataset health monitoring task
-        let dataset_config = self.config.clone();
+        let _dataset_config = self.config.clone();
         let dataset_pool_manager = self.pool_manager.clone();
         let dataset_manager_clone = self.dataset_manager.clone();
         let dataset_health_data = self.health_data.clone();
 
         let dataset_monitor_handle = tokio::spawn(async move {
-            let mut interval = tokio::time::interval(
-                tokio::time::Duration::from_secs(
-                    dataset_config
-                        .extensions
-                        .health_monitoring
-                        .health_check_frequency
-                        .as_secs()
-                        * 2,
-                ), // Less frequent
-            );
+            let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(600)); // 10 minutes canonical default
 
             loop {
                 interval.tick().await;

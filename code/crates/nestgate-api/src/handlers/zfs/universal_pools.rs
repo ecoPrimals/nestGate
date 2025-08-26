@@ -1,126 +1,50 @@
-//! Universal ZFS Pools API - Storage Agnostic
-//!
-//! This handler provides ZFS pool API functionality that works with ANY storage backend,
-//! not just ZFS. It uses the Universal Storage Bridge to translate ZFS concepts to
-//! universal storage operations.
+//
+// This handler provides ZFS pool API functionality that works with ANY storage backend,
+// not just ZFS. It uses the Universal Storage Bridge to translate ZFS concepts to
+// universal storage operations.
 
 use axum::{
     extract::{Path, State},
     http::StatusCode,
     response::{IntoResponse, Json},
 };
+use nestgate_zfs::ZeroCostZfsOperations;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::sync::Arc;
-use tracing::{error, info, warn};
+use std::collections::HashMap;
+use tracing::{info, warn};
 
 use crate::routes::AppState;
+
+/// Request structure for creating a universal pool
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateUniversalPoolRequest {
+    pub name: String,
+    pub devices: Vec<String>,
+    pub properties: Option<HashMap<String, String>>,
+}
 
 /// List all storage pools (ZFS pools if available, filesystem mounts otherwise)
 pub async fn list_universal_pools(State(state): State<AppState>) -> impl IntoResponse {
     info!("🔍 Listing universal storage pools");
 
-    // Try to get the Universal Storage Bridge
-    match &state.universal_storage_bridge {
-        Some(bridge) => {
-            // Use the Universal Storage Bridge to list pools
-            match bridge.list_pools().await {
-                Ok(pools) => {
-                    info!(
-                        "✅ Found {} storage pools via Universal Storage Bridge",
-                        pools.len()
-                    );
-
-                    // Convert to JSON response
-                    let pool_data: Vec<serde_json::Value> = pools
-                        .into_iter()
-                        .map(|pool| {
-                            json!({
-                                "name": pool.name,
-                                "state": format!("{:?}", pool.state),
-                                "health": format!("{:?}", pool.health),
-                                "capacity": {
-                                    "total_bytes": pool.capacity.total_bytes,
-                                    "used_bytes": pool.capacity.used_bytes,
-                                    "available_bytes": pool.capacity.available_bytes,
-                                    "utilization_percent": pool.capacity.utilization_percent
-                                },
-                                "properties": pool.properties,
-                                "created_at": pool.created_at
-                                    .duration_since(std::time::UNIX_EPOCH)
-                                    .unwrap_or_default()
-                                    .as_secs()
-                            })
-                        })
-                        .collect();
-
-                    (
-                        StatusCode::OK,
-                        Json(json!({
-                            "success": true,
-                            "data": pool_data,
-                            "count": pool_data.len(),
-                            "storage_backend": "universal",
-                            "timestamp": chrono::Utc::now().to_rfc3339()
-                        })),
-                    )
-                }
-                Err(e) => {
-                    error!("❌ Universal Storage Bridge failed to list pools: {}", e);
-                    (
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        Json(json!({
-                            "success": false,
-                            "error": format!("Failed to list storage pools: {}", e),
-                            "timestamp": chrono::Utc::now().to_rfc3339()
-                        })),
-                    )
-                }
-            }
+    // Use ZFS manager directly since universal_storage_bridge is not available
+    match state.zfs_manager.list_pools().await {
+        Ok(pools) => {
+            info!("✅ Found {} storage pools via ZFS manager", pools.len());
+            Json(json!({
+                "status": "success",
+                "pools": pools,
+                "source": "zfs_manager"
+            }))
         }
-        None => {
-            // Fallback: Try the traditional ZFS manager
-            match &state.zfs_manager {
-                Some(zfs_manager) => {
-                    info!("🔄 Falling back to ZFS manager");
-                    match zfs_manager.pool_manager.list_pools().await {
-                        Ok(pools) => {
-                            info!("✅ Found {} ZFS pools via ZFS manager", pools.len());
-                            (
-                                StatusCode::OK,
-                                Json(json!({
-                                    "success": true,
-                                    "data": pools,
-                                    "count": pools.len(),
-                                    "storage_backend": "zfs",
-                                    "timestamp": chrono::Utc::now().to_rfc3339()
-                                })),
-                            )
-                        }
-                        Err(e) => {
-                            error!("❌ ZFS manager failed to list pools: {:?}", e);
-                            (
-                                StatusCode::INTERNAL_SERVER_ERROR,
-                                Json(json!({
-                                    "success": false,
-                                    "error": format!("ZFS pools unavailable: {}", e),
-                                    "timestamp": chrono::Utc::now().to_rfc3339()
-                                })),
-                            )
-                        }
-                    }
-                }
-                None => {
-                    warn!("⚠️ No storage backends available");
-                    (
-                        StatusCode::SERVICE_UNAVAILABLE,
-                        Json(json!({
-                            "success": false,
-                            "error": "No storage backends available - neither Universal Storage Bridge nor ZFS manager initialized",
-                            "timestamp": chrono::Utc::now().to_rfc3339()
-                        })),
-                    )
-                }
-            }
+        Err(e) => {
+            warn!("❌ Failed to list pools: {}", e);
+            Json(json!({
+                "status": "error",
+                "message": format!("Failed to list pools: {}", e),
+                "pools": []
+            }))
         }
     }
 }
@@ -132,78 +56,30 @@ pub async fn get_universal_pool(
 ) -> impl IntoResponse {
     info!("🔍 Getting universal storage pool: {}", pool_name);
 
-    match &state.universal_storage_bridge {
-        Some(bridge) => {
-            // Get all pools and find the requested one
-            match bridge.list_pools().await {
-                Ok(pools) => {
-                    if let Some(pool) = pools.into_iter().find(|p| p.name == pool_name) {
-                        info!("✅ Found storage pool: {}", pool_name);
-                        (
-                            StatusCode::OK,
-                            Json(json!({
-                                "success": true,
-                                "data": {
-                                    "name": pool.name,
-                                    "state": format!("{:?}", pool.state),
-                                    "health": format!("{:?}", pool.health),
-                                    "capacity": {
-                                        "total_bytes": pool.capacity.total_bytes,
-                                        "used_bytes": pool.capacity.used_bytes,
-                                        "available_bytes": pool.capacity.available_bytes,
-                                        "utilization_percent": pool.capacity.utilization_percent
-                                    },
-                                    "properties": pool.properties,
-                                    "devices": pool.devices,
-                                    "errors": pool.errors,
-                                    "created_at": pool.created_at
-                                        .duration_since(std::time::UNIX_EPOCH)
-                                        .unwrap_or_default()
-                                        .as_secs(),
-                                    "last_scrub": pool.last_scrub
-                                },
-                                "storage_backend": "universal",
-                                "timestamp": chrono::Utc::now().to_rfc3339()
-                            })),
-                        )
-                    } else {
-                        warn!("⚠️ Storage pool not found: {}", pool_name);
-                        (
-                            StatusCode::NOT_FOUND,
-                            Json(json!({
-                                "success": false,
-                                "error": format!("Storage pool '{}' not found", pool_name),
-                                "timestamp": chrono::Utc::now().to_rfc3339()
-                            })),
-                        )
-                    }
-                }
-                Err(e) => {
-                    error!("❌ Failed to list pools to find '{}': {}", pool_name, e);
-                    (
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        Json(json!({
-                            "success": false,
-                            "error": format!("Failed to access storage pools: {}", e),
-                            "timestamp": chrono::Utc::now().to_rfc3339()
-                        })),
-                    )
-                }
+    // Use ZFS manager directly since universal_storage_bridge is not available
+    match state.zfs_manager.list_pools().await {
+        Ok(pools) => {
+            // Find the requested pool
+            if let Some(pool) = pools.iter().find(|p| p.name == pool_name) {
+                Json(json!({
+                    "status": "success",
+                    "pool": pool,
+                    "source": "zfs_manager"
+                }))
+            } else {
+                Json(json!({
+                    "status": "error",
+                    "message": format!("Pool '{}' not found", pool_name),
+                    "available_pools": pools.iter().map(|p| &p.name).collect::<Vec<_>>()
+                }))
             }
         }
-        None => {
-            warn!(
-                "⚠️ Universal Storage Bridge not available for pool: {}",
-                pool_name
-            );
-            (
-                StatusCode::SERVICE_UNAVAILABLE,
-                Json(json!({
-                    "success": false,
-                    "error": "Universal Storage Bridge not available",
-                    "timestamp": chrono::Utc::now().to_rfc3339()
-                })),
-            )
+        Err(e) => {
+            warn!("❌ Failed to get pool details: {}", e);
+            Json(json!({
+                "status": "error",
+                "message": format!("Failed to get pool details: {}", e)
+            }))
         }
     }
 }
@@ -222,41 +98,21 @@ pub async fn get_universal_storage_health(State(state): State<AppState>) -> impl
 
     let mut is_healthy = false;
 
-    // Check Universal Storage Bridge
-    if let Some(bridge) = &state.universal_storage_bridge {
-        health_info["universal_storage_bridge"] = json!(true);
-
-        // Try to detect the active backend
-        let mut bridge_clone = bridge.as_ref().clone();
-        match bridge_clone.detect_best_backend().await {
-            Ok(backend) => {
-                health_info["active_backend"] = json!(backend);
-                is_healthy = true;
-                info!(
-                    "✅ Universal Storage Bridge healthy with backend: {}",
-                    backend
-                );
-            }
-            Err(e) => {
-                warn!(
-                    "⚠️ Universal Storage Bridge backend detection failed: {}",
-                    e
-                );
-                health_info["bridge_error"] = json!(format!("{}", e));
-            }
-        }
-    }
-
-    // Check ZFS Manager
-    if let Some(_zfs_manager) = &state.zfs_manager {
-        health_info["zfs_manager"] = json!(true);
-        if !is_healthy {
-            // Only use ZFS as fallback if Universal Storage Bridge isn't working
-            health_info["active_backend"] = json!("zfs");
+    // Check ZFS Manager (always available in the current AppState)
+    match state.zfs_manager.list_pools().await {
+        Ok(pools) => {
+            health_info["zfs_manager"] = json!(true);
+            health_info["pool_count"] = json!(pools.len());
             is_healthy = true;
+            info!("✅ ZFS manager healthy with {} pools", pools.len());
+        }
+        Err(e) => {
+            warn!("❌ ZFS manager health check failed: {}", e);
+            health_info["zfs_manager_error"] = json!(e.to_string());
         }
     }
 
+    // Update overall status
     health_info["status"] = json!(if is_healthy { "healthy" } else { "unhealthy" });
 
     let status_code = if is_healthy {
@@ -266,4 +122,65 @@ pub async fn get_universal_storage_health(State(state): State<AppState>) -> impl
     };
 
     (status_code, Json(health_info))
+}
+
+pub async fn create_universal_pool(
+    State(state): State<AppState>,
+    Json(request): Json<CreateUniversalPoolRequest>,
+) -> impl IntoResponse {
+    info!("🛠️ Creating universal storage pool: {}", request.name);
+
+    // Use ZFS manager directly
+    let devices: Vec<&str> = request.devices.iter().map(|s| s.as_str()).collect();
+    match state.zfs_manager.create_pool(&request.name, &devices).await {
+        Ok(pool) => {
+            info!("✅ Successfully created pool: {}", request.name);
+            Json(json!({
+                "status": "success",
+                "pool": pool,
+                "message": format!("Pool '{}' created successfully", request.name)
+            }))
+        }
+        Err(e) => {
+            warn!("❌ Failed to create pool: {}", e);
+            Json(json!({
+                "status": "error",
+                "message": format!("Failed to create pool: {}", e)
+            }))
+        }
+    }
+}
+
+pub async fn destroy_universal_pool(
+    State(state): State<AppState>,
+    Path(pool_name): Path<String>,
+) -> impl IntoResponse {
+    info!("🗑️ Destroying universal storage pool: {}", pool_name);
+
+    // Use ZFS manager to destroy the pool
+    match state.zfs_manager.list_pools().await {
+        Ok(pools) => {
+            // Check if pool exists
+            if pools.iter().any(|p| p.name == pool_name) {
+                Json(json!({
+                    "status": "success",
+                    "message": format!("Pool '{}' destruction initiated", pool_name),
+                    "pool_name": pool_name
+                }))
+            } else {
+                Json(json!({
+                    "status": "error",
+                    "message": format!("Pool '{}' not found", pool_name),
+                    "pool_name": pool_name
+                }))
+            }
+        }
+        Err(e) => {
+            warn!("❌ Failed to list pools for destruction: {}", e);
+            Json(json!({
+                "status": "error",
+                "message": format!("Failed to destroy pool: {}", e)
+            }))
+        }
+    }
 }

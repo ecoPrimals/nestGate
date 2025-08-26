@@ -1,7 +1,6 @@
-//! Metrics Collection Module
-//!
-//! This module handles real-time metrics collection for the performance dashboard
-//! using actual system and ZFS metrics instead of mock data.
+//
+// This module handles real-time metrics collection for the performance dashboard
+// using actual system and ZFS metrics instead of mock data.
 
 use crate::handlers::performance_dashboard::types::*;
 use nestgate_core::Result;

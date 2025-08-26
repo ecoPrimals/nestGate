@@ -1,20 +1,22 @@
-//! Metrics Collection System
-//!
-//! Real-time metrics collection and data aggregation for the performance dashboard.
+//
+// Real-time metrics collection and data aggregation for the performance dashboard.
 
+use axum::{extract::State, response::Json};
+use nestgate_core::Result;
+// use crate::error::SystemResource;  // Missing module
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::sync::broadcast;
+use tokio::time::{Duration, Instant};
 // Removed unused tracing import
 
 use super::dashboard_types::{DashboardEvent, TimeRange};
-use nestgate_core::{NestGateError, Result};
-use crate::error::SystemResource;
+use nestgate_core::NestGateError;
+use tracing::debug;
 use tracing::info;
 use tracing::warn;
-use tracing::debug;
 
 /// Real-time metrics aggregation structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -149,38 +151,49 @@ impl RealTimeMetricsCollector {
     /// Get current system and storage metrics with real data collection
     pub async fn get_current_metrics(&self) -> Result<RealTimeMetrics> {
         info!("📊 Collecting real-time system and storage metrics");
-        
+
         // Collect real system metrics
         let system_metrics = Self::collect_real_system_metrics().await?;
-        
+
         // Collect ZFS pool metrics (if available)
-        let pool_metrics = Self::collect_zfs_pool_metrics().await.unwrap_or_else(|_| vec![]);
-        
+        let pool_metrics = Self::collect_zfs_pool_metrics()
+            .await
+            .unwrap_or_else(|_| vec![]);
+
         // Collect ZFS ARC statistics
-        let (arc_hit_ratio, l2arc_hit_ratio, compression_ratio) = Self::collect_zfs_cache_stats().await?;
-        
+        let (arc_hit_ratio, l2arc_hit_ratio, compression_ratio) =
+            Self::collect_zfs_cache_stats().await?;
+
         // Calculate total throughput from pool metrics or system I/O
         let total_throughput = if !pool_metrics.is_empty() {
-            pool_metrics.iter().map(|p| p.read_throughput + p.write_throughput).sum()
+            pool_metrics
+                .iter()
+                .map(|p| p.read_throughput + p.write_throughput)
+                .sum()
         } else {
             // Fallback to system disk I/O throughput estimation
-            (system_metrics.disk_io.read_bytes + system_metrics.disk_io.write_bytes) as f64 / (1024.0 * 1024.0) // MB/s
+            (system_metrics.disk_io.read_bytes + system_metrics.disk_io.write_bytes) as f64
+                / (1024.0 * 1024.0) // MB/s
         };
-        
+
         // Calculate average latencies from system disk metrics
         let average_read_latency = if pool_metrics.is_empty() {
             // Estimate from system I/O (simplified calculation)
             let read_ops = system_metrics.disk_io.read_operations.max(1);
-            (system_metrics.disk_io.read_bytes as f64 / read_ops as f64) / 1000.0 // Rough latency estimate
+            (system_metrics.disk_io.read_bytes as f64 / read_ops as f64) / 1000.0
+        // Rough latency estimate
         } else {
-            pool_metrics.iter().map(|p| p.read_throughput).sum::<f64>() / pool_metrics.len().max(1) as f64
+            pool_metrics.iter().map(|p| p.read_throughput).sum::<f64>()
+                / pool_metrics.len().max(1) as f64
         };
-        
+
         let average_write_latency = if pool_metrics.is_empty() {
             let write_ops = system_metrics.disk_io.write_operations.max(1);
-            (system_metrics.disk_io.write_bytes as f64 / write_ops as f64) / 1000.0 // Rough latency estimate
+            (system_metrics.disk_io.write_bytes as f64 / write_ops as f64) / 1000.0
+        // Rough latency estimate
         } else {
-            pool_metrics.iter().map(|p| p.write_throughput).sum::<f64>() / pool_metrics.len().max(1) as f64
+            pool_metrics.iter().map(|p| p.write_throughput).sum::<f64>()
+                / pool_metrics.len().max(1) as f64
         };
 
         Ok(RealTimeMetrics {
@@ -199,21 +212,21 @@ impl RealTimeMetricsCollector {
     /// Collect real system metrics from /proc filesystem and system commands
     async fn collect_real_system_metrics() -> Result<SystemMetrics> {
         debug!("💻 Collecting real system metrics from /proc and system interfaces");
-        
+
         // Collect CPU usage from /proc/stat
         let cpu_usage = Self::get_real_cpu_usage().await?;
-        
-        // Collect memory information from /proc/meminfo  
+
+        // Collect memory information from /proc/meminfo
         let (memory_usage, memory_total, memory_available) = Self::get_real_memory_info().await?;
-        
+
         // Collect network I/O from /proc/net/dev
         let network_io = Self::get_real_network_io().await?;
-        
+
         // Collect disk I/O from /proc/diskstats or /sys/block
         let disk_io = Self::get_real_disk_io().await?;
-        
+
         Ok(SystemMetrics {
-            cpu_usage,
+            _cpu_usage: cpu_usage,
             memory_usage,
             memory_total,
             memory_available,
@@ -221,7 +234,7 @@ impl RealTimeMetricsCollector {
             disk_io,
         })
     }
-    
+
     /// Get real CPU usage from /proc/stat
     async fn get_real_cpu_usage() -> Result<f64> {
         match tokio::fs::read_to_string("/proc/stat").await {
@@ -236,10 +249,10 @@ impl RealTimeMetricsCollector {
                         let iowait: u64 = fields[5].parse().unwrap_or(0);
                         let irq: u64 = fields[6].parse().unwrap_or(0);
                         let softirq: u64 = fields[7].parse().unwrap_or(0);
-                        
+
                         let total_active = user + nice + system + iowait + irq + softirq;
                         let total = total_active + idle;
-                        
+
                         if total > 0 {
                             let usage = (total_active as f64 / total as f64) * 100.0;
                             debug!("📈 Real CPU usage: {:.2}%", usage);
@@ -256,7 +269,7 @@ impl RealTimeMetricsCollector {
             }
         }
     }
-    
+
     /// Get real memory information from /proc/meminfo
     async fn get_real_memory_info() -> Result<(f64, u64, u64)> {
         match tokio::fs::read_to_string("/proc/meminfo").await {
@@ -266,13 +279,13 @@ impl RealTimeMetricsCollector {
                 let mut mem_free = 0u64;
                 let mut buffers = 0u64;
                 let mut cached = 0u64;
-                
+
                 for line in content.lines() {
                     let parts: Vec<&str> = line.split_whitespace().collect();
                     if parts.len() >= 2 {
                         let value_kb: u64 = parts[1].parse().unwrap_or(0);
                         let value_bytes = value_kb * 1024; // Convert KB to bytes
-                        
+
                         match parts[0] {
                             "MemTotal:" => mem_total = value_bytes,
                             "MemAvailable:" => mem_available = value_bytes,
@@ -283,24 +296,26 @@ impl RealTimeMetricsCollector {
                         }
                     }
                 }
-                
+
                 // If MemAvailable is not available, calculate it (older kernels)
                 if mem_available == 0 && mem_total > 0 {
                     mem_available = mem_free + buffers + cached;
                 }
-                
+
                 if mem_total > 0 {
                     let memory_used = mem_total.saturating_sub(mem_available);
                     let memory_usage_percent = (memory_used as f64 / mem_total as f64) * 100.0;
-                    
-                    debug!("🧠 Real memory usage: {:.2}% ({} GB / {} GB)", 
-                           memory_usage_percent, 
-                           memory_used / (1024*1024*1024), 
-                           mem_total / (1024*1024*1024));
-                    
+
+                    debug!(
+                        "🧠 Real memory usage: {:.2}% ({} GB / {} GB)",
+                        memory_usage_percent,
+                        memory_used / (1024 * 1024 * 1024),
+                        mem_total / (1024 * 1024 * 1024)
+                    );
+
                     return Ok((memory_usage_percent, mem_total, mem_available));
                 }
-                
+
                 warn!("⚠️ Could not parse memory info, using fallback");
                 Ok((60.0, 8 * 1024 * 1024 * 1024, 3 * 1024 * 1024 * 1024)) // 8GB total, 3GB available
             }
@@ -310,7 +325,7 @@ impl RealTimeMetricsCollector {
             }
         }
     }
-    
+
     /// Get real network I/O from /proc/net/dev
     async fn get_real_network_io() -> Result<NetworkIOMetrics> {
         match tokio::fs::read_to_string("/proc/net/dev").await {
@@ -319,7 +334,7 @@ impl RealTimeMetricsCollector {
                 let mut total_bytes_sent = 0u64;
                 let mut total_packets_received = 0u64;
                 let mut total_packets_sent = 0u64;
-                
+
                 // Skip header lines
                 for line in content.lines().skip(2) {
                     let parts: Vec<&str> = line.split_whitespace().collect();
@@ -328,21 +343,23 @@ impl RealTimeMetricsCollector {
                         if parts[0].starts_with("lo:") {
                             continue;
                         }
-                        
+
                         // RX: bytes, packets (columns 1, 2)
                         total_bytes_received += parts[1].parse().unwrap_or(0);
                         total_packets_received += parts[2].parse().unwrap_or(0);
-                        
+
                         // TX: bytes, packets (columns 9, 10)
                         total_bytes_sent += parts[9].parse().unwrap_or(0);
                         total_packets_sent += parts[10].parse().unwrap_or(0);
                     }
                 }
-                
-                debug!("🌐 Real network I/O: RX {} MB, TX {} MB", 
-                       total_bytes_received / (1024*1024), 
-                       total_bytes_sent / (1024*1024));
-                
+
+                debug!(
+                    "🌐 Real network I/O: RX {} MB, TX {} MB",
+                    total_bytes_received / (1024 * 1024),
+                    total_bytes_sent / (1024 * 1024)
+                );
+
                 Ok(NetworkIOMetrics {
                     bytes_received: total_bytes_received,
                     bytes_sent: total_bytes_sent,
@@ -361,7 +378,7 @@ impl RealTimeMetricsCollector {
             }
         }
     }
-    
+
     /// Get real disk I/O from /proc/diskstats
     async fn get_real_disk_io() -> Result<DiskIOMetrics> {
         match tokio::fs::read_to_string("/proc/diskstats").await {
@@ -370,7 +387,7 @@ impl RealTimeMetricsCollector {
                 let mut total_write_bytes = 0u64;
                 let mut total_read_operations = 0u64;
                 let mut total_write_operations = 0u64;
-                
+
                 for line in content.lines() {
                     let parts: Vec<&str> = line.split_whitespace().collect();
                     if parts.len() >= 14 {
@@ -378,28 +395,30 @@ impl RealTimeMetricsCollector {
                         if parts[2].contains(char::is_numeric) && parts[2].len() > 3 {
                             continue;
                         }
-                        
+
                         // Read operations (column 3), sectors read (column 5)
                         let read_ops: u64 = parts[3].parse().unwrap_or(0);
                         let read_sectors: u64 = parts[5].parse().unwrap_or(0);
-                        
+
                         // Write operations (column 7), sectors written (column 9)
                         let write_ops: u64 = parts[7].parse().unwrap_or(0);
                         let write_sectors: u64 = parts[9].parse().unwrap_or(0);
-                        
+
                         total_read_operations += read_ops;
                         total_write_operations += write_ops;
-                        
+
                         // Convert sectors to bytes (assuming 512 bytes per sector)
                         total_read_bytes += read_sectors * 512;
                         total_write_bytes += write_sectors * 512;
                     }
                 }
-                
-                debug!("💾 Real disk I/O: Read {} MB, Write {} MB", 
-                       total_read_bytes / (1024*1024), 
-                       total_write_bytes / (1024*1024));
-                
+
+                debug!(
+                    "💾 Real disk I/O: Read {} MB, Write {} MB",
+                    total_read_bytes / (1024 * 1024),
+                    total_write_bytes / (1024 * 1024)
+                );
+
                 Ok(DiskIOMetrics {
                     read_bytes: total_read_bytes,
                     write_bytes: total_write_bytes,
@@ -418,19 +437,19 @@ impl RealTimeMetricsCollector {
             }
         }
     }
-    
+
     /// Collect ZFS pool metrics (if ZFS is available)
     async fn collect_zfs_pool_metrics() -> Result<Vec<PoolMetrics>> {
         // Try to get ZFS pool statistics
         match tokio::process::Command::new("zpool")
             .args(&["list", "-H", "-p"])
             .output()
-            .await 
+            .await
         {
             Ok(output) if output.status.success() => {
                 let stdout = String::from_utf8_lossy(&output.stdout);
                 let mut pools = Vec::new();
-                
+
                 for line in stdout.lines() {
                     let parts: Vec<&str> = line.split('\t').collect();
                     if parts.len() >= 7 {
@@ -444,7 +463,7 @@ impl RealTimeMetricsCollector {
                             0.0
                         };
                         let health_status = parts[6].to_string();
-                        
+
                         pools.push(PoolMetrics {
                             name: pool_name,
                             health_status,
@@ -453,15 +472,15 @@ impl RealTimeMetricsCollector {
                             used_space,
                             available_space,
                             read_iops: 0,  // Would need additional ZFS iostat data
-                            write_iops: 0, // Would need additional ZFS iostat data  
-                            read_throughput: 0.0,  // Would be calculated from iostat
+                            write_iops: 0, // Would need additional ZFS iostat data
+                            read_throughput: 0.0, // Would be calculated from iostat
                             write_throughput: 0.0, // Would be calculated from iostat
                             fragmentation_level: 0.0, // Would come from zpool status -v
                             error_count: 0, // Would be parsed from zpool status
                         });
                     }
                 }
-                
+
                 debug!("🏊 Collected {} ZFS pool metrics", pools.len());
                 Ok(pools)
             }
@@ -471,7 +490,7 @@ impl RealTimeMetricsCollector {
             }
         }
     }
-    
+
     /// Collect ZFS ARC cache statistics
     async fn collect_zfs_cache_stats() -> Result<(f64, f64, f64)> {
         // Try to read ZFS ARC stats from /proc/spl/kstat/zfs/arcstats (Linux ZFS)
@@ -481,7 +500,7 @@ impl RealTimeMetricsCollector {
                 let mut arc_misses = 0u64;
                 let mut l2arc_hits = 0u64;
                 let mut l2arc_misses = 0u64;
-                
+
                 for line in content.lines() {
                     let parts: Vec<&str> = line.split_whitespace().collect();
                     if parts.len() >= 3 {
@@ -494,23 +513,26 @@ impl RealTimeMetricsCollector {
                         }
                     }
                 }
-                
+
                 let arc_total = arc_hits + arc_misses;
                 let arc_hit_ratio = if arc_total > 0 {
                     (arc_hits as f64 / arc_total as f64) * 100.0
                 } else {
                     90.0 // Default good ratio
                 };
-                
+
                 let l2arc_total = l2arc_hits + l2arc_misses;
                 let l2arc_hit_ratio = if l2arc_total > 0 {
                     (l2arc_hits as f64 / l2arc_total as f64) * 100.0
                 } else {
                     70.0 // Default reasonable L2ARC ratio
                 };
-                
-                debug!("🎯 Real ZFS cache stats: ARC {:.1}%, L2ARC {:.1}%", arc_hit_ratio, l2arc_hit_ratio);
-                
+
+                debug!(
+                    "🎯 Real ZFS cache stats: ARC {:.1}%, L2ARC {:.1}%",
+                    arc_hit_ratio, l2arc_hit_ratio
+                );
+
                 // Compression ratio would come from pool-specific stats
                 Ok((arc_hit_ratio, l2arc_hit_ratio, 1.4)) // Default 1.4x compression
             }
@@ -522,7 +544,11 @@ impl RealTimeMetricsCollector {
     }
 
     /// Get historical performance data for a specific pool
-    pub async fn get_historical_data(&self, _pool_name: &str, _time_range: &TimeRange) -> Result<Vec<PoolMetrics>> {
+    pub async fn get_historical_data(
+        &self,
+        _pool_name: &str,
+        _time_range: &TimeRange,
+    ) -> Result<Vec<PoolMetrics>> {
         // Implementation for getting historical data
         debug!("Getting historical data for pool: {}", _pool_name);
         Ok(vec![])
@@ -551,7 +577,10 @@ impl RealTimeMetricsCollector {
     }
 
     /// Get I/O performance historical data
-    pub async fn get_io_historical_data(&self, _time_range: &TimeRange) -> Result<Vec<IOMetricsPoint>> {
+    pub async fn get_io_historical_data(
+        &self,
+        _time_range: &TimeRange,
+    ) -> Result<Vec<IOMetricsPoint>> {
         // Implementation for I/O historical data
         debug!("Getting I/O historical data");
         Ok(vec![])
@@ -565,14 +594,19 @@ impl RealTimeMetricsCollector {
     }
 
     /// Get comprehensive historical metrics combining all metric types
-    pub async fn get_comprehensive_historical_data(&self) -> Result<Vec<ComprehensiveMetricsPoint>> {
+    pub async fn get_comprehensive_historical_data(
+        &self,
+    ) -> Result<Vec<ComprehensiveMetricsPoint>> {
         // Implementation for comprehensive historical data
         debug!("Getting comprehensive historical data");
         Ok(vec![])
     }
 
     /// Get storage capacity historical data
-    pub async fn get_capacity_historical_data(&self, _time_range: &TimeRange) -> Result<Vec<CapacityMetricsPoint>> {
+    pub async fn get_capacity_historical_data(
+        &self,
+        _time_range: &TimeRange,
+    ) -> Result<Vec<CapacityMetricsPoint>> {
         // Implementation for capacity historical data
         debug!("Getting capacity historical data");
         Ok(vec![])
@@ -583,4 +617,4 @@ impl Default for RealTimeMetricsCollector {
     fn default() -> Self {
         Self::new()
     }
-} 
+}

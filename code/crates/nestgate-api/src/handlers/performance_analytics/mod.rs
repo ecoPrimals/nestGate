@@ -1,6 +1,5 @@
-//! Performance Analytics Module
-//!
-//! Comprehensive performance monitoring and analytics system for NestGate.
+//
+// Comprehensive performance monitoring and analytics system for NestGate.
 
 use axum::{response::IntoResponse, Json};
 use serde_json::json;

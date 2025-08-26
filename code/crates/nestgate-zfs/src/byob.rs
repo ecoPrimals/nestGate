@@ -1,10 +1,9 @@
-//! BYOB (Bring Your Own Biome) Storage Management
-//!
-//! Integrates with orchestration coordination and compute execution modules.
-//!
-//! This module provides workspace management and storage provisioning for
-//! the BYOB (Bring Your Own Biome) system, allowing users to bring their own
-//! development environments and data.
+//
+// Integrates with orchestration coordination and compute execution modules.
+//
+// This module provides workspace management and storage provisioning for
+// the BYOB (Bring Your Own Biome) system, allowing users to bring their own
+// development environments and data.
 
 use crate::manager::ZfsManager;
 use anyhow::Result;
@@ -159,7 +158,7 @@ impl ByobManager {
 
         // Create the dataset
         self.zfs_manager
-            .create_dataset(child, &parent, tier.into())
+            .create_dataset(child, &parent, tier)
             .await?;
 
         // Set quota using zfs command directly if specified

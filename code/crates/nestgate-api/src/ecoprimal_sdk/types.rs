@@ -1,7 +1,6 @@
-//! Core types and data structures for EcoPrimal SDK
-//!
-//! This module contains the fundamental data types, enums, and structures
-//! used throughout the EcoPrimal ecosystem.
+//
+// This module contains the fundamental data types, enums, and structures
+// used throughout the EcoPrimal ecosystem.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

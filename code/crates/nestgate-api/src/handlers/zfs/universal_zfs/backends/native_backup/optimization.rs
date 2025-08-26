@@ -1,6 +1,5 @@
-//! Optimization Operations for Native ZFS Backend
-//!
-//! Contains all optimization and analytics operations for the native ZFS backend.
+//
+// Contains all optimization and analytics operations for the native ZFS backend.
 
 // Removed unused tracing import
 

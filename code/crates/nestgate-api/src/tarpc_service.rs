@@ -1,11 +1,10 @@
-//! Enhanced tarpc Service Integration
-//!
-//! This module provides production-ready tarpc service integration with:
-//! - Service mesh integration
-//! - Health monitoring and metrics
-//! - Connection management
-//! - Load balancing
-//! - Circuit breaker patterns
+//
+// This module provides production-ready tarpc service integration with:
+// - Service mesh integration
+// - Health monitoring and metrics
+// - Connection management
+// - Load balancing
+// - Circuit breaker patterns
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -17,7 +16,7 @@ use nestgate_core::service_discovery::registry::{
     InMemoryServiceRegistry, UniversalServiceRegistry,
 };
 use nestgate_core::service_discovery::types::ServiceEndpoint;
-use nestgate_core::unified_enums::UnifiedHealthStatus as HealthStatus;
+use crate::canonical_modernization::UnifiedHealthStatus as HealthStatus;
 use std::time::Duration;
 use tracing::debug;
 use tracing::error;
@@ -209,7 +208,7 @@ impl TarpcServiceManager {
         }
 
         // Register service in service registry
-        let service_endpoint = ServiceEndpoint {
+        let _service_endpoint = ServiceEndpoint {
             url: format!("http://{}:{}", address, port),
             protocol: nestgate_core::service_discovery::types::CommunicationProtocol::HTTP,
             health_check: Some(format!("http://{}:{}/health", address, port)),
@@ -219,20 +218,17 @@ impl TarpcServiceManager {
         let service_registration =
             nestgate_core::service_discovery::types::UniversalServiceRegistration {
                 service_id: uuid::Uuid::new_v4(),
-                metadata: nestgate_core::service_discovery::types::ServiceMetadata {
-                    name: service_name.to_string(),
-                    category: nestgate_core::service_discovery::types::ServiceCategory::Network,
-                    version: "1.0.0".to_string(),
-                    description: "RPC service".to_string(),
-                    health_endpoint: Some(format!("http://{}:{}/health", address, port)),
-                    metrics_endpoint: None,
+                metadata: {
+                    let mut metadata = nestgate_core::canonical_modernization::service_metadata::UniversalServiceMetadata::default();
+                    metadata.name = service_name.to_string();
+                    metadata.version = "1.0.0".to_string();
+                    metadata.description = "RPC service".to_string();
+                    metadata.health_endpoint = Some(format!("http://{}:{}/health", address, port));
+                    metadata
                 },
-                capabilities: vec![],
                 resources: nestgate_core::service_discovery::types::ResourceSpec::default(),
-                endpoints: vec![service_endpoint],
-                integration:
-                    nestgate_core::service_discovery::types::IntegrationPreferences::default(),
-                extensions: std::collections::HashMap::new(),
+                integration: nestgate_core::service_discovery::types::IntegrationPreferences::default(),
+                extensions: HashMap::new(),
             };
 
         self.service_registry
@@ -274,7 +270,7 @@ impl TarpcServiceManager {
 
         // Use the first endpoint from the selected service
         let service_endpoint = selected_service
-            .endpoints
+            .metadata.endpoints
             .first()
             .ok_or("Service has no endpoints".to_string())?;
 

@@ -1,4 +1,3 @@
-/// ZFS Performance Metrics Collection
 /// Comprehensive metrics gathering from ZFS pools, datasets, and system resources
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -8,8 +7,9 @@ use tracing::{debug, warn};
 
 use crate::types::StorageTier;
 use crate::{ZfsDatasetManager, ZfsPoolManager};
-use nestgate_core::{types::StorageTier as CoreStorageTier, NestGateError, Result as CoreResult};
+use nestgate_core::{NestGateError, Result as CoreResult};
 
+use super::super::types::TierMetricsMap;
 use super::super::types::*;
 
 impl ZfsPerformanceMonitor {
@@ -18,7 +18,7 @@ impl ZfsPerformanceMonitor {
         pool_manager: &Arc<ZfsPoolManager>,
         dataset_manager: &Arc<ZfsDatasetManager>,
         current_metrics: &Arc<RwLock<CurrentPerformanceMetrics>>,
-        tier_metrics: &Arc<RwLock<HashMap<StorageTier, TierPerformanceData>>>,
+        tier_metrics: &TierMetricsMap,
     ) -> CoreResult<()> {
         debug!("Collecting performance metrics");
 
@@ -47,11 +47,11 @@ impl ZfsPerformanceMonitor {
                 total_writes: 50000_u64,
                 total_bytes_read: disk_stats
                     .first()
-                    .map(|s| s.read_ops as u64 * 1024 * 1024)
+                    .map(|s| s.read_ops * 1024 * 1024)
                     .unwrap_or(0),
                 total_bytes_written: disk_stats
                     .first()
-                    .map(|s| s.write_ops as u64 * 1024 * 1024)
+                    .map(|s| s.write_ops * 1024 * 1024)
                     .unwrap_or(0),
                 avg_io_size_bytes: 65536_u64,
                 read_write_ratio: 2.0,
@@ -297,9 +297,9 @@ impl ZfsPerformanceMonitor {
             };
 
             MemoryInfo {
-                total_mb: (total / (1024 * 1024)) as u64,
-                used_mb: (used / (1024 * 1024)) as u64,
-                available_mb: (available / (1024 * 1024)) as u64,
+                total_mb: (total / (1024 * 1024)),
+                used_mb: (used / (1024 * 1024)),
+                available_mb: (available / (1024 * 1024)),
                 utilization_percent,
             }
         } else {

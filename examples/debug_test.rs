@@ -27,7 +27,7 @@ fn main() {
     std::fs::write("temp_test.rs", test_code).unwrap();
 
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "temp_test"])
+        .args(["run", "--bin", "temp_test"])
         .output()
         .expect("Failed to run test");
 

@@ -1,6 +1,5 @@
-//! Comprehensive Unit Tests
-//!
-//! Comprehensive unit tests for overall validation
+//
+// Comprehensive unit tests for overall validation
 
 use std::collections::HashMap;
 use std::path::PathBuf;

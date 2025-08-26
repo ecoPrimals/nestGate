@@ -1,4 +1,3 @@
-/// **EVENTS SETTINGS MODULE**
 /// Contains all configuration related to events
 /// Extracted from unified_automation_config.rs for better maintainability
 

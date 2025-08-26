@@ -1,4 +1,3 @@
-/// **DISCOVERY SETTINGS MODULE**
 /// Contains all configuration related to discovery
 /// Extracted from unified_automation_config.rs for better maintainability
 

@@ -1,7 +1,6 @@
-//! Universal ZFS Service Configuration
-//!
-//! Comprehensive configuration system supporting multiple backends,
-//! fail-safe mechanisms, and runtime configuration updates.
+//
+// Comprehensive configuration system supporting multiple backends,
+// fail-safe mechanisms, and runtime configuration updates.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

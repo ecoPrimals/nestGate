@@ -1,7 +1,5 @@
-/// **UNIFIED FILE SYSTEM MONITOR CONFIGURATION - MODULAR ARCHITECTURE**
-/// Smart refactoring of 1,279-line monolith into focused, maintainable modules.
-/// Each module handles a specific concern with clear boundaries.
-use nestgate_core::unified_config_consolidation::StandardDomainConfig;
+
+use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as StandardDomainConfig;
 use serde::{Deserialize, Serialize};
 
 // Re-export types from config.rs for backward compatibility
@@ -29,7 +27,7 @@ pub use watch_settings::*;
 
 /// **UNIFIED FILE SYSTEM MONITOR EXTENSIONS**
 /// Main configuration structure that composes all specialized modules
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UnifiedFsMonitorExtensions {
     /// Watch configuration settings
     pub watch: WatchSettings,
@@ -51,19 +49,5 @@ pub struct UnifiedFsMonitorExtensions {
 
 /// **UNIFIED FILE SYSTEM MONITOR CONFIGURATION**
 /// The main configuration type following StandardDomainConfig pattern
-pub type UnifiedFsMonitorConfig = StandardDomainConfig<UnifiedFsMonitorExtensions>;
-
-impl Default for UnifiedFsMonitorExtensions {
-    fn default() -> Self {
-        Self {
-            watch: WatchSettings::default(),
-            event_processing: EventProcessingSettings::default(),
-            notifications: NotificationSettings::default(),
-            performance: FsMonitorPerformanceSettings::default(),
-            filters: FilterSettings::default(),
-            storage: FsMonitorStorageSettings::default(),
-            integrations: IntegrationSettings::default(),
-            security: FsMonitorSecuritySettings::default(),
-        }
-    }
-}
+/// CANONICAL MODERNIZATION: Simplified type alias without type parameters
+pub type UnifiedFsMonitorConfig = StandardDomainConfig;

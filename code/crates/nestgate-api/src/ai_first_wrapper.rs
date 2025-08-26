@@ -1,8 +1,7 @@
-//! AI-First API endpoint wrappers
-//! Converts existing APIs to AI-First format
-//!
-//! This module provides conversion utilities to transform traditional API responses
-//! into AI-First format that complies with the ecoPrimals ecosystem standards.
+// Converts existing APIs to AI-First format
+//
+// This module provides conversion utilities to transform traditional API responses
+// into AI-First format that complies with the ecoPrimals ecosystem standards.
 
 use nestgate_core::ai_first::*;
 use nestgate_core::NestGateError;

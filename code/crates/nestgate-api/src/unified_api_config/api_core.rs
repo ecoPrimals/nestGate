@@ -1,8 +1,8 @@
-use super::api_settings::*;
 /// **UNIFIED API CONFIGURATION - CORE MODULE**
 /// Contains the main UnifiedApiConfig struct and core configuration logic.
 /// This eliminates fragmented API config structs across multiple modules.
-use nestgate_core::unified_config_consolidation::StandardDomainConfig;
+// CANONICAL MODERNIZATION: Migrated from deprecated unified_final_config
+use nestgate_core::canonical_modernization::CanonicalModernizedConfig;
 use serde::{Deserialize, Serialize};
 
 /// **UNIFIED API EXTENSIONS**
@@ -27,16 +27,50 @@ pub struct UnifiedApiExtensions {
     pub health: ApiHealthSettings,
     /// Storage and persistence
     pub storage: ApiStorageSettings,
-    }
+}
 
-/// **UNIFIED API CONFIGURATION**
+impl Default for UnifiedApiExtensions {
+    fn default() -> Self {
+        Self {
+            http_server: ApiHttpServerSettings::default(),
+            streaming: ApiStreamingSettings::default(),
+            service_mesh: ApiServiceMeshSettings::default(),
+            sse: ApiSseSettings::default(),
+            primal: ApiPrimalSettings::default(),
+            auth: ApiAuthSettings::default(),
+            performance: ApiPerformanceSettings::default(),
+            health: ApiHealthSettings::default(),
+            storage: ApiStorageSettings::default(),
+        }
+    }
+}
+
+/// **UNIFIED API CONFIGURATION - CANONICAL MODERNIZATION**
 /// The single source of truth for all API configuration across the system
-pub type UnifiedApiConfig = StandardDomainConfig<UnifiedApiExtensions>;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnifiedApiConfig {
+    /// Base canonical configuration
+    pub base: CanonicalModernizedConfig,
+    /// API-specific extensions
+    pub api_extensions: UnifiedApiExtensions,
+}
+
+impl Default for UnifiedApiConfig {
+    fn default() -> Self {
+        Self {
+            base: CanonicalModernizedConfig::default(),
+            api_extensions: UnifiedApiExtensions::default(),
+        }
+    }
+}
 
 impl UnifiedApiConfig {
     /// Create development configuration optimized for local development
     pub fn development() -> Self {
-        Self::create_for_environment("development")
+        let mut config = Self::default();
+        config.base.runtime.deployment_environment = 
+            nestgate_core::canonical_modernization::CanonicalEnvironment::Development;
+        config
     }
 
     /// Create production configuration optimized for high-load production

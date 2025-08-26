@@ -1,15 +1,23 @@
+use nestgate_core::error::conversions::create_zfs_error;
+use nestgate_core::types::StorageTier;
 /// **ZERO-COST ZFS OPERATIONS**
 /// This module replaces Arc<dyn> patterns in ZFS operations with compile-time dispatch
 /// for maximum performance in storage-critical paths.
-
-use crate::error::{Result, ZfsError};
-use crate::types::StorageTier;
+///
+use nestgate_core::{error::domain_errors::ZfsOperation, Result};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::marker::PhantomData;
+
 use std::path::PathBuf;
+use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
+
+// Type aliases for complex types to improve readability
+type PoolInfoMap = Arc<RwLock<HashMap<String, ZeroCostPoolInfo>>>;
+type DatasetInfoMap = Arc<RwLock<HashMap<String, ZeroCostDatasetInfo>>>;
+type SnapshotInfoMap = Arc<RwLock<HashMap<String, ZeroCostSnapshotInfo>>>;
 
 /// **ZERO-COST ZFS OPERATIONS TRAIT**
 /// Replaces Arc<dyn ZfsOperations> with native async methods
@@ -30,7 +38,7 @@ pub trait ZeroCostZfsOperations<
         &self,
         name: &str,
         devices: &[&str],
-    ) -> impl std::future::Future<Output = Result<Self::Pool, Self::Error>> + Send;
+    ) -> impl std::future::Future<Output = Result<Self::Pool>> + Send;
 
     /// Create dataset - compile-time specialization
     fn create_dataset(
@@ -38,35 +46,35 @@ pub trait ZeroCostZfsOperations<
         pool: &Self::Pool,
         name: &str,
         tier: StorageTier,
-    ) -> impl std::future::Future<Output = Result<Self::Dataset, Self::Error>> + Send;
+    ) -> impl std::future::Future<Output = Result<Self::Dataset>> + Send;
 
     /// Create snapshot - zero-cost abstraction
     fn create_snapshot(
         &self,
         dataset: &Self::Dataset,
         name: &str,
-    ) -> impl std::future::Future<Output = Result<Self::Snapshot, Self::Error>> + Send;
+    ) -> impl std::future::Future<Output = Result<Self::Snapshot>> + Send;
 
     /// Get pool properties - direct access
     fn get_pool_properties(
         &self,
         pool: &Self::Pool,
-    ) -> impl std::future::Future<Output = Result<Self::Properties, Self::Error>> + Send;
+    ) -> impl std::future::Future<Output = Result<Self::Properties>> + Send;
 
     /// List pools with compile-time limits
-    fn list_pools(&self) -> impl std::future::Future<Output = Result<Vec<Self::Pool>, Self::Error>> + Send;
+    fn list_pools(&self) -> impl std::future::Future<Output = Result<Vec<Self::Pool>>> + Send;
 
     /// List datasets with compile-time limits
     fn list_datasets(
         &self,
         pool: &Self::Pool,
-    ) -> impl std::future::Future<Output = Result<Vec<Self::Dataset>, Self::Error>> + Send;
+    ) -> impl std::future::Future<Output = Result<Vec<Self::Dataset>>> + Send;
 
     /// List snapshots with compile-time limits
     fn list_snapshots(
         &self,
         dataset: &Self::Dataset,
-    ) -> impl std::future::Future<Output = Result<Vec<Self::Snapshot>, Self::Error>> + Send;
+    ) -> impl std::future::Future<Output = Result<Vec<Self::Snapshot>>> + Send;
 
     /// Check pool capacity at compile-time
     fn can_create_pool(&self) -> bool {
@@ -101,7 +109,7 @@ pub trait ZeroCostZfsOperations<
 
 /// **ZERO-COST POOL INFORMATION**
 /// High-performance pool data structure
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostPoolInfo {
     pub name: String,
     pub size: u64,
@@ -109,12 +117,13 @@ pub struct ZeroCostPoolInfo {
     pub available: u64,
     pub health: String,
     pub properties: HashMap<String, String>,
+    #[serde(with = "serde_system_time")]
     pub created_at: std::time::SystemTime,
 }
 
 /// **ZERO-COST DATASET INFORMATION**
 /// High-performance dataset data structure
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostDatasetInfo {
     pub name: String,
     pub pool: String,
@@ -123,36 +132,80 @@ pub struct ZeroCostDatasetInfo {
     pub used: u64,
     pub properties: HashMap<String, String>,
     pub mount_point: Option<PathBuf>,
+    #[serde(with = "serde_system_time")]
     pub created_at: std::time::SystemTime,
 }
 
 /// **ZERO-COST SNAPSHOT INFORMATION**
 /// High-performance snapshot data structure
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostSnapshotInfo {
     pub name: String,
     pub dataset: String,
     pub size: u64,
+    #[serde(with = "serde_system_time")]
     pub created_at: std::time::SystemTime,
     pub properties: HashMap<String, String>,
 }
 
-/// **ZERO-COST ZFS MANAGER**
-/// High-performance ZFS manager with compile-time configuration
-pub struct ZeroCostZfsManager<
-    const MAX_POOLS: usize = 100,
-    const MAX_DATASETS: usize = 10000,
-    const MAX_SNAPSHOTS: usize = 100000,
-    const COMMAND_TIMEOUT_MS: u64 = 30000,
-> {
-    pools: Arc<RwLock<HashMap<String, ZeroCostPoolInfo>>>,
-    datasets: Arc<RwLock<HashMap<String, ZeroCostDatasetInfo>>>,
-    snapshots: Arc<RwLock<HashMap<String, ZeroCostSnapshotInfo>>>,
-    _phantom: PhantomData<()>,
+/// Helper module for serializing SystemTime
+mod serde_system_time {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    type SerializeResult<S> = Result<<S as Serializer>::Ok, <S as Serializer>::Error>;
+
+    pub fn serialize<S>(time: &SystemTime, serializer: S) -> SerializeResult<S>
+    where
+        S: Serializer,
+    {
+        let duration = time
+            .duration_since(UNIX_EPOCH)
+            .map_err(serde::ser::Error::custom)?;
+        duration.as_secs().serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<SystemTime, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let secs = u64::deserialize(deserializer)?;
+        Ok(UNIX_EPOCH + std::time::Duration::from_secs(secs))
+    }
 }
 
-impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usize, const COMMAND_TIMEOUT_MS: u64>
-    ZeroCostZfsManager<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS, COMMAND_TIMEOUT_MS>
+/// Zero-cost ZFS operations manager with compile-time capacity limits
+pub struct ZeroCostZfsManager<
+    const MAX_POOLS: usize,
+    const MAX_DATASETS: usize,
+    const MAX_SNAPSHOTS: usize,
+    const COMMAND_TIMEOUT_MS: u64,
+> {
+    pools: PoolInfoMap,
+    datasets: DatasetInfoMap,
+    snapshots: SnapshotInfoMap,
+    #[allow(dead_code)]
+    request_id_counter: AtomicU64,
+}
+
+impl<
+        const MAX_POOLS: usize,
+        const MAX_DATASETS: usize,
+        const MAX_SNAPSHOTS: usize,
+        const COMMAND_TIMEOUT_MS: u64,
+    > Default for ZeroCostZfsManager<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS, COMMAND_TIMEOUT_MS>
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<
+        const MAX_POOLS: usize,
+        const MAX_DATASETS: usize,
+        const MAX_SNAPSHOTS: usize,
+        const COMMAND_TIMEOUT_MS: u64,
+    > ZeroCostZfsManager<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS, COMMAND_TIMEOUT_MS>
 {
     /// Create new ZFS manager with compile-time configuration
     pub fn new() -> Self {
@@ -160,7 +213,7 @@ impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usi
             pools: Arc::new(RwLock::new(HashMap::with_capacity(MAX_POOLS))),
             datasets: Arc::new(RwLock::new(HashMap::with_capacity(MAX_DATASETS))),
             snapshots: Arc::new(RwLock::new(HashMap::with_capacity(MAX_SNAPSHOTS))),
-            _phantom: PhantomData,
+            request_id_counter: AtomicU64::new(0),
         }
     }
 
@@ -170,26 +223,33 @@ impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usi
     }
 
     /// Execute ZFS command with compile-time timeout
-    async fn execute_zfs_command(&self, args: &[&str]) -> Result<String, ZfsError> {
+    async fn execute_zfs_command(&self, args: &[&str]) -> Result<String> {
         let mut cmd = tokio::process::Command::new("zfs");
         cmd.args(args);
-        
+
         let output = tokio::time::timeout(Self::command_timeout(), cmd.output())
             .await
-            .map_err(|_| ZfsError::Internal {
-                message: format!("ZFS command timed out after {:?}", Self::command_timeout()),
+            .map_err(|_| {
+                create_zfs_error(
+                    format!("ZFS command timed out after {:?}", Self::command_timeout()),
+                    ZfsOperation::Command
+                )
             })?
-            .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to execute ZFS command: {}", e),
+            .map_err(|e| {
+                create_zfs_error(
+                    format!("Failed to execute ZFS command: {e}"),
+                    ZfsOperation::Command
+                )
             })?;
 
         if !output.status.success() {
-            return Err(ZfsError::Internal {
-                message: format!(
+            return Err(create_zfs_error(
+                format!(
                     "ZFS command failed: {}",
                     String::from_utf8_lossy(&output.stderr)
                 ),
-            });
+                ZfsOperation::Command
+            ));
         }
 
         Ok(String::from_utf8_lossy(&output.stdout).to_string())
@@ -198,13 +258,13 @@ impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usi
     /// Parse pool properties from ZFS output
     fn parse_pool_properties(&self, output: &str) -> HashMap<String, String> {
         let mut properties = HashMap::new();
-        
+
         for line in output.lines() {
             if let Some((key, value)) = line.split_once('\t') {
                 properties.insert(key.trim().to_string(), value.trim().to_string());
             }
         }
-        
+
         properties
     }
 
@@ -227,22 +287,26 @@ impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usi
     }
 }
 
-impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usize, const COMMAND_TIMEOUT_MS: u64>
-    ZeroCostZfsOperations<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS> 
+impl<
+        const MAX_POOLS: usize,
+        const MAX_DATASETS: usize,
+        const MAX_SNAPSHOTS: usize,
+        const COMMAND_TIMEOUT_MS: u64,
+    > ZeroCostZfsOperations<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS>
     for ZeroCostZfsManager<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS, COMMAND_TIMEOUT_MS>
 {
+    type Error = nestgate_core::NestGateError;
     type Pool = ZeroCostPoolInfo;
     type Dataset = ZeroCostDatasetInfo;
     type Snapshot = ZeroCostSnapshotInfo;
     type Properties = HashMap<String, String>;
-    type Error = ZfsError;
-
-    async fn create_pool(&self, name: &str, devices: &[&str]) -> Result<Self::Pool, Self::Error> {
+    async fn create_pool(&self, name: &str, devices: &[&str]) -> Result<Self::Pool> {
         // Check capacity at runtime
         if !self.can_create_more_pools().await {
-            return Err(ZfsError::Internal {
-                message: format!("Cannot create pool: maximum pools ({}) reached", MAX_POOLS),
-            });
+            return Err(create_zfs_error(
+                format!("Cannot create pool: maximum pools ({MAX_POOLS}) reached"),
+                ZfsOperation::PoolCreate
+            ));
         }
 
         // Build ZFS create command
@@ -253,17 +317,19 @@ impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usi
         self.execute_zfs_command(&args).await?;
 
         // Get pool properties
-        let properties_output = self.execute_zfs_command(&[
-            "get", "all", "-H", "-p", name
-        ]).await?;
-        
+        let properties_output = self
+            .execute_zfs_command(&["get", "all", "-H", "-p", name])
+            .await?;
+
         let properties = self.parse_pool_properties(&properties_output);
-        
+
         // Parse basic pool information
-        let size = properties.get("size")
+        let size: u64 = properties
+            .get("size")
             .and_then(|s| s.parse().ok())
             .unwrap_or(0);
-        let used = properties.get("allocated")
+        let used: u64 = properties
+            .get("allocated")
             .and_then(|s| s.parse().ok())
             .unwrap_or(0);
         let available = size.saturating_sub(used);
@@ -273,14 +339,18 @@ impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usi
             size,
             used,
             available,
-            health: properties.get("health").unwrap_or("UNKNOWN").to_string(),
+            health: properties
+                .get("health")
+                .map_or("UNKNOWN".to_string(), |v| v.to_string()),
             properties: properties.clone(),
             created_at: std::time::SystemTime::now(),
         };
 
         // Store in memory cache
-        let mut pools = self.pools.write().await;
-        pools.insert(name.to_string(), pool_info.clone());
+        {
+            let mut pools_map = self.pools.write().await;
+            pools_map.insert(pool_info.name.clone(), pool_info.clone());
+        }
 
         Ok(pool_info)
     }
@@ -290,19 +360,20 @@ impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usi
         pool: &Self::Pool,
         name: &str,
         tier: StorageTier,
-    ) -> Result<Self::Dataset, Self::Error> {
+    ) -> Result<Self::Dataset> {
         // Check capacity at runtime
         if !self.can_create_more_datasets().await {
-            return Err(ZfsError::Internal {
-                message: format!("Cannot create dataset: maximum datasets ({}) reached", MAX_DATASETS),
-            });
+            return Err(create_zfs_error(
+                format!("Cannot create dataset: maximum datasets ({MAX_DATASETS}) reached"),
+                ZfsOperation::DatasetCreate
+            ));
         }
 
         let dataset_path = format!("{}/{}", pool.name, name);
 
         // Build create command with tier-specific properties
         let mut args = vec!["create"];
-        
+
         // Apply tier-specific properties
         match tier {
             StorageTier::Hot => {
@@ -317,32 +388,45 @@ impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usi
                 args.extend(&["-o", "compression=gzip-9"]);
                 args.extend(&["-o", "sync=disabled"]);
             }
+            StorageTier::Cache => {
+                args.extend(&["-o", "compression=lz4"]);
+                args.extend(&["-o", "sync=always"]);
+                args.extend(&["-o", "primarycache=all"]);
+            }
+            StorageTier::Archive => {
+                args.extend(&["-o", "compression=gzip-9"]);
+                args.extend(&["-o", "sync=disabled"]);
+                args.extend(&["-o", "atime=off"]);
+            }
         }
-        
+
         args.push(&dataset_path);
 
         // Execute command
         self.execute_zfs_command(&args).await?;
 
         // Get dataset properties
-        let properties_output = self.execute_zfs_command(&[
-            "get", "all", "-H", "-p", &dataset_path
-        ]).await?;
-        
+        let properties_output = self
+            .execute_zfs_command(&["get", "all", "-H", "-p", &dataset_path])
+            .await?;
+
         let properties = self.parse_pool_properties(&properties_output);
-        
+
         // Parse dataset information
-        let used = properties.get("used")
+        let used = properties
+            .get("used")
             .and_then(|s| s.parse().ok())
             .unwrap_or(0);
-        let available = properties.get("available")
+        let available = properties
+            .get("available")
             .and_then(|s| s.parse().ok())
             .unwrap_or(0);
         let size = used + available;
 
-        let mount_point = properties.get("mountpoint")
+        let mount_point = properties
+            .get("mountpoint")
             .filter(|mp| *mp != "none" && *mp != "-")
-            .map(|mp| PathBuf::from(mp));
+            .map(PathBuf::from);
 
         let dataset_info = ZeroCostDatasetInfo {
             name: name.to_string(),
@@ -356,38 +440,39 @@ impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usi
         };
 
         // Store in memory cache
-        let mut datasets = self.datasets.write().await;
-        datasets.insert(dataset_path, dataset_info.clone());
+        {
+            let mut datasets_map = self.datasets.write().await;
+            datasets_map.insert(dataset_info.name.clone(), dataset_info.clone());
+        }
 
         Ok(dataset_info)
     }
 
-    async fn create_snapshot(
-        &self,
-        dataset: &Self::Dataset,
-        name: &str,
-    ) -> Result<Self::Snapshot, Self::Error> {
+    async fn create_snapshot(&self, dataset: &Self::Dataset, name: &str) -> Result<Self::Snapshot> {
         // Check capacity at runtime
         if !self.can_create_more_snapshots().await {
-            return Err(ZfsError::Internal {
-                message: format!("Cannot create snapshot: maximum snapshots ({}) reached", MAX_SNAPSHOTS),
-            });
+            return Err(create_zfs_error(
+                format!("Cannot create snapshot: maximum snapshots ({MAX_SNAPSHOTS}) reached"),
+                ZfsOperation::SystemCheck
+            ));
         }
 
         let dataset_path = format!("{}/{}", dataset.pool, dataset.name);
-        let snapshot_path = format!("{}@{}", dataset_path, name);
+        let snapshot_path = format!("{dataset_path}@{name}");
 
         // Execute snapshot command
-        self.execute_zfs_command(&["snapshot", &snapshot_path]).await?;
+        self.execute_zfs_command(&["snapshot", &snapshot_path])
+            .await?;
 
         // Get snapshot properties
-        let properties_output = self.execute_zfs_command(&[
-            "get", "all", "-H", "-p", &snapshot_path
-        ]).await?;
-        
+        let properties_output = self
+            .execute_zfs_command(&["get", "all", "-H", "-p", &snapshot_path])
+            .await?;
+
         let properties = self.parse_pool_properties(&properties_output);
-        
-        let size = properties.get("used")
+
+        let size = properties
+            .get("used")
             .and_then(|s| s.parse().ok())
             .unwrap_or(0);
 
@@ -400,45 +485,73 @@ impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usi
         };
 
         // Store in memory cache
-        let mut snapshots = self.snapshots.write().await;
-        snapshots.insert(snapshot_path, snapshot_info.clone());
+        {
+            let mut snapshots_map = self.snapshots.write().await;
+            snapshots_map.insert(snapshot_info.name.clone(), snapshot_info.clone());
+        }
 
         Ok(snapshot_info)
     }
 
-    async fn get_pool_properties(&self, pool: &Self::Pool) -> Result<Self::Properties, Self::Error> {
+    async fn get_pool_properties(&self, pool: &Self::Pool) -> Result<Self::Properties> {
         // Try cache first
         {
-            let pools = self.pools.read().await;
-            if let Some(cached_pool) = pools.get(&pool.name) {
+            let pools_map = self.pools.read().await;
+            if let Some(cached_pool) = pools_map.get(&pool.name) {
                 return Ok(cached_pool.properties.clone());
             }
         }
 
         // Fetch from ZFS
-        let properties_output = self.execute_zfs_command(&[
-            "get", "all", "-H", "-p", &pool.name
-        ]).await?;
-        
+        let properties_output = self
+            .execute_zfs_command(&["get", "all", "-H", "-p", &pool.name])
+            .await?;
+
         let properties = self.parse_pool_properties(&properties_output);
-        
+
         // Update cache
-        let mut pools = self.pools.write().await;
-        if let Some(cached_pool) = pools.get_mut(&pool.name) {
-            cached_pool.properties = properties.clone();
+        {
+            let mut pools_map = self.pools.write().await;
+            let pool_info = ZeroCostPoolInfo {
+                name: pool.name.clone(),
+                size: properties
+                    .get("size")
+                    .and_then(|s| s.parse::<u64>().ok())
+                    .unwrap_or(0),
+                used: properties
+                    .get("allocated")
+                    .and_then(|s| s.parse::<u64>().ok())
+                    .unwrap_or(0),
+                available: properties
+                    .get("size")
+                    .and_then(|s| s.parse::<u64>().ok())
+                    .unwrap_or(0)
+                    .saturating_sub(
+                        properties
+                            .get("allocated")
+                            .and_then(|s| s.parse::<u64>().ok())
+                            .unwrap_or(0),
+                    ),
+                health: properties
+                    .get("health")
+                    .map_or("UNKNOWN".to_string(), |v| v.to_string()),
+                properties: properties.clone(),
+                created_at: std::time::SystemTime::now(),
+            };
+            pools_map.insert(pool.name.clone(), pool_info);
         }
 
         Ok(properties)
     }
 
-    async fn list_pools(&self) -> Result<Vec<Self::Pool>, Self::Error> {
+    async fn list_pools(&self) -> Result<Vec<Self::Pool>> {
         // Get pools from ZFS
-        let output = self.execute_zfs_command(&[
-            "list", "-H", "-o", "name,size,used,avail,health"
-        ]).await?;
+        let output = self
+            .execute_zfs_command(&["list", "-H", "-o", "name,size,used,avail,health"])
+            .await?;
 
         let mut pools = Vec::with_capacity(MAX_POOLS);
-        
+
         for line in output.lines() {
             let parts: Vec<&str> = line.split('\t').collect();
             if parts.len() >= 5 {
@@ -467,19 +580,27 @@ impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usi
         Ok(pools)
     }
 
-    async fn list_datasets(&self, pool: &Self::Pool) -> Result<Vec<Self::Dataset>, Self::Error> {
+    async fn list_datasets(&self, pool: &Self::Pool) -> Result<Vec<Self::Dataset>> {
         // Get datasets from ZFS
-        let output = self.execute_zfs_command(&[
-            "list", "-r", "-H", "-o", "name,used,avail,mountpoint", &pool.name
-        ]).await?;
+        let output = self
+            .execute_zfs_command(&[
+                "list",
+                "-r",
+                "-H",
+                "-o",
+                "name,used,avail,mountpoint",
+                &pool.name,
+            ])
+            .await?;
 
         let mut datasets = Vec::with_capacity(MAX_DATASETS);
-        
+
         for line in output.lines() {
             let parts: Vec<&str> = line.split('\t').collect();
             if parts.len() >= 4 && parts[0] != pool.name {
                 let full_name = parts[0].to_string();
-                let name = full_name.strip_prefix(&format!("{}/", pool.name))
+                let name = full_name
+                    .strip_prefix(&format!("{}/", pool.name))
                     .unwrap_or(&full_name)
                     .to_string();
                 let used = parts[1].parse().unwrap_or(0);
@@ -511,16 +632,25 @@ impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usi
         Ok(datasets)
     }
 
-    async fn list_snapshots(&self, dataset: &Self::Dataset) -> Result<Vec<Self::Snapshot>, Self::Error> {
+    async fn list_snapshots(&self, dataset: &Self::Dataset) -> Result<Vec<Self::Snapshot>> {
         let dataset_path = format!("{}/{}", dataset.pool, dataset.name);
-        
+
         // Get snapshots from ZFS
-        let output = self.execute_zfs_command(&[
-            "list", "-r", "-t", "snapshot", "-H", "-o", "name,used", &dataset_path
-        ]).await?;
+        let output = self
+            .execute_zfs_command(&[
+                "list",
+                "-r",
+                "-t",
+                "snapshot",
+                "-H",
+                "-o",
+                "name,used",
+                &dataset_path,
+            ])
+            .await?;
 
         let mut snapshots = Vec::with_capacity(MAX_SNAPSHOTS);
-        
+
         for line in output.lines() {
             let parts: Vec<&str> = line.split('\t').collect();
             if parts.len() >= 2 {
@@ -533,7 +663,7 @@ impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usi
                         dataset: ds_path.to_string(),
                         size,
                         created_at: std::time::SystemTime::now(), // Approximation
-                        properties: HashMap::new(), // Would be populated on demand
+                        properties: HashMap::new(),               // Would be populated on demand
                     });
 
                     if snapshots.len() >= MAX_SNAPSHOTS {
@@ -549,12 +679,15 @@ impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usi
 
 /// **TYPE ALIASES FOR COMMON CONFIGURATIONS**
 /// Pre-configured ZFS managers for different use cases
-
+///
 /// Development ZFS manager: Small limits, fast timeout
 pub type DevelopmentZfsManager = ZeroCostZfsManager<10, 100, 1000, 10000>; // 10 pools, 100 datasets, 1k snapshots, 10s timeout
 
 /// Production ZFS manager: Large limits, standard timeout
 pub type ProductionZfsManager = ZeroCostZfsManager<100, 10000, 100000, 30000>; // 100 pools, 10k datasets, 100k snapshots, 30s timeout
+
+/// High-performance ZFS manager: Optimized limits, balanced timeout
+pub type HighPerformanceZfsManager = ZeroCostZfsManager<200, 20000, 200000, 45000>; // 200 pools, 20k datasets, 200k snapshots, 45s timeout
 
 /// Testing ZFS manager: Tiny limits, very fast timeout
 pub type TestingZfsManager = ZeroCostZfsManager<2, 10, 100, 5000>; // 2 pools, 10 datasets, 100 snapshots, 5s timeout
@@ -564,7 +697,6 @@ pub type EnterpriseZfsManager = ZeroCostZfsManager<1000, 100000, 1000000, 60000>
 
 /// **MIGRATION UTILITIES**
 /// Help migrate from Arc<dyn ZfsOperations> to zero-cost patterns
-
 pub struct ZfsMigrationGuide;
 
 impl ZfsMigrationGuide {
@@ -594,21 +726,20 @@ impl ZfsMigrationGuide {
 
 /// **PERFORMANCE BENCHMARKING**
 /// Tools for measuring ZFS performance improvements
-
 pub struct ZfsBenchmark;
 
 impl ZfsBenchmark {
     /// Benchmark ZFS operations
-    pub async fn benchmark_zfs_operations<Z>(zfs: &Z, operations: u32) -> Duration
+    pub async fn benchmark_zfs_operations<Z>(_zfs: &Z, operations: u32) -> Duration
     where
         Z: ZeroCostZfsOperations,
     {
         let start = std::time::Instant::now();
-        
+
         // This would benchmark actual ZFS operations
         // For safety, we'll just measure the time
         tokio::time::sleep(Duration::from_millis(operations as u64)).await;
-        
+
         start.elapsed()
     }
 
@@ -617,8 +748,10 @@ impl ZfsBenchmark {
         // Expected results based on eliminating Arc<dyn> overhead in storage operations
         let old_duration = Duration::from_millis(5000); // Old Arc<dyn> approach
         let new_duration = Duration::from_millis(1000); // New zero-cost approach
-        let improvement = ((old_duration.as_nanos() - new_duration.as_nanos()) as f64 / old_duration.as_nanos() as f64) * 100.0;
-        
+        let improvement = ((old_duration.as_nanos() - new_duration.as_nanos()) as f64
+            / old_duration.as_nanos() as f64)
+            * 100.0;
+
         (old_duration, new_duration, improvement)
     }
-} 
+}

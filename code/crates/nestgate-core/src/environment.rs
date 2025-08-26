@@ -1,4 +1,4 @@
-// Removed unused error imports
+use std::collections::HashMap;
 /// Environment detection and configuration for NestGate
 ///
 /// Supports two primary modes:
@@ -31,16 +31,8 @@ pub struct Environment {
     pub external_services: HashMap<String, String>,
 }
 
-/// Service configuration
-#[derive(Debug, Clone)]
-pub struct ServiceConfig {
-    /// Service name
-    pub name: String,
-    /// Service version
-    pub version: String,
-    /// Service description
-    pub description: String,
-}
+/// **CANONICAL MODERNIZATION** - Use canonical service configuration
+pub use crate::canonical_types::service::ServiceConfig;
 
 /// Network configuration
 #[derive(Debug, Clone)]
@@ -91,11 +83,11 @@ impl Environment {
     fn detect_service_config() -> ServiceConfig {
         ServiceConfig {
             name: env::var("SERVICE_NAME")
-                .unwrap_or_else(|_| crate::constants::strings::DEFAULT_SERVICE_NAME.to_string()),
+                .unwrap_or_else(|_| crate::canonical_modernization::canonical_constants::strings::DEFAULT_SERVICE_NAME.to_string()),
             version: env::var("SERVICE_VERSION")
-                .unwrap_or_else(|_| crate::constants::strings::DEFAULT_SERVICE_VERSION.to_string()),
+                .unwrap_or_else(|_| crate::canonical_modernization::canonical_constants::strings::DEFAULT_SERVICE_VERSION.to_string()),
             description: env::var("SERVICE_DESCRIPTION").unwrap_or_else(|_| {
-                crate::constants::strings::DEFAULT_SERVICE_DESCRIPTION.to_string()
+                crate::canonical_modernization::canonical_constants::strings::DEFAULT_SERVICE_DESCRIPTION.to_string()
             }),
         }
     }
@@ -104,27 +96,35 @@ impl Environment {
     fn detect_network_config(mode: &OperationMode) -> NetworkConfig {
         match mode {
             OperationMode::Standalone => NetworkConfig {
-                bind_interface: env::var("NESTGATE_BIND_INTERFACE")
-                    .unwrap_or_else(|_| "127.0.0.1".to_string()), // Secure default: localhost only
+                bind_interface: env::var("NESTGATE_BIND_INTERFACE").unwrap_or_else(|_| {
+                    crate::sovereignty_config::migration_helpers::get_bind_address().to_string()
+                }), // Sovereignty-compliant default
                 port: env::var("NESTGATE_PORT")
-                    .unwrap_or_else(|_| "8080".to_string())
+                    .unwrap_or_else(|_| {
+                        crate::sovereignty_config::migration_helpers::get_api_port().to_string()
+                    })
                     .parse()
                     .unwrap_or(8080),
-                service_name: env::var("NESTGATE_SERVICE_NAME")
-                    .unwrap_or_else(|_| "nestgate".to_string()),
+                service_name: env::var("NESTGATE_SERVICE_NAME").unwrap_or_else(|_| {
+                    crate::sovereignty_config::migration_helpers::get_service_name()
+                }),
                 discovery_enabled: env::var("NESTGATE_DISCOVERY_ENABLED")
                     .map(|v| v.parse().unwrap_or(false))
                     .unwrap_or(false),
             },
             OperationMode::OrchestrationEnhanced => NetworkConfig {
-                bind_interface: env::var("NESTGATE_BIND_INTERFACE")
-                    .unwrap_or_else(|_| "127.0.0.1".to_string()), // Secure default: localhost only (even in orchestrated mode)
+                bind_interface: env::var("NESTGATE_BIND_INTERFACE").unwrap_or_else(|_| {
+                    crate::sovereignty_config::migration_helpers::get_bind_address().to_string()
+                }), // Sovereignty-compliant default
                 port: env::var("NESTGATE_PORT")
-                    .unwrap_or_else(|_| "8080".to_string()) // Use proper port instead of 0
+                    .unwrap_or_else(|_| {
+                        crate::sovereignty_config::migration_helpers::get_api_port().to_string()
+                    }) // Use proper port instead of 0
                     .parse()
                     .unwrap_or(8080),
-                service_name: env::var("NESTGATE_SERVICE_NAME")
-                    .unwrap_or_else(|_| "nestgate".to_string()),
+                service_name: env::var("NESTGATE_SERVICE_NAME").unwrap_or_else(|_| {
+                    crate::sovereignty_config::migration_helpers::get_service_name()
+                }),
                 discovery_enabled: env::var("NESTGATE_DISCOVERY_ENABLED")
                     .map(|v| v.parse().unwrap_or(true))
                     .unwrap_or(true), // Enable discovery in orchestration mode

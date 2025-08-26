@@ -1,6 +1,6 @@
-//! MCP Service Implementation
-//!
-//! This module contains the main MCP service that orchestrates MCP operations.
+//
+// This module contains the main MCP service that orchestrates MCP operations.
+// **ZERO-COST ARCHITECTURE**: Generic dispatch eliminates Arc<dyn> overhead
 
 use crate::session::SessionManager;
 use std::collections::HashMap;
@@ -13,10 +13,18 @@ use crate::{
     types::ProviderCapabilities, Result,
 };
 
-/// Enhanced MCP Service with enhanced NestGate capabilities integrated into v2 orchestrator
-pub struct EnhancedMcpService {
+/// **ZERO-COST ENHANCED MCP SERVICE**
+/// 
+/// **PERFORMANCE**: Generic compile-time dispatch eliminates Arc<dyn> overhead
+/// **MEMORY**: Direct client storage, no heap allocations for trait objects
+/// **SCALABILITY**: Type-safe orchestrator integration with zero runtime cost
+pub struct ZeroCostEnhancedMcpService<C>
+where
+    C: OrchestratorClient,
+{
     config: EnhancedMcpConfig,
-    orchestrator_client: Arc<dyn OrchestratorClient>,
+    /// Orchestrator client - zero-cost generic dispatch
+    orchestrator_client: C,
     capabilities: Arc<RwLock<ProviderCapabilities>>,
     metrics: Arc<RwLock<nestgate_core::diagnostics::SystemMetrics>>,
     _session_manager: Arc<SessionManager>,
@@ -24,11 +32,11 @@ pub struct EnhancedMcpService {
     _provider_registry: Arc<RwLock<HashMap<String, provider::ProviderInfo>>>,
 }
 
-impl EnhancedMcpService {
-    pub fn new(
-        config: EnhancedMcpConfig,
-        orchestrator_client: Arc<dyn OrchestratorClient>,
-    ) -> Self {
+impl<C> ZeroCostEnhancedMcpService<C>
+where
+    C: OrchestratorClient,
+{
+    pub fn new(config: EnhancedMcpConfig, orchestrator_client: C) -> Self {
         Self {
             config,
             orchestrator_client,
@@ -42,72 +50,54 @@ impl EnhancedMcpService {
         }
     }
 
-    /// Start the MCP service
+    /// Start the MCP service - zero-cost orchestrator integration
     pub async fn start(&self) -> Result<()> {
-        info!("Starting Enhanced MCP Service v2");
+        info!("Starting Zero-Cost Enhanced MCP Service v2");
 
-        // Register with orchestrator
+        // Register with orchestrator - direct method call, no virtual dispatch
         self.register_with_orchestrator().await?;
 
-        // Start metrics collection
-        self.start_metrics_collection().await?;
-
-        // Start health checks
-        self.start_health_checks().await?;
-
-        info!("Enhanced MCP Service v2 started successfully");
+        info!("Zero-Cost Enhanced MCP Service started successfully");
         Ok(())
     }
 
-    /// Register this service with the orchestrator
+    /// Register with orchestrator - compile-time dispatch
     async fn register_with_orchestrator(&self) -> Result<()> {
-        let service_info = crate::protocol::ServiceInfo {
-            service_id: format!("mcp-{}", uuid::Uuid::new_v4()),
-            service_name: "nestgate-mcp".to_string(),
-            service_type: "mcp".to_string(),
-            endpoint: self.config.orchestrator_endpoint.clone(),
-            status: crate::protocol::ServiceStatus::Online,
-            capabilities: vec!["storage".to_string(), "security".to_string()],
+        debug!("Registering MCP service with orchestrator");
+
+        // Use the zero-cost orchestrator client directly
+        let service_registration = nestgate_core::traits::ServiceRegistration {
+            service_id: "enhanced-mcp-service".to_string(),
+            service_type: nestgate_core::unified_enums::UnifiedServiceType::Orchestration,
+            endpoint: format!("http://{}:{}", self.config.host, self.config.port),
+            capabilities: vec!["mcp".to_string(), "orchestration".to_string()],
             metadata: HashMap::new(),
+            health_check_endpoint: Some("/health".to_string()),
+            tags: vec!["zero-cost".to_string(), "canonical".to_string()],
         };
 
-        self.orchestrator_client
-            .register_service(service_info)
-            .await?;
-        info!("Successfully registered with orchestrator");
+        // Direct method call - zero-cost dispatch
+        self.orchestrator_client.register_service(&service_registration).await?;
+
+        debug!("Successfully registered with orchestrator");
         Ok(())
     }
 
-    /// Start periodic metrics collection
-    async fn start_metrics_collection(&self) -> Result<()> {
-        debug!("Starting metrics collection");
-        // Implementation for metrics collection would go here
-        Ok(())
+    /// Health check with zero-cost orchestrator communication
+    pub async fn health_check(&self) -> Result<bool> {
+        // Direct method call to orchestrator client
+        self.orchestrator_client.health_check().await
     }
 
-    /// Start periodic health checks
-    async fn start_health_checks(&self) -> Result<()> {
-        debug!("Starting health checks");
-        // Implementation for health checks would go here
-        Ok(())
+    /// Get service configuration
+    pub fn config(&self) -> &EnhancedMcpConfig {
+        &self.config
     }
 
-    /// Get current service metrics
-    pub async fn get_metrics(&self) -> nestgate_core::diagnostics::SystemMetrics {
-        self.metrics.read().await.clone()
-    }
-
-    /// Update service capabilities
-    pub async fn update_capabilities(&self, capabilities: ProviderCapabilities) -> Result<()> {
-        *self.capabilities.write().await = capabilities;
-        info!("Updated service capabilities");
-        Ok(())
-    }
-
-    /// Shutdown the service gracefully
-    pub async fn shutdown(&self) -> Result<()> {
-        info!("Shutting down Enhanced MCP Service");
-        // Implementation for graceful shutdown would go here
-        Ok(())
+    /// Get capabilities with zero-cost access
+    pub async fn capabilities(&self) -> ProviderCapabilities {
+        self.capabilities.read().await.clone()
     }
 }
+
+// CANONICAL MODERNIZATION: Deprecated EnhancedMcpService removed - use ZeroCostEnhancedMcpService instead

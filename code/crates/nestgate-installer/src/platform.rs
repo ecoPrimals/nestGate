@@ -1,13 +1,12 @@
-//! Platform Detection and System Requirements
-//!
-//! This module provides cross-platform system detection and validation
-//! to ensure NestGate can be installed and run properly on the target system.
-//!
-//! ## Features
-//! - Operating system detection (Linux, Windows, macOS)
-//! - Architecture detection (x86_64, ARM64)
-//! - System requirements validation
-//! - Platform-specific installation paths
+//
+// This module provides cross-platform system detection and validation
+// to ensure NestGate can be installed and run properly on the target system.
+//
+// ## Features
+// - Operating system detection (Linux, Windows, macOS)
+// - Architecture detection (x86_64, ARM64)
+// - System requirements validation
+// - Platform-specific installation paths
 
 use anyhow::Result;
 use std::path::Path;
@@ -50,6 +49,7 @@ impl PlatformInfo {
     }
 }
 
+#[allow(dead_code)] // Reserved for installer PATH modification
 pub fn add_to_path(install_path: &Path) -> Result<()> {
     #[cfg(unix)]
     {
@@ -63,6 +63,7 @@ pub fn add_to_path(install_path: &Path) -> Result<()> {
 }
 
 #[cfg(unix)]
+#[allow(dead_code)] // Platform-specific PATH implementation
 fn add_to_path_unix(install_path: &Path) -> Result<()> {
     use std::fs::OpenOptions;
     use std::io::Write;
@@ -120,6 +121,7 @@ fn add_to_path_windows(install_path: &Path) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)] // Reserved for desktop integration features
 pub fn create_desktop_shortcut(install_path: &Path, name: &str) -> Result<()> {
     #[cfg(unix)]
     {
@@ -133,6 +135,7 @@ pub fn create_desktop_shortcut(install_path: &Path, name: &str) -> Result<()> {
 }
 
 #[cfg(unix)]
+#[allow(dead_code)] // Platform-specific desktop integration
 fn create_desktop_shortcut_unix(install_path: &Path, name: &str) -> Result<()> {
     use std::fs;
 

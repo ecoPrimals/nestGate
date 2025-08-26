@@ -2,12 +2,16 @@
 /// Demonstrates the rebuilt test modules work properly
 mod common;
 
-use common::{
-    CleanTestConfig, CompleteTestConfig, MockServiceRegistry, MockStorageService,
-    MockUniversalService, TestHelpers, TestSetup, TestUtils,
-};
-use nestgate_core::{unified_enums::UnifiedServiceType, Result};
+use crate::common::MockUniversalService;
+use crate::canonical_modernization::UnifiedServiceType;
+use nestgate_core::Result;
 use std::time::Duration;
+use tests::common::test_doubles::UniversalService;
+use tests::common::{
+    CleanTestConfig, CompleteTestConfig, MockServiceRegistry, MockStorageService,
+    SimpleTestService, TestHelpers, TestSetup, TestUtils,
+};
+use tokio;
 
 #[tokio::test]
 async fn test_clean_infrastructure_basic_functionality() -> Result<()> {
@@ -21,7 +25,7 @@ async fn test_clean_infrastructure_basic_functionality() -> Result<()> {
     let unique_name = TestUtils::unique_test_name("test_infra");
     println!("✅ Generated unique name: {}", unique_name);
 
-    // Test unified config
+    // Create unified config for testing
     let unified_config = TestUtils::simple_unified_config();
     println!(
         "✅ Created unified config with network port: {}",
@@ -52,7 +56,7 @@ async fn test_mock_services_functionality() -> Result<()> {
     println!("✅ Service disabling works correctly");
 
     // Test mock storage service
-    let storage = MockStorageService::new("test_store".to_string());
+    let mut storage = MockStorageService::new("test_store".to_string());
     storage
         .store("key1".to_string(), b"value1".to_vec())
         .await?;
@@ -74,7 +78,7 @@ async fn test_mock_services_functionality() -> Result<()> {
 async fn test_service_registry() -> Result<()> {
     println!("🧪 Testing service registry");
 
-    let registry = MockServiceRegistry::new();
+    let mut registry = MockServiceRegistry::new();
 
     // Register multiple services
     let storage_service = MockUniversalService::storage("primary_storage");
@@ -118,7 +122,7 @@ async fn test_helper_functions() -> Result<()> {
     TestHelpers::assert_test(true, "This should pass")?;
     println!("✅ Assertion helper works");
 
-    TestHelpers::assert_eq(42, 42, "Numbers should be equal")?;
+    TestHelpers::assert_eq!(42, 42, "Numbers should be equal")?;
     println!("✅ Equality assertion works");
 
     // Test failing assertion (should return error)
@@ -192,17 +196,19 @@ async fn test_configuration_variants() -> Result<()> {
     println!("🧪 Testing configuration variants");
 
     // Test different config types
-    let perf_config = CompleteTestConfig::performance_test();
+    let perf_config = CleanTestConfig::performance_test();
     assert!(perf_config.performance.enable_metrics);
     assert!(perf_config.performance.expected_ops_per_sec.is_some());
     println!("✅ Performance config created");
 
-    let chaos_config = CompleteTestConfig::chaos_test();
+    // Test chaos configuration
+    let chaos_config = CleanTestConfig::chaos_test();
     assert!(chaos_config.chaos.enabled);
     assert!(chaos_config.basic.enable_chaos);
     println!("✅ Chaos config created");
 
-    let integration_config = CompleteTestConfig::integration_test();
+    // Test integration configuration
+    let integration_config = CleanTestConfig::integration_test();
     assert!(!integration_config.environment.isolated);
     assert!(!integration_config.performance.enable_metrics);
     println!("✅ Integration config created");
@@ -226,11 +232,15 @@ async fn test_environment_setup_and_cleanup() -> Result<()> {
     let mut env = TestSetup::initialize(&config).await?;
     println!("✅ Environment initialized: {}", env.name);
 
-    // Add some resources
+    // Add test resources
+    println!("🔧 Setting up test resources...");
     env.add_resource("resource_1".to_string());
     env.add_resource("resource_2".to_string());
     assert_eq!(env.resources.len(), 2);
-    println!("✅ Added {} resources", env.resources.len());
+    println!("✅ Added test resources");
+
+    // Test environment operations
+    println!("⚡ Testing environment operations...");
 
     // Check uptime - give it a moment to ensure measurable uptime
     tokio::time::sleep(std::time::Duration::from_millis(1)).await;

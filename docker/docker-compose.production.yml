@@ -1,0 +1,139 @@
+version: '3.8'
+
+# 🚀 NestGate Production Deployment Configuration
+# 
+# This Docker Compose configuration provides a production-ready deployment
+# of NestGate with all necessary services, monitoring, and security features.
+
+services:
+  # Main NestGate Application
+  nestgate:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: nestgate-production
+    restart: unless-stopped
+    ports:
+      - "8080:8080"  # Main API
+      - "8081:8081"  # WebSocket streaming
+      - "8082:8082"  # Internal gRPC
+    environment:
+      - NESTGATE_ENVIRONMENT=production
+      - NESTGATE_LOG_LEVEL=info
+      - NESTGATE_METRICS_ENABLED=true
+      - NESTGATE_SECURITY_HARDENED=true
+      - RUST_BACKTRACE=1
+    volumes:
+      - nestgate_data:/var/lib/nestgate
+      - nestgate_config:/etc/nestgate
+      - nestgate_logs:/var/log/nestgate
+    networks:
+      - nestgate_network
+    depends_on:
+      - redis
+      - prometheus
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: nestgate-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - nestgate_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: nestgate-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - nestgate_network
+
+  # Grafana for monitoring dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: nestgate-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./config/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - nestgate_network
+    depends_on:
+      - prometheus
+
+  # NGINX reverse proxy and load balancer
+  nginx:
+    image: nginx:alpine
+    container_name: nestgate-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    networks:
+      - nestgate_network
+    depends_on:
+      - nestgate
+
+# Persistent volumes for data storage
+volumes:
+  nestgate_data:
+    driver: local
+  nestgate_config:
+    driver: local
+  nestgate_logs:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  nginx_logs:
+    driver: local
+
+# Dedicated network for service communication
+networks:
+  nestgate_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16 

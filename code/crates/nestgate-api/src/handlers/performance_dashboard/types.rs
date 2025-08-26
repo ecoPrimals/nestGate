@@ -1,6 +1,5 @@
-//! Performance Dashboard Types
-//! 
-//! This module contains all the data structures and enums used by the performance dashboard.
+// 
+// This module contains all the data structures and enums used by the performance dashboard.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

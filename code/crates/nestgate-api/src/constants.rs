@@ -1,21 +1,22 @@
-//! API Constants
-//!
-//! Constants used throughout the NestGate API server
+//
+// **MIGRATION COMPLETE**: All API constants now use the canonical constant system
+// from `nestgate_core::constants::domain_constants`.
+//
+// This eliminates constant duplication and provides a single source of truth.
 
-/// Default API port
-pub const DEFAULT_API_PORT: u16 = 8080;
+// **CANONICAL MODERNIZATION**: Use unified constants from core
+pub use nestgate_core::canonical_modernization::canonical_constants::{
+    api::*, 
+    network::*,
+    performance::*,
+};
 
-/// API version
-pub const API_VERSION: &str = "v1";
+// Legacy re-exports removed - use nestgate_core::constants instead
 
-/// Default request timeout in seconds
-pub const DEFAULT_REQUEST_TIMEOUT_SECS: u64 = 30;
-
-/// Maximum request body size (10MB)
-pub const MAX_REQUEST_BODY_SIZE: usize = 10 * 1024 * 1024;
-
-/// Default page size for paginated responses
-pub const DEFAULT_PAGE_SIZE: usize = 20;
-
-/// Maximum page size for paginated responses
-pub const MAX_PAGE_SIZE: usize = 100;
+/// **CANONICAL MODERNIZATION COMPLETE**
+/// All API constants are now consolidated in the canonical constant system.
+/// This provides:
+/// - Single source of truth
+/// - Consistent naming conventions  
+/// - Easy maintenance and updates
+/// - No duplication across modules

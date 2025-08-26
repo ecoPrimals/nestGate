@@ -1,6 +1,5 @@
-//! Streaming Configuration Settings
-//!
-//! Streaming and real-time configuration types for the NestGate API.
+//
+// Streaming and real-time configuration types for the NestGate API.
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;

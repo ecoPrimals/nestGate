@@ -1,15 +1,11 @@
-//! ZFS Analytics Module
-//!
-//! Handles ZFS-specific performance analysis including pool trends, capacity analysis, and I/O performance.
+//
+// Handles ZFS-specific performance analysis including pool trends, capacity analysis, and I/O performance.
 
 use crate::handlers::performance_dashboard::types::*;
-use nestgate_core::Result;
+use nestgate_core::{Result, NestGateError};
 use nestgate_zfs::ZfsManager;
 use std::sync::Arc;
-use tracing::info;
-use tracing::warn;
-use tracing::debug;
-// Removed unused tracing import
+use tracing::{debug, info, warn};
 
 #[derive(Debug, Clone)]
 pub struct ZfsAnalyzer {
@@ -22,7 +18,7 @@ impl ZfsAnalyzer {
     }
 
     /// Create with default configuration - PRODUCTION READY
-    /// Replaces mock() with real ZFS integration
+    /// Real ZFS integration for production use
     pub async fn new_with_default_config() -> Result<Self> {
         let config = nestgate_zfs::ZfsConfig::default();
         let zfs_manager = Arc::new(ZfsManager::new(config).await.map_err(|e| {
@@ -34,14 +30,6 @@ impl ZfsAnalyzer {
             }
         })?);
         Ok(Self { zfs_manager })
-    }
-
-    /// Create mock instance for testing only
-    #[cfg(test)]
-    pub fn mock() -> Self {
-        Self {
-            zfs_manager: Arc::new(nestgate_zfs::ZfsManager::mock()),
-        }
     }
 
     /// Collect comprehensive pool trend analysis

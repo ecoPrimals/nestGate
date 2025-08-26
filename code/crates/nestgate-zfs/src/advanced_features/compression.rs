@@ -1,8 +1,7 @@
-//! Compression Analytics Module
-//!
-//! ZFS compression analysis and optimization recommendations
+//
+// ZFS compression analysis and optimization recommendations
 
-use crate::error::Result;
+use crate::error::CanonicalResult as Result;
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 

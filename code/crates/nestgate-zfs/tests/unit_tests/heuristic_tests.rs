@@ -1,6 +1,5 @@
-//! Heuristic Unit Tests
-//!
-//! Tests for heuristic-based optimization
+//
+// Tests for heuristic-based optimization
 
 use std::collections::HashMap;
 use std::path::PathBuf;

@@ -1,7 +1,6 @@
-//! Storage Operations and Monitoring
-//!
-//! ZFS-focused storage operations including status monitoring,
-//! cleanup, scaling, and low-level storage management.
+//
+// ZFS-focused storage operations including status monitoring,
+// cleanup, scaling, and low-level storage management.
 
 use axum::{extract::Json, extract::Path, http::StatusCode};
 use serde_json::{json, Value};

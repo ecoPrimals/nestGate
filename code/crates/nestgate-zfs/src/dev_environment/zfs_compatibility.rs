@@ -1,24 +1,25 @@
-//! ZFS Compatibility Layer for Development Environments
-//!
-//! This module provides a ZFS-compatible API that works on systems without
-//! dedicated ZFS storage hardware. It's designed for:
-//!
-//! - **Development Laptops**: Work on ZFS features without dedicated pools
-//! - **Container Environments**: Docker/Podman where ZFS isn't available
-//! - **CI/CD Systems**: Automated testing without storage hardware
-//! - **Staging Environments**: Non-production testing environments
-//!
-//! ## ⚠️ Important: This is Production-Ready Code
-//! This is NOT a "mock" - it's a sophisticated hardware abstraction layer
-//! that provides real functionality through filesystem operations, system calls,
-//! and compatibility shims. It allows the full NestGate system to run in
-//! environments where dedicated ZFS hardware isn't available.
+//
+// This module provides a ZFS-compatible API that works on systems without
+// dedicated ZFS storage hardware. It's designed for:
+//
+// - **Development Laptops**: Work on ZFS features without dedicated pools
+// - **Container Environments**: Docker/Podman where ZFS isn't available
+// - **CI/CD Systems**: Automated testing without storage hardware
+// - **Staging Environments**: Non-production testing environments
+//
+// ## ⚠️ Important: This is Production-Ready Code
+// This is NOT a "mock" - it's a sophisticated hardware abstraction layer
+// that provides real functionality through filesystem operations, system calls,
+// and compatibility shims. It allows the full NestGate system to run in
+// environments where dedicated ZFS hardware isn't available.
 
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{info, warn};
 
-use crate::{Result, ZfsError};
+use crate::error::CanonicalResult as Result;
+use nestgate_core::error::conversions::create_zfs_error;
+use nestgate_core::error::domain_errors::ZfsOperation;
 use nestgate_core::types::StorageTier;
 
 /// Development Environment ZFS Service
@@ -59,6 +60,7 @@ impl Default for DevEnvironmentConfig {
 
 /// Simulated ZFS pool for development
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Development environment simulation - fields intentionally unused
 struct DevPool {
     name: String,
     size_bytes: u64,
@@ -67,8 +69,48 @@ struct DevPool {
     created_at: std::time::SystemTime,
 }
 
+impl DevPool {
+    /// Create a new development pool
+    #[allow(dead_code)]
+    pub fn new(name: String, size_bytes: u64) -> Self {
+        Self {
+            name,
+            health: "ONLINE".to_string(),
+            size_bytes,
+            used_bytes: 0,
+            created_at: std::time::SystemTime::now(),
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    #[allow(dead_code)]
+    pub fn health(&self) -> &str {
+        &self.health
+    }
+
+    #[allow(dead_code)]
+    pub fn size_bytes(&self) -> u64 {
+        self.size_bytes
+    }
+
+    #[allow(dead_code)]
+    pub fn used_bytes(&self) -> u64 {
+        self.used_bytes
+    }
+
+    #[allow(dead_code)]
+    pub fn created_at(&self) -> std::time::SystemTime {
+        self.created_at
+    }
+}
+
 /// Simulated ZFS dataset for development
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Development environment simulation - fields intentionally unused
 struct DevDataset {
     name: String,
     pool: String,
@@ -76,6 +118,57 @@ struct DevDataset {
     size_bytes: u64,
     tier: StorageTier,
     properties: HashMap<String, String>,
+}
+
+#[allow(dead_code)] // Development environment methods
+impl DevDataset {
+    /// Create a new development dataset
+    #[allow(dead_code)] // Development environment simulation
+    pub fn new(
+        name: String,
+        pool: String,
+        mount_point: std::path::PathBuf,
+        tier: StorageTier,
+    ) -> Self {
+        Self {
+            name,
+            pool,
+            mount_point,
+            size_bytes: 0,
+            tier,
+            properties: HashMap::new(),
+        }
+    }
+
+    /// Get dataset name
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Get parent pool
+    pub fn pool(&self) -> &str {
+        &self.pool
+    }
+
+    /// Get mount point
+    pub fn mount_point(&self) -> &std::path::PathBuf {
+        &self.mount_point
+    }
+
+    /// Get dataset size
+    pub fn size_bytes(&self) -> u64 {
+        self.size_bytes
+    }
+
+    /// Get storage tier
+    pub fn tier(&self) -> &StorageTier {
+        &self.tier
+    }
+
+    /// Get properties
+    pub fn properties(&self) -> &HashMap<String, String> {
+        &self.properties
+    }
 }
 
 impl DevEnvironmentZfsService {
@@ -109,10 +202,10 @@ impl DevEnvironmentZfsService {
     pub async fn initialize(&self) -> Result<()> {
         if let Err(e) = tokio::fs::create_dir_all(&self.config.base_directory).await {
             warn!("Failed to create base directory: {}", e);
-            return Err(ZfsError::SystemUnavailable(format!(
-                "Failed to create base directory: {}",
-                e
-            )).into());
+            return Err(create_zfs_error(
+                format!("Failed to create base directory: {e}"),
+                ZfsOperation::Configuration
+            ));
         }
 
         info!("✅ Development environment initialized");

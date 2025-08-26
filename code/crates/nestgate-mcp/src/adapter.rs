@@ -1,6 +1,5 @@
-//! MCP Protocol Adapter
-//!
-//! Adapter for MCP protocol integration
+//
+// Adapter for MCP protocol integration
 
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -28,8 +27,8 @@ impl Default for AdapterConfig {
             name: "nestgate-mcp".to_string(),
             endpoint: format!(
                 "http://{}:{}",
-                nestgate_core::constants::network::addresses::LOCALHOST,
-                nestgate_core::constants::network::ports::NESTGATE_API
+                        nestgate_core::canonical_modernization::canonical_constants::network::addresses::LOCALHOST,
+        nestgate_core::canonical_modernization::canonical_constants::network::ports::NESTGATE_API
             ),
             timeout_seconds: nestgate_core::constants::timeouts::REQUEST_TIMEOUT_SECS,
             retry_attempts: 3,

@@ -1,7 +1,6 @@
-//! Dataset Management Handler Functions
-//!
-//! This module contains all the HTTP handlers for dataset-related operations
-//! including creating, reading, updating, and deleting datasets.
+//
+// This module contains all the HTTP handlers for dataset-related operations
+// including creating, reading, updating, and deleting datasets.
 
 use axum::{
     extract::{Path, State},

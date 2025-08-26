@@ -1,8 +1,7 @@
-//! Core types for ZFS automation system
-//!
-//! This module contains all the fundamental data structures used throughout
-//! the automation system including policies, lifecycle management, events,
-//! and status tracking.
+//
+// This module contains all the fundamental data structures used throughout
+// the automation system including policies, lifecycle management, events,
+// and status tracking.
 
 use crate::types::StorageTier;
 use serde::{Deserialize, Serialize};
@@ -136,6 +135,15 @@ pub struct BandwidthLimits {
     pub peak_max_mbps: u64,
     /// Maximum migration bandwidth during off-peak hours (MB/s)
     pub off_peak_max_mbps: u64,
+}
+
+impl Default for BandwidthLimits {
+    fn default() -> Self {
+        Self {
+            peak_max_mbps: 100,     // 100 MB/s during peak hours
+            off_peak_max_mbps: 200, // 200 MB/s during off-peak hours
+        }
+    }
 }
 
 /// Automation status information for monitoring and reporting

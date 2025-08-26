@@ -1,8 +1,7 @@
-//! Policy management and rule definitions for ZFS automation
-//!
-//! This module contains all policy-related structures and configurations
-//! including tier assignment rules, lifecycle management policies,
-//! migration rules, and performance thresholds.
+//
+// This module contains all policy-related structures and configurations
+// including tier assignment rules, lifecycle management policies,
+// migration rules, and performance thresholds.
 
 use nestgate_core::types::StorageTier;
 use serde::{Deserialize, Serialize};
@@ -77,6 +76,12 @@ pub struct MigrationRules {
     pub performance_limits: MigrationPerformanceLimits,
     /// Bandwidth limits for migrations
     pub bandwidth_limits: super::types::BandwidthLimits,
+    /// Age threshold in days (for compatibility with tiers.rs)
+    pub age_threshold_days: u32,
+    /// Access frequency threshold (for compatibility with tiers.rs)
+    pub access_frequency_threshold: f64,
+    /// Auto migration enabled flag (alias for enable_auto_migration)
+    pub auto_migration_enabled: bool,
 }
 
 /// Migration scheduling configuration
@@ -112,4 +117,69 @@ pub struct PerformanceThresholds {
     pub max_error_rate: f64,
     /// Utilization threshold for tier rebalancing (%)
     pub max_utilization: f64,
+}
+
+impl MigrationRules {
+    /// Hot tier defaults
+    pub fn hot_tier_defaults() -> Self {
+        Self {
+            enable_auto_migration: true,
+            migration_schedule: MigrationSchedule {
+                allowed_hours: (0..24).collect(),
+                max_concurrent: 3,
+                off_peak_priority_boost: true,
+            },
+            performance_limits: MigrationPerformanceLimits {
+                max_cpu_usage: 50.0,
+                max_memory_usage: 30.0,
+                max_io_impact: 40.0,
+            },
+            bandwidth_limits: super::types::BandwidthLimits::default(),
+            age_threshold_days: 7,
+            access_frequency_threshold: 10.0,
+            auto_migration_enabled: true,
+        }
+    }
+
+    /// Warm tier defaults
+    pub fn warm_tier_defaults() -> Self {
+        Self {
+            enable_auto_migration: true,
+            migration_schedule: MigrationSchedule {
+                allowed_hours: (0..24).collect(),
+                max_concurrent: 2,
+                off_peak_priority_boost: true,
+            },
+            performance_limits: MigrationPerformanceLimits {
+                max_cpu_usage: 30.0,
+                max_memory_usage: 20.0,
+                max_io_impact: 25.0,
+            },
+            bandwidth_limits: super::types::BandwidthLimits::default(),
+            age_threshold_days: 30,
+            access_frequency_threshold: 2.0,
+            auto_migration_enabled: true,
+        }
+    }
+
+    /// Cold tier defaults
+    pub fn cold_tier_defaults() -> Self {
+        Self {
+            enable_auto_migration: true,
+            migration_schedule: MigrationSchedule {
+                allowed_hours: vec![0, 1, 2, 3, 4, 5], // Night hours only
+                max_concurrent: 1,
+                off_peak_priority_boost: false,
+            },
+            performance_limits: MigrationPerformanceLimits {
+                max_cpu_usage: 15.0,
+                max_memory_usage: 10.0,
+                max_io_impact: 15.0,
+            },
+            bandwidth_limits: super::types::BandwidthLimits::default(),
+            age_threshold_days: 90,
+            access_frequency_threshold: 0.1,
+            auto_migration_enabled: true,
+        }
+    }
 }

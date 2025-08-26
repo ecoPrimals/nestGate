@@ -1,6 +1,5 @@
-//! Pool Operations for Native ZFS Backend
-//!
-//! Contains all pool-related operations for the native ZFS backend.
+//
+// Contains all pool-related operations for the native ZFS backend.
 
 use std::collections::HashMap;
 use std::time::SystemTime;

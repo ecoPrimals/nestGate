@@ -1,6 +1,5 @@
-//! Configuration Unit Tests
-//!
-//! Tests for ZFS configuration settings and defaults
+//
+// Tests for ZFS configuration settings and defaults
 
 use std::collections::HashMap;
 use std::path::PathBuf;

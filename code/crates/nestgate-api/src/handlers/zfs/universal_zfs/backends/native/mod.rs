@@ -1,12 +1,11 @@
-//! Native ZFS Backend Module
-//!
-//! This module contains the native ZFS backend implementation split into logical submodules:
-//! - core: Core service structure and utilities
-//! - pool_operations: Pool management operations
-//! - dataset_operations: Dataset management operations
-//! - snapshot_operations: Snapshot operations
-//! - optimization: Optimization and analytics
-//! - configuration: Configuration and utility methods
+//
+// This module contains the native ZFS backend implementation split into logical submodules:
+// - core: Core service structure and utilities
+// - pool_operations: Pool management operations
+// - dataset_operations: Dataset management operations
+// - snapshot_operations: Snapshot operations
+// - optimization: Optimization and analytics
+// - configuration: Configuration and utility methods
 
 mod configuration;
 mod core;

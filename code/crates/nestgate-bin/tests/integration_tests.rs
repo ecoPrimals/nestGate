@@ -1,50 +1,49 @@
-//! # NestGate Binary Integration Tests
-//!
-//! **Comprehensive integration tests for the NestGate main binary**
-//!
-//! This module contains integration tests that verify the complete functionality
-//! of the NestGate binary, including service startup, configuration handling,
-//! and cross-component interaction testing.
-//!
-//! ## Test Coverage
-//!
-//! - **Service Lifecycle**: Startup, shutdown, and signal handling
-//! - **Configuration Loading**: Config file parsing and validation
-//! - **Component Integration**: Cross-module communication and data flow
-//! - **Error Handling**: Graceful degradation and error recovery
-//! - **Performance Validation**: Resource usage and startup timing
-//! - **CLI Interface**: Command-line argument processing and help output
-//!
-//! ## Test Scenarios
-//!
-//! The integration tests cover:
-//! - Normal startup and shutdown sequences
-//! - Configuration file variations and edge cases
-//! - Network connectivity scenarios
-//! - Storage system integration
-//! - Multi-user access patterns
-//! - System resource constraints
-//!
-//! ## Test Infrastructure
-//!
-//! Uses comprehensive test harnesses:
-//! - Isolated test environments
-//! - Mock external dependencies
-//! - Controlled system states
-//! - Reproducible test conditions
-//! - Detailed logging and metrics collection
-//!
-//! ## Example Test Structure
-//!
-//! ```rust
-//! #[test]
-//! fn test_service_startup_with_valid_config() {
-//!     let config = create_test_config();
-//!     let service = start_nestgate_service(config);
-//!     assert!(service.is_healthy());
-//!     assert_eq!(service.status(), ServiceStatus::Running);
-//! }
-//! ```
+//
+// **Comprehensive integration tests for the NestGate main binary**
+//
+// This module contains integration tests that verify the complete functionality
+// of the NestGate binary, including service startup, configuration handling,
+// and cross-component interaction testing.
+//
+// ## Test Coverage
+//
+// - **Service Lifecycle**: Startup, shutdown, and signal handling
+// - **Configuration Loading**: Config file parsing and validation
+// - **Component Integration**: Cross-module communication and data flow
+// - **Error Handling**: Graceful degradation and error recovery
+// - **Performance Validation**: Resource usage and startup timing
+// - **CLI Interface**: Command-line argument processing and help output
+//
+// ## Test Scenarios
+//
+// The integration tests cover:
+// - Normal startup and shutdown sequences
+// - Configuration file variations and edge cases
+// - Network connectivity scenarios
+// - Storage system integration
+// - Multi-user access patterns
+// - System resource constraints
+//
+// ## Test Infrastructure
+//
+// Uses comprehensive test harnesses:
+// - Isolated test environments
+// - Mock external dependencies
+// - Controlled system states
+// - Reproducible test conditions
+// - Detailed logging and metrics collection
+//
+// ## Example Test Structure
+//
+// ```rust
+// #[test]
+// fn test_service_startup_with_valid_config() {
+//     let config = create_test_config();
+//     let service = start_nestgate_service(config);
+//     assert!(service.is_healthy());
+//     assert_eq!(service.status(), ServiceStatus::Running);
+// }
+// ```
 
 use std::process::{Command, Stdio};
 use std::time::Duration;

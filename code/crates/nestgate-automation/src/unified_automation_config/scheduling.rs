@@ -1,4 +1,3 @@
-use nestgate_core::smart_abstractions::prelude::*;
 /// **SCHEDULING MODULE**
 /// Task scheduling configuration - extracted from monolithic config
 use serde::{Deserialize, Serialize};
@@ -34,7 +33,7 @@ impl SmartDefault for SchedulingSettings {
     fn smart_default() -> Self {
         Self {
             enabled: true,
-            tasks: HashMap::smart_default(),
+            tasks: HashMap::default(),
             default_timeout: Duration::from_secs(300),
             max_concurrent: 5,
         }

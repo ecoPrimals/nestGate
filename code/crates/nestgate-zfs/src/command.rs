@@ -1,6 +1,14 @@
-use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+// ==================== CANONICAL MODERNIZATION ====================
+
+/// **CANONICAL**: ZFS command Result type using AnyhowResult for external integration
+/// This uses AnyhowResult for better ecosystem integration with external command execution
+type ZfsCommandResult<T> = AnyhowResult<T>;
+
+/// **CANONICAL**: Parsed table result using AnyhowResult
+type ParsedTableResult = AnyhowResult<Vec<HashMap<String, String>>>;
 use std::process::Command;
 use tracing::debug;
 use tracing::error;
@@ -40,17 +48,17 @@ impl ZfsCommand {
     }
 
     /// Execute a zpool command
-    pub async fn zpool(&self, args: &[&str]) -> Result<CommandResult> {
+    pub async fn zpool(&self, args: &[&str]) -> ZfsCommandResult<CommandResult> {
         self.execute_command("zpool", args).await
     }
 
     /// Execute a zfs command
-    pub async fn zfs(&self, args: &[&str]) -> Result<CommandResult> {
+    pub async fn zfs(&self, args: &[&str]) -> ZfsCommandResult<CommandResult> {
         self.execute_command("zfs", args).await
     }
 
     /// Check if ZFS is available on the system
-    pub async fn check_zfs_available() -> Result<bool> {
+    pub async fn check_zfs_available() -> ZfsCommandResult<bool> {
         let result = Command::new("which").arg("zfs").output();
 
         match result {
@@ -68,7 +76,11 @@ impl ZfsCommand {
     }
 
     /// Execute a command with proper error handling and logging
-    async fn execute_command(&self, command: &str, args: &[&str]) -> Result<CommandResult> {
+    async fn execute_command(
+        &self,
+        command: &str,
+        args: &[&str],
+    ) -> ZfsCommandResult<CommandResult> {
         if self.dry_run {
             info!("DRY RUN: {} {}", command, args.join(" "));
             return Ok(CommandResult {
@@ -154,7 +166,7 @@ impl CommandResult {
     }
 
     /// Parse the output as key-value pairs (for property commands)
-    pub fn parse_properties(&self) -> Result<HashMap<String, String>> {
+    pub fn parse_properties(&self) -> ZfsCommandResult<HashMap<String, String>> {
         let mut properties = HashMap::new();
 
         for line in self.stdout_lines() {
@@ -174,7 +186,7 @@ impl CommandResult {
     }
 
     /// Parse tabular output (like zpool list, zfs list)
-    pub fn parse_table(&self) -> Result<Vec<HashMap<String, String>>> {
+    pub fn parse_table(&self) -> ParsedTableResult {
         let lines = self.stdout_lines();
         if lines.is_empty() {
             return Ok(vec![]);
@@ -224,7 +236,7 @@ impl ZfsOperations {
     }
 
     /// List all ZFS pools
-    pub async fn list_pools(&self) -> Result<Vec<ZfsPool>> {
+    pub async fn list_pools(&self) -> ZfsCommandResult<Vec<ZfsPool>> {
         let result = self
             .command
             .zpool(&["list", "-H", "-o", "name,size,alloc,free,health"])
@@ -252,7 +264,7 @@ impl ZfsOperations {
     }
 
     /// Get pool status
-    pub async fn pool_status(&self, pool_name: &str) -> Result<PoolStatus> {
+    pub async fn pool_status(&self, pool_name: &str) -> ZfsCommandResult<PoolStatus> {
         let result = self.command.zpool(&["status", pool_name]).await?;
 
         if !result.is_success() {
@@ -285,7 +297,10 @@ impl ZfsOperations {
     }
 
     /// List datasets in a pool
-    pub async fn list_datasets(&self, pool_name: Option<&str>) -> Result<Vec<ZfsDataset>> {
+    pub async fn list_datasets(
+        &self,
+        pool_name: Option<&str>,
+    ) -> ZfsCommandResult<Vec<ZfsDataset>> {
         let mut args = vec!["list", "-H", "-o", "name,used,avail,refer,mountpoint"];
         if let Some(pool) = pool_name {
             args.push(pool);
@@ -322,7 +337,7 @@ impl ZfsOperations {
         &self,
         dataset_name: &str,
         properties: Option<&HashMap<String, String>>,
-    ) -> Result<()> {
+    ) -> ZfsCommandResult<()> {
         let mut args = vec!["create"];
 
         // Add properties if provided
@@ -353,7 +368,11 @@ impl ZfsOperations {
     }
 
     /// Create a snapshot
-    pub async fn create_snapshot(&self, dataset_name: &str, snapshot_name: &str) -> Result<()> {
+    pub async fn create_snapshot(
+        &self,
+        dataset_name: &str,
+        snapshot_name: &str,
+    ) -> ZfsCommandResult<()> {
         let full_name = format!("{dataset_name}@{snapshot_name}");
         let result = self.command.zfs(&["snapshot", &full_name]).await?;
 
@@ -369,7 +388,10 @@ impl ZfsOperations {
     }
 
     /// List snapshots
-    pub async fn list_snapshots(&self, dataset_name: Option<&str>) -> Result<Vec<ZfsSnapshot>> {
+    pub async fn list_snapshots(
+        &self,
+        dataset_name: Option<&str>,
+    ) -> ZfsCommandResult<Vec<ZfsSnapshot>> {
         let mut args = vec!["list", "-H", "-t", "snapshot", "-o", "name,used,creation"];
         if let Some(dataset) = dataset_name {
             args.push(dataset);
@@ -461,7 +483,7 @@ mod tests {
     use tokio;
 
     #[tokio::test]
-    async fn test_zfs_availability() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_zfs_availability() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let available = ZfsCommand::check_zfs_available().await.unwrap_or_else(|e| {
             tracing::warn!("ZFS not available in test environment: {:?}", e);
             false // Return false instead of trying to return an error
@@ -474,7 +496,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_dry_run_mode() {
+    async fn test_dry_run_mode() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let cmd = ZfsCommand::new().with_dry_run(true);
         let result = cmd.zpool(&["list"]).await.unwrap_or_else(|e| {
             tracing::error!(
@@ -482,22 +504,22 @@ mod tests {
                 "Failed to execute zpool list in test",
                 e
             );
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!(
-                    "Operation failed - {}: {:?}",
-                    "{}", "Failed to execute zpool list in test", e
-                ),
-            )
-            .into());
+            // Return a default failed command result for test purposes
+            CommandResult {
+                success: false,
+                stdout: String::new(),
+                stderr: format!("Operation failed: {:?}", e),
+                exit_code: 1,
+            }
         });
 
         assert!(result.is_success());
         assert!(result.stdout.contains("DRY RUN"));
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_command_result_parsing() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_command_result_parsing() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let result = CommandResult {
             success: true,
             stdout: "name\tsize\talloc\npool1\t1T\t500G\npool2\t2T\t1T".to_string(),

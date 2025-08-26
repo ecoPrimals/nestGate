@@ -1,6 +1,5 @@
-//! Configuration structures for EcoPrimal SDK
-//!
-//! This module contains configuration types and structures for primal configuration.
+//
+// This module contains configuration types and structures for primal configuration.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

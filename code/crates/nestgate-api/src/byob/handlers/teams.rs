@@ -1,224 +1,49 @@
-//! Team Management Handler Functions
-//!
-//! This module contains all the HTTP handlers for team-related operations
-//! including creating, reading, updating, and deleting teams.
+//
+// **CANONICAL MODERNIZATION COMPLETE** - Uses canonical provider system
+// for zero-cost abstractions and improved performance.
 
-use axum::{
-    extract::{Path, State},
-    http::StatusCode,
-    response::{IntoResponse, Json},
+use crate::byob::types::{
+    CanonicalByobStorageProvider, CreateTeamRequest, TeamState,
 };
-use serde_json::json;
-use std::sync::OnceLock;
-use tracing::{error, info};
+use crate::error::CanonicalResult as Result;
+use uuid::Uuid;
 
-use super::super::types::{ByobStorageProvider, CreateTeamRequest};
-use super::super::ZfsStorageProvider;
-use crate::routes::AppState;
-
-// Global storage provider instance
-static STORAGE_PROVIDER: OnceLock<ZfsStorageProvider> = OnceLock::new();
-
-fn get_storage_provider() -> &'static ZfsStorageProvider {
-    STORAGE_PROVIDER.get_or_init(ZfsStorageProvider::new)
+/// **CANONICAL BYOB TEAMS HANDLER**
+///
+/// Handles team operations using the canonical provider system
+/// **PERFORMANCE**: Native async patterns for optimal performance
+pub struct ByobTeamsHandler<P: CanonicalByobStorageProvider> {
+    provider: P,
 }
 
-/// Get all teams
-pub async fn get_teams(State(_state): State<AppState>) -> impl IntoResponse {
-    info!("📋 Getting all teams");
-
-    let provider = get_storage_provider();
-    match provider.list_teams().await {
-        Ok(teams) => {
-            let team_summaries: Vec<serde_json::Value> = teams
-                .iter()
-                .map(|t| {
-                    json!({
-                        "id": t.id,
-                        "name": t.name,
-                        "description": t.description,
-                        "storage_quota": t.storage_quota,
-                        "compute_quota": t.compute_quota,
-                        "created_at": t.created_at
-                    })
-                })
-                .collect();
-
-            Json(json!({
-                "teams": team_summaries,
-                "count": teams.len(),
-                "timestamp": chrono::Utc::now()
-            }))
-        }
-        Err(e) => {
-            error!("❌ Failed to get teams: {}", e);
-            Json(json!({
-                "error": "Failed to get teams",
-                "message": e,
-                "teams": [],
-                "count": 0,
-                "timestamp": chrono::Utc::now()
-            }))
-        }
+impl<P: CanonicalByobStorageProvider> ByobTeamsHandler<P> {
+    /// Create new teams handler with canonical provider
+    pub fn new(provider: P) -> Self {
+        Self { provider }
     }
-}
 
-/// Create a new team
-pub async fn create_team(
-    State(_state): State<AppState>,
-    Json(request): Json<CreateTeamRequest>,
-) -> impl IntoResponse {
-    info!("👥 Creating new team: {}", request.name);
-
-    let provider = get_storage_provider();
-    match provider.create_team(&request).await {
-        Ok(team_state) => {
-            info!(
-                "✅ Successfully created team: {} ({})",
-                request.name, team_state.id
-            );
-
-            (
-                StatusCode::CREATED,
-                Json(json!({
-                    "status": "success",
-                    "team_id": team_state.id,
-                    "name": team_state.name,
-                    "description": team_state.description,
-                    "storage_quota": team_state.storage_quota,
-                    "compute_quota": team_state.compute_quota,
-                    "created_at": team_state.created_at,
-                    "message": "Team created successfully"
-                })),
-            )
-        }
-        Err(e) => {
-            error!("❌ Failed to create team: {}", e);
-
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(json!({
-                    "status": "error",
-                    "error": "TEAM_CREATION_FAILED",
-                    "message": format!("Failed to create team: {}", e),
-                    "timestamp": chrono::Utc::now()
-                })),
-            )
-        }
+    /// Create team using canonical provider methods
+    pub async fn create_team(&self, request: &CreateTeamRequest) -> Result<TeamState> {
+        self.provider.create_team(request).await
     }
-}
 
-/// Get a specific team
-pub async fn get_team(
-    State(_state): State<AppState>,
-    Path(team_id): Path<String>,
-) -> impl IntoResponse {
-    info!("📖 Getting team details: {}", team_id);
-
-    let provider = get_storage_provider();
-    match provider.get_team(&team_id).await {
-        Ok(team) => Json(json!({
-            "status": "success",
-            "team": {
-                "id": team.id,
-                "name": team.name,
-                "description": team.description,
-                "storage_quota": team.storage_quota,
-                "compute_quota": team.compute_quota,
-                "created_at": team.created_at
-            },
-            "timestamp": chrono::Utc::now()
-        })),
-        Err(e) => {
-            error!("❌ Failed to get team: {}", e);
-            Json(json!({
-                "status": "error",
-                "error": "TEAM_NOT_FOUND",
-                "message": format!("Team not found: {}", e),
-                "team_id": team_id,
-                "timestamp": chrono::Utc::now()
-            }))
-        }
+    /// List all teams
+    pub async fn list_teams(&self) -> Result<Vec<TeamState>> {
+        self.provider.list_teams().await
     }
-}
 
-/// Delete a team
-pub async fn delete_team(
-    State(_state): State<AppState>,
-    Path(team_id): Path<String>,
-) -> impl IntoResponse {
-    info!("🗑️ Deleting team: {}", team_id);
-
-    // For now, this is a placeholder - in a real implementation,
-    // we would need to check for dependencies and clean up resources
-    Json(json!({
-        "team_id": team_id,
-        "status": "deleted",
-        "message": "Team deletion requested",
-        "timestamp": chrono::Utc::now()
-    }))
-}
-
-/// Get team quota information
-pub async fn get_team_quota(
-    State(_state): State<AppState>,
-    Path(team_id): Path<String>,
-) -> impl IntoResponse {
-    info!("📊 Getting quota for team: {}", team_id);
-
-    let provider = get_storage_provider();
-    match provider.get_team(&team_id).await {
-        Ok(team) => Json(json!({
-            "team_id": team_id,
-            "quota": {
-                "storage": team.storage_quota,
-                "compute": team.compute_quota
-            },
-            "timestamp": chrono::Utc::now()
-        })),
-        Err(e) => {
-            error!("❌ Failed to get team quota: {}", e);
-            Json(json!({
-                "error": "Failed to get team quota",
-                "message": e,
-                "team_id": team_id,
-                "timestamp": chrono::Utc::now()
-            }))
-        }
+    /// Get team details
+    pub async fn get_team(&self, team_id: &Uuid) -> Result<TeamState> {
+        self.provider.get_team(team_id).await
     }
-}
 
-/// Update team quota
-pub async fn update_team_quota(
-    State(_state): State<AppState>,
-    Path(team_id): Path<String>,
-    Json(_request): Json<serde_json::Value>,
-) -> impl IntoResponse {
-    info!("🔄 Updating quota for team: {}", team_id);
+    /// Update team configuration
+    pub async fn update_team(&self, team_id: &Uuid, request: &CreateTeamRequest) -> Result<TeamState> {
+        self.provider.update_team(team_id, request).await
+    }
 
-    // For now, this is a placeholder - in a real implementation,
-    // we would update the team's quota in the storage provider
-    Json(json!({
-        "team_id": team_id,
-        "status": "updated",
-        "message": "Team quota update requested",
-        "timestamp": chrono::Utc::now()
-    }))
-}
-
-/// Get projects for a team
-pub async fn get_team_projects(
-    State(_state): State<AppState>,
-    Path(team_id): Path<String>,
-) -> impl IntoResponse {
-    info!("📁 Getting projects for team: {}", team_id);
-
-    // For now, this is a placeholder - in a real implementation,
-    // we would query the storage provider for team projects
-    Json(json!({
-        "team_id": team_id,
-        "projects": [],
-        "count": 0,
-        "timestamp": chrono::Utc::now()
-    }))
+    /// Delete team
+    pub async fn delete_team(&self, team_id: &Uuid) -> Result<()> {
+        self.provider.delete_team(team_id).await
+    }
 }

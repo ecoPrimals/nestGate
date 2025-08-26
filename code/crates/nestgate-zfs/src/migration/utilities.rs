@@ -1,7 +1,6 @@
-//! ZFS Migration Utilities - Helper functions for paths, tiers, and file operations
-//!
-//! Contains utility functions for working with storage tiers, file paths,
-//! dataset operations, and other migration-related helpers.
+//
+// Contains utility functions for working with storage tiers, file paths,
+// dataset operations, and other migration-related helpers.
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -50,7 +49,7 @@ pub async fn ensure_target_dataset_exists(
         .list_datasets()
         .await
         .map_err(|e| NestGateError::System {
-            message: format!("Failed to list datasets: {}", e),
+            message: format!("Failed to list datasets: {e}"),
             resource: nestgate_core::error::SystemResource::Disk,
             utilization: None,
             recovery: nestgate_core::error::RecoveryStrategy::Retry,
@@ -100,7 +99,7 @@ pub async fn ensure_target_dataset_exists(
             .create_dataset(dataset_name, "storage", core_tier)
             .await
             .map_err(|e| NestGateError::System {
-                message: format!("Failed to create dataset: {}", e),
+                message: format!("Failed to create dataset: {e}"),
                 resource: nestgate_core::error::SystemResource::Disk,
                 utilization: None,
                 recovery: nestgate_core::error::RecoveryStrategy::Retry,

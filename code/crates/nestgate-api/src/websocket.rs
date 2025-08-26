@@ -1,10 +1,9 @@
-//! Enhanced WebSocket + JSON Communication for External Clients
-//!
-//! This module provides real-time WebSocket communication optimized for:
-//! - Web UIs and dashboards
-//! - External service integration
-//! - Real-time monitoring and notifications
-//! - Event streaming to clients
+//
+// This module provides real-time WebSocket communication optimized for:
+// - Web UIs and dashboards
+// - External service integration
+// - Real-time monitoring and notifications
+// - Event streaming to clients
 
 use serde::{Deserialize, Serialize};
 
@@ -157,8 +156,7 @@ impl WebSocketManager {
         };
 
         // Create a channel for this client
-        let (_event_sender, _event_receiver) =
-            tokio::sync::broadcast::channel::<WebSocketEvent>(100);
+        let (_event_sender, _event_receiver) = broadcast::channel::<WebSocketEvent>(100);
 
         // Add the client to our registry
         let client_info = ConnectionInfo {
@@ -244,7 +242,7 @@ impl WebSocketManager {
         let event_size = event_json.len() as u64;
 
         // Create shared reference for zero-copy broadcasting
-        let event_json_ref = std::sync::Arc::new(event_json);
+        let event_json_ref = Arc::new(event_json);
 
         // Update statistics
         if let Ok(mut stats) = self.stats.try_write() {

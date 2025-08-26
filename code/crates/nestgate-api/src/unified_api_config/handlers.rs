@@ -1,4 +1,3 @@
-/// **UNIFIED API HANDLER CONFIGURATIONS**
 /// 
 /// This module consolidates all scattered configuration structures across API handlers
 /// into a single, standardized system using the StandardDomainConfig pattern.
@@ -17,14 +16,15 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-use nestgate_core::unified_config_consolidation::StandardDomainConfig;
+use nestgate_core::unified_final_config::supporting_types::StandardDomainConfig;
 use nestgate_core::types::StorageTier;
 
 // ==================== UNIFIED API HANDLER CONFIGURATION ====================
 
 /// **THE** unified configuration type for all API handlers
 /// This replaces 20+ scattered config structs across handlers with a single, consistent interface
-pub type UnifiedApiHandlerConfig = StandardDomainConfig<ApiHandlerExtensions>;
+/// CANONICAL MODERNIZATION: Simplified type alias without type parameters
+pub type UnifiedApiHandlerConfig = StandardDomainConfig;
 
 /// API handler-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs

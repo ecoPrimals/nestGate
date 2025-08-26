@@ -1,4 +1,3 @@
-//! System status endpoint handler
 
 use axum::Json;
 use serde::{Deserialize, Serialize};
@@ -7,15 +6,21 @@ use tracing::info;
 // Removed unused tracing import
 
 #[derive(Debug, Serialize, Deserialize)]
+/// System status information
 pub struct SystemStatus {
+    /// Current system status
     pub status: String,
+    /// System version
     pub version: String,
+    /// System uptime in seconds
     pub uptime: u64,
+    /// Current timestamp
     pub timestamp: u64,
 }
 
 static START_TIME: std::sync::OnceLock<SystemTime> = std::sync::OnceLock::new();
 
+/// Initialize system uptime tracking
 pub fn initialize_uptime() {
     START_TIME.set(SystemTime::now()).ok();
 }

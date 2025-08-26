@@ -1,6 +1,5 @@
-//! Hardware Tuning Handler
-//!
-//! This module provides the HardwareTuningHandler for API routes.
+//
+// This module provides the HardwareTuningHandler for API routes.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -9,9 +8,8 @@ use uuid::Uuid;
 
 use super::adapter::HardwareTuningAdapter;
 use super::types::*;
-use nestgate_core::{hardware_tuning::TuningResult, NestGateError};
-
-type Result<T> = std::result::Result<T, NestGateError>;
+// CANONICAL MODERNIZATION: Use unified error system
+use nestgate_core::error::{NestGateError, Result};
 
 /// Hardware tuning handler for API routes
 #[derive(Clone)]

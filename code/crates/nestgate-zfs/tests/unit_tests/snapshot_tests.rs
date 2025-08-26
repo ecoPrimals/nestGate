@@ -1,6 +1,5 @@
-//! Snapshot Unit Tests
-//!
-//! Tests for snapshot policy and retention
+//
+// Tests for snapshot policy and retention
 
 use std::collections::HashMap;
 use std::path::PathBuf;

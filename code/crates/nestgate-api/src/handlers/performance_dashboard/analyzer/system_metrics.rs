@@ -1,6 +1,5 @@
-//! System Metrics Collection Module
-//!
-//! Handles collection of system-level performance metrics including CPU, memory, network, and disk.
+//
+// Handles collection of system-level performance metrics including CPU, memory, network, and disk.
 
 use crate::handlers::performance_dashboard::types::*;
 use nestgate_core::Result;

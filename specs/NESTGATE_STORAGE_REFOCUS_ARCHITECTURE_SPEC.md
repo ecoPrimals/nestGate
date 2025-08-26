@@ -299,9 +299,9 @@ impl TierManager {
 // Example: Performance optimization delegation
 impl PerformanceManager {
     pub async fn optimize_storage(&self, pool: &ZfsPool) -> Result<OptimizationPlan> {
-        // 1. Request AI optimization from Squirrel
+        // 1. Request AI optimization via capability-based discovery
         let ai_request = EcosystemRequest::storage_optimization(pool);
-        match self.universal_adapter.delegate("squirrel", ai_request).await {
+        match self.universal_adapter.request_capability("ai.optimization@1.0.0", ai_request).await {
             Ok(ai_plan) => Ok(ai_plan),
             Err(_) => self.basic_storage_optimization(pool).await, // Storage fallback
         }

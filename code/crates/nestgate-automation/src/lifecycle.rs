@@ -1,6 +1,5 @@
-//! Dataset Lifecycle Management
-//!
-//! Automated dataset lifecycle management and optimization scheduling
+//
+// Automated dataset lifecycle management and optimization scheduling
 
 use crate::Result;
 use nestgate_core::error::NestGateError;

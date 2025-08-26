@@ -1,6 +1,5 @@
-//! Basic ZFS Functionality Tests
-//!
-//! Tests the core ZFS functionality without complex integrations
+//
+// Tests the core ZFS functionality without complex integrations
 
 use nestgate_core::StorageTier;
 use nestgate_zfs::{config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager};

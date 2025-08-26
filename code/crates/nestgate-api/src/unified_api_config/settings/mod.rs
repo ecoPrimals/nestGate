@@ -1,7 +1,6 @@
-//! API Configuration Settings
-//!
-//! This module contains all API configuration settings organized into logical sub-modules.
-//! Originally extracted from a large 902-line file for better maintainability.
+//
+// This module contains all API configuration settings organized into logical sub-modules.
+// Originally extracted from a large 902-line file for better maintainability.
 
 pub mod http;
 pub mod performance;

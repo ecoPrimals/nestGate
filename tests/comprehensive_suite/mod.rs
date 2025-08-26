@@ -1,18 +1,17 @@
-/// Comprehensive Suite Module
+/// Comprehensive Suite Module - Canonical Modernization
+/// Uses unified test configuration system instead of duplicate structures
 pub mod config;
 pub mod tests;
 
-#[derive(Debug, Clone, Default)]
-pub struct ComprehensiveSuiteConfig {
-    pub test_scope: String,
-    pub performance_enabled: bool,
-}
+// **CANONICAL MODERNIZATION**: Use unified test configuration
+pub use crate::common::config::{TestPerformanceSettings, UnifiedTestConfig};
 
-impl ComprehensiveSuiteConfig {
-    pub fn new() -> Self {
-        Self {
-            test_scope: "full".to_string(),
-            performance_enabled: true,
-        }
-    }
+/// Comprehensive suite configuration builder
+pub fn create_comprehensive_suite_config() -> UnifiedTestConfig {
+    let mut config = crate::common::test_config::UnifiedTestConfigBuilder::performance_test(
+        "comprehensive_suite",
+    );
+    config.extensions.performance.enable_metrics = true;
+    config.extensions.performance.enable_stress_testing = true;
+    config
 }

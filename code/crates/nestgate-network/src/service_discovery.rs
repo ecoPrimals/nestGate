@@ -1,4 +1,3 @@
-//! Universal service discovery module
 
 use crate::{Result, ServiceInstance, ServiceStatus};
 use serde::{Deserialize, Serialize};

@@ -1,14 +1,35 @@
-//! ZFS Manager Dataset Operations - ZFS dataset management operations
-//!
-//! Contains all dataset-related operations including creation, destruction,
-//! and snapshot management.
+//
+// Contains all dataset-related operations including creation, destruction,
+// and snapshot management.
 
-use crate::error::{Result, ZfsError};
+use nestgate_core::error::conversions::create_zfs_error;
+use nestgate_core::error::domain_errors::ZfsOperation;
 use crate::types::StorageTier;
+use nestgate_core::Result;
 // Removed unused tracing import
 
 use super::ZfsManager;
 use tracing::info;
+
+/// Dataset analyzer for ZFS operations
+#[derive(Debug, Clone)]
+pub struct DatasetAnalyzer {
+    pub config: std::collections::HashMap<String, String>,
+}
+
+impl DatasetAnalyzer {
+    pub fn new() -> Self {
+        Self {
+            config: std::collections::HashMap::new(),
+        }
+    }
+}
+
+impl Default for DatasetAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl ZfsManager {
     /// Create a new dataset
@@ -25,10 +46,13 @@ impl ZfsManager {
 
         let result = self
             .dataset_manager
-            .create_dataset(name, parent, tier.into())
+            .create_dataset(name, parent, tier)
             .await
-            .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to create dataset: {e}"),
+            .map_err(|e| {
+                create_zfs_error(
+                    format!("Failed to create dataset: {e}"),
+                    ZfsOperation::DatasetCreate
+                )
             })?;
 
         Ok(result)
@@ -41,8 +65,11 @@ impl ZfsManager {
         self.dataset_manager
             .destroy_dataset(name)
             .await
-            .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to destroy dataset: {e}"),
+            .map_err(|e| {
+                create_zfs_error(
+                    format!("Failed to destroy dataset: {e}"),
+                    ZfsOperation::DatasetCreate
+                )
             })?;
 
         Ok(())
@@ -56,8 +83,11 @@ impl ZfsManager {
         self.snapshot_manager
             .list_snapshots(dataset)
             .await
-            .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to list snapshots: {e}"),
+            .map_err(|e| {
+                create_zfs_error(
+                    format!("Failed to list snapshots: {e}"),
+                    ZfsOperation::DatasetCreate
+                )
             })
     }
 }

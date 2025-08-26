@@ -1,0 +1,40 @@
+[package]
+name = "nestgate-canonical"
+version = "0.1.0"
+edition = "2021"
+description = "Canonical configuration and types for NestGate - Unified Single Source of Truth"
+license = "AGPL-3.0-or-later"
+
+[dependencies]
+# Core serialization and error handling
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Configuration management (based on Songbird success)
+config = "0.14"
+toml = "0.8"
+serde_json = "1.0"
+serde_yaml = "0.9"
+
+# Environment integration
+dirs = "5.0"
+
+# Performance optimization dependencies
+num_cpus = "1.16"
+parking_lot = "0.12"
+
+# File system specific dependencies
+uuid = { version = "1.6", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# Zero-cost architecture support
+tokio = { version = "1.0", features = ["full"] }
+futures = "0.3"
+
+[features]
+default = ["unified-config", "zero-cost-patterns"]
+unified-config = []           # Enable unified configuration system
+zero-cost-patterns = []       # Enable zero-cost architecture patterns
+simd-integration = []         # Enable SIMD optimization integration
+performance-monitoring = []   # Enable performance regression testing 

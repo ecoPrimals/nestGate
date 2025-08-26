@@ -1,7 +1,6 @@
-//! Project Management Handler Functions
-//!
-//! This module contains all the HTTP handlers for project-related operations
-//! including creating, reading, updating, and deleting projects.
+//
+// This module contains all the HTTP handlers for project-related operations
+// including creating, reading, updating, and deleting projects.
 
 use axum::{
     extract::{Path, State},

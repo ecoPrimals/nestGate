@@ -1,7 +1,6 @@
-//! Session management for MCP service
-//!
-//! This module provides session handling for the MCP service, including
-//! client authentication, session tracking, and session cleanup.
+//
+// This module provides session handling for the MCP service, including
+// client authentication, session tracking, and session cleanup.
 
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
@@ -9,7 +8,7 @@ use std::time::Duration;
 // Removed unused tracing import
 use uuid::Uuid;
 
-use crate::error::Result;
+use crate::error::CanonicalResult as Result;
 use tracing::debug;
 
 /// Session state
@@ -163,7 +162,7 @@ impl SessionManager {
         } else {
             Err(nestgate_core::NestGateError::invalid_input(
                 "session_id".to_string(),
-                format!("Session not found: {}", id),
+                format!("Session not found: {id}"),
             ))
         }
     }
@@ -243,9 +242,13 @@ mod tests {
         assert_eq!(session.state, SessionState::Establishing);
         assert_eq!(session.auth_level, AuthLevel::None);
 
-        let retrieved = manager
-            .get_session(&session.id)
-            .unwrap_or_else(|| panic!("Expected session to exist"));
+        let retrieved = manager.get_session(&session.id).unwrap_or_else(|| {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Expected session to exist".to_string(),
+            )
+            .into());
+        });
         assert_eq!(retrieved.id, session.id);
     }
 

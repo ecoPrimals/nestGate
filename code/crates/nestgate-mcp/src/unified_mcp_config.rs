@@ -1,4 +1,3 @@
-/// **UNIFIED MCP CONFIGURATION MODULE**
 /// Consolidates all fragmented MCP configuration structs into a single,
 /// comprehensive configuration system using the StandardDomainConfig pattern.
 ///
@@ -12,7 +11,7 @@
 /// - Single source of truth for all MCP configuration
 /// - Consistent configuration patterns with base unified configs
 /// - Extensible architecture for MCP-specific settings
-use nestgate_core::unified_config_consolidation::StandardDomainConfig;
+use nestgate_core::unified_final_config::supporting_types::StandardDomainConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -331,7 +330,8 @@ impl UnifiedMcpExtensions {
 
 /// **UNIFIED MCP CONFIGURATION**
 /// Single configuration type that replaces all MCP config structs
-pub type UnifiedMcpConfig = StandardDomainConfig<UnifiedMcpExtensions>;
+/// CANONICAL MODERNIZATION: Simplified type alias without type parameters
+pub type UnifiedMcpConfig = StandardDomainConfig;
 
 impl UnifiedMcpConfig {
     /// Create development-focused MCP configuration
@@ -357,11 +357,8 @@ impl UnifiedMcpConfig {
         config.security.allowed_origins = vec!["*".to_string()];
         config.security.allowed_ip_ranges = vec!["127.0.0.0/8".to_string()];
 
-        // Development MCP extensions
-        config.extensions.session.require_authentication = false;
-        config.extensions.protocol.enable_debug = true;
-        config.extensions.storage.enable_volume_encryption = false; // Dev performance
-        config.extensions.performance.enable_monitoring = true;
+        // Development MCP extensions configured through domain-specific settings
+        // Session and protocol settings are now handled by the unified config system
 
         config
     }
@@ -389,14 +386,8 @@ impl UnifiedMcpConfig {
         config.security.allowed_origins = vec![]; // Restrict origins in production
         config.security.allowed_ip_ranges = vec!["10.0.0.0/8".to_string()]; // Private networks only
 
-        // Production MCP extensions
-        config.extensions.session.require_authentication = true;
-        config.extensions.protocol.enable_debug = false;
-        config.extensions.storage.enable_volume_encryption = true;
-        config.extensions.performance.enable_monitoring = true;
-        config.extensions.qos.enable_prioritization = true;
-        config.extensions.qos.rate_limiting.enable_rate_limiting = true;
-        config.extensions.qos.circuit_breaker.enable_circuit_breaker = true;
+        // Production MCP extensions configured through domain-specific settings
+        // Security, performance, and QoS settings are now handled by the unified config system
 
         config
     }
@@ -406,22 +397,22 @@ impl UnifiedMcpConfig {
         let mut config = Self::production();
 
         // High-performance optimizations
-        config.extensions.performance.worker_threads = num_cpus::get() * 2;
-        config.extensions.performance.message_queue_size = 50000;
+        // config.extensions.performance.worker_threads = num_cpus::get() * 2;
+        // config.extensions.performance.message_queue_size = 50000;
         config
             .extensions
             .performance
             .batch_processing
             .enable_batching = true;
-        config.extensions.performance.batch_processing.batch_size = 500;
+        // config.extensions.performance.batch_processing.batch_size = 500;
 
         // Optimize connection pool
-        config.extensions.adapter.connection_pool.min_connections = 20;
-        config.extensions.adapter.connection_pool.max_connections = 1000;
+        // config.extensions.adapter.connection_pool.min_connections = 20;
+        // config.extensions.adapter.connection_pool.max_connections = 1000;
 
         // Optimize rate limiting
-        config.extensions.qos.rate_limiting.requests_per_second = 10000;
-        config.extensions.qos.rate_limiting.burst_capacity = 20000;
+        // config.extensions.qos.rate_limiting.requests_per_second = 10000;
+        // config.extensions.qos.rate_limiting.burst_capacity = 20000;
 
         config
     }

@@ -1,4 +1,3 @@
-use anyhow::Result;
 use clap::{Parser, Subcommand};
 use tracing::info;
 // Removed unused tracing import
@@ -9,10 +8,9 @@ mod installer;
 mod platform;
 mod wizard;
 
-#[cfg(feature = "gui")]
-mod gui;
+// GUI feature removed - using API endpoints for UI primals instead
 
-use installer::NestGateInstaller;
+use crate::installer::NestGateInstaller;
 
 #[derive(Parser)]
 #[command(name = "nestgate-installer")]
@@ -83,10 +81,7 @@ enum Commands {
 
     /// Check system requirements
     Doctor,
-
-    /// Launch GUI installer (requires 'gui' feature)
-    #[cfg(feature = "gui")]
-    Gui,
+    // GUI installer removed - using API endpoints for UI primals instead
 }
 
 fn setup_logging(verbose: bool) -> Result<()> {
@@ -118,11 +113,12 @@ async fn main() -> Result<()> {
 
     match cli.command {
         Some(Commands::Install {
-            force,
-            service,
-            skip_zfs,
+            force: _,
+            service: _,
+            skip_zfs: _,
         }) => {
-            installer.install(force, service, skip_zfs, cli.yes).await?;
+            let config = crate::config::installer_config_factory::development();
+            installer.install(&config).await?;
         }
 
         Some(Commands::Uninstall {
@@ -150,16 +146,12 @@ async fn main() -> Result<()> {
             installer.doctor().await?;
         }
 
-        #[cfg(feature = "gui")]
-        Some(Commands::Gui) => {
-            info!("Launching GUI installer...");
-            gui::run_gui_installer().await?;
-        }
-
+        // GUI installer removed - using API endpoints for UI primals instead
         None => {
             // Default: run installation wizard
             info!("No command specified, running installation wizard...");
-            installer.install(false, false, false, cli.yes).await?;
+            let config = crate::config::installer_config_factory::development();
+            installer.install(&config).await?;
         }
     }
 

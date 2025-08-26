@@ -1,12 +1,13 @@
-//! File System Monitor Types
-//!
-//! Core types and data structures for the file system monitor.
+//
+// Core types and data structures for the file system monitor.
 
-use nestgate_core::smart_abstractions::prelude::*;
+// TEMPORARY: SmartDefault disabled pending native async compatibility fixes
+// use nestgate_core::smart_abstractions::smart_default::SmartDefault;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::{Duration, SystemTime};
+use nestgate_core::canonical_modernization::idiomatic_evolution::SmartDefault;
 
 /// File system event types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -63,7 +64,7 @@ impl SmartDefault for FsEvent {
             timestamp: SystemTime::now(),
             file_size: None,
             is_directory: false,
-            metadata: HashMap::smart_default(),
+            metadata: HashMap::default(),
         }
     }
 }
@@ -95,14 +96,14 @@ impl SmartDefault for FsMonitorStats {
     fn smart_default() -> Self {
         Self {
             total_events: 0,
-            events_by_type: HashMap::smart_default(),
+            events_by_type: HashMap::default(),
             events_last_minute: 0,
             events_last_hour: 0,
             watched_paths: 0,
             uptime_seconds: 0,
             buffer_utilization: 0.0,
             last_event_time: None,
-            performance_metrics: HashMap::smart_default(),
+            performance_metrics: HashMap::default(),
         }
     }
 }
@@ -133,8 +134,8 @@ impl SmartDefault for EventFilter {
                 FsEventType::Deleted,
                 FsEventType::Moved,
             ],
-            exclude_types: Vec::smart_default(),
-            file_extensions: Vec::smart_default(),
+            exclude_types: Vec::default(),
+            file_extensions: Vec::default(),
             ignore_paths: vec![
                 PathBuf::from(".snapshots"),
                 PathBuf::from(".zfs"),
@@ -191,7 +192,7 @@ impl SmartDefault for NotificationChannel {
         Self {
             name: "default".to_string(),
             channel_type: "log".to_string(),
-            config: HashMap::smart_default(),
+            config: HashMap::default(),
             enabled: true,
         }
     }

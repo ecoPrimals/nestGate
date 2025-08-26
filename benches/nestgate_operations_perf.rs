@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
 // Use the unified benchmark configuration system
-use nestgate_core::unified_benchmark_config::{
+use nestgate_core::config::canonical_unified::{
     BenchmarkMockConfiguration, BenchmarkMockService, UnifiedBenchmarkConfig,
 };
 
@@ -159,23 +159,27 @@ fn bench_concurrent_operations(c: &mut Criterion) {
             let handles: Vec<_> = (0..10)
                 .map(|thread_id| {
                     let data = Arc::clone(&shared_data);
-                    std::thread::spawn(move || {
-                        for i in 0..10 {
-                            let key = format!("key_{thread_id}_{i}");
-                            let value = thread_id * 10 + i;
+                    std::thread::spawn(
+                        move || -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+                            for i in 0..10 {
+                                let key = format!("key_{thread_id}_{i}");
+                                let value = thread_id * 10 + i;
 
-                            {
-                                let mut map =
-                                    nestgate_core::safe_operations::safe_mutex_lock(&data)?;
-                                map.insert(key.clone(), value);
-                            }
+                                {
+                                    let mut map =
+                                        nestgate_core::safe_operations::safe_mutex_lock(&data)?;
+                                    map.insert(key.clone(), value);
+                                }
 
-                            {
-                                let map = nestgate_core::safe_operations::safe_mutex_lock(&data)?;
-                                black_box(map.get(&key).copied());
+                                {
+                                    let map =
+                                        nestgate_core::safe_operations::safe_mutex_lock(&data)?;
+                                    black_box(map.get(&key).copied());
+                                }
                             }
-                        }
-                    })
+                            Ok(())
+                        },
+                    )
                 })
                 .collect();
 

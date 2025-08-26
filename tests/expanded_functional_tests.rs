@@ -1,5 +1,6 @@
-use nestgate_core::unified_enums::{UnifiedCapabilityType, UnifiedServiceType};
-use nestgate_core::unified_types::{UnifiedConfig, UnifiedServiceConfig};
+use crate::canonical_modernization::{UnifiedCapabilityType, UnifiedServiceType};
+use crate::canonical_modernization::{UnifiedConfig, UnifiedServiceConfig};
+use nestgate_core::canonical_modernization::CanonicalModernizedConfig;
 /// Expanded functional tests demonstrating more NestGate capabilities
 /// Builds on the simple working test foundation with more comprehensive coverage
 use nestgate_core::{NestGateError, Result};
@@ -9,10 +10,10 @@ use tokio::time::sleep;
 
 #[tokio::test]
 async fn test_configuration_system() -> Result<()> {
-    println!("⚙️ Testing unified configuration system");
+    println!("⚙️ Testing canonical configuration system");
 
     // Test default configuration creation
-    let config = UnifiedConfig::default();
+    let config = CanonicalModernizedConfig::default();
     println!("✅ Created default configuration");
 
     // Test configuration fields accessibility
@@ -57,10 +58,7 @@ async fn test_service_type_categorization() -> Result<()> {
             _ => UnifiedCapabilityType::Generic,
         };
 
-        println!(
-            "✅ Service {:?} -> Capability {:?}",
-            service_type, capability
-        );
+        println!("✅ Service {service_type:?} -> Capability {capability:?}");
     }
 
     println!("🎉 Service categorization test passed!");
@@ -76,10 +74,10 @@ async fn test_error_propagation_patterns() -> Result<()> {
         "Internal processing error".to_string(),
         "test_context".to_string(),
     );
-    println!("✅ Created internal error: {:?}", internal_error);
+    println!("✅ Created internal error: {internal_error:?}");
 
-    let timeout_error = NestGateError::timeout_error("test_operation".to_string(), 5000);
-    println!("✅ Created timeout error: {:?}", timeout_error);
+    let timeout_error = NestGateError::timeout_error("test_operation", Duration::from_millis(5000));
+    println!("✅ Created timeout error: {timeout_error:?}");
 
     // Test error chaining
     async fn failing_operation() -> Result<String> {
@@ -93,7 +91,7 @@ async fn test_error_propagation_patterns() -> Result<()> {
         match failing_operation().await {
             Ok(result) => Ok(result),
             Err(e) => Err(NestGateError::internal_error(
-                format!("Wrapper failed: {:?}", e),
+                format!("Wrapper failed: {e:?}"),
                 "wrapper_context".to_string(),
             )),
         }
@@ -107,7 +105,7 @@ async fn test_error_propagation_patterns() -> Result<()> {
                 "test_error".to_string(),
             ))
         }
-        Err(e) => println!("✅ Caught expected error: {:?}", e),
+        Err(e) => println!("✅ Caught expected error: {e:?}"),
     }
 
     println!("🎉 Error propagation test passed!");
@@ -126,11 +124,11 @@ async fn test_async_patterns_and_timeouts() -> Result<()> {
 
     let result = tokio::time::timeout(Duration::from_millis(100), quick_operation).await;
     match result {
-        Ok(value) => println!("✅ Quick operation completed: {}", value),
+        Ok(value) => println!("✅ Quick operation completed: {value}"),
         Err(_) => {
             return Err(NestGateError::timeout_error(
-                "quick_operation".to_string(),
-                100,
+                "quick_operation",
+                Duration::from_millis(100),
             ))
         }
     }
@@ -181,7 +179,7 @@ async fn test_concurrent_service_simulation() -> Result<()> {
             for i in 0..operations {
                 sleep(Duration::from_millis(5)).await;
                 if i % 2 == 0 {
-                    println!("🔧 {} service: operation {} completed", service_name, i);
+                    println!("🔧 {service_name} service: operation {i} completed");
                 }
             }
 
@@ -195,7 +193,7 @@ async fn test_concurrent_service_simulation() -> Result<()> {
     for handle in handles {
         let result = handle.await.map_err(|e| {
             NestGateError::internal_error(
-                format!("Service simulation failed: {}", e),
+                format!("Service simulation failed: {e}"),
                 "concurrent_test".to_string(),
             )
         })?;
@@ -206,10 +204,7 @@ async fn test_concurrent_service_simulation() -> Result<()> {
 
     // Verify all services completed
     for (name, service_type, ops) in results {
-        println!(
-            "📊 Service {} ({:?}): {} operations",
-            name, service_type, ops
-        );
+        println!("📊 Service {name} ({service_type:?}): {ops} operations");
         assert_eq!(ops, 5, "Each service should complete 5 operations");
     }
 
@@ -265,10 +260,7 @@ async fn test_performance_metrics_collection() -> Result<()> {
     println!("   Total duration: {:?}", metrics.total_duration);
     println!("   Average latency: {:?}", metrics.average_latency);
     println!("   Success rate: {:.2}%", metrics.success_rate * 100.0);
-    println!(
-        "   Successful: {}, Failed: {}",
-        successful_operations, failed_operations
-    );
+    println!("   Successful: {successful_operations}, Failed: {failed_operations}");
 
     // Basic performance assertions
     assert!(
@@ -290,12 +282,11 @@ fn test_configuration_defaults_and_validation() {
     println!("🔍 Testing configuration defaults and validation");
 
     // Test default configurations
-    let config = UnifiedConfig::default();
+    let config = CanonicalModernizedConfig::default();
 
-    // Validate network configuration defaults
-    println!("🌐 Network bind address: {}", config.network.bind_address);
-    assert!(config.network.port > 0, "Port should be positive");
-    assert!(config.network.port <= 65535, "Port should be valid");
+    // Test network configuration
+    assert!(config.network.api.port > 0, "Port should be positive");
+    // Note: Port validation is handled by type system (u16 max is 65535)
 
     // Validate storage configuration
     println!("💾 Storage enabled: {}", config.storage.enabled);
@@ -344,8 +335,7 @@ async fn test_resource_management_patterns() -> Result<()> {
             if current + amount > *max {
                 return Err(NestGateError::internal_error(
                     format!(
-                        "Resource limit exceeded for {}: {} + {} > {}",
-                        resource_type, current, amount, max
+                        "Resource limit exceeded for {resource_type}: {current} + {amount} > {max}"
                     ),
                     "resource_allocation".to_string(),
                 ));
@@ -377,10 +367,10 @@ async fn test_resource_management_patterns() -> Result<()> {
     tracker.allocate("connections", 10)?;
 
     let (mem_used, mem_max) = tracker.get_usage("memory");
-    println!("✅ Memory usage: {}/{}", mem_used, mem_max);
+    println!("✅ Memory usage: {mem_used}/{mem_max}");
 
     let (conn_used, conn_max) = tracker.get_usage("connections");
-    println!("✅ Connection usage: {}/{}", conn_used, conn_max);
+    println!("✅ Connection usage: {conn_used}/{conn_max}");
 
     // Test resource limit enforcement
     match tracker.allocate("memory", 1000) {
@@ -396,7 +386,7 @@ async fn test_resource_management_patterns() -> Result<()> {
     // Test deallocation
     tracker.deallocate("memory", 50);
     let (mem_used_after, _) = tracker.get_usage("memory");
-    println!("✅ Memory after deallocation: {}", mem_used_after);
+    println!("✅ Memory after deallocation: {mem_used_after}");
     assert_eq!(mem_used_after, 50);
 
     println!("🎉 Resource management test passed!");

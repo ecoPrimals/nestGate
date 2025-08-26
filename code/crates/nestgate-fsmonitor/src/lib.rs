@@ -1,4 +1,3 @@
-/// **NESTGATE FILE SYSTEM MONITOR LIBRARY**
 /// Modern, modular file system monitoring with unified configuration architecture
 ///
 /// This library provides comprehensive file system monitoring capabilities with:
@@ -58,6 +57,13 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::SystemTime;
 
+// Type aliases to reduce complexity
+type AsyncEventHandler<'a> =
+    std::pin::Pin<Box<dyn std::future::Future<Output = Result<()>> + Send + 'a>>;
+type EventHandlerList = Arc<RwLock<Vec<Arc<dyn FsEventHandler>>>>;
+type EventBuffer = Arc<RwLock<Vec<FsEvent>>>;
+type AccessCountMap = Arc<RwLock<HashMap<PathBuf, u64>>>;
+
 use futures::channel::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use serde::{Deserialize, Serialize};
@@ -68,27 +74,6 @@ use std::time::Duration;
 use tracing::debug;
 use tracing::error;
 use tracing::info;
-
-/// Legacy file system event types (kept for backward compatibility)
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub enum LegacyFsEventType {
-    /// File was created
-    Created,
-    /// File was modified
-    Modified,
-    /// File was deleted
-    Deleted,
-    /// File was moved/renamed
-    Moved,
-    /// Directory was created
-    DirectoryCreated,
-    /// Directory was deleted
-    DirectoryDeleted,
-    /// Access time updated
-    Accessed,
-    /// Metadata changed
-    MetadataChanged,
-}
 
 /// File system event
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -151,10 +136,7 @@ impl Default for FsMonitorConfig {
 /// Event handler trait
 pub trait FsEventHandler: Send + Sync + std::fmt::Debug {
     /// Handle a file system event
-    fn handle_event(
-        &self,
-        event: FsEvent,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<()>> + Send + '_>>;
+    fn handle_event(&self, event: FsEvent) -> AsyncEventHandler<'_>;
 }
 
 /// File system monitor statistics
@@ -185,7 +167,7 @@ pub struct FsMonitor {
     watcher: Option<Arc<Mutex<RecommendedWatcher>>>,
     event_sender: Option<UnboundedSender<FsEvent>>,
     event_receiver: Option<UnboundedReceiver<FsEvent>>,
-    handlers: Arc<RwLock<Vec<Arc<dyn FsEventHandler>>>>,
+    handlers: EventHandlerList,
     stats: Arc<RwLock<FsMonitorStats>>,
     event_buffer: Arc<RwLock<Vec<FsEvent>>>,
     is_running: Arc<RwLock<bool>>,
@@ -515,7 +497,7 @@ impl FsMonitor {
     }
 
     /// Add event to buffer
-    async fn add_to_buffer(buffer: &Arc<RwLock<Vec<FsEvent>>>, event: FsEvent, max_size: usize) {
+    async fn add_to_buffer(buffer: &EventBuffer, event: FsEvent, max_size: usize) {
         let mut buffer = buffer.write().await;
         buffer.push(event);
 
@@ -531,10 +513,7 @@ impl FsMonitor {
 pub struct LoggingEventHandler;
 
 impl FsEventHandler for LoggingEventHandler {
-    fn handle_event(
-        &self,
-        event: FsEvent,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<()>> + Send + '_>> {
+    fn handle_event(&self, event: FsEvent) -> AsyncEventHandler<'_> {
         Box::pin(async move {
             debug!("FS Event: {:?} - {:?}", event.event_type, event.path);
             Ok(())
@@ -544,7 +523,7 @@ impl FsEventHandler for LoggingEventHandler {
 
 /// Event handler for file access pattern tracking
 pub struct AccessPatternHandler {
-    access_counts: Arc<RwLock<HashMap<PathBuf, u64>>>,
+    access_counts: AccessCountMap,
 }
 
 impl std::fmt::Debug for AccessPatternHandler {
@@ -582,10 +561,7 @@ impl AccessPatternHandler {
 }
 
 impl FsEventHandler for AccessPatternHandler {
-    fn handle_event(
-        &self,
-        event: FsEvent,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<()>> + Send + '_>> {
+    fn handle_event(&self, event: FsEvent) -> AsyncEventHandler<'_> {
         let access_counts = Arc::clone(&self.access_counts);
         Box::pin(async move {
             // Track access patterns for optimization
@@ -616,7 +592,7 @@ mod tests {
     async fn test_event_handler() {
         let handler = LoggingEventHandler;
         let event = FsEvent {
-            event_type: LegacyFsEventType::Created,
+            event_type: FsEventType::Created,
             path: PathBuf::from(&format!(
                 "{}/test.txt",
                 std::env::var("NESTGATE_TEMP_DIR").unwrap_or_else(|_| "/tmp".to_string())
