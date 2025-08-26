@@ -1,4 +1,3 @@
-/// **EVENT PROCESSING MODULE**
 /// Event handling and processing configuration - extracted from monolithic config
 /// Handles all aspects of file system event processing, batching, and queuing
 use serde::{Deserialize, Serialize};

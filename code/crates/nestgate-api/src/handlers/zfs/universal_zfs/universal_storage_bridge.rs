@@ -1,12 +1,11 @@
-//! Universal Storage Bridge for ZFS API
-//!
-//! This bridge makes the ZFS API endpoints work with ANY storage backend,
-//! not just ZFS. It translates ZFS concepts (pools, datasets, snapshots)
-//! to universal storage operations that work on filesystems, object storage, etc.
+//
+// This bridge makes the ZFS API endpoints work with ANY storage backend,
+// not just ZFS. It translates ZFS concepts (pools, datasets, snapshots)
+// to universal storage operations that work on filesystems, object storage, etc.
 
 use crate::handlers::zfs::universal_zfs::types::*;
 use std::collections::HashMap;
-use std::sync::Arc;
+
 use std::time::SystemTime;
 use tracing::{debug, info, warn};
 

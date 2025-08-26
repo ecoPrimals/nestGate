@@ -1,0 +1,28 @@
+[package]
+name = "nestgate-performance"
+version = "0.1.0"
+edition = "2021"
+authors = ["NestGate Team"]
+description = "Advanced performance optimization modules for NestGate - SIMD, zero-copy networking, lock-free structures, and adaptive optimization"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nestgate/nestgate"
+keywords = ["performance", "simd", "zero-copy", "lock-free", "optimization"]
+categories = ["performance", "concurrency", "network-programming"]
+
+[dependencies]
+nestgate-core = { path = "../nestgate-core" }
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.0", features = ["full"] }
+tracing = "0.1"
+
+[features]
+default = ["simd", "zero-copy", "lock-free", "adaptive"]
+simd = []
+zero-copy = []
+lock-free = []
+adaptive = []
+custom-allocators = []
+
+[lib]
+name = "nestgate_performance"
+path = "src/lib.rs" 

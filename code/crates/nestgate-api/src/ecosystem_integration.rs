@@ -1,7 +1,7 @@
-//! Universal Ecosystem Integration Implementation
-//!
-//! Implements truly universal API patterns for ecosystem integration with
-//! capability-based service discovery and dynamic service registration.
+// Universal Ecosystem Integration Implementation
+//
+// Implements truly universal API patterns for ecosystem integration with
+// capability-based service discovery and dynamic service registration.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -528,26 +528,51 @@ pub struct DiscoveredService {
 /// Ecosystem error types
 #[derive(Debug, Clone, Serialize, Deserialize, thiserror::Error)]
 pub enum EcosystemError {
+    /// Network communication error occurred
     #[error("Network error: {message}")]
-    NetworkError { message: String },
+    NetworkError {
+        /// Detailed error message describing the network issue
+        message: String,
+    },
 
+    /// Requested service was not found in the ecosystem
     #[error("Service not found: {service_id}")]
-    ServiceNotFound { service_id: String },
+    ServiceNotFound {
+        /// ID of the service that could not be found
+        service_id: String,
+    },
 
+    /// Service registration failed
     #[error("Registration failed: {reason}")]
-    RegistrationFailed { reason: String },
+    RegistrationFailed {
+        /// Reason why registration failed
+        reason: String,
+    },
 
+    /// Authentication with ecosystem service failed
     #[error("Authentication failed")]
     AuthenticationFailed,
 
+    /// Configuration validation failed
     #[error("Invalid configuration: {field}")]
-    InvalidConfiguration { field: String },
+    InvalidConfiguration {
+        /// Name of the configuration field that is invalid
+        field: String,
+    },
 
+    /// Operation timed out
     #[error("Timeout occurred: {operation}")]
-    Timeout { operation: String },
+    Timeout {
+        /// Name of the operation that timed out
+        operation: String,
+    },
 
+    /// Internal ecosystem error
     #[error("Internal error: {message}")]
-    Internal { message: String },
+    Internal {
+        /// Internal error message
+        message: String,
+    },
 }
 
 /// Service registration response
@@ -596,10 +621,15 @@ pub struct ServiceHealthStatus {
 /// Service event types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EventType {
+    /// A new service was registered in the ecosystem
     ServiceRegistered,
+    /// A service was removed from the ecosystem
     ServiceDeregistered,
+    /// A service's health status changed
     ServiceHealthChanged,
+    /// A service's metadata or configuration was updated
     ServiceUpdated,
+    /// Custom event type with string identifier
     Custom(String),
 }
 
@@ -621,16 +651,23 @@ pub struct ServiceEvent {
 /// Primal types for ecosystem integration
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PrimalType {
+    /// Storage-focused primal (like NestGate)
     Storage,
+    /// Security-focused primal (like BearDog)
     Security,
+    /// AI/ML-focused primal
     AI,
+    /// Compute-focused primal (like Toadstool)
     Compute,
+    /// Network-focused primal
     Network,
+    /// Custom primal type with string identifier
     Custom(String),
 }
 
 /// Type aliases for backward compatibility
 pub type EcosystemServiceRegistration = UniversalServiceRegistration;
+/// NestGate service registration type alias for compatibility
 pub type NestGateServiceRegistration = UniversalServiceRegistration;
 
 impl UniversalServiceRegistration {

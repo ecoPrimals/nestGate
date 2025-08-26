@@ -1,8 +1,8 @@
-use crate::common::test_config::{UnifiedTestConfig, TestChaosSettings, ChaosType};
-use nestgate_core::unified_enums::UnifiedServiceType;
+use crate::common::config::{UnifiedTestConfig, TestChaosSettings, ChaosType};
+use crate::canonical_modernization::UnifiedServiceType;
 use nestgate_core::{NestGateError, Result};
 use std::collections::HashMap;
-use std::sync::Arc;
+
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 use tokio::time::sleep;
@@ -23,7 +23,7 @@ use tokio::time::sleep;
 /// run_e2e_chaos_test(&config).await?;
 /// ```
 
-/// E2E chaos test runner using unified configuration
+/// E2E chaos test runner using canonical configuration
 pub async fn run_e2e_chaos_test(config: &UnifiedTestConfig) -> Result<E2EChaosResults> {
     let start_time = Instant::now();
     

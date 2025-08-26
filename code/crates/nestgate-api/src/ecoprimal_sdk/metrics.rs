@@ -1,6 +1,5 @@
-//! Performance metrics functionality
-//!
-//! Placeholder module for performance metrics and monitoring features.
+//
+// Placeholder module for performance metrics and monitoring features.
 
 // Re-export metrics types from the types module
 pub use super::types::PrimalMetrics;

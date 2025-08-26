@@ -1,6 +1,5 @@
-//! ZFS Metrics Collection
-//!
-//! Provides metrics collection and aggregation for ZFS operations
+//
+// Provides metrics collection and aggregation for ZFS operations
 
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};

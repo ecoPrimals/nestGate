@@ -1,4 +1,4 @@
-use nestgate_core::unified_enums::UnifiedServiceType;
+use crate::canonical_modernization::UnifiedServiceType;
 /// Simple working test to demonstrate successful compilation and execution
 /// This test only uses core nestgate functionality that compiles successfully
 use nestgate_core::{NestGateError, Result};
@@ -11,7 +11,7 @@ async fn test_core_functionality_works() -> Result<()> {
 
     // Test service type enum
     let service_type = UnifiedServiceType::Storage;
-    println!("✅ Service type: {:?}", service_type);
+    println!("✅ Service type: {service_type:?}");
 
     // Test async operations
     sleep(Duration::from_millis(10)).await;
@@ -20,7 +20,7 @@ async fn test_core_functionality_works() -> Result<()> {
     // Test error handling
     let result: Result<String> = Ok("Success".to_string());
     match result {
-        Ok(value) => println!("✅ Success: {}", value),
+        Ok(value) => println!("✅ Success: {value}"),
         Err(e) => return Err(e),
     }
 
@@ -36,7 +36,7 @@ async fn test_error_creation() -> Result<()> {
     let error =
         NestGateError::internal_error("Test error message".to_string(), "test context".to_string());
 
-    println!("✅ Created error: {:?}", error);
+    println!("✅ Created error: {error:?}");
 
     // Test error conversion
     let _result: Result<()> = Err(error);
@@ -59,7 +59,7 @@ async fn test_performance_simulation() -> Result<()> {
     }
 
     let duration = start.elapsed();
-    println!("✅ Completed 100 operations in {:?}", duration);
+    println!("✅ Completed 100 operations in {duration:?}");
 
     // Simple performance assertion
     assert!(
@@ -89,7 +89,7 @@ fn test_sync_operations() {
             UnifiedServiceType::Network => println!("✅ Network service recognized"),
             UnifiedServiceType::Security => println!("✅ Security service recognized"),
             UnifiedServiceType::Compute => println!("✅ Compute service recognized"),
-            _ => println!("✅ Other service type: {:?}", service_type),
+            _ => println!("✅ Other service type: {service_type:?}"),
         }
     }
 
@@ -106,7 +106,7 @@ async fn test_concurrent_operations() -> Result<()> {
     for i in 0..10 {
         let handle = tokio::spawn(async move {
             sleep(Duration::from_millis(10)).await;
-            format!("Task {} completed", i)
+            format!("Task {i} completed")
         });
         handles.push(handle);
     }
@@ -116,7 +116,7 @@ async fn test_concurrent_operations() -> Result<()> {
     for handle in handles {
         let result = handle.await.map_err(|e| {
             NestGateError::internal_error(
-                format!("Task failed: {}", e),
+                format!("Task failed: {e}"),
                 "concurrent test".to_string(),
             )
         })?;

@@ -1,6 +1,5 @@
-//! Pool Setup Configuration
-//!
-//! Configuration structures and defaults for ZFS pool setup operations
+//
+// Configuration structures and defaults for ZFS pool setup operations
 
 use crate::types::StorageTier;
 use serde::{Deserialize, Serialize};
@@ -25,9 +24,7 @@ pub const LIMIT_HOT_MAX: &str = "hot_max_size";
 pub const LIMIT_WARM_MAX: &str = "warm_max_size";
 
 // Compression Algorithm Constants
-const COMPRESSION_LZ4: &str = "lz4";
-const COMPRESSION_GZIP_6: &str = "gzip-6";
-const COMPRESSION_GZIP_9: &str = "gzip-9";
+use nestgate_core::canonical_modernization::canonical_constants::storage::{COMPRESSION_LZ4, COMPRESSION_GZIP_6, COMPRESSION_GZIP_9};
 pub const COMPRESSION_ZSTD: &str = "zstd";
 
 // ZFS Property Constants
@@ -43,8 +40,7 @@ pub const METRIC_LATENCY: &str = "latency";
 pub const METRIC_THROUGHPUT: &str = "throughput";
 
 // Record Size Constants
-const RECORDSIZE_128K: &str = "128K";
-const RECORDSIZE_1M: &str = "1M";
+use nestgate_core::canonical_modernization::canonical_constants::zfs::{RECORDSIZE_128K, RECORDSIZE_1M};
 
 // File System Type Constants
 pub const FSTYPE_ZFS: &str = "zfs";
@@ -228,22 +224,7 @@ pub struct TierLimits {
     pub reserved_space: HashMap<String, u64>,
 }
 
-/// Pool setup configuration for creation
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PoolSetupConfig {
-    /// Pool name
-    pub pool_name: String,
-    /// Devices to use for the pool
-    pub devices: Vec<String>,
-    /// Pool topology (mirror, raidz, etc.)
-    pub topology: PoolTopology,
-    /// ZFS properties to set
-    pub properties: HashMap<String, String>,
-    /// Whether to create tier structure
-    pub create_tiers: bool,
-    /// Tier mappings to device types
-    pub tier_mappings: HashMap<StorageTier, Vec<super::DeviceType>>,
-}
+// PoolSetupConfig removed - use CanonicalZfsConfig for unified ZFS configuration
 
 /// Pool topology options
 #[derive(Debug, Clone, Serialize, Deserialize)]

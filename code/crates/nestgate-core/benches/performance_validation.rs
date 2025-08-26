@@ -1,9 +1,8 @@
-//! Performance Validation Benchmarks
-//!
-//! This benchmark suite validates the performance improvements claimed:
-//! - UUID Caching: 5x performance improvement (274,587 ns/iter → <50,000 ns/iter)
-//! - Memory Pooling: 2x performance improvement
-//! - Overall system optimization validation
+//
+// This benchmark suite validates the performance improvements claimed:
+// - UUID Caching: 5x performance improvement (274,587 ns/iter → <50,000 ns/iter)
+// - Memory Pooling: 2x performance improvement
+// - Overall system optimization validation
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::sync::{
@@ -16,7 +15,7 @@ use uuid::Uuid;
 // Simplified benchmark without missing modules
 
 // Stub implementations for benchmark functions
-fn get_or_create_uuid(key: &str) -> Uuid {
+fn get_or_create_uuid(_key: &str) -> Uuid {
     // Simple deterministic UUID for benchmarking
     Uuid::new_v4() // Use v4 since v5 might not be available in all uuid versions
 }
@@ -199,7 +198,7 @@ fn benchmark_concurrent_performance(c: &mut Criterion) {
                     for handle in handles {
                         handle.join().unwrap_or_else(|e| {
                             tracing::error!("Thread join failed: {:?}", e);
-                            () // Return unit type on error
+                            // Return unit type on error
                         });
                     }
                 })

@@ -1,7 +1,6 @@
-//! Hardware Environment Detection
-//!
-//! Determines what storage capabilities are available in the current environment
-//! and selects the appropriate backend (native ZFS, remote ZFS, or development abstraction).
+//
+// Determines what storage capabilities are available in the current environment
+// and selects the appropriate backend (native ZFS, remote ZFS, or development abstraction).
 
 use std::sync::OnceLock;
 use tokio::process::Command;

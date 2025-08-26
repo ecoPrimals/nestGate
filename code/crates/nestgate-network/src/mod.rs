@@ -1,7 +1,6 @@
-//! NestGate Network Module
-//!
-//! This module provides network connectivity and orchestration capabilities through:
-//! - OrchestrationAdapter (universal adapter pattern)
+//
+// This module provides network connectivity and orchestration capabilities through:
+// - OrchestrationAdapter (universal adapter pattern)
 
 pub mod api;
 pub mod connection_manager;

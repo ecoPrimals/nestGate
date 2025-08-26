@@ -1,0 +1,217 @@
+# NestGate Production-Optimized Configuration
+# Leverages zero-copy optimizations, advanced security, and performance tuning
+
+[system]
+instance_name = "nestgate-production"
+environment = "production"
+log_level = "info"
+max_concurrent_operations = 10000
+worker_threads = 16
+enable_tracing = true
+performance_monitoring = true
+
+[network]
+[network.api]
+host = "0.0.0.0"
+port = 8443  # HTTPS only in production
+max_connections = 5000
+connection_timeout_ms = 30000
+request_timeout_ms = 60000
+enable_compression = true
+compression_level = 6
+keep_alive_timeout = 300
+max_request_size = 10485760  # 10MB
+
+[network.tls]
+enabled = true
+cert_path = "/etc/nestgate/tls/server.crt"
+key_path = "/etc/nestgate/tls/server.key"
+ca_path = "/etc/nestgate/tls/ca.crt"
+min_tls_version = "1.3"
+cipher_suites = ["TLS_AES_256_GCM_SHA384", "TLS_CHACHA20_POLY1305_SHA256"]
+require_client_cert = false
+
+[security]
+[security.authentication]
+enabled = true
+provider = "zero_cost_provider"
+session_timeout_minutes = 60
+max_failed_attempts = 5
+lockout_duration_minutes = 15
+require_strong_passwords = true
+enable_mfa = true
+
+[security.authorization]
+enabled = true
+default_policy = "deny"
+enable_rbac = true
+audit_all_access = true
+
+[security.encryption]
+algorithm = "AES-256-GCM"
+key_rotation_days = 90
+encrypt_at_rest = true
+encrypt_in_transit = true
+secure_key_storage = true
+
+[storage]
+backend_type = "zfs_native"
+data_directory = "/var/lib/nestgate/data"
+backup_directory = "/var/lib/nestgate/backups"
+max_storage_size = "1TB"
+compression_enabled = true
+deduplication_enabled = true
+encryption_enabled = true
+backup_retention_days = 90
+
+[storage.performance]
+# Zero-copy optimizations
+enable_zero_copy = true
+buffer_pool_size = 1048576  # 1MB buffer pool
+max_buffer_size = 131072    # 128KB max buffer
+string_pool_enabled = true
+memory_mapped_files = true
+async_io_enabled = true
+io_uring_enabled = true
+
+[storage.cache]
+enabled = true
+cache_size = "2GB"
+cache_policy = "lru"
+ttl_seconds = 3600
+write_through = true
+compression = true
+
+[monitoring]
+[monitoring.metrics]
+enabled = true
+collection_interval_seconds = 30
+retention_days = 30
+export_format = "prometheus"
+export_endpoint = "http://prometheus:9090/api/v1/write"
+
+[monitoring.health_checks]
+enabled = true
+check_interval_seconds = 30
+timeout_seconds = 10
+endpoints = [
+    "/health",
+    "/metrics",
+    "/ready"
+]
+
+[monitoring.logging]
+level = "info"
+format = "json"
+output = "file"
+file_path = "/var/log/nestgate/nestgate.log"
+max_file_size = "100MB"
+max_files = 10
+compress_rotated = true
+
+[performance]
+# Advanced performance optimizations
+[performance.zero_copy]
+enabled = true
+buffer_reuse = true
+string_interning = true
+memory_pool_size = "512MB"
+large_object_threshold = 65536
+
+[performance.async]
+max_blocking_threads = 32
+event_interval_ms = 1
+max_io_events_per_tick = 1024
+thread_keep_alive_ms = 10000
+
+[performance.memory]
+# Memory optimization settings
+gc_enabled = false  # Rust doesn't have GC, but this controls cleanup
+memory_limit = "8GB"
+enable_huge_pages = true
+memory_mapped_threshold = 4096
+zero_copy_threshold = 1024
+
+[performance.cpu]
+cpu_affinity_enabled = true
+numa_aware = true
+prefetch_enabled = true
+branch_prediction_hints = true
+
+[zfs]
+[zfs.pools]
+default_pool = "tank"
+compression = "lz4"
+deduplication = true
+encryption = "aes-256-gcm"
+recordsize = "128K"
+atime = false  # Disable access time for performance
+
+[zfs.datasets]
+default_quota = "100GB"
+default_reservation = "10GB"
+compression_ratio_target = 2.0
+snapshot_retention_days = 30
+
+[zfs.performance]
+# ZFS-specific performance optimizations
+arc_max = "4GB"
+arc_min = "1GB"
+l2arc_enabled = true
+zil_enabled = true
+async_write = true
+sync_disabled = false  # Keep data integrity
+
+[observability]
+[observability.tracing]
+enabled = true
+jaeger_endpoint = "http://jaeger:14268/api/traces"
+sample_rate = 0.1  # 10% sampling in production
+max_spans_per_trace = 1000
+
+[observability.profiling]
+enabled = true
+cpu_profiling = true
+memory_profiling = true
+profile_duration_seconds = 60
+profile_interval_seconds = 300
+
+[rate_limiting]
+enabled = true
+requests_per_second = 1000
+burst_size = 5000
+window_seconds = 60
+cleanup_interval_seconds = 300
+
+[clustering]
+enabled = false  # Single node for now
+node_id = "node-1"
+cluster_name = "nestgate-production"
+heartbeat_interval_seconds = 30
+election_timeout_seconds = 5000
+
+[backup]
+enabled = true
+schedule = "0 2 * * *"  # Daily at 2 AM
+retention_days = 30
+compression = true
+encryption = true
+verify_backups = true
+backup_location = "/backup/nestgate"
+
+[disaster_recovery]
+enabled = true
+replication_enabled = false  # Single node setup
+checkpoint_interval_seconds = 300
+recovery_point_objective_minutes = 15
+recovery_time_objective_minutes = 30
+
+# Environment-specific overrides
+[production_overrides]
+# Additional production-specific settings
+strict_mode = true
+debug_assertions = false
+panic_on_error = false
+graceful_shutdown_timeout_seconds = 30
+max_memory_usage = "8GB"
+enable_core_dumps = false 

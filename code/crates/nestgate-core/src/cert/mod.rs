@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
-/// Certificate Management Module
-/// Provides certificate generation, validation, and management capabilities
+
+/// Certificate management and validation for NestGate
 ///
 /// ## Example
 /// ```rust

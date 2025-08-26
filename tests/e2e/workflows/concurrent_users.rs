@@ -17,7 +17,7 @@ pub async fn test_concurrent_user_workflow(config: &UnifiedTestConfig) -> Result
     let mut error_messages = Vec::new();
     let mut performance_metrics = HashMap::new();
 
-    let concurrent_users = config.extensions.performance.concurrent_users.min(50); // Limit for testing
+    let concurrent_users = config.performance.max_concurrent_operations.min(50); // Limit for testing
     let operations_per_user = 5;
     let total_steps = (concurrent_users * operations_per_user) as usize;
     let mut steps_completed = 0;

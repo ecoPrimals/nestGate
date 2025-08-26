@@ -1,68 +1,67 @@
-//! # NestGate NAS Unit Tests
-//!
-//! **Comprehensive unit tests for the NestGate Network Attached Storage functionality**
-//!
-//! This module contains unit tests for all NAS-specific components, validating
-//! network sharing protocols, file system operations, access control, and
-//! storage management functionality.
-//!
-//! ## Test Coverage Areas
-//!
-//! - **Network Protocols**: SMB/CIFS, NFS, and FTP protocol implementations
-//! - **File System Operations**: File I/O, directory operations, and metadata handling
-//! - **Access Control**: User authentication, permissions, and sharing policies
-//! - **Storage Management**: Volume management, quota enforcement, and space allocation
-//! - **Performance**: Throughput testing, concurrent access, and resource utilization
-//! - **Reliability**: Error handling, recovery mechanisms, and data integrity
-//!
-//! ## Protocol Testing
-//!
-//! Validates network sharing protocols:
-//! - **SMB/CIFS**: Windows-compatible file sharing
-//! - **NFS**: Unix/Linux network file system
-//! - **FTP/SFTP**: File transfer protocols
-//! - **WebDAV**: Web-based distributed authoring
-//! - **HTTP REST**: API-based file access
-//!
-//! ## Security Testing
-//!
-//! Comprehensive security validation:
-//! - Authentication mechanisms and token management
-//! - Authorization checks and access control lists
-//! - Encryption of data in transit and at rest
-//! - Audit logging and security event tracking
-//! - Vulnerability prevention and input sanitization
-//!
-//! ## Performance Characteristics
-//!
-//! Tests validate performance requirements:
-//! - Concurrent user handling capacity
-//! - File transfer throughput optimization  
-//! - Memory usage and resource management
-//! - Network protocol efficiency
-//! - Storage backend integration performance
-//!
-//! ## Integration Points
-//!
-//! Tests cover integration with:
-//! - ZFS storage backend
-//! - Network layer components
-//! - User authentication systems
-//! - System monitoring and logging
-//! - Configuration management
-//!
-//! ## Example Test Structure
-//!
-//! ```rust
-//! #[test]
-//! fn test_smb_share_creation() {
-//!     let nas_service = create_test_nas();
-//!     let share_config = ShareConfig::new("test_share", "/data/test");
-//!     let result = nas_service.create_smb_share(share_config);
-//!     assert!(result.is_ok());
-//!     assert!(nas_service.share_exists("test_share"));
-//! }
-//! ```
+//
+// **Comprehensive unit tests for the NestGate Network Attached Storage functionality**
+//
+// This module contains unit tests for all NAS-specific components, validating
+// network sharing protocols, file system operations, access control, and
+// storage management functionality.
+//
+// ## Test Coverage Areas
+//
+// - **Network Protocols**: SMB/CIFS, NFS, and FTP protocol implementations
+// - **File System Operations**: File I/O, directory operations, and metadata handling
+// - **Access Control**: User authentication, permissions, and sharing policies
+// - **Storage Management**: Volume management, quota enforcement, and space allocation
+// - **Performance**: Throughput testing, concurrent access, and resource utilization
+// - **Reliability**: Error handling, recovery mechanisms, and data integrity
+//
+// ## Protocol Testing
+//
+// Validates network sharing protocols:
+// - **SMB/CIFS**: Windows-compatible file sharing
+// - **NFS**: Unix/Linux network file system
+// - **FTP/SFTP**: File transfer protocols
+// - **WebDAV**: Web-based distributed authoring
+// - **HTTP REST**: API-based file access
+//
+// ## Security Testing
+//
+// Comprehensive security validation:
+// - Authentication mechanisms and token management
+// - Authorization checks and access control lists
+// - Encryption of data in transit and at rest
+// - Audit logging and security event tracking
+// - Vulnerability prevention and input sanitization
+//
+// ## Performance Characteristics
+//
+// Tests validate performance requirements:
+// - Concurrent user handling capacity
+// - File transfer throughput optimization  
+// - Memory usage and resource management
+// - Network protocol efficiency
+// - Storage backend integration performance
+//
+// ## Integration Points
+//
+// Tests cover integration with:
+// - ZFS storage backend
+// - Network layer components
+// - User authentication systems
+// - System monitoring and logging
+// - Configuration management
+//
+// ## Example Test Structure
+//
+// ```rust
+// #[test]
+// fn test_smb_share_creation() {
+//     let nas_service = create_test_nas();
+//     let share_config = ShareConfig::new("test_share", "/data/test");
+//     let result = nas_service.create_smb_share(share_config);
+//     assert!(result.is_ok());
+//     assert!(nas_service.share_exists("test_share"));
+// }
+// ```
 
 use serde::Deserialize;
 use serde::Serialize;
@@ -149,7 +148,7 @@ mod protocol_tests {
     }
 
     #[test]
-    fn test_protocol_serialization() {
+    fn test_protocol_serialization() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let protocols = vec![Protocol::Nfs, Protocol::Smb, Protocol::Http];
 
         for protocol in protocols {
@@ -159,19 +158,14 @@ mod protocol_tests {
             if let Ok(json_str) = json {
                 let deserialized: Result<Protocol, _> = serde_json::from_str(&json_str);
                 assert!(deserialized.is_ok());
-                assert_eq!(
-                    deserialized.unwrap_or_else(|e| {
-                        tracing::error!("Unwrap failed: {:?}", e);
-                        return Err(std::io::Error::new(
-                            std::io::ErrorKind::Other,
-                            format!("Operation failed: {:?}", e),
-                        )
-                        .into());
-                    }),
-                    protocol
-                );
+                let deserialized_protocol = deserialized.map_err(|e| {
+                    tracing::error!("Deserialization failed: {:?}", e);
+                    format!("Deserialization failed: {:?}", e)
+                })?;
+                assert_eq!(deserialized_protocol, protocol);
             }
         }
+        Ok(())
     }
 }
 
@@ -249,7 +243,7 @@ mod access_mode_tests {
     }
 
     #[test]
-    fn test_access_mode_serialization() {
+    fn test_access_mode_serialization() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let modes = vec![
             AccessMode::ReadOnly,
             AccessMode::ReadWrite,
@@ -263,19 +257,14 @@ mod access_mode_tests {
             if let Ok(json_str) = json {
                 let deserialized: Result<AccessMode, _> = serde_json::from_str(&json_str);
                 assert!(deserialized.is_ok());
-                assert_eq!(
-                    deserialized.unwrap_or_else(|e| {
-                        tracing::error!("Unwrap failed: {:?}", e);
-                        return Err(std::io::Error::new(
-                            std::io::ErrorKind::Other,
-                            format!("Operation failed: {:?}", e),
-                        )
-                        .into());
-                    }),
-                    mode
-                );
+                let deserialized_mode = deserialized.map_err(|e| {
+                    tracing::error!("Deserialization failed: {:?}", e);
+                    format!("Deserialization failed: {:?}", e)
+                })?;
+                assert_eq!(deserialized_mode, mode);
             }
         }
+        Ok(())
     }
 }
 

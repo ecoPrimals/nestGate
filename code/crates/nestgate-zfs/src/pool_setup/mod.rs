@@ -1,6 +1,5 @@
-//! ZFS Pool Setup and Management
-//!
-//! Comprehensive ZFS pool setup with device detection, validation, and creation
+//
+// Comprehensive ZFS pool setup with device detection, validation, and creation
 
 use tracing::info;
 use tracing::warn;
@@ -19,7 +18,7 @@ use std::collections::HashMap;
 // Removed unused tracing import
 
 use crate::types::StorageTier;
-use nestgate_core::{types::StorageTier as CoreStorageTier, NestGateError, Result as CoreResult};
+use nestgate_core::{NestGateError, Result as CoreResult};
 
 /// Pool setup specific errors
 #[derive(Debug, thiserror::Error)]

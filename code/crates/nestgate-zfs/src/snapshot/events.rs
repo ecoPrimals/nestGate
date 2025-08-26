@@ -1,7 +1,6 @@
-//! Snapshot Event Tracking
-//!
-//! Event logging, policy statistics, and automation status tracking
-//! for snapshot management operations.
+//
+// Event logging, policy statistics, and automation status tracking
+// for snapshot management operations.
 
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;

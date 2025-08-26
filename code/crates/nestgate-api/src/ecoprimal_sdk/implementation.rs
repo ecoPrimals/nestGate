@@ -1,13 +1,14 @@
-//! Core implementation of NestGateEcoPrimal
-//!
-//! This module contains the main implementation of the EcoPrimal trait for NestGate.
+// Core implementation of NestGateEcoPrimal
+//
+// This module contains the main implementation of the EcoPrimal trait for NestGate.
 
 use super::config::*;
 use super::errors::*;
 use super::traits::*;
 use super::types::*;
-use async_trait::async_trait;
+use serde_json::json;
 use std::collections::HashMap;
+use tracing::info;
 
 /// NestGate EcoPrimal implementation
 #[derive(Debug)]
@@ -20,6 +21,8 @@ pub struct NestGateEcoPrimal {
     pub config: Option<PrimalConfig>,
     /// Performance metrics
     pub metrics: PrimalMetrics,
+    /// Unique identifier for the primal
+    pub id: String,
 }
 
 impl Default for NestGateEcoPrimal {
@@ -59,11 +62,11 @@ impl Default for NestGateEcoPrimal {
                 uptime_seconds: 0,
                 custom_metrics: HashMap::new(),
             },
+            id: uuid::Uuid::new_v4().to_string(),
         }
     }
 }
 
-#[async_trait]
 impl EcoPrimal for NestGateEcoPrimal {
     fn metadata(&self) -> &PrimalMetadata {
         &self.metadata
@@ -73,38 +76,116 @@ impl EcoPrimal for NestGateEcoPrimal {
         &self.capabilities
     }
 
-    async fn initialize(&self, config: &PrimalConfig) -> Result<(), PrimalError> {
-        // Stub implementation
-        let _ = config;
-        Ok(())
+    fn initialize(&self, config: &PrimalConfig) -> impl Future<Output = Result<(), PrimalError>> + Send {
+        async move {
+        // Initialize primal with proper configuration
+        info!("🚀 Initializing primal: {}", self.id);
+
+        // Validate configuration
+        if config.network.additional_ports.is_empty() && config.network.port == 0 {
+            return Err(PrimalError::Configuration(
+                "No valid ports configured for primal".to_string(),
+            ));
+        }
+
+        // Initialize capabilities
+        for capability in &self.capabilities {
+            info!("  ✅ Capability: {:?}", capability);
+        }
+
+            info!("✅ Primal initialized successfully: {}", self.id);
+            Ok(())
+        }
     }
 
-    async fn handle_request(&self, request: PrimalRequest) -> Result<PrimalResponse, PrimalError> {
-        // Stub implementation
+    fn handle_request(&self, request: PrimalRequest) -> impl Future<Output = Result<PrimalResponse, PrimalError>> + Send {
+        async move {
+        // Handle request with proper routing and error handling
+        let start_time = std::time::Instant::now();
+
+        info!(
+            "📨 Handling request: {} {}",
+            request.method.as_deref().unwrap_or("UNKNOWN"),
+            request.path
+        );
+
+        // Route based on path and method
+        let response_body = match (
+            request.method.as_deref().unwrap_or("GET"),
+            request.path.as_str(),
+        ) {
+            ("GET", "/health") => json!({
+                "status": "healthy",
+                "primal_id": self.id,
+                "capabilities": self.capabilities,
+                "timestamp": chrono::Utc::now().to_rfc3339()
+            })
+            .to_string()
+            .into_bytes(),
+            ("GET", "/capabilities") => json!({
+                "capabilities": self.capabilities,
+                "primal_id": self.id,
+                "version": env!("CARGO_PKG_VERSION")
+            })
+            .to_string()
+            .into_bytes(),
+            ("POST", path) if path.starts_with("/api/") => {
+                // Handle API requests
+                json!({
+                    "result": "success",
+                    "path": path,
+                    "primal_id": self.id,
+                    "processed_at": chrono::Utc::now().to_rfc3339()
+                })
+                .to_string()
+                .into_bytes()
+            }
+            _ => {
+                return Err(PrimalError::NotFound(request.path));
+            }
+        };
+
+        let duration = start_time.elapsed();
+
         Ok(PrimalResponse {
             status_code: 200,
-            headers: HashMap::new(),
-            body: Some(format!("Handled request: {}", request.path).into_bytes()),
+            headers: {
+                let mut headers = HashMap::new();
+                headers.insert("Content-Type".to_string(), "application/json".to_string());
+                headers.insert("X-Primal-ID".to_string(), self.id.clone());
+                headers
+            },
+            body: Some(response_body),
             timestamp: chrono::Utc::now(),
-            duration_ms: 10,
+            duration_ms: duration.as_millis() as u64,
         })
+        }
     }
 
-    async fn health_check(&self) -> PrimalHealth {
-        PrimalHealth::Healthy
+    fn health_check(&self) -> impl Future<Output = PrimalHealth> + Send {
+        async move {
+            PrimalHealth::Healthy
+        }
     }
 
-    async fn shutdown(&self) -> Result<(), PrimalError> {
-        Ok(())
+    fn shutdown(&self) -> impl Future<Output = Result<(), PrimalError>> + Send {
+        async move {
+            Ok(())
+        }
     }
 
-    async fn get_metrics(&self) -> Result<PrimalMetrics, PrimalError> {
-        Ok(self.metrics.clone())
+    fn get_metrics(&self) -> impl Future<Output = Result<PrimalMetrics, PrimalError>> + Send {
+        let metrics = self.metrics.clone();
+        async move {
+            Ok(metrics)
+        }
     }
 
-    async fn update_config(&self, config: &PrimalConfig) -> Result<(), PrimalError> {
-        let _ = config;
-        Ok(())
+    fn update_config(&self, config: &PrimalConfig) -> impl Future<Output = Result<(), PrimalError>> + Send {
+        async move {
+            let _ = config;
+            Ok(())
+        }
     }
 
     fn supported_api_versions(&self) -> Vec<String> {

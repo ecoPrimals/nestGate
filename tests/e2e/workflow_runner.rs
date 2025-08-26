@@ -1,10 +1,10 @@
-use crate::common::test_config::{
+use crate::common::config::{
     ChaosType, PerformanceThresholds, TestChaosSettings, TestPerformanceSettings, UnifiedTestConfig,
 };
-use nestgate_core::unified_enums::UnifiedServiceType;
+use crate::canonical_modernization::UnifiedServiceType;
 use nestgate_core::{NestGateError, Result};
 use std::collections::HashMap;
-use std::sync::Arc;
+
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 use tokio::time::sleep;
@@ -19,7 +19,7 @@ pub struct TestResults {
     pub errors_encountered: Vec<String>,
 }
 
-/// E2E workflow test runner using unified configuration
+/// E2E workflow test runner using canonical configuration
 pub async fn run_comprehensive_workflow_test(config: &UnifiedTestConfig) -> Result<TestResults> {
     println!("🚀 Starting comprehensive E2E workflow test");
     let start_time = Instant::now();
@@ -112,7 +112,7 @@ async fn execute_performance_phase(
     println!("🏁 Phase 3: Performance Testing");
     
     // Use performance settings from config
-    let perf_settings = &config.extensions.performance;
+            let perf_settings = &config.performance;
     
     // Simulate performance testing
     sleep(Duration::from_millis(150)).await;
@@ -131,7 +131,7 @@ async fn execute_chaos_phase(
     println!("🌪️ Phase 4: Chaos Testing");
     
     // Use chaos settings from config
-    let chaos_settings = &config.extensions.chaos;
+            let chaos_settings = &config.monitoring; // Chaos testing under monitoring domain
     
     // Simulate chaos testing
     sleep(Duration::from_millis(300)).await;

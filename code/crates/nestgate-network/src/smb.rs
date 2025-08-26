@@ -1,6 +1,5 @@
-//! SMB (Server Message Block) protocol implementation
-//!
-//! This module provides SMB server functionality for the NestGate system
+//
+// This module provides SMB server functionality for the NestGate system
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -126,7 +125,7 @@ impl SmbServer {
         let smbd_output = Command::new("systemctl")
             .args(["start", "smbd"])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to start smbd: {e}")))?;
+            .map_err(|e| NestGateError::network_error(&format!("Failed to start smbd: {e}"), "start_smbd", None))?;
 
         if !smbd_output.status.success() {
             let error = String::from_utf8_lossy(&smbd_output.stderr);
@@ -139,7 +138,7 @@ impl SmbServer {
         let nmbd_output = Command::new("systemctl")
             .args(["start", "nmbd"])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to start nmbd: {e}")))?;
+            .map_err(|e| NestGateError::network_error(&format!("Failed to start nmbd: {e}"), "start_nmbd", None))?;
 
         if !nmbd_output.status.success() {
             let error = String::from_utf8_lossy(&nmbd_output.stderr);
@@ -159,7 +158,7 @@ impl SmbServer {
         let smbd_output = Command::new("systemctl")
             .args(["stop", "smbd"])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to stop smbd: {e}")))?;
+            .map_err(|e| NestGateError::network_error(&format!("Failed to stop smbd: {e}"), "stop_smbd", None))?;
 
         if !smbd_output.status.success() {
             let error = String::from_utf8_lossy(&smbd_output.stderr);
@@ -170,7 +169,7 @@ impl SmbServer {
         let nmbd_output = Command::new("systemctl")
             .args(["stop", "nmbd"])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to stop nmbd: {e}")))?;
+            .map_err(|e| NestGateError::network_error(&format!("Failed to stop nmbd: {e}"), "stop_nmbd", None))?;
 
         if !nmbd_output.status.success() {
             let error = String::from_utf8_lossy(&nmbd_output.stderr);

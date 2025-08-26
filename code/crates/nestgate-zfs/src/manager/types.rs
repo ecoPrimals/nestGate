@@ -1,7 +1,6 @@
-//! ZFS Manager Types - Data structures for ZFS management
-//!
-//! Contains all the data structures used by the ZFS manager including
-//! service information, tier analysis, performance metrics, and status reporting.
+//
+// Contains all the data structures used by the ZFS manager including
+// service information, tier analysis, performance metrics, and status reporting.
 
 use crate::types::StorageTier;
 use serde::{Deserialize, Serialize};

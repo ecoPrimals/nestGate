@@ -1,79 +1,117 @@
-//! Prediction types for heuristic tier prediction
 
-use nestgate_core::types::StorageTier;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 
-/// Storage tier types for prediction
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+use nestgate_core::unified_enums::StorageTier;
+/// **PREDICTION TYPES - CANONICAL IMPLEMENTATION**
+/// Clean type definitions for prediction and analysis functionality
+
+/// Tier type enumeration for backward compatibility
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TierType {
     Hot,
     Warm,
     Cold,
 }
 
-/// File type classification for intelligent processing
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
-pub enum FileType {
-    Database,
-    Document,
-    Image,
-    Archive,
-    Log,
-    Backup,
+/// Data pattern enumeration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum DataPattern {
+    Sequential,
+    Random,
+    Mixed,
     Unknown,
 }
 
-/// Access pattern data for prediction
+/// File type enumeration  
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DataPattern {
-    pub accesses_last_24h: u32,
-    pub accesses_last_week: u32,
-    pub accesses_last_month: u32,
-    pub total_accesses: u64,
-    pub last_access: SystemTime,
+pub enum FileType {
+    Document,
+    Image,
+    Video,
+    Archive,
+    Log,
+    Backup,
+    Database,
+    Other(String),
+    Unknown,
 }
 
-/// Prediction result structure
+/// Access type enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PredictionResult {
-    pub recommended_tier: TierType,
-    pub confidence: f64,
-    pub reasoning: String,
-    pub alternative_tiers: Vec<TierType>,
-    pub prediction_score: f64,
-}
-
-/// Access type for tracking file operations
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum AccessType {
     Read,
     Write,
     Delete,
-    Move,
-    Copy,
+    Modify,
 }
 
-impl std::fmt::Display for TierType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            TierType::Hot => write!(f, "Hot"),
-            TierType::Warm => write!(f, "Warm"),
-            TierType::Cold => write!(f, "Cold"),
+/// Access event structure with canonical fields
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AccessEvent {
+    pub file_path: String,
+    pub access_type: AccessType,
+    pub timestamp: SystemTime,
+    pub size_bytes: u64,
+}
+
+/// File characteristics structure with canonical fields
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FileCharacteristics {
+    pub estimated_compression_ratio: f64,
+    pub dedup_potential: f64,
+    pub access_frequency: f64, // Accesses per day
+    pub size_category: SizeCategory,
+}
+
+impl Default for FileCharacteristics {
+    fn default() -> Self {
+        Self {
+            estimated_compression_ratio: 1.0,
+            dedup_potential: 0.0,
+            access_frequency: 0.0,
+            size_category: SizeCategory::Small,
         }
     }
 }
 
-/// Confidence levels for predictions
+/// Size category enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum Confidence {
-    Low,
-    Medium,
-    High,
-    VeryHigh,
+pub enum SizeCategory {
+    Small,  // < 1MB
+    Medium, // 1MB - 100MB
+    Large,  // 100MB - 1GB
+    XLarge, // > 1GB
+    Unknown,
 }
 
-/// File analysis result for prediction
+/// Access pattern structure with canonical fields
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AccessPattern {
+    pub accesses_last_24h: u32,
+    pub accesses_last_week: u32,
+    pub accesses_last_month: u32,
+    pub total_accesses: u32,
+    pub last_access: SystemTime,
+    pub peak_access_times: Vec<u8>, // Hours of day (0-23)
+    pub read_write_ratio: f64,      // Read operations / Write operations
+}
+
+impl Default for AccessPattern {
+    fn default() -> Self {
+        Self {
+            accesses_last_24h: 0,
+            accesses_last_week: 0,
+            accesses_last_month: 0,
+            total_accesses: 0,
+            last_access: SystemTime::now(),
+            peak_access_times: vec![9, 10, 11, 14, 15, 16], // Default business hours
+            read_write_ratio: 3.0,                          // Default 3:1 read/write ratio
+        }
+    }
+}
+
+/// File analysis structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FileAnalysis {
     pub file_path: String,
@@ -84,14 +122,29 @@ pub struct FileAnalysis {
     pub file_type: String,
 }
 
-/// Tier prediction result with confidence and alternatives
+/// Tier prediction structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierPrediction {
-    pub recommended_tier: TierType,
-    pub confidence: Confidence,
-    pub reasoning: String,
-    pub alternative_tiers: Vec<TierType>,
-    pub prediction_score: f64,
+    pub predicted_tier: StorageTier,
+    pub confidence_score: f64,
+    pub accesses_last_24h: u32,
+    pub accesses_last_week: u32,
+    pub accesses_last_month: u32,
+    pub size_bytes: u64,
+    pub file_type: String,
+    pub recommendation_reason: String,
+}
+
+/// Data migration instruction
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DataMigration {
+    pub file_path: String,
+    pub size_bytes: u64,
+    pub current_tier: StorageTier,
+    pub target_tier: StorageTier,
+    pub migration_time: SystemTime,
+    pub accessed_at: SystemTime,
+    pub tier_prediction: TierPrediction,
 }
 
 /// Legacy tier prediction for compatibility
@@ -129,36 +182,27 @@ impl From<StorageTier> for TierType {
             StorageTier::Hot => TierType::Hot,
             StorageTier::Warm => TierType::Warm,
             StorageTier::Cold => TierType::Cold,
-            StorageTier::Cache => TierType::Hot, // Map cache to hot tier
-            StorageTier::Archive => TierType::Cold, // Map archive to cold tier
+            StorageTier::Cool => TierType::Cold,  // Map cool to cold
+            StorageTier::Frozen => TierType::Cold, // Map frozen to cold
         }
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TierClassification {
     Performance,
-    Capacity,
+    Balanced,
     Archive,
-}
-
-impl From<TierClassification> for StorageTier {
-    fn from(tier_class: TierClassification) -> Self {
-        match tier_class {
-            TierClassification::Performance => StorageTier::Hot,
-            TierClassification::Capacity => StorageTier::Warm,
-            TierClassification::Archive => StorageTier::Cold,
-        }
-    }
 }
 
 impl From<StorageTier> for TierClassification {
     fn from(tier: StorageTier) -> Self {
         match tier {
             StorageTier::Hot => TierClassification::Performance,
-            StorageTier::Warm => TierClassification::Capacity,
+            StorageTier::Warm => TierClassification::Balanced,
             StorageTier::Cold => TierClassification::Archive,
-            StorageTier::Cache => TierClassification::Performance, // Map cache to performance
-            StorageTier::Archive => TierClassification::Archive,   // Map archive to archive
+            StorageTier::Cool => TierClassification::Archive,  // Map cool to archive
+            StorageTier::Frozen => TierClassification::Archive, // Map frozen to archive
         }
     }
 }

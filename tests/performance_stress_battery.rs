@@ -4,16 +4,19 @@
 /// under various stress conditions and load patterns.
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
+
 use std::time::Instant;
 use tokio::time::{sleep, Duration};
 
-// Use the unified benchmark configuration system for performance testing
-use nestgate_core::unified_benchmark_config::{
-    BenchmarkPerformanceSettings, BenchmarkResults as UnifiedBenchmarkResults,
-    UnifiedBenchmarkConfig,
+use nestgate_core::config::canonical_unified::PerformanceConfig;
+use nestgate_core::{
+    config::canonical_unified::CanonicalConfig,
+    error::{NestGateError, Result},
+    canonical_modernization::unified_enums::{UnifiedServiceState, UnifiedServiceType},
 };
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 // **DEPRECATED CONFIGURATION REMOVED**
 // Use UnifiedBenchmarkConfig with BenchmarkPerformanceSettings for all performance testing.
@@ -278,7 +281,7 @@ impl PerformanceStressBattery {
     }
 
     /// Execute a single performance operation
-    async fn execute_performance_operation(thread_id: u64) -> Result<(), String> {
+    async fn execute_performance_operation(thread_id: u64) -> Result<()> {
         let operation_types = vec![
             ("compute", 0.4),
             ("memory", 0.3),
@@ -338,7 +341,10 @@ impl PerformanceStressBattery {
         };
 
         if fastrand::f64() < failure_rate {
-            Err(format!("Simulated {selected_operation} failure"))
+            Err(NestGateError::internal_error(
+                format!("Simulated {selected_operation} failure"),
+                "execute_performance_operation".to_string(),
+            ))
         } else {
             Ok(())
         }
@@ -378,9 +384,9 @@ impl PerformanceStressBattery {
         // Calculate performance score
         let performance_score = {
             let throughput_score = throughput_efficiency.min(100.0);
-            let reliability_score = (100.0 - error_rate_percent).max(0.0);
+            let reliability_score = (100.0_f64 - error_rate_percent).max(0.0_f64);
             let response_time_score = if avg_response_time > 0.0 {
-                (100.0 - avg_response_time.min(100.0)).max(0.0)
+                (100.0_f64 - avg_response_time.min(100.0_f64)).max(0.0_f64)
             } else {
                 100.0
             };
@@ -490,7 +496,7 @@ async fn test_basic_performance() {
 
 #[tokio::test]
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
-async fn test_high_throughput_performance() {
+async fn test_modular_performance_components() {
     println!("⚡ High Throughput Performance Test");
 
     let config = PerformanceConfig {

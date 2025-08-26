@@ -8,9 +8,13 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 // use urlencoding;
+use nestgate_core::config::canonical_unified::CanonicalConfig as UnifiedApiConfig;
+use nestgate_core::{NestGateError, Result};
 use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
+use std::sync::{Arc, RwLock};
+use std::time::Duration;
+use tokio::time::timeout;
+use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
 /// API Security Test Suite
@@ -77,13 +81,19 @@ impl Default for SecurityTestState {
 async fn login(
     State(state): State<SecurityTestState>,
     Json(request): Json<AuthRequest>,
-) -> Result<Json<AuthResponse>, StatusCode> {
-    let users = state.users.read().await;
+) -> std::result::Result<Json<AuthResponse>, StatusCode> {
+    let users = state
+        .users
+        .read()
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     if let Some(password) = users.get(&request.username) {
         if password == &request.password {
             let token = format!("token_{}", Uuid::new_v4());
-            let mut tokens = state.tokens.write().await;
+            let mut tokens = state
+                .tokens
+                .write()
+                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
             tokens.insert(token.clone(), request.username);
 
             return Ok(Json(AuthResponse {
@@ -101,7 +111,7 @@ async fn get_resource(
     State(state): State<SecurityTestState>,
     Path(resource_id): Path<Uuid>,
     headers: HeaderMap,
-) -> Result<Json<ProtectedResource>, StatusCode> {
+) -> std::result::Result<Json<ProtectedResource>, StatusCode> {
     // Check authentication
     let token = headers
         .get("authorization")
@@ -109,11 +119,17 @@ async fn get_resource(
         .and_then(|s| s.strip_prefix("Bearer "))
         .ok_or(StatusCode::UNAUTHORIZED)?;
 
-    let tokens = state.tokens.read().await;
+    let tokens = state
+        .tokens
+        .read()
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     let username = tokens.get(token).ok_or(StatusCode::UNAUTHORIZED)?;
 
     // Check resource exists and authorization
-    let resources = state.resources.read().await;
+    let resources = state
+        .resources
+        .read()
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     let resource = resources.get(&resource_id).ok_or(StatusCode::NOT_FOUND)?;
 
     // Check if user is authorized to access this resource
@@ -128,14 +144,17 @@ async fn get_resource(
 async fn rate_limited_endpoint(
     State(state): State<SecurityTestState>,
     headers: HeaderMap,
-) -> Result<Json<serde_json::Value>, StatusCode> {
+) -> std::result::Result<Json<serde_json::Value>, StatusCode> {
     // Simple rate limiting based on IP (mocked with a header)
     let client_ip = headers
         .get("x-client-ip")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("unknown");
 
-    let mut counts = state.request_counts.write().await;
+    let mut counts = state
+        .request_counts
+        .write()
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     let count = counts.entry(client_ip.to_string()).or_insert(0);
     *count += 1;
 
@@ -157,7 +176,7 @@ struct InputData {
 
 async fn validate_input(
     Json(data): Json<InputData>,
-) -> Result<Json<serde_json::Value>, StatusCode> {
+) -> std::result::Result<Json<serde_json::Value>, StatusCode> {
     // Validate name length
     if data.name.is_empty() || data.name.len() > 100 {
         return Err(StatusCode::BAD_REQUEST);
@@ -187,9 +206,7 @@ struct SearchQuery {
     query: String,
 }
 
-async fn search_endpoint(
-    Query(params): Query<SearchQuery>,
-) -> Result<Json<serde_json::Value>, StatusCode> {
+async fn search_endpoint(Query(params): Query<SearchQuery>) -> Result<Json<serde_json::Value>> {
     // Check for SQL injection attempts
     let dangerous_patterns = [
         "SELECT", "INSERT", "UPDATE", "DELETE", "DROP", "UNION", "'", "\"", ";", "--", "/*", "*/",
@@ -199,7 +216,12 @@ async fn search_endpoint(
     let query_upper = params.query.to_uppercase();
     for pattern in &dangerous_patterns {
         if query_upper.contains(pattern) {
-            return Err(StatusCode::BAD_REQUEST);
+            return Err(NestGateError::api_error(
+                "Invalid search query",
+                Some("GET"),
+                Some("/search"),
+                Some(400),
+            ));
         }
     }
 
@@ -233,42 +255,45 @@ mod tests {
 
     #[tokio::test]
     async fn test_authentication_bypass_protection() {
-        use crate::common::{assert_equals, create_test_server, TestResult};
+        use super::super::common::{TestHelpers, TestSetup};
+        use nestgate_core::Result as TestResult;
 
         async fn run_test() -> TestResult<()> {
             let app = create_test_app();
-            let server = create_test_server(app, "authentication_bypass_protection")?;
+            let app = create_test_app();
 
             // Test access to protected resource without token
             let response = server
                 .get("/resources/00000000-0000-0000-0000-000000000000")
                 .await;
-            assert_equals(
+            assert_eq!(
                 response.status_code(),
                 StatusCode::UNAUTHORIZED,
-                "Access without token should be unauthorized",
-            )?;
+                "Access without token should be unauthorized"
+            );
 
             // Test access with invalid token
             let response = server
                 .get("/resources/00000000-0000-0000-0000-000000000000")
                 .add_header("authorization", "Bearer invalid_token")
                 .await;
-            assert_equals(
+            assert_eq!(
                 response.status_code(),
                 StatusCode::UNAUTHORIZED,
-                "Access with invalid token should be unauthorized",
-            )?;
+                "Access with invalid token should be unauthorized"
+            );
 
             Ok(())
         }
 
-        safe_test!("test_authentication_bypass_protection", run_test());
+        tokio::test("test_authentication_bypass_protection", run_test());
     }
 
     #[tokio::test]
     async fn test_authorization_boundary_enforcement() {
-        use crate::common::{assert_equals, create_test_server, TestResult};
+        use crate::common::{
+            helpers::assert_equals, helpers::create_test_server, test_error_handling::TestResult,
+        };
 
         async fn run_test() -> TestResult<()> {
             let app = create_test_app();
@@ -312,7 +337,7 @@ mod tests {
             Ok(())
         }
 
-        safe_test!("test_authorization_boundary_enforcement", run_test());
+        tokio::test("test_authorization_boundary_enforcement", run_test());
     }
 
     #[tokio::test]
@@ -424,7 +449,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_sql_injection_protection() {
-        use crate::common::{assert_equals, create_test_server, TestResult};
+        use crate::common::{
+            helpers::assert_equals, helpers::create_test_server, test_error_handling::TestResult,
+        };
 
         async fn run_test() -> TestResult<()> {
             let app = create_test_app();
@@ -432,7 +459,7 @@ mod tests {
 
             // Test normal query
             let response = server.get("/search?query=hello").await;
-            assert_equals(
+            assert_eq!(
                 response.status_code(),
                 StatusCode::OK,
                 "Normal query should succeed",
@@ -453,7 +480,7 @@ mod tests {
                 let response = server
                     .get(&format!("/search?query={}", injection.replace(" ", "%20")))
                     .await;
-                assert_equals(
+                assert_eq!(
                     response.status_code(),
                     StatusCode::BAD_REQUEST,
                     &format!("Failed to block injection: {}", injection),
@@ -463,7 +490,7 @@ mod tests {
             Ok(())
         }
 
-        safe_test!("test_sql_injection_protection", run_test());
+        tokio::test("test_sql_injection_protection", run_test());
     }
 
     #[tokio::test]

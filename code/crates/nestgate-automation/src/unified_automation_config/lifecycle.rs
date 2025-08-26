@@ -1,4 +1,3 @@
-use nestgate_core::smart_abstractions::prelude::*;
 /// **LIFECYCLE MODULE**
 /// Lifecycle management configuration - extracted from monolithic config
 /// Handles service lifecycle, startup, shutdown, health checks, and recovery
@@ -192,7 +191,7 @@ impl Default for RecoverySettings {
 impl SmartDefault for DependencySettings {
     fn smart_default() -> Self {
         Self {
-            services: HashMap::smart_default(),
+            services: HashMap::default(),
             timeout: Duration::from_secs(30),
             wait_on_startup: true,
         }

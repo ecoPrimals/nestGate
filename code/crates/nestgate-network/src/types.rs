@@ -1,4 +1,3 @@
-//! Network types and structures
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

@@ -1,8 +1,7 @@
-//! Capacity Monitoring Module
-//!
-//! Core capacity monitoring, performance bottleneck detection, and maintenance scheduling
+//
+// Core capacity monitoring, performance bottleneck detection, and maintenance scheduling
 
-use crate::error::Result;
+use crate::error::CanonicalResult as Result;
 use crate::types::{BottleneckReport, CapacityReport, MaintenanceSchedule, SystemInfo};
 use tracing::debug;
 

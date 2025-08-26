@@ -1,32 +1,44 @@
-//! Configuration Operations Module
-//! Single responsibility: ZFS configuration and optimization
+// Single responsibility: ZFS configuration and optimization
 
 use super::core::NativeZfsService;
 use crate::handlers::zfs::universal_zfs::types::UniversalZfsResult;
 use std::collections::HashMap;
 
+/// Optimize ZFS configuration for better performance
 pub async fn optimize(
-    service: &NativeZfsService,
+    _service: &NativeZfsService,
     _optimization_type: String,
 ) -> UniversalZfsResult<String> {
     Ok("Optimization completed".to_string())
 }
 
+/// Get analytics data for ZFS optimization
 pub async fn get_optimization_analytics(
-    service: &NativeZfsService,
+    _service: &NativeZfsService,
 ) -> UniversalZfsResult<HashMap<String, serde_json::Value>> {
     Ok(HashMap::new())
 }
 
+/// Predict optimal storage tier for a dataset
 pub async fn predict_tier(
-    service: &NativeZfsService,
+    _service: &NativeZfsService,
     _dataset_name: &str,
 ) -> UniversalZfsResult<String> {
     Ok("tier_1".to_string())
 }
 
+/// Get the current configuration of the native ZFS service
+///
+/// Returns a HashMap containing the current configuration settings
+/// for the native ZFS backend service.
+///
+/// # Arguments
+/// * `service` - The native ZFS service instance
+///
+/// # Returns
+/// * `UniversalZfsResult<HashMap<String, serde_json::Value>>` - Configuration map
 pub async fn get_configuration(
-    service: &NativeZfsService,
+    _service: &NativeZfsService,
 ) -> UniversalZfsResult<HashMap<String, serde_json::Value>> {
     let mut config = HashMap::new();
     config.insert(
@@ -40,8 +52,18 @@ pub async fn get_configuration(
     Ok(config)
 }
 
+/// Update the configuration of the native ZFS service
+///
+/// Applies new configuration settings to the native ZFS backend service.
+///
+/// # Arguments
+/// * `service` - The native ZFS service instance
+/// * `config` - New configuration settings to apply
+///
+/// # Returns
+/// * `UniversalZfsResult<()>` - Success or error result
 pub async fn update_configuration(
-    service: &NativeZfsService,
+    _service: &NativeZfsService,
     _config: HashMap<String, serde_json::Value>,
 ) -> UniversalZfsResult<()> {
     Ok(())

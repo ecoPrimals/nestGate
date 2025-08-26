@@ -1,6 +1,5 @@
-//! Optimization Operations with Fail-Safe
-//!
-//! Optimization operations with circuit breaker and retry logic.
+//
+// Optimization operations with circuit breaker and retry logic.
 
 use crate::handlers::zfs::universal_zfs::types::{UniversalZfsError, UniversalZfsResult};
 
@@ -12,9 +11,9 @@ pub async fn optimize(service: &FailSafeZfsService) -> UniversalZfsResult<String
         if let Some(fallback) = &service.fallback {
             return fallback.optimize().await;
         } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
+            return Err(UniversalZfsError::CircuitBreakerOpen {
+                service: "zfs_optimization".to_string(),
+            });
         }
     }
 
@@ -43,9 +42,9 @@ pub async fn get_optimization_analytics(
         if let Some(fallback) = &service.fallback {
             return fallback.get_optimization_analytics().await;
         } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
+            return Err(UniversalZfsError::CircuitBreakerOpen {
+                service: "zfs_optimization".to_string(),
+            });
         }
     }
 
@@ -75,9 +74,9 @@ pub async fn predict_tier(
         if let Some(fallback) = &service.fallback {
             return fallback.predict_tier(file_path).await;
         } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
+            return Err(UniversalZfsError::CircuitBreakerOpen {
+                service: "zfs_optimization".to_string(),
+            });
         }
     }
 
@@ -106,9 +105,9 @@ pub async fn get_configuration(
         if let Some(fallback) = &service.fallback {
             return fallback.get_configuration().await;
         } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
+            return Err(UniversalZfsError::CircuitBreakerOpen {
+                service: "zfs_optimization".to_string(),
+            });
         }
     }
 
@@ -138,9 +137,9 @@ pub async fn update_configuration(
         if let Some(fallback) = &service.fallback {
             return fallback.update_configuration(config).await;
         } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
+            return Err(UniversalZfsError::CircuitBreakerOpen {
+                service: "zfs_optimization".to_string(),
+            });
         }
     }
 
@@ -167,9 +166,9 @@ pub async fn shutdown(service: &FailSafeZfsService) -> UniversalZfsResult<()> {
         if let Some(fallback) = &service.fallback {
             return fallback.shutdown().await;
         } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
+            return Err(UniversalZfsError::CircuitBreakerOpen {
+                service: "zfs_optimization".to_string(),
+            });
         }
     }
 

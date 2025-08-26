@@ -1,6 +1,5 @@
-//! Pool Creation and Management
-//!
-//! ZFS pool creation, tier setup, and management operations
+//
+// ZFS pool creation, tier setup, and management operations
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -13,7 +12,7 @@ use super::{
     validation::{PoolSetupConfig, PoolTopology},
 };
 use crate::types::StorageTier;
-use nestgate_core::{types::StorageTier as CoreStorageTier, NestGateError, Result as CoreResult};
+use nestgate_core::{NestGateError, Result as CoreResult};
 
 /// Result of pool setup operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -107,7 +106,7 @@ impl PoolCreator {
         for (key, value) in &config.properties {
             if key.is_empty() || value.is_empty() {
                 return Err(NestGateError::Internal {
-                    message: format!("Invalid property: {}={}", key, value),
+                    message: format!("Invalid property: {key}={value}"),
                     location: Some(format!("{}:{}", file!(), line!())),
                     debug_info: None,
                     is_bug: false,
@@ -167,7 +166,7 @@ impl PoolCreator {
                 is_bug: false,
             })?
             .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to execute zpool create: {}", e),
+                message: format!("Failed to execute zpool create: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
                 debug_info: None,
                 is_bug: false,
@@ -177,10 +176,7 @@ impl PoolCreator {
             let error_msg = String::from_utf8_lossy(&output.stderr);
             let stdout_msg = String::from_utf8_lossy(&output.stdout);
             return Err(NestGateError::Internal {
-                message: format!(
-                    "Pool creation failed: stderr: {}, stdout: {}",
-                    error_msg, stdout_msg
-                ),
+                message: format!("Pool creation failed: stderr: {error_msg}, stdout: {stdout_msg}"),
                 location: Some(format!("{}:{}", file!(), line!())),
                 debug_info: None,
                 is_bug: false,
@@ -291,7 +287,7 @@ impl PoolCreator {
         cmd.arg(&dataset_name);
 
         let output = cmd.output().await.map_err(|e| NestGateError::Internal {
-            message: format!("Failed to execute zfs create: {}", e),
+            message: format!("Failed to execute zfs create: {e}"),
             location: Some(format!("{}:{}", file!(), line!())),
             debug_info: None,
             is_bug: false,
@@ -300,10 +296,7 @@ impl PoolCreator {
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
             return Err(NestGateError::Internal {
-                message: format!(
-                    "Failed to create tier dataset {}: {}",
-                    dataset_name, error_msg
-                ),
+                message: format!("Failed to create tier dataset {dataset_name}: {error_msg}"),
                 location: Some(format!("{}:{}", file!(), line!())),
                 debug_info: None,
                 is_bug: false,
@@ -337,7 +330,7 @@ impl PoolCreator {
         cmd.arg(pool_name);
 
         let output = cmd.output().await.map_err(|e| NestGateError::Internal {
-            message: format!("Failed to execute zpool destroy: {}", e),
+            message: format!("Failed to execute zpool destroy: {e}"),
             location: Some(format!("{}:{}", file!(), line!())),
             debug_info: None,
             is_bug: false,

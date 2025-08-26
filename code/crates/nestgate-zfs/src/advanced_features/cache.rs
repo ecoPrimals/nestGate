@@ -1,8 +1,7 @@
-//! Cache Analytics Module
-//!
-//! ZFS cache (ARC/L2ARC) analysis and performance metrics
+//
+// ZFS cache (ARC/L2ARC) analysis and performance metrics
 
-use crate::error::Result;
+use crate::error::CanonicalResult as Result;
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 

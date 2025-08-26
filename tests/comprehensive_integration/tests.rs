@@ -2,14 +2,14 @@
 /// 
 /// 🚀 ECOSYSTEM UNIFICATION: Now using unified test config system
 
-use std::sync::Arc;
+
 use tokio::time::{sleep, Duration};
 
 // Use centralized unified test config system
 use super::{create_comprehensive_test_config, create_optimized_comprehensive_config};
-use crate::common::test_config::{UnifiedTestConfig, UnifiedTestConfigBuilder};
+use crate::common::config::{UnifiedTestConfig, UnifiedTestConfigBuilder};
 
-/// Comprehensive integration test suite using unified configuration
+/// Comprehensive integration test suite using canonical configuration
 #[tokio::test]
 async fn comprehensive_integration_test_suite() {
     let test_config = create_comprehensive_test_config();
@@ -21,11 +21,11 @@ async fn comprehensive_integration_test_suite() {
         test_config.test_name
     );
     
-    // Run tests with proper unified configuration
+    // Run tests with proper canonical configuration
     run_comprehensive_tests_with_config(test_config).await;
 }
 
-/// Run comprehensive tests with unified configuration
+/// Run comprehensive tests with canonical configuration
 async fn run_comprehensive_tests_with_config(config: UnifiedTestConfig) {
     tracing::info!("Running tests with unified config for: {}", config.test_description);
     

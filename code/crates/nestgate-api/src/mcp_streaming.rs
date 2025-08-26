@@ -1,8 +1,7 @@
-//! MCP Streaming Extensions
-//!
-//! This module extends the existing MCP protocol with streaming capabilities
-//! for high-throughput, low-latency communication with AI systems and
-//! external MCP clusters.
+//
+// This module extends the existing MCP protocol with streaming capabilities
+// for high-throughput, low-latency communication with AI systems and
+// external MCP clusters.
 
 use serde::{Deserialize, Serialize};
 use std::{
@@ -73,9 +72,9 @@ pub struct StreamInfo {
     /// Stream status
     pub status: StreamStatus,
     /// Creation timestamp
-    pub created_at: std::time::SystemTime,
+    pub created_at: SystemTime,
     /// Last activity timestamp
-    pub last_activity: std::time::SystemTime,
+    pub last_activity: SystemTime,
 }
 
 /// Types of MCP streams

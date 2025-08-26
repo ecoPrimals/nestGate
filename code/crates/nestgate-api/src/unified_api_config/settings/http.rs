@@ -1,6 +1,5 @@
-//! HTTP Server Configuration Settings
-//!
-//! HTTP server configuration types for the NestGate API.
+//
+// HTTP server configuration types for the NestGate API.
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;

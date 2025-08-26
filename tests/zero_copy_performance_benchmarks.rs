@@ -1,9 +1,9 @@
 use nestgate_core::memory_pool::{MemoryPool, PoolStatistics};
-use nestgate_core::return_builders::build_access_grant;
+use nestgate_core::return_builders::config_builders::build_access_grant;
 /// Zero-Copy Performance Benchmarks
 /// Demonstrates the performance improvements from our optimization work
 use nestgate_core::{NestGateError, Result};
-use std::sync::Arc;
+
 use std::time::{Duration, Instant};
 
 #[tokio::test]
@@ -31,8 +31,8 @@ async fn benchmark_memory_pool_statistics_access() -> Result<()> {
     let duration = start.elapsed();
 
     println!("✅ Zero-Copy Statistics Access:");
-    println!("   Iterations: {}", iterations);
-    println!("   Total time: {:?}", duration);
+    println!("   Iterations: {iterations}");
+    println!("   Total time: {duration:?}");
     println!("   Average per access: {:?}", duration / iterations);
     println!(
         "   Operations per second: {:.0}",
@@ -54,9 +54,9 @@ async fn benchmark_access_grant_building() -> Result<()> {
     println!("🚀 Benchmark: Access Grant Building (Zero-Copy vs Clone)");
 
     // Create test data
-    let large_permissions: Vec<String> = (0..10_000).map(|i| format!("permission_{}", i)).collect();
+    let large_permissions: Vec<String> = (0..10_000).map(|i| format!("permission_{i}")).collect();
 
-    let large_consensus_nodes: Vec<String> = (0..1_000).map(|i| format!("node_{}", i)).collect();
+    let large_consensus_nodes: Vec<String> = (0..1_000).map(|i| format!("node_{i}")).collect();
 
     println!("📊 Test data prepared:");
     println!("   Permissions: {} items", large_permissions.len());
@@ -80,8 +80,8 @@ async fn benchmark_access_grant_building() -> Result<()> {
     let duration = start.elapsed();
 
     println!("✅ Zero-Copy Access Grant Building:");
-    println!("   Iterations: {}", iterations);
-    println!("   Total time: {:?}", duration);
+    println!("   Iterations: {iterations}");
+    println!("   Total time: {duration:?}");
     println!("   Average per build: {:?}", duration / iterations);
     println!(
         "   Builds per second: {:.0}",
@@ -101,7 +101,7 @@ async fn benchmark_access_grant_building() -> Result<()> {
     let clone_duration = clone_start.elapsed();
 
     println!("📊 Simulated Clone-Heavy Approach:");
-    println!("   Total time: {:?}", clone_duration);
+    println!("   Total time: {clone_duration:?}");
     println!("   Average per clone: {:?}", clone_duration / iterations);
 
     // Calculate improvement
@@ -111,7 +111,7 @@ async fn benchmark_access_grant_building() -> Result<()> {
         1.0
     };
 
-    println!("🎯 Performance Improvement: {:.2}x faster", improvement);
+    println!("🎯 Performance Improvement: {improvement:.2}x faster");
 
     assert!(
         duration < Duration::from_secs(5),
@@ -132,8 +132,7 @@ async fn benchmark_concurrent_zero_copy_operations() -> Result<()> {
     let operations_per_task = 1_000;
 
     println!(
-        "🔄 Running {} concurrent tasks with {} operations each",
-        concurrent_tasks, operations_per_task
+        "🔄 Running {concurrent_tasks} concurrent tasks with {operations_per_task} operations each"
     );
 
     let start = Instant::now();
@@ -164,17 +163,17 @@ async fn benchmark_concurrent_zero_copy_operations() -> Result<()> {
     let mut total_operations = 0;
     for handle in handles {
         let (task_id, ops) = handle.await.map_err(|e| {
-            NestGateError::internal_error(format!("Task failed: {}", e), "benchmark".to_string())
+            NestGateError::internal_error(format!("Task failed: {e}"), "benchmark".to_string())
         })?;
         total_operations += ops;
-        println!("✅ Task {} completed {} operations", task_id, ops);
+        println!("✅ Task {task_id} completed {ops} operations");
     }
 
     let duration = start.elapsed();
 
     println!("📊 Concurrent Performance Results:");
-    println!("   Total operations: {}", total_operations);
-    println!("   Total time: {:?}", duration);
+    println!("   Total operations: {total_operations}");
+    println!("   Total time: {duration:?}");
     println!(
         "   Operations per second: {:.0}",
         total_operations as f64 / duration.as_secs_f64()
@@ -228,8 +227,8 @@ fn benchmark_struct_copy_vs_clone_overhead() {
     let copy_duration = copy_start.elapsed();
 
     println!("✅ Copy Implementation (Optimized):");
-    println!("   Iterations: {}", iterations);
-    println!("   Total time: {:?}", copy_duration);
+    println!("   Iterations: {iterations}");
+    println!("   Total time: {copy_duration:?}");
     println!("   Average per copy: {:?}", copy_duration / iterations);
     println!(
         "   Copies per second: {:.0}",
@@ -275,7 +274,7 @@ fn benchmark_struct_copy_vs_clone_overhead() {
 
     println!("📊 Clone Implementation (For Comparison):");
     println!("   Iterations: {}", iterations / 100);
-    println!("   Total time: {:?}", clone_duration);
+    println!("   Total time: {clone_duration:?}");
     println!(
         "   Average per clone: {:?}",
         clone_duration / (iterations / 100)
@@ -287,7 +286,7 @@ fn benchmark_struct_copy_vs_clone_overhead() {
     let improvement = clone_per_op / copy_per_op;
 
     println!("🎯 Copy vs Clone Performance:");
-    println!("   Copy is {:.0}x faster than Clone", improvement);
+    println!("   Copy is {improvement:.0}x faster than Clone");
     println!("   Memory overhead eliminated: Zero heap allocations for Copy");
 
     println!("🎉 Copy vs Clone benchmark completed!");
@@ -332,7 +331,7 @@ async fn benchmark_real_world_usage_pattern() -> Result<()> {
         let _grant = build_access_grant(
             &permissions, // Optimized: reference instead of clone
             1640995200 + i as i64,
-            &format!("request_{}", i),
+            &format!("request_{i}"),
             &consensus_nodes, // Optimized: reference instead of clone
             0.85,
         );
@@ -351,8 +350,8 @@ async fn benchmark_real_world_usage_pattern() -> Result<()> {
     let final_stats = pool.statistics();
 
     println!("📊 Real-World Performance Results:");
-    println!("   Total requests processed: {}", iterations);
-    println!("   Total time: {:?}", duration);
+    println!("   Total requests processed: {iterations}");
+    println!("   Total time: {duration:?}");
     println!("   Average request time: {:?}", duration / iterations);
     println!(
         "   Requests per second: {:.0}",

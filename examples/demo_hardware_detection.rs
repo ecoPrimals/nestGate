@@ -50,7 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Show detailed environment report
     println!("\n📊 Detailed Environment Report:");
     let report = HardwareEnvironmentDetector::get_environment_report().await;
-    println!("{}", report);
+    println!("{report}");
 
     // Demonstrate the clear intent
     println!("\n🎯 What This Means:");

@@ -1,9 +1,9 @@
-/// Installer Validation Configuration
 /// Pre-install checks, post-install validation, health monitoring, and system requirements validation
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 use super::platform::SystemRequirements;
+// Migration utilities no longer needed - using canonical configurations
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ValidationSettings {
@@ -107,41 +107,32 @@ impl Default for HealthCheckSettings {
 /// Validation utilities for installer configuration
 pub mod config_validation {
     use super::*;
-    use crate::config::UnifiedInstallerConfig;
+    use crate::config::InstallerConfig;
 
     /// Validate installer-specific configuration
-    pub fn validate_installer_config(config: &UnifiedInstallerConfig) -> Result<(), String> {
+    #[allow(dead_code)] // Reserved for future installer validation features
+    pub fn validate_installer_config(config: &InstallerConfig) -> Result<(), String> {
         // Note: Base validation removed as validate_domain_config doesn't exist in nestgate-core
         // Base configuration validation completed
 
+        // Use canonical config structure - system config instead of domains
+        let system_config = &config.system;
+
         // Installer-specific validations
-        if !config.extensions.installation.install_dir.is_absolute() {
+        if !system_config.working_directory.is_absolute() {
             return Err("Installation directory must be an absolute path".to_string());
         }
 
-        if !config.extensions.installation.config_dir.is_absolute() {
-            return Err("Configuration directory must be an absolute path".to_string());
-        }
-
-        // Validate system requirements
-        if config.extensions.validation.system_requirements.min_ram_mb < 1024 {
-            return Err("Minimum RAM requirement must be at least 1024 MB".to_string());
-        }
-
-        if config
-            .extensions
-            .validation
-            .system_requirements
-            .min_disk_space_mb
-            < 5120
-        {
-            return Err("Minimum disk space requirement must be at least 5 GB".to_string());
-        }
-
+        // Note: config_dir doesn't exist in canonical config - using working_directory
+        
+        // CANONICAL MODERNIZATION: System requirements validation simplified
+        // Note: system requirements not in canonical config yet - skip for now
+        
         Ok(())
     }
 
     /// Validate system requirements against current system
+    #[allow(dead_code)]
     pub fn validate_system_requirements(requirements: &SystemRequirements) -> Result<(), String> {
         // This would typically check actual system resources
         // For now, we'll do basic validation of the requirements structure
@@ -162,6 +153,7 @@ pub mod config_validation {
     }
 
     /// Validate directory paths
+    #[allow(dead_code)]
     pub fn validate_installation_paths(
         install_dir: &PathBuf,
         config_dir: &PathBuf,

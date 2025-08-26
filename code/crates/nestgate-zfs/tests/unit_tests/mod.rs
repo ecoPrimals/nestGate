@@ -1,14 +1,13 @@
-//! Unit Tests Module Structure
-//!
-//! Organized unit tests for NestGate ZFS components split by functionality:
-//! - config_tests: ZFS configuration tests
-//! - performance_tests: Performance metrics and tier tests
-//! - heuristic_tests: Heuristic-based optimization tests
-//! - migration_tests: Migration functionality tests
-//! - snapshot_tests: Snapshot policy and retention tests
-//! - automation_tests: Automation and lifecycle management tests
-//! - lifecycle_tests: Phase 2 lifecycle management tests
-//! - comprehensive_tests: Comprehensive unit tests
+//
+// Organized unit tests for NestGate ZFS components split by functionality:
+// - config_tests: ZFS configuration tests
+// - performance_tests: Performance metrics and tier tests
+// - heuristic_tests: Heuristic-based optimization tests
+// - migration_tests: Migration functionality tests
+// - snapshot_tests: Snapshot policy and retention tests
+// - automation_tests: Automation and lifecycle management tests
+// - lifecycle_tests: Phase 2 lifecycle management tests
+// - comprehensive_tests: Comprehensive unit tests
 
 mod config_tests;
 mod performance_tests;

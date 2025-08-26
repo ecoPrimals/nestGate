@@ -1,8 +1,7 @@
-//! Snapshot Analytics Module
-//!
-//! ZFS snapshot analysis and optimization recommendations
+//
+// ZFS snapshot analysis and optimization recommendations
 
-use crate::error::Result;
+use crate::error::CanonicalResult as Result;
 use crate::types::RetentionPolicy;
 use serde::{Deserialize, Serialize};
 use tracing::debug;

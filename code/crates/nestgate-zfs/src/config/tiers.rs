@@ -1,61 +1,44 @@
-//! Tier Configuration Module
-//!
-//! Configuration for hot/warm/cold storage tiers, performance profiles, and migration rules.
+//
+// Configuration for hot/warm/cold storage tiers, performance profiles, and migration rules.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use super::migration::{CapacityLimits, MigrationRules};
 
-// ===== ZERO-COPY TIER CONFIG STRING OPTIMIZATION CONSTANTS =====
-// These constants eliminate .to_string() calls and improve performance by 15-25%
+// Use canonical constants system  
+use nestgate_core::canonical_modernization::canonical_constants::storage::{
+    TIER_HOT, TIER_WARM, TIER_COLD, COMPRESSION_LZ4, COMPRESSION_GZIP,
+};
+use crate::constants::COMPRESSION_OFF;
 
-// Tier Names (Most Frequent)
-pub const TIER_HOT: &str = "hot";
-pub const TIER_WARM: &str = "warm";
-pub const TIER_COLD: &str = "cold";
+// Define missing constants locally
+const POOL_DEFAULT: &str = "default";
+const POOL_PRODUCTION: &str = "production";
 
-// ZFS Property Names (Highest Frequency - 6 times each)
-pub const PROP_COMPRESSION: &str = "compression";
-pub const PROP_RECORDSIZE: &str = "recordsize";
-pub const PROP_ATIME: &str = "atime";
-pub const PROP_PRIMARYCACHE: &str = "primarycache";
-pub const PROP_SECONDARYCACHE: &str = "secondarycache";
-pub const PROP_LOGBIAS: &str = "logbias";
-pub const PROP_SYNC: &str = "sync";
-pub const PROP_DEDUP: &str = "dedup";
+// Define missing ZFS constants locally until they're added to canonical constants
+const RECORDSIZE_PROPERTY: &str = "recordsize";
+use nestgate_core::canonical_modernization::canonical_constants::zfs::{RECORDSIZE_1M, RECORDSIZE_64K, RECORDSIZE_128K};
+const ATIME_PROPERTY: &str = "atime";
+const PRIMARYCACHE_PROPERTY: &str = "primarycache";
+const CACHE_METADATA: &str = "metadata";
+const CACHE_ALL: &str = "all";
+const CACHE_NONE: &str = "none";
+const SECONDARYCACHE_PROPERTY: &str = "secondarycache";
+const SYNC_PROPERTY: &str = "sync";
+const COMPRESSION_PROPERTY: &str = "compression";
+const COMPRESSION_ZSTD: &str = "zstd";
+const COMPRESSION_GZIP_9: &str = "gzip-9";
+const LOGBIAS_PROPERTY: &str = "logbias";
+const BIAS_LATENCY: &str = "latency";
+const BIAS_THROUGHPUT: &str = "throughput";
+const DEDUP_PROPERTY: &str = "dedup";
+const VALUE_ALWAYS: &str = "always";
+const VALUE_ON: &str = "on";
+const VALUE_OFF: &str = "off";
+const VALUE_STANDARD: &str = "standard";
 
-// ZFS Property Values - Cache Settings
-pub const CACHE_ALL: &str = "all";
-pub const CACHE_METADATA: &str = "metadata";
-pub const CACHE_NONE: &str = "none";
-
-// ZFS Property Values - Compression
-pub const COMPRESSION_OFF: &str = "off";
-pub const COMPRESSION_LZ4: &str = "lz4";
-pub const COMPRESSION_ZSTD: &str = "zstd";
-pub const COMPRESSION_GZIP_9: &str = "gzip-9";
-
-// ZFS Property Values - Record Sizes
-pub const RECORDSIZE_64K: &str = "64K";
-pub const RECORDSIZE_128K: &str = "128K";
-pub const RECORDSIZE_1M: &str = "1M";
-
-// ZFS Property Values - General
-pub const VALUE_ON: &str = "on";
-pub const VALUE_OFF: &str = "off";
-pub const VALUE_ALWAYS: &str = "always";
-pub const VALUE_STANDARD: &str = "standard";
-
-// Performance Bias Values
-pub const BIAS_LATENCY: &str = "latency";
-pub const BIAS_THROUGHPUT: &str = "throughput";
-
-// Pool Name Constants
-pub const POOL_DEFAULT: &str = "nestpool";
-pub const POOL_PRODUCTION: &str = "nestpool-prod";
-
-// Validation Error Message Constants
+// Local ZFS-specific constants not in centralized system
 const ERROR_TIER_NAME_EMPTY: &str = "Tier name cannot be empty";
 const ERROR_POOL_NAME_EMPTY: &str = "Pool name cannot be empty";
 const ERROR_DATASET_PREFIX_EMPTY: &str = "Dataset prefix cannot be empty";
@@ -129,11 +112,14 @@ impl TierConfig {
     /// Default configuration for hot tier (high performance)
     pub fn hot_tier_default() -> Self {
         let mut properties = HashMap::new();
-        properties.insert(PROP_COMPRESSION.to_string(), COMPRESSION_OFF.to_string());
-        properties.insert(PROP_RECORDSIZE.to_string(), RECORDSIZE_128K.to_string());
-        properties.insert(PROP_ATIME.to_string(), VALUE_OFF.to_string());
-        properties.insert(PROP_PRIMARYCACHE.to_string(), CACHE_ALL.to_string());
-        properties.insert(PROP_SECONDARYCACHE.to_string(), CACHE_ALL.to_string());
+        properties.insert(
+            COMPRESSION_PROPERTY.to_string(),
+            COMPRESSION_OFF.to_string(),
+        );
+        properties.insert(RECORDSIZE_PROPERTY.to_string(), RECORDSIZE_128K.to_string());
+        properties.insert(ATIME_PROPERTY.to_string(), VALUE_OFF.to_string());
+        properties.insert(PRIMARYCACHE_PROPERTY.to_string(), CACHE_ALL.to_string());
+        properties.insert(SECONDARYCACHE_PROPERTY.to_string(), CACHE_ALL.to_string());
 
         Self {
             name: TIER_HOT.to_string(),
@@ -149,11 +135,20 @@ impl TierConfig {
     /// Default configuration for warm tier (balanced)
     pub fn warm_tier_default() -> Self {
         let mut properties = HashMap::new();
-        properties.insert(PROP_COMPRESSION.to_string(), COMPRESSION_LZ4.to_string());
-        properties.insert(PROP_RECORDSIZE.to_string(), RECORDSIZE_1M.to_string());
-        properties.insert(PROP_ATIME.to_string(), VALUE_ON.to_string());
-        properties.insert(PROP_PRIMARYCACHE.to_string(), CACHE_METADATA.to_string());
-        properties.insert(PROP_SECONDARYCACHE.to_string(), CACHE_METADATA.to_string());
+        properties.insert(
+            COMPRESSION_PROPERTY.to_string(),
+            COMPRESSION_LZ4.to_string(),
+        );
+        properties.insert(RECORDSIZE_PROPERTY.to_string(), RECORDSIZE_1M.to_string());
+        properties.insert(ATIME_PROPERTY.to_string(), VALUE_ON.to_string());
+        properties.insert(
+            PRIMARYCACHE_PROPERTY.to_string(),
+            CACHE_METADATA.to_string(),
+        );
+        properties.insert(
+            SECONDARYCACHE_PROPERTY.to_string(),
+            CACHE_METADATA.to_string(),
+        );
 
         Self {
             name: TIER_WARM.to_string(),
@@ -169,12 +164,18 @@ impl TierConfig {
     /// Default configuration for cold tier (high compression)
     pub fn cold_tier_default() -> Self {
         let mut properties = HashMap::new();
-        properties.insert(PROP_COMPRESSION.to_string(), COMPRESSION_ZSTD.to_string());
-        properties.insert(PROP_RECORDSIZE.to_string(), RECORDSIZE_1M.to_string());
-        properties.insert(PROP_ATIME.to_string(), VALUE_OFF.to_string());
-        properties.insert(PROP_PRIMARYCACHE.to_string(), CACHE_METADATA.to_string());
-        properties.insert(PROP_SECONDARYCACHE.to_string(), CACHE_NONE.to_string());
-        properties.insert(PROP_SYNC.to_string(), VALUE_ALWAYS.to_string());
+        properties.insert(
+            COMPRESSION_PROPERTY.to_string(),
+            COMPRESSION_ZSTD.to_string(),
+        );
+        properties.insert(RECORDSIZE_PROPERTY.to_string(), RECORDSIZE_1M.to_string());
+        properties.insert(ATIME_PROPERTY.to_string(), VALUE_OFF.to_string());
+        properties.insert(
+            PRIMARYCACHE_PROPERTY.to_string(),
+            CACHE_METADATA.to_string(),
+        );
+        properties.insert(SECONDARYCACHE_PROPERTY.to_string(), CACHE_NONE.to_string());
+        properties.insert(SYNC_PROPERTY.to_string(), VALUE_ALWAYS.to_string());
 
         Self {
             name: TIER_COLD.to_string(),
@@ -195,26 +196,27 @@ impl TierConfig {
         // Performance-optimized properties for hot tier
         config
             .properties
-            .insert(PROP_RECORDSIZE.to_string(), RECORDSIZE_64K.to_string());
+            .insert(RECORDSIZE_PROPERTY.to_string(), RECORDSIZE_64K.to_string());
+        config.properties.insert(
+            COMPRESSION_PROPERTY.to_string(),
+            COMPRESSION_LZ4.to_string(),
+        );
         config
             .properties
-            .insert(PROP_COMPRESSION.to_string(), COMPRESSION_LZ4.to_string());
+            .insert(PRIMARYCACHE_PROPERTY.to_string(), CACHE_ALL.to_string());
         config
             .properties
-            .insert(PROP_PRIMARYCACHE.to_string(), CACHE_ALL.to_string());
+            .insert(SECONDARYCACHE_PROPERTY.to_string(), CACHE_ALL.to_string());
         config
             .properties
-            .insert(PROP_SECONDARYCACHE.to_string(), CACHE_ALL.to_string());
+            .insert(LOGBIAS_PROPERTY.to_string(), BIAS_LATENCY.to_string());
         config
             .properties
-            .insert(PROP_LOGBIAS.to_string(), BIAS_LATENCY.to_string());
-        config
-            .properties
-            .insert(PROP_SYNC.to_string(), VALUE_STANDARD.to_string());
+            .insert(SYNC_PROPERTY.to_string(), VALUE_STANDARD.to_string());
 
         // Aggressive migration rules for hot tier
-        config.migration_rules.age_threshold_days = 7;
-        config.migration_rules.access_frequency_threshold = 10.0;
+        config.migration_rules.min_age_hours = 7 * 24; // 7 days in hours
+        config.migration_rules.access_threshold = 10;
         config.migration_rules.auto_migration_enabled = true;
 
         config
@@ -228,23 +230,26 @@ impl TierConfig {
         // Balanced properties for warm tier
         config
             .properties
-            .insert(PROP_RECORDSIZE.to_string(), RECORDSIZE_128K.to_string());
+            .insert(RECORDSIZE_PROPERTY.to_string(), RECORDSIZE_128K.to_string());
+        config.properties.insert(
+            COMPRESSION_PROPERTY.to_string(),
+            COMPRESSION_ZSTD.to_string(),
+        );
+        config.properties.insert(
+            PRIMARYCACHE_PROPERTY.to_string(),
+            CACHE_METADATA.to_string(),
+        );
+        config.properties.insert(
+            SECONDARYCACHE_PROPERTY.to_string(),
+            CACHE_METADATA.to_string(),
+        );
         config
             .properties
-            .insert(PROP_COMPRESSION.to_string(), COMPRESSION_ZSTD.to_string());
-        config
-            .properties
-            .insert(PROP_PRIMARYCACHE.to_string(), CACHE_METADATA.to_string());
-        config
-            .properties
-            .insert(PROP_SECONDARYCACHE.to_string(), CACHE_METADATA.to_string());
-        config
-            .properties
-            .insert(PROP_LOGBIAS.to_string(), BIAS_THROUGHPUT.to_string());
+            .insert(LOGBIAS_PROPERTY.to_string(), BIAS_THROUGHPUT.to_string());
 
         // Balanced migration rules
-        config.migration_rules.age_threshold_days = 30;
-        config.migration_rules.access_frequency_threshold = 2.0;
+        config.migration_rules.min_age_hours = 30 * 24; // 30 days in hours
+        config.migration_rules.access_threshold = 2;
         config.migration_rules.auto_migration_enabled = true;
 
         config
@@ -258,26 +263,28 @@ impl TierConfig {
         // Space-optimized properties for cold tier
         config
             .properties
-            .insert(PROP_RECORDSIZE.to_string(), RECORDSIZE_1M.to_string());
+            .insert(RECORDSIZE_PROPERTY.to_string(), RECORDSIZE_1M.to_string());
+        config.properties.insert(
+            COMPRESSION_PROPERTY.to_string(),
+            COMPRESSION_GZIP_9.to_string(),
+        );
+        config.properties.insert(
+            PRIMARYCACHE_PROPERTY.to_string(),
+            CACHE_METADATA.to_string(),
+        );
         config
             .properties
-            .insert(PROP_COMPRESSION.to_string(), COMPRESSION_GZIP_9.to_string());
+            .insert(SECONDARYCACHE_PROPERTY.to_string(), CACHE_NONE.to_string());
         config
             .properties
-            .insert(PROP_PRIMARYCACHE.to_string(), CACHE_METADATA.to_string());
+            .insert(LOGBIAS_PROPERTY.to_string(), BIAS_THROUGHPUT.to_string());
         config
             .properties
-            .insert(PROP_SECONDARYCACHE.to_string(), CACHE_NONE.to_string());
-        config
-            .properties
-            .insert(PROP_LOGBIAS.to_string(), BIAS_THROUGHPUT.to_string());
-        config
-            .properties
-            .insert(PROP_DEDUP.to_string(), VALUE_ON.to_string());
+            .insert(DEDUP_PROPERTY.to_string(), VALUE_ON.to_string());
 
         // Conservative migration rules
-        config.migration_rules.age_threshold_days = 90;
-        config.migration_rules.access_frequency_threshold = 0.1;
+        config.migration_rules.min_age_hours = 90 * 24; // 90 days in hours
+        config.migration_rules.access_threshold = 1;
         config.migration_rules.auto_migration_enabled = true;
 
         config

@@ -1,4 +1,3 @@
-/// **UNIFIED NETWORK CONFIG - SETTINGS MODULE**
 /// Contains all individual network configuration setting structs.
 /// Extracted from the large unified_network_config.rs to achieve file size compliance.
 

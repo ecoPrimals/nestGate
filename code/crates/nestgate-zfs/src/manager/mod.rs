@@ -1,9 +1,8 @@
-//! ZFS Manager - Main orchestrator for ZFS operations
-//!
-//! Enhanced ZFS manager that integrates advanced patterns with v2 orchestrator architecture,
-//! AI integration, and comprehensive performance monitoring. This module coordinates all
-//! ZFS operations including pool management, dataset operations, snapshots, tier management,
-//! and automated optimization.
+//
+// Enhanced ZFS manager that integrates advanced patterns with v2 orchestrator architecture,
+// AI integration, and comprehensive performance monitoring. This module coordinates all
+// ZFS operations including pool management, dataset operations, snapshots, tier management,
+// and automated optimization.
 
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -14,10 +13,6 @@ use crate::{
     performance::ZfsPerformanceMonitor, pool::ZfsPoolManager, snapshot::ZfsSnapshotManager,
     tier::TierManager,
 };
-use nestgate_automation::DatasetAnalyzer;
-
-#[cfg(feature = "orchestrator")]
-use nestgate_mcp::OrchestratorClient;
 
 // Module declarations
 pub mod ai_tier_optimization;
@@ -43,7 +38,7 @@ pub struct ZfsManager {
     /// Migration engine for tier optimization
     pub migration_engine: Arc<RwLock<MigrationEngine>>,
     /// Dataset analysis and automation
-    pub dataset_analyzer: Arc<DatasetAnalyzer>,
+    pub dataset_analyzer: Arc<crate::migration::discovery::DatasetAnalyzer>,
     /// Performance monitoring
     pub performance_monitor: Arc<RwLock<ZfsPerformanceMonitor>>,
     /// Tiered storage management
@@ -56,9 +51,10 @@ pub struct ZfsManager {
     pub automation: Option<Arc<DatasetAutomation>>,
     /// Configuration management
     pub config: ZfsConfig,
-    /// Optional orchestrator client
+    /// Optional orchestrator client (placeholder for future implementation)
     #[cfg(feature = "orchestrator")]
-    orchestrator_client: Option<Arc<dyn OrchestratorClient>>,
+    #[allow(dead_code)] // Future orchestrator integration
+    orchestrator_enabled: bool,
 }
 
 impl std::fmt::Debug for ZfsManager {

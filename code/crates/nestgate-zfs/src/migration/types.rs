@@ -1,17 +1,17 @@
-//! ZFS Migration Types - Data structures and enums for migration system
-//!
-//! Contains all the core data structures used by the migration system including
-//! job definitions, configurations, statistics, and processing contexts.
+//
+// Contains all the core data structures used by the migration system including
+// job definitions, configurations, statistics, and processing contexts.
 
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::SystemTime;
-use tokio::sync::{RwLock, Semaphore};
+use tokio::sync::RwLock;
 use uuid;
 
-use crate::{dataset::ZfsDatasetManager, pool::ZfsPoolManager, types::StorageTier};
+// Remove unused imports for canonical modernization
+use crate::types::StorageTier;
 
 /// Migration job status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -218,14 +218,25 @@ impl Default for MigrationStatistics {
     }
 }
 
-/// Migration queue processing context
+// Type aliases for complex types to improve readability
+type MigrationJobQueue = Arc<RwLock<VecDeque<MigrationJob>>>;
+type ActiveMigrationsMap = Arc<RwLock<HashMap<String, MigrationJob>>>;
+type MigrationHistoryVec = Arc<RwLock<Vec<MigrationJob>>>;
+
+/// Migration context for passing state between operations
+/// **CANONICAL MODERNIZATION**: Complete context with concrete types for performance
 pub struct MigrationContext<'a> {
-    pub job_queue: &'a Arc<RwLock<VecDeque<MigrationJob>>>,
-    pub active_migrations: &'a Arc<RwLock<HashMap<String, MigrationJob>>>,
-    pub migration_history: &'a Arc<RwLock<Vec<MigrationJob>>>,
+    pub job_queue: &'a MigrationJobQueue,
+    pub active_migrations: &'a ActiveMigrationsMap,
+    pub migration_history: &'a MigrationHistoryVec,
+    /// Migration statistics for tracking performance
     pub statistics: &'a Arc<RwLock<MigrationStatistics>>,
-    pub migration_semaphore: &'a Arc<Semaphore>,
+    /// Semaphore for controlling concurrent migrations
+    pub migration_semaphore: &'a tokio::sync::Semaphore,
+    /// Migration configuration
     pub config: &'a MigrationConfig,
-    pub pool_manager: &'a Arc<ZfsPoolManager>,
-    pub dataset_manager: &'a Arc<ZfsDatasetManager>,
+    /// Pool manager reference (concrete type for performance)
+    pub pool_manager: &'a Arc<crate::pool::ZfsPoolManager>,
+    /// Dataset manager reference (concrete type for performance)
+    pub dataset_manager: &'a Arc<crate::dataset::ZfsDatasetManager>,
 }

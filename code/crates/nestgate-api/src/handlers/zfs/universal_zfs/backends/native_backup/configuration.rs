@@ -1,6 +1,5 @@
-//! Configuration Operations for Native ZFS Backend
-//!
-//! Contains configuration and utility operations for the native ZFS backend.
+//
+// Contains configuration and utility operations for the native ZFS backend.
 
 // Removed unused tracing import
 
@@ -60,7 +59,7 @@ pub async fn update_configuration(
         }
         Ok(())
     } else {
-        Err(UniversalZfsError::invalid_input(
+        Err(UniversalZfsError::Zfs { operation: "zfs_operation".to_string(), error_data: ZfsErrorData::invalid_input(
             "config",
             "Invalid configuration format - expected JSON object",
         ))

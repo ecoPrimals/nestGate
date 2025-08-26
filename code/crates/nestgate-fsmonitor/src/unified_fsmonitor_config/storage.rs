@@ -1,4 +1,3 @@
-/// **STORAGE MODULE**
 /// Storage and persistence configuration - extracted from monolithic config
 /// Handles storage backends, retention, compression, indexing, and backup settings
 use serde::{Deserialize, Serialize};
@@ -7,7 +6,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 /// Storage and persistence settings
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct FsMonitorStorageSettings {
     /// Enable event storage
     pub enabled: bool,
@@ -95,19 +94,6 @@ pub struct BackupSettings {
     pub retention_count: u32,
     /// Enable compression for backups
     pub compress: bool,
-}
-
-impl Default for FsMonitorStorageSettings {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            backend: StorageBackendConfig::default(),
-            retention: EventRetentionSettings::default(),
-            compression: CompressionSettings::default(),
-            indexing: IndexingSettings::default(),
-            backup: BackupSettings::default(),
-        }
-    }
 }
 
 impl Default for StorageBackendConfig {

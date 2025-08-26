@@ -1,9 +1,8 @@
-//! Integration tests for ZFS API endpoints
-//!
-//! This test suite validates the complete ZFS API functionality including
-//! pool management, dataset operations, snapshot management, and AI integration.
-//!
-//! Tests use real ZFS by default. To run with mock data, set USE_MOCK_ZFS=true
+//
+// This test suite validates the complete ZFS API functionality including
+// pool management, dataset operations, snapshot management, and AI integration.
+//
+// Tests use real ZFS by default. To run with mock data, set USE_MOCK_ZFS=true
 
 use axum_test::TestServer;
 use nestgate_api::create_app;

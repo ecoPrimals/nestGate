@@ -1,4 +1,3 @@
-/// Middleware Performance Configuration
 /// Performance optimization settings and monitoring configuration
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -154,7 +153,7 @@ pub struct BatchingSettings {
     pub batch_timeout: Duration,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResponseOptimizationSettings {
     /// Response caching
     pub caching: ResponseCachingSettings,
@@ -202,7 +201,7 @@ pub struct StreamingSettings {
     pub threshold: usize,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MemoryOptimizationSettings {
     /// Enable memory optimization
     pub enabled: bool,
@@ -216,7 +215,7 @@ pub struct MemoryOptimizationSettings {
 
 // ==================== OBSERVABILITY SETTINGS ====================
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MiddlewareObservabilitySettings {
     /// Logging configuration
     pub logging: LoggingSettings,
@@ -339,7 +338,7 @@ pub struct HealthEndpoint {
     pub timeout: Duration,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AlertingSettings {
     /// Enable alerting
     pub enabled: bool,
@@ -535,16 +534,6 @@ impl Default for BatchingSettings {
     }
 }
 
-impl Default for ResponseOptimizationSettings {
-    fn default() -> Self {
-        Self {
-            caching: ResponseCachingSettings::default(),
-            streaming: StreamingSettings::default(),
-            compression: CompressionSettings::default(),
-        }
-    }
-}
-
 impl Default for ResponseCachingSettings {
     fn default() -> Self {
         Self {
@@ -561,29 +550,6 @@ impl Default for StreamingSettings {
             enabled: false,
             buffer_size: 8192,
             threshold: 1024 * 1024, // 1MB
-        }
-    }
-}
-
-impl Default for MemoryOptimizationSettings {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            object_pooling: false,
-            string_interning: false,
-            memory_mapping: false,
-        }
-    }
-}
-
-impl Default for MiddlewareObservabilitySettings {
-    fn default() -> Self {
-        Self {
-            logging: LoggingSettings::default(),
-            metrics: MetricsSettings::default(),
-            tracing: TracingSettings::default(),
-            health_monitoring: HealthMonitoringSettings::default(),
-            alerting: AlertingSettings::default(),
         }
     }
 }
@@ -638,16 +604,6 @@ impl Default for HealthMonitoringSettings {
             enabled: false,
             check_interval: Duration::from_secs(30),
             endpoints: Vec::new(),
-        }
-    }
-}
-
-impl Default for AlertingSettings {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            rules: Vec::new(),
-            destinations: Vec::new(),
         }
     }
 }

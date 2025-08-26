@@ -1,14 +1,13 @@
-//! Server-Sent Events (SSE) Streaming for NestGate
-//!
-//! This module provides real-time Server-Sent Events streaming capabilities
-//! for clients that prefer SSE over WebSocket connections. It integrates
-//! with the existing event coordination system and provides:
-//!
-//! - Real-time storage operation streaming
-//! - System health monitoring streams
-//! - Performance metrics streaming
-//! - Event-driven notifications
-//! - Backpressure handling
+//
+// This module provides real-time Server-Sent Events streaming capabilities
+// for clients that prefer SSE over WebSocket connections. It integrates
+// with the existing event coordination system and provides:
+//
+// - Real-time storage operation streaming
+// - System health monitoring streams
+// - Performance metrics streaming
+// - Event-driven notifications
+// - Backpressure handling
 
 use anyhow::Result;
 use axum::{

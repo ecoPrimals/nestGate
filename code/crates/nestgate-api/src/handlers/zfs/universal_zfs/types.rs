@@ -1,16 +1,23 @@
-//! Universal ZFS Types and Error Handling
-//!
-//! Common types used across all ZFS service implementations with comprehensive
-//! error handling and structured data types.
+// Universal ZFS Types and Error Handling
+//
+// Common types used across all ZFS service implementations with comprehensive
+// error handling and structured data types.
 
+use nestgate_core::error::domain_errors::RateLimitInfo;
+use nestgate_core::error::{IdioResult, NestGateError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 use std::time::SystemTime;
 use thiserror::Error;
 
-/// Universal ZFS Result type
-pub type UniversalZfsResult<T> = Result<T, UniversalZfsError>;
+// ==================== CANONICAL MODERNIZATION ====================
+
+/// **CANONICAL**: Universal ZFS Result type using IdioResult
+/// This follows the canonical Result<T,E> pattern with domain-specific error type
+pub type UniversalZfsResult<T> = IdioResult<T, UniversalZfsError>;
+
+// DEPRECATED TYPE REMOVED: LegacyZfsResult<T> - Use UniversalZfsResult<T> instead
 
 /// Comprehensive error types for universal ZFS operations
 #[derive(Error, Debug, Clone, Serialize, Deserialize)]
@@ -117,6 +124,120 @@ pub enum UniversalZfsError {
         /// Error message from command execution
         message: String,
     },
+}
+
+// ==================== CONVERSION TRAITS ====================
+
+impl From<UniversalZfsError> for NestGateError {
+    fn from(err: UniversalZfsError) -> Self {
+        match err {
+            UniversalZfsError::ServiceUnavailable { message } => {
+                NestGateError::service_unavailable("universal_zfs".to_string(), message)
+            }
+            UniversalZfsError::Timeout {
+                operation,
+                duration,
+            } => NestGateError::Timeout {
+                operation,
+                duration,
+                retryable: true,
+                suggested_timeout: Some(duration * 2),
+            },
+            UniversalZfsError::Configuration { message } => {
+                NestGateError::configuration_error(message, Some("zfs".to_string()))
+            }
+            UniversalZfsError::Backend { backend, message } => {
+                NestGateError::UniversalZfs(Box::new(nestgate_core::error::UniversalZfsErrorData {
+                    message,
+                    operation: "backend_operation".to_string(),
+                    backend: Some(backend),
+                    resource: None,
+                    timeout_duration: None,
+                    circuit_breaker_open: false,
+                    rate_limit_info: None,
+                }))
+            }
+            UniversalZfsError::NotFound {
+                resource_type,
+                name,
+            } => {
+                NestGateError::UniversalZfs(Box::new(nestgate_core::error::UniversalZfsErrorData {
+                    message: format!("{} '{}' not found", resource_type, name),
+                    operation: "resource_lookup".to_string(),
+                    backend: None,
+                    resource: Some(name),
+                    timeout_duration: None,
+                    circuit_breaker_open: false,
+                    rate_limit_info: None,
+                }))
+            }
+            UniversalZfsError::PermissionDenied { operation } => {
+                NestGateError::permission_denied_error("zfs_resource".to_string(), operation)
+            }
+            UniversalZfsError::InvalidInput { field, message } => {
+                NestGateError::invalid_input(field, message)
+            }
+            UniversalZfsError::Network { message } => {
+                NestGateError::Network(Box::new(nestgate_core::error::NetworkErrorData {
+                    message,
+                    operation: "zfs_network".to_string(),
+                    endpoint: None,
+                    context: None,
+                }))
+            }
+            UniversalZfsError::Internal { message } => NestGateError::Internal {
+                message,
+                location: Some("universal_zfs".to_string()),
+                debug_info: None,
+                is_bug: false,
+            },
+            UniversalZfsError::CircuitBreakerOpen { service } => {
+                NestGateError::UniversalZfs(Box::new(nestgate_core::error::UniversalZfsErrorData {
+                    message: format!("Circuit breaker open for service: {}", service),
+                    operation: "service_access".to_string(),
+                    backend: Some(service),
+                    resource: None,
+                    timeout_duration: None,
+                    circuit_breaker_open: true,
+                    rate_limit_info: None,
+                }))
+            }
+            UniversalZfsError::RateLimitExceeded { limit, window } => {
+                NestGateError::UniversalZfs(Box::new(nestgate_core::error::UniversalZfsErrorData {
+                    message: format!("Rate limit exceeded: {} per {:?}", limit, window),
+                    operation: "rate_limited_operation".to_string(),
+                    backend: None,
+                    resource: None,
+                    timeout_duration: None,
+                    circuit_breaker_open: false,
+                    rate_limit_info: Some(RateLimitInfo {
+                        limit,
+                        window,
+                        current_usage: limit,
+                        reset_time: std::time::SystemTime::now() + window,
+                    }),
+                }))
+            }
+            UniversalZfsError::ValidationFailed { errors } => NestGateError::Validation {
+                field: "multiple_fields".to_string(),
+                message: errors.join("; "),
+                current_value: None,
+                expected: Some("valid input".to_string()),
+                user_error: true,
+            },
+            UniversalZfsError::CommandFailed { command, message } => {
+                NestGateError::UniversalZfs(Box::new(nestgate_core::error::UniversalZfsErrorData {
+                    message,
+                    operation: "command_execution".to_string(),
+                    backend: None,
+                    resource: Some(command),
+                    timeout_duration: None,
+                    circuit_breaker_open: false,
+                    rate_limit_info: None,
+                }))
+            }
+        }
+    }
 }
 
 impl UniversalZfsError {
@@ -489,6 +610,26 @@ impl Default for ServiceMetrics {
             circuit_breaker_state: "CLOSED".to_string(),
             active_connections: 0,
             custom_metrics: HashMap::new(),
+        }
+    }
+}
+
+// ==================== ERROR CONVERSIONS ====================
+
+impl From<std::io::Error> for UniversalZfsError {
+    fn from(error: std::io::Error) -> Self {
+        UniversalZfsError::Backend {
+            backend: "system".to_string(),
+            message: format!("IO error: {}", error),
+        }
+    }
+}
+
+impl From<tokio::time::error::Elapsed> for UniversalZfsError {
+    fn from(_error: tokio::time::error::Elapsed) -> Self {
+        UniversalZfsError::Timeout {
+            operation: "command execution".to_string(),
+            duration: Duration::from_secs(30), // Default timeout
         }
     }
 }

@@ -1,8 +1,7 @@
-//! Event Coordination System
-//!
-//! This module provides reactive event coordination for the hybrid communication
-//! system, enabling real-time coordination between WebSocket clients, internal
-//! services, and MCP streams.
+//
+// This module provides reactive event coordination for the hybrid communication
+// system, enabling real-time coordination between WebSocket clients, internal
+// services, and MCP streams.
 
 use nestgate_core::uuid_cache::get_or_create_uuid;
 use serde::{Deserialize, Serialize};
@@ -25,12 +24,16 @@ pub struct EventCoordinator {
     stats: Arc<RwLock<EventStats>>,
 }
 
-/// Event processing statistics
+/// Event coordination metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventStats {
+    /// Total number of events processed
     pub total_events: u64,
+    /// Number of events successfully processed
     pub events_processed: u64,
+    /// Number of currently active event handlers
     pub active_handlers: u64,
+    /// Total number of errors encountered
     pub errors: u64,
 }
 
@@ -96,13 +99,18 @@ pub enum CoordinatedEventType {
     HealthMonitoring,
 }
 
-/// Event processing result
+/// Event processing result with detailed information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventProcessingResult {
+    /// Unique identifier for the event
     pub event_id: Uuid,
+    /// Identifier of the handler that processed the event
     pub handler_id: String,
+    /// Whether the event was processed successfully
     pub success: bool,
+    /// Time taken to process the event
     pub processing_time: std::time::Duration,
+    /// Optional error message if processing failed
     pub error_message: Option<String>,
 }
 
@@ -133,7 +141,7 @@ impl EventCoordinator {
     pub async fn register_handler(
         &self,
         handler: EventHandler,
-    ) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let handler_id = handler.id.to_string();
 
         {
@@ -155,7 +163,7 @@ impl EventCoordinator {
     pub async fn emit_event(
         &self,
         event: CoordinatedEvent,
-    ) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let handlers = self.handlers.read().await;
 
         for handler in handlers.values() {
@@ -218,32 +226,31 @@ impl EventCoordinator {
         &self,
         event: CoordinatedEvent,
         handler: &EventHandler,
-    ) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         debug!(
             "Handling event {} with handler {}",
             event.event_id, handler.name
         );
 
         // Route to the appropriate handler method based on event type
-        let result: std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> =
-            match event.event_type {
-                CoordinatedEventType::WebSocket => self.handle_websocket_event(&event).await,
-                CoordinatedEventType::InternalService => {
-                    self.handle_internal_service_event(&event).await
-                }
-                CoordinatedEventType::McpStream => self.handle_mcp_stream_event(&event).await,
-                CoordinatedEventType::StorageOperation => {
-                    self.handle_storage_operation_event(&event).await
-                }
-                CoordinatedEventType::ConfigurationChange => {
-                    debug!("Handling configuration change event: {}", event.event_id);
-                    Ok(())
-                }
-                CoordinatedEventType::HealthMonitoring => {
-                    debug!("Handling health monitoring event: {}", event.event_id);
-                    Ok(())
-                }
-            };
+        let result: Result<(), Box<dyn std::error::Error + Send + Sync>> = match event.event_type {
+            CoordinatedEventType::WebSocket => self.handle_websocket_event(&event).await,
+            CoordinatedEventType::InternalService => {
+                self.handle_internal_service_event(&event).await
+            }
+            CoordinatedEventType::McpStream => self.handle_mcp_stream_event(&event).await,
+            CoordinatedEventType::StorageOperation => {
+                self.handle_storage_operation_event(&event).await
+            }
+            CoordinatedEventType::ConfigurationChange => {
+                debug!("Handling configuration change event: {}", event.event_id);
+                Ok(())
+            }
+            CoordinatedEventType::HealthMonitoring => {
+                debug!("Handling health monitoring event: {}", event.event_id);
+                Ok(())
+            }
+        };
 
         // Update stats
         let mut stats = self.stats.write().await;
@@ -265,7 +272,7 @@ impl EventCoordinator {
     async fn handle_websocket_event(
         &self,
         event: &CoordinatedEvent,
-    ) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         debug!("Handling WebSocket event: {:?}", event.event_type);
 
         // Create a WebSocket event from the coordinated event (if WebSocket feature is enabled)
@@ -307,7 +314,7 @@ impl EventCoordinator {
     async fn handle_internal_service_event(
         &self,
         event: &CoordinatedEvent,
-    ) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         debug!("Handling internal service event: {:?}", event.event_type);
 
         // Route to appropriate internal service based on event data
@@ -347,7 +354,7 @@ impl EventCoordinator {
     async fn handle_mcp_stream_event(
         &self,
         event: &CoordinatedEvent,
-    ) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         debug!("Handling MCP stream event: {:?}", event.event_type);
 
         // Extract stream information from event data
@@ -401,7 +408,7 @@ impl EventCoordinator {
     async fn handle_storage_operation_event(
         &self,
         event: &CoordinatedEvent,
-    ) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         debug!("Handling storage operation event: {:?}", event.event_type);
 
         // Extract storage operation information from event data

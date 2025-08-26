@@ -1,16 +1,15 @@
-//! ZFS Configuration Management
-//!
-//! Advanced configuration patterns with ZFS-specific settings.
-//! This module is organized into focused submodules for better maintainability:
-//!
-//! - `main` - Main ZFS configuration and core settings
-//! - `tiers` - Tier configurations and performance profiles
-//! - `migration` - Migration settings and capacity limits
-//! - `pool` - Pool discovery and management settings
-//! - `health` - Health monitoring configuration  
-//! - `metrics` - Metrics collection and export settings
-//! - `security` - Security configuration and access control
-//! - `automation` - Dataset automation and AI settings
+//
+// Advanced configuration patterns with ZFS-specific settings.
+// This module is organized into focused submodules for better maintainability:
+//
+// - `main` - Main ZFS configuration and core settings
+// - `tiers` - Tier configurations and performance profiles
+// - `migration` - Migration settings and capacity limits
+// - `pool` - Pool discovery and management settings
+// - `health` - Health monitoring configuration  
+// - `metrics` - Metrics collection and export settings
+// - `security` - Security configuration and access control
+// - `automation` - Dataset automation and AI settings
 
 pub mod automation;
 pub mod health;

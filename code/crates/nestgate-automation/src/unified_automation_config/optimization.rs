@@ -1,4 +1,3 @@
-use nestgate_core::smart_abstractions::prelude::*;
 /// **OPTIMIZATION MODULE**
 /// Performance optimization configuration - extracted from monolithic config
 use serde::{Deserialize, Serialize};

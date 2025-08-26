@@ -51,8 +51,7 @@ indicatif = "0.17"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
-# Iced GUI preparation (feature-gated for now)
-iced = { version = "0.12", optional = true, features = ["tokio", "debug", "image", "svg"] }
+# GUI removed - using API endpoints for UI primals instead
 
 # Platform-specific dependencies
 [target.'cfg(windows)'.dependencies]
@@ -67,4 +66,4 @@ nix = { version = "0.27", features = ["user"] }
 [features]
 default = ["cli"]
 cli = []
-gui = ["iced"] 
+# GUI feature removed - using API-driven UI primals instead 

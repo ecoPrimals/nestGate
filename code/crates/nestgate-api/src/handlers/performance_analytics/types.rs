@@ -1,24 +1,15 @@
-//! Performance Analytics Types
-//!
-//! Core data structures and enums for performance monitoring and analytics.
+//
+// Core data structures and enums for performance monitoring and analytics.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 
-/// Performance analytics configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PerformanceConfig {
-    /// Collection interval in seconds
-    pub collection_interval: u64,
-    /// Retention period in days
-    pub retention_days: u32,
-    /// Enable predictive analytics
-    pub predictive_enabled: bool,
-    /// Alert thresholds
-    pub alert_thresholds: AlertThresholds,
-}
+/// **CANONICAL MODERNIZATION** - Use canonical performance configuration
+pub use nestgate_core::CanonicalPerformanceConfig as PerformanceConfig;
+
+// ==================== PERFORMANCE ANALYTICS TYPES ====================
 
 /// Alert threshold configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

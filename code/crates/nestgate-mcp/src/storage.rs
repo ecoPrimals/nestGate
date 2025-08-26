@@ -1,13 +1,12 @@
-//! MCP Storage Management
-//!
-//! Storage management for MCP integration
+//
+// Storage management for MCP integration
 
 use crate::{
-    error::Error,
-    types::{MountInfo, MountRequest, StorageTier},
+    types::{MountInfo, MountRequest, MountStatus, NfsVersion, StorageProtocol, StorageTier},
     Result,
 };
 use nestgate_core::biomeos::{BiomeContext, VolumeSpec};
+use nestgate_core::error::NestGateError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -91,13 +90,23 @@ impl McpStorageManager {
 
         // Validate configuration
         if config.name.is_empty() {
-            return Err(Error::validation("Volume name cannot be empty".to_string()).into());
+            return Err(NestGateError::Validation {
+                field: "volume_name".to_string(),
+                message: "Volume name cannot be empty".to_string(),
+                current_value: Some("".to_string()),
+                expected: Some("non-empty string".to_string()),
+                user_error: true,
+            });
         }
 
         if config.size_bytes == 0 {
-            return Err(
-                Error::validation("Volume size must be greater than zero".to_string()).into(),
-            );
+            return Err(NestGateError::Validation {
+                field: "volume_size".to_string(),
+                message: "Volume size must be greater than zero".to_string(),
+                current_value: Some("0".to_string()),
+                expected: Some("> 0".to_string()),
+                user_error: true,
+            });
         }
 
         // Check if volume already exists
@@ -222,7 +231,12 @@ impl McpStorageManager {
             })?;
 
         if volume.mounted {
-            return Err(Error::storage(format!("Cannot delete mounted volume: {name}")).into());
+            return Err(NestGateError::Io {
+                operation: "volume deletion".to_string(),
+                error_message: format!("Cannot delete mounted volume: {name}"),
+                resource: Some(name.to_string()),
+                retryable: false,
+            });
         }
 
         volumes.remove(name);
@@ -271,11 +285,13 @@ impl McpStorageManager {
             "cold" => StorageTier::Cold,
             "cache" => StorageTier::Hot, // Map cache to hot tier
             _ => {
-                return Err(Error::validation(format!(
-                    "Unknown storage tier: {}",
-                    volume_spec.tier
-                ))
-                .into())
+                return Err(NestGateError::Validation {
+                    field: "storage_tier".to_string(),
+                    message: format!("Unknown storage tier: {}", volume_spec.tier),
+                    current_value: Some(volume_spec.tier.clone()),
+                    expected: Some("hot, warm, cold, or cache".to_string()),
+                    user_error: true,
+                });
             }
         };
 
@@ -392,11 +408,15 @@ impl McpStorageManager {
                 })?;
 
         if new_size_bytes < volume.used_bytes {
-            return Err(Error::storage(format!(
-                "Cannot shrink volume below used space: {} < {}",
-                new_size_bytes, volume.used_bytes
-            ))
-            .into());
+            return Err(NestGateError::Io {
+                operation: "volume resize".to_string(),
+                error_message: format!(
+                    "Cannot shrink volume below used space: {} < {}",
+                    new_size_bytes, volume.used_bytes
+                ),
+                resource: Some("volume".to_string()),
+                retryable: false,
+            });
         }
 
         volume.size_bytes = new_size_bytes;
@@ -433,15 +453,15 @@ impl StorageAdapter {
         tracing::info!(
             "Mounting volume: {} to {}",
             request.volume_id,
-            request.mount_point.display()
+            request.mount_path
         );
         Ok(MountInfo {
-            id: format!("mount_{}", request.volume_id),
             volume_id: request.volume_id.clone(),
-            node_id: request.node_id.clone(),
-            mount_point: request.mount_point.clone(),
-            protocol: request.protocol.clone(),
-            created_at: SystemTime::now(),
+            mount_path: request.mount_path.clone(),
+            protocol: StorageProtocol::Nfs(NfsVersion::V4), // Default protocol
+            options: request.options.clone(),
+            status: MountStatus::Mounted,
+            mounted_at: SystemTime::now(),
         })
     }
 }

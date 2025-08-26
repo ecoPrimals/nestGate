@@ -1,6 +1,5 @@
-//! Performance Dashboard HTTP Handlers
-//!
-//! This module contains the main PerformanceDashboard struct and HTTP handler functions.
+//
+// This module contains the main PerformanceDashboard struct and HTTP handler functions.
 
 use super::{PerformanceAnalyzer, RealTimeMetricsCollector, OptimizationEngineInterface};
 use crate::handlers::performance_dashboard::types::*;

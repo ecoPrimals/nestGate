@@ -1,9 +1,8 @@
-//! Mock ZFS Backend
-//!
-//! Provides mock responses for testing and development without requiring actual ZFS.
-//! This backend is fully deterministic and provides consistent responses.
+//
+// Provides mock responses for testing and development without requiring actual ZFS.
+// This backend is fully deterministic and provides consistent responses.
 
-use async_trait::async_trait;
+// REMOVED: async_trait - using zero-cost native async patterns
 use std::collections::HashMap;
 use std::time::SystemTime;
 use tokio::time::sleep;
@@ -184,7 +183,7 @@ impl Default for MockZfsService {
     }
 }
 
-#[async_trait]
+// CANONICAL MODERNIZATION: Converted from async_trait to zero-cost native async
 impl UniversalZfsService for MockZfsService {
     fn service_name(&self) -> &str {
         &self.service_name
@@ -194,510 +193,560 @@ impl UniversalZfsService for MockZfsService {
         &self.service_version
     }
 
-    async fn health_check(&self) -> UniversalZfsResult<HealthStatus> {
-        self.simulate_delay().await;
+    fn health_check(&self) -> impl std::future::Future<Output = UniversalZfsResult<HealthStatus>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("health_check") {
-            return Err(UniversalZfsError::service_unavailable(
-                "Mock service unavailable",
-            ));
-        }
+            if self.should_fail("health_check") {
+                return Err(UniversalZfsError::service_unavailable(
+                    "Mock service unavailable",
+                ));
+            }
 
-        let checks = vec![
-            HealthCheck {
-                name: "zfs_available".to_string(),
+            let checks = vec![
+                HealthCheck {
+                    name: "zfs_available".to_string(),
+                    status: ServiceStatus::Healthy,
+                    message: "Mock ZFS is available".to_string(),
+                    duration: Duration::from_millis(1),
+                },
+                HealthCheck {
+                    name: "pools_healthy".to_string(),
+                    status: ServiceStatus::Healthy,
+                    message: "All pools are healthy".to_string(),
+                    duration: Duration::from_millis(2),
+                },
+                HealthCheck {
+                    name: "datasets_healthy".to_string(),
+                    status: ServiceStatus::Healthy,
+                    message: "All datasets are healthy".to_string(),
+                    duration: Duration::from_millis(1),
+                },
+            ];
+
+            Ok(HealthStatus {
+                service_name: self.service_name.clone(),
                 status: ServiceStatus::Healthy,
-                message: "Mock ZFS is available".to_string(),
-                duration: Duration::from_millis(1),
-            },
-            HealthCheck {
-                name: "pools_healthy".to_string(),
-                status: ServiceStatus::Healthy,
-                message: "All pools are healthy".to_string(),
-                duration: Duration::from_millis(2),
-            },
-            HealthCheck {
-                name: "datasets_healthy".to_string(),
-                status: ServiceStatus::Healthy,
-                message: "All datasets are healthy".to_string(),
-                duration: Duration::from_millis(1),
-            },
-        ];
-
-        Ok(HealthStatus {
-            service_name: self.service_name.clone(),
-            status: ServiceStatus::Healthy,
-            last_check: SystemTime::now(),
-            zfs_available: true,
-            pools_healthy: true,
-            datasets_healthy: true,
-            system_healthy: true,
-            checks,
-            metrics: Some(self.get_metrics().await?),
-        })
+                last_check: SystemTime::now(),
+                zfs_available: true,
+                pools_healthy: true,
+                datasets_healthy: true,
+                system_healthy: true,
+                checks,
+                metrics: Some(self.get_metrics().await?),
+            })
+        }
     }
 
-    async fn get_metrics(&self) -> UniversalZfsResult<ServiceMetrics> {
-        self.simulate_delay().await;
+    fn get_metrics(&self) -> impl std::future::Future<Output = UniversalZfsResult<ServiceMetrics>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        Ok(ServiceMetrics {
-            service_name: self.service_name.clone(),
-            timestamp: SystemTime::now(),
-            uptime: SystemTime::now()
-                .duration_since(self.start_time)
-                .unwrap_or_default(),
-            requests_total: 1000,
-            requests_successful: 995,
-            requests_failed: 5,
-            average_response_time: Duration::from_millis(50),
-            error_rate: 0.5,
-            circuit_breaker_state: "CLOSED".to_string(),
-            active_connections: 10,
-            custom_metrics: {
-                let mut metrics = HashMap::new();
-                metrics.insert("pools_count".to_string(), self.pools.len() as f64);
-                metrics.insert("datasets_count".to_string(), self.datasets.len() as f64);
-                metrics.insert("snapshots_count".to_string(), self.snapshots.len() as f64);
-                metrics
-            },
-        })
+            Ok(ServiceMetrics {
+                service_name: self.service_name.clone(),
+                timestamp: SystemTime::now(),
+                uptime: SystemTime::now()
+                    .duration_since(self.start_time)
+                    .unwrap_or_default(),
+                requests_total: 1000,
+                requests_successful: 995,
+                requests_failed: 5,
+                average_response_time: Duration::from_millis(50),
+                error_rate: 0.5,
+                circuit_breaker_state: "CLOSED".to_string(),
+                active_connections: 10,
+                custom_metrics: {
+                    let mut metrics = HashMap::new();
+                    metrics.insert("pools_count".to_string(), self.pools.len() as f64);
+                    metrics.insert("datasets_count".to_string(), self.datasets.len() as f64);
+                    metrics.insert("snapshots_count".to_string(), self.snapshots.len() as f64);
+                    metrics
+                },
+            })
+        }
     }
 
-    async fn is_available(&self) -> bool {
-        !self.should_fail("is_available")
+    fn is_available(&self) -> impl std::future::Future<Output = bool> + Send {
+        async move {
+            !self.should_fail("is_available")
+        }
     }
 
-    async fn list_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
-        self.simulate_delay().await;
+    fn list_pools(&self) -> impl std::future::Future<Output = UniversalZfsResult<Vec<PoolInfo>>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("list_pools") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated list_pools failure",
-            ));
+            if self.should_fail("list_pools") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated list_pools failure",
+                ));
+            }
+
+            Ok(self.pools.values().cloned().collect())
         }
-
-        Ok(self.pools.values().cloned().collect())
     }
 
-    async fn get_pool(&self, name: &str) -> UniversalZfsResult<Option<PoolInfo>> {
-        self.simulate_delay().await;
+    fn get_pool(&self, name: &str) -> impl std::future::Future<Output = UniversalZfsResult<Option<PoolInfo>>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("get_pool") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated get_pool failure",
-            ));
+            if self.should_fail("get_pool") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated get_pool failure",
+                ));
+            }
+
+            if name == "nonexistent_pool" {
+                return Ok(None);
+            }
+
+            Ok(self.pools.get(name).cloned())
         }
-
-        if name == "nonexistent_pool" {
-            return Ok(None);
-        }
-
-        Ok(self.pools.get(name).cloned())
     }
 
-    async fn create_pool(&self, config: &PoolConfig) -> UniversalZfsResult<PoolInfo> {
-        self.simulate_delay().await;
+    fn create_pool(&self, config: &PoolConfig) -> impl std::future::Future<Output = UniversalZfsResult<PoolInfo>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("create_pool") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated create_pool failure",
-            ));
+            if self.should_fail("create_pool") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated create_pool failure",
+                ));
+            }
+
+            if config.name.is_empty() {
+                return Err(UniversalZfsError::invalid_input(
+                    "name",
+                    "Pool name cannot be empty",
+                ));
+            }
+
+            if config.devices.is_empty() {
+                return Err(UniversalZfsError::invalid_input(
+                    "devices",
+                    "At least one device is required",
+                ));
+            }
+
+            let pool = PoolInfo {
+                name: config.name.clone(),
+                health: PoolHealth::Online,
+                state: PoolState::Active,
+                capacity: PoolCapacity {
+                    total_bytes: 1_000_000_000_000, // 1TB
+                    used_bytes: 0,
+                    available_bytes: 1_000_000_000_000,
+                    utilization_percent: 0.0,
+                },
+                devices: config.devices.clone(),
+                properties: config.properties.clone(),
+                created_at: SystemTime::now(),
+                last_scrub: None,
+                scrub_status: ScrubStatus::None,
+                errors: Vec::new(),
+            };
+
+            Ok(pool)
         }
-
-        if config.name.is_empty() {
-            return Err(UniversalZfsError::invalid_input(
-                "name",
-                "Pool name cannot be empty",
-            ));
-        }
-
-        if config.devices.is_empty() {
-            return Err(UniversalZfsError::invalid_input(
-                "devices",
-                "At least one device is required",
-            ));
-        }
-
-        let pool = PoolInfo {
-            name: config.name.clone(),
-            health: PoolHealth::Online,
-            state: PoolState::Active,
-            capacity: PoolCapacity {
-                total_bytes: 1_000_000_000_000, // 1TB
-                used_bytes: 0,
-                available_bytes: 1_000_000_000_000,
-                utilization_percent: 0.0,
-            },
-            devices: config.devices.clone(),
-            properties: config.properties.clone(),
-            created_at: SystemTime::now(),
-            last_scrub: None,
-            scrub_status: ScrubStatus::None,
-            errors: Vec::new(),
-        };
-
-        Ok(pool)
     }
 
-    async fn destroy_pool(&self, name: &str) -> UniversalZfsResult<()> {
-        self.simulate_delay().await;
+    fn destroy_pool(&self, name: &str) -> impl std::future::Future<Output = UniversalZfsResult<()>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("destroy_pool") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated destroy_pool failure",
-            ));
+            if self.should_fail("destroy_pool") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated destroy_pool failure",
+                ));
+            }
+
+            if !self.pools.contains_key(name) {
+                return Err(UniversalZfsError::not_found("pool", name));
+            }
+
+            Ok(())
         }
-
-        if !self.pools.contains_key(name) {
-            return Err(UniversalZfsError::not_found("pool", name));
-        }
-
-        Ok(())
     }
 
-    async fn scrub_pool(&self, name: &str) -> UniversalZfsResult<()> {
-        self.simulate_delay().await;
+    fn scrub_pool(&self, name: &str) -> impl std::future::Future<Output = UniversalZfsResult<()>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("scrub_pool") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated scrub_pool failure",
-            ));
+            if self.should_fail("scrub_pool") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated scrub_pool failure",
+                ));
+            }
+
+            if !self.pools.contains_key(name) {
+                return Err(UniversalZfsError::not_found("pool", name));
+            }
+
+            Ok(())
         }
-
-        if !self.pools.contains_key(name) {
-            return Err(UniversalZfsError::not_found("pool", name));
-        }
-
-        Ok(())
     }
 
-    async fn get_pool_status(&self, name: &str) -> UniversalZfsResult<String> {
-        self.simulate_delay().await;
+    fn get_pool_status(&self, name: &str) -> impl std::future::Future<Output = UniversalZfsResult<String>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("get_pool_status") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated get_pool_status failure",
-            ));
+            if self.should_fail("get_pool_status") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated get_pool_status failure",
+                ));
+            }
+
+            if !self.pools.contains_key(name) {
+                return Err(UniversalZfsError::not_found("pool", name));
+            }
+
+            Ok(format!("Pool '{name}' is ONLINE"))
         }
-
-        if !self.pools.contains_key(name) {
-            return Err(UniversalZfsError::not_found("pool", name));
-        }
-
-        Ok(format!("Pool '{name}' is ONLINE"))
     }
 
-    async fn list_datasets(&self) -> UniversalZfsResult<Vec<DatasetInfo>> {
-        self.simulate_delay().await;
+    fn list_datasets(&self) -> impl std::future::Future<Output = UniversalZfsResult<Vec<DatasetInfo>>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("list_datasets") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated list_datasets failure",
-            ));
+            if self.should_fail("list_datasets") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated list_datasets failure",
+                ));
+            }
+
+            Ok(self.datasets.values().cloned().collect())
         }
-
-        Ok(self.datasets.values().cloned().collect())
     }
 
-    async fn get_dataset(&self, name: &str) -> UniversalZfsResult<Option<DatasetInfo>> {
-        self.simulate_delay().await;
+    fn get_dataset(&self, name: &str) -> impl std::future::Future<Output = UniversalZfsResult<Option<DatasetInfo>>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("get_dataset") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated get_dataset failure",
-            ));
+            if self.should_fail("get_dataset") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated get_dataset failure",
+                ));
+            }
+
+            if name == "nonexistent_dataset" {
+                return Ok(None);
+            }
+
+            Ok(self.datasets.get(name).cloned())
         }
-
-        if name == "nonexistent_dataset" {
-            return Ok(None);
-        }
-
-        Ok(self.datasets.get(name).cloned())
     }
 
-    async fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
-        self.simulate_delay().await;
+    fn create_dataset(&self, config: &DatasetConfig) -> impl std::future::Future<Output = UniversalZfsResult<DatasetInfo>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("create_dataset") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated create_dataset failure",
-            ));
+            if self.should_fail("create_dataset") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated create_dataset failure",
+                ));
+            }
+
+            if config.name.is_empty() {
+                return Err(UniversalZfsError::invalid_input(
+                    "name",
+                    "Dataset name cannot be empty",
+                ));
+            }
+
+            let dataset = DatasetInfo {
+                name: config.name.clone(),
+                dataset_type: config.dataset_type.clone(),
+                used_space: 0,
+                available_space: 1_000_000_000_000, // 1TB
+                mount_point: Some(format!("/{}", config.name)),
+                properties: config.properties.clone(),
+                created_at: SystemTime::now(),
+                parent: config.parent.clone(),
+                children: Vec::new(),
+            };
+
+            Ok(dataset)
         }
-
-        if config.name.is_empty() {
-            return Err(UniversalZfsError::invalid_input(
-                "name",
-                "Dataset name cannot be empty",
-            ));
-        }
-
-        let dataset = DatasetInfo {
-            name: config.name.clone(),
-            dataset_type: config.dataset_type.clone(),
-            used_space: 0,
-            available_space: 1_000_000_000_000, // 1TB
-            mount_point: Some(format!("/{}", config.name)),
-            properties: config.properties.clone(),
-            created_at: SystemTime::now(),
-            parent: config.parent.clone(),
-            children: Vec::new(),
-        };
-
-        Ok(dataset)
     }
 
-    async fn destroy_dataset(&self, name: &str) -> UniversalZfsResult<()> {
-        self.simulate_delay().await;
+    fn destroy_dataset(&self, name: &str) -> impl std::future::Future<Output = UniversalZfsResult<()>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("destroy_dataset") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated destroy_dataset failure",
-            ));
+            if self.should_fail("destroy_dataset") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated destroy_dataset failure",
+                ));
+            }
+
+            if !self.datasets.contains_key(name) {
+                return Err(UniversalZfsError::not_found("dataset", name));
+            }
+
+            Ok(())
         }
-
-        if !self.datasets.contains_key(name) {
-            return Err(UniversalZfsError::not_found("dataset", name));
-        }
-
-        Ok(())
     }
 
-    async fn get_dataset_properties(
+    fn get_dataset_properties(
         &self,
         name: &str,
-    ) -> UniversalZfsResult<HashMap<String, String>> {
-        self.simulate_delay().await;
+    ) -> impl std::future::Future<Output = UniversalZfsResult<HashMap<String, String>>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("get_dataset_properties") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated get_dataset_properties failure",
-            ));
+            if self.should_fail("get_dataset_properties") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated get_dataset_properties failure",
+                ));
+            }
+
+            if name == "nonexistent" {
+                return Err(UniversalZfsError::not_found("dataset", name));
+            }
+
+            let mut properties = HashMap::new();
+            properties.insert("compression".to_string(), "on".to_string());
+            properties.insert("deduplication".to_string(), "off".to_string());
+            properties.insert("encryption".to_string(), "off".to_string());
+            properties.insert("recordsize".to_string(), "128K".to_string());
+
+            Ok(properties)
         }
-
-        if name == "nonexistent" {
-            return Err(UniversalZfsError::not_found("dataset", name));
-        }
-
-        let mut properties = HashMap::new();
-        properties.insert("compression".to_string(), "on".to_string());
-        properties.insert("deduplication".to_string(), "off".to_string());
-        properties.insert("encryption".to_string(), "off".to_string());
-        properties.insert("recordsize".to_string(), "128K".to_string());
-
-        Ok(properties)
     }
 
-    async fn set_dataset_properties(
+    fn set_dataset_properties(
         &self,
         name: &str,
         properties: &HashMap<String, String>,
-    ) -> UniversalZfsResult<()> {
-        self.simulate_delay().await;
+    ) -> impl std::future::Future<Output = UniversalZfsResult<()>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("set_dataset_properties") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated set_dataset_properties failure",
-            ));
+            if self.should_fail("set_dataset_properties") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated set_dataset_properties failure",
+                ));
+            }
+
+            if name == "nonexistent" {
+                return Err(UniversalZfsError::not_found("dataset", name));
+            }
+
+            if properties.is_empty() {
+                return Err(UniversalZfsError::invalid_input(
+                    "properties",
+                    "Properties cannot be empty",
+                ));
+            }
+
+            Ok(())
         }
-
-        if name == "nonexistent" {
-            return Err(UniversalZfsError::not_found("dataset", name));
-        }
-
-        if properties.is_empty() {
-            return Err(UniversalZfsError::invalid_input(
-                "properties",
-                "Properties cannot be empty",
-            ));
-        }
-
-        Ok(())
     }
 
-    async fn list_snapshots(&self) -> UniversalZfsResult<Vec<SnapshotInfo>> {
-        self.simulate_delay().await;
+    fn list_snapshots(&self) -> impl std::future::Future<Output = UniversalZfsResult<Vec<SnapshotInfo>>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("list_snapshots") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated list_snapshots failure",
-            ));
+            if self.should_fail("list_snapshots") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated list_snapshots failure",
+                ));
+            }
+
+            Ok(self.snapshots.values().cloned().collect())
         }
-
-        Ok(self.snapshots.values().cloned().collect())
     }
 
-    async fn list_dataset_snapshots(&self, dataset: &str) -> UniversalZfsResult<Vec<SnapshotInfo>> {
-        self.simulate_delay().await;
+    fn list_dataset_snapshots(&self, dataset: &str) -> impl std::future::Future<Output = UniversalZfsResult<Vec<SnapshotInfo>>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("list_dataset_snapshots") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated list_dataset_snapshots failure",
-            ));
+            if self.should_fail("list_dataset_snapshots") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated list_dataset_snapshots failure",
+                ));
+            }
+
+            let snapshots: Vec<SnapshotInfo> = self
+                .snapshots
+                .values()
+                .filter(|s| s.dataset == dataset)
+                .cloned()
+                .collect();
+
+            Ok(snapshots)
         }
-
-        let snapshots: Vec<SnapshotInfo> = self
-            .snapshots
-            .values()
-            .filter(|s| s.dataset == dataset)
-            .cloned()
-            .collect();
-
-        Ok(snapshots)
     }
 
-    async fn create_snapshot(&self, config: &SnapshotConfig) -> UniversalZfsResult<SnapshotInfo> {
-        self.simulate_delay().await;
+    fn create_snapshot(&self, config: &SnapshotConfig) -> impl std::future::Future<Output = UniversalZfsResult<SnapshotInfo>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("create_snapshot") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated create_snapshot failure",
-            ));
+            if self.should_fail("create_snapshot") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated create_snapshot failure",
+                ));
+            }
+
+            if config.name.is_empty() {
+                return Err(UniversalZfsError::invalid_input(
+                    "name",
+                    "Snapshot name cannot be empty",
+                ));
+            }
+
+            if config.dataset.is_empty() {
+                return Err(UniversalZfsError::invalid_input(
+                    "dataset",
+                    "Dataset name cannot be empty",
+                ));
+            }
+
+            let snapshot = SnapshotInfo {
+                name: format!("{}@{}", config.dataset, config.name),
+                dataset: config.dataset.clone(),
+                created_at: SystemTime::now(),
+                size_bytes: 1_000_000_000, // 1GB
+                properties: config.properties.clone(),
+                description: config.description.clone(),
+            };
+
+            Ok(snapshot)
         }
-
-        if config.name.is_empty() {
-            return Err(UniversalZfsError::invalid_input(
-                "name",
-                "Snapshot name cannot be empty",
-            ));
-        }
-
-        if config.dataset.is_empty() {
-            return Err(UniversalZfsError::invalid_input(
-                "dataset",
-                "Dataset name cannot be empty",
-            ));
-        }
-
-        let snapshot = SnapshotInfo {
-            name: format!("{}@{}", config.dataset, config.name),
-            dataset: config.dataset.clone(),
-            created_at: SystemTime::now(),
-            size_bytes: 1_000_000_000, // 1GB
-            properties: config.properties.clone(),
-            description: config.description.clone(),
-        };
-
-        Ok(snapshot)
     }
 
-    async fn destroy_snapshot(&self, name: &str) -> UniversalZfsResult<()> {
-        self.simulate_delay().await;
+    fn destroy_snapshot(&self, name: &str) -> impl std::future::Future<Output = UniversalZfsResult<()>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("destroy_snapshot") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated destroy_snapshot failure",
-            ));
+            if self.should_fail("destroy_snapshot") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated destroy_snapshot failure",
+                ));
+            }
+
+            if !self.snapshots.contains_key(name) {
+                return Err(UniversalZfsError::not_found("snapshot", name));
+            }
+
+            Ok(())
         }
-
-        if !self.snapshots.contains_key(name) {
-            return Err(UniversalZfsError::not_found("snapshot", name));
-        }
-
-        Ok(())
     }
 
-    async fn optimize(&self) -> UniversalZfsResult<String> {
-        self.simulate_delay().await;
+    fn optimize(&self) -> impl std::future::Future<Output = UniversalZfsResult<String>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("optimize") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated optimize failure",
-            ));
+            if self.should_fail("optimize") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated optimize failure",
+                ));
+            }
+
+            Ok("opt-123456789".to_string())
         }
-
-        Ok("opt-123456789".to_string())
     }
 
-    async fn get_optimization_analytics(&self) -> UniversalZfsResult<serde_json::Value> {
-        self.simulate_delay().await;
+    fn get_optimization_analytics(&self) -> impl std::future::Future<Output = UniversalZfsResult<serde_json::Value>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("get_optimization_analytics") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated get_optimization_analytics failure",
-            ));
+            if self.should_fail("get_optimization_analytics") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated get_optimization_analytics failure",
+                ));
+            }
+
+            Ok(serde_json::json!({
+                "tier_performance": {
+                    "hot": {"iops": 1000, "latency_ms": 1.5},
+                    "warm": {"iops": 500, "latency_ms": 3.0},
+                    "cold": {"iops": 100, "latency_ms": 10.0}
+                },
+                "recommendations": [
+                    "Consider moving cold data to warm tier",
+                    "Enable compression on high-volume datasets"
+                ]
+            }))
         }
-
-        Ok(serde_json::json!({
-            "tier_performance": {
-                "hot": {"iops": 1000, "latency_ms": 1.5},
-                "warm": {"iops": 500, "latency_ms": 3.0},
-                "cold": {"iops": 100, "latency_ms": 10.0}
-            },
-            "recommendations": [
-                "Consider moving cold data to warm tier",
-                "Enable compression on high-volume datasets"
-            ]
-        }))
     }
 
-    async fn predict_tier(&self, file_path: &str) -> UniversalZfsResult<String> {
-        self.simulate_delay().await;
+    fn predict_tier(&self, file_path: &str) -> impl std::future::Future<Output = UniversalZfsResult<String>> + Send {
+        async move {
+            self.simulate_delay().await;
 
-        if self.should_fail("predict_tier") {
-            return Err(UniversalZfsError::backend(
-                "mock",
-                "Simulated predict_tier failure",
-            ));
+            if self.should_fail("predict_tier") {
+                return Err(UniversalZfsError::backend(
+                    "mock",
+                    "Simulated predict_tier failure",
+                ));
+            }
+
+            if file_path.is_empty() {
+                return Err(UniversalZfsError::invalid_input(
+                    "file_path",
+                    "File path cannot be empty",
+                ));
+            }
+
+            // Mock prediction logic based on file path
+            let predicted_tier = if file_path.contains("cache") || file_path.contains("temp") {
+                "hot"
+            } else if file_path.contains("archive") || file_path.contains("backup") {
+                "cold"
+            } else {
+                "warm"
+            };
+
+            Ok(predicted_tier.to_string())
         }
+    }
 
-        if file_path.is_empty() {
-            return Err(UniversalZfsError::invalid_input(
-                "file_path",
-                "File path cannot be empty",
-            ));
+    fn get_configuration(&self) -> impl std::future::Future<Output = UniversalZfsResult<serde_json::Value>> + Send {
+        async move {
+            self.simulate_delay().await;
+
+            Ok(serde_json::json!({
+                "service_name": self.service_name,
+                "service_version": self.service_version,
+                "backend": "mock",
+                "simulate_delays": self.simulate_delays,
+                "pools_count": self.pools.len(),
+                "datasets_count": self.datasets.len(),
+                "snapshots_count": self.snapshots.len()
+            }))
         }
-
-        // Mock prediction logic based on file path
-        let predicted_tier = if file_path.contains("cache") || file_path.contains("temp") {
-            "hot"
-        } else if file_path.contains("archive") || file_path.contains("backup") {
-            "cold"
-        } else {
-            "warm"
-        };
-
-        Ok(predicted_tier.to_string())
     }
 
-    async fn get_configuration(&self) -> UniversalZfsResult<serde_json::Value> {
-        self.simulate_delay().await;
-
-        Ok(serde_json::json!({
-            "service_name": self.service_name,
-            "service_version": self.service_version,
-            "backend": "mock",
-            "simulate_delays": self.simulate_delays,
-            "pools_count": self.pools.len(),
-            "datasets_count": self.datasets.len(),
-            "snapshots_count": self.snapshots.len()
-        }))
+    fn update_configuration(&self, _config: serde_json::Value) -> impl std::future::Future<Output = UniversalZfsResult<()>> + Send {
+        async move {
+            self.simulate_delay().await;
+            Ok(())
+        }
     }
 
-    async fn update_configuration(&self, _config: serde_json::Value) -> UniversalZfsResult<()> {
-        self.simulate_delay().await;
-        Ok(())
-    }
-
-    async fn shutdown(&self) -> UniversalZfsResult<()> {
-        self.simulate_delay().await;
-        Ok(())
+    fn shutdown(&self) -> impl std::future::Future<Output = UniversalZfsResult<()>> + Send {
+        async move {
+            self.simulate_delay().await;
+            Ok(())
+        }
     }
 }

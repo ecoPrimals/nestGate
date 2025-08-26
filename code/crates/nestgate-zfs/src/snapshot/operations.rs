@@ -1,7 +1,6 @@
-//! Snapshot Operation Execution
-//!
-//! Implementation of snapshot operations including create, delete, clone,
-//! rollback, send, and receive operations.
+//
+// Implementation of snapshot operations including create, delete, clone,
+// rollback, send, and receive operations.
 
 use serde::{Deserialize, Serialize};
 

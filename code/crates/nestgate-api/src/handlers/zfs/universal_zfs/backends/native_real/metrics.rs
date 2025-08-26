@@ -1,4 +1,3 @@
-//! Metrics Operations Module
-//! Single responsibility: ZFS metrics collection and monitoring
+// Single responsibility: ZFS metrics collection and monitoring
 
-use super::core::NativeZfsService;
+// Metrics collection for native ZFS

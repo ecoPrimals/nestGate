@@ -1,11 +1,10 @@
-/// **INTEGRATIONS MODULE**
 /// External system integration configuration - extracted from monolithic config
 /// Handles webhooks, message queues, databases, APIs, and custom integrations
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Integration settings
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct IntegrationSettings {
     /// Enable integrations
     pub enabled: bool,
@@ -113,17 +112,4 @@ pub struct CustomIntegration {
     pub config: HashMap<String, serde_json::Value>,
     /// Integration enabled
     pub enabled: bool,
-}
-
-impl Default for IntegrationSettings {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            webhooks: Vec::new(),
-            message_queues: Vec::new(),
-            databases: Vec::new(),
-            apis: Vec::new(),
-            custom: HashMap::new(),
-        }
-    }
 }

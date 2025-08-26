@@ -1,10 +1,11 @@
-//! ZFS Manager Utilities - Parsing and helper functions
-//!
-//! Contains utility functions for parsing ZFS output, capacity calculations,
-//! and other helper functions used throughout the ZFS manager.
+//
+// Contains utility functions for parsing ZFS output, capacity calculations,
+// and other helper functions used throughout the ZFS manager.
 
 use super::types::CapacityInfo;
-use crate::error::{Result, ZfsError};
+use nestgate_core::error::conversions::create_zfs_error;
+use nestgate_core::error::domain_errors::ZfsOperation;
+use nestgate_core::Result;
 // Removed unused tracing import
 
 use super::ZfsManager;
@@ -14,13 +15,12 @@ use tracing::warn;
 impl ZfsManager {
     /// Calculate system utilization as percentage
     pub async fn _calculate_system_utilization(&self) -> Result<f64> {
-        let pools = self
-            .pool_manager
-            .list_pools()
-            .await
-            .map_err(|e| ZfsError::Internal {
-                message: format!("Failed to list pools: {e}"),
-            })?;
+        let pools = self.pool_manager.list_pools().await.map_err(|e| {
+            create_zfs_error(
+                format!("Failed to list pools: {e}"),
+                ZfsOperation::SystemCheck
+            )
+        })?;
 
         if pools.is_empty() {
             return Ok(0.0);
@@ -34,8 +34,11 @@ impl ZfsManager {
                 .pool_manager
                 .get_pool_status(&pool.name)
                 .await
-                .map_err(|e| ZfsError::Internal {
-                    message: format!("Failed to get pool status: {e}"),
+                .map_err(|e| {
+                    create_zfs_error(
+                        format!("Failed to get pool status: {e}"),
+                        ZfsOperation::PoolCreate
+                    )
                 })?;
 
             // Parse status string for utilization info - simplified parsing

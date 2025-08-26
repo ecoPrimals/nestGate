@@ -1,23 +1,25 @@
-//! ZFS Migration Engine - Main migration engine with lifecycle management
-//!
-//! Contains the MigrationEngine struct and its lifecycle methods for managing
-//! automated data migration between storage tiers.
+//
+// Contains the MigrationEngine struct and its lifecycle methods for managing
+// automated data migration between storage tiers.
 
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
+use crate::migration::discovery::DatasetAnalyzer;
 use std::time::Duration;
 use tokio::sync::{mpsc, RwLock, Semaphore};
 use tokio::time::interval;
 use tracing::error;
 use tracing::info;
 
-use crate::{
-    automation::DatasetAnalyzer, config::ZfsConfig, dataset::ZfsDatasetManager,
-    pool::ZfsPoolManager,
-};
+use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager};
+// Removed unresolved FileAnalyzer import - using local implementation
 use nestgate_core::Result as CoreResult;
 
 use super::types::*;
+
+// Type aliases for complex types
+type ActiveMigrationsMap = Arc<RwLock<HashMap<String, MigrationJob>>>;
+type MigrationStatisticsMap = Arc<RwLock<MigrationStatistics>>;
 
 /// Migration engine for automated tier-to-tier data movement
 #[derive(Debug)]
@@ -32,11 +34,11 @@ pub struct MigrationEngine {
     /// Migration job queue
     job_queue: Arc<RwLock<VecDeque<MigrationJob>>>,
     /// Active migrations
-    active_migrations: Arc<RwLock<HashMap<String, MigrationJob>>>,
+    active_migrations: ActiveMigrationsMap,
     /// Migration history
     migration_history: Arc<RwLock<Vec<MigrationJob>>>,
     /// Migration statistics
-    statistics: Arc<RwLock<MigrationStatistics>>,
+    statistics: MigrationStatisticsMap,
 
     /// Concurrency control
     migration_semaphore: Arc<Semaphore>,

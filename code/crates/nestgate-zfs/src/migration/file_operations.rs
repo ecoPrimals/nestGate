@@ -1,7 +1,6 @@
-//! ZFS Migration File Operations - File copying, verification, and metadata handling
-//!
-//! Contains the core file operations for migration including high-performance
-//! file copying with progress tracking, integrity verification, and metadata preservation.
+//
+// Contains the core file operations for migration including high-performance
+// file copying with progress tracking, integrity verification, and metadata preservation.
 
 use std::path::PathBuf;
 use std::time::Instant;
@@ -23,7 +22,7 @@ pub async fn copy_file_with_progress(
         tokio::fs::File::open(source_path)
             .await
             .map_err(|e| NestGateError::System {
-                message: format!("Failed to open source file: {}", e),
+                message: format!("Failed to open source file: {e}"),
                 resource: nestgate_core::error::SystemResource::Disk,
                 utilization: None,
                 recovery: nestgate_core::error::RecoveryStrategy::Retry,
@@ -33,7 +32,7 @@ pub async fn copy_file_with_progress(
         tokio::fs::File::create(target_path)
             .await
             .map_err(|e| NestGateError::System {
-                message: format!("Failed to create target file: {}", e),
+                message: format!("Failed to create target file: {e}"),
                 resource: nestgate_core::error::SystemResource::Disk,
                 utilization: None,
                 recovery: nestgate_core::error::RecoveryStrategy::Retry,
@@ -53,7 +52,7 @@ pub async fn copy_file_with_progress(
                 .read(&mut buffer)
                 .await
                 .map_err(|e| NestGateError::System {
-                    message: format!("Failed to read source file: {}", e),
+                    message: format!("Failed to read source file: {e}"),
                     resource: nestgate_core::error::SystemResource::Disk,
                     utilization: None,
                     recovery: nestgate_core::error::RecoveryStrategy::Retry,
@@ -67,7 +66,7 @@ pub async fn copy_file_with_progress(
             .write_all(&buffer[..bytes_read])
             .await
             .map_err(|e| NestGateError::System {
-                message: format!("Failed to write target file: {}", e),
+                message: format!("Failed to write target file: {e}"),
                 resource: nestgate_core::error::SystemResource::Disk,
                 utilization: None,
                 recovery: nestgate_core::error::RecoveryStrategy::Retry,
@@ -101,7 +100,7 @@ pub async fn copy_file_with_progress(
         .sync_all()
         .await
         .map_err(|e| NestGateError::System {
-            message: format!("Failed to sync target file: {}", e),
+            message: format!("Failed to sync target file: {e}"),
             resource: nestgate_core::error::SystemResource::Disk,
             utilization: None,
             recovery: nestgate_core::error::RecoveryStrategy::Retry,
@@ -117,7 +116,7 @@ pub async fn verify_file_integrity(source_path: &PathBuf, target_path: &PathBuf)
         tokio::fs::metadata(source_path)
             .await
             .map_err(|e| NestGateError::System {
-                message: format!("Failed to get source metadata: {}", e),
+                message: format!("Failed to get source metadata: {e}"),
                 resource: nestgate_core::error::SystemResource::Disk,
                 utilization: None,
                 recovery: nestgate_core::error::RecoveryStrategy::Retry,
@@ -127,7 +126,7 @@ pub async fn verify_file_integrity(source_path: &PathBuf, target_path: &PathBuf)
         tokio::fs::metadata(target_path)
             .await
             .map_err(|e| NestGateError::System {
-                message: format!("Failed to get target metadata: {}", e),
+                message: format!("Failed to get target metadata: {e}"),
                 resource: nestgate_core::error::SystemResource::Disk,
                 utilization: None,
                 recovery: nestgate_core::error::RecoveryStrategy::Retry,
@@ -153,7 +152,7 @@ pub async fn verify_file_integrity(source_path: &PathBuf, target_path: &PathBuf)
             tokio::fs::read(source_path)
                 .await
                 .map_err(|e| NestGateError::System {
-                    message: format!("Failed to read source for verification: {}", e),
+                    message: format!("Failed to read source for verification: {e}"),
                     resource: nestgate_core::error::SystemResource::Disk,
                     utilization: None,
                     recovery: nestgate_core::error::RecoveryStrategy::Retry,
@@ -163,7 +162,7 @@ pub async fn verify_file_integrity(source_path: &PathBuf, target_path: &PathBuf)
             tokio::fs::read(target_path)
                 .await
                 .map_err(|e| NestGateError::System {
-                    message: format!("Failed to read target for verification: {}", e),
+                    message: format!("Failed to read target for verification: {e}"),
                     resource: nestgate_core::error::SystemResource::Disk,
                     utilization: None,
                     recovery: nestgate_core::error::RecoveryStrategy::Retry,

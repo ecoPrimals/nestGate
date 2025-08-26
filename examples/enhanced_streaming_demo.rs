@@ -1,4 +1,3 @@
-use tracing::{error, info};
 // Enhanced Streaming Communication Demo
 //
 // This demo showcases the enhanced streaming capabilities of NestGate, including:

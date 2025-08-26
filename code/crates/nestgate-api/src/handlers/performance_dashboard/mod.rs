@@ -1,15 +1,14 @@
-//! Performance Dashboard Module
-//!
-//! This module provides comprehensive real-time performance monitoring, analytics,
-//! and visualization for the NestGate storage system. It includes intelligent
-//! insights, optimization recommendations, and predictive analytics.
-//!
-//! ## Key Features
-//! - **Real-Time Metrics**: Live storage performance monitoring  
-//! - **Predictive Analytics**: AI-powered performance forecasting
-//! - **Optimization Insights**: Intelligent recommendations for performance improvement
-//! - **Resource Monitoring**: Comprehensive system resource tracking
-//! - **Historical Analysis**: Trend analysis and pattern recognition
+//
+// This module provides comprehensive real-time performance monitoring, analytics,
+// and visualization for the NestGate storage system. It includes intelligent
+// insights, optimization recommendations, and predictive analytics.
+//
+// ## Key Features
+// - **Real-Time Metrics**: Live storage performance monitoring  
+// - **Predictive Analytics**: AI-powered performance forecasting
+// - **Optimization Insights**: Intelligent recommendations for performance improvement
+// - **Resource Monitoring**: Comprehensive system resource tracking
+// - **Historical Analysis**: Trend analysis and pattern recognition
 
 pub mod types;
 pub mod metrics;

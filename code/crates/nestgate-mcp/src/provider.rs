@@ -1,6 +1,7 @@
-//! MCP Provider Management
-//!
-//! Provider management for MCP integration
+//
+// Provider management for MCP integration
+
+// Deprecated code cleaned up - allow directive no longer needed
 
 use crate::{error, Result};
 

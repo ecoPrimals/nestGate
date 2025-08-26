@@ -1,17 +1,18 @@
-/// Interface Module System
-/// This module system breaks down the large interface.rs file into manageable,
-/// focused modules while maintaining the unified interface architecture.
-/// **ACHIEVEMENT**: Reduces file sizes to <400 lines while preserving functionality
-// Core interface modules
-pub mod health_status;
-// REMOVED: service_types - deprecated and replaced by unified_types::service_metadata
+use crate::NestGateError;
+use std::collections::HashMap;
+//
+// **CANONICAL MODERNIZATION COMPLETE** - Unified interface definitions
+//
+// This module provides canonical interface definitions that replace all
+// deprecated and fragmented interface patterns.
+
+// **CANONICAL INTERFACES** - Modern unified interface definitions
 pub mod core_interfaces;
 pub mod event_types;
+pub mod health_status;
 pub mod storage_types;
 
 // Re-export all types for backward compatibility and ease of use
-pub use health_status::{HealthState, UnifiedHealthStatus, UnifiedServiceMetrics};
-// REMOVED: service_types re-exports - use crate::unified_types::service_metadata instead
 pub use core_interfaces::{
     ToUnified,
     UniversalConfigInterface,
@@ -21,36 +22,18 @@ pub use core_interfaces::{
     // **REMOVED**: UniversalServiceInterface, UniversalStorageInterface (use canonical traits instead)
 };
 pub use event_types::{EventHandler, EventPriority, EventSubscription, UnifiedEvent};
+pub use health_status::{HealthState, UnifiedHealthStatus, UnifiedServiceMetrics};
 pub use storage_types::{StorageMetrics, StorageResource, StorageResourceConfig};
 
 // Import unified configuration types
 use crate::traits::{UniversalResponseStatus, UniversalServiceResponse};
-use crate::unified_types::UnifiedServiceConfig;
+use crate::canonical_modernization::UnifiedServiceConfig;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-/// Universal Service Request structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UniversalServiceRequest {
-    pub request_id: String,
-    pub service_name: String,
-    pub operation: String,
-    pub payload: serde_json::Value,
-    pub metadata: std::collections::HashMap<String, String>,
-}
-
-impl Default for UniversalServiceRequest {
-    fn default() -> Self {
-        Self {
-            request_id: Uuid::new_v4().to_string(),
-            service_name: "default".to_string(),
-            operation: "status".to_string(),
-            payload: serde_json::Value::Null,
-            metadata: std::collections::HashMap::new(),
-        }
-    }
-}
+/// Universal Service Request - re-export from canonical traits
+pub use crate::traits::UniversalServiceRequest;
 
 // ==================== ERROR EXTENSION METHODS ====================
 // These extend NestGateError with interface-specific convenience methods
@@ -138,8 +121,8 @@ pub mod validation {
 
     /// Validate service info completeness
     pub fn validate_service_info(
-        config: &crate::unified_types::UnifiedServiceConfig,
-    ) -> crate::error::Result<()> {
+        config: &crate::canonical_modernization::UnifiedServiceConfig,
+    ) -> crate::error::CanonicalResult<()> {
         if config.name.is_empty() {
             return Err(crate::error::NestGateError::invalid_input(
                 "name".to_string(),
@@ -157,8 +140,8 @@ pub mod validation {
     }
 
     /// Validate request format and structure
-    pub fn validate_request(request: &UniversalServiceRequest) -> crate::error::Result<()> {
-        if request.request_id.is_empty() {
+    pub fn validate_request(request: &UniversalServiceRequest) -> crate::error::CanonicalResult<()> {
+        if request.id.is_empty() {
             return Err(crate::error::NestGateError::invalid_input(
                 "request_id".to_string(),
                 "Request ID cannot be empty".to_string(),
@@ -168,7 +151,7 @@ pub mod validation {
     }
 
     /// Validate storage resource configuration
-    pub fn validate_storage_config(config: &StorageResourceConfig) -> crate::error::Result<()> {
+    pub fn validate_storage_config(config: &StorageResourceConfig) -> crate::error::CanonicalResult<()> {
         if config.resource_type.is_empty() {
             return Err(crate::error::NestGateError::invalid_input(
                 "resource_type".to_string(),
@@ -191,14 +174,19 @@ pub mod factories {
         version: &str,
         description: &str,
         service_id: &str,
-    ) -> crate::unified_types::UnifiedServiceConfig {
-        crate::unified_types::UnifiedServiceConfig {
+    ) -> crate::canonical_modernization::UnifiedServiceConfig {
+        crate::canonical_modernization::UnifiedServiceConfig {
             name: name.to_string(),
             version: version.to_string(),
-            description: description.to_string(),
-            service_name: service_id.to_string(),
-            service_type: crate::unified_enums::service_types::UnifiedServiceType::Generic,
-            ..Default::default()
+            port: 8080,
+            bind_address: "0.0.0.0".to_string(),
+            metadata: {
+                let mut metadata = std::collections::HashMap::new();
+                metadata.insert("description".to_string(), description.to_string());
+                metadata.insert("service_id".to_string(), service_id.to_string());
+                metadata.insert("service_type".to_string(), "Generic".to_string());
+                metadata
+            },
         }
     }
 
@@ -213,6 +201,9 @@ pub mod factories {
             data,
             error: None,
             metadata: std::collections::HashMap::new(),
+            processing_time_ms: Some(0),
+            headers: std::collections::HashMap::new(),
+            body: Vec::new(),
         }
     }
 
@@ -224,6 +215,9 @@ pub mod factories {
             data: None,
             error: Some(error_message.to_string()),
             metadata: std::collections::HashMap::new(),
+            processing_time_ms: Some(0),
+            headers: std::collections::HashMap::new(),
+            body: Vec::new(),
         }
     }
 
@@ -240,9 +234,15 @@ pub mod factories {
     /// Create a default service configuration
     pub fn default_service_config(service_id: &str) -> UnifiedServiceConfig {
         UnifiedServiceConfig {
-            service_name: service_id.to_string(),
-            service_type: crate::unified_enums::service_types::UnifiedServiceType::Generic,
-            ..Default::default()
+            name: service_id.to_string(),
+            version: "1.0.0".to_string(),
+            port: 8080,
+            bind_address: "0.0.0.0".to_string(),
+            metadata: {
+                let mut metadata = std::collections::HashMap::new();
+                metadata.insert("service_type".to_string(), "Generic".to_string());
+                metadata
+            },
         }
     }
 }

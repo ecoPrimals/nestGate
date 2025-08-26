@@ -1,10 +1,9 @@
-//! ZFS Backend Implementations
-//!
-//! This module contains different backend implementations for the universal ZFS service:
-//! - Native: Uses real ZFS commands
-//! - Native Real: Modular native ZFS implementation
-//! - Mock: Provides mock responses for testing
-//! - Remote: Connects to remote ZFS services
+//
+// This module contains different backend implementations for the universal ZFS service:
+// - Native: Uses real ZFS commands
+// - Native Real: Modular native ZFS implementation
+// - Mock: Provides mock responses for testing
+// - Remote: Connects to remote ZFS services
 
 pub mod mock;
 pub mod native;

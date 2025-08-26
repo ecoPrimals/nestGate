@@ -1,6 +1,5 @@
-//! Retry Executor Implementation
-//!
-//! Provides retry logic for fail-safe operations.
+//
+// Provides retry logic for fail-safe operations.
 
 use std::time::Duration;
 // Removed unused tracing import
@@ -16,10 +15,31 @@ pub struct RetryExecutor {
 }
 
 impl RetryExecutor {
+    /// Create a new retry executor with the specified retry policy
+    ///
+    /// # Arguments
+    /// * `config` - Retry policy configuration including max attempts and backoff settings
+    ///
+    /// # Returns
+    /// * New retry executor instance
     pub fn new(config: RetryPolicy) -> Self {
         Self { config }
     }
 
+    /// Execute an operation with retry logic
+    ///
+    /// Attempts to execute the provided operation with exponential backoff
+    /// retry logic according to the configured retry policy.
+    ///
+    /// # Arguments
+    /// * `operation` - Async operation to execute with retry logic
+    ///
+    /// # Returns
+    /// * Result of the operation after all retry attempts
+    ///
+    /// # Type Parameters
+    /// * `F` - Function type that returns a Future
+    /// * `T` - Return type of the operation
     pub async fn execute<F, T>(&self, operation: F) -> UniversalZfsResult<T>
     where
         F: Fn() -> std::pin::Pin<

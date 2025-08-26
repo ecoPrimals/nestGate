@@ -1,4 +1,3 @@
-/// **MONITORING SETTINGS MODULE**
 /// Contains all configuration related to monitoring
 /// Extracted from unified_automation_config.rs for better maintainability
 

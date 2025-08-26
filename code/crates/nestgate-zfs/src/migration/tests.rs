@@ -1,7 +1,6 @@
-//! ZFS Migration Tests - Unit tests for migration functionality
-//!
-//! Contains comprehensive unit tests for the migration system including
-//! job creation, configuration, and core functionality testing.
+//
+// Contains comprehensive unit tests for the migration system including
+// job creation, configuration, and core functionality testing.
 
 #[cfg(test)]
 mod test_suite {

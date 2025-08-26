@@ -1,6 +1,5 @@
-//! Dataset Operations with Fail-Safe
-//!
-//! Dataset operations with circuit breaker and retry logic.
+//
+// Dataset operations with circuit breaker and retry logic.
 
 use std::collections::HashMap;
 
@@ -17,11 +16,14 @@ pub async fn list_datasets(service: &FailSafeZfsService) -> UniversalZfsResult<V
             fallback.list_datasets().await
         } else {
             // Try fallback operation
-            match service.execute_fallback_operation("list_datasets", &service.primary).await {
+            match service
+                .execute_fallback_operation("list_datasets", &service.primary)
+                .await
+            {
                 Ok(_) => Ok(Vec::new()), // Return empty list as fallback
-                Err(_) => Err(crate::handlers::zfs::universal_zfs::types::UniversalZfsError::CircuitBreakerOpen {
+                Err(_) => Err(UniversalZfsError::CircuitBreakerOpen {
                     service: service.service_name.clone(),
-                })
+                }),
             }
         };
     }
@@ -37,12 +39,7 @@ pub async fn list_datasets(service: &FailSafeZfsService) -> UniversalZfsResult<V
                 // Apply timeout
                 tokio::time::timeout(timeout_duration, primary.list_datasets())
                     .await
-                    .map_err(|_| {
-                        crate::handlers::zfs::universal_zfs::types::UniversalZfsError::timeout(
-                            "list_datasets",
-                            timeout_duration,
-                        )
-                    })?
+                    .map_err(|_| UniversalZfsError::timeout("list_datasets", timeout_duration))?
             })
         })
         .await;

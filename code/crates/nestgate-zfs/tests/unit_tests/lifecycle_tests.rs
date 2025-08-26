@@ -1,6 +1,5 @@
-//! Lifecycle Management Unit Tests
-//!
-//! Tests for Phase 2 lifecycle management
+//
+// Tests for Phase 2 lifecycle management
 
 use std::collections::HashMap;
 use std::path::PathBuf;

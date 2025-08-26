@@ -1,6 +1,5 @@
-//! Device Detection and Classification
-//!
-//! Hardware detection, device classification, and storage device management
+//
+// Hardware detection, device classification, and storage device management
 
 use serde::{Deserialize, Serialize};
 
@@ -78,7 +77,7 @@ impl DeviceScanner {
             .output()
             .await
             .map_err(|e| NestGateError::System {
-                message: format!("Failed to run lsblk: {}", e),
+                message: format!("Failed to run lsblk: {e}"),
                 resource: nestgate_core::error::SystemResource::Cpu,
                 utilization: None,
                 recovery: nestgate_core::error::RecoveryStrategy::Retry,
@@ -87,7 +86,7 @@ impl DeviceScanner {
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
             return Err(NestGateError::System {
-                message: format!("lsblk failed: {}", stderr),
+                message: format!("lsblk failed: {stderr}"),
                 resource: nestgate_core::error::SystemResource::Cpu,
                 utilization: None,
                 recovery: nestgate_core::error::RecoveryStrategy::Retry,
@@ -97,7 +96,7 @@ impl DeviceScanner {
         let stdout = String::from_utf8_lossy(&output.stdout);
         let lsblk_output: serde_json::Value =
             serde_json::from_str(&stdout).map_err(|e| NestGateError::System {
-                message: format!("Failed to parse lsblk output: {}", e),
+                message: format!("Failed to parse lsblk output: {e}"),
                 resource: nestgate_core::error::SystemResource::Cpu,
                 utilization: None,
                 recovery: nestgate_core::error::RecoveryStrategy::Retry,
@@ -206,7 +205,7 @@ impl DeviceScanner {
             (&size_str[..pos], &size_str[pos..])
         } else {
             return size_str.parse().map_err(|_| NestGateError::System {
-                message: format!("Invalid size format: {}", size_str),
+                message: format!("Invalid size format: {size_str}"),
                 resource: nestgate_core::error::SystemResource::Cpu,
                 utilization: None,
                 recovery: nestgate_core::error::RecoveryStrategy::Retry,
@@ -214,7 +213,7 @@ impl DeviceScanner {
         };
 
         let number: f64 = num_str.parse().map_err(|_| NestGateError::System {
-            message: format!("Invalid size format: {}", size_str),
+            message: format!("Invalid size format: {size_str}"),
             resource: nestgate_core::error::SystemResource::Cpu,
             utilization: None,
             recovery: nestgate_core::error::RecoveryStrategy::Retry,
@@ -229,7 +228,7 @@ impl DeviceScanner {
             "P" | "PB" => 1024 * 1024 * 1024 * 1024 * 1024,
             _ => {
                 return Err(NestGateError::System {
-                    message: format!("Unknown size unit: {}", unit),
+                    message: format!("Unknown size unit: {unit}"),
                     resource: nestgate_core::error::SystemResource::Cpu,
                     utilization: None,
                     recovery: nestgate_core::error::RecoveryStrategy::Retry,

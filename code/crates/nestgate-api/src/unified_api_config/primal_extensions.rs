@@ -1,4 +1,3 @@
-/// **UNIFIED PRIMAL CONFIGURATION EXTENSIONS**
 /// Consolidates all fragmented primal configuration structs into the StandardDomainConfig pattern.
 /// 
 /// **ELIMINATES**:
@@ -14,7 +13,7 @@
 /// - Consistent configuration patterns with base unified configs
 /// - Extensible architecture for primal-specific settings
 
-use nestgate_core::unified_config_consolidation::StandardDomainConfig;
+use nestgate_core::unified_final_config::supporting_types::StandardDomainConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -326,7 +325,8 @@ pub struct MetricConfig {
 
 /// **UNIFIED PRIMAL CONFIGURATION**
 /// The single source of truth for all primal configuration across the system
-pub type UnifiedPrimalConfig = StandardDomainConfig<UnifiedPrimalExtensions>;
+/// CANONICAL MODERNIZATION: Simplified type alias without type parameters
+pub type UnifiedPrimalConfig = StandardDomainConfig;
 
 impl UnifiedPrimalConfig {
     /// Create development configuration optimized for local development

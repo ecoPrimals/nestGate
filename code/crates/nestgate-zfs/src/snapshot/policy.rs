@@ -1,7 +1,6 @@
-//! Snapshot Policy Management
-//!
-//! Configuration types for snapshot policies including retention rules,
-//! scheduling frequencies, and policy definitions.
+//
+// Configuration types for snapshot policies including retention rules,
+// scheduling frequencies, and policy definitions.
 
 use crate::types::StorageTier;
 use serde::{Deserialize, Serialize};

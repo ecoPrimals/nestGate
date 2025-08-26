@@ -1,4 +1,3 @@
-/// **SECURITY MODULE**
 /// Security and access control configuration - extracted from monolithic config
 /// Handles access control, encryption, audit logging, authentication, and authorization
 use serde::{Deserialize, Serialize};

@@ -1,4 +1,3 @@
-use std::time::Duration;
 #[cfg(test)]
 mod tests {
     use super::*;

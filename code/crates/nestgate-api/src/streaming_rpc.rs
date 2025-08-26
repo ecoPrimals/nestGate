@@ -1,7 +1,6 @@
-//! Streaming RPC Server Implementation
-//!
-//! Provides high-performance streaming RPC capabilities for NestGate API.
-//! Supports bi-directional streaming for real-time data transfer and coordination.
+//
+// Provides high-performance streaming RPC capabilities for NestGate API.
+// Supports bi-directional streaming for real-time data transfer and coordination.
 
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;

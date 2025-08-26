@@ -1,9 +1,8 @@
-//! Provider-related type definitions for MCP system
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use super::auth_types::AuthConfig;
+use super::auth::AuthConfig;
 
 /// Provider configuration (Enhanced with proven patterns)
 #[derive(Debug, Clone, Serialize, Deserialize)]

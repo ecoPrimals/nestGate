@@ -1,15 +1,14 @@
-//! ZFS Automation Integration
-//!
-//! This module provides integration between ZFS storage management and the
-//! NestGate automation system. It offers intelligent dataset lifecycle management,
-//! automated tier optimization, and policy-driven automation.
-//!
-//! The automation system includes:
-//! - Intelligent tier evaluation and recommendation
-//! - Automated dataset lifecycle management
-//! - Policy-driven automation with customizable rules
-//! - Integration with the NestGate ecosystem
-//! - Performance optimization and migration coordination
+//
+// This module provides integration between ZFS storage management and the
+// NestGate automation system. It offers intelligent dataset lifecycle management,
+// automated tier optimization, and policy-driven automation.
+//
+// The automation system includes:
+// - Intelligent tier evaluation and recommendation
+// - Automated dataset lifecycle management
+// - Policy-driven automation with customizable rules
+// - Integration with the NestGate ecosystem
+// - Performance optimization and migration coordination
 
 pub mod actions;
 pub mod engine;
@@ -20,42 +19,28 @@ pub mod tests;
 pub mod tier_evaluation;
 pub mod types;
 
-// Re-export main automation types and functionality from nestgate-automation
-pub use nestgate_automation::{
-    AccessPatterns, AutomationConfig, DatasetAnalysis, DatasetAnalyzer, DatasetLifecycleManager,
-    FileAnalysis, FileAnalyzer, IntelligentDatasetManager, OptimizationResult,
-    Result as AutomationResult, TierPerformanceStats, TierPrediction, TierPredictor,
-};
+// Import canonical automation types from modernized package
+/// **CANONICAL**: Use ZFS-specific Result type for automation
+pub use crate::error::ZfsResult as Result;
+// Removed unresolved automation imports - using local implementations
 
-// Re-export ecosystem integration types (when network integration is enabled)
-pub use nestgate_automation::discovery::EcosystemDiscovery;
-#[cfg(feature = "network-integration")]
-pub use nestgate_automation::{
-    DatasetCreatedNotification, EcosystemService, ServiceConnectionPool, ServicePlan,
-    ServiceRegistration, TierDiscoveryRequest, TierDiscoveryResponse,
-};
-// Note: SquirrelConnection removed as it's no longer available
+// Import canonical types from the types module
+// Removed unresolved automation types - using local definitions
 
-// Legacy compatibility types that some existing code might still reference
-pub use nestgate_automation::{
-    AccessEvent, AccessType, DatasetContext, FileCharacteristics, FileType, ServiceHealth,
-    StorageContext, TaskPriority, TierStats, TrainingExample,
-};
+// Import core types
+pub use nestgate_core::traits::{ServiceHealth};
+pub use nestgate_core::canonical_types::{StorageTier};
 
-// Re-export core types from our modules
-pub use types::{
-    AutomationEvent, AutomationEventType, AutomationPolicy, AutomationStatus, BandwidthLimits,
-    DatasetLifecycle, DatasetMetadata, LifecycleRule, LifecycleStage, MigrationRule,
-    PolicyConditions, PolicyPriority, TierRule,
-};
+// Remove references to deleted discovery module
+// pub use nestgate_automation::discovery::EcosystemDiscovery;
 
 // Re-export main engine
 pub use engine::DatasetAutomation;
 
-// Re-export integration functions
+// Re-export integration functions with correct names
 pub use integration::{
-    check_zfs_ecosystem_availability, initialize_zfs_automation,
-    initialize_zfs_automation_with_config,
+    check_zfs_ecosystem_availability, initialize_automation as initialize_zfs_automation,
+    initialize_automation_with_config as initialize_zfs_automation_with_config,
 };
 
 // Re-export policy management

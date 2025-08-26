@@ -1,9 +1,8 @@
-/// **UNIFIED NETWORK CONFIG - CORE MODULE**
 /// Contains the main UnifiedNetworkConfig struct and core network configuration logic.
 /// Extracted from the large unified_network_config.rs to achieve file size compliance.
 
 use serde::{Deserialize, Serialize};
-use nestgate_core::unified_config_consolidation::StandardDomainConfig;
+use nestgate_core::unified_final_config::supporting_types::StandardDomainConfig;
 use super::network_settings::*;
 
 // ==================== NETWORK-SPECIFIC EXTENSIONS ====================
@@ -32,7 +31,8 @@ pub struct NetworkExtensions {
 
 /// **UNIFIED NETWORK CONFIGURATION**
 /// The single source of truth for all network configuration across the system
-pub type UnifiedNetworkConfig = StandardDomainConfig<NetworkExtensions>;
+/// CANONICAL MODERNIZATION: Simplified type alias without type parameters
+pub type UnifiedNetworkConfig = StandardDomainConfig;
 
 impl Default for NetworkExtensions {
     fn default() -> Self {

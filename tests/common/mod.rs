@@ -1,151 +1,82 @@
-pub use nestgate_core::unified_enums::UnifiedServiceType;
-pub use nestgate_core::unified_types::UnifiedConfig;
-/// Clean, rebuilt common test infrastructure
-/// Eliminates duplicate definitions and import conflicts
-// Re-export core types we need for testing - avoid conflicts by being explicit
-pub use nestgate_core::{NestGateError, Result};
+use std::future::Future;
+// Test common utilities and helpers
+// **MODERNIZED**: Removed async_trait dependency for zero-cost async
+use nestgate_core::error::Result;
+use nestgate_core::canonical_modernization::UnifiedCapabilityType;
+use nestgate_core::{UnifiedServiceState, UniversalService};
 
-use serde::{Deserialize, Serialize};
-use std::time::Duration;
-
-// Declare submodules
+// Re-export configuration modules
 pub mod config;
-pub mod helpers;
+pub use config::UnifiedTestConfig;
+
+// Test utilities
+// REMOVED: helpers module - use test_helpers directly
+// pub mod helpers;
 pub mod mocks;
+pub mod test_config;
+pub mod test_doubles;
+pub mod test_error_handling;
+pub mod utils;
 
-// Re-export key utilities for convenience
-pub use config::CompleteTestConfig;
-pub use helpers::{TestHelpers, TestSetup};
+// Re-export commonly used test utilities
+pub use test_helpers::{TestHelpers, TestSetup};
 pub use mocks::{MockServiceRegistry, MockStorageService, MockUniversalService};
+pub use utils::TestUtils;
 
-/// Clean test configuration without conflicts
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CleanTestConfig {
-    pub name: String,
-    pub timeout: Duration,
-    pub max_concurrent: usize,
-    pub enable_chaos: bool,
-}
-
-impl Default for CleanTestConfig {
-    fn default() -> Self {
-        Self {
-            name: "default_test".to_string(),
-            timeout: Duration::from_secs(30),
-            max_concurrent: 10,
-            enable_chaos: false,
-        }
-    }
-}
+// Test configuration types from canonical system
+pub use config::UnifiedTestConfig as TestConfig;
+pub use nestgate_core::config::canonical_unified::CanonicalTestConfig as CleanTestConfig;
 
 /// Simple test service for mocking
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct SimpleTestService {
-    pub service_type: UnifiedServiceType,
     pub name: String,
-    pub enabled: bool,
 }
 
 impl SimpleTestService {
-    pub fn new(service_type: UnifiedServiceType, name: String) -> Self {
-        Self {
-            service_type,
-            name,
-            enabled: true,
-        }
-    }
-
-    pub fn storage(name: String) -> Self {
-        Self::new(UnifiedServiceType::Storage, name)
-    }
-
-    pub fn network(name: String) -> Self {
-        Self::new(UnifiedServiceType::Network, name)
-    }
-
-    pub fn security(name: String) -> Self {
-        Self::new(UnifiedServiceType::Security, name)
+    pub fn new(name: String) -> Self {
+        Self { name }
     }
 }
 
-/// Test result tracking
-#[derive(Debug, Clone)]
-pub struct TestResult {
-    pub test_name: String,
-    pub success: bool,
-    pub duration: Duration,
-    pub error: Option<String>,
-}
+/// **ZERO-COST ASYNC**: Native async implementation without async_trait overhead
+impl UniversalService for SimpleTestService {
+    type Config = String;
+    type Health = bool;
 
-impl TestResult {
-    pub fn success(test_name: String, duration: Duration) -> Self {
-        Self {
-            test_name,
-            success: true,
-            duration,
-            error: None,
-        }
+    fn initialize(&mut self, _config: Self::Config) -> impl std::future::Future<Output = Result<()>> + Send {
+        async move { Ok(()) }
     }
 
-    pub fn failure(test_name: String, duration: Duration, error: String) -> Self {
-        Self {
-            test_name,
-            success: false,
-            duration,
-            error: Some(error),
-        }
-    }
-}
-
-/// Test utilities
-pub struct TestUtils;
-
-impl TestUtils {
-    /// Create a test configuration with custom timeout
-    pub fn config_with_timeout(timeout_secs: u64) -> CleanTestConfig {
-        CleanTestConfig {
-            timeout: Duration::from_secs(timeout_secs),
-            ..Default::default()
-        }
+    fn start(&mut self) -> impl std::future::Future<Output = Result<()>> + Send {
+        async move { Ok(()) }
     }
 
-    /// Generate a unique test name
-    pub fn unique_test_name(prefix: &str) -> String {
-        use std::time::{SystemTime, UNIX_EPOCH};
-        let timestamp = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis();
-        format!("{}_{}", prefix, timestamp)
+    fn stop(&mut self) -> impl std::future::Future<Output = Result<()>> + Send {
+        async move { Ok(()) }
     }
 
-    /// Create a simple unified config for testing
-    pub fn simple_unified_config() -> UnifiedConfig {
-        UnifiedConfig::default()
+    fn status(&self) -> impl std::future::Future<Output = UnifiedServiceState> + Send {
+        async move { UnifiedServiceState::Running }
     }
 
-    /// Wait for a condition with timeout
-    pub async fn wait_for_condition<F, Fut>(
-        condition: F,
-        timeout: Duration,
-        check_interval: Duration,
-    ) -> Result<()>
-    where
-        F: Fn() -> Fut,
-        Fut: std::future::Future<Output = bool>,
-    {
-        let start = std::time::Instant::now();
+    fn health(&self) -> impl std::future::Future<Output = Result<Self::Health>> + Send {
+        async move { Ok(true) }
+    }
 
-        while start.elapsed() < timeout {
-            if condition().await {
-                return Ok(());
-            }
-            tokio::time::sleep(check_interval).await;
-        }
+    fn service_id(&self) -> &str {
+        &self.name
+    }
 
-        Err(NestGateError::internal_error(
-            "Condition not met within timeout".to_string(),
-            "test_utils".to_string(),
-        ))
+    fn service_type(&self) -> UnifiedCapabilityType {
+        UnifiedCapabilityType::Storage
+    }
+
+    fn handle_request<'a>(&self, _request: &'a str) -> impl std::future::Future<Output = Result<String>> + Send {
+        async move { Ok("test_response".to_string()) }
+    }
+
+    fn capabilities<'a>(&self) -> impl std::future::Future<Output = Result<Vec<String>>> + Send {
+        async move { Ok(vec!["test".to_string()]) }
     }
 }

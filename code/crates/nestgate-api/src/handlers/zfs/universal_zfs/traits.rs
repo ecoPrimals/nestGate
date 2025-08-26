@@ -1,106 +1,120 @@
-//! Universal ZFS Service Traits
-//!
-//! Defines the core abstraction for ZFS operations that can be implemented
-//! by multiple backends (native, mock, remote) with consistent interfaces.
+// **CANONICAL ZFS SERVICE TRAIT - COMPREHENSIVE UNIFICATION**
+//
+// This trait provides the complete canonical interface for all ZFS backend implementations.
+// It unifies all methods from native, remote, and fail-safe backends into a single consistent API.
 
-use async_trait::async_trait;
+// REMOVED: async_trait - using zero-cost native async patterns
 use std::collections::HashMap;
-use std::time::Duration;
 
 use super::types::{
     DatasetConfig, DatasetInfo, HealthStatus, PoolConfig, PoolInfo, ServiceMetrics, SnapshotConfig,
     SnapshotInfo, UniversalZfsResult,
 };
 
-/// Universal ZFS Service abstraction
+/// **CANONICAL UNIVERSAL ZFS SERVICE TRAIT**
 ///
-/// This trait defines all ZFS operations in a backend-agnostic way.
-/// Implementations can use real ZFS commands, mock responses, or remote services.
-#[async_trait]
+/// This trait defines the complete interface that all ZFS backend implementations must provide.
+/// It includes all methods from native_real, remote, and fail_safe implementations.
+/// **CANONICAL MODERNIZATION**: Zero-cost native async patterns
 pub trait UniversalZfsService: Send + Sync {
-    /// Service identification
+    // ==================== CORE SERVICE METHODS ====================
+
+    /// Get the service name
     fn service_name(&self) -> &str;
+
+    /// Get the service version  
     fn service_version(&self) -> &str;
 
-    /// Health and status operations
-    async fn health_check(&self) -> UniversalZfsResult<HealthStatus>;
-    async fn get_metrics(&self) -> UniversalZfsResult<ServiceMetrics>;
-    async fn is_available(&self) -> bool;
+    /// Perform a health check on the service
+    fn health_check(&self) -> impl std::future::Future<Output = UniversalZfsResult<HealthStatus>> + Send;
 
-    /// Pool operations
+    /// Get service metrics
+    fn get_metrics(&self) -> impl std::future::Future<Output = UniversalZfsResult<ServiceMetrics>> + Send;
+
+    /// Check if the service is available
+    fn is_available(&self) -> impl std::future::Future<Output = bool> + Send;
+
+    /// Shutdown the service gracefully
+    fn shutdown(&self) -> impl std::future::Future<Output = UniversalZfsResult<()>> + Send;
+
+    // ==================== POOL OPERATIONS ====================
+
+    /// List all pools
     async fn list_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>>;
-    async fn get_pool(&self, name: &str) -> UniversalZfsResult<Option<PoolInfo>>;
+
+    /// Create a new pool
     async fn create_pool(&self, config: &PoolConfig) -> UniversalZfsResult<PoolInfo>;
+
+    /// Get information about a specific pool
+    async fn get_pool(&self, name: &str) -> UniversalZfsResult<Option<PoolInfo>>;
+
+    /// Destroy a pool
     async fn destroy_pool(&self, name: &str) -> UniversalZfsResult<()>;
+
+    /// Scrub a pool (data integrity check)
     async fn scrub_pool(&self, name: &str) -> UniversalZfsResult<()>;
+
+    /// Get pool status information
     async fn get_pool_status(&self, name: &str) -> UniversalZfsResult<String>;
 
-    /// Dataset operations
+    // ==================== DATASET OPERATIONS ====================
+
+    /// List all datasets
     async fn list_datasets(&self) -> UniversalZfsResult<Vec<DatasetInfo>>;
-    async fn get_dataset(&self, name: &str) -> UniversalZfsResult<Option<DatasetInfo>>;
+
+    /// Create a new dataset
     async fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo>;
+
+    /// Get information about a specific dataset
+    async fn get_dataset(&self, name: &str) -> UniversalZfsResult<Option<DatasetInfo>>;
+
+    /// Destroy a dataset
     async fn destroy_dataset(&self, name: &str) -> UniversalZfsResult<()>;
-    async fn get_dataset_properties(
-        &self,
-        name: &str,
-    ) -> UniversalZfsResult<HashMap<String, String>>;
+
+    /// Set dataset properties
     async fn set_dataset_properties(
         &self,
-        name: &str,
+        dataset_name: &str,
         properties: &HashMap<String, String>,
     ) -> UniversalZfsResult<()>;
 
-    /// Snapshot operations
+    /// Get dataset properties
+    async fn get_dataset_properties(
+        &self,
+        dataset_name: &str,
+    ) -> UniversalZfsResult<HashMap<String, String>>;
+
+    // ==================== SNAPSHOT OPERATIONS ====================
+
+    /// List all snapshots
     async fn list_snapshots(&self) -> UniversalZfsResult<Vec<SnapshotInfo>>;
-    async fn list_dataset_snapshots(&self, dataset: &str) -> UniversalZfsResult<Vec<SnapshotInfo>>;
+
+    /// Create a snapshot
     async fn create_snapshot(&self, config: &SnapshotConfig) -> UniversalZfsResult<SnapshotInfo>;
+
+    /// List snapshots for a specific dataset
+    async fn list_dataset_snapshots(
+        &self,
+        dataset_name: &str,
+    ) -> UniversalZfsResult<Vec<SnapshotInfo>>;
+
+    /// Destroy a snapshot
     async fn destroy_snapshot(&self, name: &str) -> UniversalZfsResult<()>;
 
-    /// Advanced operations
+    // ==================== OPTIMIZATION & CONFIGURATION ====================
+
+    /// Optimize ZFS configuration
     async fn optimize(&self) -> UniversalZfsResult<String>;
+
+    /// Get optimization analytics
     async fn get_optimization_analytics(&self) -> UniversalZfsResult<serde_json::Value>;
+
+    /// Predict optimal tier for data
     async fn predict_tier(&self, file_path: &str) -> UniversalZfsResult<String>;
 
-    /// Configuration and control
+    /// Get current configuration
     async fn get_configuration(&self) -> UniversalZfsResult<serde_json::Value>;
+
+    /// Update configuration
     async fn update_configuration(&self, config: serde_json::Value) -> UniversalZfsResult<()>;
-    async fn shutdown(&self) -> UniversalZfsResult<()>;
-}
-
-/// Health monitoring trait for services
-#[async_trait]
-pub trait HealthMonitor: Send + Sync {
-    async fn check_health(&self) -> UniversalZfsResult<HealthStatus>;
-    async fn get_last_health_check(&self) -> Option<HealthStatus>;
-    async fn start_monitoring(&self, interval: Duration) -> UniversalZfsResult<()>;
-    async fn stop_monitoring(&self) -> UniversalZfsResult<()>;
-}
-
-/// Metrics collection trait
-#[async_trait]
-pub trait MetricsCollector: Send + Sync {
-    async fn collect_metrics(&self) -> UniversalZfsResult<ServiceMetrics>;
-    async fn reset_metrics(&self) -> UniversalZfsResult<()>;
-    async fn get_historical_metrics(
-        &self,
-        duration: Duration,
-    ) -> UniversalZfsResult<Vec<ServiceMetrics>>;
-}
-
-/// Configuration management trait
-#[async_trait]
-pub trait ConfigurationManager: Send + Sync {
-    async fn get_config(&self) -> UniversalZfsResult<serde_json::Value>;
-    async fn update_config(&self, config: serde_json::Value) -> UniversalZfsResult<()>;
-    async fn validate_config(&self, config: &serde_json::Value) -> UniversalZfsResult<bool>;
-    async fn reload_config(&self) -> UniversalZfsResult<()>;
-}
-
-/// Service discovery trait for remote services
-#[async_trait]
-pub trait ServiceDiscovery: Send + Sync {
-    async fn discover_services(&self) -> UniversalZfsResult<Vec<String>>;
-    async fn register_service(&self, endpoint: &str) -> UniversalZfsResult<()>;
-    async fn unregister_service(&self, endpoint: &str) -> UniversalZfsResult<()>;
-    async fn get_healthy_services(&self) -> UniversalZfsResult<Vec<String>>;
 }

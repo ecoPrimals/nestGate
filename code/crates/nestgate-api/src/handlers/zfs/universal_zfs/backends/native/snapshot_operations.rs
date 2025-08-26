@@ -1,6 +1,5 @@
-//! Snapshot Operations for Native ZFS Backend
-//!
-//! Contains all snapshot-related operations for the native ZFS backend.
+//
+// Contains all snapshot-related operations for the native ZFS backend.
 
 use std::collections::HashMap;
 // Removed unused tracing import

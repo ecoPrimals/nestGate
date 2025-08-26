@@ -1,10 +1,11 @@
-//! ZFS Manager Health - Health monitoring and status reporting
-//!
-//! Contains all health-related operations including comprehensive service status,
-//! ZFS health checking, and system monitoring.
+//
+// Contains all health-related operations including comprehensive service status,
+// ZFS health checking, and system monitoring.
 
 use super::types::*;
-use crate::error::{Result, ZfsError};
+use nestgate_core::error::conversions::create_zfs_error;
+use nestgate_core::error::domain_errors::ZfsOperation;
+use nestgate_core::Result;
 use std::time::SystemTime;
 // Removed unused tracing import
 
@@ -115,9 +116,10 @@ impl ZfsManager {
         use crate::command::ZfsOperations;
 
         let ops = ZfsOperations::new();
-        let pools = ops.list_pools().await.map_err(|e| ZfsError::Storage {
-            message: e.to_string(),
-        })?;
+        let pools = ops
+            .list_pools()
+            .await
+            .map_err(|e| create_zfs_error(e.to_string(), ZfsOperation::Configuration))?;
 
         // Check if any pools are unhealthy
         for pool in pools {
@@ -139,9 +141,7 @@ impl ZfsManager {
         let datasets = ops
             .list_datasets(None)
             .await
-            .map_err(|e| ZfsError::Storage {
-                message: e.to_string(),
-            })?;
+            .map_err(|e| create_zfs_error(e.to_string(), ZfsOperation::Configuration))?;
 
         // Filter datasets by tier and calculate utilization
         let tier_datasets: Vec<_> = datasets.iter().filter(|d| d.name.contains(tier)).collect();
@@ -177,9 +177,7 @@ impl ZfsManager {
         let snapshots = ops
             .list_snapshots(None)
             .await
-            .map_err(|e| ZfsError::Storage {
-                message: e.to_string(),
-            })?;
+            .map_err(|e| create_zfs_error(e.to_string(), ZfsOperation::Configuration))?;
 
         Ok(snapshots.len() as u32)
     }
@@ -192,9 +190,10 @@ impl ZfsManager {
 
         // Verify ZFS is available
         if !crate::is_zfs_available().await {
-            return Err(ZfsError::Internal {
-                message: "ZFS is not available on this system".to_string(),
-            });
+            return Err(create_zfs_error(
+                "ZFS is not available on this system".to_string(),
+                ZfsOperation::SystemCheck
+            ));
         }
 
         // Start metrics collection

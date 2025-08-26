@@ -1,6 +1,5 @@
-//! Comprehensive ZFS Pool Tests
-//!
-//! Tests the public API of the ZFS pool management system
+//
+// Tests the public API of the ZFS pool management system
 
 use nestgate_core::NestGateError;
 use nestgate_zfs::{

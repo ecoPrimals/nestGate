@@ -7,7 +7,7 @@ use tokio::time::sleep;
 
 /// Performance Test: Throughput Under Load
 #[tokio::test]
-async fn test_throughput_under_load() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_throughput_under_load() -> std::result::Result<(), Box<dyn std::error::Error>> {
     println!("📈 PERFORMANCE: Throughput Under Load");
 
     let start_time = Instant::now();
@@ -33,11 +33,8 @@ async fn test_throughput_under_load() -> Result<(), Box<dyn std::error::Error>> 
     let elapsed = start_time.elapsed();
     let throughput = operations_completed as f64 / elapsed.as_secs_f64();
 
-    println!(
-        "  📊 Completed {} operations in {:?}",
-        operations_completed, elapsed
-    );
-    println!("  🚀 Throughput: {:.2} operations/second", throughput);
+    println!("  📊 Completed {operations_completed} operations in {elapsed:?}");
+    println!("  🚀 Throughput: {throughput:.2} operations/second");
 
     // Assert performance targets
     assert!(throughput > 100.0, "Throughput should be > 100 ops/sec");
@@ -55,12 +52,9 @@ async fn test_latency_under_various_loads() -> Result<(), Box<dyn std::error::Er
     let load_levels = vec![10, 50, 100, 200, 500];
 
     for load in load_levels {
-        println!(
-            "  🔄 Testing latency with {} concurrent operations...",
-            load
-        );
+        println!("  🔄 Testing latency with {load} concurrent operations...");
 
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
         let mut handles = Vec::new();
 
         for _ in 0..load {
@@ -83,10 +77,7 @@ async fn test_latency_under_various_loads() -> Result<(), Box<dyn std::error::Er
         let median = latencies[latencies.len() / 2];
         let p95 = latencies[(latencies.len() as f64 * 0.95) as usize];
 
-        println!(
-            "    📊 Load {}: Median latency: {:?}, P95: {:?}",
-            load, median, p95
-        );
+        println!("    📊 Load {load}: Median latency: {median:?}, P95: {p95:?}");
 
         // Assert latency targets
         assert!(

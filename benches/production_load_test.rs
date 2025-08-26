@@ -187,7 +187,7 @@ fn bench_api_load_tests(c: &mut Criterion) {
                         concurrent_requests,
                         concurrent_requests * 10,
                     ))
-                });
+                })
             },
         );
     }
@@ -273,7 +273,7 @@ fn bench_mixed_production_workload(c: &mut Criterion) {
 
                 black_box(total_time)
             })
-        });
+        })
     });
 }
 

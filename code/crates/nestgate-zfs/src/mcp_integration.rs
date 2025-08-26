@@ -1,8 +1,7 @@
-//! ZFS MCP Integration
-//!
-//! This module provides integration between ZFS and MCP (Model Coordination Protocol),
-//! enabling ZFS to act as a storage provider for MCP systems with tiered storage
-//! capabilities, AI optimization, and performance monitoring.
+//
+// This module provides integration between ZFS and MCP (Model Coordination Protocol),
+// enabling ZFS to act as a storage provider for MCP systems with tiered storage
+// capabilities, AI optimization, and performance monitoring.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -13,7 +12,7 @@ use tokio::sync::RwLock;
 
 use crate::types::StorageTier;
 use crate::ZfsManager;
-use nestgate_core::{error::ApiErrorData, NestGateError, Result};
+use nestgate_core::{NestGateError, Result};
 use tracing::error;
 use tracing::info;
 use tracing::warn;
@@ -201,7 +200,7 @@ impl ZfsMcpStorageProvider {
         match self
             .zfs_manager
             .dataset_manager
-            .create_dataset(name, &parent, tier.into())
+            .create_dataset(name, &parent, tier)
             .await
         {
             Ok(_) => {
@@ -229,7 +228,7 @@ impl ZfsMcpStorageProvider {
                     request.mount_id, e
                 );
                 Err(nestgate_core::NestGateError::Internal {
-                    message: format!("Dataset creation failed: {}", e),
+                    message: format!("Dataset creation failed: {e}"),
                     location: Some(format!("{}:{}", file!(), line!())),
                     debug_info: None,
                     is_bug: false,
@@ -256,7 +255,7 @@ impl ZfsMcpStorageProvider {
                 Err(e) => {
                     error!("Failed to destroy dataset for mount {}: {}", mount_id, e);
                     Err(nestgate_core::NestGateError::Internal {
-                        message: format!("Dataset destruction failed: {}", e),
+                        message: format!("Dataset destruction failed: {e}"),
                         location: Some(format!("{}:{}", file!(), line!())),
                         debug_info: None,
                         is_bug: false,
@@ -265,12 +264,10 @@ impl ZfsMcpStorageProvider {
             }
         } else {
             warn!("Mount not found: {}", mount_id);
-            Err(nestgate_core::NestGateError::api_error(
-                &format!("Mount not found: {}", mount_id),
-                Some("GET"),
-                Some(&format!("/mounts/{mount_id}")),
-                Some(404),
-            ))
+            // IDIOMATIC EVOLUTION: Simple constructor with context
+            Err(nestgate_core::NestGateError::simple(format!(
+                "Mount not found: {mount_id}"
+            )))
         }
     }
 
@@ -290,7 +287,7 @@ impl ZfsMcpStorageProvider {
         match self
             .zfs_manager
             .dataset_manager
-            .create_dataset(name, &parent, tier.into())
+            .create_dataset(name, &parent, tier)
             .await
         {
             Ok(_) => {
@@ -317,7 +314,7 @@ impl ZfsMcpStorageProvider {
                     request.volume_id, e
                 );
                 Err(nestgate_core::NestGateError::Internal {
-                    message: format!("Dataset creation failed: {}", e),
+                    message: format!("Dataset creation failed: {e}"),
                     location: Some(format!("{}:{}", file!(), line!())),
                     debug_info: None,
                     is_bug: false,
@@ -344,7 +341,7 @@ impl ZfsMcpStorageProvider {
                 Err(e) => {
                     error!("Failed to destroy dataset for volume {}: {}", volume_id, e);
                     Err(nestgate_core::NestGateError::Internal {
-                        message: format!("Dataset destruction failed: {}", e),
+                        message: format!("Dataset destruction failed: {e}"),
                         location: Some(format!("{}:{}", file!(), line!())),
                         debug_info: None,
                         is_bug: false,
@@ -353,12 +350,10 @@ impl ZfsMcpStorageProvider {
             }
         } else {
             warn!("Volume not found: {}", volume_id);
-            Err(nestgate_core::NestGateError::api_error(
-                &format!("Volume not found: {}", volume_id),
-                Some("GET"),
-                Some(&format!("/volumes/{volume_id}")),
-                Some(404),
-            ))
+            // IDIOMATIC EVOLUTION: Simple constructor with context
+            Err(nestgate_core::NestGateError::simple(format!(
+                "Volume not found: {volume_id}"
+            )))
         }
     }
 

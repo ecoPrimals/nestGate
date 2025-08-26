@@ -1,20 +1,19 @@
-//! ZFS Handler Types
-//!
-//! This module contains all the shared types, request/response structures,
-//! and data models used by the ZFS API handlers.
+//
+// This module contains all the shared types, request/response structures,
+// and data models used by the ZFS API handlers.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use nestgate_core::types::StorageTier;
-use nestgate_zfs::manager::ZfsManager;
+use nestgate_zfs::zero_cost_zfs_operations::ProductionZfsManager;
 
 /// ZFS API state container
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct ZfsApiState {
     /// ZFS manager instance
-    pub zfs_manager: Arc<ZfsManager>,
+    pub zfs_manager: Arc<ProductionZfsManager>,
 }
 
 /// Pool creation request

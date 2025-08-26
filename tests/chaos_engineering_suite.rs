@@ -6,9 +6,12 @@ use rand::Rng;
 use std::time::Duration;
 use tokio::time::sleep;
 
+// Type alias to reduce complexity
+type TestResult = Result<(), Box<dyn std::error::Error>>;
+
 /// Chaos Test: Network Partition Simulation
 #[tokio::test]
-async fn test_network_partition_resilience() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_network_partition_resilience() -> TestResult {
     println!("🌪️ CHAOS: Network Partition Simulation");
 
     // 1. Establish normal network conditions
@@ -37,14 +40,14 @@ async fn test_network_partition_resilience() -> Result<(), Box<dyn std::error::E
 
 /// Chaos Test: Random Service Failures
 #[tokio::test]
-async fn test_random_service_failures() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_random_service_failures() -> TestResult {
     println!("🌪️ CHAOS: Random Service Failures");
 
     let mut rng = rand::thread_rng();
 
     // Simulate random failures across different services
     for round in 1..=5 {
-        println!("  🎲 Chaos round {}: Introducing random failures...", round);
+        println!("  🎲 Chaos round {round}: Introducing random failures...");
 
         // Random failure duration
         let failure_duration = rng.gen_range(50..200);
@@ -61,7 +64,7 @@ async fn test_random_service_failures() -> Result<(), Box<dyn std::error::Error>
 
 /// Chaos Test: Resource Exhaustion
 #[tokio::test]
-async fn test_resource_exhaustion_handling() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_resource_exhaustion_handling() -> TestResult {
     println!("🌪️ CHAOS: Resource Exhaustion Handling");
 
     // 1. Simulate memory pressure
@@ -90,7 +93,7 @@ async fn test_resource_exhaustion_handling() -> Result<(), Box<dyn std::error::E
 
 /// Chaos Test: Data Corruption Scenarios
 #[tokio::test]
-async fn test_data_corruption_resilience() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_data_corruption_resilience() -> TestResult {
     println!("🌪️ CHAOS: Data Corruption Resilience");
 
     // 1. Simulate bit-flip errors

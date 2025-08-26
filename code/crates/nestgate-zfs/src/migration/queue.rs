@@ -1,7 +1,6 @@
-//! ZFS Migration Queue - Queue processing and migration execution
-//!
-//! Contains the queue processing logic for managing migration jobs and
-//! executing migrations between storage tiers.
+//
+// Contains the queue processing logic for managing migration jobs and
+// executing migrations between storage tiers.
 
 use chrono::Timelike;
 use std::sync::Arc;
@@ -46,7 +45,7 @@ pub async fn process_migration_queue(context: MigrationContext<'_>) -> CoreResul
                 .acquire()
                 .await
                 .map_err(|e| NestGateError::Internal {
-                    message: format!("Failed to acquire migration permit: {}", e),
+                    message: format!("Failed to acquire migration permit: {e}"),
                     location: Some(format!("{}:{}", file!(), line!())),
                     debug_info: None,
                     is_bug: false,
@@ -175,7 +174,7 @@ async fn execute_migration(
         tokio::fs::create_dir_all(parent)
             .await
             .map_err(|e| NestGateError::System {
-                message: format!("Failed to create target directory: {}", e),
+                message: format!("Failed to create target directory: {e}"),
                 resource: nestgate_core::error::SystemResource::Disk,
                 utilization: None,
                 recovery: nestgate_core::error::RecoveryStrategy::Retry,
@@ -198,7 +197,7 @@ async fn execute_migration(
         tokio::fs::remove_file(&job.source_path)
             .await
             .map_err(|e| NestGateError::System {
-                message: format!("Failed to remove source file: {}", e),
+                message: format!("Failed to remove source file: {e}"),
                 resource: nestgate_core::error::SystemResource::Disk,
                 utilization: None,
                 recovery: nestgate_core::error::RecoveryStrategy::Retry,

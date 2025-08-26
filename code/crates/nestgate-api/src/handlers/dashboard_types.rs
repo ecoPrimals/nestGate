@@ -1,12 +1,11 @@
-//! Dashboard Type Definitions
-//!
-//! Core types and structures used by the performance dashboard system.
+//
+// Core types and structures used by the performance dashboard system.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::{ SystemTime};
-use tokio::sync::RwLock;
 use std::time::Duration;
+use std::time::SystemTime;
+use tokio::sync::RwLock;
 
 /// Time range configuration for performance queries
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -50,7 +49,9 @@ impl TimeRange {
 
     /// Get duration of this time range
     pub fn duration(&self) -> Duration {
-        self.end.duration_since(self.start).unwrap_or(Duration::ZERO)
+        self.end
+            .duration_since(self.start)
+            .unwrap_or(Duration::ZERO)
     }
 
     /// Check if this time range is valid
@@ -71,14 +72,14 @@ impl TimeRange {
     pub fn intervals(&self) -> Vec<(SystemTime, SystemTime)> {
         let mut intervals = Vec::new();
         let mut current = self.start;
-        
+
         while current < self.end {
             let next = current + self.granularity;
             let interval_end = if next > self.end { self.end } else { next };
             intervals.push((current, interval_end));
             current = next;
         }
-        
+
         intervals
     }
 }
@@ -189,4 +190,4 @@ impl Default for DashboardConfig {
             alert_thresholds,
         }
     }
-} 
+}

@@ -1,16 +1,16 @@
-//! Snapshot Policy Scheduler
-//!
-//! Handles scheduling and execution of snapshot policies including
-//! retention management and automated snapshot creation.
+//
+// Handles scheduling and execution of snapshot policies including
+// retention management and automated snapshot creation.
 
 use chrono::{Datelike, Timelike};
-use std::collections::HashMap;
+// Removed unused HashMap import
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::RwLock;
 // Removed unused tracing import
 
 use crate::dataset::ZfsDatasetManager;
+use crate::performance::types::SnapshotPolicyMap;
 use nestgate_core::{NestGateError, Result as CoreResult};
 
 use super::operations::SnapshotOperationType;
@@ -27,7 +27,7 @@ use tracing::warn;
 #[derive(Debug)]
 pub struct PolicyScheduler {
     dataset_manager: Arc<ZfsDatasetManager>,
-    policies: Arc<RwLock<HashMap<String, SnapshotPolicy>>>,
+    policies: SnapshotPolicyMap,
     operation_queue: Arc<RwLock<Vec<SnapshotOperation>>>,
 }
 
@@ -35,7 +35,7 @@ impl PolicyScheduler {
     /// Create a new policy scheduler
     pub fn new(
         dataset_manager: Arc<ZfsDatasetManager>,
-        policies: Arc<RwLock<HashMap<String, SnapshotPolicy>>>,
+        policies: SnapshotPolicyMap,
         operation_queue: Arc<RwLock<Vec<SnapshotOperation>>>,
     ) -> Self {
         Self {
@@ -348,6 +348,7 @@ impl PolicyScheduler {
     }
 
     /// Apply custom retention policy
+    #[allow(clippy::too_many_arguments)] // Retention policy requires multiple time periods
     async fn apply_custom_retention(
         &self,
         snapshots: Vec<SnapshotInfo>,

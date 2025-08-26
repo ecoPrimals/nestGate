@@ -1,6 +1,5 @@
-//! Community primal registry functionality
-//!
-//! Placeholder module for community-contributed primal features.
+//
+// Placeholder module for community-contributed primal features.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

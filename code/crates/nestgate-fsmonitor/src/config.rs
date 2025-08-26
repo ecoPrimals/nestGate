@@ -1,17 +1,17 @@
-/// File System Monitor Configuration Management
 /// Handles file system monitoring configuration, event detection, and notification
 /// **ECOSYSTEM UNIFICATION**: This module now uses the unified type system from nestgate-core
 /// to eliminate file system monitor config fragmentation and ensure consistency.
 use serde::{Deserialize, Serialize};
 
 /// File system event types
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum FsEventType {
     /// File or directory created
     Created,
     /// Directory created specifically
     DirectoryCreated,
     /// File or directory modified
+    #[default]
     Modified,
     /// File or directory deleted
     Deleted,
@@ -27,12 +27,6 @@ pub enum FsEventType {
     AttributeChanged,
     /// Metadata changed
     MetadataChanged,
-}
-
-impl Default for FsEventType {
-    fn default() -> Self {
-        FsEventType::Modified
-    }
 }
 
 // **DEPRECATED IMPLEMENTATION REMOVED**

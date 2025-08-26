@@ -4,20 +4,14 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 /// This will help us identify if compiler optimizations are eliminating work
 
 fn validate_real_work_vs_stub(c: &mut Criterion) {
-    // Test 1: Real work that should take measurable time
-    c.bench_function("real_work_validation", |b| {
+    c.bench_function("real_work_benchmark", |b| {
         b.iter(|| {
-            // Real computation that can't be optimized away
-            let mut sum = 0u64;
+            // Simulate real computational work
+            let mut sum = 0;
             for i in 0..1000 {
-                sum += black_box(i * i); // Prevent optimization
+                sum += black_box(i * i);
             }
-            // Access memory to force real work
-            let mut data = vec![0u8; 1000];
-            for (i, byte) in data.iter_mut().enumerate() {
-                *byte = (sum + i as u64) as u8;
-            }
-            black_box(sum + data.len() as u64)
+            black_box(sum)
         })
     });
 
@@ -115,12 +109,16 @@ fn validate_uuid_cache_if_exists(c: &mut Criterion) {
             }
         }
 
-        fn get_or_create(&self, key: &str) -> Arc<Uuid> {
+        fn get_or_create(&self, key: &str) -> Result<Arc<Uuid>, Box<dyn std::error::Error>> {
             let mut cache = nestgate_core::safe_operations::safe_mutex_lock(&self.cache)?;
-            cache
-                .entry(key.to_string())
-                .or_insert_with(|| Arc::new(Uuid::new_v4()))
-                .clone()
+
+            if let Some(uuid) = cache.get(key) {
+                Ok(uuid.clone())
+            } else {
+                let new_uuid = Arc::new(Uuid::new_v4());
+                cache.insert(key.to_string(), new_uuid.clone());
+                Ok(new_uuid)
+            }
         }
     }
 
@@ -174,23 +172,26 @@ fn validate_memory_pool_concept(c: &mut Criterion) {
             }
         }
 
-        fn get_buffer(&self) -> Vec<u8> {
+        fn get_buffer(&self) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
             let mut buffers = nestgate_core::safe_operations::safe_mutex_lock(&self.buffers)?;
-            if let Some(mut buf) = buffers.pop() {
-                buf.clear();
-                buf.reserve(self.size);
-                buf
+
+            if let Some(buffer) = buffers.pop() {
+                Ok(buffer)
             } else {
-                Vec::with_capacity(self.size)
+                Ok(vec![0u8; 8192]) // Create new buffer
             }
         }
 
-        fn return_buffer(&self, buffer: Vec<u8>) {
+        fn return_buffer(
+            &self,
+            buffer: Vec<u8>,
+        ) -> std::result::Result<(), Box<dyn std::error::Error>> {
             let mut buffers = nestgate_core::safe_operations::safe_mutex_lock(&self.buffers)?;
             if buffers.len() < 10 {
                 // Limit pool size
                 buffers.push(buffer);
             }
+            Ok(())
         }
     }
 
@@ -198,13 +199,13 @@ fn validate_memory_pool_concept(c: &mut Criterion) {
 
     c.bench_function("memory_pool_allocation", |b| {
         b.iter(|| {
-            let mut buffer = pool.get_buffer();
+            let mut buffer = pool.get_buffer().unwrap_or_else(|_| vec![0u8; 8192]);
             // Do real work with the buffer
             for i in 0..100 {
                 buffer.push((i % 256) as u8);
             }
             let checksum: u32 = buffer.iter().map(|&x| x as u32).sum();
-            pool.return_buffer(buffer);
+            let _ = pool.return_buffer(buffer);
             black_box(checksum)
         })
     });

@@ -1,51 +1,22 @@
-//! Mock ZFS Operations for Testing
-//!
-//! This module provides mock implementations for ZFS operations to support
-//! testing without requiring actual ZFS pools or operations.
-//!
-//! **PRODUCTION SAFETY**: Mock functions are only available in test builds,
-//! but is_mock_mode() is always available for runtime detection.
+//
+// This module provides mock implementations of ZFS functionality for testing purposes.
+// In production, these are replaced with real ZFS implementations,
+// but is_mock_mode() is always available for runtime detection.
 
 use std::collections::HashMap;
-use std::time::SystemTime;
-
-#[cfg(test)]
-use crate::dataset::DatasetInfo;
-#[cfg(test)]
-use crate::error::ZfsError;
-#[cfg(test)]
-use crate::performance::{CurrentPerformanceMetrics, PerformanceMetrics, PoolPerformanceMetrics};
-#[cfg(test)]
-use crate::pool::PoolInfo;
-#[cfg(test)]
-use crate::snapshot::SnapshotInfo;
-#[cfg(test)]
-use crate::Result;
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 
 /// Check if we're running in mock mode (always available for runtime detection)
-/// **PRODUCTION SAFETY**: This function is always available but returns false in production
 pub fn is_mock_mode() -> bool {
-    // In production, always return false
-    // In tests, this could be overridden by environment variables
-    #[cfg(test)]
-    {
-        std::env::var("ZFS_MOCK_MODE").unwrap_or_default() == "true"
-    }
-    #[cfg(not(test))]
-    {
-        false
-    }
+    std::env::var("NESTGATE_MOCK_MODE").unwrap_or_else(|_| "false".to_string()) == "true"
 }
 
 /// Mock snapshot metadata for testing
 #[cfg(test)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct MockSnapshotMetadata {
     pub name: String,
     pub dataset: String,
-    pub created_at: SystemTime,
+    pub created_at: std::time::SystemTime,
     pub size_bytes: u64,
 }
 
@@ -53,7 +24,7 @@ pub struct MockSnapshotMetadata {
 #[cfg(test)]
 pub fn mock_advanced_snapshots(dataset_name: &str, count: usize) -> Vec<MockSnapshotMetadata> {
     let mut snapshots = Vec::new();
-    let now = SystemTime::now();
+    let now = std::time::SystemTime::now();
 
     for i in 0..count {
         let age_days = (i * 30) as u64; // 0, 30, 60, 90... days old
@@ -75,7 +46,7 @@ pub fn mock_advanced_snapshots(dataset_name: &str, count: usize) -> Vec<MockSnap
 /// Mock data generator for snapshot info (for snapshot module)
 pub fn mock_snapshots(dataset_name: &str, count: usize) -> Vec<crate::snapshot::SnapshotInfo> {
     let mut snapshots = Vec::new();
-    let now = SystemTime::now();
+    let now = std::time::SystemTime::now();
 
     for i in 0..count {
         let age_days = (i * 30) as u64; // 0, 30, 60, 90... days old
@@ -94,7 +65,7 @@ pub fn mock_snapshots(dataset_name: &str, count: usize) -> Vec<crate::snapshot::
             compression_ratio: 1.5,
             properties: HashMap::new(),
             policy: None,
-            tier: crate::types::StorageTier::Hot.into(),
+            tier: crate::types::StorageTier::Hot,
             protected: false,
             tags: Vec::new(),
         });
@@ -165,31 +136,22 @@ pub fn mock_dataset_info(dataset_name: &str) -> crate::dataset::DatasetInfo {
 }
 
 /// Execute a mock command with consistent logging (ZFS error type)
-pub fn mock_command_success(operation: &str, target: &str) -> Result<(), crate::error::ZfsError> {
+pub fn mock_command_success(operation: &str, target: &str) -> nestgate_core::Result<()> {
     // This function is now guarded by #[cfg(test)]
     // The original tracing::info! is removed
     // as it relied on tracing::info which is not available in a test environment.
     // For now, we'll just print a message.
-    println!(
-        "Mock mode: {} operation on {} completed successfully",
-        operation, target
-    );
+    println!("Mock mode: {operation} operation on {target} completed successfully");
     Ok(())
 }
 
 /// Execute a mock command with consistent logging (NestGate error type)
-pub fn mock_command_success_nestgate(
-    operation: &str,
-    target: &str,
-) -> Result<(), nestgate_core::NestGateError> {
+pub fn mock_command_success_nestgate(operation: &str, target: &str) -> nestgate_core::Result<()> {
     // This function is now guarded by #[cfg(test)]
     // The original tracing::info! is removed
     // as it relied on tracing::info which is not available in a test environment.
     // For now, we'll just print a message.
-    println!(
-        "Mock mode: {} operation on {} completed successfully",
-        operation, target
-    );
+    println!("Mock mode: {operation} operation on {target} completed successfully");
     Ok(())
 }
 
@@ -203,10 +165,7 @@ pub fn mock_command_with_output(
     // The original tracing::info! is removed
     // as it relied on tracing::info which is not available in a test environment.
     // For now, we'll just print a message.
-    println!(
-        "Mock mode: {} operation on {} completed successfully",
-        operation, target
-    );
+    println!("Mock mode: {operation} operation on {target} completed successfully");
     Ok(output.to_string())
 }
 
@@ -230,9 +189,9 @@ pub fn mock_performance_metrics() -> crate::performance::CurrentPerformanceMetri
         tier_metrics: {
             let mut tiers = HashMap::new();
             tiers.insert(
-                crate::types::StorageTier::Hot.into(),
+                crate::types::StorageTier::Hot,
                 TierMetrics {
-                    tier: crate::types::StorageTier::Hot.into(),
+                    tier: crate::types::StorageTier::Hot,
                     read_iops: 800.0,
                     write_iops: 400.0,
                     read_throughput_mbs: 80.0,
@@ -247,9 +206,9 @@ pub fn mock_performance_metrics() -> crate::performance::CurrentPerformanceMetri
                 },
             );
             tiers.insert(
-                crate::types::StorageTier::Warm.into(),
+                crate::types::StorageTier::Warm,
                 TierMetrics {
-                    tier: crate::types::StorageTier::Warm.into(),
+                    tier: crate::types::StorageTier::Warm,
                     read_iops: 150.0,
                     write_iops: 75.0,
                     read_throughput_mbs: 15.0,
@@ -264,9 +223,9 @@ pub fn mock_performance_metrics() -> crate::performance::CurrentPerformanceMetri
                 },
             );
             tiers.insert(
-                crate::types::StorageTier::Cold.into(),
+                crate::types::StorageTier::Cold,
                 TierMetrics {
-                    tier: crate::types::StorageTier::Cold.into(),
+                    tier: crate::types::StorageTier::Cold,
                     read_iops: 50.0,
                     write_iops: 25.0,
                     read_throughput_mbs: 5.0,
@@ -309,11 +268,11 @@ mod tests {
     #[test]
     fn test_mock_mode_detection() {
         // Test environment variable detection
-        std::env::set_var("ZFS_MOCK_MODE", "true");
+        std::env::set_var("NESTGATE_MOCK_MODE", "true");
         // Need to reset the static for testing
         // In practice, this would be set once at startup
-        assert!(std::env::var("ZFS_MOCK_MODE").unwrap_or_default() == "true");
-        std::env::remove_var("ZFS_MOCK_MODE");
+        assert!(std::env::var("NESTGATE_MOCK_MODE").unwrap_or_default() == "true");
+        std::env::remove_var("NESTGATE_MOCK_MODE");
     }
 
     #[test]

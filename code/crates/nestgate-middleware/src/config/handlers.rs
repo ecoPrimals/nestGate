@@ -1,4 +1,3 @@
-/// Middleware Request/Response Handlers Configuration
 /// Configuration for request processing, response handling, and chain management
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -8,7 +7,7 @@ use super::types::{HttpResponseFormat, MiddlewareType};
 
 // ==================== REQUEST PROCESSING ====================
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RequestProcessingSettings {
     /// Request parsing configuration
     pub parsing: RequestParsingSettings,
@@ -38,7 +37,7 @@ pub struct RequestParsingSettings {
     pub parse_json: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RequestValidationSettings {
     /// Enable request validation
     pub enabled: bool,
@@ -86,7 +85,7 @@ pub struct ValidatorConfig {
     pub parameters: HashMap<String, serde_json::Value>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RequestTransformationSettings {
     /// Enable request transformation
     pub enabled: bool,
@@ -113,7 +112,7 @@ pub enum TransformationType {
     Custom(String),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RequestRoutingSettings {
     /// Enable custom routing
     pub enabled: bool,
@@ -137,7 +136,7 @@ pub struct RoutingRule {
 
 // ==================== RESPONSE HANDLING ====================
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResponseHandlingSettings {
     /// Response formatting
     pub formatting: ResponseFormattingSettings,
@@ -192,7 +191,7 @@ pub struct ErrorHandlerConfig {
     pub config: HashMap<String, serde_json::Value>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResponseTransformationSettings {
     /// Enable response transformation
     pub enabled: bool,
@@ -293,7 +292,7 @@ pub struct ErrorPropagationSettings {
     pub rollback_on_error: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ParallelExecutionSettings {
     /// Enable parallel execution
     pub enabled: bool,
@@ -315,17 +314,6 @@ pub struct ParallelGroup {
 
 // ==================== DEFAULT IMPLEMENTATIONS ====================
 
-impl Default for RequestProcessingSettings {
-    fn default() -> Self {
-        Self {
-            parsing: RequestParsingSettings::default(),
-            validation: RequestValidationSettings::default(),
-            transformation: RequestTransformationSettings::default(),
-            routing: RequestRoutingSettings::default(),
-        }
-    }
-}
-
 impl Default for RequestParsingSettings {
     fn default() -> Self {
         Self {
@@ -341,47 +329,6 @@ impl Default for RequestParsingSettings {
             parse_query: true,
             parse_form: true,
             parse_json: true,
-        }
-    }
-}
-
-impl Default for RequestValidationSettings {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            rules: Vec::new(),
-            schema_validation: false,
-            custom_validators: HashMap::new(),
-        }
-    }
-}
-
-impl Default for RequestTransformationSettings {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            rules: Vec::new(),
-        }
-    }
-}
-
-impl Default for RequestRoutingSettings {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            rules: Vec::new(),
-            default_route: None,
-        }
-    }
-}
-
-impl Default for ResponseHandlingSettings {
-    fn default() -> Self {
-        Self {
-            formatting: ResponseFormattingSettings::default(),
-            error_handling: ErrorHandlingSettings::default(),
-            transformation: ResponseTransformationSettings::default(),
-            headers: ResponseHeadersSettings::default(),
         }
     }
 }
@@ -405,15 +352,6 @@ impl Default for ErrorHandlingSettings {
             custom_handlers: HashMap::new(),
             log_errors: true,
             templates: HashMap::new(),
-        }
-    }
-}
-
-impl Default for ResponseTransformationSettings {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            rules: Vec::new(),
         }
     }
 }
@@ -471,16 +409,6 @@ impl Default for ErrorPropagationSettings {
             stop_on_error: true,
             aggregate_errors: false,
             rollback_on_error: false,
-        }
-    }
-}
-
-impl Default for ParallelExecutionSettings {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            groups: Vec::new(),
-            sync_points: Vec::new(),
         }
     }
 }

@@ -1,6 +1,5 @@
-//! Lifecycle management functionality
-//!
-//! Placeholder module for primal lifecycle management features.
+//
+// Placeholder module for primal lifecycle management features.
 
 use serde::{Deserialize, Serialize};
 

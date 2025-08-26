@@ -1,16 +1,16 @@
-//! Tier Manager - Hot/warm/cold storage tier management
-//!
-//! This module will be fully implemented in Week 2
+//
+// This module will be fully implemented in Week 2
 
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 // Removed unused tracing import
 
+use crate::performance::types::TierStatsMap;
 use crate::{
     config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager, types::StorageTier,
 };
-use nestgate_core::{types::StorageTier as CoreStorageTier, Result};
+use nestgate_core::Result;
 use tracing::info;
 use tracing::warn;
 
@@ -22,7 +22,7 @@ pub struct TierManager {
     #[allow(dead_code)]
     pool_manager: Arc<ZfsPoolManager>,
     dataset_manager: Arc<ZfsDatasetManager>,
-    tier_stats: Arc<RwLock<HashMap<StorageTier, TierStats>>>,
+    tier_stats: TierStatsMap,
 }
 
 #[derive(Debug, Clone, Default)]

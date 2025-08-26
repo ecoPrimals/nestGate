@@ -1,4 +1,3 @@
-//! Common data structures used across the API
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -48,4 +47,4 @@ pub struct AuthToken {
 }
 
 /// Re-export universal response types from nestgate-core to eliminate duplication
-pub use nestgate_core::response::{ApiResponse as Response, ErrorResponse};
+pub use nestgate_core::response::{ApiResponse as Response, UnifiedErrorResponse as ErrorResponse};

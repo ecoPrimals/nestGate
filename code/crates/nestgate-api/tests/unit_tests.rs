@@ -1,7 +1,6 @@
-//! Unit tests for NestGate API components
-//!
-//! This test suite validates individual API components, handlers, and utilities
-//! in isolation using mocks and test doubles.
+//
+// This test suite validates individual API components, handlers, and utilities
+// in isolation using mocks and test doubles.
 
 // Import the required types
 use nestgate_api::handlers::zfs::types::*;

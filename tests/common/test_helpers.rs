@@ -14,16 +14,16 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Arc;
+
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-// Import unified types and configurations
+// Import canonical types and configurations
 use nestgate_core::{
     traits::{UniversalService, UniversalServiceRequest, UniversalServiceResponse},
-    unified_enums::service_types::{UnifiedServiceType, UnifiedServiceState},
-    unified_types::{UnifiedConfig, UnifiedServiceConfig},
+    canonical_modernization::canonical_modernization::unified_enums::{UnifiedServiceType, UnifiedServiceState},
+    canonical_types::{UnifiedConfig, UnifiedServiceConfig},
     error::{NestGateError, Result},
 };
 
@@ -45,17 +45,17 @@ pub fn create_test_performance_monitor() -> nestgate_zfs::performance::Performan
     nestgate_zfs::performance::PerformanceMonitor::new(config)
 }
 
-/// **CONSOLIDATED**: Create test NAS server with unified configuration
+/// **CONSOLIDATED**: Create test NAS server with canonical configuration
 /// Replaces NAS server creation across multiple integration tests
 pub async fn create_test_nas_server() -> Result<nestgate_nas::NasServer> {
-    let config = nestgate_nas::unified_nas_config::UnifiedNasConfig::default();
+            let config = nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig::default();
     nestgate_nas::NasServer::new(config).await
 }
 
 /// **CONSOLIDATED**: Create test MCP adapter with standardized configuration
 /// Replaces MCP adapter creation helpers
 pub async fn create_test_mcp_adapter() -> Result<nestgate_mcp::adapter::McpAdapter> {
-    let config = nestgate_mcp::config::UnifiedMcpConfig::default();
+    let config = nestgate_mcp::config::UnifiedUnifiedMcpConfig::default();
     nestgate_mcp::adapter::McpAdapter::new(config).await
 }
 
@@ -88,48 +88,72 @@ pub struct MockTestService {
     pub call_count: Arc<RwLock<u64>>,
 }
 
-#[async_trait]
+// **CANONICAL MODERNIZATION**: Native async implementation without async_trait overhead
 impl UniversalService for MockTestService {
-    async fn handle_request(&self, request: UniversalServiceRequest) -> Result<UniversalServiceResponse> {
-        // Increment call count
-        let mut count = self.call_count.write().await;
-        *count += 1;
-        
-        // Simulate processing delay
-        tokio::time::sleep(self.response_delay).await;
-        
-        if self.should_fail {
-            return Err(NestGateError::InternalError(format!("Mock service {} configured to fail", self.service_id)));
+    type Config = MockTestConfig;
+    type Health = TestHealthStatus;
+
+    fn handle_request(&self, request: UniversalServiceRequest) -> impl std::future::Future<Output = Result<UniversalServiceResponse>> + Send {
+        async move {
+            // Increment call count
+            let mut count = self.call_count.write().await;
+            *count += 1;
+            
+            // Simulate processing delay
+            tokio::time::sleep(self.response_delay).await;
+            
+            if self.should_fail {
+                return Err(NestGateError::Testing(Box::new(crate::error::TestErrorData {
+                    test_name: "mock_test_service".to_string(),
+                    assertion_details: Some(crate::error::TestAssertionDetails {
+                        expected: "success".to_string(),
+                        actual: "failure".to_string(),
+                        message: "Mock service configured to fail".to_string(),
+                    }),
+                    context: ErrorContext {
+                        operation: "handle_request".to_string(),
+                        component: "MockTestService".to_string(),
+                        metadata: std::collections::HashMap::new(),
+                        timestamp: std::time::SystemTime::now(),
+                    },
+                })));
+            }
+
+            Ok(UniversalServiceResponse {
+                id: request.id,
+                status_code: 200,
+                headers: std::collections::HashMap::new(),
+                body: serde_json::to_vec(&serde_json::json!({
+                    "status": "success",
+                    "service_type": self.service_type,
+                    "message": "Mock service response"
+                })).unwrap_or_default(),
+            })
         }
-        
-        Ok(UniversalServiceResponse {
-            success: true,
-            data: serde_json::json!({
-                "service_id": self.service_id,
-                "service_type": self.service_type.as_str(),
-                "call_count": *count,
-                "request_id": request.id,
-            }),
-            metadata: HashMap::new(),
-        })
     }
-    
-    async fn get_health(&self) -> Result<HashMap<String, serde_json::Value>> {
-        let count = self.call_count.read().await;
-        Ok(HashMap::from([
-            ("service_id".to_string(), serde_json::json!(self.service_id)),
-            ("status".to_string(), serde_json::json!(if self.should_fail { "unhealthy" } else { "healthy" })),
-            ("call_count".to_string(), serde_json::json!(*count)),
-            ("last_check".to_string(), serde_json::json!(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs())),
-        ]))
+
+    fn get_health(&self) -> impl std::future::Future<Output = Self::Health> + Send {
+        async move {
+            TestHealthStatus {
+                status: "healthy".to_string(),
+                uptime: Duration::from_secs(3600),
+                last_check: SystemTime::now(),
+                details: std::collections::HashMap::new(),
+            }
+        }
     }
-    
-    fn get_service_type(&self) -> UnifiedServiceType {
-        self.service_type.clone()
-    }
-    
-    fn get_service_id(&self) -> String {
-        self.service_id.clone()
+
+    fn get_metrics(&self) -> impl std::future::Future<Output = ServiceMetrics> + Send {
+        async move {
+            let count = *self.call_count.read().await;
+            ServiceMetrics {
+                requests: count,
+                errors: if self.should_fail { count } else { 0 },
+                latency_ms: self.response_delay.as_millis() as f64,
+                memory_usage: 1024,
+                cpu_usage: 0.1,
+            }
+        }
     }
 }
 

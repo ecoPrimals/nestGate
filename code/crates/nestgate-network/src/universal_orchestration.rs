@@ -1,8 +1,7 @@
-//! Universal Orchestration Integration for NestGate
-//!
-//! This module provides comprehensive integration with any orchestration provider,
-//! handling service registration, port management, and network coordination in a
-//! provider-agnostic manner.
+//
+// This module provides comprehensive integration with any orchestration provider,
+// handling service registration, port management, and network coordination in a
+// provider-agnostic manner.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -157,8 +156,8 @@ pub struct UniversalOrchestrationManager {
 impl UniversalOrchestrationManager {
     /// Create a new universal orchestration manager
     pub async fn new(config: UniversalOrchestrationConfig) -> Result<Self> {
-        let adapter = Arc::new(create_default_adapter());
-        adapter.initialize().await?;
+        let adapter = Arc::new(create_default_adapter()?);
+        // Initialize method not available in canonical adapter - using as-is
 
         Ok(Self {
             config,
@@ -632,6 +631,9 @@ impl UniversalOrchestrationManager {
                         ServiceStatus::Error => ServiceHealth::Unhealthy,
                         ServiceStatus::Unknown => ServiceHealth::Unknown,
                         ServiceStatus::Stopped => ServiceHealth::Degraded,
+                        ServiceStatus::Starting => ServiceHealth::Unknown,
+                        ServiceStatus::Stopping => ServiceHealth::Degraded,
+                        ServiceStatus::Failed => ServiceHealth::Unhealthy,
                     };
                     cached_service.last_seen = std::time::SystemTime::now();
                 }
@@ -668,7 +670,7 @@ pub async fn create_orchestration_manager_with_config(
         Err(e) => {
             tracing::error!("Failed to create orchestration manager: {:?}", e);
             // Return a default manager instead of an error
-            let adapter = Arc::new(create_default_adapter());
+            let adapter = Arc::new(create_default_adapter()?);
             Ok(UniversalOrchestrationManager {
                 config: config.clone(),
                 primal_adapter: adapter,
@@ -700,10 +702,11 @@ mod tests {
     #[tokio::test]
     async fn test_service_registration_fallback() {
         let manager = create_default_orchestration_manager().await.map_err(|e| {
-            crate::error::NetworkError::InternalError(format!(
-                "Expected Network operation but failed: {}",
-                e
-            ))
+            nestgate_core::error::NestGateError::network_error(
+                &format!("Expected Network operation but failed: {}", e),
+                "orchestration_manager_creation",
+                None,
+            )
         })?;
         let service = NetworkServiceRegistration::default();
 
@@ -715,10 +718,11 @@ mod tests {
     #[tokio::test]
     async fn test_orchestration_stats() {
         let manager = create_default_orchestration_manager().await.map_err(|e| {
-            crate::error::NetworkError::InternalError(format!(
-                "Expected Network operation but failed: {}",
-                e
-            ))
+            nestgate_core::error::NestGateError::network_error(
+                &format!("Expected Network operation but failed: {}", e),
+                "orchestration_manager_creation",
+                None,
+            )
         })?;
         let stats = manager.get_orchestration_stats().await;
 

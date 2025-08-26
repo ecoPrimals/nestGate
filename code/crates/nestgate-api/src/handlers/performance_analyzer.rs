@@ -1,6 +1,5 @@
-//! Performance Analysis Engine
-//!
-//! Advanced performance analysis, trend detection, and forecasting capabilities.
+//
+// Advanced performance analysis, trend detection, and forecasting capabilities.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -10,10 +9,12 @@ use tokio::sync::broadcast;
 // Removed unused tracing import
 
 use super::dashboard_types::{DashboardEvent, TimeRange};
-use super::metrics_collector::{PoolMetrics, IOMetricsPoint, CacheMetricsPoint, ComprehensiveMetricsPoint, CapacityMetricsPoint};
+use super::metrics_collector::{
+    CacheMetricsPoint, CapacityMetricsPoint, ComprehensiveMetricsPoint, IOMetricsPoint, PoolMetrics,
+};
 use nestgate_core::Result;
-use tracing::info;
 use tracing::debug;
+use tracing::info;
 
 /// Performance analyzer with trend detection and forecasting
 #[derive(Debug)]
@@ -188,7 +189,10 @@ impl PerformanceAnalyzer {
     }
 
     /// Analyze overall system performance for a given time range
-    pub async fn analyze_performance(&self, _time_range: &TimeRange) -> Result<PerformanceAnalysisResult> {
+    pub async fn analyze_performance(
+        &self,
+        _time_range: &TimeRange,
+    ) -> Result<PerformanceAnalysisResult> {
         // Mock implementation - replace with actual analysis
         debug!("Analyzing performance for time range");
         Ok(PerformanceAnalysisResult {
@@ -200,40 +204,65 @@ impl PerformanceAnalyzer {
     }
 
     /// Analyze performance trends for a specific pool - REAL IMPLEMENTATION
-    pub async fn analyze_pool_trends(&self, pool_name: &str, _historical_data: &[PoolMetrics]) -> Result<PoolPerformanceTrends> {
-        debug!("🔍 Analyzing real performance trends for pool: {}", pool_name);
-        
+    pub async fn analyze_pool_trends(
+        &self,
+        pool_name: &str,
+        _historical_data: &[PoolMetrics],
+    ) -> Result<PoolPerformanceTrends> {
+        debug!(
+            "🔍 Analyzing real performance trends for pool: {}",
+            pool_name
+        );
+
         // Collect real-time performance data for the pool/filesystem
         let current_stats = collect_real_io_statistics().await?;
         let cache_stats = collect_real_cache_statistics().await?;
-        
+
         // Generate trend data points (in production, this would come from time-series data)
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .expect("System time should be after UNIX epoch")
+            .map_err(|e| {
+                tracing::error!(
+                    "Expected operation failed: {} - Error: {:?}",
+                    "System time should be after UNIX epoch",
+                    e
+                );
+                std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!(
+                        "{} - Error: {:?}",
+                        "System time should be after UNIX epoch", e
+                    ),
+                )
+            })?
             .as_secs();
-            
+
         let read_latency_trend = generate_trend_points(current_stats.read_latency_ms, now, 24);
         let write_latency_trend = generate_trend_points(current_stats.write_latency_ms, now, 24);
-        let throughput_trend = generate_trend_points(current_stats.read_mbps + current_stats.write_mbps, now, 24);
-        let cache_hit_ratio_trend = generate_trend_points(cache_stats.buffer_cache_hit_ratio * 100.0, now, 24);
-        
+        let throughput_trend =
+            generate_trend_points(current_stats.read_mbps + current_stats.write_mbps, now, 24);
+        let cache_hit_ratio_trend =
+            generate_trend_points(cache_stats.buffer_cache_hit_ratio * 100.0, now, 24);
+
         Ok(PoolPerformanceTrends {
             pool_name: pool_name.to_string(),
             time_range: TimeRange::last_hours(24), // Last day
-            read_latency_trend,
-            write_latency_trend,
-            throughput_trend,
-            cache_hit_ratio_trend,
+            read_latency_trend: read_latency_trend.into_iter().map(|(_, v)| v).collect(),
+            write_latency_trend: write_latency_trend.into_iter().map(|(_, v)| v).collect(),
+            throughput_trend: throughput_trend.into_iter().map(|(_, v)| v).collect(),
+            cache_hit_ratio_trend: cache_hit_ratio_trend.into_iter().map(|(_, v)| v).collect(),
         })
     }
 
     /// Analyze I/O patterns and performance characteristics - REAL IMPLEMENTATION
-    pub async fn analyze_io_patterns(&self, _historical_data: &[IOMetricsPoint]) -> Result<IOPerformanceAnalysis> {
+    pub async fn analyze_io_patterns(
+        &self,
+        _historical_data: &[IOMetricsPoint],
+    ) -> Result<IOPerformanceAnalysis> {
         debug!("🔍 Analyzing real I/O patterns from system");
-        
+
         let io_stats = collect_real_io_statistics().await?;
-        
+
         Ok(IOPerformanceAnalysis {
             time_range: TimeRange::last_hours(1), // Last hour of real data
             average_read_iops: io_stats.read_iops,
@@ -263,11 +292,14 @@ impl PerformanceAnalyzer {
     }
 
     /// Analyze cache performance and effectiveness - REAL IMPLEMENTATION
-    pub async fn analyze_cache_performance(&self, _cache_metrics: &[CacheMetricsPoint]) -> Result<CachePerformanceAnalysis> {
+    pub async fn analyze_cache_performance(
+        &self,
+        _cache_metrics: &[CacheMetricsPoint],
+    ) -> Result<CachePerformanceAnalysis> {
         debug!("🔍 Analyzing real cache performance from system");
-        
+
         let cache_stats = collect_real_cache_statistics().await?;
-        
+
         Ok(CachePerformanceAnalysis {
             arc_analysis: CacheComponentAnalysis {
                 hit_ratio: cache_stats.buffer_cache_hit_ratio,
@@ -289,7 +321,11 @@ impl PerformanceAnalyzer {
     }
 
     /// Generate performance forecasts based on historical data
-    pub async fn generate_performance_forecast(&self, _historical_data: &[ComprehensiveMetricsPoint], horizon: Duration) -> Result<PerformanceForecast> {
+    pub async fn generate_performance_forecast(
+        &self,
+        _historical_data: &[ComprehensiveMetricsPoint],
+        horizon: Duration,
+    ) -> Result<PerformanceForecast> {
         // Implementation placeholder
         debug!("Generating performance forecast for {:?}", horizon);
         Ok(PerformanceForecast {
@@ -301,7 +337,10 @@ impl PerformanceAnalyzer {
     }
 
     /// Forecast capacity growth and exhaustion timelines
-    pub async fn forecast_capacity_growth(&self, _historical_data: &[CapacityMetricsPoint]) -> Result<CapacityForecast> {
+    pub async fn forecast_capacity_growth(
+        &self,
+        _historical_data: &[CapacityMetricsPoint],
+    ) -> Result<CapacityForecast> {
         // Implementation placeholder
         debug!("Forecasting capacity growth");
         Ok(CapacityForecast {
@@ -317,7 +356,7 @@ impl Default for PerformanceAnalyzer {
     fn default() -> Self {
         Self::new()
     }
-} 
+}
 
 /// Collect real I/O statistics from system
 async fn collect_real_io_statistics() -> Result<RealIOStatistics> {
@@ -325,9 +364,8 @@ async fn collect_real_io_statistics() -> Result<RealIOStatistics> {
     use std::str;
 
     // Read /proc/diskstats for real I/O metrics
-    let diskstats = std::fs::read_to_string("/proc/diskstats")
-        .unwrap_or_else(|_| String::new());
-    
+    let diskstats = std::fs::read_to_string("/proc/diskstats").unwrap_or_else(|_| String::new());
+
     let mut total_read_iops = 0u64;
     let mut total_write_iops = 0u64;
     let mut total_read_sectors = 0u64;
@@ -340,8 +378,18 @@ async fn collect_real_io_statistics() -> Result<RealIOStatistics> {
         if fields.len() >= 14 {
             let device_name = fields[2];
             // Focus on real block devices (not loop devices, etc.)
-            if device_name.starts_with("sd") || device_name.starts_with("nvme") || device_name.starts_with("hd") {
-                if let (Ok(reads), Ok(writes), Ok(read_sectors), Ok(write_sectors), Ok(read_time), Ok(write_time)) = (
+            if device_name.starts_with("sd")
+                || device_name.starts_with("nvme")
+                || device_name.starts_with("hd")
+            {
+                if let (
+                    Ok(reads),
+                    Ok(writes),
+                    Ok(read_sectors),
+                    Ok(write_sectors),
+                    Ok(read_time),
+                    Ok(write_time),
+                ) = (
                     fields[3].parse::<u64>(),
                     fields[7].parse::<u64>(),
                     fields[5].parse::<u64>(),
@@ -363,14 +411,18 @@ async fn collect_real_io_statistics() -> Result<RealIOStatistics> {
     // Calculate throughput (sectors are typically 512 bytes)
     let read_mbps = (total_read_sectors * 512) as f64 / (1024.0 * 1024.0);
     let write_mbps = (total_write_sectors * 512) as f64 / (1024.0 * 1024.0);
-    
+
     // Calculate average latency
-    let avg_read_latency = if total_read_iops > 0 { 
-        total_read_time_ms as f64 / total_read_iops as f64 
-    } else { 0.0 };
-    let avg_write_latency = if total_write_iops > 0 { 
-        total_write_time_ms as f64 / total_write_iops as f64 
-    } else { 0.0 };
+    let avg_read_latency = if total_read_iops > 0 {
+        total_read_time_ms as f64 / total_read_iops as f64
+    } else {
+        0.0
+    };
+    let avg_write_latency = if total_write_iops > 0 {
+        total_write_time_ms as f64 / total_write_iops as f64
+    } else {
+        0.0
+    };
 
     Ok(RealIOStatistics {
         read_iops: total_read_iops,
@@ -387,9 +439,8 @@ async fn collect_real_io_statistics() -> Result<RealIOStatistics> {
 /// Collect real cache statistics from system
 async fn collect_real_cache_statistics() -> Result<RealCacheStatistics> {
     // Read /proc/meminfo for memory/cache statistics
-    let meminfo = std::fs::read_to_string("/proc/meminfo")
-        .unwrap_or_else(|_| String::new());
-    
+    let meminfo = std::fs::read_to_string("/proc/meminfo").unwrap_or_else(|_| String::new());
+
     let mut total_mem = 0u64;
     let mut available_mem = 0u64;
     let mut cached_mem = 0u64;
@@ -415,45 +466,78 @@ async fn collect_real_cache_statistics() -> Result<RealCacheStatistics> {
 
     let used_mem = total_mem - available_mem;
     let cache_mem = cached_mem + buffer_mem;
-    
+
     // Calculate cache statistics
-    let buffer_cache_utilization = if total_mem > 0 { cache_mem as f64 / total_mem as f64 } else { 0.0 };
-    let buffer_cache_hit_ratio = if used_mem > 0 { 
+    let buffer_cache_utilization = if total_mem > 0 {
+        cache_mem as f64 / total_mem as f64
+    } else {
+        0.0
+    };
+    let buffer_cache_hit_ratio = if used_mem > 0 {
         // Estimate hit ratio based on cache utilization (higher cache = better hit ratio)
-        0.5 + (buffer_cache_utilization * 0.4) 
-    } else { 0.5 };
-    
+        0.5 + (buffer_cache_utilization * 0.4)
+    } else {
+        0.5
+    };
+
     Ok(RealCacheStatistics {
         buffer_cache_hit_ratio,
         page_cache_hit_ratio: buffer_cache_hit_ratio * 0.8, // Page cache typically lower
         buffer_cache_utilization,
         page_cache_utilization: buffer_cache_utilization * 0.7,
-        page_cache_eviction_rate: if buffer_cache_utilization > 0.9 { 0.1 } else { 0.02 },
+        page_cache_eviction_rate: if buffer_cache_utilization > 0.9 {
+            0.1
+        } else {
+            0.02
+        },
         cache_performance_impact: buffer_cache_hit_ratio * 0.3, // Cache contributes 30% to performance
         overall_cache_effectiveness: buffer_cache_hit_ratio,
     })
 }
 
 /// Generate cache optimization opportunities based on real statistics
-fn generate_cache_optimization_opportunities(stats: &RealCacheStatistics) -> Vec<String> {
+fn generate_cache_optimization_opportunities(
+    stats: &RealCacheStatistics,
+) -> Vec<CacheOptimizationOpportunity> {
     let mut opportunities = Vec::new();
-    
+
     if stats.buffer_cache_hit_ratio < 0.8 {
-        opportunities.push("Consider increasing buffer cache size for better hit ratio".to_string());
+        opportunities.push(CacheOptimizationOpportunity {
+            opportunity_type: "arc_tuning".to_string(),
+            description: "ARC hit ratio is below optimal threshold".to_string(),
+            estimated_improvement: 0.2, // Placeholder for actual improvement
+            implementation_effort: "Medium".to_string(),
+        });
     }
-    
+
     if stats.buffer_cache_utilization > 0.95 {
-        opportunities.push("Cache is highly utilized - consider expanding cache size".to_string());
+        opportunities.push(CacheOptimizationOpportunity {
+            opportunity_type: "cache_expansion".to_string(),
+            description: "Cache is highly utilized - consider expanding cache size".to_string(),
+            estimated_improvement: 0.1, // Placeholder for actual improvement
+            implementation_effort: "High".to_string(),
+        });
     }
-    
+
     if stats.page_cache_eviction_rate > 0.05 {
-        opportunities.push("High eviction rate detected - optimize cache retention policies".to_string());
+        opportunities.push(CacheOptimizationOpportunity {
+            opportunity_type: "cache_retention".to_string(),
+            description: "High eviction rate detected - optimize cache retention policies"
+                .to_string(),
+            estimated_improvement: 0.15, // Placeholder for actual improvement
+            implementation_effort: "Medium".to_string(),
+        });
     }
-    
+
     if opportunities.is_empty() {
-        opportunities.push("Cache performance is optimal".to_string());
+        opportunities.push(CacheOptimizationOpportunity {
+            opportunity_type: "optimal_cache".to_string(),
+            description: "Cache performance is optimal".to_string(),
+            estimated_improvement: 0.0,
+            implementation_effort: "Low".to_string(),
+        });
     }
-    
+
     opportunities
 }
 
@@ -486,7 +570,7 @@ struct RealCacheStatistics {
 fn generate_trend_points(current_value: f64, timestamp: u64, hours: u64) -> Vec<(u64, f64)> {
     let mut points = Vec::new();
     let hour_seconds = 3600;
-    
+
     for i in 0..hours {
         let ts = timestamp - ((hours - i - 1) * hour_seconds);
         // Add some realistic variation around the current value
@@ -494,6 +578,6 @@ fn generate_trend_points(current_value: f64, timestamp: u64, hours: u64) -> Vec<
         let value = current_value + variation;
         points.push((ts, value.max(0.0)));
     }
-    
+
     points
-} 
+}

@@ -1,7 +1,6 @@
-//! Basic Workspace CRUD Operations
-//!
-//! Core workspace lifecycle management including creation, reading,
-//! updating, and listing workspace resources with real ZFS integration.
+//
+// Core workspace lifecycle management including creation, reading,
+// updating, and listing workspace resources with real ZFS integration.
 
 use axum::{
     extract::{Json, Path},

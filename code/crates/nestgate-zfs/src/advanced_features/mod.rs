@@ -1,7 +1,6 @@
-//! Advanced ZFS Features Module
-//!
-//! This module contains advanced ZFS analytics and monitoring capabilities
-//! split into focused, maintainable sub-modules for better code organization.
+//
+// This module contains advanced ZFS analytics and monitoring capabilities
+// split into focused, maintainable sub-modules for better code organization.
 
 pub mod cache;
 pub mod capacity;

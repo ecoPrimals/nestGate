@@ -1,7 +1,6 @@
-//! ZFS Snapshot Management
-//!
-//! Comprehensive snapshot lifecycle management with automated policies,
-//! retention rules, and backup integration for production-ready ZFS systems.
+//
+// Comprehensive snapshot lifecycle management with automated policies,
+// retention rules, and backup integration for production-ready ZFS systems.
 
 mod events;
 mod manager;

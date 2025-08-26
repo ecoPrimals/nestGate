@@ -1,4 +1,3 @@
-/// **RESOURCES SETTINGS MODULE**
 /// Contains all configuration related to resources
 /// Extracted from unified_automation_config.rs for better maintainability
 

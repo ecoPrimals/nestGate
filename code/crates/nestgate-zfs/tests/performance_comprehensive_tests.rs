@@ -1,12 +1,11 @@
-//! Comprehensive Performance Engine Tests
-//!
-//! Complete test coverage for real-time performance optimization including:
-//! - Metrics collection and analysis
-//! - Bottleneck detection algorithms
-//! - Performance optimization strategies
-//! - Real-time monitoring systems
-//! - Alert handling and response
-//! - ZFS parameter tuning
+//
+// Complete test coverage for real-time performance optimization including:
+// - Metrics collection and analysis
+// - Bottleneck detection algorithms
+// - Performance optimization strategies
+// - Real-time monitoring systems
+// - Alert handling and response
+// - ZFS parameter tuning
 
 use nestgate_zfs::performance_engine::{
     AccessPattern, AlertResponse, AlertSeverity, AlertType, AppliedOptimization, ArcStatistics,
@@ -428,27 +427,23 @@ mod tuning_tests {
         let recordsize_rec = recommendations
             .iter()
             .find(|r| r.parameter == "recordsize")
-            .unwrap_or_else(|e| {
-                tracing::error!("Unwrap failed: {:?}", e);
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Operation failed: {:?}", e),
+            .ok_or_else(|| {
+                std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "recordsize recommendation not found",
                 )
-                .into());
-            });
+            })?;
         assert_eq!(recordsize_rec.recommended_value, "1M");
 
         let compression_rec = recommendations
             .iter()
             .find(|r| r.parameter == "compression")
-            .unwrap_or_else(|e| {
-                tracing::error!("Unwrap failed: {:?}", e);
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Operation failed: {:?}", e),
+            .ok_or_else(|| {
+                std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "compression recommendation not found",
                 )
-                .into());
-            });
+            })?;
         assert_eq!(compression_rec.recommended_value, "zstd");
     }
 }

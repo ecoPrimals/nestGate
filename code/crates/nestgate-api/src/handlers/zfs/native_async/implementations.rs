@@ -1,9 +1,7 @@
-/// Native Async ZFS Implementations
 /// Extracted from native_async_zfs.rs to maintain file size compliance
 /// Contains production and development implementations of native async ZFS traits
 
 use std::collections::HashMap;
-use std::future::Future;
 use std::time::Duration;
 
 use super::super::universal_zfs::types::{

@@ -1,645 +1,301 @@
-//! Enhanced Error Handling
-//!
-//! Comprehensive error types with advanced integration error handling
-//! with v2 orchestrator error management
+//
+// This module provides MCP-specific error handling that integrates seamlessly
+// with the canonical NestGateError system. All MCP errors are now represented
+// as NestGateError::Mcp variants with rich context and recovery suggestions.
 
+use nestgate_core::error::domain_errors::McpErrorData;
+use nestgate_core::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fmt;
-use std::time::SystemTime;
 
-/// **DEPRECATED**: Use nestgate_core::error::NestGateError instead
-/// This custom error type has been superseded by the unified error system
-#[deprecated(
-    since = "2.1.0",
-    note = "Use nestgate_core::error::NestGateError::Mcp variant instead"
-)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Error {
-    pub error_type: ErrorType,
-    pub message: String,
-    pub details: Option<String>,
-    pub timestamp: SystemTime,
-    pub source: Option<String>,
-    pub error_code: Option<String>,
-}
+// ==================== CANONICAL ERROR PATTERNS ====================
 
-impl Error {
-    /// **DEPRECATED**: Use nestgate_core::error::NestGateError::Mcp instead
-    #[deprecated(
-        since = "2.1.0",
-        note = "Use nestgate_core::error::NestGateError::Mcp instead"
-    )]
-    pub fn new(error_type: ErrorType, message: String) -> Self {
-        Self {
-            error_type,
-            message,
-            details: None,
-            timestamp: SystemTime::now(),
-            source: None,
-            error_code: None,
+/// Canonical error creation helpers for MCP operations
+pub struct McpErrorBuilder;
+
+impl McpErrorBuilder {
+    /// Create a canonical MCP connection error
+    pub fn connection_error(message: &str, endpoint: Option<&str>) -> NestGateError {
+        let mut context = HashMap::new();
+        context.insert("error_type".to_string(), "ConnectionError".to_string());
+        if let Some(ep) = endpoint {
+            context.insert("endpoint".to_string(), ep.to_string());
         }
-    }
+        context.insert(
+            "recovery_suggestions".to_string(),
+            "Check network connectivity; Verify MCP server is running; Check firewall settings"
+                .to_string(),
+        );
 
-    /// Create a new internal error
-    pub fn internal(message: String) -> Self {
-        Self::new(ErrorType::InternalError, message)
-    }
-
-    /// Create a new network error
-    pub fn network(err: impl fmt::Display) -> Self {
-        Self::new(ErrorType::Network, format!("Network error: {err}"))
-    }
-
-    /// Create a new authentication error
-    pub fn authentication(message: String) -> Self {
-        Self::new(ErrorType::Auth, message)
-    }
-
-    /// Create a new authorization error
-    pub fn authorization(message: String) -> Self {
-        Self::new(ErrorType::PermissionDenied, message)
-    }
-
-    /// Create a new validation error
-    pub fn validation(message: String) -> Self {
-        Self::new(ErrorType::Validation, message)
-    }
-
-    /// Create a new storage error
-    pub fn storage(message: String) -> Self {
-        Self::new(ErrorType::Storage, message)
-    }
-
-    /// Create a new protocol error
-    pub fn protocol(message: String) -> Self {
-        Self::new(ErrorType::Protocol, message)
-    }
-
-    /// Create a new federation error
-    pub fn federation(message: String) -> Self {
-        Self::new(ErrorType::Network, format!("Federation error: {message}"))
-    }
-
-    /// Create a new orchestrator error
-    pub fn orchestrator(message: String) -> Self {
-        Self::new(
-            ErrorType::InternalError,
-            format!("Orchestrator error: {message}"),
-        )
-    }
-
-    /// Create a new service error
-    pub fn service(message: String) -> Self {
-        Self::new(ErrorType::ServiceUnavailable, message)
-    }
-
-    /// Create a new configuration error
-    pub fn configuration(message: String) -> Self {
-        Self::new(ErrorType::Config, message)
-    }
-
-    /// Create a new timeout error
-    pub fn timeout(message: String) -> Self {
-        Self::new(ErrorType::Timeout, message)
-    }
-
-    /// Create a new resource error
-    pub fn resource(message: String) -> Self {
-        Self::new(ErrorType::NotFound, message)
-    }
-
-    /// Create a new unsupported error
-    pub fn unsupported(message: String) -> Self {
-        Self::new(ErrorType::Unsupported, message)
-    }
-
-    /// Create a new invalid payload error
-    pub fn invalid_payload(message: &str) -> Self {
-        Self::new(ErrorType::InvalidRequest, message.to_string())
-    }
-
-    /// Create a new session error
-    pub fn session(message: String) -> Self {
-        Self::new(ErrorType::Auth, message)
-    }
-
-    /// Add details to the error
-    pub fn with_details(mut self, details: String) -> Self {
-        self.details = Some(details);
-        self
-    }
-
-    /// Add source information
-    pub fn with_source(mut self, source: String) -> Self {
-        self.source = Some(source);
-        self
-    }
-
-    /// Add error code
-    pub fn with_code(mut self, code: String) -> Self {
-        self.error_code = Some(code);
-        self
-    }
-
-    /// Check if error is retryable
-    pub fn is_retryable(&self) -> bool {
-        matches!(
-            self.error_type,
-            ErrorType::Network
-                | ErrorType::Timeout
-                | ErrorType::ServiceUnavailable
-                | ErrorType::Connection
-                | ErrorType::InternalError // Internal errors can be retryable (e.g., temporary resource issues)
-        )
-    }
-
-    /// Check if error is permanent (not retryable)
-    pub fn is_permanent(&self) -> bool {
-        matches!(
-            self.error_type,
-            ErrorType::Auth
-                | ErrorType::PermissionDenied
-                | ErrorType::Validation
-                | ErrorType::Unsupported
-                | ErrorType::Config
-                | ErrorType::InvalidRequest
-                | ErrorType::NotFound
-                | ErrorType::AlreadyExists
-        )
-    }
-
-    /// Get error severity
-    pub fn severity(&self) -> ErrorSeverity {
-        self.error_type.default_severity()
-    }
-}
-
-/// Error types for MCP operations
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
-pub enum ErrorType {
-    /// Connection-related errors
-    Connection,
-    /// Authentication/authorization errors
-    Auth,
-    /// Protocol-related errors
-    Protocol,
-    /// Configuration errors
-    Config,
-    /// Storage-related errors
-    Storage,
-    /// Network-related errors
-    Network,
-    /// Timeout errors
-    Timeout,
-    /// Resource not found
-    NotFound,
-    /// Resource already exists
-    AlreadyExists,
-    /// Insufficient permissions
-    PermissionDenied,
-    /// Invalid request
-    InvalidRequest,
-    /// Service unavailable
-    ServiceUnavailable,
-    /// Internal server error
-    InternalError,
-    /// Unsupported operation
-    Unsupported,
-    /// Mount-related errors
-    Mount,
-    /// Volume-related errors
-    Volume,
-    /// Filesystem errors
-    Filesystem,
-    /// Permission errors
-    Permission,
-    /// Validation errors
-    Validation,
-    /// Parsing errors
-    Parsing,
-    /// Serialization errors
-    Serialization,
-}
-
-impl ErrorType {
-    /// Get the default severity for this error type
-    pub fn default_severity(&self) -> ErrorSeverity {
-        match self {
-            ErrorType::Connection => ErrorSeverity::Medium,
-            ErrorType::Auth => ErrorSeverity::High,
-            ErrorType::Protocol => ErrorSeverity::Medium,
-            ErrorType::Config => ErrorSeverity::High,
-            ErrorType::Storage => ErrorSeverity::High,
-            ErrorType::Network => ErrorSeverity::Medium,
-            ErrorType::Timeout => ErrorSeverity::Low,
-            ErrorType::NotFound => ErrorSeverity::Low,
-            ErrorType::AlreadyExists => ErrorSeverity::Low,
-            ErrorType::PermissionDenied => ErrorSeverity::High,
-            ErrorType::InvalidRequest => ErrorSeverity::Medium,
-            ErrorType::ServiceUnavailable => ErrorSeverity::High,
-            ErrorType::InternalError => ErrorSeverity::Critical,
-            ErrorType::Unsupported => ErrorSeverity::Low,
-            ErrorType::Mount => ErrorSeverity::High,
-            ErrorType::Volume => ErrorSeverity::High,
-            ErrorType::Filesystem => ErrorSeverity::High,
-            ErrorType::Permission => ErrorSeverity::High,
-            ErrorType::Validation => ErrorSeverity::Low,
-            ErrorType::Parsing => ErrorSeverity::Medium,
-            ErrorType::Serialization => ErrorSeverity::Medium,
-        }
-    }
-}
-
-/// Error severity levels
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
-pub enum ErrorSeverity {
-    /// Low severity - informational
-    Low,
-    /// Medium severity - warning
-    Medium,
-    /// High severity - error
-    High,
-    /// Critical severity - system failure
-    Critical,
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}: {}", self.error_type, self.message)?;
-        if let Some(details) = &self.details {
-            write!(f, " ({details})")?;
-        }
-        if let Some(source) = &self.source {
-            write!(f, " [source: {source}]")?;
-        }
-        if let Some(code) = &self.error_code {
-            write!(f, " [code: {code}]")?;
-        }
-        Ok(())
-    }
-}
-
-impl std::error::Error for Error {}
-
-// Implement From traits for common error types
-
-impl From<std::io::Error> for Error {
-    fn from(err: std::io::Error) -> Self {
-        Error::internal(format!("IO error: {err}"))
-    }
-}
-
-impl From<serde_json::Error> for Error {
-    fn from(err: serde_json::Error) -> Self {
-        Error::new(ErrorType::Serialization, format!("JSON error: {err}"))
-    }
-}
-
-impl From<reqwest::Error> for Error {
-    fn from(err: reqwest::Error) -> Self {
-        if err.is_timeout() {
-            Error::timeout(format!("Request timeout: {err}"))
-        } else if err.is_connect() {
-            Error::network(err)
-        } else {
-            Error::internal(format!("HTTP client error: {err}"))
-        }
-    }
-}
-
-impl From<tokio::time::error::Elapsed> for Error {
-    fn from(err: tokio::time::error::Elapsed) -> Self {
-        Error::timeout(format!("Operation timeout: {err}"))
-    }
-}
-
-impl From<Error> for nestgate_core::NestGateError {
-    fn from(err: Error) -> Self {
-        match err.error_type {
-            ErrorType::Network => {
-                let network_data = nestgate_core::error::NetworkErrorData {
-                    message: err.message.clone(),
-                    endpoint: Some("MCP".to_string()),
-                    operation: "mcp_connection".to_string(),
-                    context: Some({
-                        let mut context_map = std::collections::HashMap::new();
-                        context_map.insert("operation".to_string(), "mcp_connection".to_string());
-                        context_map.insert("component".to_string(), "mcp_network".to_string());
-                        context_map.insert(
-                            "timestamp".to_string(),
-                            std::time::SystemTime::now()
-                                .duration_since(std::time::UNIX_EPOCH)
-                                .unwrap_or_default()
-                                .as_secs()
-                                .to_string(),
-                        );
-                        context_map
-                    }),
-                };
-                nestgate_core::NestGateError::Network(Box::new(network_data))
-            }
-            ErrorType::Auth => {
-                // Use Security error since Auth variant doesn't exist
-                let security_data = nestgate_core::error::SecurityErrorData {
-                    message: err.message.clone(),
-                    operation: "mcp_authentication".to_string(),
-                    resource: Some("MCP".to_string()),
-                    principal: None,
-                    context: Some({
-                        let mut context_map = std::collections::HashMap::new();
-                        context_map.insert("operation".to_string(), "mcp_auth".to_string());
-                        context_map.insert("component".to_string(), "mcp_security".to_string());
-                        context_map
-                    }),
-                };
-                nestgate_core::NestGateError::Security(Box::new(security_data))
-            }
-            ErrorType::Storage => {
-                let zfs_data = nestgate_core::error::ZfsErrorData {
-                    message: err.message,
-                    operation: nestgate_core::error::domain_errors::ZfsOperation::Storage,
-                    pool: Some("MCP Volume".to_string()),
-                    dataset: None,
-                    snapshot: None,
-                    command: None,
-                    error_code: None,
-                    recovery_suggestions: Vec::new(),
-                };
-                nestgate_core::NestGateError::Zfs(Box::new(zfs_data))
-            }
-            ErrorType::Validation => nestgate_core::NestGateError::Validation {
-                field: "mcp_validation".to_string(),
-                message: err.message,
-                current_value: None,
-                expected: None,
-                user_error: true,
-            },
-            ErrorType::InternalError => nestgate_core::NestGateError::Internal {
-                message: err.message,
-                location: None,
-                debug_info: None,
-                is_bug: false,
-            },
-            _ => nestgate_core::NestGateError::Internal {
-                message: err.message,
-                location: None,
-                debug_info: None,
-                is_bug: false,
-            },
-        }
-    }
-}
-
-/// Use universal MCP result type from nestgate-core  
-pub type Result<T> = nestgate_core::Result<T>;
-
-/// Error Context for enhanced error tracking
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ErrorContext {
-    pub operation: String,
-    pub component: String,
-    pub request_id: Option<String>,
-    pub user_id: Option<String>,
-    pub session_id: Option<String>,
-    pub metadata: std::collections::HashMap<String, String>,
-}
-
-impl ErrorContext {
-    pub fn new(operation: String, component: String) -> Self {
-        Self {
-            operation,
-            component,
-            request_id: None,
-            user_id: None,
+        NestGateError::Mcp(Box::new(McpErrorData {
+            message: message.to_string(),
+            operation: "connection".to_string(),
             session_id: None,
-            metadata: std::collections::HashMap::new(),
+            context: Some(context),
+        }))
+    }
+
+    /// Create a canonical MCP protocol error
+    pub fn protocol_error(message: &str, method: Option<&str>) -> NestGateError {
+        let mut context = HashMap::new();
+        context.insert("error_type".to_string(), "ProtocolError".to_string());
+        if let Some(m) = method {
+            context.insert("method".to_string(), m.to_string());
         }
+        context.insert("recovery_suggestions".to_string(), 
+            "Check MCP protocol version compatibility; Verify message format; Review MCP specification".to_string());
+
+        NestGateError::Mcp(Box::new(McpErrorData {
+            message: message.to_string(),
+            operation: "protocol".to_string(),
+            session_id: None,
+            context: Some(context),
+        }))
     }
 
-    pub fn with_request_id(mut self, request_id: String) -> Self {
-        self.request_id = Some(request_id);
-        self
+    /// Create a canonical MCP authentication error
+    pub fn authentication_error(message: &str, endpoint: Option<&str>) -> NestGateError {
+        let mut context = HashMap::new();
+        context.insert("error_type".to_string(), "AuthenticationError".to_string());
+        if let Some(ep) = endpoint {
+            context.insert("endpoint".to_string(), ep.to_string());
+        }
+        context.insert(
+            "recovery_suggestions".to_string(),
+            "Check authentication credentials; Verify API keys are valid; Check token expiration"
+                .to_string(),
+        );
+
+        NestGateError::Mcp(Box::new(McpErrorData {
+            message: message.to_string(),
+            operation: "authentication".to_string(),
+            session_id: None,
+            context: Some(context),
+        }))
     }
 
-    pub fn with_user_id(mut self, user_id: String) -> Self {
-        self.user_id = Some(user_id);
-        self
+    /// Create a canonical MCP timeout error
+    pub fn timeout_error(
+        message: &str,
+        method: Option<&str>,
+        timeout_ms: Option<u64>,
+    ) -> NestGateError {
+        let mut context = HashMap::new();
+        context.insert("error_type".to_string(), "TimeoutError".to_string());
+        if let Some(m) = method {
+            context.insert("method".to_string(), m.to_string());
+        }
+        if let Some(ms) = timeout_ms {
+            context.insert("timeout_ms".to_string(), ms.to_string());
+        }
+        context.insert(
+            "recovery_suggestions".to_string(),
+            "Increase timeout duration; Check server performance; Verify network latency"
+                .to_string(),
+        );
+
+        NestGateError::Mcp(Box::new(McpErrorData {
+            message: message.to_string(),
+            operation: "timeout".to_string(),
+            session_id: None,
+            context: Some(context),
+        }))
     }
 
-    pub fn with_session_id(mut self, session_id: String) -> Self {
-        self.session_id = Some(session_id);
-        self
-    }
+    /// Create a canonical MCP validation error
+    pub fn validation_error(message: &str, field: Option<&str>) -> NestGateError {
+        let mut context = HashMap::new();
+        context.insert("error_type".to_string(), "ValidationError".to_string());
+        if let Some(f) = field {
+            context.insert("field".to_string(), f.to_string());
+        }
+        context.insert(
+            "recovery_suggestions".to_string(),
+            "Check input parameters; Verify data format; Review field requirements".to_string(),
+        );
 
-    pub fn with_metadata(mut self, key: String, value: String) -> Self {
-        self.metadata.insert(key, value);
-        self
+        NestGateError::Mcp(Box::new(McpErrorData {
+            message: message.to_string(),
+            operation: "validation".to_string(),
+            session_id: None,
+            context: Some(context),
+        }))
     }
 }
 
-/// Enhanced Error with Context
+// ==================== LEGACY ERROR TYPES ====================
+// These are kept for internal compatibility but not exposed in public API
+
+/// Internal error type enumeration for backward compatibility
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ContextualError {
-    pub error: Error,
-    pub context: ErrorContext,
+pub enum ErrorType {
+    ConnectionError,
+    ProtocolError,
+    AuthenticationError,
+    TimeoutError,
+    ValidationError,
+    InternalError,
+    Network,
+    Auth,
+    Authorization,
+    NotFound,
+    InvalidRequest,
+    ServerError,
 }
 
-impl ContextualError {
-    pub fn new(error: Error, context: ErrorContext) -> Self {
-        Self { error, context }
-    }
-}
-
-impl fmt::Display for ContextualError {
+impl fmt::Display for ErrorType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{} in {} (operation: {})",
-            self.error, self.context.component, self.context.operation
-        )?;
-        if let Some(request_id) = &self.context.request_id {
-            write!(f, " [request_id: {request_id}]")?;
-        }
-        Ok(())
-    }
-}
-
-impl std::error::Error for ContextualError {}
-
-/// Error Handler trait for different error handling strategies
-pub trait ErrorHandler {
-    fn handle_error(&self, error: &Error) -> ErrorHandlingAction;
-    fn should_retry(&self, error: &Error, attempt: u32) -> bool;
-    fn get_retry_delay(&self, error: &Error, attempt: u32) -> std::time::Duration;
-}
-
-/// Error Handling Actions
-#[derive(Debug, Clone, PartialEq)]
-pub enum ErrorHandlingAction {
-    Retry,
-    Fallback,
-    Escalate,
-    Ignore,
-    Fail,
-}
-
-/// Default Error Handler implementation
-pub struct DefaultErrorHandler {
-    max_retries: u32,
-    base_delay: std::time::Duration,
-}
-
-impl DefaultErrorHandler {
-    pub fn new() -> Self {
-        Self {
-            max_retries: 3,
-            base_delay: std::time::Duration::from_millis(100),
-        }
-    }
-
-    pub fn with_max_retries(mut self, max_retries: u32) -> Self {
-        self.max_retries = max_retries;
-        self
-    }
-
-    pub fn with_base_delay(mut self, base_delay: std::time::Duration) -> Self {
-        self.base_delay = base_delay;
-        self
-    }
-}
-
-impl Default for DefaultErrorHandler {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl ErrorHandler for DefaultErrorHandler {
-    fn handle_error(&self, error: &Error) -> ErrorHandlingAction {
-        match error.severity() {
-            ErrorSeverity::Critical => ErrorHandlingAction::Escalate,
-            ErrorSeverity::High => {
-                if error.is_retryable() {
-                    ErrorHandlingAction::Retry
-                } else {
-                    ErrorHandlingAction::Fail
-                }
-            }
-            ErrorSeverity::Medium => {
-                if error.is_retryable() {
-                    ErrorHandlingAction::Retry
-                } else {
-                    ErrorHandlingAction::Fallback
-                }
-            }
-            ErrorSeverity::Low => {
-                if error.is_permanent() {
-                    ErrorHandlingAction::Fail
-                } else {
-                    ErrorHandlingAction::Retry
-                }
-            }
-        }
-    }
-
-    fn should_retry(&self, error: &Error, attempt: u32) -> bool {
-        attempt < self.max_retries && error.is_retryable()
-    }
-
-    fn get_retry_delay(&self, _error: &Error, attempt: u32) -> std::time::Duration {
-        // Exponential backoff with jitter
-        let delay_ms = self.base_delay.as_millis() * (2_u128.pow(attempt));
-        let jitter = fastrand::u64(0..=delay_ms as u64 / 10);
-        std::time::Duration::from_millis(delay_ms as u64 + jitter)
-    }
-}
-
-/// Error Metrics for monitoring and alerting
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ErrorMetrics {
-    pub error_count: u64,
-    pub error_rate: f64,
-    pub errors_by_type: std::collections::HashMap<ErrorType, u64>,
-    pub errors_by_severity: std::collections::HashMap<ErrorSeverity, u64>,
-    pub last_error: Option<Error>,
-    pub last_updated: SystemTime,
-}
-
-impl ErrorMetrics {
-    pub fn new() -> Self {
-        Self {
-            error_count: 0,
-            error_rate: 0.0,
-            errors_by_type: std::collections::HashMap::new(),
-            errors_by_severity: std::collections::HashMap::new(),
-            last_error: None,
-            last_updated: SystemTime::now(),
-        }
-    }
-
-    pub fn record_error(&mut self, error: &Error) {
-        self.error_count += 1;
-        *self
-            .errors_by_type
-            .entry(error.error_type.clone())
-            .or_insert(0) += 1;
-        *self.errors_by_severity.entry(error.severity()).or_insert(0) += 1;
-        self.last_error = Some(error.clone());
-        self.last_updated = SystemTime::now();
-    }
-
-    pub fn calculate_error_rate(&mut self, total_requests: u64) {
-        if total_requests > 0 {
-            self.error_rate = self.error_count as f64 / total_requests as f64 * 100.0;
+        match self {
+            ErrorType::ConnectionError => write!(f, "ConnectionError"),
+            ErrorType::ProtocolError => write!(f, "ProtocolError"),
+            ErrorType::AuthenticationError => write!(f, "AuthenticationError"),
+            ErrorType::TimeoutError => write!(f, "TimeoutError"),
+            ErrorType::ValidationError => write!(f, "ValidationError"),
+            ErrorType::InternalError => write!(f, "InternalError"),
+            ErrorType::Network => write!(f, "Network"),
+            ErrorType::Auth => write!(f, "Auth"),
+            ErrorType::Authorization => write!(f, "Authorization"),
+            ErrorType::NotFound => write!(f, "NotFound"),
+            ErrorType::InvalidRequest => write!(f, "InvalidRequest"),
+            ErrorType::ServerError => write!(f, "ServerError"),
         }
     }
 }
 
-impl Default for ErrorMetrics {
-    fn default() -> Self {
-        Self::new()
-    }
+// ==================== CANONICAL CONVERSION HELPERS ====================
+
+/// Convert legacy error type to canonical MCP error
+pub fn create_mcp_error(error_type: ErrorType, message: String) -> NestGateError {
+    let mut context = HashMap::new();
+    context.insert("error_type".to_string(), error_type.to_string());
+
+    let (operation, recovery_suggestions) = match &error_type {
+        ErrorType::ConnectionError => ("connection", "Check network connectivity; Verify MCP server is running; Check firewall settings"),
+        ErrorType::ProtocolError => ("protocol", "Check MCP protocol version compatibility; Verify message format; Review MCP specification"),
+        ErrorType::AuthenticationError | ErrorType::Auth => ("authentication", "Check authentication credentials; Verify API keys are valid; Check token expiration"),
+        ErrorType::Authorization => ("authorization", "Check user permissions; Verify access rights; Contact administrator if needed"),
+        ErrorType::TimeoutError => ("timeout", "Increase timeout duration; Check server performance; Verify network latency"),
+        ErrorType::ValidationError => ("validation", "Check input parameters; Verify data format; Review field requirements"),
+        ErrorType::Network => ("network", "Check network connection; Verify DNS resolution; Check proxy settings"),
+        ErrorType::NotFound => ("not_found", "Check resource path; Verify resource exists; Check permissions"),
+        ErrorType::InvalidRequest => ("invalid_request", "Review request format; Check required parameters; Verify API documentation"),
+        ErrorType::ServerError | ErrorType::InternalError => ("server_error", "Retry the operation; Check server logs; Contact support if problem persists"),
+    };
+
+    context.insert(
+        "recovery_suggestions".to_string(),
+        recovery_suggestions.to_string(),
+    );
+
+    NestGateError::Mcp(Box::new(McpErrorData {
+        message,
+        operation: operation.to_string(),
+        session_id: None,
+        context: Some(context),
+    }))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+/// Create an internal MCP error
+pub fn internal_error(message: String) -> NestGateError {
+    create_mcp_error(ErrorType::InternalError, message)
+}
 
-    #[test]
-    fn test_error_creation() {
-        let error = Error::internal("Test error".to_string());
-        assert_eq!(error.error_type, ErrorType::InternalError);
-        assert_eq!(error.message, "Test error");
-        assert!(error.is_retryable());
+/// Create a network MCP error
+pub fn network_error(err: impl fmt::Display) -> NestGateError {
+    create_mcp_error(ErrorType::Network, format!("Network error: {err}"))
+}
+
+/// Create an authentication MCP error
+pub fn authentication_error(message: String) -> NestGateError {
+    create_mcp_error(ErrorType::AuthenticationError, message)
+}
+
+/// Create an authorization MCP error
+pub fn authorization_error(message: String) -> NestGateError {
+    create_mcp_error(ErrorType::Authorization, message)
+}
+
+/// Create a connection MCP error
+pub fn connection_error(message: String) -> NestGateError {
+    create_mcp_error(ErrorType::ConnectionError, message)
+}
+
+/// Create a protocol MCP error
+pub fn protocol_error(message: String) -> NestGateError {
+    create_mcp_error(ErrorType::ProtocolError, message)
+}
+
+/// Create a timeout MCP error
+pub fn timeout_error(message: String) -> NestGateError {
+    create_mcp_error(ErrorType::TimeoutError, message)
+}
+
+/// Create a validation MCP error
+pub fn validation_error(message: String) -> NestGateError {
+    create_mcp_error(ErrorType::ValidationError, message)
+}
+
+/// Create a not found MCP error
+pub fn not_found_error(message: String) -> NestGateError {
+    create_mcp_error(ErrorType::NotFound, message)
+}
+
+/// Create an invalid request MCP error
+pub fn invalid_request_error(message: String) -> NestGateError {
+    create_mcp_error(ErrorType::InvalidRequest, message)
+}
+
+/// Create a server MCP error
+pub fn server_error(message: String) -> NestGateError {
+    create_mcp_error(ErrorType::ServerError, message)
+}
+
+// ==================== CANONICAL HELPER FUNCTIONS ====================
+
+/// Convert any MCP operation result to canonical Result<T>
+pub fn to_canonical_result<T, E: Into<NestGateError>>(
+    result: std::result::Result<T, E>,
+) -> Result<T> {
+    result.map_err(|e| e.into())
+}
+
+/// Create a canonical MCP error with full context
+pub fn create_contextual_error(
+    error_type: ErrorType,
+    message: String,
+    endpoint: Option<String>,
+    method: Option<String>,
+    request_id: Option<String>,
+) -> NestGateError {
+    let mut context = HashMap::new();
+    context.insert("error_type".to_string(), error_type.to_string());
+
+    if let Some(ep) = endpoint {
+        context.insert("endpoint".to_string(), ep);
+    }
+    if let Some(m) = method {
+        context.insert("method".to_string(), m);
     }
 
-    #[test]
-    fn test_error_severity() {
-        let internal_error = Error::internal("Test".to_string());
-        assert_eq!(internal_error.severity(), ErrorSeverity::Critical);
+    let (operation, recovery_suggestions) = match &error_type {
+        ErrorType::ConnectionError => ("connection", "Check network connectivity; Verify MCP server is running; Check firewall settings"),
+        ErrorType::ProtocolError => ("protocol", "Check MCP protocol version compatibility; Verify message format; Review MCP specification"),
+        ErrorType::AuthenticationError | ErrorType::Auth => ("authentication", "Check authentication credentials; Verify API keys are valid; Check token expiration"),
+        ErrorType::TimeoutError => ("timeout", "Increase timeout duration; Check server performance; Verify network latency"),
+        ErrorType::ValidationError => ("validation", "Check input parameters; Verify data format; Review field requirements"),
+        _ => ("general", "Check MCP server status; Verify configuration; Retry the operation"),
+    };
 
-        let validation_error = Error::validation("Test".to_string());
-        assert_eq!(validation_error.severity(), ErrorSeverity::Low);
-    }
+    context.insert(
+        "recovery_suggestions".to_string(),
+        recovery_suggestions.to_string(),
+    );
 
-    #[test]
-    fn test_error_handler() {
-        let handler = DefaultErrorHandler::new();
-        let error = Error::network("Test".to_string());
-
-        assert_eq!(handler.handle_error(&error), ErrorHandlingAction::Retry);
-        assert!(handler.should_retry(&error, 1));
-        assert!(!handler.should_retry(&error, 5));
-    }
-
-    #[test]
-    fn test_error_metrics() {
-        let mut metrics = ErrorMetrics::new();
-        let error = Error::internal("Test".to_string());
-
-        metrics.record_error(&error);
-        assert_eq!(metrics.error_count, 1);
-        assert_eq!(metrics.errors_by_type[&ErrorType::InternalError], 1);
-        assert_eq!(metrics.errors_by_severity[&ErrorSeverity::Critical], 1);
-    }
+    NestGateError::Mcp(Box::new(McpErrorData {
+        message,
+        operation: operation.to_string(),
+        session_id: request_id,
+        context: Some(context),
+    }))
 }

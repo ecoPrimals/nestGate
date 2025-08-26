@@ -1,6 +1,5 @@
-//! Team Management Operations
-//!
-//! Team creation, listing, and workspace team association functionality.
+//
+// Team creation, listing, and workspace team association functionality.
 
 use axum::{extract::Json, http::StatusCode};
 use serde_json::{json, Value};

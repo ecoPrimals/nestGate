@@ -37,10 +37,8 @@ chrono = { workspace = true }
 clap = { version = "4.4", features = ["derive"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
+thiserror = { workspace = true }
 
 [dev-dependencies]
 tokio-test = { workspace = true } 
-# UI binary
-[[bin]]
-name = "nestgate-gui"
-path = "src/bin/nestgate-ui.rs"
+# GUI binary removed - using API endpoints for UI primals instead

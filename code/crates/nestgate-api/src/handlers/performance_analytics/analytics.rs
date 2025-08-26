@@ -1,6 +1,5 @@
-//! Performance Analytics Analysis
-//!
-//! Analytics functionality for alert checking and recommendation generation.
+//
+// Analytics functionality for alert checking and recommendation generation.
 
 use chrono::Utc;
 use std::collections::HashMap;

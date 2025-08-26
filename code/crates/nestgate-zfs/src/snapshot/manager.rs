@@ -1,6 +1,5 @@
-//! ZFS Snapshot Manager
-//!
-//! Main manager for coordinating snapshot operations, policies, and automation.
+//
+// Main manager for coordinating snapshot operations, policies, and automation.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -11,7 +10,7 @@ use tokio::time::interval;
 // Removed unused tracing import
 
 use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, types::StorageTier};
-use nestgate_core::{types::StorageTier as CoreStorageTier, Result as CoreResult};
+use nestgate_core::Result as CoreResult;
 
 use super::operations::SnapshotOperationType;
 use super::policy::{RetentionPolicy, ScheduleFrequency, SnapshotPolicy};
@@ -21,6 +20,10 @@ use tracing::debug;
 use tracing::error;
 use tracing::info;
 
+// Type aliases for complex types
+type SnapshotPolicyMap = Arc<RwLock<HashMap<String, SnapshotPolicy>>>;
+type SnapshotInfoCache = Arc<RwLock<HashMap<String, SnapshotInfo>>>;
+
 /// ZFS Snapshot Manager
 #[derive(Debug)]
 pub struct ZfsSnapshotManager {
@@ -29,9 +32,9 @@ pub struct ZfsSnapshotManager {
     dataset_manager: Arc<ZfsDatasetManager>,
 
     /// Snapshot policies
-    policies: Arc<RwLock<HashMap<String, SnapshotPolicy>>>,
+    policies: SnapshotPolicyMap,
     /// Snapshot cache
-    snapshot_cache: Arc<RwLock<HashMap<String, SnapshotInfo>>>,
+    snapshot_cache: SnapshotInfoCache,
     /// Operation queue
     operation_queue: Arc<RwLock<Vec<SnapshotOperation>>>,
     /// Statistics
@@ -370,7 +373,7 @@ impl ZfsSnapshotManager {
 
     /// Update snapshot cache
     async fn update_cache(
-        snapshot_cache: &Arc<RwLock<HashMap<String, SnapshotInfo>>>,
+        snapshot_cache: &SnapshotInfoCache,
         statistics: &Arc<RwLock<SnapshotStatistics>>,
         dataset_manager: &Arc<ZfsDatasetManager>,
     ) -> CoreResult<()> {

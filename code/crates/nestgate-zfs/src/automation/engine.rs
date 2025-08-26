@@ -1,14 +1,17 @@
-//! Main automation engine for ZFS dataset management
-//!
-//! This module contains the core DatasetAutomation engine that orchestrates
-//! all automation activities including policy evaluation, lifecycle management,
-//! and tier optimization.
+//
+// This module contains the core DatasetAutomation engine that orchestrates
+// all automation activities including policy evaluation, lifecycle management,
+// and tier optimization.
 
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use std::time::SystemTime;
 use tokio::sync::RwLock;
+
+// Type aliases to reduce complexity
+type PolicyMap = Arc<RwLock<HashMap<String, AutomationPolicy>>>;
+type LifecycleMap = Arc<RwLock<HashMap<String, DatasetLifecycle>>>;
 use tracing::debug;
 use tracing::info;
 use tracing::warn;
@@ -22,9 +25,9 @@ use super::{
     },
 };
 use crate::config::DatasetAutomationConfig;
+use crate::error::ZfsResult as Result;
 use crate::types::StorageTier;
 use crate::{dataset::ZfsDatasetManager, migration::MigrationEngine, pool::ZfsPoolManager};
-use nestgate_core::Result;
 
 /// Intelligent dataset automation engine
 #[derive(Debug)]
@@ -36,9 +39,9 @@ pub struct DatasetAutomation {
     /// Migration engine for tier movement
     migration_engine: Arc<RwLock<MigrationEngine>>,
     /// Active automation policies
-    policies: Arc<RwLock<HashMap<String, AutomationPolicy>>>,
+    policies: PolicyMap,
     /// Lifecycle tracking
-    lifecycle_tracker: Arc<RwLock<HashMap<String, DatasetLifecycle>>>,
+    lifecycle_tracker: LifecycleMap,
     /// Configuration
     config: DatasetAutomationConfig,
 }
@@ -227,7 +230,7 @@ impl DatasetAutomation {
         }
 
         // Apply stage-specific automatic rules
-        actions::apply_automatic_stage_rules(dataset_name, &lifecycle).await?;
+        actions::apply_automatic_stage_rules(dataset_name, lifecycle).await?;
 
         Ok(())
     }

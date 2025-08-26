@@ -1,4 +1,3 @@
-//! Authentication-related type definitions for MCP system
 
 use serde::{Deserialize, Serialize};
 

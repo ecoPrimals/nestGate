@@ -1,11 +1,10 @@
-/// Unit Tests for NestGate ZFS Components
 /// Focused unit tests for individual components and functions
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::SystemTime;
 
 use crate::performance::TierMetrics;
-use nestgate_automation::PerformanceExpectation;
+use nestgate_automation::types::optimization::PerformanceExpectation;
 use nestgate_core::StorageTier as CoreStorageTier;
 use nestgate_zfs::{
     migration::{MigrationJob, MigrationPriority, MigrationStatus},
@@ -19,7 +18,7 @@ mod config_unit_tests {
 
     #[test]
     fn test_zfs_config_defaults() {
-        let config = UnifiedZfsConfig::default();
+        let config = ZfsConfig::default();
 
         assert_eq!(config.api_endpoint, "http://127.0.0.1:8081");
         assert_eq!(config.default_pool, "nestpool");
@@ -31,7 +30,7 @@ mod config_unit_tests {
 
     #[test]
     fn test_tier_config_hierarchy() {
-        let config = UnifiedZfsConfig::default();
+        let config = ZfsConfig::default();
 
         let hot = config.get_tier_config(&CoreStorageTier::Hot);
         let warm = config.get_tier_config(&CoreStorageTier::Warm);
@@ -239,7 +238,7 @@ mod property_tests {
     #[test]
     fn test_tier_performance_invariants() {
         let tiers = vec![StorageTier::Hot, StorageTier::Warm, StorageTier::Cold];
-        let config = UnifiedZfsConfig::default();
+        let config = ZfsConfig::default();
 
         for tier in &tiers {
             let tier_config = config.get_tier_config(&match tier {
@@ -256,7 +255,7 @@ mod property_tests {
 
     #[test]
     fn test_config_validation_invariants() {
-        let config = UnifiedZfsConfig::default();
+        let config = ZfsConfig::default();
 
         assert!(!config.default_pool.is_empty());
         assert!(config.health_monitoring.check_interval_seconds > 0);

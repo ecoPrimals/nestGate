@@ -1,4 +1,3 @@
-//! Health check endpoint handler
 
 use axum::response::IntoResponse;
 

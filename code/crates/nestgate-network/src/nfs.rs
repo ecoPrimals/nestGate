@@ -1,6 +1,5 @@
-//! NFS (Network File System) protocol implementation
-//!
-//! This module provides NFS server functionality for the NestGate system
+//
+// This module provides NFS server functionality for the NestGate system
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -143,7 +142,7 @@ impl NfsServer {
         let rpcbind_output = Command::new("systemctl")
             .args(["start", "rpcbind"])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to start rpcbind: {e}")))?;
+            .map_err(|e| NestGateError::network_error(&format!("Failed to start rpcbind: {e}"), "start_rpcbind", None))?;
 
         if !rpcbind_output.status.success() {
             let error = String::from_utf8_lossy(&rpcbind_output.stderr);
@@ -154,13 +153,15 @@ impl NfsServer {
         let nfs_output = Command::new("systemctl")
             .args(["start", "nfs-kernel-server"])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to start NFS server: {e}")))?;
+            .map_err(|e| NestGateError::network_error(&format!("Failed to start NFS server: {e}"), "start_nfs_server", None))?;
 
         if !nfs_output.status.success() {
             let error = String::from_utf8_lossy(&nfs_output.stderr);
-            return Err(NestGateError::Network(format!(
-                "Failed to start NFS server: {error}"
-            )));
+            return Err(NestGateError::network_error(
+                &format!("Failed to start NFS server: {error}"),
+                "start_nfs_server",
+                None
+            ));
         }
 
         tracing::info!("NFS daemon services started successfully");
@@ -176,7 +177,7 @@ impl NfsServer {
         let nfs_output = Command::new("systemctl")
             .args(["stop", "nfs-kernel-server"])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to stop NFS server: {e}")))?;
+            .map_err(|e| NestGateError::network_error(&format!("Failed to stop NFS server: {e}"), "stop_nfs_server", None))?;
 
         if !nfs_output.status.success() {
             let error = String::from_utf8_lossy(&nfs_output.stderr);
@@ -271,11 +272,11 @@ impl NfsServer {
                 .truncate(true)
                 .open(temp_path)
                 .map_err(|e| {
-                    NestGateError::Network(format!("Failed to create temp exports file: {e}"))
+                    NestGateError::network_error(&format!("Failed to create temp exports file: {e}"), "create_exports_file", None)
                 })?;
 
             file.write_all(exports_content.as_bytes()).map_err(|e| {
-                NestGateError::Network(format!("Failed to write exports file: {e}"))
+                NestGateError::network_error(&format!("Failed to write exports file: {e}"), "write_exports_file", None)
             })?;
         }
 
@@ -284,20 +285,22 @@ impl NfsServer {
         let mv_output = Command::new("sudo")
             .args(["cp", temp_path, "/etc/exports"])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to update /etc/exports: {e}")))?;
+            .map_err(|e| NestGateError::network_error(&format!("Failed to update /etc/exports: {e}"), "update_exports", None))?;
 
         if !mv_output.status.success() {
             let error = String::from_utf8_lossy(&mv_output.stderr);
-            return Err(NestGateError::Network(format!(
-                "Failed to update /etc/exports: {error}"
-            )));
+            return Err(NestGateError::network_error(
+                &format!("Failed to update /etc/exports: {error}"),
+                "update_exports",
+                None
+            ));
         }
 
         // Reload exports
         let reload_output = Command::new("sudo")
             .args(["exportfs", "-ra"])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to reload exports: {e}")))?;
+            .map_err(|e| NestGateError::network_error(&format!("Failed to reload exports: {e}"), "reload_exports", None))?;
 
         if !reload_output.status.success() {
             let error = String::from_utf8_lossy(&reload_output.stderr);
@@ -398,13 +401,13 @@ async fn perform_nfs_mount(
     // Ensure mount point directory exists
     if let Some(parent) = mount_point.parent() {
         fs::create_dir_all(parent).map_err(|e| {
-            NestGateError::Network(format!("Failed to create mount point parent: {e}"))
+            NestGateError::network_error(&format!("Failed to create mount point parent: {e}"), "create_mount_parent", None)
         })?;
     }
 
     if !mount_point.exists() {
         fs::create_dir_all(mount_point)
-            .map_err(|e| NestGateError::Network(format!("Failed to create mount point: {e}")))?;
+            .map_err(|e| NestGateError::network_error(&format!("Failed to create mount point: {e}"), "create_mount_point", None))?;
     }
 
     // For NFS server, we don't actually mount on the server side

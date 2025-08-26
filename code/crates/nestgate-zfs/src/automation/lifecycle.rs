@@ -1,7 +1,6 @@
-//! Dataset lifecycle management and stage transitions
-//!
-//! This module handles the complete lifecycle of datasets including stage
-//! transitions, condition evaluation, and automated lifecycle rule application.
+//
+// This module handles the complete lifecycle of datasets including stage
+// transitions, condition evaluation, and automated lifecycle rule application.
 
 use std::time::Duration;
 use std::time::SystemTime;
@@ -179,7 +178,7 @@ pub fn get_or_create_lifecycle(
         // Create new lifecycle tracking
         DatasetLifecycle {
             dataset_name: dataset_name.to_string(),
-            current_tier: CoreStorageTier::Warm.into(), // Default to warm
+            current_tier: CoreStorageTier::Warm, // Default to warm
             created: SystemTime::now(),
             last_accessed: None,
             access_count: 0,

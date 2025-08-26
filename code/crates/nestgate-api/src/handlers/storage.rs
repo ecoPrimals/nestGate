@@ -1,4 +1,3 @@
-use axum::response::IntoResponse;
 use axum::Json;
 use serde::{Deserialize, Serialize};
 
@@ -10,33 +9,51 @@ use tracing::warn;
 /// Storage pool information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StoragePool {
+    /// Pool name
     pub name: String,
+    /// Pool status
     pub status: String,
+    /// Total pool size in bytes
     pub size: u64,
+    /// Used space in bytes
     pub used: u64,
+    /// Available space in bytes
     pub available: u64,
+    /// Pool health status
     pub health: String,
+    /// Pool type (raidz, mirror, etc.)
     pub pool_type: String,
 }
 
 /// Storage dataset information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageDataset {
+    /// Dataset name
     pub name: String,
+    /// Parent pool name
     pub pool: String,
+    /// Dataset size in bytes
     pub size: u64,
+    /// Used space in bytes
     pub used: u64,
+    /// Available space in bytes
     pub available: u64,
+    /// Mount point path
     pub mount_point: String,
+    /// Compression algorithm
     pub compression: String,
 }
 
 /// Storage snapshot information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageSnapshot {
+    /// Name of the storage volume
     pub name: String,
+    /// Dataset path for this volume
     pub dataset: String,
+    /// Size of the volume in bytes
     pub size: u64,
+    /// Creation timestamp
     pub created: String,
     /// Referenced data size in bytes
     pub referenced: u64,
@@ -234,9 +251,7 @@ fn parse_size_string(size_str: &str) -> Option<u64> {
 /// Collect real storage datasets (important directories) from system
 async fn collect_real_storage_datasets(
 ) -> Result<Vec<StorageDataset>, Box<dyn std::error::Error + Send + Sync>> {
-    use std::process::Command;
-    use std::str;
-
+    // Mock implementation for datasets
     let mut datasets = Vec::new();
 
     // Important directories to monitor as "datasets"
@@ -611,7 +626,7 @@ fn parse_bandwidth_unit(value: &str) -> Option<f64> {
 async fn collect_fallback_storage_metrics() -> StorageMetrics {
     // Get basic disk space information from system
     let (total_storage, used_storage, available_storage) = match tokio::process::Command::new("df")
-        .args(&["-B1", "/"])  // Get root filesystem size in bytes
+        .args(&["-B1", "/"]) // Get root filesystem size in bytes
         .output()
         .await
     {

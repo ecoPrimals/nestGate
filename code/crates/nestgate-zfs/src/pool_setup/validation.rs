@@ -1,6 +1,5 @@
-//! Pool Setup Validation
-//!
-//! Validation logic and safety checks for ZFS pool setup operations
+//
+// Validation logic and safety checks for ZFS pool setup operations
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -10,7 +9,7 @@ use super::{
     device_detection::{DeviceType, StorageDevice},
 };
 use crate::types::StorageTier;
-use nestgate_core::types::StorageTier as CoreStorageTier;
+// Removed unused import: nestgate_core::types::StorageTier as CoreStorageTier
 
 /// Result of validation operations
 #[derive(Debug, Clone, Serialize, Deserialize)]

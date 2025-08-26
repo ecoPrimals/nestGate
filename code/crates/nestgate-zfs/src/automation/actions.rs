@@ -1,11 +1,10 @@
-//! Action execution for ZFS automation
-//!
-//! This module implements lifecycle actions and automatic stage rules
-//! for dataset management and tier optimization.
+//
+// This module implements lifecycle actions and automatic stage rules
+// for dataset management and tier optimization.
 
 use super::types::{DatasetLifecycle, LifecycleStage};
+use crate::error::CanonicalResult as Result;
 use crate::types::StorageTier;
-use nestgate_core::Result;
 use std::time::SystemTime;
 use tracing::{debug, info, warn};
 
@@ -46,7 +45,7 @@ pub async fn execute_lifecycle_action(
             Ok(ActionResult {
                 action: action.to_string(),
                 success: false,
-                message: format!("Unknown action: {}", action),
+                message: format!("Unknown action: {action}"),
                 timestamp,
             })
         }
@@ -118,10 +117,10 @@ async fn execute_migration_action(
     // Simulate migration operation
     // In a real implementation, this would coordinate with the migration engine
     let success = true;
-    let message = format!("Successfully migrated to {:?} tier", target_tier);
+    let message = format!("Successfully migrated to {target_tier:?} tier");
 
     Ok(ActionResult {
-        action: format!("migrate_to_{:?}", target_tier).to_lowercase(),
+        action: format!("migrate_to_{target_tier:?}").to_lowercase(),
         success,
         message,
         timestamp: SystemTime::now(),

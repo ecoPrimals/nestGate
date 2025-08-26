@@ -1,9 +1,7 @@
-//! File System Monitor Error Types
-//!
-//! Provides unified error handling for the file system monitor with integration
-//! to the NestGate core error system.
+//
+// Provides unified error handling for the file system monitor with integration
+// to the NestGate core error system.
 
-use nestgate_core::smart_abstractions::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -26,13 +24,8 @@ pub enum FsMonitorError {
     Handler { message: String },
 }
 
-impl SmartDefault for FsMonitorError {
-    fn smart_default() -> Self {
-        Self::Configuration {
-            message: "Default configuration error".to_string(),
-        }
-    }
-}
+// Note: SmartDefault functionality moved to canonical modernization
+// For now, use standard Default trait
 
 impl From<FsMonitorError> for nestgate_core::NestGateError {
     fn from(err: FsMonitorError) -> Self {
@@ -72,14 +65,15 @@ impl From<FsMonitorError> for nestgate_core::NestGateError {
     }
 }
 
-/// Result type for file system monitor operations
-pub type Result<T> = std::result::Result<T, FsMonitorError>;
+// CANONICAL MODERNIZATION: Use canonical error system directly
+// Removed fragmented Result type alias
+pub use nestgate_core::error::Result;
 
 // From trait implementations for error conversion
 impl From<notify::Error> for FsMonitorError {
     fn from(err: notify::Error) -> Self {
         FsMonitorError::WatcherInit {
-            message: format!("Notify error: {}", err),
+            message: format!("Notify error: {err}"),
         }
     }
 }
@@ -87,7 +81,7 @@ impl From<notify::Error> for FsMonitorError {
 impl From<std::io::Error> for FsMonitorError {
     fn from(err: std::io::Error) -> Self {
         FsMonitorError::EventProcessing {
-            message: format!("IO error: {}", err),
+            message: format!("IO error: {err}"),
         }
     }
 }
@@ -95,7 +89,7 @@ impl From<std::io::Error> for FsMonitorError {
 impl From<nestgate_core::error::NestGateError> for FsMonitorError {
     fn from(err: nestgate_core::error::NestGateError) -> Self {
         FsMonitorError::EventProcessing {
-            message: format!("NestGate error: {}", err),
+            message: format!("NestGate error: {err}"),
         }
     }
 }

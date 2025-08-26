@@ -1,4 +1,3 @@
-/// **UNIFIED NETWORK CONFIG MODULE SYSTEM**
 /// Breaking down the large unified_network_config.rs (865 lines) into focused modules
 /// to achieve 2000-line file size compliance while maintaining functionality.
 

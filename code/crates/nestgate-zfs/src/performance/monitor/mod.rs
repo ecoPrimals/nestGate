@@ -1,4 +1,3 @@
-/// ZFS Performance Monitor - Modular Architecture
 /// Split from monolithic monitor.rs for maintainability and 2000-line compliance
 /// Core monitoring implementation with specialized metrics, analysis, and reporting modules
 use std::collections::{HashMap, VecDeque};
@@ -10,7 +9,7 @@ use tracing::{error, info};
 
 use crate::types::StorageTier;
 use crate::{ZfsDatasetManager, ZfsPoolManager};
-use nestgate_core::{types::StorageTier as CoreStorageTier, Result as CoreResult};
+use nestgate_core::Result as CoreResult;
 
 use super::types::*;
 

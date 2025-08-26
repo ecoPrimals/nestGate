@@ -3,13 +3,13 @@
 //! This file has been refactored to comply with the 1000 lines per file limit
 //! by splitting functionality across multiple modules in tests/e2e/
 
-use crate::common::test_config::UnifiedTestConfig;
+use crate::common::config::UnifiedTestConfig;
 use crate::e2e::{
     chaos_testing::{execute_chaos_tests, ChaosTestResults},
     performance_testing::{execute_performance_tests, PerformanceTestResults},
     workflow_runner::{run_comprehensive_workflow_test, TestResults as WorkflowResults},
 };
-use nestgate_core::{NestGateError, Result};
+use nestgate_core::Result;
 use std::time::{Duration, Instant};
 
 /// Comprehensive test results combining all test types
@@ -128,7 +128,7 @@ fn print_comprehensive_summary(results: &ComprehensiveTestResults) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::test_config::UnifiedTestConfig;
+    use crate::common::config::UnifiedTestConfig;
 
     #[tokio::test]
     async fn test_comprehensive_e2e_development() {

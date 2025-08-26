@@ -1,113 +1,121 @@
-#![doc = "
-# NestGate MCP (Model Context Protocol) Integration
+//
+// This crate provides comprehensive MCP integration capabilities with canonical
+// error handling and modern patterns. All MCP operations now use the unified
+// NestGateError system for consistent error handling across the ecosystem.
 
-High-performance MCP protocol implementation providing seamless integration with AI systems,
-language models, and external MCP-compatible services.
-
-## Key Features
-
-- **MCP Protocol Compliance**: Full implementation of Model Context Protocol specification
-- **Session Management**: Secure session handling with authentication and authorization
-- **Security Framework**: Multi-provider authentication with role-based access control
-- **Streaming Support**: High-throughput streaming for large model interactions
-- **Error Handling**: Comprehensive error management with retry logic
-
-## Protocol Support
-
-- **MCP v1.0**: Full protocol compliance with all standard operations
-- **Authentication**: Multiple auth methods (API keys, OAuth2, certificates)
-- **Authorization**: Role-based permissions for fine-grained access control  
-- **Session Lifecycle**: Complete session management with cleanup and monitoring
-
-## Performance
-
-- **Throughput**: Optimized for high-frequency model interactions
-- **Latency**: Sub-millisecond session operations  
-- **Scalability**: Concurrent session support with resource pooling
-- **Reliability**: Automatic retry and failover mechanisms
-
-This crate enables secure, high-performance integration with AI systems and external
-MCP-compatible services within the NestGate ecosystem.
-"]
-
-// Core MCP modules
-pub mod adapter;
-pub mod client;
 pub mod config;
 pub mod error;
-pub mod protocol;
-pub mod provider;
-pub mod security;
-pub mod service;
-pub mod session;
-pub mod storage;
-pub mod types;
 
-// Re-export commonly used types and traits
-pub use client::{HttpOrchestratorClient, OrchestratorClient};
-pub use config::{EnhancedMcpConfig, McpConfig, RetryConfig};
-// Use unified error system instead of deprecated local error types
-pub use nestgate_core::error::{NestGateError, Result};
+// Re-export canonical types and functions
+pub use error::{
+    authentication_error, authorization_error, connection_error, create_contextual_error,
+    create_mcp_error, internal_error, invalid_request_error, network_error, not_found_error,
+    protocol_error, server_error, timeout_error, to_canonical_result, validation_error, ErrorType,
+    McpErrorBuilder,
+};
 
-// Deprecated re-export for backward compatibility
-#[deprecated(since = "2.1.0", note = "Use nestgate_core::Result and NestGateError instead")]
-pub use error::{Error as McpError, Result as McpResult};
-pub use service::EnhancedMcpService;
+// Re-export canonical Result type from nestgate-core
+pub use nestgate_core::error::Result as McpResult;
 
-// Re-export key types from sub-modules
-pub use nestgate_core::diagnostics::SystemMetrics;
-pub use types::{AuthConfig, ProviderCapabilities, ProviderConfig, TlsConfig};
+// ==================== CANONICAL INTEGRATION PATTERNS ====================
 
-/// Version information
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+/// MCP service trait using canonical error patterns
+#[allow(async_fn_in_trait)]
+pub trait McpService {
+    /// Initialize the MCP service
+    async fn initialize(&mut self) -> McpResult<()>;
 
-/// Default MCP service configuration
-pub fn default_config() -> McpConfig {
-    McpConfig::default()
+    /// Get service health status
+    async fn health_check(&self) -> McpResult<McpHealthStatus>;
+
+    /// Shutdown the service gracefully
+    async fn shutdown(&mut self) -> McpResult<()>;
 }
 
-/// Default enhanced MCP service configuration
-pub fn default_enhanced_config() -> EnhancedMcpConfig {
-    EnhancedMcpConfig::default()
+/// MCP health status using canonical patterns
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct McpHealthStatus {
+    pub is_healthy: bool,
+    pub message: String,
+    pub details: Option<std::collections::HashMap<String, String>>,
 }
 
-/// Create a new HTTP orchestrator client
-pub fn create_http_client(base_url: String) -> HttpOrchestratorClient {
-    HttpOrchestratorClient::new(base_url)
-}
-
-/// Create a new enhanced MCP service
-pub fn create_service(
-    config: EnhancedMcpConfig,
-    orchestrator_client: std::sync::Arc<dyn OrchestratorClient>,
-) -> EnhancedMcpService {
-    EnhancedMcpService::new(config, orchestrator_client)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_default_config_creation() {
-        let config = default_config();
-        assert_eq!(config.node_id, "default-node");
-        assert!(!config.federation_enabled);
+impl McpHealthStatus {
+    pub fn healthy() -> Self {
+        Self {
+            is_healthy: true,
+            message: "MCP service is healthy".to_string(),
+            details: None,
+        }
     }
 
-    #[test]
-    fn test_enhanced_config_creation() {
-        let config = default_enhanced_config();
-        assert_eq!(config.node_id, "default-node");
-        assert_eq!(config.cluster_name, "default-cluster");
-        assert!(!config.federation_enabled);
-        assert_eq!(config.metrics_collection_interval, 30);
-        assert_eq!(config.health_check_interval, 10);
+    pub fn unhealthy(message: impl Into<String>) -> Self {
+        Self {
+            is_healthy: false,
+            message: message.into(),
+            details: None,
+        }
     }
 
-    #[test]
-    fn test_version_info() {
-        assert!(!VERSION.is_empty());
-        assert!(VERSION.chars().any(|c| c.is_ascii_digit()));
+    pub fn with_details(mut self, details: std::collections::HashMap<String, String>) -> Self {
+        self.details = Some(details);
+        self
     }
+}
+
+// ==================== MODERNIZED CONSTANTS ====================
+
+/// Default MCP configuration constants
+pub mod constants {
+    use nestgate_core::canonical_modernization::canonical_constants::network::{
+        CONNECTION_TIMEOUT_SECS, REQUEST_TIMEOUT_SECS,
+    };
+    use std::time::Duration;
+
+    /// Default connection timeout - **CANONICAL MODERNIZATION**
+    pub const DEFAULT_CONNECT_TIMEOUT: Duration = Duration::from_secs(CONNECTION_TIMEOUT_SECS);
+
+    /// Default request timeout (extended for MCP operations) - **CANONICAL MODERNIZATION**
+    pub const DEFAULT_REQUEST_TIMEOUT: Duration = Duration::from_secs(REQUEST_TIMEOUT_SECS);
+
+    /// Default retry attempts - **CANONICAL MODERNIZATION**
+    pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3; // Reasonable default for MCP operations
+
+    /// Default retry delay - **CANONICAL MODERNIZATION**
+    pub const DEFAULT_RETRY_DELAY: Duration = Duration::from_millis(1000); // 1 second initial delay
+
+    /// Default protocol version
+    pub const DEFAULT_PROTOCOL_VERSION: &str = "2024-11-05";
+
+    /// Default user agent
+    pub const DEFAULT_USER_AGENT: &str = "nestgate-mcp/0.1.0";
+}
+
+// ==================== CANONICAL HELPER FUNCTIONS ====================
+
+/// Create a canonical MCP client configuration
+pub fn create_default_config() -> config::McpClientConfig {
+    config::McpClientConfig::default()
+}
+
+/// Validate MCP protocol version compatibility
+pub fn is_protocol_version_supported(version: &str) -> bool {
+    matches!(version, "2024-11-05" | "2024-10-07" | "2024-09-25")
+}
+
+/// Create a standardized MCP error response
+pub fn create_error_response(
+    error_type: ErrorType,
+    message: impl Into<String>,
+) -> serde_json::Value {
+    serde_json::json!({
+        "error": {
+            "type": error_type.to_string(),
+            "message": message.into(),
+            "timestamp": std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs()
+        }
+    })
 }

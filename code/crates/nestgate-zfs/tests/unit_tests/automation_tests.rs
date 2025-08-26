@@ -1,6 +1,5 @@
-//! Automation Unit Tests
-//!
-//! Tests for automation and lifecycle management
+//
+// Tests for automation and lifecycle management
 
 use std::collections::HashMap;
 use std::path::PathBuf;

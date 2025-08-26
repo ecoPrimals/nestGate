@@ -1,0 +1,110 @@
+# Hybrid Capabilities Configuration for NestGate
+# Principle: NestGate only knows storage. External capabilities route through universal adapter.
+
+[storage_intelligence]
+# Tier recommendation: Try external AI, fallback to local smart heuristics
+tier_recommendation = { mode = "external_heavy", capability_type = "ai.storage_optimization", fallback = "local_smart", timeout_ms = 5000 }
+
+# Compression analysis: Local smart (fast entropy analysis)
+compression_analysis = { mode = "local_smart", fallback = "failsafe" }
+
+# Access pattern prediction: External AI for complex patterns, local for simple
+access_prediction = { mode = "external_heavy", capability_type = "ai.access_patterns", fallback = "local_smart", timeout_ms = 3000 }
+
+# Performance optimization: Local smart for basic tuning
+performance_tuning = { mode = "local_smart", fallback = "failsafe" }
+
+# Anomaly detection: External for complex ML, local for threshold-based
+anomaly_detection = { mode = "external_heavy", capability_type = "ai.anomaly_detection", fallback = "local_smart", timeout_ms = 2000 }
+
+[security_capabilities]
+# Authentication: Route to BearDog, fallback to development bypass
+authentication = { mode = "external_heavy", capability_type = "security.authentication", fallback = "failsafe", timeout_ms = 1000 }
+
+# Encryption: Route to BearDog for key management, local for basic encryption
+encryption = { mode = "external_heavy", capability_type = "security.encryption", fallback = "local_smart", timeout_ms = 2000 }
+
+# Token validation: Local smart (signature verification), external for complex validation
+token_validation = { mode = "local_smart", fallback = "failsafe" }
+
+# Access control: Route to BearDog for complex policies, local for basic checks
+access_control = { mode = "external_heavy", capability_type = "security.access_control", fallback = "local_smart", timeout_ms = 1500 }
+
+[orchestration_capabilities]
+# Service discovery: Route to Songbird, fallback to static configuration
+service_discovery = { mode = "external_heavy", capability_type = "orchestration.discovery", fallback = "failsafe", timeout_ms = 3000 }
+
+# Health monitoring: Local smart (storage health), external for ecosystem health
+health_monitoring = { mode = "local_smart", fallback = "failsafe" }
+
+# Load balancing: Route to Songbird for complex algorithms, local for round-robin
+load_balancing = { mode = "external_heavy", capability_type = "orchestration.load_balancing", fallback = "local_smart", timeout_ms = 2000 }
+
+# Event routing: Route to Songbird for complex workflows, local for simple events
+event_routing = { mode = "external_heavy", capability_type = "orchestration.events", fallback = "local_smart", timeout_ms = 1000 }
+
+[compute_capabilities]
+# Resource allocation: Route to Toadstool for complex scheduling, local for basic allocation
+resource_allocation = { mode = "external_heavy", capability_type = "compute.resource_allocation", fallback = "local_smart", timeout_ms = 4000 }
+
+# Workload optimization: Route to Toadstool for ML-based optimization, local for heuristics
+workload_optimization = { mode = "external_heavy", capability_type = "compute.workload_optimization", fallback = "local_smart", timeout_ms = 5000 }
+
+# Performance monitoring: Local smart (storage performance), external for system-wide
+performance_monitoring = { mode = "local_smart", fallback = "failsafe" }
+
+[ui_integration]
+# Dashboard data: Local smart (storage metrics), external for ecosystem overview
+dashboard_data = { mode = "local_smart", fallback = "failsafe" }
+
+# User interface: Route to biomeOS for complex UI, local for API endpoints
+user_interface = { mode = "external_heavy", capability_type = "ui.interface", fallback = "failsafe", timeout_ms = 2000 }
+
+# Notifications: Route to biomeOS for rich notifications, local for simple alerts
+notifications = { mode = "external_heavy", capability_type = "ui.notifications", fallback = "local_smart", timeout_ms = 1000 }
+
+[failsafe_defaults]
+# Standalone operation defaults - always work without external dependencies
+default_tier = "warm"
+default_compression = "lz4"
+default_cache_size_mb = 128
+default_timeout_ms = 5000
+default_retry_attempts = 3
+auth_bypass_dev_mode = true
+static_service_endpoints = { storage = "localhost:8080", health = "localhost:8080/health" }
+
+[universal_adapter]
+# Universal adapter configuration - how NestGate communicates with external primals
+discovery_timeout_ms = 2000
+capability_cache_ttl_seconds = 300
+max_concurrent_requests = 10
+retry_policy = "exponential_backoff"
+circuit_breaker_threshold = 5
+
+# Capability type mappings - NestGate doesn't know which primal provides what
+# The universal adapter handles discovery and routing
+[capability_mappings]
+"ai.storage_optimization" = { description = "ML-based storage tier optimization", expected_providers = ["squirrel"] }
+"ai.access_patterns" = { description = "Access pattern prediction and analysis", expected_providers = ["squirrel"] }
+"ai.anomaly_detection" = { description = "ML-based anomaly detection in storage patterns", expected_providers = ["squirrel"] }
+
+"security.authentication" = { description = "User authentication and session management", expected_providers = ["beardog"] }
+"security.encryption" = { description = "Data encryption and key management", expected_providers = ["beardog"] }
+"security.access_control" = { description = "Access control policies and enforcement", expected_providers = ["beardog"] }
+
+"orchestration.discovery" = { description = "Service discovery and registration", expected_providers = ["songbird"] }
+"orchestration.load_balancing" = { description = "Load balancing and traffic distribution", expected_providers = ["songbird"] }
+"orchestration.events" = { description = "Event routing and workflow orchestration", expected_providers = ["songbird"] }
+
+"compute.resource_allocation" = { description = "Compute resource allocation and scheduling", expected_providers = ["toadstool"] }
+"compute.workload_optimization" = { description = "Workload optimization and placement", expected_providers = ["toadstool"] }
+
+"ui.interface" = { description = "User interface components and dashboards", expected_providers = ["biomeOS"] }
+"ui.notifications" = { description = "User notifications and alerts", expected_providers = ["biomeOS"] }
+
+[development]
+# Development mode settings
+mock_external_capabilities = true
+log_capability_routing = true
+enable_capability_metrics = true
+bypass_timeouts_in_tests = true 

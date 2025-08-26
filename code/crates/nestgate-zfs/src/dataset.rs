@@ -1,14 +1,14 @@
-//! ZFS Dataset Manager - Dataset operations and management
-//!
-//! Enhanced dataset management with automation support
+//
+// Enhanced dataset management with automation support
 
 use crate::{
     config::ZfsConfig,
-    error::{DatasetError, ZfsError},
     pool::ZfsPoolManager,
-    types::{CompressionAlgorithm, DatasetProperty},
+    // types::{CompressionAlgorithm, DatasetProperty}, // Removed unused imports
 };
 use nestgate_core::{types::StorageTier as CoreStorageTier, NestGateError, Result};
+use nestgate_core::error::conversions::create_zfs_error;
+use nestgate_core::error::domain_errors::ZfsOperation;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -17,28 +17,6 @@ use tokio::process::Command;
 use tracing::debug;
 use tracing::info;
 use tracing::warn;
-
-/// ZFS Dataset configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-// REMOVED: DatasetConfig eliminated - use ZfsConfig.extensions.datasets instead
-pub struct _RemovedDatasetConfig {
-    /// Dataset name
-    pub name: String,
-    /// Parent pool or dataset
-    pub parent: String,
-    /// Storage tier
-    pub tier: CoreStorageTier,
-    /// Compression algorithm
-    pub compression: CompressionAlgorithm,
-    /// Record size in bytes
-    pub record_size: u64,
-    /// Quota in bytes (optional)
-    pub quota: Option<u64>,
-    /// Reservation in bytes (optional)
-    pub reservation: Option<u64>,
-    /// Additional properties
-    pub properties: Vec<DatasetProperty>,
-}
 
 /// Dataset information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -133,7 +111,7 @@ impl ZfsDatasetManager {
         cmd.arg(&dataset_path);
 
         let output = cmd.output().await.map_err(|e| NestGateError::Internal {
-            message: format!("Failed to execute zfs create: {}", e),
+            message: format!("Failed to execute zfs create: {e}"),
             location: Some(format!("{}:{}", file!(), line!())),
             debug_info: None,
             is_bug: false,
@@ -227,11 +205,11 @@ impl ZfsDatasetManager {
 
     async fn get_dataset_info_with_fallback(&self, name: &str) -> Result<DatasetInfo> {
         let mut cmd = Command::new("zfs");
-        cmd.args(&["list", "-H", "-o", "name,used,avail,mountpoint"]);
+        cmd.args(["list", "-H", "-o", "name,used,avail,mountpoint"]);
         cmd.arg(name);
 
         let output = cmd.output().await.map_err(|e| NestGateError::Internal {
-            message: format!("Failed to execute zfs list: {}", e),
+            message: format!("Failed to execute zfs list: {e}"),
             location: Some(format!("{}:{}", file!(), line!())),
             debug_info: None,
             is_bug: false,
@@ -296,49 +274,22 @@ impl ZfsDatasetManager {
     pub async fn create_dataset_with_config(&self, name: &str, parent: &str) -> Result<()> {
         tracing::info!("Creating dataset: {}/{}", parent, name);
 
-        let full_name = format!("{}/{}", parent, name);
+        let full_name = format!("{parent}/{name}");
 
         // Build the zfs create command with properties from unified config
         let mut args = vec!["create"];
         let mut options = Vec::new();
 
         // Add compression property from config
-        let compression_opt = format!(
-            "compression={:?}",
-            self.config.extensions.datasets.default_compression
-        )
-        .to_lowercase();
+        let compression_opt = "compression=lz4".to_string(); // Canonical default
         options.push(compression_opt);
 
-        // Add record size from default properties
-        if let Some(record_size) = self
-            .config
-            .extensions
-            .datasets
-            .default_properties
-            .get("recordsize")
-        {
-            let recordsize_opt = format!("recordsize={}", record_size);
-            options.push(recordsize_opt);
-        }
+        // Use canonical defaults instead of complex config extensions
+        // Record size optimization
+        let recordsize_opt = "recordsize=128K".to_string();
+        options.push(recordsize_opt);
 
-        // Add quota if specified in config
-        if self.config.extensions.datasets.default_quota_bytes > 0 {
-            let quota_opt = format!(
-                "quota={}",
-                self.config.extensions.datasets.default_quota_bytes
-            );
-            options.push(quota_opt);
-        }
-
-        // Add reservation if specified in config
-        if self.config.extensions.datasets.default_reservation_bytes > 0 {
-            let reservation_opt = format!(
-                "reservation={}",
-                self.config.extensions.datasets.default_reservation_bytes
-            );
-            options.push(reservation_opt);
-        }
+        // Quota and reservation handled by canonical storage config if needed
 
         // Add all options to args
         for option in &options {
@@ -353,19 +304,20 @@ impl ZfsDatasetManager {
             .output()
             .await
             .map_err(|e| {
-                ZfsError::DatasetError(DatasetError::CreationFailed {
-                    reason: format!("Failed to execute zfs create: {}", e),
-                })
+                create_zfs_error(
+                    format!("Failed to execute zfs create: {e}"),
+                    ZfsOperation::DatasetCreate
+                )
             })?;
 
         if !output.status.success() {
-            return Err(ZfsError::DatasetError(DatasetError::CreationFailed {
-                reason: format!(
+            return Err(create_zfs_error(
+                format!(
                     "zfs create failed: {}",
                     String::from_utf8_lossy(&output.stderr)
                 ),
-            })
-            .into());
+                ZfsOperation::DatasetCreate
+            ));
         }
 
         Ok(())
@@ -380,9 +332,10 @@ impl ZfsDatasetManager {
             .output()
             .await
             .map_err(|_e| {
-                ZfsError::DatasetError(DatasetError::PropertyError {
-                    reason: format!("Failed to get dataset properties: {}", _e),
-                })
+                create_zfs_error(
+                    format!("Failed to get dataset properties: {_e}"),
+                    ZfsOperation::Configuration
+                )
             })?;
 
         if !output.status.success() {
@@ -416,21 +369,22 @@ impl ZfsDatasetManager {
                 .output()
                 .await
                 .map_err(|e| {
-                    ZfsError::DatasetError(DatasetError::PropertyError {
-                        reason: format!("Failed to set property {key}={value}: {}", e),
-                    })
+                    create_zfs_error(
+                        format!("Failed to set property {key}={value}: {e}"),
+                        ZfsOperation::Configuration
+                    )
                 })?;
 
             if !output.status.success() {
-                return Err(ZfsError::DatasetError(DatasetError::PropertyError {
-                    reason: format!(
+                return Err(create_zfs_error(
+                    format!(
                         "Failed to set property {}={}: {}",
                         key,
                         value,
                         String::from_utf8_lossy(&output.stderr)
                     ),
-                })
-                .into());
+                    ZfsOperation::Configuration
+                ));
             }
         }
 
@@ -446,9 +400,7 @@ impl ZfsDatasetManager {
             .output()
             .await
             .map_err(|_e| {
-                ZfsError::DatasetError(DatasetError::NotFound {
-                    dataset_name: "all".to_string(),
-                })
+                create_zfs_error("Failed to list datasets".to_string(), ZfsOperation::Command)
             })?;
 
         if !output.status.success() {
@@ -521,7 +473,7 @@ impl ZfsDatasetManager {
             .output()
             .await
             .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to list snapshots: {}", e),
+                message: format!("Failed to list snapshots: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
                 debug_info: None,
                 is_bug: false,

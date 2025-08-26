@@ -1,4 +1,3 @@
-/// **PERFORMANCE MODULE**
 /// Performance and resource management configuration - extracted from monolithic config
 /// Handles buffer sizes, thread pools, memory management, I/O optimization, and monitoring
 use serde::{Deserialize, Serialize};

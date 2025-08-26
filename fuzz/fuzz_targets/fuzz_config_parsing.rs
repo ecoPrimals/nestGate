@@ -1,15 +1,10 @@
 #![no_main]
 
-// use arbitrary::Arbitrary; // Currently unused
 use libfuzzer_sys::fuzz_target;
-// use std::collections::HashMap; // Currently unused
-
-// Import unified fuzz configuration system
-use nestgate_api::ecoprimal_sdk::LoggingConfig;
 use nestgate_core::config::Config;
-use nestgate_core::unified_config_consolidation::{
+use nestgate_core::unified_final_config::{
     ConfigFormat, FuzzConfigData, FuzzConfigParsingSettings, MaliciousContent, UnifiedFuzzConfig,
-    UnifiedZfsConfig,
+    ZfsConfig,
 };
 use nestgate_zfs::config::ZfsConfig;
 

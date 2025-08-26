@@ -1,6 +1,5 @@
-//! Performance Analytics Router
-//!
-//! Router configuration for performance analytics endpoints.
+//
+// Router configuration for performance analytics endpoints.
 
 use axum::{
     routing::{get, post},

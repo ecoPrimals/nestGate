@@ -1,0 +1,305 @@
+# **ZERO-COST PRODUCTION CONFIGURATION**
+# NestGate Production Configuration Optimized for Zero-Cost Architecture
+# This configuration enables all zero-cost patterns for maximum performance
+
+[system]
+instance_name = "nestgate-zero-cost-production"
+environment = "production"
+log_level = "info"
+max_concurrent_operations = 20000  # Increased due to zero-cost efficiency
+worker_threads = 32                # Can handle more threads with zero-cost patterns
+enable_tracing = true
+performance_monitoring = true
+zero_cost_mode = true              # Enable zero-cost architecture globally
+
+[network]
+[network.api]
+host = "0.0.0.0"
+port = 8443
+max_connections = 10000            # Increased capacity with zero-cost connection pools
+connection_timeout_ms = 30000
+request_timeout_ms = 60000
+enable_compression = true
+compression_level = 6
+keep_alive_timeout = 300
+max_request_size = 10485760
+
+# Zero-cost connection pool configuration
+[network.connection_pool]
+pool_type = "zero_cost"            # Use ZeroCostConnectionPool
+pool_size = 200                    # Compile-time sized pool
+connection_factory = "tcp_zero_cost"
+validation_interval_seconds = 30
+connection_timeout_seconds = 30
+enable_health_checks = true
+
+[network.tls]
+enabled = true
+cert_path = "/etc/nestgate/tls/server.crt"
+key_path = "/etc/nestgate/tls/server.key"
+ca_path = "/etc/nestgate/tls/ca.crt"
+min_tls_version = "1.3"
+cipher_suites = ["TLS_AES_256_GCM_SHA384", "TLS_CHACHA20_POLY1305_SHA256"]
+require_client_cert = false
+
+[security]
+[security.authentication]
+enabled = true
+provider_type = "zero_cost_security"  # Use ZeroCostSecurityProvider
+session_timeout_minutes = 60
+max_failed_attempts = 5
+lockout_duration_minutes = 15
+require_strong_passwords = true
+enable_mfa = true
+
+# Zero-cost security provider configuration
+[security.zero_cost_provider]
+provider_type = "jwt_zero_cost"    # Use ZeroCostJwtSecurityProvider
+secret_size = 32                   # Compile-time secret size
+token_expiry_seconds = 3600
+enable_token_refresh = true
+validation_cache_size = 1000       # Compile-time cache size
+
+[security.authorization]
+enabled = true
+default_policy = "deny"
+enable_rbac = true
+audit_all_access = true
+
+[security.encryption]
+algorithm = "AES-256-GCM"
+key_rotation_days = 90
+encrypt_at_rest = true
+encrypt_in_transit = true
+secure_key_storage = true
+
+[storage]
+backend_type = "zero_cost_storage"  # Use ZeroCostStorageBackend
+data_directory = "/var/lib/nestgate/data"
+backup_directory = "/var/lib/nestgate/backups"
+max_storage_size = "1TB"
+compression_enabled = true
+deduplication_enabled = true
+encryption_enabled = true
+backup_retention_days = 90
+
+# Zero-cost storage backend configuration
+[storage.zero_cost_backend]
+backend_type = "file_zero_cost"    # Use ZeroCostFileBackend
+base_path = "/var/lib/nestgate/data"
+enable_direct_io = true
+buffer_size = 131072               # 128KB - optimized for zero-cost operations
+max_concurrent_operations = 1000   # Compile-time limit
+enable_memory_mapping = true
+use_io_uring = true
+
+# Zero-cost COW manager configuration
+[storage.cow_manager]
+manager_type = "zero_cost"         # Use ZeroCostCowManager
+max_operations = 2000              # Compile-time operation limit
+enable_deduplication = true
+max_cow_depth = 15
+snapshot_retention_days = 30
+enable_performance_tracking = true
+
+[storage.performance]
+# Zero-cost optimizations enabled
+enable_zero_cost = true
+buffer_pool_size = 2097152         # 2MB buffer pool - optimized for zero-cost
+max_buffer_size = 262144           # 256KB max buffer
+string_pool_enabled = true
+memory_mapped_files = true
+async_io_enabled = true
+io_uring_enabled = true
+direct_dispatch_enabled = true     # Enable direct method dispatch
+
+[storage.cache]
+enabled = true
+cache_type = "zero_cost"           # Use zero-cost cache implementation
+cache_size = "4GB"                 # Larger cache due to efficiency gains
+cache_policy = "lru"
+ttl_seconds = 3600
+write_through = true
+compression = true
+max_entries = 100000               # Compile-time cache size
+
+[monitoring]
+[monitoring.metrics]
+enabled = true
+collection_interval_seconds = 30
+retention_days = 30
+export_format = "prometheus"
+export_endpoint = "http://prometheus:9090/api/v1/write"
+
+# Zero-cost performance monitoring
+[monitoring.performance]
+enable_zero_cost_benchmarks = true
+benchmark_interval_seconds = 300   # Run benchmarks every 5 minutes
+track_pattern_improvements = true
+monitor_memory_reduction = true
+alert_on_performance_regression = true
+
+[monitoring.health_checks]
+enabled = true
+check_interval_seconds = 30
+timeout_seconds = 10
+endpoints = [
+    "/health",
+    "/metrics",
+    "/ready",
+    "/zero-cost-status"            # Zero-cost specific health check
+]
+
+[monitoring.logging]
+level = "info"
+format = "json"
+output = "file"
+file_path = "/var/log/nestgate/nestgate.log"
+max_file_size = "100MB"
+max_files = 10
+compress_rotated = true
+
+[performance]
+# Zero-cost architecture performance optimizations
+[performance.zero_cost]
+enabled = true
+buffer_reuse = true
+string_interning = true
+memory_pool_size = "1GB"           # Larger pool for zero-cost operations
+large_object_threshold = 65536
+enable_compile_time_optimization = true
+use_const_generics = true
+eliminate_virtual_dispatch = true
+
+[performance.async]
+max_blocking_threads = 64          # More threads due to efficiency gains
+event_interval_ms = 1
+max_io_events_per_tick = 2048      # Increased capacity
+thread_keep_alive_ms = 10000
+use_native_async = true            # Enable native async (no #[async_trait])
+
+[performance.memory]
+# Memory optimization settings for zero-cost patterns
+gc_enabled = false
+memory_limit = "16GB"              # Can handle more with zero-cost efficiency
+enable_huge_pages = true
+memory_mapped_threshold = 4096
+zero_copy_threshold = 1024
+arc_elimination_enabled = true     # Eliminate Arc<dyn> patterns
+direct_composition_enabled = true
+
+[performance.cpu]
+cpu_affinity_enabled = true
+numa_aware = true
+prefetch_enabled = true
+branch_prediction_hints = true
+enable_monomorphization = true     # Leverage Rust's zero-cost abstractions
+
+# Zero-cost pattern-specific configurations
+[zero_cost_patterns]
+[zero_cost_patterns.connection_factory]
+factory_type = "tcp"
+max_connections_per_factory = 100
+connection_validation_enabled = true
+enable_connection_pooling = true
+pool_size = 200
+
+[zero_cost_patterns.storage_backend]
+backend_implementation = "file"
+enable_direct_io = true
+buffer_size = 131072
+max_concurrent_operations = 1000
+enable_zero_copy_reads = true
+
+[zero_cost_patterns.security_provider]
+provider_implementation = "jwt"
+secret_size = 32
+enable_token_caching = true
+cache_size = 1000
+token_validation_timeout_ms = 100
+
+[zero_cost_patterns.universal_service]
+use_native_async = true            # No #[async_trait] boxing
+enable_compile_time_dispatch = true
+service_registry_size = 100
+
+[zero_cost_patterns.cow_manager]
+max_operations = 2000
+enable_snapshot_tracking = true
+use_compile_time_arrays = true
+operation_history_size = 10000
+
+[zfs]
+[zfs.pools]
+default_pool = "tank"
+compression = "lz4"
+deduplication = true
+encryption = "aes-256-gcm"
+recordsize = "128K"
+atime = false
+
+[zfs.datasets]
+default_quota = "100GB"
+default_reservation = "10GB"
+compression_ratio_target = 2.0
+snapshot_retention_days = 30
+
+[zfs.performance]
+# ZFS optimized for zero-cost operations
+arc_max = "8GB"                    # Larger ARC due to efficiency gains
+arc_min = "2GB"
+l2arc_enabled = true
+zil_enabled = true
+async_write = true
+sync_disabled = false
+zero_cost_integration = true       # Enable ZFS zero-cost integration
+
+[observability]
+[observability.tracing]
+enabled = true
+jaeger_endpoint = "http://jaeger:14268/api/traces"
+sample_rate = 0.1
+max_spans_per_trace = 1000
+
+[observability.profiling]
+enabled = true
+cpu_profiling = true
+memory_profiling = true
+profile_duration_seconds = 60
+zero_cost_pattern_profiling = true  # Profile zero-cost pattern performance
+
+# Zero-cost specific observability
+[observability.zero_cost_metrics]
+track_arc_elimination = true
+track_async_trait_elimination = true
+track_virtual_dispatch_elimination = true
+track_memory_overhead_reduction = true
+track_throughput_improvements = true
+track_latency_improvements = true
+
+# Deployment and rollout configuration
+[deployment]
+[deployment.rollout]
+strategy = "gradual"               # Gradual rollout of zero-cost patterns
+rollout_percentage_per_hour = 10   # 10% per hour rollout
+enable_canary_deployment = true
+canary_percentage = 5
+rollback_on_error_rate = 0.05      # Rollback if error rate > 5%
+
+[deployment.validation]
+enable_performance_validation = true
+validation_duration_minutes = 30
+required_improvement_percentage = 20  # Require 20% improvement minimum
+enable_memory_validation = true
+enable_throughput_validation = true
+
+# Feature flags for zero-cost patterns
+[feature_flags]
+zero_cost_connection_pool = true
+zero_cost_storage_backend = true
+zero_cost_security_provider = true
+zero_cost_cow_manager = true
+zero_cost_universal_service = true
+native_async_traits = true
+arc_elimination = true
+virtual_dispatch_elimination = true 

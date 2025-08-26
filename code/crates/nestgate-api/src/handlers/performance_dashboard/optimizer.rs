@@ -1,6 +1,5 @@
-//! Optimization Engine Interface Module
-//!
-//! This module provides optimization recommendations for the storage system.
+//
+// This module provides optimization recommendations for the storage system.
 
 use crate::handlers::performance_dashboard::types::*;
 use nestgate_core::Result;

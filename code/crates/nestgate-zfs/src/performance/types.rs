@@ -1,10 +1,19 @@
-//! Performance monitoring types and data structures
 
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::sync::{mpsc, RwLock};
+
+use crate::snapshot::SnapshotPolicy;
+use crate::tier::TierStats;
+
+// Type aliases to reduce complexity
+pub type TierMetricsMap = Arc<RwLock<HashMap<StorageTier, TierPerformanceData>>>;
+pub type AlertConditionsVec = Arc<RwLock<Vec<AlertCondition>>>;
+pub type ActiveAlertsVec = Arc<RwLock<Vec<ActiveAlert>>>;
+pub type SnapshotPolicyMap = Arc<RwLock<HashMap<String, SnapshotPolicy>>>;
+pub type TierStatsMap = Arc<RwLock<HashMap<StorageTier, TierStats>>>;
 
 use crate::types::StorageTier;
 use crate::{ZfsDatasetManager, ZfsPoolManager};
@@ -86,11 +95,11 @@ pub struct ZfsPerformanceMonitor {
     /// Historical metrics
     pub metrics_history: Arc<RwLock<VecDeque<PerformanceSnapshot>>>,
     /// Tier-specific metrics
-    pub tier_metrics: Arc<RwLock<HashMap<StorageTier, TierPerformanceData>>>,
+    pub tier_metrics: TierMetricsMap,
     /// Alert conditions
-    pub alert_conditions: Arc<RwLock<Vec<AlertCondition>>>,
+    pub alert_conditions: AlertConditionsVec,
     /// Active alerts
-    pub active_alerts: Arc<RwLock<Vec<ActiveAlert>>>,
+    pub active_alerts: ActiveAlertsVec,
 
     /// Background tasks
     pub collection_task: Option<tokio::task::JoinHandle<()>>,
@@ -431,11 +440,36 @@ pub(crate) struct PoolProperties {
     pub dedup_ratio: f64,
 }
 
-/// System memory information
-#[derive(Debug)]
+#[allow(dead_code)] // Development/testing structure - intentionally unused
 pub(crate) struct LocalMemoryInfo {
-    pub available_mb: u64,
-    pub used_mb: u64,
+    available_mb: u64,
+    used_mb: u64,
+}
+
+#[allow(dead_code)] // Performance analysis methods
+impl LocalMemoryInfo {
+    /// Create new memory info
+    #[allow(dead_code)] // Development/testing method
+    pub fn new(available_mb: u64, used_mb: u64) -> Self {
+        Self {
+            available_mb,
+            used_mb,
+        }
+    }
+
+    /// Get total memory
+    pub fn total_mb(&self) -> u64 {
+        self.available_mb + self.used_mb
+    }
+
+    /// Get memory usage percentage
+    pub fn usage_percentage(&self) -> f64 {
+        if self.total_mb() == 0 {
+            0.0
+        } else {
+            (self.used_mb as f64 / self.total_mb() as f64) * 100.0
+        }
+    }
 }
 
 /// Pool I/O statistics

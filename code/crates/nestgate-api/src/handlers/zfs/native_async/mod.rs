@@ -1,4 +1,3 @@
-/// Native Async ZFS Module - Split for File Size Compliance
 /// This module was split from native_async_zfs.rs to maintain the 2000-line limit
 /// while preserving all functionality and maintaining backward compatibility
 

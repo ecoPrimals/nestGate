@@ -2,9 +2,9 @@
 ///
 /// Real integration tests for ZFS functionality
 use nestgate_core::{NestGateError, Result};
-use nestgate_core::unified_config_consolidation::UnifiedZfsConfig;
+use nestgate_zfs::config::ZfsConfig;
 use nestgate_zfs::ZfsManager;
-use std::sync::Arc;
+
 use tokio::time::Duration;
 
 #[tokio::test]
@@ -12,7 +12,7 @@ async fn test_zfs_integration() -> Result<()> {
     println!("🚀 Starting ZFS integration test");
 
     // Create ZFS manager
-    let config = UnifiedZfsConfig::default();
+    let config = ZfsConfig::default();
     let manager = match ZfsManager::new(config).await {
         Ok(m) => m,
         Err(e) if e.to_string().contains("ZFS modules cannot be auto-loaded") => {
@@ -38,7 +38,7 @@ async fn test_zfs_integration() -> Result<()> {
             println!("⏭️ Skipping service status check - ZFS not available");
             return Ok(());
         }
-        Err(e) => return Err(e.into()),
+        Err(e) => return Err(e),
     };
     println!("📊 Service status: {:?}", service_status.overall_health);
 
@@ -50,7 +50,7 @@ async fn test_zfs_integration() -> Result<()> {
 async fn test_zfs_pool_operations() -> Result<()> {
     println!("🔄 Testing ZFS pool operations");
 
-    let config = UnifiedZfsConfig::default();
+    let config = ZfsConfig::default();
     let manager = ZfsManager::new(config).await?;
 
     // Test pool manager operations
@@ -67,14 +67,18 @@ async fn test_zfs_pool_operations() -> Result<()> {
 async fn test_zfs_dataset_operations() -> Result<()> {
     println!("🗂️ Testing ZFS dataset operations");
 
-    let config = UnifiedZfsConfig::default();
+    let config = ZfsConfig::default();
     let manager = ZfsManager::new(config).await?;
 
     // Test dataset creation
     let dataset_name = "nestpool/test_dataset";
     let result = manager
         .dataset_manager
-        .create_dataset(dataset_name, "nestpool", nestgate_core::StorageTier::Warm)
+        .create_dataset(
+            dataset_name,
+            "nestpool",
+            nestgate_core::types::StorageTier::Warm,
+        )
         .await;
 
     match result {
@@ -89,7 +93,7 @@ async fn test_zfs_dataset_operations() -> Result<()> {
 async fn test_zfs_performance_monitoring() -> Result<()> {
     println!("📈 Testing ZFS performance monitoring");
 
-    let config = UnifiedZfsConfig::default();
+    let config = ZfsConfig::default();
     let manager = ZfsManager::new(config).await?;
 
     // Test performance metrics
@@ -111,7 +115,7 @@ async fn test_zfs_performance_monitoring() -> Result<()> {
 async fn test_zfs_concurrent_operations() -> Result<()> {
     println!("🔄 Testing concurrent ZFS operations");
 
-    let config = UnifiedZfsConfig::default();
+    let config = ZfsConfig::default();
     let manager = Arc::new(ZfsManager::new(config).await?);
 
     // Test concurrent operations
@@ -151,7 +155,7 @@ async fn test_zfs_error_handling() -> Result<()> {
     println!("❌ Testing ZFS error handling");
 
     let config = ZfsConfig {
-        api_endpoint: "http://nonexistent-endpoint:8080".to_string(),
+        // API endpoint configuration removed - using network config instead
         ..Default::default()
     };
 
@@ -178,7 +182,7 @@ async fn test_zfs_error_handling() -> Result<()> {
             println!("⏭️ Skipping service status check - ZFS not available");
             return Ok(());
         }
-        Err(e) => return Err(e.into()),
+        Err(e) => return Err(e),
     };
 
     println!("✅ Error handling test completed");
@@ -189,7 +193,7 @@ async fn test_zfs_error_handling() -> Result<()> {
 async fn test_zfs_timeout_handling() -> Result<()> {
     println!("⏱️ Testing ZFS timeout handling");
 
-    let config = UnifiedZfsConfig::default();
+    let config = ZfsConfig::default();
     let manager = ZfsManager::new(config).await?;
 
     // Test with timeout

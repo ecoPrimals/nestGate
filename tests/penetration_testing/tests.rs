@@ -1,17 +1,9 @@
 /// Penetration Testing Tests
-use crate::PenetrationTestConfig;
+use crate::common::config::CanonicalTestConfig;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_penetration_config_defaults() {
-        let config = PenetrationTestConfig::default();
-        assert!(config.attack_intensity > 0);
-        assert!(config.concurrent_attacks > 0);
-        assert!(config.rate_limit_bypass_attempts > 0);
-    }
-
-    // Additional comprehensive tests would be implemented here
+#[tokio::test]
+async fn test_penetration_basic() {
+    let config = CanonicalTestConfig::penetration_tests();
+    // Test implementation continues with canonical config
+    assert!(config.test_domain.integration.penetration_testing.enabled);
 }

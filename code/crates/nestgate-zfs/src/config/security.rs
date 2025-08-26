@@ -1,6 +1,5 @@
-//! Security Configuration Module
-//!
-//! Configuration for ZFS security, encryption metadata tracking, and access control.
+//
+// Configuration for ZFS security, encryption metadata tracking, and access control.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -97,7 +96,7 @@ impl AccessControlConfig {
         let mut group_rules = HashMap::new();
         group_rules.insert(
             "zfs-operators".to_string(),
-            vec!["read", "create", "snapshot"]
+            ["read", "create", "snapshot"]
                 .iter()
                 .map(|s| s.to_string())
                 .collect(),

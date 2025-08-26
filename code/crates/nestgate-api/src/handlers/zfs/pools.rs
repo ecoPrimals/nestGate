@@ -1,7 +1,6 @@
-//! ZFS Pool Management API Endpoints
-//! 
-//! This module provides REST API endpoints for ZFS pool operations with
-//! AI-First response formatting that enables seamless integration with AI agents.
+// 
+// This module provides REST API endpoints for ZFS pool operations with
+// AI-First response formatting that enables seamless integration with AI agents.
 
 use crate::ai_first_wrapper::to_ai_first_response;
 use axum::{
