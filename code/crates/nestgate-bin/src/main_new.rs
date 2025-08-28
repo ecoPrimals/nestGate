@@ -7,11 +7,13 @@
 // - Production-ready performance and reliability
 
 use nestgate_bin::{
+use nestgate_core::constants::ConstantsMigrationHelper;
     cli::{parse_args, setup_logging, print_banner, Commands, ServiceAction, StorageAction, ConfigAction},
     commands::zfs::ZfsCommandHandler,
     error::Result,
 };
 use tracing::{info, error, debug};
+use nestgate_core::constants::ConstantsMigrationHelper;
 
 mod error;
 
@@ -244,7 +246,7 @@ async fn handle_config_command(action: ConfigAction) -> Result<()> {
             println!("storage.default_backend: filesystem");
             println!("storage.compression: true");
             println!("storage.checksumming: true");
-            println!("service.port: 8080");
+            println!("service.port: nestgate_core::constants::canonical::network::DEFAULT_API_PORT");
             println!("service.bind: 0.0.0.0");
             println!("logging.level: info");
         }
@@ -259,7 +261,7 @@ async fn handle_config_command(action: ConfigAction) -> Result<()> {
             match key.as_str() {
                 "storage.default_backend" => println!("filesystem"),
                 "storage.compression" => println!("true"),
-                "service.port" => println!("8080"),
+                "service.port" => println!(ConstantsMigrationHelper::api_port_string()),
                 _ => println!("Configuration key not found: {}", key),
             }
         }
