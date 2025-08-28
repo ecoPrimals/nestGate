@@ -3,7 +3,8 @@
 //! Unified configuration management for all NestGate components.
 //! This module provides the canonical configuration architecture.
 
-use crate::{NestGateError, Result};
+// PEDANTIC: Removed unused imports
+// use crate::{NestGateError, Result}; // REMOVED - unused imports
 
 // ==================== SECTION ====================
 

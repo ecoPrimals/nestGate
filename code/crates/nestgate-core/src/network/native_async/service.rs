@@ -79,7 +79,7 @@ impl crate::traits::canonical_unified_traits::CanonicalService for NativeAsyncNe
         crate::unified_enums::service_types::UnifiedServiceType::Network
     }
 
-    fn initialize(&self, config: Self::Config) -> impl std::future::Future<Output = std::result::Result<(), Self::Error>> + Send {
+    fn initialize(&self, _config: Self::Config) -> impl std::future::Future<Output = std::result::Result<(), Self::Error>> + Send { // PEDANTIC: Fixed unused parameter
         async move {
             // Initialize with config
             Ok(())

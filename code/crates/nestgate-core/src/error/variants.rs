@@ -10,7 +10,7 @@ use thiserror::Error;
 use super::context::ErrorContext;
 use super::data::{
     StorageErrorData, NetworkErrorData, SecurityErrorData, McpErrorData,
-    ApiErrorData, AutomationErrorData, UniversalZfsErrorData, MiddlewareErrorData,
+    AutomationErrorData, UniversalZfsErrorData, MiddlewareErrorData,
     FsMonitorErrorData, InstallerErrorData, PrimalErrorData
 };
 
