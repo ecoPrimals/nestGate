@@ -139,7 +139,7 @@ pub fn io_error_to_storage_error(error: std::io::Error, operation: &str, path: &
 /// **EXAMPLE**: How to migrate a legacy storage implementation
 /// 
 /// This shows the pattern for migrating from old trait definitions to CanonicalStorage
-#[cfg(feature = "migration_examples")]
+#[cfg(test)] // PEDANTIC: Fixed cfg condition from migration_examples
 pub mod migration_example {
     use super::*;
     use crate::traits::{CanonicalService, CanonicalStorage};

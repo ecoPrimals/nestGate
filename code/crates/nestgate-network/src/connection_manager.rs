@@ -515,3 +515,6 @@ impl SongbirdConnectionManager {
         Ok(response.status().is_success())
     }
 } */
+
+#[allow(deprecated)] // PEDANTIC: Allow deprecated ServiceRegistration during migration
+//! **CONNECTION MANAGER**

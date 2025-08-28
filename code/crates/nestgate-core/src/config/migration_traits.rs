@@ -38,7 +38,7 @@ pub struct ConfigMigrationHelper;
 
 impl ConfigMigrationHelper {
     /// Validate that migration preserves all functionality
-    pub fn validate_migration<T, C>(original: &T, canonical: &C) -> Result<()> 
+    pub fn validate_migration<T, C>(_original: &T, _canonical: &C) -> Result<()>  // PEDANTIC: Fixed unused parameters
     where
         T: std::fmt::Debug,
         C: std::fmt::Debug,
@@ -49,7 +49,7 @@ impl ConfigMigrationHelper {
     }
     
     /// Batch migrate configs in a directory
-    pub fn batch_migrate_directory(dir_path: &str) -> Result<usize> {
+    pub fn batch_migrate_directory(_dir_path: &str) -> Result<usize> { // PEDANTIC: Fixed unused parameter
         // TODO: Implement directory scanning and batch migration
         Ok(0)
     }
