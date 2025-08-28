@@ -369,13 +369,11 @@ impl CanonicalStorageBackend for FilesystemBackend {
         async move {
             match tokio::fs::read(&full_path).await {
                 Ok(data) => Ok(data),
-                Err(e) => Err(NestGateError::Storage {
-                    message: format!("Read failed for path '{path}': {e}"),
+                Err(e) => Err(crate::error::StorageError::FileReadError { // PEDANTIC: Use correct StorageError variant
+                    path: path.to_string(),
                     operation: "read_file".to_string(),
-                    resource: Some(path.to_string()),
-                    retryable: true,
-                    storage_data: None,
-                    context: None,
+                    error: e.to_string(),
+                    permissions: None,
                 }),
             }
         }
@@ -390,27 +388,23 @@ impl CanonicalStorageBackend for FilesystemBackend {
             // Ensure parent directory exists
             if let Some(parent) = full_path.parent() {
                 if let Err(e) = tokio::fs::create_dir_all(parent).await {
-                    return Err(NestGateError::Storage {
-                        message: format!("Write failed for path '{path}': Failed to create parent directory: {e}"),
-                        operation: "create_directory".to_string(),
-                        resource: Some(path.to_string()),
-                        retryable: true,
-                        storage_data: None,
-                        context: None,
-                    });
+                                         return Err(crate::error::StorageError::FileReadError { // PEDANTIC: Use correct StorageError variant
+                         path: path.to_string(),
+                         operation: "create_directory".to_string(),
+                         error: format!("Failed to create parent directory: {e}"),
+                         permissions: None,
+                     });
                 }
             }
 
             match tokio::fs::write(&full_path, &data).await {
                 Ok(()) => Ok(()),
-                Err(e) => Err(NestGateError::Storage {
-                    message: format!("Write failed for path '{path}': {e}"),
-                    operation: "write_file".to_string(),
-                    resource: Some(path.to_string()),
-                    retryable: true,
-                    storage_data: None,
-                    context: None,
-                }),
+                                 Err(e) => Err(crate::error::StorageError::FileReadError { // PEDANTIC: Use correct StorageError variant
+                     path: path.to_string(),
+                     operation: "write_file".to_string(),
+                     error: e.to_string(),
+                     permissions: None,
+                 }),
             }
         }
     }
@@ -423,14 +417,12 @@ impl CanonicalStorageBackend for FilesystemBackend {
             let metadata = match tokio::fs::metadata(&full_path).await {
                 Ok(metadata) => metadata,
                 Err(e) => {
-                    return Err(NestGateError::Storage {
-                        message: format!("Delete failed for path '{path}': Failed to get metadata: {e}"),
-                        operation: "get_metadata".to_string(),
-                        resource: Some(path.to_string()),
-                        retryable: true,
-                        storage_data: None,
-                        context: None,
-                    })
+                                         return Err(crate::error::StorageError::FileReadError { // PEDANTIC: Use correct StorageError variant
+                         path: path.to_string(),
+                         operation: "get_metadata".to_string(),
+                         error: format!("Failed to get metadata: {e}"),
+                         permissions: None,
+                     })
                 }
             };
 
@@ -442,14 +434,12 @@ impl CanonicalStorageBackend for FilesystemBackend {
 
             match result {
                 Ok(()) => Ok(()),
-                Err(e) => Err(NestGateError::Storage {
-                    message: format!("Delete failed for path '{path}': {e}"),
-                    operation: "delete_file".to_string(),
-                    resource: Some(path.to_string()),
-                    retryable: true,
-                    storage_data: None,
-                    context: None,
-                }),
+                                 Err(e) => Err(crate::error::StorageError::FileReadError { // PEDANTIC: Use correct StorageError variant
+                     path: path.to_string(),
+                     operation: "delete_file".to_string(),
+                     error: e.to_string(),
+                     permissions: None,
+                 }),
             }
         }
     }
@@ -462,13 +452,10 @@ impl CanonicalStorageBackend for FilesystemBackend {
             let mut entries = match tokio::fs::read_dir(&full_path).await {
                 Ok(entries) => entries,
                 Err(e) => {
-                    return Err(NestGateError::Storage {
+                    return Err(crate::error::StorageError::IoError { // PEDANTIC: Use StorageError instead of NestGateError
                         message: format!("List failed for path '{path}': {e}"),
+                        path: path.to_string(),
                         operation: "list_directory".to_string(),
-                        resource: Some(path.to_string()),
-                        retryable: true,
-                        storage_data: None,
-                        context: None,
                     })
                 }
             };
@@ -478,13 +465,10 @@ impl CanonicalStorageBackend for FilesystemBackend {
                 entries
                     .next_entry()
                     .await
-                    .map_err(|e| NestGateError::Storage {
+                    .map_err(|e| crate::error::StorageError::IoError { // PEDANTIC: Use StorageError instead of NestGateError
                         message: format!("List failed for path '{path}': {e}"),
+                        path: path.to_string(),
                         operation: "read_directory_entry".to_string(),
-                        resource: Some(path.to_string()),
-                        retryable: true,
-                        storage_data: None,
-                        context: None,
                     })?
             {
                 if let Some(name) = entry.file_name().to_str() {
@@ -515,13 +499,10 @@ impl CanonicalStorageBackend for FilesystemBackend {
                         permissions: None, // Could be enhanced with actual permissions
                     })
                 }
-                Err(e) => Err(NestGateError::Storage {
+                Err(e) => Err(crate::error::StorageError::IoError { // PEDANTIC: Use StorageError instead of NestGateError
                     message: format!("Metadata failed for path '{path}': {e}"),
+                    path: path.to_string(),
                     operation: "get_metadata".to_string(),
-                    resource: Some(path.to_string()),
-                    retryable: true,
-                    storage_data: None,
-                    context: None,
                 }),
             }
         }
@@ -589,14 +570,11 @@ impl CanonicalStorageBackend for MemoryBackend {
             let storage = data.read().await;
             match storage.get(&path) {
                 Some(content) => Ok(content.clone()),
-                None => Err(NestGateError::Storage {
-                    message: "Resource not found".to_string(),
-                    operation: "read".to_string(),
-                    resource: Some(path.clone()),
-                    retryable: false,
-                    storage_data: None,
-                    context: None,
-                }),
+                                None => Err(crate::error::StorageError::FileNotFound { // PEDANTIC: Use correct StorageError variant
+                     path: path.clone(),
+                     operation: "read".to_string(),
+                     permissions: None,
+                 }),
             }
         }
     }
@@ -621,13 +599,10 @@ impl CanonicalStorageBackend for MemoryBackend {
             let mut storage = storage.write().await;
             match storage.remove(&path) {
                 Some(_) => Ok(()),
-                None => Err(NestGateError::Storage {
-                    message: format!("File not found: {path}"),
-                    operation: "read".to_string(),
-                    resource: Some(path.clone()),
-                    retryable: false,
-                    storage_data: None,
-                    context: None,
+                None => Err(crate::error::StorageError::FileNotFound { // PEDANTIC: Use correct StorageError variant
+                    path: path.clone(),
+                    operation: "delete".to_string(),
+                    permissions: None,
                 }),
             }
         }
@@ -673,13 +648,10 @@ impl CanonicalStorageBackend for MemoryBackend {
                     is_directory: false,
                     permissions: None,
                 }),
-                None => Err(NestGateError::Storage {
-                    message: format!("File not found: {path}"),
-                    operation: "read".to_string(),
-                    resource: Some(path.clone()),
-                    retryable: false,
-                    storage_data: None,
-                    context: None,
+                None => Err(crate::error::StorageError::FileNotFound { // PEDANTIC: Use correct StorageError variant
+                    path: path.clone(),
+                    operation: "metadata".to_string(),
+                    permissions: None,
                 }),
             }
         }
@@ -732,16 +704,18 @@ mod tests {
         let data = b"test data";
         backend.write(test_path, data).await.map_err(|e| {
             tracing::error!("Storage write failed: {:?}", e);
-            NestGateError::Storage {
+            crate::error::StorageError::IoError { // PEDANTIC: Use StorageError instead of NestGateError
+                message: format!("Write operation failed: {:?}", e),
+                path: test_path.to_string(),
                 operation: "write".to_string(),
-                details: format!("Write operation failed: {:?}", e),
             }
         })?;
         let read_data = backend.read(test_path).await.map_err(|e| {
             tracing::error!("Storage read failed: {:?}", e);
-            NestGateError::Storage {
+            crate::error::StorageError::IoError { // PEDANTIC: Use StorageError instead of NestGateError
+                message: format!("Read operation failed: {:?}", e),
+                path: test_path.to_string(),
                 operation: "read".to_string(),
-                details: format!("Read operation failed: {:?}", e),
             }
         })?;
         assert_eq!(read_data, data);
@@ -778,16 +752,18 @@ mod tests {
         let data = b"test data";
         backend.write(test_path, data).await.map_err(|e| {
             tracing::error!("Storage write failed: {:?}", e);
-            NestGateError::Storage {
+            crate::error::StorageError::IoError { // PEDANTIC: Use StorageError instead of NestGateError
+                message: format!("Write operation failed: {:?}", e),
+                path: test_path.to_string(),
                 operation: "write".to_string(),
-                details: format!("Write operation failed: {:?}", e),
             }
         })?;
         let read_data = backend.read(test_path).await.map_err(|e| {
             tracing::error!("Storage read failed: {:?}", e);
-            NestGateError::Storage {
+            crate::error::StorageError::IoError { // PEDANTIC: Use StorageError instead of NestGateError
+                message: format!("Read operation failed: {:?}", e),
+                path: test_path.to_string(),
                 operation: "read".to_string(),
-                details: format!("Read operation failed: {:?}", e),
             }
         })?;
         assert_eq!(read_data, data);

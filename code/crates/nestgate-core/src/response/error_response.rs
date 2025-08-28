@@ -110,14 +110,16 @@ impl UnifiedErrorResponse {
 
 impl IntoResponse for UnifiedErrorResponse {
     fn into_response(self) -> axum::response::Response {
-        let status = match self.context.error_code.as_str() {
-            "NOT_FOUND" => axum::http::StatusCode::NOT_FOUND,
-            "UNAUTHORIZED" => axum::http::StatusCode::UNAUTHORIZED,
-            "FORBIDDEN" => axum::http::StatusCode::FORBIDDEN,
-            "INVALID_INPUT" => axum::http::StatusCode::BAD_REQUEST,
-            "TIMEOUT" => axum::http::StatusCode::REQUEST_TIMEOUT,
-            "SERVICE_UNAVAILABLE" => axum::http::StatusCode::SERVICE_UNAVAILABLE,
-            _ => axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+        let status = match self.context.error_id.as_str() { // PEDANTIC: Fixed from error_code to error_id
+            "VALIDATION_ERROR" => 400,
+            "AUTHENTICATION_ERROR" => 401,
+            "PERMISSION_DENIED" => 403,
+            "NOT_FOUND" => 404,
+            "TIMEOUT" => 408,
+            "RATE_LIMIT" => 429,
+            "INTERNAL_ERROR" => 500,
+            "SERVICE_UNAVAILABLE" => 503,
+            _ => 500,
         };
 
         (status, Json(self.serialize())).into_response()

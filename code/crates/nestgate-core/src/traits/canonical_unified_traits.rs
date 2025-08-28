@@ -73,8 +73,8 @@ pub trait CanonicalService: Send + Sync + 'static {
     /// Health check method - PEDANTIC ADDITION
     fn health_check(&self) -> impl Future<Output = Result<Self::Health, Self::Error>> + Send {
         async move {
-            // Default implementation returns healthy status
-            Ok(Self::Health::default())
+            // PEDANTIC: Use is_healthy method instead of default()
+            self.is_healthy().await
         }
     }
 
@@ -243,22 +243,24 @@ pub trait CanonicalProviderFactory<T, P: CanonicalProvider<T>> {
 // ==================== SUPPORTING TYPES ====================
 
 /// Service capabilities
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)] // PEDANTIC: Added Default derive
 pub struct ServiceCapabilities {
-    pub features: Vec<String>,
-    pub version: String,
+    pub can_scale: bool,
+    pub can_migrate: bool,
+    pub can_backup: bool,
+    pub supported_protocols: Vec<String>,
 }
 
 /// Provider health status
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)] // PEDANTIC: Added Default derive  
 pub struct ProviderHealth {
-    pub status: HealthStatus,
+    pub is_healthy: bool,
     pub last_check: SystemTime,
-    pub uptime: Duration,
+    pub health_details: HashMap<String, String>,
 }
 
 /// Provider capabilities
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)] // PEDANTIC: Added Serialize/Deserialize derives
 pub struct ProviderCapabilities {
     pub supported_types: Vec<UnifiedServiceType>,
     pub max_instances: Option<u32>,
@@ -308,8 +310,10 @@ pub struct CronSchedule {
 }
 
 /// Schedule ID
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub struct ScheduleId(pub u64);
+#[derive(Debug, Clone, Serialize, Deserialize)] // PEDANTIC: Added Serialize/Deserialize derives
+pub struct ScheduleId {
+    pub id: String,
+}
 
 /// Schedule info
 #[derive(Debug, Clone, Serialize, Deserialize)]
