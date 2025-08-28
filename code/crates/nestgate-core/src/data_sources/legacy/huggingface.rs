@@ -4,7 +4,6 @@ use crate::error::{NetworkError, NetworkErrorData};
 /// Provides access to HuggingFace Model Hub for AI model discovery and download.
 use crate::temporal_storage::*;
 use crate::{NestGateError, Result};
-use async_trait::async_trait;
 use reqwest::Client;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -118,7 +117,7 @@ impl HuggingFaceModelSource {
     }
 
     /// Download model using HuggingFace Hub API
-    async fn _download_model(&self, model_id: &str) -> Result<Vec<u8>> {
+    fn _download_model(&self, model_id: &str) -> impl std::future::Future<Output = Result<Vec<u8>> + Send;
         // Removed unused tracing import
 
         info!("📥 Downloading HuggingFace model: {}", model_id);
@@ -160,7 +159,7 @@ impl HuggingFaceModelSource {
     }
 
     /// List model files using HuggingFace Hub API
-    async fn _list_model_files(&self, model_id: &str) -> Result<Vec<ModelFile>> {
+    fn _list_model_files(&self, model_id: &str) -> impl std::future::Future<Output = Result<Vec<ModelFile>> + Send;
         // Removed unused tracing import
 
         info!("📄 Listing HuggingFace model files for: {}", model_id);
@@ -210,7 +209,7 @@ impl HuggingFaceModelSource {
     }
 
     /// Download model file using HuggingFace Hub API
-    async fn _download_model_file(&self, model_id: &str, filename: &str) -> Result<Vec<u8>> {
+    fn _download_model_file(&self, model_id: &str, filename: &str) -> impl std::future::Future<Output = Result<Vec<u8>> + Send;
         // Removed unused tracing import
 
         info!(
@@ -291,7 +290,6 @@ impl HuggingFaceModelSource {
     }
 }
 
-#[async_trait]
 impl UniversalDataSource for HuggingFaceModelSource {
     async fn connect(&self) -> Result<ConnectionHandle> {
         let client = reqwest::Client::new();
@@ -341,7 +339,7 @@ impl UniversalDataSource for HuggingFaceModelSource {
             .json::<serde_json::Value>()
             .await
             .map_err(|e| NestGateError::Validation {
-                field: "parsing".to_string(),
+                field: Some("parsing".to_string()),
                 message: e.to_string(),
                 current_value: None,
                 expected: None,
@@ -401,7 +399,7 @@ impl UniversalDataSource for HuggingFaceModelSource {
             .json::<serde_json::Value>()
             .await
             .map_err(|e| NestGateError::Validation {
-                field: "parsing".to_string(),
+                field: Some("parsing".to_string()),
                 message: e.to_string(),
                 current_value: None,
                 expected: None,
@@ -445,7 +443,7 @@ impl UniversalDataSource for HuggingFaceModelSource {
             .json::<serde_json::Value>()
             .await
             .map_err(|e| NestGateError::Validation {
-                field: "parsing".to_string(),
+                field: Some("parsing".to_string()),
                 message: e.to_string(),
                 current_value: None,
                 expected: None,

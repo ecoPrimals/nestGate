@@ -1,15 +1,13 @@
 // Removed unused error imports
 /// Communication Traits
-use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use futures_util::Stream;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::error::Result;
+use crate::Result;
 
 /// Communication layer trait
-#[async_trait]
 pub trait CommunicationLayer: Send + Sync {
     /// Send a message to a specific service
     async fn send_message(
@@ -19,28 +17,28 @@ pub trait CommunicationLayer: Send + Sync {
     ) -> Result<CommunicationResponse>;
 
     /// Broadcast a message to all services
-    async fn broadcast(&self, message: ServiceMessage) -> Result<Vec<CommunicationResponse>>;
+    fn broadcast(&self, message: ServiceMessage) -> impl std::future::Future<Output = Result<Vec<CommunicationResponse>> + Send;
 
     /// Listen for incoming messages
-    async fn listen(&self) -> impl Stream<Item = (ServiceAddress, ServiceMessage)>;
+    fn listen(&self) -> impl std::future::Future<Output = impl Stream<Item = (ServiceAddress, ServiceMessage)>> + Send;
 
     /// Subscribe to a topic
-    async fn subscribe(&self, topic: &str) -> Result<()>;
+    fn subscribe(&self, topic: &str) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Unsubscribe from a topic
-    async fn unsubscribe(&self, topic: &str) -> Result<()>;
+    fn unsubscribe(&self, topic: &str) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Connect to the communication layer
-    async fn connect(&self) -> Result<()>;
+    fn connect(&self) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Disconnect from the communication layer
-    async fn disconnect(&self) -> Result<()>;
+    fn disconnect(&self) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Check if connected
-    async fn is_connected(&self) -> bool;
+    fn is_connected(&self) -> impl std::future::Future<Output = bool> + Send;
 
     /// Get communication statistics
-    async fn get_stats(&self) -> Result<CommunicationStats>;
+    fn get_stats(&self) -> impl std::future::Future<Output = Result<CommunicationStats>> + Send;
 }
 
 /// Service address for routing messages

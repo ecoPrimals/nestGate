@@ -156,9 +156,13 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
 
         // Sophisticated service selection algorithm based on multiple criteria
         if candidates.is_empty() {
-            return Err(crate::error::NestGateError::ServiceDiscovery {
-                requirements: format!("{requirements:?}"),
+            return Err(crate::error::NestGateError::System {
                 message: "No services found matching requirements".to_string(),
+                operation: "select_service".to_string(),
+                resource: Some(format!("requirements: {requirements:?}")),
+                utilization: None,
+                retryable: true,
+                context: None,
             });
         }
 
@@ -218,16 +222,36 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
         scored_candidates
             .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Return the highest scoring service
+        // Get services count before creating the error
+        let services_count = self.services.read().await.len();
+
         scored_candidates
             .into_iter()
             .next()
             .map(|(service, _score)| service)
             .ok_or_else(|| NestGateError::Internal {
                 message: "No suitable services found matching the requirements".to_string(),
+                component: "service_discovery_registry".to_string(),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: Some("Service discovery returned no candidates".to_string()),
                 is_bug: false,
+                context: Some(crate::error::context::ErrorContext {
+                    error_id: "error".to_string(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                    operation: "service_discovery".to_string(),
+                    component: "service_registry".to_string(),
+                    metadata: {
+                        let mut map = std::collections::HashMap::new();
+                        map.insert("details".to_string(), "Service discovery returned no candidates".to_string());
+                        map.insert("registry_size".to_string(), services_count.to_string());
+                        map
+                    },
+                    timestamp: std::time::SystemTime::now(),
+                    retry_info: None,
+                    recovery_suggestions: vec!["Check service registration".to_string()],
+                    performance_metrics: None,
+                    environment: None,
+                }),
             })
     }
 
@@ -241,9 +265,13 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
             registration.capabilities = capabilities;
             Ok(())
         } else {
-            Err(NestGateError::ServiceDiscovery {
+            Err(NestGateError::System {
                 message: "Service not found".to_string(),
-                requirements: format!("service_id: {service_id}"),
+                operation: "update_capabilities".to_string(),
+                resource: Some(format!("service_id: {service_id}")),
+                utilization: None,
+                retryable: false,
+                context: None,
             })
         }
     }

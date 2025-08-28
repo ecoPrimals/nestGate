@@ -121,7 +121,7 @@ impl ZfsPoolManager {
             .map_err(|e| NestGateError::Internal {
                 message: format!("Failed to execute zpool list: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -130,7 +130,7 @@ impl ZfsPoolManager {
             return Err(NestGateError::Internal {
                 message: format!("zpool list failed: {error_msg}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
         }

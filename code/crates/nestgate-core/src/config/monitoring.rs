@@ -29,7 +29,7 @@ const HTTP_METHOD_POST: &str = "POST";
 const EMPTY_STRING: &str = "";
 
 #[cfg(test)]
-use crate::constants::test::{
+use crate::constants::domain_constants::test::{
     EXAMPLE_SENDER_EMAIL, EXAMPLE_SLACK_WEBHOOK, EXAMPLE_SMTP_SERVER, EXAMPLE_TEST_EMAIL,
     EXAMPLE_WEBHOOK_URL,
 };

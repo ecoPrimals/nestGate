@@ -10,7 +10,6 @@
 /// **REPLACES**: Multiple helper modules across test files
 /// **PROBLEM SOLVED**: Helper function proliferation and duplication
 
-use async_trait::async_trait;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -19,28 +18,30 @@ use uuid::Uuid;
 
 use crate::{Result, NestGateError};
 use crate::traits::{UniversalService, UniversalServiceRequest, UniversalServiceResponse};
-use crate::unified_enums::service_types::{UnifiedServiceType, UnifiedServiceState};
-use crate::unified_types::{UnifiedConfig, UnifiedServiceConfig};
+use crate::unified_enums::{UnifiedServiceType, UnifiedServiceState};
+// **MIGRATED**: Using canonical config system instead of deprecated unified_types
+use crate::config::canonical_master::NestGateCanonicalConfig as NestGateCanonicalConfig;
+// **MIGRATED**: Using local UnifiedServiceConfig definition
+use crate::service_discovery::config::UnifiedServiceConfig;
 
-// ==================== FACTORY TRAIT ====================
+// ==================== SECTION ====================
 
 /// Universal Test Factory trait for creating test objects
-#[async_trait]
 pub trait TestFactory<T> {
     type Config;
     type Error: std::error::Error + Send + Sync + 'static;
     
     /// Create a test instance with default configuration
-    async fn create_default() -> std::result::Result<T, Self::Error>;
+    fn create_default() -> impl std::future::Future<Output = Result<T, Self::Error>> + Send;
     
     /// Create a test instance with custom configuration
-    async fn create_with_config(config: Self::Config) -> std::result::Result<T, Self::Error>;
+    fn create_with_config(config: Self::Config) -> impl std::future::Future<Output = Result<T, Self::Error>> + Send;
     
     /// Create a test instance for specific scenario
-    async fn create_for_scenario(scenario: TestScenario) -> std::result::Result<T, Self::Error>;
+    fn create_for_scenario(scenario: TestScenario) -> impl std::future::Future<Output = Result<T, Self::Error>> + Send;
     
     /// Create multiple test instances
-    async fn create_batch(count: usize) -> std::result::Result<Vec<T>, Self::Error>;
+    fn create_batch(count: usize) -> impl std::future::Future<Output = Result<Vec<T>> + Send;
 }
 
 /// Test scenarios for different testing contexts
@@ -60,7 +61,7 @@ pub enum TestScenario {
     Custom(String),
 }
 
-// ==================== SERVICE FACTORY ====================
+// ==================== SECTION ====================
 
 /// Factory for creating test services
 pub struct ServiceTestFactory;
@@ -111,7 +112,7 @@ impl Default for ServiceBehavior {
     }
 }
 
-// ==================== STORAGE FACTORY ====================
+// ==================== SECTION ====================
 
 /// Factory for creating test storage objects
 pub struct StorageTestFactory;
@@ -163,14 +164,14 @@ impl StorageTestFactory {
     }
 }
 
-// ==================== CONFIGURATION FACTORY ====================
+// ==================== SECTION ====================
 
 /// Factory for creating test configurations
 pub struct ConfigTestFactory;
 
 impl ConfigTestFactory {
     /// Create a test configuration for specific scenario
-    pub fn create_for_scenario(scenario: TestScenario) -> UnifiedConfig {
+    pub fn create_for_scenario(scenario: TestScenario) -> NestGateCanonicalConfig {
         match scenario {
             TestScenario::Unit => Self::create_unit_test_config(),
             TestScenario::Integration => Self::create_integration_test_config(),
@@ -182,8 +183,8 @@ impl ConfigTestFactory {
     }
     
     /// Create configuration optimized for unit tests
-    pub fn create_unit_test_config() -> UnifiedConfig {
-        let mut config = UnifiedConfig::default();
+    pub fn create_unit_test_config() -> NestGateCanonicalConfig {
+        let mut config = NestGateCanonicalConfig::default();
         config.network.port = 0; // Random port
         config.timeouts.connection_timeout = Duration::from_millis(100);
         config.retry.max_attempts = 1;
@@ -191,8 +192,8 @@ impl ConfigTestFactory {
     }
     
     /// Create configuration optimized for integration tests
-    pub fn create_integration_test_config() -> UnifiedConfig {
-        let mut config = UnifiedConfig::default();
+    pub fn create_integration_test_config() -> NestGateCanonicalConfig {
+        let mut config = NestGateCanonicalConfig::default();
         config.network.port = 0; // Random port
         config.timeouts.connection_timeout = Duration::from_millis(500);
         config.retry.max_attempts = 2;
@@ -201,8 +202,8 @@ impl ConfigTestFactory {
     }
     
     /// Create configuration optimized for performance tests
-    pub fn create_performance_test_config() -> UnifiedConfig {
-        let mut config = UnifiedConfig::default();
+    pub fn create_performance_test_config() -> NestGateCanonicalConfig {
+        let mut config = NestGateCanonicalConfig::default();
         config.network.port = 0;
         config.timeouts.connection_timeout = Duration::from_secs(1);
         config.retry.max_attempts = 3;
@@ -212,8 +213,8 @@ impl ConfigTestFactory {
     }
     
     /// Create configuration for chaos testing
-    pub fn create_chaos_test_config() -> UnifiedConfig {
-        let mut config = UnifiedConfig::default();
+    pub fn create_chaos_test_config() -> NestGateCanonicalConfig {
+        let mut config = NestGateCanonicalConfig::default();
         config.network.port = 0;
         config.timeouts.connection_timeout = Duration::from_millis(50); // Aggressive timeouts
         config.retry.max_attempts = 5; // More retries for chaos
@@ -221,8 +222,8 @@ impl ConfigTestFactory {
     }
     
     /// Create configuration simulating production
-    pub fn create_production_sim_config() -> UnifiedConfig {
-        let mut config = UnifiedConfig::default();
+    pub fn create_production_sim_config() -> NestGateCanonicalConfig {
+        let mut config = NestGateCanonicalConfig::default();
         config.network.port = 8080;
         config.timeouts.connection_timeout = Duration::from_secs(30);
         config.retry.max_attempts = 3;
@@ -233,12 +234,12 @@ impl ConfigTestFactory {
     }
     
     /// Create default test configuration
-    pub fn create_default_config() -> UnifiedConfig {
+    pub fn create_default_config() -> NestGateCanonicalConfig {
         Self::create_unit_test_config()
     }
 }
 
-// ==================== DATA FACTORY ====================
+// ==================== SECTION ====================
 
 /// Factory for creating test data
 pub struct TestDataFactory;
@@ -279,7 +280,7 @@ pub trait TestDataGenerator {
     fn generate_for_scenario(scenario: &TestScenario, index: usize) -> Self;
 }
 
-// ==================== MOCK IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 /// Mock service for testing
 pub struct MockTestService {
@@ -298,7 +299,6 @@ impl MockTestService {
     }
 }
 
-#[async_trait]
 impl UniversalService for MockTestService {
     type Config = UnifiedServiceConfig;
     type Health = bool;
@@ -403,7 +403,7 @@ impl TestServiceRegistry {
     }
 }
 
-// ==================== STORAGE MOCK IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 /// Mock memory storage backend
 pub struct MemoryStorageBackend {
@@ -418,7 +418,6 @@ impl MemoryStorageBackend {
     }
 }
 
-#[async_trait]
 impl crate::universal_storage::UniversalStorageBackend for MemoryStorageBackend {
     async fn handle_request(
         &self,
@@ -502,7 +501,6 @@ impl LocalStorageBackend {
     }
 }
 
-#[async_trait]
 impl UnifiedStorageBackend for LocalStorageBackend {
     async fn handle_request(
         &self,
@@ -560,7 +558,6 @@ impl MockStorageBackend {
     }
 }
 
-#[async_trait]
 impl crate::universal_storage::UniversalStorageBackend for MockStorageBackend {
     async fn handle_request(
         &self,
@@ -599,4 +596,3 @@ impl crate::universal_storage::UniversalStorageBackend for MockStorageBackend {
     async fn shutdown(&mut self) -> Result<()> {
         Ok(())
     }
-} 

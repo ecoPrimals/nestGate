@@ -7,6 +7,8 @@ use crate::error::CanonicalResult as Result;
 use clap::Subcommand;
 use std::path::PathBuf;
 
+use nestgate_core::constants::ConstantsMigrationHelper;
+
 #[derive(Debug, Subcommand)]
 pub enum ZfsCommands {
     /// Create a new ZFS dataset
@@ -71,10 +73,10 @@ pub struct ZfsHandler {
 
 impl ZfsHandler {
     pub fn new() -> Self {
-        let api_endpoint = std::env::var("NESTGATE_API_ENDPOINT")
-            .unwrap_or_else(|_| "http://localhost:8080".to_string());
+        let base_url = std::env::var("NESTGATE_API_URL")
+            .unwrap_or_else(|_| ConstantsMigrationHelper::http_api_endpoint());
 
-        Self { api_endpoint }
+        Self { api_endpoint: base_url }
     }
 
     /// Execute ZFS command

@@ -135,7 +135,6 @@ impl ZfsManager {
 
     /// Get real tier utilization from ZFS
     async fn get_real_tier_utilization(&self, tier: &str) -> Result<f64> {
-        use crate::command::ZfsOperations;
 
         let ops = ZfsOperations::new();
         let datasets = ops
@@ -171,7 +170,6 @@ impl ZfsManager {
 
     /// Get total snapshots count
     async fn get_total_snapshots(&self) -> Result<u32> {
-        use crate::command::ZfsOperations;
 
         let ops = ZfsOperations::new();
         let snapshots = ops

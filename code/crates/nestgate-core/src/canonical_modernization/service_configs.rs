@@ -4,10 +4,9 @@ use std::collections::HashMap;
 // like discovery, load balancing, routing, and inter-service communication.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::Duration;
 
-// ==================== SERVICE CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 /// **CANONICAL SERVICE CONFIGURATIONS**
 ///
@@ -31,7 +30,7 @@ pub struct CanonicalServiceConfigs {
     pub retry: CanonicalRetryConfig,
 }
 
-// ==================== SERVICE-SPECIFIC CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CanonicalDiscoveryConfig {
@@ -183,7 +182,7 @@ pub struct CanonicalRetryConfig {
     pub retry_on_connection_errors: bool,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for BackendConfig {
     fn default() -> Self {

@@ -8,7 +8,7 @@ use std::collections::HashMap;
 // Removed unused import: use std::fmt;
 use std::time::{Duration, SystemTime};
 
-// ==================== AUTOMATION ERROR DATA ====================
+// ==================== SECTION ====================
 
 /// Automation system error data
 /// Consolidates errors from nestgate-automation crate
@@ -82,7 +82,7 @@ pub struct CacheContext {
     pub hit_rate: Option<f64>,
 }
 
-// ==================== MIDDLEWARE ERROR DATA ====================
+// ==================== SECTION ====================
 
 /// Middleware system error data
 /// Consolidates errors from nestgate-middleware crate
@@ -158,7 +158,7 @@ pub struct HandlerContext {
     pub previous_handlers: Vec<String>,
 }
 
-// ==================== FILE SYSTEM MONITOR ERROR DATA ====================
+// ==================== SECTION ====================
 
 /// File system monitor error data
 /// Consolidates errors from nestgate-fsmonitor crate
@@ -214,7 +214,7 @@ pub struct EventContext {
     pub queue_size: Option<usize>,
 }
 
-// ==================== INSTALLER ERROR DATA ====================
+// ==================== SECTION ====================
 
 /// Installer system error data
 /// Consolidates errors from nestgate-installer crate
@@ -276,7 +276,7 @@ pub struct RequirementsContext {
     pub missing_requirements: Vec<String>,
 }
 
-// ==================== ZFS ERROR DATA ====================
+// ==================== SECTION ====================
 
 /// ZFS system error data
 /// Consolidates errors from nestgate-zfs crate
@@ -298,6 +298,8 @@ pub struct ZfsErrorData {
     pub error_code: Option<i32>,
     /// Recovery suggestions
     pub recovery_suggestions: Vec<String>,
+                    performance_metrics: None,
+                    environment: None,
 }
 
 /// ZFS operations that can fail
@@ -324,7 +326,7 @@ pub enum ZfsOperation {
     Command,
 }
 
-// ==================== PRIMAL ERROR DATA ====================
+// ==================== SECTION ====================
 
 /// Primal SDK error data
 /// Consolidates errors from ecoprimal SDK
@@ -377,7 +379,7 @@ pub struct PrimalRequestContext {
     pub timestamp: SystemTime,
 }
 
-// ==================== UNIVERSAL ZFS ERROR DATA ====================
+// ==================== SECTION ====================
 
 /// Universal ZFS error data
 /// Enhanced ZFS errors with universal adapter context
@@ -392,7 +394,7 @@ pub struct UniversalZfsErrorData {
     /// Resource involved
     pub resource: Option<String>,
     /// Timeout duration if applicable
-    pub timeout_duration: Option<Duration>,
+    pub duration: Option<Duration>,
     /// Circuit breaker state
     pub circuit_breaker_open: bool,
     /// Rate limit information
@@ -412,7 +414,7 @@ pub struct RateLimitInfo {
     pub reset_time: SystemTime,
 }
 
-// ==================== NETWORK ERROR DATA ====================
+// ==================== SECTION ====================
 
 /// Network system error data
 /// Consolidates errors from network operations
@@ -428,7 +430,7 @@ pub struct NetworkErrorData {
     pub context: Option<HashMap<String, String>>,
 }
 
-// ==================== MCP ERROR DATA ====================
+// ==================== SECTION ====================
 
 /// MCP (Model Context Protocol) error data
 /// Consolidates errors from MCP operations
@@ -444,7 +446,7 @@ pub struct McpErrorData {
     pub context: Option<HashMap<String, String>>,
 }
 
-// ==================== API ERROR DATA ====================
+// ==================== SECTION ====================
 
 /// API system error data
 /// Consolidates errors from API operations
@@ -462,7 +464,7 @@ pub struct ApiErrorData {
     pub context: Option<HashMap<String, String>>,
 }
 
-// ==================== SECURITY ERROR DATA ====================
+// ==================== SECTION ====================
 
 /// Security system error data
 /// Consolidates errors from security operations
@@ -480,7 +482,7 @@ pub struct SecurityErrorData {
     pub context: Option<HashMap<String, String>>,
 }
 
-// ==================== ERROR CONVERSION UTILITIES ====================
+// ==================== SECTION ====================
 
 impl From<AutomationErrorData> for crate::error::NestGateError {
     fn from(data: AutomationErrorData) -> Self {
@@ -512,7 +514,7 @@ impl From<UniversalZfsErrorData> for crate::error::NestGateError {
     }
 }
 
-// ==================== DISPLAY IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl std::fmt::Display for ZfsErrorData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -579,3 +581,6 @@ impl std::fmt::Display for McpErrorData {
         write!(f, "{} (operation: {})", self.message, self.operation)
     }
 }
+
+// Note: Removed conflicting boxed Display implementations
+// Rust automatically implements Display for Box<T> when T implements Display

@@ -2,7 +2,7 @@
 //!
 //! This test validates that the canonical modernization is working correctly
 
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateCanonicalUnifiedConfig;
+use nestgate_core::config::unified::NestGateUnifiedConfig;
 use nestgate_core::config::defaults::Environment;
 
 /// Test that canonical configuration works
@@ -29,12 +29,12 @@ async fn test_canonical_config_creation() {
 async fn test_environment_driven_config() {
     // Test development environment
     let dev_config =
-        nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+        nestgate_core::config::unified::create_config_for_environment(Environment::Development);
     assert!(matches!(dev_config.environment, Environment::Development));
 
     // Test production environment
     let prod_config =
-        nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Production);
+        nestgate_core::config::unified::create_config_for_environment(Environment::Production);
     assert!(matches!(prod_config.environment, Environment::Production));
 
     println!("✅ Environment-driven configuration works");

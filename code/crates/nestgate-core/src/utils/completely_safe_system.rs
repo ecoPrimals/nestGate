@@ -3,7 +3,7 @@
 //! This module provides system operations that are guaranteed to be safe
 //! without using any unsafe code blocks.
 
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use std::env;
 use std::fs;
 use std::path::Path;
@@ -110,9 +110,9 @@ impl SafeSystemOps {
 
         Err(NestGateError::System {
             message: "Could not determine user ID using safe methods".to_string(),
-            resource: crate::error::SystemResource::FileSystem,
+            resource: crate::error::core::SystemResource::FileSystem,
             utilization: None,
-            recovery: crate::error::RecoveryStrategy::ManualIntervention,
+            recovery: crate::error::core::RecoveryStrategy::ManualIntervention,
         })
     }
 
@@ -158,9 +158,9 @@ impl SafeSystemOps {
 
         Err(NestGateError::System {
             message: "Could not determine group ID using safe methods".to_string(),
-            resource: crate::error::SystemResource::FileSystem,
+            resource: crate::error::core::SystemResource::FileSystem,
             utilization: None,
-            recovery: crate::error::RecoveryStrategy::ManualIntervention,
+            recovery: crate::error::core::RecoveryStrategy::ManualIntervention,
         })
     }
 
@@ -177,7 +177,7 @@ impl SafeSystemOps {
             let fields: Vec<&str> = stat_content.split_whitespace().collect();
             if fields.len() > 3 {
                 return fields[3].parse().map_err(|_| NestGateError::Validation {
-                    field: "ppid".to_string(),
+                    field: Some("ppid".to_string()),
                     message: "Could not parse parent process ID".to_string(),
                     current_value: Some(fields[3].to_string()),
                     expected: Some("valid integer".to_string()),
@@ -197,7 +197,7 @@ impl SafeSystemOps {
                     .trim()
                     .parse()
                     .map_err(|_| NestGateError::Validation {
-                        field: "ppid".to_string(),
+                        field: Some("ppid".to_string()),
                         message: "Could not parse parent process ID from ps output".to_string(),
                         current_value: Some(ppid_str.trim().to_string()),
                         expected: Some("valid integer".to_string()),
@@ -209,7 +209,7 @@ impl SafeSystemOps {
         Err(NestGateError::Internal {
             message: "Could not determine parent process ID".to_string(),
             location: Some("get_parent_process_id".to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })
     }
@@ -238,7 +238,7 @@ impl SafeSystemOps {
         Err(NestGateError::Internal {
             message: format!("Could not determine name for process {pid}"),
             location: Some("get_process_name".to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })
     }
@@ -267,9 +267,9 @@ impl SafeSystemOps {
 
         Err(NestGateError::System {
             message: "Could not determine system uptime".to_string(),
-            resource: crate::error::SystemResource::FileSystem,
+            resource: crate::error::core::SystemResource::FileSystem,
             utilization: None,
-            recovery: crate::error::RecoveryStrategy::Retry,
+            recovery: crate::error::core::RecoveryStrategy::Retry,
         })
     }
 
@@ -304,9 +304,9 @@ impl SafeSystemOps {
 
         Err(NestGateError::System {
             message: "Could not determine hostname".to_string(),
-            resource: crate::error::SystemResource::Network,
+            resource: crate::error::core::SystemResource::Network,
             utilization: None,
-            recovery: crate::error::RecoveryStrategy::Retry,
+            recovery: crate::error::core::RecoveryStrategy::Retry,
         })
     }
 
@@ -350,9 +350,9 @@ impl SafeSystemOps {
 
         Err(NestGateError::System {
             message: "Could not read memory information".to_string(),
-            resource: crate::error::SystemResource::Memory,
+            resource: crate::error::core::SystemResource::Memory,
             utilization: None,
-            recovery: crate::error::RecoveryStrategy::Retry,
+            recovery: crate::error::core::RecoveryStrategy::Retry,
         })
     }
 
@@ -399,6 +399,7 @@ impl SafeSystemOps {
             ),
             resource: Some(path.to_string_lossy().to_string()),
             retryable: true,
+                context: None,
         })?;
 
         #[cfg(unix)]

@@ -3,9 +3,9 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 
-// ==================== GENERAL VALIDATION ====================
+// ==================== SECTION ====================
 
 /// Validate that a string value is not empty
 pub fn validate_not_empty(value: &str, field_name: &str) -> Result<()> {
@@ -16,6 +16,7 @@ pub fn validate_not_empty(value: &str, field_name: &str) -> Result<()> {
             current_value: Some("empty string".to_string()),
             expected: Some("non-empty string".to_string()),
             user_error: true,
+                context: None,
         });
     }
     Ok(())
@@ -38,6 +39,7 @@ pub fn validate_length(
                 current_value: Some(len.to_string()),
                 expected: Some(format!("At least {min} characters")),
                 user_error: true,
+                context: None,
             });
         }
     }
@@ -50,6 +52,7 @@ pub fn validate_length(
                 current_value: Some(len.to_string()),
                 expected: Some(format!("At most {max} characters")),
                 user_error: true,
+                context: None,
             });
         }
     }
@@ -69,6 +72,7 @@ where
                 current_value: Some(value.to_string()),
                 expected: Some(format!("At least {min_val}")),
                 user_error: true,
+                context: None,
             });
         }
     }
@@ -81,6 +85,7 @@ where
                 current_value: Some(value.to_string()),
                 expected: Some(format!("At most {max_val}")),
                 user_error: true,
+                context: None,
             });
         }
     }
@@ -105,6 +110,7 @@ where
             current_value: Some(value.to_string()),
             expected: Some(allowed_str),
             user_error: true,
+                context: None,
         });
     }
     Ok(())
@@ -118,7 +124,7 @@ pub fn validate_pattern(
     description: &str,
 ) -> Result<()> {
     let regex = regex::Regex::new(pattern).map_err(|e| NestGateError::Validation {
-        field: "pattern".to_string(),
+        field: Some("pattern".to_string()),
         message: format!("Invalid regex pattern: {e}"),
         current_value: Some(pattern.to_string()),
         expected: Some("Valid regex pattern".to_string()),
@@ -132,22 +138,24 @@ pub fn validate_pattern(
             current_value: Some(value.to_string()),
             expected: Some(description.to_string()),
             user_error: true,
+                context: None,
         });
     }
     Ok(())
 }
 
-// ==================== EMAIL VALIDATION ====================
+// ==================== SECTION ====================
 
 /// Validate email address format
 pub fn validate_email(email: &str) -> Result<()> {
     if email.is_empty() {
         return Err(NestGateError::Validation {
-            field: "email".to_string(),
+            field: Some("email".to_string()),
             message: "Email address cannot be empty".to_string(),
             current_value: Some(email.to_string()),
             expected: Some("Valid email address".to_string()),
             user_error: true,
+                context: None,
         });
     }
 
@@ -167,28 +175,30 @@ pub fn validate_email_domain_format(email: &str) -> Result<()> {
     let parts: Vec<&str> = email.split('@').collect();
     if parts.len() != 2 {
         return Err(NestGateError::Validation {
-            field: "email".to_string(),
+            field: Some("email".to_string()),
             message: "Email must contain exactly one @ symbol".to_string(),
             current_value: Some(email.to_string()),
             expected: Some("user@domain.com format".to_string()),
             user_error: true,
+                context: None,
         });
     }
 
     let domain = parts[1];
     if !domain.contains('.') {
         return Err(NestGateError::Validation {
-            field: "email_domain".to_string(),
+            field: Some("email_domain".to_string()),
             message: "Email domain must contain at least one dot".to_string(),
             current_value: Some(domain.to_string()),
             expected: Some("Valid domain (e.g., example.com)".to_string()),
             user_error: true,
+                context: None,
         });
     }
     Ok(())
 }
 
-// ==================== PASSWORD VALIDATION ====================
+// ==================== SECTION ====================
 
 /// Password strength requirements
 #[derive(Debug, Clone)]
@@ -233,31 +243,34 @@ pub fn validate_password(password: &str, requirements: &PasswordRequirements) ->
     // Character requirements
     if requirements.require_uppercase && !password.chars().any(|c| c.is_uppercase()) {
         return Err(NestGateError::Validation {
-            field: "password".to_string(),
+            field: Some("password".to_string()),
             message: "Password must contain at least one uppercase letter".to_string(),
             current_value: None,
             expected: Some("At least one uppercase letter".to_string()),
             user_error: true,
+                context: None,
         });
     }
 
     if requirements.require_lowercase && !password.chars().any(|c| c.is_lowercase()) {
         return Err(NestGateError::Validation {
-            field: "password".to_string(),
+            field: Some("password".to_string()),
             message: "Password must contain at least one lowercase letter".to_string(),
             current_value: None,
             expected: Some("At least one lowercase letter".to_string()),
             user_error: true,
+                context: None,
         });
     }
 
     if requirements.require_digits && !password.chars().any(|c| c.is_ascii_digit()) {
         return Err(NestGateError::Validation {
-            field: "password".to_string(),
+            field: Some("password".to_string()),
             message: "Password must contain at least one digit".to_string(),
             current_value: None,
             expected: Some("At least one digit".to_string()),
             user_error: true,
+                context: None,
         });
     }
 
@@ -265,13 +278,14 @@ pub fn validate_password(password: &str, requirements: &PasswordRequirements) ->
         let special_chars = "!@#$%^&*()_+-=[]{}|;:,.<>?";
         if !password.chars().any(|c| special_chars.contains(c)) {
             return Err(NestGateError::Validation {
-                field: "password".to_string(),
+                field: Some("password".to_string()),
                 message: "Password must contain at least one special character".to_string(),
                 current_value: None,
                 expected: Some(
                     "At least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)".to_string(),
                 ),
                 user_error: true,
+                context: None,
             });
         }
     }
@@ -281,11 +295,12 @@ pub fn validate_password(password: &str, requirements: &PasswordRequirements) ->
     for pattern in &requirements.forbidden_patterns {
         if password_lower.contains(&pattern.to_lowercase()) {
             return Err(NestGateError::Validation {
-                field: "password".to_string(),
+                field: Some("password".to_string()),
                 message: format!("Password cannot contain '{pattern}'"),
                 current_value: None,
                 expected: Some("Password without common patterns".to_string()),
                 user_error: true,
+                context: None,
             });
         }
     }
@@ -337,27 +352,29 @@ pub fn calculate_password_strength(password: &str) -> u8 {
     score.min(100)
 }
 
-// ==================== FILE AND PATH VALIDATION ====================
+// ==================== SECTION ====================
 
 /// Validate file path is safe (no directory traversal)
 pub fn validate_safe_path(path: &str) -> Result<()> {
     if path.contains("..") {
         return Err(NestGateError::Validation {
-            field: "path".to_string(),
+            field: Some("path".to_string()),
             message: "Path cannot contain '..' (directory traversal)".to_string(),
             current_value: Some(path.to_string()),
             expected: Some("Path without '..' sequences".to_string()),
             user_error: true,
+                context: None,
         });
     }
 
     if path.starts_with('/') && !cfg!(unix) {
         return Err(NestGateError::Validation {
-            field: "path".to_string(),
+            field: Some("path".to_string()),
             message: "Absolute paths are not allowed".to_string(),
             current_value: Some(path.to_string()),
             expected: Some("Relative path".to_string()),
             user_error: true,
+                context: None,
         });
     }
     Ok(())
@@ -370,11 +387,12 @@ pub fn validate_file_extension(filename: &str, allowed_extensions: &[&str]) -> R
 
     if !allowed_extensions.contains(&extension) {
         return Err(NestGateError::Validation {
-            field: "file_extension".to_string(),
+            field: Some("file_extension".to_string()),
             message: format!("File extension '{extension}' is not allowed"),
             current_value: Some(extension.to_string()),
             expected: Some(format!("One of: {}", allowed_extensions.join(", "))),
             user_error: true,
+                context: None,
         });
     }
     Ok(())
@@ -384,11 +402,12 @@ pub fn validate_file_extension(filename: &str, allowed_extensions: &[&str]) -> R
 pub fn validate_safe_filename(filename: &str) -> Result<()> {
     if filename.is_empty() {
         return Err(NestGateError::Validation {
-            field: "filename".to_string(),
+            field: Some("filename".to_string()),
             message: "Filename cannot be empty".to_string(),
             current_value: Some(filename.to_string()),
             expected: Some("Non-empty filename".to_string()),
             user_error: true,
+                context: None,
         });
     }
 
@@ -397,11 +416,12 @@ pub fn validate_safe_filename(filename: &str) -> Result<()> {
     for ch in filename.chars() {
         if dangerous_chars.contains(ch) || ch.is_control() {
             return Err(NestGateError::Validation {
-                field: "filename".to_string(),
+                field: Some("filename".to_string()),
                 message: format!("Filename contains invalid character: '{ch}'"),
                 current_value: Some(filename.to_string()),
                 expected: Some("Filename without special characters".to_string()),
                 user_error: true,
+                context: None,
             });
         }
     }
@@ -419,26 +439,28 @@ pub fn validate_safe_filename(filename: &str) -> Result<()> {
 
     if reserved_names.contains(&name_without_ext.to_uppercase().as_str()) {
         return Err(NestGateError::Validation {
-            field: "filename".to_string(),
+            field: Some("filename".to_string()),
             message: format!("Filename '{name_without_ext}' is reserved"),
             current_value: Some(filename.to_string()),
             expected: Some("Non-reserved filename".to_string()),
             user_error: true,
+                context: None,
         });
     }
     Ok(())
 }
 
-// ==================== DATA VALIDATION ====================
+// ==================== SECTION ====================
 
 /// Validate JSON string
 pub fn validate_json(json_str: &str) -> Result<()> {
     serde_json::from_str::<serde_json::Value>(json_str).map_err(|e| NestGateError::Validation {
-        field: "json".to_string(),
+        field: Some("json".to_string()),
         message: format!("Invalid JSON: {e}"),
         current_value: Some(json_str.to_string()),
         expected: Some("Valid JSON format".to_string()),
         user_error: true,
+                context: None,
     })?;
     Ok(())
 }
@@ -456,6 +478,7 @@ pub fn validate_required_fields(
                 current_value: data.get(*field).cloned(),
                 expected: Some("Non-empty value".to_string()),
                 user_error: true,
+                context: None,
             });
         }
     }
@@ -472,11 +495,12 @@ pub fn validate_credit_card(card_number: &str) -> Result<()> {
 
     if digits.len() < 13 || digits.len() > 19 {
         return Err(NestGateError::Validation {
-            field: "credit_card".to_string(),
+            field: Some("credit_card".to_string()),
             message: "Credit card number must be 13-19 digits".to_string(),
             current_value: Some(digits.len().to_string()),
             expected: Some("13-19 digits".to_string()),
             user_error: true,
+                context: None,
         });
     }
 
@@ -498,17 +522,18 @@ pub fn validate_credit_card(card_number: &str) -> Result<()> {
 
     if sum % 10 != 0 {
         return Err(NestGateError::Validation {
-            field: "credit_card".to_string(),
+            field: Some("credit_card".to_string()),
             message: "Invalid credit card number (failed Luhn check)".to_string(),
             current_value: Some(card_number.to_string()),
             expected: Some("Valid credit card number".to_string()),
             user_error: true,
+                context: None,
         });
     }
     Ok(())
 }
 
-// ==================== COMPOSITE VALIDATORS ====================
+// ==================== SECTION ====================
 
 /// Validation rule that can be applied to a value
 pub trait ValidationRule<T> {

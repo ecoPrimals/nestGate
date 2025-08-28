@@ -37,7 +37,7 @@ impl<T: Send + 'static> ConnectionGuard<T> {
             .ok_or_else(|| crate::NestGateError::Internal {
                 message: "Connection has been consumed".to_string(),
                 location: Some(file!().to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })
     }
@@ -49,7 +49,7 @@ impl<T: Send + 'static> ConnectionGuard<T> {
             .ok_or_else(|| crate::NestGateError::Internal {
                 message: "Connection has been consumed".to_string(),
                 location: Some(file!().to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })
     }
@@ -64,7 +64,7 @@ impl<T: Send + 'static> ConnectionGuard<T> {
             .ok_or_else(|| crate::NestGateError::Internal {
                 message: "Connection has already been taken".to_string(),
                 location: Some(file!().to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })
     }

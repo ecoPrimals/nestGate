@@ -4,12 +4,11 @@ use std::collections::HashMap;
 /// This module contains storage access control, permissions, and metadata types.
 /// Split from consolidated_storage_types.rs for better maintainability and 2000-line compliance.
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 // Import unified enums
 // use crate::canonical_modernization::UnifiedAccessType; // Currently unused
 
-// ==================== ACCESS CONTROL TYPES ====================
+// ==================== SECTION ====================
 
 /// Storage access control configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -157,7 +156,7 @@ pub enum AccessResult {
     Custom(String),
 }
 
-// ==================== METADATA TYPES ====================
+// ==================== SECTION ====================
 
 /// Storage resource metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -339,7 +338,7 @@ pub enum LifecycleAction {
     },
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for StorageAccessControl {
     fn default() -> Self {
@@ -385,7 +384,7 @@ impl Default for StorageResourceTags {
     }
 }
 
-// ==================== UTILITY IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl StorageAccessControl {
     /// Check if a user has specific permission

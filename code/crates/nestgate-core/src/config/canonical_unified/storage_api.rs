@@ -9,7 +9,7 @@ use crate::canonical_modernization::canonical_constants::{
     storage::{GB},
 };
 
-// ==================== STORAGE CONFIGURATION ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageConfig {
@@ -70,7 +70,7 @@ pub struct TierConfig {
     pub access_frequency_threshold: u32,
 }
 
-// ==================== API CONFIGURATION ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
@@ -107,7 +107,7 @@ pub struct RestApiConfig {
     pub cors_origins: Vec<String>,
 }
 
-// ==================== ZFS CONFIGURATION ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
@@ -126,7 +126,7 @@ pub struct ZfsConfig {
     pub tiering: TieringConfig,
 }
 
-// ==================== SUPPORTING STORAGE/API TYPES ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CompressionConfig {
@@ -255,7 +255,7 @@ pub struct TieringConfig {
     pub cold_threshold: u64,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for CacheStorageConfig {
     fn default() -> Self {

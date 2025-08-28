@@ -2,7 +2,7 @@
 /// Core network configuration types and utilities.
 use serde::{Deserialize, Serialize};
 
-// ==================== UNIFIED NETWORK CONFIGURATION ====================
+// ==================== SECTION ====================
 
 // Re-export the canonical network configuration
 pub use crate::canonical_modernization::network_config::UnifiedNetworkConfig;
@@ -10,11 +10,11 @@ pub use crate::canonical_modernization::network_config::UnifiedNetworkConfig;
 // Alias for backward compatibility during transition
 pub type NetworkConfig = UnifiedNetworkConfig;
 
-// ==================== LEGACY CONFIGURATION REMOVED ====================
+// ==================== SECTION ====================
 // All legacy network configuration has been successfully migrated to UnifiedNetworkConfig
 // No deprecated types remain - migration complete
 
-// ==================== HELPER FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Create default network configuration
 pub fn create_default_config() -> UnifiedNetworkConfig {

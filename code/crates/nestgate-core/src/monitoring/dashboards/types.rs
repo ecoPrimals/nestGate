@@ -1,7 +1,8 @@
-use std::collections::HashMap;
-///
-/// This module contains all type definitions for the dashboard system including
-/// dashboard configuration, panel types, and variable definitions.
+//! **DASHBOARD TYPES AND CONFIGURATION**
+//!
+//! Dashboard configuration types and enums for monitoring system.
+//! Extracted from dashboards.rs for file size compliance.
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;

@@ -31,7 +31,7 @@ pub struct CanonicalConfig {
     pub environment: EnvironmentConfig,
 }
 
-// ==================== SYSTEM CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// System-level configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -60,7 +60,7 @@ pub enum Environment {
     Testing,
 }
 
-// ==================== NETWORK CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Network configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -171,7 +171,7 @@ pub struct FailoverConfig {
     pub timeout: Duration,
 }
 
-// ==================== STORAGE CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Storage configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -225,7 +225,7 @@ pub struct RetentionPolicy {
     pub monthly: u32,
 }
 
-// ==================== SECURITY CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Security configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -274,7 +274,7 @@ pub struct RateLimitConfig {
     pub burst_size: u32,
 }
 
-// ==================== PERFORMANCE CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Performance configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -314,7 +314,7 @@ pub struct IoConfig {
     pub max_concurrent_ops: u32,
 }
 
-// ==================== MONITORING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -359,7 +359,7 @@ pub struct AlertConfig {
     pub email_config: Option<HashMap<String, String>>,
 }
 
-// ==================== INTEGRATIONS CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Integration configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -405,7 +405,7 @@ pub struct RetryConfig {
     pub max_delay: Duration,
 }
 
-// ==================== ENVIRONMENT CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Environment-specific configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -21,7 +21,7 @@ use std::marker::PhantomData;
 // **CANONICAL MODERNIZATION**: Use canonical error types
 use nestgate_core::error::{NestGateError, Result};
 
-// ==================== POOL ALLOCATOR ====================
+// ==================== SECTION ====================
 
 /// **POOL ALLOCATOR**
 /// 
@@ -165,7 +165,7 @@ pub struct PoolStats {
     pub fragmentation_ratio: f64,
 }
 
-// ==================== STACK ALLOCATOR ====================
+// ==================== SECTION ====================
 
 /// **STACK ALLOCATOR**
 /// 
@@ -284,7 +284,7 @@ pub struct StackStats {
     pub utilization_percent: f64,
 }
 
-// ==================== RING BUFFER ALLOCATOR ====================
+// ==================== SECTION ====================
 
 /// **RING BUFFER ALLOCATOR**
 /// 
@@ -407,7 +407,7 @@ pub struct RingBufferStats {
     pub utilization_percent: f64,
 }
 
-// ==================== SIMD-ALIGNED ALLOCATOR ====================
+// ==================== SECTION ====================
 
 /// **SIMD-ALIGNED ALLOCATOR**
 /// 
@@ -481,7 +481,7 @@ pub struct SimdAllocatorStats {
     pub waste_percentage: f64,
 }
 
-// ==================== GLOBAL ALLOCATOR INTEGRATION ====================
+// ==================== SECTION ====================
 
 /// **NESTGATE GLOBAL ALLOCATOR**
 /// 
@@ -629,7 +629,7 @@ pub struct GlobalAllocatorStats {
     pub fallback_allocations: usize,
 }
 
-// ==================== PERFORMANCE BENCHMARKS ====================
+// ==================== SECTION ====================
 
 /// **CUSTOM ALLOCATOR BENCHMARKS**
 pub mod benchmarks {
@@ -702,7 +702,6 @@ pub mod benchmarks {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_pool_allocator() {

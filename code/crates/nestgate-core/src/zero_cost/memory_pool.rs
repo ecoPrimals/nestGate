@@ -31,7 +31,7 @@ where
     }
 
 /// Pool interface statistics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct PoolInterfaceStats {
     pub available_items: usize,
     pub total_capacity: usize,
@@ -256,7 +256,7 @@ impl ZeroCostPoolInterface<Vec<u8>, 1000, 8192> for DevelopmentBufferPool {
         Ok(vec![0u8; Self::buffer_size()])
     }
 
-    fn return_item(&self, _item: Vec<u8>) -> Result<()> {}
+    fn return_item(&self, _item: Vec<u8>) -> Result<()> { Ok(()) }
 
     fn get_stats(&self) -> PoolInterfaceStats {
         PoolInterfaceStats {
@@ -276,7 +276,7 @@ impl ZeroCostPoolInterface<String, 1000, 8192> for ProductionObjectPool {
         Ok(String::with_capacity(Self::buffer_size()))
     }
 
-    fn return_item(&self, _item: String) -> Result<()> {}
+    fn return_item(&self, _item: String) -> Result<()> { Ok(()) }
 
     fn get_stats(&self) -> PoolInterfaceStats {
         PoolInterfaceStats {
@@ -296,7 +296,7 @@ impl ZeroCostPoolInterface<String, 1000, 8192> for DevelopmentObjectPool {
         Ok(String::with_capacity(Self::buffer_size()))
     }
 
-    fn return_item(&self, _item: String) -> Result<()> {}
+    fn return_item(&self, _item: String) -> Result<()> { Ok(()) }
 
     fn get_stats(&self) -> PoolInterfaceStats {
         PoolInterfaceStats {

@@ -3,7 +3,7 @@
 /// Replaces: StorageConfig, BackendConfig, ReplicationConfig, StorageResourceConfig,
 /// FilesystemConfig, BlockStorageConfig, ObjectStorageConfig, NetworkFsConfig, and 10+ others
 use super::CanonicalDomainConfig;
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -41,7 +41,6 @@ impl CanonicalDomainConfig for CanonicalStorageConfig {
             return Err(NestGateError::config_error(
                 "cache_size_mb",
                 "must be greater than 0",
-                None,
             ));
         }
 
@@ -49,7 +48,6 @@ impl CanonicalDomainConfig for CanonicalStorageConfig {
             return Err(NestGateError::config_error(
                 "io_threads",
                 "must be greater than 0",
-                None,
             ));
         }
 
@@ -100,7 +98,7 @@ impl CanonicalDomainConfig for CanonicalStorageConfig {
     }
 }
 
-// ==================== STORAGE CONFIGURATION STRUCTURES ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct StorageBackends {
@@ -158,7 +156,7 @@ pub struct TierConfig {
     pub migration_threshold: f64,
 }
 
-// ==================== BACKEND CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FilesystemBackend {
@@ -204,7 +202,7 @@ pub struct MemoryBackend {
     pub persistence_path: Option<PathBuf>,
 }
 
-// ==================== SUPPORTING ENUMS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ReplicationSyncMode {
@@ -239,7 +237,7 @@ pub enum ZfsCompression {
     Gzip,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for StoragePerformance {
     fn default() -> Self {

@@ -1,39 +1,19 @@
 use std::collections::HashMap;
 use std::future::Future;
 //
-// **CANONICAL MODERNIZATION COMPLETE** - This module consolidates all fragmented provider traits 
-// across the codebase into the canonical `CanonicalUniversalProvider<T>` pattern, eliminating 
-// duplication and providing zero-cost migration paths for legacy provider implementations.
-//
-// **CONSOLIDATES AND ELIMINATES**:
-// - `SecurityPrimalProvider` from `universal_traits.rs` ✅
-// - `OrchestrationPrimalProvider` from `universal_traits.rs` ✅
-// - `ComputePrimalProvider` from `universal_traits.rs` ✅
-// - `UniversalPrimalProvider` from `universal_traits.rs` ✅
-// - `ZeroCostSecurityProvider` variants (multiple files) ✅
-// - `ZeroCostUniversalServiceProvider` from `zero_cost/migrated_universal_service_provider.rs` ✅
-// - `ByobStorageProvider` from `nestgate-api/src/byob/types.rs` ✅ MIGRATED
-// - `StoragePrimalProvider` from `nestgate-api/src/universal_primal.rs` ✅
-// - `CacheProvider` variants across multiple modules ✅
-// - `HealthCheckProvider` from `observability/health_checks.rs` ✅
-// - All other fragmented provider traits ✅
-//
-// **PROVIDES**:
 // - Single canonical provider interface
 // - Zero-cost provider patterns with native async
 // - Type-safe provider composition
 // - 40-60% performance improvement over async_trait patterns
 
 use crate::error::CanonicalResult as Result;
-use crate::traits::UniversalService;
-use crate::canonical_modernization::UnifiedServiceType;
+use crate::traits::canonical_unified_traits::CanonicalService;
+use crate::unified_enums::service_types::UnifiedServiceType;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
-use std::future::Future;
 
-// ==================== CANONICAL PROVIDER UNIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE CANONICAL UNIVERSAL PROVIDER TRAIT - SINGLE SOURCE OF TRUTH**
 ///
@@ -81,7 +61,7 @@ pub trait CanonicalUniversalProvider<T>: Send + Sync + 'static {
     fn validate_config(&self, config: &Self::Config) -> impl Future<Output = Result<Vec<String>, Self::Error>> + Send;
 }
 
-// ==================== PROVIDER HEALTH AND CAPABILITIES ====================
+// ==================== SECTION ====================
 
 /// Provider health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -157,7 +137,7 @@ pub struct ResourceRequirements {
     pub network_bps: Option<u64>,
 }
 
-// ==================== SPECIALIZED PROVIDER TRAITS ====================
+// ==================== SECTION ====================
 
 /// Security provider trait for authentication and authorization services
 pub trait SecurityProvider: CanonicalUniversalProvider<Box<dyn SecurityService>> {
@@ -186,7 +166,7 @@ pub trait NetworkProvider: CanonicalUniversalProvider<Box<dyn NetworkService>> {
     fn receive(&self) -> impl Future<Output = Result<Option<(String, Vec<u8>)>, Self::Error>> + Send;
 }
 
-// ==================== SERVICE TRAIT DEFINITIONS ====================
+// ==================== SECTION ====================
 
 /// Security service trait
 pub trait SecurityService: Send + Sync {}
@@ -200,7 +180,7 @@ pub trait NetworkService: Send + Sync {}
 /// Cache service trait
 pub trait CacheService: Send + Sync {}
 
-// ==================== PROVIDER REGISTRY ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COST PROVIDER REGISTRY**
 /// 
@@ -235,7 +215,7 @@ impl<P: CanonicalUniversalProvider<T>, T> ZeroCostProviderRegistry<P, T> {
     }
 }
 
-// ==================== SUPPORTING TYPES ====================
+// ==================== SECTION ====================
 
 /// Authentication credentials
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -253,7 +233,7 @@ pub struct AuthToken {
     pub permissions: Vec<String>,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for ProviderHealth {
     fn default() -> Self {

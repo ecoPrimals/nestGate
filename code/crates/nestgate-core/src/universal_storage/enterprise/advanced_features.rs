@@ -5,9 +5,7 @@ use std::collections::HashMap;
 
 use crate::error::CanonicalResult as Result;
 use crate::universal_storage::enterprise::analytics::DetailedMetrics;
-// REMOVED: async_trait - using zero-cost native async patterns
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;

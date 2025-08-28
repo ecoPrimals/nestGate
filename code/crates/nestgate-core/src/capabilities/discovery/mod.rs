@@ -12,8 +12,7 @@ pub mod storage;
 // **UNIFIED DYNAMIC DISCOVERY SYSTEM** - PRIMARY ARCHITECTURE
 // **MODULARIZED CONFIGURATION** - Split from 909-line monolithic file
 pub mod config;
-
-// unified_dynamic_config has been removed - use modular config/ structure instead
+pub mod unified_dynamic_config;
 
 // **SUPPORTING MODULES**
 // Temporarily disabled example code while updating to new API
@@ -26,8 +25,8 @@ pub use security::SecurityCapabilityDiscovery;
 pub use storage::StorageCapabilityDiscovery;
 
 // **PRIMARY UNIFIED DISCOVERY EXPORTS**
-// unified_dynamic_config removed - use modular config/ structure instead
 pub use config::*;
+pub use unified_dynamic_config::{UnifiedDynamicDiscoveryManager};
 
 /// **UNIFIED DISCOVERY CONFIGURATION** - THE CANONICAL TYPE
 /// Single entry point for all discovery configuration patterns
@@ -37,7 +36,7 @@ pub type DiscoveryConfig = UnifiedDynamicDiscoveryExtensions;
 /// Single entry point for all discovery management operations
 pub type DiscoveryManager = UnifiedDynamicDiscoveryExtensions;
 
-// ==================== CAPABILITY DISCOVERY API ====================
+// ==================== SECTION ====================
 
 /// Discover storage capabilities from available primals
 pub async fn discover_storage_capabilities() -> crate::Result<Vec<storage::StorageCapabilityInfo>> {

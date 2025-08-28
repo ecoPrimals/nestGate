@@ -2,7 +2,6 @@
 // Provides mock responses for testing and development without requiring actual ZFS.
 // This backend is fully deterministic and provides consistent responses.
 
-// REMOVED: async_trait - using zero-cost native async patterns
 use std::collections::HashMap;
 use std::time::SystemTime;
 use tokio::time::sleep;

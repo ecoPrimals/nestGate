@@ -4,7 +4,6 @@ use std::collections::HashMap;
 // resilience measures.
 
 use crate::error::CanonicalResult as Result;
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;

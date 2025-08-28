@@ -88,6 +88,7 @@ impl NasServer {
                     error_message: e.to_string(),
                     resource: Some(self.config.share_root.to_string_lossy().to_string()),
                     retryable: true,
+                context: None,
                 })?;
             info!(
                 "📁 Created share root directory: {:?}",
@@ -158,6 +159,7 @@ impl NasServer {
                     error_message: e.to_string(),
                     resource: Some(share.path.to_string_lossy().to_string()),
                     retryable: true,
+                context: None,
                 }
             })?;
             info!("📁 Created share directory: {:?}", share.path);
@@ -213,6 +215,7 @@ impl SmbServer {
                 error_message: e.to_string(),
                 resource: Some(bind_addr.clone()),
                 retryable: true,
+                context: None,
             }
         })?);
         info!("📁 SMB server listening on {}", bind_addr);
@@ -278,6 +281,7 @@ impl HttpServer {
                 error_message: e.to_string(),
                 resource: Some(bind_addr.clone()),
                 retryable: true,
+                context: None,
             }
         })?);
         info!("🌐 HTTP server listening on {}", bind_addr);
@@ -299,7 +303,6 @@ impl HttpServer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
 
     #[test]
     fn test_nas_config_default() {

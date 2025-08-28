@@ -100,7 +100,6 @@ impl LoadBalancer {
             return endpoints.first().map(|e| (*e).clone());
     }
 
-        use rand::Rng;
         let mut rng = rand::thread_rng();
         let mut random_weight = rng.gen_range(0..total_weight);
 

@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // Intelligent connection pooling with adaptive scaling for high-throughput scenarios.
 

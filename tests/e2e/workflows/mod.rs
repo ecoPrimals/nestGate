@@ -14,9 +14,9 @@ pub use crate::common::config::{
     CanonicalTestConfig, E2EWorkflowSettings, TestConfigMigrationUtilities
 };
 
-// ==================== DEPRECATED E2E CONFIG REMOVED ====================
+// ==================== MODERNIZATION COMPLETE ====================
 //
-// **CANONICAL MODERNIZATION COMPLETE**: Deprecated E2EWorkflowConfig eliminated
+// **CANONICAL MODERNIZATION COMPLETE**: All configurations use canonical system
 // Use CanonicalTestConfig::e2e_workflow_tests() from tests::common::config instead
 //
 // **MIGRATION COMPLETE**: All E2E workflow tests now use canonical patterns

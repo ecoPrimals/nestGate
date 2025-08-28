@@ -229,7 +229,6 @@ async fn test_concurrent_connections() {
 
 #[cfg(test)]
 mod integration_tests {
-    use super::*;
 
     /// Test full remote service lifecycle
     #[tokio::test]

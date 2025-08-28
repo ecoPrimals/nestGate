@@ -1,6 +1,7 @@
 
 /// Validation result type
-pub type ValidationResult<T> = Result<T, ValidationError>;
+// Use canonical ValidationResult from error::idiomatic_evolution
+pub use crate::error::idiomatic_evolution::ValidationResult;
 
 /// Validation error types
 #[derive(Debug, Clone)]

@@ -1,11 +1,10 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 /// **UNIVERSAL ADAPTER ROUTING MODULE**
 /// All inter-service routing goes through the universal adapter.
 /// Replaces hardcoded network constants and service routing with dynamic discovery.
-use crate::ecosystem_integration::universal_adapter::UniversalAdapter;
-use crate::{Result, NestGateError};
-use std::collections::HashMap;
+use crate::ecosystem_integration::universal_adapter::{UniversalAdapter, types::CapabilityQuery};
+use crate::{Result};
 use std::sync::Arc;
 
 /// Universal router for all service communication
@@ -32,7 +31,7 @@ impl UniversalRouter {
         }
 
         // Discover storage endpoint dynamically
-        let endpoint = format!("storage://zfs-{}", self.adapter.get_service_id());
+        let endpoint = format!("storage://zfs-{}", self.adapter.service_id());
         self.cache_endpoint("storage", &endpoint).await;
         Ok(endpoint)
     }
@@ -43,7 +42,7 @@ impl UniversalRouter {
             return Ok(endpoint);
         }
 
-        let endpoint = format!("orchestration://service-{}", self.adapter.get_service_id());
+        let endpoint = format!("orchestration://service-{}", self.adapter.service_id());
         self.cache_endpoint("orchestration", &endpoint).await;
         Ok(endpoint)
     }
@@ -54,7 +53,7 @@ impl UniversalRouter {
             return Ok(endpoint);
         }
 
-        let endpoint = format!("security://auth-{}", self.adapter.get_service_id());
+        let endpoint = format!("security://auth-{}", self.adapter.service_id());
         self.cache_endpoint("security", &endpoint).await;
         Ok(endpoint)
     }
@@ -65,7 +64,7 @@ impl UniversalRouter {
             return Ok(endpoint);
         }
 
-        let endpoint = format!("ai://service-{}", self.adapter.get_service_id());
+        let endpoint = format!("ai://service-{}", self.adapter.service_id());
         self.cache_endpoint("ai", &endpoint).await;
         Ok(endpoint)
     }
@@ -83,21 +82,24 @@ impl UniversalRouter {
                 // Generic capability discovery
                 let capabilities = self
                     .adapter
-                    .query_capabilities(capability.to_string())
+                    .query_capabilities(CapabilityQuery::Search(capability.to_string()))
                     .await;
 
-                capabilities
+                let capability_info = capabilities?
                     .first()
-                    .cloned() // String capabilities don't have .name field
+                    .cloned()
                     .ok_or_else(|| NestGateError::Configuration {
+                        field: capability.to_string(),
                         message: format!("No capability found for: {capability}"),
-                        config_source: crate::error::UnifiedConfigSource::Runtime,
-                        field: Some(capability.to_string()),
-                        suggested_fix: Some(
-                            "Ensure required service is registered with the universal adapter"
-                                .to_string(),
-                        ),
-                    })
+                        current_value: None,
+                        expected: Some("registered capability".to_string()),
+                        user_error: false,
+                    })?;
+                
+                // Convert ServiceCapability to endpoint string
+                let endpoint = format!("{}://{}", format!("{:?}", capability_info.category).to_lowercase(), capability_info.id);
+                self.cache_endpoint(capability, &endpoint).await;
+                Ok(endpoint)
             }
         }
     }

@@ -3,7 +3,6 @@
 /// Defines capability interfaces for service coordination, workflow management,
 /// and event routing through the Songbird orchestration primal.
 use super::{CapabilityRequest, CapabilityResponse, UniversalCapability};
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -40,7 +39,6 @@ pub struct WorkflowResponse {
 }
 
 /// Orchestration capability trait for Songbird integration
-#[async_trait]
 pub trait OrchestrationCapability: UniversalCapability {
     /// Coordinate multiple services
     async fn coordinate_services(
@@ -72,7 +70,6 @@ impl Default for MockOrchestrationCapability {
     }
 }
 
-#[async_trait]
 impl UniversalCapability for MockOrchestrationCapability {
     async fn execute(
         &self,
@@ -133,7 +130,6 @@ impl UniversalCapability for MockOrchestrationCapability {
     }
 }
 
-#[async_trait]
 impl OrchestrationCapability for MockOrchestrationCapability {
     async fn coordinate_services(
         &self,

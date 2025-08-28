@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-// ==================== CANONICAL MCP CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Canonical MCP client configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -231,7 +231,7 @@ impl Default for McpServerCapabilities {
     }
 }
 
-// ==================== CONFIGURATION VALIDATION ====================
+// ==================== SECTION ====================
 
 impl McpClientConfig {
     /// Validate the configuration

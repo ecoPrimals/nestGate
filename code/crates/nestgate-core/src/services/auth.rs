@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 use base64::{engine::general_purpose, Engine as _};
 /// **AUTHENTICATION SERVICE**
@@ -7,7 +7,6 @@ use base64::{engine::general_purpose, Engine as _};
 /// session management, and comprehensive security features.
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
@@ -15,7 +14,7 @@ use tracing::{debug, info, warn};
 use uuid::Uuid;
 
 use crate::config::dynamic_config::DynamicConfigManager;
-use crate::{NestGateError, Result};
+use crate::{Result};
 
 /// Authentication Service with comprehensive security features
 pub struct AuthService {
@@ -458,11 +457,12 @@ impl AuthService {
             .any(|u| u.username == request.username || u.email == request.email)
         {
             return Err(NestGateError::Validation {
-                field: "username_or_email".to_string(),
+                field: Some("username_or_email".to_string()),
                 message: "Username or email already exists".to_string(),
                 current_value: Some(request.username),
                 expected: Some("unique username and email".to_string()),
                 user_error: true,
+                context: None,
             });
         }
         drop(users);
@@ -790,21 +790,23 @@ impl AuthService {
         async move {
             if request.password != request.confirm_password {
                 return Err(NestGateError::Validation {
-                    field: "confirm_password".to_string(),
+                    field: Some("confirm_password".to_string()),
                     message: "Passwords do not match".to_string(),
                     current_value: None,
                     expected: Some("matching password".to_string()),
                     user_error: true,
+                context: None,
                 });
             }
 
             if request.password.len() < policy.min_length {
                 return Err(NestGateError::Validation {
-                    field: "password".to_string(),
+                    field: Some("password".to_string()),
                     message: format!("Password must be at least {} characters", policy.min_length),
                     current_value: Some(request.password.len().to_string()),
                     expected: Some(format!(">= {}", policy.min_length)),
                     user_error: true,
+                context: None,
                 });
             }
 
@@ -828,7 +830,7 @@ impl AuthService {
                 .map_err(|e| NestGateError::Internal {
                     message: format!("Invalid salt format: {e}"),
                     location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: Some("Salt parsing failed during password hashing".to_string()),
+                    location: Some("Salt parsing failed during password hashing".to_string()),
                     is_bug: false,
                 })?;
 

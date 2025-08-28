@@ -161,7 +161,6 @@ pub mod performance {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_zero_cost_factory_creation() {

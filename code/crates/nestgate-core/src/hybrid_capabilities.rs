@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // **Architecture**: Local Smart + Universal Adapter + Failsafe Defaults
@@ -10,12 +10,10 @@ use std::collections::HashMap;
 // - **Failsafe**: Always-working defaults for standalone operation
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
-use crate::error::NestGateError;
 use crate::universal_adapter::UniversalAdapter;
 
 /// Capability execution modes

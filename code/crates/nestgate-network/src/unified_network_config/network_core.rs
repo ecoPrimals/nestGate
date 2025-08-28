@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use nestgate_core::unified_final_config::supporting_types::StandardDomainConfig;
 use super::network_settings::*;
 
-// ==================== NETWORK-SPECIFIC EXTENSIONS ====================
+// ==================== SECTION ====================
 
 /// Network-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs

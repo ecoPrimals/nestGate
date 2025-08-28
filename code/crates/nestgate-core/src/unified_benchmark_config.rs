@@ -10,9 +10,9 @@ use uuid::Uuid;
 
 // Import the standardized config pattern
 use crate::unified_config_consolidation::StandardDomainConfig;
-use crate::unified_enums::UnifiedServiceType;
+use crate::unified_enums::service_types::UnifiedServiceType;
 
-// ==================== BENCHMARK-SPECIFIC EXTENSIONS ====================
+// ==================== SECTION ====================
 
 /// Benchmark-specific configuration extensions
 /// Domain-specific fields for comprehensive benchmark testing
@@ -170,7 +170,7 @@ pub struct BenchmarkStressSettings {
     pub recovery_time: Duration,
     }
 
-// ==================== BENCHMARK DATA STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// Performance benchmark thresholds
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -331,7 +331,7 @@ pub struct BenchmarkResults {
     pub additional_metrics: HashMap<String, f64>,
     }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for BenchmarkExtensions {
     fn default() -> Self {
@@ -513,12 +513,12 @@ impl Default for BenchmarkMockConfiguration {
     }
     }
 
-// ==================== TYPE ALIAS FOR UNIFIED BENCHMARK CONFIG ====================
+// ==================== SECTION ====================
 
 /// Standardized Benchmark configuration
 pub type UnifiedBenchmarkConfig = StandardDomainConfig<BenchmarkExtensions>;
 
-// ==================== BUILDER PATTERN ====================
+// ==================== SECTION ====================
 
 impl UnifiedBenchmarkConfig {
     /// Create a comprehensive benchmark configuration

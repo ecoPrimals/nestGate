@@ -119,9 +119,9 @@ impl UniversalAuthAdapter {
         warn!("🔄 No security capability found, using standalone mode");
         Err(crate::error::NestGateError::Configuration {
             message: "No security capability available".to_string(),
-            config_source: crate::error::UnifiedConfigSource::Runtime,
+            
             field: Some("security_capability".to_string()),
-            suggested_fix: Some("Configure universal adapter with security capability".to_string()),
+            
         })
     }
 

@@ -1,0 +1,795 @@
+//! **ERROR VARIANTS**
+//!
+//! This module provides the main NestGateUnifiedError enum and all its variants,
+//! representing the single source of truth for all errors in NestGate.
+
+use serde::{Deserialize, Serialize};
+use std::time::Duration;
+use thiserror::Error;
+
+use super::context::ErrorContext;
+use super::data::{
+    StorageErrorData, NetworkErrorData, SecurityErrorData, McpErrorData,
+    ApiErrorData, AutomationErrorData, UniversalZfsErrorData, MiddlewareErrorData,
+    FsMonitorErrorData, InstallerErrorData, PrimalErrorData
+};
+
+// ==================== SECTION ====================
+
+/// **THE** definitive NestGate error type - single source of truth for all errors
+#[derive(Debug, Clone, Error, Serialize, Deserialize)]
+pub enum NestGateUnifiedError {
+    /// Configuration-related errors
+    #[error("Configuration error in {field}: {message}")]
+    Configuration {
+        /// The configuration field that caused the error
+        field: String,
+        /// Error message
+        message: String,
+        /// Current invalid value
+        current_value: Option<String>,
+        /// Expected value or format
+        expected: Option<String>,
+        /// Whether this is a user configuration error
+        user_error: bool,
+    },
+
+    /// API-related errors
+    #[error("API error: {message}")]
+    Api {
+        /// Error message
+        message: String,
+        /// HTTP status code
+        status_code: Option<u16>,
+        /// Request ID for tracing
+        request_id: Option<String>,
+        /// API endpoint that failed
+        endpoint: Option<String>,
+        /// Error context
+        context: Option<ErrorContext>,
+    },
+
+    /// Storage and ZFS errors
+    #[error("Storage error: {message}")]
+    Storage {
+        /// Error message
+        message: String,
+        /// Storage operation that failed
+        operation: String,
+        /// Resource involved (path, pool, dataset)
+        resource: Option<String>,
+        /// Whether the operation is retryable
+        retryable: bool,
+        /// Storage-specific error data
+        storage_data: Option<StorageErrorData>,
+        /// Error context
+        context: Option<ErrorContext>,
+    },
+
+    /// Network and communication errors
+    #[error("Network error: {message}")]
+    Network {
+        /// Error message
+        message: String,
+        /// Network operation that failed
+        operation: String,
+        /// Remote address if applicable
+        address: Option<String>,
+        /// Remote address (alias for compatibility)
+        remote_address: Option<String>,
+        /// Network endpoint
+        endpoint: Option<String>,
+        /// Retry after duration in seconds
+        retry_after: Option<u64>,
+        /// Network-specific error code
+        network_code: Option<String>,
+        /// Whether the operation is retryable
+        recoverable: bool,
+        /// Whether the operation is retryable (alias)
+        retryable: bool,
+        /// Network-specific error data
+        network_data: Option<NetworkErrorData>,
+        /// Error context
+        context: Option<ErrorContext>,
+    },
+
+    /// Security and authentication errors
+    #[error("Security error: {message}")]
+    Security {
+        /// Error message
+        message: String,
+        /// Security operation that failed
+        operation: String,
+        /// User or entity involved
+        subject: Option<String>,
+        /// Whether the operation is retryable
+        retryable: bool,
+        /// Security-specific error data
+        security_data: Option<SecurityErrorData>,
+        /// Error context
+        context: Option<ErrorContext>,
+    },
+
+    /// ZFS-specific errors
+    #[error("ZFS error: {message}")]
+    Zfs {
+        /// Error message
+        message: String,
+        /// ZFS operation that failed
+        operation: String,
+        /// ZFS resource (pool, dataset, snapshot)
+        resource: Option<String>,
+        /// Whether the operation is retryable
+        retryable: bool,
+        /// ZFS-specific error data
+        zfs_data: Option<super::data::ZfsErrorData>,
+        /// Error context
+        context: Option<ErrorContext>,
+    },
+
+    /// MCP (Model Context Protocol) errors
+    #[error("MCP error: {message}")]
+    Mcp {
+        /// Error message
+        message: String,
+        /// MCP operation that failed
+        operation: String,
+        /// Message ID for correlation
+        message_id: Option<String>,
+        /// Whether the operation is retryable
+        retryable: bool,
+        /// MCP-specific error data
+        mcp_data: Option<McpErrorData>,
+        /// Error context
+        context: Option<ErrorContext>,
+    },
+
+    /// Automation and workflow errors
+    #[error("Automation error: {message}")]
+    Automation {
+        /// Error message
+        message: String,
+        /// Automation workflow that failed
+        workflow: String,
+        /// Current step in the workflow
+        step: Option<String>,
+        /// Whether the workflow can be retried
+        retryable: bool,
+        /// Automation-specific error data
+        automation_data: Option<AutomationErrorData>,
+        /// Error context
+        context: Option<ErrorContext>,
+    },
+
+    /// Middleware errors
+    #[error("Middleware error: {message}")]
+    Middleware {
+        /// Error message
+        message: String,
+        /// Middleware component that failed
+        middleware: String,
+        /// Processing stage where error occurred
+        stage: String,
+        /// Whether the request can be retried
+        retryable: bool,
+        /// Middleware-specific error data
+        middleware_data: Option<MiddlewareErrorData>,
+        /// Error context
+        context: Option<ErrorContext>,
+    },
+
+    /// File system monitoring errors
+    #[error("File system monitor error: {message}")]
+    FsMonitor {
+        /// Error message
+        message: String,
+        /// File system path being monitored
+        path: String,
+        /// Monitor operation that failed
+        operation: String,
+        /// Whether monitoring can be retried
+        retryable: bool,
+        /// FsMonitor-specific error data
+        fs_monitor_data: Option<FsMonitorErrorData>,
+        /// Error context
+        context: Option<ErrorContext>,
+    },
+
+    /// Installation and deployment errors
+    #[error("Installation error: {message}")]
+    Installation {
+        /// Error message
+        message: String,
+        /// Component being installed
+        component: String,
+        /// Installation step that failed
+        step: Option<String>,
+        /// Whether installation can be retried
+        retryable: bool,
+        /// Installer-specific error data
+        installer_data: Option<InstallerErrorData>,
+        /// Error context
+        context: Option<ErrorContext>,
+    },
+
+    /// Universal ZFS backend errors
+    #[error("Universal ZFS error: {message}")]
+    UniversalZfs {
+        /// Error message
+        message: String,
+        /// Backend that failed
+        backend: String,
+        /// Operation that failed
+        operation: String,
+        /// Whether the operation is retryable
+        retryable: bool,
+        /// Universal ZFS-specific error data
+        universal_zfs_data: Option<UniversalZfsErrorData>,
+        /// Error context
+        context: Option<ErrorContext>,
+    },
+
+    /// Primal SDK errors (for ecosystem integration)
+    #[error("Primal error: {message}")]
+    Primal {
+        /// Error message
+        message: String,
+        /// Primal service that failed
+        service: String,
+        /// Operation that failed
+        operation: String,
+        /// Whether the operation is retryable
+        retryable: bool,
+        /// Primal-specific error data
+        primal_data: Option<PrimalErrorData>,
+        /// Error context
+        context: Option<ErrorContext>,
+    },
+
+    /// I/O and system errors
+    #[error("I/O error: {message}")]
+    Io {
+        /// Error message
+        message: String,
+        /// I/O operation that failed
+        operation: String,
+        /// File path if applicable
+        path: Option<String>,
+        /// Whether the operation is retryable
+        retryable: bool,
+        /// Error context
+        context: Option<ErrorContext>,
+    },
+
+    /// Validation and data format errors
+    #[error("Validation error: {message}")]
+    Validation {
+        /// Error message
+        message: String,
+        /// Field or data that failed validation
+        field: String,
+        /// Current invalid value
+        value: Option<String>,
+        /// Current invalid value (alternative field name)
+        current_value: Option<String>,
+        /// Expected format or constraint
+        expected: Option<String>,
+        /// Error context
+        context: Option<ErrorContext>,
+    },
+
+    /// Timeout errors
+    #[error("Timeout error: {message}")]
+    Timeout {
+        /// Error message
+        message: String,
+        /// Operation that timed out
+        operation: String,
+        /// Timeout duration
+        timeout: Duration,
+        /// Whether the operation can be retried
+        retryable: bool,
+        /// Error context
+        context: Option<ErrorContext>,
+    },
+
+    /// Resource exhaustion errors
+    #[error("Resource exhausted: {message}")]
+    ResourceExhausted {
+        /// Error message
+        message: String,
+        /// Resource type that was exhausted
+        resource_type: String,
+        /// Current usage level
+        current_usage: Option<u64>,
+        /// Maximum capacity
+        max_capacity: Option<u64>,
+        /// Error context
+        context: Option<ErrorContext>,
+    },
+
+    /// Internal system errors
+    #[error("Internal error: {message}")]
+    Internal {
+        /// Error message
+        message: String,
+        /// Component where error occurred
+        component: String,
+        /// Location in code where error occurred
+        location: Option<String>,
+        /// Whether this is a bug that should be reported
+        is_bug: bool,
+        /// Error context for debugging
+        context: Option<ErrorContext>,
+    },
+
+    /// System-level errors
+    #[error("System error: {message}")]
+    System {
+        /// Error message
+        message: String,
+        /// System operation that failed
+        operation: String,
+        /// System resource affected
+        resource: Option<String>,
+        /// Resource utilization level
+        utilization: Option<f64>,
+        /// Whether the operation is retryable
+        retryable: bool,
+        /// Error context
+        context: Option<ErrorContext>,
+    },
+
+    /// Unknown or unclassified errors
+    #[error("Unknown error: {message}")]
+    Unknown {
+        /// Error message
+        message: String,
+        /// Error context
+        context: Option<ErrorContext>,
+    },
+}
+
+// ==================== SECTION ====================
+
+impl From<serde_json::Error> for NestGateUnifiedError {
+    fn from(err: serde_json::Error) -> Self {
+        Self::Validation {
+            message: format!("JSON serialization error: {}", err),
+            field: "json".to_string(),
+            value: None,
+            current_value: None,
+            expected: Some("valid JSON format".to_string()),
+            context: None,
+        }
+    }
+}
+
+impl From<std::io::Error> for NestGateUnifiedError {
+    fn from(err: std::io::Error) -> Self {
+        Self::Io {
+            message: err.to_string(),
+            operation: "io_operation".to_string(),
+            path: None,
+            retryable: matches!(err.kind(), std::io::ErrorKind::Interrupted | std::io::ErrorKind::TimedOut),
+            context: None,
+        }
+    }
+}
+
+impl NestGateUnifiedError {
+    /// Check if the error is retryable
+    pub fn is_retryable(&self) -> bool {
+        match self {
+            Self::Configuration { .. } => false,
+            Self::Api { .. } => true, // Most API errors are retryable
+            Self::Storage { retryable, .. } => *retryable,
+            Self::Network { recoverable, .. } => *recoverable,
+            Self::Security { retryable, .. } => *retryable,
+            Self::Zfs { retryable, .. } => *retryable,
+            Self::Mcp { retryable, .. } => *retryable,
+            Self::Automation { retryable, .. } => *retryable,
+            Self::Middleware { retryable, .. } => *retryable,
+            Self::FsMonitor { retryable, .. } => *retryable,
+            Self::Installation { retryable, .. } => *retryable,
+            Self::UniversalZfs { retryable, .. } => *retryable,
+            Self::Primal { retryable, .. } => *retryable,
+            Self::Io { retryable, .. } => *retryable,
+            Self::Validation { .. } => false, // Validation errors are not retryable
+            Self::Timeout { retryable, .. } => *retryable,
+            Self::ResourceExhausted { .. } => false, // Resource exhaustion not retryable
+            Self::System { retryable, .. } => *retryable,
+            Self::Internal { .. } => false, // Internal errors not retryable
+            Self::Unknown { .. } => false, // Unknown errors not retryable
+        }
+    }
+
+    /// Get error context if available
+    pub fn context(&self) -> Option<&ErrorContext> {
+        match self {
+            Self::Configuration { .. } => None,
+            Self::Api { context, .. } => context.as_ref(),
+            Self::Storage { context, .. } => context.as_ref(),
+            Self::Network { context, .. } => context.as_ref(),
+            Self::Security { context, .. } => context.as_ref(),
+            Self::Zfs { context, .. } => context.as_ref(),
+            Self::Mcp { context, .. } => context.as_ref(),
+            Self::Automation { context, .. } => context.as_ref(),
+            Self::Middleware { context, .. } => context.as_ref(),
+            Self::FsMonitor { context, .. } => context.as_ref(),
+            Self::Installation { context, .. } => context.as_ref(),
+            Self::UniversalZfs { context, .. } => context.as_ref(),
+            Self::Primal { context, .. } => context.as_ref(),
+            Self::Io { context, .. } => context.as_ref(),
+            Self::Validation { context, .. } => context.as_ref(),
+            Self::Timeout { context, .. } => context.as_ref(),
+            Self::ResourceExhausted { context, .. } => context.as_ref(),
+            Self::System { context, .. } => context.as_ref(),
+            Self::Internal { context, .. } => context.as_ref(),
+            Self::Unknown { context, .. } => context.as_ref(),
+        }
+    }
+
+    /// Get error category
+    pub fn category(&self) -> &'static str {
+        match self {
+            Self::Configuration { .. } => "configuration",
+            Self::Api { .. } => "api",
+            Self::Storage { .. } => "storage",
+            Self::Network { .. } => "network",
+            Self::Security { .. } => "security",
+            Self::Zfs { .. } => "zfs",
+            Self::Mcp { .. } => "mcp",
+            Self::Automation { .. } => "automation",
+            Self::Middleware { .. } => "middleware",
+            Self::FsMonitor { .. } => "fs_monitor",
+            Self::Installation { .. } => "installation",
+            Self::UniversalZfs { .. } => "universal_zfs",
+            Self::Primal { .. } => "primal",
+            Self::Io { .. } => "io",
+            Self::Validation { .. } => "validation",
+            Self::Timeout { .. } => "timeout",
+            Self::ResourceExhausted { .. } => "resource_exhaustion",
+            Self::Internal { .. } => "internal",
+            Self::System { .. } => "system",
+            Self::Unknown { .. } => "unknown",
+        }
+    }
+
+    /// Create a timeout error
+    pub fn timeout_error(message: &str, duration: std::time::Duration) -> Self {
+        Self::Timeout {
+            message: message.to_string(),
+            operation: "unknown".to_string(),
+            timeout: duration,
+            retryable: true,
+            context: None,
+        }
+    }
+
+    // ==================== PEDANTIC HELPER METHODS ====================
+    // Adding all the helper methods that the codebase expects
+
+    /// Create internal error with debug information
+    pub fn internal_error_with_debug(message: impl Into<String>) -> Self {
+        Self::Internal {
+            message: message.into(),
+            component: "internal".to_string(),
+            location: None,
+            bug_report: true,
+            context: None,
+        }
+    }
+
+    /// Create internal error with debug information and context - PEDANTIC OVERLOAD
+    pub fn internal_error_with_debug_context(
+        message: impl Into<String>, 
+        context: Option<String>
+    ) -> Self {
+        Self::Internal {
+            message: message.into(),
+            component: "internal".to_string(),
+            location: None,
+            bug_report: true,
+            context: context.map(|c| crate::error::context::ErrorContext {
+                request_id: None,
+                user_id: None,
+                session_id: None,
+                operation: Some("debug".to_string()),
+                metadata: std::collections::HashMap::new(),
+                timestamp: std::time::SystemTime::now(),
+                stack_trace: None,
+                related_errors: vec![],
+                retry_info: None,
+                recovery_suggestions: vec![c],
+                performance_metrics: None,
+                environment: None,
+            }),
+        }
+    }
+
+    /// Create configuration error
+    pub fn configuration_error(message: impl Into<String>) -> Self {
+        Self::Configuration {
+            field: "configuration".to_string(),
+            message: message.into(),
+            current_value: None,
+            expected: None,
+            user_error: true,
+        }
+    }
+
+    /// Create configuration error with field - PEDANTIC OVERLOAD
+    pub fn configuration_error_with_field(
+        message: impl Into<String>,
+        field: impl Into<String>
+    ) -> Self {
+        Self::Configuration {
+            field: field.into(),
+            message: message.into(),
+            current_value: None,
+            expected: None,
+            user_error: true,
+        }
+    }
+
+    /// Create permission denied error
+    pub fn permission_denied(message: impl Into<String>) -> Self {
+        Self::Security {
+            message: format!("Permission denied: {}", message.into()),
+            operation: "access_check".to_string(),
+            subject: None,
+            retryable: false,
+            security_data: None,
+            context: None,
+        }
+    }
+
+    /// Create permission denied error with operation - PEDANTIC OVERLOAD
+    pub fn permission_denied_with_operation(
+        operation: impl Into<String>,
+        message: impl Into<String>
+    ) -> Self {
+        Self::Security {
+            message: format!("Permission denied: {}", message.into()),
+            operation: operation.into(),
+            subject: None,
+            retryable: false,
+            security_data: None,
+            context: None,
+        }
+    }
+
+    /// Create network error
+    pub fn network_error(message: impl Into<String>) -> Self {
+        Self::Network {
+            message: message.into(),
+            operation: "network_operation".to_string(),
+            address: None,
+            remote_address: None,
+            endpoint: None,
+            retry_after: None,
+            network_code: None,
+            recoverable: false,
+            retryable: false,
+            network_data: None,
+            context: None,
+        }
+    }
+
+    /// Create storage error
+    pub fn storage_error(message: impl Into<String>) -> Self {
+        Self::Storage {
+            message: message.into(),
+            operation: "storage_operation".to_string(),
+            resource: None,
+            retryable: false,
+            storage_data: None,
+            context: None,
+        }
+    }
+
+    /// Create validation error
+    pub fn validation_error(message: impl Into<String>) -> Self {
+        Self::Validation {
+            message: message.into(),
+            field: "validation".to_string(),
+            value: None,
+            current_value: None,
+            expected: None,
+            context: None,
+        }
+    }
+
+    /// Create API error with status code
+    pub fn api_error_with_status(message: impl Into<String>, status_code: u16) -> Self {
+        Self::Api {
+            message: message.into(),
+            status_code: Some(status_code),
+            request_id: None,
+            endpoint: None,
+            context: None,
+        }
+    }
+
+    /// Create simple error with message
+    pub fn simple(message: impl Into<String>) -> Self {
+        Self::Internal {
+            message: message.into(),
+            component: "general".to_string(),
+            location: None,
+            bug_report: false,
+            context: None,
+        }
+    }
+
+    /// Create error with context
+    pub fn with_context(mut self, context: impl Into<String>) -> Self {
+        let context_str = context.into();
+        match &mut self {
+            Self::Configuration { message, .. } => {
+                *message = format!("{} (context: {})", message, context_str);
+            }
+            Self::Api { message, .. } => {
+                *message = format!("{} (context: {})", message, context_str);
+            }
+            Self::Storage { message, .. } => {
+                *message = format!("{} (context: {})", message, context_str);
+            }
+            Self::Network { message, .. } => {
+                *message = format!("{} (context: {})", message, context_str);
+            }
+            Self::Security { message, .. } => {
+                *message = format!("{} (context: {})", message, context_str);
+            }
+            Self::Internal { message, .. } => {
+                *message = format!("{} (context: {})", message, context_str);
+            }
+            _ => {} // Add context to other variants as needed
+        }
+        self
+    }
+
+    // ==================== ADDITIONAL PEDANTIC HELPER METHODS ====================
+
+    /// Create service unavailable error
+    pub fn service_unavailable(message: impl Into<String>) -> Self {
+        Self::Api {
+            message: format!("Service unavailable: {}", message.into()),
+            status_code: Some(503),
+            request_id: None,
+            endpoint: None,
+            context: None,
+        }
+    }
+
+    /// Create service unavailable error with operation - PEDANTIC OVERLOAD
+    pub fn service_unavailable_with_operation(
+        operation: impl Into<String>,
+        message: impl Into<String>
+    ) -> Self {
+        Self::Api {
+            message: format!("Service unavailable during {}: {}", operation.into(), message.into()),
+            status_code: Some(503),
+            request_id: None,
+            endpoint: Some(operation.into()),
+            context: None,
+        }
+    }
+
+    /// Create not found error
+    pub fn not_found_error(message: impl Into<String>) -> Self {
+        Self::Api {
+            message: format!("Not found: {}", message.into()),
+            status_code: Some(404),
+            request_id: None,
+            endpoint: None,
+            context: None,
+        }
+    }
+
+    /// Create not found error with resource - PEDANTIC OVERLOAD
+    pub fn not_found_error_with_resource(
+        resource: impl Into<String>,
+        message: impl Into<String>
+    ) -> Self {
+        Self::Api {
+            message: format!("Resource '{}' not found: {}", resource.into(), message.into()),
+            status_code: Some(404),
+            request_id: None,
+            endpoint: Some(resource.into()),
+            context: None,
+        }
+    }
+
+    /// Create invalid input error
+    pub fn invalid_input(message: impl Into<String>) -> Self {
+        Self::Validation {
+            message: format!("Invalid input: {}", message.into()),
+            field: "input".to_string(),
+            value: None,
+            current_value: None,
+            expected: None,
+            context: None,
+        }
+    }
+
+    /// Create invalid input error with field - PEDANTIC OVERLOAD
+    pub fn invalid_input_with_field(
+        field: impl Into<String>,
+        message: impl Into<String>
+    ) -> Self {
+        Self::Validation {
+            message: format!("Invalid input: {}", message.into()),
+            field: field.into(),
+            value: None,
+            current_value: None,
+            expected: None,
+            context: None,
+        }
+    }
+
+    /// Create timeout error with operation
+    pub fn timeout_error_with_operation(operation: impl Into<String>, duration: std::time::Duration) -> Self {
+        Self::Timeout {
+            message: format!("Operation '{}' timed out", operation.into()),
+            operation: operation.into(),
+            timeout: duration,
+            retryable: true,
+            context: None,
+        }
+    }
+
+    /// Create connection error
+    pub fn connection_error(message: impl Into<String>) -> Self {
+        Self::Network {
+            message: format!("Connection error: {}", message.into()),
+            operation: "connect".to_string(),
+            address: None,
+            remote_address: None,
+            endpoint: None,
+            retry_after: None,
+            network_code: None,
+            recoverable: true,
+            retryable: true,
+            network_data: None,
+            context: None,
+        }
+    }
+
+    /// Create resource error
+    pub fn resource_error(message: impl Into<String>) -> Self {
+        Self::Storage {
+            message: format!("Resource error: {}", message.into()),
+            operation: "resource_access".to_string(),
+            resource: None,
+            retryable: false,
+            storage_data: None,
+            context: None,
+        }
+    }
+
+    /// Create authentication error
+    pub fn authentication_error(message: impl Into<String>) -> Self {
+        Self::Security {
+            message: format!("Authentication failed: {}", message.into()),
+            operation: "authenticate".to_string(),
+            subject: None,
+            retryable: false,
+            security_data: None,
+            context: None,
+        }
+    }
+
+    /// Create authorization error
+    pub fn authorization_error(message: impl Into<String>) -> Self {
+        Self::Security {
+            message: format!("Authorization failed: {}", message.into()),
+            operation: "authorize".to_string(),
+            subject: None,
+            retryable: false,
+            security_data: None,
+            context: None,
+        }
+    }
+} 

@@ -1,7 +1,6 @@
 //! Orchestration Fallback Provider
 //! Local service coordination when external orchestration primals are unavailable
 
-use async_trait::async_trait;
 use std::collections::HashMap;
 use tracing::debug;
 
@@ -28,6 +27,7 @@ impl Default for OrchestrationFallbackProvider {
     }
 }
 
+#[derive(Debug)]
 pub struct OrchestrationFallbackProvider {
     _config: OrchestrationFallbackConfig, // Mark as intentionally unused with underscore prefix
 }
@@ -127,7 +127,6 @@ impl OrchestrationFallbackProvider {
     }
 }
 
-#[async_trait]
 impl FallbackProvider for OrchestrationFallbackProvider {
     async fn execute(
         &self,

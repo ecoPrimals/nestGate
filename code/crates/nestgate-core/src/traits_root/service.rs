@@ -3,7 +3,6 @@
 
 // Removed unused Future import - using native async
 
-// REMOVED: async_trait - using zero-cost native async patterns
 
 /// Core service trait for all NestGate services - **ZERO-COST NATIVE ASYNC**
 pub trait Service: Send + Sync {

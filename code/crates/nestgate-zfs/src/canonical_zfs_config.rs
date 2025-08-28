@@ -2,7 +2,7 @@
 // This module provides the canonical ZFS configuration that integrates with
 // NestGate's unified configuration system, replacing all fragmented ZFS configs.
 
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
 use nestgate_core::error::{NestGateError, Result};
 use nestgate_core::traits_root::config::Configuration;
 use serde::{Deserialize, Serialize};
@@ -146,7 +146,7 @@ impl CanonicalZfsConfig {
     }
 }
 
-// ==================== CONFIGURATION TRAIT IMPLEMENTATION ====================
+// ==================== SECTION ====================
 
 impl Configuration for CanonicalZfsConfig {
     fn name(&self) -> &str {
@@ -189,7 +189,7 @@ impl Configuration for CanonicalZfsConfig {
     }
 }
 
-// ==================== ZFS CONFIGURATION COMPONENTS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ZfsPoolConfig {
@@ -318,7 +318,7 @@ impl ZfsPerformanceConfig {
     }
 }
 
-// ==================== SUPPORTING CONFIGURATION TYPES ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ZfsScrubSchedule {
@@ -709,7 +709,7 @@ impl ZfsMigrationConfig {
     }
 }
 
-// ==================== CANONICAL ZFS CONFIGURATION BUILDERS ====================
+// ==================== SECTION ====================
 
 /// Canonical ZFS configuration builder with fluent API
 #[derive(Debug, Clone, Default)]

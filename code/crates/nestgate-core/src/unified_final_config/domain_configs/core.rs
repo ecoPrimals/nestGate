@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 //
-// Core domain-specific configuration structures extracted from the monolithic domain_configs.rs
+// Core domain-specific configuration structures extracted from the monolithic NestGateCanonicalConfig.rs
 // for better maintainability and focused responsibility.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::Duration;
 
 /// Health monitoring configuration

@@ -3,7 +3,7 @@
 //! This module provides a comprehensive, unified storage abstraction layer that supports
 //! multiple storage backends through a single, consistent interface.
 
-// ==================== NEW UNIFIED STORAGE SYSTEM ====================
+// ==================== SECTION ====================
 
 /// **THE** Unified Storage Traits - Canonical storage interface system
 /// This module consolidates all fragmented storage trait definitions
@@ -11,6 +11,9 @@ pub mod unified_storage_traits;
 
 /// Unified Storage Types - Consolidated type definitions
 pub mod unified_storage_types;
+
+/// Canonical Storage - Main storage implementation
+pub mod canonical_storage;
 
 // Re-export the canonical storage traits for easy access
 pub use unified_storage_traits::{
@@ -56,63 +59,18 @@ pub use unified_storage_traits::{
     UnifiedStorageType,
 };
 
-// ==================== LEGACY STORAGE MODULES (DEPRECATED) ====================
+// ==================== SECTION ====================
 
-/// **DEPRECATED**: Legacy storage backend implementations
-/// Use `unified_storage_traits::UnifiedStorageBackend` instead
-#[deprecated(
-    since = "2.1.0",
-    note = "Use unified_storage_traits::UnifiedStorageBackend instead. This module contains fragmented trait definitions that have been consolidated."
-)]
-pub mod backends;
+// **DEPRECATED MODULES REMOVED** - Eliminated as part of unification cleanup
+// - backends: Consolidated into unified_storage_traits::UnifiedStorageBackend
+// - consolidated_types: Consolidated into unified_storage_traits types
 
-/// **DEPRECATED**: Legacy consolidated types
-/// Use `unified_storage_traits` types instead
-#[deprecated(
-    since = "2.1.0",
-    note = "Use unified_storage_traits types instead. This module contains duplicate type definitions."
-)]
-pub mod consolidated_types;
-
-// REMOVED: Deprecated legacy modules eliminated
 // - types.rs: Fragmented type definitions eliminated
 // - traits.rs: Fragmented trait definitions eliminated
-// All functionality migrated to unified_storage_traits.rs
 
-// ==================== MIGRATION UTILITIES REMOVED ====================
-// Migration utilities have been removed as they are no longer needed.
+// ==================== SECTION ====================
 // All storage interfaces have been successfully migrated to the unified system.
-
-// ==================== COMPATIBILITY RE-EXPORTS ====================
-
-// REMOVED: Legacy compatibility exports eliminated
-// All legacy storage backends have been migrated to unified_storage_traits
-
-/// **MIGRATION GUIDE**
-///
-/// To migrate from legacy storage interfaces to the unified system:
-///
-/// ```rust
-/// // OLD: Multiple fragmented traits
-/// use nestgate_core::universal_storage::backends::StorageBackend;
-/// use nestgate_core::universal_storage::types::UniversalStorageBackend;
-/// use nestgate_core::universal_storage::consolidated_types::UniversalStorageBackend;
-///
-/// // NEW: Single unified trait
-/// use nestgate_core::universal_storage::UnifiedStorageBackend;
-///
-/// // OLD: Inconsistent metadata types
-/// use nestgate_core::universal_storage::backends::StorageMetadata;
-/// use nestgate_core::universal_storage::types::FileMetadata;
-///
-/// // NEW: Unified metadata type
-/// use nestgate_core::universal_storage::UnifiedStorageMetadata;
-///
-/// // Configuration migration
-// Temporarily commented out due to missing migration module
-// use nestgate_core::universal_storage::migration::migrate_config;
-/// let config = migrate_config("filesystem")?;
-/// ```
+// Use unified_storage_traits directly for all storage operations.
 
 #[cfg(test)]
 mod tests {

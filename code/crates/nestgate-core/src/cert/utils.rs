@@ -2,10 +2,14 @@
 /// Utility functions for certificate generation, parsing, and manipulation.
 use super::types::{Certificate, CertificateType};
 use crate::error::NestGateError;
-use crate::unified_types::UnifiedNetworkConfig;
 use crate::Result;
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
+use std::path::Path;
+use std::net::SocketAddr;
+
+// **MIGRATED**: Using canonical config instead of deprecated unified_types
+use crate::config::canonical_master::{NetworkConfig as UnifiedNetworkConfig, ApiConfig};
 
 /// Convert SystemTime to a string representation
 pub fn format_system_time(time: SystemTime) -> String {
@@ -22,9 +26,10 @@ pub fn parse_system_time(s: &str) -> Result<SystemTime> {
         Err(_) => Err(NestGateError::Validation {
             field: "timestamp".to_string(),
             message: format!("Invalid timestamp format: {s}"),
+            value: Some(s.to_string()),
             current_value: Some(s.to_string()),
             expected: Some("Unix timestamp in seconds".to_string()),
-            user_error: false,
+            context: None,
         }),
     }
 }
@@ -229,15 +234,10 @@ pub mod modern {
         let endpoint_result = adapter.discover_endpoint("cert-service");
         let endpoint = endpoint_result?;
 
-        // Create network configuration for cert service
+        // Create basic network configuration for cert service
         let _network_config = UnifiedNetworkConfig {
             bind_address: endpoint.ip(),
-            api_port: endpoint.port(),
-            service_name: "cert-service".to_string(),
-            max_connections: 100,
-            connection_timeout: Duration::from_secs(30),
-            keep_alive: true,
-            discovery_enabled: true,
+            port: endpoint.port(),
             ..Default::default()
         };
 
@@ -387,7 +387,6 @@ pub mod modern {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_generate_self_signed() {

@@ -6,7 +6,7 @@ use std::future::Future;
 use std::path::PathBuf;
 use tokio::fs;
 
-// ==================== ZERO-COST STORAGE TRAIT ====================
+// ==================== SECTION ====================
 
 /// **Simple zero-cost storage trait**
 ///
@@ -33,7 +33,7 @@ pub trait ZeroCostSimpleStorage<const MAX_SIZE_MB: usize = 100> {
     }
 }
 
-// ==================== IMPLEMENTATION ====================
+// ==================== SECTION ====================
 
 /// **Simple filesystem implementation**
 pub struct SimpleFilesystemStorage {
@@ -55,7 +55,7 @@ impl SimpleFilesystemStorage {
 impl<const MAX_SIZE_MB: usize> ZeroCostSimpleStorage<MAX_SIZE_MB> for SimpleFilesystemStorage {
     type Error = std::io::Error;
 
-    async fn read(&self, path: &str) -> std::result::Result<Vec<u8>, Self::Error> {
+    fn read(&self, path: &str) -> impl std::future::Future<Output = Result<Vec<u8>> + Send;
         let full_path = self.full_path(path);
 
         // Check file size with compile-time limit
@@ -70,7 +70,7 @@ impl<const MAX_SIZE_MB: usize> ZeroCostSimpleStorage<MAX_SIZE_MB> for SimpleFile
         fs::read(full_path).await
     }
 
-    async fn write(&self, path: &str, data: Vec<u8>) -> std::result::Result<(), Self::Error> {
+    fn write(&self, path: &str, data: Vec<u8>) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send;
         // Check data size at compile time
         if data.len() > (MAX_SIZE_MB * 1024 * 1024) {
             return Err(std::io::Error::new(
@@ -90,7 +90,7 @@ impl<const MAX_SIZE_MB: usize> ZeroCostSimpleStorage<MAX_SIZE_MB> for SimpleFile
     }
 }
 
-// ==================== SPECIALIZED TYPES ====================
+// ==================== SECTION ====================
 
 /// High-performance storage (smaller files, faster operations)
 /// Note: Uses generic implementation with const parameters
@@ -100,7 +100,7 @@ pub type FastStorage<const MAX_MB: usize = 10> = SimpleFilesystemStorage;
 /// Note: Uses generic implementation with const parameters  
 pub type BulkStorage<const MAX_MB: usize = 1024> = SimpleFilesystemStorage;
 
-// ==================== MIGRATION DEMONSTRATION ====================
+// ==================== SECTION ====================
 
 /// **Migration comparison utilities**
 pub struct ZeroCostMigrationDemo;
@@ -113,9 +113,8 @@ MIGRATION: async_trait → Zero-Cost Native Async
 
 BEFORE (async_trait with runtime overhead):
 ```rust
-#[async_trait]
 trait StorageService {
-    async fn read(&self, path: &str) -> Result<Vec<u8>>;
+    fn read(&self, path: &str) -> impl std::future::Future<Output = Result<Vec<u8>> + Send;
 }
 ```
 

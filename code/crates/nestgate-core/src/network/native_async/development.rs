@@ -4,12 +4,14 @@
 use std::collections::HashMap;
 
 use crate::diagnostics::types::ServiceInfo;
-use crate::error::Result;
+use crate::Result;
 
 use super::traits::NativeAsyncServiceDiscovery;
 use super::types::{ServiceEvent, ServiceQuery};
 
 /// Development service discovery for testing
+/// Development-optimized service discovery implementation
+/// Provides lightweight service discovery for development environments
 pub struct DevelopmentServiceDiscovery {
     service_count: std::sync::Arc<std::sync::atomic::AtomicUsize>,
 }

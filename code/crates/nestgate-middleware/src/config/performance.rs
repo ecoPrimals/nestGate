@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-// ==================== PERFORMANCE SETTINGS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MiddlewarePerformanceSettings {
@@ -213,7 +213,7 @@ pub struct MemoryOptimizationSettings {
     pub memory_mapping: bool,
 }
 
-// ==================== OBSERVABILITY SETTINGS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MiddlewareObservabilitySettings {
@@ -374,7 +374,7 @@ pub enum AlertDestination {
     Custom(HashMap<String, String>),
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for MiddlewarePerformanceSettings {
     fn default() -> Self {

@@ -1,4 +1,4 @@
-use crate::unified_types::UnifiedConfig;
+use crate::config::canonical_master::NestGateCanonicalConfig;
 // **REMOVED**: InterfaceResult import - using unified Result<T> instead
 
 // Remove deprecated imports - use unified types instead
@@ -17,7 +17,7 @@ pub use config::*;
 pub use types::*;
 
 /// **UNIFIED**: Use the main Result type from error module
-pub use crate::error::Result;
+pub use crate::Result;
 
 // **REMOVED**: Deprecated UniversalAdapterResult<T> type alias eliminated
 // Use unified Result<T> type directly
@@ -35,7 +35,7 @@ impl Default for AdapterConfigurationSummary {
     fn default() -> Self {
         Self {
             discovery_endpoint:
-                crate::constants::domain_constants::network::addresses::DEFAULT_DISCOVERY_ENDPOINT
+                crate::constants::unified::network::DEFAULT_DISCOVERY_ENDPOINT
                     .to_string(), // Use centralized constant
             // SOVEREIGNTY FIX: Use capability-based service identification
             service_name: std::env::var("NESTGATE_SERVICE_NAME")
@@ -50,11 +50,11 @@ impl Default for AdapterConfigurationSummary {
 /// Universal Adapter System that combines all components
 pub struct UniversalAdapterSystem {
     adapter: crate::ecosystem_integration::universal_adapter::adapter::UniversalAdapter,
-    config: UnifiedConfig,
+    config: NestGateCanonicalConfig,
 }
 
 impl UniversalAdapterSystem {
-    pub async fn new(config: UnifiedConfig) -> crate::Result<Self> {
+    pub async fn new(config: NestGateCanonicalConfig) -> crate::Result<Self> {
         // Create adapter config from unified config
         let adapter_config = crate::ecosystem_integration::create_default_adapter_config();
         let adapter =
@@ -74,7 +74,7 @@ impl UniversalAdapterSystem {
     }
 
     /// Get the configuration
-    pub fn config(&self) -> &UnifiedConfig {
+    pub fn config(&self) -> &NestGateCanonicalConfig {
         &self.config
     }
 }

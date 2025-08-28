@@ -3,7 +3,6 @@ use std::collections::HashMap;
 // Provides comprehensive system metrics collection and analysis.
 
 use crate::error::CanonicalResult as Result;
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;

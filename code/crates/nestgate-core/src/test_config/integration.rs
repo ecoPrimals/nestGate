@@ -3,10 +3,9 @@ use std::collections::HashMap;
 /// This module provides configuration for integration testing including external services,
 /// databases, message queues, service mesh, and service discovery.
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::Duration;
 
-// ==================== INTEGRATION TESTING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// **Unified integration testing configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

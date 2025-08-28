@@ -4,7 +4,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-// ==================== SERVICE CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** ServiceType - unified across all modules
 /// Replaces 2+ fragmented ServiceType definitions
@@ -64,7 +64,7 @@ impl fmt::Display for UnifiedServiceType {
     }
 }
 
-// ==================== HEALTH STATUS CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** HealthStatus - unified across all modules
 /// Replaces 4+ fragmented HealthStatus definitions across health checks, monitoring, etc.
@@ -121,7 +121,7 @@ impl fmt::Display for UnifiedHealthStatus {
     }
 }
 
-// ==================== SERVICE STATE CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** ServiceState - unified across all modules  
 /// Replaces 6+ fragmented ServiceStatus enum definitions across diagnostics, network, etc.
@@ -170,7 +170,7 @@ impl fmt::Display for UnifiedServiceState {
     }
 }
 
-// ==================== CONNECTION STATUS CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** ConnectionStatus - unified across all modules
 /// Replaces ConnectionStatus definitions across network and service modules

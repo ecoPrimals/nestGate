@@ -4,7 +4,7 @@
 //! patterns and no deprecated fragments remain.
 
 use nestgate_core::{
-    config::canonical_unified::CanonicalConfig,
+    config::unified::NestGateUnifiedConfig,
     error::{NestGateError, Result},
 };
 use std::path::Path;

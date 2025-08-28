@@ -27,7 +27,7 @@ use uuid::Uuid;
 // Removed unused chrono imports
 use crate::error::NestGateError;
 
-// ==================== CORE AI-FIRST RESPONSE FORMAT ====================
+// ==================== SECTION ====================
 
 /// **THE** Universal AI-first response format - ALL ENDPOINTS MUST USE THIS
 ///
@@ -177,7 +177,7 @@ pub struct EcosystemMetadata {
     pub cross_primal_capabilities: Vec<String>,
 }
 
-// ==================== SUPPORTING ENUMS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AIErrorCategory {
@@ -261,7 +261,7 @@ pub struct UIHint {
     pub severity: String,
 }
 
-// ==================== SMART ABSTRACTIONS & BUILDERS ====================
+// ==================== SECTION ====================
 
 /// Builder for constructing AI-First responses with sensible defaults
 pub struct AIFirstResponseBuilder<T> {
@@ -334,7 +334,7 @@ pub trait IntoAIFirstError {
     fn into_ai_first_error_with_hints(self, hints: Vec<String>) -> AIFirstError;
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for AIResponseMetadata {
     fn default() -> Self {
@@ -401,7 +401,7 @@ impl Default for EcosystemMetadata {
     }
 }
 
-// ==================== CONVERSION IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl IntoAIFirstError for NestGateError {
     fn into_ai_first_error(self) -> AIFirstError {
@@ -439,10 +439,10 @@ trait NestGateErrorExt {
 impl NestGateErrorExt for NestGateError {
     fn error_code(&self) -> String {
         match self {
-            NestGateError::Network(_) => "NETWORK_ERROR".to_string(),
-            NestGateError::Security(_) => "SECURITY_ERROR".to_string(),
-            NestGateError::Api(_) => "API_ERROR".to_string(),
-            NestGateError::Zfs(_) => "ZFS_ERROR".to_string(),
+            NestGateError::Network { .. } => "NETWORK_ERROR".to_string(),
+            NestGateError::Security { .. } => "SECURITY_ERROR".to_string(),
+            NestGateError::Api { .. } => "API_ERROR".to_string(),
+            NestGateError::Storage { .. } => "ZFS_ERROR".to_string(),
             NestGateError::Configuration { .. } => "CONFIG_ERROR".to_string(),
             NestGateError::Validation { .. } => "VALIDATION_ERROR".to_string(),
             _ => "UNKNOWN_ERROR".to_string(),
@@ -451,10 +451,10 @@ impl NestGateErrorExt for NestGateError {
 
     fn ai_error_category(&self) -> AIErrorCategory {
         match self {
-            NestGateError::Network(_) => AIErrorCategory::Network,
-            NestGateError::Security(_) => AIErrorCategory::Security,
+            NestGateError::Network { .. } => AIErrorCategory::Network,
+            NestGateError::Security { .. } => AIErrorCategory::Security,
             NestGateError::Configuration { .. } => AIErrorCategory::Configuration,
-            NestGateError::Zfs(_) | NestGateError::UniversalZfs(_) => AIErrorCategory::Storage,
+            NestGateError::Storage { .. } => AIErrorCategory::Storage,
             NestGateError::System { .. } => AIErrorCategory::System,
             _ => AIErrorCategory::Internal,
         }
@@ -462,11 +462,11 @@ impl NestGateErrorExt for NestGateError {
 
     fn retry_strategy(&self) -> RetryStrategy {
         match self {
-            NestGateError::Network(_) => RetryStrategy::ExponentialBackoff {
+            NestGateError::Network { .. } => RetryStrategy::ExponentialBackoff {
                 base_ms: 1000,
                 max_attempts: 3,
             },
-            NestGateError::Security(_) => RetryStrategy::NoRetry,
+            NestGateError::Security { .. } => RetryStrategy::NoRetry,
             NestGateError::Configuration { .. } => RetryStrategy::NoRetry,
             _ => RetryStrategy::LinearBackoff {
                 interval_ms: 2000,
@@ -477,7 +477,7 @@ impl NestGateErrorExt for NestGateError {
 
     fn automation_hints(&self) -> Vec<String> {
         match self {
-            NestGateError::Network(_) => vec![
+            NestGateError::Network { .. } => vec![
                 "Check network connectivity".to_string(),
                 "Verify endpoint availability".to_string(),
                 "Consider fallback endpoints".to_string(),
@@ -493,9 +493,9 @@ impl NestGateErrorExt for NestGateError {
 
     fn severity(&self) -> ErrorSeverity {
         match self {
-            NestGateError::Security(_) => ErrorSeverity::Critical,
+            NestGateError::Security { .. } => ErrorSeverity::Critical,
             NestGateError::System { .. } => ErrorSeverity::High,
-            NestGateError::Network(_) => ErrorSeverity::Medium,
+            NestGateError::Network { .. } => ErrorSeverity::Medium,
             _ => ErrorSeverity::Low,
         }
     }
@@ -503,13 +503,13 @@ impl NestGateErrorExt for NestGateError {
     fn requires_human_intervention(&self) -> bool {
         matches!(
             self,
-            NestGateError::Security(_) | NestGateError::Configuration { .. }
+            NestGateError::Security { .. } | NestGateError::Configuration { .. }
         )
     }
 
     fn recovery_suggestions(&self) -> Vec<RecoverySuggestion> {
         match self {
-            NestGateError::Network(_) => vec![RecoverySuggestion {
+            NestGateError::Network { .. } => vec![RecoverySuggestion {
                 suggestion_id: "network_retry".to_string(),
                 description: "Retry with exponential backoff".to_string(),
                 automated: true,
@@ -521,7 +521,7 @@ impl NestGateErrorExt for NestGateError {
     }
 }
 
-// ==================== TYPE ALIASES FOR COMMON PATTERNS ====================
+// ==================== SECTION ====================
 
 /// Common AI-First response types for NestGate operations
 pub type AIStorageResponse<T> = AIFirstResponse<T>;
@@ -532,7 +532,7 @@ pub type AIConfigResponse<T> = AIFirstResponse<T>;
 /// Result type that automatically converts to AI-First format
 pub type AIResult<T> = Result<AIFirstResponse<T>, AIFirstError>;
 
-// ==================== UTILITY FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Create a successful AI-First response with high confidence
 pub fn ai_success<T>(data: T) -> AIFirstResponse<T> {

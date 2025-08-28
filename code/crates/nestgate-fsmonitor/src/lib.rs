@@ -221,7 +221,7 @@ impl FsMonitor {
         .map_err(|e| NestGateError::Internal {
             message: format!("Failed to create file system watcher: {e}"),
             location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })?;
 
@@ -280,7 +280,7 @@ impl FsMonitor {
                 .map_err(|e| NestGateError::Internal {
                     message: format!("Failed to watch path {path:?}: {e}"),
                     location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: None,
+                    context: None,
                     is_bug: false,
                 })?;
 
@@ -296,7 +296,7 @@ impl FsMonitor {
             watcher.unwatch(path).map_err(|e| NestGateError::Internal {
                 message: format!("Failed to unwatch path {path:?}: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -350,7 +350,7 @@ impl FsMonitor {
             .ok_or_else(|| NestGateError::Internal {
                 message: "Event sender not initialized".to_string(),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?
             .clone();

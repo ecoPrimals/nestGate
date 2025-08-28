@@ -91,7 +91,7 @@ impl IntelligenceAdapter {
         Err(NestGateError::Internal {
             message: "Mock intelligence adapter not yet implemented - use real adapter".to_string(),
             location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })
     }
@@ -118,7 +118,7 @@ impl IntelligenceAdapter {
             serde_json::to_vec(&inference_request).map_err(|e| NestGateError::Internal {
                 message: format!("Failed to serialize inference request: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -128,7 +128,7 @@ impl IntelligenceAdapter {
             payload,
             metadata: {
                 let mut metadata = std::collections::HashMap::new();
-                metadata.insert("service".to_string(), self.service_name.clone());
+                metadata.insert("service".to_string(), self.name.clone());
                 metadata.insert("model_id".to_string(), request.model_id.clone());
                 metadata
             },
@@ -149,7 +149,7 @@ impl IntelligenceAdapter {
                             NestGateError::Internal {
                                 message: format!("Failed to deserialize inference response: {e}"),
                                 location: Some(format!("{}:{}", file!(), line!())),
-                                debug_info: None,
+                                context: None,
                                 is_bug: false,
                             }
                         })?;
@@ -176,7 +176,7 @@ impl IntelligenceAdapter {
                     Err(NestGateError::Internal {
                         message: format!("Model inference failed: {error_msg}"),
                         location: Some(format!("{}:{}", file!(), line!())),
-                        debug_info: None,
+                        context: None,
                         is_bug: false,
                     })
                 }
@@ -186,7 +186,7 @@ impl IntelligenceAdapter {
                 Err(NestGateError::Internal {
                     message: format!("Intelligence adapter communication failed: {e}"),
                     location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: None,
+                    context: None,
                     is_bug: false,
                 })
             }
@@ -210,7 +210,7 @@ impl IntelligenceAdapter {
             serde_json::to_vec(&analysis_request).map_err(|e| NestGateError::Internal {
                 message: format!("Failed to serialize analysis request: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -220,7 +220,7 @@ impl IntelligenceAdapter {
             payload,
             metadata: {
                 let mut metadata = std::collections::HashMap::new();
-                metadata.insert("service".to_string(), self.service_name.clone());
+                metadata.insert("service".to_string(), self.name.clone());
                 metadata.insert("task_id".to_string(), task.task_id.clone());
                 metadata.insert("analysis_type".to_string(), task.analysis_type.clone());
                 metadata
@@ -239,7 +239,7 @@ impl IntelligenceAdapter {
                             NestGateError::Internal {
                                 message: format!("Failed to deserialize analysis response: {e}"),
                                 location: Some(format!("{}:{}", file!(), line!())),
-                                debug_info: None,
+                                context: None,
                                 is_bug: false,
                             }
                         })?;
@@ -267,7 +267,7 @@ impl IntelligenceAdapter {
                     Err(NestGateError::Internal {
                         message: format!("Data analysis failed: {error_msg}"),
                         location: Some(format!("{}:{}", file!(), line!())),
-                        debug_info: None,
+                        context: None,
                         is_bug: false,
                     })
                 }
@@ -277,7 +277,7 @@ impl IntelligenceAdapter {
                 Err(NestGateError::Internal {
                     message: format!("Intelligence adapter communication failed: {e}"),
                     location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: None,
+                    context: None,
                     is_bug: false,
                 })
             }
@@ -311,7 +311,7 @@ impl IntelligenceAdapter {
             serde_json::to_vec(&optimization_request).map_err(|e| NestGateError::Internal {
                 message: format!("Failed to serialize optimization request: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -321,7 +321,7 @@ impl IntelligenceAdapter {
             payload,
             metadata: {
                 let mut metadata = std::collections::HashMap::new();
-                metadata.insert("service".to_string(), self.service_name.clone());
+                metadata.insert("service".to_string(), self.name.clone());
                 metadata.insert("target_system".to_string(), target_system.to_string());
                 metadata
             },
@@ -341,7 +341,7 @@ impl IntelligenceAdapter {
                                     "Failed to deserialize optimization response: {e}"
                                 ),
                                 location: Some(format!("{}:{}", file!(), line!())),
-                                debug_info: None,
+                                context: None,
                                 is_bug: false,
                             }
                         })?;
@@ -361,7 +361,7 @@ impl IntelligenceAdapter {
                     Err(NestGateError::Internal {
                         message: format!("Optimization suggestions failed: {error_msg}"),
                         location: Some(format!("{}:{}", file!(), line!())),
-                        debug_info: None,
+                        context: None,
                         is_bug: false,
                     })
                 }
@@ -371,7 +371,7 @@ impl IntelligenceAdapter {
                 Err(NestGateError::Internal {
                     message: format!("Intelligence adapter communication failed: {e}"),
                     location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: None,
+                    context: None,
                     is_bug: false,
                 })
             }
@@ -384,7 +384,7 @@ impl IntelligenceAdapter {
 
         let discovery_request = serde_json::json!({
             "model_type": model_type,
-            "service": self.service_name,
+            "service": self.name,
             "capabilities": ["inference", "analysis"]
         });
 
@@ -392,7 +392,7 @@ impl IntelligenceAdapter {
             serde_json::to_vec(&discovery_request).map_err(|e| NestGateError::Internal {
                 message: format!("Failed to serialize model discovery request: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -414,7 +414,7 @@ impl IntelligenceAdapter {
                         .map_err(|e| NestGateError::Internal {
                             message: format!("Failed to deserialize model discovery response: {e}"),
                             location: Some(format!("{}:{}", file!(), line!())),
-                            debug_info: None,
+                            context: None,
                             is_bug: false,
                         })?;
 
@@ -454,14 +454,14 @@ impl IntelligenceAdapter {
         info!("🧠 Performing intelligence adapter health check");
 
         let health_request = serde_json::json!({
-            "service": self.service_name,
+            "service": self.name,
             "check_type": "ai_connectivity"
         });
 
         let payload = serde_json::to_vec(&health_request).map_err(|e| NestGateError::Internal {
             message: format!("Failed to serialize health check request: {e}"),
             location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })?;
 

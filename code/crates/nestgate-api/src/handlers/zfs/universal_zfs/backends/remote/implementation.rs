@@ -1,5 +1,4 @@
 
-// REMOVED: async_trait - using zero-cost native async patterns
 use serde_json::json;
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};

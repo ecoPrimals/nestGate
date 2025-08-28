@@ -3,13 +3,14 @@
 // with the canonical NestGateError system. All MCP errors are now represented
 // as NestGateError::Mcp variants with rich context and recovery suggestions.
 
-use nestgate_core::error::domain_errors::McpErrorData;
+// McpErrorData moved to unified error system
+use nestgate_core::error::McpErrorData;
 use nestgate_core::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 
-// ==================== CANONICAL ERROR PATTERNS ====================
+// ==================== SECTION ====================
 
 /// Canonical error creation helpers for MCP operations
 pub struct McpErrorBuilder;
@@ -28,12 +29,19 @@ impl McpErrorBuilder {
                 .to_string(),
         );
 
-        NestGateError::Mcp(Box::new(McpErrorData {
+        NestGateError::Mcp {
             message: message.to_string(),
             operation: "connection".to_string(),
-            session_id: None,
-            context: Some(context),
-        }))
+            connection_id: None,
+            protocol_version: Some("1.0".to_string()),
+            mcp_data: Some(McpErrorData {
+                message_type: "connection_error".to_string(),
+                protocol_version: "1.0".to_string(),
+                connection_state: "disconnected".to_string(),
+                sequence_number: None,
+            }),
+            context: None,
+        }
     }
 
     /// Create a canonical MCP protocol error
@@ -46,12 +54,19 @@ impl McpErrorBuilder {
         context.insert("recovery_suggestions".to_string(), 
             "Check MCP protocol version compatibility; Verify message format; Review MCP specification".to_string());
 
-        NestGateError::Mcp(Box::new(McpErrorData {
+        NestGateError::Mcp {
             message: message.to_string(),
             operation: "protocol".to_string(),
-            session_id: None,
-            context: Some(context),
-        }))
+            connection_id: None,
+            protocol_version: Some("1.0".to_string()),
+            mcp_data: Some(McpErrorData {
+                message_type: "protocol_error".to_string(),
+                protocol_version: "1.0".to_string(),
+                connection_state: "connected".to_string(),
+                sequence_number: None,
+            }),
+            context: None,
+        }
     }
 
     /// Create a canonical MCP authentication error
@@ -67,12 +82,19 @@ impl McpErrorBuilder {
                 .to_string(),
         );
 
-        NestGateError::Mcp(Box::new(McpErrorData {
+        NestGateError::Mcp {
             message: message.to_string(),
             operation: "authentication".to_string(),
-            session_id: None,
-            context: Some(context),
-        }))
+            connection_id: None,
+            protocol_version: Some("1.0".to_string()),
+            mcp_data: Some(McpErrorData {
+                message_type: "authentication_error".to_string(),
+                protocol_version: "1.0".to_string(),
+                connection_state: "connected".to_string(),
+                sequence_number: None,
+            }),
+            context: None,
+        }
     }
 
     /// Create a canonical MCP timeout error
@@ -95,12 +117,19 @@ impl McpErrorBuilder {
                 .to_string(),
         );
 
-        NestGateError::Mcp(Box::new(McpErrorData {
+        NestGateError::Mcp {
             message: message.to_string(),
             operation: "timeout".to_string(),
-            session_id: None,
-            context: Some(context),
-        }))
+            connection_id: None,
+            protocol_version: Some("1.0".to_string()),
+            mcp_data: Some(McpErrorData {
+                message_type: "timeout_error".to_string(),
+                protocol_version: "1.0".to_string(),
+                connection_state: "connected".to_string(),
+                sequence_number: None,
+            }),
+            context: None,
+        }
     }
 
     /// Create a canonical MCP validation error
@@ -115,16 +144,23 @@ impl McpErrorBuilder {
             "Check input parameters; Verify data format; Review field requirements".to_string(),
         );
 
-        NestGateError::Mcp(Box::new(McpErrorData {
+        NestGateError::Mcp {
             message: message.to_string(),
             operation: "validation".to_string(),
-            session_id: None,
-            context: Some(context),
-        }))
+            connection_id: None,
+            protocol_version: Some("1.0".to_string()),
+            mcp_data: Some(McpErrorData {
+                message_type: "validation_error".to_string(),
+                protocol_version: "1.0".to_string(),
+                connection_state: "connected".to_string(),
+                sequence_number: None,
+            }),
+            context: None,
+        }
     }
 }
 
-// ==================== LEGACY ERROR TYPES ====================
+// ==================== SECTION ====================
 // These are kept for internal compatibility but not exposed in public API
 
 /// Internal error type enumeration for backward compatibility
@@ -163,7 +199,7 @@ impl fmt::Display for ErrorType {
     }
 }
 
-// ==================== CANONICAL CONVERSION HELPERS ====================
+// ==================== SECTION ====================
 
 /// Convert legacy error type to canonical MCP error
 pub fn create_mcp_error(error_type: ErrorType, message: String) -> NestGateError {
@@ -188,12 +224,19 @@ pub fn create_mcp_error(error_type: ErrorType, message: String) -> NestGateError
         recovery_suggestions.to_string(),
     );
 
-    NestGateError::Mcp(Box::new(McpErrorData {
-        message,
+    NestGateError::Mcp {
+        message: format!("MCP {} operation failed", operation),
         operation: operation.to_string(),
-        session_id: None,
-        context: Some(context),
-    }))
+        connection_id: None,
+        protocol_version: Some("1.0".to_string()),
+        mcp_data: Some(McpErrorData {
+            message_type: operation.to_string(),
+            protocol_version: "1.0".to_string(),
+            connection_state: "connected".to_string(),
+            sequence_number: None,
+        }),
+        context: None,
+    }
 }
 
 /// Create an internal MCP error
@@ -251,7 +294,7 @@ pub fn server_error(message: String) -> NestGateError {
     create_mcp_error(ErrorType::ServerError, message)
 }
 
-// ==================== CANONICAL HELPER FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Convert any MCP operation result to canonical Result<T>
 pub fn to_canonical_result<T, E: Into<NestGateError>>(
@@ -292,10 +335,17 @@ pub fn create_contextual_error(
         recovery_suggestions.to_string(),
     );
 
-    NestGateError::Mcp(Box::new(McpErrorData {
-        message,
+    NestGateError::Mcp {
+        message: format!("MCP {} operation failed", operation),
         operation: operation.to_string(),
-        session_id: request_id,
-        context: Some(context),
-    }))
+        connection_id: request_id.clone(),
+        protocol_version: Some("1.0".to_string()),
+        mcp_data: Some(McpErrorData {
+            message_type: operation.to_string(),
+            protocol_version: "1.0".to_string(),
+            connection_state: "connected".to_string(),
+            sequence_number: request_id.and_then(|id| id.parse().ok()),
+        }),
+        context: None,
+    }
 }

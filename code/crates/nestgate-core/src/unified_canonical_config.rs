@@ -2,7 +2,7 @@
 /// This is the ultimate configuration unification that brings together all domain-specific
 /// unified configurations under a single canonical root system following the proven patterns.
 
-use nestgate_core::unified_config_consolidation::StandardDomainConfig;
+use crate::unified_config_consolidation::StandardDomainConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -18,7 +18,7 @@ use nestgate_network::unified_network_extensions::UnifiedNetworkConfig;
 use nestgate_zfs::unified_zfs_config::UnifiedZfsConfig;
 
 // Re-export the existing canonical types for compatibility
-pub use crate::config::canonical::{
+pub use crate::config::canonical_master:{
     CanonicalConfig as LegacyCanonicalConfig, CanonicalConfigBuilder as LegacyCanonicalConfigBuilder,
     Environment, EnvironmentConfig, IntegrationsConfig, MonitoringConfig, NetworkConfig,
     PerformanceConfig, SecurityConfig, StorageConfig, SystemConfig,
@@ -26,6 +26,8 @@ pub use crate::config::canonical::{
 
 /// **UNIFIED CANONICAL EXTENSIONS**
 /// Consolidates all unified domain configurations into a single root system
+/// Unified canonical extensions for cross-domain integrations
+/// Provides extensibility points for custom domain-specific configurations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedCanonicalExtensions {
     /// API and HTTP server configuration
@@ -59,6 +61,8 @@ pub struct UnifiedCanonicalExtensions {
 pub type UnifiedCanonicalConfig = StandardDomainConfig<UnifiedCanonicalExtensions>;
 
 /// Domain feature flags for selective enablement
+/// Domain-specific feature flags for conditional functionality
+/// Enables fine-grained control over domain features across environments
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DomainFeatureFlags {
     /// Enable API server functionality
@@ -84,6 +88,8 @@ pub struct DomainFeatureFlags {
 }
 
 /// Cross-domain integration settings
+/// Cross-domain integration configurations
+/// Manages inter-domain communication and data sharing patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrossDomainIntegrations {
     /// API to storage integration
@@ -307,37 +313,31 @@ impl UnifiedCanonicalConfig {
 
     /// Get enabled domains
     pub fn get_enabled_domains(&self) -> Vec<String> {
-        let mut domains = Vec::new();
-        
-        if self.extensions.domain_features.api_enabled {
-            domains.push("api".to_string());
-        }
-        if self.extensions.domain_features.primal_enabled {
-            domains.push("primal".to_string());
-        }
-        if self.extensions.domain_features.network_enabled {
-            domains.push("network".to_string());
-        }
-        if self.extensions.domain_features.zfs_enabled {
-            domains.push("zfs".to_string());
-        }
-        if self.extensions.domain_features.nas_enabled {
-            domains.push("nas".to_string());
-        }
-        if self.extensions.domain_features.mcp_enabled {
-            domains.push("mcp".to_string());
-        }
-        if self.extensions.domain_features.middleware_enabled {
-            domains.push("middleware".to_string());
-        }
-        if self.extensions.domain_features.automation_enabled {
-            domains.push("automation".to_string());
-        }
-        if self.extensions.domain_features.fsmonitor_enabled {
-            domains.push("fsmonitor".to_string());
-        }
-        if self.extensions.domain_features.experimental_enabled {
-            domains.push("experimental".to_string());
+        let mut domains = Vec::with_capacity(10); // Pre-allocate for performance
+
+        // Use const strings to avoid allocations
+        const DOMAIN_NAMES: [&str; 10] = [
+            "api", "primal", "network", "zfs", "nas",
+            "mcp", "middleware", "automation", "fsmonitor", "experimental"
+        ];
+
+        let enabled_flags = [
+            self.extensions.domain_features.api_enabled,
+            self.extensions.domain_features.primal_enabled,
+            self.extensions.domain_features.network_enabled,
+            self.extensions.domain_features.zfs_enabled,
+            self.extensions.domain_features.nas_enabled,
+            self.extensions.domain_features.mcp_enabled,
+            self.extensions.domain_features.middleware_enabled,
+            self.extensions.domain_features.automation_enabled,
+            self.extensions.domain_features.fsmonitor_enabled,
+            self.extensions.domain_features.experimental_enabled,
+        ];
+
+        for (name, enabled) in DOMAIN_NAMES.iter().zip(enabled_flags.iter()) {
+            if *enabled {
+                domains.push((*name).to_string());
+            }
         }
 
         // Add custom domains
@@ -482,7 +482,7 @@ impl DomainFeatureFlags {
     /// Custom environment - enable specific domains
     pub fn custom(domains: &[&str]) -> Self {
         let mut flags = Self::minimal(); // Start with minimal
-        
+
         for domain in domains {
             match *domain {
                 "api" => flags.api_enabled = true,
@@ -498,7 +498,7 @@ impl DomainFeatureFlags {
                 _ => {} // Ignore unknown domains
             }
         }
-        
+
         flags
     }
 }
@@ -614,4 +614,4 @@ impl UnifiedCanonicalConfig {
     pub fn primal_integration() -> Self {
         Self::custom(&["primal", "api", "network", "middleware", "mcp"])
     }
-} 
+}

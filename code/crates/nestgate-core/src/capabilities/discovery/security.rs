@@ -1,7 +1,7 @@
 /// **SECURITY CAPABILITY DISCOVERY**
 /// Discovery and management of security-related capabilities
 /// Replaces hardcoded security configurations with dynamic discovery
-use crate::error::Result;
+use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

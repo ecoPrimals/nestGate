@@ -10,7 +10,7 @@ use super::migration::{CapacityLimits, MigrationRules};
 use nestgate_core::canonical_modernization::canonical_constants::storage::{
     TIER_HOT, TIER_WARM, TIER_COLD, COMPRESSION_LZ4, COMPRESSION_GZIP,
 };
-use crate::constants::COMPRESSION_OFF;
+use crate::canonical_modernization::canonical_constants::COMPRESSION_OFF;
 
 // Define missing constants locally
 const POOL_DEFAULT: &str = "default";

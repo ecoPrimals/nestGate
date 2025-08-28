@@ -19,7 +19,7 @@
 
 use std::time::Duration;
 
-// ==================== STORAGE DOMAIN CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Storage-related constants consolidated from multiple modules
 pub mod storage {
@@ -130,7 +130,7 @@ pub mod storage {
     }
 }
 
-// ==================== NETWORK DOMAIN CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Network-related constants consolidated from multiple modules
 pub mod network {
@@ -180,7 +180,7 @@ pub mod network {
     }
 }
 
-// ==================== API DOMAIN CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// API-related constants consolidated from multiple modules  
 pub mod api {
@@ -238,7 +238,7 @@ pub mod api {
     }
 }
 
-// ==================== PERFORMANCE DOMAIN CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Performance-related constants
 pub mod performance {
@@ -266,7 +266,7 @@ pub mod performance {
     }
 }
 
-// ==================== SECURITY DOMAIN CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Security-related constants
 pub mod security {
@@ -296,7 +296,7 @@ pub mod security {
     }
 }
 
-// ==================== TIMEOUT DOMAIN CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Timeout constants for various operations
 pub mod timeouts {
@@ -333,7 +333,7 @@ pub mod timeouts {
     pub const DAY: Duration = Duration::from_secs(86400);
 }
 
-// ==================== SERVICE DOMAIN CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Service-related constants
 pub mod services {
@@ -367,7 +367,7 @@ pub mod services {
     }
 }
 
-// ==================== UTILITY FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Utility functions for working with domain constants
 pub mod utils {
@@ -423,7 +423,7 @@ pub mod utils {
     }
 }
 
-// ==================== CONVENIENCE RE-EXPORTS ====================
+// ==================== SECTION ====================
 
 pub use api::versions::CURRENT as CURRENT_API_VERSION;
 pub use network::ports::{
@@ -434,7 +434,7 @@ pub use storage::protocols::{NFS as PROTOCOL_NFS, SMB as PROTOCOL_SMB, ZFS as PR
 /// Re-export commonly used constants for convenience
 pub use storage::tiers::{COLD as TIER_COLD, HOT as TIER_HOT, WARM as TIER_WARM};
 
-// ==================== TEST CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Test-only constants for configuration and testing
 #[cfg(test)]
@@ -458,7 +458,6 @@ pub mod test {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_tier_validation() {

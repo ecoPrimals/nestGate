@@ -4,7 +4,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-// ==================== STORAGE TYPE CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** StorageType - unified across all modules
 /// Replaces StorageType definitions in service discovery and storage modules
@@ -61,7 +61,7 @@ impl fmt::Display for UnifiedStorageType {
     }
 }
 
-// ==================== ACCESS TYPE CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** AccessType - unified across all modules
 /// Replaces AccessType definitions in automation and other modules
@@ -103,7 +103,7 @@ impl fmt::Display for UnifiedAccessType {
     }
 }
 
-// ==================== TIER TYPE CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** TierType - unified across all modules
 /// Replaces TierType definitions in automation and storage modules

@@ -131,10 +131,10 @@ impl Default for HealthCheckConfig {
 }
 
 /// Trait for components that can be health checked
-#[async_trait::async_trait]
-pub trait HealthCheckable: Send + Sync {
+/// **CANONICAL MODERNIZATION**: Native async trait without async_trait overhead
+pub trait HealthCheckable: Send + Sync + 'static {
     /// Perform a health check on this component
-    async fn health_check(&self) -> Result<HealthStatus>;
+    fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus>> + Send;
 
     /// Get the component name
     fn component_name(&self) -> &str;
@@ -143,8 +143,8 @@ pub trait HealthCheckable: Send + Sync {
     fn component_type(&self) -> &str;
 
     /// Perform a deep health check (optional, defaults to regular health check)
-    async fn deep_health_check(&self) -> Result<HealthStatus> {
-        self.health_check().await
+    fn deep_health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus>> + Send {
+        self.health_check()
     }
 }
 
@@ -525,10 +525,9 @@ impl GenericHealthChecker {
     }
 }
 
-#[async_trait::async_trait]
 impl HealthCheckable for GenericHealthChecker {
-    async fn health_check(&self) -> Result<HealthStatus> {
-        (self.health_check_fn)()
+    fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus>> + Send {
+        async move { (self.health_check_fn)() }
     }
 
     fn component_name(&self) -> &str {

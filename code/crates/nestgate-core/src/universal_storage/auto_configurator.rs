@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // Analyzes detected storage systems and automatically creates optimal configurations
@@ -9,13 +9,11 @@ use std::collections::HashMap;
 // - Hybrid architectures (local + cloud, multi-cloud)
 // - ZFS-like feature mapping across different backends
 
-use crate::error::CanonicalResult as Result; // NestGateError removed - unused
 use crate::universal_storage::DetectedStorage;
 // Removed unused imports - using unified types
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
-// ==================== AUTO-CONFIGURATOR ====================
+// ==================== SECTION ====================
 
 /// **INTELLIGENT STORAGE AUTO-CONFIGURATOR**
 /// Creates optimal storage configurations from detected storage systems
@@ -404,7 +402,7 @@ impl AutoConfigurator {
                 // Any storage with COW capability or sufficient space
                 storage
                     .capabilities
-                    .contains(&crate::canonical_modernization::UnifiedServiceType::Storage)
+                    .contains(&crate::unified_enums::UnifiedServiceType::Storage)
                     || storage.available_space > 1_000_000_000 // > 1GB
             }
             ZfsFeature::Checksumming => {
@@ -419,7 +417,7 @@ impl AutoConfigurator {
                 // Need multiple storage backends or block-level access
                 storage
                     .capabilities
-                    .contains(&crate::canonical_modernization::UnifiedServiceType::Storage)
+                    .contains(&crate::unified_enums::UnifiedServiceType::Storage)
                     || self.available_storage.len() > 2
             }
         }
@@ -542,7 +540,7 @@ impl AutoConfigurator {
     }
 }
 
-// ==================== DATA STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// Configuration settings for the auto-configurator
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -644,7 +642,7 @@ pub struct StorageLandscapeAnalysis {
     pub redundancy_options: Vec<RedundancyOption>,
     pub total_capacity: u64,
     pub total_monthly_cost: f64,
-    pub available_capabilities: Vec<crate::canonical_modernization::UnifiedServiceType>,
+    pub available_capabilities: Vec<crate::unified_enums::UnifiedServiceType>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]

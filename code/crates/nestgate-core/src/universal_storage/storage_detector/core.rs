@@ -1,11 +1,10 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // Core utilities and shared functionality for the storage detector system.
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use super::types::*;
-use std::collections::HashMap;
 
 /// Core utilities for storage detection
 pub struct StorageDetectorUtils;

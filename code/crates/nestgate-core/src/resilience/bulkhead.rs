@@ -1,9 +1,9 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // Implements the Bulkhead pattern to isolate resources and prevent cascading
 // failures by limiting concurrent access to critical resources.
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::{RwLock, Semaphore, SemaphorePermit};

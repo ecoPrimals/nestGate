@@ -5,8 +5,11 @@ use axum::response::{IntoResponse, Json};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::time::SystemTime;
 
-use crate::unified_types::UnifiedErrorContext;
+// **MIGRATED**: Using canonical error context instead of deprecated unified_types
+use crate::error::context::ErrorContext as UnifiedErrorContext;
+use crate::NestGateError;
 
 /// Unified error response with multiple formatting options
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -31,7 +34,24 @@ pub enum ErrorResponseFormat {
 impl UnifiedErrorResponse {
     pub fn simple(message: &str, error_code: &str, service_name: &str) -> Self {
         Self {
-            context: UnifiedErrorContext::simple(message, error_code, service_name),
+            context: UnifiedErrorContext {
+                error_id: uuid::Uuid::new_v4().to_string(),
+                component: service_name.to_string(),
+                operation: "error_response".to_string(),
+                timestamp: std::time::SystemTime::now(),
+                metadata: {
+                    let mut map = std::collections::HashMap::new();
+                    map.insert("message".to_string(), message.to_string());
+                    map.insert("error_code".to_string(), error_code.to_string());
+                    map
+                },
+                stack_trace: None,
+                related_errors: Vec::new(),
+                retry_info: None,
+                recovery_suggestions: Vec::new(),
+                performance_metrics: None,
+                environment: None,
+            },
             format: ErrorResponseFormat::Simple,
         }
     }
@@ -54,13 +74,23 @@ impl UnifiedErrorResponse {
     pub fn serialize(&self) -> serde_json::Value {
         match self.format {
             ErrorResponseFormat::Simple => {
-                serde_json::to_value(self.context.to_simple_response()).unwrap_or_default()
+                serde_json::json!({
+                    "error": self.context.metadata.get("message").unwrap_or(&"Unknown error".to_string()),
+                    "code": self.context.metadata.get("error_code").unwrap_or(&"UNKNOWN".to_string()),
+                    "service": self.context.component
+                })
             }
             ErrorResponseFormat::Detailed => {
-                serde_json::to_value(self.context.to_detailed_response()).unwrap_or_default()
+                serde_json::to_value(&self.context).unwrap_or_default()
             }
             ErrorResponseFormat::Statistics => {
-                serde_json::to_value(self.context.to_statistics_response()).unwrap_or_default()
+                serde_json::json!({
+                    "error_id": self.context.error_id,
+                    "component": self.context.component,
+                    "operation": self.context.operation,
+                    "timestamp": self.context.timestamp,
+                    "metadata": self.context.metadata
+                })
             }
         }
     }
@@ -73,7 +103,7 @@ impl UnifiedErrorResponse {
 
     /// Add additional context
     pub fn with_context(mut self, key: &str, value: serde_json::Value) -> Self {
-        self.context = self.context.with_context(key, value);
+        self.context.metadata.insert(key.to_string(), value.to_string());
         self
     }
 }
@@ -112,11 +142,24 @@ pub struct ErrorResponse {
 
 impl From<ErrorResponse> for UnifiedErrorResponse {
     fn from(legacy: ErrorResponse) -> Self {
-        let context = UnifiedErrorContext::simple(
-            &legacy.error,
-            legacy.code.as_deref().unwrap_or("UNKNOWN"),
-            legacy.service.as_deref().unwrap_or("unknown"),
-        );
+        let context = UnifiedErrorContext {
+            error_id: uuid::Uuid::new_v4().to_string(),
+            component: legacy.service.as_deref().unwrap_or("unknown").to_string(),
+            operation: "legacy_conversion".to_string(),
+            timestamp: std::time::SystemTime::now(),
+            metadata: {
+                let mut map = std::collections::HashMap::new();
+                map.insert("message".to_string(), legacy.error);
+                map.insert("error_code".to_string(), legacy.code.unwrap_or("UNKNOWN".to_string()));
+                map
+            },
+            stack_trace: None,
+            related_errors: Vec::new(),
+            retry_info: None,
+            recovery_suggestions: Vec::new(),
+            performance_metrics: None,
+            environment: None,
+        };
 
         Self {
             context,

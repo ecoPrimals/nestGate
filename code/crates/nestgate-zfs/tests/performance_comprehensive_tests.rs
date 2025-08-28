@@ -119,7 +119,6 @@ mod test_utils {
 
 #[cfg(test)]
 mod performance_metrics_tests {
-    use super::*;
     use test_utils::*;
 
     #[test]
@@ -155,8 +154,6 @@ mod performance_metrics_tests {
 
 #[cfg(test)]
 mod bottleneck_detection_tests {
-    use super::*;
-    use test_utils::*;
 
     #[test]
     fn test_bottleneck_creation() {
@@ -201,8 +198,6 @@ mod bottleneck_detection_tests {
 
 #[cfg(test)]
 mod optimization_tests {
-    use super::*;
-    use test_utils::*;
 
     #[test]
     fn test_applied_optimization_creation() {
@@ -291,7 +286,6 @@ mod optimization_tests {
 
 #[cfg(test)]
 mod alert_handling_tests {
-    use super::*;
 
     #[test]
     fn test_performance_alert_creation() {
@@ -362,7 +356,6 @@ mod alert_handling_tests {
 
 #[cfg(test)]
 mod tuning_tests {
-    use super::*;
 
     #[test]
     fn test_tuning_recommendation_creation() {
@@ -451,7 +444,6 @@ mod tuning_tests {
 #[cfg(test)]
 mod configuration_tests {
     use super::test_utils::*;
-    use super::*;
 
     #[test]
     fn test_workload_pattern_creation() {
@@ -492,8 +484,6 @@ mod configuration_tests {
 
 #[cfg(test)]
 mod integration_tests {
-    use super::*;
-    use test_utils::*;
 
     #[test]
     fn test_comprehensive_performance_scenario() {

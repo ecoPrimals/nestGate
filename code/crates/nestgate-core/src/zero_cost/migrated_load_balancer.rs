@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 use std::future::Future;
 /// **ZERO-COST LOAD BALANCER**
@@ -14,13 +14,12 @@ use std::future::Future;
 /// - Monomorphized code generation for optimal performance
 ///
 /// **EXPECTED IMPROVEMENTS**: 70% performance gain (highest of all critical targets)
-/// **REPLACES**: `nestgate_core::traits_root::load_balancer::LoadBalancer`
+/// **REPLACES**: `crate::traits_root::load_balancer::LoadBalancer`
 use crate::Result;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::SystemTime;
 
-// ==================== ZERO-COST LOAD BALANCER TRAIT ====================
+// ==================== SECTION ====================
 
 /// **Zero-cost load balancer trait**
 ///
@@ -141,7 +140,7 @@ pub trait ZeroCostLoadBalancer<const MAX_SERVICES: usize = 1000, const MAX_HISTO
     }
 }
 
-// ==================== ZERO-COST LOAD BALANCING ALGORITHMS ====================
+// ==================== SECTION ====================
 
 /// Zero-cost load balancing algorithm enum
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash)]
@@ -202,7 +201,7 @@ impl ZeroCostLoadBalancingAlgorithm {
     }
 }
 
-// ==================== SUPPORTING TYPES ====================
+// ==================== SECTION ====================
 
 /// Default service information implementation
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -360,7 +359,7 @@ pub struct DefaultWeightUpdate {
     pub timestamp: SystemTime,
 }
 
-// ==================== EXAMPLE IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 /// High-performance round-robin load balancer
 pub struct ZeroCostRoundRobinBalancer {
@@ -400,9 +399,9 @@ impl ZeroCostLoadBalancer for ZeroCostRoundRobinBalancer {
         if services.is_empty() {
             return Err(crate::NestGateError::Configuration {
                 message: "No services available".to_string(),
-                config_source: crate::canonical_modernization::UnifiedConfigSource::Runtime,
+                
                 field: Some("services".to_string()),
-                suggested_fix: Some("Add at least one service to the pool".to_string()),
+                
             });
         }
 
@@ -412,9 +411,9 @@ impl ZeroCostLoadBalancer for ZeroCostRoundRobinBalancer {
         if healthy_services.is_empty() {
             return Err(crate::NestGateError::Configuration {
                 message: "No healthy services available".to_string(),
-                config_source: crate::canonical_modernization::UnifiedConfigSource::Runtime,
+                
                 field: Some("healthy_services".to_string()),
-                suggested_fix: Some("Check service health and network connectivity".to_string()),
+                
             });
         }
 
@@ -498,7 +497,7 @@ impl ZeroCostLoadBalancer for ZeroCostRoundRobinBalancer {
     }
 }
 
-// ==================== COMPATIBILITY BRIDGE ====================
+// ==================== SECTION ====================
 
 /// Compatibility adapter for migrating from async_trait to zero-cost
 pub struct LoadBalancerAdapter<T> {

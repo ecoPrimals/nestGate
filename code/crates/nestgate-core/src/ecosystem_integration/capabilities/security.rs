@@ -3,7 +3,6 @@
 /// Defines capability interfaces for authentication, authorization, and encryption
 /// through the BearDog security primal.
 use super::{CapabilityRequest, CapabilityResponse, UniversalCapability};
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -62,7 +61,6 @@ pub struct EncryptionResponse {
 }
 
 /// Security capability trait for BearDog integration
-#[async_trait]
 pub trait SecurityCapability: UniversalCapability {
     /// Authenticate user credentials
     async fn authenticate(
@@ -100,7 +98,6 @@ impl Default for MockSecurityCapability {
     }
 }
 
-#[async_trait]
 impl UniversalCapability for MockSecurityCapability {
     async fn execute(
         &self,
@@ -173,7 +170,6 @@ impl UniversalCapability for MockSecurityCapability {
     }
 }
 
-#[async_trait]
 impl SecurityCapability for MockSecurityCapability {
     async fn authenticate(
         &self,

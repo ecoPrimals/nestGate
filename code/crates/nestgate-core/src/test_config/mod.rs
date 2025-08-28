@@ -15,9 +15,8 @@ use std::collections::HashMap;
 // NOTE: StandardDomainConfig pattern has been moved to unified_final_config
 // use crate::unified_config_consolidation::StandardDomainConfig;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
-// ==================== MODULAR CONFIGURATION MODULES ====================
+// ==================== SECTION ====================
 
 pub mod chaos;
 pub mod environment;
@@ -47,7 +46,7 @@ pub use security::{
     VulnerabilityTestConfig,
 };
 
-// ==================== UNIFIED TEST CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// **THE** unified test configuration for all testing scenarios
 /// This replaces the large unified_test_config_consolidation.rs file

@@ -46,6 +46,7 @@ impl ZeroCostCache<String, Vec<u8>> for ProductionCache {
     async fn set(&self, key: String, value: Vec<u8>) -> Result<()> {
         let mut data = self.data.write().await;
         data.insert(key, value);
+        Ok(())
     }
 
     async fn remove(&self, key: &String) -> Option<Vec<u8>> {
@@ -67,6 +68,7 @@ impl ZeroCostCache<String, Vec<u8>> for DevelopmentCache {
     async fn set(&self, key: String, value: Vec<u8>) -> Result<()> {
         // For development, we simulate the operation
         let _ = (key, value);
+        Ok(())
     }
 
     async fn remove(&self, key: &String) -> Option<Vec<u8>> {
@@ -173,14 +175,14 @@ where
         T: Send + Sync + 'static,
     {
         if !self.can_accept_connection() {
-            return Err(crate::error::core::NestGateError::api_simple(
-                crate::error::domain_errors::ApiError::BadRequest {
-                    message: "Maximum connections reached".to_string(),
-                    field: None,
-                    validation_errors: vec![],
-                },
-            ));
-    }
+            return Err(crate::NestGateError::Internal {
+                message: "Maximum connections reached".to_string(),
+                component: "zero_cost_composition".to_string(),
+                location: Some(format!("{}:{}", file!(), line!())),
+                is_bug: false,
+                context: None,
+            });
+        }
 
         self.connections.fetch_add(1, Ordering::Relaxed);
 

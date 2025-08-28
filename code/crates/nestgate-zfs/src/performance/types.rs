@@ -112,7 +112,6 @@ pub struct ZfsPerformanceMonitor {
 
 /// Performance monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-// REMOVED: PerformanceConfig eliminated - use ZfsConfig.extensions.performance instead
 pub struct _RemovedPerformanceConfig {
     /// Metrics collection interval in seconds
     pub collection_interval: u64,

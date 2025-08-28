@@ -16,7 +16,6 @@ use std::time::{Duration, SystemTime};
 
 use crate::unified_enums::{UnifiedFileType, UnifiedTierType};
 
-// REMOVED: Local SyncError enum - migrated to unified NestGateError system
 // This eliminates error type fragmentation in favor of the unified approach
 use crate::error::NestGateError;
 
@@ -29,9 +28,11 @@ impl SyncErrors {
     pub fn io_error(error: std::io::Error) -> NestGateError {
         NestGateError::System {
             message: format!("Sync IO error: {error}"),
-            resource: crate::error::SystemResource::FileSystem,
+            operation: "sync_io".to_string(),
+            resource: Some("FileSystem".to_string()),
             utilization: None,
-            recovery: crate::error::RecoveryStrategy::Retry,
+            retryable: true,
+            context: None,
         }
     }
 
@@ -74,9 +75,11 @@ impl SyncErrors {
     pub fn service_unavailable() -> NestGateError {
         NestGateError::System {
             message: "Sync service is not available".to_string(),
-            resource: crate::error::SystemResource::Network, // Use Network instead of Service
+            operation: "service_availability_check".to_string(),
+            resource: Some("Network".to_string()),
             utilization: None,
-            recovery: crate::error::RecoveryStrategy::Retry,
+            retryable: true,
+            context: None,
         }
     }
 }
@@ -142,10 +145,9 @@ pub struct FileChangeEvent {
     pub enabled: bool,
 }
 
-/// **UNIFIED** Sync Configuration using StandardDomainConfig pattern
+/// **UNIFIED** Sync Configuration using canonical config pattern
 /// Consolidates DeltaSyncConfig, SyncSessionConfig, and SyncServiceConfig into unified approach
-pub type UnifiedSyncConfig =
-    crate::unified_config_consolidation::StandardDomainConfig<SyncExtensions>;
+pub type UnifiedSyncConfig = crate::config::canonical_master::NestGateCanonicalConfig;
 
 /// Sync-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs
@@ -206,7 +208,6 @@ impl Default for SyncExtensions {
     }
 }
 
-// REMOVED: Duplicate config structs consolidated into unified pattern
 // - DeltaSyncConfig: Merged into SyncExtensions::delta
 // - SyncSessionConfig: Merged into SyncExtensions::session
 // - SyncServiceConfig: Merged into SyncExtensions::service

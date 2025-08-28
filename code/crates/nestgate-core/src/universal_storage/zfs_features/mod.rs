@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-// ==================== MODERN ZFS MODULES ====================
+// ==================== SECTION ====================
 
 pub mod compression_engine;
 pub mod integrity_manager;
@@ -22,7 +22,7 @@ pub mod deduplication_manager;
 pub mod raid_z_manager;
 #[cfg(feature = "zfs-advanced-features")]
 // pub mod zfs_demo; // Disabled during canonical modernization - uses deprecated APIs
-// ==================== MODERN RE-EXPORTS ====================
+// ==================== SECTION ====================
 // Core ZFS functionality (always available)
 pub use compression_engine::{CompressionEngine, CompressionStats, CompressionType};
 pub use integrity_manager::{ChecksumType, IntegrityManager, IntegrityStats};
@@ -36,7 +36,7 @@ pub use deduplication_manager::{ContentHash, DedupStats, DeduplicationManager};
 #[cfg(feature = "zfs-advanced-features")]
 pub use raid_z_manager::{ParityLevel, RaidZConfig, RaidZManager};
 
-// ==================== MODERN ZFS ENGINE ====================
+// ==================== SECTION ====================
 
 /// Modern ZFS engine using canonical storage traits
 pub struct ModernZfsEngine<T>
@@ -288,7 +288,7 @@ where
     /// Get storage backend capabilities
     pub async fn storage_capabilities(
         &self,
-    ) -> Result<Vec<crate::canonical_modernization::UnifiedServiceType>> {
+    ) -> Result<Vec<crate::unified_enums::UnifiedServiceType>> {
         self.storage_backend.capabilities().await
     }
 
@@ -335,7 +335,7 @@ pub struct EngineHealth {
     pub overall_health: f64,
 }
 
-// ==================== FACTORY FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Create a modern ZFS engine with filesystem backend
 pub async fn create_filesystem_zfs_engine(
@@ -356,7 +356,7 @@ pub async fn create_memory_zfs_engine(
     ModernZfsEngine::new(backend, config).await
 }
 
-// ==================== TESTS ====================
+// ==================== SECTION ====================
 
 #[cfg(test)]
 mod tests {

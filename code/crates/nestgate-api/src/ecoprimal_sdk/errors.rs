@@ -73,7 +73,7 @@ impl fmt::Display for PrimalError {
 
 impl std::error::Error for PrimalError {}
 
-// ==================== NESTGATE ERROR INTEGRATION ====================
+// ==================== SECTION ====================
 
 /// Convert PrimalError to unified NestGateError
 impl From<PrimalError> for NestGateError {

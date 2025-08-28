@@ -3,7 +3,6 @@
 /// Defines capability interfaces for hardware optimization, resource allocation,
 /// and performance tuning through the Toadstool compute primal.
 use super::{CapabilityRequest, CapabilityResponse, UniversalCapability};
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -61,7 +60,6 @@ pub struct PerformanceTuningResponse {
 }
 
 /// Compute capability trait for Toadstool integration
-#[async_trait]
 pub trait ComputeCapability: UniversalCapability {
     /// Optimize hardware resources for better performance
     async fn optimize_hardware(
@@ -99,7 +97,6 @@ impl Default for MockComputeCapability {
     }
 }
 
-#[async_trait]
 impl UniversalCapability for MockComputeCapability {
     async fn execute(
         &self,
@@ -178,7 +175,6 @@ impl UniversalCapability for MockComputeCapability {
     }
 }
 
-#[async_trait]
 impl ComputeCapability for MockComputeCapability {
     async fn optimize_hardware(
         &self,

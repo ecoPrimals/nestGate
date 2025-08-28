@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // Comprehensive monitoring, metrics, and tracing infrastructure for NestGate.
@@ -13,8 +13,7 @@ pub use health_checks::{HealthChecker, HealthStatus, SystemHealth};
 pub use metrics::{MetricsCollector, MetricsRegistry, PerformanceMetrics};
 pub use tracing_config::{init_tracing, TracingConfig};
 
-use crate::{Result, NestGateError};
-use std::collections::HashMap;
+use crate::{Result};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -206,9 +205,9 @@ pub async fn get_system_health() -> Result<SystemHealth> {
     if let Some(obs) = get_observability() {
         obs.get_health().await
     } else {
-        Err(NestGateError::configuration_error(
+        Err(NestGateError::configuration_error_with_field(
             "Observability not initialized".to_string(),
-            Some("health_check".to_string()),
+            "health_check".to_string(),
         ))
     }
 }

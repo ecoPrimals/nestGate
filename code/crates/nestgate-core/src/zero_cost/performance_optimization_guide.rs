@@ -170,7 +170,6 @@ where
 
 /// Pattern 2: Replace async_trait with Native Async
 pub mod async_trait_elimination {
-    use super::*;
 
     /// ❌ BEFORE: async_trait overhead
     /// ```rust
@@ -252,7 +251,6 @@ trait ZeroCostService {
 
 /// Pattern 3: Const Generic Configuration
 pub mod const_generic_config {
-    use super::*;
 
     /// ❌ BEFORE: Runtime configuration lookup
     /// ```rust

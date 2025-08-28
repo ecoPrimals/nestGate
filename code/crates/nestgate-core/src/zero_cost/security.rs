@@ -1,4 +1,4 @@
-use crate::error::{NestGateError, SecurityErrorData};
+use crate::error::{NestGateError};
 /// Zero-cost Security Provider Implementation
 /// Provides production-ready security services with compile-time optimization.
 use crate::zero_cost::traits::ZeroCostSecurityProvider;
@@ -32,13 +32,10 @@ impl ZeroCostSecurityProvider for ProductionSecurityProvider {
 
     async fn validate_token(&self, token: &str) -> Self::Result {
         if !is_valid_token(token) {
-            return Err(NestGateError::Security(Box::new(SecurityErrorData {
-                message: "Authentication failed: Invalid token format".to_string(),
-                operation: "token_validation".to_string(),
-                resource: Some("token".to_string()),
-                principal: None,
-                context: None,
-            })));
+            return Err(NestGateError::permission_denied(
+                "token_validation",
+                "Authentication failed: Invalid token format",
+            ));
         }
         Ok("valid".to_string())
     }
@@ -70,13 +67,10 @@ impl ZeroCostSecurityProvider for DevelopmentSecurityProvider {
     async fn validate_token(&self, token: &str) -> Self::Result {
         // Development mode is more lenient
         if token.is_empty() {
-            return Err(NestGateError::Security(Box::new(SecurityErrorData {
-                message: "Authentication failed: Empty token".to_string(),
-                operation: "token_validation".to_string(),
-                resource: Some("token".to_string()),
-                principal: None,
-                context: None,
-            })));
+            return Err(NestGateError::permission_denied(
+                "token_validation", 
+                "Authentication failed: Empty token",
+            ));
         }
         Ok("valid".to_string())
     }

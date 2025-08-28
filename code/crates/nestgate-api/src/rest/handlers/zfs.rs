@@ -19,9 +19,9 @@ use nestgate_core::universal_storage::{
     zfs_features::{ModernZfsConfig, ModernZfsEngine},
 };
 
-// ============================================================================
+// ==================== SECTION ====================
 // DATASET DATA HANDLERS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// List all ZFS datasets
 /// GET /api/v1/zfs/datasets
@@ -373,9 +373,9 @@ pub async fn get_dataset_stats(
     }
 }
 
-// ============================================================================
+// ==================== SECTION ====================
 // SNAPSHOT DATA HANDLERS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// List snapshots for a dataset
 /// GET /api/v1/zfs/datasets/:dataset/snapshots
@@ -622,9 +622,9 @@ pub async fn clone_snapshot(
     }
 }
 
-// ============================================================================
+// ==================== SECTION ====================
 // HELPER FUNCTIONS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// Convert ZFS engine to API Dataset model
 async fn convert_engine_to_dataset(

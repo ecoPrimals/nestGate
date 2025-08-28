@@ -16,11 +16,10 @@
 /// - Health monitoring patterns
 /// - Service discovery abstractions
 /// - Mock service generation
-use crate::error::Result;
+use crate::Result;
 use crate::traits::{UniversalServiceRequest, UniversalServiceResponse};
 use crate::unified_constants;
-use crate::unified_enums::{UnifiedHealthStatus, UnifiedServiceState, UnifiedServiceType};
-use async_trait::async_trait;
+use crate::unified_enums::service_types::UnifiedServiceType};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -28,7 +27,7 @@ use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-// ==================== SMART SERVICE FACTORY ====================
+// ==================== SECTION ====================
 
 /// **SMART SERVICE FACTORY**
 /// Eliminates the need for scattered service creation helper functions
@@ -197,23 +196,22 @@ impl Default for SmartServiceFactory {
     }
 }
 
-// ==================== SMART SERVICE TRAIT ====================
+// ==================== SECTION ====================
 
 /// **SMART SERVICE TRAIT**
 /// Enhanced service trait with intelligent defaults and lifecycle management
-#[async_trait]
 pub trait SmartService: Send + Sync {
     /// Get service metadata
     fn metadata(&self) -> &ServiceMetadata;
 
     /// Start the service with intelligent initialization
-    async fn start(&mut self) -> Result<()>;
+    fn start(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Stop the service gracefully
-    async fn stop(&mut self) -> Result<()>;
+    fn stop(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Get current health status
-    async fn health_check(&self) -> Result<UnifiedHealthStatus>;
+    fn health_check(&self) -> impl std::future::Future<Output = Result<UnifiedHealthStatus>> + Send;
 
     /// Handle service requests with intelligent routing
     async fn handle_request(
@@ -222,16 +220,16 @@ pub trait SmartService: Send + Sync {
     ) -> Result<UniversalServiceResponse>;
 
     /// Get service metrics
-    async fn get_metrics(&self) -> Result<ServiceMetrics>;
+    fn get_metrics(&self) -> impl std::future::Future<Output = Result<ServiceMetrics>> + Send;
 
     /// Update service configuration dynamically
-    async fn update_config(&mut self, config: HashMap<String, String>) -> Result<()>;
+    fn update_config(&mut self, config: HashMap<String, String>) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Get service capabilities
     fn capabilities(&self) -> &[String];
 }
 
-// ==================== SERVICE METADATA ====================
+// ==================== SECTION ====================
 
 /// Comprehensive service metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -295,7 +293,7 @@ impl Default for ServiceMetrics {
     }
 }
 
-// ==================== SMART SERVICE WRAPPER ====================
+// ==================== SECTION ====================
 
 /// Generic smart service wrapper that provides intelligent defaults
 #[allow(dead_code)] // Service wrapper - field used internally
@@ -319,7 +317,6 @@ impl SmartServiceWrapper {
     }
 }
 
-#[async_trait]
 impl SmartService for SmartServiceWrapper {
     fn metadata(&self) -> &ServiceMetadata {
         &self.metadata
@@ -453,7 +450,7 @@ impl SmartServiceWrapper {
     }
 }
 
-// ==================== MOCK SERVICE IMPLEMENTATION ====================
+// ==================== SECTION ====================
 
 /// Mock service behavior configuration
 #[derive(Debug, Clone)]
@@ -496,7 +493,6 @@ impl MockSmartService {
     }
 }
 
-#[async_trait]
 impl SmartService for MockSmartService {
     fn metadata(&self) -> &ServiceMetadata {
         &self.metadata
@@ -569,7 +565,7 @@ impl SmartService for MockSmartService {
     }
 }
 
-// ==================== SERVICE DISCOVERY PATTERNS ====================
+// ==================== SECTION ====================
 
 /// **SMART SERVICE DISCOVERY**
 /// Intelligent service discovery with automatic registration and health monitoring
@@ -724,7 +720,7 @@ impl Default for SmartServiceDiscovery {
     }
 }
 
-// ==================== CONVENIENCE FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Create a smart service factory with default configuration
 pub fn create_service_factory() -> SmartServiceFactory {

@@ -1,14 +1,29 @@
 use std::collections::HashMap;
-
-// Removed unused error imports
-use crate::canonical_modernization::unified_enums::UnifiedTierType as StorageTier;
+use std::time::Duration;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::SystemTime;
 use uuid::Uuid;
 
-// Re-export cache types for convenience
-pub use crate::cache::types::{CacheConfig, CacheType, EvictionPolicy};
+// **MIGRATED**: Using canonical types instead of deprecated unified_types
+pub use crate::config::canonical_master::StorageConfig as CacheConfig;
+use crate::canonical_types::storage::{StorageTier, StorageOperation};
+
+// **CANONICAL CACHE TYPES** - Consolidated from unified_types
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum CacheType {
+    Memory,
+    Redis,
+    Disk,
+    Hybrid,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum EvictionPolicy {
+    LRU,
+    LFU,
+    FIFO,
+    Random,
+}
 
 /// Storage service configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -273,7 +288,7 @@ mod tests {
 
     #[test]
     fn test_cache_config_usage() {
-        let mut cache = crate::config::canonical_unified::CacheStorageConfig {
+        let mut cache = crate::config::canonical_master::CacheStorageConfig {
             cache_directory: "/tmp/test-cache".to_string(),
             cache_size_bytes: 1000 * 1024 * 1024, // 1000 MB in bytes
             max_entries: 10000,

@@ -15,14 +15,14 @@
 
 use std::io::{IoSlice, IoSliceMut};
 use std::net::SocketAddr;
-use std::sync::Arc;
 use std::marker::PhantomData;
+use std::sync::Arc;
 // **CANONICAL MODERNIZATION**: Use canonical error types and reference internal modules
 use nestgate_core::error::{NestGateError, Result};
 use crate::lock_free_structures::{LockFreeMpscQueue, LockFreeHashMap};
 // Removed unresolved ZeroCostSimdProcessor import
 
-// ==================== ZERO-COPY BUFFER MANAGEMENT ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COPY BUFFER POOL**
 /// 
@@ -157,7 +157,7 @@ pub struct BufferPoolStats {
     pub buffer_misses: u64,
 }
 
-// ==================== ZERO-COPY NETWORK INTERFACE ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COPY NETWORK INTERFACE**
 /// 
@@ -165,20 +165,22 @@ pub struct BufferPoolStats {
 /// Integrates with kernel bypass and hardware acceleration
 pub struct ZeroCopyNetworkInterface<const BUFFER_SIZE: usize = 65536> {
     buffer_pool: Arc<ZeroCopyBufferPool<BUFFER_SIZE, 1024>>,
-    connection_registry: LockFreeHashMap<String, Arc<ZeroCopyConnection>>,
-    // TODO: Re-integrate SIMD processor when available
+    connection_registry: LockFreeHashMap<String, Arc<ZeroCopyConnection<BUFFER_SIZE>>>,
+    /// SIMD processor for high-performance packet processing (feature-gated)
+    #[cfg(feature = "simd")]
+    simd_processor: Arc<crate::simd_optimizations_advanced::SimdBulkProcessor<BUFFER_SIZE>>,
     stats: NetworkStats,
 }
 
 /// **ZERO-COPY CONNECTION**
 /// 
 /// Individual network connection with zero-copy capabilities
-pub struct ZeroCopyConnection {
+pub struct ZeroCopyConnection<const BUFFER_SIZE: usize = 65536> {
     connection_id: u64,
     remote_addr: SocketAddr,
     local_addr: SocketAddr,
-    tx_queue: LockFreeMpscQueue<ZeroCopyBuffer<65536>>,
-    rx_queue: LockFreeMpscQueue<ZeroCopyBuffer<65536>>,
+    tx_queue: LockFreeMpscQueue<ZeroCopyBuffer<BUFFER_SIZE>>,
+    rx_queue: LockFreeMpscQueue<ZeroCopyBuffer<BUFFER_SIZE>>,
     connection_stats: ConnectionStats,
 }
 
@@ -206,7 +208,9 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
         Self {
             buffer_pool: Arc::new(ZeroCopyBufferPool::new()),
             connection_registry: LockFreeHashMap::with_capacity(1024),
-            // TODO: Re-integrate SIMD processor when available
+            /// SIMD processor initialization (feature-gated for optimal performance)
+            #[cfg(feature = "simd")]
+            simd_processor: Arc::new(crate::simd_optimizations_advanced::SimdBulkProcessor::new()),
             stats: NetworkStats::default(),
         }
     }
@@ -246,7 +250,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
         // Acquire buffer from pool (zero allocation)
         let mut buffer = self.buffer_pool
             .acquire_buffer()
-            .ok_or_else(|| NestGateError::network_error("No buffers available", "buffer_pool", None))?;
+            .ok_or_else(|| NestGateError::network_error_with_endpoint("buffer_pool", "No buffers available", None))?;
 
         // Direct copy to buffer (SIMD optimization available when processor is integrated)
         let copy_len = data.len().min(buffer.capacity());
@@ -336,10 +340,10 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
     }
 
     // Helper methods
-    fn get_connection(&self, connection_id: u64) -> Result<Arc<ZeroCopyConnection>> {
+    fn get_connection(&self, connection_id: u64) -> Result<Arc<ZeroCopyConnection<BUFFER_SIZE>>> {
         self.connection_registry
             .get(&connection_id.to_string())
-            .ok_or_else(|| NestGateError::network_error("connection", "Connection not found", None))
+            .ok_or_else(|| NestGateError::network_error_with_endpoint("connection", "Connection not found", None))
     }
 
     fn generate_connection_id(&self, remote_addr: &SocketAddr) -> u64 {
@@ -371,7 +375,7 @@ pub struct NetworkInterfaceStats {
     pub buffer_pool_stats: BufferPoolStats,
 }
 
-// ==================== KERNEL BYPASS NETWORKING ====================
+// ==================== SECTION ====================
 
 /// **KERNEL BYPASS NETWORK ADAPTER**
 /// 
@@ -463,7 +467,7 @@ impl<const RING_SIZE: usize> KernelBypassAdapter<RING_SIZE> {
             tracing::trace!("Hardware send initiated for slot {}", slot);
             Ok(())
         } else {
-            Err(NestGateError::network_error("hardware_send", "No available TX slots", None))
+            Err(NestGateError::network_error_with_endpoint("hardware_send", "No available TX slots", None))
         }
     }
 
@@ -543,7 +547,7 @@ impl<const SIZE: usize> ZeroCopyRing<SIZE> {
                 self.tail.store(next_tail, std::sync::atomic::Ordering::Release);
                 Ok(buffer)
             } else {
-                Err(NestGateError::network_error("ring_buffer", "No buffer in slot", None))
+                Err(NestGateError::network_error_with_endpoint("ring_buffer", "No buffer in slot", None))
             }
         } else {
             Err(NestGateError::validation_error("ring_slot", "Invalid slot index", None))
@@ -551,7 +555,7 @@ impl<const SIZE: usize> ZeroCopyRing<SIZE> {
     }
 }
 
-// ==================== PERFORMANCE BENCHMARKS ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COPY NETWORKING BENCHMARKS**
 pub mod benchmarks {
@@ -622,7 +626,6 @@ pub mod benchmarks {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_zero_copy_buffer() {

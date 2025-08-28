@@ -1,7 +1,7 @@
 /// **SECURITY DOMAIN**
 /// Security-specific business logic and operations.
 
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 
 /// Security domain operations
 pub struct SecurityDomain {

@@ -44,7 +44,7 @@ pub use nestgate_performance as performance;
 pub mod prelude {
     //! Common imports for NestGate applications
 
-    pub use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateFinalConfig;
+    pub use nestgate_core::config::unified::NestGateUnifiedConfig as NestGateUnifiedConfig;
     pub use nestgate_core::error::{NestGateError, Result};
     pub use nestgate_core::smart_abstractions::prelude::*;
     

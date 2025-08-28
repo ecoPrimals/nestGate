@@ -87,7 +87,7 @@ pub fn parse_size_string(size_str: &str) -> UniversalZfsResult<u64> {
     let base_value = numeric_part
         .parse::<f64>()
         .map_err(|_| UniversalZfsError::InvalidInput {
-            field: "size".to_string(),
+            field: Some("size".to_string()),
             message: format!("Invalid numeric value: {}", numeric_part),
         })?;
 
@@ -124,7 +124,7 @@ pub fn parse_size_string(size_str: &str) -> UniversalZfsResult<u64> {
 
         _ => {
             return Err(UniversalZfsError::InvalidInput {
-                field: "size_unit".to_string(),
+                field: Some("size_unit".to_string()),
                 message: format!("Unknown size unit: {}", unit_part),
             }
             .into());
@@ -145,7 +145,7 @@ fn split_size_string(size_str: &str) -> UniversalZfsResult<(&str, &str)> {
 
     if split_pos == 0 {
         return Err(UniversalZfsError::InvalidInput {
-            field: "size".to_string(),
+            field: Some("size".to_string()),
             message: format!("Size string has no numeric part: {}", size_str),
         }
         .into());

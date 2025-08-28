@@ -1,7 +1,7 @@
 /// Core Universal Primal Discovery Orchestrator
 /// This module contains the main orchestration logic that coordinates
 /// between different discovery subsystems.
-use crate::error::Result;
+use crate::Result;
 use std::collections::HashMap;
 use std::net::IpAddr;
 use std::sync::Arc;

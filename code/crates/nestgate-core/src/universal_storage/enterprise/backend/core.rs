@@ -1,12 +1,11 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use crate::canonical_modernization::ServiceCapability;
 
 use super::super::{

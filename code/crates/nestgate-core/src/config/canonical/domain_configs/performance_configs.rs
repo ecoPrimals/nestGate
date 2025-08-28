@@ -3,7 +3,7 @@
 /// Replaces: PerformanceConfig, MetricsConfig, MonitoringConfig, AlertsConfig,
 /// BenchmarkConfig, and 8+ other performance config structures
 use super::CanonicalDomainConfig;
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -39,7 +39,6 @@ impl CanonicalDomainConfig for CanonicalPerformanceConfig {
             return Err(NestGateError::config_error(
                 "metrics.collection_interval",
                 "must be greater than 0",
-                None,
             ));
         }
         Ok(())
@@ -66,7 +65,7 @@ impl CanonicalDomainConfig for CanonicalPerformanceConfig {
     }
 }
 
-// ==================== PERFORMANCE CONFIGURATION STRUCTURES ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMetrics {
@@ -181,9 +180,9 @@ impl Default for PerformanceLimits {
     fn default() -> Self {
         Self {
             max_cpu_usage: 90.0,
-            max_memory_usage: 8589934592,      // 8GB
-            max_disk_usage: 107374182400,      // 100GB
-            max_network_bandwidth: 1073741824, // 1GB/s
+            max_memory_usage: 8_589_934_592,      // 8GB
+            max_disk_usage: 107_374_182_400,      // 100GB
+            max_network_bandwidth: 1_073_741_824, // 1GB/s
             max_concurrent_requests: 10000,
         }
     }

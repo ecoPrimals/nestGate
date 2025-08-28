@@ -1,8 +1,13 @@
 /// Multi-tier Cache Manager Implementation
 use super::types::{CacheEntry, CacheStats, StorageTier};
-use crate::unified_types::{UnifiedCacheConfig, UnifiedConfig};
-use crate::{NestGateError, Result};
 use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+
+// **MIGRATED**: Using canonical cache config instead of deprecated unified_types
+use crate::config::canonical_master::{CacheConfig, CacheConfig as UnifiedCacheConfig};
+use crate::config::canonical_master::NestGateCanonicalConfig;
+use crate::{NestGateError, Result};
 use tracing::{debug, info, warn};
 
 /// Multi-tier cache manager
@@ -23,12 +28,12 @@ pub struct CacheManager {
 
 impl CacheManager {
     /// Create a new cache manager
-    pub fn new(config: UnifiedConfig) -> Self {
+    pub fn new(config: NestGateCanonicalConfig) -> Self {
         Self {
             hot_tier: HashMap::new(),
             warm_tier: HashMap::new(),
             cold_tier: HashMap::new(),
-            config: config.cache, // Extract cache config from unified config
+            config: config.storage.cache, // Extract cache config from unified config
             stats: CacheStats::default(),
         }
     }
@@ -36,9 +41,9 @@ impl CacheManager {
     /// Determine the appropriate tier for data of given size
     #[allow(dead_code)]
     fn determine_tier(&self, size: usize) -> StorageTier {
-        if size <= self.config.hot_tier_size {
+        if size <= self.config.hot_tier_size as usize {
             StorageTier::Hot
-        } else if size <= self.config.warm_tier_size {
+        } else if size <= self.config.warm_tier_size as usize {
             StorageTier::Warm
         } else {
             StorageTier::Cold
@@ -47,7 +52,7 @@ impl CacheManager {
 
     /// Create a new cache manager optimized for development
     pub fn for_development() -> Self {
-        let config = UnifiedCacheConfig::development();
+        let config = CacheConfig::development();
         Self {
             hot_tier: HashMap::new(),
             warm_tier: HashMap::new(),
@@ -59,7 +64,7 @@ impl CacheManager {
 
     /// Create a new cache manager optimized for production
     pub fn for_production() -> Self {
-        let config = UnifiedCacheConfig::high_performance();
+        let config = CacheConfig::high_performance();
         Self {
             hot_tier: HashMap::new(),
             warm_tier: HashMap::new(),
@@ -100,6 +105,18 @@ impl CacheManager {
                 self.stats.warm_tier_size_bytes += size;
             }
             StorageTier::Cold => {
+                self.cold_tier.insert(key.to_string(), entry);
+                self.stats.cold_tier_items += 1;
+                self.stats.cold_tier_size_bytes += size;
+            }
+            StorageTier::Cache => {
+                // Cache tier maps to hot tier for this implementation
+                self.hot_tier.insert(key.to_string(), entry);
+                self.stats.hot_tier_items += 1;
+                self.stats.hot_tier_size_bytes += size;
+            }
+            StorageTier::Archive => {
+                // Archive tier maps to cold tier for this implementation
                 self.cold_tier.insert(key.to_string(), entry);
                 self.stats.cold_tier_items += 1;
                 self.stats.cold_tier_size_bytes += size;
@@ -206,26 +223,30 @@ impl CacheManager {
         self.cold_tier.clear();
 
         // Clear disk cache
-        let cache_path = std::path::PathBuf::from(&self.config.cache_dir);
-        if cache_path.exists() {
-            let entries = std::fs::read_dir(&cache_path).map_err(|e| NestGateError::Io {
-                operation: "read cache directory".to_string(),
-                error_message: e.to_string(),
-                resource: Some(self.config.cache_dir.clone()),
-                retryable: true,
-            })?;
-
-            for entry in entries {
-                let entry = entry.map_err(|e| NestGateError::Io {
-                    operation: "read cache directory entry".to_string(),
-                    error_message: e.to_string(),
-                    resource: None,
+        if let Some(cache_dir) = &self.config.cache_dir {
+            let cache_path = cache_dir.clone();
+            if cache_path.exists() {
+                let entries = std::fs::read_dir(&cache_path).map_err(|e| NestGateError::Io {
+                    message: e.to_string(),
+                    operation: "read cache directory".to_string(),
+                    path: Some(cache_path.to_string_lossy().to_string()),
                     retryable: true,
+                    context: None,
                 })?;
 
-                if entry.path().is_file() {
-                    if let Err(e) = std::fs::remove_file(entry.path()) {
-                        warn!("Failed to remove cache file {:?}: {}", entry.path(), e);
+                for entry in entries {
+                    let entry = entry.map_err(|e| NestGateError::Io {
+                        message: e.to_string(),
+                        operation: "read cache directory entry".to_string(),
+                        path: None,
+                        retryable: true,
+                        context: None,
+                    })?;
+
+                    if entry.path().is_file() {
+                        if let Err(e) = std::fs::remove_file(entry.path()) {
+                            warn!("Failed to remove cache file {:?}: {}", entry.path(), e);
+                        }
                     }
                 }
             }
@@ -241,31 +262,35 @@ impl CacheManager {
     /// Get cache statistics
     pub fn stats(&self) -> Result<CacheStats> {
         // Return current statistics
-        let cache_path = std::path::PathBuf::from(&self.config.cache_dir);
-        if !cache_path.exists() {
-            return Ok(CacheStats::default());
+        if let Some(cache_dir) = &self.config.cache_dir {
+            let cache_path = cache_dir.clone();
+            if !cache_path.exists() {
+                return Ok(CacheStats::default());
+            }
+
+            // Calculate current statistics
+            let hot_count = self.hot_tier.len();
+            let warm_count = self.warm_tier.len();
+            let cold_count = self.cold_tier.len();
+
+            Ok(CacheStats {
+                hits: self.stats.hits,
+                misses: self.stats.misses,
+                hot_tier_items: hot_count,
+                warm_tier_items: warm_count,
+                cold_tier_items: cold_count,
+                hot_tier_size_bytes: self.stats.hot_tier_size_bytes,
+                warm_tier_size_bytes: self.stats.warm_tier_size_bytes,
+                cold_tier_size_bytes: self.stats.cold_tier_size_bytes,
+                hot_tier_evictions: self.stats.hot_tier_evictions,
+                warm_tier_evictions: self.stats.warm_tier_evictions,
+                cold_tier_evictions: self.stats.cold_tier_evictions,
+                tier_access_times: self.stats.tier_access_times.clone(),
+                efficiency_metrics: self.stats.efficiency_metrics.clone(),
+            })
+        } else {
+            Ok(CacheStats::default())
         }
-
-        // Calculate current statistics
-        let hot_count = self.hot_tier.len();
-        let warm_count = self.warm_tier.len();
-        let cold_count = self.cold_tier.len();
-
-        Ok(CacheStats {
-            hits: self.stats.hits,
-            misses: self.stats.misses,
-            hot_tier_items: hot_count,
-            warm_tier_items: warm_count,
-            cold_tier_items: cold_count,
-            hot_tier_size_bytes: self.stats.hot_tier_size_bytes,
-            warm_tier_size_bytes: self.stats.warm_tier_size_bytes,
-            cold_tier_size_bytes: self.stats.cold_tier_size_bytes,
-            hot_tier_evictions: self.stats.hot_tier_evictions,
-            warm_tier_evictions: self.stats.warm_tier_evictions,
-            cold_tier_evictions: self.stats.cold_tier_evictions,
-            tier_access_times: self.stats.tier_access_times.clone(),
-            efficiency_metrics: self.stats.efficiency_metrics.clone(),
-        })
     }
 
     /// Check if cache contains a key
@@ -309,7 +334,7 @@ impl CacheManager {
 
     /// Flush dirty entries to disk (for write-back policy)
     pub async fn flush(&self) -> Result<()> {
-        if self.config.policy != "WriteBack" {
+        if self.config.policy.as_deref() != Some("WriteBack") {
             return Ok(());
         }
 
@@ -398,6 +423,28 @@ impl CacheManager {
                     debug!("Evicted {} from cold tier", key);
                 }
             }
+            StorageTier::Cache => {
+                // Cache tier maps to hot tier for eviction
+                if let Some((key, entry)) = self.hot_tier.iter().next() {
+                    let key = key.clone();
+                    let size = entry.size;
+                    self.hot_tier.remove(&key);
+                    self.stats.hot_tier_items -= 1;
+                    self.stats.hot_tier_size_bytes -= size;
+                    debug!("Evicted {} from cache tier (hot)", key);
+                }
+            }
+            StorageTier::Archive => {
+                // Archive tier maps to cold tier for eviction
+                if let Some((key, entry)) = self.cold_tier.iter().next() {
+                    let key = key.clone();
+                    let size = entry.size;
+                    self.cold_tier.remove(&key);
+                    self.stats.cold_tier_items -= 1;
+                    self.stats.cold_tier_size_bytes -= size;
+                    debug!("Evicted {} from archive tier (cold)", key);
+                }
+            }
         }
         Ok(())
     }
@@ -473,8 +520,11 @@ impl CacheManager {
     fn get_cache_path(&self, key: &str) -> std::path::PathBuf {
         // Simple key-to-filename mapping (in real implementation, would handle special characters)
         let filename = format!("{}.cache", key.replace('/', "_"));
-        let cache_path = std::path::PathBuf::from(&self.config.cache_dir);
-        cache_path.join(filename)
+        if let Some(cache_dir) = &self.config.cache_dir {
+            cache_dir.join(filename)
+        } else {
+            std::path::PathBuf::from(filename)
+        }
     }
 
     async fn load_cache_data(&self, key: &str) -> Result<Vec<u8>> {
@@ -484,10 +534,11 @@ impl CacheManager {
 
     async fn load_from_disk(&self, path: &std::path::Path) -> Result<Vec<u8>> {
         tokio::fs::read(path).await.map_err(|e| NestGateError::Io {
+            message: e.to_string(),
             operation: "read cache file".to_string(),
-            error_message: e.to_string(),
-            resource: Some(path.to_string_lossy().to_string()),
+            path: Some(path.to_string_lossy().to_string()),
             retryable: true,
+            context: None,
         })
     }
 
@@ -500,9 +551,10 @@ impl CacheManager {
                 .await
                 .map_err(|e| NestGateError::Io {
                     operation: "create cache directory".to_string(),
-                    error_message: e.to_string(),
-                    resource: Some(parent.to_string_lossy().to_string()),
+                    message: e.to_string(),
+                    path: Some(parent.to_string_lossy().to_string()),
                     retryable: true,
+                context: None,
                 })?;
         }
 
@@ -510,23 +562,27 @@ impl CacheManager {
             .await
             .map_err(|e| NestGateError::Io {
                 operation: "write cache file".to_string(),
-                error_message: e.to_string(),
-                resource: Some(cache_path.to_string_lossy().to_string()),
+                message: e.to_string(),
+                path: Some(cache_path.to_string_lossy().to_string()),
                 retryable: true,
+                context: None,
             })
     }
 
     /// Remove cache entry from disk
     async fn remove_from_disk(&self, key: &str) -> Result<()> {
-        let cache_path = std::path::PathBuf::from(&self.config.cache_dir);
-        let file_path = cache_path.join(format!("{key}.cache"));
-        if file_path.exists() {
-            std::fs::remove_file(&file_path).map_err(|e| NestGateError::Io {
-                operation: "remove cache file".to_string(),
-                error_message: e.to_string(),
-                resource: Some(file_path.to_string_lossy().to_string()),
-                retryable: false,
-            })?;
+        if let Some(cache_dir) = &self.config.cache_dir {
+            let cache_path = cache_dir.clone();
+            let file_path = cache_path.join(format!("{key}.cache"));
+            if file_path.exists() {
+                std::fs::remove_file(&file_path).map_err(|e| NestGateError::Io {
+                    operation: "remove cache file".to_string(),
+                    message: e.to_string(),
+                    path: Some(file_path.to_string_lossy().to_string()),
+                    retryable: false,
+                    context: None,
+                })?;
+            }
         }
         Ok(())
     }
@@ -559,18 +615,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_cache_manager_creation() {
-        use crate::unified_types::UnifiedConfig;
+        use crate::config::canonical_master::NestGateCanonicalConfig;
 
-        let config = UnifiedConfig::default();
+        let config = NestGateCanonicalConfig::default();
         let manager = CacheManager::new(config);
         assert!(manager.hot_tier.is_empty());
     }
 
     #[tokio::test]
     async fn test_cache_operations() {
-        use crate::unified_types::UnifiedConfig;
 
-        let config = UnifiedConfig::default();
+        let config = NestGateCanonicalConfig::default();
         let mut manager = CacheManager::new(config);
 
         // Test set and get operations
@@ -590,7 +645,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_cache_expiration() {
-        let config = crate::unified_types::UnifiedConfig::default();
+        let config = crate::config::canonical_master::NestGateCanonicalConfig::default();
         let mut cache = CacheManager::new(config);
 
         // Set data with short expiration

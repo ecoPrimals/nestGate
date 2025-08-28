@@ -110,7 +110,7 @@ pub struct HealthMonitoringConfig {
 /// **CANONICAL MODERNIZATION** - Use canonical metrics configuration
 pub use nestgate_core::CanonicalMetricsConfig as MetricsConfig;
 
-// ==================== RPC CONFIGURATION TYPES ====================
+// ==================== SECTION ====================
 
 /// Stream configuration
 #[derive(Debug, Clone)]
@@ -175,7 +175,7 @@ impl Default for NestGateRpcConfig {
     }
 }
 
-// ==================== CANONICAL IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for CanonicalRpcConfig {
     fn default() -> Self {

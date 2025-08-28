@@ -1,4 +1,3 @@
-use crate::NestGateError;
 //
 // This module provides timeout discovery functionality,
 // extracted from the monolithic unified_dynamic_config.rs file.
@@ -14,7 +13,7 @@ use crate::NestGateError;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-// ==================== TIMEOUT DISCOVERY SETTINGS ====================
+// ==================== SECTION ====================
 
 /// Timeout discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -67,19 +66,25 @@ impl TimeoutDiscoverySettings {
     /// Validate timeout settings
     pub fn validate(&self) -> crate::Result<()> {
         if self.min_timeout > self.max_timeout {
-            return Err(crate::error::NestGateError::validation_error(
-                "timeout_validation",
-                "Minimum timeout cannot be greater than maximum timeout",
-                None
-            ));
+            return Err(crate::error::NestGateError::Validation {
+                field: "timeout_validation".to_string(),
+                message: "Minimum timeout cannot be greater than maximum timeout".to_string(),
+                value: Some(format!("min: {:?}, max: {:?}", self.min_timeout, self.max_timeout)),
+                current_value: Some(format!("min: {:?}, max: {:?}", self.min_timeout, self.max_timeout)),
+                expected: Some("min_timeout <= max_timeout".to_string()),
+                context: None,
+            });
         }
 
         if self.default_timeout > self.max_timeout || self.default_timeout < self.min_timeout {
-            return Err(crate::error::NestGateError::validation_error(
-                "timeout_validation",
-                "Default timeout must be within min/max range",
-                None
-            ));
+            return Err(crate::error::NestGateError::Validation {
+                field: "timeout_validation".to_string(),
+                message: "Default timeout must be within min/max range".to_string(),
+                value: Some(format!("default: {:?}, min: {:?}, max: {:?}", self.default_timeout, self.min_timeout, self.max_timeout)),
+                current_value: Some(format!("default: {:?}, min: {:?}, max: {:?}", self.default_timeout, self.min_timeout, self.max_timeout)),
+                expected: Some("min_timeout <= default_timeout <= max_timeout".to_string()),
+                context: None,
+            });
         }
 
         Ok(())

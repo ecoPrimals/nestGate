@@ -1,15 +1,14 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // This module provides sophisticated memory management and optimization
 // strategies for maximum performance with zero unsafe code.
 
-use std::collections::HashMap;
 use std::sync::{Arc, Weak};
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 
 /// Advanced memory optimization manager
 pub struct MemoryOptimizationManager {

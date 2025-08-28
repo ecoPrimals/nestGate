@@ -20,7 +20,7 @@ use super::{
 };
 use serde::{Deserialize, Serialize};
 
-// ==================== CORE UNIFIED STRUCTURE ====================
+// ==================== SECTION ====================
 
 /// **UNIFIED DYNAMIC DISCOVERY EXTENSIONS**
 /// 
@@ -43,7 +43,7 @@ pub struct UnifiedDynamicDiscoveryExtensions {
     pub cache: CacheDiscoverySettings,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 
 impl UnifiedDynamicDiscoveryExtensions {
@@ -71,7 +71,7 @@ impl UnifiedDynamicDiscoveryExtensions {
     }
 }
 
-// ==================== BUILDER PATTERN ====================
+// ==================== SECTION ====================
 
 /// Builder for creating UnifiedDynamicDiscoveryExtensions with custom settings
 pub struct UnifiedDynamicDiscoveryExtensionsBuilder {

@@ -16,7 +16,7 @@ use nestgate_core::{NestGateError, Result as CoreResult};
 use super::operations::SnapshotOperationType;
 use super::policy::{RetentionPolicy, ScheduleFrequency, SnapshotPolicy};
 use super::types::{SnapshotInfo, SnapshotOperation, SnapshotOperationStatus};
-use nestgate_core::error::UnifiedConfigSource;
+use crate::config::canonical_master::NestGateCanonicalConfigSource;
 use std::time::Duration;
 use tracing::debug;
 use tracing::error;
@@ -385,9 +385,9 @@ impl PolicyScheduler {
             ScheduleFrequency::Monthly { .. } => Ok(Duration::from_secs(2629746)), // ~30.44 days
             ScheduleFrequency::Cron(_) => Err(NestGateError::Configuration {
                 message: "Cron parsing not implemented".to_string(),
-                config_source: UnifiedConfigSource::File("zfs.conf".to_string()),
+                
                 field: None,
-                suggested_fix: None,
+                
             }),
         }
     }

@@ -1,9 +1,8 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // Implements the Circuit Breaker pattern to prevent cascading failures by
 // temporarily blocking calls to failing services.
 
-use crate::error::NestGateError;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
@@ -76,19 +75,19 @@ impl From<CircuitBreakerError> for NestGateError {
             CircuitBreakerError::CircuitOpen { name } => NestGateError::Internal {
                 message: format!("Circuit breaker '{name}' is open - requests blocked"),
                 location: Some("circuit_breaker".to_string()),
-                debug_info: Some("Circuit breaker protection active".to_string()),
+                location: Some("Circuit breaker protection active".to_string()),
                 is_bug: false,
             },
             CircuitBreakerError::Configuration { message } => NestGateError::Configuration {
                 field: Some("circuit_breaker".to_string()),
                 message,
-                config_source: crate::error::UnifiedConfigSource::Defaults,
-                suggested_fix: Some("Check circuit breaker configuration parameters".to_string()),
+                
+                
             },
             CircuitBreakerError::Internal { message } => NestGateError::Internal {
                 message,
                 location: Some("circuit_breaker".to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             },
         }

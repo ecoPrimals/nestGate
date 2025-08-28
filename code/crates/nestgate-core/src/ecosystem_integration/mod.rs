@@ -75,7 +75,7 @@ pub use universal_adapter::{
 /// the universal adapter.
 pub async fn initialize_ecosystem_integration(
     config: AdapterConfig,
-) -> crate::error::Result<UniversalAdapter> {
+) -> crate::Result<UniversalAdapter> {
     let adapter = UniversalAdapter::new(config);
     adapter.initialize().await?;
     Ok(adapter)
@@ -128,7 +128,7 @@ pub fn create_default_adapter_config() -> AdapterConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::NestGateError;
+    use crate::error::NestGateError;
 
     /// Helper function to create a universal adapter from config
     fn create_universal_adapter(

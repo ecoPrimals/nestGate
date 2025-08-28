@@ -291,28 +291,31 @@ impl UnifiedNetworkConfig {
     pub fn validate(&self) -> crate::Result<()> {
         if self.port == 0 {
             return Err(crate::NestGateError::Configuration {
+                field: "port".to_string(),
                 message: "Network port cannot be zero".to_string(),
-                config_source: crate::error::UnifiedConfigSource::Runtime,
-                field: Some("port".to_string()),
-                suggested_fix: Some("Set a valid port number > 0".to_string()),
+                current_value: Some("0".to_string()),
+                expected: Some("positive port number (1-65535)".to_string()),
+                user_error: true,
             });
         }
 
         if self.max_connections == 0 {
             return Err(crate::NestGateError::Configuration {
+                field: "max_connections".to_string(),
                 message: "Max connections cannot be zero".to_string(),
-                config_source: crate::error::UnifiedConfigSource::Runtime,
-                field: Some("max_connections".to_string()),
-                suggested_fix: Some("Set max_connections > 0".to_string()),
+                current_value: Some("0".to_string()),
+                expected: Some("positive integer (e.g., 1000)".to_string()),
+                user_error: true,
             });
         }
 
         if self.worker_threads == 0 {
             return Err(crate::NestGateError::Configuration {
+                field: "worker_threads".to_string(),
                 message: "Worker threads cannot be zero".to_string(),
-                config_source: crate::error::UnifiedConfigSource::Runtime,
-                field: Some("worker_threads".to_string()),
-                suggested_fix: Some("Set worker_threads to a positive value".to_string()),
+                current_value: Some("0".to_string()),
+                expected: Some("positive integer (e.g., 4)".to_string()),
+                user_error: true,
             });
         }
         Ok(())

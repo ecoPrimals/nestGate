@@ -8,7 +8,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 // use urlencoding;
-use nestgate_core::config::canonical_unified::CanonicalConfig as UnifiedApiConfig;
+use nestgate_core::config::unified::NestGateUnifiedConfig as UnifiedApiConfig;
 use nestgate_core::{NestGateError, Result};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};

@@ -3,7 +3,6 @@
 // **CANONICAL MODERNIZATION**: Migrated from async_trait to native async patterns
 
 // CANONICAL MODERNIZATION: Removed async_trait for native async patterns
-// use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;

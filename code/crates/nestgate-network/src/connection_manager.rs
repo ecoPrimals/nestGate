@@ -3,8 +3,6 @@
 // with any orchestration provider or in standalone mode.
 
 use std::future::Future;
-// REMOVED: async_trait dependency - using zero-cost native async patterns
-// use async_trait::async_trait;
 use nestgate_core::ecosystem_integration::fallback_providers::orchestration::OrchestrationFallbackProvider;
 use nestgate_core::error::{IdioResult, NestGateError};
 use nestgate_core::traits::{ServiceRegistration};
@@ -14,6 +12,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid;
+use nestgate_core::constants::ConstantsMigrationHelper;
 
 // Type aliases to reduce complexity
 type ActiveConnectionMap = Arc<RwLock<HashMap<String, ActiveConnection>>>;
@@ -192,7 +191,7 @@ impl SongbirdConnectionManager {
 
         Self {
             orchestration_client: HttpOrchestrationClient {
-                fallback_provider: OrchestrationFallbackProvider::new(service_name.clone()),
+                fallback_provider: OrchestrationFallbackProvider::new(),
                 base_url: orchestration_endpoint,
                 timeout: std::time::Duration::from_secs(10),
             },
@@ -222,16 +221,18 @@ impl SongbirdConnectionManager {
         let response = if !services.is_empty() {
             ConnectionResponse {
                 connection_id: format!("conn-{}", uuid::Uuid::new_v4()),
-                endpoint: "localhost:8080".to_string(), // Simplified endpoint
+                endpoint: ConstantsMigrationHelper::api_endpoint(), // Was: "localhost:8080"
                 token: None,
                 expires_at: None,
                 metadata: HashMap::new(),
             }
         } else {
-            return Err(nestgate_core::NestGateError::NotFound(format!(
-                "Service not found: {}",
-                request.target_service
-            )));
+            return Err(nestgate_core::NestGateError::LoadBalancer {
+                message: format!("Service not found: {}", request.target_service),
+                operation: "service_discovery".to_string(),
+                available_services: None,
+                context: None,
+            });
         };
 
         // Track the connection
@@ -437,7 +438,7 @@ impl SongbirdConnectionManager {
             .map_err(|e| nestgate_core::NestGateError::Internal {
                 message: format!("Failed to request connection: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -449,7 +450,7 @@ impl SongbirdConnectionManager {
                     .map_err(|e| nestgate_core::NestGateError::Internal {
                         message: format!("Failed to parse connection response: {e}"),
                         location: Some(format!("{}:{}", file!(), line!())),
-                        debug_info: None,
+                        context: None,
                         is_bug: false,
                     })?;
 
@@ -477,7 +478,7 @@ impl SongbirdConnectionManager {
             nestgate_core::NestGateError::Internal {
                 message: format!("Failed to release connection: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             }
         })?;
@@ -506,7 +507,7 @@ impl SongbirdConnectionManager {
             nestgate_core::NestGateError::Internal {
                 message: format!("Failed to check connection health: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             }
         })?;

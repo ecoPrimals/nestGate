@@ -1,9 +1,9 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // This module provides enhanced developer experience for error handling,
 // building on our unified error system with convenient macros and utilities.
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 
 /// **ERGONOMIC ERROR CREATION MACROS**
 /// These macros make error creation more convenient while preserving all the
@@ -20,18 +20,14 @@ macro_rules! error {
     };
 }
 
-/// Create a configuration error with field context
-#[macro_export]
-macro_rules! config_error {
-    ($field:expr, $reason:expr) => {
-        $crate::error::NestGateError::invalid($field, $reason)
-    };
-    ($field:expr, $fmt:expr, $($arg:tt)*) => {
-        $crate::error::NestGateError::invalid($field, format!($fmt, $($arg)*))
-    };
-}
+/// **DEPRECATED**: Use the idiomatic config_error! macro from unified module
+/// 
+/// This macro has been moved to the unified error system.
+/// Use `NestGateError::config_error()` method instead.
 
-/// Create a network error with operation context (LEGACY - Use idiomatic network_error! instead)
+// Removed duplicate config_error macro - use unified error system methods
+
+/// **DEPRECATED**: Use the idiomatic network_error! macro from idiomatic_evolution module
 /// **DEPRECATED**: Use the idiomatic network_error! macro from idiomatic_evolution module
 #[macro_export]
 macro_rules! legacy_network_error {
@@ -84,7 +80,14 @@ where
     where
         F: FnOnce() -> String,
     {
-        self.map_err(|e| NestGateError::validation_error(&f(), &format!("{e}"), None))
+        self.map_err(|e| NestGateError::Validation {
+            field: f(),
+            message: format!("{e}"),
+            value: None,
+            current_value: None,
+            expected: None,
+            context: None,
+        })
     }
 
     fn map_nestgate_err<F>(self, f: F) -> Result<T>
@@ -116,9 +119,27 @@ pub fn safe_mutex_lock<'a, T>(
         // In a real implementation, we might want to return the recovered data
         NestGateError::Internal {
             message: format!("Mutex poisoned in {context}"),
+            component: "enhanced_ergonomics".to_string(),
             location: Some(std::panic::Location::caller().to_string()),
-            debug_info: Some("Mutex was poisoned by a panicked thread".to_string()),
             is_bug: true,
+            context: Some(crate::error::context::ErrorContext {
+                    error_id: "error".to_string(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                operation: "mutex_lock".to_string(),
+                component: "enhanced_ergonomics".to_string(),
+                metadata: {
+                    let mut map = std::collections::HashMap::new();
+                    map.insert("context".to_string(), context.to_string());
+                    map.insert("details".to_string(), "Mutex was poisoned by a panicked thread".to_string());
+                    map
+                },
+                timestamp: std::time::SystemTime::now(),
+                    retry_info: None,
+                    recovery_suggestions: vec![],
+                    performance_metrics: None,
+                    environment: None,
+            }),
         }
     })
 }
@@ -132,9 +153,27 @@ pub fn safe_rwlock_read<'a, T>(
         tracing::warn!("RwLock poisoned in {}, recovering gracefully", context);
         NestGateError::Internal {
             message: format!("RwLock poisoned in {context}"),
+            component: "enhanced_ergonomics".to_string(),
             location: Some(std::panic::Location::caller().to_string()),
-            debug_info: Some("RwLock was poisoned by a panicked thread".to_string()),
             is_bug: true,
+            context: Some(crate::error::context::ErrorContext {
+                    error_id: "error".to_string(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                operation: "rwlock_read".to_string(),
+                component: "enhanced_ergonomics".to_string(),
+                metadata: {
+                    let mut map = std::collections::HashMap::new();
+                    map.insert("context".to_string(), context.to_string());
+                    map.insert("details".to_string(), "RwLock was poisoned by a panicked thread".to_string());
+                    map
+                },
+                timestamp: std::time::SystemTime::now(),
+                    retry_info: None,
+                    recovery_suggestions: vec![],
+                    performance_metrics: None,
+                    environment: None,
+            }),
         }
     })
 }
@@ -151,9 +190,27 @@ pub fn safe_rwlock_write<'a, T>(
         );
         NestGateError::Internal {
             message: format!("RwLock write poisoned in {context}"),
+            component: "enhanced_ergonomics".to_string(),
             location: Some(std::panic::Location::caller().to_string()),
-            debug_info: Some("RwLock was poisoned by a panicked thread".to_string()),
             is_bug: true,
+            context: Some(crate::error::context::ErrorContext {
+                    error_id: "error".to_string(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                operation: "rwlock_write".to_string(),
+                component: "enhanced_ergonomics".to_string(),
+                metadata: {
+                    let mut map = std::collections::HashMap::new();
+                    map.insert("context".to_string(), context.to_string());
+                    map.insert("details".to_string(), "RwLock was poisoned by a panicked thread".to_string());
+                    map
+                },
+                timestamp: std::time::SystemTime::now(),
+                    retry_info: None,
+                    recovery_suggestions: vec![],
+                    performance_metrics: None,
+                    environment: None,
+            }),
         }
     })
 }

@@ -195,7 +195,7 @@ impl NativeZfsCommandExecutor {
         // Security: prevent command injection
         for arg in args {
             if arg.contains(';') || arg.contains('&') || arg.contains('|') || arg.contains('`') {
-                return Err(NestGateError::security_error(
+                return Err(NestGateError::permission_denied(
                     "command_validation",
                     format!("Invalid command argument detected: {arg}")
                 ));
@@ -211,7 +211,7 @@ impl NativeZfsCommandExecutor {
                     // These are safe ZFS commands
                 }
                 _ => {
-                    return Err(NestGateError::security_error(
+                    return Err(NestGateError::permission_denied(
                         "command_validation",
                         format!("Unsafe ZFS command: {command}")
                     ));

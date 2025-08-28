@@ -6,9 +6,9 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// ============================================================================
+// ==================== SECTION ====================
 // ZFS DATASET MODELS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// ZFS Dataset representation
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -159,9 +159,9 @@ pub struct UpdateDatasetRequest {
     pub properties: DatasetProperties,
 }
 
-// ============================================================================
+// ==================== SECTION ====================
 // ZFS SNAPSHOT MODELS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// ZFS Snapshot representation
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -220,9 +220,9 @@ pub struct CloneSnapshotRequest {
     pub properties: Option<DatasetProperties>,
 }
 
-// ============================================================================
+// ==================== SECTION ====================
 // STORAGE BACKEND MODELS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// Storage backend types
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -394,9 +394,9 @@ pub struct PerformanceMetrics {
     pub iops: u64,
 }
 
-// ============================================================================
+// ==================== SECTION ====================
 // AUTO-CONFIGURATION MODELS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// Auto-configuration request
 #[derive(Debug, Deserialize)]
@@ -546,9 +546,9 @@ pub struct PerformanceProjection {
     pub scalability: String,
 }
 
-// ============================================================================
+// ==================== SECTION ====================
 // MONITORING MODELS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// System metrics
 #[derive(Debug, Serialize, Deserialize)]
@@ -688,9 +688,9 @@ pub enum ComparisonOperator {
     LessThanOrEqual,
 }
 
-// ============================================================================
+// ==================== SECTION ====================
 // CONFIGURATION MODELS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// System configuration
 #[derive(Debug, Serialize, Deserialize)]

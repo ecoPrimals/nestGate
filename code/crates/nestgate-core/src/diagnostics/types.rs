@@ -101,6 +101,5 @@ impl Default for ServiceInfo {
     }
 }
 
-// REMOVED: Deprecated HealthStatus and ServiceStatus enums
 // Use UnifiedHealthStatus and UnifiedServiceState from crate::unified_enums instead
 // This cleanup eliminates fragmented status type definitions in favor of the unified system.

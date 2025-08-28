@@ -116,10 +116,10 @@ pub mod config_validation {
         // Base configuration validation completed
 
         // Use canonical config structure - system config instead of domains
-        let system_config = &config.system;
+        let system_config = &config.base_config.system;
 
         // Installer-specific validations
-        if !system_config.working_directory.is_absolute() {
+        if !system_config.data_dir.is_absolute() {
             return Err("Installation directory must be an absolute path".to_string());
         }
 

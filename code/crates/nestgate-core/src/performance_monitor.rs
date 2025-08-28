@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // This module provides comprehensive performance monitoring and metrics
@@ -6,7 +6,6 @@ use std::collections::HashMap;
 
 use crate::idiomatic_evolution::SafeResultExt;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::time::{Duration, Instant};
@@ -35,9 +34,9 @@ impl PerformanceMonitor {
             .read()
             .map_err(|_| crate::error::NestGateError::System {
                 message: "Failed to acquire read lock on performance metrics".to_string(),
-                resource: crate::error::SystemResource::Memory,
+                resource: crate::error::core::SystemResource::Memory,
                 utilization: Some(100.0),
-                recovery: crate::error::RecoveryStrategy::Retry,
+                recovery: crate::error::core::RecoveryStrategy::Retry,
             })
     }
 
@@ -53,7 +52,7 @@ impl PerformanceMonitor {
             .map_err(|e| crate::error::NestGateError::Internal {
                 message: format!("Failed to acquire write lock on metrics: {e}"),
                 location: Some("performance_monitor.rs".to_string()),
-                debug_info: Some("safe_write_lock".to_string()),
+                location: Some("safe_write_lock".to_string()),
                 is_bug: false,
             })
     }

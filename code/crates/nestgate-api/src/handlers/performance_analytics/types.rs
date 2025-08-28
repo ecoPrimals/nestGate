@@ -9,7 +9,7 @@ use uuid::Uuid;
 /// **CANONICAL MODERNIZATION** - Use canonical performance configuration
 pub use nestgate_core::CanonicalPerformanceConfig as PerformanceConfig;
 
-// ==================== PERFORMANCE ANALYTICS TYPES ====================
+// ==================== SECTION ====================
 
 /// Alert threshold configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

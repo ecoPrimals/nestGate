@@ -61,11 +61,6 @@ use tempfile::TempDir;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use std::path::PathBuf;
-    use std::time::Duration;
-    use tokio::time::sleep;
-    use tempfile::TempDir;
 
     fn create_test_certs() -> (TempDir, TlsConfig) {
         let temp_dir = TempDir::new().unwrap_or_else(|e| {

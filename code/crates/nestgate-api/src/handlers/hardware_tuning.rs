@@ -7,7 +7,7 @@
 // This module has been refactored into a modular structure.
 // The implementation is now in the `hardware_tuning` submodule.
 
-// ==================== HARDWARE TUNING MODULE ====================
+// ==================== SECTION ====================
 // This module provides hardware performance tuning and optimization
 
 use axum::{extract::State, response::Json};

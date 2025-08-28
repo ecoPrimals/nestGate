@@ -3,7 +3,7 @@
 /// Replaces: NetworkConfig, ServerConfig, StreamConfig, ServiceMeshConfig,
 /// NetworkFsConfig, and 8+ other network config structures
 use super::CanonicalDomainConfig;
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -40,7 +40,6 @@ impl CanonicalDomainConfig for CanonicalNetworkConfig {
             return Err(NestGateError::config_error(
                 "server.port",
                 "must be greater than 0",
-                None,
             ));
         }
         Ok(())
@@ -67,7 +66,7 @@ impl CanonicalDomainConfig for CanonicalNetworkConfig {
     }
 }
 
-// ==================== NETWORK CONFIGURATION STRUCTURES ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkServer {
@@ -142,7 +141,7 @@ pub struct WebSocketProtocolConfig {
     pub compression: bool,
 }
 
-// ==================== SUPPORTING ENUMS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum HttpVersion {
@@ -221,7 +220,7 @@ impl Default for HttpProtocolConfig {
         Self {
             version: HttpVersion::Http2,
             max_header_size: 8192,
-            max_body_size: 1048576, // 1MB
+            max_body_size: 1_048_576, // 1MB
         }
     }
 }
@@ -240,7 +239,7 @@ impl Default for HttpsProtocolConfig {
 impl Default for GrpcProtocolConfig {
     fn default() -> Self {
         Self {
-            max_message_size: 4194304, // 4MB
+            max_message_size: 4_194_304, // 4MB
             keep_alive_interval: Duration::from_secs(30),
             compression: GrpcCompression::Gzip,
         }

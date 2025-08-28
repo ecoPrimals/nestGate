@@ -7,7 +7,7 @@ use tokio::sync::{Mutex, RwLock, Semaphore};
 use tracing::{debug, info, warn};
 
 use super::{ConnectionFactory, ConnectionGuard, HealthCheckFn, PoolStats};
-use crate::unified_types::UnifiedConfig;
+use crate::config::canonical_master::NestGateCanonicalConfig;
 use crate::{NestGateError, Result};
 
 /// Wrapper for pooled connections with metadata
@@ -30,7 +30,7 @@ where
     /// Health check function
     health_check: HealthCheckFn<T>,
     /// Pool configuration
-    config: UnifiedConfig,
+    config: NestGateCanonicalConfig,
     /// Semaphore to limit concurrent connections
     semaphore: Arc<Semaphore>,
     /// Pool statistics
@@ -43,7 +43,7 @@ where
 {
     /// Create a new connection pool
     pub fn new(
-        config: UnifiedConfig,
+        config: NestGateCanonicalConfig,
         factory: ConnectionFactory<T>,
         health_check: Option<HealthCheckFn<T>>,
     ) -> Result<Self> {
@@ -96,14 +96,14 @@ where
         .map_err(|_| NestGateError::Internal {
             message: "Connection pool acquisition timeout".to_string(),
             location: Some(file!().to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })?;
 
         let _permit = permit.map_err(|_| NestGateError::Internal {
             message: "Connection pool semaphore error".to_string(),
             location: Some(file!().to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })?;
 
@@ -203,7 +203,7 @@ where
         pool: Arc<Mutex<VecDeque<PooledConnection<T>>>>,
         health_check: HealthCheckFn<T>,
         stats: Arc<RwLock<PoolStats>>,
-        _config: UnifiedConfig,
+        _config: NestGateCanonicalConfig,
     ) {
         let mut interval = tokio::time::interval(Duration::from_secs(30)); // 30 second health check interval
 

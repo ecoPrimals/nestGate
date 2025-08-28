@@ -4,7 +4,6 @@ use crate::zero_cost::traits::ZeroCostNetworkProvider;
 /// Production-optimized network provider
 pub struct ProductionNetworkProvider;
 
-#[async_trait::async_trait]
 impl ZeroCostNetworkProvider<1000, 8192> for ProductionNetworkProvider {
     type ConnectionInfo = String;
     type Result = crate::Result<String>;
@@ -25,7 +24,6 @@ impl ZeroCostNetworkProvider<1000, 8192> for ProductionNetworkProvider {
 /// Development-optimized network provider
 pub struct DevelopmentNetworkProvider;
 
-#[async_trait::async_trait]
 impl ZeroCostNetworkProvider<100, 4096> for DevelopmentNetworkProvider {
     type ConnectionInfo = String;
     type Result = crate::Result<String>;

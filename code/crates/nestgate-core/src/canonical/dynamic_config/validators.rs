@@ -1,6 +1,6 @@
 
 use super::types::*;
-use crate::config::canonical_unified::{CanonicalConfig, NetworkConfig, SecurityConfig, StorageConfig};
+use crate::config::canonical_master::{NestGateCanonicalConfig as CanonicalConfig};
 use crate::error::CanonicalResult as Result;
 
 /// Storage configuration validator
@@ -225,7 +225,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_config_validation() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        use crate::canonical::dynamic_config::DynamicConfigManager;
 
         let temp_dir = TempDir::new().map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
@@ -277,7 +276,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_config_export_import() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        use crate::canonical::dynamic_config::DynamicConfigManager;
 
         let temp_dir = TempDir::new().map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);

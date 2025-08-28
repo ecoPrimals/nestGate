@@ -1,13 +1,12 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // Canonical implementation of COW functionality for ZFS-like operations.
 // Provides safe data modification through snapshot-based copy-on-write semantics.
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use crate::universal_storage::canonical_storage::CanonicalStorageBackend;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
@@ -166,7 +165,7 @@ where
                 .ok_or_else(|| NestGateError::Internal {
                     message: format!("COW operation not found: {operation_id}"),
                     location: Some("get_cow_operation".to_string()),
-                    debug_info: None,
+                    context: None,
                     is_bug: false,
                 })?
         };
@@ -200,7 +199,7 @@ where
                 .ok_or_else(|| NestGateError::Internal {
                     message: format!("COW operation not found: {operation_id}"),
                     location: Some("get_cow_operation".to_string()),
-                    debug_info: None,
+                    context: None,
                     is_bug: false,
                 })?
         };
@@ -227,7 +226,7 @@ where
                     "Checksum mismatch: expected {expected_checksum}, got {actual_checksum}"
                 ),
                 location: Some("write_with_cow_and_checksum".to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
         }

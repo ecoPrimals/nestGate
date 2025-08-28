@@ -4,7 +4,7 @@
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-// ==================== CHAOS ENGINEERING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// **Unified chaos engineering configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

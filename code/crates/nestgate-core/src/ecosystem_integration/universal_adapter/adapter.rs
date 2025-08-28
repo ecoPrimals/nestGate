@@ -69,7 +69,7 @@ impl UniversalAdapter {
     }
 
     /// Initialize the adapter and register our capabilities
-    pub async fn initialize(&self) -> crate::error::Result<()> {
+    pub async fn initialize(&self) -> crate::Result<()> {
         // Configuration validation - using unified config (validation not needed for basic functionality)
 
         debug!("Initializing NestGate Universal Adapter with configuration");
@@ -88,7 +88,7 @@ impl UniversalAdapter {
     }
 
     /// Register NestGate's capabilities with the ecosystem
-    async fn register_nestgate_capabilities(&self) -> crate::error::Result<()> {
+    async fn register_nestgate_capabilities(&self) -> crate::Result<()> {
         let capabilities = self.create_nestgate_capabilities();
 
         // In a real implementation, this would register with actual discovery services
@@ -166,7 +166,7 @@ impl UniversalAdapter {
     async fn register_with_ecosystem(
         &self,
         capabilities: Vec<ServiceCapability>,
-    ) -> crate::error::Result<()> {
+    ) -> crate::Result<()> {
         info!(
             "Registering {} capabilities with ecosystem",
             capabilities.len()
@@ -194,7 +194,7 @@ impl UniversalAdapter {
     }
 
     /// Start discovering capabilities from other ecosystem participants
-    async fn start_capability_discovery(&self) -> crate::error::Result<()> {
+    async fn start_capability_discovery(&self) -> crate::Result<()> {
         info!("Starting capability discovery from ecosystem");
 
         // This would periodically query the ecosystem for new capabilities
@@ -204,7 +204,7 @@ impl UniversalAdapter {
     }
 
     /// Simulate capability discovery for demonstration
-    async fn simulate_capability_discovery(&self) -> crate::error::Result<()> {
+    async fn simulate_capability_discovery(&self) -> crate::Result<()> {
         // Simulate discovering capabilities from the ecosystem
         let discovered_caps = vec![
             ServiceCapability {
@@ -258,7 +258,7 @@ impl UniversalAdapter {
     }
 
     /// Start health monitoring
-    async fn start_health_monitoring(&self) -> crate::error::Result<()> {
+    async fn start_health_monitoring(&self) -> crate::Result<()> {
         info!("Starting health monitoring");
 
         // Update initial health status
@@ -277,7 +277,7 @@ impl UniversalAdapter {
     pub async fn query_capabilities(
         &self,
         query: CapabilityQuery,
-    ) -> crate::error::Result<Vec<ServiceCapability>> {
+    ) -> crate::Result<Vec<ServiceCapability>> {
         debug!("Querying capabilities: {:?}", query);
 
         let discovered = self.discovered_capabilities.read().await;
@@ -338,7 +338,7 @@ impl UniversalAdapter {
     pub async fn execute_capability(
         &self,
         request: CapabilityRequest,
-    ) -> crate::error::Result<CapabilityResponse> {
+    ) -> crate::Result<CapabilityResponse> {
         let start_time = std::time::Instant::now();
 
         info!("Executing capability request: {}", request.capability_id);
@@ -353,12 +353,10 @@ impl UniversalAdapter {
         let capability = self
             .find_capability(&request.capability_id)
             .await
-            .ok_or_else(|| NestGateError::Internal {
-                message: format!("Capability {} not found", request.capability_id),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: Some("Capability not found during execution".to_string()),
-                is_bug: false,
-            })?;
+            .ok_or_else(|| NestGateError::internal_error_with_debug_context(
+                &format!("Capability {} not found", request.capability_id),
+                Some("Capability not found during execution".to_string())
+            ))?;
 
         // Execute the capability (simulate execution)
         let result = self.execute_capability_impl(&capability, &request).await;
@@ -417,7 +415,7 @@ impl UniversalAdapter {
         &self,
         capability: &ServiceCapability,
         request: &CapabilityRequest,
-    ) -> crate::error::Result<CapabilityResponse> {
+    ) -> crate::Result<CapabilityResponse> {
         // Simulate capability execution
         let execution_time = std::time::Duration::from_millis(50);
         tokio::time::sleep(execution_time).await;
@@ -503,7 +501,7 @@ impl UniversalAdapter {
     }
 
     /// Shutdown the adapter
-    pub async fn shutdown(&self) -> crate::error::Result<()> {
+    pub async fn shutdown(&self) -> crate::Result<()> {
         info!("Shutting down Universal Adapter");
 
         // Cancel active requests
@@ -594,11 +592,14 @@ impl UniversalAdapter {
             }
             _ => {
                 // Modern error response for unknown operations
-                Err(crate::NestGateError::validation_error(
-                    "operation",
-                    &format!("Unknown operation: {operation}"),
-                    Some(operation.to_string()),
-                ))
+                Err(crate::NestGateError::Validation {
+                    field: "operation".to_string(),
+                    message: format!("Unknown operation: {operation}"),
+                    value: Some(operation.to_string()),
+                    current_value: Some(operation.to_string()),
+                    expected: Some("valid operation name".to_string()),
+                    context: None,
+                })
             }
         }
     }

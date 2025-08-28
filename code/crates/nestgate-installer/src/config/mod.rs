@@ -1,7 +1,7 @@
 // Simplified, unified installer configuration using canonical patterns
 
 // Migration utilities no longer needed - using canonical configurations
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateFinalConfig;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -24,11 +24,25 @@ pub use validation::ValidationSettings;
 // Re-export implementation methods
 // pub use execution::implementation::*; // Currently unused
 
-/// Main installer configuration structure
-/// CANONICAL MODERNIZATION: Simplified type alias without type parameters
-pub type InstallerConfig = NestGateFinalConfig;
+/// Installer configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InstallerConfig {
+    pub base_config: NestGateCanonicalConfig,
+    pub installation_path: String,
+    pub environment: String,
+}
 
-// ==================== INSTALLER-SPECIFIC EXTENSIONS ====================
+impl Default for InstallerConfig {
+    fn default() -> Self {
+        Self {
+            base_config: NestGateCanonicalConfig::default(),
+            installation_path: "/opt/nestgate".to_string(),
+            environment: "development".to_string(),
+        }
+    }
+}
+
+// ==================== SECTION ====================
 
 /// Installer-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs
@@ -52,31 +66,33 @@ pub enum InstallMode {
     Custom,
 }
 
-// ==================== CONFIGURATION FACTORY ====================
+// ==================== SECTION ====================
 
 pub mod installer_config_factory {
     use super::*;
-    use nestgate_core::config::canonical_unified::{EnvironmentConfig, DeploymentEnvironment};
+    use nestgate_core::config::canonical_master::{EnvironmentConfig, Environment};
     use nestgate_core::canonical_modernization::builders::CanonicalConfigBuilder;
     
     /// Development configuration
     pub fn development() -> InstallerConfig {
-        CanonicalConfigBuilder::new()
-            .environment(DeploymentEnvironment::Development)
-            .build()
-            .expect("Failed to build development configuration")
+        InstallerConfig {
+            base_config: NestGateCanonicalConfig::development(),
+            installation_path: "/opt/nestgate".to_string(),
+            environment: "development".to_string(),
+        }
     }
 
     /// Production configuration
     pub fn production() -> InstallerConfig {
-        CanonicalConfigBuilder::new()
-            .environment(DeploymentEnvironment::Production)
-            .build()
-            .expect("Failed to build production configuration")
+        InstallerConfig {
+            base_config: NestGateCanonicalConfig::production(),
+            installation_path: "/opt/nestgate".to_string(),
+            environment: "production".to_string(),
+        }
     }
 }
 
-// ==================== INSTALLER CONFIG UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Installer-specific configuration utilities
 pub struct InstallerConfigUtils;
@@ -84,12 +100,12 @@ pub struct InstallerConfigUtils;
 impl InstallerConfigUtils {
     pub fn validate(config: &InstallerConfig) -> Result<(), String> {
         // Use canonical config structure - working_directory instead of services.installation
-        if !config.system.working_directory.exists() {
+        if !PathBuf::from(&config.installation_path).exists() {
             return Err("Installation directory does not exist".to_string());
         }
 
         // Basic validation - can be expanded as needed
-        if config.system.service_name.is_empty() {
+        if config.base_config.system.service_name.is_empty() {
             return Err("Service name cannot be empty".to_string());
         }
 
@@ -115,7 +131,7 @@ impl InstallerConfigUtils {
 
     /// Set data directory
     pub fn set_data_directory(config: &mut InstallerConfig, data_path: &str) {
-        config.system.working_directory = PathBuf::from(data_path);
+        config.installation_path = data_path.to_string();
     }
 
     /// Set log directory (using working_directory as base)
@@ -128,13 +144,12 @@ impl InstallerConfigUtils {
 #[cfg(test)]
 mod tests {
     use super::InstallerConfig;
-    use super::*;
 
     #[test]
     fn test_installer_config_creation() {
         let config = installer_config_factory::development();
         assert_eq!(
-            config.system.instance_name,
+            config.base_config.system.instance_name,
             Some("nestgate-instance".to_string())
         );
         // Canonical modernization: verbose setting moved to system config
@@ -147,7 +162,7 @@ mod tests {
         // Canonical modernization: installation settings moved to environment config
         // Environment type check simplified for canonical config
         // Canonical modernization: security installation is default
-        assert!(config.domains.security.authentication_enabled); // Check authentication is enabled
+        assert!(config.base_config.domains.security.authentication_enabled); // Check authentication is enabled
     }
 
     #[test]
@@ -156,7 +171,7 @@ mod tests {
         // System requirements validation is now handled by the unified config validation system
 
         // Set force_install to true to bypass directory existence check for tests
-        config.domains.installation.force_install = true;
+        config.base_config.domains.installation.force_install = true;
 
         let result = InstallerConfigUtils::validate(&config);
         assert!(result.is_ok());
@@ -182,6 +197,6 @@ mod tests {
         InstallerConfigUtils::set_data_directory(&mut config, "/custom/data");
 
         // Verify the directory was set
-        assert_eq!(config.system.working_directory, PathBuf::from("/custom/data"));
+        assert_eq!(config.installation_path, PathBuf::from("/custom/data").to_string_lossy().into_owned());
     }
 }

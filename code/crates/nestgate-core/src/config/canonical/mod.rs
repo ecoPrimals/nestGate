@@ -11,7 +11,7 @@
 
 pub mod builders;
 pub mod defaults;
-pub mod domain_configs;
+pub mod NestGateCanonicalConfig;
 pub mod loader;
 pub mod merger;
 pub mod types;
@@ -24,7 +24,7 @@ pub use types::{
 };
 
 // Re-export domain configurations
-pub use domain_configs::{
+pub use NestGateCanonicalConfig::{
     CanonicalDomainConfig, CanonicalNetworkConfig, CanonicalPerformanceConfig,
     CanonicalSecurityConfig, CanonicalServiceConfig, CanonicalStorageConfig, CanonicalTestConfig,
 };

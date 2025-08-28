@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // **FINAL PHASE** of the Idiomatic Result<T, E> Migration - Complete transition
 // to fully idiomatic error handling patterns with deprecation of legacy patterns.
@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 use std::time::{Duration, SystemTime};
 
 use crate::error::{
-    IdioResult, NestGateError,
+    IdioResult,
 };
 
 /// **ECOSYSTEM ADOPTION MANAGER**

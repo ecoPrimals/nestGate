@@ -54,7 +54,7 @@ pub struct Alert {
     pub component: String,
 }
 
-// ==================== TYPE ALIASES FOR CLARITY ====================
+// ==================== SECTION ====================
 
 /// Type alias for health data storage
 pub type HealthDataMap = Arc<tokio::sync::RwLock<HashMap<String, HealthReport>>>;

@@ -5,42 +5,17 @@ use std::collections::HashMap;
 
 use std::borrow::Cow;
 use std::sync::Arc;
-use std::collections::HashMap;
 use parking_lot::RwLock;
 use std::sync::OnceLock;
 
-/// **STRING CONSTANTS POOL**
-/// Pre-allocated string constants to avoid repeated allocations
-pub struct StringConstants;
+// **MIGRATED**: Using canonical constants instead of local definitions
+use crate::constants::canonical::{
+    api::{CONFIG_API, CONFIG_ZFS, CONFIG_NETWORK, CONFIG_SECURITY, CONFIG_MONITORING},
+    operations::OP_READ,
+};
 
-impl StringConstants {
-    // Common configuration keys
-    pub const CONFIG_API: &'static str = "api";
-    pub const CONFIG_ZFS: &'static str = "zfs";
-    pub const CONFIG_NETWORK: &'static str = "network";
-    pub const CONFIG_SECURITY: &'static str = "security";
-    pub const CONFIG_MONITORING: &'static str = "monitoring";
-    
-    // Common operation names
-    pub const OP_READ: &'static str = "read";
-    pub const OP_WRITE: &'static str = "write";
-    pub const OP_DELETE: &'static str = "delete";
-    pub const OP_CREATE: &'static str = "create";
-    pub const OP_UPDATE: &'static str = "update";
-    
-    // Common status values
-    pub const STATUS_SUCCESS: &'static str = "success";
-    pub const STATUS_FAILED: &'static str = "failed";
-    pub const STATUS_PENDING: &'static str = "pending";
-    pub const STATUS_RUNNING: &'static str = "running";
-    pub const STATUS_STOPPED: &'static str = "stopped";
-    
-    // Common error types
-    pub const ERROR_NETWORK: &'static str = "network_error";
-    pub const ERROR_STORAGE: &'static str = "storage_error";
-    pub const ERROR_CONFIG: &'static str = "config_error";
-    pub const ERROR_VALIDATION: &'static str = "validation_error";
-}
+// **CANONICAL CONSTANTS MIGRATION COMPLETE**
+// All constants now imported from the canonical constants system
 
 /// **SHARED STRING POOL**
 /// Thread-safe pool for frequently used strings

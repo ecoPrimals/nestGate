@@ -5,13 +5,12 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::time::Duration;
-use std::collections::HashMap;
 
 use crate::canonical_modernization::canonical_constants::{
     system::{DEFAULT_SERVICE_NAME, DEFAULT_TIMEOUT_SECS, DEFAULT_LOG_LEVEL},
 };
 
-// ==================== SYSTEM CONFIGURATION ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemConfig {
@@ -77,7 +76,7 @@ pub struct ConfigMetadata {
     pub tags: Vec<String>,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for SystemConfig {
     fn default() -> Self {

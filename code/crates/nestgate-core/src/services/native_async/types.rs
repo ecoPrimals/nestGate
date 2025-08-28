@@ -3,13 +3,12 @@ use std::future::Future;
 /// Extracted from native_async_final_services.rs to maintain file size compliance
 /// Contains data structures, enums, and type definitions for native async services
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::SystemTime;
 
-use crate::traits::UniversalResponseStatus;
+// UniversalResponseStatus removed - use canonical response types
 
 /// Service request type - re-export from canonical traits
-pub use crate::traits::UniversalServiceRequest as ServiceRequest;
+// UniversalServiceRequest removed - use domain-specific request types
 
 /// Service response type
 #[derive(Debug, Clone)]
@@ -17,7 +16,7 @@ pub struct ServiceResponse {
     pub success: bool,
     pub data: Vec<u8>,
     pub request_id: Option<String>,
-    pub status: UniversalResponseStatus,
+    pub status: crate::canonical_types::ResponseStatus,
     pub headers: HashMap<String, String>,
     pub payload: serde_json::Value,
     pub timestamp: u64,

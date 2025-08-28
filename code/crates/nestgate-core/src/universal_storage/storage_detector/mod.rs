@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // **MODULARIZATION COMPLETE** - Successfully refactored storage_detector.rs from 950 lines
@@ -13,10 +13,9 @@ use std::collections::HashMap;
 // - ✅ Easy to extend with new storage types
 // - ✅ 100% backward compatibility maintained
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use crate::universal_storage::{UnifiedStorageCapability, UnifiedStorageType};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::path::Path;
 
 // Core detector modules

@@ -8,7 +8,6 @@ use serde::{Deserialize, Serialize};
 /// let config = CertificateConfig::default();
 /// ```
 use std::path::PathBuf;
-// REMOVED: unused imports
 
 // Certificate configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

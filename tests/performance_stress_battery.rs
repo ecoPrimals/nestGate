@@ -8,9 +8,9 @@ use std::collections::HashMap;
 use std::time::Instant;
 use tokio::time::{sleep, Duration};
 
-use nestgate_core::config::canonical_unified::PerformanceConfig;
+use nestgate_core::config::unified::PerformanceConfig;
 use nestgate_core::{
-    config::canonical_unified::CanonicalConfig,
+    config::unified::NestGateUnifiedConfig,
     error::{NestGateError, Result},
     canonical_modernization::unified_enums::{UnifiedServiceState, UnifiedServiceType},
 };
@@ -18,7 +18,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-// **DEPRECATED CONFIGURATION REMOVED**
+// **MODERNIZATION COMPLETE**
 // Use UnifiedBenchmarkConfig with BenchmarkPerformanceSettings for all performance testing.
 
 /// Performance test results with detailed metrics

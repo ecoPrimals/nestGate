@@ -19,7 +19,7 @@ pub use traits::{
 pub use types::{
     CommunicationMessage, ConnectionInfo, ConnectionStatus, ExecutionStatus, LoadBalancerStats,
     MCPError, MCPMessage, MCPResponse, MCPSessionInfo, MessagePriority, NetworkAddress,
-    ServiceRequest, ServiceResponse, ServiceStats, WorkflowExecution,
+    ServiceResponse, ServiceStats, WorkflowExecution,
 };
 
 pub use production::{ProductionCommunicationProvider, ProductionLoadBalancer};
@@ -120,7 +120,7 @@ mod tests {
                         success: false,
                         data: vec![],
                         request_id: None,
-                        status: crate::traits::UniversalResponseStatus::Error,
+                        status: crate::canonical_types::ResponseStatus::Error,
                         headers: std::collections::HashMap::new(),
                         payload: serde_json::Value::Null,
                         timestamp: std::time::SystemTime::now()

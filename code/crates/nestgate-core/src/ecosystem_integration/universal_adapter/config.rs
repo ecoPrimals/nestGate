@@ -1,7 +1,99 @@
-use crate::unified_types::{
-    UnifiedMonitoringConfig, UnifiedNetworkConfig, UnifiedRetryConfig, UnifiedSecurityConfig,
-    UnifiedServiceConfig, UnifiedTimeoutConfig,
+// **MIGRATED**: Using config module's unified_types instead of deprecated root unified_types
+use crate::config::canonical_master::{
+    MonitoringConfig as UnifiedMonitoringConfig, 
+    NetworkConfig as UnifiedNetworkConfig,
 };
+
+// **FALLBACK**: Define missing config types locally until they are added to unified_types
+use std::time::Duration;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnifiedServiceConfig {
+    pub name: String,
+    pub version: String,
+    pub enabled: bool,
+    // Additional fields needed by the codebase
+    pub service_name: String,
+    pub description: String,
+    pub environment: String,
+    pub service_type: crate::unified_enums::UnifiedServiceType,
+    pub auto_start: bool,
+    pub priority: u8,
+    pub max_instances: usize,
+    pub health_check_enabled: bool,
+    pub capabilities: Vec<String>,
+    pub dependencies: Vec<String>,
+    pub metadata: std::collections::HashMap<String, String>,
+    pub timeouts: UnifiedTimeoutConfig,
+    pub retry: UnifiedRetryConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnifiedTimeoutConfig {
+    pub connection_timeout: Duration,
+    pub request_timeout: Duration,
+    pub idle_timeout: Duration,
+    pub default_timeout: Duration,
+}
+
+impl Default for UnifiedTimeoutConfig {
+    fn default() -> Self {
+        Self {
+            connection_timeout: Duration::from_secs(30),
+            request_timeout: Duration::from_secs(60),
+            idle_timeout: Duration::from_secs(300),
+            default_timeout: Duration::from_secs(30),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnifiedRetryConfig {
+    pub max_attempts: u32,
+    pub initial_delay: Duration,
+    pub max_delay: Duration,
+    pub backoff_multiplier: f64,
+}
+
+impl UnifiedRetryConfig {
+    pub fn critical_operations() -> Self {
+        Self {
+            max_attempts: 5,
+            initial_delay: Duration::from_millis(100),
+            max_delay: Duration::from_secs(10),
+            backoff_multiplier: 2.0,
+        }
+    }
+
+    pub fn high_frequency() -> Self {
+        Self {
+            max_attempts: 3,
+            initial_delay: Duration::from_millis(50),
+            max_delay: Duration::from_secs(2),
+            backoff_multiplier: 1.5,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnifiedSecurityConfig {
+    pub enable_tls: bool,
+    pub verify_certificates: bool,
+    pub require_auth: bool,
+}
+
+impl Default for UnifiedSecurityConfig {
+    fn default() -> Self {
+        Self {
+            enable_tls: true,
+            verify_certificates: true,
+            require_auth: true,
+        }
+    }
+}
+
+// Remove duplicate struct definitions - use the imported ones from unified_types
+
 /// Universal Adapter Configuration
 /// Configuration structures and settings for the NestGate Universal Adapter.
 use serde::{Deserialize, Serialize};
@@ -39,12 +131,13 @@ pub struct AdapterExtensions {
 impl Default for UnifiedAdapterConfig {
     fn default() -> Self {
         let service = UnifiedServiceConfig {
-            service_name: "universal-adapter".to_string(),
             name: "universal-adapter".to_string(),
+            version: "1.0.0".to_string(),
+            enabled: true,
+            service_name: "universal-adapter".to_string(),
             description: "Universal Primal Adapter Service".to_string(),
             environment: "production".to_string(),
             service_type: crate::unified_enums::UnifiedServiceType::Adapter,
-            enabled: true,
             auto_start: true,
             priority: 8,
             max_instances: 5,
@@ -57,7 +150,6 @@ impl Default for UnifiedAdapterConfig {
             metadata: std::collections::HashMap::new(),
             timeouts: UnifiedTimeoutConfig::default(),
             retry: UnifiedRetryConfig::critical_operations(),
-            ..Default::default()
         };
         Self {
             service,
@@ -166,7 +258,7 @@ impl UnifiedAdapterConfig {
         let mut config = Self::default();
         config.service.retry = UnifiedRetryConfig::critical_operations();
         config.service.max_instances = 10;
-        config.monitoring.metrics_enabled = true;
+        config.monitoring.metrics.enabled = true;
         config.adapter.monitoring_enabled = true;
         config
     }

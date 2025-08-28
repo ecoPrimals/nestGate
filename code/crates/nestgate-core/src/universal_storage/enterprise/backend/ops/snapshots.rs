@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // This module provides snapshot management functionality for enterprise storage,
@@ -13,7 +13,7 @@ use std::collections::HashMap;
 // **EXTRACTED FROM**: enterprise_ops.rs lines 45-155 (110 lines)
 
 // Removed async_trait - using native async patterns
-use crate::{Result, NestGateError};
+use crate::{Result};
 use std::time::SystemTime;
 
 use super::super::super::{
@@ -25,7 +25,7 @@ use super::super::super::{
 };
 use super::super::core::EnterpriseStorageBackend;
 
-// ==================== SNAPSHOT OPERATIONS IMPLEMENTATION ====================
+// ==================== SECTION ====================
 
 // Native async implementation
 impl EnterpriseStorageCapabilities for EnterpriseStorageBackend {

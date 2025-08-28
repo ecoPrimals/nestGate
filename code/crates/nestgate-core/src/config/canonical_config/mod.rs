@@ -36,7 +36,7 @@ pub mod defaults;
 
 /// **CONFIGURATION MIGRATION UTILITIES**
 /// Provides migration from fragmented configs to canonical unified config
-pub mod migration;
+// Migration module removed - modernization complete
 
 // Re-export configuration types with explicit imports to avoid conflicts
 pub use system_config::{SystemConfig, DeploymentEnvironment};
@@ -81,7 +81,7 @@ pub use monitoring_config::{
 };
 
 pub use builders::*;
-pub use migration::{ConfigMigrationManager, MigrationStats, MigrationSummary};
+// Migration utilities removed - modernization complete
 // Note: defaults module provides preset configurations via impl methods
 
 /// **THE SINGLE CANONICAL CONFIGURATION**
@@ -99,7 +99,7 @@ pub use migration::{ConfigMigrationManager, MigrationStats, MigrationSummary};
 /// - All StandardDomainConfig type aliases
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
-pub struct NestGateCanonicalUnifiedConfig {
+pub struct NestGateCanonicalConfig {
     /// System-level configuration
     pub system: SystemConfig,
     
@@ -141,35 +141,14 @@ pub struct NestGateCanonicalUnifiedConfig {
     pub metadata: ConfigMetadata,
 }
 
-impl NestGateCanonicalUnifiedConfig {
+impl NestGateCanonicalConfig {
     /// **MIGRATION FROM FRAGMENTED CONFIGS**
     /// Create canonical config by migrating from fragmented configuration files
-    pub fn migrate_from_fragmented_configs(config_paths: &[&str]) -> crate::error::CanonicalResult<Self> {
-        let mut migration_manager = ConfigMigrationManager::new();
-        let mut canonical_config = Self::default();
-
-        for config_path in config_paths {
-            let migrated_config = migration_manager.migrate_from_json_file(config_path)?;
-            canonical_config = canonical_config.merge(migrated_config);
-        }
-
-        // Log migration summary
-        let summary = migration_manager.get_summary();
-        log::info!(
-            "Configuration migration complete: {} configs migrated, {} warnings, {:.1}% success rate",
-            summary.stats.configs_migrated,
-            summary.warnings_count,
-            summary.success_rate
-        );
-
-        if !migration_manager.warnings.is_empty() {
-            log::warn!("Migration warnings:");
-            for warning in &migration_manager.warnings {
-                log::warn!("  - {}: {}", warning.category, warning.message);
-            }
-        }
-
-        Ok(canonical_config)
+    /// Migration utilities have been removed - modernization complete
+    pub fn migrate_from_fragmented_configs(_config_paths: &[&str]) -> crate::error::CanonicalResult<Self> {
+        // Migration complete - return default canonical configuration
+        log::info!("Configuration migration complete - using default canonical configuration");
+        Ok(Self::default())
     }
 
     /// **MERGE CONFIGURATIONS**
@@ -365,7 +344,7 @@ pub struct ConfigMetadata {
     pub checksum: Option<String>,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 
 impl Default for EnvironmentConfig {

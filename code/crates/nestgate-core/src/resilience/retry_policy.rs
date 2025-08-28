@@ -1,9 +1,9 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // Provides configurable retry policies with exponential backoff for
 // handling transient failures.
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use std::time::Duration;
 
 /// Retry configuration

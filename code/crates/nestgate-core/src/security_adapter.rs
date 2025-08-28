@@ -68,7 +68,7 @@ impl SecurityAdapter {
         Err(NestGateError::Internal {
             message: "Mock security adapter not yet implemented - use real adapter".to_string(),
             location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })
     }
@@ -97,7 +97,7 @@ impl SecurityAdapter {
             },
             context: Some({
                 let mut context = HashMap::new();
-                context.insert("service".to_string(), self.service_name.clone());
+                context.insert("service".to_string(), self.name.clone());
                 context.insert("auth_type".to_string(), "user_login".to_string());
                 context
             }),
@@ -106,7 +106,7 @@ impl SecurityAdapter {
         let payload = serde_json::to_vec(&auth_request).map_err(|e| NestGateError::Internal {
             message: format!("Failed to serialize authentication request: {e}"),
             location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })?;
 
@@ -132,7 +132,7 @@ impl SecurityAdapter {
                                     "Failed to deserialize authentication response: {e}"
                                 ),
                                 location: Some(format!("{}:{}", file!(), line!())),
-                                debug_info: None,
+                                context: None,
                                 is_bug: false,
                             }
                         })?;
@@ -179,7 +179,7 @@ impl SecurityAdapter {
                 Err(NestGateError::Internal {
                     message: format!("Security adapter communication failed: {e}"),
                     location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: None,
+                    context: None,
                     is_bug: false,
                 })
             }
@@ -201,7 +201,7 @@ impl SecurityAdapter {
                 let mut context = HashMap::new();
                 context.insert(
                     "service".to_string(),
-                    serde_json::Value::String(self.service_name.clone()),
+                    serde_json::Value::String(self.name.clone()),
                 );
                 context.insert(
                     "timestamp".to_string(),
@@ -214,7 +214,7 @@ impl SecurityAdapter {
         let payload = serde_json::to_vec(&auth_request).map_err(|e| NestGateError::Internal {
             message: format!("Failed to serialize authorization request: {e}"),
             location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })?;
 
@@ -239,7 +239,7 @@ impl SecurityAdapter {
                                     "Failed to deserialize authorization response: {e}"
                                 ),
                                 location: Some(format!("{}:{}", file!(), line!())),
-                                debug_info: None,
+                                context: None,
                                 is_bug: false,
                             }
                         })?;
@@ -269,7 +269,7 @@ impl SecurityAdapter {
                     Err(NestGateError::Internal {
                         message: format!("Authorization check failed: {error_msg}"),
                         location: Some(format!("{}:{}", file!(), line!())),
-                        debug_info: None,
+                        context: None,
                         is_bug: false,
                     })
                 }
@@ -279,7 +279,7 @@ impl SecurityAdapter {
                 Err(NestGateError::Internal {
                     message: format!("Security adapter communication failed: {e}"),
                     location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: None,
+                    context: None,
                     is_bug: false,
                 })
             }
@@ -300,7 +300,7 @@ impl SecurityAdapter {
             key_id: None, // Let the security primal choose the key
             metadata: {
                 let mut metadata = HashMap::new();
-                metadata.insert("service".to_string(), self.service_name.clone());
+                metadata.insert("service".to_string(), self.name.clone());
                 metadata.insert("operation".to_string(), "encrypt".to_string());
                 metadata
             },
@@ -310,7 +310,7 @@ impl SecurityAdapter {
             serde_json::to_vec(&encryption_request).map_err(|e| NestGateError::Internal {
                 message: format!("Failed to serialize encryption request: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -333,7 +333,7 @@ impl SecurityAdapter {
                             NestGateError::Internal {
                                 message: format!("Failed to deserialize encryption response: {e}"),
                                 location: Some(format!("{}:{}", file!(), line!())),
-                                debug_info: None,
+                                context: None,
                                 is_bug: false,
                             }
                         })?;
@@ -343,7 +343,7 @@ impl SecurityAdapter {
                         .map_err(|e| NestGateError::Internal {
                             message: format!("Failed to decode encrypted data: {e}"),
                             location: Some(format!("{}:{}", file!(), line!())),
-                            debug_info: None,
+                            context: None,
                             is_bug: false,
                         })?;
 
@@ -362,7 +362,7 @@ impl SecurityAdapter {
                     Err(NestGateError::Internal {
                         message: format!("Encryption failed: {error_msg}"),
                         location: Some(format!("{}:{}", file!(), line!())),
-                        debug_info: None,
+                        context: None,
                         is_bug: false,
                     })
                 }
@@ -372,7 +372,7 @@ impl SecurityAdapter {
                 Err(NestGateError::Internal {
                     message: format!("Security adapter communication failed: {e}"),
                     location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: None,
+                    context: None,
                     is_bug: false,
                 })
             }
@@ -389,14 +389,14 @@ impl SecurityAdapter {
         let signing_request = serde_json::json!({
             "data": general_purpose::STANDARD.encode(data),
             "algorithm": "RSA-SHA256", // Default signing algorithm
-            "service": self.service_name
+            "service": self.name
         });
 
         let payload =
             serde_json::to_vec(&signing_request).map_err(|e| NestGateError::Internal {
                 message: format!("Failed to serialize signing request: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -419,7 +419,7 @@ impl SecurityAdapter {
                             NestGateError::Internal {
                                 message: format!("Failed to deserialize signing response: {e}"),
                                 location: Some(format!("{}:{}", file!(), line!())),
-                                debug_info: None,
+                                context: None,
                                 is_bug: false,
                             }
                         })?;
@@ -430,7 +430,7 @@ impl SecurityAdapter {
                         .ok_or_else(|| NestGateError::Internal {
                             message: "Missing signature in response".to_string(),
                             location: Some(format!("{}:{}", file!(), line!())),
-                            debug_info: None,
+                            context: None,
                             is_bug: false,
                         })?;
 
@@ -444,7 +444,7 @@ impl SecurityAdapter {
                             |e| NestGateError::Internal {
                                 message: format!("Failed to decode signature data: {e}"),
                                 location: Some(format!("{}:{}", file!(), line!())),
-                                debug_info: None,
+                                context: None,
                                 is_bug: false,
                             },
                         )?,
@@ -468,7 +468,7 @@ impl SecurityAdapter {
                     Err(NestGateError::Internal {
                         message: format!("Data signing failed: {error_msg}"),
                         location: Some(format!("{}:{}", file!(), line!())),
-                        debug_info: None,
+                        context: None,
                         is_bug: false,
                     })
                 }
@@ -478,7 +478,7 @@ impl SecurityAdapter {
                 Err(NestGateError::Internal {
                     message: format!("Security adapter communication failed: {e}"),
                     location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: None,
+                    context: None,
                     is_bug: false,
                 })
             }
@@ -490,14 +490,14 @@ impl SecurityAdapter {
         info!("🔐 Performing security adapter health check");
 
         let health_request = serde_json::json!({
-            "service": self.service_name,
+            "service": self.name,
             "check_type": "connectivity"
         });
 
         let payload = serde_json::to_vec(&health_request).map_err(|e| NestGateError::Internal {
             message: format!("Failed to serialize health check request: {e}"),
             location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })?;
 

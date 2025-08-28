@@ -1,9 +1,9 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // Provides timeout functionality for operations to prevent hanging requests
 // and ensure system responsiveness.
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use std::time::Duration;
 
 /// Execute operation with timeout

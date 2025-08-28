@@ -7,7 +7,12 @@ use std::time::Duration;
 use std::time::SystemTime;
 use thiserror::Error;
 
-use crate::error::domain_errors::*;
+// Import domain error data types from the data module
+use super::data::{
+    StorageErrorData, NetworkErrorData, SecurityErrorData, McpErrorData, 
+    ApiErrorData, AutomationErrorData, UniversalZfsErrorData,
+    MiddlewareErrorData, FsMonitorErrorData, InstallerErrorData, PrimalErrorData,
+};
 
 /// Retry configuration information for error handling
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,7 +40,25 @@ pub struct ErrorContext {
     pub timestamp: SystemTime,
 }
 
-// ==================== SUPPORTING ENUMS ====================
+impl ErrorContext {
+    /// Create a new error context
+    pub fn new(component: &str, operation: &str) -> Self {
+        Self {
+            operation: operation.to_string(),
+            component: component.to_string(),
+            metadata: HashMap::new(),
+            timestamp: SystemTime::now(),
+        }
+    }
+    
+    /// Add metadata to the error context
+    pub fn with_metadata(mut self, key: &str, value: &str) -> Self {
+        self.metadata.insert(key.to_string(), value.to_string());
+        self
+    }
+}
+
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum UnifiedConfigSource {
@@ -67,10 +90,6 @@ pub enum RecoveryStrategy {
     Fallback,
     ScaleUp,
     WaitAndRetry,
-    ManualIntervention,
-    Ignore,
-    Restart,
-    Continue,
 }
 
 /// Test assertion failure details for rich debugging context
@@ -79,7 +98,7 @@ pub struct TestAssertionDetails {
     /// What was expected
     pub expected: String,
     /// What was actually received
-    pub actual: String,
+    pub current_value: String,
     /// Assertion description
     pub description: String,
 }
@@ -107,15 +126,15 @@ impl std::fmt::Display for TestErrorData {
     }
 }
 
-/// **UNIFIED ERROR SYSTEM**
-/// This is the root error type for all NestGate operations. It provides comprehensive
-/// error classification, rich context, and structured recovery information.
+/// **LEGACY ERROR SYSTEM**
+/// This is the legacy error type for NestGate operations. 
+/// **DEPRECATED**: Use NestGateUnifiedError from unified.rs instead.
 #[derive(Error, Debug, Clone, Serialize, Deserialize)]
-pub enum NestGateError {
+pub enum NestGateLegacyError {
     // ===== DOMAIN-SPECIFIC ERRORS =====
     /// ZFS storage system errors
     #[error("ZFS Error: {0}")]
-    Zfs(Box<ZfsErrorData>),
+    Zfs(Box<UniversalZfsErrorData>),
 
     /// Network and communication errors
     #[error("Network Error: {0}")]
@@ -172,12 +191,8 @@ pub enum NestGateError {
     #[error("Configuration Error: {message}")]
     Configuration {
         message: String,
-        /// Configuration source (file, environment, defaults)
-        config_source: UnifiedConfigSource,
         /// Field name or section that caused the error
         field: Option<String>,
-        /// Suggested fix for the configuration issue
-        suggested_fix: Option<String>,
     },
 
     /// System resource and infrastructure errors
@@ -315,7 +330,7 @@ pub enum NestGateError {
 }
 
 // Add From implementation for serde_json::Error
-impl From<serde_json::Error> for NestGateError {
+impl From<serde_json::Error> for NestGateLegacyError {
     fn from(err: serde_json::Error) -> Self {
         Self::Validation {
             field: "JSON".to_string(),

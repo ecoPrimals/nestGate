@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // High-performance ZFS service implementation using zero-cost abstractions.
@@ -7,7 +7,6 @@ use super::traits::ZeroCostUniversalZfsService;
 use super::types::*;
 use crate::Result;
 
-use std::collections::HashMap;
 
 /// Zero-cost ZFS service implementation
 pub struct ZeroCostZfsService {
@@ -40,7 +39,7 @@ impl ZeroCostUniversalZfsService for ZeroCostZfsService {
     type SnapshotConfig = DefaultSnapshotConfig;
 
     fn service_name(&self) -> &'static str {
-        self.service_name
+        self.name
     }
 
     async fn health_check(&self) -> Result<Self::HealthStatus> {

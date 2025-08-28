@@ -1,14 +1,4 @@
 //
-// **CANONICAL MODERNIZATION COMPLETE** - This module consolidates ALL scattered
-// constants from across the NestGate ecosystem into a single, authoritative source.
-//
-// **ELIMINATES AND REPLACES**:
-// - `const_generic_configs.rs` (353 lines) - Performance constants
-// - `constants/core.rs`, `constants/network.rs`, etc. - Domain constants
-// - 200+ scattered constant definitions across all crates
-// - Duplicate DEFAULT_* patterns (50+ instances)
-//
-// **PROVIDES**:
 // - Single source of truth for all constants
 // - Consistent naming patterns
 // - Domain-organized hierarchy
@@ -194,6 +184,18 @@ pub mod limits {
     
     /// Maximum recursion depth
     pub const MAX_RECURSION_DEPTH: usize = 50;
+    
+    /// Maximum number of ZFS pools
+    pub const MAX_POOLS: usize = 64;
+    
+    /// Maximum number of datasets
+    pub const MAX_DATASETS: usize = 1000;
+    
+    /// Maximum concurrent operations
+    pub const MAX_CONCURRENT_OPERATIONS: usize = 100;
+    
+    /// Maximum optimizations
+    pub const MAX_OPTIMIZATIONS: usize = 50;
 }
 
 /// **API CONSTANTS**
@@ -613,7 +615,7 @@ pub mod development {
     }
 }
 
-// ==================== MACRO FOR COMPILE-TIME CONSTANT ACCESS ====================
+// ==================== SECTION ====================
 
 /// Macro for compile-time constant access
 #[macro_export]
@@ -647,7 +649,7 @@ macro_rules! const_access {
     };
 }
 
-// ==================== CANONICAL CONSTANTS STRUCT ====================
+// ==================== SECTION ====================
 
 /// **CANONICAL CONSTANTS** - Main constants container
 pub struct CanonicalConstants;
@@ -680,7 +682,7 @@ pub struct SystemConstants;
 /// API constants container
 pub struct ApiConstants;
 
-// ==================== ZERO-COST CONFIG TYPES ====================
+// ==================== SECTION ====================
 
 /// Zero-cost configuration marker
 pub struct ZeroCostConfig;
@@ -688,7 +690,7 @@ pub struct ZeroCostConfig;
 /// Const generic configuration marker (renamed to avoid conflict)
 pub struct ConstGenericConfig;
 
-// ==================== CONVENIENCE RE-EXPORTS ====================
+// ==================== SECTION ====================
 
 // Network constants (avoiding duplicate imports)
 pub use network::{DEFAULT_API_PORT, REQUEST_TIMEOUT_SECS, DEFAULT_BIND_ADDRESS, LOCALHOST};

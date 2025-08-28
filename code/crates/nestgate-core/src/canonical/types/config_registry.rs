@@ -11,11 +11,10 @@ use std::collections::HashMap;
 // - All other fragmented config structures
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
 
-// ==================== CANONICAL CONFIGURATION REGISTRY ====================
+// ==================== SECTION ====================
 
 /// **THE CANONICAL STORAGE CONFIGURATION**
 ///
@@ -23,8 +22,8 @@ use std::time::Duration;
 /// - `StorageConfig` from canonical_storage.rs
 /// - `StorageResourceConfig` from unified_types/storage/config.rs
 /// - `StorageConfig` from config/storage.rs
-/// - `CanonicalStorageConfig` from config/canonical/domain_configs/storage_configs.rs
-/// - `StorageConfig` from unified_final_config/domain_configs/storage.rs
+/// - `CanonicalStorageConfig` from config/canonical/NestGateCanonicalConfig/storage_configs.rs
+/// - `StorageConfig` from unified_final_config/NestGateCanonicalConfig/storage.rs
 /// - `FsMonitorStorageSettings` from fsmonitor storage config
 /// - `McpStorageConfig` from mcp storage config
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -55,7 +54,7 @@ pub struct CanonicalStorageConfig {
 ///
 /// Consolidates ALL network configuration patterns:
 /// - `NetworkConfig` from canonical_modernization/core_config.rs
-/// - `CanonicalNetworkConfig` from canonical_modernization/domain_configs.rs
+/// - `CanonicalNetworkConfig` from canonical_modernization/NestGateCanonicalConfig.rs
 /// - Network settings from unified_network_extensions.rs
 /// - Network configs from various service modules
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -120,7 +119,7 @@ pub struct CanonicalMonitoringConfig {
     pub performance: MonitoringPerformanceConfig,
 }
 
-// ==================== STORAGE CONFIGURATION COMPONENTS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum StorageBackendType {
@@ -326,7 +325,7 @@ pub struct StorageResourceConfig {
     pub resource_limits: HashMap<String, u64>,
 }
 
-// ==================== NETWORK CONFIGURATION COMPONENTS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NetworkInterfaceConfig {
@@ -447,7 +446,7 @@ pub struct NetworkMonitoringConfig {
     pub metrics_export: bool,
 }
 
-// ==================== SECURITY CONFIGURATION COMPONENTS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SecurityAuthenticationConfig {
@@ -530,7 +529,7 @@ pub struct SecurityComplianceConfig {
     pub compliance_level: String,
 }
 
-// ==================== MONITORING CONFIGURATION COMPONENTS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MonitoringMetricsConfig {

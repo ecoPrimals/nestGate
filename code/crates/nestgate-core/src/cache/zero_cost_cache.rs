@@ -2,7 +2,7 @@
 /// This module replaces Arc<dyn CacheProvider> patterns with compile-time dispatch
 /// for maximum performance in high-frequency cache operations.
 
-use crate::error::Result;
+use crate::Result;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::Arc;

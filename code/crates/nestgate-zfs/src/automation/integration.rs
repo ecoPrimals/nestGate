@@ -3,7 +3,7 @@
 // with the NestGate ecosystem and external services.
 
 // Removed unresolved automation imports - use local implementations
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateFinalConfig;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig as NestGateCanonicalConfig;
 use nestgate_core::error::{IdioResult, NestGateError};
 
 // Placeholder types until automation crate is fully integrated

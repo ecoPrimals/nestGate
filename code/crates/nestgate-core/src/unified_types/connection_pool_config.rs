@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-// ==================== UNIFIED CONNECTION POOL CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Unified Connection Pool Configuration - consolidates all connection pooling settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -55,7 +55,7 @@ impl Default for UnifiedConnectionPoolConfig {
     }
 }
 
-// ==================== CONNECTION RETRY CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Connection retry configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -106,7 +106,7 @@ pub struct RetryCondition {
     pub custom_delay: Option<Duration>,
 }
 
-// ==================== POOL MONITORING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Pool monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -259,7 +259,7 @@ pub enum PoolAlertSeverity {
     Critical,
 }
 
-// ==================== CONNECTION VALIDATION CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Connection validation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -310,7 +310,7 @@ pub enum ValidationStrategy {
     Custom(String),
 }
 
-// ==================== CONNECTION POOL TYPES ====================
+// ==================== SECTION ====================
 
 /// Connection pool types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -327,7 +327,7 @@ pub enum PoolType {
     Custom(String),
 }
 
-// ==================== CONNECTION LIFECYCLE CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Connection lifecycle configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -422,7 +422,7 @@ pub enum PoolingStrategy {
     Custom(String),
 }
 
-// ==================== CONNECTION LOAD BALANCING ====================
+// ==================== SECTION ====================
 
 /// Connection load balancing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

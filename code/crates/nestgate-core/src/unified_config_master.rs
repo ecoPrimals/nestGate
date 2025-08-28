@@ -20,7 +20,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::{Duration, SystemTime};
 
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use crate::unified_config_consolidation::StandardDomainConfig;
 use crate::unified_types::{
     UnifiedCacheConfig, UnifiedConnectionPoolConfig, UnifiedMemoryConfig, UnifiedMonitoringConfig,
@@ -28,7 +28,7 @@ use crate::unified_types::{
     UnifiedStorageConfig, UnifiedTimeoutConfig,
 };
 
-// ==================== MASTER CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// **THE** master configuration for the entire NestGate ecosystem
 /// This is the single source of truth that replaces all scattered configurations
@@ -177,7 +177,7 @@ pub enum ValidationStatus {
     Error(Vec<String>),
 }
 
-// ==================== DOMAIN EXTENSIONS ====================
+// ==================== SECTION ====================
 
 /// API domain-specific configuration extensions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -287,7 +287,7 @@ pub struct MiddlewareDomainExtensions {
     pub custom_chain: Vec<CustomMiddlewareConfig>,
 }
 
-// ==================== CONFIGURATION STRUCTS ====================
+// ==================== SECTION ====================
 // Note: These would be defined in detail based on the specific needs
 // For now, providing placeholder structures
 
@@ -530,7 +530,7 @@ pub struct CustomMiddlewareConfig {
     pub config: HashMap<String, serde_json::Value>,
 }
 
-// ==================== IMPLEMENTATION ====================
+// ==================== SECTION ====================
 
 impl Default for SystemMasterConfig {
     fn default() -> Self {
@@ -667,7 +667,7 @@ impl NestGateMasterConfig {
     }
 }
 
-// ==================== CONFIGURATION TRAIT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 /// Trait for domain-specific configuration validation
 pub trait DomainConfigValidator {

@@ -2,7 +2,7 @@
 /// This module handles JWT tokens, API keys, and other authentication tokens
 /// used in the NestGate system.
 use super::auth_types::TokenType;
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
@@ -76,7 +76,7 @@ impl AuthToken {
             .map_err(|_| NestGateError::Internal {
                 message: "Token has expired".to_string(),
                 location: Some(file!().to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })
     }

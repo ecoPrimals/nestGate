@@ -1,11 +1,10 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // This module provides additional security hardening measures beyond the basic
 // safe operations, including rate limiting, input sanitization, and attack prevention.
 
-use crate::{Result, NestGateError};
-use std::collections::HashMap;
+use crate::{Result};
 use std::net::IpAddr;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -85,11 +84,12 @@ impl InputSanitizer {
     pub fn sanitize_string(input: &str, max_length: usize) -> Result<String> {
         if input.len() > max_length {
             return Err(NestGateError::Validation {
-                field: "input".to_string(),
+                field: Some("input".to_string()),
                 message: format!("Input too long: {} > {max_length}", input.len()),
                 current_value: Some(input[..50.min(input.len())].to_string()),
                 expected: Some(format!("Length <= {max_length}")),
                 user_error: true,
+                context: None,
             });
         }
 
@@ -149,11 +149,12 @@ impl InputSanitizer {
             std::path::Path::new(path)
                 .canonicalize()
                 .map_err(|e| NestGateError::Validation {
-                    field: "file_path".to_string(),
+                    field: Some("file_path".to_string()),
                     message: format!("Invalid file path: {e}"),
                     current_value: Some(path.to_string()),
                     expected: Some("Valid file path".to_string()),
                     user_error: true,
+                context: None,
                 })?;
 
         Ok(normalized.to_string_lossy().to_string())

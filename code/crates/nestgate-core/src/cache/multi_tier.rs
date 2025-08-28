@@ -1,6 +1,6 @@
 //! Multi-tier caching system with automatic tiering and eviction
 //! **MODERNIZED**: Updated to use current patterns and proper error handling
-use crate::error::Result;
+use crate::Result;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -63,7 +63,7 @@ pub struct MultiTierCache {
     cold_tier: Box<dyn CacheProvider<String, Vec<u8>>>,
     /// Global cache configuration
     #[allow(dead_code)]
-    config: crate::unified_types::UnifiedCacheConfig,
+    config: crate::config::canonical_master::CacheConfig,
 }
 
 impl MultiTierCache {
@@ -83,7 +83,7 @@ impl MultiTierCache {
             hot_tier,
             warm_tier,
             cold_tier,
-            config: crate::unified_types::UnifiedCacheConfig::default(),
+            config: crate::config::canonical_master::CacheConfig::default(),
         })
     }
 

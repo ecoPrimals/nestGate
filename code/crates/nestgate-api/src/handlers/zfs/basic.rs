@@ -18,7 +18,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{error, info, warn};
 
-// ==================== REQUEST/RESPONSE TYPES ====================
+// ==================== SECTION ====================
 
 /// **ZFS API REQUEST - CREATE POOL**
 ///
@@ -70,7 +70,7 @@ pub struct ZfsHealthResponse {
     pub issues: Vec<String>,
 }
 
-// ==================== HELPER FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Get ZFS service instance using zero-cost operations
 async fn get_zfs_service(state: &AppState) -> Result<Arc<ProductionZfsManager>, String> {
@@ -79,7 +79,7 @@ async fn get_zfs_service(state: &AppState) -> Result<Arc<ProductionZfsManager>, 
         .ok_or_else(|| "ZFS service not available".to_string())
 }
 
-// ==================== POOL OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// List all ZFS pools
 pub async fn list_pools(
@@ -213,7 +213,7 @@ pub async fn delete_pool(
     }
 }
 
-// ==================== DATASET OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// List datasets in a pool
 pub async fn list_datasets(
@@ -353,7 +353,7 @@ pub async fn create_dataset(
     }
 }
 
-// ==================== SNAPSHOT OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// List snapshots for a dataset
 pub async fn list_snapshots(
@@ -476,7 +476,7 @@ pub async fn create_snapshot(
     }
 }
 
-// ==================== HEALTH AND MONITORING ====================
+// ==================== SECTION ====================
 
 /// Get ZFS health status
 pub async fn get_zfs_health(
@@ -527,7 +527,7 @@ pub async fn get_zfs_health(
     }
 }
 
-// ==================== PERFORMANCE AND ANALYTICS ====================
+// ==================== SECTION ====================
 
 /// Get performance analytics (placeholder for future implementation)
 pub async fn get_performance_analytics(

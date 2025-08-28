@@ -633,7 +633,7 @@ impl LoadTestManager {
             return Err(nestgate_core::NestGateError::Internal {
                 message: format!("Simulated failure for {method} {endpoint}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
         }
@@ -666,7 +666,7 @@ impl LoadTestManager {
             Err(nestgate_core::NestGateError::Internal {
                 message: format!("Test {test_id} not found in active tests"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })
         }

@@ -4,7 +4,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-// ==================== MESSAGE CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** MessageType - unified across all modules
 /// Replaces 3+ fragmented MessageType definitions across MCP, network, and communication modules
@@ -58,7 +58,7 @@ impl fmt::Display for UnifiedMessageType {
     }
 }
 
-// ==================== EVENT CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** EventType - unified across all modules
 /// Replaces 5+ fragmented EventType definitions across various event systems
@@ -121,7 +121,7 @@ impl fmt::Display for UnifiedEventType {
     }
 }
 
-// ==================== OPERATION CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** OperationType - unified across all modules
 /// Replaces OperationType definitions across service operations and handlers
@@ -184,7 +184,7 @@ impl fmt::Display for UnifiedOperationType {
     }
 }
 
-// ==================== ALERT CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** AlertType - unified across all modules
 /// Replaces AlertType definitions in monitoring and notification systems

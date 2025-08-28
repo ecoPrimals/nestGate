@@ -158,6 +158,8 @@ pub struct UnifiedErrorContext {
     pub statistics: Option<UnifiedErrorStatistics>,
     /// Recovery suggestions for users/operators
     pub recovery_suggestions: Vec<String>,
+                    performance_metrics: None,
+                    environment: None,
     /// Additional metadata for debugging
     pub metadata: HashMap<String, serde_json::Value>,
 
@@ -191,6 +193,8 @@ impl Default for UnifiedErrorContext {
             user_context: None,
             statistics: None,
             recovery_suggestions: Vec::new(),
+                    performance_metrics: None,
+                    environment: None,
             metadata: HashMap::new(),
 
             // Initialize convenience fields
@@ -274,6 +278,8 @@ impl UnifiedErrorContext {
             error: self.error.clone(),
             request_context: self.request_context.clone(),
             recovery_suggestions: self.recovery_suggestions.clone(),
+                    performance_metrics: None,
+                    environment: None,
             metadata: self.metadata.clone(),
         }
     }
@@ -313,5 +319,7 @@ pub struct DetailedErrorResponse {
     pub error: UnifiedErrorCore,
     pub request_context: Option<UnifiedRequestContext>,
     pub recovery_suggestions: Vec<String>,
+                    performance_metrics: None,
+                    environment: None,
     pub metadata: HashMap<String, serde_json::Value>,
 }

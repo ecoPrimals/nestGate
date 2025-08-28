@@ -22,11 +22,16 @@ impl std::fmt::Display for UniversalSecurityError {
 }
 
 impl std::error::Error for UniversalSecurityError {}
-use crate::types::SecurityServiceNode;
+use crate::canonical_types::SecurityServiceNode;
 /// Core client functionality for capability-based decentralized authentication.
 // Removed discovery import - using unified NestGateError
-use crate::unified_types::{UnifiedConfig, UnifiedSecurityConfig};
 use std::sync::Arc;
+use tokio::sync::RwLock;
+use uuid::Uuid;
+
+// **MIGRATED**: Using canonical config instead of deprecated unified_types
+use crate::config::canonical_master::NestGateCanonicalConfig;
+use crate::config::canonical_master::SecurityConfig as UnifiedSecurityConfig;
 use std::time::Duration;
 
 /// Universal Security Capability definition
@@ -39,8 +44,8 @@ pub struct UniversalSecurityCapability {
 
 /// Universal Security Client for interacting with security services
 pub struct UniversalSecurityClient {
-    /// Configuration using UnifiedConfig
-    pub(crate) config: UnifiedConfig,
+    /// Configuration using NestGateCanonicalConfig
+    pub(crate) config: NestGateCanonicalConfig,
     /// Discovered security service nodes
     pub(crate) available_nodes: Vec<SecurityServiceNode>,
     /// Service discovery client
@@ -63,7 +68,7 @@ impl std::fmt::Debug for UniversalSecurityClient {
 impl UniversalSecurityClient {
     /// Create a new universal security client
     pub async fn new(
-        config: UnifiedConfig,
+        config: NestGateCanonicalConfig,
         service_discovery: Arc<crate::universal_primal_discovery::UniversalPrimalDiscovery>,
     ) -> Result<Self, UniversalSecurityError> {
         let http_client = reqwest::Client::builder()

@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use super::types::{HttpResponseFormat, MiddlewareType};
 
-// ==================== REQUEST PROCESSING ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RequestProcessingSettings {
@@ -134,7 +134,7 @@ pub struct RoutingRule {
     pub middleware: Option<Vec<MiddlewareType>>,
 }
 
-// ==================== RESPONSE HANDLING ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResponseHandlingSettings {
@@ -256,7 +256,7 @@ pub enum HeaderConditionType {
     Custom(String),
 }
 
-// ==================== CHAIN MANAGEMENT ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChainManagementSettings {
@@ -312,7 +312,7 @@ pub struct ParallelGroup {
     pub max_concurrency: usize,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for RequestParsingSettings {
     fn default() -> Self {

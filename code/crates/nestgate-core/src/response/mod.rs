@@ -27,7 +27,7 @@ pub use traits::{
     ResponseConversion, ResponseMetadata,
 };
 
-// ==================== RESPONSE UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Response utility functions for common operations
 pub mod utils {
@@ -148,7 +148,7 @@ pub mod utils {
     }
 }
 
-// ==================== RESPONSE MIDDLEWARE ====================
+// ==================== SECTION ====================
 
 /// Middleware utilities for response processing
 pub mod middleware {
@@ -221,14 +221,15 @@ pub mod middleware {
     }
 }
 
-// ==================== RESPONSE VALIDATION ====================
+// ==================== SECTION ====================
 
 /// Validation utilities for responses
 pub mod validation {
-    use super::*;
+    use super::{ApiResponse, SuccessResponse, UnifiedErrorResponse};
+    use crate::Result;
 
     /// Validate API response structure
-    pub fn validate_api_response<T>(response: &ApiResponse<T>) -> Result<(), String> {
+    pub fn validate_api_response<T>(response: &ApiResponse<T>) -> std::result::Result<(), String> {
         if response.success && response.data.is_none() {
             return Err("Successful response must have data".to_string());
         }
@@ -244,7 +245,7 @@ pub mod validation {
     }
 
     /// Validate unified error response structure
-    pub fn validate_unified_error_response(response: &UnifiedErrorResponse) -> Result<(), String> {
+    pub fn validate_unified_error_response(response: &UnifiedErrorResponse) -> std::result::Result<(), String> {
         if response.context.service_name.is_empty() {
             return Err("Error response must have service name".to_string());
         }
@@ -252,7 +253,7 @@ pub mod validation {
     }
 
     /// Validate success response structure
-    pub fn validate_success_response(response: &SuccessResponse) -> Result<(), String> {
+    pub fn validate_success_response(response: &SuccessResponse) -> std::result::Result<(), String> {
         if response.message.is_empty() {
             return Err("Success response must have message".to_string());
         }
@@ -260,11 +261,10 @@ pub mod validation {
     }
 }
 
-// ==================== RESPONSE TESTING UTILITIES ====================
+// ==================== SECTION ====================
 
 #[cfg(test)]
 pub mod testing {
-    use super::*;
 
     /// Create a test API response with mock data
     pub fn mock_api_response<T: serde::Serialize>(data: T) -> ApiResponse<T> {

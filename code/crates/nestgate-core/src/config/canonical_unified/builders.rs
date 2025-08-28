@@ -6,17 +6,17 @@ use std::time::Duration;
 
 use super::*;
 
-/// Configuration builder for creating NestGateCanonicalUnifiedConfig
+/// Configuration builder for creating NestGateCanonicalConfig
 #[derive(Debug, Default)]
 pub struct ConfigBuilder {
-    config: NestGateCanonicalUnifiedConfig,
+    config: NestGateCanonicalConfig,
 }
 
 impl ConfigBuilder {
     /// Create a new configuration builder
     pub fn new() -> Self {
         Self {
-            config: NestGateCanonicalUnifiedConfig::default(),
+            config: NestGateCanonicalConfig::default(),
         }
     }
 
@@ -99,7 +99,7 @@ impl ConfigBuilder {
     }
 
     /// Build the configuration
-    pub fn build(self) -> Result<NestGateCanonicalUnifiedConfig, Vec<String>> {
+    pub fn build(self) -> Result<NestGateCanonicalConfig, Vec<String>> {
         self.config.validate()?;
         Ok(self.config)
     }

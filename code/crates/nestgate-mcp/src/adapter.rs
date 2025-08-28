@@ -88,7 +88,7 @@ impl McpAdapter {
             return Err(NestGateError::Internal {
                 message: "Adapter name cannot be empty".to_string(),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
         }
@@ -97,7 +97,7 @@ impl McpAdapter {
             return Err(NestGateError::Internal {
                 message: "Adapter endpoint cannot be empty".to_string(),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
         }
@@ -145,7 +145,7 @@ impl McpAdapter {
             return Err(NestGateError::Internal {
                 message: "Adapter not connected".to_string(),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
         }

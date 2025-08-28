@@ -1,12 +1,11 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // This module provides comprehensive rate limiting functionality
 // to prevent abuse and ensure fair usage of API resources.
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};

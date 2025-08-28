@@ -108,7 +108,7 @@ impl PoolCreator {
                 return Err(NestGateError::Internal {
                     message: format!("Invalid property: {key}={value}"),
                     location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: None,
+                    context: None,
                     is_bug: false,
                 });
             }
@@ -162,13 +162,13 @@ impl PoolCreator {
             .map_err(|_| NestGateError::Internal {
                 message: "Pool creation timed out".to_string(),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?
             .map_err(|e| NestGateError::Internal {
                 message: format!("Failed to execute zpool create: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -178,7 +178,7 @@ impl PoolCreator {
             return Err(NestGateError::Internal {
                 message: format!("Pool creation failed: stderr: {error_msg}, stdout: {stdout_msg}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
         }
@@ -289,7 +289,7 @@ impl PoolCreator {
         let output = cmd.output().await.map_err(|e| NestGateError::Internal {
             message: format!("Failed to execute zfs create: {e}"),
             location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })?;
 
@@ -298,7 +298,7 @@ impl PoolCreator {
             return Err(NestGateError::Internal {
                 message: format!("Failed to create tier dataset {dataset_name}: {error_msg}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
         }
@@ -315,7 +315,7 @@ impl PoolCreator {
                     "Pool destruction requires explicit force flag when confirmation is required"
                         .to_string(),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
         }
@@ -332,7 +332,7 @@ impl PoolCreator {
         let output = cmd.output().await.map_err(|e| NestGateError::Internal {
             message: format!("Failed to execute zpool destroy: {e}"),
             location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })?;
 
@@ -341,7 +341,7 @@ impl PoolCreator {
             return Err(NestGateError::Internal {
                 message: format!("Failed to destroy pool {pool_name}: {error_msg}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
         }
@@ -422,7 +422,7 @@ impl PoolCreator {
                         return Err(NestGateError::Internal {
                             message: format!("Cleanup destroy command failed: {e}"),
                             location: Some(format!("{}:{}", file!(), line!())),
-                            debug_info: None,
+                            context: None,
                             is_bug: false,
                         });
                     }

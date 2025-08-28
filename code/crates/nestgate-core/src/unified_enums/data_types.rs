@@ -4,7 +4,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-// ==================== DATA CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** DataType - unified across all modules
 /// Replaces 4+ fragmented DataType definitions across temporal_storage, ecosystem_integration, etc.
@@ -73,7 +73,7 @@ impl fmt::Display for UnifiedDataType {
     }
 }
 
-// ==================== CONTENT TYPE CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** ContentType - unified across all modules
 /// Replaces ContentType definitions in API handlers and HTTP responses
@@ -154,7 +154,7 @@ impl fmt::Display for UnifiedContentType {
     }
 }
 
-// ==================== FILE TYPE CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** FileType - unified across all modules
 /// Replaces FileType definitions in automation and ZFS modules

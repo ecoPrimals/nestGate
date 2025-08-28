@@ -10,7 +10,7 @@ use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{debug, error, warn};
 
-// ==================== ZFS POOL OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// Get ZFS pool statistics for a specific pool
 pub async fn get_zfs_pool_stats(pool_name: &str) -> Result<serde_json::Value, String> {
@@ -59,7 +59,7 @@ pub async fn calculate_pool_trends(
     Ok(trends)
 }
 
-// ==================== ZFS DATA STRUCTURES ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolInfo {
@@ -84,7 +84,7 @@ pub struct PoolTrendPoint {
     pub throughput_mbps: f64,
 }
 
-// ==================== ZFS POOL LISTING ====================
+// ==================== SECTION ====================
 
 /// Get list of all ZFS pools
 pub async fn get_zfs_pool_list() -> Result<Vec<PoolInfo>, String> {
@@ -156,7 +156,7 @@ pub async fn calculate_growth_rate(_pools: &[PoolInfo]) -> f64 {
     10.5 // GB per day
 }
 
-// ==================== ZFS IO STATISTICS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsIOStats {
@@ -191,7 +191,7 @@ pub async fn get_zfs_io_stats(pool_name: &str) -> Result<ZfsIOStats, String> {
     parse_zpool_iostat_output(&stdout, pool_name)
 }
 
-// ==================== ZFS ARC STATISTICS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsArcStats {
@@ -234,7 +234,7 @@ pub async fn get_arc_stats_fallback() -> Result<ZfsArcStats, String> {
     })
 }
 
-// ==================== SYSTEM CAPACITY ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemCapacity {
@@ -343,7 +343,7 @@ pub async fn generate_performance_predictions(horizon_days: u32) -> Vec<String> 
     predictions
 }
 
-// ==================== PARSING UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Parse zpool status output
 fn parse_zpool_status_output(output: &str) -> Result<serde_json::Value, String> {

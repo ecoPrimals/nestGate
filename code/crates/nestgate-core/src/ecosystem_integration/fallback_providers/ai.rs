@@ -1,13 +1,13 @@
 //! AI Fallback Provider
 //! Heuristic-based AI operations when external AI primals are unavailable
 
-use async_trait::async_trait;
 use std::collections::HashMap;
 use tracing::debug;
 
 use crate::ecosystem_integration::mock_router::{FallbackProvider, MockRoutingError};
 
 /// AI fallback provider using heuristic algorithms
+#[derive(Debug)]
 pub struct AiFallbackProvider {
     config: AiFallbackConfig,
 }
@@ -119,7 +119,6 @@ impl AiFallbackProvider {
     }
 }
 
-#[async_trait]
 impl FallbackProvider for AiFallbackProvider {
     async fn execute(
         &self,

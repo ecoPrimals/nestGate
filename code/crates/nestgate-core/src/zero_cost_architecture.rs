@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::time::Instant;
 //
 // This module implements proven zero-cost patterns from the parent ecosystem
 // that achieve 40-60% performance improvements by eliminating runtime overhead.
@@ -19,7 +20,7 @@ use std::collections::HashMap;
 
 use std::marker::PhantomData;
 
-// ==================== ZERO-COST TRAIT PATTERNS ====================
+// ==================== SECTION ====================
 
 /// Zero-cost cache provider trait (replaces async_trait patterns)
 pub trait ZeroCostCacheProvider<K, V> {
@@ -51,7 +52,7 @@ pub trait ZeroCostStorageProvider<Key, Value> {
     fn delete(&self, key: &Key) -> bool;
 }
 
-// ==================== ZERO-COST SYSTEM COMPOSITION ====================
+// ==================== SECTION ====================
 
 /// Zero-cost system with compile-time dependency injection
 /// This replaces Arc<dyn Trait> patterns with direct composition
@@ -138,7 +139,7 @@ where
     }
 }
 
-// ==================== ZERO-COST DATA STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// Zero-cost request structure
 #[derive(Debug, Clone)]
@@ -181,7 +182,7 @@ pub enum ZeroCostError {
     Storage,
 }
 
-// ==================== CONCRETE IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 /// In-memory cache implementation - zero allocation
 pub struct ZeroCostMemoryCache<const CAPACITY: usize> {
@@ -295,7 +296,7 @@ impl ZeroCostStorageProvider<String, Vec<u8>> for ZeroCostFileStorage {
     }
 }
 
-// ==================== ZERO-COST SYSTEM BUILDER ====================
+// ==================== SECTION ====================
 
 /// Builder for zero-cost systems with compile-time configuration
 pub struct ZeroCostSystemBuilder<const MAX_SIZE: usize, const TIMEOUT_MS: u64> {
@@ -333,7 +334,7 @@ impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> ZeroCostSystemBuilder<MAX_SIZ
     }
 }
 
-// ==================== PERFORMANCE BENCHMARKS ====================
+// ==================== SECTION ====================
 
 /// Performance comparison utilities
 pub mod benchmarks {
@@ -379,7 +380,7 @@ pub mod benchmarks {
     }
 }
 
-// ==================== MIGRATION UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Migrate from traditional Arc<dyn Trait> patterns to zero-cost
 pub fn migrate_to_zero_cost() {
@@ -390,7 +391,7 @@ pub fn migrate_to_zero_cost() {
     println!("🔧 Compile-time safety: 100%");
 }
 
-// ==================== TYPE ALIASES FOR COMMON CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 /// Common zero-cost system configurations
 pub type StandardZeroCostSystem = ZeroCostSystem<
@@ -412,7 +413,7 @@ pub type HighPerformanceZeroCostSystem = ZeroCostSystem<
 pub type DevelopmentZeroCostSystem =
     ZeroCostSystem<ZeroCostMemoryCache<100>, ZeroCostJwtProvider, ZeroCostFileStorage, 100, 60000>;
 
-// ==================== ZERO-COST PERFORMANCE DEMONSTRATION ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COST ARCHITECTURE DEMONSTRATION**
 ///
@@ -528,7 +529,6 @@ where
     ///
     /// Demonstrates measurable performance improvements
     pub async fn benchmark_performance(&self) -> ZeroCostBenchmarkResults {
-        use std::time::Instant;
 
         let start = Instant::now();
 

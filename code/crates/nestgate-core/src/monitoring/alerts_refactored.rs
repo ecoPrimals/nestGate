@@ -339,7 +339,7 @@ impl AlertManager {
         let rule = rules.get(rule_id).ok_or_else(|| NestGateError::Internal {
             message: format!("Alert rule not found: {}", rule_id),
             location: Some("AlertManager::trigger_alert".to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })?;
 
@@ -448,7 +448,7 @@ impl AlertManager {
             let converted_result = result.map_err(|e| NestGateError::Internal {
                 message: format!("Notification channel validation failed: {}", e),
                 location: Some("AlertManager::validate_channels".to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
             (id, converted_result)
@@ -712,11 +712,11 @@ impl AlertRuleBuilder {
 /// 
 /// **Lines of Code Reduction**: 1,052 → ~400 lines (62% reduction)
 /// **Complexity Elimination**:
-/// - ❌ Large AlertChannel enum (200+ lines) → ✅ NotificationChannel trait system
-/// - ❌ 15+ manual impl Default blocks → ✅ SmartDefault implementations  
-/// - ❌ Complex manual alert construction → ✅ Builder pattern with smart defaults
-/// - ❌ Scattered notification logic → ✅ Unified channel management
-/// - ❌ Repetitive error handling → ✅ Consistent Result types
+/// ✅ Migrated NotificationChannel trait system
+/// ✅ Migrated SmartDefault implementations  
+/// ✅ Migrated Builder pattern with smart defaults
+/// ✅ Migrated Unified channel management
+/// ✅ Migrated Consistent Result types
 /// 
 /// **Maintainability Improvements**:
 /// - ✅ Type-safe notification channels (extensible without enum modification)

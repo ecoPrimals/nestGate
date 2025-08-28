@@ -8,7 +8,7 @@
 //! - System throughput validation
 
 use crate::canonical_modernization::{UnifiedHealthStatus, UnifiedServiceType};
-use nestgate_core::config::canonical_unified::types::CanonicalConfig;
+use nestgate_core::config::unified::types::CanonicalConfig;
 use nestgate_core::error::{NestGateError, Result};
 
 use std::time::{Duration, Instant};
@@ -206,8 +206,8 @@ async fn test_canonical_scalability() -> Result<()> {
         // Create configurations at scale
         let configs: Vec<CanonicalConfig> = (0..scale)
             .map(|i| CanonicalConfig {
-                network: nestgate_core::config::canonical_unified::types::NetworkConfig {
-                    api: nestgate_core::config::canonical_unified::types::ApiServerConfig {
+                network: nestgate_core::config::unified::types::NetworkConfig {
+                    api: nestgate_core::config::unified::types::ApiServerConfig {
                         port: 8000 + (i % 1000) as u16,
                         ..Default::default()
                     },

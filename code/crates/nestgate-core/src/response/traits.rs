@@ -73,6 +73,8 @@ impl ResponseConversion<UnifiedErrorResponse> for ErrorResponse {
 impl<T> ResponseConversion<ApiResponse<T>> for SuccessResponse {
     fn convert(self) -> ApiResponse<T> {
         ApiResponse {
+            request_id: uuid::Uuid::new_v4().to_string(),
+            status: crate::canonical_types::ResponseStatus::Success,
             success: true,
             data: None,
             error: None,
@@ -86,6 +88,7 @@ impl<T> ResponseConversion<ApiResponse<T>> for SuccessResponse {
                 }
                 metadata
             }),
+            processing_time_ms: 0,
         }
     }
 }
@@ -188,7 +191,7 @@ impl ResponseMetadata for UnifiedErrorResponse {
 
         // Add context metadata
         for (key, value) in &self.context.context {
-            metadata.insert(format!("context_{key}"), value.clone());
+            metadata.insert(format!("context_{key}"), serde_json::Value::String(value.clone()));
         }
 
         metadata

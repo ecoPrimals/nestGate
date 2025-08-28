@@ -18,7 +18,7 @@ use std::marker::PhantomData;
 use std::ptr::NonNull;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-// ==================== CACHE-LINE OPTIMIZED DATA STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// Cache line size for modern x86-64 processors
 // **CANONICAL MODERNIZATION** - Use canonical constants
@@ -96,7 +96,7 @@ impl<T> CachePadded<T> {
     }
 }
 
-// ==================== OPTIMALLY PACKED STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// **HIGH-PERFORMANCE CONNECTION INFO**
 /// 
@@ -286,7 +286,7 @@ pub struct HotMetricsSnapshot {
     pub memory_usage_bytes: usize,
 }
 
-// ==================== MEMORY POOL OPTIMIZATION ====================
+// ==================== SECTION ====================
 
 /// **CACHE-OPTIMIZED MEMORY POOL**
 /// 
@@ -427,7 +427,7 @@ pub struct PoolStats {
     pub utilization_percent: usize,
 }
 
-// ==================== NUMA-AWARE ALLOCATION ====================
+// ==================== SECTION ====================
 
 /// **NUMA-AWARE ALLOCATOR**
 /// 
@@ -515,7 +515,7 @@ pub struct NumaStats {
     pub allocations_per_node: [usize; 8],
 }
 
-// ==================== MEMORY LAYOUT UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Calculate optimal struct field ordering to minimize padding
 pub fn analyze_struct_layout<T>() -> StructLayoutAnalysis {
@@ -587,7 +587,7 @@ impl StructLayoutAnalysis {
     }
 }
 
-// ==================== TYPE ALIASES ====================
+// ==================== SECTION ====================
 
 /// Cache-aligned metrics for high-performance monitoring
 pub type CacheAlignedMetrics = CacheAligned<OptimalMetrics>;

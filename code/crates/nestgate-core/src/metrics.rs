@@ -53,6 +53,10 @@ impl MetricsCollector {
             value: 0.0,
             metric_type: MetricType::Counter,
             timestamp: std::time::SystemTime::now(),
+                    retry_info: None,
+                    recovery_suggestions: vec![],
+                    performance_metrics: None,
+                    environment: None,
         });
         entry.value += 1.0;
         entry.timestamp = std::time::SystemTime::now();
@@ -66,6 +70,10 @@ impl MetricsCollector {
                 value,
                 metric_type: MetricType::Gauge,
                 timestamp: std::time::SystemTime::now(),
+                    retry_info: None,
+                    recovery_suggestions: vec![],
+                    performance_metrics: None,
+                    environment: None,
             };
             metrics.insert(name.to_string(), metric);
         } else {
@@ -81,6 +89,10 @@ impl MetricsCollector {
                 value,
                 metric_type: MetricType::Histogram,
                 timestamp: std::time::SystemTime::now(),
+                    retry_info: None,
+                    recovery_suggestions: vec![],
+                    performance_metrics: None,
+                    environment: None,
             };
             metrics.insert(name.to_string(), metric);
         } else {

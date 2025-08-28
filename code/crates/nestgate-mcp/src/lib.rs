@@ -17,7 +17,7 @@ pub use error::{
 // Re-export canonical Result type from nestgate-core
 pub use nestgate_core::error::Result as McpResult;
 
-// ==================== CANONICAL INTEGRATION PATTERNS ====================
+// ==================== SECTION ====================
 
 /// MCP service trait using canonical error patterns
 #[allow(async_fn_in_trait)]
@@ -63,7 +63,7 @@ impl McpHealthStatus {
     }
 }
 
-// ==================== MODERNIZED CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Default MCP configuration constants
 pub mod constants {
@@ -91,7 +91,7 @@ pub mod constants {
     pub const DEFAULT_USER_AGENT: &str = "nestgate-mcp/0.1.0";
 }
 
-// ==================== CANONICAL HELPER FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Create a canonical MCP client configuration
 pub fn create_default_config() -> config::McpClientConfig {

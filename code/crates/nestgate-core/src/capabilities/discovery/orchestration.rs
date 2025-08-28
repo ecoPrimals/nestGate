@@ -1,7 +1,7 @@
 /// **ORCHESTRATION CAPABILITY DISCOVERY**
 /// Discovery and management of orchestration-related capabilities
 /// Replaces hardcoded orchestration configurations with dynamic discovery
-use crate::error::Result;
+use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

@@ -7,7 +7,6 @@
 use crate::data_sources::data_capabilities::*;
 use crate::data_sources::providers::universal_http_provider::{HttpProviderConfigBuilder, UniversalHttpProvider};
 use crate::{NestGateError, Result};
-use async_trait::async_trait;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -137,7 +136,7 @@ impl UniversalGenomeProvider {
         let obj = data.as_object().ok_or_else(|| NestGateError::Internal {
             message: "Invalid genome sequence response format".to_string(),
             location: Some("UniversalGenomeProvider::parse_genome_sequence".to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })?;
 
@@ -150,7 +149,7 @@ impl UniversalGenomeProvider {
             .ok_or_else(|| NestGateError::Internal {
                 message: "No sequence data found in response".to_string(),
                 location: Some("UniversalGenomeProvider::parse_genome_sequence".to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?
             .to_string();
@@ -175,7 +174,6 @@ impl UniversalGenomeProvider {
     }
 }
 
-#[async_trait]
 impl DataCapability for UniversalGenomeProvider {
     fn capability_type(&self) -> &str {
         "genome_data"
@@ -197,7 +195,6 @@ impl DataCapability for UniversalGenomeProvider {
     }
 }
 
-#[async_trait]
 impl GenomeDataCapability for UniversalGenomeProvider {
     async fn search_genomes(&self, query: &str) -> Result<Vec<GenomeResult>> {
         debug!("🔍 Searching genomes with query: {}", query);
@@ -254,4 +251,3 @@ impl GenomeProviderFactory {
     pub fn create_custom(base_url: String, provider_name: String, api_key: Option<String>) -> Result<Arc<UniversalGenomeProvider>> {
         Ok(Arc::new(UniversalGenomeProvider::for_custom_database(base_url, provider_name, api_key)?))
     }
-} 

@@ -3,7 +3,7 @@
 //! Provides caching infrastructure including multi-tier caching,
 //! TTL management, and performance optimization.
 
-use crate::unified_types::UnifiedConfig;
+use crate::config::canonical_master::NestGateCanonicalConfig;
 
 /// Cache Management Module
 /// Advanced caching system with support for multiple storage tiers, configurable policies,
@@ -15,8 +15,8 @@ use crate::unified_types::UnifiedConfig;
 /// ## Usage
 /// ### Basic Single-Tier Cache
 /// ```rust
-/// use crate::cache::{CacheManager, UnifiedConfig};
-/// let config = crate::unified_types::UnifiedConfig::default();
+/// use crate::cache::{CacheManager, NestGateCanonicalConfig};
+/// let config = crate::config::canonical_master::NestGateCanonicalConfig::default();
 /// let cache = CacheManager::new(config)?;
 /// // Put data in cache
 /// cache.put("key", b"data".to_vec()).await?;
@@ -28,7 +28,7 @@ use crate::unified_types::UnifiedConfig;
 /// ### Multi-Tier Cache
 /// ```rust
 /// use crate::cache::{MultiTierCache, MultiTierCacheConfig};
-/// let config = crate::unified_types::UnifiedConfig::default();
+/// let config = crate::config::canonical_master::NestGateCanonicalConfig::default();
 /// let cache = MultiTierCache::new(config)?;
 /// // Data automatically starts in hot tier and may be promoted/demoted
 /// cache.put("key", b"data".to_vec()).await?;
@@ -58,11 +58,14 @@ pub enum CacheSystem {
 impl CacheSystem {
     /// Create a cache with a single tier for small deployments
     pub fn single_tier(
-        cache_config: crate::unified_types::UnifiedCacheConfig,
+        cache_config: crate::config::canonical_master::CacheConfig,
     ) -> crate::Result<Self> {
-        // Create UnifiedConfig with the cache config
-        let config = crate::unified_types::UnifiedConfig {
-            cache: cache_config,
+        // Create NestGateCanonicalConfig with the cache config
+        let config = crate::config::canonical_master::NestGateCanonicalConfig {
+            storage: crate::config::canonical_master::StorageConfig {
+                cache: cache_config,
+                ..Default::default()
+            },
             ..Default::default()
         };
 
@@ -203,7 +206,7 @@ impl CacheSystemStats {
 
 /// Cache builder for easy configuration
 pub struct CacheBuilder {
-    config: crate::unified_types::UnifiedCacheConfig,
+    config: crate::config::canonical_master::CacheConfig,
     multi_tier: bool,
     multi_tier_config: Option<MultiTierCacheConfig>,
 }
@@ -212,7 +215,7 @@ impl CacheBuilder {
     /// Create a new cache builder
     pub fn new() -> Self {
         Self {
-            config: crate::unified_types::UnifiedCacheConfig::default(),
+            config: crate::config::canonical_master::CacheConfig::default(),
             multi_tier: false,
             multi_tier_config: None,
         }
@@ -220,33 +223,33 @@ impl CacheBuilder {
 
     /// Set cache policy
     pub fn with_policy(mut self, policy: CachePolicy) -> Self {
-        self.config.policy = policy.to_string();
+        self.config.policy = Some(policy.to_string());
         self
     }
 
     /// Set cache directory
     pub fn with_cache_dir<P: Into<std::path::PathBuf>>(mut self, path: P) -> Self {
-        self.config.cache_dir = path.into().to_string_lossy().to_string();
+        self.config.cache_dir = Some(path.into());
         self
     }
 
     /// Set cache TTL
     pub fn with_ttl(mut self, ttl: std::time::Duration) -> Self {
-        self.config.ttl_seconds = ttl.as_secs();
+        self.config.ttl_seconds = Some(ttl.as_secs());
         self
     }
 
     /// Set hot tier size
     pub fn with_hot_tier_size(mut self, size: usize) -> Self {
-        self.config.hot_tier_size = size;
+        self.config.hot_tier_size = Some(size as u64);
         self
     }
 
     /// Enable multi-tier caching
     // LINTING FIX: Add underscore prefix for unused parameter
-    pub fn with_multi_tier(mut self, _config: UnifiedConfig) -> Self {
+    pub fn with_multi_tier(mut self, _config: NestGateCanonicalConfig) -> Self {
         self.multi_tier = true;
-        // Convert UnifiedConfig to MultiTierCacheConfig
+        // Convert NestGateCanonicalConfig to MultiTierCacheConfig
         let multi_tier_config = MultiTierCacheConfig {
             hot_tier_config: crate::cache::multi_tier::SimpleCacheConfig {
                 max_size: 1024 * 1024, // 1MB
@@ -295,12 +298,12 @@ impl Default for CacheBuilder {
 }
 
 // Convenience functions for common use cases
-impl crate::unified_types::UnifiedCacheConfig {
+impl crate::config::canonical_master::CacheConfig {
     /// Create a hot tier configuration
     pub fn hot_tier() -> Self {
         Self {
-            hot_tier_size: 100 * 1024 * 1024, // 100MB
-            ttl_seconds: 3600,                // 1 hour
+            hot_tier_size: Some(100 * 1024 * 1024), // 100MB
+            ttl_seconds: Some(3600),                // 1 hour
             ..Self::default()
         }
     }
@@ -308,8 +311,8 @@ impl crate::unified_types::UnifiedCacheConfig {
     /// Create a warm tier configuration
     pub fn warm_tier() -> Self {
         Self {
-            warm_tier_size: 1024 * 1024 * 1024, // 1GB
-            ttl_seconds: 7200,                  // 2 hours
+            warm_tier_size: Some(1024 * 1024 * 1024), // 1GB
+            ttl_seconds: Some(7200),                  // 2 hours
             ..Self::default()
         }
     }
@@ -317,8 +320,8 @@ impl crate::unified_types::UnifiedCacheConfig {
     /// Create a cold tier configuration
     pub fn cold_tier() -> Self {
         Self {
-            cold_tier_unlimited: true,
-            ttl_seconds: 86400, // 24 hours
+            cold_tier_unlimited: Some(true),
+            ttl_seconds: Some(86400), // 24 hours
             ..Self::default()
         }
     }
@@ -330,7 +333,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_cache_system_operations() -> crate::Result<()> {
-        let config = crate::unified_types::UnifiedCacheConfig::default();
+        let config = crate::config::canonical_master::CacheConfig::default();
         // Safe cache access implementation
         // SAFETY FIX: Replace panic! with proper test assertion
         let mut cache = CacheSystem::single_tier(config).map_err(|e| {
@@ -394,7 +397,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_cache_stats() {
-        let config = crate::unified_types::UnifiedCacheConfig::default();
+        let config = crate::config::canonical_master::CacheConfig::default();
         let cache = CacheSystem::single_tier(config).unwrap_or_else(|e| {
             tracing::error!("Cache creation failed: {:?}", e);
             panic!("Failed to create cache: {:?}", e);
@@ -420,7 +423,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_multi_tier_cache_operations() -> crate::Result<()> {
-        let mut config = crate::unified_types::UnifiedConfig::default();
+        let mut config = crate::config::canonical_master::NestGateCanonicalConfig::default();
         config.cache.cache_dir = "/tmp/nestgate_test_cache".to_string();
 
         // Test multi-tier cache if configured
@@ -443,7 +446,7 @@ mod tests {
             .map_err(|e| crate::error::NestGateError::Internal {
                 message: format!("Cache maintenance failed: {e:?}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
         cache
@@ -452,7 +455,7 @@ mod tests {
             .map_err(|e| crate::error::NestGateError::Internal {
                 message: format!("Cache flush failed: {e:?}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -500,32 +503,31 @@ mod tests {
 
     #[test]
     fn test_cache_config_presets() {
-        let hot_config = crate::unified_types::UnifiedCacheConfig::default();
-        assert_eq!(hot_config.hot_tier_size, 100 * 1024 * 1024);
+        let hot_config = crate::config::canonical_master::CacheConfig::default();
+        assert_eq!(hot_config.hot_tier_size, Some(100 * 1024 * 1024));
 
-        let warm_config = crate::unified_types::UnifiedCacheConfig::default();
-        assert_eq!(warm_config.warm_tier_size, 1024 * 1024 * 1024);
+        let warm_config = crate::config::canonical_master::CacheConfig::default();
+        assert_eq!(warm_config.warm_tier_size, Some(1024 * 1024 * 1024));
 
-        let cold_config = crate::unified_types::UnifiedCacheConfig::default();
+        let cold_config = crate::config::canonical_master::CacheConfig::default();
         assert!(cold_config.cold_tier_unlimited);
     }
 }
 
 #[cfg(test)]
 mod cache_comprehensive_tests {
-    use super::*;
     use std::time::Duration;
 
     /// Test cache initialization with various configurations
     #[test]
     fn test_cache_initialization_variants() {
         // Test single-tier cache
-        let single_config = crate::unified_types::UnifiedCacheConfig::default();
+        let single_config = crate::config::canonical_master::CacheConfig::default();
         let single_cache = CacheSystem::single_tier(single_config);
         assert!(single_cache.is_ok());
 
         // Test multi-tier cache
-        let multi_config = crate::unified_types::UnifiedCacheConfig::default();
+        let multi_config = crate::config::canonical_master::CacheConfig::default();
         // Would test multi-tier initialization if implemented
 
         println!("✅ Cache initialization variants tested");
@@ -534,7 +536,7 @@ mod cache_comprehensive_tests {
     /// Test cache operations with different data types
     #[tokio::test]
     async fn test_cache_data_type_operations() {
-        let config = crate::unified_types::UnifiedCacheConfig::default();
+        let config = crate::config::canonical_master::CacheConfig::default();
         let cache = CacheSystem::single_tier(config).unwrap();
 
         // Test string caching
@@ -555,7 +557,7 @@ mod cache_comprehensive_tests {
     /// Test cache eviction policies and memory pressure
     #[tokio::test]
     async fn test_cache_eviction_policies() {
-        let mut config = crate::unified_types::UnifiedCacheConfig::default();
+        let mut config = crate::config::canonical_master::CacheConfig::default();
         // Set small memory limit to force evictions
 
         let cache = CacheSystem::single_tier(config).unwrap();
@@ -576,7 +578,7 @@ mod cache_comprehensive_tests {
     /// Test cache expiration and TTL handling
     #[tokio::test]
     async fn test_cache_expiration() {
-        let config = crate::unified_types::UnifiedCacheConfig::default();
+        let config = crate::config::canonical_master::CacheConfig::default();
         let cache = CacheSystem::single_tier(config).unwrap();
 
         // Test immediate expiration
@@ -597,7 +599,7 @@ mod cache_comprehensive_tests {
     /// Test cache statistics and monitoring
     #[tokio::test]
     async fn test_cache_statistics() {
-        let config = crate::unified_types::UnifiedCacheConfig::default();
+        let config = crate::config::canonical_master::CacheConfig::default();
         let cache = CacheSystem::single_tier(config).unwrap();
 
         // Generate cache operations to create statistics
@@ -626,7 +628,7 @@ mod cache_comprehensive_tests {
     #[tokio::test]
     async fn test_concurrent_cache_operations() {
         use std::sync::Arc;
-        let config = crate::unified_types::UnifiedCacheConfig::default();
+        let config = crate::config::canonical_master::CacheConfig::default();
         let cache = Arc::new(CacheSystem::single_tier(config).unwrap());
 
         let mut handles = Vec::new();
@@ -656,7 +658,7 @@ mod cache_comprehensive_tests {
     #[tokio::test]
     async fn test_cache_persistence() {
         let temp_dir = tempfile::TempDir::new().unwrap();
-        let mut config = crate::unified_types::UnifiedCacheConfig::default();
+        let mut config = crate::config::canonical_master::CacheConfig::default();
         // Would set persistence path to temp_dir
 
         let cache = CacheSystem::single_tier(config).unwrap();
@@ -668,7 +670,7 @@ mod cache_comprehensive_tests {
         drop(cache);
 
         // Create new cache instance with same persistence path
-        let mut config = crate::unified_types::UnifiedCacheConfig::default();
+        let mut config = crate::config::canonical_master::CacheConfig::default();
         let restored_cache = CacheSystem::single_tier(config).unwrap();
 
         // Verify data was restored
@@ -680,7 +682,7 @@ mod cache_comprehensive_tests {
     /// Test cache error handling and resilience
     #[tokio::test]
     async fn test_cache_error_handling() {
-        let config = crate::unified_types::UnifiedCacheConfig::default();
+        let config = crate::config::canonical_master::CacheConfig::default();
         let cache = CacheSystem::single_tier(config).unwrap();
 
         // Test operations with invalid keys
@@ -704,7 +706,7 @@ mod cache_comprehensive_tests {
     /// Test cache memory management
     #[test]
     fn test_cache_memory_management() {
-        let config = crate::unified_types::UnifiedCacheConfig::default();
+        let config = crate::config::canonical_master::CacheConfig::default();
         let cache = CacheSystem::single_tier(config).unwrap();
 
         // Test memory usage tracking
@@ -723,7 +725,7 @@ mod cache_comprehensive_tests {
     #[test]
     fn test_cache_config_validation() {
         // Test invalid configurations
-        let mut invalid_config = crate::unified_types::UnifiedCacheConfig::default();
+        let mut invalid_config = crate::config::canonical_master::CacheConfig::default();
 
         // Test negative values
         // Test zero values where inappropriate
@@ -737,7 +739,7 @@ mod cache_comprehensive_tests {
     /// Test cache metrics and performance monitoring
     #[tokio::test]
     async fn test_cache_performance_metrics() {
-        let config = crate::unified_types::UnifiedCacheConfig::default();
+        let config = crate::config::canonical_master::CacheConfig::default();
         let cache = CacheSystem::single_tier(config).unwrap();
 
         // Generate operations to measure performance

@@ -3,7 +3,6 @@
 /// Defines capability interfaces for AI model inference, data analysis,
 /// and optimization suggestions through the Squirrel AI primal.
 use super::{CapabilityRequest, CapabilityResponse, UniversalCapability};
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -60,7 +59,6 @@ pub struct OptimizationResponse {
 }
 
 /// Intelligence capability trait for Squirrel integration
-#[async_trait]
 pub trait IntelligenceCapability: UniversalCapability {
     /// Run AI model inference
     async fn model_inference(
@@ -98,7 +96,6 @@ impl Default for MockIntelligenceCapability {
     }
 }
 
-#[async_trait]
 impl UniversalCapability for MockIntelligenceCapability {
     async fn execute(
         &self,
@@ -182,7 +179,6 @@ impl UniversalCapability for MockIntelligenceCapability {
     }
 }
 
-#[async_trait]
 impl IntelligenceCapability for MockIntelligenceCapability {
     async fn model_inference(
         &self,

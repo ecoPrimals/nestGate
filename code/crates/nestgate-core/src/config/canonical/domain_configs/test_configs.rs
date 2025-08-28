@@ -3,7 +3,7 @@
 /// Replaces: UnifiedTestConfig, TestExecutionConfig, TestMockConfig, TestPerformanceConfig,
 /// TestNetworkConfig, TestSecurityConfig, and 15+ other test config structures
 use super::CanonicalDomainConfig;
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -38,7 +38,6 @@ impl CanonicalDomainConfig for CanonicalTestConfig {
             return Err(NestGateError::config_error(
                 "max_concurrent_tests",
                 "must be greater than 0",
-                Some("Set a positive integer value".to_string()),
             ));
         }
 
@@ -47,7 +46,6 @@ impl CanonicalDomainConfig for CanonicalTestConfig {
             return Err(NestGateError::config_error(
                 "default_timeout",
                 "must be greater than 0",
-                Some("Set a positive duration value".to_string()),
             ));
         }
 
@@ -56,7 +54,6 @@ impl CanonicalDomainConfig for CanonicalTestConfig {
             return Err(NestGateError::config_error(
                 "target_throughput",
                 "must be greater than 0",
-                Some("Set a positive throughput value".to_string()),
             ));
         }
 
@@ -111,7 +108,7 @@ impl CanonicalDomainConfig for CanonicalTestConfig {
     }
 }
 
-// ==================== TEST CONFIGURATION STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// Test execution configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -201,7 +198,7 @@ pub struct TestChaos {
     pub failure_injection_rate: f64,
 }
 
-// ==================== SUPPORTING TYPES ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TestIsolationLevel {
@@ -317,7 +314,7 @@ impl Default for ChaosBlastRadius {
     }
 }
 
-// ==================== ADDITIONAL LEGACY TYPES FOR BUILDERS COMPATIBILITY ====================
+// ==================== SECTION ====================
 
 /// Legacy test settings for BiomeOS integration (used by builders)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

@@ -190,11 +190,9 @@ mod pool_manager_tests {
 
 #[cfg(test)]
 mod pool_info_tests {
-    use super::*;
 
     #[test]
     fn test_pool_info_structure() {
-        use std::collections::HashMap;
 
         // Test creating pool info structure with correct fields
         let pool_info = PoolInfo {
@@ -259,7 +257,6 @@ mod pool_info_tests {
 
 #[cfg(test)]
 mod concurrent_operations_tests {
-    use super::*;
 
     #[tokio::test]
     async fn test_concurrent_pool_discovery() {
@@ -301,7 +298,6 @@ mod concurrent_operations_tests {
 
 #[cfg(test)]
 mod integration_tests {
-    use super::*;
 
     #[tokio::test]
     async fn test_pool_manager_with_config() {

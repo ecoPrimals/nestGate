@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::net::{IpAddr, SocketAddr};
 use std::time::Duration;
 
-// ==================== NETWORK SETTINGS STRUCTS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkVlanSettings {
@@ -169,7 +169,7 @@ pub struct TrafficShapingRule {
     pub bandwidth_limit: u64,
     }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for NetworkVlanSettings {
     fn default() -> Self {

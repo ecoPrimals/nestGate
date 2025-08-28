@@ -17,7 +17,7 @@ use std::arch::x86_64::*;
 #[cfg(feature = "portable_simd")]
 use std::simd::*;
 
-// ==================== SIMD-OPTIMIZED DATA PROCESSING ====================
+// ==================== SECTION ====================
 
 /// **SIMD-OPTIMIZED BATCH PROCESSOR**
 /// 
@@ -187,7 +187,7 @@ impl<const BATCH_SIZE: usize> SimdBatchProcessor<BATCH_SIZE> {
     }
 }
 
-// ==================== SIMD-ACCELERATED CRYPTOGRAPHIC OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// **SIMD-OPTIMIZED CRYPTOGRAPHIC PROCESSOR**
 /// 
@@ -325,7 +325,7 @@ impl SimdCryptoProcessor {
     }
 }
 
-// ==================== SIMD-OPTIMIZED SEARCH OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// **SIMD-ACCELERATED SEARCH PROCESSOR**
 /// 
@@ -440,7 +440,7 @@ impl SimdSearchProcessor {
     }
 }
 
-// ==================== SIMD ERROR TYPES ====================
+// ==================== SECTION ====================
 
 /// SIMD operation error types
 #[derive(Debug, Clone, PartialEq)]
@@ -468,7 +468,7 @@ impl std::fmt::Display for SimdError {
 
 impl std::error::Error for SimdError {}
 
-// ==================== SIMD CAPABILITY DETECTION ====================
+// ==================== SECTION ====================
 
 /// SIMD capability detector and optimizer
 pub struct SimdCapabilities {
@@ -531,7 +531,7 @@ impl SimdCapabilities {
     }
 }
 
-// ==================== TYPE ALIASES AND CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// High-performance batch processor with optimal settings
 pub type OptimalSimdProcessor = SimdBatchProcessor<64>;

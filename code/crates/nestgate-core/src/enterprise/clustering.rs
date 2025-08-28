@@ -1,10 +1,10 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // High-availability clustering for enterprise NestGate deployments
 // with automatic leader election, node discovery, and failover capabilities.
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::net::{IpAddr, SocketAddr};

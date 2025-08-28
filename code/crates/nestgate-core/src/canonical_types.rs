@@ -1,35 +1,14 @@
-use std::collections::HashMap;
-//
-// **CANONICAL MODERNIZATION COMPLETE** - This module consolidates ALL type
-// definitions from across the NestGate ecosystem into a single, authoritative source.
-//
-// **CONSOLIDATES AND ELIMINATES**:
-// - `unified_types/mod.rs` (954 lines) - Fragmented type definitions
-// - `unified_storage_types.rs` - Storage type duplicates
-// - `canonical_modernization/unified_types.rs` - Legacy unified types
-// - `interface/core_interfaces.rs` - Interface type duplicates
-// - `universal_primal.rs` types - API type duplicates
-// - 200+ scattered type definitions across all crates
-//
-// **PROVIDES**:
-// - Single source of truth for all types
-// - Zero-cost type aliases
-// - Consistent naming patterns
-// - Domain-organized hierarchy
-// - Migration utilities for legacy types
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::time::SystemTime;
 
-// Import unified constants for default values
-use crate::canonical_modernization::canonical_constants::{
-    network::{DEFAULT_API_PORT, LOCALHOST},
-    system::DEFAULT_SERVICE_NAME,
+use crate::constants::unified::{
+    // Removed unused network constants
+    // Removed unused storage constants
+    system::{DEFAULT_INSTANCE_NAME},
 };
 
-// ==================== CORE SYSTEM TYPES ====================
+// ==================== SECTION ====================
 
 /// **SERVICE TYPES** - Core service identification and management
 pub mod service {
@@ -127,8 +106,8 @@ pub mod service {
         fn default() -> Self {
             Self {
                 service_id: ServiceId::default().0,
-                service_name: DEFAULT_SERVICE_NAME.to_string(),
-                name: DEFAULT_SERVICE_NAME.to_string(),
+                service_name: DEFAULT_INSTANCE_NAME.to_string(),
+                name: DEFAULT_INSTANCE_NAME.to_string(),
                 version: "1.0.0".to_string(),
                 status: ServiceState::Unknown,
                 health_status: "unknown".to_string(),
@@ -172,7 +151,10 @@ pub mod service {
 
 /// **NETWORK TYPES** - Network communication and connectivity
 pub mod network {
-    use super::*;
+    use serde::{Deserialize, Serialize};
+    use crate::canonical_modernization::canonical_constants::{
+        network::{DEFAULT_API_PORT, LOCALHOST},
+    };
     
     /// Connection status
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -217,9 +199,32 @@ pub mod network {
     }
 }
 
+/// **SYSTEM TYPES** - Core system status and resource management
+pub mod system {
+    use serde::{Deserialize, Serialize};
+    
+    /// Allocation status for resources
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+    pub enum AllocationStatus {
+        Active,
+        Inactive,
+        Pending,
+        Failed,
+    }
+    
+    impl Default for AllocationStatus {
+        fn default() -> Self {
+            Self::Inactive
+        }
+    }
+}
+
 /// **STORAGE TYPES** - Storage operations and management
 pub mod storage {
-    use super::*;
+    use std::collections::HashMap;
+    use std::path::PathBuf;
+    use std::time::SystemTime;
+    use serde::{Deserialize, Serialize};
     
     /// Storage tiers for data classification
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -272,7 +277,8 @@ pub mod storage {
 
 /// **SECURITY TYPES** - Authentication, authorization, and encryption
 pub mod security {
-    use super::*;
+    use std::time::SystemTime;
+    use serde::{Deserialize, Serialize};
     
     /// Authentication methods
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -308,7 +314,12 @@ pub mod security {
 
 /// **EVENT TYPES** - Event handling and processing
 pub mod events {
-    use super::*;
+    use std::collections::HashMap;
+    use std::time::SystemTime;
+    use serde::{Deserialize, Serialize};
+    use crate::canonical_modernization::canonical_constants::{
+        system::DEFAULT_SERVICE_NAME,
+    };
     
     /// Event severity levels
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -364,7 +375,9 @@ pub mod events {
 
 /// **REQUEST/RESPONSE TYPES** - API communication patterns
 pub mod api {
-    use super::*;
+    use std::collections::HashMap;
+    use std::time::SystemTime;
+    use serde::{Deserialize, Serialize};
     
     /// Request structure
     #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -400,7 +413,9 @@ pub mod api {
 
 /// **HEALTH TYPES** - System health monitoring
 pub mod health {
-    use super::*;
+    use std::collections::HashMap;
+    use std::time::SystemTime;
+    use serde::{Deserialize, Serialize};
     
     /// Health status
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -434,7 +449,6 @@ pub mod health {
 
 /// **HANDLER CONFIGURATION TYPES** - Unified handler configuration system
 pub mod handlers {
-    // Removed unused super import
     use serde::{Deserialize, Serialize};
     use std::time::Duration;
     
@@ -549,13 +563,11 @@ pub mod handlers {
     }
 }
 
-// ==================== UNIVERSAL REQUEST/RESPONSE TYPES ====================
+// ==================== SECTION ====================
 
-/// Universal service request - re-export from canonical traits
-pub use crate::traits::UniversalServiceRequest as UniversalRequest;
-
-/// Universal service response - re-export from canonical traits  
-pub use crate::traits::UniversalServiceResponse as UniversalResponse;
+// Universal request/response types removed - use domain-specific types instead
+// Migration: UniversalRequest → Domain-specific request types
+// Migration: UniversalResponse → Domain-specific response types
 
 /// Response status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -569,41 +581,40 @@ pub enum ResponseStatus {
     Forbidden,
 }
 
-// ==================== MIGRATION UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Type conversion utilities for canonical types
 pub mod conversion {
-    use super::*;
+    use super::{ServiceState, ServiceType};
     
     /// Convert legacy service state string to canonical type
-    pub fn parse_service_state(state: &str) -> service::ServiceState {
+    pub fn parse_service_state(state: &str) -> ServiceState {
         match state.to_lowercase().as_str() {
-            "starting" => service::ServiceState::Starting,
-            "running" => service::ServiceState::Running,
-            "stopping" => service::ServiceState::Stopping,
-            "stopped" => service::ServiceState::Stopped,
-            "failed" => service::ServiceState::Failed,
-            _ => service::ServiceState::Unknown,
+            "starting" => ServiceState::Starting,
+            "running" => ServiceState::Running,
+            "stopping" => ServiceState::Stopping,
+            "stopped" => ServiceState::Stopped,
+            "failed" => ServiceState::Failed,
+            _ => ServiceState::Unknown,
         }
     }
     
     /// Convert legacy service type string to canonical type
-    pub fn parse_service_type(service_type: &str) -> service::ServiceType {
+    pub fn parse_service_type(service_type: &str) -> ServiceType {
         match service_type.to_lowercase().as_str() {
-            "storage" => service::ServiceType::Storage,
-            "network" => service::ServiceType::Network,
-            "security" => service::ServiceType::Security,
-            "monitoring" => service::ServiceType::Monitoring,
-            "compute" => service::ServiceType::Compute,
-            "api" => service::ServiceType::Api,
-            _ => service::ServiceType::Generic,
+            "storage" => ServiceType::Storage,
+            "network" => ServiceType::Network,
+            "security" => ServiceType::Security,
+            "monitoring" => ServiceType::Monitoring,
+            "compute" => ServiceType::Compute,
+            "api" => ServiceType::Api,
+            _ => ServiceType::Generic,
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_service_types() {
@@ -619,7 +630,7 @@ mod tests {
     }
 }
 
-// ==================== RE-EXPORTS FOR CONVENIENCE ====================
+// ==================== SECTION ====================
 
 /// Common types re-exported for easy access
 pub use api::{Request, Response, ApiError};
@@ -628,4 +639,5 @@ pub use health::{HealthStatus, HealthCheck, SystemHealth};
 pub use network::{ConnectionStatus, Protocol, Endpoint};
 pub use security::{AuthMethod, AccessLevel, SecurityContext};
 pub use service::{ServiceId, ServiceState, ServiceType, ServiceConfig, ServiceMetrics};
-pub use storage::{StorageTier, StorageOperation, StorageMetadata, StorageResource}; 
+pub use storage::{StorageTier, StorageOperation, StorageMetadata, StorageResource};
+pub use system::{AllocationStatus}; 

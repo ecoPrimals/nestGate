@@ -5,7 +5,8 @@
 use crate::universal_spore::{
     AuthorizationDecision, OperationRequest, UniversalCryptographicSpore, UserContext,
 };
-use crate::universal_traits::{SecurityPrimalProvider, Signature};
+use crate::universal_providers_zero_cost::{Signature};
+// SecurityPrimalProvider has been consolidated - using direct security patterns
 use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -33,9 +34,8 @@ pub struct CryptoProof {
 }
 
 impl CryptoProof {
-    /// Create new proof using any security primal provider
-    pub async fn new_with_security_provider(
-        security_provider: &Arc<dyn SecurityPrimalProvider>,
+    /// Create new proof using security context
+    pub async fn new_with_security_context(
         data: &[u8],
         context: &str,
     ) -> Result<Self> {
@@ -68,11 +68,8 @@ impl CryptoProof {
         })
     }
 
-    /// Validate proof using any security primal provider
-    pub async fn validate_with_security_provider(
-        &self,
-        security_provider: &Arc<dyn SecurityPrimalProvider>,
-    ) -> Result<bool> {
+    /// Validate proof using security validation
+    pub async fn validate_with_security_context(&self) -> Result<bool> {
         println!("Validating crypto proof with security provider");
 
         // Check timestamp validity (not too old)
@@ -133,7 +130,7 @@ impl CryptoProof {
                 .map_err(|e| NestGateError::Internal {
                     message: format!("Time error: {e}"),
                     location: Some(file!().to_string()),
-                    debug_info: None,
+                    context: None,
                     is_bug: false,
                 })?
                 .as_secs()
@@ -154,7 +151,6 @@ impl CryptoProof {
 
     /// Hash proof data with security provider signature
     fn hash_proof_data(proof_data: &[u8], signature: &str) -> Result<String> {
-        use sha2::{Digest, Sha256};
 
         let mut hasher = Sha256::new();
         hasher.update(proof_data);
@@ -225,15 +221,14 @@ pub struct ExternalBoundaryGuardian {
     /// Detection patterns for corporate usage
     pub detection_patterns: Vec<CorporateDetectionPattern>,
 
-    /// Security provider interface
+    /// Security context for validation
     #[allow(dead_code)]
-    security_provider: Arc<dyn SecurityPrimalProvider>,
+    security_context: String,
 }
 
 impl ExternalBoundaryGuardian {
     /// Create new guardian with cryptographic spore
     pub async fn new_with_spore(
-        security_provider: Arc<dyn SecurityPrimalProvider>,
         provider_endpoint: Option<String>,
     ) -> Result<Self> {
         // Create spore for NestGate
@@ -258,7 +253,7 @@ impl ExternalBoundaryGuardian {
         Ok(Self {
             spore: Arc::new(spore),
             detection_patterns: vec![],
-            security_provider,
+            security_context: "default".to_string(),
         })
     }
 
@@ -277,6 +272,10 @@ impl ExternalBoundaryGuardian {
             user_context: user_context.clone(),
             metadata: std::collections::HashMap::new(),
             timestamp: std::time::SystemTime::now(),
+                    retry_info: None,
+                    recovery_suggestions: vec![],
+                    performance_metrics: None,
+                    environment: None,
         };
 
         // Ask spore for authorization
@@ -302,7 +301,7 @@ impl ExternalBoundaryGuardian {
                 ..
             } => {
                 println!("⚠️ Access denied: {reason}");
-                Err(NestGateError::security_error(
+                Err(NestGateError::permission_denied(
                     &reason,
                     "crypto_lock_access",
                     Some("external_boundary_guardian"),
@@ -320,7 +319,7 @@ impl ExternalBoundaryGuardian {
                     organization_profile.organization_name, contact
                 );
                 println!("🏢 {message}");
-                Err(NestGateError::security_error(
+                Err(NestGateError::permission_denied(
                     &message,
                     "crypto_lock_access",
                     Some("external_boundary_guardian"),
@@ -345,6 +344,10 @@ impl ExternalBoundaryGuardian {
             user_context: user_context.clone(),
             metadata: std::collections::HashMap::new(),
             timestamp: std::time::SystemTime::now(),
+                    retry_info: None,
+                    recovery_suggestions: vec![],
+                    performance_metrics: None,
+                    environment: None,
         };
 
         // Ask spore for authorization
@@ -435,10 +438,9 @@ pub struct SporeStatus {
 
 /// Create a spore-enhanced boundary guardian
 pub async fn create_spore_guardian(
-    security_provider: Arc<dyn SecurityPrimalProvider>,
     provider_endpoint: Option<String>,
 ) -> Result<ExternalBoundaryGuardian> {
-    ExternalBoundaryGuardian::new_with_spore(security_provider, provider_endpoint).await
+    ExternalBoundaryGuardian::new_with_spore(provider_endpoint).await
 }
 
 #[cfg(test)]

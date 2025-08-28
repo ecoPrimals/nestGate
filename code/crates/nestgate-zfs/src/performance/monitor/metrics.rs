@@ -97,7 +97,7 @@ impl ZfsPerformanceMonitor {
             .map_err(|e| NestGateError::Internal {
                 message: format!("Failed to execute zpool iostat: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -213,7 +213,7 @@ impl ZfsPerformanceMonitor {
             .map_err(|e| NestGateError::Internal {
                 message: format!("Failed to get pool properties: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -405,7 +405,7 @@ impl ZfsPerformanceMonitor {
             .map_err(|e| NestGateError::Internal {
                 message: format!("Failed to get pool I/O stats: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 

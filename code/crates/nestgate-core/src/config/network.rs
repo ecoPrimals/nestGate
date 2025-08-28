@@ -605,7 +605,7 @@ mod tests {
         assert!(!endpoints.has_service("custom"));
 
         // Test service names include external services
-        let names = endpoints.service_names();
+        let names = endpoints.names();
         assert!(names.contains(&"huggingface"));
         assert!(names.contains(&"ncbi"));
         // And dynamically added services

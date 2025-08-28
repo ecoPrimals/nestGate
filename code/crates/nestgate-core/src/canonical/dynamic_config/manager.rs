@@ -1,7 +1,6 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::SystemTime;
@@ -11,8 +10,8 @@ use uuid::Uuid;
 use super::types::*;
 use super::validators::*;
 use crate::canonical::dynamic_config::ConfigSection;
-use crate::config::canonical_unified::CanonicalConfig;
-use crate::{Result, NestGateError};
+use crate::config::canonical_master::NestGateCanonicalConfig as CanonicalConfig;
+use crate::{Result};
 
 // **CANONICAL MODERNIZATION**: Type aliases to fix clippy complexity errors
 /// Type alias for configuration validator registry
@@ -94,7 +93,7 @@ impl DynamicConfigManager {
         let content = toml::to_string_pretty(&config).map_err(|e| NestGateError::Internal {
             message: format!("Failed to serialize configuration: {e}"),
             location: Some("DynamicConfigManager::save_config_to_file".to_string()),
-            debug_info: Some(format!("Path: {}", self.config_path.display())),
+            location: Some(format!("Path: {}", self.config_path.display())),
             is_bug: false,
         })?;
 
@@ -105,6 +104,7 @@ impl DynamicConfigManager {
                 error_message: format!("Failed to write config file: {e}"),
                 resource: Some(self.config_path.to_string_lossy().to_string()),
                 retryable: true,
+                context: None,
             })?;
 
         Ok(())
@@ -144,7 +144,7 @@ impl DynamicConfigManager {
                         .map(|e| &e.message)
                         .unwrap_or(&"Unknown error".to_string())
                 ),
-                config_source: crate::error::core::UnifiedConfigSource::Runtime,
+                
                 field: Some(change.path.clone()),
                 suggested_fix: validation_report
                     .errors
@@ -274,7 +274,7 @@ impl DynamicConfiguration for DynamicConfigManager {
                         "version_id".to_string(),
                     ),
                     field: Some("version_id".to_string()),
-                    suggested_fix: Some("Choose a different version".to_string()),
+                    
                 });
             }
 
@@ -298,7 +298,7 @@ impl DynamicConfiguration for DynamicConfigManager {
                     "version_id".to_string(),
                 ),
                 field: Some("version_id".to_string()),
-                suggested_fix: Some("Check available versions".to_string()),
+                
             })
         }
     }
@@ -325,9 +325,9 @@ impl DynamicConfiguration for DynamicConfigManager {
         if !all_valid {
             return Err(NestGateError::Configuration {
                 message: "One or more configuration changes failed validation".to_string(),
-                config_source: crate::error::core::UnifiedConfigSource::Runtime,
+                
                 field: None,
-                suggested_fix: Some("Check validation reports and fix issues".to_string()),
+                
             });
         }
 

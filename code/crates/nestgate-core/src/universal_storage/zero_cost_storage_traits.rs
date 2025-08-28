@@ -17,7 +17,7 @@ use super::unified_storage_traits::{
     UnifiedStorageItem, UnifiedStorageMetadata, UnifiedStorageRequest, UnifiedStorageResponse,
 };
 
-// ==================== ZERO-COST STORAGE BACKEND TRAIT ====================
+// ==================== SECTION ====================
 
 /// **Zero-cost unified storage backend trait**
 ///
@@ -108,7 +108,7 @@ pub trait ZeroCostStorageBackend<
     ) -> impl Future<Output = std::result::Result<ZeroCostStorageHealth, Self::Error>> + Send;
 }
 
-// ==================== ZERO-COST STORAGE TYPES ====================
+// ==================== SECTION ====================
 
 /// Zero-cost storage operation for batch processing
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -143,7 +143,7 @@ pub struct ZeroCostStorageHealth {
     pub current_concurrent_ops: usize,
 }
 
-// ==================== ZERO-COST STORAGE PROVIDER TRAIT ====================
+// ==================== SECTION ====================
 
 /// **Zero-cost storage provider trait**
 ///
@@ -181,7 +181,7 @@ where
     }
 }
 
-// ==================== MIGRATION UTILITIES ====================
+// ==================== SECTION ====================
 
 /// **Migration helper for storage traits**
 pub struct StorageTraitMigration;

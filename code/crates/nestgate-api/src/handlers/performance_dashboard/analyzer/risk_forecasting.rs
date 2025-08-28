@@ -29,7 +29,7 @@ impl RiskForecaster {
             NestGateError::Internal {
                 message: format!("Failed to initialize ZFS manager for risk forecasting: {}", e),
                 location: Some(file!().to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             }
         })?);

@@ -2,13 +2,12 @@ use std::collections::HashMap;
 use std::future::Future;
 use crate::error::CanonicalResult as Result;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 /// **ZERO-COST UNIVERSAL COORDINATION**
 ///
 /// Zero-cost replacement for the async_trait-based UniversalCoordination trait.
 /// Provides the same functionality with native async methods and compile-time optimization.
 
-// ==================== ZERO-COST COORDINATION TYPES ====================
+// ==================== SECTION ====================
 
 /// Storage provisioning request
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -58,7 +57,7 @@ pub enum CoordinationStatus {
     Timeout,
 }
 
-// ==================== ZERO-COST COORDINATION TRAIT ====================
+// ==================== SECTION ====================
 
 /// **Zero-cost universal coordination trait**
 ///
@@ -106,7 +105,7 @@ pub struct CoordinationHealth {
     pub connected_services: Vec<String>,
 }
 
-// ==================== EXAMPLE ZERO-COST IMPLEMENTATION ====================
+// ==================== SECTION ====================
 
 /// Example zero-cost coordination service
 pub struct ZeroCostCoordinationService<const MAX_CONCURRENT: usize = 1000> {
@@ -218,7 +217,7 @@ impl<const MAX_CONCURRENT: usize> ZeroCostUniversalCoordination
     }
 }
 
-// ==================== COMPATIBILITY BRIDGE ====================
+// ==================== SECTION ====================
 
 /// Compatibility bridge for existing async_trait code
 pub struct CoordinationCompatibilityBridge<T> {
@@ -258,7 +257,7 @@ where
     }
 }
 
-// ==================== SPECIALIZED IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 /// Production coordination service (high concurrency)
 pub type ProductionCoordination = ZeroCostCoordinationService<10000>;

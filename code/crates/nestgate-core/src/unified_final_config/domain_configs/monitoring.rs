@@ -1,5 +1,5 @@
 //
-// Monitoring-specific configuration structures extracted from the monolithic domain_configs.rs
+// Monitoring-specific configuration structures extracted from the monolithic NestGateCanonicalConfig.rs
 // for better maintainability and focused responsibility.
 
 use serde::{Deserialize, Serialize};

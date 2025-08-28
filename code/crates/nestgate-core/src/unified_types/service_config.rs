@@ -4,7 +4,6 @@ use std::collections::HashMap;
 // eliminating fragmentation across service implementations.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::Duration;
 
 /// Unified service configuration

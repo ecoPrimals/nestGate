@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // Advanced enterprise capabilities for production NestGate deployments
@@ -23,9 +23,8 @@ pub use disaster_recovery::{DisasterRecoveryManager, BackupStrategy, RecoveryPla
 pub use compliance::{ComplianceManager, AuditLogger, PolicyEngine};
 pub use analytics::{AnalyticsEngine, DataPipeline, InsightGenerator};
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 

@@ -172,7 +172,6 @@ pub fn mock_command_with_output(
 /// Mock performance metrics
 pub fn mock_performance_metrics() -> crate::performance::CurrentPerformanceMetrics {
     use crate::performance::*;
-    use std::collections::HashMap;
     use std::time::SystemTime;
 
     CurrentPerformanceMetrics {

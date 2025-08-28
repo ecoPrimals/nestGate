@@ -6,7 +6,6 @@
 //! **ARCHITECTURAL PRINCIPLE**: NestGate defines what it needs (data capabilities),
 //! external providers implement how they provide it.
 
-use async_trait::async_trait;
 use serde_json::Value;
 use std::collections::HashMap;
 use crate::Result;
@@ -35,9 +34,8 @@ impl ExternalModelDataProvider {
 }
 
 /// Data capability trait that external providers implement
-#[async_trait]
 pub trait DataCapability: Send + Sync {
-    async fn handle_request(&self, request: &DataRequest) -> Result<DataResponse>;
+    fn handle_request(&self, request: &DataRequest) -> impl std::future::Future<Output = Result<DataResponse>> + Send;
     fn supported_capabilities(&self) -> Vec<String>;
     fn provider_info(&self) -> ProviderInfo;
 }
@@ -63,7 +61,6 @@ pub struct ProviderInfo {
     pub capabilities: Vec<String>,
 }
 
-#[async_trait]
 impl DataCapability for ExternalModelDataProvider {
     async fn handle_request(&self, request: &DataRequest) -> Result<DataResponse> {
         // This would be implemented by external AI systems (like Squirrel)
@@ -89,4 +86,3 @@ impl DataCapability for ExternalModelDataProvider {
             capabilities: self.capabilities.clone(),
         }
     }
-} 

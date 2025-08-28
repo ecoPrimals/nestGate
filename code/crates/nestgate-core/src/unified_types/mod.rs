@@ -1,7 +1,9 @@
 pub mod access_patterns;
+pub mod cache_config;
 pub mod error_types;
 pub mod network_config;
 pub mod retry_config;
+pub mod service_config;
 pub mod service_metadata;
 /// Unified Types Module System
 /// This module system breaks down the large unified_types.rs file into manageable,
@@ -28,6 +30,9 @@ pub use service_metadata::{
     ServiceCapability, ServiceEndpoint, ServiceStatus, UniversalServiceMetadata,
     UniversalServiceMetadataBuilder,
 };
+
+// Service configuration types - defined inline in this file
+// pub use UnifiedServiceConfig; // Already public in this module
 // Migration utilities removed - system is mature
 pub use timeout_config::UnifiedTimeoutConfig;
 // Storage types moved to unified_types - define locally if needed
@@ -76,7 +81,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
-// ==================== REMAINING UNIFIED CONFIGURATIONS ====================
+// ==================== SECTION ====================
 // These will be moved to dedicated modules in subsequent phases
 
 /// Unified Security Configuration - consolidates all security settings
@@ -296,56 +301,18 @@ impl Default for UnifiedSecurityConfig {
 /// **THE** Master Unified Configuration - consolidates ALL system configuration
 /// This is the root configuration structure that ties everything together
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UnifiedConfig {
-    /// Service identification and metadata
-    pub service: UnifiedServiceConfig,
-    /// Network configuration
-    pub network: UnifiedNetworkConfig,
-    /// Security configuration
-    pub security: UnifiedSecurityConfig,
-    /// Global timeout configuration
-    pub timeouts: UnifiedTimeoutConfig,
-    /// Global retry configuration
-    pub retry: UnifiedRetryConfig,
-    /// Monitoring and telemetry configuration
-    pub monitoring: UnifiedMonitoringConfig,
-    /// Cache configuration
-    pub cache: UnifiedCacheConfig,
-    /// Storage configuration
-    pub storage: UnifiedStorageConfig,
-    /// Memory configuration
-    pub memory: UnifiedMemoryConfig,
-    /// Connection pool configuration
-    pub connection_pool: UnifiedConnectionPoolConfig,
-    /// Environment-specific settings
-    pub environment: HashMap<String, serde_json::Value>,
-    /// Feature flags
-    pub features: HashMap<String, bool>,
-    /// Configuration version for compatibility
-    pub config_version: String,
-    /// Configuration timestamp
-    pub config_timestamp: SystemTime,
-
-    // Legacy compatibility fields
-    /// Minimum connections (legacy compatibility)
-    pub min_connections: usize,
-    /// Health check interval (legacy compatibility)
-    pub health_check_interval: Duration,
-    /// Health check timeout (legacy compatibility)
-    pub health_check_timeout: Duration,
-    /// Preferred network interfaces (legacy compatibility)
-    pub preferred_interfaces: Vec<String>,
-    /// Port scan range (legacy compatibility)
-    pub port_scan_range: String,
-    /// Scan timeout (legacy compatibility)
-    pub scan_timeout: Duration,
-    /// Custom configuration values (legacy compatibility)
-    pub custom: HashMap<String, serde_json::Value>,
-    /// Discovery endpoint (legacy compatibility)
-    pub discovery_endpoint: String,
-    /// Installer configuration
-    pub installer: UnifiedInstallerConfig,
-}
+// ==================== SECTION ====================
+//
+// **DEPRECATED**: This UnifiedConfig definition is superseded by the canonical
+// NestGateCanonicalConfig in crate::config::canonical_master. Use the canonical version instead.
+//
+// **MIGRATION PATH**:
+// - Old: use crate::unified_types::UnifiedConfig
+// - New: use crate::config::canonical_master::NestGateCanonicalConfig
+//
+// ==================== SECTION ====================
+// UnifiedConfig has been removed. Use crate::config::canonical_master::NestGateCanonicalConfig instead.
+// Deprecated struct completely removed - use canonical_master::NestGateCanonicalConfig
 
 // Placeholder implementations for configurations not yet modularized
 // These will be moved to their respective modules
@@ -479,6 +446,64 @@ impl Default for UnifiedCacheConfig {
             max_memory_percent: 0.8,
             enable_lru: true,
             concurrent_threads: 4,
+        }
+    }
+}
+
+impl UnifiedCacheConfig {
+    /// Development cache configuration with debugging enabled
+    pub fn development() -> Self {
+        Self {
+            enabled: true,
+            max_size: 100,
+            ttl: Duration::from_secs(60),
+            ttl_seconds: 60,
+            hot_tier_size: 10 * 1024 * 1024,   // 10MB
+            warm_tier_size: 50 * 1024 * 1024,  // 50MB
+            cold_tier_unlimited: false,
+            cache_dir: "/tmp/nestgate-dev-cache".to_string(),
+            policy: "lru".to_string(),
+            name: "development-cache".to_string(),
+            eviction_policy: "lru".to_string(),
+            enable_compression: false,
+            compression_level: 1,
+            default_ttl_seconds: 60,
+            enable_metrics: true,
+            metrics_interval_seconds: 30,
+            enable_persistence: false,
+            persistence_path: "/tmp/nestgate-dev-cache-persist".to_string(),
+            persistence_interval_seconds: 60,
+            max_memory_percent: 0.5,
+            enable_lru: true,
+            concurrent_threads: 2,
+        }
+    }
+
+    /// High performance cache configuration for production
+    pub fn high_performance() -> Self {
+        Self {
+            enabled: true,
+            max_size: 10000,
+            ttl: Duration::from_secs(600),
+            ttl_seconds: 600,
+            hot_tier_size: 500 * 1024 * 1024,   // 500MB
+            warm_tier_size: 2 * 1024 * 1024 * 1024, // 2GB
+            cold_tier_unlimited: true,
+            cache_dir: "/var/lib/nestgate/cache-performance".to_string(),
+            policy: "lfu".to_string(),
+            name: "high-performance-cache".to_string(),
+            eviction_policy: "lfu".to_string(),
+            enable_compression: true,
+            compression_level: 3,
+            default_ttl_seconds: 600,
+            enable_metrics: true,
+            metrics_interval_seconds: 10,
+            enable_persistence: true,
+            persistence_path: "/var/lib/nestgate/cache-performance-persist".to_string(),
+            persistence_interval_seconds: 120,
+            max_memory_percent: 0.9,
+            enable_lru: false,
+            concurrent_threads: 8,
         }
     }
 }
@@ -701,10 +726,26 @@ impl UnifiedConfig {
         }
     }
 
+    /// Create a high-performance configuration
+    pub fn high_performance() -> Self {
+        Self {
+            network: UnifiedNetworkConfig::production(),
+            timeouts: UnifiedTimeoutConfig::production(),
+            retry: UnifiedRetryConfig::slow(),
+            ..Default::default()
+        }
+    }
+
     /// Validate the entire configuration
     pub fn validate(&self) -> crate::Result<()> {
         // Implementation would validate unified storage configuration
         // For now, this is a placeholder
         Ok(())
+    }
+
+    pub fn validate_service_config(&self) -> std::result::Result<bool, crate::NestGateError> {
+        // Implementation would validate service-specific configuration
+        // For now, this is a placeholder
+        Ok(true)
     }
 }

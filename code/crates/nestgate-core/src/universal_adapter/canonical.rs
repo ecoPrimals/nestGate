@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 // **CANONICAL UNIVERSAL ADAPTER**
 //
@@ -20,7 +20,6 @@ use std::collections::HashMap;
 // - Zero-cost abstractions where possible
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
@@ -28,12 +27,13 @@ use uuid::Uuid;
 // Removed unused import
 use tracing::{debug, info};
 
-use crate::{Result, NestGateError};
+use crate::{Result};
+use crate::unified_enums::{UnifiedHealthStatus, UnifiedServiceState};
 // Removed unused trait imports for now
 // Removed unused import
-use crate::canonical_modernization::{UnifiedHealthStatus, UnifiedServiceState, UnifiedServiceType};
+use crate::unified_enums::service_types::UnifiedServiceType;
 
-// ==================== ORCHESTRATION PROVIDER ====================
+// ==================== SECTION ====================
 
 /// Orchestration provider for network adapter compatibility
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -51,7 +51,7 @@ pub struct ServiceProvider {
     pub capability: String,
 }
 
-// ==================== CANONICAL CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// **THE** canonical universal adapter configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -140,7 +140,7 @@ pub enum RetryBackoff {
     Fixed { delay: Duration },
 }
 
-// ==================== CANONICAL TYPES ====================
+// ==================== SECTION ====================
 
 /// Canonical adapter statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -233,7 +233,7 @@ pub struct ExecutionMetrics {
     pub network_bytes_received: u64,
 }
 
-// ==================== CANONICAL UNIVERSAL ADAPTER ====================
+// ==================== SECTION ====================
 
 /// **THE** canonical universal adapter implementation
 #[derive(Debug)]
@@ -260,12 +260,19 @@ impl CanonicalUniversalAdapter {
             .timeout(config.requests.timeout)
             .build()
             .map_err(|e| {
-                NestGateError::Network(Box::new(crate::error::NetworkErrorData {
-                    operation: format!("Failed to create HTTP client: {e}"),
-                    endpoint: None,
+                NestGateError::Network {
                     message: format!("HTTP client creation failed: {e}"),
+                    operation: "http_client_creation".to_string(),
+                    address: None,
+                    remote_address: None,
+                    endpoint: None,
+                    retry_after: None,
+                    network_code: None,
+                    recoverable: false,
+                    retryable: false,
+                    network_data: None,
                     context: None,
-                }))
+                }
             })?;
 
         let stats = CanonicalAdapterStats {
@@ -426,13 +433,13 @@ impl CanonicalUniversalAdapter {
             }
         }
 
-        Err(NestGateError::Api(Box::new(crate::error::ApiErrorData {
+        Err(NestGateError::Api {
             message: format!("No provider found for capability: {capability}"),
-            method: Some("GET".to_string()),
-            path: Some(format!("/capabilities/{capability}")),
             status_code: Some(404),
+            request_id: None,
+            endpoint: Some(format!("/capabilities/{capability}")),
             context: None,
-        })))
+        })
     }
 
     async fn execute_request(
@@ -478,11 +485,11 @@ impl CanonicalUniversalAdapter {
     }
 }
 
-// ==================== ADAPTER SPECIFIC METHODS ====================
+// ==================== SECTION ====================
 // Note: Full UniversalService implementation would require more complex trait bounds
 // For now, we provide the core adapter functionality without the trait implementation
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for CanonicalAdapterConfig {
     fn default() -> Self {

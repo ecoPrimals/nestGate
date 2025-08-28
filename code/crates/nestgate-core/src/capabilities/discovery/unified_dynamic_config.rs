@@ -15,8 +15,12 @@
 /// - Extensible architecture for new discovery types
 // Using universal adapter from proper module path
 use crate::ecosystem_integration::universal_adapter::UniversalAdapter;
-use crate::error::Result;
-use crate::unified_config_consolidation::StandardDomainConfig;
+use crate::Result;
+
+// **MIGRATED**: Using canonical config system instead of deprecated unified_config_consolidation
+use crate::config::canonical_master::{NestGateCanonicalConfig, NetworkConfig};
+// Use NetworkConfig directly from canonical_master as CanonicalNetworkConfig
+// Removed unused CanonicalConfigBuilder import
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr};
@@ -219,7 +223,22 @@ impl Default for UnifiedDynamicDiscoveryExtensions {
 
 /// **UNIFIED DYNAMIC DISCOVERY CONFIGURATION**
 /// Single configuration type that replaces all Dynamic*Config structs
-pub type UnifiedDynamicDiscoveryConfig = StandardDomainConfig<UnifiedDynamicDiscoveryExtensions>;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnifiedDynamicDiscoveryConfig {
+    /// Network configuration
+    pub network: NetworkConfig,
+    /// Discovery-specific extensions
+    pub extensions: UnifiedDynamicDiscoveryExtensions,
+}
+
+impl Default for UnifiedDynamicDiscoveryConfig {
+    fn default() -> Self {
+        Self {
+            network: NetworkConfig::default(),
+            extensions: UnifiedDynamicDiscoveryExtensions::default(),
+        }
+    }
+}
 
 /// **UNIFIED DYNAMIC DISCOVERY MANAGER**
 /// Consolidates all dynamic discovery operations into a single manager

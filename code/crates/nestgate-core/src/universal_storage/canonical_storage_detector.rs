@@ -18,12 +18,11 @@ use std::collections::HashMap;
 use crate::error::CanonicalResult as Result;
 use crate::canonical_modernization::CanonicalModernizedConfig;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::path::Path;
 use std::time::{Duration, SystemTime};
 use tokio::fs;
 
-// ==================== CANONICAL STORAGE DETECTOR ====================
+// ==================== SECTION ====================
 
 /// **CANONICAL UNIVERSAL STORAGE DETECTOR**
 /// 
@@ -327,7 +326,7 @@ impl CanonicalStorageDetector {
     }
 }
 
-// ==================== CANONICAL CONFIGURATION ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CanonicalDetectionConfig {
@@ -379,7 +378,7 @@ impl Default for CanonicalDetectionConfig {
     }
 }
 
-// ==================== CANONICAL DETECTED STORAGE ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CanonicalDetectedStorage {
@@ -431,7 +430,7 @@ pub enum CanonicalStorageType {
     Custom(String),
 }
 
-// ==================== CANONICAL STORAGE PROFILE ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CanonicalStorageProfile {
@@ -522,7 +521,7 @@ pub struct CanonicalReliabilityScore {
     pub uptime_percentage: f64,
 }
 
-// ==================== CANONICAL DETECTION STATISTICS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CanonicalDetectionStats {
@@ -553,7 +552,7 @@ impl Default for CanonicalDetectionStats {
     }
 }
 
-// ==================== CANONICAL STORAGE DETECTOR BUILDER ====================
+// ==================== SECTION ====================
 
 /// **CANONICAL STORAGE DETECTOR BUILDER**
 /// 

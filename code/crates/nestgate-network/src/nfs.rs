@@ -169,7 +169,6 @@ impl NfsServer {
 
     /// Stop NFS daemon services
     async fn stop_nfs_daemon(&self) -> Result<()> {
-        use std::process::Command;
 
         tracing::info!("Stopping NFS daemon services");
 
@@ -281,7 +280,6 @@ impl NfsServer {
         }
 
         // Move temp file to /etc/exports (requires root privileges)
-        use std::process::Command;
         let mv_output = Command::new("sudo")
             .args(["cp", temp_path, "/etc/exports"])
             .output()
@@ -389,7 +387,6 @@ async fn perform_nfs_mount(
     mount_point: &std::path::Path,
     client_host: &str,
 ) -> Result<()> {
-    use std::fs;
 
     tracing::info!(
         "Performing NFS mount: {} -> {:?} for client {}",

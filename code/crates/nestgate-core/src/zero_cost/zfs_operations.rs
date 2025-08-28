@@ -4,13 +4,13 @@
 use crate::Result;
 use std::marker::PhantomData;
 
-use crate::constants::{limits, retention, timeout_defaults};
+use crate::canonical_modernization::canonical_constants::{limits, network, timeouts};
 
 /// Zero-cost ZFS operations trait - replaces Arc<dyn ZfsOperations>
 pub trait ZeroCostZfsOperations<
     const MAX_POOLS: usize = { limits::MAX_POOLS },
     const MAX_DATASETS: usize = { limits::MAX_DATASETS },
-    const SNAPSHOT_RETENTION_DAYS: u32 = { retention::SNAPSHOT_RETENTION_DAYS },
+    const SNAPSHOT_RETENTION_DAYS: u32 = 30,
 >
 {
     type Pool: Clone + Send + Sync + 'static;
@@ -61,8 +61,8 @@ pub trait ZeroCostZfsOperations<
 
 /// Zero-cost ZFS service trait - replaces Arc<dyn UniversalZfsService>
 pub trait ZeroCostUniversalZfsService<
-    const MAX_OPERATIONS: usize = { limits::MAX_CONCURRENT_OPERATIONS },
-    const TIMEOUT_SECS: u64 = { timeout_defaults::TIMEOUT_SECS_STANDARD },
+    const MAX_OPERATIONS: usize = 100, // Max concurrent operations
+    const TIMEOUT_SECS: u64 = 30, // Standard timeout in seconds
 >
 {
     type PoolInfo: Clone + Send + Sync + 'static;
@@ -199,13 +199,14 @@ impl ZeroCostUniversalZfsService<10000, 300> for ProductionUniversalZfsService {
         if let Some(pool) = pools.iter().find(|p| p.contains(name)) {
             self.zfs_ops.get_pool_properties(pool).await
         } else {
-            Err(crate::error::core::NestGateError::api_simple(
-                crate::error::domain_errors::ApiError::NotFound {
-                    resource_type: "ZfsPool".to_string(),
-                    resource_id: name.to_string(),
-                    suggestions: vec![],
-                },
-            ))
+            Err(crate::error::NestGateError::Storage {
+                message: format!("ZfsPool:{}", name),
+                operation: "get_pool_properties".to_string(),
+                resource: Some(name.to_string()),
+                retryable: false,
+                storage_data: None,
+                context: None,
+            })
     }
     }
 
@@ -257,6 +258,7 @@ impl crate::zero_cost::native_async_traits::NativeAsyncUniversalZfsService
     async fn delete_snapshot(&self, dataset: &str, snapshot_name: &str) -> crate::Result<()> {
         // Production implementation would delete actual snapshot
         println!("Deleted snapshot {snapshot_name} from dataset {dataset}");
+        Ok(())
     }
     }
 
@@ -347,13 +349,14 @@ where
 
             Ok(optimization)
         } else {
-            Err(crate::error::core::NestGateError::api_simple(
-                crate::error::domain_errors::ApiError::NotFound {
-                    resource_type: "ZfsPool".to_string(),
-                    resource_id: pool_name.to_string(),
-                    suggestions: vec![],
-                },
-            ))
+            Err(crate::error::NestGateError::Storage {
+                message: format!("ZfsPool:{}", pool_name),
+                operation: "get_optimization".to_string(),
+                resource: Some(pool_name.to_string()),
+                retryable: false,
+                storage_data: None,
+                context: None,
+            })
     }
     }
 

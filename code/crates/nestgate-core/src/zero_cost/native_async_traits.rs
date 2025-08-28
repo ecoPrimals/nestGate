@@ -348,6 +348,7 @@ impl NativeAsyncUniversalProvider<1000, 300> for ProductionUniversalProvider {
     async fn initialize(&self, _config: Self::ConfigData) -> Result<()> {
         self.initialized
             .store(true, std::sync::atomic::Ordering::Relaxed);
+        Ok(())
     }
 
     async fn get_service_info(&self, service_id: &str) -> Result<Self::ServiceInfo> {
@@ -369,6 +370,7 @@ impl NativeAsyncUniversalProvider<1000, 300> for ProductionUniversalProvider {
     async fn shutdown(&self) -> Result<()> {
         self.initialized
             .store(false, std::sync::atomic::Ordering::Relaxed);
+        Ok(())
     }
     }
 
@@ -380,7 +382,7 @@ impl NativeAsyncUniversalProvider<1000, 600> for DevelopmentUniversalProvider {
     type HealthStatus = String;
     type ConfigData = std::collections::HashMap<String, String>;
 
-    async fn initialize(&self, _config: Self::ConfigData) -> Result<()> {}
+    async fn initialize(&self, _config: Self::ConfigData) -> Result<()> { Ok(()) }
 
     async fn get_service_info(&self, service_id: &str) -> Result<Self::ServiceInfo> {
         Ok(format!("Development service info for: {service_id}"))
@@ -394,7 +396,7 @@ impl NativeAsyncUniversalProvider<1000, 600> for DevelopmentUniversalProvider {
         Ok(vec!["dev_test_service".to_string()])
     }
 
-    async fn shutdown(&self) -> Result<()> {}
+    async fn shutdown(&self) -> Result<()> { Ok(()) }
     }
 
 /// Native async orchestration system - replaces multiple #[async_trait] patterns
@@ -454,6 +456,8 @@ where
         // Increment active services
         self.active_services
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        
+        Ok(())
     }
 
     /// Comprehensive health check - zero-cost async composition
@@ -474,6 +478,8 @@ where
         self.universal.shutdown().await?;
         self.active_services
             .store(0, std::sync::atomic::Ordering::Relaxed);
+        
+        Ok(())
     }
 
     /// Get service statistics with compile-time limits
@@ -536,6 +542,10 @@ mod tests {
             request_type: PrimalRequestType::Capability,
             payload: HashMap::new(),
             timestamp: std::time::SystemTime::now(),
+                    retry_info: None,
+                    recovery_suggestions: vec![],
+                    performance_metrics: None,
+                    environment: None,
             security_context: None,
         };
 

@@ -25,7 +25,7 @@ pub struct UniversalServiceRegistration {
 }
 
 /// Service metadata information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ServiceMetadata {
     /// Human-readable service name
     pub name: String,
@@ -42,9 +42,10 @@ pub struct ServiceMetadata {
 }
 
 /// Service category enumeration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 pub enum ServiceCategory {
     /// Storage and persistence services
+    #[default]
     Storage,
     /// AI and machine learning services
     AI,
@@ -524,7 +525,7 @@ pub struct SelectionPreferences {
     pub performance_priority: bool,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for PerformanceRequirements {
     fn default() -> Self {

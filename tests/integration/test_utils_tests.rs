@@ -3,7 +3,7 @@
 //! This test validates test utils integration functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateCanonicalUnifiedConfig;
+use nestgate_core::config::unified::NestGateUnifiedConfig as NestGateUnifiedConfig;
 use nestgate_core::config::defaults::Environment;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -19,7 +19,7 @@ async fn test_test_utils_integration_config() {
     assert!(!config.system.instance_name.is_empty());
     
     // Test environment-specific test utils integration configuration
-    let dev_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::unified::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ Test utils integration configuration test completed");
@@ -161,13 +161,13 @@ async fn test_test_utils_environments() {
     info!("🌍 Testing test utils integration across environments");
     
     // Test development environment test utils integration
-    let dev_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::unified::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development test utils integration configuration validated");
     
     // Test production environment test utils integration
-    let prod_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::unified::create_config_for_environment(Environment::Production);
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production test utils integration configuration validated");

@@ -1,4 +1,4 @@
-use crate::error::Result;
+use crate::Result;
 /// **CANONICAL DOMAIN CONFIGURATION SYSTEM**
 ///
 /// This module provides the single source of truth for all domain-specific configurations
@@ -19,7 +19,7 @@ use crate::error::Result;
 /// - Domain-specific configuration hierarchies
 use serde::{Deserialize, Serialize};
 
-// ==================== CANONICAL CONFIGURATION TRAIT ====================
+// ==================== SECTION ====================
 
 /// **THE** canonical configuration trait that all domain configurations must implement
 pub trait CanonicalDomainConfig:
@@ -41,7 +41,7 @@ pub trait CanonicalDomainConfig:
     fn schema() -> serde_json::Value;
 }
 
-// ==================== DOMAIN MODULES ====================
+// ==================== SECTION ====================
 
 pub mod network_configs;
 pub mod performance_configs;
@@ -50,7 +50,7 @@ pub mod service_configs;
 pub mod storage_configs;
 pub mod test_configs;
 
-// ==================== RE-EXPORTS ====================
+// ==================== SECTION ====================
 
 // Test configurations
 pub use test_configs::{

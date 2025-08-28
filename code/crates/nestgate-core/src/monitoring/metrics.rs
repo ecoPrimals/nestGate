@@ -635,7 +635,7 @@ impl MetricsExporter {
         serde_json::to_string_pretty(&export_data).map_err(|e| NestGateError::Internal {
             message: format!("Failed to serialize metrics to JSON: {e}"),
             location: Some("MetricsExporter::export_json".to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })
     }

@@ -1,7 +1,6 @@
 //
 // Contains the main service structure and core functionality.
 
-// REMOVED: async_trait - using zero-cost native async patterns
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::SystemTime;

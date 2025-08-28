@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-// ==================== UNIFIED CACHE CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Unified Cache Configuration - consolidates all caching settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -49,7 +49,7 @@ impl Default for UnifiedCacheConfig {
     }
 }
 
-// ==================== CACHE TYPES ====================
+// ==================== SECTION ====================
 
 /// Cache types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -68,7 +68,7 @@ pub enum CacheType {
     Custom(String),
 }
 
-// ==================== EVICTION POLICIES ====================
+// ==================== SECTION ====================
 
 /// Cache eviction policies
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -89,7 +89,7 @@ pub enum EvictionPolicy {
     Custom(String),
 }
 
-// ==================== CACHE REPLICATION CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Cache replication configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -162,7 +162,7 @@ pub enum ConflictResolution {
     Custom(String),
 }
 
-// ==================== CACHE MONITORING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Cache monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -315,7 +315,7 @@ pub enum CacheAlertSeverity {
     Critical,
 }
 
-// ==================== CACHE PARTITIONING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Cache partitioning configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -383,7 +383,7 @@ pub enum PartitionLoadBalancing {
     Custom(String),
 }
 
-// ==================== CACHE STORAGE CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Cache storage configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -515,7 +515,7 @@ pub enum KeyDerivationFunction {
     Custom(String),
 }
 
-// ==================== CACHE WARMING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Cache warming configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,11 +1,10 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // This module implements additional security measures to protect against
 // common vulnerabilities and ensure robust security posture.
 
-use crate::{Result, NestGateError};
-use std::collections::HashMap;
+use crate::{Result};
 use std::time::{Duration, SystemTime};
 use tracing::{debug, warn};
 
@@ -103,7 +102,7 @@ impl InputValidator {
     /// Validate that input contains only safe characters
     pub fn validate_safe_string(input: &str, max_length: usize) -> Result<()> {
         if input.len() > max_length {
-            return Err(NestGateError::security_error(
+            return Err(NestGateError::permission_denied(
                 "Input exceeds maximum length",
                 "validate_input",
                 Some("input_validation"),
@@ -113,7 +112,7 @@ impl InputValidator {
 
         // Check for potentially dangerous characters
         if input.contains('\0') || input.contains('\x1b') {
-            return Err(NestGateError::security_error(
+            return Err(NestGateError::permission_denied(
                 "Input contains potentially dangerous characters",
                 "validate_input",
                 Some("input_validation"),
@@ -129,7 +128,7 @@ impl InputValidator {
                     "Potentially dangerous pattern detected in input: {}",
                     pattern
                 );
-                return Err(NestGateError::security_error(
+                return Err(NestGateError::permission_denied(
                     "Input contains potentially dangerous SQL patterns",
                     "validate_input",
                     Some("sql_injection_prevention"),
@@ -145,7 +144,7 @@ impl InputValidator {
     pub fn validate_file_path(path: &str) -> Result<()> {
         // Check for directory traversal attempts
         if path.contains("..") || path.contains("./") || path.starts_with('/') {
-            return Err(NestGateError::security_error(
+            return Err(NestGateError::permission_denied(
                 "Path contains directory traversal patterns",
                 "validate_path",
                 Some("directory_traversal_prevention"),
@@ -155,7 +154,7 @@ impl InputValidator {
 
         // Check for null bytes
         if path.contains('\0') {
-            return Err(NestGateError::security_error(
+            return Err(NestGateError::permission_denied(
                 "Path contains null bytes",
                 "validate_path",
                 Some("path_validation"),
@@ -172,7 +171,7 @@ impl InputValidator {
             // Check for command injection patterns
             let dangerous_chars = ['|', '&', ';', '>', '<', '`', '$', '(', ')'];
             if arg.chars().any(|c| dangerous_chars.contains(&c)) {
-                return Err(NestGateError::security_error(
+                return Err(NestGateError::permission_denied(
                     "Command argument contains potentially dangerous characters",
                     "validate_command",
                     Some("command_injection_prevention"),

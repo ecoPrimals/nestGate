@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // This module implements enterprise-grade resilience patterns including circuit breakers,
@@ -10,7 +10,7 @@ pub mod failure_detector;
 pub mod retry_policy;
 pub mod timeout_manager;
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
