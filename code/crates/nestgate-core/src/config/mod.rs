@@ -1,15 +1,17 @@
-//! **NESTGATE UNIFIED CONFIGURATION SYSTEM**
+//! **NESTGATE CONFIGURATION SYSTEM**
 //!
-//! This module provides the single, canonical configuration system for NestGate.
-//! All configuration should migrate to use the canonical master configuration.
+//! Unified configuration management for all NestGate components.
+//! This module provides the canonical configuration architecture.
 
 use crate::{NestGateError, Result};
 
 // ==================== SECTION ====================
 
-/// **PRIMARY**: The canonical master configuration system (modular)
-/// This replaces ALL other configuration systems
+/// **CANONICAL MASTER**: The definitive configuration system
 pub mod canonical_master;
+
+/// **MIGRATION TRAITS**: Systematic config consolidation utilities
+pub mod migration_traits;
 
 // ==================== SECTION ====================
 // All deprecated configuration modules have been removed. Use canonical_master directly:
@@ -39,6 +41,15 @@ pub use canonical_master::{
     LogLevel,
     FeatureFlags,
     ConfigMetadata,
+};
+
+/// Migration utilities for config consolidation
+pub use migration_traits::{
+    IntoCanonicalNetworkConfig, 
+    IntoCanonicalStorageConfig, 
+    IntoCanonicalSecurityConfig,
+    ConfigMigrationHelper,
+    MigrationStats
 };
 
 // Note: Detailed configuration types are defined inline in canonical_master
