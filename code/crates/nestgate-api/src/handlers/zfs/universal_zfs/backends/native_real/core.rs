@@ -7,7 +7,6 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime};
 
-// REMOVED: async_trait - using zero-cost native async patterns
 use std::process::Command;
 use tracing::{info, warn};
 

@@ -1,8 +1,8 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // Core detection logic for different storage types.
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use crate::universal_storage::{UnifiedStorageCapability, UnifiedStorageType};
 use super::types::*;
 use super::config::DetectionConfig;

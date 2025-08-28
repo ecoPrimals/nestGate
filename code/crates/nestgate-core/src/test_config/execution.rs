@@ -4,7 +4,7 @@
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-// ==================== TEST EXECUTION CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// **Unified test execution configuration**
 /// Consolidates: TestExecutionConfig, TestRetryConfig, CleanTestConfig

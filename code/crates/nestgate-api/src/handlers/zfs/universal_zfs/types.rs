@@ -11,7 +11,7 @@ use std::time::Duration;
 use std::time::SystemTime;
 use thiserror::Error;
 
-// ==================== CANONICAL MODERNIZATION ====================
+// ==================== SECTION ====================
 
 /// **CANONICAL**: Universal ZFS Result type using IdioResult
 /// This follows the canonical Result<T,E> pattern with domain-specific error type
@@ -126,7 +126,7 @@ pub enum UniversalZfsError {
     },
 }
 
-// ==================== CONVERSION TRAITS ====================
+// ==================== SECTION ====================
 
 impl From<UniversalZfsError> for NestGateError {
     fn from(err: UniversalZfsError) -> Self {
@@ -141,6 +141,7 @@ impl From<UniversalZfsError> for NestGateError {
                 operation,
                 duration,
                 retryable: true,
+                context: None,
                 suggested_timeout: Some(duration * 2),
             },
             UniversalZfsError::Configuration { message } => {
@@ -188,7 +189,7 @@ impl From<UniversalZfsError> for NestGateError {
             UniversalZfsError::Internal { message } => NestGateError::Internal {
                 message,
                 location: Some("universal_zfs".to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             },
             UniversalZfsError::CircuitBreakerOpen { service } => {
@@ -219,11 +220,12 @@ impl From<UniversalZfsError> for NestGateError {
                 }))
             }
             UniversalZfsError::ValidationFailed { errors } => NestGateError::Validation {
-                field: "multiple_fields".to_string(),
+                field: Some("multiple_fields".to_string()),
                 message: errors.join("; "),
                 current_value: None,
                 expected: Some("valid input".to_string()),
                 user_error: true,
+                context: None,
             },
             UniversalZfsError::CommandFailed { command, message } => {
                 NestGateError::UniversalZfs(Box::new(nestgate_core::error::UniversalZfsErrorData {
@@ -614,7 +616,7 @@ impl Default for ServiceMetrics {
     }
 }
 
-// ==================== ERROR CONVERSIONS ====================
+// ==================== SECTION ====================
 
 impl From<std::io::Error> for UniversalZfsError {
     fn from(error: std::io::Error) -> Self {

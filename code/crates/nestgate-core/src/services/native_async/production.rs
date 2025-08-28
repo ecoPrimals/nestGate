@@ -1,12 +1,10 @@
-use crate::NestGateError;
+use base64::{engine::general_purpose, Engine};
 use std::collections::HashMap;
 use std::future::Future;
 /// Production Service Implementations
 /// Extracted from native_async_final_services.rs to maintain file size compliance
 /// Contains production-ready implementations of native async service traits
-use std::future::Future;
 use std::pin::Pin;
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
@@ -16,9 +14,12 @@ use crate::error::CanonicalResult as Result;
 use super::{
     traits::{NativeAsyncCommunicationProvider, NativeAsyncLoadBalancer},
     types::{
-        CommunicationMessage, LoadBalancerStats, ServiceRequest, ServiceResponse, ServiceStats,
+        CommunicationMessage, LoadBalancerStats, ServiceResponse, ServiceStats,
     },
 };
+
+// Import missing ServiceRequest type
+use crate::universal_traits::ServiceRequest;
 
 use crate::service_discovery::types::ServiceInfo;
 
@@ -83,7 +84,7 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
 
     async fn add_service(&self, service: Self::ServiceInfo) -> Result<()> {
         // Native async service addition - no Future boxing overhead
-        let service_name = service.metadata.service_name.clone();
+        let service_name = service.metadata.name.clone();
         let mut services = self.services.write().await;
         services.insert(service_name.clone(), service);
 
@@ -141,7 +142,7 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
                     stats.total_requests += 1;
                     stats.successful_requests += 1;
 
-                    if let Some(service_stats) = stats.service_stats.get_mut(&service.metadata.service_name)
+                    if let Some(service_stats) = stats.service_stats.get_mut(&service.metadata.name)
                     {
                         service_stats.requests += 1;
                         service_stats.successful_requests += 1;
@@ -159,7 +160,7 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
                     stats.total_requests += 1;
                     stats.failed_requests += 1;
 
-                    if let Some(service_stats) = stats.service_stats.get_mut(&service.metadata.service_name)
+                    if let Some(service_stats) = stats.service_stats.get_mut(&service.metadata.name)
                     {
                         service_stats.requests += 1;
                         service_stats.failed_requests += 1;
@@ -175,7 +176,7 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
             stats.total_requests += 1;
             stats.failed_requests += 1;
 
-            Err(crate::NestGateError::service_unavailable(
+            Err(crate::NestGateError::service_unavailable_with_operation(
                 "routing".to_string(),
                 format!(
                     "Service '{}' not found or no services available",
@@ -195,7 +196,7 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
         // Direct async method for service statistics
         let stats = self.stats.read().await;
         stats.service_stats.get(service_id).cloned().ok_or_else(|| {
-            crate::NestGateError::not_found_error(
+            crate::NestGateError::not_found_error_with_resource(
                 "ServiceStats".to_string(),
                 service_id.to_string(),
             )
@@ -213,7 +214,7 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
 
             for (name, service_info) in services.iter() {
                 // Perform actual health check based on service type
-                let is_healthy = match service_info.metadata.endpoints.first() {
+                let is_healthy = match service_info.endpoints.first() {
                     Some(endpoint) => {
                         // Try to connect to the service endpoint
                         match tokio::time::timeout(
@@ -365,7 +366,7 @@ impl ProductionLoadBalancer {
         request: &ServiceRequest,
     ) -> Result<ServiceResponse> {
         // Try each endpoint until one succeeds
-        for endpoint in &service.metadata.endpoints {
+        for endpoint in &service.endpoints {
             // Convert to expected endpoint type for compatibility
             let compat_endpoint = crate::service_discovery::types::ServiceEndpoint {
                 url: endpoint.url.clone(),
@@ -383,8 +384,8 @@ impl ProductionLoadBalancer {
         }
 
         // All endpoints failed
-        Err(crate::NestGateError::service_unavailable(
-            service.metadata.service_name.clone(),
+        Err(crate::NestGateError::service_unavailable_with_operation(
+            service.metadata.name.clone(),
             "All service endpoints failed".to_string(),
         ))
     }
@@ -423,35 +424,51 @@ impl ProductionLoadBalancer {
         let response = tokio::time::timeout(Duration::from_secs(30), http_request.send())
             .await
             .map_err(|_| {
-                crate::NestGateError::TimeoutError {
+                crate::NestGateError::Timeout {
+                    message: "Service request timed out".to_string(),
                     operation: "service_request".to_string(),
-                    timeout_duration: Duration::from_secs(30),
+                    timeout: Duration::from_secs(30),
+                    retryable: true,
+                    context: None,
                 }
             })?
             .map_err(|e| {
-                crate::NestGateError::Network(Box::new(crate::error::domain_errors::NetworkErrorData {
+                crate::NestGateError::Network {
                     message: format!("HTTP request failed: {e}"),
                     operation: "http_request".to_string(),
+                    address: Some(endpoint.url.clone()),
+                    remote_address: Some(endpoint.url.clone()),
                     endpoint: Some(endpoint.url.clone()),
+                    retry_after: None,
+                    network_code: None,
+                    recoverable: true,
+                    retryable: true,
+                    network_data: None,
                     context: None,
-                }))
+                }
             })?;
 
         // Parse response
         if response.status().is_success() {
             let response_body: serde_json::Value = response.json().await.map_err(|e| {
                 // IDIOMATIC EVOLUTION: Network error with rich context
-                crate::NestGateError::Network(Box::new(crate::error::domain_errors::NetworkErrorData {
+                crate::NestGateError::Network {
                     message: format!("Failed to parse response: {e} (endpoint: {})", endpoint.url),
-                    operation: "POST".to_string(),
+                    operation: "response_parsing".to_string(),
+                    address: Some(endpoint.url.clone()),
+                    remote_address: Some(endpoint.url.clone()),
                     endpoint: Some(endpoint.url.clone()),
+                    retry_after: None,
+                    network_code: None,
+                    recoverable: false,
+                    retryable: false,
+                    network_data: None,
                     context: None,
-                }))
+                }
             })?;
 
             let data = if let Some(data_b64) = response_body.get("data").and_then(|v| v.as_str()) {
                 // Use base64 engine for decoding
-                use base64::{engine::general_purpose, Engine as _};
                 general_purpose::STANDARD
                     .decode(data_b64)
                     .unwrap_or_else(|_| data_b64.as_bytes().to_vec())
@@ -463,7 +480,7 @@ impl ProductionLoadBalancer {
                 success: true,
                 data,
                 request_id: Some(request_id),
-                status: crate::traits::UniversalResponseStatus::Success,
+                status: crate::canonical_types::ResponseStatus::Success,
                 headers: HashMap::new(),
                 payload: response_body,
                 timestamp: SystemTime::now()
@@ -485,15 +502,22 @@ impl ProductionLoadBalancer {
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
             // IDIOMATIC EVOLUTION: Network error with status code context
-            Err(crate::NestGateError::Network(Box::new(crate::error::domain_errors::NetworkErrorData {
+            Err(crate::NestGateError::Network {
                 message: format!(
                     "Service returned error: {status} - {error_text} (endpoint: {}, method: POST)",
                     endpoint.url
                 ),
-                operation: "POST".to_string(),
+                operation: "http_post".to_string(),
+                address: Some(endpoint.url.clone()),
+                remote_address: Some(endpoint.url.clone()),
                 endpoint: Some(endpoint.url.clone()),
+                retry_after: None,
+                network_code: Some(status.to_string()),
+                recoverable: true,
+                retryable: true,
+                network_data: None,
                 context: None,
-            })))
+            })
         }
     }
 }

@@ -4,7 +4,7 @@
 /// - Resource limit analysis
 /// - Performance profile optimization
 /// - System capacity analysis
-use crate::error::Result;
+use crate::Result;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
@@ -35,8 +35,8 @@ impl std::fmt::Display for TestType {
 // 🚀 FULLY MODERN: Clean imports - no duplicates
 
 // 🚀 MODERNIZATION: UnifiedConfig now uses UnifiedPerformanceTestConfig directly
-/// **MODERNIZED**: UnifiedConfig now uses UnifiedPerformanceTestConfig directly
-pub type PerformanceTestConfig = crate::unified_types::UnifiedPerformanceTestConfig;
+/// **MODERNIZED**: UnifiedConfig now uses UnifiedPerformanceTestConfig directly  
+pub type PerformanceTestConfig = crate::config::canonical_master::PerformanceConfig;
 
 // 🚀 FULLY MODERN: All performance testing functionality now uses UnifiedPerformanceTestConfig directly
 // No legacy implementation needed - use UnifiedPerformanceTestConfig::default() and methods
@@ -81,12 +81,12 @@ pub struct TestResult {
 /// Enhanced Performance Test Runner with unified configuration
 #[derive(Debug)]
 pub struct PerformanceTestRunner {
-    pub config: crate::unified_types::UnifiedPerformanceTestConfig,
+    pub config: crate::config::canonical_master::PerformanceConfig,
 }
 
 impl PerformanceTestRunner {
     /// Create new performance test runner
-    pub fn new(config: crate::unified_types::UnifiedPerformanceTestConfig) -> Self {
+    pub fn new(config: crate::config::canonical_master::PerformanceConfig) -> Self {
         Self { config }
     }
 
@@ -95,7 +95,7 @@ impl PerformanceTestRunner {
         let mut latencies = Vec::new();
 
         // Run multiple test iterations to gather latency data
-        for _ in 0..self.config.test_iterations {
+        for _ in 0..self.config.testing.test_iterations {
             let start = Instant::now();
 
             // Simulate test operation
@@ -110,20 +110,20 @@ impl PerformanceTestRunner {
 
         // Calculate target percentile timeout
         let percentile_index =
-            ((latencies.len() as f64 * self.config.percentile_target).ceil() as usize - 1)
+            ((latencies.len() as f64 * self.config.testing.percentile_target / 100.0).ceil() as usize - 1)
                 .min(latencies.len() - 1);
 
         let optimal_timeout = latencies[percentile_index];
 
         // Ensure within bounds
         let bounded_timeout = optimal_timeout
-            .max(Duration::from_secs(self.config.baseline_timeout_seconds))
-            .min(Duration::from_secs(self.config.max_timeout_seconds));
+            .max(Duration::from_secs(self.config.testing.baseline_timeout_seconds))
+            .min(Duration::from_secs(self.config.testing.max_timeout_seconds));
 
         Ok(OptimalTimeout {
             timeout: bounded_timeout,
             confidence: 0.95,
-            test_iterations: self.config.test_iterations as usize,
+            test_iterations: self.config.testing.test_iterations,
             baseline_latency: latencies[0],
         })
     }
@@ -132,29 +132,26 @@ impl PerformanceTestRunner {
     pub fn generate_metrics(&self) -> HashMap<String, String> {
         let mut metrics = HashMap::new();
 
-        metrics.insert("test_name".to_string(), self.config.test_name.clone());
-        metrics.insert("test_type".to_string(), self.config.test_type.clone());
-        metrics.insert(
-            "concurrent_users".to_string(),
-            self.config.concurrent_users.to_string(),
-        );
-        metrics.insert("target_rps".to_string(), self.config.target_rps.to_string());
+        metrics.insert("test_name".to_string(), "performance_discovery".to_string());
+        metrics.insert("test_type".to_string(), "timeout_optimization".to_string());
+        metrics.insert("concurrent_users".to_string(), "1".to_string());
+        metrics.insert("target_rps".to_string(), "100".to_string());
 
         metrics.insert(
             "test_iterations".to_string(),
-            self.config.test_iterations.to_string(),
+            self.config.testing.test_iterations.to_string(),
         );
         metrics.insert(
             "baseline_timeout".to_string(),
-            format!("{}s", self.config.baseline_timeout_seconds),
+            format!("{}s", self.config.testing.baseline_timeout_seconds),
         );
         metrics.insert(
             "max_timeout".to_string(),
-            format!("{}s", self.config.max_timeout_seconds),
+            format!("{}s", self.config.testing.max_timeout_seconds),
         );
         metrics.insert(
             "percentile_target".to_string(),
-            self.config.percentile_target.to_string(),
+            self.config.testing.percentile_target.to_string(),
         );
 
         metrics
@@ -184,7 +181,7 @@ impl PerformanceDiscovery {
         _operation: &str,
     ) -> Result<Duration> {
         // Use default performance test config for discovery
-        let config = crate::unified_types::UnifiedPerformanceTestConfig::default();
+        let config = crate::config::canonical_master::PerformanceConfig::default();
         let runner = PerformanceTestRunner::new(config);
 
         let optimal = runner.discover_optimal_timeout().await?;

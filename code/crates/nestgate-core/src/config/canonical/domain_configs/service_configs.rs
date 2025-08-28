@@ -3,7 +3,7 @@
 /// Replaces: ServiceConfig, DiscoveryConfig, AutomationConfig, LifecycleConfig,
 /// EcosystemConfig, and 10+ other service config structures
 use super::CanonicalDomainConfig;
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -39,7 +39,6 @@ impl CanonicalDomainConfig for CanonicalServiceConfig {
             return Err(NestGateError::config_error(
                 "identity.name",
                 "cannot be empty",
-                None,
             ));
         }
         Ok(())
@@ -66,7 +65,7 @@ impl CanonicalDomainConfig for CanonicalServiceConfig {
     }
 }
 
-// ==================== SERVICE CONFIGURATION STRUCTURES ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceIdentity {
@@ -154,7 +153,7 @@ pub struct FederationSettings {
     pub cross_ecosystem_auth: bool,
 }
 
-// ==================== SUPPORTING ENUMS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DependencyType {

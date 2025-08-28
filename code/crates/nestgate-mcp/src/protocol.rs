@@ -13,19 +13,15 @@ use crate::types::{
 };
 use nestgate_core::diagnostics::SystemMetrics;
 
-// ==================== CANONICAL MODERNIZATION ====================
+// ==================== SECTION ====================
 
-/// **CANONICAL**: MCP protocol-specific Result type using IdioResult
-/// This follows the canonical Result<T,E> pattern with domain-specific error type
-pub type McpResult<T> = IdioResult<T, McpProtocolError>;
+/// Use canonical McpResult from nestgate_core::error
+pub use nestgate_core::error::idiomatic_evolution::McpResult;
 
-// **CANONICAL MODERNIZATION COMPLETE**: Deprecated Result type alias removed
-// Use McpResult<T> for domain-specific MCP errors
-
-/// Convenience Result type for internal use in this crate
+/// **CANONICAL RESULT** - Use canonical Result from nestgate-core
 pub type Result<T> = McpResult<T>;
 
-// ==================== MCP PROTOCOL TYPES ====================
+// ==================== SECTION ====================
 
 /// MCP message structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -570,7 +566,7 @@ pub enum McpProtocolError {
     SessionError { message: String },
 }
 
-// ==================== CONVERSION TRAITS ====================
+// ==================== SECTION ====================
 
 impl From<McpProtocolError> for NestGateError {
     fn from(err: McpProtocolError) -> Self {
@@ -594,7 +590,7 @@ impl From<McpProtocolError> for NestGateError {
     }
 }
 
-// ==================== CONVENIENCE CONSTRUCTORS ====================
+// ==================== SECTION ====================
 
 impl McpProtocolError {
     pub fn protocol_error(message: impl Into<String>) -> Self {

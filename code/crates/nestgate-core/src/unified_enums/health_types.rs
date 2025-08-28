@@ -3,7 +3,6 @@ use std::collections::HashMap;
 /// Unified health status definitions for consistent health monitoring
 /// across all NestGate services and components.
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// Unified health status enumeration for all services
 /// Provides consistent health reporting across the ecosystem

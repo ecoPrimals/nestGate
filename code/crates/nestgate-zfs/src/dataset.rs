@@ -113,7 +113,7 @@ impl ZfsDatasetManager {
         let output = cmd.output().await.map_err(|e| NestGateError::Internal {
             message: format!("Failed to execute zfs create: {e}"),
             location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })?;
 
@@ -124,7 +124,7 @@ impl ZfsDatasetManager {
                     String::from_utf8_lossy(&output.stderr)
                 ),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
         }
@@ -211,7 +211,7 @@ impl ZfsDatasetManager {
         let output = cmd.output().await.map_err(|e| NestGateError::Internal {
             message: format!("Failed to execute zfs list: {e}"),
             location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })?;
 
@@ -475,7 +475,7 @@ impl ZfsDatasetManager {
             .map_err(|e| NestGateError::Internal {
                 message: format!("Failed to list snapshots: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -486,7 +486,7 @@ impl ZfsDatasetManager {
                     String::from_utf8_lossy(&output.stderr)
                 ),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
         }

@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
 
-// ==================== ZERO-COST NETWORK TYPES ====================
+// ==================== SECTION ====================
 
 /// Zero-cost orchestration client configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

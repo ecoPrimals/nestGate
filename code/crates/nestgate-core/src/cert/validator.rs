@@ -1,5 +1,5 @@
 use crate::ecosystem_integration::universal_adapter::UniversalAdapter; // Updated import
-use crate::unified_types::UnifiedConfig;
+use crate::config::canonical_master::NestGateCanonicalConfig;
 use crate::Result;
 /// Certificate Validator
 /// Unified certificate validation for the NestGate ecosystem
@@ -8,12 +8,12 @@ pub struct CertificateValidator {
     #[allow(dead_code)]
     adapter: UniversalAdapter, // Updated type
     #[allow(dead_code)]
-    config: UnifiedConfig,
+    config: NestGateCanonicalConfig,
 }
 
 impl CertificateValidator {
     /// Create a new certificate validator
-    pub fn new(config: UnifiedConfig) -> Self {
+    pub fn new(config: NestGateCanonicalConfig) -> Self {
         let adapter = UniversalAdapter::new(
             crate::ecosystem_integration::universal_adapter::config::AdapterConfig::default(),
         );
@@ -36,5 +36,5 @@ impl CertificateValidator {
 
 /// Create a default certificate validator
 pub fn create_default_certificate_validator() -> CertificateValidator {
-    CertificateValidator::new(UnifiedConfig::default())
+    CertificateValidator::new(NestGateCanonicalConfig::default())
 }

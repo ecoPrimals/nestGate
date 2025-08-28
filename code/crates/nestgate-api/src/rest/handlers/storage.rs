@@ -14,9 +14,9 @@ use crate::rest::models::*;
 use crate::rest::{ApiState, DataError, DataResponse, ListQuery};
 use nestgate_core::universal_storage::AutoConfigurator;
 
-// ============================================================================
+// ==================== SECTION ====================
 // STORAGE BACKEND DATA HANDLERS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// List available storage backends
 /// GET /api/v1/storage/backends
@@ -574,9 +574,9 @@ pub async fn auto_configure(
     Ok(Json(DataResponse::new(result)))
 }
 
-// ============================================================================
+// ==================== SECTION ====================
 // HELPER FUNCTIONS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// Get available filesystem space (simplified)
 fn get_filesystem_space(path: &str) -> Option<u64> {

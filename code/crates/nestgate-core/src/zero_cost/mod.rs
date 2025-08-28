@@ -20,7 +20,6 @@ pub mod optimized_traits;
 pub mod zfs_operations;
 
 // Phase 3: Native async trait patterns (replacing #[async_trait])
-// REMOVED: async_trait_migration - migration utilities no longer needed
 pub mod native_async_traits;
 
 pub use composition::*;

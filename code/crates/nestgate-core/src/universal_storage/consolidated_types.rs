@@ -11,7 +11,6 @@
 /// - Various API handler storage structs
 ///
 /// **PROBLEM SOLVED**: Single authoritative source for all storage operations
-use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -21,7 +20,7 @@ use std::time::Duration;
 use crate::unified_enums::UnifiedTierType;
 use crate::Result;
 
-// ==================== CORE STORAGE TYPES ====================
+// ==================== SECTION ====================
 
 /// **THE** Universal Storage Type - replaces all StorageType enums
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -78,7 +77,7 @@ pub enum CloudProvider {
     Custom { endpoint: String },
 }
 
-// ==================== STORAGE RESOURCES ====================
+// ==================== SECTION ====================
 
 /// **THE** Universal Storage Resource - consolidates all storage resource types
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -182,7 +181,7 @@ pub enum StorageHealthStatus {
     Unknown,
 }
 
-// ==================== STORAGE PERFORMANCE ====================
+// ==================== SECTION ====================
 
 /// Storage performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -222,7 +221,7 @@ pub struct StorageIoMetrics {
     pub avg_response_time: Duration,
 }
 
-// ==================== STORAGE REQUESTS & RESPONSES ====================
+// ==================== SECTION ====================
 
 /// Universal storage request
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -354,7 +353,7 @@ pub struct StoragePerformanceRequirements {
     pub required_availability: Option<f64>,
 }
 
-// ==================== STORAGE EVENTS ====================
+// ==================== SECTION ====================
 
 /// Storage event types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -388,7 +387,7 @@ pub struct StorageEvent {
     pub resource_id: Option<String>,
 }
 
-// ==================== STORAGE ITEMS & METADATA ====================
+// ==================== SECTION ====================
 
 /// Storage item (file or directory)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -447,11 +446,10 @@ pub struct StorageMetadata {
     pub system: HashMap<String, serde_json::Value>,
 }
 
-// ==================== STORAGE BACKEND TRAIT ====================
+// ==================== SECTION ====================
 
 /// **THE** Universal Storage Backend trait
 /// Consolidates all storage backend interfaces
-#[async_trait]
 pub trait UniversalStorageBackend: Send + Sync {
     /// Handle a storage request
     async fn handle_request(
@@ -466,22 +464,22 @@ pub trait UniversalStorageBackend: Send + Sync {
     fn capabilities(&self) -> Vec<StorageCapability>;
 
     /// Check if backend is available
-    async fn is_available(&self) -> bool;
+    fn is_available(&self) -> impl std::future::Future<Output = bool> + Send;
 
     /// Perform health check
-    async fn health_check(&self) -> Result<StorageHealthStatus>;
+    fn health_check(&self) -> impl std::future::Future<Output = Result<StorageHealthStatus>> + Send;
 
     /// Get performance metrics
-    async fn get_metrics(&self) -> Result<StoragePerformanceMetrics>;
+    fn get_metrics(&self) -> impl std::future::Future<Output = Result<StoragePerformanceMetrics>> + Send;
 
     /// Initialize backend with configuration
-    async fn initialize(&mut self, config: StorageResourceConfig) -> Result<()>;
+    fn initialize(&mut self, config: StorageResourceConfig) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Shutdown backend gracefully
-    async fn shutdown(&mut self) -> Result<()>;
+    fn shutdown(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for UniversalStorageType {
     fn default() -> Self {
@@ -527,7 +525,7 @@ impl Default for StoragePerformanceMetrics {
     }
 }
 
-// ==================== UTILITY FUNCTIONS ====================
+// ==================== SECTION ====================
 
 impl UniversalStorageType {
     /// Check if storage type supports a capability

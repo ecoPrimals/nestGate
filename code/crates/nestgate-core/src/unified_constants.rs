@@ -18,7 +18,7 @@
 /// - Easy maintenance and updates
 use std::time::Duration;
 
-// ==================== API CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// API versioning and endpoint constants
 pub mod api {
@@ -97,7 +97,7 @@ pub mod api {
     }
 }
 
-// ==================== PROTOCOL CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Protocol-specific constants
 pub mod protocols {
@@ -170,11 +170,10 @@ pub mod protocols {
     }
 }
 
-// ==================== NETWORK CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Network and connectivity constants
 pub mod network {
-    use std::time::Duration;
 
     /// Default network addresses (configurable via environment)
     pub mod addresses {
@@ -272,7 +271,7 @@ pub mod network {
     }
 }
 
-// ==================== STORAGE CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Storage system constants
 pub mod storage {
@@ -329,7 +328,7 @@ pub mod storage {
     }
 }
 
-// ==================== PERFORMANCE CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Performance and optimization constants
 pub mod performance {
@@ -376,7 +375,7 @@ pub mod performance {
     }
 }
 
-// ==================== SECURITY CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Security and cryptography constants
 pub mod security {
@@ -417,7 +416,7 @@ pub mod security {
     }
 }
 
-// ==================== MONITORING CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Monitoring and observability constants
 pub mod monitoring {
@@ -456,7 +455,7 @@ pub mod monitoring {
     }
 }
 
-// ==================== TEST CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Testing framework constants
 pub mod testing {
@@ -499,12 +498,10 @@ pub mod testing {
     }
 }
 
-// REMOVED: Duplicate protocols module - consolidated into main protocols module above
 
-// REMOVED: Duplicate storage module eliminated
 // Use the original storage module definition above instead
 
-// ==================== ZFS CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// ZFS-specific constants for properties, pools, and datasets
 pub mod zfs {
@@ -557,12 +554,11 @@ pub mod zfs {
     }
 }
 
-// ==================== NETWORK CONSTANTS ====================
+// ==================== SECTION ====================
 
-// REMOVED: Duplicate network module eliminated
 // Use the original network module definition above instead
 
-// ==================== SERVICE CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Service names and identifiers
 pub mod services {
@@ -586,11 +582,10 @@ pub mod services {
     }
 }
 
-// ==================== TIMEOUT CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Timeout configurations for various operations
 pub mod timeouts {
-    use super::Duration;
 
     /// File operation timeouts
     pub const MOUNT_TIMEOUT: Duration = Duration::from_secs(5);
@@ -610,10 +605,9 @@ pub mod timeouts {
     pub const SSE_KEEP_ALIVE: Duration = Duration::from_secs(30);
 }
 
-// REMOVED: Duplicate performance, monitoring, and testing modules eliminated
 // Use the original module definitions above instead
 
-// ==================== COMPILE-TIME CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Compile-time validated constants using const generics
 pub mod compile_time {
@@ -642,7 +636,7 @@ pub mod compile_time {
     pub const SIZE_1048576: usize = 1048576; // 1MB
 }
 
-// ==================== CONVENIENCE FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Convenience functions for working with unified constants
 impl UnifiedConstants {
@@ -681,7 +675,7 @@ impl UnifiedConstants {
 /// Main unified constants struct for namespace organization
 pub struct UnifiedConstants;
 
-// ==================== CONSTANTS CLEANUP COMPLETED ====================
+// ==================== SECTION ====================
 
 pub use api::capabilities::*;
 pub use api::roles::*;

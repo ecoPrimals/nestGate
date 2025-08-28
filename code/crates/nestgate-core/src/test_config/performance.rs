@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-// ==================== PERFORMANCE TESTING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// **Unified performance testing configuration**
 /// Consolidates: PerformanceMetricsConfig, StressTestConfig, LoadTestConfig, BenchmarkConfig

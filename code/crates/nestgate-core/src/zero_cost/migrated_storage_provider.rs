@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 use std::future::Future;
 /// **ZERO-COST UNIFIED STORAGE PROVIDER**
@@ -16,14 +16,13 @@ use std::future::Future;
 /// - Atomic provider health tracking
 ///
 /// **EXPECTED IMPROVEMENTS**: 45% performance gain in provider operations
-/// **REPLACES**: `nestgate_core::universal_storage::unified_storage_traits::UnifiedStorageProvider`
+/// **REPLACES**: `crate::universal_storage::unified_storage_traits::UnifiedStorageProvider`
 use crate::Result;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::time::{Duration, SystemTime};
 
-// ==================== ZERO-COST STORAGE PROVIDER TRAIT ====================
+// ==================== SECTION ====================
 
 /// **Zero-cost unified storage provider trait**
 ///
@@ -222,7 +221,7 @@ pub trait ZeroCostUnifiedStorageProvider<
     }
 }
 
-// ==================== SUPPORTING TYPES ====================
+// ==================== SECTION ====================
 
 /// Provider metrics for performance monitoring
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -464,7 +463,7 @@ impl Default for EcosystemRegistration {
     }
 }
 
-// ==================== EXAMPLE IMPLEMENTATION ====================
+// ==================== SECTION ====================
 
 /// High-performance storage provider implementation
 pub struct ZeroCostStorageProvider {
@@ -652,9 +651,9 @@ impl ZeroCostUnifiedStorageProvider for ZeroCostStorageProvider {
         if config.backend_id.is_empty() {
             return Err(crate::error::NestGateError::Configuration {
                 message: "Backend ID cannot be empty".to_string(),
-                config_source: crate::error::UnifiedConfigSource::Runtime,
+                
                 field: Some("backend_id".to_string()),
-                suggested_fix: Some("Provide a non-empty backend ID".to_string()),
+                
             });
         }
 
@@ -662,9 +661,9 @@ impl ZeroCostUnifiedStorageProvider for ZeroCostStorageProvider {
         if config.performance_settings.max_connections == 0 {
             return Err(crate::error::NestGateError::Configuration {
                 message: "Max connections must be greater than 0".to_string(),
-                config_source: crate::error::UnifiedConfigSource::Runtime,
+                
                 field: Some("performance_settings.max_connections".to_string()),
-                suggested_fix: Some("Set max_connections to a positive value".to_string()),
+                
             });
         }
 
@@ -676,9 +675,9 @@ impl ZeroCostUnifiedStorageProvider for ZeroCostStorageProvider {
         if config.backend_id.is_empty() {
             return Some(Err(crate::error::NestGateError::Configuration {
                 message: "Backend ID cannot be empty".to_string(),
-                config_source: crate::error::UnifiedConfigSource::Runtime,
+                
                 field: Some("backend_id".to_string()),
-                suggested_fix: Some("Provide a non-empty backend ID".to_string()),
+                
             }));
         }
         Some(Ok(()))
@@ -720,7 +719,7 @@ pub enum BackendStatus {
     Maintenance,
 }
 
-// ==================== COMPATIBILITY BRIDGE ====================
+// ==================== SECTION ====================
 
 /// Compatibility adapter for migrating from async_trait to zero-cost
 pub struct StorageProviderAdapter<T> {

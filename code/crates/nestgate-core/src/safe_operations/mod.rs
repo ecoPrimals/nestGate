@@ -1,6 +1,6 @@
 /// **UNIFIED**: Use the main Result type from error module
 /// This eliminates duplicate Result type definitions
-pub use crate::error::Result;
+pub use crate::Result;
 
 // **REMOVED**: Deprecated SafeResult<T> type alias eliminated
 // Use unified Result<T> type directly

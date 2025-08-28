@@ -1,15 +1,16 @@
-use std::collections::HashMap;
-//
-// This module contains the canonical modernization patterns and utilities
-// that have been successfully implemented across NestGate.
+//! **CANONICAL MODERNIZATION SYSTEM**
+//!
+//! This module provides the complete canonical modernization framework for NestGate,
+//! implementing unified systems that replace fragmented legacy patterns.
 
-// ==================== CORE CANONICAL MODULES ====================
+// Removed unused serde imports
 
-/// Canonical constants - centralized configuration values
+// ==================== SECTION ====================
+
+/// Canonical constants system
 pub mod canonical_constants;
-/// **CONSTANTS CONSOLIDATION**
-/// Systematic consolidation of scattered constants to canonical system
-/// Note: Disabled for compilation compatibility - concept demonstrated
+
+/// Constants consolidation system - disabled for compilation compatibility
 // pub mod constants_consolidation;
 
 /// Unified types system
@@ -27,23 +28,43 @@ pub mod builders;
 /// Idiomatic evolution patterns and utilities
 pub mod idiomatic_evolution;
 
-// ==================== BACKWARD COMPATIBILITY ALIASES ====================
+// ==================== SECTION ====================
 
-use crate::config::canonical_unified::NestGateCanonicalUnifiedConfig;
+use crate::config::canonical_master::NestGateCanonicalConfig;
 
 /// **BACKWARD COMPATIBILITY**: Legacy configuration type alias
-pub type CanonicalModernizedConfig = NestGateCanonicalUnifiedConfig;
+pub type CanonicalModernizedConfig = NestGateCanonicalConfig;
 
 /// **BACKWARD COMPATIBILITY**: Service metadata types
 pub mod service_metadata {
-    pub use crate::traits::{ServiceRegistration, UniversalServiceRequest, UniversalServiceResponse};
-    pub use crate::service_discovery::types::{ServiceCapability, ServiceEndpoint, ServiceDependency, ServiceStatus};
-    
-    // Additional service metadata types
+    use std::collections::HashMap;
     use serde::{Serialize, Deserialize};
     use std::time::SystemTime;
-    use std::collections::HashMap;
-
+    
+    pub use crate::traits::{ServiceRegistration};
+    pub use crate::service_discovery::types::{ServiceCapability, ServiceEndpoint};
+    pub use crate::universal_providers_zero_cost::{ServiceStatus};
+    
+    /// Service dependency definition
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct ServiceDependency {
+        pub service_name: String,
+        pub version_requirement: String,
+        pub optional: bool,
+        pub metadata: HashMap<String, String>,
+    }
+    
+    impl Default for ServiceDependency {
+        fn default() -> Self {
+            Self {
+                service_name: "unknown".to_string(),
+                version_requirement: "*".to_string(),
+                optional: false,
+                metadata: HashMap::new(),
+            }
+        }
+    }
+    
     /// Universal service metadata
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct UniversalServiceMetadata {
@@ -57,7 +78,6 @@ pub mod service_metadata {
         pub metadata: HashMap<String, String>,
         pub created_at: SystemTime,
         pub updated_at: SystemTime,
-        // Additional fields expected by service discovery
         pub configuration: HashMap<String, String>,
         pub tags: Vec<String>,
         pub status: ServiceStatus,
@@ -85,25 +105,19 @@ pub mod service_metadata {
     }
 }
 
-// ==================== RE-EXPORTS ====================
+// ==================== SECTION ====================
 
 pub use canonical_constants::*;
-// Disabled for compilation compatibility - concept demonstrated
-// pub use constants_consolidation::{
-//     ConstantsConsolidationManager, ConsolidationStats, ConsolidationSummary,
-//     ScatteredConstant, HardcodedValue, ConstantValue,
-// };
-pub use unified_types::*;
-pub use unified_enums::*;
-pub use zero_cost_traits::*;
-pub use service_metadata::*;
 
-// ==================== CANONICAL PATTERNS COMPLETE ====================
-//
-// The following modules have been successfully consolidated:
-// ❌ REMOVED: core_config → Consolidated into config::canonical_unified
-// ❌ REMOVED: domain_configs → Consolidated into config::canonical_unified
-// ✅ ACTIVE: canonical_constants → Centralized constants system
-// ✅ ACTIVE: unified_types → Canonical type definitions
-// ✅ ACTIVE: unified_enums → Unified enumeration system
-// ✅ ACTIVE: zero_cost_traits → Zero-cost trait patterns 
+/// Re-export from unified_types - only types that actually exist
+pub use unified_types::{
+    UnifiedServiceConfig, UnifiedNetworkConfig
+};
+
+/// Re-export from unified_enums - only enums that actually exist  
+pub use crate::unified_enums::{
+    service_types::{UnifiedServiceType, UnifiedServiceState}
+};
+
+pub use zero_cost_traits::*;
+pub use service_metadata::*; 

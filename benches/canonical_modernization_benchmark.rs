@@ -10,7 +10,7 @@
 //! - Type safety validation (100% coverage target)
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use nestgate_core::config::canonical_unified::{
+use nestgate_core::config::unified::{
     NestGateCanonicalUnifiedConfig, PerformanceBenefits,
 };
 use nestgate_core::canonical_modernization::migration_utils::{

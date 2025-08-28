@@ -3,7 +3,7 @@
 //! **CANONICAL MODERNIZATION COMPLETE** - Integrated with unified test configuration system.
 //! Uses CanonicalTestConfig with chaos testing domain configuration.
 
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateCanonicalUnifiedConfig;
+use nestgate_core::config::unified::NestGateUnifiedConfig as NestGateUnifiedConfig;
 use nestgate_core::config::defaults::Environment;
 use nestgate_core::error::{NestGateError, Result};
 use std::time::Duration;

@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // This module provides systematic consolidation of scattered constants across the entire
@@ -18,8 +18,7 @@ use std::collections::HashMap;
 // - Migration statistics and reporting
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use crate::{Result, NestGateError};
+use crate::{Result};
 
 /// **CONSTANTS CONSOLIDATION MANAGER**
 /// Handles systematic migration of scattered constants to canonical system
@@ -562,7 +561,7 @@ impl ConstantsConsolidationManager {
     }
 }
 
-// ==================== SUPPORTING TYPES ====================
+// ==================== SECTION ====================
 
 /// Scattered constant information
 #[derive(Debug, Clone, Serialize, Deserialize)]

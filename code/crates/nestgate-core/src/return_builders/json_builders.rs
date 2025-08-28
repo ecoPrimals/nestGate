@@ -10,12 +10,15 @@ use std::collections::HashMap;
 /// **TESTABLE**: Can verify all field assignments without side effects
 pub fn build_api_success<T>(data: T) -> crate::response::ApiResponse<T> {
     crate::response::ApiResponse {
+        request_id: uuid::Uuid::new_v4().to_string(),
+        status: crate::canonical_types::ResponseStatus::Success,
         success: true,
         data: Some(data),
         error: None,
         error_code: None,
         timestamp: Utc::now(),
         metadata: Some(HashMap::new()),
+        processing_time_ms: 0,
     }
 }
 
@@ -43,12 +46,15 @@ pub fn build_api_success_with_metadata_and_request_id<T>(
     }
 
     crate::response::ApiResponse {
+        request_id: uuid::Uuid::new_v4().to_string(),
+        status: crate::canonical_types::ResponseStatus::Success,
         success: true,
         data: Some(data),
         error: None,
         error_code: None,
         timestamp: Utc::now(),
         metadata: Some(final_metadata),
+        processing_time_ms: 0,
     }
 }
 
@@ -60,12 +66,15 @@ pub fn build_api_error<T>(
     error_code: Option<String>,
 ) -> crate::response::ApiResponse<T> {
     crate::response::ApiResponse {
+        request_id: uuid::Uuid::new_v4().to_string(),
+        status: crate::canonical_types::ResponseStatus::Error,
         success: false,
         data: None,
         error: Some(error_message),
         error_code,
         timestamp: Utc::now(),
         metadata: Some(HashMap::new()),
+        processing_time_ms: 0,
     }
 }
 

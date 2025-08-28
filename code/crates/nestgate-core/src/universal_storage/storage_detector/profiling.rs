@@ -1,8 +1,8 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // Performance benchmarking and profiling for storage systems.
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use super::types::*;
 use std::time::{Duration, Instant};
 use tokio::time::sleep;

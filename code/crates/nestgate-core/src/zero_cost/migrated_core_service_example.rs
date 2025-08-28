@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 use crate::zero_cost::universal_service::ZeroCostUniversalService;
 /// **MIGRATED CORE SERVICE EXAMPLE**
@@ -8,15 +8,14 @@ use crate::zero_cost::universal_service::ZeroCostUniversalService;
 /// and a template for migrating other services.
 ///
 /// **PERFORMANCE TARGET**: 30-50% improvement over async_trait version
-use crate::{NestGateError, Result};
+use crate::{Result};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-// ==================== ZERO-COST CONFIGURATION SERVICE ====================
+// ==================== SECTION ====================
 
 /// **Configuration for the zero-cost configuration service**
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -76,7 +75,7 @@ impl Default for ZeroCostConfigServiceMetadata {
     }
 }
 
-// ==================== ZERO-COST CONFIGURATION SERVICE IMPLEMENTATION ====================
+// ==================== SECTION ====================
 
 /// **Zero-cost configuration service implementation**
 ///
@@ -158,7 +157,7 @@ impl<const MAX_CACHE_SIZE: usize> ZeroCostConfigService<MAX_CACHE_SIZE> {
     }
 }
 
-// ==================== ZERO-COST UNIVERSAL SERVICE IMPLEMENTATION ====================
+// ==================== SECTION ====================
 
 impl<const MAX_CACHE_SIZE: usize> ZeroCostUniversalService
     for ZeroCostConfigService<MAX_CACHE_SIZE>
@@ -235,7 +234,7 @@ impl<const MAX_CACHE_SIZE: usize> ZeroCostUniversalService
     fn service_name(&self) -> &str {
         self.config
             .as_ref()
-            .map(|c| c.service_name.as_str())
+            .map(|c| c.name.as_str())
             .unwrap_or("zero-cost-config-service")
     }
 
@@ -293,7 +292,7 @@ impl<const MAX_CACHE_SIZE: usize> ZeroCostUniversalService
     }
 }
 
-// ==================== SPECIALIZED IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 /// **Production configuration service** (high cache size)
 pub type ProductionConfigService = ZeroCostConfigService<10000>;
@@ -304,7 +303,7 @@ pub type DevelopmentConfigService = ZeroCostConfigService<100>;
 /// **Testing configuration service** (minimal cache)
 pub type TestingConfigService = ZeroCostConfigService<10>;
 
-// ==================== COMPATIBILITY WRAPPER ====================
+// ==================== SECTION ====================
 
 /// **Async_trait compatibility wrapper**
 ///
@@ -335,7 +334,7 @@ impl<const SIZE: usize> CompatibleConfigService<SIZE> {
     }
 }
 
-// ==================== PERFORMANCE BENCHMARKING ====================
+// ==================== SECTION ====================
 
 /// **Performance comparison utilities for this specific service**
 pub mod config_service_benchmarks {
@@ -417,13 +416,12 @@ pub mod config_service_benchmarks {
     }
 }
 
-// ==================== MIGRATION EXAMPLE ====================
+// ==================== SECTION ====================
 
 /// **Complete migration example**
 ///
 /// Shows how to migrate from async_trait to zero-cost patterns
 pub mod migration_example {
-    use super::*;
 
     /// Example of migrating a service collection
     pub async fn demonstrate_migration() -> Result<()> {
@@ -464,7 +462,6 @@ pub mod migration_example {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[tokio::test]
     async fn test_zero_cost_config_service() {
@@ -477,7 +474,7 @@ mod tests {
             NestGateError::Internal {
                 message: format!("Service startup failed: {:?}", e),
                 location: Some("migrated_core_service_example.rs:476".to_string()),
-                debug_info: Some("start operation".to_string()),
+                location: Some("start operation".to_string()),
                 is_bug: false,
             }
         })?;
@@ -521,7 +518,7 @@ mod tests {
             NestGateError::Internal {
                 message: format!("Service shutdown failed: {:?}", e),
                 location: Some("migrated_core_service_example.rs:520".to_string()),
-                debug_info: Some("stop operation".to_string()),
+                location: Some("stop operation".to_string()),
                 is_bug: false,
             }
         })?;
@@ -537,7 +534,7 @@ mod tests {
             NestGateError::Internal {
                 message: format!("Service startup failed: {:?}", e),
                 location: Some("migrated_core_service_example.rs:536".to_string()),
-                debug_info: Some("start operation".to_string()),
+                location: Some("start operation".to_string()),
                 is_bug: false,
             }
         })?;

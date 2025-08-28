@@ -22,7 +22,8 @@ pub use types::{
     NetworkResponse,
 };
 
-pub use crate::unified_types::UnifiedNetworkConfig;
+// **MIGRATED**: Using canonical config system instead of deprecated unified_types
+pub use crate::config::canonical_master::NetworkConfig as UnifiedNetworkConfig;
 
 pub use production::{
     // ProductionNetworkManager, ProductionServiceDiscovery, // These will be implemented as needed
@@ -96,10 +97,10 @@ mod tests {
         fn default() -> Self {
             Self {
                 protocol: "http".to_string(),
-                timeout_ms: 5000,
+                timeout_ms: crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS as u32,
                 protocol_type: "HTTP".to_string(),
                 host: "localhost".to_string(),
-                port: 8080,
+                port: crate::constants::canonical::network::DEFAULT_HTTP_PORT,
                 encryption: false,
                 timeout_seconds: 30,
                 max_retries: 3,
@@ -205,7 +206,7 @@ mod tests {
         let handler = ProductionProtocolHandler::default();
 
         // Test native async connection - no Future boxing
-        let config = crate::unified_types::network_config::UnifiedNetworkConfig::default();
+        let config = crate::config::canonical_master::network_config::UnifiedNetworkConfig::default();
 
         let connection = handler.connect(&config).await;
         assert!(connection.is_ok());

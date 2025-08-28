@@ -4,7 +4,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-// ==================== PROTOCOL TYPE CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** ProtocolType - unified across all modules
 /// Replaces ProtocolType definitions in network and API modules
@@ -55,7 +55,7 @@ impl fmt::Display for UnifiedProtocolType {
     }
 }
 
-// ==================== INTEGRATION TYPE CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** IntegrationType - unified across all modules
 /// Replaces IntegrationType definitions in ecosystem integration modules
@@ -103,7 +103,7 @@ impl fmt::Display for UnifiedIntegrationType {
     }
 }
 
-// ==================== PROXY TYPE CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** ProxyType - unified across all modules
 /// Replaces ProxyType definitions in ecosystem integration and network modules

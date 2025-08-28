@@ -33,32 +33,32 @@ impl From<FsMonitorError> for nestgate_core::NestGateError {
             FsMonitorError::WatcherInit { message } => nestgate_core::NestGateError::Internal {
                 message: format!("FS Monitor watcher init: {message}"),
                 location: Some("nestgate-fsmonitor".to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             },
             FsMonitorError::WatchPath { path, message } => nestgate_core::NestGateError::Internal {
                 message: format!("FS Monitor watch path {path:?}: {message}"),
                 location: Some("nestgate-fsmonitor".to_string()),
-                debug_info: Some(format!("path: {path:?}")),
                 is_bug: false,
+                context: None,
             },
             FsMonitorError::EventProcessing { message } => nestgate_core::NestGateError::Internal {
                 message: format!("FS Monitor event processing: {message}"),
                 location: Some("nestgate-fsmonitor".to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             },
             FsMonitorError::Configuration { message } => nestgate_core::NestGateError::Validation {
-                field: "fsmonitor_config".to_string(),
+                field: Some("fsmonitor_config".to_string()),
                 message: format!("FS Monitor config: {message}"),
                 expected: Some("valid filesystem monitor configuration".to_string()),
                 current_value: Some("invalid configuration".to_string()),
-                user_error: true,
+                context: None,
             },
             FsMonitorError::Handler { message } => nestgate_core::NestGateError::Internal {
                 message: format!("FS Monitor handler: {message}"),
                 location: Some("nestgate-fsmonitor".to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             },
         }

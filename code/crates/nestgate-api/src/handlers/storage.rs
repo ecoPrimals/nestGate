@@ -163,7 +163,6 @@ async fn collect_real_storage_pools(
 
 /// Create fallback pool representing the root filesystem
 async fn create_fallback_root_pool() -> StoragePool {
-    use std::process::Command;
 
     // Get root filesystem info
     let (size, used, available) =
@@ -301,7 +300,6 @@ async fn collect_real_storage_datasets(
 async fn get_directory_usage(
     dir: &str,
 ) -> Result<(u64, u64, u64), Box<dyn std::error::Error + Send + Sync>> {
-    use std::process::Command;
 
     // Use df to get filesystem stats for the directory
     let output = Command::new("df").args(&["-B1", dir]).output()?;

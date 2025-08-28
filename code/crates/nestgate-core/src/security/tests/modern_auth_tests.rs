@@ -3,7 +3,7 @@
 //! This module contains modernized authentication tests using canonical error patterns
 //! and robust test infrastructure.
 
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use crate::security::auth_types::{
     AccessLevel, AuthContext, AuthMethod, Permission, Role, TokenType,
 };
@@ -38,7 +38,7 @@ impl ModernAuthManager {
         if self.users.contains_key(username) {
             Ok(format!("modern_token_for_{}", username))
         } else {
-            Err(NestGateError::security_error(
+            Err(NestGateError::permission_denied(
                 "User not found",
                 "authentication",
                 None,
@@ -52,7 +52,7 @@ impl ModernAuthManager {
             let username = token.strip_prefix("modern_token_for_").unwrap_or("unknown");
             Ok(username.to_string())
         } else {
-            Err(NestGateError::security_error(
+            Err(NestGateError::permission_denied(
                 "Invalid token format",
                 "token_validation",
                 None,
@@ -149,14 +149,14 @@ async fn test_modern_token_operations() -> Result<()> {
 #[tokio::test]
 async fn test_modern_security_error_patterns() -> Result<()> {
     // Test canonical security error creation patterns
-    let auth_failed = NestGateError::security_error(
+    let auth_failed = NestGateError::permission_denied(
         "Invalid credentials",
         "authentication",
         Some("user_database"),
         Some("test_user"),
     );
 
-    let auth_denied = NestGateError::security_error(
+    let auth_denied = NestGateError::permission_denied(
         "Insufficient permissions",
         "authorization",
         Some("sensitive_data"),
@@ -164,7 +164,7 @@ async fn test_modern_security_error_patterns() -> Result<()> {
     );
 
     let token_error =
-        NestGateError::security_error("Token expired", "token_validation", None, Some("test_user"));
+        NestGateError::permission_denied("Token expired", "token_validation", None, Some("test_user"));
 
     // Verify error types are correct
     assert!(matches!(auth_failed, NestGateError::Security(_)));

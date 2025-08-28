@@ -1,74 +1,142 @@
-use crate::capabilities::discovery::UnifiedDynamicDiscoveryManager;
-/// Primal Discovery Service
-/// **UNIFIED DISCOVERY CONFIG MIGRATION**
-/// This module now uses the comprehensive UnifiedDynamicDiscoveryConfig
-/// instead of the simple local DiscoveryConfig struct.
-use crate::unified_types::UnifiedConfig;
+/// **CANONICAL ADAPTER DISCOVERY**
+/// 
+/// Consolidated discovery utilities for the universal adapter system.
+use crate::Result;
+use crate::canonical_types::service::{ServiceType, ServiceState};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use tracing::debug;
+use std::time::{Duration, SystemTime};
 
-/// Discovered primal information
+/// Service discovery configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DiscoveredPrimal {
-    /// Primal ID
-    pub id: String,
-    /// Primal name
-    pub name: String,
-    /// Primal type (compute, storage, security, etc.)
-    pub primal_type: String,
-    /// Capabilities provided
-    pub capabilities: Vec<String>,
-    /// Connection endpoint
+pub struct DiscoveryConfig {
+    /// Discovery endpoint
     pub endpoint: String,
-    /// Discovery timestamp
-    pub discovered_at: std::time::SystemTime,
+    /// Discovery timeout
+    pub timeout: Duration,
+    /// Maximum retry attempts
+    pub max_retries: u32,
+    /// Discovery interval for periodic discovery
+    pub discovery_interval: Duration,
+    /// Enabled discovery methods
+    pub methods: Vec<DiscoveryMethod>,
 }
 
-/// Discovery manager for capability-based service discovery
-/// Uses the unified dynamic discovery configuration system for consistent patterns
-pub struct DiscoveryManager {
-    /// Unified configuration system
-    #[allow(dead_code)]
-    config: UnifiedConfig,
-    /// Discovery manager using unified system
-    discovery_manager: Option<UnifiedDynamicDiscoveryManager>,
-    /// Discovered primals cache
-    discovered_primals: Arc<RwLock<HashMap<String, DiscoveredPrimal>>>,
-}
-
-impl DiscoveryManager {
-    /// Create new discovery service with unified configuration
-    pub fn new(config: UnifiedConfig) -> Self {
+impl Default for DiscoveryConfig {
+    fn default() -> Self {
         Self {
-            config,
-            discovery_manager: None, // Will be initialized when needed
-            discovered_primals: Arc::new(RwLock::new(HashMap::new())),
+            endpoint: "localhost:8080".to_string(),
+            timeout: Duration::from_secs(30),
+            max_retries: 3,
+            discovery_interval: Duration::from_secs(60),
+            methods: vec![
+                DiscoveryMethod::Environment,
+                DiscoveryMethod::ServiceRegistry,
+            ],
         }
     }
+}
 
-    /// Initialize with unified discovery manager
-    pub fn with_discovery_manager(mut self, manager: UnifiedDynamicDiscoveryManager) -> Self {
-        self.discovery_manager = Some(manager);
-        self
-    }
+/// Discovery methods
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum DiscoveryMethod {
+    /// Environment variable discovery
+    Environment,
+    /// Service registry lookup
+    ServiceRegistry,
+    /// Network scanning
+    NetworkScan,
+    /// Configuration file
+    Configuration,
+    /// DNS-based discovery
+    Dns,
+}
 
-    /// Discover available primals using unified discovery system
-    pub async fn discover_primals(&self) -> Vec<DiscoveredPrimal> {
-        // Use unified discovery manager if available, otherwise return empty results
-        if let Some(_manager) = &self.discovery_manager {
-            // Future: Implement discovery using unified manager
-            debug!("Discovery manager available for primal discovery");
+/// Discovered service information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiscoveredService {
+    /// Service identifier
+    pub id: String,
+    /// Service name
+    pub name: String,
+    /// Service type
+    pub service_type: ServiceType,
+    /// Service state
+    pub state: ServiceState,
+    /// Service endpoint
+    pub endpoint: String,
+    /// Service capabilities
+    pub capabilities: Vec<String>,
+    /// Service metadata
+    pub metadata: HashMap<String, String>,
+    /// Discovery timestamp
+    pub discovered_at: SystemTime,
+    /// Last health check
+    pub last_health_check: Option<SystemTime>,
+}
+
+/// Discovery result
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiscoveryResult {
+    /// Discovered services
+    pub services: Vec<DiscoveredService>,
+    /// Discovery method used
+    pub method: DiscoveryMethod,
+    /// Discovery duration
+    pub duration: Duration,
+    /// Success status
+    pub success: bool,
+    /// Error message if failed
+    pub error: Option<String>,
+}
+
+/// Discover available services using canonical discovery
+pub async fn discover_services(config: &DiscoveryConfig) -> Result<DiscoveryResult> {
+    let start_time = std::time::Instant::now();
+    
+    // For now, return a basic result - this would be expanded with real discovery logic
+    let services = vec![
+        DiscoveredService {
+            id: "nestgate-core".to_string(),
+            name: "NestGate Core".to_string(),
+            service_type: ServiceType::Storage,
+            state: ServiceState::Running,
+            endpoint: config.endpoint.clone(),
+            capabilities: vec!["storage".to_string(), "zfs".to_string()],
+            metadata: HashMap::new(),
+            discovered_at: SystemTime::now(),
+            last_health_check: Some(SystemTime::now()),
         }
-        // For now, return simplified discovery
-        vec![]
-    }
+    ];
+    
+    Ok(DiscoveryResult {
+        services,
+        method: DiscoveryMethod::Environment,
+        duration: start_time.elapsed(),
+        success: true,
+        error: None,
+    })
+}
 
-    /// Get cached discoveries
-    pub async fn get_discoveries(&self) -> Vec<DiscoveredPrimal> {
-        let cache = self.discovered_primals.read().await;
-        cache.values().cloned().collect()
+/// Discover services by capability
+pub async fn discover_by_capability(
+    config: &DiscoveryConfig,
+    capability: &str,
+) -> Result<Vec<DiscoveredService>> {
+    let result = discover_services(config).await?;
+    
+    Ok(result.services.into_iter()
+        .filter(|service| service.capabilities.contains(&capability.to_string()))
+        .collect())
+}
+
+/// Health check a discovered service
+pub async fn health_check_service(service: &DiscoveredService) -> Result<bool> {
+    // Basic health check implementation - would be expanded with real health check logic
+    match service.state {
+        ServiceState::Running => Ok(true),
+        ServiceState::Starting => Ok(false),
+        ServiceState::Stopping | ServiceState::Stopped | ServiceState::Failed => Ok(false),
+        _ => Ok(false),
     }
 }

@@ -1,14 +1,12 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::future::Future;
 
-use std::future::Future;
 
 use std::time::SystemTime;
 
-use crate::{Result, NestGateError};
+use crate::{Result};
+use crate::error::StorageResult; // Use canonical StorageResult
 
-/// Storage operation result type
-pub type StorageResult<T> = Result<T>;
 use crate::universal_storage::{
     canonical_storage::{
         CanonicalStorageBackend, CanonicalStorageHealth, CanonicalStorageMetadata,
@@ -21,14 +19,14 @@ use super::core::EnterpriseStorageBackend;
 impl CanonicalStorageBackend for EnterpriseStorageBackend {
     async fn capabilities(
         &self,
-    ) -> Result<Vec<crate::canonical_modernization::UnifiedServiceType>> {
+    ) -> Result<Vec<crate::unified_enums::UnifiedServiceType>> {
         // Convert ServiceCapability to UnifiedServiceType for trait compatibility
         Ok(vec![
-            crate::canonical_modernization::UnifiedServiceType::Storage,
-            crate::canonical_modernization::UnifiedServiceType::Network,
-            crate::canonical_modernization::UnifiedServiceType::Security,
-            crate::canonical_modernization::UnifiedServiceType::Monitoring,
-            crate::canonical_modernization::UnifiedServiceType::Generic,
+            crate::unified_enums::UnifiedServiceType::Storage,
+            crate::unified_enums::UnifiedServiceType::Network,
+            crate::unified_enums::UnifiedServiceType::Security,
+            crate::unified_enums::UnifiedServiceType::Monitoring,
+            crate::unified_enums::UnifiedServiceType::Generic,
         ])
     }
 

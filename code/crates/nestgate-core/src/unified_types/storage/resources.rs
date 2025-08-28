@@ -15,7 +15,7 @@ use super::access::{StorageAccessControl, StorageResourceMetadata};
 use super::config::StorageResourceConfig;
 use super::metrics::StorageMetrics;
 
-// ==================== CORE STORAGE RESOURCE TYPES ====================
+// ==================== SECTION ====================
 
 /// **THE** unified storage resource - consolidates all resource definitions
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -159,7 +159,7 @@ pub enum StorageHealthState {
     Initializing,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for UnifiedStorageResource {
     fn default() -> Self {
@@ -195,7 +195,7 @@ impl Default for StorageHealthInfo {
     }
 }
 
-// ==================== UTILITY IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl UnifiedStorageResource {
     /// Create a new storage resource with default values

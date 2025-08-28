@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-// ==================== HANDLER-SPECIFIC CONFIGURATION TYPES ====================
+// ==================== SECTION ====================
 
 /// ZFS handler specific configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -93,7 +93,7 @@ pub struct AuthHandlerSpecificConfig {
     pub password_policy: PasswordPolicy,
 }
 
-// ==================== TYPE ALIASES FOR SPECIFIC HANDLERS ====================
+// ==================== SECTION ====================
 
 /// ZFS handler configuration type alias
 pub type ZfsHandlerConfig = HandlerConfig<ZfsHandlerSpecificConfig>;
@@ -113,7 +113,7 @@ pub type WorkspaceHandlerConfig = HandlerConfig<WorkspaceHandlerSpecificConfig>;
 /// Authentication handler configuration type alias
 pub type AuthHandlerConfig = HandlerConfig<AuthHandlerSpecificConfig>;
 
-// ==================== SUPPORTING CONFIGURATION STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// ZFS pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -192,7 +192,7 @@ pub struct ZfsServiceConfig {
     pub environment: HashMap<String, String>,
 }
 
-// ==================== PERFORMANCE CONFIGURATION STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// Performance thresholds configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -243,7 +243,7 @@ pub struct BenchmarkScenario {
     pub expected_metrics: HashMap<String, f64>,
 }
 
-// ==================== DASHBOARD CONFIGURATION STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// Widget configuration for dashboard
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -293,7 +293,7 @@ pub struct DashboardTheme {
     pub custom_css: Option<String>,
 }
 
-// ==================== LOAD TESTING CONFIGURATION STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// Ramp-up configuration for load testing
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -326,7 +326,7 @@ pub struct RampUpStep {
     pub target_users: usize,
 }
 
-// ==================== WORKSPACE CONFIGURATION STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// Workspace backup configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -374,7 +374,7 @@ pub struct AccessRule {
     pub conditions: HashMap<String, String>,
 }
 
-// ==================== AUTHENTICATION CONFIGURATION STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// JWT configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -452,7 +452,7 @@ pub struct PasswordPolicy {
     pub expiration: Option<Duration>,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for ZfsHandlerSpecificConfig {
     fn default() -> Self {

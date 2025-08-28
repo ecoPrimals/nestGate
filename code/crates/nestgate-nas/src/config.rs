@@ -20,7 +20,7 @@ impl Default for AccessLevel {
     }
     }
 
-// ==================== UNIFIED NAS CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// NAS Share-specific configuration extensions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

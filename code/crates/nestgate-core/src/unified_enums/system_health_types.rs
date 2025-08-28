@@ -4,7 +4,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-// ==================== SYSTEM STATUS CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** SystemStatus - unified across all modules
 /// Replaces SystemStatus definitions across system monitoring modules
@@ -49,7 +49,7 @@ impl fmt::Display for UnifiedSystemStatus {
     }
 }
 
-// ==================== TEST TYPE CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** TestType - unified across all modules
 /// Replaces TestType definitions in test frameworks and automation
@@ -106,7 +106,7 @@ impl fmt::Display for UnifiedTestType {
     }
 }
 
-// ==================== MONITORING STATUS CLASSIFICATION ====================
+// ==================== SECTION ====================
 
 /// **THE** MonitoringStatus - unified across all modules
 /// Replaces MonitoringStatus definitions in observability modules

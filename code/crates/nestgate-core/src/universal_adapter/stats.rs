@@ -1,68 +1,121 @@
-/// Universal Adapter Statistics and Metrics
+/// **CANONICAL ADAPTER STATISTICS**
+/// 
+/// Consolidated statistics and metrics for the universal adapter system.
 use serde::{Deserialize, Serialize};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-/// Adapter statistics
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct AdapterStats {
-    /// Number of discovered security providers
-    pub security_providers: usize,
-    /// Number of discovered orchestration providers
-    pub orchestration_providers: usize,
-    /// Number of discovered compute providers
-    pub compute_providers: usize,
-    /// Total discovery attempts
-    pub discovery_attempts: u64,
-    /// Successful discoveries
-    pub successful_discoveries: u64,
-    /// Last discovery time
-    pub last_discovery: Option<std::time::SystemTime>,
-}
+// Custom serialization for Instant
+mod instant_serde {
+    use super::*;
+    use serde::{Deserializer, Serializer};
 
-impl AdapterStats {
-    /// Create new adapter statistics
-    pub fn new() -> Self {
-        Self::default()
+    pub fn serialize<S>(instant: &Instant, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // Convert to duration since a reference point and serialize that
+        let duration_since_start = instant.elapsed();
+        duration_since_start.serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Instant, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        // For deserialization, just use current time minus the duration
+        let duration = Duration::deserialize(deserializer)?;
+        Ok(Instant::now() - duration)
     }
 }
 
-/// Get total discovery attempts count
-pub fn get_discovery_attempts() -> u64 {
-    static DISCOVERY_ATTEMPTS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-    DISCOVERY_ATTEMPTS.load(std::sync::atomic::Ordering::Relaxed)
+/// Comprehensive adapter statistics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AdapterStats {
+    /// Number of active providers
+    pub active_providers: usize,
+    /// Total requests processed
+    pub total_requests: u64,
+    /// Successful requests
+    pub successful_requests: u64,
+    /// Failed requests
+    pub failed_requests: u64,
+    /// Average response time in milliseconds
+    pub average_response_time_ms: f64,
+    /// Peak response time in milliseconds
+    pub peak_response_time_ms: f64,
+    /// Total uptime
+    pub uptime: Duration,
+    /// Last reset timestamp
+    #[serde(with = "instant_serde")]
+    pub last_reset: Instant,
 }
 
-/// Get successful discoveries count
-pub fn get_successful_discoveries() -> u64 {
-    static SUCCESSFUL_DISCOVERIES: std::sync::atomic::AtomicU64 =
-        std::sync::atomic::AtomicU64::new(0);
-    SUCCESSFUL_DISCOVERIES.load(std::sync::atomic::Ordering::Relaxed)
+impl Default for AdapterStats {
+    fn default() -> Self {
+        Self {
+            active_providers: 0,
+            total_requests: 0,
+            successful_requests: 0,
+            failed_requests: 0,
+            average_response_time_ms: 0.0,
+            peak_response_time_ms: 0.0,
+            uptime: Duration::from_secs(0),
+            last_reset: Instant::now(),
+        }
+    }
 }
 
-/// Get last discovery time
-pub fn get_last_discovery_time() -> Option<std::time::SystemTime> {
-    static LAST_DISCOVERY: std::sync::OnceLock<std::sync::Mutex<Option<std::time::SystemTime>>> =
-        std::sync::OnceLock::new();
-    let mutex = LAST_DISCOVERY.get_or_init(|| std::sync::Mutex::new(None));
-    mutex.lock().map(|guard| *guard).unwrap_or(None)
-}
-
-/// Increment discovery attempts counter
-pub fn increment_discovery_attempts() {
-    static DISCOVERY_ATTEMPTS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-    DISCOVERY_ATTEMPTS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-}
-
-/// Increment successful discoveries counter and update last discovery time
-pub fn increment_successful_discoveries() {
-    static SUCCESSFUL_DISCOVERIES: std::sync::atomic::AtomicU64 =
-        std::sync::atomic::AtomicU64::new(0);
-    SUCCESSFUL_DISCOVERIES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-
-    // Update last discovery time
-    static LAST_DISCOVERY: std::sync::OnceLock<std::sync::Mutex<Option<std::time::SystemTime>>> =
-        std::sync::OnceLock::new();
-    let mutex = LAST_DISCOVERY.get_or_init(|| std::sync::Mutex::new(None));
-    if let Ok(mut last_discovery) = mutex.lock() {
-        *last_discovery = Some(std::time::SystemTime::now());
+impl AdapterStats {
+    /// Record a successful request
+    pub fn record_success(&mut self, response_time: Duration) {
+        self.total_requests += 1;
+        self.successful_requests += 1;
+        
+        let response_ms = response_time.as_millis() as f64;
+        
+        // Update average response time
+        if self.total_requests == 1 {
+            self.average_response_time_ms = response_ms;
+        } else {
+            self.average_response_time_ms = 
+                (self.average_response_time_ms * (self.total_requests - 1) as f64 + response_ms) 
+                / self.total_requests as f64;
+        }
+        
+        // Update peak response time
+        if response_ms > self.peak_response_time_ms {
+            self.peak_response_time_ms = response_ms;
+        }
+    }
+    
+    /// Record a failed request
+    pub fn record_failure(&mut self, response_time: Duration) {
+        self.total_requests += 1;
+        self.failed_requests += 1;
+        
+        let response_ms = response_time.as_millis() as f64;
+        
+        // Update average response time (include failures)
+        if self.total_requests == 1 {
+            self.average_response_time_ms = response_ms;
+        } else {
+            self.average_response_time_ms = 
+                (self.average_response_time_ms * (self.total_requests - 1) as f64 + response_ms) 
+                / self.total_requests as f64;
+        }
+    }
+    
+    /// Calculate success rate as percentage
+    pub fn success_rate(&self) -> f64 {
+        if self.total_requests == 0 {
+            100.0
+        } else {
+            (self.successful_requests as f64 / self.total_requests as f64) * 100.0
+        }
+    }
+    
+    /// Reset all statistics
+    pub fn reset(&mut self) {
+        *self = Self::default();
     }
 }

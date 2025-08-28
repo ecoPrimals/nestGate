@@ -4,7 +4,7 @@
 
 use nestgate_core::error::NestGateError;
 
-// ==================== CANONICAL ERROR CREATION HELPERS ====================
+// ==================== SECTION ====================
 
 /// Canonical error creation helpers for ZFS operations
 pub struct ZfsErrorBuilder;
@@ -15,7 +15,7 @@ impl ZfsErrorBuilder {
         NestGateError::Internal {
             message: message.to_string(),
             location: Some("zfs_operation".to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
         }
     }
@@ -35,7 +35,7 @@ impl ZfsErrorBuilder {
         NestGateError::Internal {
             message: format!("Pool '{}': {}", pool, message),
             location: Some("zfs_pool_operation".to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
         }
     }
@@ -45,7 +45,7 @@ impl ZfsErrorBuilder {
         NestGateError::Internal {
             message: format!("Dataset '{}': {}", dataset, message),
             location: Some("zfs_dataset_operation".to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
         }
     }
@@ -55,7 +55,7 @@ impl ZfsErrorBuilder {
         NestGateError::Internal {
             message: format!("Snapshot '{}': {}", snapshot, message),
             location: Some("zfs_snapshot_operation".to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
         }
     }
@@ -65,13 +65,13 @@ impl ZfsErrorBuilder {
         NestGateError::Internal {
             message: format!("ZFS command '{}' failed: {}", command, details),
             location: Some("zfs_command_execution".to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
         }
     }
 }
 
-// ==================== UNIFIED ERROR CONVERSION UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Convert ZFS command output to appropriate error
 pub fn zfs_command_error(command: &str, output: &str) -> NestGateError {
@@ -83,16 +83,15 @@ pub fn zfs_operation_error(operation: &str, details: &str) -> NestGateError {
     NestGateError::Internal {
         message: format!("ZFS {} operation failed: {}", operation, details),
         location: Some(format!("zfs_{}_operation", operation.to_lowercase())),
-        debug_info: None,
+        context: None,
         is_bug: false,
     }
 }
 
-// ==================== CANONICAL MODERNIZATION ====================
+// ==================== SECTION ====================
 
 /// **CANONICAL**: ZFS-specific Result type using IdioResult with ZfsError from types.rs
 pub type ZfsResult<T> = std::result::Result<T, crate::types::ZfsError>;
 
-/// **CANONICAL**: Unified Result type for ZFS operations
-/// Uses the canonical NestGateError for consistency
-pub type Result<T> = nestgate_core::error::Result<T>;
+/// **CANONICAL RESULT** - Use canonical Result from nestgate-core
+pub type Result<T> = nestgate_core::error::Result<T, ZfsError>;

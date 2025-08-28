@@ -1,10 +1,9 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 // Advanced Async Optimization Module
 //
 // This module provides optimized async patterns and utilities to improve
 // performance of async operations throughout NestGate.
 
-use crate::error::NestGateError;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};

@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // This module provides a high-performance replacement for the Arc<dyn CanonicalStorageBackend>
@@ -8,13 +8,12 @@ use std::collections::HashMap;
 // **PROVIDES**: 45% performance improvement through direct dispatch
 // **ELIMINATES**: Virtual method call overhead and Arc allocation costs
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use crate::zero_cost_migrations::{ZeroCostStorageBackend, ZeroCostCowConfig};
-use std::collections::HashMap;
 use std::marker::PhantomData;
 use tracing::info;
 
-// ==================== ZERO-COST COW OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// Zero-cost COW operation tracking
 #[derive(Debug, Clone)]
@@ -160,7 +159,7 @@ pub struct ZeroCostCowStatistics {
     pub pool_handle: &'static str,
 }
 
-// ==================== ZERO-COST BUILDER PATTERN ====================
+// ==================== SECTION ====================
 
 /// Zero-cost COW manager builder with compile-time configuration
 pub struct ZeroCostCowManagerBuilder<Backend, const MAX_OPERATIONS: usize = 1000>
@@ -219,7 +218,7 @@ where
     }
 }
 
-// ==================== PERFORMANCE COMPARISON ====================
+// ==================== SECTION ====================
 
 /// Performance benchmarking utilities
 pub mod performance {
@@ -262,7 +261,7 @@ pub mod performance {
     }
 }
 
-// ==================== MIGRATION UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Migration guide from Arc<dyn> COW manager to zero-cost version
 pub const MIGRATION_GUIDE: &str = r#"
@@ -332,7 +331,7 @@ where
 - ✅ Compile-time optimization and safety
 "#;
 
-// ==================== TYPE ALIASES ====================
+// ==================== SECTION ====================
 
 /// Common zero-cost COW manager configurations
 pub type StandardZeroCostCowManager<Backend> = ZeroCostCowManager<Backend, 1000>;

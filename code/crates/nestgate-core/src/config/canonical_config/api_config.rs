@@ -11,7 +11,6 @@ use std::collections::HashMap;
 // - All scattered handler-specific configurations
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::Duration;
 
 /// API configuration (consolidates 20+ API configs)
@@ -42,7 +41,7 @@ pub struct ApiConfig {
     pub handler_extensions: ApiHandlerExtensions,
 }
 
-// ==================== CONSOLIDATED HANDLER CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 /// **CONSOLIDATED ZFS HANDLER CONFIGURATION**
 /// Absorbs: UnifiedApiHandlerConfig.zfs, ZfsHandlerConfig from nestgate-api
@@ -348,7 +347,7 @@ pub struct AlertingConfig {
     pub thresholds: HashMap<String, f64>,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 
 impl Default for UnifiedPoolConfig {
@@ -551,7 +550,7 @@ impl Default for HealthCheckConfig {
 }
 
 
-// ==================== EXISTING API CONFIG TYPES ====================
+// ==================== SECTION ====================
 
 /// REST API configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

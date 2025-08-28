@@ -1,7 +1,6 @@
 //! Security Fallback Provider
 //! Local cryptographic operations when external security primals are unavailable
 
-use async_trait::async_trait;
 use base64::{engine::general_purpose, Engine as _};
 use std::collections::HashMap;
 use tracing::debug;
@@ -9,6 +8,7 @@ use tracing::debug;
 use crate::ecosystem_integration::mock_router::{FallbackProvider, MockRoutingError};
 
 /// Security fallback provider using local cryptographic functions
+#[derive(Debug)]
 pub struct SecurityFallbackProvider {
     config: SecurityFallbackConfig,
 }
@@ -115,7 +115,6 @@ impl SecurityFallbackProvider {
     #[allow(dead_code)]
     async fn decrypt_data(&self, encrypted_data: &str) -> Result<String, MockRoutingError> {
         // Simple mock decryption - in reality this would use proper cryptography
-        use base64::{engine::general_purpose, Engine as _};
         let decoded = general_purpose::STANDARD
             .decode(encrypted_data)
             .map_err(|e| MockRoutingError::FallbackError(format!("Decryption failed: {e}")))?;
@@ -141,7 +140,6 @@ impl SecurityFallbackProvider {
     }
 }
 
-#[async_trait]
 impl FallbackProvider for SecurityFallbackProvider {
     async fn execute(
         &self,

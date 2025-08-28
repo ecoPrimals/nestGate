@@ -7,12 +7,10 @@ use std::collections::HashMap;
 //
 // To enable: `cargo build --features "experimental-zero-cost"`
 
-#![cfg(feature = "experimental-zero-cost")]
-
 use std::marker::PhantomData;
 use std::mem::MaybeUninit;
 
-// ==================== ZERO-COST ABSTRACTIONS ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COST**: Compile-time string interning
 ///
@@ -52,9 +50,9 @@ pub trait ZeroCostConfig {
 pub struct ProductionConfig;
 
 impl ZeroCostConfig for ProductionConfig {
-    const BUFFER_SIZE: usize = 65536;
-    const MAX_CONNECTIONS: usize = 10000;
-    const TIMEOUT_MS: u64 = 5000;
+    const BUFFER_SIZE: usize = crate::constants::canonical::performance::NETWORK_BUFFER_SIZE;
+    const MAX_CONNECTIONS: usize = crate::constants::canonical::performance::MAX_CONNECTIONS;
+    const TIMEOUT_MS: u64 = crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS;
     const DEBUG: bool = false;
 }
 
@@ -62,9 +60,9 @@ impl ZeroCostConfig for ProductionConfig {
 pub struct DevelopmentConfig;
 
 impl ZeroCostConfig for DevelopmentConfig {
-    const BUFFER_SIZE: usize = 4096;
-    const MAX_CONNECTIONS: usize = 100;
-    const TIMEOUT_MS: u64 = 30000;
+    const BUFFER_SIZE: usize = crate::constants::canonical::performance::DEFAULT_BUFFER_SIZE;
+    const MAX_CONNECTIONS: usize = crate::constants::canonical::performance::MAX_CONNECTIONS;
+    const TIMEOUT_MS: u64 = crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS;
     const DEBUG: bool = true;
 }
 
@@ -207,7 +205,7 @@ impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> ZeroCostPool<T, POOL_SI
     }
 }
 
-// ==================== ZERO-COST OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COST**: Branch-free operations
 ///
@@ -270,7 +268,7 @@ impl<T> CacheAligned<T> {
     }
 }
 
-// ==================== ZERO-COST SERVICE PATTERNS ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COST**: Service with compile-time configuration
 ///
@@ -334,7 +332,7 @@ impl<C: ZeroCostConfig> ZeroCostService<C> {
     }
 }
 
-// ==================== ZERO-COST BENCHMARKING ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COST**: Performance measurement that compiles away in release
 ///
@@ -369,7 +367,6 @@ impl ZeroCostBenchmark {
     pub fn count_operation(operation_name: &'static str) {
         #[cfg(debug_assertions)]
         {
-            use std::collections::HashMap;
             use std::sync::LazyLock;
             use std::sync::Mutex;
 
@@ -389,7 +386,7 @@ impl ZeroCostBenchmark {
     }
 }
 
-// ==================== EVOLUTION EXAMPLES ====================
+// ==================== SECTION ====================
 
 #[cfg(test)]
 mod tests {
@@ -473,12 +470,11 @@ mod tests {
     }
 }
 
-// ==================== PERFORMANCE VALIDATION ====================
+// ==================== SECTION ====================
 
 /// Validate that our zero-cost abstractions actually have zero cost
 #[cfg(test)]
 mod performance_validation {
-    use super::*;
 
     #[test]
     fn validate_zero_cost_service() {

@@ -2,7 +2,7 @@
 /// Storage-specific business logic and operations.
 /// Replaces mechanical splits in large storage-related files.
 
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 
 /// Storage domain operations
 pub struct StorageDomain {

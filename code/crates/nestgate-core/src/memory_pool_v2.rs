@@ -51,7 +51,7 @@ impl<T: Send + 'static> PoolRefMut<T> {
             None => Err(NestGateError::Internal {
                 message: "Buffer has been consumed".to_string(),
                 location: Some(file!().to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: true,
             }),
     }
@@ -75,7 +75,7 @@ impl<T: Send + 'static> PoolRefMut<T> {
             None => Err(NestGateError::Internal {
                 message: "Buffer has already been consumed".to_string(),
                 location: Some(file!().to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: true,
             }),
     }
@@ -129,7 +129,7 @@ impl PoolString {
             .ok_or_else(|| NestGateError::Internal {
                 message: "String buffer has been consumed".to_string(),
                 location: Some(file!().to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: true,
             })
     }

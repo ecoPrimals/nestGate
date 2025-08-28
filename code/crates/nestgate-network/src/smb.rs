@@ -150,7 +150,6 @@ impl SmbServer {
 
     /// Stop Samba daemon services
     async fn stop_samba_daemon(&self) -> Result<()> {
-        use std::process::Command;
 
         tracing::info!("Stopping Samba daemon services");
 
@@ -291,7 +290,6 @@ impl SmbServer {
         }
 
         // Move temp file to /etc/samba/smb.conf (requires root privileges)
-        use std::process::Command;
         let mv_output = Command::new("sudo")
             .args(["cp", &temp_path, &format!("{}/samba/smb.conf", 
                 std::env::var("NESTGATE_CONFIG_DIR").unwrap_or_else(|_| "/etc".to_string()))])

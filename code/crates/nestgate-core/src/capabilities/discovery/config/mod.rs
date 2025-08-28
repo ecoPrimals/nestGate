@@ -14,7 +14,7 @@
 // **ELIMINATES**: 909-line monolithic configuration file
 // **PROVIDES**: Focused, maintainable discovery configuration modules
 
-// ==================== MODULE DECLARATIONS ====================
+// ==================== SECTION ====================
 
 /// Core unified structures and coordination
 pub mod core;
@@ -37,7 +37,7 @@ pub mod storage;
 /// Cache discovery configuration
 pub mod cache;
 
-// ==================== RE-EXPORTS ====================
+// ==================== SECTION ====================
 
 // Re-export all functionality for backward compatibility
 pub use core::*;
@@ -48,7 +48,7 @@ pub use environment::*;
 pub use storage::*;
 pub use cache::*;
 
-// ==================== COMMON IMPORTS ====================
+// ==================== SECTION ====================
 
 // Removed unused imports - using available types from canonical modernization
 // Removed unused imports - using available types from canonical modernization

@@ -4,11 +4,9 @@ use std::future::Future;
 // High-performance replacement for async_trait-based UniversalZfsService
 // with native async methods and compile-time optimization for ZFS operations.
 
-use std::future::Future;
 
 use crate::Result;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 // Re-export supporting types that are needed by the trait
 use super::types::ZfsOperationStats;

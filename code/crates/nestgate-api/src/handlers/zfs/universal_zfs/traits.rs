@@ -3,7 +3,6 @@
 // This trait provides the complete canonical interface for all ZFS backend implementations.
 // It unifies all methods from native, remote, and fail-safe backends into a single consistent API.
 
-// REMOVED: async_trait - using zero-cost native async patterns
 use std::collections::HashMap;
 
 use super::types::{

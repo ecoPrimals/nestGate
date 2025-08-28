@@ -1,12 +1,11 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::watch;
 use uuid::Uuid;
 
-use crate::config::canonical_unified::CanonicalConfig;
+use crate::config::canonical_master::NestGateCanonicalConfig as CanonicalConfig;
 use crate::error::CanonicalResult as Result;
 
 /// Configuration version with metadata

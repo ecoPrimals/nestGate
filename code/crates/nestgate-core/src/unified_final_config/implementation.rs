@@ -1,6 +1,5 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use crate::error::CanonicalResult as Result;
-use crate::NestGateError;
 
 impl NestGateFinalConfig {
     /// Create a new configuration with default values
@@ -71,15 +70,15 @@ impl NestGateFinalConfig {
         // For now, basic validation
         if self
             .system
-            .instance_name
+            .name
             .as_ref()
             .is_none_or(|name| name.is_empty())
         {
             return Err(NestGateError::Configuration {
                 field: Some("system.instance_name".to_string()),
                 message: "Instance name cannot be empty".to_string(),
-                config_source: crate::error::UnifiedConfigSource::Defaults,
-                suggested_fix: Some("Set a non-empty instance name".to_string()),
+                
+                
             });
         }
 
@@ -88,13 +87,11 @@ impl NestGateFinalConfig {
 
     /// Save configuration to file
     pub async fn save(&self, path: &str) -> Result<()> {
-        use crate::error::NestGateError;
-        use tokio::fs;
 
         let toml_content = toml::to_string_pretty(self).map_err(|e| NestGateError::Internal {
             message: format!("Failed to serialize configuration: {e}"),
             location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })?;
 
@@ -103,7 +100,7 @@ impl NestGateFinalConfig {
             .map_err(|e| NestGateError::Internal {
                 message: format!("Failed to write configuration file: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: Some(format!("path: {path}")),
+                location: Some(format!("path: {path}")),
                 is_bug: false,
             })?;
 

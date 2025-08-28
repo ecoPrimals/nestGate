@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // This module implements the universal adapter pattern that eliminates hardcoding violations
@@ -16,11 +16,9 @@ use std::collections::HashMap;
 // Removed unused Future import - using native async
 
 use crate::canonical::types::{CapabilityIndexMap, HealthMonitorRegistry, ProviderRegistry};
-use crate::{Result, NestGateError};
+use crate::{Result};
 // CANONICAL MODERNIZATION: Removed async_trait for native async patterns
-// use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use uuid::Uuid;
@@ -51,9 +49,9 @@ impl CapabilityId {
         if parts.len() != 2 {
             return Err(NestGateError::Configuration {
                 message: format!("Invalid capability format: {capability_string}"),
-                config_source: crate::error::core::UnifiedConfigSource::Runtime,
+                
                 field: Some("capability_string".to_string()),
-                suggested_fix: Some("Use format 'domain.capability@version'".to_string()),
+                
             });
         }
 
@@ -61,9 +59,9 @@ impl CapabilityId {
         if capability_parts.len() != 2 {
             return Err(NestGateError::Configuration {
                 message: format!("Invalid capability domain.capability format: {}", parts[0]),
-                config_source: crate::error::core::UnifiedConfigSource::Runtime,
+                
                 field: Some("capability_domain".to_string()),
-                suggested_fix: Some("Use format 'domain.capability'".to_string()),
+                
             });
         }
 

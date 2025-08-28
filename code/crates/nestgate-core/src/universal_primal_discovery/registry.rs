@@ -4,7 +4,7 @@
 /// - Service mesh integration
 /// - External discovery queries
 /// - Registry-based configuration
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use std::collections::HashMap;
 use std::time::Duration;
 
@@ -100,10 +100,11 @@ impl ServiceRegistryClient {
         // For now, just validate the inputs
         if capability.is_empty() || endpoint.is_empty() {
             return Err(NestGateError::Configuration {
+                field: "capability/endpoint".to_string(),
                 message: "Capability and endpoint cannot be empty".to_string(),
-                config_source: crate::error::core::UnifiedConfigSource::Runtime,
-                field: Some("capability/endpoint".to_string()),
-                suggested_fix: Some("Provide valid capability and endpoint values".to_string()),
+                current_value: Some(format!("capability='{}', endpoint='{}'", capability, endpoint)),
+                expected: Some("non-empty strings".to_string()),
+                user_error: true,
             });
         }
         Ok(())
@@ -126,17 +127,19 @@ impl ServiceRegistryClient {
             port_str
                 .parse::<u16>()
                 .map_err(|e| NestGateError::Configuration {
+                    field: "port".to_string(),
                     message: format!("Invalid port configuration '{port_str}': {e}"),
-                    config_source: crate::error::core::UnifiedConfigSource::Environment,
-                    field: Some("port".to_string()),
-                    suggested_fix: Some("Use valid port number (1-65535)".to_string()),
+                    current_value: Some(port_str.clone()),
+                    expected: Some("valid u16 integer".to_string()),
+                    user_error: true,
                 })
         } else {
             Err(NestGateError::Configuration {
+                field: "adapter_port".to_string(),
                 message: format!("No adapter configuration found for {service_name}:{port_type}"),
-                config_source: crate::error::core::UnifiedConfigSource::Runtime,
-                field: Some("adapter_port".to_string()),
-                suggested_fix: Some("Configure port through adapter or environment".to_string()),
+                current_value: None,
+                expected: Some(format!("environment variable {}", adapter_env_key)),
+                user_error: true,
             })
         }
     }

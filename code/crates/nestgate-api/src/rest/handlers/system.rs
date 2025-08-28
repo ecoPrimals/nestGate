@@ -11,9 +11,9 @@ use tracing::{debug, info};
 use crate::rest::{ApiState, DataResponse};
 use nestgate_core::universal_storage::auto_configurator::AutoConfigurator;
 
-// ============================================================================
+// ==================== SECTION ====================
 // SYSTEM DATA HANDLERS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// System health status
 #[derive(Debug, Serialize, Deserialize)]
@@ -212,9 +212,9 @@ pub async fn system_status(State(state): State<ApiState>) -> Json<DataResponse<S
     Json(DataResponse::new(system_status))
 }
 
-// ============================================================================
+// ==================== SECTION ====================
 // HELPER FUNCTIONS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// Get system uptime in seconds (simplified)
 fn get_system_uptime() -> u64 {

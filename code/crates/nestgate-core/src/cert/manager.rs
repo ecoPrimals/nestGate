@@ -2,9 +2,9 @@
 /// Unified certificate management for the NestGate ecosystem
 use std::collections::HashMap;
 // unused Arc import removed
-// Import UnifiedConfig from unified_types module
+// Import NestGateCanonicalConfig from unified_types module
 use crate::ecosystem_integration::universal_adapter::UniversalAdapter;
-use crate::unified_types::UnifiedConfig; // Updated import
+use crate::config::canonical_master::NestGateCanonicalConfig; // Updated import
 
 use crate::Result;
 
@@ -13,12 +13,12 @@ pub struct CertificateManager {
     #[allow(dead_code)]
     adapter: UniversalAdapter, // Updated type
     #[allow(dead_code)]
-    config: UnifiedConfig,
+    config: NestGateCanonicalConfig,
 }
 
 impl CertificateManager {
     /// Create a new certificate manager
-    pub fn new(config: UnifiedConfig) -> Self {
+    pub fn new(config: NestGateCanonicalConfig) -> Self {
         let adapter = UniversalAdapter::new(
             crate::ecosystem_integration::universal_adapter::config::AdapterConfig::default(),
         );
@@ -37,5 +37,5 @@ impl CertificateManager {
 
 /// Create a default certificate manager
 pub fn create_default_certificate_manager() -> CertificateManager {
-    CertificateManager::new(UnifiedConfig::default())
+    CertificateManager::new(NestGateCanonicalConfig::default())
 }

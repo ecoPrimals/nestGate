@@ -89,7 +89,6 @@ mod config_unit_tests {
 
 #[cfg(test)]
 mod performance_unit_tests {
-    use super::*;
     use crate::performance::*;
 
     #[test]
@@ -126,7 +125,6 @@ mod performance_unit_tests {
 
 #[cfg(test)]
 mod migration_unit_tests {
-    use super::*;
 
     #[test]
     fn test_migration_job_lifecycle() {
@@ -156,7 +154,6 @@ mod migration_unit_tests {
 
 #[cfg(test)]
 mod snapshot_unit_tests {
-    use super::*;
 
     #[test]
     fn test_snapshot_policy_validation() {
@@ -196,7 +193,6 @@ mod snapshot_unit_tests {
 
 #[cfg(test)]
 mod automation_unit_tests {
-    use super::*;
 
     #[test]
     fn test_tier_thresholds_hierarchy() {
@@ -233,7 +229,6 @@ mod automation_unit_tests {
 
 #[cfg(test)]
 mod property_tests {
-    use super::*;
 
     #[test]
     fn test_tier_performance_invariants() {

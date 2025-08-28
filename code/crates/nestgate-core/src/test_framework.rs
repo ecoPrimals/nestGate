@@ -19,7 +19,7 @@
 ///
 /// // Test assertion failure
 /// return Err(NestGateError::Validation {
-///     field: "test_result".to_string(),
+///     field: Some("test_result".to_string()),
 ///     issue: "Expected 'success' but got 'failure'".to_string(),
 ///     suggestion: "Check test logic and dependencies".to_string(),
 /// });
@@ -46,7 +46,7 @@ use crate::{NestGateError, Result};
 /// All test errors now use NestGateError::Testing variant for consistency
 pub type TestResult<T> = Result<T>;
 
-// ==================== TEST SETUP OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// **SAFE TEST SETUP**
 /// For initializing test environments, configs, managers
@@ -56,9 +56,9 @@ where
 {
     f().map_err(|e| crate::error::NestGateError::System {
         message: format!("Test setup failed in {}: {}", operation, e),
-        resource: crate::error::SystemResource::Memory,
+        resource: crate::error::core::SystemResource::Memory,
         utilization: None,
-        recovery: crate::error::RecoveryStrategy::ManualIntervention,
+        recovery: crate::error::core::RecoveryStrategy::ManualIntervention,
     })
     }
 
@@ -71,13 +71,13 @@ where
 {
     f().await.map_err(|e| crate::error::NestGateError::System {
         message: format!("Async test setup failed in {}: {}", operation, e),
-        resource: crate::error::SystemResource::Memory,
+        resource: crate::error::core::SystemResource::Memory,
         utilization: None,
-        recovery: crate::error::RecoveryStrategy::ManualIntervention,
+        recovery: crate::error::core::RecoveryStrategy::ManualIntervention,
     })
     }
 
-// ==================== TEST OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// **SAFE TEST OPERATION**
 /// For test logic operations that might fail
@@ -87,9 +87,9 @@ where
 {
     f().map_err(|e| crate::error::NestGateError::System {
         message: format!("Test operation failed in {}: {}", operation, e),
-        resource: crate::error::SystemResource::Memory,
+        resource: crate::error::core::SystemResource::Memory,
         utilization: None,
-        recovery: crate::error::RecoveryStrategy::Retry,
+        recovery: crate::error::core::RecoveryStrategy::Retry,
     })
     }
 
@@ -102,13 +102,13 @@ where
 {
     f().await.map_err(|e| crate::error::NestGateError::System {
         message: format!("Async test operation failed in {}: {}", operation, e),
-        resource: crate::error::SystemResource::Memory,
+        resource: crate::error::core::SystemResource::Memory,
         utilization: None,
-        recovery: crate::error::RecoveryStrategy::Retry,
+        recovery: crate::error::core::RecoveryStrategy::Retry,
     })
     }
 
-// ==================== ENHANCED ASSERTIONS ====================
+// ==================== SECTION ====================
 
 /// **ENHANCED ASSERT_EQ** with rich error context
 #[macro_export]
@@ -118,7 +118,7 @@ macro_rules! test_assert_eq {
             return Err($crate::test_framework::TestError::Assertion {
                 description: $description.to_string(),
                 expected: format!("{:?}", $right),
-                actual: format!("{:?}", $left),
+                current_value: format!("{:?}", $left),
                 location: format!("{}:{}", file!(), line!()),
             });
     }
@@ -133,14 +133,14 @@ macro_rules! test_assert {
             return Err($crate::test_framework::TestError::Assertion {
                 description: $description.to_string(),
                 expected: "true".to_string(),
-                actual: "false".to_string(),
+                current_value: "false".to_string(),
                 location: format!("{}:{}", file!(), line!()),
             });
     }
     };
     }
 
-// ==================== TEST TIMEOUT OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// **SAFE TEST TIMEOUT**
 /// Operations with timeout tracking and context
@@ -159,14 +159,14 @@ where
                 operation,
                 start.elapsed()
             ),
-            resource: crate::error::SystemResource::Memory,
+            resource: crate::error::core::SystemResource::Memory,
             utilization: None,
-            recovery: crate::error::RecoveryStrategy::ManualIntervention,
+            recovery: crate::error::core::RecoveryStrategy::ManualIntervention,
         }),
     }
     }
 
-// ==================== SYSTEM ERROR CONVERSION ====================
+// ==================== SECTION ====================
 
 /// Test error type for framework
 #[derive(Debug, Clone)]
@@ -192,7 +192,7 @@ pub fn system_error(error: NestGateError, test_context: &str) -> TestError {
     }
     }
 
-// ==================== HELPER MACROS ====================
+// ==================== SECTION ====================
 
 /// **QUICK SETUP MACRO** for common patterns
 #[macro_export]
@@ -213,7 +213,7 @@ macro_rules! setup_async {
     };
     }
 
-// ==================== TEST UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Test performance tracking
 #[derive(Debug)]
@@ -242,12 +242,12 @@ impl TestTimer {
                     "Test operation '{}' exceeded maximum duration: {:?} > {:?}",
                     self.operation, elapsed, max_duration
                 ),
-                resource: crate::error::SystemResource::Memory,
+                resource: crate::error::core::SystemResource::Memory,
                 utilization: Some(
                     ((elapsed.as_millis() as f64 / max_duration.as_millis() as f64) * 100.0) as u8
                         as f64,
                 ),
-                recovery: crate::error::RecoveryStrategy::Retry,
+                recovery: crate::error::core::RecoveryStrategy::Retry,
             })
         } else {
     }

@@ -22,7 +22,7 @@ use std::collections::VecDeque;
 use nestgate_core::error::{NestGateError, Result};
 use crate::lock_free_structures::{LockFreeHashMap, LockFreeMpscQueue};
 
-// ==================== PERFORMANCE MONITORING SYSTEM ====================
+// ==================== SECTION ====================
 
 /// **ADAPTIVE PERFORMANCE MONITOR**
 /// 
@@ -32,9 +32,9 @@ pub struct AdaptivePerformanceMonitor {
     metrics_collector: Arc<MetricsCollector>,
     optimization_engine: Arc<OptimizationEngine>,
     auto_tuner: Arc<AutoTuner>,
-    monitoring_active: AtomicBool,
+    monitoring_active: Arc<AtomicBool>,
     optimization_interval: Duration,
-    performance_history: Arc<PerformanceHistory>,
+    performance_history: Arc<tokio::sync::RwLock<PerformanceHistory>>,
 }
 
 /// **METRICS COLLECTOR**
@@ -185,9 +185,9 @@ impl AdaptivePerformanceMonitor {
             metrics_collector: Arc::new(MetricsCollector::new()),
             optimization_engine: Arc::new(OptimizationEngine::new()),
             auto_tuner: Arc::new(AutoTuner::new()),
-            monitoring_active: AtomicBool::new(false),
+            monitoring_active: Arc::new(AtomicBool::new(false)),
             optimization_interval: Duration::from_secs(30),
-            performance_history: Arc::new(PerformanceHistory::new(1000)),
+            performance_history: Arc::new(tokio::sync::RwLock::new(PerformanceHistory::new(1000))),
         }
     }
 
@@ -213,9 +213,9 @@ impl AdaptivePerformanceMonitor {
         let optimization_engine = Arc::clone(&self.optimization_engine);
         let auto_tuner = Arc::clone(&self.auto_tuner);
         let performance_history = Arc::clone(&self.performance_history);
-        let monitoring_active = &self.monitoring_active;
+        let monitoring_active = Arc::clone(&self.monitoring_active);
         let optimization_interval = self.optimization_interval;
-
+        
         tokio::spawn(async move {
             let mut last_optimization = Instant::now();
             
@@ -225,7 +225,7 @@ impl AdaptivePerformanceMonitor {
                 
                 // Create performance snapshot
                 let snapshot = Self::create_performance_snapshot(&metrics_collector);
-                performance_history.add_snapshot(snapshot.clone());
+                performance_history.write().await.add_snapshot(snapshot.clone());
                 
                 // Run optimization if interval elapsed
                 if last_optimization.elapsed() >= optimization_interval {
@@ -254,11 +254,11 @@ impl AdaptivePerformanceMonitor {
     }
 
     /// Get current performance statistics
-    pub fn get_performance_stats(&self) -> AdaptivePerformanceStats {
+    pub async fn get_performance_stats(&self) -> AdaptivePerformanceStats {
         let metrics = self.metrics_collector.get_current_metrics();
         let optimization_stats = self.optimization_engine.get_stats();
         let tuning_stats = self.auto_tuner.get_stats();
-        let history_stats = self.performance_history.get_trend_analysis();
+        let history_stats = self.performance_history.read().await.get_trend_analysis();
 
         AdaptivePerformanceStats {
             current_metrics: metrics,
@@ -710,7 +710,7 @@ impl TrendAnalyzer {
     }
 }
 
-// ==================== DATA STRUCTURES ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone)]
 pub struct CurrentMetrics {
@@ -784,7 +784,7 @@ mod tests {
         let monitor = AdaptivePerformanceMonitor::new();
         assert!(!monitor.monitoring_active.load(Ordering::Relaxed));
         
-        let stats = monitor.get_performance_stats();
+        let stats = monitor.get_performance_stats().await;
         assert!(!stats.monitoring_active);
     }
 

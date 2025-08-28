@@ -3,9 +3,9 @@
 use rand::prelude::*;
 use std::collections::HashMap;
 
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 
-// ==================== CASE CONVERSION ====================
+// ==================== SECTION ====================
 
 /// Convert string to snake_case
 pub fn to_snake_case(input: &str) -> String {
@@ -90,7 +90,7 @@ pub fn to_title_case(input: &str) -> String {
         .join(" ")
 }
 
-// ==================== STRING VALIDATION ====================
+// ==================== SECTION ====================
 
 /// Check if string contains only alphanumeric characters
 pub fn is_alphanumeric(input: &str) -> bool {
@@ -143,7 +143,7 @@ pub fn is_printable(input: &str) -> bool {
         .all(|c| !c.is_control() || c == '\n' || c == '\t')
 }
 
-// ==================== STRING MANIPULATION ====================
+// ==================== SECTION ====================
 
 /// Truncate string to maximum length, optionally adding ellipsis
 pub fn truncate(input: &str, max_len: usize, add_ellipsis: bool) -> String {
@@ -247,7 +247,7 @@ pub fn split_and_trim(input: &str, delimiter: &str) -> Vec<String> {
         .collect()
 }
 
-// ==================== RANDOM STRING GENERATION ====================
+// ==================== SECTION ====================
 
 /// Generate random string of specified length using alphanumeric characters
 pub fn random_string(length: usize) -> String {
@@ -298,7 +298,7 @@ pub fn random_uuid_like() -> String {
     )
 }
 
-// ==================== TEXT ANALYSIS ====================
+// ==================== SECTION ====================
 
 /// Count words in string
 pub fn word_count(input: &str) -> usize {
@@ -341,7 +341,7 @@ pub fn is_palindrome(input: &str) -> bool {
     cleaned == cleaned.chars().rev().collect::<String>()
 }
 
-// ==================== STRING ESCAPING ====================
+// ==================== SECTION ====================
 
 /// Escape special characters for JSON
 pub fn escape_json(input: &str) -> String {
@@ -390,7 +390,7 @@ pub fn escape_shell(input: &str) -> String {
     }
 }
 
-// ==================== STRING PARSING ====================
+// ==================== SECTION ====================
 
 /// Parse boolean from string (flexible parsing)
 pub fn parse_bool_flexible(input: &str) -> Result<bool> {
@@ -398,11 +398,12 @@ pub fn parse_bool_flexible(input: &str) -> Result<bool> {
         "true" | "yes" | "on" | "1" | "y" | "t" => Ok(true),
         "false" | "no" | "off" | "0" | "n" | "f" => Ok(false),
         _ => Err(NestGateError::Validation {
-            field: "boolean".to_string(),
+            field: Some("boolean".to_string()),
             message: format!("Invalid boolean value: {input}"),
             current_value: Some(input.to_string()),
             expected: Some("true/false, yes/no, on/off, 1/0, y/n, t/f".to_string()),
             user_error: true,
+                context: None,
         }),
     }
 }

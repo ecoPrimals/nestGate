@@ -1,11 +1,11 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::future::Future;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::time::Duration;
 use tokio::fs;
 
-// ==================== ZERO-COST STORAGE BACKEND TRAIT ====================
+// ==================== SECTION ====================
 
 /// **Zero-cost storage backend trait**
 ///
@@ -76,7 +76,7 @@ pub trait ZeroCostStorageBackend<
     }
 }
 
-// ==================== PRODUCTION IMPLEMENTATION ====================
+// ==================== SECTION ====================
 
 /// **Production filesystem storage backend**
 ///
@@ -233,7 +233,7 @@ impl<const MAX_OPS: usize, const MAX_SIZE_MB: usize, const TIMEOUT_SECS: u64>
     }
 }
 
-// ==================== SPECIALIZED IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 /// High-performance storage backend for frequent operations
 pub type HighPerformanceStorage = ZeroCostFilesystemBackend<2000, 512, 10>;
@@ -244,7 +244,7 @@ pub type LargeFileStorage = ZeroCostFilesystemBackend<100, 4096, 120>;
 /// Quick operations storage backend
 pub type QuickStorage = ZeroCostFilesystemBackend<5000, 64, 5>;
 
-// ==================== MIGRATION UTILITIES ====================
+// ==================== SECTION ====================
 
 /// **Migration helper from async_trait to zero-cost**
 pub struct StorageBackendMigration;
@@ -308,7 +308,6 @@ impl StorageBackendMigration {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::error::NestGateError;
     use tempfile::TempDir;
 
     #[tokio::test]

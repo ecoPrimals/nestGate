@@ -1,9 +1,9 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // Analysis tools and reporting functionality for storage systems.
 
 use super::types::*;
-use crate::{Result, NestGateError};
+use crate::{Result};
 
 /// Storage analyzer for generating insights and recommendations
 pub struct StorageAnalyzer {

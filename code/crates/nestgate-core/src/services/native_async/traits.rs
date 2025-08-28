@@ -6,7 +6,7 @@ use std::future::Future;
 use std::time::Duration;
 
 // Simplified constants import - using default values until constants modules are fully implemented
-// use crate::constants::{buffers, limits, retention, retry, timeout_defaults};
+// use crate::canonical_modernization::canonical_constants::{buffers, limits, retention, retry, timeout_defaults};
 use crate::Result;
 
 /// Native async load balancer trait - replaces #[async_trait] LoadBalancer

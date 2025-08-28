@@ -20,7 +20,7 @@ use std::marker::PhantomData;
 // **CANONICAL MODERNIZATION**: Use canonical error types
 use nestgate_core::error::{NestGateError, Result};
 
-// ==================== LOCK-FREE QUEUE ====================
+// ==================== SECTION ====================
 
 /// **LOCK-FREE MPSC QUEUE**
 /// 
@@ -135,7 +135,7 @@ impl<T> Drop for LockFreeMpscQueue<T> {
 unsafe impl<T: Send> Send for LockFreeMpscQueue<T> {}
 unsafe impl<T: Send> Sync for LockFreeMpscQueue<T> {}
 
-// ==================== LOCK-FREE HASH MAP ====================
+// ==================== SECTION ====================
 
 /// **LOCK-FREE HASH MAP**
 /// 
@@ -353,7 +353,7 @@ impl<K, V> Drop for LockFreeHashMap<K, V> {
 unsafe impl<K: Send, V: Send> Send for LockFreeHashMap<K, V> {}
 unsafe impl<K: Send + Sync, V: Send + Sync> Sync for LockFreeHashMap<K, V> {}
 
-// ==================== LOCK-FREE STACK ====================
+// ==================== SECTION ====================
 
 /// **LOCK-FREE STACK**
 /// 
@@ -460,7 +460,7 @@ impl<T> Drop for LockFreeStack<T> {
 unsafe impl<T: Send> Send for LockFreeStack<T> {}
 unsafe impl<T: Send> Sync for LockFreeStack<T> {}
 
-// ==================== INTEGRATION WITH ZERO-COST ARCHITECTURE ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COST CONCURRENT SERVICE REGISTRY**
 /// 
@@ -495,19 +495,17 @@ where
         Ok(())
     }
 
-    /// Get service by name with lock-free operation
-    /// PERFORMANCE: O(1) average case, zero blocking
+    /// Get a service by name
     pub fn get_service(&self, name: &str) -> Option<Arc<T>> {
-        self.services.get(name)
+        self.services.get(&name.to_string())
     }
 
-    /// Remove service with lock-free operation
-    pub fn remove_service(&self, name: &str) -> Option<Arc<T>> {
-        if let Some(service) = self.services.remove(name) {
-            self.service_count.fetch_sub(1, Ordering::Relaxed);
-            Some(service)
+    /// Remove a service by name
+    pub fn remove_service(&self, name: &str) -> bool {
+        if let Some(service) = self.services.remove(&name.to_string()) {
+            true
         } else {
-            None
+            false
         }
     }
 
@@ -536,13 +534,12 @@ where
     }
 }
 
-// ==================== PERFORMANCE BENCHMARKS ====================
+// ==================== SECTION ====================
 
 /// **LOCK-FREE PERFORMANCE BENCHMARKS**
 pub mod benchmarks {
     use super::*;
     use std::time::Instant;
-    use std::sync::Arc;
     use std::thread;
 
     /// Benchmark lock-free queue performance
@@ -643,9 +640,6 @@ pub mod benchmarks {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use std::sync::Arc;
-    use std::thread;
 
     #[test]
     fn test_lock_free_queue() {

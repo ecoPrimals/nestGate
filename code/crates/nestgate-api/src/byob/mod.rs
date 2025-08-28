@@ -4,7 +4,6 @@
 // **CANONICAL MODERNIZATION**: Migrated from async_trait to native async patterns
 
 // CANONICAL MODERNIZATION: Removed async_trait for native async patterns
-// use async_trait::async_trait;
 use axum::{
     routing::{delete, get, post, put},
     Router,

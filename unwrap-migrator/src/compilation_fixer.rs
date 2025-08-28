@@ -184,7 +184,7 @@ impl StorageError {"#.to_string(),
         self.fix_patterns.push(CompilationFix {
             file_pattern: "universal_storage/canonical_storage.rs".to_string(),
             error_pattern: r"Err(NestGateError::storage_error(".to_string(),
-            replacement: r"Err(StorageError::OperationFailed { operation: \"storage\".to_string(), reason: format!(".to_string(),
+            replacement: r#"Err(StorageError::OperationFailed { operation: "storage".to_string(), reason: format!("Operation failed: {}", e) })"#.to_string(),
             description: "Convert NestGateError to StorageError".to_string(),
             priority: 2,
         });

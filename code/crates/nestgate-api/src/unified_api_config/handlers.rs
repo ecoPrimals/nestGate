@@ -19,7 +19,7 @@ use std::time::Duration;
 use nestgate_core::unified_final_config::supporting_types::StandardDomainConfig;
 use nestgate_core::types::StorageTier;
 
-// ==================== UNIFIED API HANDLER CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// **THE** unified configuration type for all API handlers
 /// This replaces 20+ scattered config structs across handlers with a single, consistent interface
@@ -44,7 +44,7 @@ pub struct ApiHandlerExtensions {
     pub auth: AuthHandlerConfig,
 }
 
-// ==================== ZFS HANDLER CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 /// **UNIFIED ZFS HANDLER CONFIGURATION**
 /// Replaces: PoolConfig (3 variants), DatasetConfig (2 variants), SnapshotConfig, ZfsServiceConfig
@@ -217,7 +217,7 @@ impl Default for ZfsPerformanceConfig {
     }
 }
 
-// ==================== PERFORMANCE HANDLER CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 /// **UNIFIED PERFORMANCE HANDLER CONFIGURATION**
 /// Replaces: performance_analytics/types.rs::PerformanceConfig, universal_zfs/config.rs::PerformanceConfig
@@ -297,7 +297,7 @@ impl Default for PerformanceAlertConfig {
     }
 }
 
-// ==================== DASHBOARD HANDLER CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 /// **UNIFIED DASHBOARD HANDLER CONFIGURATION**
 /// Replaces: dashboard_types.rs::DashboardConfig, performance_dashboard/types.rs::DashboardConfig
@@ -360,7 +360,7 @@ pub struct DashboardVisualizationConfig {
     pub responsive_design: bool,
 }
 
-// ==================== LOAD TESTING HANDLER CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 /// **UNIFIED LOAD TESTING HANDLER CONFIGURATION**
 /// Replaces: load_testing.rs::LoadTestConfig, load_testing.rs::TestDataConfig
@@ -435,7 +435,7 @@ pub struct LoadTestScenariosConfig {
     pub custom_scenarios: HashMap<String, serde_json::Value>,
 }
 
-// ==================== WORKSPACE HANDLER CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 /// **UNIFIED WORKSPACE HANDLER CONFIGURATION**
 /// Consolidates workspace management settings from various handlers
@@ -470,7 +470,7 @@ pub struct WorkspaceSecurityConfig {
     pub isolation_level: String,
 }
 
-// ==================== AUTH HANDLER CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 /// **UNIFIED AUTH HANDLER CONFIGURATION**
 /// Consolidates authentication and authorization settings
@@ -516,7 +516,7 @@ impl Default for SessionConfig {
     }
 }
 
-// ==================== BUILDER PATTERNS ====================
+// ==================== SECTION ====================
 
 impl UnifiedApiHandlerConfig {
     /// Create a development configuration with debug settings

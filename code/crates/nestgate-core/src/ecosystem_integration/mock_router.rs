@@ -5,7 +5,6 @@
 //! through the universal adapter while providing local fallbacks when external
 //! primals are unavailable.
 
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -52,18 +51,17 @@ pub enum MockRoutingError {
     #[error("Serialization error: {0}")]
     SerializationError(String),
     #[error("Timeout waiting for adapter response")]
-    TimeoutError,
+    Timeout,
 }
 
 /// Trait for fallback providers
-#[async_trait]
 pub trait FallbackProvider: Send + Sync {
     /// Execute a fallback operation
-    async fn execute(
+    fn execute(
         &self,
         operation: &str,
         params: serde_json::Value,
-    ) -> std::result::Result<serde_json::Value, MockRoutingError>;
+    ) -> impl std::future::Future<Output = std::result::Result<serde_json::Value, MockRoutingError>> + Send;
 
     /// Get the capabilities this provider supports
     fn supported_operations(&self) -> Vec<String>;
@@ -74,12 +72,57 @@ pub trait FallbackProvider: Send + Sync {
     }
 }
 
+/// Enum wrapper for fallback providers to avoid trait object issues
+#[derive(Debug)]
+pub enum FallbackProviderWrapper {
+    Security(crate::ecosystem_integration::fallback_providers::security::SecurityFallbackProvider),
+    Ai(crate::ecosystem_integration::fallback_providers::ai::AiFallbackProvider),
+    Orchestration(crate::ecosystem_integration::fallback_providers::orchestration::OrchestrationFallbackProvider),
+    Zfs(crate::ecosystem_integration::fallback_providers::zfs::ZfsFallbackProvider),
+}
+
+impl FallbackProviderWrapper {
+    pub async fn execute(
+        &self,
+        operation: &str,
+        params: serde_json::Value,
+    ) -> std::result::Result<serde_json::Value, MockRoutingError> {
+        match self {
+            FallbackProviderWrapper::Security(provider) => provider.execute(operation, params).await,
+            FallbackProviderWrapper::Ai(provider) => provider.execute(operation, params).await,
+            FallbackProviderWrapper::Orchestration(provider) => provider.execute(operation, params).await,
+            FallbackProviderWrapper::Zfs(provider) => {
+                provider.execute(operation, params).await
+                    .map_err(|e| MockRoutingError::FallbackError(e.to_string()))
+            },
+        }
+    }
+
+    pub fn supported_operations(&self) -> Vec<String> {
+        match self {
+            FallbackProviderWrapper::Security(provider) => provider.supported_operations(),
+            FallbackProviderWrapper::Ai(provider) => provider.supported_operations(),
+            FallbackProviderWrapper::Orchestration(provider) => provider.supported_operations(),
+            FallbackProviderWrapper::Zfs(provider) => provider.supported_operations(),
+        }
+    }
+
+    pub fn metadata(&self) -> HashMap<String, String> {
+        match self {
+            FallbackProviderWrapper::Security(provider) => provider.metadata(),
+            FallbackProviderWrapper::Ai(provider) => provider.metadata(),
+            FallbackProviderWrapper::Orchestration(provider) => provider.metadata(),
+            FallbackProviderWrapper::Zfs(provider) => provider.metadata(),
+        }
+    }
+}
+
 /// Universal Mock Router - Central routing for all mock operations
 pub struct UniversalMockRouter {
     /// Universal adapter for external capabilities
     adapter: Arc<UniversalAdapter>,
     /// Local fallback implementations
-    fallback_providers: Arc<RwLock<HashMap<String, Box<dyn FallbackProvider>>>>,
+    fallback_providers: Arc<RwLock<HashMap<String, FallbackProviderWrapper>>>,
     /// Configuration for routing behavior
     config: MockRoutingConfig,
     /// Cache for successful adapter connections
@@ -120,7 +163,7 @@ impl UniversalMockRouter {
     pub async fn register_fallback_capability(
         &self,
         capability: &str,
-        provider: Box<dyn FallbackProvider>,
+        provider: FallbackProviderWrapper,
     ) {
         let mut providers = self.fallback_providers.write().await;
         providers.insert(capability.to_string(), provider);
@@ -249,7 +292,7 @@ impl UniversalMockRouter {
 
         let result = tokio::time::timeout(self.config.adapter_timeout, operation_future)
             .await
-            .map_err(|_| MockRoutingError::TimeoutError)?;
+            .map_err(|_| MockRoutingError::Timeout)?;
 
         let response = result?;
 
@@ -357,7 +400,6 @@ mod tests {
         operations: Vec<String>,
     }
 
-    #[async_trait]
     impl FallbackProvider for TestFallbackProvider {
         async fn execute(
             &self,

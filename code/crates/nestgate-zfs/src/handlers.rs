@@ -4,7 +4,6 @@
 //
 // **CANONICAL MODERNIZATION**: Migrated to zero-cost native async patterns
 
-// REMOVED: async_trait - using zero-cost native async patterns
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::pin::Pin;

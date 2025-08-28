@@ -4,11 +4,10 @@
 
 use crate::capabilities::discovery::{
     UnifiedDynamicDiscoveryConfig,
-    // REMOVED: unused imports after cleanup
     // migration_utilities::UnifiedMigrationCoordinator, // Will be implemented as needed
 };
 use crate::ecosystem_integration::universal_adapter::adapter::UniversalAdapter;
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use std::sync::Arc;
 
 /// **EXAMPLE 1: Basic Unified Configuration Discovery**

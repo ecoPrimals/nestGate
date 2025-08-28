@@ -1,7 +1,6 @@
 //
 // Contains the main service structure and core utilities for the native ZFS backend.
 
-// REMOVED: async_trait - using zero-cost native async patterns
 
 use std::collections::HashMap;
 use std::time::SystemTime;

@@ -19,7 +19,7 @@ use nestgate_core::error::{NestGateError, Result};
 use nestgate_core::universal_storage::canonical_storage::{CanonicalStorageBackend, StorageResult};
 use std::marker::PhantomData;
 
-// ==================== SIMD PROCESSOR CORE ====================
+// ==================== SECTION ====================
 
 /// **SIMD BULK DATA PROCESSOR**
 /// High-performance SIMD processor for bulk data operations
@@ -53,7 +53,7 @@ impl<const BUFFER_SIZE: usize> SimdBulkProcessor<BUFFER_SIZE> {
     }
 }
 
-// ==================== SIMD STORAGE BACKEND ====================
+// ==================== SECTION ====================
 
 /// **SIMD-ACCELERATED STORAGE BACKEND**
 /// Storage backend with SIMD-accelerated operations for maximum throughput
@@ -114,7 +114,7 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
                     
                     Ok(processed)
                 }
-                Err(e) => Err(NestGateError::storage_error(&e.to_string(), "read", Some(&full_path))),
+                Err(e) => Err(NestGateError::storage_error("read", &e.to_string(), Some(full_path))),
             }
         }
     }
@@ -133,7 +133,7 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
             
             tokio::fs::write(&full_path, &processed)
                 .await
-                .map_err(|e| NestGateError::storage_error(&e.to_string(), "write", Some(&full_path)))
+                .map_err(|e| NestGateError::storage_error("write", &e.to_string(), Some(full_path)))
         }
     }
 
@@ -142,7 +142,7 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
         async move {
             tokio::fs::remove_file(&full_path)
                 .await
-                .map_err(|e| NestGateError::storage_error(&e.to_string(), "delete", Some(&full_path)))
+                .map_err(|e| NestGateError::storage_error("delete", &e.to_string(), Some(full_path)))
         }
     }
 
@@ -184,7 +184,7 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
     }
 }
 
-// ==================== SIMD BATCH PROCESSING PIPELINE ====================
+// ==================== SECTION ====================
 
 /// **SIMD BATCH PROCESSING PIPELINE**
 /// High-throughput batch processing with SIMD acceleration
@@ -207,7 +207,7 @@ impl<const BATCH_SIZE: usize> SimdBatchProcessor<BATCH_SIZE> {
     }
 }
 
-// ==================== PERFORMANCE TESTS ====================
+// ==================== SECTION ====================
 
 #[cfg(test)]
 mod tests {

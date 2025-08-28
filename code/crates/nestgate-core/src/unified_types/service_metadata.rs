@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 
-use crate::unified_enums::UnifiedServiceType;
+use crate::unified_enums::service_types::UnifiedServiceType;
 
 /// **THE** Universal Service Metadata Structure
 /// Comprehensive service information that encompasses all use cases across the ecosystem
@@ -416,7 +416,7 @@ impl UniversalServiceMetadata {
 
         // Add a default endpoint based on service configuration
         let default_endpoint = ServiceEndpoint {
-            url: format!("http://{}:{}", config.service_name, 8080), // Default endpoint
+            url: format!("http://{}:{}", config.name, 8080), // Default endpoint
             protocol: CommunicationProtocol::Http,
             endpoint_type: EndpointType::Primary,
             health_check: None,
@@ -425,7 +425,7 @@ impl UniversalServiceMetadata {
         metadata.add_endpoint(default_endpoint);
 
         // Set primary endpoint
-        metadata.primary_endpoint = Some(format!("http://{}:{}", config.service_name, 8080));
+        metadata.primary_endpoint = Some(format!("http://{}:{}", config.name, 8080));
 
         metadata
     }

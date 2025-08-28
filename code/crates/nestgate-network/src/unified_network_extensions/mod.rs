@@ -11,7 +11,7 @@
 // - `qos.rs` - Quality of Service settings
 // - `security.rs` - Network security settings
 
-// ==================== MODULE DECLARATIONS ====================
+// ==================== SECTION ====================
 
 /// Service discovery and orchestration settings
 pub mod orchestration;
@@ -34,7 +34,7 @@ pub mod qos;
 /// Network security settings
 pub mod security;
 
-// ==================== RE-EXPORTS ====================
+// ==================== SECTION ====================
 
 // Re-export all types for backward compatibility
 pub use orchestration::*;
@@ -45,7 +45,7 @@ pub use routing::*;
 pub use qos::*;
 pub use security::*;
 
-// ==================== MAIN UNIFIED STRUCTURE ====================
+// ==================== SECTION ====================
 
 use serde::{Deserialize, Serialize};
 

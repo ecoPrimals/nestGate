@@ -262,7 +262,7 @@ impl From<crate::error::NestGateError> for AIFirstError {
                 crate::error::NestGateError::Network(_) => AIErrorCategory::ExternalService,
                 crate::error::NestGateError::Configuration {
                 ..
-                suggested_fix: Some("Check configuration and try again".to_string()),
+                
             } => AIErrorCategory::Configuration,
                 crate::error::NestGateError::Validation { .. } => AIErrorCategory::Validation,
                 _ => AIErrorCategory::Internal,

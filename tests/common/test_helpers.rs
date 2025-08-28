@@ -48,7 +48,7 @@ pub fn create_test_performance_monitor() -> nestgate_zfs::performance::Performan
 /// **CONSOLIDATED**: Create test NAS server with canonical configuration
 /// Replaces NAS server creation across multiple integration tests
 pub async fn create_test_nas_server() -> Result<nestgate_nas::NasServer> {
-            let config = nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig::default();
+            let config = nestgate_core::config::unified::NestGateUnifiedConfig::default();
     nestgate_nas::NasServer::new(config).await
 }
 
@@ -295,15 +295,21 @@ pub mod cleanup {
     
     /// Reset environment variables used in tests
     pub fn cleanup_test_environment() {
-        let test_vars = [
+        // Environment cleanup
+        let env_vars = [
             "NESTGATE_TEST_MODE",
-            "NESTGATE_TEST_CONFIG",
-            "MCP_CLUSTER_ENDPOINT",
-            "MCP_NODE_ID",
-            "NESTGATE_ENABLE_LEGACY_ENDPOINTS",
+            "NESTGATE_LOG_LEVEL",
+            "NESTGATE_CONFIG_PATH",
+            "NESTGATE_TEMP_DIR",
+            "NESTGATE_ENABLE_DEBUG",
+            "NESTGATE_PERFORMANCE_MODE",
+            // REMOVED: Legacy endpoint reference
+            "NESTGATE_TEST_TIMEOUT",
+            "NESTGATE_MOCK_SERVICES",
+            "NESTGATE_INTEGRATION_MODE",
         ];
         
-        for var in &test_vars {
+        for var in &env_vars {
             std::env::remove_var(var);
         }
     }

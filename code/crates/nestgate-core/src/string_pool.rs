@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // This module provides optimized string pooling to eliminate performance bottlenecks
@@ -11,7 +11,6 @@ use std::collections::HashMap;
 
 use crate::idiomatic_evolution::SafeResultExt;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, RwLockReadGuard, RwLockWriteGuard};
 
@@ -176,7 +175,7 @@ impl StringPool {
             .map_err(|e| crate::error::NestGateError::Internal {
                 message: format!("Failed to acquire read lock: {e}"),
                 location: Some("string_pool.rs".to_string()),
-                debug_info: Some("safe_read_lock".to_string()),
+                location: Some("safe_read_lock".to_string()),
                 is_bug: false,
             })
     }
@@ -187,7 +186,7 @@ impl StringPool {
             .map_err(|e| crate::error::NestGateError::Internal {
                 message: format!("Failed to acquire write lock: {e}"),
                 location: Some("string_pool.rs".to_string()),
-                debug_info: Some("safe_write_lock".to_string()),
+                location: Some("safe_write_lock".to_string()),
                 is_bug: false,
             })
     }

@@ -4,8 +4,9 @@
 /// - Dynamic port discovery and availability scanning
 /// - Network interface introspection
 /// - Service endpoint resolution
-use crate::error::{NestGateError, Result};
-use crate::unified_types::UnifiedConfig;
+use crate::{NestGateError, Result};
+// **MIGRATED**: Using canonical config system instead of deprecated unified_types
+use crate::config::canonical_master::NestGateCanonicalConfig as NestGateCanonicalConfig;
 use std::collections::HashMap;
 use std::net::IpAddr;
 use std::time::Duration;
@@ -43,7 +44,8 @@ pub struct InterfaceInfo {
 /// Network discovery subsystem
 #[derive(Debug)]
 pub struct NetworkDiscovery {
-    config: UnifiedConfig,
+    config: NestGateCanonicalConfig,
+    discovery_config: NetworkDiscoveryConfig,
 }
 
 impl Default for NetworkDiscovery {
@@ -56,13 +58,17 @@ impl NetworkDiscovery {
     /// Create new network discovery subsystem
     pub fn new() -> Self {
         Self {
-            config: UnifiedConfig::default(),
+            config: NestGateCanonicalConfig::default(),
+            discovery_config: NetworkDiscoveryConfig::default(),
         }
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: UnifiedConfig) -> Self {
-        Self { config }
+    pub fn with_config(config: NestGateCanonicalConfig) -> Self {
+        Self { 
+            config,
+            discovery_config: NetworkDiscoveryConfig::default(),
+        }
     }
 
     /// **PRIMAL DISCOVERY**: Find available bind address through network discovery
@@ -107,9 +113,27 @@ impl NetworkDiscovery {
 
         Err(NestGateError::System {
             message: "No available ports found".to_string(),
-            resource: crate::error::core::SystemResource::Network,
+            operation: "find_available_port".to_string(),
+            resource: Some("Network".to_string()),
             utilization: None,
-            recovery: crate::error::core::RecoveryStrategy::Retry,
+            retryable: true,
+            context: Some(crate::error::context::ErrorContext {
+                    error_id: "error".to_string(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                operation: "find_available_port".to_string(),
+                component: "network_discovery".to_string(),
+                metadata: {
+                    let mut map = std::collections::HashMap::new();
+                    map.insert("recovery_strategy".to_string(), "Retry".to_string());
+                    map
+                },
+                timestamp: std::time::SystemTime::now(),
+                retry_info: None,
+                recovery_suggestions: vec!["Check network configuration and retry".to_string()],
+                    performance_metrics: None,
+                    environment: None,
+            }),
         })
     }
 
@@ -129,9 +153,27 @@ impl NetworkDiscovery {
             .max_by_key(|iface| iface.priority_score)
             .ok_or_else(|| NestGateError::System {
                 message: "No suitable network interface found".to_string(),
-                resource: crate::error::core::SystemResource::Network,
+                operation: "detect_optimal_bind_interface".to_string(),
+                resource: Some("Network".to_string()),
                 utilization: None,
-                recovery: crate::error::core::RecoveryStrategy::Fallback,
+                retryable: true,
+                context: Some(crate::error::context::ErrorContext {
+                    error_id: "error".to_string(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                    operation: "detect_optimal_bind_interface".to_string(),
+                    component: "network_discovery".to_string(),
+                    metadata: {
+                        let mut map = std::collections::HashMap::new();
+                        map.insert("recovery_strategy".to_string(), "Fallback".to_string());
+                        map
+                    },
+                    timestamp: std::time::SystemTime::now(),
+                    retry_info: None,
+                    recovery_suggestions: vec!["Use fallback interface or localhost".to_string()],
+                    performance_metrics: None,
+                    environment: None,
+                }),
             })?;
 
         Ok(optimal_interface.ip_address)
@@ -163,7 +205,7 @@ impl NetworkDiscovery {
         });
 
         // Add common interface patterns with reasonable defaults
-        for (idx, interface_name) in self.config.preferred_interfaces.iter().enumerate() {
+        for (idx, interface_name) in self.discovery_config.preferred_interfaces.iter().enumerate() {
             interfaces.push(InterfaceInfo {
                 name: interface_name.clone(),
                 ip_address: IpAddr::V4(std::net::Ipv4Addr::new(192, 168, 1, 100)),
@@ -193,17 +235,9 @@ impl NetworkDiscovery {
     pub async fn scan_network_for_service(&self, service_name: &str) -> Result<String> {
         // Simplified implementation - in a real system this would do actual network discovery
         let bind_address = self.detect_optimal_bind_interface().await?;
-        // Parse port range from string format like "1-65535"
-        let port_range = self
-            .config
-            .port_scan_range
-            .split('-')
-            .collect::<Vec<&str>>();
-        let start_port = port_range
-            .first()
-            .unwrap_or(&"8080")
-            .parse::<u16>()
-            .unwrap_or(8080);
+        // Use the port range from discovery config
+        let (start_port, end_port) = self.discovery_config.port_scan_range;
+        // start_port is already available from the tuple above
         let port = self
             .discover_available_port(service_name, start_port)
             .await?;
@@ -234,15 +268,15 @@ impl NetworkDiscovery {
 
         config.insert(
             "scan_timeout".to_string(),
-            format!("{:?}", self.config.scan_timeout),
+            format!("{:?}", self.discovery_config.scan_timeout),
         );
         config.insert(
             "port_range".to_string(),
-            format!("{:?}", self.config.port_scan_range),
+            format!("{:?}", self.discovery_config.port_scan_range),
         );
         config.insert(
             "preferred_interfaces".to_string(),
-            self.config.preferred_interfaces.join(","),
+            self.discovery_config.preferred_interfaces.join(","),
         );
 
         Ok(config)

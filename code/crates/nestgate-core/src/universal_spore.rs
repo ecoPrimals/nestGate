@@ -285,7 +285,7 @@ impl UniversalCryptographicSpore {
             return Err(NestGateError::Internal {
                 message: "Evolution not required at this time".to_string(),
                 location: Some("UniversalCryptographicSpore::spawn_child".to_string()),
-                debug_info: Some(format!(
+                location: Some(format!(
                     "Generation: {}, Last evolution: {:?}",
                     self.generation, self.last_evolution
                 )),

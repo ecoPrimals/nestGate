@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::time::Duration;
 
-// ==================== PERFORMANCE CONFIGURATION ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
@@ -107,7 +107,7 @@ impl Default for MetricsConfig {
     }
 }
 
-// ==================== SERVICE CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
@@ -164,7 +164,7 @@ pub struct ApiServiceConfig {
     pub max_payload_size: u64,
 }
 
-// ==================== TESTING CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
@@ -231,7 +231,7 @@ pub struct ChaosTestConfig {
     pub target_services: Vec<String>,
 }
 
-// ==================== MONITORING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MonitoringConfig {
@@ -275,7 +275,7 @@ pub struct TracingConfig {
     pub service_name: String,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 
 

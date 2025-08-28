@@ -182,8 +182,11 @@ impl From<StorageTier> for TierType {
             StorageTier::Hot => TierType::Hot,
             StorageTier::Warm => TierType::Warm,
             StorageTier::Cold => TierType::Cold,
-            StorageTier::Cool => TierType::Cold,  // Map cool to cold
             StorageTier::Frozen => TierType::Cold, // Map frozen to cold
+            nestgate_core::config::UnifiedTierType::Custom(name) => {
+                // Map custom tiers to cold as fallback
+                TierType::Cold
+            }
         }
     }
 }
@@ -201,8 +204,11 @@ impl From<StorageTier> for TierClassification {
             StorageTier::Hot => TierClassification::Performance,
             StorageTier::Warm => TierClassification::Balanced,
             StorageTier::Cold => TierClassification::Archive,
-            StorageTier::Cool => TierClassification::Archive,  // Map cool to archive
             StorageTier::Frozen => TierClassification::Archive, // Map frozen to archive
+            nestgate_core::config::UnifiedTierType::Custom(_) => {
+                // Map custom tiers to balanced as fallback
+                TierClassification::Balanced
+            }
         }
     }
 }

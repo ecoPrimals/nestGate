@@ -194,5 +194,3 @@ impl OrchestratorClientFactory {
     }
 }
 
-// **CANONICAL MODERNIZATION COMPLETE**
-// All async_trait patterns eliminated in favor of zero-cost native async.

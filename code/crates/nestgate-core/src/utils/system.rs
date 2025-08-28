@@ -2,9 +2,9 @@
 //!
 //! Provides safe system operations and utilities.
 
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 
-// ==================== OS INFORMATION ====================
+// ==================== SECTION ====================
 
 /// Get the operating system name
 pub fn get_os_name() -> String {
@@ -100,7 +100,7 @@ pub fn get_kernel_version() -> Result<String> {
     }
 }
 
-// ==================== HARDWARE INFORMATION ====================
+// ==================== SECTION ====================
 
 /// Get the number of CPU cores
 pub fn get_cpu_count() -> usize {
@@ -174,7 +174,7 @@ pub fn get_cpu_frequency() -> Option<f64> {
     None
 }
 
-// ==================== MEMORY INFORMATION ====================
+// ==================== SECTION ====================
 
 /// Get total system memory in bytes
 pub fn get_total_memory() -> Result<u64> {
@@ -264,7 +264,7 @@ pub struct MemoryInfo {
     pub usage_percent: f64,
 }
 
-// ==================== DISK INFORMATION ====================
+// ==================== SECTION ====================
 
 /// Get total disk space in bytes for the root filesystem
 ///
@@ -285,6 +285,7 @@ pub fn get_total_disk() -> Result<u64> {
             ),
             resource: Some("/".to_string()),
             retryable: true,
+                context: None,
         }),
     }
 }
@@ -308,11 +309,12 @@ pub fn get_free_disk() -> Result<u64> {
             ),
             resource: Some("/tmp".to_string()),
             retryable: true,
+                context: None,
         }),
     }
 }
 
-// ==================== SYSTEM IDENTIFICATION ====================
+// ==================== SECTION ====================
 
 /// Get system hostname
 pub fn get_hostname() -> Result<String> {
@@ -322,7 +324,7 @@ pub fn get_hostname() -> Result<String> {
         .ok_or_else(|| NestGateError::Internal {
             message: "Failed to get hostname".to_string(),
             location: Some("get_hostname".to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })
 }
@@ -384,7 +386,7 @@ pub struct LoadAverage {
     pub fifteen_minutes: f64,
 }
 
-// ==================== PROCESS INFORMATION ====================
+// ==================== SECTION ====================
 
 /// Get current process ID
 pub fn get_current_pid() -> u32 {

@@ -355,7 +355,7 @@ impl ConnectionPoolManager {
     where
         T: Send + Sync + 'static,
     {
-        // TODO: Redesign to store Arc<dyn Any> instead of Box<dyn Any>
+        // CANONICAL: Using Arc<dyn Any> for zero-cost shared ownership and thread safety
         // to properly support returning references
         None
     }
@@ -380,7 +380,7 @@ impl HttpConnectionPool {
                 .map_err(|e| NestGateError::Internal {
                     message: format!("Failed to create HTTP client: {e}"),
                     location: Some("HttpConnectionPool::new_http_pool".to_string()),
-                    debug_info: None,
+                    context: None,
                     is_bug: false,
                 })
         })

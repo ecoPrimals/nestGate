@@ -54,7 +54,7 @@ impl ReplicationManager {
             Err(NestGateError::Internal {
                 message: format!("Replication task {task_id} not found"),
                 location: Some(file!().to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })
         }

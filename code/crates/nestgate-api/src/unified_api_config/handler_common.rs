@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-// ==================== UNIFIED HANDLER CONFIGURATION PATTERN ====================
+// ==================== SECTION ====================
 
 /// **THE** standardized handler configuration pattern
 /// This replaces all scattered handler config structs with a single, consistent pattern
@@ -167,4 +167,4 @@ impl Default for LoggingConfig {
 /// **CANONICAL MODERNIZATION** - Use canonical metrics configuration
 pub use nestgate_core::CanonicalMetricsConfig as MetricsConfig; 
 
-// ==================== HANDLER CONFIGURATION TYPES ==================== 
+// ==================== SECTION ====================

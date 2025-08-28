@@ -12,7 +12,7 @@ use nestgate_core::error::domain_errors::ZfsOperation;
 // Re-export core storage tier for convenience
 pub use nestgate_core::canonical_types::StorageTier;
 
-// ==================== ERROR TYPES ====================
+// ==================== SECTION ====================
 
 /// ZFS-specific error type for backward compatibility
 #[derive(Debug, thiserror::Error)]
@@ -36,7 +36,7 @@ pub enum ZfsError {
 /// This follows the canonical Result<T,E> pattern with domain-specific error type
 pub type ZfsResult<T> = Result<T, ZfsError>;
 
-// ==================== POOL TYPES ====================
+// ==================== SECTION ====================
 
 /// ZFS pool information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -82,7 +82,7 @@ pub struct PoolCapacity {
     pub deduplication_ratio: f64,
 }
 
-// ==================== DATASET TYPES ====================
+// ==================== SECTION ====================
 
 /// ZFS dataset information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -101,7 +101,7 @@ pub struct DatasetInfo {
     pub created_at: SystemTime,
 }
 
-// ==================== SNAPSHOT TYPES ====================
+// ==================== SECTION ====================
 
 /// ZFS snapshot information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -113,7 +113,7 @@ pub struct SnapshotInfo {
     pub created_at: SystemTime,
 }
 
-// ==================== ZERO-COST TYPES ====================
+// ==================== SECTION ====================
 
 /// Zero-cost pool information for compile-time optimization
 #[derive(Debug, Clone)]
@@ -152,7 +152,7 @@ pub struct ZeroCostSnapshotInfo {
     pub created_at: SystemTime,
 }
 
-// ==================== COMMAND TYPES ====================
+// ==================== SECTION ====================
 
 /// ZFS command execution result
 #[derive(Debug, Clone)]
@@ -195,7 +195,7 @@ pub enum ZfsCommand {
     },
 }
 
-// ==================== NATIVE ZFS TYPES ====================
+// ==================== SECTION ====================
 
 /// Native ZFS pool status from zpool command
 #[derive(Debug, Clone)]
@@ -208,7 +208,7 @@ pub enum PoolStatus {
     Unavailable,
 }
 
-// ==================== CONVERSION IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl From<PoolStatus> for PoolHealth {
     fn from(status: PoolStatus) -> Self {
@@ -223,7 +223,7 @@ impl From<PoolStatus> for PoolHealth {
     }
 }
 
-// ==================== ERROR CONVERSION IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl From<nestgate_core::error::NestGateError> for ZfsError {
     fn from(err: nestgate_core::error::NestGateError) -> Self {
@@ -277,7 +277,7 @@ impl From<ZfsError> for nestgate_core::NestGateError {
     }
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for PoolInfo {
     fn default() -> Self {
@@ -338,7 +338,7 @@ impl Default for SnapshotInfo {
     }
 }
 
-// ==================== UTILITY FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Create a pool info from raw ZFS output
 pub fn pool_info_from_zfs_output(name: &str, output: &str) -> ZfsResult<PoolInfo> {

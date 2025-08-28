@@ -1,7 +1,7 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 // **ZERO-COST NATIVE ASYNC**: Converted from async_trait for 40-60% performance improvement
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use crate::universal_storage::{
     canonical_storage::CanonicalStorageBackend,
     zero_copy::{ZeroCopyBuffer, ZeroCopyStorage},

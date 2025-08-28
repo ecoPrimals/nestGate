@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // This module provides shared utility functions for enterprise storage operations,
@@ -12,12 +12,12 @@ use std::collections::HashMap;
 //
 // **EXTRACTED FROM**: enterprise_ops.rs lines 425-935 (510+ lines)
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use std::path::Path;
 use super::super::core::EnterpriseStorageBackend;
 use super::FileHashMap;
 
-// ==================== DIRECTORY OPERATIONS ====================
+// ==================== SECTION ====================
 
 impl EnterpriseStorageBackend {
     /// Recursively copy directory tree

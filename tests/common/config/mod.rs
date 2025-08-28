@@ -10,7 +10,7 @@
 //! - Implemented compile-time configuration validation
 
 use nestgate_core::config::defaults::Environment;
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateCanonicalUnifiedConfig;
+use nestgate_core::config::unified::NestGateUnifiedConfig as NestGateUnifiedConfig;
 use crate::canonical_modernization::{UnifiedHealthStatus, UnifiedServiceType};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -725,7 +725,7 @@ impl CanonicalTestConfig {
 
 // ==================== MIGRATION UTILITIES ====================
 
-/// **DEPRECATED CONFIGURATION MIGRATION**
+/// **CONFIGURATION MIGRATION COMPLETE**
 ///
 /// Utilities to help migrate from fragmented test configurations
 pub struct TestConfigMigrationUtilities;

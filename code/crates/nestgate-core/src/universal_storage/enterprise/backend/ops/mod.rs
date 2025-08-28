@@ -13,7 +13,7 @@ use std::collections::HashMap;
 // **ELIMINATES**: 934-line monolithic implementation
 // **PROVIDES**: Focused, maintainable, and testable modules
 
-// ==================== MODULE DECLARATIONS ====================
+// ==================== SECTION ====================
 
 /// Snapshot management operations
 pub mod snapshots;
@@ -30,12 +30,12 @@ pub mod analytics;
 /// Shared utilities and helper functions
 pub mod utilities;
 
-// ==================== RE-EXPORTS ====================
+// ==================== SECTION ====================
 
 // Re-export specific functionality to avoid unused warnings
 // Note: Full re-exports available but not used in current implementation
 
-// ==================== COMMON IMPORTS ====================
+// ==================== SECTION ====================
 
 // async_trait available but not used in this module
 use std::collections::{HashMap, HashSet};
@@ -43,7 +43,7 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 // Error types available but not used in this module
 
-// ==================== SHARED TYPE ALIASES ====================
+// ==================== SECTION ====================
 
 /// Type alias for file hash mapping in enterprise operations
 pub type FileHashMap = HashMap<String, Vec<(PathBuf, u64)>>;
@@ -51,7 +51,7 @@ pub type FileHashMap = HashMap<String, Vec<(PathBuf, u64)>>;
 /// Type alias for deduplication operation results
 pub type DuplicationResult = crate::error::CanonicalResult<(Vec<crate::universal_storage::enterprise::DuplicateGroup>, u64)>;
 
-// ==================== SHARED STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// Parameters for incremental backup operations
 pub struct IncrementalBackupParams<'a> {

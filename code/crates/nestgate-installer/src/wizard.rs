@@ -36,8 +36,9 @@ impl InstallationWizard {
         // Using canonical configuration - access working_directory instead of domains.installation
         let default_path = self
             .config
+            .base_config
             .system
-            .working_directory
+            .data_dir
             .to_string_lossy()
             .to_string();
 
@@ -47,9 +48,9 @@ impl InstallationWizard {
             .interact_text()
             .map_err(|e| NestGateError::validation_error("input", &format!("Input error: {e}"), None))?;
 
-        // Update canonical config fields - use working_directory instead of data_directory
-        self.config.system.working_directory = PathBuf::from(&custom_path);
-        // Note: log_directory doesn't exist in canonical config, using working_directory
+        // Update canonical config fields - use data_dir instead of working_directory
+        self.config.base_config.system.data_dir = PathBuf::from(&custom_path);
+        // Note: log_directory doesn't exist in canonical config, using data_dir
 
         Ok(())
     }
@@ -130,11 +131,11 @@ impl InstallationWizard {
         println!("======================");
         println!(
             "Installation Path: {}",
-            self.config.system.working_directory.display()
+            self.config.base_config.system.data_dir.display()
         );
         println!(
             "Service Name: {}",
-            self.config.system.service_name
+            self.config.base_config.system.service_name
         );
 
         let confirm: bool = Confirm::new()

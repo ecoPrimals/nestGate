@@ -97,7 +97,6 @@ pub async fn delete_project(
     State(_state): State<AppState>,
     Path(project_id): Path<String>,
 ) -> impl IntoResponse {
-    use tracing::{error, info};
 
     info!("🗑️ Deleting project: {}", project_id);
 

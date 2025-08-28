@@ -1,4 +1,3 @@
-use crate::NestGateError;
 use std::collections::HashMap;
 use std::future::Future;
 /// **ZERO-COST UNIVERSAL PROVIDERS - CANONICAL MODERNIZATION COMPLETE**
@@ -8,9 +7,8 @@ use std::future::Future;
 
 use crate::error::CanonicalResult as Result;
 // Removed unused trait imports - using zero-cost patterns
-// Removed unused UnifiedServiceType import
+// Removed unuse crate::unified_enums::service_types::UnifiedServiceType import
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::marker::PhantomData;
 // Removed unused Arc import - using zero-cost composition
 use std::time::SystemTime;
@@ -53,7 +51,7 @@ pub enum SecurityDecision {
     },
 }
 
-// ==================== ZERO-COST SECURITY PROVIDER ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COST UNIVERSAL SECURITY WRAPPER**
 /// 
@@ -151,33 +149,27 @@ where
     /// Authenticate with zero-cost dispatch
     pub async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken> {
         self.provider.authenticate(credentials).await
-            .map_err(|_| crate::NestGateError::security_error(
-                "Authentication failed",
+            .map_err(|_| crate::NestGateError::permission_denied_with_operation(
                 "authenticate",
-                None,
-                None
+                "Authentication failed"
             ))
     }
 
     /// Encrypt data with direct method call - no virtual dispatch
     pub async fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
         self.provider.encrypt(data, algorithm).await
-            .map_err(|_| crate::NestGateError::security_error(
-                "Encryption failed",
+            .map_err(|_| crate::NestGateError::permission_denied_with_operation(
                 "encrypt",
-                None,
-                None
+                "Encryption failed"
             ))
     }
 
     /// Decrypt data with zero allocation overhead
     pub async fn decrypt(&self, encrypted: &[u8], algorithm: &str) -> Result<Vec<u8>> {
         self.provider.decrypt(encrypted, algorithm).await
-            .map_err(|_| crate::NestGateError::security_error(
-                "Decryption failed",
+            .map_err(|_| crate::NestGateError::permission_denied_with_operation(
                 "decrypt",
-                None,
-                None
+                "Decryption failed"
             ))
     }
 
@@ -194,7 +186,7 @@ where
     }
 }
 
-// ==================== ZERO-COST ORCHESTRATION PROVIDER ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COST UNIVERSAL ORCHESTRATION WRAPPER**
 /// 
@@ -241,7 +233,7 @@ pub trait ZeroCostOrchestrationProvider: Send + Sync + 'static {
     fn health_check(&self) -> impl Future<Output = std::result::Result<bool, Self::Error>> + Send;
 }
 
-// ==================== ZERO-COST COMPUTE PROVIDER ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COST UNIVERSAL COMPUTE WRAPPER**
 /// 
@@ -278,7 +270,7 @@ pub trait ZeroCostComputeProvider: Send + Sync + 'static {
     fn health_check(&self) -> impl Future<Output = std::result::Result<bool, Self::Error>> + Send;
 }
 
-// ==================== SUPPORTING TYPES ====================
+// ==================== SECTION ====================
 
 /// Service status information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -287,6 +279,17 @@ pub struct ServiceStatus {
     pub replicas: u32,
     pub health: String,
     pub last_updated: std::time::SystemTime,
+}
+
+impl Default for ServiceStatus {
+    fn default() -> Self {
+        Self {
+            running: false,
+            replicas: 0,
+            health: "unknown".to_string(),
+            last_updated: std::time::SystemTime::now(),
+        }
+    }
 }
 
 /// Compute resources information
@@ -298,7 +301,7 @@ pub struct ComputeResources {
     pub max_tasks: u32,
 }
 
-// ==================== MIGRATION UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Migration guide from Arc<dyn> to zero-cost patterns
 pub const ZERO_COST_MIGRATION_GUIDE: &str = r#"
@@ -344,7 +347,7 @@ where
 - ✅ Compile-time optimization and safety
 "#;
 
-// ==================== TYPE ALIASES ====================
+// ==================== SECTION ====================
 
 /// Common zero-cost provider configurations
 pub type StandardZeroCostSecurityWrapper<Provider> = ZeroCostUniversalSecurityWrapper<Provider, 1000>;

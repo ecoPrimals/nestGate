@@ -3,10 +3,9 @@ use std::collections::HashMap;
 /// This module provides configuration for security testing including authentication,
 /// authorization, penetration testing, and vulnerability scanning.
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::Duration;
 
-// ==================== SECURITY TESTING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// **Unified security testing configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

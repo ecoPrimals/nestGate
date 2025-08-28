@@ -91,21 +91,23 @@ impl McpStorageManager {
         // Validate configuration
         if config.name.is_empty() {
             return Err(NestGateError::Validation {
-                field: "volume_name".to_string(),
+                field: Some("volume_name".to_string()),
                 message: "Volume name cannot be empty".to_string(),
                 current_value: Some("".to_string()),
                 expected: Some("non-empty string".to_string()),
                 user_error: true,
+                context: None,
             });
         }
 
         if config.size_bytes == 0 {
             return Err(NestGateError::Validation {
-                field: "volume_size".to_string(),
+                field: Some("volume_size".to_string()),
                 message: "Volume size must be greater than zero".to_string(),
                 current_value: Some("0".to_string()),
                 expected: Some("> 0".to_string()),
                 user_error: true,
+                context: None,
             });
         }
 
@@ -236,6 +238,7 @@ impl McpStorageManager {
                 error_message: format!("Cannot delete mounted volume: {name}"),
                 resource: Some(name.to_string()),
                 retryable: false,
+                context: None,
             });
         }
 
@@ -271,11 +274,12 @@ impl McpStorageManager {
             volume_spec
                 .size_bytes()
                 .map_err(|e| nestgate_core::NestGateError::Validation {
-                    field: "volume_size".to_string(),
+                    field: Some("volume_size".to_string()),
                     message: format!("Invalid volume size: {e}"),
                     current_value: None,
                     expected: Some("Valid size format (e.g., 100GB, 1TB)".to_string()),
                     user_error: true,
+                context: None,
                 })?;
 
         // Convert biomeOS tier to MCP tier
@@ -286,11 +290,12 @@ impl McpStorageManager {
             "cache" => StorageTier::Hot, // Map cache to hot tier
             _ => {
                 return Err(NestGateError::Validation {
-                    field: "storage_tier".to_string(),
+                    field: Some("storage_tier".to_string()),
                     message: format!("Unknown storage tier: {}", volume_spec.tier),
                     current_value: Some(volume_spec.tier.clone()),
                     expected: Some("hot, warm, cold, or cache".to_string()),
                     user_error: true,
+                context: None,
                 });
             }
         };
@@ -416,6 +421,7 @@ impl McpStorageManager {
                 ),
                 resource: Some("volume".to_string()),
                 retryable: false,
+                context: None,
             });
         }
 

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[cfg(test)]
-use crate::constants::test::{
+use crate::canonical_modernization::canonical_constants::test::{
     DESC_CUSTOM, DESC_POWER_USER, PERM_CUSTOM, ROLE_CUSTOM, ROLE_POWER_USER,
 };
 
@@ -62,8 +62,10 @@ const INTERFACE_ALL_IPV6: &str = "::";
 // Removed unused constant (generic_constant_cleanup)
 // Removed unused constant (generic_constant_cleanup)
 
+// Replace hardcoded port with canonical constant
+use crate::constants::canonical::network::DEFAULT_API_PORT;
+
 // Default Port Value Constants
-const DEFAULT_API_PORT: &str = "8080";
 const DEFAULT_HEALTH_PORT: &str = "8081";
 const DEFAULT_METRICS_PORT: &str = "9090";
 
@@ -397,7 +399,7 @@ impl Default for EndpointConfig {
                 let mut ports = HashMap::new();
                 // Use environment-aware port configuration
                 ports.insert(
-                    "8080".to_string(),
+                    DEFAULT_API_PORT.to_string(),
                     std::env::var("NESTGATE_API_PORT")
                         .unwrap_or_else(|_| DEFAULT_API_PORT.to_string())
                         .parse()

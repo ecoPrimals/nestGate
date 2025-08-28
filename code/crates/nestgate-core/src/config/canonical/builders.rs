@@ -5,14 +5,15 @@
 ///
 /// **REPLACES**: All scattered config builders across the codebase
 /// **PROVIDES**: Unified, type-safe configuration construction
-use super::domain_configs::*;
-use crate::error::{NestGateError, Result};
+use super::NestGateCanonicalConfig::*;
+use crate::{NestGateError, Result};
+// Removed unused import: UnifiedConfigSource
 use serde_json;
 use std::collections::HashMap;
 use std::env;
 use std::time::Duration;
 
-// ==================== CANONICAL CONFIGURATION BUILDER TRAIT ====================
+// ==================== SECTION ====================
 
 /// **THE** canonical configuration builder trait
 pub trait CanonicalConfigBuilder<T>: Default + Clone + Send + Sync
@@ -35,7 +36,7 @@ where
     fn merge(self, other: Self) -> Self;
 }
 
-// ==================== TEST CONFIGURATION BUILDER ====================
+// ==================== SECTION ====================
 
 /// **CANONICAL TEST CONFIGURATION BUILDER**
 /// Replaces all scattered test config builders with a unified, fluent API
@@ -241,7 +242,7 @@ impl CanonicalConfigBuilder<CanonicalTestConfig> for CanonicalTestConfigBuilder 
     }
 }
 
-// ==================== DOMAIN-SPECIFIC BUILDERS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone)]
 pub struct TestExecutionBuilder {
@@ -317,23 +318,21 @@ impl TestExecutionBuilder {
     fn validate(&self) -> Result<()> {
         if self.max_duration.as_secs() == 0 {
             return Err(NestGateError::Configuration {
+                field: "max_duration".to_string(),
                 message: "Test max_duration must be greater than 0".to_string(),
-                config_source: crate::error::UnifiedConfigSource::Builder(
-                    "TestExecutionBuilder".to_string(),
-                ),
-                field: Some("max_duration".to_string()),
-                suggested_fix: Some("Set max_duration to a positive value".to_string()),
+                current_value: Some(self.max_duration.as_secs().to_string()),
+                expected: Some("duration > 0".to_string()),
+                user_error: true,
             });
         }
 
         if self.retry_attempts > 10 {
             return Err(NestGateError::Configuration {
+                field: "retry_attempts".to_string(),
                 message: "Test retry_attempts should not exceed 10".to_string(),
-                config_source: crate::error::UnifiedConfigSource::Builder(
-                    "TestExecutionBuilder".to_string(),
-                ),
-                field: Some("retry_attempts".to_string()),
-                suggested_fix: Some("Set retry_attempts to 10 or less".to_string()),
+                current_value: Some(self.retry_attempts.to_string()),
+                expected: Some("retry_attempts <= 10".to_string()),
+                user_error: true,
             });
         }
 
@@ -412,23 +411,21 @@ impl TestResourceLimitsBuilder {
     fn validate(&self) -> Result<()> {
         if self.max_memory_mb == 0 {
             return Err(NestGateError::Configuration {
+                field: "max_memory_mb".to_string(),
                 message: "max_memory_mb must be greater than 0".to_string(),
-                config_source: crate::error::UnifiedConfigSource::Builder(
-                    "TestResourceLimitsBuilder".to_string(),
-                ),
-                field: Some("max_memory_mb".to_string()),
-                suggested_fix: Some("Set max_memory_mb to a positive value".to_string()),
+                current_value: Some(self.max_memory_mb.to_string()),
+                expected: Some("memory > 0 MB".to_string()),
+                user_error: true,
             });
         }
 
         if self.max_cpu_cores == 0 {
             return Err(NestGateError::Configuration {
+                field: "max_cpu_cores".to_string(),
                 message: "max_cpu_cores must be greater than 0".to_string(),
-                config_source: crate::error::UnifiedConfigSource::Builder(
-                    "TestResourceLimitsBuilder".to_string(),
-                ),
-                field: Some("max_cpu_cores".to_string()),
-                suggested_fix: Some("Set max_cpu_cores to a positive value".to_string()),
+                current_value: Some(self.max_cpu_cores.to_string()),
+                expected: Some("cpu_cores > 0".to_string()),
+                user_error: true,
             });
         }
 
@@ -520,12 +517,11 @@ impl TestMockingBuilder {
     fn validate(&self) -> Result<()> {
         if self.failure_rate < 0.0 || self.failure_rate > 1.0 {
             return Err(NestGateError::Configuration {
+                field: "failure_rate".to_string(),
                 message: "failure_rate must be between 0.0 and 1.0".to_string(),
-                config_source: crate::error::UnifiedConfigSource::Builder(
-                    "TestMockingBuilder".to_string(),
-                ),
-                field: Some("failure_rate".to_string()),
-                suggested_fix: Some("Set failure_rate to a value between 0.0 and 1.0".to_string()),
+                current_value: Some(self.failure_rate.to_string()),
+                expected: Some("0.0 <= failure_rate <= 1.0".to_string()),
+                user_error: true,
             });
         }
 
@@ -534,12 +530,11 @@ impl TestMockingBuilder {
             builder
                 .validate()
                 .map_err(|e| NestGateError::Configuration {
+                    field: format!("mock_services.{name}"),
                     message: format!("Invalid mock service '{name}': {e}"),
-                    config_source: crate::error::UnifiedConfigSource::Builder(
-                        "TestMockingBuilder".to_string(),
-                    ),
-                    field: Some(format!("mock_services.{name}")),
-                    suggested_fix: Some("Fix the mock service configuration".to_string()),
+                    current_value: None,
+                    expected: Some("valid mock service configuration".to_string()),
+                    user_error: true,
                 })?;
         }
 
@@ -769,9 +764,9 @@ impl_basic_builder!(StressLimitsBuilder, StressLimits);
 impl_basic_builder!(BiomeOSTestSettingsBuilder, BiomeOSTestSettings);
 impl_basic_builder!(ZfsTestSettingsBuilder, ZfsTestSettings);
 
-// Default implementations moved to domain_configs modules to avoid conflicts
+// Default implementations moved to NestGateCanonicalConfig modules to avoid conflicts
 
-// ==================== CONVENIENCE FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Create a quick unit test configuration
 pub fn unit_test_config() -> Result<CanonicalTestConfig> {

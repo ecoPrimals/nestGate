@@ -5,7 +5,7 @@
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::NestGateError;
+    use crate::error::NestGateError;
     use serde_json::Value as JsonValue;
 
     #[test]

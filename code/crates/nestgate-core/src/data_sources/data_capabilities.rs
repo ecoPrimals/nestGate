@@ -4,7 +4,6 @@
 //! Any external system that can provide these capabilities can integrate.
 
 use crate::{NestGateError, Result};
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -42,49 +41,45 @@ pub struct SourceInfo {
 }
 
 /// Universal data capability trait
-#[async_trait]
 pub trait DataCapability: Send + Sync {
     /// What type of data this capability provides
     fn capability_type(&self) -> &str;
     
     /// Check if this capability can handle a specific request
-    async fn can_handle(&self, request: &DataRequest) -> Result<bool>;
+    fn can_handle(&self, request: &DataRequest) -> impl std::future::Future<Output = Result<bool>> + Send;
     
     /// Execute a data request
-    async fn execute_request(&self, request: &DataRequest) -> Result<DataResponse>;
+    fn execute_request(&self, request: &DataRequest) -> impl std::future::Future<Output = Result<DataResponse>> + Send;
     
     /// Get capability metadata
     fn get_metadata(&self) -> HashMap<String, String>;
 }
 
 /// Genome data capability (for any genome database)
-#[async_trait]
 pub trait GenomeDataCapability: DataCapability {
     /// Search for genome sequences
-    async fn search_genomes(&self, query: &str) -> Result<Vec<GenomeResult>>;
+    fn search_genomes(&self, query: &str) -> impl std::future::Future<Output = Result<Vec<GenomeResult>> + Send;
     
     /// Get genome sequence by ID
-    async fn get_genome_sequence(&self, genome_id: &str) -> Result<GenomeSequence>;
+    fn get_genome_sequence(&self, genome_id: &str) -> impl std::future::Future<Output = Result<GenomeSequence>> + Send;
 }
 
 /// Model data capability (for any AI model repository)
-#[async_trait]
 pub trait ModelDataCapability: DataCapability {
     /// Search for models
-    async fn search_models(&self, query: &str) -> Result<Vec<ModelResult>>;
+    fn search_models(&self, query: &str) -> impl std::future::Future<Output = Result<Vec<ModelResult>> + Send;
     
     /// Get model information
-    async fn get_model_info(&self, model_id: &str) -> Result<ModelInfo>;
+    fn get_model_info(&self, model_id: &str) -> impl std::future::Future<Output = Result<ModelInfo>> + Send;
 }
 
 /// Research data capability (for any research database)
-#[async_trait]
 pub trait ResearchDataCapability: DataCapability {
     /// Search research papers/data
-    async fn search_research(&self, query: &str) -> Result<Vec<ResearchResult>>;
+    fn search_research(&self, query: &str) -> impl std::future::Future<Output = Result<Vec<ResearchResult>> + Send;
     
     /// Get research data by ID
-    async fn get_research_data(&self, research_id: &str) -> Result<ResearchData>;
+    fn get_research_data(&self, research_id: &str) -> impl std::future::Future<Output = Result<ResearchData>> + Send;
 }
 
 /// Generic result types (provider-agnostic)
@@ -133,4 +128,3 @@ pub struct ResearchData {
     pub title: String,
     pub content: serde_json::Value,
     pub metadata: HashMap<String, String>,
-} 

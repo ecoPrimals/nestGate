@@ -4,13 +4,14 @@
 #[cfg(test)]
 mod tests {
     use super::super::client::{UniversalSecurityClient, UniversalSecurityError, UniversalSecurityCapability};
-    use crate::unified_types::{UnifiedConfig, UnifiedSecurityConfig};
-    use crate::types::SecurityServiceNode;
+    use crate::config::canonical_master::NestGateCanonicalConfig;
+    use crate::service_discovery::config::UnifiedSecurityConfig;
+    use crate::canonical_types::SecurityServiceNode;
     use std::sync::Arc;
 
     #[tokio::test]
     async fn test_universal_security_client_creation() {
-        let config = UnifiedConfig::default();
+        let config = NestGateCanonicalConfig::default();
         
         let result = UniversalSecurityClient::new(config).await;
         assert!(result.is_ok(), "Should create security client successfully");
@@ -47,7 +48,7 @@ mod tests {
 
     #[test]
     fn test_security_service_node_creation() {
-        use crate::types::{SecurityServiceNode, ServiceNodeStatus};
+        use crate::canonical_types::{SecurityServiceNode, ServiceNodeStatus};
         
         let node = SecurityServiceNode {
             service_id: "test-node-1".to_string(),
@@ -68,7 +69,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_security_client_refresh_services() {
-        let config = UnifiedConfig::default();
+        let config = NestGateCanonicalConfig::default();
         let mut client = UniversalSecurityClient::new(config).await.unwrap();
         
         let result = client.refresh_services().await;
@@ -78,7 +79,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_security_client_service_availability() {
-        let config = UnifiedConfig::default();
+        let config = NestGateCanonicalConfig::default();
         let client = UniversalSecurityClient::new(config).await.unwrap();
         
         let result = client.is_service_available("test-service").await;

@@ -4,7 +4,7 @@
 /// - Hardware profiling and resource limits
 /// - Runtime environment analysis
 /// - Optimal configuration recommendations
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use std::collections::HashMap;
 
 /// System capabilities profile
@@ -65,12 +65,26 @@ impl SystemIntrospection {
             .as_ref()
             .ok_or_else(|| NestGateError::Internal {
                 message: "Capabilities not initialized after detection attempt".to_string(),
+                component: "introspection".to_string(),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: Some(
-                    "discover_resource_limits: capabilities still None after initialization"
-                        .to_string(),
-                ),
                 is_bug: true,
+                context: Some(crate::error::context::ErrorContext {
+                    error_id: "introspection-error".to_string(),
+                    operation: "discover_resource_limits".to_string(),
+                    component: "introspection".to_string(),
+                    metadata: {
+                        let mut map = std::collections::HashMap::new();
+                        map.insert("details".to_string(), "capabilities still None after initialization".to_string());
+                        map
+                    },
+                    timestamp: std::time::SystemTime::now(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                    retry_info: None,
+                    recovery_suggestions: vec!["Ensure system capabilities detection is working".to_string()],
+                    performance_metrics: None,
+                    environment: None,
+                }),
             })?;
 
         match resource_type {
@@ -130,12 +144,26 @@ impl SystemIntrospection {
             .as_ref()
             .ok_or_else(|| NestGateError::Internal {
                 message: "Capabilities not initialized after detection attempt".to_string(),
+                component: "introspection".to_string(),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: Some(
-                    "create_hardware_profile: capabilities still None after initialization"
-                        .to_string(),
-                ),
                 is_bug: true,
+                context: Some(crate::error::context::ErrorContext {
+                    error_id: "error".to_string(),
+                    operation: "create_hardware_profile".to_string(),
+                    component: "introspection".to_string(),
+                    metadata: {
+                        let mut map = std::collections::HashMap::new();
+                        map.insert("details".to_string(), "capabilities still None after initialization".to_string());
+                        map
+                    },
+                    timestamp: std::time::SystemTime::now(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                    retry_info: None,
+                    recovery_suggestions: vec![],
+                    performance_metrics: None,
+                    environment: None,
+                }),
             })?;
 
         // Score components (0.0 to 1.0)

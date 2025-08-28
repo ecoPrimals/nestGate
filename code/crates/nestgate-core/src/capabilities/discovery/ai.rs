@@ -1,7 +1,7 @@
 /// **AI CAPABILITY DISCOVERY**
 /// Discovery and management of AI-related capabilities
 /// Replaces hardcoded AI configurations with dynamic discovery
-use crate::error::Result;
+use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

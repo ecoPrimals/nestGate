@@ -1,7 +1,7 @@
 /// **NETWORK DOMAIN**
 /// Network-specific business logic and operations.
 
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 
 /// Network domain operations
 pub struct NetworkDomain {

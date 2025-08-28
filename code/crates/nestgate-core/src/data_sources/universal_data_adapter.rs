@@ -92,7 +92,7 @@ impl UniversalDataAdapter {
         Err(NestGateError::Internal {
             message: format!("No available provider for capability: {}", request.capability_type),
             location: Some("UniversalDataAdapter::execute_request".to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })
     }

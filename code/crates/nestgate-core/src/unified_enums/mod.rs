@@ -11,7 +11,6 @@ pub mod network_types;
 pub mod service_types;
 pub mod storage_access_types;
 pub mod system_health_types;
-// REMOVED: conversion_utils - migration utilities no longer needed
 // Note: health_status_migrations and service_status_migrations modules
 // are not needed as the unified enum system provides all necessary types
 
@@ -22,12 +21,14 @@ pub use network_types::*;
 pub use service_types::*;
 pub use storage_access_types::*;
 pub use system_health_types::*;
-// REMOVED: conversion utility re-exports - migration complete
 
 // **UNIFIED ENUMS AVAILABILITY**
 // UnifiedHealthStatus is properly defined in service_types.rs and widely used
 // Re-enabling export for consistent access patterns
 pub use service_types::UnifiedHealthStatus;
+
+// **COMPATIBILITY ALIASES** for external crates
+pub use storage_access_types::UnifiedTierType as StorageTier;
 
 // Remove duplicate import - use service_types::UnifiedServiceState directly
 // pub use service_types::UnifiedServiceState;
@@ -40,7 +41,7 @@ pub use service_types::UnifiedServiceState as ServiceState;
 // Additional missing enum types referenced in lib.rs
 pub use message_event_types::UnifiedAlertSeverity as UnifiedLogLevel;
 pub use message_event_types::UnifiedEventType as UnifiedErrorCategory;
-pub use service_types::UnifiedServiceType as UnifiedCapabilityType;
+pub use crate::unified_enums::service_types::UnifiedServiceType as UnifiedCapabilityType;
 
 /// Common enum patterns for use across the codebase
 pub trait UnifiedEnum: Clone + PartialEq + Eq + std::fmt::Debug {
