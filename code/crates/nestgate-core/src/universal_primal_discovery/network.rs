@@ -236,7 +236,7 @@ impl NetworkDiscovery {
         // Simplified implementation - in a real system this would do actual network discovery
         let bind_address = self.detect_optimal_bind_interface().await?;
         // Use the port range from discovery config
-        let (start_port, end_port) = self.discovery_config.port_scan_range;
+        let (start_port, _end_port) = self.discovery_config.port_scan_range; // PEDANTIC: Fixed unused variable
         // start_port is already available from the tuple above
         let port = self
             .discover_available_port(service_name, start_port)

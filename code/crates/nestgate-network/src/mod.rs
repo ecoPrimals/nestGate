@@ -1,4 +1,5 @@
-//! **NESTGATE NETWORK MODULE**
+#[allow(deprecated)] // PEDANTIC: Allow deprecated ServiceRegistration during migration
+//! **NESTGATE NETWORK CRATE**
 //!
 //! This module provides network functionality for NestGate,
 //! organized into focused modules for maintainability.

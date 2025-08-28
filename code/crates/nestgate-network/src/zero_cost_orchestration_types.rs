@@ -1,3 +1,5 @@
+#[allow(deprecated)] // PEDANTIC: Allow deprecated ServiceRegistration during migration
+//! **ZERO COST ORCHESTRATION TYPES**
 ///
 /// This module contains all the type definitions for the zero-cost orchestration client,
 /// separated from the main implementation for better modularity and maintainability.

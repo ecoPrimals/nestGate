@@ -9,7 +9,7 @@ use thiserror::Error;
 
 // Import domain error data types from the data module
 use super::data::{
-    StorageErrorData, NetworkErrorData, SecurityErrorData, McpErrorData, 
+    NetworkErrorData, SecurityErrorData, McpErrorData, 
     ApiErrorData, AutomationErrorData, UniversalZfsErrorData,
     MiddlewareErrorData, FsMonitorErrorData, InstallerErrorData, PrimalErrorData,
 };
