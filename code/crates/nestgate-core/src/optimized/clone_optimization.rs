@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 /// **CLONE OPTIMIZATION MODULE**
 ///
 /// This module provides patterns and utilities to minimize unnecessary cloning
@@ -82,7 +82,7 @@ impl<T> SharedConfiguration<T> {
         Arc::get_mut(&mut self.data).ok_or_else(|| NestGateError::Internal {
             message: "Cannot get mutable reference to shared configuration".to_string(),
             location: Some("clone_optimization.rs:83".to_string()),
-            debug_info: Some("SharedConfiguration::get_mut".to_string()),
+            location: Some("SharedConfiguration::get_mut".to_string()),
             is_bug: false,
         })
     }

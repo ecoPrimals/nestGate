@@ -2,28 +2,28 @@
 /// Core traits using native async methods and const generics for compile-time specialization.
 /// Replaces async_trait patterns for maximum performance.
 // Removed unused imports - using native async traits instead
-use crate::constants::{buffers, limits};
+use crate::canonical_modernization::canonical_constants::{performance, limits};
 
 /// **ZERO-COST STORAGE PROVIDER TRAIT**
 /// Compile-time optimized storage operations with const generics
-#[async_trait::async_trait]
-pub trait ZeroCostStorageProvider {
+/// **CANONICAL MODERNIZATION**: Native async trait without async_trait overhead
+pub trait ZeroCostStorageProvider: Send + Sync + 'static {
     type PoolInfo: Clone + Send + Sync + 'static;
     type DatasetInfo: Clone + Send + Sync + 'static;
     type Error: Clone + Send + Sync + 'static;
     type Result: Clone + Send + Sync + 'static;
 
     /// Get pool information
-    async fn get_pool_info(&self, pool_name: &str) -> Self::Result;
+    fn get_pool_info(&self, pool_name: &str) -> impl std::future::Future<Output = Self::Result> + Send;
 
     /// Get dataset statistics
-    async fn get_dataset_stats(&self, dataset_name: &str) -> Self::Result;
+    fn get_dataset_stats(&self, dataset_name: &str) -> impl std::future::Future<Output = Self::Result> + Send;
     }
 
 /// **ZERO-COST SECURITY PROVIDER TRAIT**
 /// Compile-time optimized security operations
-#[async_trait::async_trait]
-pub trait ZeroCostSecurityProvider {
+/// **CANONICAL MODERNIZATION**: Native async trait without async_trait overhead
+pub trait ZeroCostSecurityProvider: Send + Sync + 'static {
     type TokenInfo: Clone + Send + Sync + 'static;
     type Result: Clone + Send + Sync + 'static;
 
@@ -31,19 +31,19 @@ pub trait ZeroCostSecurityProvider {
     fn max_tokens() -> usize;
 
     /// Generate authentication token
-    async fn generate_token(&self, user_id: &str) -> Self::Result;
+    fn generate_token(&self, user_id: &str) -> impl std::future::Future<Output = Self::Result> + Send;
 
     /// Validate token
-    async fn validate_token(&self, token: &str) -> Self::Result;
+    fn validate_token(&self, token: &str) -> impl std::future::Future<Output = Self::Result> + Send;
 
     /// Revoke token
-    async fn revoke_token(&self, token: &str) -> Self::Result;
+    fn revoke_token(&self, token: &str) -> impl std::future::Future<Output = Self::Result> + Send;
     }
 
 /// **ZERO-COST NETWORK PROVIDER TRAIT**
 /// Compile-time optimized network operations
-#[async_trait::async_trait]
-pub trait ZeroCostNetworkProvider<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize> {
+/// **CANONICAL MODERNIZATION**: Native async trait without async_trait overhead
+pub trait ZeroCostNetworkProvider<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize>: Send + Sync + 'static {
     type ConnectionInfo: Clone + Send + Sync + 'static;
     type Result: Clone + Send + Sync + 'static;
 
@@ -65,7 +65,7 @@ pub trait ZeroCostNetworkProvider<const MAX_CONNECTIONS: usize, const BUFFER_SIZ
 
 /// Zero-copy data source with compile-time buffer management
 pub trait ZeroCostDataSource<
-    const BUFFER_SIZE: usize = { buffers::BUFFER_SIZE_STANDARD },
+    const BUFFER_SIZE: usize = 8192, // Standard buffer size
     const MAX_RESULTS: usize = 1000, // Default max results for zero-copy operations
 >
 {

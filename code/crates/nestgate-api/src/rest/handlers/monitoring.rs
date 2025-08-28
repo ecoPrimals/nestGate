@@ -13,9 +13,9 @@ use tracing::{debug, info};
 use crate::rest::models::*;
 use crate::rest::{ApiState, DataError, DataResponse};
 
-// ============================================================================
+// ==================== SECTION ====================
 // MONITORING DATA HANDLERS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// Query parameters for historical metrics
 #[derive(Debug, Deserialize)]
@@ -334,9 +334,9 @@ pub async fn get_alerts(
     Ok(Json(DataResponse::new(alerts)))
 }
 
-// ============================================================================
+// ==================== SECTION ====================
 // METRIC GENERATION HELPERS (for realistic demo data)
-// ============================================================================
+// ==================== SECTION ====================
 
 fn generate_realistic_cpu_usage() -> f64 {
     use std::collections::hash_map::DefaultHasher;
@@ -353,8 +353,6 @@ fn generate_realistic_cpu_usage() -> f64 {
 }
 
 fn generate_realistic_memory_usage() -> f64 {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
 
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp() + 1).hash(&mut hasher);
@@ -366,8 +364,6 @@ fn generate_realistic_memory_usage() -> f64 {
 }
 
 fn generate_realistic_disk_read() -> f64 {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
 
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp() + 2).hash(&mut hasher);
@@ -379,8 +375,6 @@ fn generate_realistic_disk_read() -> f64 {
 }
 
 fn generate_realistic_disk_write() -> f64 {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
 
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp() + 3).hash(&mut hasher);
@@ -400,8 +394,6 @@ fn generate_realistic_write_iops() -> u64 {
 }
 
 fn generate_realistic_queue_depth() -> f64 {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
 
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp() + 4).hash(&mut hasher);
@@ -413,8 +405,6 @@ fn generate_realistic_queue_depth() -> f64 {
 }
 
 fn generate_realistic_network_rx() -> u64 {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
 
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp() + 5).hash(&mut hasher);
@@ -438,8 +428,6 @@ fn generate_realistic_network_tx_packets() -> u64 {
 }
 
 fn generate_realistic_cache_hit_ratio() -> f64 {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
 
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp() + 6).hash(&mut hasher);

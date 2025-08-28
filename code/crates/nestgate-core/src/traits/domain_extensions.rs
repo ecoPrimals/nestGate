@@ -19,15 +19,14 @@ use std::future::Future;
 // **ZERO-COST**: All traits use native async methods for maximum performance.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::Duration;
 use uuid::Uuid;
 
 use crate::error::CanonicalResult as Result;
-use crate::traits::UniversalService;
+use crate::traits::canonical_unified_traits::CanonicalService;
 use crate::canonical_modernization::UnifiedHealthStatus;
 
-// ==================== ZFS SERVICE EXTENSION ====================
+// ==================== SECTION ====================
 
 /// ZFS-specific service extension data
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -92,7 +91,7 @@ pub trait ZfsServiceExtension: UniversalService {
     fn zfs_health_check(&self) -> impl Future<Output = Result<Self::ZfsHealth>> + Send;
 }
 
-// ==================== STORAGE SERVICE EXTENSION ====================
+// ==================== SECTION ====================
 
 /// Storage-specific service extension data
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -128,7 +127,7 @@ pub trait StorageServiceExtension: UniversalService {
     fn restore_backup(&self, backup_id: &str) -> impl Future<Output = Result<()>> + Send;
 }
 
-// ==================== ECOPRIMAL EXTENSION ====================
+// ==================== SECTION ====================
 
 /// EcoPrimal-specific service data
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -177,7 +176,7 @@ pub trait EcoPrimalExtension: UniversalService {
     ) -> impl Future<Output = Result<()>> + Send;
 }
 
-// ==================== REGISTRY SERVICE EXTENSION ====================
+// ==================== SECTION ====================
 
 /// Service registry extension data
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -229,7 +228,7 @@ pub trait RegistryServiceExtension: UniversalService {
     ) -> impl Future<Output = Result<usize>> + Send;
 }
 
-// ==================== NETWORK SERVICE EXTENSION ====================
+// ==================== SECTION ====================
 
 /// Network service extension data
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -278,7 +277,7 @@ pub trait NetworkServiceExtension: UniversalService {
     ) -> impl Future<Output = Result<HashMap<String, u64>>> + Send;
 }
 
-// ==================== MIGRATION UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Helper trait to migrate from specialized traits to UniversalService extensions
 pub trait ServiceMigrationHelper {

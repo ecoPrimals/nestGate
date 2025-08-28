@@ -52,8 +52,8 @@ pub use nestgate_core::Result;
 pub fn automation_error(message: String) -> AutomationError {
     AutomationError::CoreError(NestGateError::Configuration {
         message,
-        config_source: nestgate_core::error::UnifiedConfigSource::Environment,
+        
         field: None,
-        suggested_fix: Some("Check automation configuration".to_string()),
+        
     })
 }

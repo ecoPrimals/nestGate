@@ -4,7 +4,7 @@ use std::sync::{Arc, RwLock};
 use tokio::sync::broadcast;
 
 use super::{Diagnostic, DiagnosticLevel, SystemMetrics};
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use crate::unified_enums::UnifiedHealthStatus as HealthStatus;
 
 /// Main diagnostics manager
@@ -43,8 +43,9 @@ impl DiagnosticsManager {
             .read()
             .map_err(|_| NestGateError::Internal {
                 message: "Failed to acquire diagnostics read lock".to_string(),
+                component: "diagnostics_manager".to_string(),
                 location: Some(file!().to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -109,8 +110,9 @@ impl DiagnosticsManager {
     pub fn get_metrics(&self) -> Result<SystemMetrics> {
         let metrics = self.metrics.read().map_err(|_| NestGateError::Internal {
             message: "Failed to acquire metrics read lock".to_string(),
+            component: "diagnostics_manager".to_string(),
             location: Some(file!().to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
         })?;
 
@@ -124,8 +126,9 @@ impl DiagnosticsManager {
             .write()
             .map_err(|_| NestGateError::Internal {
                 message: "Failed to acquire diagnostics write lock".to_string(),
+                component: "diagnostics_manager".to_string(),
                 location: Some(file!().to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 

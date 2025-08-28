@@ -16,7 +16,7 @@ use crate::Result;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-// ==================== ZERO-COST UNIVERSAL SERVICE PROVIDER ====================
+// ==================== SECTION ====================
 
 /// **Zero-cost universal service provider trait**
 ///
@@ -107,7 +107,7 @@ pub trait ZeroCostUniversalServiceProvider: Send + Sync + 'static {
     }
 }
 
-// ==================== SUPPORTING TYPES ====================
+// ==================== SECTION ====================
 
 /// Default service registration implementation
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -224,7 +224,7 @@ impl Default for DefaultMetrics {
     }
 }
 
-// ==================== EXAMPLE IMPLEMENTATION ====================
+// ==================== SECTION ====================
 
 /// Example zero-cost universal service provider implementation
 pub struct ExampleZeroCostProvider {
@@ -284,7 +284,7 @@ impl ZeroCostUniversalServiceProvider for ExampleZeroCostProvider {
     async fn create_registration(&self) -> Result<Self::Registration> {
         Ok(DefaultServiceRegistration {
             service_id: self.service_id.clone(),
-            name: self.service_name.clone(),
+            name: self.name.clone(),
             version: env!("CARGO_PKG_VERSION").to_string(),
             capabilities: self.capabilities.iter().map(|c| c.name.clone()).collect(),
             endpoints: vec![format!("http://localhost:8080/{}", self.service_id)],
@@ -340,7 +340,7 @@ impl ZeroCostUniversalServiceProvider for ExampleZeroCostProvider {
     }
 
     fn service_name(&self) -> &str {
-        &self.service_name
+        &self.name
     }
 
     fn capabilities_count(&self) -> usize {
@@ -352,7 +352,7 @@ impl ZeroCostUniversalServiceProvider for ExampleZeroCostProvider {
     }
 }
 
-// ==================== COMPATIBILITY BRIDGE ====================
+// ==================== SECTION ====================
 
 /// Compatibility adapter for migrating from async_trait to zero-cost
 pub struct UniversalServiceProviderAdapter<T> {

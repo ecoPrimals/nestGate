@@ -4,7 +4,6 @@ use std::collections::HashMap;
 // by reading from environment variables with intelligent defaults.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::env;
 use std::net::SocketAddr;
 use std::str::FromStr;
@@ -318,7 +317,6 @@ pub fn get_service_endpoint(service_type: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
 
     #[test]
     fn test_dynamic_port_assignment() {

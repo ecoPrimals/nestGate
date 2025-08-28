@@ -1,10 +1,9 @@
 use crate::error::{NetworkError};
 use std::path::PathBuf;
 use std::marker::PhantomData;
-use async_trait::async_trait;
 use serde::de::DeserializeOwned;
 
-use crate::error::Result;
+use crate::Result;
 use crate::traits::config::ConfigProvider;
 use serde::Deserialize;
 
@@ -42,7 +41,6 @@ impl<T> FileConfigProvider<T> {
     }
 }
 
-#[async_trait]
 impl<T> ConfigProvider<T> for FileConfigProvider<T>
 where
     T: DeserializeOwned + Send + Sync + 'static,
@@ -68,4 +66,3 @@ where
         // In a real implementation, this would watch the file for changes
         Ok(futures_util::stream::empty())
     }
-}

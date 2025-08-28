@@ -14,7 +14,7 @@ pub use super::handler_types::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// ==================== CONFIGURATION BUILDERS ====================
+// ==================== SECTION ====================
 
 /// Configuration builder for creating handler configurations with defaults
 pub struct HandlerConfigBuilder<T> {
@@ -83,7 +83,7 @@ impl<T> Default for HandlerConfigBuilder<T> {
     }
 }
 
-// ==================== CONFIGURATION VALIDATION ====================
+// ==================== SECTION ====================
 
 /// Configuration validation error
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -118,21 +118,21 @@ impl ConfigValidator for CommonHandlerConfig {
 
         if self.handler_name.is_empty() {
             errors.push(ConfigError {
-                field: "handler_name".to_string(),
+                field: Some("handler_name".to_string()),
                 message: "Handler name cannot be empty".to_string(),
             });
         }
 
         if self.max_concurrent_requests == 0 {
             errors.push(ConfigError {
-                field: "max_concurrent_requests".to_string(),
+                field: Some("max_concurrent_requests".to_string()),
                 message: "Max concurrent requests must be greater than 0".to_string(),
             });
         }
 
         if self.timeout.as_secs() == 0 {
             errors.push(ConfigError {
-                field: "timeout".to_string(),
+                field: Some("timeout".to_string()),
                 message: "Timeout must be greater than 0".to_string(),
             });
         }
@@ -141,7 +141,7 @@ impl ConfigValidator for CommonHandlerConfig {
     }
 }
 
-// ==================== CONFIGURATION FACTORIES ====================
+// ==================== SECTION ====================
 
 /// Factory functions for creating pre-configured handler configs
 pub struct HandlerConfigFactory;
@@ -196,7 +196,7 @@ impl HandlerConfigFactory {
     }
 }
 
-// ==================== ENVIRONMENT CONFIGURATION LOADING ====================
+// ==================== SECTION ====================
 
 /// Trait for loading configuration from environment variables
 pub trait FromEnvironment {
@@ -214,7 +214,7 @@ pub trait FromEnvironment {
     }
 }
 
-// ==================== CONFIGURATION REGISTRY ====================
+// ==================== SECTION ====================
 
 /// Registry for managing multiple handler configurations
 pub struct HandlerConfigRegistry {
@@ -266,7 +266,7 @@ impl Default for HandlerConfigRegistry {
     }
 }
 
-// ==================== CONVENIENCE FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Create a default configuration for a specific handler type
 pub fn default_config_for_handler(handler_type: &str) -> Result<Box<dyn std::any::Any>, ConfigError> {
@@ -338,7 +338,7 @@ pub fn default_config_for_handler(handler_type: &str) -> Result<Box<dyn std::any
 }),
         )),
         _ => Err(ConfigError {
-            field: "handler_type".to_string(),
+            field: Some("handler_type".to_string()),
             message: format!("Unknown handler type: {}", handler_type),
         }),
     }
@@ -356,7 +356,7 @@ pub fn supported_handler_types() -> Vec<&'static str> {
     ]
 }
 
-// ==================== TESTS ====================
+// ==================== SECTION ====================
 
 #[cfg(test)]
 mod tests {

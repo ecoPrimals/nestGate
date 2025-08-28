@@ -3,10 +3,9 @@ use std::collections::HashMap;
 // This module provides the fundamental type definitions used throughout
 // the canonical modernization system.
 
-use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
-// ==================== CANONICAL TYPE ALIASES ====================
+// ==================== SECTION ====================
 
 /// **Canonical Provider Registry**
 ///
@@ -91,7 +90,7 @@ pub type HealthCheckMap = Arc<RwLock<HashMap<String, HealthCheck>>>;
 /// Type alias for health check functions.
 pub type HealthCheckFunction = Arc<dyn Fn() -> bool + Send + Sync>;
 
-// ==================== SUPPORTING TYPES ====================
+// ==================== SECTION ====================
 
 /// **Service Information Structure**
 ///
@@ -177,7 +176,7 @@ pub struct HealthCheck {
     pub enabled: bool,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for ServiceInfo {
     fn default() -> Self {

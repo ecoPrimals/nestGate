@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// ==================== CANONICAL MODERNIZATION ====================
+// ==================== SECTION ====================
 
 /// **CANONICAL**: ZFS command Result type using AnyhowResult for external integration
 /// This uses AnyhowResult for better ecosystem integration with external command execution

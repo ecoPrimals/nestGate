@@ -3,7 +3,7 @@
 //! This test validates core system integration using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateCanonicalUnifiedConfig;
+use nestgate_core::config::unified::NestGateUnifiedConfig;
 use nestgate_core::config::defaults::Environment;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -20,7 +20,7 @@ async fn test_basic_integration() {
 
     // Test environment configuration
     let dev_config =
-        nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+        nestgate_core::config::unified::create_config_for_environment(Environment::Development);
     assert!(matches!(dev_config.environment, Environment::Development));
 
     info!("✅ Basic integration test completed");
@@ -54,7 +54,7 @@ async fn test_configuration_validation() {
 
     // Test development environment
     let dev_config =
-        nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+        nestgate_core::config::unified::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(!dev_config.system.log_level.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
@@ -62,7 +62,7 @@ async fn test_configuration_validation() {
 
     // Test production environment
     let prod_config =
-        nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Production);
+        nestgate_core::config::unified::create_config_for_environment(Environment::Production);
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(!prod_config.system.log_level.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));

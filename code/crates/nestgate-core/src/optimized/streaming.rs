@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // **PHASE 2 ENHANCEMENT** - High-performance streaming with:
 // - Zero-copy streaming for large data transfers
@@ -16,7 +16,7 @@ use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 use futures::{Stream, Sink, SinkExt, StreamExt};
 use bytes::{Bytes, BytesMut};
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use crate::universal_storage::zero_copy::AdvancedZeroCopyBuffer;
 
 /// High-performance streaming configuration
@@ -313,7 +313,6 @@ impl AdvancedStreamWriter {
     
     /// Write data to underlying sink
     async fn write_data(&mut self, data: &[u8]) -> Result<()> {
-        use tokio::io::AsyncWriteExt;
         self.sink.write_all(data).await
             .map_err(|e| NestGateError::internal_error(
                 "Write error",

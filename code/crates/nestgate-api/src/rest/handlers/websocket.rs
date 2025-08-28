@@ -15,9 +15,9 @@ use tracing::{debug, error, info};
 use crate::rest::models::*;
 use crate::rest::ApiState;
 
-// ============================================================================
+// ==================== SECTION ====================
 // WEBSOCKET DATA HANDLERS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// Query parameters for WebSocket connections
 #[derive(Debug, Deserialize)]
@@ -64,9 +64,9 @@ pub async fn events_websocket(
     ws.on_upgrade(move |socket| handle_events_websocket(socket, state, query))
 }
 
-// ============================================================================
+// ==================== SECTION ====================
 // WEBSOCKET HANDLERS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// Handle metrics WebSocket connection
 async fn handle_metrics_websocket(mut socket: WebSocket, state: ApiState, query: WebSocketQuery) {
@@ -166,9 +166,9 @@ async fn handle_events_websocket(mut socket: WebSocket, state: ApiState, query: 
     info!("Events WebSocket connection terminated");
 }
 
-// ============================================================================
+// ==================== SECTION ====================
 // HELPER FUNCTIONS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// Get current system metrics
 async fn get_current_metrics(state: &ApiState) -> Result<SystemMetrics, String> {
@@ -311,8 +311,6 @@ pub struct SystemEvent {
 
 /// Generate sample system event
 async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
 
     let mut hasher = DefaultHasher::new();
     chrono::Utc::now().timestamp_millis().hash(&mut hasher);
@@ -390,8 +388,6 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
 
 // Real-time metric generators (with more variation than historical)
 fn generate_realtime_cpu_usage() -> f64 {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
 
     let mut hasher = DefaultHasher::new();
     chrono::Utc::now().timestamp_millis().hash(&mut hasher);
@@ -403,8 +399,6 @@ fn generate_realtime_cpu_usage() -> f64 {
 }
 
 fn generate_realtime_memory_usage() -> f64 {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
 
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 1).hash(&mut hasher);
@@ -416,8 +410,6 @@ fn generate_realtime_memory_usage() -> f64 {
 }
 
 fn generate_realtime_disk_read() -> f64 {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
 
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 2).hash(&mut hasher);
@@ -429,8 +421,6 @@ fn generate_realtime_disk_read() -> f64 {
 }
 
 fn generate_realtime_disk_write() -> f64 {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
 
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 3).hash(&mut hasher);
@@ -450,8 +440,6 @@ fn generate_realtime_write_iops() -> u64 {
 }
 
 fn generate_realtime_queue_depth() -> f64 {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
 
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 4).hash(&mut hasher);
@@ -463,8 +451,6 @@ fn generate_realtime_queue_depth() -> f64 {
 }
 
 fn generate_realtime_network_rx() -> u64 {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
 
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 5).hash(&mut hasher);
@@ -488,8 +474,6 @@ fn generate_realtime_network_tx_packets() -> u64 {
 }
 
 fn generate_realtime_cache_hit_ratio() -> f64 {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
 
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 6).hash(&mut hasher);

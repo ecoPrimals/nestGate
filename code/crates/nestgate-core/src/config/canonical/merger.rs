@@ -4,7 +4,7 @@
 //! Single responsibility: Combine configurations with proper precedence.
 
 use super::types::*;
-use crate::error::Result;
+use crate::Result;
 
 /// Configuration merger
 pub struct ConfigMerger;

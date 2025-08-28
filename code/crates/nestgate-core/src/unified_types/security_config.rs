@@ -9,7 +9,7 @@ use std::time::Duration;
 // Import timeout config from the existing module
 use super::timeout_config::UnifiedTimeoutConfig;
 
-// ==================== UNIFIED SECURITY CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Unified Security Configuration - consolidates all security settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -56,7 +56,7 @@ impl Default for UnifiedSecurityConfig {
     }
 }
 
-// ==================== AUTHENTICATION CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Authentication configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -183,7 +183,7 @@ pub enum SsoProvider {
     Custom(String),
 }
 
-// ==================== ENCRYPTION CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Encryption configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -226,7 +226,7 @@ pub enum TlsVersion {
     V1_3,
 }
 
-// ==================== ACCESS CONTROL CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Access control configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -278,7 +278,7 @@ pub struct Role {
     pub inherits_from: Vec<String>,
 }
 
-// ==================== AUDIT CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Security audit configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -317,7 +317,7 @@ pub enum AuditLevel {
     Debug,
 }
 
-// ==================== CERTIFICATE CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Certificate configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -360,7 +360,7 @@ pub enum KeyAlgorithm {
     Ed25519,
 }
 
-// ==================== SECURITY RATE LIMITING ====================
+// ==================== SECTION ====================
 
 /// Security rate limiting configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -384,7 +384,7 @@ impl Default for SecurityRateLimitConfig {
     }
 }
 
-// ==================== INTRUSION DETECTION ====================
+// ==================== SECTION ====================
 
 /// Intrusion detection configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -417,7 +417,7 @@ pub struct GeoBlockingConfig {
     pub block_unknown_locations: bool,
 }
 
-// ==================== SECURITY LOGGING ====================
+// ==================== SECTION ====================
 
 /// Security logging configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -472,7 +472,7 @@ pub enum SecurityLogDestination {
     Database,
 }
 
-// ==================== COMPLIANCE CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Compliance configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

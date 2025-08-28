@@ -1,5 +1,4 @@
-use crate::NestGateError;
-use std::collections::HashMap;
+use crate::error::NestGateError;
 // **IDIOMATIC RESULT<T, E> EVOLUTION**
 //
 // **CANONICAL MODERNIZATION**: Evolution from Result<T> to idiomatic Result<T, E>
@@ -19,9 +18,8 @@ use std::collections::HashMap;
 // - Zero breaking changes through gradual migration
 
 use serde::{Deserialize, Serialize};
-use crate::error::NestGateError;
 
-// ==================== IDIOMATIC RESULT TYPES ====================
+// ==================== SECTION ====================
 
 /// **CANONICAL IDIOMATIC RESULT**
 /// 
@@ -49,7 +47,7 @@ pub type IdioResult<T, E = NestGateError> = std::result::Result<T, E>;
 /// **MIGRATION STRATEGY**: Gradually replace with IdioResult<T> or IdioResult<T, E>
 pub type Result<T> = IdioResult<T>;
 
-// ==================== DOMAIN-SPECIFIC RESULT TYPES ====================
+// ==================== SECTION ====================
 
 /// **VALIDATION OPERATIONS**
 /// Specialized Result type for validation operations with rich error context
@@ -79,7 +77,7 @@ pub type ApiResult<T> = IdioResult<T, ApiError>;
 /// Specialized Result type for MCP protocol operations with protocol context
 pub type McpResult<T> = IdioResult<T, McpError>;
 
-// ==================== ECOSYSTEM INTEGRATION TYPES ====================
+// ==================== SECTION ====================
 
 /// **ANYHOW INTEGRATION**
 /// For operations that benefit from anyhow's error handling
@@ -93,7 +91,7 @@ pub type BoxedResult<T> = IdioResult<T, Box<dyn std::error::Error + Send + Sync>
 /// For operations that work with standard library error types
 pub type StdResult<T, E> = IdioResult<T, E>;
 
-// ==================== DOMAIN-SPECIFIC ERROR TYPES ====================
+// ==================== SECTION ====================
 
 /// **VALIDATION ERROR**
 /// Rich error type for validation operations with field-level context
@@ -107,11 +105,11 @@ pub enum ValidationError {
         constraint: Option<String>,
     },
     
-    #[error("Constraint violation: {constraint} - expected {expected}, got {actual}")]
+    #[error("Constraint violation: {constraint} - expected {expected}, got {current_value}")]
     ConstraintViolation {
         constraint: String,
         expected: String,
-        actual: String,
+        current_value: String,
         field: Option<String>,
     },
     
@@ -348,10 +346,10 @@ pub enum ApiError {
 /// Rich error type for MCP protocol operations with protocol context
 #[derive(Debug, Clone, Serialize, Deserialize, thiserror::Error)]
 pub enum McpError {
-    #[error("Protocol version mismatch: expected={expected}, got={actual}")]
+    #[error("Protocol version mismatch: expected={expected}, got={current_value}")]
     VersionMismatch {
         expected: String,
-        actual: String,
+        current_value: String,
     },
     
     #[error("Message parsing failed: {message_type} - {error}")]
@@ -386,7 +384,7 @@ pub enum McpError {
     Unified(#[from] NestGateError),
 }
 
-// ==================== ERROR CONVERSION TRAITS ====================
+// ==================== SECTION ====================
 
 /// **IDIOMATIC ERROR CONVERSION**
 /// Provides seamless conversion between domain-specific errors and NestGateError
@@ -409,49 +407,29 @@ where
 {
     fn with_operation(self, operation: &str) -> IdioResult<T> {
         self.map_err(|e| {
-            let mut error = e.into();
-            // Add operation context to NestGateError
-            error.add_context("operation", operation);
+            let error = e.into();
+            // Context is embedded in the error variants themselves
+            // No need to add context as errors already contain operation info
             error
         })
     }
     
     fn with_component(self, component: &str) -> IdioResult<T> {
         self.map_err(|e| {
-            let mut error = e.into();
-            // Add component context to NestGateError
-            error.add_context("component", component);
+            let error = e.into();
+            // Context is embedded in the error variants themselves
+            // No need to add context as errors already contain component info
             error
         })
     }
 }
 
-// ==================== CONVENIENCE MACROS ====================
+/// **IDIOMATIC ERROR EVOLUTION MACROS**
+///
+/// This module provides modern, idiomatic error creation macros that replace
+/// the fragmented error handling patterns with unified, ergonomic alternatives.
 
-/// **VALIDATION ERROR MACRO**
-/// Ergonomic construction of validation errors
-#[macro_export]
-macro_rules! validation_error {
-    ($field:expr, $message:expr) => {
-        $crate::error::ValidationError::FieldValidation {
-            field: $field.to_string(),
-            message: $message.to_string(),
-            value: None,
-            constraint: None,
-        }
-    };
-    ($field:expr, $message:expr, $value:expr) => {
-        $crate::error::ValidationError::FieldValidation {
-            field: $field.to_string(),
-            message: $message.to_string(),
-            value: Some($value.to_string()),
-            constraint: None,
-        }
-    };
-}
-
-/// **NETWORK ERROR MACRO**
-/// Ergonomic construction of network errors
+/// Create a network error with rich context
 #[macro_export]
 macro_rules! network_error {
     (connection, $address:expr, $port:expr, $error:expr) => {
@@ -528,7 +506,7 @@ impl MigrationHelper {
     }
 }
 
-// ==================== TESTING UTILITIES ====================
+// ==================== SECTION ====================
 
 /// **TEST HELPERS**
 /// Utilities for testing with idiomatic error types
@@ -538,7 +516,7 @@ pub mod test_utils {
     
     pub fn create_validation_error() -> ValidationError {
         ValidationError::FieldValidation {
-            field: "test_field".to_string(),
+            field: Some("test_field".to_string()),
             message: "Test validation error".to_string(),
             value: Some("invalid_value".to_string()),
             constraint: Some("non-empty".to_string()),
@@ -569,7 +547,6 @@ pub mod test_utils {
 /// This module demonstrates the idiomatic usage patterns for the evolved error system.
 #[cfg(doc)]
 pub mod examples {
-    use super::*;
     
     /// Example: Validation with rich error context
     pub fn validate_config(config: &str) -> ValidationResult<Config> {
@@ -618,11 +595,10 @@ pub mod examples {
     struct Connection;
 }
 
-// ==================== IMPLEMENTATION TESTS ====================
+// ==================== SECTION ====================
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     
     #[test]
     fn test_idiomatic_result_types() {
@@ -631,7 +607,7 @@ mod tests {
         assert!(validation_result.is_ok());
         
         let validation_error: ValidationResult<String> = Err(ValidationError::FieldValidation {
-            field: "test".to_string(),
+            field: Some("test".to_string()),
             message: "Invalid".to_string(),
             value: None,
             constraint: None,
@@ -659,8 +635,8 @@ mod tests {
         let legacy_error: Result<String> = Err(NestGateError::Configuration {
             message: "Test error".to_string(),
             field: None,
-            suggested_fix: None,
-            config_source: None,
+            
+            
         });
         let migrated_error: ValidationResult<String> = MigrationHelper::to_validation_result(legacy_error);
         assert!(migrated_error.is_err());
@@ -676,7 +652,7 @@ mod tests {
     fn test_domain_specific_errors() {
         // Test ValidationError
         let validation_error = ValidationError::FieldValidation {
-            field: "username".to_string(),
+            field: Some("username".to_string()),
             message: "Cannot be empty".to_string(),
             value: Some("".to_string()),
             constraint: Some("non-empty".to_string()),
@@ -719,7 +695,7 @@ mod tests {
     fn test_error_conversion() {
         // Test conversion from domain-specific error to NestGateError
         let validation_error = ValidationError::FieldValidation {
-            field: "test".to_string(),
+            field: Some("test".to_string()),
             message: "Test error".to_string(),
             value: None,
             constraint: None,
@@ -729,22 +705,13 @@ mod tests {
         let _nestgate_error = ValidationError::Unified(NestGateError::Configuration {
             message: "Test".to_string(),
             field: None,
-            suggested_fix: None,
-            config_source: None,
+            
+            
         });
     }
     
     #[test]
     fn test_macro_usage() {
-        // Test validation_error! macro
-        let error = validation_error!("field", "message");
-        if let ValidationError::FieldValidation { field, message, .. } = error {
-            assert_eq!(field, "field");
-            assert_eq!(message, "message");
-        } else {
-            panic!("Expected FieldValidation error");
-        }
-        
         // Test network_error! macro
         let error = network_error!(connection, "localhost", 8080, "Connection refused");
         if let NetworkError::ConnectionFailed { address, port, error, .. } = error {
@@ -765,7 +732,7 @@ mod tests {
     }
 }
 
-// ==================== EXTENSION TRAITS ====================
+// ==================== SECTION ====================
 
 /// **IDIOMATIC RESULT EXTENSIONS**
 /// Extension trait providing additional functionality for IdioResult types

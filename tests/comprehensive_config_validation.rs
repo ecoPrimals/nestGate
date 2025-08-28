@@ -3,7 +3,7 @@
 //! Tests all configuration combinations, edge cases, and validation paths
 //! to achieve 95% test coverage for configuration modules.
 
-use nestgate_core::config::canonical_unified::{
+use nestgate_core::config::unified::{
     ApiServerConfig, CanonicalConfig as Config, NetworkConfig, SecurityConfig, StorageConfig,
 };
 use nestgate_core::error::Result;

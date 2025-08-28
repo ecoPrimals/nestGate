@@ -4,7 +4,7 @@
 //! Single responsibility: Load configuration from various sources.
 
 use super::types::CanonicalConfig;
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use std::path::PathBuf;
 
 /// Configuration loader with support for multiple sources
@@ -14,10 +14,11 @@ impl ConfigLoader {
     /// Load configuration from a TOML file
     pub fn load_from_file(path: &PathBuf) -> Result<CanonicalConfig> {
         let content = std::fs::read_to_string(path).map_err(|e| NestGateError::Io {
+            message: format!("Failed to read config file: {e}"),
             operation: "load_config".to_string(),
-            error_message: format!("Failed to read config file: {e}"),
-            resource: Some(path.to_string_lossy().to_string()),
+            path: Some(path.to_string_lossy().to_string()),
             retryable: false,
+            context: None,
         })?;
 
         Self::parse_toml(&content)
@@ -39,11 +40,11 @@ impl ConfigLoader {
     fn parse_toml(content: &str) -> Result<CanonicalConfig> {
         let config: CanonicalConfig =
             toml::from_str(content).map_err(|e| NestGateError::Validation {
-                field: "config_file".to_string(),
+                field: Some("config_file".to_string()),
                 message: format!("Invalid configuration format: {e}"),
                 current_value: None,
                 expected: Some("valid TOML".to_string()),
-                user_error: true,
+                context: None,
             })?;
 
         // Validate the loaded configuration
@@ -58,16 +59,17 @@ impl ConfigLoader {
 
         let content = toml::to_string_pretty(config).map_err(|e| NestGateError::Internal {
             message: format!("Failed to serialize configuration: {e}"),
-            location: Some("ConfigLoader::save_to_file".to_string()),
-            debug_info: Some(format!("Path: {}", path.display())),
+            location: Some(format!("ConfigLoader::save_to_file - Path: {}", path.display())),
             is_bug: false,
+            context: None,
         })?;
 
         std::fs::write(path, content).map_err(|e| NestGateError::Io {
+            message: format!("Failed to write config file: {e}"),
             operation: "save_config".to_string(),
-            error_message: format!("Failed to write config file: {e}"),
-            resource: Some(path.to_string_lossy().to_string()),
+            path: Some(path.to_string_lossy().to_string()),
             retryable: true,
+            context: None,
         })?;
 
         Ok(())

@@ -1,4 +1,4 @@
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use crate::security::AuthContext;
 /// Authentication and authorization module for NestGate
 ///
@@ -244,7 +244,7 @@ impl AuthMiddleware {
             match *required_role {
                 Role::Admin => {
                     if !context.is_admin() {
-                        return Err(NestGateError::security_error(
+                        return Err(NestGateError::permission_denied(
                             "admin role required",
                             "access",
                             Some("admin-protected resource"),
@@ -254,7 +254,7 @@ impl AuthMiddleware {
                 }
                 Role::Operator => {
                     if !context.has_role(&Role::Operator) {
-                        return Err(NestGateError::security_error(
+                        return Err(NestGateError::permission_denied(
                             "operator role required",
                             "access",
                             Some("operator-protected resource"),
@@ -264,7 +264,7 @@ impl AuthMiddleware {
                 }
                 Role::ReadOnly => {
                     if !context.has_role(&Role::ReadOnly) {
-                        return Err(NestGateError::security_error(
+                        return Err(NestGateError::permission_denied(
                             "read-only role required",
                             "access",
                             Some("read-only resource"),
@@ -274,7 +274,7 @@ impl AuthMiddleware {
                 }
                 _ => {
                     if !context.has_role(required_role) && !context.is_admin() {
-                        return Err(NestGateError::security_error(
+                        return Err(NestGateError::permission_denied(
                             "specific role required",
                             "access",
                             Some("role-protected resource"),
@@ -289,7 +289,7 @@ impl AuthMiddleware {
         for perm_name in &self.required_permissions {
             let perm = Permission::new(perm_name);
             if !context.has_permission(&perm) {
-                return Err(NestGateError::security_error(
+                return Err(NestGateError::permission_denied(
                     &format!("{perm_name} permission required"),
                     "access",
                     Some("permission-protected resource"),

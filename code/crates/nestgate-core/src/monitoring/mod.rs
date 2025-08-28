@@ -7,7 +7,7 @@ pub mod alerts;
 pub mod dashboards;
 pub mod health_checks;
 pub mod metrics;
-pub mod tracing_setup;
+pub mod tracing;
 
 // Re-export key monitoring features
 pub use alerts::{AlertChannel, AlertManager, AlertRule, AlertSeverity};
@@ -16,4 +16,4 @@ pub use metrics::{
     MetricsCollector, MetricsExporter, PerformanceMetrics, ProviderMetrics, StorageMetrics,
     SystemMetrics,
 };
-pub use tracing_setup::{create_span, init_tracing, TraceContext, TracingConfig};
+pub use tracing::{create_span, init_tracing, TraceContext, TracingConfig};

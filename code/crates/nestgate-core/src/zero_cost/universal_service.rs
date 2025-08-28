@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 /// **ZERO-COST UNIVERSAL SERVICE TRAIT**
 ///
@@ -12,13 +12,13 @@ use std::collections::HashMap;
 /// - Direct method dispatch (no vtable overhead)
 /// - Monomorphized code generation for optimal performance
 ///
-/// **REPLACES**: `nestgate_core::traits::UniversalService`
+/// **REPLACES**: `crate::traits::canonical_unified_traits::CanonicalService`
 use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 use uuid::Uuid;
 
-// ==================== ZERO-COST UNIVERSAL SERVICE TRAIT ====================
+// ==================== SECTION ====================
 
 /// **Zero-cost universal service trait**
 ///
@@ -94,7 +94,7 @@ pub trait ZeroCostUniversalService: Send + Sync + 'static {
     }
 }
 
-// ==================== ZERO-COST SERVICE EXTENSIONS ====================
+// ==================== SECTION ====================
 
 /// **Zero-cost discoverable service trait**
 ///
@@ -136,7 +136,7 @@ pub trait ZeroCostConfigurableService: ZeroCostUniversalService {
     fn export_config(&self) -> impl std::future::Future<Output = Result<serde_json::Value>> + Send;
 }
 
-// ==================== STANDARD HEALTH TYPES ====================
+// ==================== SECTION ====================
 
 /// **Zero-cost service health status**
 ///
@@ -192,7 +192,7 @@ pub struct HealthMetrics {
     pub avg_response_time_ms: f64,
 }
 
-// ==================== STANDARD METADATA TYPES ====================
+// ==================== SECTION ====================
 
 /// **Zero-cost service metadata**
 ///
@@ -219,7 +219,7 @@ pub struct ZeroCostServiceMetadata {
     pub properties: std::collections::HashMap<String, String>,
 }
 
-// ==================== UTILITY FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// **Create default health metrics**
 pub fn default_health_metrics() -> HealthMetrics {
@@ -262,9 +262,7 @@ pub fn unhealthy_status(error: String, recovery_hint: Option<String>) -> ZeroCos
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::NestGateError;
     use std::time::Duration;
-    use uuid::Uuid;
 
     /// **Mock zero-cost service for testing**
     struct MockZeroCostService {
@@ -376,7 +374,7 @@ mod tests {
             NestGateError::Internal {
                 message: format!("Service shutdown failed: {:?}", e),
                 location: Some("universal_service.rs:417".to_string()),
-                debug_info: Some("stop operation".to_string()),
+                location: Some("stop operation".to_string()),
                 is_bug: false,
             }
         })?;

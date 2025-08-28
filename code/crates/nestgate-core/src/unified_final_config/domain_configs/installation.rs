@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 //
-// Installation-specific configuration structures extracted from the monolithic domain_configs.rs
+// Installation-specific configuration structures extracted from the monolithic NestGateCanonicalConfig.rs
 // for better maintainability and focused responsibility.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
 

@@ -4,7 +4,6 @@ use std::collections::HashMap;
 
 use crate::error::CanonicalResult as Result;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// Workload patterns for optimization
 #[derive(Debug, Clone, Serialize, Deserialize)]

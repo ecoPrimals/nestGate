@@ -3,7 +3,7 @@
 /// This module defines universal traits that any primal can implement,
 /// eliminating hardcoded dependencies on specific primal implementations.
 use crate::biomeos::ServiceCategory;
-use async_trait::async_trait;
+// CANONICAL MODERNIZATION: Removed async_trait for native async patterns
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
@@ -13,85 +13,43 @@ use uuid::Uuid;
 use crate::Result;
 use tracing::info;
 
-/// **DEPRECATED**: Use nestgate_core::traits::UniversalService instead
-/// This trait has been superseded by the canonical UniversalService trait
-#[deprecated(
-    since = "2.1.0",
-    note = "Use nestgate_core::traits::UniversalService instead"
-)]
-#[async_trait]
-pub trait PrimalProvider: Send + Sync {
-    /// Unique service identifier (UUID-based, not name-based)
-    fn service_id(&self) -> Uuid;
-
-    /// Instance identifier for multi-instance support
-    fn instance_id(&self) -> &str;
-
-    /// User/device context this primal instance serves
-    fn context(&self) -> &PrimalContext;
-
-    /// Service category this provider implements
-    fn service_category(&self) -> ServiceCategory;
-
-    /// Capabilities this service provides
-    fn capabilities(&self) -> Vec<PrimalCapability>;
-
-    /// What capabilities this service needs from other services
-    fn dependencies(&self) -> Vec<PrimalDependency>;
-
-    /// Health check for this service
-    async fn health_check(&self) -> PrimalHealth;
-
-    /// Get service API endpoints
-    fn endpoints(&self) -> PrimalEndpoints;
-
-    /// Handle inter-service communication
-    async fn handle_service_request(&self, request: PrimalRequest) -> Result<PrimalResponse>;
-
-    /// Initialize the service with configuration
-    async fn initialize(&mut self, config: serde_json::Value) -> Result<()>;
-
-    /// Shutdown the service gracefully
-    async fn shutdown(&mut self) -> Result<()>;
-
-    /// Check if this service can serve the given context
-    fn can_serve_context(&self, context: &PrimalContext) -> bool;
-}
+// **DEPRECATED TRAIT REMOVED** - PrimalProvider eliminated as part of unification cleanup
+// Use crate::traits::canonical_unified_traits::CanonicalService instead
 
 /// Universal security primal provider trait
-#[async_trait]
+/// **CANONICAL MODERNIZATION**: Native async trait without async_trait overhead
 pub trait SecurityPrimalProvider: Send + Sync {
     /// Authenticate with provided credentials
-    async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken>;
+    fn authenticate(&self, credentials: &Credentials) -> impl std::future::Future<Output = Result<AuthToken>> + Send;
 
     /// Encrypt data with specified algorithm
-    async fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>>;
+    fn encrypt(&self, data: &[u8], algorithm: &str) -> impl std::future::Future<Output = Result<Vec<u8>>> + Send;
 
     /// Decrypt data with specified algorithm
-    async fn decrypt(&self, encrypted: &[u8], algorithm: &str) -> Result<Vec<u8>>;
+    fn decrypt(&self, encrypted: &[u8], algorithm: &str) -> impl std::future::Future<Output = Result<Vec<u8>>> + Send;
 
     /// Sign data cryptographically
-    async fn sign_data(&self, data: &[u8]) -> Result<Signature>;
+    fn sign_data(&self, data: &[u8]) -> impl std::future::Future<Output = Result<Signature>> + Send;
 
     /// Verify cryptographic signature
-    async fn verify_signature(&self, data: &[u8], signature: &Signature) -> Result<bool>;
+    fn verify_signature(&self, data: &[u8], signature: &Signature) -> impl std::future::Future<Output = Result<bool>> + Send;
 
     /// Get signing key identifier
-    async fn get_key_id(&self) -> Result<String>;
+    fn get_key_id(&self) -> impl std::future::Future<Output = Result<String>> + Send;
 
     /// Validate security token
-    async fn validate_token(&self, token: &str, data: &[u8]) -> Result<bool>;
+    fn validate_token(&self, token: &str, data: &[u8]) -> impl std::future::Future<Output = Result<bool>> + Send;
 
     /// Generate validation token
-    async fn generate_validation_token(&self, data: &[u8]) -> Result<String>;
+    fn generate_validation_token(&self, data: &[u8]) -> impl std::future::Future<Output = Result<String>> + Send;
 
     /// Check if access crosses security boundary
-    async fn evaluate_boundary_access(
+    fn evaluate_boundary_access(
         &self,
         source: &str,
         destination: &str,
         operation: &str,
-    ) -> Result<SecurityDecision>;
+    ) -> impl std::future::Future<Output = Result<SecurityDecision>> + Send;
 }
 
 /// Security decision for boundary access
@@ -106,68 +64,68 @@ pub enum SecurityDecision {
 }
 
 /// Universal orchestration primal provider trait
-#[async_trait]
+/// **CANONICAL MODERNIZATION**: Native async trait without async_trait overhead
 pub trait OrchestrationPrimalProvider: Send + Sync {
     /// Register service with orchestrator
-    async fn register_service(&self, service: &ServiceRegistration) -> Result<String>;
+    fn register_service(&self, service: &ServiceRegistration) -> impl std::future::Future<Output = Result<String>> + Send;
 
     /// Discover available services
-    async fn discover_services(&self, service_type: &str) -> Result<Vec<ServiceInstance>>;
+    fn discover_services(&self, service_type: &str) -> impl std::future::Future<Output = Result<Vec<ServiceInstance>>> + Send;
 
     /// Allocate port for service
-    async fn allocate_port(&self, service: &str, port_type: &str) -> Result<u16>;
+    fn allocate_port(&self, service: &str, port_type: &str) -> impl std::future::Future<Output = Result<u16>> + Send;
 
     /// Release allocated port
-    async fn release_port(&self, service: &str, port: u16) -> Result<()>;
+    fn release_port(&self, service: &str, port: u16) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Route request between services
-    async fn route_request(&self, request: &InterPrimalRequest) -> Result<InterPrimalResponse>;
+    fn route_request(&self, request: &InterPrimalRequest) -> impl std::future::Future<Output = Result<InterPrimalResponse>> + Send;
 
     /// Get service health status
-    async fn get_service_health(&self, service: &str) -> Result<ServiceHealth>;
+    fn get_service_health(&self, service: &str) -> impl std::future::Future<Output = Result<ServiceHealth>> + Send;
 
     /// Load balance across service instances
-    async fn load_balance(
+    fn load_balance(
         &self,
         service: &str,
         request: &ServiceRequest,
-    ) -> Result<ServiceResponse>;
+    ) -> impl std::future::Future<Output = Result<ServiceResponse>> + Send;
 }
 
 /// Universal compute primal provider trait
-#[async_trait]
+/// **CANONICAL MODERNIZATION**: Native async trait without async_trait overhead
 pub trait ComputePrimalProvider: Send + Sync {
     /// Allocate compute resources
-    async fn allocate_resources(&self, spec: &ResourceSpec) -> Result<ResourceAllocation>;
+    fn allocate_resources(&self, spec: &ResourceSpec) -> impl std::future::Future<Output = Result<ResourceAllocation>> + Send;
 
     /// Execute workload
-    async fn execute_workload(&self, workload: &WorkloadSpec) -> Result<WorkloadResult>;
+    fn execute_workload(&self, workload: &WorkloadSpec) -> impl std::future::Future<Output = Result<WorkloadResult>> + Send;
 
     /// Monitor performance metrics
-    async fn monitor_performance(
+    fn monitor_performance(
         &self,
         allocation: &ResourceAllocation,
-    ) -> Result<PerformanceMetrics>;
+    ) -> impl std::future::Future<Output = Result<PerformanceMetrics>> + Send;
 
     /// Scale resources up or down
-    async fn scale_resources(
+    fn scale_resources(
         &self,
         allocation: &ResourceAllocation,
         target: &ScalingTarget,
-    ) -> Result<()>;
+    ) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Get resource utilization
-    async fn get_resource_utilization(&self) -> Result<ResourceUtilization>;
+    fn get_resource_utilization(&self) -> impl std::future::Future<Output = Result<ResourceUtilization>> + Send;
 
     /// Detect platform capabilities
-    async fn detect_platform(&self) -> Result<PlatformCapabilities>;
+    fn detect_platform(&self) -> impl std::future::Future<Output = Result<PlatformCapabilities>> + Send;
 
     /// Optimize resource allocation
-    async fn optimize_allocation(
+    fn optimize_allocation(
         &self,
         current: &ResourceAllocation,
         metrics: &PerformanceMetrics,
-    ) -> Result<OptimizationRecommendation>;
+    ) -> impl std::future::Future<Output = Result<OptimizationRecommendation>> + Send;
 }
 
 // Supporting types and structures
@@ -588,32 +546,32 @@ pub struct OptimizationRecommendation {
 }
 
 /// EcosystemIntegration trait for service mesh registration and discovery
-#[async_trait]
+/// **CANONICAL MODERNIZATION**: Native async trait without async_trait overhead
 pub trait EcosystemIntegration: Send + Sync {
     /// Register this service with the ecosystem
-    async fn register_with_ecosystem(
+    fn register_with_ecosystem(
         &self,
         service_info: &ServiceInfo,
-    ) -> Result<ServiceRegistration>;
+    ) -> impl std::future::Future<Output = Result<ServiceRegistration>> + Send;
 
     /// Discover services by capability
-    async fn discover_services_by_capability(
+    fn discover_services_by_capability(
         &self,
         capability: &str,
-    ) -> Result<Vec<ServiceInstance>>;
+    ) -> impl std::future::Future<Output = Result<Vec<ServiceInstance>>> + Send;
 
     /// Get service health status
-    async fn get_service_health(&self, service_id: &str) -> Result<ServiceHealth>;
+    fn get_service_health(&self, service_id: &str) -> impl std::future::Future<Output = Result<ServiceHealth>> + Send;
 
     /// Update service capabilities
-    async fn update_capabilities(&self, capabilities: &[String]) -> Result<()>;
+    fn update_capabilities(&self, capabilities: &[String]) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Deregister from ecosystem
-    async fn deregister_from_ecosystem(&self, service_id: &str) -> Result<()>;
+    fn deregister_from_ecosystem(&self, service_id: &str) -> impl std::future::Future<Output = Result<()>> + Send;
 }
 
 /// UniversalPrimalProvider trait for capability advertisement
-#[async_trait]
+/// **CANONICAL MODERNIZATION**: Native async trait without async_trait overhead
 pub trait UniversalPrimalProvider: Send + Sync {
     /// Get primal type identifier
     fn primal_type(&self) -> &str;
@@ -628,14 +586,14 @@ pub trait UniversalPrimalProvider: Send + Sync {
     fn supports_capability(&self, capability: &str) -> bool;
 
     /// Get capability-specific configuration
-    async fn get_capability_config(&self, capability: &str) -> Result<serde_json::Value>;
+    fn get_capability_config(&self, capability: &str) -> impl std::future::Future<Output = Result<serde_json::Value>> + Send;
 
     /// Execute capability-specific operation
-    async fn execute_capability(
+    fn execute_capability(
         &self,
         capability: &str,
         params: serde_json::Value,
-    ) -> Result<serde_json::Value>;
+    ) -> impl std::future::Future<Output = Result<serde_json::Value>> + Send;
 }
 
 /// Service information for ecosystem registration

@@ -1,5 +1,5 @@
 /// Unified ZFS configuration using canonical patterns
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateFinalConfig;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig as NestGateCanonicalConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;

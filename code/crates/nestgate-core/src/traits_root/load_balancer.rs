@@ -1,17 +1,16 @@
 // Removed unused error imports
 /// Load Balancer Traits
-use async_trait::async_trait;
 use rand::rngs::StdRng;
-use rand::SeedableRng;
+use rand::{Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use crate::universal_traits::{ServiceInfo, ServiceRequest, ServiceResponse};
+// ServiceInfo, ServiceRequest, ServiceResponse types consolidated - using generic patterns
 
 /// Load balancer trait
-#[async_trait]
 pub trait LoadBalancer: Send + Sync {
     /// Select a service instance for a request
     async fn select_service(
@@ -28,10 +27,10 @@ pub trait LoadBalancer: Send + Sync {
     ) -> Result<()>;
 
     /// Update service weights
-    async fn update_weights(&self, weights: HashMap<String, f64>) -> Result<()>;
+    fn update_weights(&self, weights: HashMap<String, f64>) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Get load balancer statistics
-    async fn get_stats(&self) -> Result<LoadBalancerStats>;
+    fn get_stats(&self) -> impl std::future::Future<Output = Result<LoadBalancerStats>> + Send;
 
     /// Get algorithm name
     fn algorithm(&self) -> &'static str;
@@ -246,7 +245,6 @@ impl HealthAwareLoadBalancer {
 }
 
 // Trait implementations
-#[async_trait]
 impl LoadBalancer for RoundRobinLoadBalancer {
     async fn select_service(
         &self,
@@ -256,7 +254,25 @@ impl LoadBalancer for RoundRobinLoadBalancer {
         if services.is_empty() {
             return Err(NestGateError::LoadBalancer {
                 message: "No services available".to_string(),
-                location: Some(format!("{}:{}", file!(), line!())),
+                operation: "round_robin_select".to_string(),
+                available_services: Some(0),
+                context: Some(crate::error::context::ErrorContext {
+                    error_id: "error".to_string(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                    operation: "round_robin_select".to_string(),
+                    component: "load_balancer".to_string(),
+                    metadata: {
+                        let mut map = std::collections::HashMap::new();
+                        map.insert("location".to_string(), format!("{}:{}", file!(), line!()));
+                        map
+                    },
+                    timestamp: std::time::SystemTime::now(),
+                    retry_info: None,
+                    recovery_suggestions: vec!["Add services to the pool before load balancing".to_string()],
+                    performance_metrics: None,
+                    environment: None,
+                }),
             });
         }
 
@@ -284,8 +300,10 @@ impl LoadBalancer for RoundRobinLoadBalancer {
 
     async fn update_weights(&self, _weights: HashMap<String, f64>) -> Result<()> {
         Err(NestGateError::NotImplemented {
-            feature: "Round robin does not support weights".to_string(),
-            location: Some(format!("{}:{}", file!(), line!())),
+            message: "Weight updates not supported for round robin load balancer".to_string(),
+            feature: "update_weights".to_string(),
+            location: Some("round_robin_load_balancer::update_weights".to_string()),
+            context: None,
         })
     }
 
@@ -298,7 +316,6 @@ impl LoadBalancer for RoundRobinLoadBalancer {
     }
 }
 
-#[async_trait]
 impl LoadBalancer for WeightedRoundRobinLoadBalancer {
     async fn select_service(
         &self,
@@ -308,7 +325,26 @@ impl LoadBalancer for WeightedRoundRobinLoadBalancer {
         if services.is_empty() {
             return Err(NestGateError::LoadBalancer {
                 message: "No services available".to_string(),
-                location: Some(format!("{}:{}", file!(), line!())),
+                operation: "weighted_round_robin_select".to_string(),
+                available_services: Some(0),
+                context: Some(crate::error::context::ErrorContext {
+                    error_id: "error".to_string(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                    operation: "weighted_round_robin_select".to_string(),
+                    component: "load_balancer".to_string(),
+                    metadata: {
+                        let mut map = std::collections::HashMap::new();
+                        map.insert("location".to_string(), format!("{}:{}", file!(), line!()));
+                        map.insert("services_count".to_string(), services.len().to_string());
+                        map
+                    },
+                    timestamp: std::time::SystemTime::now(),
+                    retry_info: None,
+                    recovery_suggestions: vec!["Add services to the pool before load balancing".to_string()],
+                    performance_metrics: None,
+                    environment: None,
+                }),
             });
         }
 
@@ -355,7 +391,26 @@ impl LoadBalancer for WeightedRoundRobinLoadBalancer {
 
         selected_service.ok_or_else(|| NestGateError::LoadBalancer {
             message: "No service selected".to_string(),
-            location: Some(format!("{}:{}", file!(), line!())),
+            operation: "weighted_round_robin_select".to_string(),
+            available_services: Some(services.len()),
+            context: Some(crate::error::context::ErrorContext {
+                    error_id: "error".to_string(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                operation: "weighted_round_robin_select".to_string(),
+                component: "load_balancer".to_string(),
+                metadata: {
+                    let mut map = std::collections::HashMap::new();
+                    map.insert("location".to_string(), format!("{}:{}", file!(), line!()));
+                    map.insert("services_count".to_string(), services.len().to_string());
+                    map
+                },
+                timestamp: std::time::SystemTime::now(),
+                retry_info: None,
+                recovery_suggestions: vec!["Add services to the pool before load balancing".to_string()],
+                    performance_metrics: None,
+                    environment: None,
+            }),
         })
     }
 
@@ -388,7 +443,6 @@ impl LoadBalancer for WeightedRoundRobinLoadBalancer {
     }
 }
 
-#[async_trait]
 impl LoadBalancer for LeastConnectionsLoadBalancer {
     async fn select_service(
         &self,
@@ -398,7 +452,25 @@ impl LoadBalancer for LeastConnectionsLoadBalancer {
         if services.is_empty() {
             return Err(NestGateError::LoadBalancer {
                 message: "No services available".to_string(),
-                location: Some(format!("{}:{}", file!(), line!())),
+                operation: "least_connections_select".to_string(),
+                available_services: Some(0),
+                context: Some(crate::error::context::ErrorContext {
+                    error_id: "error".to_string(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                    operation: "least_connections_select".to_string(),
+                    component: "load_balancer".to_string(),
+                    metadata: {
+                        let mut map = std::collections::HashMap::new();
+                        map.insert("location".to_string(), format!("{}:{}", file!(), line!()));
+                        map
+                    },
+                    timestamp: std::time::SystemTime::now(),
+                    retry_info: None,
+                    recovery_suggestions: vec!["Add services to the pool before load balancing".to_string()],
+                    performance_metrics: None,
+                    environment: None,
+                }),
             });
         }
 
@@ -420,7 +492,27 @@ impl LoadBalancer for LeastConnectionsLoadBalancer {
 
         selected_service.ok_or_else(|| NestGateError::LoadBalancer {
             message: "No service selected".to_string(),
-            location: Some(format!("{}:{}", file!(), line!())),
+            operation: "least_connections_select".to_string(),
+            available_services: Some(services.len()),
+            context: Some(crate::error::context::ErrorContext {
+                    error_id: "error".to_string(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                operation: "least_connections_select".to_string(),
+                component: "load_balancer".to_string(),
+                metadata: {
+                    let mut map = std::collections::HashMap::new();
+                    map.insert("location".to_string(), format!("{}:{}", file!(), line!()));
+                    map.insert("services_count".to_string(), services.len().to_string());
+                    map.insert("min_connections".to_string(), min_connections.to_string());
+                    map
+                },
+                timestamp: std::time::SystemTime::now(),
+                retry_info: None,
+                recovery_suggestions: vec!["Add services to the pool before load balancing".to_string()],
+                    performance_metrics: None,
+                    environment: None,
+            }),
         })
     }
 
@@ -446,8 +538,10 @@ impl LoadBalancer for LeastConnectionsLoadBalancer {
 
     async fn update_weights(&self, _weights: HashMap<String, f64>) -> Result<()> {
         Err(NestGateError::NotImplemented {
-            feature: "Least connections does not support weights".to_string(),
+            message: "Least connections does not support weights".to_string(),
+            feature: "update_weights".to_string(),
             location: Some(format!("{}:{}", file!(), line!())),
+            context: None,
         })
     }
 
@@ -460,7 +554,6 @@ impl LoadBalancer for LeastConnectionsLoadBalancer {
     }
 }
 
-#[async_trait]
 impl LoadBalancer for RandomLoadBalancer {
     async fn select_service(
         &self,
@@ -470,7 +563,25 @@ impl LoadBalancer for RandomLoadBalancer {
         if services.is_empty() {
             return Err(NestGateError::LoadBalancer {
                 message: "No services available".to_string(),
-                location: Some(format!("{}:{}", file!(), line!())),
+                operation: "random_select".to_string(),
+                available_services: Some(0),
+                context: Some(crate::error::context::ErrorContext {
+                    error_id: "error".to_string(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                    operation: "random_select".to_string(),
+                    component: "load_balancer".to_string(),
+                    metadata: {
+                        let mut map = std::collections::HashMap::new();
+                        map.insert("location".to_string(), format!("{}:{}", file!(), line!()));
+                        map
+                    },
+                    timestamp: std::time::SystemTime::now(),
+                    retry_info: None,
+                    recovery_suggestions: vec!["Add services to the pool before load balancing".to_string()],
+                    performance_metrics: None,
+                    environment: None,
+                }),
             });
         }
 
@@ -478,7 +589,26 @@ impl LoadBalancer for RandomLoadBalancer {
 
         let mut rng = self.rng.lock().map_err(|_| NestGateError::LoadBalancer {
             message: "Random number generator lock poisoned".to_string(),
-            location: Some(format!("{}:{}", file!(), line!())),
+            operation: "random_select".to_string(),
+            available_services: Some(services.len()),
+            context: Some(crate::error::context::ErrorContext {
+                    error_id: "error".to_string(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                operation: "random_select".to_string(),
+                component: "load_balancer".to_string(),
+                metadata: {
+                    let mut map = std::collections::HashMap::new();
+                    map.insert("location".to_string(), format!("{}:{}", file!(), line!()));
+                    map.insert("error_type".to_string(), "lock_poisoned".to_string());
+                    map
+                },
+                timestamp: std::time::SystemTime::now(),
+                retry_info: None,
+                recovery_suggestions: vec!["Restart the load balancer to recover from poisoned lock".to_string()],
+                    performance_metrics: None,
+                    environment: None,
+            }),
         })?;
         let index = rng.gen_range(0..services.len());
         let selected = services[index].clone();
@@ -511,8 +641,10 @@ impl LoadBalancer for RandomLoadBalancer {
 
     async fn update_weights(&self, _weights: HashMap<String, f64>) -> Result<()> {
         Err(NestGateError::NotImplemented {
-            feature: "Random load balancer does not support weights".to_string(),
+            message: "Random load balancer does not support weights".to_string(),
+            feature: "update_weights".to_string(),
             location: Some(format!("{}:{}", file!(), line!())),
+            context: None,
         })
     }
 
@@ -525,7 +657,6 @@ impl LoadBalancer for RandomLoadBalancer {
     }
 }
 
-#[async_trait]
 impl LoadBalancer for WeightedRandomLoadBalancer {
     async fn select_service(
         &self,
@@ -535,13 +666,30 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
         if services.is_empty() {
             return Err(NestGateError::LoadBalancer {
                 message: "No services available".to_string(),
-                location: Some(format!("{}:{}", file!(), line!())),
+                operation: "weighted_random_select".to_string(),
+                available_services: Some(0),
+                context: Some(crate::error::context::ErrorContext {
+                    error_id: "error".to_string(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                    operation: "weighted_random_select".to_string(),
+                    component: "load_balancer".to_string(),
+                    metadata: {
+                        let mut map = std::collections::HashMap::new();
+                        map.insert("location".to_string(), format!("{}:{}", file!(), line!()));
+                        map
+                    },
+                    timestamp: std::time::SystemTime::now(),
+                    retry_info: None,
+                    recovery_suggestions: vec!["Add services to the pool before load balancing".to_string()],
+                    performance_metrics: None,
+                    environment: None,
+                }),
             });
         }
 
         // Implement proper weighted random algorithm
         let weights = self.weights.read();
-        use rand::Rng;
 
         // Calculate total weight
         let total_weight: f64 = services
@@ -553,7 +701,27 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
             // Fallback to uniform random if no valid weights
             let mut rng = self.rng.lock().map_err(|_| NestGateError::LoadBalancer {
                 message: "Random number generator lock poisoned".to_string(),
-                location: Some(format!("{}:{}", file!(), line!())),
+                operation: "weighted_random_select".to_string(),
+                available_services: Some(services.len()),
+                context: Some(crate::error::context::ErrorContext {
+                    error_id: "error".to_string(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                    operation: "weighted_random_select".to_string(),
+                    component: "load_balancer".to_string(),
+                    metadata: {
+                        let mut map = std::collections::HashMap::new();
+                        map.insert("location".to_string(), format!("{}:{}", file!(), line!()));
+                        map.insert("error_type".to_string(), "lock_poisoned".to_string());
+                        map.insert("fallback_reason".to_string(), "zero_total_weight".to_string());
+                        map
+                    },
+                    timestamp: std::time::SystemTime::now(),
+                    retry_info: None,
+                    recovery_suggestions: vec!["Restart the load balancer to recover from poisoned lock".to_string()],
+                    performance_metrics: None,
+                    environment: None,
+                }),
             })?;
             let index = rng.gen_range(0..services.len());
             return Ok(services[index].clone());
@@ -562,7 +730,27 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
         // Generate random number in [0, total_weight)
         let mut rng = self.rng.lock().map_err(|_| NestGateError::LoadBalancer {
             message: "Random number generator lock poisoned".to_string(),
-            location: Some(format!("{}:{}", file!(), line!())),
+            operation: "weighted_random_select".to_string(),
+            available_services: Some(services.len()),
+            context: Some(crate::error::context::ErrorContext {
+                    error_id: "error".to_string(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                operation: "weighted_random_select".to_string(),
+                component: "load_balancer".to_string(),
+                metadata: {
+                    let mut map = std::collections::HashMap::new();
+                    map.insert("location".to_string(), format!("{}:{}", file!(), line!()));
+                    map.insert("error_type".to_string(), "lock_poisoned".to_string());
+                    map.insert("total_weight".to_string(), total_weight.to_string());
+                    map
+                },
+                timestamp: std::time::SystemTime::now(),
+                retry_info: None,
+                recovery_suggestions: vec!["Restart the load balancer to recover from poisoned lock".to_string()],
+                    performance_metrics: None,
+                    environment: None,
+            }),
         })?;
         let random_weight = rng.gen::<f64>() * total_weight;
         drop(rng);
@@ -618,7 +806,6 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
     }
 }
 
-#[async_trait]
 impl LoadBalancer for HealthAwareLoadBalancer {
     async fn select_service(
         &self,
@@ -635,7 +822,27 @@ impl LoadBalancer for HealthAwareLoadBalancer {
         if healthy_services.is_empty() {
             return Err(NestGateError::LoadBalancer {
                 message: "No healthy services available".to_string(),
-                location: Some(format!("{}:{}", file!(), line!())),
+                operation: "health_aware_select".to_string(),
+                available_services: Some(0),
+                context: Some(crate::error::context::ErrorContext {
+                    error_id: "error".to_string(),
+                    stack_trace: None,
+                    related_errors: vec![],
+                    operation: "health_aware_select".to_string(),
+                    component: "load_balancer".to_string(),
+                    metadata: {
+                        let mut map = std::collections::HashMap::new();
+                        map.insert("location".to_string(), format!("{}:{}", file!(), line!()));
+                        map.insert("total_services".to_string(), services.len().to_string());
+                        map.insert("healthy_services".to_string(), "0".to_string());
+                        map
+                    },
+                    timestamp: std::time::SystemTime::now(),
+                    retry_info: None,
+                    recovery_suggestions: vec!["Check service health status and wait for recovery".to_string()],
+                    performance_metrics: None,
+                    environment: None,
+                }),
             });
         }
 

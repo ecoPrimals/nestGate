@@ -7,11 +7,10 @@ use crate::capabilities::discovery::{
     ConfigUnificationImpactReport,
 };
 use crate::ecosystem_integration::universal_adapter::adapter::UniversalAdapter;
-use crate::error::Result;
+use crate::Result;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
-// REMOVED: unused import
 
 /// **PERFORMANCE BENCHMARK SUITE**
 /// Comprehensive benchmarking for configuration discovery performance
@@ -308,7 +307,7 @@ impl UnifiedConfigBenchmarks {
     }
     }
 
-// ==================== BENCHMARK RESULT STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// Individual benchmark result
 #[derive(Debug, Clone)]

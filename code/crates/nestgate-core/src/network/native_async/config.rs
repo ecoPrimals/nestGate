@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 /// Network configuration for native async implementation
+/// Network configuration for native async networking
+/// Defines connection parameters, timeouts, and performance settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkConfig {
     /// Server host

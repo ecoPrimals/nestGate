@@ -2,9 +2,9 @@
 /// Network operations, IP validation, hostname checking, and related functions
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 
-// ==================== IP ADDRESS VALIDATION ====================
+// ==================== SECTION ====================
 
 /// Check if a string is a valid IP address (IPv4 or IPv6)
 pub fn is_valid_ip(ip: &str) -> bool {
@@ -24,11 +24,12 @@ pub fn is_valid_ipv6(ip: &str) -> bool {
 /// Parse an IP address string to IpAddr
 pub fn parse_ip(ip: &str) -> Result<IpAddr> {
     ip.parse::<IpAddr>().map_err(|_| NestGateError::Validation {
-        field: "ip_address".to_string(),
+        field: Some("ip_address".to_string()),
         message: format!("Invalid IP address: {ip}"),
         current_value: Some(ip.to_string()),
         expected: Some("Valid IPv4 or IPv6 address".to_string()),
         user_error: true,
+                context: None,
     })
 }
 
@@ -36,11 +37,12 @@ pub fn parse_ip(ip: &str) -> Result<IpAddr> {
 pub fn parse_ipv4(ip: &str) -> Result<Ipv4Addr> {
     ip.parse::<Ipv4Addr>()
         .map_err(|_| NestGateError::Validation {
-            field: "ipv4_address".to_string(),
+            field: Some("ipv4_address".to_string()),
             message: format!("Invalid IPv4 address: {ip}"),
             current_value: Some(ip.to_string()),
             expected: Some("Valid IPv4 address (e.g., 192.168.1.1)".to_string()),
             user_error: true,
+                context: None,
         })
 }
 
@@ -48,15 +50,16 @@ pub fn parse_ipv4(ip: &str) -> Result<Ipv4Addr> {
 pub fn parse_ipv6(ip: &str) -> Result<Ipv6Addr> {
     ip.parse::<Ipv6Addr>()
         .map_err(|_| NestGateError::Validation {
-            field: "ipv6_address".to_string(),
+            field: Some("ipv6_address".to_string()),
             message: format!("Invalid IPv6 address: {ip}"),
             current_value: Some(ip.to_string()),
             expected: Some("Valid IPv6 address (e.g., ::1)".to_string()),
             user_error: true,
+                context: None,
         })
 }
 
-// ==================== CIDR VALIDATION ====================
+// ==================== SECTION ====================
 
 /// Check if a string is a valid CIDR notation
 pub fn is_valid_cidr(cidr: &str) -> bool {
@@ -68,52 +71,57 @@ pub fn parse_cidr(input: &str) -> Result<(IpAddr, u8)> {
     let parts: Vec<&str> = input.split('/').collect();
     if parts.len() != 2 {
         return Err(NestGateError::Validation {
-            field: "cidr".to_string(),
+            field: Some("cidr".to_string()),
             message: format!("Invalid CIDR format: {input}"),
             current_value: Some(input.to_string()),
             expected: Some("IP/prefix format (e.g., 192.168.1.0/24)".to_string()),
             user_error: true,
+                context: None,
         });
     }
 
     let ip = parts[0]
         .parse::<IpAddr>()
         .map_err(|_| NestGateError::Validation {
-            field: "ip".to_string(),
+            field: Some("ip".to_string()),
             message: format!("Invalid IP address: {}", parts[0]),
             current_value: Some(parts[0].to_string()),
             expected: Some("Valid IP address".to_string()),
             user_error: true,
+                context: None,
         })?;
 
     let prefix = parts[1]
         .parse::<u8>()
         .map_err(|_| NestGateError::Validation {
-            field: "prefix".to_string(),
+            field: Some("prefix".to_string()),
             message: format!("Invalid prefix length: {}", parts[1]),
             current_value: Some(parts[1].to_string()),
             expected: Some("Number between 0-32 (IPv4) or 0-128 (IPv6)".to_string()),
             user_error: true,
+                context: None,
         })?;
 
     // Validate prefix length based on IP address type
     match ip {
         IpAddr::V4(_) if prefix > 32 => {
             return Err(NestGateError::Validation {
-                field: "prefix".to_string(),
+                field: Some("prefix".to_string()),
                 message: format!("Invalid IPv4 prefix length: {prefix}"),
                 current_value: Some(prefix.to_string()),
                 expected: Some("0-32".to_string()),
                 user_error: true,
+                context: None,
             });
         }
         IpAddr::V6(_) if prefix > 128 => {
             return Err(NestGateError::Validation {
-                field: "prefix".to_string(),
+                field: Some("prefix".to_string()),
                 message: format!("Invalid IPv6 prefix length: {prefix}"),
                 current_value: Some(prefix.to_string()),
                 expected: Some("0-128".to_string()),
                 user_error: true,
+                context: None,
             });
         }
         _ => {}
@@ -122,7 +130,7 @@ pub fn parse_cidr(input: &str) -> Result<(IpAddr, u8)> {
     Ok((ip, prefix))
 }
 
-// ==================== HOSTNAME VALIDATION ====================
+// ==================== SECTION ====================
 
 /// Check if a hostname is valid
 pub fn is_valid_hostname(hostname: &str) -> bool {
@@ -169,7 +177,7 @@ pub fn is_valid_domain(domain: &str) -> bool {
     is_valid_hostname(domain)
 }
 
-// ==================== PORT VALIDATION ====================
+// ==================== SECTION ====================
 
 /// Check if a port number is valid (1-65535)
 pub fn is_valid_port(port: u16) -> bool {
@@ -207,7 +215,7 @@ pub async fn find_available_port(start_port: u16) -> Option<u16> {
     None
 }
 
-// ==================== URL VALIDATION ====================
+// ==================== SECTION ====================
 
 /// Check if a string is a valid URL
 pub fn is_valid_url(url: &str) -> bool {
@@ -226,15 +234,16 @@ pub fn is_valid_http_url(url: &str) -> bool {
 /// Parse a URL and return its components
 pub fn parse_url(url: &str) -> Result<url::Url> {
     url::Url::parse(url).map_err(|e| NestGateError::Validation {
-        field: "url".to_string(),
+        field: Some("url".to_string()),
         message: format!("Invalid URL: {e}"),
         current_value: Some(url.to_string()),
         expected: Some("Valid URL format".to_string()),
         user_error: true,
+                context: None,
     })
 }
 
-// ==================== MAC ADDRESS VALIDATION ====================
+// ==================== SECTION ====================
 
 /// Check if a string is a valid MAC address
 pub fn is_valid_mac_address(mac: &str) -> bool {
@@ -271,7 +280,7 @@ pub fn normalize_mac_address(mac: &str) -> Option<String> {
     Some(normalized)
 }
 
-// ==================== NETWORK UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Check if an IP address is in a private range
 pub fn is_private_ip(ip: &IpAddr) -> bool {

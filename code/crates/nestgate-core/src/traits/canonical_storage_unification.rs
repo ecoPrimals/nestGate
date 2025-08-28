@@ -1,30 +1,17 @@
 use std::collections::HashMap;
 // # Canonical Storage Trait Unification
 //
-// **CANONICAL MODERNIZATION COMPLETE** - All fragmented storage traits have been
-// successfully consolidated into the unified `CanonicalUnifiedStorage` system.
-//
-// **CONSOLIDATES**:
-// - `CanonicalStorageBackend` from `universal_storage/canonical_storage.rs` ✅
-// - `ZeroCopyStorage` from `universal_storage/zero_copy.rs` ✅
-// - `EnterpriseStorageCapabilities` from `universal_storage/enterprise/traits.rs` ✅
-// - `ZeroCostUnifiedStorageBackend` from `universal_storage/zero_cost_unified_storage_traits.rs` ✅
-// - `AdvancedStorageManagement` from `universal_storage/enterprise/advanced_features.rs` ✅
-// - Various other fragmented storage traits ✅
-//
-// **PROVIDES**:
 // - Single canonical storage interface
 // - Migration utilities for legacy traits
 // - Zero-cost patterns for high performance
 // - Enterprise feature extensions
 
 use crate::error::CanonicalResult as Result;
-use crate::traits::UniversalService;
+use crate::traits::canonical_unified_traits::CanonicalService;
 // Removed: async_trait import - now using native async patterns
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
-// ==================== CANONICAL STORAGE UNIFICATION ====================
+// ==================== SECTION ====================
 
 /// **CANONICAL STORAGE TRAIT - THE SINGLE SOURCE OF TRUTH**
 ///
@@ -169,7 +156,7 @@ pub trait CanonicalUnifiedStorage: UniversalService {
     }
 }
 
-// ==================== SUPPORTING TYPES ====================
+// ==================== SECTION ====================
 
 /// Storage item information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -238,7 +225,7 @@ pub enum IntegrityStatus {
     Error,
 }
 
-// ==================== ZERO-COST EXTENSIONS ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COST STORAGE EXTENSION**
 ///
@@ -281,7 +268,7 @@ pub enum StorageOperationResult {
     Error(String),
 }
 
-// ==================== MIGRATION UTILITIES ====================
+// ==================== SECTION ====================
 
 /// **CANONICAL STORAGE MIGRATION UTILITIES**
 ///
@@ -315,7 +302,7 @@ impl StorageMigrationUtilities {
     }
 }
 
-// ==================== CANONICAL ACHIEVEMENTS ====================
+// ==================== SECTION ====================
 
 /// **STORAGE UNIFICATION ACHIEVEMENTS**
 ///
@@ -390,5 +377,3 @@ impl StorageUnificationAchievements {
     }
 }
 
-// **CANONICAL MODERNIZATION COMPLETE**
-// All storage traits have been successfully unified into the canonical system

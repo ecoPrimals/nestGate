@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::future::Future;
 // **ZERO-COST CONNECTION POOL PATTERNS**
 //
@@ -18,7 +18,7 @@ use std::future::Future;
 use crate::error::CanonicalResult as Result;
 use std::marker::PhantomData;
 
-// ==================== ZERO-COST CONNECTION FACTORY ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COST CONNECTION FACTORY TRAIT**
 /// 
@@ -64,7 +64,7 @@ pub trait ZeroCostHealthChecker<T> {
     }
 }
 
-// ==================== ZERO-COST CONNECTION POOL MANAGER ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COST CONNECTION POOL MANAGER**
 /// 
@@ -215,7 +215,7 @@ where
     }
 }
 
-// ==================== SUPPORTING TYPES ====================
+// ==================== SECTION ====================
 
 /// Connection metadata for tracking connection state
 #[derive(Debug, Clone)]
@@ -310,7 +310,7 @@ impl PoolStatistics {
     }
 }
 
-// ==================== EXAMPLE IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 /// Example TCP connection factory implementation
 pub struct TcpConnectionFactory {
@@ -352,7 +352,7 @@ impl ZeroCostHealthChecker<std::net::TcpStream> for TcpHealthChecker {
     }
 }
 
-// ==================== TYPE ALIASES ====================
+// ==================== SECTION ====================
 
 /// Standard TCP connection pool
 pub type TcpConnectionPool = ZeroCostConnectionPoolManager<
@@ -374,7 +374,7 @@ pub type HighPerformanceTcpConnectionPool = ZeroCostConnectionPoolManager<
     15000, // HEALTH_CHECK_INTERVAL_MS
 >;
 
-// ==================== MIGRATION UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Migration guide from Arc<dyn> to zero-cost patterns
 pub const ARC_DYN_MIGRATION_GUIDE: &str = r#"

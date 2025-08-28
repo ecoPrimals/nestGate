@@ -4,7 +4,7 @@
 //! for the NestGate system, ensuring production-ready security.
 
 use nestgate_core::{
-    config::canonical_unified::CanonicalConfig,
+    config::unified::NestGateUnifiedConfig,
     error::{NestGateError, Result},
     canonical_modernization::unified_enums::{UnifiedServiceState, UnifiedServiceType},
     zero_cost_security_provider::{

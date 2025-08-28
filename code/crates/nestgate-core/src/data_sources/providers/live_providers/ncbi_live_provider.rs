@@ -7,7 +7,6 @@
 use crate::data_sources::data_capabilities::*;
 use crate::data_sources::providers::universal_http_provider::{HttpProviderConfigBuilder, UniversalHttpProvider};
 use crate::{NestGateError, Result};
-use async_trait::async_trait;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -61,7 +60,7 @@ impl NCBILiveProvider {
     }
 
     /// Search NCBI databases using ESearch
-    async fn esearch(&self, database: &str, query: &str, max_results: Option<u32>) -> Result<Vec<String>> {
+    fn esearch(&self, database: &str, query: &str, max_results: Option<u32>) -> impl std::future::Future<Output = Result<Vec<String>> + Send;
         let mut params = HashMap::new();
         params.insert("db".to_string(), database.to_string());
         params.insert("term".to_string(), query.to_string());
@@ -84,7 +83,7 @@ impl NCBILiveProvider {
             .ok_or_else(|| NestGateError::Internal {
                 message: "Invalid NCBI ESearch response format".to_string(),
                 location: Some("NCBILiveProvider::esearch".to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -94,7 +93,7 @@ impl NCBILiveProvider {
             .ok_or_else(|| NestGateError::Internal {
                 message: "No ID list in NCBI response".to_string(),
                 location: Some("NCBILiveProvider::esearch".to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -109,7 +108,7 @@ impl NCBILiveProvider {
     }
 
     /// Fetch summaries using ESummary
-    async fn esummary(&self, database: &str, ids: &[String]) -> Result<Value> {
+    fn esummary(&self, database: &str, ids: &[String]) -> impl std::future::Future<Output = Result<Value>> + Send;
         if ids.is_empty() {
             return Ok(json!({}));
         }
@@ -133,7 +132,7 @@ impl NCBILiveProvider {
     }
 
     /// Fetch sequences using EFetch
-    async fn efetch(&self, database: &str, id: &str, format: &str) -> Result<Value> {
+    fn efetch(&self, database: &str, id: &str, format: &str) -> impl std::future::Future<Output = Result<Value>> + Send;
         let mut params = HashMap::new();
         params.insert("db".to_string(), database.to_string());
         params.insert("id".to_string(), id.to_string());
@@ -156,7 +155,7 @@ impl NCBILiveProvider {
     /// Parse NCBI summary data into GenomeResult
     fn parse_ncbi_summary_to_genome_result(&self, id: &str, summary: &Value) -> Option<GenomeResult> {
         let title = summary.get("title")?.as_str()?.to_string();
-        
+
         let organism = summary.get("organism")
             .or_else(|| summary.get("orgname"))
             .and_then(|v| v.as_str())
@@ -176,7 +175,6 @@ impl NCBILiveProvider {
     }
 }
 
-#[async_trait]
 impl DataCapability for NCBILiveProvider {
     fn capability_type(&self) -> &str {
         "genome_data"
@@ -197,7 +195,7 @@ impl DataCapability for NCBILiveProvider {
             .ok_or_else(|| NestGateError::Internal {
                 message: "Missing 'query' parameter for NCBI request".to_string(),
                 location: Some("NCBILiveProvider::execute_request".to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -215,7 +213,7 @@ impl DataCapability for NCBILiveProvider {
 
         // Search NCBI
         let ids = self.esearch(database, query, max_results).await?;
-        
+
         if ids.is_empty() {
             return Ok(DataResponse {
                 data: json!({
@@ -235,9 +233,9 @@ impl DataCapability for NCBILiveProvider {
 
         // Get summaries
         let summaries = self.esummary(database, &ids).await?;
-        
+
         // Parse results
-        let mut results = Vec::new();
+        let mut results = Vec::with_capacity(ids.len());
         if let Some(result_obj) = summaries.get("result") {
             for id in &ids {
                 if let Some(summary) = result_obj.get(id) {
@@ -282,7 +280,6 @@ impl DataCapability for NCBILiveProvider {
     }
 }
 
-#[async_trait]
 impl GenomeDataCapability for NCBILiveProvider {
     async fn search_genomes(&self, query: &str) -> Result<Vec<GenomeResult>> {
         debug!("🔍 Searching NCBI genomes with query: {}", query);
@@ -299,7 +296,7 @@ impl GenomeDataCapability for NCBILiveProvider {
         };
 
         let response = self.execute_request(&request).await?;
-        
+
         // Extract results from response
         let results = response.data
             .get("results")
@@ -317,7 +314,7 @@ impl GenomeDataCapability for NCBILiveProvider {
 
         // Fetch the sequence using EFetch
         let sequence_data = self.efetch("nucleotide", genome_id, "fasta").await?;
-        
+
         // Parse FASTA format (simplified)
         let sequence_text = sequence_data.as_str()
             .unwrap_or("")
@@ -367,4 +364,3 @@ impl NCBIProviderFactory {
 
         Ok(Arc::new(NCBILiveProvider::new(api_key, email)?))
     }
-} 

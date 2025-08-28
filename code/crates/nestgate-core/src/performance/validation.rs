@@ -1,8 +1,8 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // Core framework for validating zero-cost performance improvements.
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 
 /// Performance benchmark results
 #[derive(Debug, Clone)]

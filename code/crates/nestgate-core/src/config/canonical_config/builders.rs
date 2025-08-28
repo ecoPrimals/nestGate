@@ -4,17 +4,17 @@
 
 use super::*;
 
-/// Configuration builder for NestGateCanonicalUnifiedConfig
+/// Configuration builder for NestGateCanonicalConfig
 #[derive(Debug, Default)]
 pub struct ConfigBuilder {
-    config: NestGateCanonicalUnifiedConfig,
+    config: NestGateCanonicalConfig,
 }
 
 impl ConfigBuilder {
     /// Create a new configuration builder
     pub fn new() -> Self {
         Self {
-            config: NestGateCanonicalUnifiedConfig::default(),
+            config: NestGateCanonicalConfig::default(),
         }
     }
 
@@ -92,7 +92,7 @@ impl ConfigBuilder {
             .map_err(|e| format!("Failed to read config file: {e}"))?;
         
         // For now, just return self - TOML parsing can be added when needed
-        // let file_config: NestGateCanonicalUnifiedConfig = toml::from_str(&content)
+        // let file_config: NestGateCanonicalConfig = toml::from_str(&content)
         //     .map_err(|e| format!("Failed to parse config file: {}", e))?;
         // self.config = file_config;
         
@@ -118,7 +118,7 @@ impl ConfigBuilder {
     }
 
     /// Build the final configuration
-    pub fn build(self) -> Result<NestGateCanonicalUnifiedConfig, String> {
+    pub fn build(self) -> Result<NestGateCanonicalConfig, String> {
         self.validate()?;
         Ok(self.config)
     }

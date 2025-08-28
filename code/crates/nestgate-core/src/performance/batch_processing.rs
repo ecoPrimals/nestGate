@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // Intelligent batch processing for high-throughput operations with adaptive sizing.
 

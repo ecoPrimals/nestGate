@@ -7,7 +7,7 @@ macro_rules! safe_unwrap {
         $expr.map_err(|e| $crate::NestGateError::Internal {
             message: format!("Operation failed in context '{}': {:?}", $context, e),
             location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: Some(format!("Context: {}", $context)),
+            location: Some(format!("Context: {}", $context)),
             is_bug: false,
         })?
     };
@@ -21,7 +21,7 @@ macro_rules! safe_expect {
         $expr.map_err(|_| $crate::NestGateError::Internal {
             message: format!("Expectation failed: {}", $msg),
             location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: Some(format!("Message: {}", $msg)),
+            location: Some(format!("Message: {}", $msg)),
             is_bug: false,
         })?
     };

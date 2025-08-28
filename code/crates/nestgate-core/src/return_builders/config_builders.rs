@@ -3,6 +3,20 @@
 /// Extracted from the large return_builders.rs to achieve file size compliance.
 use std::collections::HashMap;
 use uuid::Uuid;
+use serde::{Deserialize, Serialize};
+use chrono::{DateTime, Utc};
+
+/// Access grant structure for config builders
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AccessGrant {
+    pub permissions: Vec<String>,
+    pub valid_until: DateTime<Utc>,
+    pub consensus_nodes: Vec<String>,
+    pub consensus_percentage: f64,
+    pub grant_id: String,
+    pub granted_at: DateTime<Utc>,
+    pub metadata: HashMap<String, String>,
+}
 
 /// Build AccessGrant response with all required fields
 /// **PURE FUNCTION**: No side effects, deterministic field construction
@@ -14,13 +28,19 @@ pub fn build_access_grant(
     proof_data: &str,
     consensus_nodes: &[String],
     consensus_percentage: f64,
-) -> crate::types::AccessGrant {
-    crate::types::AccessGrant {
+) -> AccessGrant {
+    AccessGrant {
         permissions: permissions.to_vec(),
-        valid_until,
-        proof_hash: format!("{:x}", md5::compute(proof_data.as_bytes())),
+        valid_until: DateTime::from_timestamp(valid_until, 0).unwrap_or_default(),
         consensus_nodes: consensus_nodes.to_vec(),
         consensus_percentage,
+        grant_id: Uuid::new_v4().to_string(),
+        granted_at: Utc::now(),
+        metadata: {
+            let mut meta = HashMap::new();
+            meta.insert("proof_hash".to_string(), format!("{:x}", md5::compute(proof_data.as_bytes())));
+            meta
+        },
     }
 }
 
@@ -55,7 +75,7 @@ pub fn build_error_context(
     details: String,
     code: Option<String>,
     retry_info: Option<crate::error::RetryInfo>,
-) -> crate::error::ErrorContext {
+) -> crate::error::context::ErrorContext {
     let mut metadata = HashMap::new();
     if let Some(c) = code {
         metadata.insert("error_code".to_string(), c);
@@ -70,10 +90,17 @@ pub fn build_error_context(
         metadata.insert("retry_available".to_string(), "true".to_string());
     }
 
-    crate::error::ErrorContext {
+    crate::error::context::ErrorContext {
+        error_id: "config-builder-error".to_string(),
         operation: "config_validation".to_string(),
         component: "config_builder".to_string(),
         metadata,
         timestamp: std::time::SystemTime::now(),
+        stack_trace: None,
+        related_errors: vec![],
+        retry_info: None,
+        recovery_suggestions: vec![],
+        performance_metrics: None,
+        environment: None,
     }
 }

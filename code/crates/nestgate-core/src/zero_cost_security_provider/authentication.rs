@@ -1,13 +1,12 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // Routes to BearDog for complex authentication when available,
 // falls back to local token validation for standalone operation.
 
 use super::types::{AuthMethod, ZeroCostAuthToken, ZeroCostCredentials};
-use crate::{NestGateError, Result};
+use crate::{Result};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 use tracing::{debug, info, warn};
 
@@ -97,15 +96,22 @@ impl HybridAuthenticationManager {
 
         // Check rate limiting
         if !self.check_rate_limit(&credentials.username).await? {
-            return Err(NestGateError::Security(Box::new(
-                crate::error::domain_errors::SecurityErrorData {
-                    message: "Too many authentication attempts".to_string(),
-                    operation: "authentication".to_string(),
+            return Err(NestGateError::Security {
+                message: "Too many authentication attempts".to_string(),
+                operation: "authentication".to_string(),
+                subject: Some(credentials.username.clone()),
+                retryable: false,
+                security_data: Some(crate::error::SecurityErrorData {
+                    subject: Some(credentials.username.clone()),
+                    action: Some("authenticate".to_string()),
                     resource: None,
-                    principal: None,
-                    context: None,
-                },
-            )));
+                    security_context: None,
+                    auth_info: None,
+                    permissions: Some(vec!["authentication".to_string()]),
+                    severity: crate::error::SecuritySeverity::High,
+                }),
+                context: None,
+            });
         }
 
         // Try external authentication first if configured
@@ -166,15 +172,22 @@ impl HybridAuthenticationManager {
         debug!("Refreshing token");
 
         if !self.config.local_token_settings.enable_refresh {
-            return Err(NestGateError::Security(Box::new(
-                crate::error::domain_errors::SecurityErrorData {
-                    message: "Token refresh not enabled".to_string(),
-                    operation: "token_refresh".to_string(),
+            return Err(NestGateError::Security {
+                message: "Token refresh not enabled".to_string(),
+                operation: "token_refresh".to_string(),
+                subject: None,
+                retryable: false,
+                security_data: Some(crate::error::SecurityErrorData {
+                    action: Some("token_refresh".to_string()),
+                    subject: None,
                     resource: None,
-                    principal: None,
-                    context: None,
-                },
-            )));
+                    permissions: Some(vec!["token_refresh".to_string()]),
+                    auth_info: None,
+                    security_context: None,
+                    severity: crate::error::SecuritySeverity::Medium,
+                }),
+                context: None,
+            });
         }
 
         // Try external refresh first if configured
@@ -308,15 +321,22 @@ impl HybridAuthenticationManager {
 
                     Ok(token)
                 } else {
-                    Err(NestGateError::Security(Box::new(
-                        crate::error::domain_errors::SecurityErrorData {
-                            message: "Invalid credentials".to_string(),
-                            operation: "authentication".to_string(),
+                    Err(NestGateError::Security {
+                        message: "Invalid credentials".to_string(),
+                        operation: "authentication".to_string(),
+                        subject: Some(credentials.username.clone()),
+                        retryable: true,
+                        security_data: Some(crate::error::SecurityErrorData {
+                            action: Some("local_validation".to_string()),
+                            subject: Some(credentials.username.clone()),
                             resource: None,
-                            principal: None,
-                            context: None,
-                        },
-                    )))
+                            permissions: Some(vec!["authentication".to_string()]),
+                            auth_info: None,
+                            security_context: None,
+                            severity: crate::error::SecuritySeverity::High,
+                        }),
+                        context: None,
+                    })
                 }
             }
             AuthMethod::Token => {
@@ -330,54 +350,80 @@ impl HybridAuthenticationManager {
                     );
                     Ok(token)
                 } else {
-                    Err(NestGateError::Security(Box::new(
-                        crate::error::domain_errors::SecurityErrorData {
-                            message: "Invalid API key".to_string(),
-                            operation: "api_key_validation".to_string(),
+                    Err(NestGateError::Security {
+                        message: "Invalid API key".to_string(),
+                        operation: "api_key_validation".to_string(),
+                        subject: None,
+                        retryable: true,
+                        security_data: Some(crate::error::SecurityErrorData {
+                            action: Some("api_key".to_string()),
+                            subject: None,
                             resource: None,
-                            principal: None,
-                            context: None,
-                        },
-                    )))
+                            permissions: Some(vec!["api_access".to_string()]),
+                            security_context: None,
+                            auth_info: None,
+                            severity: crate::error::SecuritySeverity::High,
+                        }),
+                        context: None,
+                    })
                 }
             }
             AuthMethod::Certificate => {
                 // Certificate-based authentication not implemented in local fallback
-                Err(NestGateError::Security(Box::new(
-                    crate::error::domain_errors::SecurityErrorData {
-                        message: "Certificate authentication requires external provider"
-                            .to_string(),
-                        operation: "certificate_auth".to_string(),
+                Err(NestGateError::Security {
+                    message: "Certificate authentication requires external provider".to_string(),
+                    operation: "certificate_auth".to_string(),
+                    subject: None,
+                    retryable: false,
+                    security_data: Some(crate::error::SecurityErrorData {
+                        action: Some("certificate".to_string()),
+                        subject: None,
                         resource: None,
-                        principal: None,
-                        context: None,
-                    },
-                )))
+                        permissions: Some(vec!["certificate_auth".to_string()]),
+                            security_context: None,
+                        auth_info: None,
+                        severity: crate::error::SecuritySeverity::Medium,
+                    }),
+                    context: None,
+                })
             }
             AuthMethod::Biometric => {
                 // Biometric authentication not implemented in local fallback
-                Err(NestGateError::Security(Box::new(
-                    crate::error::domain_errors::SecurityErrorData {
-                        message: "Biometric authentication requires external provider".to_string(),
-                        operation: "biometric_auth".to_string(),
+                Err(NestGateError::Security {
+                    message: "Biometric authentication requires external provider".to_string(),
+                    operation: "biometric_auth".to_string(),
+                    subject: None,
+                    retryable: false,
+                    security_data: Some(crate::error::SecurityErrorData {
+                        action: Some("biometric".to_string()),
+                        subject: None,
                         resource: None,
-                        principal: None,
-                        context: None,
-                    },
-                )))
+                        permissions: Some(vec!["biometric_auth".to_string()]),
+                            security_context: None,
+                        auth_info: None,
+                        severity: crate::error::SecuritySeverity::Medium,
+                    }),
+                    context: None,
+                })
             }
             AuthMethod::MultiFactor { .. } => {
                 // Multi-factor authentication not implemented in local fallback
-                Err(NestGateError::Security(Box::new(
-                    crate::error::domain_errors::SecurityErrorData {
-                        message: "Multi-factor authentication requires external provider"
-                            .to_string(),
-                        operation: "mfa_auth".to_string(),
+                Err(NestGateError::Security {
+                    message: "Multi-factor authentication requires external provider".to_string(),
+                    operation: "mfa_auth".to_string(),
+                    subject: None,
+                    retryable: false,
+                    security_data: Some(crate::error::SecurityErrorData {
+                        action: Some("multi_factor".to_string()),
+                        subject: None,
                         resource: None,
-                        principal: None,
-                        context: None,
-                    },
-                )))
+                        permissions: Some(vec!["mfa_auth".to_string()]),
+                            security_context: None,
+                        auth_info: None,
+                        severity: crate::error::SecuritySeverity::Medium,
+                    }),
+                    context: None,
+                })
             }
         }
     }
@@ -427,15 +473,22 @@ impl HybridAuthenticationManager {
             );
             Ok(new_token)
         } else {
-            Err(NestGateError::Security(Box::new(
-                crate::error::domain_errors::SecurityErrorData {
-                    message: "Token not found for refresh".to_string(),
-                    operation: "token_refresh".to_string(),
+            Err(NestGateError::Security {
+                message: "Token not found for refresh".to_string(),
+                operation: "token_refresh".to_string(),
+                subject: None,
+                retryable: false,
+                security_data: Some(crate::error::SecurityErrorData {
+                    action: Some("token_refresh".to_string()),
+                    subject: None,
                     resource: None,
-                    principal: None,
-                    context: None,
-                },
-            )))
+                    permissions: Some(vec!["token_refresh".to_string()]),
+                            security_context: None,
+                    auth_info: None,
+                    severity: crate::error::SecuritySeverity::Medium,
+                }),
+                context: None,
+            })
         }
     }
 

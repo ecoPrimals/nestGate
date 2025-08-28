@@ -5,7 +5,7 @@ use std::fs as stdfs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-// ==================== BASIC FILE OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// Checks if a path exists.
 #[must_use]
@@ -83,7 +83,7 @@ pub fn copy_recursive(src: &Path, dst: &Path) -> io::Result<()> {
     }
 }
 
-// ==================== PERMISSION CHECKS ====================
+// ==================== SECTION ====================
 
 /// Check if a path is readable
 pub fn is_readable(path: &Path) -> bool {
@@ -112,7 +112,6 @@ pub fn is_writable(path: &Path) -> bool {
         Ok(metadata) => {
             #[cfg(unix)]
             {
-                use std::os::unix::fs::MetadataExt;
                 let mode = metadata.mode();
                 // Check if owner has write permission (simplified check)
                 (mode & 0o200) != 0
@@ -146,7 +145,6 @@ pub fn is_executable(path: &Path) -> bool {
         Ok(metadata) => {
             #[cfg(unix)]
             {
-                use std::os::unix::fs::MetadataExt;
                 let mode = metadata.mode();
                 // Check if owner has execute permission (simplified check)
                 (mode & 0o100) != 0
@@ -168,7 +166,7 @@ pub fn is_executable(path: &Path) -> bool {
     }
 }
 
-// ==================== ADVANCED FILE OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// Find files matching a pattern recursively
 pub fn find_files<P: AsRef<Path>>(dir: P, pattern: &str) -> io::Result<Vec<PathBuf>> {
@@ -256,7 +254,7 @@ pub fn make_unique_filename(base_path: &Path) -> PathBuf {
     parent.join(filename)
 }
 
-// ==================== UTILITY FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Get temporary directory path
 pub fn temp_dir() -> PathBuf {
@@ -288,7 +286,7 @@ pub fn home_dir() -> Option<PathBuf> {
         .map(PathBuf::from)
 }
 
-// ==================== PATH UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Check if a path is a directory
 pub fn is_directory(path: &Path) -> bool {

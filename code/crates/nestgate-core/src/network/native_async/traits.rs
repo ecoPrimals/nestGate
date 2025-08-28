@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::time::Duration;
 
-use crate::error::Result;
+use crate::Result;
 
 /// Native async service discovery trait - replaces #[async_trait] ServiceDiscovery
 pub trait NativeAsyncServiceDiscovery<

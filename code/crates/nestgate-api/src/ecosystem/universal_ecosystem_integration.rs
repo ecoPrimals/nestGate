@@ -67,9 +67,9 @@ impl UniversalEcosystemIntegration {
         let ecosystems: Vec<EcosystemInfo> = serde_json::from_value(response.data.unwrap_or_default())
             .map_err(|e| NestGateError::Configuration { 
                 message: format!("Failed to parse ecosystem discovery response: {}", e),
-                config_source: nestgate_core::error::UnifiedConfigSource::File("ecosystem_integration".to_string()),
+                
                 field: Some("discovery_response".to_string()),
-                suggested_fix: Some("Check ecosystem response format".to_string()),
+                
             })?;
 
         // Cache discovered ecosystems
@@ -108,9 +108,9 @@ impl UniversalEcosystemIntegration {
         serde_json::from_value(response.data.unwrap_or_default())
             .map_err(|e| NestGateError::Configuration {
                 message: format!("Failed to parse registration response: {}", e),
-                config_source: nestgate_core::error::UnifiedConfigSource::File("ecosystem_integration".to_string()),
+                
                 field: Some("registration_response".to_string()),
-                suggested_fix: Some("Check registration response format".to_string()),
+                
             })
     }
 
@@ -134,9 +134,9 @@ impl UniversalEcosystemIntegration {
         serde_json::from_value(response.data.unwrap_or_default())
             .map_err(|e| NestGateError::Configuration {
                 message: format!("Failed to parse event response: {}", e),
-                config_source: nestgate_core::error::UnifiedConfigSource::File("ecosystem_integration".to_string()),
+                
                 field: Some("event_response".to_string()),
-                suggested_fix: Some("Check event response format".to_string()),
+                
             })
     }
 
@@ -157,9 +157,9 @@ impl UniversalEcosystemIntegration {
         serde_json::from_value(response.data.unwrap_or_default())
             .map_err(|e| NestGateError::Configuration {
                 message: format!("Failed to parse status response: {}", e),
-                config_source: nestgate_core::error::UnifiedConfigSource::File("ecosystem_integration".to_string()),
+                
                 field: Some("status_response".to_string()),
-                suggested_fix: Some("Check status response format".to_string()),
+                
             })
     }
 

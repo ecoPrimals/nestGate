@@ -1,5 +1,4 @@
 // Removed unused tracing import
-use async_trait::async_trait;
 /// Universal Provider Wrappers
 ///
 /// This module provides wrapper implementations that adapt existing hardcoded
@@ -7,7 +6,8 @@ use async_trait::async_trait;
 /// migration to the universal architecture.
 use std::sync::Arc;
 
-use crate::universal_traits::*;
+// universal_traits consolidated - using specific imports from zero_cost providers
+use crate::universal_providers_zero_cost::*;
 use crate::{NestGateError, Result};
 use std::time::{Duration, SystemTime};
 
@@ -22,14 +22,13 @@ pub struct UniversalSecurityWrapper {
 }
 
 /// Trait for any security client (BearDog, Vault, etc.)
-#[async_trait]
 pub trait SecurityClient: Send + Sync {
-    async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken>;
-    async fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>>;
-    async fn decrypt(&self, encrypted: &[u8], algorithm: &str) -> Result<Vec<u8>>;
-    async fn sign_data(&self, data: &[u8]) -> Result<Signature>;
-    async fn verify_signature(&self, data: &[u8], signature: &Signature) -> Result<bool>;
-    async fn health_check(&self) -> Result<bool>;
+    fn authenticate(&self, credentials: &Credentials) -> impl std::future::Future<Output = Result<AuthToken>> + Send;
+    fn encrypt(&self, data: &[u8], algorithm: &str) -> impl std::future::Future<Output = Result<Vec<u8>> + Send;
+    fn decrypt(&self, encrypted: &[u8], algorithm: &str) -> impl std::future::Future<Output = Result<Vec<u8>> + Send;
+    fn sign_data(&self, data: &[u8]) -> impl std::future::Future<Output = Result<Signature>> + Send;
+    fn verify_signature(&self, data: &[u8], signature: &Signature) -> impl std::future::Future<Output = Result<bool>> + Send;
+    fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send;
 }
 
 impl UniversalSecurityWrapper {
@@ -64,7 +63,6 @@ impl UniversalSecurityWrapper {
     }
 }
 
-#[async_trait]
 impl SecurityPrimalProvider for UniversalSecurityWrapper {
     async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken> {
         if let Some(client) = &self.client {
@@ -142,7 +140,6 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
         } else {
             // Fallback signing - simplified implementation without external crypto deps
             // In production, this should route through SecurityAdapter
-            use sha2::{Digest, Sha256};
 
             let key = format!("fallback_key_{}", self.provider_name);
             let mut hasher = Sha256::new();
@@ -167,7 +164,6 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
                 return Ok(false);
             }
 
-            use sha2::{Digest, Sha256};
 
             let key = format!("fallback_key_{}", self.provider_name);
             let mut hasher = Sha256::new();
@@ -185,7 +181,6 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
         } else {
             // Fallback encryption - simple XOR cipher (NOT for production use)
             // In production, this should route through SecurityAdapter
-            use sha2::{Digest, Sha256};
 
             let mut hasher = Sha256::new();
             hasher.update(format!("fallback_encryption_key_{}", self.provider_name));
@@ -206,7 +201,6 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
         } else {
             // Fallback decryption - simple XOR cipher (matches encryption)
             // In production, this should route through SecurityAdapter
-            use sha2::{Digest, Sha256};
 
             let mut hasher = Sha256::new();
             hasher.update(format!("fallback_encryption_key_{}", self.provider_name));
@@ -228,7 +222,6 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
 
     async fn generate_validation_token(&self, data: &[u8]) -> Result<String> {
         // Generate a simple validation token - could delegate to underlying client
-        use sha2::{Digest, Sha256};
         let mut hasher = Sha256::new();
         hasher.update(data);
         hasher.update(self.provider_name.as_bytes());
@@ -261,13 +254,12 @@ pub struct UniversalOrchestrationWrapper {
 }
 
 /// Trait for any orchestration client (Songbird, Kubernetes, etc.)
-#[async_trait]
 pub trait OrchestrationClient: Send + Sync {
-    async fn register_service(&self, service: &ServiceRegistration) -> Result<String>;
-    async fn discover_services(&self, service_type: &str) -> Result<Vec<ServiceInstance>>;
-    async fn allocate_port(&self, service: &str, port_type: &str) -> Result<u16>;
-    async fn release_port(&self, service: &str, port: u16) -> Result<()>;
-    async fn health_check(&self) -> Result<bool>;
+    fn register_service(&self, service: &ServiceRegistration) -> impl std::future::Future<Output = Result<String>> + Send;
+    fn discover_services(&self, service_type: &str) -> impl std::future::Future<Output = Result<Vec<ServiceInstance>> + Send;
+    fn allocate_port(&self, service: &str, port_type: &str) -> impl std::future::Future<Output = Result<u16>> + Send;
+    fn release_port(&self, service: &str, port: u16) -> impl std::future::Future<Output = Result<()>> + Send;
+    fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send;
 }
 
 impl UniversalOrchestrationWrapper {
@@ -299,7 +291,6 @@ impl UniversalOrchestrationWrapper {
     }
 }
 
-#[async_trait]
 impl OrchestrationPrimalProvider for UniversalOrchestrationWrapper {
     async fn register_service(&self, service: &ServiceRegistration) -> Result<String> {
         if let Some(client) = &self.client {
@@ -378,15 +369,14 @@ pub struct UniversalComputeWrapper {
 }
 
 /// Trait for any compute client (ToadStool, Docker, etc.)
-#[async_trait]
 pub trait ComputeClient: Send + Sync {
-    async fn allocate_resources(&self, spec: &ResourceSpec) -> Result<ResourceAllocation>;
-    async fn execute_workload(&self, workload: &WorkloadSpec) -> Result<WorkloadResult>;
+    fn allocate_resources(&self, spec: &ResourceSpec) -> impl std::future::Future<Output = Result<ResourceAllocation>> + Send;
+    fn execute_workload(&self, workload: &WorkloadSpec) -> impl std::future::Future<Output = Result<WorkloadResult>> + Send;
     async fn monitor_performance(
         &self,
         allocation: &ResourceAllocation,
     ) -> Result<PerformanceMetrics>;
-    async fn health_check(&self) -> Result<bool>;
+    fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send;
 }
 
 impl UniversalComputeWrapper {
@@ -418,7 +408,6 @@ impl UniversalComputeWrapper {
     }
 }
 
-#[async_trait]
 impl ComputePrimalProvider for UniversalComputeWrapper {
     async fn allocate_resources(&self, spec: &ResourceSpec) -> Result<ResourceAllocation> {
         if let Some(client) = &self.client {

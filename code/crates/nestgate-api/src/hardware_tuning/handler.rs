@@ -61,7 +61,7 @@ impl HardwareTuningHandler {
             .ok_or_else(|| NestGateError::Internal {
                 message: format!("Session not found: {session_id}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })
     }

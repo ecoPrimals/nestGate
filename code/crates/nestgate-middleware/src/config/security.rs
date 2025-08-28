@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
 
-// ==================== SECURITY SETTINGS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MiddlewareSecuritySettings {
@@ -22,7 +22,7 @@ pub struct MiddlewareSecuritySettings {
     pub sanitization: SanitizationSettings,
 }
 
-// ==================== AUTHENTICATION ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AuthenticationMiddlewareSettings {
@@ -227,7 +227,7 @@ pub enum MfaProvider {
     Hardware,
 }
 
-// ==================== AUTHORIZATION ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthorizationMiddlewareSettings {
@@ -280,7 +280,7 @@ pub enum DefaultPolicy {
     Deny,
 }
 
-// ==================== CORS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CorsSettings {
@@ -300,7 +300,7 @@ pub struct CorsSettings {
     pub max_age: Option<Duration>,
 }
 
-// ==================== RATE LIMITING ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RateLimitingSettings {
@@ -350,7 +350,7 @@ pub enum RateLimitStorage {
     Database,
 }
 
-// ==================== SECURITY HEADERS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityHeadersSettings {
@@ -385,7 +385,7 @@ pub enum FrameOptions {
     AllowFrom(String),
 }
 
-// ==================== SANITIZATION ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SanitizationSettings {
@@ -427,7 +427,7 @@ pub struct XssSettings {
     pub output_encoding: bool,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl MiddlewareSecuritySettings {
     /// Development security settings

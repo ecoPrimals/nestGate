@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // This module provides benchmarks to validate the performance improvements
 // achieved by the zero-copy storage implementation.

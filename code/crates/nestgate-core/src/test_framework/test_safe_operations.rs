@@ -1,6 +1,6 @@
 /// Test-safe operations module using unified error handling
 /// All test errors now use NestGateError::Testing variant for consistency
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 // Removed unused imports - test framework handles errors internally
 use serde::{de::DeserializeOwned, Serialize};
 use std::future::Future;
@@ -20,7 +20,7 @@ pub fn safe_test_to_json<T: Serialize>(
             "JSON serialization failed in {test_context}: serializing {value_description}"
         ),
         location: Some(format!("{}:{}", file!(), line!())),
-        debug_info: Some(e.to_string()),
+        location: Some(e.to_string()),
         is_bug: false,
     })
     }
@@ -36,7 +36,7 @@ pub fn safe_test_from_json<T: DeserializeOwned>(
             "JSON deserialization failed in {test_context}: deserializing to {type_description}"
         ),
         location: Some(format!("{}:{}", file!(), line!())),
-        debug_info: Some(e.to_string()),
+        location: Some(e.to_string()),
         is_bug: false,
     })
     }
@@ -58,7 +58,7 @@ where
         .map_err(|e| crate::NestGateError::Internal {
             message: format!("API call failed: {} in {test_context}", operation),
             location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: Some(e.to_string()),
+            location: Some(e.to_string()),
             is_bug: false,
         })?;
 
@@ -85,7 +85,7 @@ pub fn safe_test_get<'a, T>(
     collection
         .get(index)
         .ok_or_else(|| crate::NestGateError::Validation {
-            field: "collection_index".to_string(),
+            field: Some("collection_index".to_string()),
             message: format!("Index {index} out of bounds in {collection_description}"),
             current_value: Some(index.to_string()),
             expected: Some(format!("index < {}", collection.len())),
@@ -105,7 +105,7 @@ where
 {
     map.get(key)
         .ok_or_else(|| crate::NestGateError::Validation {
-            field: "map_key".to_string(),
+            field: Some("map_key".to_string()),
             message: format!("Key not found in {map_description}"),
             current_value: Some(format!("{:?}", key)),
             expected: Some(format!("key exists in map with {} entries", map.len())),
@@ -120,7 +120,7 @@ pub fn safe_test_unwrap_option<T>(
     value_description: &str,
 ) -> TestResult<T> {
     option.ok_or_else(|| crate::NestGateError::Validation {
-        field: "option_value".to_string(),
+        field: Some("option_value".to_string()),
         message: format!("Option was None when unwrapping {value_description} in {test_context}"),
         current_value: Some("None".to_string()),
         expected: Some("Some(value)".to_string()),
@@ -137,7 +137,7 @@ pub fn safe_test_unwrap_result<T, E: std::fmt::Display>(
     result.map_err(|e| crate::NestGateError::Internal {
         message: format!("Result unwrapping failed in {test_context}: {operation_description}"),
         location: Some(format!("{}:{}", file!(), line!())),
-        debug_info: Some(e.to_string()),
+        location: Some(e.to_string()),
         is_bug: false,
     })
     }
@@ -151,6 +151,7 @@ pub async fn safe_test_read_file(path: &str, test_context: &str) -> TestResult<S
                 error_message: e.to_string(),
                 reerror_message: Some(path.to_string()),
                 retryable: false,
+                context: None,
             })
     }
 
@@ -163,6 +164,7 @@ pub async fn safe_test_create_dir(path: &str, test_context: &str) -> TestResult<
                 error_message: e.to_string(),
                 reerror_message: Some(path.to_string()),
                 retryable: false,
+                context: None,
             })
     }
 
@@ -183,6 +185,7 @@ where
             operation: operation.to_string(),
             duration: timeout,
             retryable: true,
+                context: None,
             suggested_timeout: Some(timeout * 2), // Suggest doubling the timeout
         }),
     }
@@ -204,7 +207,7 @@ where
         .map_err(|e| crate::NestGateError::Internal {
             message: format!("Database operation failed: {} in {test_context}", operation),
             location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: Some(e.to_string()),
+            location: Some(e.to_string()),
             is_bug: false,
         })
     }
@@ -228,7 +231,7 @@ pub fn assert_test_performance<T>(
 ) -> TestResult<T> {
     if duration > max_duration {
         return Err(crate::NestGateError::Validation {
-            field: "performance_duration".to_string(),
+            field: Some("performance_duration".to_string()),
             message: format!("Performance assertion failed in {_test_context}"),
             current_value: Some(format!("{duration:?}")),
             expected: Some(format!("≤ {max_duration:?}")),
@@ -246,7 +249,7 @@ pub fn assert_test_memory_usage(
 ) -> TestResult<()> {
     if current_memory > max_memory {
         return Err(crate::NestGateError::Validation {
-            field: "memory_usage".to_string(),
+            field: Some("memory_usage".to_string()),
             message: format!("Memory usage assertion failed in {test_context}"),
             current_value: Some(format!("{current_memory} bytes")),
             expected: Some(format!("≤ {max_memory} bytes")),
@@ -282,7 +285,7 @@ where
                     items.len()
                 ),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: Some(e.to_string()),
+                location: Some(e.to_string()),
                 is_bug: false,
             })?;
         results.push(result);

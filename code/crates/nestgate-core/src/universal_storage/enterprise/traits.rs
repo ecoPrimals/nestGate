@@ -14,7 +14,6 @@ use crate::error::CanonicalResult as Result;
 use crate::universal_storage::{
     canonical_storage::CanonicalStorageBackend, zero_copy::ZeroCopyStorage,
 };
-// REMOVED: async_trait - using zero-cost native async patterns
 
 /// Enterprise storage capabilities trait - **ZERO-COST NATIVE ASYNC**
 ///

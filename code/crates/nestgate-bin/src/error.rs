@@ -11,6 +11,7 @@
 
 use nestgate_core::error::{CanonicalResult, NestGateError, IntoNestGateError};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use thiserror::Error;
 
 /// **CANONICAL BINARY ERROR TYPE**
@@ -60,25 +61,86 @@ pub enum NestGateBinError {
     },
 }
 
-// ==================== CANONICAL MODERNIZATION ====================
+// ==================== SECTION ====================
 
-/// **CANONICAL RESULT TYPE**
+/// **UNIFIED ERROR SYSTEM MIGRATION**
 /// 
-/// Uses the canonical `CanonicalResult<T, E>` pattern for maximum flexibility
-/// while maintaining domain-specific error context.
-pub type BinResult<T> = CanonicalResult<T, NestGateBinError>;
+/// The bin crate now uses the unified NestGateError system for all operations,
+/// eliminating the fragmented NestGateBinError type.
 
-/// **CONVENIENCE RESULT TYPE**
-/// 
-/// Internal convenience type that defaults to NestGateBinError
-pub type Result<T> = BinResult<T>;
+/// **CANONICAL RESULT** - Use unified Result from nestgate-core
+pub type Result<T> = nestgate_core::error::Result<T>;
 
-// ==================== CANONICAL ERROR CONVERSION ====================
+/// **BIN RESULT** - Domain-specific result for bin operations
+pub type BinResult<T> = nestgate_core::error::IdioResult<T, nestgate_core::NestGateError>;
 
-/// **CANONICAL CONVERSION TO UNIFIED ERROR SYSTEM**
-/// 
-/// This implementation shows how domain-specific errors integrate with
-/// the unified NestGateError system while preserving context and recovery information.
+// ==================== SECTION ====================
+
+/// Helper functions for creating bin-specific errors using unified system
+pub struct BinErrorHelper;
+
+impl BinErrorHelper {
+    /// Create command execution error using unified system
+    pub fn command_execution_error(message: impl Into<String>, command: Option<String>, exit_code: Option<i32>) -> NestGateError {
+        NestGateError::Internal {
+            message: format!("Command execution failed: {}", message.into()),
+            component: format!("command: {:?}, exit_code: {:?}", command, exit_code),
+            location: None,
+            bug_report: false,
+            context: None,
+        }
+    }
+
+    /// Create configuration error using unified system
+    pub fn configuration_error(message: impl Into<String>, config_path: Option<String>) -> NestGateError {
+        NestGateError::Configuration {
+            field: config_path.unwrap_or_else(|| "bin_config".to_string()),
+            message: message.into(),
+            current_value: None,
+            expected: None,
+            user_error: true,
+        }
+    }
+
+    /// Create argument parsing error using unified system
+    pub fn argument_parsing_error(message: impl Into<String>, argument: Option<String>) -> NestGateError {
+        NestGateError::Validation {
+            message: format!("Argument parsing error: {}", message.into()),
+            field: argument.unwrap_or_else(|| "command_line_args".to_string()),
+            value: None,
+            current_value: None,
+            expected: Some("valid command line arguments".to_string()),
+            context: None,
+        }
+    }
+
+    /// Create service initialization error using unified system
+    pub fn service_initialization_error(message: impl Into<String>, service_name: Option<String>) -> NestGateError {
+        NestGateError::Internal {
+            message: format!("Service initialization error: {}", message.into()),
+            component: service_name.unwrap_or_else(|| "unknown_service".to_string()),
+            location: None,
+            bug_report: false,
+            context: None,
+        }
+    }
+
+    /// Create runtime error using unified system
+    pub fn runtime_error(message: impl Into<String>, operation: Option<String>) -> NestGateError {
+        NestGateError::Internal {
+            message: format!("Runtime error: {}", message.into()),
+            component: operation.unwrap_or_else(|| "runtime".to_string()),
+            location: None,
+            bug_report: false,
+            context: None,
+        }
+    }
+}
+
+// ==================== SECTION ====================
+
+/// **DEPRECATED**: Legacy conversion from NestGateBinError to unified system
+/// This is maintained for backward compatibility during migration.
 impl From<NestGateBinError> for NestGateError {
     fn from(err: NestGateBinError) -> Self {
         match err {
@@ -165,7 +227,7 @@ impl IntoNestGateError for NestGateBinError {
     }
 }
 
-// ==================== CANONICAL ERROR BUILDERS ====================
+// ==================== SECTION ====================
 
 /// **CANONICAL ERROR BUILDERS**
 /// 
@@ -217,7 +279,7 @@ impl NestGateBinError {
     }
 }
 
-// ==================== CANONICAL RESULT EXTENSIONS ====================
+// ==================== SECTION ====================
 
 /// **CANONICAL RESULT EXTENSIONS**
 /// 

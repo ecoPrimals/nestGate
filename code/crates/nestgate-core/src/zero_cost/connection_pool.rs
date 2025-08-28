@@ -80,7 +80,8 @@ where
             // Direct health check before storing
             self.health_check.check(&connection)?;
             connections.push(connection);
-    }
+        }
+        Ok(())
     }
 
     /// Get pool statistics - compile-time size
@@ -139,15 +140,16 @@ pub struct ProductionHealthCheck;
 impl ZeroCostHealthCheck<DatabaseConnection> for ProductionHealthCheck {
     fn check(&self, connection: &DatabaseConnection) -> Result<()> {
         if connection.connected {
+            Ok(())
         } else {
-            Err(crate::error::core::NestGateError::api_simple(
-                crate::error::domain_errors::ApiError::ServiceUnavailable {
-                    service: "ConnectionPool".to_string(),
-                    message: "Connection health check failed".to_string(),
-                    retry_after: None,
-                },
-            ))
-    }
+            Err(crate::NestGateError::Internal {
+                message: "Connection health check failed".to_string(),
+                component: "zero_cost_connection_pool".to_string(),
+                location: Some("ConnectionPool".to_string()),
+                context: None,
+                is_bug: false,
+            })
+        }
     }
     }
 

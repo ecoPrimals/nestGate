@@ -9,33 +9,29 @@ use std::time::Duration;
 
 // Internal re-exports will be handled by the module system
 
-/// Storage tier for caching
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum StorageTier {
-    /// Fast access, limited capacity (SSD, RAM)
-    Hot,
-    /// Moderate access, larger capacity (fast HDD)
-    Warm,
-    /// Slow access, unlimited capacity (archive storage)
-    Cold,
-}
+/// Storage tier for caching - use canonical definition
+pub use crate::canonical_types::StorageTier;
 
 impl StorageTier {
     /// Get tier priority (lower number = higher priority)
     pub fn priority(&self) -> u8 {
         match self {
-            StorageTier::Hot => 0,
-            StorageTier::Warm => 1,
-            StorageTier::Cold => 2,
+            StorageTier::Cache => 0,  // Ultra-fast cache has highest priority
+            StorageTier::Hot => 1,
+            StorageTier::Warm => 2,
+            StorageTier::Cold => 3,
+            StorageTier::Archive => 4, // Archive has lowest priority
         }
     }
 
     /// Get typical access time for this tier
     pub fn typical_access_time(&self) -> Duration {
         match self {
+            StorageTier::Cache => Duration::from_micros(100),  // Ultra-fast cache
             StorageTier::Hot => Duration::from_millis(1),
             StorageTier::Warm => Duration::from_millis(10),
             StorageTier::Cold => Duration::from_millis(100),
+            StorageTier::Archive => Duration::from_secs(10),   // Archive can be very slow
         }
     }
 }
@@ -66,60 +62,8 @@ impl std::fmt::Display for CachePolicy {
 }
 
 /// Use this instead of the deprecated CacheConfig
-impl crate::unified_types::UnifiedCacheConfig {
-    /// High-performance cache configuration optimized for production workloads
-    pub fn high_performance() -> Self {
-        Self {
-            name: "high-perf-cache".to_string(),
-            max_size: 2 * 1024 * 1024 * 1024, // 2GB
-            eviction_policy: "lru".to_string(),
-            ttl_seconds: 1800, // 30 minutes
-            cache_dir: "/tmp/nestgate-high-perf-cache".to_string(),
-            policy: "write-back".to_string(),
-            hot_tier_size: 500_000_000,
-            warm_tier_size: 1_000_000_000,
-            cold_tier_unlimited: true,
-            enable_compression: true,
-            compression_level: 3,
-            default_ttl_seconds: 1800,
-            enable_metrics: true,
-            metrics_interval_seconds: 30,
-            enable_persistence: false,
-            persistence_interval_seconds: 60,
-            max_memory_percent: 90.0,
-            enable_lru: true,
-            concurrent_threads: (num_cpus::get() * 2) as u32,
-            ..Default::default()
-        }
-    }
 
-    /// Development-friendly cache configuration with debugging features
-    pub fn development() -> Self {
-        Self {
-            name: "dev-cache".to_string(),
-            max_size: 50 * 1024 * 1024, // 50MB
-            eviction_policy: "lru".to_string(),
-            ttl_seconds: 7200, // 2 hours
-            cache_dir: "/tmp/nestgate-dev-cache".to_string(),
-            policy: "write-through".to_string(),
-            hot_tier_size: 10_000_000,
-            warm_tier_size: 30_000_000,
-            cold_tier_unlimited: false,
-            enable_compression: false,
-            compression_level: 6,
-            default_ttl_seconds: 7200,
-            enable_metrics: true,
-            metrics_interval_seconds: 120,
-            enable_persistence: true,
-            persistence_path: "/tmp/nestgate-dev-cache.db".to_string(),
-            persistence_interval_seconds: 600,
-            max_memory_percent: 60.0,
-            enable_lru: true,
-            concurrent_threads: 2,
-            ..Default::default()
-        }
-    }
-}
+// All duplicate UnifiedCacheConfig implementations removed
 
 /// Cache statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]

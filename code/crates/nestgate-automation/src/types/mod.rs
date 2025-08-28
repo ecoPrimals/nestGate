@@ -1,3 +1,4 @@
+pub mod config;
 pub mod ecosystem;
 pub mod optimization;
 /// **AUTOMATION TYPES MODULE**

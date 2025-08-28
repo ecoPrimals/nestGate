@@ -196,7 +196,6 @@ pub async fn create_pool(
     service: &NativeZfsService,
     config: &PoolConfig,
 ) -> UniversalZfsResult<PoolInfo> {
-    use tokio::process::Command;
 
     let pool_name = &config.name;
 
@@ -235,7 +234,6 @@ pub async fn create_pool(
 
 /// Destroy a ZFS pool
 pub async fn destroy_pool(_service: &NativeZfsService, name: &str) -> UniversalZfsResult<()> {
-    use tokio::process::Command;
 
     // Build zpool destroy command
     let mut cmd = Command::new("zpool");

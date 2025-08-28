@@ -256,7 +256,6 @@ impl Default for NestGateConfig {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_config_default_values() {

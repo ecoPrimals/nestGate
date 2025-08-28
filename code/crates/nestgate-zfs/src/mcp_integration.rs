@@ -98,21 +98,23 @@ impl ZfsMcpConfig {
     pub fn validate(&self) -> Result<()> {
         if self.max_concurrent_operations == 0 {
             return Err(NestGateError::Validation {
-                field: "input".to_string(),
+                field: Some("input".to_string()),
                 message: "max_concurrent_operations must be greater than 0".to_string(),
                 current_value: None,
                 expected: None,
                 user_error: true,
+                context: None,
             });
         }
 
         if self.max_concurrent_operations > 1000 {
             return Err(NestGateError::Validation {
-                field: "input".to_string(),
+                field: Some("input".to_string()),
                 message: "max_concurrent_operations must be less than or equal to 1000".to_string(),
                 current_value: None,
                 expected: None,
                 user_error: true,
+                context: None,
             });
         }
         Ok(())
@@ -230,7 +232,7 @@ impl ZfsMcpStorageProvider {
                 Err(nestgate_core::NestGateError::Internal {
                     message: format!("Dataset creation failed: {e}"),
                     location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: None,
+                    context: None,
                     is_bug: false,
                 })
             }
@@ -257,7 +259,7 @@ impl ZfsMcpStorageProvider {
                     Err(nestgate_core::NestGateError::Internal {
                         message: format!("Dataset destruction failed: {e}"),
                         location: Some(format!("{}:{}", file!(), line!())),
-                        debug_info: None,
+                        context: None,
                         is_bug: false,
                     })
                 }
@@ -316,7 +318,7 @@ impl ZfsMcpStorageProvider {
                 Err(nestgate_core::NestGateError::Internal {
                     message: format!("Dataset creation failed: {e}"),
                     location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: None,
+                    context: None,
                     is_bug: false,
                 })
             }
@@ -343,7 +345,7 @@ impl ZfsMcpStorageProvider {
                     Err(nestgate_core::NestGateError::Internal {
                         message: format!("Dataset destruction failed: {e}"),
                         location: Some(format!("{}:{}", file!(), line!())),
-                        debug_info: None,
+                        context: None,
                         is_bug: false,
                     })
                 }
@@ -369,7 +371,7 @@ impl ZfsMcpStorageProvider {
             return Err(nestgate_core::NestGateError::Internal {
                 message: "AI optimization not enabled".to_string(),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
         }

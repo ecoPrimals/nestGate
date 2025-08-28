@@ -1,8 +1,8 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // Provides structured logging and distributed tracing setup.
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 
 /// Tracing configuration
 #[derive(Debug, Clone)]
@@ -51,9 +51,9 @@ pub fn init_tracing(config: TracingConfig) -> Result<()> {
             .with(tracing_subscriber::filter::LevelFilter::from_level(level))
             .try_init()
             .map_err(|e| {
-                NestGateError::configuration_error(
+                NestGateError::configuration_error_with_field(
                     format!("Failed to initialize JSON tracing: {e}"),
-                    Some("tracing".to_string()),
+                    "tracing".to_string(),
                 )
             })?;
     } else {
@@ -63,9 +63,9 @@ pub fn init_tracing(config: TracingConfig) -> Result<()> {
             .with(tracing_subscriber::filter::LevelFilter::from_level(level))
             .try_init()
             .map_err(|e| {
-                NestGateError::configuration_error(
+                NestGateError::configuration_error_with_field(
                     format!("Failed to initialize tracing: {e}"),
-                    Some("tracing".to_string()),
+                    "tracing".to_string(),
                 )
             })?;
     }
@@ -89,6 +89,6 @@ mod tests {
         let config = TracingConfig::default();
         assert_eq!(config.level, "info");
         assert!(!config.json_format);
-        assert_eq!(config.service_name, "nestgate");
+        assert_eq!(config.name, "nestgate");
     }
 }

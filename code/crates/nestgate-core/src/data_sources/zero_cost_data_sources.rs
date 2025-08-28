@@ -1,16 +1,16 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // Modern, compile-time data source system that eliminates dynamic dispatch
 // and provides zero-cost abstractions for data streaming operations.
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use tokio::fs;
 use tokio::io::{AsyncReadExt, AsyncSeekExt};
 
-// ==================== ZERO-COST DATA SOURCE TRAITS ====================
+// ==================== SECTION ====================
 
 /// Zero-cost data capability trait using compile-time generics
 #[allow(async_fn_in_trait)]
@@ -51,7 +51,7 @@ pub trait ZeroCostDataStream {
     fn metadata(&self) -> StreamMetadata;
 }
 
-// ==================== CONFIGURATION TYPES ====================
+// ==================== SECTION ====================
 
 /// Universal data configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -84,7 +84,7 @@ pub struct StreamMetadata {
     pub last_modified: Option<std::time::SystemTime>,
 }
 
-// ==================== HTTP DATA PROVIDER ====================
+// ==================== SECTION ====================
 
 /// HTTP data provider with zero-cost abstractions
 pub struct HttpDataProvider {
@@ -115,7 +115,7 @@ impl From<HttpDataError> for NestGateError {
         NestGateError::Internal {
             message: error.to_string(),
             location: Some("HttpDataError conversion".to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
         }
     }
@@ -226,7 +226,7 @@ impl ZeroCostDataStream for HttpDataStream {
     }
 }
 
-// ==================== FILE DATA PROVIDER ====================
+// ==================== SECTION ====================
 
 /// File data provider with zero-cost abstractions
 pub struct FileDataProvider {
@@ -258,7 +258,7 @@ impl From<FileDataError> for NestGateError {
         NestGateError::Internal {
             message: error.to_string(),
             location: Some("FileDataError conversion".to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
         }
     }
@@ -386,7 +386,7 @@ impl ZeroCostDataStream for FileDataStream {
     }
 }
 
-// ==================== ZERO-COST DATA MANAGER ====================
+// ==================== SECTION ====================
 
 /// Zero-cost data manager with compile-time provider selection
 pub struct ZeroCostDataManager<T: ZeroCostDataCapability> {
@@ -416,7 +416,7 @@ impl<T: ZeroCostDataCapability> ZeroCostDataManager<T> {
     }
 }
 
-// ==================== FACTORY PATTERN ====================
+// ==================== SECTION ====================
 
 /// Zero-cost data factory for compile-time provider selection
 pub struct ZeroCostDataFactory;
@@ -441,7 +441,7 @@ impl ZeroCostDataFactory {
     }
 }
 
-// ==================== TESTS ====================
+// ==================== SECTION ====================
 
 #[cfg(test)]
 mod tests {

@@ -1,7 +1,7 @@
 /// **STORAGE CAPABILITY DISCOVERY**
 /// Discovery and management of storage-related capabilities
 /// Replaces hardcoded storage configurations with dynamic discovery
-use crate::error::Result;
+use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

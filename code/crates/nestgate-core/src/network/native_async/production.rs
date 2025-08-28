@@ -6,16 +6,19 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use crate::diagnostics::types::ServiceInfo;
-use crate::error::Result;
+use crate::Result;
 
 use super::traits::{NativeAsyncProtocolHandler, NativeAsyncServiceDiscovery};
 use super::types::{
     ConnectionStatus, NetworkConnection, NetworkRequest, NetworkResponse, ServiceEvent,
     ServiceEventType, ServiceQuery,
 };
-use crate::unified_types::UnifiedNetworkConfig;
+// **MIGRATED**: Using canonical config system instead of deprecated unified_types
+use crate::config::canonical_master::NetworkConfig as UnifiedNetworkConfig;
 
 /// Production service discovery implementation
+/// Production-grade service discovery implementation
+/// Provides robust, scalable service discovery for production workloads
 pub struct ProductionServiceDiscovery {
     services: std::sync::Arc<tokio::sync::RwLock<HashMap<String, ServiceInfo>>>,
     events: std::sync::Arc<tokio::sync::RwLock<Vec<ServiceEvent>>>,
@@ -172,6 +175,8 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
 }
 
 /// Production protocol handler implementation
+/// Production-grade protocol handler for network communications
+/// Manages high-performance protocol handling with connection pooling
 pub struct ProductionProtocolHandler {
     connections: std::sync::Arc<tokio::sync::RwLock<HashMap<String, NetworkConnection>>>,
 }
@@ -195,8 +200,8 @@ impl NativeAsyncProtocolHandler<1000, 30, 3, 8192> for ProductionProtocolHandler
         let connection = NetworkConnection {
             connection_id: uuid::Uuid::new_v4().to_string(),
             protocol: "http".to_string(),
-            local_address: config.bind_address.to_string(),
-            remote_address: config.bind_address.to_string(),
+            local_address: format!("{}:{}", config.external.host, config.external.port),
+            remote_address: format!("{}:{}", config.external.host, config.external.port),
             established_at: chrono::Utc::now(),
             status: ConnectionStatus::Connecting,
             metadata: std::collections::HashMap::new(),
@@ -204,7 +209,8 @@ impl NativeAsyncProtocolHandler<1000, 30, 3, 8192> for ProductionProtocolHandler
 
         // Store connection
         let mut connections = self.connections.write().await;
-        connections.insert(connection.connection_id.clone(), connection.clone());
+        let connection_id = connection.connection_id.clone();
+        connections.insert(connection_id, connection.clone());
 
         Ok(connection)
     }

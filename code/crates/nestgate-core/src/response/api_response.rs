@@ -5,12 +5,17 @@ use axum::response::{IntoResponse, Json};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use uuid::Uuid;
 
 /// Universal API response wrapper
 /// This type provides consistent response formatting across all NestGate APIs
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiResponse<T> {
-    /// Success status
+    /// Request ID for tracing
+    pub request_id: String,
+    /// Response status
+    pub status: crate::canonical_types::ResponseStatus,
+    /// Success status (for backward compatibility)
     pub success: bool,
     /// Response data
     pub data: Option<T>,
@@ -22,62 +27,117 @@ pub struct ApiResponse<T> {
     pub timestamp: DateTime<Utc>,
     /// Additional metadata
     pub metadata: Option<HashMap<String, serde_json::Value>>,
+    /// Processing time in milliseconds
+    pub processing_time_ms: u64,
 }
 
 impl<T> ApiResponse<T> {
     /// Create a successful response with data using standardized builder
     pub fn success(data: T) -> Self {
-        crate::return_builders::build_api_success(data)
+        Self {
+            request_id: Uuid::new_v4().to_string(),
+            status: crate::canonical_types::ResponseStatus::Success,
+            success: true,
+            data: Some(data),
+            error: None,
+            error_code: None,
+            timestamp: chrono::Utc::now(),
+            metadata: Some(HashMap::new()),
+            processing_time_ms: 0,
+        }
     }
 
     /// Create a successful response with data and metadata using standardized builder
     pub fn success_with_metadata(data: T, metadata: HashMap<String, serde_json::Value>) -> Self {
-        crate::return_builders::build_api_success_with_metadata(data, metadata)
+        Self {
+            request_id: Uuid::new_v4().to_string(),
+            status: crate::canonical_types::ResponseStatus::Success,
+            success: true,
+            data: Some(data),
+            error: None,
+            error_code: None,
+            timestamp: chrono::Utc::now(),
+            metadata: Some(metadata),
+            processing_time_ms: 0,
+        }
     }
 
     /// Create an error response using standardized builder
     pub fn error(message: String) -> Self {
-        crate::return_builders::build_api_error(message, None)
+        Self {
+            request_id: Uuid::new_v4().to_string(),
+            status: crate::canonical_types::ResponseStatus::Error,
+            success: false,
+            data: None,
+            error: Some(message),
+            error_code: None,
+            timestamp: chrono::Utc::now(),
+            metadata: Some(HashMap::new()),
+            processing_time_ms: 0,
+        }
     }
 
     /// Create an error response with error code using standardized builder
     pub fn error_with_code(message: String, code: String) -> Self {
-        crate::return_builders::build_api_error(message, Some(code))
+        Self {
+            request_id: Uuid::new_v4().to_string(),
+            status: crate::canonical_types::ResponseStatus::Error,
+            success: false,
+            data: None,
+            error: Some(message),
+            error_code: Some(code),
+            timestamp: chrono::Utc::now(),
+            metadata: Some({
+                let mut meta = HashMap::new();
+                meta.insert("error_code".to_string(), serde_json::Value::String(code.clone()));
+                meta
+            }),
+            processing_time_ms: 0,
+        }
     }
 
     /// Create a new successful response directly
     pub fn new_success(data: T) -> Self {
         Self {
+            request_id: Uuid::new_v4().to_string(),
+            status: crate::canonical_types::ResponseStatus::Success,
             success: true,
             data: Some(data),
             error: None,
             error_code: None,
             timestamp: chrono::Utc::now(),
             metadata: None,
+            processing_time_ms: 0,
         }
     }
 
     /// Create a new error response directly
     pub fn new_error(message: String) -> Self {
         Self {
+            request_id: Uuid::new_v4().to_string(),
+            status: crate::canonical_types::ResponseStatus::Error,
             success: false,
             data: None,
             error: Some(message),
             error_code: None,
             timestamp: chrono::Utc::now(),
             metadata: None,
+            processing_time_ms: 0,
         }
     }
 
     /// Create a new error response with code directly
     pub fn new_error_with_code(message: String, code: String) -> Self {
         Self {
+            request_id: Uuid::new_v4().to_string(),
+            status: crate::canonical_types::ResponseStatus::Error,
             success: false,
             data: None,
             error: Some(message),
             error_code: Some(code),
             timestamp: chrono::Utc::now(),
             metadata: None,
+            processing_time_ms: 0,
         }
     }
 
@@ -136,12 +196,15 @@ impl<T: Serialize> IntoResponse for ApiResponse<T> {
 impl<T> Default for ApiResponse<T> {
     fn default() -> Self {
         Self {
+            request_id: Uuid::new_v4().to_string(),
+            status: crate::canonical_types::ResponseStatus::Error,
             success: false,
             data: None,
             error: Some("Unknown error".to_string()),
             error_code: None,
             timestamp: chrono::Utc::now(),
             metadata: None,
+            processing_time_ms: 0,
         }
     }
 }

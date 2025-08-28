@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // This module provides a high-performance replacement for the Arc<dyn Fn> based connection
 // pool factory, using zero-cost abstractions and compile-time optimization.
@@ -7,13 +7,13 @@ use crate::NestGateError;
 // **PROVIDES**: 50% performance improvement through direct dispatch
 // **ELIMINATES**: Arc allocation overhead and closure call penalties
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use crate::zero_cost_migrations::ZeroCostConnectionFactory;
 use std::marker::PhantomData;
 use std::time::{Duration, Instant};
 use tracing::{info, warn};
 
-// ==================== ZERO-COST CONNECTION POOL ====================
+// ==================== SECTION ====================
 
 /// Zero-cost connection pool with compile-time factory specialization
 pub struct ZeroCostConnectionPool<Factory, Connection, const POOL_SIZE: usize = 10>
@@ -188,7 +188,7 @@ where
     }
 }
 
-// ==================== ZERO-COST BUILDER PATTERN ====================
+// ==================== SECTION ====================
 
 /// Zero-cost connection pool builder with compile-time configuration
 pub struct ZeroCostConnectionPoolBuilder<Factory, Connection, const POOL_SIZE: usize = 10>
@@ -228,7 +228,7 @@ where
     }
 }
 
-// ==================== PRACTICAL IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 /// Zero-cost TCP connection factory implementation
 pub struct ZeroCostTcpConnectionFactory {
@@ -284,7 +284,7 @@ impl ZeroCostConnectionFactory<TcpConnection> for ZeroCostTcpConnectionFactory {
     }
 }
 
-// ==================== PERFORMANCE COMPARISON ====================
+// ==================== SECTION ====================
 
 /// Performance benchmarking utilities
 pub mod performance {
@@ -341,7 +341,7 @@ pub mod performance {
     }
 }
 
-// ==================== MIGRATION GUIDE ====================
+// ==================== SECTION ====================
 
 /// Migration guide from Arc<dyn Fn> connection pool to zero-cost version
 pub const CONNECTION_POOL_MIGRATION_GUIDE: &str = r#"
@@ -349,7 +349,6 @@ pub const CONNECTION_POOL_MIGRATION_GUIDE: &str = r#"
 
 ## Before (Arc<dyn Fn> Runtime Overhead)
 ```rust
-use std::sync::Arc;
 
 pub type ConnectionFactory<T> = Arc<dyn Fn() -> Result<T> + Send + Sync>;
 pub type HealthCheckFn<T> = Arc<dyn Fn(&T) -> Result<()> + Send + Sync>;
@@ -378,7 +377,6 @@ impl<T> ConnectionPool<T> {
 
 ## After (Zero-Cost Direct Composition)
 ```rust
-use crate::zero_cost_migrations::ZeroCostConnectionFactory;
 
 pub struct ZeroCostConnectionPool<Factory, Connection, const POOL_SIZE: usize>
 where
@@ -421,7 +419,7 @@ where
 - ✅ Compile-time pool sizing and validation
 "#;
 
-// ==================== TYPE ALIASES ====================
+// ==================== SECTION ====================
 
 /// Common zero-cost connection pool configurations
 pub type StandardTcpConnectionPool = ZeroCostConnectionPool<ZeroCostTcpConnectionFactory, TcpConnection, 50>;

@@ -111,18 +111,18 @@ impl UniversalStorageManager {
         if backend.name.trim().is_empty() {
             return Err(NestGateError::Configuration {
                 message: "Backend name cannot be empty".to_string(),
-                config_source: ConfigSource::UserProvided,
+                
                 field: Some("name".to_string()),
-                suggested_fix: Some("Provide a valid backend name".to_string()),
+                
             });
         }
 
         if backend.endpoint.trim().is_empty() {
             return Err(NestGateError::Configuration {
                 message: "Backend endpoint cannot be empty".to_string(),
-                config_source: ConfigSource::UserProvided,
+                
                 field: Some("endpoint".to_string()),
-                suggested_fix: Some("Provide a valid backend endpoint URL".to_string()),
+                
             });
         }
 

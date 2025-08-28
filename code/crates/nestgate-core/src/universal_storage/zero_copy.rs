@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 use std::future::Future;
 //
@@ -12,7 +12,6 @@ use std::future::Future;
 // - 30% reduction in CPU usage
 // - Sub-millisecond response times for large data operations
 
-use std::future::Future;
 
 use bytes::Bytes;
 use std::ops::Deref;
@@ -20,10 +19,9 @@ use std::sync::Arc;
 use tokio::io::{AsyncRead, AsyncWrite};
 
 use super::canonical_storage::{CanonicalStorageBackend, CanonicalStorageMetadata};
-use crate::{Result, NestGateError};
+use crate::{Result};
+use crate::error::StorageResult; // Use canonical StorageResult
 
-/// Storage operation result type
-pub type StorageResult<T> = Result<T>;
 
 // Type aliases for complex types
 type MmapCacheStorage = Arc<tokio::sync::RwLock<lru::LruCache<String, bytes::Bytes>>>;
@@ -392,7 +390,7 @@ impl ZeroCopyFilesystemBackend {
                 std::num::NonZeroUsize::new(100).ok_or_else(|| NestGateError::Internal {
                     message: "Failed to create NonZeroUsize".to_string(),
                     location: Some("zero_copy::new".to_string()),
-                    debug_info: Some("Cache size must be non-zero".to_string()),
+                    location: Some("Cache size must be non-zero".to_string()),
                     is_bug: true,
                 })?,
             ))),
@@ -408,9 +406,9 @@ impl ZeroCopyFilesystemBackend {
 impl CanonicalStorageBackend for ZeroCopyFilesystemBackend {
     async fn capabilities(
         &self,
-    ) -> Result<Vec<crate::canonical_modernization::UnifiedServiceType>> {
-        let mut caps = vec![crate::canonical_modernization::UnifiedServiceType::Storage];
-        caps.push(crate::canonical_modernization::UnifiedServiceType::Network);
+    ) -> Result<Vec<crate::unified_enums::UnifiedServiceType>> {
+        let mut caps = vec![crate::unified_enums::UnifiedServiceType::Storage];
+        caps.push(crate::unified_enums::UnifiedServiceType::Network);
         Ok(caps)
     }
 
@@ -575,9 +573,9 @@ impl ZeroCopyMemoryBackend {
 impl CanonicalStorageBackend for ZeroCopyMemoryBackend {
     async fn capabilities(
         &self,
-    ) -> Result<Vec<crate::canonical_modernization::UnifiedServiceType>> {
-        let mut caps = vec![crate::canonical_modernization::UnifiedServiceType::Storage];
-        caps.push(crate::canonical_modernization::UnifiedServiceType::Network);
+    ) -> Result<Vec<crate::unified_enums::UnifiedServiceType>> {
+        let mut caps = vec![crate::unified_enums::UnifiedServiceType::Storage];
+        caps.push(crate::unified_enums::UnifiedServiceType::Network);
         Ok(caps)
     }
 

@@ -1,11 +1,15 @@
-use indicatif::{ProgressBar, ProgressStyle};
-use reqwest::Client;
+use anyhow::Context;
+use nestgate_core::{NestGateError, Result};
 use std::fs::File;
 use std::path::{Path, PathBuf};
+use tokio::fs;
+
+/// Installer error type alias
+pub type InstallerError = NestGateError;
 
 pub struct DownloadManager {
     #[allow(dead_code)] // Used for future download functionality
-    client: Client,
+    client: reqwest::Client,
 }
 
 impl DownloadManager {
@@ -44,11 +48,11 @@ impl DownloadManager {
         println!("URL: {download_url}");
 
         // Create progress bar
-        let pb = ProgressBar::new_spinner();
+        let pb = indicatif::ProgressBar::new_spinner();
         pb.set_style(
-            ProgressStyle::default_spinner()
+            indicatif::ProgressStyle::default_spinner()
                 .template("{spinner:.green} [{elapsed_precise}] {msg}")
-                .unwrap_or_else(|_| ProgressStyle::default_spinner()),
+                .unwrap_or_else(|_| indicatif::ProgressStyle::default_spinner()),
         );
         pb.set_message("Downloading...");
 

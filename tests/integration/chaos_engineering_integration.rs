@@ -3,7 +3,7 @@
 //! This test validates chaos engineering integration functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateCanonicalUnifiedConfig;
+use nestgate_core::config::unified::NestGateUnifiedConfig as NestGateUnifiedConfig;
 use nestgate_core::config::defaults::Environment;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -19,7 +19,7 @@ async fn test_chaos_engineering_integration_config() {
     assert!(!config.system.instance_name.is_empty());
     
     // Test environment-specific chaos engineering integration configuration
-    let dev_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::unified::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ Chaos engineering integration configuration test completed");
@@ -161,13 +161,13 @@ async fn test_chaos_engineering_environments() {
     info!("🌍 Testing chaos engineering integration across environments");
     
     // Test development environment chaos engineering integration
-    let dev_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::unified::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development chaos engineering integration configuration validated");
     
     // Test production environment chaos engineering integration
-    let prod_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::unified::create_config_for_environment(Environment::Production);
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production chaos engineering integration configuration validated");

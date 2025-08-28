@@ -3,7 +3,6 @@ use std::collections::HashMap;
 // Utilities for comparing performance between different implementations.
 
 use super::validation::BenchmarkResults;
-use std::collections::HashMap;
 
 /// Performance comparison utilities
 pub struct PerformanceComparison;

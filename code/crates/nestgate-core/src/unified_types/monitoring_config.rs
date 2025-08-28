@@ -5,10 +5,9 @@ use std::collections::HashMap;
 /// Split from unified_types/mod.rs for better maintainability and 2000-line compliance.
 use crate::idiomatic_evolution::{SmartDefault, SafeResultExt};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::Duration;
 
-// ==================== UNIFIED MONITORING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Unified Monitoring Configuration - consolidates all monitoring settings
 #[derive(Debug, Clone, Serialize, Deserialize, Default)] // ✅ Now using derive(Default)
@@ -34,7 +33,7 @@ impl SmartDefault for UnifiedMonitoringConfig {
     }
 }
 
-// ==================== METRICS CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Metrics collection and export configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -112,7 +111,7 @@ pub enum MetricType {
     Summary,
 }
 
-// ==================== LOGGING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Logging configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -285,7 +284,7 @@ pub enum FilterAction {
     AddFields(std::collections::HashMap<String, String>),
 }
 
-// ==================== TRACING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Distributed tracing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -381,7 +380,7 @@ pub struct OperationSamplingRule {
     pub max_traces_per_second: Option<u32>,
 }
 
-// ==================== ALERTING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Alerting configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -540,7 +539,7 @@ pub enum MatchOperation {
     NotRegex,
 }
 
-// ==================== DASHBOARD CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Dashboard configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

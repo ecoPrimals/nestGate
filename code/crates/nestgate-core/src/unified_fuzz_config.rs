@@ -10,9 +10,9 @@ use std::time::Duration;
 
 // Import the standardized config pattern
 use crate::unified_config_consolidation::StandardDomainConfig;
-use crate::unified_enums::{UnifiedHealthStatus, UnifiedServiceType};
+use crate::unified_enums::service_types::UnifiedServiceType};
 
-// ==================== FUZZ-SPECIFIC EXTENSIONS ====================
+// ==================== SECTION ====================
 
 /// Fuzz-specific configuration extensions
 /// Domain-specific fields for comprehensive fuzz testing
@@ -148,7 +148,7 @@ pub struct FuzzUniversalAdapterSettings {
     pub max_config_complexity: usize,
     }
 
-// ==================== FUZZ DATA STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// Configuration formats for fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -438,7 +438,7 @@ pub struct FuzzAuthConfig {
     pub scopes: Vec<String>,
     }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for FuzzExtensions {
     fn default() -> Self {
@@ -643,12 +643,12 @@ impl Default for FuzzUniversalAdapterSettings {
     }
     }
 
-// ==================== TYPE ALIAS FOR UNIFIED FUZZ CONFIG ====================
+// ==================== SECTION ====================
 
 /// Standardized Fuzz configuration
 pub type UnifiedFuzzConfig = StandardDomainConfig<FuzzExtensions>;
 
-// ==================== BUILDER PATTERN ====================
+// ==================== SECTION ====================
 
 impl UnifiedFuzzConfig {
     /// Create a comprehensive fuzz configuration

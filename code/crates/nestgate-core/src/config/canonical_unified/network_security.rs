@@ -10,7 +10,7 @@ use crate::canonical_modernization::canonical_constants::{
     storage::{MB},
 };
 
-// ==================== NETWORK CONFIGURATION ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
@@ -67,7 +67,7 @@ pub struct RpcConfig {
     pub max_concurrent_requests: usize,
 }
 
-// ==================== SECURITY CONFIGURATION ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
@@ -116,7 +116,7 @@ pub struct OAuth2Config {
     pub scopes: Vec<String>,
 }
 
-// ==================== SUPPORTING NETWORK/SECURITY TYPES ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct LoadBalancingConfig {
@@ -208,7 +208,7 @@ pub struct LdapConfig {
     pub user_filter: String,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 
 impl Default for HttpServerConfig {

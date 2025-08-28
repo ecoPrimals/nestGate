@@ -12,7 +12,7 @@
 // - `storage.rs` - Storage discovery configuration
 // - `cache.rs` - Cache discovery configuration
 
-// ==================== MODULE DECLARATIONS ====================
+// ==================== SECTION ====================
 
 /// Configuration settings and structures
 pub mod settings;
@@ -38,7 +38,7 @@ pub mod storage;
 /// Cache discovery configuration
 pub mod cache;
 
-// ==================== RE-EXPORTS ====================
+// ==================== SECTION ====================
 
 pub use settings::*;
 pub use manager::*;

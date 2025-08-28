@@ -253,7 +253,7 @@ impl UniversalOrchestrationManager {
             Err(nestgate_core::NestGateError::Internal {
                 message: "No orchestration provider available".to_string(),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })
         }

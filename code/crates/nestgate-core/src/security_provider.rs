@@ -3,10 +3,11 @@
 ///
 /// Provides security provider functionality for NestGate core services.
 /// This module handles security provider creation and management.
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
+// SecurityPrimalProvider has been consolidated - using unified zero-cost types
+use crate::universal_traits::{AuthToken, Credentials, Signature, SecurityDecision};
 use crate::universal_traits::SecurityPrimalProvider;
-use crate::universal_traits::{AuthToken, Credentials, SecurityDecision, Signature};
-use async_trait::async_trait;
+// CANONICAL MODERNIZATION: Removed async_trait for native async patterns
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -45,97 +46,116 @@ impl SecurityProvider {
     }
 }
 
-#[async_trait]
+/// **CANONICAL MODERNIZATION**: Native async implementation without async_trait overhead
 impl SecurityPrimalProvider for SecurityProvider {
-    async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken> {
-        // Basic implementation for testing
-        use std::time::SystemTime;
+    fn authenticate(&self, credentials: &Credentials) -> impl std::future::Future<Output = Result<AuthToken>> + Send {
+        async move {
+            // Basic implementation for testing
+            use std::time::SystemTime;
 
-        if credentials.username.is_empty() {
-            return Err(NestGateError::security_error(
-                "Empty username provided",
-                "password_authentication",
-                None,
-                None,
-            ));
+            if credentials.username.is_empty() {
+                return Err(NestGateError::permission_denied_with_operation(
+                    "password_authentication",
+                    "Empty username provided",
+                ));
+            }
+
+            Ok(AuthToken {
+                token: self.generate_token(),
+                expires_at: SystemTime::now() + Duration::from_secs(3600),
+                permissions: vec!["read".to_string(), "write".to_string()],
+            })
         }
-
-        Ok(AuthToken {
-            token: self.generate_token(),
-            expires_at: SystemTime::now() + Duration::from_secs(3600),
-            permissions: vec!["read".to_string(), "write".to_string()],
-        })
     }
 
-    async fn encrypt(&self, data: &[u8], _algorithm: &str) -> Result<Vec<u8>> {
-        // Simple test implementation
-        Ok(data.to_vec())
+    fn encrypt(&self, data: &[u8], _algorithm: &str) -> impl std::future::Future<Output = Result<Vec<u8>>> + Send {
+        async move {
+            // Simple test implementation
+            Ok(data.to_vec())
+        }
     }
 
-    async fn decrypt(&self, encrypted: &[u8], _algorithm: &str) -> Result<Vec<u8>> {
-        // Simple test implementation
-        Ok(encrypted.to_vec())
+    fn decrypt(&self, encrypted: &[u8], _algorithm: &str) -> impl std::future::Future<Output = Result<Vec<u8>>> + Send {
+        async move {
+            // Simple test implementation
+            Ok(encrypted.to_vec())
+        }
     }
 
-    async fn sign_data(&self, data: &[u8]) -> Result<Signature> {
-        use std::collections::hash_map::DefaultHasher;
-        use std::hash::{Hash, Hasher};
+    fn sign_data(&self, data: &[u8]) -> impl std::future::Future<Output = Result<Signature>> + Send {
+        let id = self.id.clone();
+        async move {
+            use std::collections::hash_map::DefaultHasher;
+            use std::hash::{Hash, Hasher};
 
-        let mut hasher = DefaultHasher::new();
-        data.hash(&mut hasher);
+            let mut hasher = DefaultHasher::new();
+            data.hash(&mut hasher);
 
-        Ok(Signature {
-            algorithm: "test".to_string(),
-            signature: format!("test_sig_{:x}", hasher.finish()),
-            key_id: self.id.clone(),
-        })
+            Ok(Signature {
+                algorithm: "test".to_string(),
+                signature: format!("test_sig_{:x}", hasher.finish()),
+                key_id: id,
+            })
+        }
     }
 
-    async fn verify_signature(&self, _data: &[u8], _signature: &Signature) -> Result<bool> {
-        // Simple test implementation
-        Ok(true)
+    fn verify_signature(&self, _data: &[u8], _signature: &Signature) -> impl std::future::Future<Output = Result<bool>> + Send {
+        async move {
+            // Simple test implementation
+            Ok(true)
+        }
     }
 
-    async fn get_key_id(&self) -> Result<String> {
-        Ok(self.id.clone())
+    fn get_key_id(&self) -> impl std::future::Future<Output = Result<String>> + Send {
+        let id = self.id.clone();
+        async move {
+            Ok(id)
+        }
     }
 
-    async fn validate_token(&self, _token: &str, _data: &[u8]) -> Result<bool> {
-        Ok(true)
+    fn validate_token(&self, token: &str, _data: &[u8]) -> impl std::future::Future<Output = Result<bool>> + Send {
+        let is_valid = self.validate_token(token);
+        async move {
+            Ok(is_valid)
+        }
     }
 
-    async fn generate_validation_token(&self, _data: &[u8]) -> Result<String> {
-        Ok(self.generate_token())
+    fn generate_validation_token(&self, _data: &[u8]) -> impl std::future::Future<Output = Result<String>> + Send {
+        let token = self.generate_token();
+        async move {
+            Ok(token)
+        }
     }
 
-    async fn evaluate_boundary_access(
+    fn evaluate_boundary_access(
         &self,
         _source: &str,
         _destination: &str,
         _operation: &str,
-    ) -> Result<SecurityDecision> {
-        Ok(SecurityDecision::Allow)
+    ) -> impl std::future::Future<Output = Result<SecurityDecision>> + Send {
+        async move {
+            // Simple test implementation - allow all operations
+            Ok(SecurityDecision::Allow)
+        }
     }
 }
 
 /// Create a default security provider
-pub fn create_security_provider() -> Arc<dyn SecurityPrimalProvider> {
+pub fn create_default() -> SecurityProvider {
     let config = SecurityProviderConfig {
         provider_type: "default".to_string(),
-        config: HashMap::new(),
+        config: std::collections::HashMap::new(),
     };
-
-    Arc::new(SecurityProvider::new(
-        "default-provider".to_string(),
-        config,
-    ))
+    SecurityProvider::new("default-provider".to_string(), config)
 }
 
-/// Create a security provider with custom configuration
-pub fn create_security_provider_with_config(
-    config: SecurityProviderConfig,
-) -> Arc<dyn SecurityPrimalProvider> {
-    Arc::new(SecurityProvider::new("custom-provider".to_string(), config))
+/// Create a custom security provider  
+pub fn create_custom(provider_type: String, config_map: std::collections::HashMap<String, String>) -> SecurityProvider {
+    let config = SecurityProviderConfig {
+        provider_type,
+        config: config_map,
+    };
+    SecurityProvider::new("custom-provider".to_string(), config)
 }
 
 #[cfg(test)]
@@ -144,7 +164,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_security_provider() {
-        let provider = create_security_provider();
+        let provider = create_default();
         // Just test that provider was created successfully
         let key_id = provider.get_key_id().await.unwrap_or_else(|e| {
             tracing::error!("Failed to get key ID: {:?}", e);
@@ -155,7 +175,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_generate_token() {
-        let provider = create_security_provider();
+        let provider = create_default();
         let token = provider
             .generate_validation_token(b"test-data")
             .await
@@ -168,7 +188,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_validate_token() {
-        let provider = create_security_provider();
+        let provider = create_default();
         let is_valid = provider
             .validate_token("test-token", b"test-data")
             .await

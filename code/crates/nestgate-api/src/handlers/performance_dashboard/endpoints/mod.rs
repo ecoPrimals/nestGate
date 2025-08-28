@@ -11,7 +11,7 @@
 // - `cache.rs` - Cache performance analysis endpoints
 // - `events.rs` - Server-sent events and real-time streaming
 
-// ==================== MODULE DECLARATIONS ====================
+// ==================== SECTION ====================
 
 /// Dashboard overview and summary endpoints
 pub mod overview;
@@ -34,7 +34,7 @@ pub mod cache;
 /// Server-sent events and real-time streaming
 pub mod events;
 
-// ==================== RE-EXPORTS ====================
+// ==================== SECTION ====================
 
 pub use overview::*;
 pub use metrics::*;

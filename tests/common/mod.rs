@@ -25,7 +25,7 @@ pub use utils::TestUtils;
 
 // Test configuration types from canonical system
 pub use config::UnifiedTestConfig as TestConfig;
-pub use nestgate_core::config::canonical_unified::CanonicalTestConfig as CleanTestConfig;
+pub use nestgate_core::config::unified::NestGateUnifiedConfig as CleanTestConfig;
 
 /// Simple test service for mocking
 #[derive(Clone, Debug)]

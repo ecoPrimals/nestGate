@@ -573,7 +573,6 @@ impl Default for MemoryPoolManager {
 mod tests {
     use super::*;
     use std::thread;
-    use std::time::Duration;
 
     #[test]
     fn test_memory_pool_basic_functionality() {

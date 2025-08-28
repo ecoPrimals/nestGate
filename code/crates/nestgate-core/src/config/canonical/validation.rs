@@ -4,7 +4,7 @@
 //! Single responsibility: Validate configuration correctness.
 
 use super::types::*;
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 
 /// Configuration validator
 pub struct ConfigValidator;
@@ -24,11 +24,11 @@ impl ConfigValidator {
     fn validate_system(system: &SystemConfig) -> Result<()> {
         if system.instance_name.is_empty() {
             return Err(NestGateError::Validation {
-                field: "system.instance_name".to_string(),
+                field: Some("system.instance_name".to_string()),
                 message: "Instance name cannot be empty".to_string(),
                 current_value: Some(system.instance_name.clone()),
                 expected: Some("non-empty string".to_string()),
-                user_error: true,
+                context: None,
             });
         }
         Ok(())
@@ -42,11 +42,11 @@ impl ConfigValidator {
     fn validate_api_server(api: &ApiServerConfig) -> Result<()> {
         if api.port == 0 {
             return Err(NestGateError::Validation {
-                field: "network.api.port".to_string(),
+                field: Some("network.api.port".to_string()),
                 message: "Port cannot be 0".to_string(),
                 current_value: Some(api.port.to_string()),
                 expected: Some("port number 1-65535".to_string()),
-                user_error: true,
+                context: None,
             });
         }
         Ok(())

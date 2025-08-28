@@ -8,10 +8,10 @@
 //! - Performance optimization validation
 
 use nestgate_core::canonical_types::{health::HealthStatus, service::ServiceType};
-use nestgate_core::config::canonical_unified::types::{
+use nestgate_core::config::unified::types::{
     CanonicalConfig, NetworkConfig, SecurityConfig, StorageConfig,
 };
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateCanonicalUnifiedConfig;
+use nestgate_core::config::unified::NestGateUnifiedConfig as NestGateUnifiedConfig;
 use nestgate_core::error::{NestGateError, Result};
 use serde_json;
 use std::time::Duration;
@@ -70,7 +70,7 @@ async fn test_no_fragmented_patterns() -> Result<()> {
         CanonicalConfig::default(),
         CanonicalConfig {
             network: NetworkConfig {
-                api: nestgate_core::config::canonical_unified::types::ApiServerConfig {
+                api: nestgate_core::config::unified::types::ApiServerConfig {
                     port: 8080,
                     ..Default::default()
                 },
@@ -246,7 +246,7 @@ async fn test_canonical_config_performance() -> Result<()> {
     let configs: Vec<CanonicalConfig> = (0..1000)
         .map(|i| CanonicalConfig {
             network: NetworkConfig {
-                api: nestgate_core::config::canonical_unified::types::ApiServerConfig {
+                api: nestgate_core::config::unified::types::ApiServerConfig {
                     port: 8000 + (i % 100) as u16,
                     ..Default::default()
                 },
@@ -366,7 +366,7 @@ async fn test_canonical_concurrency() -> Result<()> {
                 // Each task creates and validates a config
                 let config = CanonicalConfig {
                     network: NetworkConfig {
-                        api: nestgate_core::config::canonical_unified::types::ApiServerConfig {
+                        api: nestgate_core::config::unified::types::ApiServerConfig {
                             port: 8000 + i as u16,
                             ..Default::default()
                         },
@@ -410,7 +410,7 @@ async fn test_canonical_system_integration() -> Result<()> {
     // Create a comprehensive configuration
     let config = CanonicalConfig {
         network: NetworkConfig {
-            api: nestgate_core::config::canonical_unified::types::ApiServerConfig {
+            api: nestgate_core::config::unified::types::ApiServerConfig {
                 port: 8080,
                 host: "127.0.0.1".parse().unwrap(),
                 ..Default::default()

@@ -3,7 +3,7 @@
 /// Replaces: SecurityConfig, AuthConfig, TlsConfig, KeyManagementConfig,
 /// AccessControlConfig, and 6+ other security config structures
 use super::CanonicalDomainConfig;
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -39,7 +39,6 @@ impl CanonicalDomainConfig for CanonicalSecurityConfig {
             return Err(NestGateError::config_error(
                 "key_management.rotation_interval",
                 "must be at least 1 hour",
-                None,
             ));
         }
         Ok(())
@@ -66,7 +65,7 @@ impl CanonicalDomainConfig for CanonicalSecurityConfig {
     }
 }
 
-// ==================== SECURITY CONFIGURATION STRUCTURES ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityAuthentication {
@@ -110,7 +109,7 @@ pub struct SecurityAudit {
     pub retention_days: u32,
 }
 
-// ==================== SUPPORTING ENUMS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AuthMethod {

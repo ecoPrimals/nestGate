@@ -6,7 +6,7 @@
 
 use super::*;
 
-impl NestGateCanonicalUnifiedConfig {
+impl NestGateCanonicalConfig {
     /// Create a testing configuration preset
     pub fn testing() -> Self {
         Self {

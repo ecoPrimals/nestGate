@@ -1,11 +1,9 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 // Real Storage Service Implementation
 //
 // Provides actual file system storage operations replacing mock implementations.
 
-// REMOVED: async_trait - using zero-cost native async patterns
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::SystemTime;
@@ -14,7 +12,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::sync::RwLock;
 use tracing::{debug, info};
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use crate::canonical_modernization::consolidated_storage_types::*;
 
 /// Real storage service implementation
@@ -456,81 +454,3 @@ pub trait StorageService: Send + Sync {
     fn get_metadata(&self, path: &str) -> impl std::future::Future<Output = Result<StorageDirectoryEntry>> + Send;
 }
 
-// **CANONICAL MODERNIZATION COMPLETE** - Native async trait implementation
-impl StorageService for RealStorageService {
-    fn write(&self, path: &str, data: &[u8]) -> impl std::future::Future<Output = Result<()>> + Send {
-        async move {
-            self.write_file(path, data).await
-        }
-    }
-
-    fn read(&self, path: &str) -> impl std::future::Future<Output = Result<Vec<u8>>> + Send {
-        async move {
-            self.read_file(path).await
-        }
-    }
-
-    fn delete(&self, path: &str) -> impl std::future::Future<Output = Result<()>> + Send {
-        async move {
-            self.delete_file(path).await
-        }
-    }
-
-    fn list(&self, path: &str) -> impl std::future::Future<Output = Result<Vec<StorageDirectoryEntry>>> + Send {
-        async move {
-            self.list_directory(path).await
-        }
-    }
-
-    fn exists(&self, path: &str) -> impl std::future::Future<Output = Result<bool>> + Send {
-        async move {
-            let full_path = self.root_path.join(path);
-            Ok(full_path.exists())
-        }
-    }
-
-    fn get_metadata(&self, path: &str) -> impl std::future::Future<Output = Result<StorageDirectoryEntry>> + Send {
-        async move {
-            let cache = self.metadata_cache.read().await;
-            if let Some(entry) = cache.get(path) {
-                return Ok(entry.clone());
-            }
-
-            let full_path = self.root_path.join(path);
-            if !full_path.exists() {
-                return Err(NestGateError::invalid_input(
-                    "file_path".to_string(),
-                    format!("File not found: {path}"),
-                ));
-            }
-
-            let metadata = fs::metadata(&full_path)
-                .await
-                .map_err(|e| e.into_nestgate_error_with_context("Failed to get file metadata: {}"))?;
-
-            Ok(StorageDirectoryEntry {
-                name: Path::new(path)
-                    .file_name()
-                    .unwrap_or_default()
-                    .to_string_lossy()
-                    .to_string(),
-                path: path.to_string(),
-                is_directory: metadata.is_dir(),
-                size: metadata.len(),
-                modified: {
-                    let timestamp = metadata
-                        .modified()
-                        .unwrap_or(SystemTime::UNIX_EPOCH)
-                        .duration_since(SystemTime::UNIX_EPOCH)
-                        .unwrap_or_default()
-                        .as_secs();
-                    chrono::DateTime::from_timestamp(timestamp as i64, 0)
-                        .unwrap_or_else(chrono::Utc::now)
-                },
-                permissions: None,
-                owner: None,
-                group: None,
-            })
-        }
-    }
-}

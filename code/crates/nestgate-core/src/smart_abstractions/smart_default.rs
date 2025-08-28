@@ -161,7 +161,6 @@ mod example {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_smart_defaults() {

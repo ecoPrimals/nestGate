@@ -6,7 +6,6 @@ use std::collections::HashMap;
 /// 2. **Standalone**: Self-contained operation with direct network protocols
 ///
 /// The system automatically detects the environment and configures itself accordingly.
-use std::collections::HashMap;
 use std::env;
 
 /// Operating mode for NestGate

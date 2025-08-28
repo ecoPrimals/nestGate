@@ -1,5 +1,5 @@
 //
-// **MODULARIZATION COMPLETE** - Successfully refactored domain_configs.rs from 1008 lines
+// **MODULARIZATION COMPLETE** - Successfully refactored NestGateCanonicalConfig.rs from 1008 lines
 // into focused, maintainable modules organized by domain responsibility.
 //
 // **Original**: Single 1008-line file with 20+ configuration structs
@@ -112,7 +112,7 @@ impl Default for DomainConfigs {
 
 /// **MODULARIZATION ACHIEVEMENT**
 ///
-/// Successfully refactored domain_configs.rs from 1008 lines into:
+/// Successfully refactored NestGateCanonicalConfig.rs from 1008 lines into:
 /// - `mod.rs`: Main coordination and DomainConfigs struct (~95 lines)
 /// - `core.rs`: Core domain configurations (~80 lines)
 /// - `network.rs`: Network domain configuration (~70 lines)

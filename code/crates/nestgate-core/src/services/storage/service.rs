@@ -1,9 +1,8 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 ///
 /// This module contains the core StorageManagerService implementation
 /// extracted from the original monolithic storage.rs file.
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::sync::RwLock;
@@ -13,7 +12,7 @@ use uuid::Uuid;
 use crate::services::storage::config::{StorageServiceConfig, ZfsConfig};
 use super::types::{CacheConfig, StoragePool, StorageQuota, StorageServiceStats};
 use crate::universal_storage::canonical_storage::{CanonicalStorageManager, FilesystemBackend};
-use crate::{NestGateError, Result};
+use crate::{Result};
 
 // Type aliases for complex storage types to satisfy clippy
 type StoragePoolMap = Arc<RwLock<HashMap<String, StoragePool>>>;
@@ -54,7 +53,7 @@ impl StorageManagerService {
 
         // Validate configuration
         config.validate().map_err(|e| {
-            NestGateError::invalid_input(
+            NestGateError::invalid_input_with_field(
                 "config".to_string(),
                 format!("Invalid storage configuration: {e}"),
             )
@@ -65,10 +64,11 @@ impl StorageManagerService {
             crate::universal_storage::canonical_storage::create_canonical_storage_manager()
                 .await
                 .map_err(|e| NestGateError::Configuration {
+                    field: "storage_manager".to_string(),
                     message: format!("Failed to create storage manager: {e}"),
-                    config_source: crate::error::core::UnifiedConfigSource::Runtime,
-                    field: Some("storage_manager".to_string()),
-                    suggested_fix: Some("Check storage configuration and permissions".to_string()),
+                    current_value: None,
+                    expected: Some("valid storage configuration".to_string()),
+                    user_error: false,
                 })?,
         );
 
@@ -130,12 +130,11 @@ impl StorageManagerService {
                 if !modules.contains("zfs") {
                     warn!("ZFS kernel module not loaded");
                     return Err(NestGateError::Configuration {
+                        field: "zfs_module".to_string(),
                         message: "ZFS kernel module is not loaded".to_string(),
-                        config_source: crate::error::UnifiedConfigSource::Defaults,
-                        field: Some("zfs_module".to_string()),
-                        suggested_fix: Some(
-                            "Run 'modprobe zfs' to load the ZFS kernel module".to_string(),
-                        ),
+                        current_value: Some("not_loaded".to_string()),
+                        expected: Some("loaded ZFS kernel module".to_string()),
+                        user_error: false,
                     });
                 }
             }
@@ -157,13 +156,11 @@ impl StorageManagerService {
             _ => {
                 warn!("ZFS tools not found in PATH");
                 Err(NestGateError::Configuration {
+                    field: "zfs_tools".to_string(),
                     message: "ZFS tools (zpool, zfs) not found in PATH".to_string(),
-                    config_source: crate::error::UnifiedConfigSource::Defaults,
-                    field: Some("zfs_tools".to_string()),
-                    suggested_fix: Some(
-                        "Install ZFS utilities package (zfsutils-linux on Ubuntu/Debian)"
-                            .to_string(),
-                    ),
+                    current_value: Some("not_found".to_string()),
+                    expected: Some("zfsutils-linux package installed".to_string()),
+                    user_error: false,
                 })
             }
         }

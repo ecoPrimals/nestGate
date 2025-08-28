@@ -4,7 +4,6 @@ use std::collections::HashMap;
 // and automated data migration between storage tiers.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
 /// Storage tiering analysis and optimization report

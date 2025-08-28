@@ -1,11 +1,10 @@
 /// Universal Primal Discovery Stub Implementations
 /// Provides fallback implementations for discovery operations when full discovery is unavailable.
 /// These stubs ensure system stability and provide sensible defaults.
-use crate::error::Result;
-use crate::unified_types::NetworkConfig;
-// 🚀 ECOSYSTEM UNIFICATION: Import unified types
-use crate::unified_types::{UnifiedConfig, UnifiedNetworkConfig};
-use crate::universal_adapter::discovery::DiscoveryManager;
+use crate::Result;
+// **MIGRATED**: Using canonical config system instead of deprecated unified_types
+use crate::config::canonical_master::{NestGateCanonicalConfig, NetworkConfig as UnifiedNetworkConfig};
+use crate::capabilities::discovery::DiscoveryManager;
 use crate::universal_adapter::stats::AdapterStats;
 use std::collections::HashMap;
 use std::net::{IpAddr, SocketAddr};
@@ -94,7 +93,7 @@ pub struct NetworkConfigAdapter {
     #[allow(dead_code)]
     service_name: String,
     #[allow(dead_code)]
-    config: UnifiedConfig,
+    config: NestGateCanonicalConfig,
     #[allow(dead_code)]
     discovery_manager: Arc<RwLock<DiscoveryManager>>,
     #[allow(dead_code)]
@@ -104,12 +103,11 @@ pub struct NetworkConfigAdapter {
 impl NetworkConfigAdapter {
     pub fn new(service_name: String) -> Self {
         let network_config = UnifiedNetworkConfig {
-            service_name: service_name.clone(),
-            api_port: get_fallback_port(&service_name),
+            // Use default NetworkConfig structure - fields updated to match unified config
             ..Default::default()
         };
 
-        let config = crate::unified_types::UnifiedConfig {
+        let config = crate::config::canonical_master::NestGateCanonicalConfig {
             network: network_config,
             ..Default::default()
         };
@@ -117,10 +115,8 @@ impl NetworkConfigAdapter {
         Self {
             service_name,
             config,
-            discovery_manager: Arc::new(RwLock::new(DiscoveryManager::new(
-                UnifiedConfig::default(),
-            ))),
-            stats: Arc::new(RwLock::new(AdapterStats::new())),
+            discovery_manager: Arc::new(RwLock::new(DiscoveryManager::new())),
+            stats: Arc::new(RwLock::new(AdapterStats::default())),
         }
     }
 
@@ -134,7 +130,7 @@ pub struct StandaloneNetworkAdapter {
     #[allow(dead_code)]
     service_name: String,
     #[allow(dead_code)]
-    config: UnifiedConfig,
+    config: NestGateCanonicalConfig,
     #[allow(dead_code)]
     discovery_manager: Arc<RwLock<DiscoveryManager>>,
     #[allow(dead_code)]
@@ -153,11 +149,9 @@ impl StandaloneNetworkAdapter {
 
         Self {
             service_name,
-            config: UnifiedConfig::default(), // Placeholder, needs proper initialization
-            discovery_manager: Arc::new(RwLock::new(DiscoveryManager::new(
-                UnifiedConfig::default(),
-            ))),
-            stats: Arc::new(RwLock::new(AdapterStats::new())),
+            config: NestGateCanonicalConfig::default(), // Placeholder, needs proper initialization
+            discovery_manager: Arc::new(RwLock::new(DiscoveryManager::new())),
+            stats: Arc::new(RwLock::new(AdapterStats::default())),
             endpoints,
         }
     }
@@ -175,11 +169,11 @@ impl StandaloneNetworkAdapter {
     }
 }
 
-/// **DEPRECATED**: Use UnifiedNetworkConfig from crate::unified_types instead
-/// NetworkConfig uses the same Default implementation as UnifiedNetworkConfig
-impl NetworkConfig {
-    /// Convert legacy NetworkConfig to UnifiedNetworkConfig
-    pub fn to_unified(&self) -> crate::unified_types::UnifiedNetworkConfig {
-        crate::unified_types::UnifiedNetworkConfig::default()
+/// **DEPRECATED**: Use UnifiedNetworkConfig from crate::config::canonical_master instead
+/// UnifiedNetworkConfig helper methods
+impl UnifiedNetworkConfig {
+    /// Convert to unified config (identity function now)
+    pub fn to_unified(&self) -> UnifiedNetworkConfig {
+        self.clone()
     }
 }

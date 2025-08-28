@@ -3,7 +3,7 @@
 //! This test validates debt elimination functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateCanonicalUnifiedConfig;
+use nestgate_core::config::unified::NestGateUnifiedConfig as NestGateUnifiedConfig;
 use nestgate_core::config::defaults::Environment;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -19,7 +19,7 @@ async fn test_debt_elimination_config() {
     assert!(!config.system.instance_name.is_empty());
     
     // Test environment-specific debt elimination configuration
-    let dev_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::unified::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ Debt elimination configuration test completed");
@@ -164,13 +164,13 @@ async fn test_debt_elimination_environments() {
     info!("🌍 Testing debt elimination across environments");
     
     // Test development environment debt elimination
-    let dev_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::unified::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development debt elimination configuration validated");
     
     // Test production environment debt elimination
-    let prod_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::unified::create_config_for_environment(Environment::Production);
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production debt elimination configuration validated");

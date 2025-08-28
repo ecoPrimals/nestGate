@@ -13,7 +13,6 @@ pub use intelligence::*;
 pub use orchestration::*;
 pub use security::*;
 
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -70,7 +69,6 @@ impl CapabilityResponse {
 }
 
 /// Universal capability trait that all external primal adapters must implement
-#[async_trait]
 pub trait UniversalCapability: Send + Sync {
     /// Execute a capability request
     async fn execute(
@@ -82,5 +80,5 @@ pub trait UniversalCapability: Send + Sync {
     fn get_metadata(&self) -> HashMap<String, serde_json::Value>;
 
     /// Health check for the capability
-    async fn health_check(&self) -> bool;
+    fn health_check(&self) -> impl std::future::Future<Output = bool> + Send;
 }

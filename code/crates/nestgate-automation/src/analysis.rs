@@ -63,7 +63,7 @@ impl FileAnalyzer {
             NestGateError::storage_error(
                 &format!("Failed to get metadata for {file_path}: {e}"),
                 "get_metadata",
-                Some(file_path),
+                Some(file_path.to_string()),
             )
         })?;
 
@@ -118,7 +118,7 @@ impl FileAnalyzer {
             NestGateError::storage_error(
                 &format!("Failed to read file metadata: {e}"),
                 "read_metadata",
-                Some(file_path),
+                Some(file_path.to_string()),
             )
         })?;
 
@@ -282,7 +282,7 @@ const SMALL_FILE_BYTES: u64 = 1024 * 1024; // 1MB
             NestGateError::storage_error(
                 &format!("Failed to read file metadata: {e}"),
                 "get_metadata", 
-                Some(file_path),
+                Some(file_path.to_string()),
             )
         })?;
 

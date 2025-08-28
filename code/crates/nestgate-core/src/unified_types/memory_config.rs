@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-// ==================== UNIFIED MEMORY CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Unified Memory Configuration - consolidates all memory management settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -37,7 +37,7 @@ impl Default for UnifiedMemoryConfig {
     }
 }
 
-// ==================== MEMORY POOL CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Memory pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -114,7 +114,7 @@ pub enum PoolType {
     Custom(String),
 }
 
-// ==================== ALLOCATION STRATEGY ====================
+// ==================== SECTION ====================
 
 /// Memory allocation strategy
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -182,7 +182,7 @@ impl Default for AllocationTracking {
     }
 }
 
-// ==================== MEMORY LIMITS ====================
+// ==================== SECTION ====================
 
 /// Memory usage limits
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -288,7 +288,7 @@ pub enum RecoveryAction {
     Custom(String),
 }
 
-// ==================== GARBAGE COLLECTION CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Garbage collection configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -414,7 +414,7 @@ pub struct GcLogging {
     pub log_file: Option<String>,
 }
 
-// ==================== MEMORY MONITORING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Memory monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

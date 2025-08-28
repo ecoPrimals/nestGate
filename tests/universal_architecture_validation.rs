@@ -11,9 +11,9 @@ use crate::common::config::{
     ArchitectureValidationSettings, CanonicalTestConfig, TestConfigMigrationUtilities,
 };
 
-// ==================== DEPRECATED CONFIG REMOVED ====================
+// ==================== MODERNIZATION COMPLETE ====================
 //
-// **CANONICAL MODERNIZATION COMPLETE**: Deprecated ArchitectureValidationConfig eliminated
+// **CANONICAL MODERNIZATION COMPLETE**: All configurations use canonical system
 // Use CanonicalTestConfig::architecture_validation_tests() from tests::common::config instead
 //
 // **MIGRATION COMPLETE**: All architecture validation now uses canonical patterns

@@ -5,7 +5,6 @@
 //! notification channels with consistent behavior and error handling.
 
 use crate::smart_abstractions::prelude::*;
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
@@ -159,7 +158,8 @@ impl SmartDefault for NotificationPriority {
 /// This trait provides a unified interface for all notification channels,
 /// eliminating the need for large enum patterns and enabling type-safe,
 /// extensible notification handling.
-#[async_trait]
+/// 
+/// **MODERNIZED**: Native async trait without async_trait overhead
 pub trait NotificationChannel: Send + Sync + std::fmt::Debug {
     /// Get the unique identifier for this channel
     fn channel_id(&self) -> &str;
@@ -173,20 +173,20 @@ pub trait NotificationChannel: Send + Sync + std::fmt::Debug {
     /// Check if the channel is currently enabled
     fn is_enabled(&self) -> bool;
 
-    /// Send a notification through this channel
-    async fn send_notification(
+    /// Send a notification through this channel - native async
+    fn send_notification(
         &self,
         content: &NotificationContent,
-    ) -> NotificationResult<DeliveryRecord>;
+    ) -> impl std::future::Future<Output = NotificationResult<DeliveryRecord>> + Send;
 
-    /// Validate the channel configuration
-    async fn validate_configuration(&self) -> NotificationResult<()>;
+    /// Validate the channel configuration - native async
+    fn validate_configuration(&self) -> impl std::future::Future<Output = NotificationResult<()>> + Send;
 
     /// Get channel-specific configuration as JSON
     fn get_configuration(&self) -> serde_json::Value;
 
-    /// Test the channel connectivity
-    async fn test_connection(&self) -> NotificationResult<bool>;
+    /// Test the channel connectivity - native async
+    fn test_connection(&self) -> impl std::future::Future<Output = NotificationResult<bool>> + Send;
 
     /// Get rate limit information for this channel
     fn get_rate_limits(&self) -> Option<RateLimitConfig>;
@@ -248,7 +248,6 @@ impl SmartDefault for EmailNotificationChannel {
     }
 }
 
-#[async_trait]
 impl NotificationChannel for EmailNotificationChannel {
     fn channel_id(&self) -> &str {
         &self.id
@@ -266,10 +265,11 @@ impl NotificationChannel for EmailNotificationChannel {
         self.enabled
     }
 
-    async fn send_notification(
+    fn send_notification(
         &self,
         content: &NotificationContent,
-    ) -> NotificationResult<DeliveryRecord> {
+    ) -> impl std::future::Future<Output = NotificationResult<DeliveryRecord>> + Send {
+        async move {
         if !self.is_enabled() {
             return Ok(DeliveryRecord {
                 channel_id: self.id.clone(),
@@ -307,9 +307,10 @@ impl NotificationChannel for EmailNotificationChannel {
                 meta
             },
         })
+        }
     }
 
-    async fn validate_configuration(&self) -> NotificationResult<()> {
+    fn validate_configuration(&self) -> impl std::future::Future<Output = Result<()>> + Send;
         if self.recipients.is_empty() {
             return Err(NotificationError::Configuration {
                 message: "No recipients configured".to_string(),
@@ -337,7 +338,7 @@ impl NotificationChannel for EmailNotificationChannel {
         })
     }
 
-    async fn test_connection(&self) -> NotificationResult<bool> {
+    fn test_connection(&self) -> impl std::future::Future<Output = Result<bool>> + Send;
         // **PRODUCTION READY**: SMTP connection test with timeout
         if !self.enabled {
             return Ok(false);
@@ -396,7 +397,6 @@ impl SmartDefault for SlackNotificationChannel {
     }
 }
 
-#[async_trait]
 impl NotificationChannel for SlackNotificationChannel {
     fn channel_id(&self) -> &str {
         &self.id
@@ -521,7 +521,6 @@ impl SmartDefault for LogNotificationChannel {
     }
 }
 
-#[async_trait]
 impl NotificationChannel for LogNotificationChannel {
     fn channel_id(&self) -> &str {
         &self.id

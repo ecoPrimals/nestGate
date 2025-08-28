@@ -72,7 +72,7 @@ impl NestGateInstaller {
 
     pub async fn install(&self, config: &InstallerConfig) -> Result<()> {
         // Note: domains field doesn't exist in canonical config - using system config instead
-        let system_config = &config.system;
+        let system_config = &config.base_config.system;
         
         // System integration logic would be based on system config
         // For now, just log that we're doing system integration
@@ -383,7 +383,7 @@ impl NestGateInstaller {
 
     async fn setup_system_integration(&self, config: &InstallerConfig) -> Result<()> {
         // Note: domains field doesn't exist in canonical config - using system config instead
-        let system_config = &config.system;
+        let system_config = &config.base_config.system;
         
         // System integration logic would be based on system config
         // For now, just log that we're doing system integration

@@ -1,13 +1,12 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // This module provides comprehensive input validation and sanitization
 // to prevent injection attacks and ensure data integrity.
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use thiserror::Error;
 
 /// Input validation errors (local to this module - will be converted to domain errors)
@@ -398,13 +397,13 @@ impl InputValidator {
 /// Validate a service name for universal service registration
 pub fn validate_service_name(name: &str) -> ValidationResult<String> {
     let validator = InputValidator::new().map_err(|_| ValidationError::InvalidField {
-        field: "validator".to_string(),
+        field: Some("validator".to_string()),
         reason: "failed to create validator".to_string(),
     })?;
 
     if !validator.patterns.alphanumeric.is_match(name) {
         return Err(ValidationError::InvalidField {
-            field: "service_name".to_string(),
+            field: Some("service_name".to_string()),
             reason: "service name must be alphanumeric".to_string(),
         });
     }
@@ -417,7 +416,7 @@ pub fn validate_endpoint_path(path: &str) -> ValidationResult<String> {
     // Additional path-specific validation
     if !path.starts_with('/') {
         return Err(ValidationError::InvalidField {
-            field: "endpoint_path".to_string(),
+            field: Some("endpoint_path".to_string()),
             reason: "path must start with '/'".to_string(),
         });
     }
@@ -428,7 +427,7 @@ pub fn validate_endpoint_path(path: &str) -> ValidationResult<String> {
 /// Validate an API key
 pub fn validate_api_key(key: &str) -> ValidationResult<String> {
     let validator = InputValidator::new().map_err(|_| ValidationError::InvalidField {
-        field: "validator".to_string(),
+        field: Some("validator".to_string()),
         reason: "failed to create validator".to_string(),
     })?;
     validator.validate_string("api_key", key, Some(32), Some(128))
@@ -437,13 +436,13 @@ pub fn validate_api_key(key: &str) -> ValidationResult<String> {
 /// Validate a username for authentication
 pub fn validate_username(username: &str) -> ValidationResult<String> {
     let validator = InputValidator::new().map_err(|_| ValidationError::InvalidField {
-        field: "validator".to_string(),
+        field: Some("validator".to_string()),
         reason: "failed to create validator".to_string(),
     })?;
 
     if !validator.patterns.alphanumeric.is_match(username) {
         return Err(ValidationError::InvalidField {
-            field: "username".to_string(),
+            field: Some("username".to_string()),
             reason: "username must be alphanumeric".to_string(),
         });
     }

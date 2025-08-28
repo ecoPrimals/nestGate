@@ -132,7 +132,7 @@ pub struct SuggestedAction {
     pub expected_outcome: String,
 }
 
-// ==================== SUPPORTING TYPES ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AIErrorCategory {
@@ -264,7 +264,7 @@ pub struct UIHints {
     pub icon_suggestions: Vec<String>,
 }
 
-// ==================== IMPLEMENTATION ====================
+// ==================== SECTION ====================
 
 impl<T> AIFirstResponse<T> {
     /// Create a successful AI-First response
@@ -334,7 +334,7 @@ impl AIFirstError {
                     "Validate environment variables".to_string(),
                 ],
             ),
-            NestGateError::Network(_) => (
+            NestGateError::Network { .. } => (
                 AIErrorCategory::Network,
                 RetryStrategy::ExponentialBackoff {
                     base_delay_ms: 1000,
@@ -345,7 +345,7 @@ impl AIFirstError {
                     "Retry with backoff".to_string(),
                 ],
             ),
-            NestGateError::Security(_) => (
+            NestGateError::Security { .. } => (
                 AIErrorCategory::Security,
                 RetryStrategy::None,
                 vec![
@@ -445,7 +445,7 @@ impl<T: Serialize> IntoResponse for AIFirstResponse<T> {
     }
 }
 
-// ==================== CONVERSION UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Trait for converting standard responses to AI-First format
 pub trait IntoAIFirstResponse<T> {

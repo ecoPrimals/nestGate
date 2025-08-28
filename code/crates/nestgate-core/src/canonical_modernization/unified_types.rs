@@ -10,10 +10,9 @@ use std::collections::HashMap;
 // - Access patterns from unified_types/access_patterns.rs
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
-// ==================== CANONICAL STORAGE TYPES ====================
+// ==================== SECTION ====================
 
 /// Canonical storage change record - consolidates all storage change tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -213,13 +212,23 @@ impl Default for CanonicalAccessPatterns {
     }
 }
 
-// ==================== CANONICAL CONFIGURATION TYPES ====================
+// ==================== SECTION ====================
 
 /// **UNIFIED CONFIG**
 /// 
 /// Main configuration structure for the NestGate system
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
+// ==================== SECTION ====================
+//
+// **DEPRECATED**: This UnifiedConfig definition is superseded by the canonical
+// NestGateCanonicalConfig in crate::config::canonical_master. Use the canonical version instead.
+//
+// **MIGRATION PATH**:
+// - Old: use crate::unified_types::UnifiedConfig
+// - New: use crate::config::canonical_master::NestGateCanonicalConfig
+//
+#[deprecated(since = "2.0.0", note = "Use crate::config::canonical_master::NestGateCanonicalConfig instead")]
 pub struct UnifiedConfig {
     /// Service configuration
     pub service: UnifiedServiceConfig,
@@ -533,7 +542,7 @@ pub enum MetricValue {
     String(String),
 }
 
-// ==================== MIGRATION UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Migration utility to convert from legacy storage types
 pub mod migration {
@@ -576,7 +585,6 @@ pub mod migration {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_canonical_replication_status_display() {
@@ -601,7 +609,7 @@ mod tests {
 
     #[test]
     fn test_migration_utilities() {
-        use migration::*;
+        use super::migration::*;
         
         assert_eq!(
             migrate_replication_status("active"),

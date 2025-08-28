@@ -47,7 +47,7 @@ pub async fn process_migration_queue(context: MigrationContext<'_>) -> CoreResul
                 .map_err(|e| NestGateError::Internal {
                     message: format!("Failed to acquire migration permit: {e}"),
                     location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: None,
+                    context: None,
                     is_bug: false,
                 })?;
 

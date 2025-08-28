@@ -4,7 +4,7 @@
 //! Single responsibility: Provide sensible defaults and builder functionality.
 
 use super::types::*;
-use crate::error::Result;
+use crate::Result;
 use std::collections::HashMap;
 use std::net::IpAddr;
 use std::path::PathBuf;

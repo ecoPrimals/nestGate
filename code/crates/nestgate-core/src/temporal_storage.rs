@@ -2,7 +2,7 @@
 ///
 /// Universal storage system spanning all technology eras from punch cards to DNA storage
 use crate::Result;
-use async_trait::async_trait;
+// CANONICAL MODERNIZATION: Removed async_trait for native async patterns
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::future::Future;
@@ -80,13 +80,13 @@ pub struct PhysicalDimensions {
 }
 
 /// Universal data source trait
-#[async_trait]
+/// **CANONICAL MODERNIZATION**: Native async trait without async_trait overhead
 pub trait UniversalDataSource: Send + Sync {
-    async fn connect(&self) -> Result<ConnectionHandle>;
-    async fn discover_data(&self) -> Result<Vec<DataDescriptor>>;
-    async fn ingest_data(&self, descriptor: &DataDescriptor) -> Result<IngestedData>;
-    async fn get_metadata(&self, descriptor: &DataDescriptor) -> Result<Metadata>;
-    async fn stream_data(&self, descriptor: &DataDescriptor) -> Result<Box<dyn DataStream>>;
+    fn connect(&self) -> impl Future<Output = Result<ConnectionHandle>> + Send;
+    fn discover_data(&self) -> impl Future<Output = Result<Vec<DataDescriptor>>> + Send;
+    fn ingest_data(&self, descriptor: &DataDescriptor) -> impl Future<Output = Result<IngestedData>> + Send;
+    fn get_metadata(&self, descriptor: &DataDescriptor) -> impl Future<Output = Result<Metadata>> + Send;
+    fn stream_data(&self, descriptor: &DataDescriptor) -> impl Future<Output = Result<Box<dyn DataStream>>> + Send;
 }
 
 /// Connection handle for data sources

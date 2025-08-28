@@ -3,12 +3,11 @@
 //! This module provides the fundamental interface traits and types that form
 //! the foundation of the NestGate interface system.
 
-use crate::error::Result;
-use async_trait::async_trait;
+use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// ==================== CORE INTERFACE TRAITS ====================
+// ==================== SECTION ====================
 
 /// Universal conversion trait for interface compatibility
 pub trait ToUnified<T> {
@@ -17,27 +16,25 @@ pub trait ToUnified<T> {
 }
 
 /// Universal configuration interface
-#[async_trait]
 pub trait UniversalConfigInterface {
     type Config: Clone + Send + Sync;
 
     /// Get current configuration
-    async fn get_config(&self) -> Result<Self::Config>;
+    fn get_config(&self) -> impl std::future::Future<Output = Result<Self::Config>> + Send;
 
     /// Update configuration
-    async fn update_config(&mut self, config: Self::Config) -> Result<()>;
+    fn update_config(&mut self, config: Self::Config) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Validate configuration
     fn validate_config(&self, config: &Self::Config) -> Result<()>;
 }
 
 /// Universal event interface
-#[async_trait]
 pub trait UniversalEventInterface {
     type Event: Clone + Send + Sync;
 
     /// Emit an event
-    async fn emit_event(&self, event: Self::Event) -> Result<()>;
+    fn emit_event(&self, event: Self::Event) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Subscribe to events
     async fn subscribe_events(
@@ -46,13 +43,12 @@ pub trait UniversalEventInterface {
 }
 
 /// Universal provider interface
-#[async_trait]
 pub trait UniversalProviderInterface {
     type Request: Send + Sync;
     type Response: Send + Sync;
 
     /// Process a request
-    async fn process_request(&self, request: Self::Request) -> Result<Self::Response>;
+    fn process_request(&self, request: Self::Request) -> impl std::future::Future<Output = Result<Self::Response>> + Send;
 
     /// Check provider capabilities
     fn get_capabilities(&self) -> Vec<String>;
@@ -61,7 +57,7 @@ pub trait UniversalProviderInterface {
     fn get_metadata(&self) -> HashMap<String, String>;
 }
 
-// ==================== CORE INTERFACE TYPES ====================
+// ==================== SECTION ====================
 
 /// Universal interface metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -87,7 +83,7 @@ impl Default for InterfaceStatus {
     }
 }
 
-// ==================== INTERFACE UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Interface builder for creating standardized interfaces
 pub struct InterfaceBuilder {
@@ -125,7 +121,7 @@ impl InterfaceBuilder {
     }
 }
 
-// ==================== INTERFACE REGISTRY ====================
+// ==================== SECTION ====================
 
 /// Registry for managing interface implementations
 pub struct InterfaceRegistry {

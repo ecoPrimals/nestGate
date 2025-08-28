@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // Transparent compression layer that works on any storage backend:
@@ -10,7 +10,6 @@ use std::collections::HashMap;
 
 use crate::error::CanonicalResult as Result;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 // Type aliases for complex compression types
 type CompressionAlgorithmBox = Box<dyn CompressionAlgorithm + Send + Sync>;
@@ -206,7 +205,7 @@ impl Default for CompressionLevelManager {
     }
 }
 
-// ==================== COMPRESSION ALGORITHMS ====================
+// ==================== SECTION ====================
 
 /// Trait for compression algorithms
 trait CompressionAlgorithm {
@@ -309,7 +308,7 @@ impl CompressionAlgorithm for GzipAlgorithm {
     }
 }
 
-// ==================== DATA STRUCTURES ====================
+// ==================== SECTION ====================
 
 #[allow(dead_code)] // Reserved for future compression header implementation
 const COMPRESSION_HEADER_SIZE: usize = 12;

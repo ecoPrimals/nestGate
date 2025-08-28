@@ -169,7 +169,7 @@ impl PoolTakeoverManager {
             .map_err(|e| NestGateError::Internal {
                 message: format!("Failed to execute zpool import: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -180,7 +180,7 @@ impl PoolTakeoverManager {
                     String::from_utf8_lossy(&output.stderr)
                 ),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
         }
@@ -190,7 +190,7 @@ impl PoolTakeoverManager {
             return Err(NestGateError::Internal {
                 message: format!("Pool verification failed after import: {pool_name}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
         }
@@ -207,7 +207,7 @@ impl PoolTakeoverManager {
             .map_err(|e| NestGateError::Internal {
                 message: format!("Failed to verify pool import: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -225,7 +225,7 @@ impl PoolTakeoverManager {
             .map_err(|e| NestGateError::Internal {
                 message: format!("Failed to execute zpool import: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -340,7 +340,7 @@ impl PoolTakeoverManager {
             .map_err(|e| NestGateError::Internal {
                 message: format!("Failed to execute zpool export: {e}"),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             })?;
 
@@ -351,7 +351,7 @@ impl PoolTakeoverManager {
                     String::from_utf8_lossy(&output.stderr)
                 ),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
         }

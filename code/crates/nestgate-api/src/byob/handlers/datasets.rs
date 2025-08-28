@@ -103,7 +103,6 @@ pub async fn delete_dataset(
     State(_state): State<AppState>,
     Path(dataset_id): Path<String>,
 ) -> impl IntoResponse {
-    use tracing::{error, info};
 
     info!("🗑️ Deleting dataset: {}", dataset_id);
 

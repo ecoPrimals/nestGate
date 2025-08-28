@@ -14,7 +14,7 @@ use tokio::time::sleep;
 
 use crate::canonical_modernization::{UnifiedServiceState, UnifiedServiceType};
 use anyhow::Context;
-use nestgate_core::config::canonical_unified::CanonicalConfig;
+use nestgate_core::config::unified::NestGateUnifiedConfig;
 use nestgate_core::error::{NestGateError, Result, ResultExt};
 
 /// **SCENARIO 1**: Configuration Loading (Common Use Case)

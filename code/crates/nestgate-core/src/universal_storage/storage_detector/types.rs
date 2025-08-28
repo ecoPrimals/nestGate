@@ -4,7 +4,6 @@ use std::collections::HashMap;
 
 use crate::universal_storage::{UnifiedStorageCapability, UnifiedStorageType};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// Comprehensive information about detected storage
 #[derive(Debug, Clone, Serialize, Deserialize)]

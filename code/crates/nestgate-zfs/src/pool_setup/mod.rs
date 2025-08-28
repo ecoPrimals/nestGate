@@ -152,7 +152,7 @@ impl ZfsPoolSetup {
             return Err(NestGateError::Internal {
                 message: "No available devices found".to_string(),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
         }
@@ -230,7 +230,7 @@ impl ZfsPoolSetup {
                 .ok_or_else(|| NestGateError::Internal {
                     message: "No device types available for tier configuration".to_string(),
                     location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: None,
+                    context: None,
                     is_bug: false,
                 })?
                 .clone();
@@ -274,7 +274,7 @@ impl ZfsPoolSetup {
                     return Err(NestGateError::Internal {
                         message: "No device types available for warm tier".to_string(),
                         location: Some(format!("{}:{}", file!(), line!())),
-                        debug_info: None,
+                        context: None,
                         is_bug: false,
                     });
                 }
@@ -311,7 +311,7 @@ impl ZfsPoolSetup {
                     validation.issues
                 ),
                 location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             });
         }

@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use crate::unified_enums::UnifiedTierType;
 
-// ==================== CORE STORAGE TYPES ====================
+// ==================== SECTION ====================
 
 /// **THE** Universal Directory Entry structure
 /// Comprehensive file system entry information for all storage protocols
@@ -202,7 +202,7 @@ pub struct MetadataChanges {
     pub attribute_changes: HashMap<String, (Option<String>, Option<String>)>,
 }
 
-// ==================== REPLICATION TYPES ====================
+// ==================== SECTION ====================
 
 /// **THE** Universal Replication Status structure
 /// Comprehensive replication status tracking with rich metadata
@@ -415,12 +415,12 @@ pub struct VerificationError {
     /// Expected value
     pub expected: Option<String>,
     /// Actual value
-    pub actual: Option<String>,
+    pub current_value: Option<String>,
     /// Verification method that failed
     pub method: VerificationMethod,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for UniversalDirectoryEntry {
     fn default() -> Self {
@@ -535,7 +535,7 @@ impl Default for UniversalReplicationResult {
     }
 }
 
-// ==================== UTILITY IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl UniversalDirectoryEntry {
     /// Check if this entry is a file
@@ -623,7 +623,7 @@ impl UniversalReplicationResult {
     }
 }
 
-// ==================== HELPER FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Convert bytes to human-readable format
 fn human_readable_size(bytes: u64) -> String {
@@ -643,7 +643,7 @@ fn human_readable_size(bytes: u64) -> String {
     }
 }
 
-// ==================== BACKWARD COMPATIBILITY ALIASES ====================
+// ==================== SECTION ====================
 
 /// Backward compatibility alias for DirectoryEntry
 pub type DirectoryEntry = UniversalDirectoryEntry;
@@ -660,7 +660,7 @@ pub type ReplicationStatus = UniversalReplicationStatus;
 /// Backward compatibility alias for ReplicationResult
 pub type ReplicationResult = UniversalReplicationResult;
 
-// ==================== MIGRATION UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Migrate from legacy DirectoryEntry structures
 impl UniversalDirectoryEntry {

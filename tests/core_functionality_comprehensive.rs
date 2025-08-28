@@ -4,7 +4,7 @@
 //! to achieve the target 90% test coverage for production readiness.
 
 use nestgate_core::{
-    config::canonical_unified::{CanonicalConfig, Environment},
+    config::unified::{CanonicalConfig, Environment},
     error::{NestGateError, Result},
     canonical_modernization::unified_enums::UnifiedCapabilityType,
     UnifiedServiceState,

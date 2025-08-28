@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-// ==================== STORAGE METRICS TYPES ====================
+// ==================== SECTION ====================
 
 /// Comprehensive storage metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -161,7 +161,7 @@ pub struct StorageSnapshotStats {
     pub oldest_snapshot_age: Duration,
 }
 
-// ==================== PERFORMANCE REQUIREMENTS ====================
+// ==================== SECTION ====================
 
 /// Storage performance requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -208,7 +208,7 @@ pub enum DurabilityLevel {
     CrossRegion,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for StorageMetrics {
     fn default() -> Self {
@@ -266,7 +266,7 @@ impl Default for StoragePerformanceRequirements {
     }
 }
 
-// ==================== UTILITY IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl StorageMetrics {
     /// Update all metrics with current timestamp

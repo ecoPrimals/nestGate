@@ -5,7 +5,7 @@
 /// **ELIMINATES**: 46 mechanical *_part*.rs files
 /// **IMPLEMENTS**: Universal Primal Architecture Standard from parent directory
 use crate::ecosystem_integration::universal_adapter::adapter::UniversalAdapter;
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -52,12 +52,11 @@ impl CapabilityManager {
             .first()
             .map(|cap| cap.name.clone())
             .ok_or_else(|| NestGateError::Configuration {
+                field: domain.to_string(),
                 message: format!("No capability found for domain: {domain}"),
-                config_source: crate::error::UnifiedConfigSource::Runtime,
-                field: Some(domain.to_string()),
-                suggested_fix: Some(
-                    "Ensure required services are running and registered".to_string(),
-                ),
+                current_value: None,
+                expected: Some("registered capability domain".to_string()),
+                user_error: false,
             })
     }
 

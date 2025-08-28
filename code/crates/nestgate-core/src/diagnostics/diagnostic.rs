@@ -31,7 +31,17 @@ pub struct Diagnostic {
 impl Diagnostic {
     /// Create a new diagnostic using standardized builder
     pub fn new(level: DiagnosticLevel, component: ComponentType, message: String) -> Self {
-        crate::return_builders::build_diagnostic(level, component, message)
+        Self {
+            id: uuid::Uuid::new_v4().to_string(),
+            level,
+            component,
+            message,
+            timestamp: std::time::SystemTime::now(),
+            details: None,
+            resource: None,
+            resolved: false,
+            resolved_at: None,
+        }
     }
 
     /// Create a new info diagnostic

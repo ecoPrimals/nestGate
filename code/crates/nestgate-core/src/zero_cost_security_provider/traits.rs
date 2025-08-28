@@ -7,7 +7,7 @@ use super::types::{ZeroCostAuthToken, ZeroCostCredentials, ZeroCostSignature};
 ///
 use crate::Result;
 
-// ==================== ZERO-COST SECURITY PROVIDER TRAIT ====================
+// ==================== SECTION ====================
 
 /// **Zero-cost security provider trait**
 ///

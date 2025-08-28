@@ -3,7 +3,7 @@
 //! This test validates security integration functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateCanonicalUnifiedConfig;
+use nestgate_core::config::unified::NestGateUnifiedConfig as NestGateUnifiedConfig;
 use nestgate_core::config::defaults::Environment;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -19,7 +19,7 @@ async fn test_security_integration_config() {
     assert!(!config.system.instance_name.is_empty());
     
     // Test environment-specific security integration configuration
-    let dev_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::unified::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ Security integration configuration test completed");
@@ -161,13 +161,13 @@ async fn test_security_environments() {
     info!("🌍 Testing security integration across environments");
     
     // Test development environment security integration
-    let dev_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::unified::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development security integration configuration validated");
     
     // Test production environment security integration
-    let prod_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::unified::create_config_for_environment(Environment::Production);
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production security integration configuration validated");

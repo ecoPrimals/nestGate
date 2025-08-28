@@ -1,12 +1,10 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // These tests provide basic coverage for core types and functions.
 
-use crate::error::NestGateError;
-use crate::types::{AllocationStatus, HealthStatus, StorageTier, SystemInfo};
+use crate::canonical_types::{AllocationStatus, HealthStatus, StorageTier, SystemInfo};
 use crate::canonical_modernization::{UnifiedHealthStatus, UnifiedServiceState};
-use std::collections::HashMap;
 
 #[cfg(test)]
 mod tests {
@@ -142,11 +140,12 @@ mod tests {
     #[test]
     fn test_nestgate_error_validation() {
         let validation_error = NestGateError::Validation {
-            field: "test_field".to_string(),
+            field: Some("test_field".to_string()),
             message: "Invalid value".to_string(),
             current_value: Some("invalid".to_string()),
             expected: Some("valid".to_string()),
             user_error: true,
+                context: None,
         };
 
         match validation_error {
@@ -172,7 +171,7 @@ mod tests {
         let error = NestGateError::Internal {
             message: "Test internal error".to_string(),
             location: Some("test_module".to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
         };
 

@@ -3,7 +3,6 @@
 // Core type definitions for the unified RPC layer including requests,
 // responses, configurations, and error types.
 
-// REMOVED: async_trait - using zero-cost native async patterns
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
