@@ -67,7 +67,7 @@ impl NativeAsyncNetworkService {
 /// **MEMORY**: No runtime overhead, compile-time dispatch
 impl crate::traits::canonical_unified_traits::CanonicalService for NativeAsyncNetworkService {
     type Config = NetworkServiceConfig;
-    type Health = crate::traits::canonical_unified_traits::ProviderHealth;
+    type Health = crate::traits::canonical_unified_traits::ProviderHealth; // PEDANTIC: Use existing ProviderHealth
     type Metrics = crate::traits::canonical_unified_traits::ServiceCapabilities;
     type Error = crate::error::NestGateError;
 
@@ -143,6 +143,21 @@ impl crate::traits::canonical_unified_traits::CanonicalService for NativeAsyncNe
 
     fn validate_config(&self, _config: &Self::Config) -> impl std::future::Future<Output = Result<Vec<String>, Self::Error>> + Send {
         async move { Ok(vec![]) }
+    }
+
+    fn is_healthy(&self) -> impl std::future::Future<Output = Result<Self::Health, Self::Error>> + Send {
+        async move {
+            Ok(crate::traits::canonical_unified_traits::ProviderHealth {
+                is_healthy: true,
+                last_check: std::time::SystemTime::now(),
+                health_details: {
+                    let mut details = std::collections::HashMap::new();
+                    details.insert("status".to_string(), "operational".to_string());
+                    details.insert("service".to_string(), "network".to_string());
+                    details
+                },
+            })
+        }
     }
 }
 

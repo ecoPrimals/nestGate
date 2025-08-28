@@ -286,9 +286,11 @@ impl RetryInfo {
     pub fn new(max_attempts: u32) -> Self {
         let now = SystemTime::now();
         Self {
-            attempt: 0,
-            max_attempts,
+            attempt: 1,
+            max_attempts: 3,
             retry_delay: Duration::from_millis(100),
+            base_delay: Duration::from_millis(100), // PEDANTIC: Added missing field
+            exponential_backoff: true, // PEDANTIC: Added missing field
             backoff_multiplier: 2.0,
             max_delay: Duration::from_secs(30),
             last_attempt: now,

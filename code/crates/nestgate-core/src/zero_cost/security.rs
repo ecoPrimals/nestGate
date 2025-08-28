@@ -33,7 +33,6 @@ impl ZeroCostSecurityProvider for ProductionSecurityProvider {
     async fn validate_token(&self, token: &str) -> Self::Result {
         if !is_valid_token(token) {
             return Err(NestGateError::permission_denied(
-                "token_validation",
                 "Authentication failed: Invalid token format",
             ));
         }
@@ -68,7 +67,6 @@ impl ZeroCostSecurityProvider for DevelopmentSecurityProvider {
         // Development mode is more lenient
         if token.is_empty() {
             return Err(NestGateError::permission_denied(
-                "token_validation", 
                 "Authentication failed: Empty token",
             ));
         }

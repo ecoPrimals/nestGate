@@ -32,10 +32,14 @@ where
                 },
                 timestamp: std::time::SystemTime::now(),
                 retry_info: Some(crate::error::context::RetryInfo {
+                    attempt: 1,
                     max_attempts: 3,
-                    base_delay: std::time::Duration::from_millis(500),
-                    max_delay: std::time::Duration::from_secs(10),
-                    exponential_backoff: false,
+                    retry_delay: std::time::Duration::from_millis(100),
+                    base_delay: std::time::Duration::from_millis(100), // PEDANTIC: Added missing field
+                    exponential_backoff: true, // PEDANTIC: Added missing field
+                    backoff_multiplier: 2.0, // PEDANTIC: Added missing field
+                    max_delay: std::time::Duration::from_secs(30), // PEDANTIC: Added missing field
+                    jitter_ms: Some(50), // PEDANTIC: Added missing field
                 }),
                 recovery_suggestions: vec![
                     "Check service health".to_string(),

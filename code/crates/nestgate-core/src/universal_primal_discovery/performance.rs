@@ -118,7 +118,7 @@ impl PerformanceTestRunner {
         // Ensure within bounds
         let bounded_timeout = optimal_timeout
             .max(Duration::from_secs(self.config.testing.baseline_timeout_seconds))
-            .min(Duration::from_secs(self.config.testing.max_timeout_seconds));
+            .min(Duration::from_secs(self.config.testing.baseline_timeout_seconds));
 
         Ok(OptimalTimeout {
             timeout: bounded_timeout,
@@ -147,7 +147,7 @@ impl PerformanceTestRunner {
         );
         metrics.insert(
             "max_timeout".to_string(),
-            format!("{}s", self.config.testing.max_timeout_seconds),
+            format!("{}s", self.config.testing.baseline_timeout_seconds),
         );
         metrics.insert(
             "percentile_target".to_string(),

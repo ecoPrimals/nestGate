@@ -79,9 +79,9 @@ impl CacheManager {
         let size = data.len() as u64;
 
         // Determine tier based on size and policy
-        let tier = if size <= self.config.hot_tier_size as u64 {
+        let tier = if size <= self.config.hot_tier_size.unwrap_or(0) as u64 {
             StorageTier::Hot
-        } else if size <= self.config.warm_tier_size as u64 {
+        } else if size <= self.config.warm_tier_size.unwrap_or(0) as u64 {
             StorageTier::Warm
         } else {
             StorageTier::Cold
