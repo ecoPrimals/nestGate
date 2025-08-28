@@ -35,6 +35,9 @@ pub mod orchestration_adapter;
 /// Zero-cost orchestration types
 pub mod zero_cost_orchestration_types;
 
+/// Configuration migration utilities
+pub mod config_migration;
+
 // ==================== SECTION ====================
 
 /// Main network service
