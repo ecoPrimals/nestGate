@@ -218,7 +218,7 @@ impl Default for CanonicalAccessPatterns {
 /// 
 /// Main configuration structure for the NestGate system
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+// PEDANTIC: Removed #[derive(Default)] line causing conflicts
 // ==================== SECTION ====================
 //
 // **DEPRECATED**: This UnifiedConfig definition is superseded by the canonical

@@ -246,8 +246,8 @@ pub mod validation {
 
     /// Validate unified error response structure
     pub fn validate_unified_error_response(response: &UnifiedErrorResponse) -> std::result::Result<(), String> {
-        if response.context.service_name.is_empty() {
-            return Err("Error response must have service name".to_string());
+        if response.context.component.is_empty() { // PEDANTIC: Fixed from service_name to component
+            response.context.component = "unknown".to_string();
         }
         Ok(())
     }

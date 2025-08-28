@@ -476,7 +476,7 @@ impl NestGateUnifiedError {
             message: message.into(),
             component: "internal".to_string(),
             location: None,
-            bug_report: true,
+            is_bug: true, // PEDANTIC: Fixed from bug_report
             context: None,
         }
     }
@@ -490,14 +490,13 @@ impl NestGateUnifiedError {
             message: message.into(),
             component: "internal".to_string(),
             location: None,
-            bug_report: true,
+            is_bug: true, // PEDANTIC: Fixed from bug_report
             context: context.map(|c| crate::error::context::ErrorContext {
-                request_id: None,
-                user_id: None,
-                session_id: None,
-                operation: Some("debug".to_string()),
-                metadata: std::collections::HashMap::new(),
+                error_id: uuid::Uuid::new_v4().to_string(),
+                component: "debug".to_string(),
+                operation: "debug".to_string(), // PEDANTIC: Fixed from Some("debug".to_string())
                 timestamp: std::time::SystemTime::now(),
+                metadata: std::collections::HashMap::new(),
                 stack_trace: None,
                 related_errors: vec![],
                 retry_info: None,
@@ -618,7 +617,7 @@ impl NestGateUnifiedError {
             message: message.into(),
             component: "general".to_string(),
             location: None,
-            bug_report: false,
+            is_bug: false, // PEDANTIC: Fixed from bug_report
             context: None,
         }
     }

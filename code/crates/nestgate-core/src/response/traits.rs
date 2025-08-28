@@ -174,11 +174,11 @@ impl ResponseMetadata for UnifiedErrorResponse {
         metadata.insert("success".to_string(), serde_json::json!(false));
         metadata.insert(
             "error_code".to_string(),
-            serde_json::json!(self.context.error_code),
+            serde_json::json!(self.context.error_id), // PEDANTIC: Fixed from error_code
         );
         metadata.insert(
             "service_name".to_string(),
-            serde_json::json!(self.context.service_name),
+            serde_json::json!(self.context.component), // PEDANTIC: Fixed from service_name
         );
         metadata.insert(
             "timestamp".to_string(),
@@ -190,8 +190,8 @@ impl ResponseMetadata for UnifiedErrorResponse {
         );
 
         // Add context metadata
-        for (key, value) in &self.context.context {
-            metadata.insert(format!("context_{key}"), serde_json::Value::String(value.clone()));
+        for (key, value) in &self.context.metadata { // PEDANTIC: Fixed from context
+            metadata.insert(format!("context_{key}"), serde_json::json!(value));
         }
 
         metadata

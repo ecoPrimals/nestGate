@@ -158,8 +158,6 @@ pub struct UnifiedErrorContext {
     pub statistics: Option<UnifiedErrorStatistics>,
     /// Recovery suggestions for users/operators
     pub recovery_suggestions: Vec<String>,
-                    performance_metrics: None,
-                    environment: None,
     /// Additional metadata for debugging
     pub metadata: HashMap<String, serde_json::Value>,
 
@@ -168,12 +166,6 @@ pub struct UnifiedErrorContext {
     pub error_code: String,
     /// Error message (convenience field)
     pub message: String,
-    /// Service name (convenience field)
-    pub service_name: String,
-    /// Timestamp (convenience field)
-    pub timestamp: SystemTime,
-    /// Additional context dictionary (convenience field)
-    pub context: HashMap<String, serde_json::Value>,
 }
 
 impl Default for UnifiedErrorContext {
@@ -193,16 +185,11 @@ impl Default for UnifiedErrorContext {
             user_context: None,
             statistics: None,
             recovery_suggestions: Vec::new(),
-                    performance_metrics: None,
-                    environment: None,
             metadata: HashMap::new(),
 
             // Initialize convenience fields
             error_code: "UNKNOWN_ERROR".to_string(),
             message: "Unknown error occurred".to_string(),
-            service_name: "unknown".to_string(),
-            timestamp: SystemTime::now(),
-            context: HashMap::new(),
         }
     }
 }
@@ -222,9 +209,6 @@ impl UnifiedErrorContext {
             },
             error_code: error_code.to_string(),
             message: message.to_string(),
-            service_name: service_name.to_string(),
-            timestamp: SystemTime::now(),
-            context: HashMap::new(),
             ..Default::default()
         }
     }
@@ -278,8 +262,6 @@ impl UnifiedErrorContext {
             error: self.error.clone(),
             request_context: self.request_context.clone(),
             recovery_suggestions: self.recovery_suggestions.clone(),
-                    performance_metrics: None,
-                    environment: None,
             metadata: self.metadata.clone(),
         }
     }
@@ -319,7 +301,5 @@ pub struct DetailedErrorResponse {
     pub error: UnifiedErrorCore,
     pub request_context: Option<UnifiedRequestContext>,
     pub recovery_suggestions: Vec<String>,
-                    performance_metrics: None,
-                    environment: None,
     pub metadata: HashMap<String, serde_json::Value>,
 }

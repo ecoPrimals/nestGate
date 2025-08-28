@@ -167,7 +167,6 @@ pub fn init_observability(config: ObservabilityConfig) -> Result<()> {
     OBSERVABILITY.set(manager.clone()).map_err(|_| {
         NestGateError::configuration_error(
             "Observability already initialized".to_string(),
-            Some("observability".to_string()),
         )
     })?;
 
