@@ -1,20 +1,18 @@
-/// Compute Capabilities (Toadstool Primal Integration)
+use crate::universal_adapter::{PrimalAgnosticAdapter, CapabilityCategory, CapabilityRequest};
+/// Compute Capabilities (Compute Primal Integration)
 ///
 /// Defines capability interfaces for hardware optimization, resource allocation,
-/// and performance tuning through the Toadstool compute primal.
+/// and performance tuning through the Compute compute primal.
 use super::{CapabilityRequest, CapabilityResponse, UniversalCapability};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 /// Hardware optimization request parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HardwareOptimizationRequest {
-    pub target_resource: String,
     pub optimization_level: u8, // 1-10 scale
     pub constraints: Vec<String>,
     pub timeout_seconds: Option<u64>,
 }
-
 /// Hardware optimization response data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HardwareOptimizationResponse {
@@ -23,7 +21,6 @@ pub struct HardwareOptimizationResponse {
     pub recommendations: Vec<String>,
     pub metrics: HashMap<String, f64>,
 }
-
 /// Resource allocation request parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceAllocationRequest {
@@ -32,7 +29,6 @@ pub struct ResourceAllocationRequest {
     pub priority: u8,
     pub duration_seconds: Option<u64>,
 }
-
 /// Resource allocation response data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceAllocationResponse {
@@ -41,7 +37,6 @@ pub struct ResourceAllocationResponse {
     pub actual_amount: u64,
     pub expires_at: Option<String>,
 }
-
 /// Performance tuning request parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceTuningRequest {
@@ -49,44 +44,41 @@ pub struct PerformanceTuningRequest {
     pub tuning_profile: String,
     pub custom_parameters: HashMap<String, serde_json::Value>,
 }
-
 /// Performance tuning response data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceTuningResponse {
+    pub metrics: std::collections::HashMap<String, f64>,
     pub tuning_applied: bool,
     pub profile_used: String,
-    pub performance_metrics: HashMap<String, f64>,
     pub warnings: Vec<String>,
 }
-
-/// Compute capability trait for Toadstool integration
+/// Compute capability trait for Compute integration
+/// **MODERNIZED**: Native async patterns for zero-cost compute operations
 pub trait ComputeCapability: UniversalCapability {
-    /// Optimize hardware resources for better performance
-    async fn optimize_hardware(
+    /// Optimize hardware resources for better performance - native async, no Future boxing
+    fn optimize_hardware(
         &self,
         request: HardwareOptimizationRequest,
-    ) -> Result<HardwareOptimizationResponse, Box<dyn std::error::Error + Send + Sync>>;
-
-    /// Allocate compute resources
-    async fn allocate_resources(
+    ) -> impl std::future::Future<Output = Result<HardwareOptimizationResponse, Box<dyn std::error::Error + Send + Sync>>> + Send;
+    /// Allocate compute resources - native async
+    fn allocate_resources(
         &self,
         request: ResourceAllocationRequest,
-    ) -> Result<ResourceAllocationResponse, Box<dyn std::error::Error + Send + Sync>>;
+    ) -> impl std::future::Future<Output = Result<ResourceAllocationResponse, Box<dyn std::error::Error + Send + Sync>>> + Send;
 
-    /// Apply performance tuning
-    async fn tune_performance(
+    /// Apply performance tuning - native async
+    fn tune_performance(
         &self,
         request: PerformanceTuningRequest,
-    ) -> Result<PerformanceTuningResponse, Box<dyn std::error::Error + Send + Sync>>;
+    ) -> impl std::future::Future<Output = Result<PerformanceTuningResponse, Box<dyn std::error::Error + Send + Sync>>> + Send;
 }
 
 /// Mock implementation for testing and development
 pub struct MockComputeCapability {
     enabled: bool,
 }
-
 impl MockComputeCapability {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self { enabled: true }
     }
 }
@@ -121,7 +113,7 @@ impl UniversalCapability for MockComputeCapability {
                 })?;
                 Ok(CapabilityResponse::success(response_data))
             }
-            "compute.resource_allocation" => {
+            "compute.path_allocation" => {
                 let response_data = serde_json::to_value(ResourceAllocationResponse {
                     allocated: true,
                     allocation_id: "mock-allocation-123".to_string(),
@@ -134,7 +126,7 @@ impl UniversalCapability for MockComputeCapability {
                 let response_data = serde_json::to_value(PerformanceTuningResponse {
                     tuning_applied: true,
                     profile_used: "high_performance".to_string(),
-                    performance_metrics: HashMap::from([
+                    metrics: HashMap::from([
                         ("throughput".to_string(), 1250.0),
                         ("latency_ms".to_string(), 12.5),
                     ]),
@@ -163,7 +155,7 @@ impl UniversalCapability for MockComputeCapability {
                 "capabilities".to_string(),
                 serde_json::json!([
                     "compute.hardware_optimization",
-                    "compute.resource_allocation",
+                    "compute.path_allocation",
                     "compute.performance_tuning"
                 ]),
             ),
@@ -205,9 +197,9 @@ impl ComputeCapability for MockComputeCapability {
         _request: PerformanceTuningRequest,
     ) -> Result<PerformanceTuningResponse, Box<dyn std::error::Error + Send + Sync>> {
         Ok(PerformanceTuningResponse {
+                metrics: std::collections::HashMap::new(),
             tuning_applied: true,
             profile_used: "mock_profile".to_string(),
-            performance_metrics: HashMap::new(),
             warnings: vec![],
         })
     }

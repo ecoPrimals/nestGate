@@ -1,12 +1,11 @@
 /// **UNIFIED CONFIG USAGE EXAMPLES**
 /// Demonstrates how the new UnifiedDynamicDiscoveryConfig replaces all fragmented configs
 /// **REPLACES**: 6 different Dynamic*Config usage patterns with a single, comprehensive system
-
 use crate::capabilities::discovery::{
     UnifiedDynamicDiscoveryConfig,
     // migration_utilities::UnifiedMigrationCoordinator, // Will be implemented as needed
 };
-use crate::ecosystem_integration::universal_adapter::adapter::UniversalAdapter;
+use crate::universal_adapter::PrimalAgnosticAdapter;
 use crate::{NestGateError, Result};
 use std::sync::Arc;
 
@@ -14,7 +13,7 @@ use std::sync::Arc;
 /// Shows how to replace multiple Dynamic*Config calls with a single unified approach
 pub async fn example_basic_unified_discovery(
     adapter: Arc<UniversalAdapter>
-) -> Result<()> {
+) -> Result<()> ", 
     println!("🚀 **BEFORE**: Fragmented config discovery");
     println!("   - DynamicStorageConfig::new(adapter.clone()).discover_storage_config().await?");
     println!("   - DynamicAuthConfig::new(adapter.clone()).discover_auth_config().await?");
@@ -24,7 +23,6 @@ pub async fn example_basic_unified_discovery(
     println!("   - DynamicEnvironmentConfig::new(adapter.clone()).discover_environment_config().await?");
     println!("   → 6 different objects, 6 different discovery calls, fragmented caching");
     println!();
-
     println!("✅ **AFTER**: Unified config discovery");
     
     // Single unified config object handles everything
@@ -39,23 +37,18 @@ pub async fn example_basic_unified_discovery(
 
     // Access specific configurations from the comprehensive result
     println!("📋 **UNIFIED RESULTS**:");
-    println!("   - Storage: {} ZFS pools, {} BiomeOS datasets", 
-        comprehensive_config.storage.zfs_pools.len(),
-        comprehensive_config.storage.biomeos_datasets.len()
+    println!("   - Storage: {comprehensive_config.storage.zfs_pools.len() ZFS pools, ", comprehensive_config.storage.zfs_pools.len() Management datasets"),
+        comprehensive_config.storage.management_datasets.len()
     );
-    println!("   - Auth: {} providers, {} security endpoints", 
-        comprehensive_config.auth.auth_providers.len(),
+    println!("   - Auth: ", comprehensive_config.auth.auth_providers.len() providers, ", comprehensive_config.auth.auth_providers.len() security endpoints"),
         comprehensive_config.auth.security_endpoints.len()
     );
-    println!("   - Network: {} services, {} address services", 
-        comprehensive_config.network.network_services.len(),
-        comprehensive_config.network.address_services.len()
+    println!("   - Network: ", comprehensive_config.network.network_services.len() services, ", comprehensive_config.network.network_services.len() address services"),
+        comprehensive_config.network.endpoint_services.len()
     );
-    println!("   - Security: {} providers configured", 
-        comprehensive_config.security.security_providers.len()
+    println!("   - Security: ", comprehensive_config.security.security_providers.len() providers configured")
     );
-    println!("   - Environment: {} providers configured", 
-        comprehensive_config.environment.environment_providers.len()
+    println!("   - Environment: ", comprehensive_config.environment.environment_providers.len() providers configured")
     );
 
     }
@@ -64,29 +57,26 @@ pub async fn example_basic_unified_discovery(
 /// Shows how to get specific configurations when you don't need everything
 pub async fn example_selective_discovery(
     adapter: Arc<UniversalAdapter>
-) -> Result<()> {
+) -> Result<()> ", 
     let unified_config = UnifiedDynamicDiscoveryConfig::new(adapter);
     
     println!("🎯 **SELECTIVE DISCOVERY**: Get only what you need");
     
     // Get only storage configuration with caching
     let storage_config = unified_config.discover_storage_config(Some("production")).await?;
-    println!("   - Storage Config: {} ZFS pools discovered", storage_config.zfs_pools.len());
+    println!("   - Storage Config: {storage_config.zfs_pools.len() ZFS pools discovered"));
     
     // Get timeout configuration for specific service type
     let api_timeouts = unified_config.discover_timeout_config("api").await?;
-    println!("   - API Timeouts: connect={}s, request={}s", 
-        api_timeouts.connect_timeout.as_secs(),
+    println!("   - API Timeouts: connect=", api_timeouts.connect_timeout.as_secs()s, request=", api_timeouts.connect_timeout.as_secs()s"),
         api_timeouts.request_timeout.as_secs()
     );
     
     // Get network configuration with topology
     let network_config = unified_config.discover_network_config(Some("production")).await?;
-    println!("   - Network Config: {} services, {} subnets", 
-        network_config.network_services.len(),
+    println!("   - Network Config: ", network_config.network_services.len() services, ", network_config.network_services.len() subnets"),
         network_config.topology_config.subnets.len()
     );
-
     }
 
 /// **EXAMPLE 3: Safe Migration from Legacy Configs**
@@ -105,9 +95,9 @@ pub async fn example_safe_migration(
     
     if validation_report.is_migration_safe() {
         println!("   ✅ Migration validation passed - systems are consistent");
-        println!("      - Storage consistency: {}", validation_report.storage_consistency);
-        println!("      - Auth consistency: {}", validation_report.auth_consistency);
-        println!("      - Overall success: {}", validation_report.overall_success);
+        println!("      - Storage consistency: {validation_report.storage_consistency}");
+        println!("      - Auth consistency: {validation_report.auth_consistency}");
+        println!("      - Overall success: {validation_report.overall_success}");
         
         // Step 2: Use unified system as primary
         println!("   Step 2: Switching to unified system...");
@@ -127,7 +117,6 @@ pub async fn example_safe_migration(
             None
         ));
     }
-
     }
 
 /// **EXAMPLE 4: Advanced Caching and Performance**
@@ -143,34 +132,33 @@ pub async fn example_advanced_caching(
     let start_time = std::time::Instant::now();
     let _config1 = unified_config.discover_storage_config(Some("cache-test")).await?;
     let first_discovery_time = start_time.elapsed();
-    println!("   First discovery: {:?} (cache miss)", first_discovery_time);
+    println!("   First discovery: {first_discovery_time:?} (cache miss)");
     
     // Second discovery - uses cache
     let start_time = std::time::Instant::now();
     let _config2 = unified_config.discover_storage_config(Some("cache-test")).await?;
     let second_discovery_time = start_time.elapsed();
-    println!("   Second discovery: {:?} (cache hit)", second_discovery_time);
+    println!("   Second discovery: {second_discovery_time:?} (cache hit)");
     
     let performance_improvement = first_discovery_time.as_nanos() as f64 / second_discovery_time.as_nanos() as f64;
-    println!("   Performance improvement: {:.1}x faster with caching", performance_improvement);
+    println!("   Performance improvement: {:.1}x faster with caching");
     
     // Parallel discovery demonstration
     let start_time = std::time::Instant::now();
     let _comprehensive = unified_config.discover_all_configs().await?;
     let parallel_discovery_time = start_time.elapsed();
-    println!("   Parallel comprehensive discovery: {:?}", parallel_discovery_time);
+    println!("   Parallel comprehensive discovery: {parallel_discovery_time:?}");
     
     // Clear caches for testing
     unified_config.clear_all_caches().await;
     println!("   ✅ All caches cleared for fresh testing");
-
     }
 
 /// **EXAMPLE 5: Integration with Existing Discovery System**
 /// Shows how unified config integrates with the existing CapabilityDiscovery
 pub async fn example_integration_with_capability_discovery(
     adapter: Arc<UniversalAdapter>
-) -> Result<()> {
+) -> Result<()> ", 
     use crate::capabilities::discovery::AiCapabilityDiscovery as CapabilityDiscovery;
     
     println!("🔗 **INTEGRATION**: Unified config with CapabilityDiscovery");
@@ -180,13 +168,13 @@ pub async fn example_integration_with_capability_discovery(
     
     // Use new unified methods
     let unified_storage = capability_discovery.discover_storage_unified().await?;
-    println!("   Unified Storage Discovery: {} ZFS pools", unified_storage.zfs_pools.len());
+    println!("   Unified Storage Discovery: {unified_storage.zfs_pools.len() ZFS pools"));
     
     let unified_auth = capability_discovery.discover_auth_unified().await?;
-    println!("   Unified Auth Discovery: {} auth providers", unified_auth.auth_providers.len());
+    println!("   Unified Auth Discovery: ", unified_auth.auth_providers.len() auth providers"));
     
     let unified_network = capability_discovery.discover_network_unified().await?;
-    println!("   Unified Network Discovery: {} network services", unified_network.network_services.len());
+    println!("   Unified Network Discovery: ", unified_network.network_services.len() network services"));
     
     // Get comprehensive configuration
     let comprehensive = capability_discovery.discover_all_unified().await?;
@@ -195,8 +183,7 @@ pub async fn example_integration_with_capability_discovery(
     // Access migration coordinator if needed
     let migration_coordinator = capability_discovery.migration_coordinator();
     let validation_report = migration_coordinator.validate_migration_consistency().await?;
-    println!("   Migration Status: Safe={}", validation_report.is_migration_safe());
-
+    println!("   Migration Status: Safe=", validation_report.is_migration_safe()"));
     }
 
 /// **DEMONSTRATION RUNNER**
@@ -208,7 +195,6 @@ pub async fn run_all_unified_config_examples(
     println!("    Consolidates 6 fragmented Dynamic*Config structs into unified system");
     println!("════════════════════════════════════════════════════════════════════");
     println!();
-
     // Run all examples
     example_basic_unified_discovery(adapter.clone()).await?;
     println!();
@@ -245,9 +231,8 @@ pub struct ConfigUnificationImpactReport {
     pub performance_improvement_factor: f64,
     pub lines_of_code_simplified: usize,
     }
-
 impl ConfigUnificationImpactReport {
-    pub fn generate_report() -> Self {
+    pub const fn generate_report() -> Self {
         Self {
             structs_eliminated: 6, // DynamicStorageConfig, DynamicAuthConfig, etc.
             cache_systems_unified: 6, // Each had its own caching system
@@ -260,11 +245,11 @@ impl ConfigUnificationImpactReport {
     pub fn print_impact_summary(&self) {
         println!("📊 **CONFIGURATION UNIFICATION IMPACT REPORT**");
         println!("═══════════════════════════════════════════════");
-        println!("✅ Dynamic*Config structs eliminated: {}", self.structs_eliminated);
-        println!("✅ Cache systems unified: {}", self.cache_systems_unified);
-        println!("✅ Discovery calls reduced by: {}", self.discovery_calls_reduced);
-        println!("✅ Performance improvement: {:.1}x faster", self.performance_improvement_factor);
-        println!("✅ Lines of code simplified: ~{}", self.lines_of_code_simplified);
+        println!("✅ Dynamic*Config structs eliminated: {self.structs_eliminated}");
+        println!("✅ Cache systems unified: {self.cache_systems_unified}");
+        println!("✅ Discovery calls reduced by: {self.discovery_calls_reduced}");
+        println!("✅ Performance improvement: {:.1}x faster");
+        println!("✅ Lines of code simplified: ~{self.lines_of_code_simplified}");
         println!();
         println!("🎯 **KEY BENEFITS ACHIEVED**:");
         println!("   - Single unified configuration API");

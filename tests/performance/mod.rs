@@ -10,7 +10,7 @@ use tokio::test;
 
 /// Test basic performance of mock storage
 #[tokio::test]
-async fn test_mock_storage_performance() {
+async fn test_mock_storage_performance() -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
     
     let storage = MockStorage::new();
@@ -22,7 +22,7 @@ async fn test_mock_storage_performance() {
         
         // Test write performance
         let write_start = Instant::now();
-        storage.store(&key, &value).await.expect("Store operation failed");
+        storage.store(&key, &value).await?;
         let write_duration = write_start.elapsed();
         
         // Write operations should be fast (< 1ms for mock storage)
@@ -31,7 +31,7 @@ async fn test_mock_storage_performance() {
         
         // Test read performance
         let read_start = Instant::now();
-        let retrieved = storage.retrieve(&key).await.expect("Retrieve operation failed");
+        let retrieved = storage.retrieve(&key).await?;
         let read_duration = read_start.elapsed();
         
         // Read operations should be very fast (< 0.5ms for mock storage)
@@ -39,6 +39,7 @@ async fn test_mock_storage_performance() {
                "Read operation too slow: {:?}", read_duration);
         
         assert_eq!(retrieved, Some(value));
+    Ok(())
     }
     
     let total_duration = start.elapsed();
@@ -50,11 +51,12 @@ async fn test_mock_storage_performance() {
     
     println!("✅ Performance test completed in {:?}", total_duration);
     println!("   Average operation time: {:?}", total_duration / 2000);
+    Ok(())
 }
 
 /// Test concurrent storage operations performance
 #[tokio::test]
-async fn test_concurrent_storage_performance() {
+async fn test_concurrent_storage_performance() -> Result<(), Box<dyn std::error::Error>> {
     let storage = MockStorage::new();
     let start = Instant::now();
     
@@ -68,19 +70,21 @@ async fn test_concurrent_storage_performance() {
             let value = format!("concurrent_value_{}", i);
             
             // Perform write operation
-            storage_clone.store(&key, &value).await.expect("Concurrent store failed");
+            storage_clone.store(&key, &value).await?;
             
             // Perform read operation
-            let retrieved = storage_clone.retrieve(&key).await.expect("Concurrent retrieve failed");
+            let retrieved = storage_clone.retrieve(&key).await?;
             assert_eq!(retrieved, Some(value));
         });
         
         tasks.push(task);
+    Ok(())
     }
     
     // Wait for all tasks to complete
     for task in tasks {
-        task.await.expect("Task failed");
+        task.await?;
+    Ok(())
     }
     
     let total_duration = start.elapsed();
@@ -90,16 +94,17 @@ async fn test_concurrent_storage_performance() {
            "Concurrent performance test too slow: {:?}", total_duration);
     
     println!("✅ Concurrent performance test completed in {:?}", total_duration);
+    Ok(())
 }
 
 /// Test API endpoint performance
 #[tokio::test]
-async fn test_api_performance() {
+async fn test_api_performance() -> Result<(), Box<dyn std::error::Error>> {
     use nestgate_api::rest::create_api_router;
     use axum_test::TestServer;
     
     let app = create_api_router().await;
-    let server = TestServer::new(app).expect("Failed to create test server");
+    let server = TestServer::new(app)?;
     
     let start = Instant::now();
     
@@ -116,6 +121,7 @@ async fn test_api_performance() {
                "API request {} too slow: {:?}", i, request_duration);
         
         response.assert_status_ok();
+    Ok(())
     }
     
     let total_duration = start.elapsed();
@@ -126,11 +132,12 @@ async fn test_api_performance() {
     
     println!("✅ API performance test completed in {:?}", total_duration);
     println!("   Average request time: {:?}", total_duration / 100);
+    Ok(())
 }
 
 /// Test memory allocation performance
 #[tokio::test]
-async fn test_memory_allocation_performance() {
+async fn test_memory_allocation_performance() -> Result<(), Box<dyn std::error::Error>> {
     use std::collections::HashMap;
     
     let start = Instant::now();
@@ -144,6 +151,7 @@ async fn test_memory_allocation_performance() {
         let value = vec![i as u8; 100]; // 100 bytes per value
         
         data.insert(key, value);
+    Ok(())
     }
     
     let insert_duration = start.elapsed();
@@ -159,6 +167,7 @@ async fn test_memory_allocation_performance() {
         let key = format!("memory_test_key_{}", i);
         let value = data.get(&key);
         assert!(value.is_some());
+    Ok(())
     }
     
     let retrieval_duration = retrieval_start.elapsed();
@@ -170,11 +179,12 @@ async fn test_memory_allocation_performance() {
     println!("✅ Memory allocation performance test completed");
     println!("   Insert time: {:?}", insert_duration);
     println!("   Retrieval time: {:?}", retrieval_duration);
+    Ok(())
 }
 
 /// Test zero-copy buffer performance
 #[tokio::test]
-async fn test_zero_copy_performance() {
+async fn test_zero_copy_performance() -> Result<(), Box<dyn std::error::Error>> {
     use bytes::Bytes;
     
     let start = Instant::now();
@@ -197,6 +207,7 @@ async fn test_zero_copy_performance() {
                "Zero-copy operation too slow: {:?}", reference_duration);
         
         references.push(reference);
+    Ok(())
     }
     
     let total_duration = start.elapsed();
@@ -209,15 +220,17 @@ async fn test_zero_copy_performance() {
     for reference in &references {
         assert_eq!(reference.len(), 1024 * 1024);
         assert_eq!(reference[0], 42);
+    Ok(())
     }
     
     println!("✅ Zero-copy performance test completed in {:?}", total_duration);
     println!("   Average zero-copy operation: {:?}", total_duration / 1000);
+    Ok(())
 }
 
 /// Test serialization performance
 #[tokio::test]
-async fn test_serialization_performance() {
+async fn test_serialization_performance() -> Result<(), Box<dyn std::error::Error>> {
     use serde_json;
     use std::collections::HashMap;
     
@@ -225,13 +238,14 @@ async fn test_serialization_performance() {
     let mut test_data = HashMap::new();
     for i in 0..1000 {
         test_data.insert(format!("key_{}", i), format!("value_{}", i));
+    Ok(())
     }
     
     let start = Instant::now();
     
     // Test JSON serialization performance
     let serialized = serde_json::to_string(&test_data)
-        .expect("Serialization failed");
+        ?;
     
     let serialization_duration = start.elapsed();
     
@@ -243,7 +257,7 @@ async fn test_serialization_performance() {
     let deserialization_start = Instant::now();
     
     let deserialized: HashMap<String, String> = serde_json::from_str(&serialized)
-        .expect("Deserialization failed");
+        ?;
     
     let deserialization_duration = deserialization_start.elapsed();
     
@@ -258,11 +272,12 @@ async fn test_serialization_performance() {
     println!("✅ Serialization performance test completed");
     println!("   Serialization time: {:?}", serialization_duration);
     println!("   Deserialization time: {:?}", deserialization_duration);
+    Ok(())
 }
 
 /// Test async task performance
 #[tokio::test]
-async fn test_async_task_performance() {
+async fn test_async_task_performance() -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
     
     // Create many concurrent tasks
@@ -276,13 +291,15 @@ async fn test_async_task_performance() {
         });
         
         tasks.push(task);
+    Ok(())
     }
     
     // Wait for all tasks to complete
     let mut results = Vec::new();
     for task in tasks {
-        let result = task.await.expect("Task failed");
+        let result = task.await?;
         results.push(result);
+    Ok(())
     }
     
     let total_duration = start.elapsed();
@@ -297,11 +314,12 @@ async fn test_async_task_performance() {
     assert_eq!(results[999], 1998);
     
     println!("✅ Async task performance test completed in {:?}", total_duration);
+    Ok(())
 }
 
 /// Benchmark suite for comprehensive performance testing
 #[tokio::test]
-async fn test_comprehensive_performance_benchmark() {
+async fn test_comprehensive_performance_benchmark() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Starting comprehensive performance benchmark...");
     
     let overall_start = Instant::now();
@@ -329,11 +347,12 @@ async fn test_comprehensive_performance_benchmark() {
     println!("   Zero-copy optimizations validated ✅");
     println!("   Memory efficiency confirmed ✅");
     println!("   Async performance verified ✅");
+    Ok(())
 }
 
 /// Test load handling performance
 #[tokio::test]
-async fn test_load_handling_performance() {
+async fn test_load_handling_performance() -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
     
     // Simulate high load scenario
@@ -352,19 +371,22 @@ async fn test_load_handling_performance() {
                 
                 let operation_duration = operation_start.elapsed();
                 batch_results.push((result, operation_duration));
+    Ok(())
             }
             
             batch_results
         });
         
         handles.push(handle);
+    Ok(())
     }
     
     // Collect all results
     let mut all_results = Vec::new();
     for handle in handles {
-        let batch_results = handle.await.expect("Batch failed");
+        let batch_results = handle.await?;
         all_results.extend(batch_results);
+    Ok(())
     }
     
     let total_duration = start.elapsed();

@@ -11,7 +11,7 @@ use tracing::info;
 
 /// Test comprehensive suite configuration
 #[tokio::test]
-async fn test_comprehensive_suite_config() {
+async fn test_comprehensive_suite_config() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔬 Starting comprehensive suite configuration test");
     
     // Test comprehensive suite configuration creation
@@ -23,11 +23,12 @@ async fn test_comprehensive_suite_config() {
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ Comprehensive suite configuration test completed");
+    Ok(())
 }
 
 /// Test comprehensive system validation
 #[tokio::test]
-async fn test_comprehensive_system_validation() {
+async fn test_comprehensive_system_validation() -> Result<(), Box<dyn std::error::Error>> {
     info!("⚡ Testing comprehensive system validation");
     
     // Test comprehensive system validation operations
@@ -47,14 +48,16 @@ async fn test_comprehensive_system_validation() {
         // Verify validation operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ Comprehensive system validation completed");
+    Ok(())
 }
 
 /// Test comprehensive test execution
 #[tokio::test]
-async fn test_comprehensive_test_execution() {
+async fn test_comprehensive_test_execution() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔍 Testing comprehensive test execution");
     
     // Test comprehensive test execution phases
@@ -74,14 +77,16 @@ async fn test_comprehensive_test_execution() {
         // Verify execution phase is valid
         assert!(!phase.is_empty(), "Phase should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ Comprehensive test execution completed");
+    Ok(())
 }
 
 /// Test comprehensive monitoring and metrics
 #[tokio::test]
-async fn test_comprehensive_monitoring() {
+async fn test_comprehensive_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing comprehensive monitoring and metrics");
     
     let start_time = std::time::Instant::now();
@@ -96,14 +101,16 @@ async fn test_comprehensive_monitoring() {
         
         // Verify monitoring timing is accurate
         assert!(elapsed.as_millis() >= cycle_time as u128, "Comprehensive timing should be accurate");
+    Ok(())
     }
     
     info!("✅ Comprehensive monitoring and metrics completed");
+    Ok(())
 }
 
 /// Test comprehensive error handling
 #[tokio::test]
-async fn test_comprehensive_error_handling() {
+async fn test_comprehensive_error_handling() -> Result<(), Box<dyn std::error::Error>> {
     info!("💥 Testing comprehensive error handling");
     
     // Test comprehensive error scenarios
@@ -126,14 +133,16 @@ async fn test_comprehensive_error_handling() {
         // Verify error handling is valid
         assert!(!error_type.is_empty(), "Error type should be specified");
         assert!(recovery_time > 0, "Recovery time should be positive");
+    Ok(())
     }
     
     info!("✅ Comprehensive error handling completed");
+    Ok(())
 }
 
 /// Test comprehensive performance characteristics
 #[tokio::test]
-async fn test_comprehensive_performance() {
+async fn test_comprehensive_performance() -> Result<(), Box<dyn std::error::Error>> {
     info!("🚀 Testing comprehensive performance characteristics");
     
     // Test comprehensive performance scenarios
@@ -153,14 +162,16 @@ async fn test_comprehensive_performance() {
         // Verify performance scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
         assert!(benchmark_time > 0, "Benchmark time should be positive");
+    Ok(())
     }
     
     info!("✅ Comprehensive performance characteristics completed");
+    Ok(())
 }
 
 /// Test comprehensive environments
 #[tokio::test]
-async fn test_comprehensive_environments() {
+async fn test_comprehensive_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing comprehensive functionality across environments");
     
     // Test development environment comprehensive functionality
@@ -176,4 +187,5 @@ async fn test_comprehensive_environments() {
     info!("Production comprehensive configuration validated");
     
     info!("✅ Comprehensive environment test completed");
+    Ok(())
 }

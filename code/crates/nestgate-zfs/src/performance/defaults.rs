@@ -1,4 +1,3 @@
-
 use std::collections::HashMap;
 use std::time::SystemTime;
 
@@ -52,7 +51,7 @@ impl Default for SystemResourceMetrics {
 impl Default for IoStatistics {
     fn default() -> Self {
         Self {
-            total_reads: 1000000,
+            total_reads: 1_000_000,
             total_writes: 500000,
             total_bytes_read: 100 * 1024 * 1024 * 1024, // 100GB
             total_bytes_written: 50 * 1024 * 1024 * 1024, // 50GB
@@ -126,11 +125,11 @@ impl Default for DatasetPerformanceStats {
 
 impl TierMetrics {
     /// Create default tier metrics for a specific tier
-    pub fn default_for_tier(tier: StorageTier) -> Self {
+    pub const fn default_for_tier(tier: StorageTier) -> Self {
         match tier {
             StorageTier::Hot => Self {
                 tier,
-                read_iops: 100000.0,
+                read_iops: 100_000.0,
                 write_iops: 50000.0,
                 read_throughput_mbs: 1500.0,
                 write_throughput_mbs: 800.0,
@@ -170,7 +169,7 @@ impl TierMetrics {
             },
             StorageTier::Cold => Self {
                 tier,
-                read_iops: 10000.0,
+                read_iops: 10_000.0,
                 write_iops: 5000.0,
                 read_throughput_mbs: 200.0,
                 write_throughput_mbs: 100.0,
@@ -191,7 +190,7 @@ impl TierMetrics {
             StorageTier::Cache => Self {
                 tier,
                 read_iops: 200000.0,
-                write_iops: 100000.0,
+                write_iops: 100_000.0,
                 read_throughput_mbs: 3000.0,
                 write_throughput_mbs: 1500.0,
                 avg_read_latency_ms: 0.1,
@@ -234,7 +233,7 @@ impl TierMetrics {
 
 impl CurrentPerformanceMetrics {
     /// Get tier metrics for a specific tier
-    pub fn get_tier_metrics(&self, tier: StorageTier) -> Option<&TierMetrics> {
+    pub const fn get_tier_metrics(&self, tier: StorageTier) -> Option<&TierMetrics> {
         self.tier_metrics.get(&tier)
     }
 }
@@ -253,7 +252,6 @@ mod tests {
         assert!(metrics.pool_metrics.total_iops >= 0.0);
         assert_eq!(metrics.tier_metrics.len(), 0);
     }
-
     #[test]
     fn test_tier_metrics_default() {
         let hot_metrics = TierMetrics::default_for_tier(StorageTier::Hot);

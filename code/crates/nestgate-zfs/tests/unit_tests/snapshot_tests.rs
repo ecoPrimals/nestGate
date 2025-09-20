@@ -9,6 +9,7 @@ use nestgate_core::StorageTier as CoreStorageTier;
 use nestgate_zfs::performance::TierMetrics;
 use nestgate_zfs::performance::{AlertCondition, AlertMetric, AlertOperator, AlertSeverity};
 use nestgate_zfs::{
+use nestgate_core::canonical_types::StorageTier;
     automation::{DatasetLifecycle, LifecycleRule, LifecycleStage},
     config::ZfsConfig,
     migration::{MigrationJob, MigrationPriority, MigrationStatus},
@@ -21,7 +22,7 @@ mod snapshot_unit_tests {
     use super::*;
 
     #[test]
-    fn test_snapshot_policy_validation() {
+    fn test_snapshot_policy_validation() -> Result<(), Box<dyn std::error::Error>> {
         let policy = SnapshotPolicy::default();
 
         assert_eq!(policy.name, "default");
@@ -29,10 +30,10 @@ mod snapshot_unit_tests {
         assert!(matches!(policy.frequency, ScheduleFrequency::Hours(1)));
         assert!(!policy.dataset_patterns.is_empty());
         assert!(policy.max_snapshots_per_run > 0);
+    Ok(())
     }
-
     #[test]
-    fn test_retention_policy_custom() {
+    fn test_retention_policy_custom() -> Result<(), Box<dyn std::error::Error>> {
         let policy = RetentionPolicy::Custom {
             hourly_hours: 24,
             daily_days: 30,
@@ -59,15 +60,19 @@ mod snapshot_unit_tests {
     std::io::ErrorKind::Other,
     "Expected Custom retention policy".to_string()
 ).into());
+    Ok(())
         }
+    Ok(())
     }
 
     #[test]
-    fn test_snapshot_schedule_creation() {
+    fn test_snapshot_schedule_creation() -> Result<(), Box<dyn std::error::Error>> {
         let schedule = ScheduleFrequency::Hours(4);
         assert!(matches!(schedule, ScheduleFrequency::Hours(4)));
         
         let schedule = ScheduleFrequency::Daily;
         assert!(matches!(schedule, ScheduleFrequency::Daily));
+    Ok(())
     }
+    Ok(())
 } 

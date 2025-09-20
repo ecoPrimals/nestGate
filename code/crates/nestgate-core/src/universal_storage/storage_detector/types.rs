@@ -2,7 +2,7 @@ use std::collections::HashMap;
 //
 // Core data structures and type definitions for storage detection system.
 
-use crate::universal_storage::{UnifiedStorageCapability, UnifiedStorageType};
+use crate::unified_enums::storage_types::{UnifiedStorageCapability, UnifiedStorageType};
 use serde::{Deserialize, Serialize};
 
 /// Comprehensive information about detected storage
@@ -13,7 +13,6 @@ pub struct DetectedStorage {
     /// Type of storage system
     pub storage_type: UnifiedStorageType,
     /// Path or connection string
-    pub path: String,
     /// Human-readable name
     pub display_name: String,
     /// What this storage system can do
@@ -29,7 +28,6 @@ pub struct DetectedStorage {
     /// Additional metadata
     pub metadata: HashMap<String, String>,
 }
-
 /// Performance profile of a storage system
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceProfile {
@@ -48,7 +46,6 @@ pub struct PerformanceProfile {
     /// Optimal block size for operations
     pub optimal_block_size: u32,
 }
-
 impl Default for PerformanceProfile {
     fn default() -> Self {
         Self {
@@ -75,7 +72,6 @@ pub struct CostProfile {
     /// Whether this is free tier eligible
     pub is_free_tier: bool,
 }
-
 impl Default for CostProfile {
     fn default() -> Self {
         Self {
@@ -98,7 +94,6 @@ pub struct StorageAnalysisReport {
     pub memory_usage_percent: f64,
     pub recommendations: Vec<String>,
 }
-
 /// Filesystem statistics
 #[derive(Debug, Clone)]
 pub struct FilesystemStats {
@@ -112,7 +107,6 @@ pub struct FilesystemStats {
     pub mount_point: String,
     pub device: String,
 }
-
 /// Memory information
 #[derive(Debug, Clone)]
 pub struct MemoryInfo {
@@ -123,7 +117,6 @@ pub struct MemoryInfo {
     pub swap_total: u64,
     pub swap_free: u64,
 }
-
 /// Cloud storage bucket information
 #[derive(Debug, Clone)]
 pub struct CloudBucket {
@@ -134,7 +127,6 @@ pub struct CloudBucket {
     pub object_count: u64,
     pub last_modified: Option<String>,
 }
-
 /// Network share information
 #[derive(Debug, Clone)]
 pub struct NetworkShare {
@@ -145,31 +137,23 @@ pub struct NetworkShare {
     pub available_space: u64,
     pub is_mounted: bool,
 }
-
 /// Block device information
 #[derive(Debug, Clone)]
 pub struct BlockDevice {
     pub device_name: String,
-    pub device_path: String,
     pub size_bytes: u64,
     pub device_type: String, // SSD, HDD, NVMe, etc.
     pub is_removable: bool,
     pub is_readonly: bool,
     pub filesystem: Option<String>,
 }
-
 impl DetectedStorage {
     /// Create a new detected storage entry
-    pub fn new(
-        identifier: String,
-        storage_type: UnifiedStorageType,
-        path: String,
-        display_name: String,
-    ) -> Self {
+    #[must_use]
+    pub fn new(identifier: String, storage_type: UnifiedStorageType, display_name: String) -> Self {
         Self {
             identifier,
             storage_type,
-            path,
             display_name,
             capabilities: Vec::new(),
             performance_profile: PerformanceProfile::default(),
@@ -188,7 +172,8 @@ impl DetectedStorage {
     }
 
     /// Check if this storage has a specific capability
-    pub fn has_capability(&self, capability: &UnifiedStorageCapability) -> bool {
+    #[must_use]
+    pub const fn has_capability(&self, capability: &UnifiedStorageCapability) -> bool {
         self.capabilities.contains(capability)
     }
 
@@ -198,7 +183,8 @@ impl DetectedStorage {
     }
 
     /// Get metadata value
-    pub fn get_metadata(&self, key: &str) -> Option<&String> {
+    #[must_use]
+    pub const fn get_metadata(&self, key: &str) -> Option<&String> {
         self.metadata.get(key)
     }
-} 
+}

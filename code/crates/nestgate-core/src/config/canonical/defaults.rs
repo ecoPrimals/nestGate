@@ -1,20 +1,18 @@
-//! Configuration Defaults
-//!
-//! This module provides default values and a builder pattern for configuration.
-//! Single responsibility: Provide sensible defaults and builder functionality.
+// Configuration Defaults
+//! Defaults functionality and utilities.
+// This module provides default values and a builder pattern for configuration.
+// Single responsibility: Provide sensible defaults and builder functionality.
 
 use super::types::*;
 use crate::Result;
 use std::collections::HashMap;
 use std::net::IpAddr;
-use std::path::PathBuf;
 use std::time::Duration;
 
 /// Configuration builder for easy setup
 pub struct CanonicalConfigBuilder {
     config: CanonicalConfig,
 }
-
 impl Default for CanonicalConfigBuilder {
     fn default() -> Self {
         Self::new()
@@ -23,13 +21,14 @@ impl Default for CanonicalConfigBuilder {
 
 impl CanonicalConfigBuilder {
     /// Create a new builder with sensible defaults
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             config: CanonicalConfig::default(),
         }
     }
 
     /// Set the environment
+    #[must_use]
     pub fn environment(mut self, env: Environment) -> Self {
         self.config.system.environment = env.clone();
         self.config.environment.name = format!("{env:?}").to_lowercase();
@@ -37,12 +36,14 @@ impl CanonicalConfigBuilder {
     }
 
     /// Set the instance name
+    #[must_use]
     pub fn instance_name(mut self, name: impl Into<String>) -> Self {
         self.config.system.instance_name = name.into();
         self
     }
 
     /// Set the API server configuration
+    #[must_use]
     pub fn api_server(mut self, host: IpAddr, port: u16) -> Self {
         self.config.network.api.host = host;
         self.config.network.api.port = port;
@@ -50,13 +51,21 @@ impl CanonicalConfigBuilder {
     }
 
     /// Enable development mode
+    #[must_use]
     pub fn dev_mode(mut self, enabled: bool) -> Self {
         self.config.system.dev_mode = enabled;
         self
     }
 
     /// Build the configuration
-    pub fn build(self) -> Result<CanonicalConfig> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn build(self) -> Result<CanonicalConfig>  {
         super::validation::ConfigValidator::validate(&self.config)?;
         Ok(self.config)
     }
@@ -69,7 +78,6 @@ impl Default for SystemConfig {
         Self {
             instance_id: None,
             instance_name: "nestgate-default".to_string(),
-            environment: Environment::Development,
             log_level: "info".to_string(),
             data_dir: PathBuf::from("./data"),
             config_dir: PathBuf::from("./config"),
@@ -237,7 +245,6 @@ impl Default for LoggingConfig {
             level: "info".to_string(),
             format: "text".to_string(),
             output: "stdout".to_string(),
-            file_path: None,
         }
     }
 }

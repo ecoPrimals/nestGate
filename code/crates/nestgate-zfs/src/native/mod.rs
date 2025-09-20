@@ -14,22 +14,28 @@ pub use crate::types::{
     SnapshotInfo, ZfsCommand, ZfsError, ZfsResult,
 };
 
-use crate::canonical_zfs_config::CanonicalZfsConfig;
+// use crate::canonical_zfs_config::CanonicalZfsConfig; // Module not yet implemented
+use crate::config::ZfsConfig as CanonicalZfsConfig; // Using ZfsConfig as canonical
 use nestgate_core::{NestGateError, Result};
 
 /// Native ZFS backend implementation
 pub struct NativeZfsBackend {
     config: CanonicalZfsConfig,
 }
-
 impl NativeZfsBackend {
     /// Create a new native ZFS backend
-    pub async fn new(config: CanonicalZfsConfig) -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn new(config: CanonicalZfsConfig) -> Result<Self>  {
         // Check if ZFS is available
         if !is_zfs_available().await {
-            return Err(NestGateError::storage_error("zfs_availability_check", "ZFS is not available on this system", None));
+            return Err(NestGateError::storage_error("zfs_availability_check"));
         }
-
         Ok(Self { config })
     }
 
@@ -39,7 +45,7 @@ impl NativeZfsBackend {
     }
 
     /// Get the configuration
-    pub fn config(&self) -> &CanonicalZfsConfig {
+    pub const fn config(&self) -> &CanonicalZfsConfig {
         &self.config
     }
 }
@@ -56,7 +62,6 @@ pub async fn is_zfs_available() -> bool {
         Err(_) => false,
     }
 }
-
 /// Check if zpool command is available
 pub async fn is_zpool_available() -> bool {
     match tokio::process::Command::new("zpool")
@@ -68,17 +73,15 @@ pub async fn is_zpool_available() -> bool {
         Err(_) => false,
     }
 }
-
 /// Get ZFS version information
 pub async fn get_zfs_version() -> Result<String> {
     let output = tokio::process::Command::new("zfs")
         .arg("version")
         .output()
         .await
-        .map_err(|e| NestGateError::storage_error("zfs_version_check", &format!("Failed to get ZFS version: {e}"), None))?;
-
+        .map_err(|_e| NestGateError::storage_error("zfs_version_check"))?;
     if !output.status.success() {
-        return Err(NestGateError::storage_error("zfs_version_check", "Failed to get ZFS version", None));
+        return Err(NestGateError::storage_error("zfs_version_check"));
     }
 
     let version_str = String::from_utf8_lossy(&output.stdout);
@@ -94,7 +97,7 @@ mod tests {
         // This test will pass/fail based on whether ZFS is actually installed
         // In CI/test environments, we expect this to be false
         let available = is_zfs_available().await;
-        println!("ZFS available: {}", available);
+        println!("ZFS available: {available}");
     }
 
     #[tokio::test]

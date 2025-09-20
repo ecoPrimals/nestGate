@@ -15,7 +15,6 @@ pub struct ApiDomainConfig {
     pub documentation_enabled: bool,
     pub endpoints: HashMap<String, String>,
 }
-
 impl Default for ApiDomainConfig {
     fn default() -> Self {
         let mut endpoints = HashMap::new();

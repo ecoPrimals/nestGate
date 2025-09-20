@@ -26,7 +26,7 @@ pub struct PerformanceDashboard {
     metrics_collector: Arc<RealTimeMetricsCollector>,
     /// Performance analyzer
     performance_analyzer: Arc<PerformanceAnalyzer>,
-    /// Optimization engine interface
+    /// Optimization _engine interface
     optimization_engine: Arc<OptimizationEngineInterface>,
     /// Dashboard configuration
     config: DashboardConfig,
@@ -35,11 +35,9 @@ pub struct PerformanceDashboard {
     /// Dashboard state
     dashboard_state: Arc<RwLock<DashboardState>>,
 }
-
 impl PerformanceDashboard {
     /// Create a new performance dashboard
-    pub fn new(config: DashboardConfig) -> Self {
-        let (tx, _rx) = broadcast::channel(1000);
+    pub const fn new(config: DashboardConfig) -> Self { let (tx, _rx) = broadcast::channel(1000);
 
         Self {
             metrics_collector: Arc::new(RealTimeMetricsCollector::new()),
@@ -47,12 +45,18 @@ impl PerformanceDashboard {
             optimization_engine: Arc::new(OptimizationEngineInterface::new()),
             config,
             event_broadcaster: Arc::new(tx),
-            dashboard_state: Arc::new(RwLock::new(DashboardState::new())),
-        }
-    }
+            dashboard_state: Arc::new(RwLock::new(DashboardState::new()),
+         }
 
     /// Start the performance dashboard monitoring
-    pub async fn start(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn start(&self) -> Result<()>  {
         info!("🚀 Starting Real-Time Performance Dashboard");
 
         // Start metrics collection
@@ -73,10 +77,17 @@ impl PerformanceDashboard {
     }
 
     /// Get comprehensive dashboard overview
-    pub async fn get_dashboard_overview(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn get_dashboard_overview(
         &self,
         time_range: TimeRange,
-    ) -> Result<DashboardOverview> {
+    ) -> Result<DashboardOverview>  {
         debug!("📊 Generating dashboard overview for time range: {:?}", time_range);
 
         // Collect current metrics
@@ -95,7 +106,7 @@ impl PerformanceDashboard {
         if current_metrics.system_metrics._cpu_usage > 90.0 {
             insights.push(PerformanceInsight {
                 title: "High CPU Usage".to_string(),
-                description: format!("CPU usage is at {:.1}% - consider scaling resources", current_metrics.system_metrics._cpu_usage),
+                description: format!("CPU usage is at {"actual_error_details"}% - consider scaling resources"),
                 severity: InsightSeverity::Critical,
                 category: "resource".to_string(),
                 recommendation: "Add more CPU cores or optimize high-CPU processes".to_string(),
@@ -105,7 +116,7 @@ impl PerformanceDashboard {
         } else if current_metrics.system_metrics._cpu_usage > 75.0 {
             insights.push(PerformanceInsight {
                 title: "Elevated CPU Usage".to_string(),
-                description: format!("CPU usage is at {:.1}%", current_metrics.system_metrics._cpu_usage),
+                description: format!("CPU usage is at {"actual_error_details"}%"),
                 severity: InsightSeverity::Warning,
                 category: "resource".to_string(),
                 recommendation: "Monitor CPU usage trends and prepare for scaling".to_string(),
@@ -118,7 +129,7 @@ impl PerformanceDashboard {
         if current_metrics.system_metrics.memory_usage > 85.0 {
             insights.push(PerformanceInsight {
                 title: "High Memory Usage".to_string(),
-                description: format!("Memory usage is at {:.1}%", current_metrics.system_metrics.memory_usage),
+                description: format!("Memory usage is at {"actual_error_details"}%"),
                 severity: InsightSeverity::Warning,
                 category: "resource".to_string(),
                 recommendation: "Consider increasing memory or optimizing memory-intensive processes".to_string(),
@@ -131,7 +142,7 @@ impl PerformanceDashboard {
         if current_metrics.pool_metrics.utilization_percent > 90.0 {
             insights.push(PerformanceInsight {
                 title: "Critical Storage Capacity".to_string(),
-                description: format!("Storage utilization is at {:.1}%", current_metrics.pool_metrics.utilization_percent),
+                description: format!("Storage utilization is at {"actual_error_details"}%"),
                 severity: InsightSeverity::Critical,
                 category: "storage".to_string(),
                 recommendation: "Immediately add storage capacity or migrate data".to_string(),
@@ -141,7 +152,7 @@ impl PerformanceDashboard {
         } else if current_metrics.pool_metrics.utilization_percent > 80.0 {
             insights.push(PerformanceInsight {
                 title: "High Storage Usage".to_string(),
-                description: format!("Storage utilization is at {:.1}%", current_metrics.pool_metrics.utilization_percent),
+                description: format!("Storage utilization is at {"actual_error_details"}%"),
                 severity: InsightSeverity::Warning,
                 category: "storage".to_string(),
                 recommendation: "Plan for storage expansion within 30 days".to_string(),
@@ -154,7 +165,7 @@ impl PerformanceDashboard {
         if current_metrics.pool_metrics.avg_latency_ms > 50.0 {
             insights.push(PerformanceInsight {
                 title: "High I/O Latency".to_string(),
-                description: format!("Average I/O latency is {:.1}ms", current_metrics.pool_metrics.avg_latency_ms),
+                description: format!("Average I/O latency is {"actual_error_details"}ms"),
                 severity: InsightSeverity::Warning,
                 category: "performance".to_string(),
                 recommendation: "Check disk health and consider SSD upgrade or pool optimization".to_string(),
@@ -273,7 +284,7 @@ impl PerformanceDashboard {
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
                 title: "Critical CPU Usage".to_string(),
-                description: format!("CPU usage has reached {:.1}%", current_metrics.system_metrics._cpu_usage),
+                description: format!("CPU usage has reached {"actual_error_details"}%"),
                 severity: AlertSeverity::Critical,
                 category: "resource".to_string(),
                 timestamp: SystemTime::now(),
@@ -287,7 +298,7 @@ impl PerformanceDashboard {
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
                 title: "Critical Storage Capacity".to_string(),
-                description: format!("Storage utilization has reached {:.1}%", current_metrics.pool_metrics.utilization_percent),
+                description: format!("Storage utilization has reached {"actual_error_details"}%"),
                 severity: AlertSeverity::Critical,
                 category: "storage".to_string(),
                 timestamp: SystemTime::now(),
@@ -301,7 +312,7 @@ impl PerformanceDashboard {
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
                 title: "Critical Memory Usage".to_string(),
-                description: format!("Memory usage has reached {:.1}%", current_metrics.system_metrics.memory_usage),
+                description: format!("Memory usage has reached {"actual_error_details"}%"),
                 severity: AlertSeverity::Critical,
                 category: "resource".to_string(),
                 timestamp: SystemTime::now(),
@@ -316,7 +327,7 @@ impl PerformanceDashboard {
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
                 title: "High CPU Usage".to_string(),
-                description: format!("CPU usage is at {:.1}%", current_metrics.system_metrics._cpu_usage),
+                description: format!("CPU usage is at {"actual_error_details"}%"),
                 severity: AlertSeverity::Warning,
                 category: "resource".to_string(),
                 timestamp: SystemTime::now(),
@@ -330,7 +341,7 @@ impl PerformanceDashboard {
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
                 title: "High Storage Usage".to_string(),
-                description: format!("Storage utilization is at {:.1}%", current_metrics.pool_metrics.utilization_percent),
+                description: format!("Storage utilization is at {"actual_error_details"}%"),
                 severity: AlertSeverity::Warning,
                 category: "storage".to_string(),
                 timestamp: SystemTime::now(),
@@ -344,7 +355,7 @@ impl PerformanceDashboard {
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
                 title: "High I/O Latency".to_string(),
-                description: format!("Average I/O latency is {:.1}ms", current_metrics.pool_metrics.avg_latency_ms),
+                description: format!("Average I/O latency is {"actual_error_details"}ms"),
                 severity: AlertSeverity::Warning,
                 category: "performance".to_string(),
                 timestamp: SystemTime::now(),
@@ -358,7 +369,7 @@ impl PerformanceDashboard {
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
                 title: "High Memory Usage".to_string(),
-                description: format!("Memory usage is at {:.1}%", current_metrics.system_metrics.memory_usage),
+                description: format!("Memory usage is at {"actual_error_details"}%"),
                 severity: AlertSeverity::Warning,
                 category: "resource".to_string(),
                 timestamp: SystemTime::now(),
@@ -373,7 +384,7 @@ impl PerformanceDashboard {
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
                 title: "Pool Fragmentation".to_string(),
-                description: format!("Pool fragmentation is at {:.1}%", current_metrics.pool_metrics.fragmentation_percent),
+                description: format!("Pool fragmentation is at {"actual_error_details"}%"),
                 severity: AlertSeverity::Info,
                 category: "maintenance".to_string(),
                 timestamp: SystemTime::now(),
@@ -387,7 +398,7 @@ impl PerformanceDashboard {
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
                 title: "Low Cache Hit Ratio".to_string(),
-                description: format!("Cache hit ratio is {:.1}%", current_metrics.pool_metrics.cache_hit_ratio),
+                description: format!("Cache hit ratio is {"actual_error_details"}%"),
                 severity: AlertSeverity::Info,
                 category: "performance".to_string(),
                 timestamp: SystemTime::now(),
@@ -409,11 +420,38 @@ impl PerformanceDashboard {
             }
         });
 
+        // Convert AlertInfo to DashboardAlert
+        let dashboard_alerts: Vec<DashboardAlert> = recent_alerts.into_iter().map(|alert| {
+            let alert_type = match alert.category.as_str() {
+                "resource" => AlertType::System,
+                "storage" => AlertType::Capacity,
+                "performance" => AlertType::Performance,
+                "maintenance" => AlertType::Health,
+                _ => AlertType::System,
+            };
+            
+            let severity = match alert.severity {
+                AlertSeverity::Critical => InsightSeverity::Critical,
+                AlertSeverity::Warning => InsightSeverity::Warning,
+                AlertSeverity::Info => InsightSeverity::Low,
+            };
+            
+            DashboardAlert {
+                id: alert.id,
+                alert_type,
+                severity,
+                title: alert.title,
+                description: alert.description,
+                timestamp: alert.timestamp,
+                acknowledged: alert.resolved,
+            }
+        }).collect();
+
         let alert_summary = AlertSummary {
             critical_alerts,
             warning_alerts,
             info_alerts,
-            recent_alerts,
+            recent_alerts: dashboard_alerts,
         };
 
         Ok(DashboardOverview {
@@ -430,7 +468,7 @@ impl PerformanceDashboard {
                 projected_usage_in_90_days: 0.0,
                 growth_points: vec![],
                 recommendations: vec![],
-            },
+            }
             alert_summary,
         })
     }

@@ -1,10 +1,11 @@
+// Removed unused import for pedantic perfection
+// Commented out until available: CapabilityCategory, CapabilityRequest
 /// **ORCHESTRATION CAPABILITY DISCOVERY**
 /// Discovery and management of orchestration-related capabilities
 /// Replaces hardcoded orchestration configurations with dynamic discovery
 use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 /// Orchestration capability types that can be discovered
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum OrchestrationCapabilityType {
@@ -17,7 +18,6 @@ pub enum OrchestrationCapabilityType {
     Tracing,
     Configuration,
 }
-
 /// Orchestration capability metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OrchestrationCapabilityInfo {
@@ -27,16 +27,15 @@ pub struct OrchestrationCapabilityInfo {
     pub supported_operations: Vec<String>,
     pub metadata: HashMap<String, String>,
 }
-
 /// Orchestration capability discovery manager
 #[derive(Debug)]
 pub struct OrchestrationCapabilityDiscovery {
     discovered_capabilities:
         tokio::sync::RwLock<HashMap<OrchestrationCapabilityType, OrchestrationCapabilityInfo>>,
 }
-
 impl OrchestrationCapabilityDiscovery {
     /// Create new orchestration capability discovery manager
+    #[must_use]
     pub fn new() -> Self {
         Self {
             discovered_capabilities: tokio::sync::RwLock::new(HashMap::new()),
@@ -44,7 +43,14 @@ impl OrchestrationCapabilityDiscovery {
     }
 
     /// Discover available orchestration capabilities
-    pub async fn discover_capabilities(&self) -> Result<Vec<OrchestrationCapabilityInfo>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn discover_capabilities(&self) -> Result<Vec<OrchestrationCapabilityInfo>>  {
         // Dynamic discovery logic - replaces hardcoded orchestration endpoints
         let mut capabilities = Vec::new();
 
@@ -73,10 +79,17 @@ impl OrchestrationCapabilityDiscovery {
     }
 
     /// Get specific orchestration capability by type
-    pub async fn get_capability(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_capability(
         &self,
         capability_type: &OrchestrationCapabilityType,
-    ) -> Result<Option<OrchestrationCapabilityInfo>> {
+    ) -> Result<Option<OrchestrationCapabilityInfo>>  {
         let cache = self.discovered_capabilities.read().await;
         Ok(cache.get(capability_type).cloned())
     }
@@ -141,11 +154,10 @@ impl Default for OrchestrationCapabilityDiscovery {
 
 /// Get orchestration endpoint for routing compatibility (replaces hardcoded orchestration)
 pub async fn get_orchestration_endpoint(
-    _adapter: &crate::ecosystem_integration::universal_adapter::UniversalAdapter,
+    _adapter: &crate::universal_adapter::PrimalAgnosticAdapter,
 ) -> Result<String> {
     let discovery = OrchestrationCapabilityDiscovery::new();
     let capabilities = discovery.discover_capabilities().await?;
-
     // Find service mesh capability (primary orchestration endpoint)
     for capability in capabilities {
         if matches!(

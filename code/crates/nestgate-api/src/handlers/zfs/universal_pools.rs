@@ -3,12 +3,12 @@
 // not just ZFS. It uses the Universal Storage Bridge to translate ZFS concepts to
 // universal storage operations.
 
+// Removed unused import: crate::handlers::zfs_stub::ZeroCostZfsOperations
 use axum::{
     extract::{Path, State},
     http::StatusCode,
     response::{IntoResponse, Json},
 };
-use nestgate_zfs::ZeroCostZfsOperations;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
@@ -16,18 +16,21 @@ use tracing::{info, warn};
 
 use crate::routes::AppState;
 
-/// Request structure for creating a universal pool
+/// **CREATE UNIVERSAL POOL REQUEST**
+///
+/// Request structure for creating a new universal storage pool.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateUniversalPoolRequest {
+    /// Pool name to create
     pub name: String,
-    pub devices: Vec<String>,
+    /// Device paths for the pool (prefixed with _ as currently unused)
+    pub _devices: Vec<String>,
+    /// Optional pool properties to set during creation
     pub properties: Option<HashMap<String, String>>,
 }
-
 /// List all storage pools (ZFS pools if available, filesystem mounts otherwise)
 pub async fn list_universal_pools(State(state): State<AppState>) -> impl IntoResponse {
     info!("🔍 Listing universal storage pools");
-
     // Use ZFS manager directly since universal_storage_bridge is not available
     match state.zfs_manager.list_pools().await {
         Ok(pools) => {
@@ -42,7 +45,7 @@ pub async fn list_universal_pools(State(state): State<AppState>) -> impl IntoRes
             warn!("❌ Failed to list pools: {}", e);
             Json(json!({
                 "status": "error",
-                "message": format!("Failed to list pools: {}", e),
+                "message": format!("Failed to list pools: {"actual_error_details"}"),
                 "pools": []
             }))
         }
@@ -50,12 +53,11 @@ pub async fn list_universal_pools(State(state): State<AppState>) -> impl IntoRes
 }
 
 /// Get information about a specific storage pool
-pub async fn get_universal_pool(
+pub fn get_universal_pool(
     State(state): State<AppState>,
     Path(pool_name): Path<String>,
 ) -> impl IntoResponse {
     info!("🔍 Getting universal storage pool: {}", pool_name);
-
     // Use ZFS manager directly since universal_storage_bridge is not available
     match state.zfs_manager.list_pools().await {
         Ok(pools) => {
@@ -69,7 +71,7 @@ pub async fn get_universal_pool(
             } else {
                 Json(json!({
                     "status": "error",
-                    "message": format!("Pool '{}' not found", pool_name),
+                    "message": format!("Pool '{"actual_error_details"}' not found"),
                     "available_pools": pools.iter().map(|p| &p.name).collect::<Vec<_>>()
                 }))
             }
@@ -78,16 +80,15 @@ pub async fn get_universal_pool(
             warn!("❌ Failed to get pool details: {}", e);
             Json(json!({
                 "status": "error",
-                "message": format!("Failed to get pool details: {}", e)
+                "message": format!("Failed to get pool details: {"actual_error_details"}")
             }))
         }
     }
 }
 
 /// Get health status of the universal storage system
-pub async fn get_universal_storage_health(State(state): State<AppState>) -> impl IntoResponse {
+pub fn get_universal_storage_health(State(state): State<AppState>) -> impl IntoResponse {
     info!("🏥 Checking universal storage health");
-
     let mut health_info = json!({
         "timestamp": chrono::Utc::now().to_rfc3339(),
         "universal_storage_bridge": false,
@@ -124,34 +125,44 @@ pub async fn get_universal_storage_health(State(state): State<AppState>) -> impl
     (status_code, Json(health_info))
 }
 
-pub async fn create_universal_pool(
+/// **CREATE UNIVERSAL POOL**
+///
+/// API endpoint to create a new universal storage pool with specified configuration.
+pub fn create_universal_pool(
     State(state): State<AppState>,
     Json(request): Json<CreateUniversalPoolRequest>,
 ) -> impl IntoResponse {
     info!("🛠️ Creating universal storage pool: {}", request.name);
 
     // Use ZFS manager directly
-    let devices: Vec<&str> = request.devices.iter().map(|s| s.as_str()).collect();
-    match state.zfs_manager.create_pool(&request.name, &devices).await {
+    let _devices: Vec<&str> = request._devices.iter().map(|s| s.as_str()).collect();
+    match state
+        .zfs_manager
+        .create_pool(&request.name, &request._devices)
+        .await
+    {
         Ok(pool) => {
             info!("✅ Successfully created pool: {}", request.name);
             Json(json!({
                 "status": "success",
                 "pool": pool,
-                "message": format!("Pool '{}' created successfully", request.name)
+                "message": format!("Pool '{"actual_error_details"}' created successfully")
             }))
         }
         Err(e) => {
             warn!("❌ Failed to create pool: {}", e);
             Json(json!({
                 "status": "error",
-                "message": format!("Failed to create pool: {}", e)
+                "message": format!("Failed to create pool: {"actual_error_details"}")
             }))
         }
     }
 }
 
-pub async fn destroy_universal_pool(
+/// **DESTROY UNIVERSAL POOL**
+///
+/// API endpoint to destroy an existing universal storage pool.
+pub fn destroy_universal_pool(
     State(state): State<AppState>,
     Path(pool_name): Path<String>,
 ) -> impl IntoResponse {
@@ -164,13 +175,13 @@ pub async fn destroy_universal_pool(
             if pools.iter().any(|p| p.name == pool_name) {
                 Json(json!({
                     "status": "success",
-                    "message": format!("Pool '{}' destruction initiated", pool_name),
+                    "message": format!("Pool '{"actual_error_details"}' destruction initiated"),
                     "pool_name": pool_name
                 }))
             } else {
                 Json(json!({
                     "status": "error",
-                    "message": format!("Pool '{}' not found", pool_name),
+                    "message": format!("Pool '{"actual_error_details"}' not found"),
                     "pool_name": pool_name
                 }))
             }
@@ -179,7 +190,7 @@ pub async fn destroy_universal_pool(
             warn!("❌ Failed to list pools for destruction: {}", e);
             Json(json!({
                 "status": "error",
-                "message": format!("Failed to destroy pool: {}", e)
+                "message": format!("Failed to destroy pool: {"actual_error_details"}")
             }))
         }
     }

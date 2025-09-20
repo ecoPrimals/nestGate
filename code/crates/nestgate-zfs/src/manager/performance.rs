@@ -3,8 +3,7 @@
 // storage optimization, and tier optimization based on performance metrics.
 
 use super::types::{OptimizationResult, PerformanceAnalytics};
-use nestgate_core::error::conversions::create_zfs_error;
-use nestgate_core::error::domain_errors::ZfsOperation;
+use crate::error::{create_zfs_error, ZfsOperation};
 use crate::types::StorageTier;
 use nestgate_core::Result;
 use std::time::SystemTime;
@@ -15,7 +14,14 @@ use tracing::info;
 
 impl ZfsManager {
     /// Get performance analytics
-    pub async fn get_performance_analytics(&self) -> Result<PerformanceAnalytics> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_performance_analytics(&self) -> Result<PerformanceAnalytics>  {
         let current_metrics = self
             .performance_monitor
             .read()
@@ -42,7 +48,7 @@ impl ZfsManager {
                 .performance_monitor
                 .read()
                 .await
-                .get_tier_performance(tier)
+                .get_tier_performance(tier.clone())
                 .await
             {
                 tier_analytics.insert(tier, tier_data);
@@ -58,10 +64,17 @@ impl ZfsManager {
     }
 
     /// Trigger comprehensive optimization using performance data and heuristics
-    pub async fn trigger_optimization(&self) -> Result<OptimizationResult> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn trigger_optimization(&self) -> Result<OptimizationResult>  {
         info!("🚀 Triggering comprehensive ZFS optimization using heuristic analysis");
 
-        let mut results = Vec::new();
+        let mut results: Vec<String> = Vec::new();
 
         // Get performance analytics to guide optimization
         let analytics = self.get_performance_analytics().await?;
@@ -76,7 +89,7 @@ impl ZfsManager {
             );
 
             // Note: AI optimization has been sunset - using heuristic optimization only
-            let tier_recommendations = self.optimize_tiers_heuristically(&analytics).await?;
+            let tier_recommendations = self.optimize_tiers_heuristically(&analytics)?;
             results.extend(tier_recommendations);
         }
 
@@ -96,10 +109,10 @@ impl ZfsManager {
         let mut recommendations = Vec::new();
 
         // Get current pool status
-        let pools = self.pool_manager.list_pools().await.map_err(|e| {
+        let pools = self.pool_manager.list_pools().await.map_err(|_e| {
             create_zfs_error(
-                format!("Failed to list pools: {e}"),
-                ZfsOperation::SystemCheck
+                format!("Failed to list pools: {"actual_error_details"}"),
+                ZfsOperation::SystemCheck,
             )
         })?;
 
@@ -108,10 +121,10 @@ impl ZfsManager {
                 .pool_manager
                 .get_pool_status(&pool.name)
                 .await
-                .map_err(|e| {
+                .map_err(|_e| {
                     create_zfs_error(
-                        format!("Failed to get pool status: {e}"),
-                        ZfsOperation::PoolCreate
+                        format!("Failed to get pool status: {"actual_error_details"}"),
+                        ZfsOperation::PoolCreate,
                     )
                 })?;
 
@@ -123,7 +136,10 @@ impl ZfsManager {
                 ));
             }
             if status.contains("FULL") || status.contains("100%") {
-                recommendations.push(format!("Pool {} is full - consider expansion", pool.name));
+                recommendations.push(format!(
+                    "Pool {} is full - consider expansion",
+                    "actual_error_details"
+                ));
             }
         }
 
@@ -132,7 +148,7 @@ impl ZfsManager {
     }
 
     /// Heuristic-based tier optimization
-    async fn optimize_tiers_heuristically(
+    fn optimize_tiers_heuristically(
         &self,
         analytics: &PerformanceAnalytics,
     ) -> Result<Vec<String>> {
@@ -149,8 +165,8 @@ impl ZfsManager {
             if perf_data.current_metrics.avg_read_latency_ms > 100.0
                 || perf_data.current_metrics.avg_write_latency_ms > 100.0
             {
-                recommendations.push(format!("Tier {:?} showing high latency (read: {:.1}ms, write: {:.1}ms) - consider optimization",
-                                           tier, perf_data.current_metrics.avg_read_latency_ms, perf_data.current_metrics.avg_write_latency_ms));
+                recommendations
+                    .push("Tier showing high latency - consider optimization".to_string());
             }
         }
 
@@ -158,7 +174,14 @@ impl ZfsManager {
     }
 
     /// Graceful shutdown of enhanced ZFS manager
-    pub async fn shutdown(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn shutdown(&self) -> Result<()>  {
         info!("Shutting down Enhanced ZFS Manager");
 
         // The actual shutdown is handled by the stop method

@@ -4,34 +4,34 @@ use chrono;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
 // Import EvictionPolicy from services module
 
 // Internal re-exports will be handled by the module system
 
 /// Storage tier for caching - use canonical definition
 pub use crate::canonical_types::StorageTier;
-
 impl StorageTier {
     /// Get tier priority (lower number = higher priority)
-    pub fn priority(&self) -> u8 {
+    #[must_use]
+    pub const fn priority(&self) -> u8 {
         match self {
-            StorageTier::Cache => 0,  // Ultra-fast cache has highest priority
-            StorageTier::Hot => 1,
-            StorageTier::Warm => 2,
-            StorageTier::Cold => 3,
-            StorageTier::Archive => 4, // Archive has lowest priority
+            Self::Cache => 0, // Ultra-fast cache has highest priority
+            Self::Hot => 1,
+            Self::Warm => 2,
+            Self::Cold => 3,
+            Self::Archive => 4, // Archive has lowest priority
         }
     }
 
     /// Get typical access time for this tier
-    pub fn typical_access_time(&self) -> Duration {
+    #[must_use]
+    pub const fn typical_access_time(&self) -> Duration {
         match self {
-            StorageTier::Cache => Duration::from_micros(100),  // Ultra-fast cache
+            StorageTier::Cache => Duration::from_micros(100), // Ultra-fast cache
             StorageTier::Hot => Duration::from_millis(1),
             StorageTier::Warm => Duration::from_millis(10),
             StorageTier::Cold => Duration::from_millis(100),
-            StorageTier::Archive => Duration::from_secs(10),   // Archive can be very slow
+            StorageTier::Archive => Duration::from_secs(10), // Archive can be very slow
         }
     }
 }
@@ -49,7 +49,6 @@ pub enum CachePolicy {
     /// Write-back caching (writes go to cache, then are flushed to backing store)
     WriteBack,
 }
-
 impl std::fmt::Display for CachePolicy {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -61,11 +60,8 @@ impl std::fmt::Display for CachePolicy {
     }
 }
 
-/// Use this instead of the deprecated CacheConfig
-
+/// Use this instead of the deprecated `CacheConfig`
 // All duplicate UnifiedCacheConfig implementations removed
-
-/// Cache statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheStats {
     /// Number of cache hits
@@ -95,7 +91,6 @@ pub struct CacheStats {
     /// Cache efficiency metrics
     pub efficiency_metrics: EfficiencyMetrics,
 }
-
 impl Default for CacheStats {
     fn default() -> Self {
         let mut tier_access_times = HashMap::new();
@@ -123,27 +118,31 @@ impl Default for CacheStats {
 
 impl CacheStats {
     /// Calculate hit ratio (0.0 to 1.0)
-    pub fn hit_ratio(&self) -> f64 {
+    #[must_use]
+    pub const fn hit_ratio(&self) -> f64 {
         let total = self.hits + self.misses;
         if total == 0 {
             0.0
         } else {
-            self.hits as f64 / total as f64
+            hits as f64 / total as f64
         }
     }
 
     /// Get total number of items across all tiers
-    pub fn total_items(&self) -> usize {
+    #[must_use]
+    pub const fn total_items(&self) -> usize {
         self.hot_tier_items + self.warm_tier_items + self.cold_tier_items
     }
 
     /// Get total size across all tiers
-    pub fn total_size_bytes(&self) -> u64 {
+    #[must_use]
+    pub const fn total_size_bytes(&self) -> u64 {
         self.hot_tier_size_bytes + self.warm_tier_size_bytes + self.cold_tier_size_bytes
     }
 
     /// Get total evictions across all tiers
-    pub fn total_evictions(&self) -> u64 {
+    #[must_use]
+    pub const fn total_evictions(&self) -> u64 {
         self.hot_tier_evictions + self.warm_tier_evictions + self.cold_tier_evictions
     }
 
@@ -188,7 +187,6 @@ pub struct EfficiencyMetrics {
     last_operations: Vec<bool>, // true = hit, false = miss
     max_operations_tracked: usize,
 }
-
 impl Default for EfficiencyMetrics {
     fn default() -> Self {
         Self {
@@ -272,7 +270,7 @@ impl EfficiencyMetrics {
             let window_end = (window_start + window_size).min(self.last_operations.len());
             let window = &self.last_operations[window_start..window_end];
             let hits = window.iter().filter(|&&h| h).count();
-            let hit_ratio = hits as f64 / window.len() as f64;
+            let hit_ratio = f64::from(hits) / (window.len() as f64);
             window_hit_ratios.push(hit_ratio);
         }
 
@@ -280,12 +278,12 @@ impl EfficiencyMetrics {
             return 0.0;
         }
 
-        let mean = window_hit_ratios.iter().sum::<f64>() / window_hit_ratios.len() as f64;
+        let mean = window_hit_ratios.iter().sum::<f64>() / (window_hit_ratios.len() as f64);
         let variance = window_hit_ratios
             .iter()
             .map(|ratio| (ratio - mean).powi(2))
             .sum::<f64>()
-            / window_hit_ratios.len() as f64;
+            / (window_hit_ratios.len() as f64);
 
         variance
     }
@@ -311,10 +309,10 @@ pub struct CacheEntry {
     /// Time to live
     pub ttl: Option<Duration>,
 }
-
 impl CacheEntry {
     /// Create a new cache entry
-    pub fn new(key: String, data: Vec<u8>, tier: StorageTier) -> Self {
+    #[must_use]
+    pub const fn new(key: String, data: Vec<u8>, tier: StorageTier) -> Self {
         let now = chrono::Utc::now();
         let size = data.len() as u64;
         Self {
@@ -330,7 +328,8 @@ impl CacheEntry {
     }
 
     /// Check if entry has expired
-    pub fn is_expired(&self) -> bool {
+    #[must_use]
+    pub const fn is_expired(&self) -> bool {
         if let Some(ttl) = self.ttl {
             let expiry_time = self.created_at + chrono::Duration::from_std(ttl).unwrap_or_default();
             chrono::Utc::now() > expiry_time
@@ -346,7 +345,8 @@ impl CacheEntry {
     }
 
     /// Get age of entry
-    pub fn age(&self) -> chrono::Duration {
+    #[must_use]
+    pub const fn age(&self) -> chrono::Duration {
         chrono::Utc::now() - self.created_at
     }
 }

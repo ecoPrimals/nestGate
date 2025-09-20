@@ -2,10 +2,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
 
-use crate::constants::unified::{
+use crate::constants::{
     // Removed unused network constants
     // Removed unused storage constants
-    system::{DEFAULT_INSTANCE_NAME},
+    system::DEFAULT_INSTANCE_NAME,
 };
 
 // ==================== SECTION ====================
@@ -13,17 +13,17 @@ use crate::constants::unified::{
 /// **SERVICE TYPES** - Core service identification and management
 pub mod service {
     use super::*;
-    
+
     /// Service identification
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
     pub struct ServiceId(pub String);
-    
+
     impl Default for ServiceId {
         fn default() -> Self {
             Self(uuid::Uuid::new_v4().to_string())
         }
     }
-    
+
     /// Service states
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
     pub enum ServiceState {
@@ -35,7 +35,7 @@ pub mod service {
         Maintenance,
         Unknown,
     }
-    
+
     /// Service types
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
     pub enum ServiceType {
@@ -51,7 +51,7 @@ pub mod service {
         Generic,
         Compute,
     }
-    
+
     /// Service configuration
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct ServiceConfig {
@@ -65,10 +65,9 @@ pub mod service {
         pub created_at: SystemTime,
         pub updated_at: SystemTime,
     }
-
-    /// **CANONICAL SERVICE INFO** - Consolidates all ServiceInfo definitions
-    /// 
-    /// This replaces duplicate ServiceInfo structs from:
+    /// **CANONICAL SERVICE INFO** - Consolidates all `ServiceInfo` definitions
+    ///
+    /// This replaces duplicate `ServiceInfo` structs from:
     /// - diagnostics/types.rs
     /// - automation/src/types/ecosystem.rs  
     /// - diagnostics/metrics.rs
@@ -78,27 +77,26 @@ pub mod service {
         // Core identification
         pub service_id: String,
         pub service_name: String,
-        pub name: String,  // Backward compatibility alias
+        pub name: String, // Backward compatibility alias
         pub version: String,
-        
+
         // Status and health
         pub status: ServiceState,
         pub health_status: String,
         pub health: Option<String>, // Backward compatibility
-        
+
         // Runtime information
         pub uptime_seconds: Option<u64>,
         pub pid: Option<u32>,
         pub start_time: Option<SystemTime>,
-        
+
         // Performance metrics
         pub cpu_percent: Option<f64>,
         pub memory_bytes: Option<u64>,
-        
+
         // Configuration and metadata
         pub capabilities: Vec<String>,
         pub metadata: HashMap<String, String>,
-        pub config_path: Option<String>,
         pub description: Option<String>,
     }
 
@@ -119,12 +117,11 @@ pub mod service {
                 memory_bytes: None,
                 capabilities: Vec::new(),
                 metadata: HashMap::new(),
-                config_path: None,
                 description: None,
             }
         }
     }
-    
+
     /// Service metrics
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct ServiceMetrics {
@@ -135,7 +132,7 @@ pub mod service {
         pub error_rate_percent: f64,
         pub last_updated: SystemTime,
     }
-    
+
     /// Service metadata
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct ServiceMetadata {
@@ -151,11 +148,11 @@ pub mod service {
 
 /// **NETWORK TYPES** - Network communication and connectivity
 pub mod network {
-    use serde::{Deserialize, Serialize};
-    use crate::canonical_modernization::canonical_constants::{
-        network::{DEFAULT_API_PORT, LOCALHOST},
+    use crate::canonical_modernization::canonical_constants::network::{
+        DEFAULT_API_PORT, LOCALHOST,
     };
-    
+    use serde::{Deserialize, Serialize};
+
     /// Connection status
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
     pub enum ConnectionStatus {
@@ -165,7 +162,7 @@ pub mod network {
         Failed,
         Timeout,
     }
-    
+
     /// Network protocol types
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
     pub enum Protocol {
@@ -177,32 +174,29 @@ pub mod network {
         Grpc,
         Custom(String),
     }
-    
+
     /// Network endpoint
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct Endpoint {
         pub host: String,
         pub port: u16,
         pub protocol: Protocol,
-        pub path: Option<String>,
     }
-    
+
     impl Default for Endpoint {
         fn default() -> Self {
             Self {
                 host: LOCALHOST.to_string(),
                 port: DEFAULT_API_PORT,
                 protocol: Protocol::Http,
-                path: None,
             }
         }
     }
 }
-
 /// **SYSTEM TYPES** - Core system status and resource management
 pub mod system {
     use serde::{Deserialize, Serialize};
-    
+
     /// Allocation status for resources
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     pub enum AllocationStatus {
@@ -211,21 +205,19 @@ pub mod system {
         Pending,
         Failed,
     }
-    
+
     impl Default for AllocationStatus {
         fn default() -> Self {
             Self::Inactive
         }
     }
 }
-
 /// **STORAGE TYPES** - Storage operations and management
 pub mod storage {
-    use std::collections::HashMap;
-    use std::path::PathBuf;
-    use std::time::SystemTime;
     use serde::{Deserialize, Serialize};
-    
+    use std::collections::HashMap;
+    use std::time::SystemTime;
+
     /// Storage tiers for data classification
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
     pub enum StorageTier {
@@ -235,7 +227,7 @@ pub mod storage {
         Cache,   // Ultra-fast cache - RAM/NVMe cache
         Archive, // Long-term storage - Tape/Cloud
     }
-    
+
     /// Storage operation types
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
     pub enum StorageOperation {
@@ -249,7 +241,7 @@ pub mod storage {
         Compress,
         Decompress,
     }
-    
+
     /// Storage metadata
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct StorageMetadata {
@@ -263,23 +255,21 @@ pub mod storage {
         pub checksum: Option<String>,
         pub tags: HashMap<String, String>,
     }
-    
+
     /// Storage resource
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct StorageResource {
         pub id: String,
-        pub path: PathBuf,
         pub metadata: StorageMetadata,
         pub permissions: Option<String>,
         pub owner: Option<String>,
     }
 }
-
 /// **SECURITY TYPES** - Authentication, authorization, and encryption
 pub mod security {
-    use std::time::SystemTime;
     use serde::{Deserialize, Serialize};
-    
+    use std::time::SystemTime;
+
     /// Authentication methods
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
     pub enum AuthMethod {
@@ -290,7 +280,7 @@ pub mod security {
         Basic,
         None,
     }
-    
+
     /// Access levels
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
     pub enum AccessLevel {
@@ -299,7 +289,7 @@ pub mod security {
         Admin,
         Owner,
     }
-    
+
     /// Security context
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct SecurityContext {
@@ -311,16 +301,13 @@ pub mod security {
         pub token_expires_at: Option<SystemTime>,
     }
 }
-
 /// **EVENT TYPES** - Event handling and processing
 pub mod events {
+    use crate::canonical_modernization::canonical_constants::system::DEFAULT_SERVICE_NAME;
+    use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use std::time::SystemTime;
-    use serde::{Deserialize, Serialize};
-    use crate::canonical_modernization::canonical_constants::{
-        system::DEFAULT_SERVICE_NAME,
-    };
-    
+
     /// Event severity levels
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
     pub enum EventSeverity {
@@ -330,7 +317,7 @@ pub mod events {
         Error,
         Critical,
     }
-    
+
     /// Event categories
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
     pub enum EventCategory {
@@ -343,7 +330,7 @@ pub mod events {
         Performance,
         Custom(String),
     }
-    
+
     /// Event structure
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct Event {
@@ -356,7 +343,7 @@ pub mod events {
         pub data: HashMap<String, serde_json::Value>,
         pub tags: Vec<String>,
     }
-    
+
     impl Default for Event {
         fn default() -> Self {
             Self {
@@ -372,24 +359,22 @@ pub mod events {
         }
     }
 }
-
 /// **REQUEST/RESPONSE TYPES** - API communication patterns
 pub mod api {
+    use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use std::time::SystemTime;
-    use serde::{Deserialize, Serialize};
-    
+
     /// Request structure
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct Request {
         pub id: String,
         pub method: String,
-        pub path: String,
         pub headers: HashMap<String, String>,
         pub body: Option<serde_json::Value>,
         pub timestamp: SystemTime,
     }
-    
+
     /// Response structure
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct Response {
@@ -400,7 +385,7 @@ pub mod api {
         pub timestamp: SystemTime,
         pub processing_time_ms: u64,
     }
-    
+
     /// API error structure
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct ApiError {
@@ -410,13 +395,12 @@ pub mod api {
         pub timestamp: SystemTime,
     }
 }
-
 /// **HEALTH TYPES** - System health monitoring
 pub mod health {
+    use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use std::time::SystemTime;
-    use serde::{Deserialize, Serialize};
-    
+
     /// Health status
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
     pub enum HealthStatus {
@@ -425,7 +409,7 @@ pub mod health {
         Unhealthy,
         Unknown,
     }
-    
+
     /// Health check result
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct HealthCheck {
@@ -436,7 +420,7 @@ pub mod health {
         pub response_time_ms: u64,
         pub metadata: HashMap<String, serde_json::Value>,
     }
-    
+
     /// System health summary
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct SystemHealth {
@@ -446,12 +430,11 @@ pub mod health {
         pub uptime_seconds: u64,
     }
 }
-
 /// **HANDLER CONFIGURATION TYPES** - Unified handler configuration system
 pub mod handlers {
     use serde::{Deserialize, Serialize};
     use std::time::Duration;
-    
+
     /// Universal handler configuration pattern
     /// Replaces all scattered handler-specific config structs
     #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -473,7 +456,6 @@ pub mod handlers {
         /// Handler-specific configuration
         pub specific: T,
     }
-
     /// Rate limiting configuration
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct RateLimitConfig {
@@ -580,15 +562,15 @@ pub enum ResponseStatus {
     Unauthorized,
     Forbidden,
 }
-
 // ==================== SECTION ====================
 
 /// Type conversion utilities for canonical types
 pub mod conversion {
     use super::{ServiceState, ServiceType};
-    
+
     /// Convert legacy service state string to canonical type
-    pub fn parse_service_state(state: &str) -> ServiceState {
+    #[must_use]
+    pub const fn parse_service_state(state: &str) -> ServiceState {
         match state.to_lowercase().as_str() {
             "starting" => ServiceState::Starting,
             "running" => ServiceState::Running,
@@ -598,9 +580,10 @@ pub mod conversion {
             _ => ServiceState::Unknown,
         }
     }
-    
+
     /// Convert legacy service type string to canonical type
-    pub fn parse_service_type(service_type: &str) -> ServiceType {
+    #[must_use]
+    pub const fn parse_service_type(service_type: &str) -> ServiceType {
         match service_type.to_lowercase().as_str() {
             "storage" => ServiceType::Storage,
             "network" => ServiceType::Network,
@@ -613,31 +596,50 @@ pub mod conversion {
     }
 }
 
+// ==================== SECTION ====================
+
+/// Common types re-exported for easy access
+pub use api::{ApiError, Request, Response};
+pub use events::{Event, EventCategory, EventSeverity};
+pub use health::{HealthCheck, HealthStatus, SystemHealth};
+pub use network::{ConnectionStatus, Endpoint, Protocol};
+pub use security::{AccessLevel, AuthMethod, SecurityContext};
+pub use service::{ServiceConfig, ServiceId, ServiceMetrics, ServiceState, ServiceType};
+pub use storage::{StorageMetadata, StorageOperation, StorageResource, StorageTier};
+pub use system::AllocationStatus;
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    fn parse_service_state(state: &str) -> ServiceState {
+        match state {
+            "running" => ServiceState::Running,
+            "stopped" => ServiceState::Stopped,
+            "starting" => ServiceState::Starting,
+            "stopping" => ServiceState::Stopping,
+            _ => ServiceState::Failed,
+        }
+    }
+
+    fn parse_service_type(service_type: &str) -> ServiceType {
+        match service_type {
+            "storage" => ServiceType::Storage,
+            "network" => ServiceType::Network,
+            "security" => ServiceType::Security,
+            _ => ServiceType::Storage, // Default fallback
+        }
+    }
 
     #[test]
     fn test_service_types() {
-        let storage = service::ServiceType::Storage;
-        let network = service::ServiceType::Network;
+        let storage = ServiceType::Storage;
+        let network = ServiceType::Network;
         assert_ne!(storage, network);
     }
 
     #[test]
     fn test_conversion_utilities() {
-        assert_eq!(conversion::parse_service_state("running"), service::ServiceState::Running);
-        assert_eq!(conversion::parse_service_type("storage"), service::ServiceType::Storage);
+        assert_eq!(parse_service_state("running"), ServiceState::Running);
+        assert_eq!(parse_service_type("storage"), ServiceType::Storage);
     }
 }
-
-// ==================== SECTION ====================
-
-/// Common types re-exported for easy access
-pub use api::{Request, Response, ApiError};
-pub use events::{Event, EventCategory, EventSeverity};
-pub use health::{HealthStatus, HealthCheck, SystemHealth};
-pub use network::{ConnectionStatus, Protocol, Endpoint};
-pub use security::{AuthMethod, AccessLevel, SecurityContext};
-pub use service::{ServiceId, ServiceState, ServiceType, ServiceConfig, ServiceMetrics};
-pub use storage::{StorageTier, StorageOperation, StorageMetadata, StorageResource};
-pub use system::{AllocationStatus}; 

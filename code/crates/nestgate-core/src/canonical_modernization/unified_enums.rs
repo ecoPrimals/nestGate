@@ -5,8 +5,8 @@
 use serde::{Deserialize, Serialize};
 
 /// **UNIFIED CAPABILITY TYPE**
-/// 
-/// Represents different types of service capabilities in the NestGate ecosystem
+///
+/// Represents different types of service capabilities in the `NestGate` ecosystem
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedCapabilityType {
     /// Storage capabilities (ZFS, NAS, etc.)
@@ -28,7 +28,6 @@ pub enum UnifiedCapabilityType {
     /// Custom capability type
     Custom(String),
 }
-
 impl Default for UnifiedCapabilityType {
     fn default() -> Self {
         Self::Generic
@@ -36,8 +35,8 @@ impl Default for UnifiedCapabilityType {
 }
 
 /// **UNIFIED SERVICE TYPE**
-/// 
-/// Represents different types of services in the NestGate ecosystem
+///
+/// Represents different types of services in the `NestGate` ecosystem
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedServiceType {
     /// Storage services
@@ -59,7 +58,6 @@ pub enum UnifiedServiceType {
     /// Custom service type
     Custom(String),
 }
-
 impl Default for UnifiedServiceType {
     fn default() -> Self {
         Self::Generic
@@ -67,7 +65,7 @@ impl Default for UnifiedServiceType {
 }
 
 /// **UNIFIED SERVICE STATE**
-/// 
+///
 /// Represents the current state of a service
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedServiceState {
@@ -90,7 +88,6 @@ pub enum UnifiedServiceState {
     /// Custom service state
     Custom(String),
 }
-
 impl Default for UnifiedServiceState {
     fn default() -> Self {
         Self::Unknown
@@ -98,7 +95,7 @@ impl Default for UnifiedServiceState {
 }
 
 /// **UNIFIED HEALTH STATUS**
-/// 
+///
 /// Represents the health status of a service or component
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedHealthStatus {
@@ -127,7 +124,6 @@ pub enum UnifiedHealthStatus {
     /// Custom health status
     Custom(String),
 }
-
 impl Default for UnifiedHealthStatus {
     fn default() -> Self {
         Self::Unknown
@@ -135,7 +131,7 @@ impl Default for UnifiedHealthStatus {
 }
 
 /// **UNIFIED TIER TYPE**
-/// 
+///
 /// Represents different storage tiers
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedTierType {
@@ -150,12 +146,11 @@ pub enum UnifiedTierType {
     /// Custom tier
     Custom(String),
 }
-
 impl Default for UnifiedTierType {
     fn default() -> Self {
         Self::Hot
     }
-} 
+}
 
 /// Unified file type enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -183,9 +178,8 @@ pub enum UnifiedFileType {
     /// Unknown file type
     Unknown,
 }
-
 impl Default for UnifiedFileType {
     fn default() -> Self {
         Self::Unknown
     }
-} 
+}

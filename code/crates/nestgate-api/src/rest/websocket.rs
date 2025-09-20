@@ -21,7 +21,7 @@ pub enum WebSocketEvent {
     /// Storage operation updates
     StorageUpdate {
         /// Type of storage operation (create, delete, modify, etc.)
-        operation: String,
+        b_operation: String,
         /// Current status of the operation (pending, running, completed, failed)
         status: String,
         /// Optional progress percentage (0-100)
@@ -51,7 +51,6 @@ pub enum WebSocketEvent {
         timestamp: String,
     },
 }
-
 /// WebSocket connection manager
 #[derive(Debug)]
 pub struct WebSocketManager {
@@ -60,10 +59,9 @@ pub struct WebSocketManager {
     /// Connected clients counter
     connected_clients: Arc<RwLock<usize>>,
 }
-
 impl WebSocketManager {
     /// Create a new WebSocket manager
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         let (event_sender, _) = broadcast::channel(1000);
 
         Self {
@@ -73,10 +71,17 @@ impl WebSocketManager {
     }
 
     /// Broadcast an event to all connected clients
-    pub async fn broadcast_event(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn broadcast_event(
         &self,
         event: WebSocketEvent,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>  {
         match self.event_sender.send(event) {
             Ok(_) => Ok(()),
             Err(e) => {
@@ -92,7 +97,7 @@ impl WebSocketManager {
     }
 
     /// Handle WebSocket upgrade request
-    pub async fn handle_upgrade(&self, ws: WebSocketUpgrade) -> impl IntoResponse {
+    pub const fn handle_upgrade(&self, ws: WebSocketUpgrade) -> impl IntoResponse {
         let event_receiver = self.event_sender.subscribe();
         let client_counter = Arc::clone(&self.connected_clients);
 
@@ -120,7 +125,6 @@ async fn handle_websocket_connection(
         *count += 1;
         info!("WebSocket client connected. Total clients: {}", *count);
     }
-
     // Send welcome message
     let welcome_event = WebSocketEvent::Message {
         content: "Connected to NestGate WebSocket".to_string(),
@@ -144,7 +148,7 @@ async fn handle_websocket_connection(
                         info!("Received WebSocket message: {}", text);
                         // Echo back for now - in production this would handle commands
                         let response = WebSocketEvent::Message {
-                            content: format!("Echo: {}", text),
+                            content: format!("Echo: {"actual_error_details"}"),
                             timestamp: chrono::Utc::now().to_rfc3339(),
                         };
 
@@ -207,16 +211,15 @@ async fn handle_websocket_connection(
 /// Helper function to create common WebSocket events
 impl WebSocketEvent {
     /// Create a storage update event
-    pub fn storage_update(operation: &str, status: &str, progress: Option<u8>) -> Self {
+    pub const fn storage_update(operation: &str, status: &str, progress: Option<u8>) -> Self {
         Self::StorageUpdate {
-            operation: operation.to_string(),
+            b_operation: operation.to_string(),
             status: status.to_string(),
             progress,
         }
     }
-
     /// Create a health update event
-    pub fn health_update(service: &str, status: &str) -> Self {
+    pub const fn health_update(service: &str, status: &str) -> Self {
         Self::HealthUpdate {
             service: service.to_string(),
             status: status.to_string(),
@@ -225,7 +228,7 @@ impl WebSocketEvent {
     }
 
     /// Create a metrics update event
-    pub fn metrics_update(metrics: HashMap<String, f64>) -> Self {
+    pub const fn metrics_update(metrics: HashMap<String, f64>) -> Self {
         Self::MetricsUpdate {
             metrics,
             timestamp: chrono::Utc::now().to_rfc3339(),
@@ -233,7 +236,7 @@ impl WebSocketEvent {
     }
 
     /// Create a simple message event
-    pub fn message(content: &str) -> Self {
+    pub const fn message(content: &str) -> Self {
         Self::Message {
             content: content.to_string(),
             timestamp: chrono::Utc::now().to_rfc3339(),
@@ -250,7 +253,6 @@ mod tests {
         let manager = WebSocketManager::new();
         assert_eq!(manager.connected_clients().await, 0);
     }
-
     #[tokio::test]
     async fn test_websocket_event_creation() -> std::result::Result<(), Box<dyn std::error::Error>>
     {
@@ -258,11 +260,11 @@ mod tests {
 
         match event {
             WebSocketEvent::StorageUpdate {
-                operation,
+                b_operation,
                 status,
                 progress,
             } => {
-                assert_eq!(operation, "create_pool");
+                assert_eq!(b_operation, "create_pool");
                 assert_eq!(status, "in_progress");
                 assert_eq!(progress, Some(50));
             }
@@ -280,18 +282,18 @@ mod tests {
     #[tokio::test]
     async fn test_event_serialization() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let event = WebSocketEvent::message("test message");
-        let serialized = serde_json::to_string(data).map_err(|e| {
+        let serialized = serde_json::to_string(&event).map_err(|e| {
             tracing::error!("JSON serialization failed: {:?}", e);
             std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
-                format!("JSON serialization failed: {:?}", e),
+                format!("JSON serialization failed: {"actual_error_details"}"),
             )
         })?;
         let deserialized: WebSocketEvent = serde_json::from_str(&serialized).map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
             std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {"actual_error_details"}"),
             )
         })?;
 

@@ -15,7 +15,6 @@ pub struct MonitoringDomainConfig {
     pub metrics_interval: Duration,
     pub health_check_interval: Duration,
 }
-
 impl Default for MonitoringDomainConfig {
     fn default() -> Self {
         Self {

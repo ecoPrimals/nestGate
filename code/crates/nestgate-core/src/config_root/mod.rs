@@ -1,8 +1,7 @@
 use crate::error::{NetworkError};
-/// Configuration module for Universal Primal Architecture
+// Configuration module for Universal Primal Architecture
 ///
-/// Re-exports configuration types and provides implementation modules.
-
+// Re-exports configuration types and provides implementation modules.
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -16,7 +15,7 @@ pub use crate::traits::config::ConfigProvider;
 pub mod validation;
 pub mod providers;
 
-/// Main orchestrator configuration
+// Main orchestrator configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OrchestratorConfig<T = DefaultServiceConfig>
 where
@@ -24,7 +23,6 @@ where
 {
     /// Core orchestrator configuration
     pub orchestrator: CoreOrchestratorConfig,
-
     /// Network configuration
     pub network: NetworkConfig,
 
@@ -65,7 +63,7 @@ where
     }
 }
 
-/// Core orchestrator configuration
+// Core orchestrator configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CoreOrchestratorConfig {
     pub port: u16,
@@ -75,7 +73,6 @@ pub struct CoreOrchestratorConfig {
     pub service_stop_timeout: Duration,
     pub request_timeout: Duration,
 }
-
 impl Default for CoreOrchestratorConfig {
     fn default() -> Self {
         Self {
@@ -89,7 +86,7 @@ impl Default for CoreOrchestratorConfig {
     }
 }
 
-/// Network configuration
+// Network configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkConfig {
     pub host: String,
@@ -99,7 +96,6 @@ pub struct NetworkConfig {
     pub keep_alive: bool,
     pub compression: bool,
 }
-
 impl Default for NetworkConfig {
     fn default() -> Self {
         Self {
@@ -113,23 +109,18 @@ impl Default for NetworkConfig {
     }
 }
 
-/// Security configuration
+// Security configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityConfig {
     pub enable_tls: bool,
-    pub cert_path: Option<String>,
-    pub key_path: Option<String>,
     pub require_auth: bool,
     pub auth_method: String,
     pub allowed_origins: Vec<String>,
 }
-
 impl Default for SecurityConfig {
     fn default() -> Self {
         Self {
             enable_tls: false,
-            cert_path: None,
-            key_path: None,
             require_auth: false,
             auth_method: "none".to_string(),
             allowed_origins: vec!["*".to_string()],
@@ -137,7 +128,7 @@ impl Default for SecurityConfig {
     }
 }
 
-/// Monitoring configuration
+// Monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonitoringConfig {
     pub enable_metrics: bool,
@@ -146,7 +137,6 @@ pub struct MonitoringConfig {
     pub log_level: String,
     pub log_format: String,
 }
-
 impl Default for MonitoringConfig {
     fn default() -> Self {
         Self {
@@ -159,27 +149,34 @@ impl Default for MonitoringConfig {
     }
 }
 
-/// Service discovery configuration
+// Service discovery configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiscoveryConfig {
     pub provider: String,
+// DEPRECATED: Consul service discovery - migrate to capability-based discovery
+// Capability-based discovery implemented
     pub consul_url: Option<String>,
+// DEPRECATED: Kubernetes orchestration - migrate to capability-based orchestration
+// Capability-based discovery implemented
     pub kubernetes_namespace: Option<String>,
     pub static_services: Vec<StaticServiceConfig>,
 }
-
 impl Default for DiscoveryConfig {
     fn default() -> Self {
         Self {
             provider: "static".to_string(),
+// DEPRECATED: Consul service discovery - migrate to capability-based discovery
+// Capability-based discovery implemented
             consul_url: None,
+// DEPRECATED: Kubernetes orchestration - migrate to capability-based orchestration
+// Capability-based discovery implemented
             kubernetes_namespace: None,
             static_services: Vec::new(),
         }
     }
 }
 
-/// Load balancing configuration
+// Load balancing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadBalancingConfig {
     pub algorithm: String,
@@ -187,7 +184,6 @@ pub struct LoadBalancingConfig {
     pub failure_threshold: u32,
     pub recovery_threshold: u32,
 }
-
 impl Default for LoadBalancingConfig {
     fn default() -> Self {
         Self {
@@ -199,7 +195,7 @@ impl Default for LoadBalancingConfig {
     }
 }
 
-/// Health monitoring configuration
+// Health monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthConfig {
     pub enabled: bool,
@@ -208,7 +204,6 @@ pub struct HealthConfig {
     pub failure_threshold: u32,
     pub success_threshold: u32,
 }
-
 impl Default for HealthConfig {
     fn default() -> Self {
         Self {
@@ -221,7 +216,7 @@ impl Default for HealthConfig {
     }
 }
 
-/// Static service configuration for discovery
+// Static service configuration for discovery
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StaticServiceConfig {
     pub id: String,
@@ -230,8 +225,7 @@ pub struct StaticServiceConfig {
     pub port: u16,
     pub tags: Vec<String>,
 }
-
-/// Default service configuration placeholder
+// Default service configuration placeholder
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DefaultServiceConfig {
     pub placeholder: bool,

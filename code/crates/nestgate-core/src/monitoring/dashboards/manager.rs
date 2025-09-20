@@ -1,7 +1,7 @@
-//! **DASHBOARD MANAGER AND TEMPLATES**
-//!
-//! Dashboard manager implementation with template creation and management.
-//! Extracted from dashboards.rs for file size compliance.
+// **DASHBOARD MANAGER AND TEMPLATES**
+//! Manager functionality and utilities.
+// Dashboard manager implementation with template creation and management.
+// Extracted from dashboards.rs for file size compliance.
 
 use crate::monitoring::{ProviderMetrics, SystemMetrics};
 use crate::{NestGateError, Result};
@@ -20,9 +20,9 @@ pub struct DashboardManager {
     /// Predefined dashboard templates
     templates: HashMap<String, DashboardConfig>,
 }
-
 impl DashboardManager {
     /// Create new dashboard manager
+    #[must_use]
     pub fn new() -> Self {
         let mut manager = Self {
             templates: HashMap::new(),
@@ -79,7 +79,7 @@ impl DashboardManager {
                 VariableConfig {
                     name: "instance".to_string(),
                     var_type: VariableType::Query,
-                    query: "label_values(up, instance)".to_string(),
+                    query: "labelvalues(up, instance)".to_string(),
                     current: None,
                     options: vec![],
                 }
@@ -91,7 +91,7 @@ impl DashboardManager {
                     title: "CPU Usage".to_string(),
                     panel_type: PanelType::Graph,
                     grid_pos: GridPos { x: 0, y: 0, w: 12, h: 8 },
-                    datasource: "prometheus".to_string(),
+                    datasource: "monitoring-capability".to_string(), // MODERNIZED: Use capability discovery
                     targets: vec![
                         QueryTarget {
                             expr: "100 - (avg(irate(node_cpu_seconds_total{mode=\"idle\",instance=\"$instance\"}[5m])) * 100)".to_string(),
@@ -108,7 +108,7 @@ impl DashboardManager {
                     title: "Memory Usage".to_string(),
                     panel_type: PanelType::Graph,
                     grid_pos: GridPos { x: 12, y: 0, w: 12, h: 8 },
-                    datasource: "prometheus".to_string(),
+                    datasource: "monitoring-capability".to_string(), // MODERNIZED: Use capability discovery
                     targets: vec![
                         QueryTarget {
                             expr: "(1 - (node_memory_MemAvailable_bytes{instance=\"$instance\"} / node_memory_MemTotal_bytes{instance=\"$instance\"})) * 100".to_string(),
@@ -125,7 +125,7 @@ impl DashboardManager {
                     title: "Active Connections".to_string(),
                     panel_type: PanelType::Stat,
                     grid_pos: GridPos { x: 0, y: 8, w: 8, h: 4 },
-                    datasource: "prometheus".to_string(),
+                    datasource: "monitoring-capability".to_string(), // MODERNIZED: Use capability discovery
                     targets: vec![
                         QueryTarget {
                             expr: "nestgate_active_connections{instance=\"$instance\"}".to_string(),
@@ -156,7 +156,7 @@ impl DashboardManager {
                 VariableConfig {
                     name: "provider".to_string(),
                     var_type: VariableType::Query,
-                    query: "label_values(nestgate_provider_requests_total, provider_name)".to_string(),
+                    query: "labelvalues(nestgate_provider_requests_total, provider_name)".to_string(),
                     current: None,
                     options: vec![],
                 }
@@ -168,11 +168,11 @@ impl DashboardManager {
                     title: "Request Rate".to_string(),
                     panel_type: PanelType::Graph,
                     grid_pos: GridPos { x: 0, y: 0, w: 12, h: 8 },
-                    datasource: "prometheus".to_string(),
+                    datasource: "monitoring-capability".to_string(), // MODERNIZED: Use capability discovery
                     targets: vec![
                         QueryTarget {
                             expr: "rate(nestgate_provider_requests_total{provider_name=\"$provider\"}[5m])".to_string(),
-                            legend_format: Some("{{status}} req/sec".to_string()),
+                            legend_format: Some("{{status} req/sec".to_string()),
                             ref_id: "A".to_string(),
                             interval: None,
                         }
@@ -185,7 +185,7 @@ impl DashboardManager {
                     title: "Response Time".to_string(),
                     panel_type: PanelType::Graph,
                     grid_pos: GridPos { x: 12, y: 0, w: 12, h: 8 },
-                    datasource: "prometheus".to_string(),
+                    datasource: "monitoring-capability".to_string(), // MODERNIZED: Use capability discovery
                     targets: vec![
                         QueryTarget {
                             expr: "histogram_quantile(0.95, rate(nestgate_provider_response_time_seconds_bucket{provider_name=\"$provider\"}[5m]))".to_string(),
@@ -216,7 +216,7 @@ impl DashboardManager {
                 VariableConfig {
                     name: "backend".to_string(),
                     var_type: VariableType::Query,
-                    query: "label_values(nestgate_storage_operations_total, backend_name)".to_string(),
+                    query: "labelvalues(nestgate_storage_operations_total, backend_name)".to_string(),
                     current: None,
                     options: vec![],
                 }
@@ -228,11 +228,11 @@ impl DashboardManager {
                     title: "Storage Operations".to_string(),
                     panel_type: PanelType::Graph,
                     grid_pos: GridPos { x: 0, y: 0, w: 12, h: 8 },
-                    datasource: "prometheus".to_string(),
+                    datasource: "monitoring-capability".to_string(), // MODERNIZED: Use capability discovery
                     targets: vec![
                         QueryTarget {
                             expr: "rate(nestgate_storage_operations_total{backend_name=\"$backend\"}[5m])".to_string(),
-                            legend_format: Some("{{operation}} ops/sec".to_string()),
+                            legend_format: Some("{{operation} ops/sec".to_string()),
                             ref_id: "A".to_string(),
                             interval: None,
                         }
@@ -245,11 +245,11 @@ impl DashboardManager {
                     title: "Data Transfer Rate".to_string(),
                     panel_type: PanelType::Graph,
                     grid_pos: GridPos { x: 12, y: 0, w: 12, h: 8 },
-                    datasource: "prometheus".to_string(),
+                    datasource: "monitoring-capability".to_string(), // MODERNIZED: Use capability discovery
                     targets: vec![
                         QueryTarget {
                             expr: "rate(nestgate_storage_bytes_transferred{backend_name=\"$backend\"}[5m])".to_string(),
-                            legend_format: Some("{{direction}} bytes/sec".to_string()),
+                            legend_format: Some("{{direction} bytes/sec".to_string()),
                             ref_id: "A".to_string(),
                             interval: None,
                         }
@@ -280,7 +280,7 @@ impl DashboardManager {
                     title: "Active Alerts".to_string(),
                     panel_type: PanelType::AlertList,
                     grid_pos: GridPos { x: 0, y: 0, w: 24, h: 12 },
-                    datasource: "prometheus".to_string(),
+                    datasource: "monitoring-capability".to_string(), // MODERNIZED: Use capability discovery
                     targets: vec![],
                     options: HashMap::new(),
                 },
@@ -289,22 +289,34 @@ impl DashboardManager {
     }
 
     /// Get dashboard template by name
-    pub fn get_template(&self, name: &str) -> Result<&DashboardConfig> {
-        self.templates.get(name).ok_or_else(|| NestGateError::Internal {
-            message: format!("Dashboard template '{}' not found", name),
-            location: Some(file!().to_string()),
-            context: None,
-            is_bug: false,
-        })
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn get_template(&self, name: &str) -> Result<&DashboardConfig>  {
+        self.templates.get(name).ok_or_else(|| NestGateError::internal_error(
+            location: Some(file!().to_string())})
     }
 
     /// List available templates
-    pub fn list_templates(&self) -> Vec<String> {
+    pub const fn list_templates(&self) -> Vec<String> {
         self.templates.keys().cloned().collect()
     }
 
-    /// Build Grafana dashboard JSON
-    pub fn build_grafana_dashboard(&self, config: &DashboardConfig) -> Result<Value> {
+    /// Build monitoring dashboard JSON using capability-based discovery
+    /// MODERNIZED: No longer hardcoded to Grafana - uses discovered monitoring capability
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn build_monitoring_dashboard(&self, config: &DashboardConfig) -> Result<Value>  {
         let mut panels = Vec::new();
 
         for panel in &config.panels {
@@ -321,7 +333,7 @@ impl DashboardManager {
             panels.push(json!({
                 "id": panel.id,
                 "title": panel.title,
-                "type": format!("{:?}", panel.panel_type).to_lowercase(),
+                "type": format!("{panel.panel_type:?}").to_lowercase(),
                 "gridPos": {
                     "x": panel.grid_pos.x,
                     "y": panel.grid_pos.y,
@@ -338,20 +350,20 @@ impl DashboardManager {
         for var in &config.variables {
             templating.push(json!({
                 "name": var.name,
-                "type": format!("{:?}", var.var_type).to_lowercase(),
+                "type": format!("{var.var_type:?}").to_lowercase(),
                 "query": var.query,
                 "current": var.current,
                 "options": var.options
             }));
         }
 
-        Ok(json!({
+        Ok(json!(", 
             "dashboard": {
                 "id": null,
                 "title": config.title,
                 "description": config.description,
                 "tags": config.tags,
-                "refresh": format!("{}s", config.refresh_interval.as_secs()),
+                "refresh": format!("{config.refresh_interval.as_secs()s")),
                 "time": {
                     "from": config.time_range.from,
                     "to": config.time_range.to
@@ -365,24 +377,34 @@ impl DashboardManager {
     }
 
     /// Generate Grafana dashboard from template
-    pub fn generate_from_template(&self, template_name: &str) -> Result<String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn generate_from_template(&self, template_name: &str) -> Result<String>  {
         let config = self.get_template(template_name)?;
-        let dashboard = self.build_grafana_dashboard(config)?;
+        let dashboard = self.build_monitoring_dashboard(config)?;
         
-        serde_json::to_string_pretty(&dashboard).map_err(|e| NestGateError::Internal {
-            message: format!("Failed to serialize dashboard: {e}"),
-            location: Some(file!().to_string()),
-            context: None,
-            is_bug: false,
-        })
+        serde_json::to_string_pretty(&dashboard).map_err(|e| NestGateError::internal_error(
+            location: Some(file!().to_string())})
     }
 
     /// Generate custom dashboard for specific metrics
-    pub fn generate_custom_dashboard(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn generate_custom_dashboard(
         &self,
         system_metrics: &SystemMetrics,
         provider_metrics: &HashMap<String, ProviderMetrics>,
-    ) -> Result<String> {
+    ) -> Result<String>  {
         let mut panels = Vec::new();
         let mut panel_id = 1u32;
 
@@ -392,9 +414,9 @@ impl DashboardManager {
             title: "System Health".to_string(),
             panel_type: PanelType::Stat,
             grid_pos: GridPos { x: 0, y: 0, w: 8, h: 4 },
-            datasource: "prometheus".to_string(),
+            datasource: "monitoring-capability".to_string(), // MODERNIZED: Use capability discovery
             targets: vec![QueryTarget {
-                expr: format!("vector({:.1})", system_metrics.cpu_usage),
+                expr: format!("vector({:.1})"),
                 legend_format: Some("CPU Usage %".to_string()),
                 ref_id: "A".to_string(),
                 interval: None,
@@ -407,12 +429,12 @@ impl DashboardManager {
         for (provider_name, _metrics) in provider_metrics {
             panels.push(PanelConfig {
                 id: panel_id,
-                title: format!("Provider: {}", provider_name),
+                title: format!("Provider: {provider_name}"),
                 panel_type: PanelType::Graph,
                 grid_pos: GridPos { x: (panel_id % 3) * 8, y: (panel_id / 3) * 8, w: 8, h: 6 },
-                datasource: "prometheus".to_string(),
+                datasource: "monitoring-capability".to_string(), // MODERNIZED: Use capability discovery
                 targets: vec![QueryTarget {
-                    expr: format!("nestgate_provider_requests_total{{provider_name=\"{}\"}}", provider_name),
+                    expr: format!("nestgate_provider_requests_total{{provider_name=\"{}\"}", provider_name),
                     legend_format: Some("Requests".to_string()),
                     ref_id: "A".to_string(),
                     interval: None,
@@ -436,14 +458,10 @@ impl DashboardManager {
             panels,
         };
 
-        let dashboard = self.build_grafana_dashboard(&config)?;
+        let dashboard = self.build_monitoring_dashboard(&config)?;
         let json =
-            serde_json::to_string_pretty(&dashboard).map_err(|e| NestGateError::Internal {
-                message: format!("Failed to serialize custom dashboard: {e}"),
-                location: Some(file!().to_string()),
-                context: None,
-                is_bug: false,
-            })?;
+            serde_json::to_string_pretty(&dashboard).map_err(|e| NestGateError::internal_error(
+                location: Some(file!()"))?;
 
         Ok(json)
     }

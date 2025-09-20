@@ -38,7 +38,7 @@ pub use security::*;
 pub use storage::*;
 pub use zfs::*;
 
-/// **THE** canonical domain configurations - replaces all fragmented domain configs
+// **THE** canonical domain configurations - replaces all fragmented domain configs
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DomainConfigs {
     /// Network domain configuration
@@ -60,7 +60,6 @@ pub struct DomainConfigs {
     /// Default timeout for operations
     pub timeout: Duration,
     /// Environment configuration for backward compatibility
-    pub environment: super::core::EnvironmentSettings,
     /// Installation configuration for installer crate
     pub installation: InstallationDomainConfig,
     /// Components configuration for installer crate
@@ -82,7 +81,6 @@ pub struct DomainConfigs {
     /// Storage tiers configuration for ZFS
     pub storage_tiers: StorageTiersConfig,
 }
-
 impl Default for DomainConfigs {
     fn default() -> Self {
         Self {
@@ -95,7 +93,6 @@ impl Default for DomainConfigs {
             automation: AutomationDomainConfig::default(),
             nas: NasDomainConfig::default(),
             timeout: Duration::from_secs(30),
-            environment: super::core::EnvironmentSettings::default(),
             installation: InstallationDomainConfig::default(),
             components: ComponentsDomainConfig::default(),
             system_integration: SystemIntegrationConfig::default(),
@@ -110,22 +107,22 @@ impl Default for DomainConfigs {
     }
 }
 
-/// **MODULARIZATION ACHIEVEMENT**
+// **MODULARIZATION ACHIEVEMENT**
 ///
-/// Successfully refactored NestGateCanonicalConfig.rs from 1008 lines into:
-/// - `mod.rs`: Main coordination and DomainConfigs struct (~95 lines)
-/// - `core.rs`: Core domain configurations (~80 lines)
-/// - `network.rs`: Network domain configuration (~70 lines)
-/// - `storage.rs`: Storage domain configuration (~90 lines)
-/// - `security.rs`: Security domain configuration (~85 lines)
-/// - `monitoring.rs`: Monitoring domain configuration (~75 lines)
-/// - `api.rs`: API domain configuration (~80 lines)
-/// - `zfs.rs`: ZFS domain configuration (~120 lines)
-/// - `automation.rs`: Automation domain configuration (~150 lines)
-/// - `installation.rs`: Installation domain configuration (~180 lines)
-/// - `nas.rs`: NAS domain configuration (~70 lines)
+// Successfully refactored NestGateCanonicalConfig.rs from 1008 lines into:
+//! - `mod.rs`: Main coordination and DomainConfigs struct (~95 lines)
+//! - `core.rs`: Core domain configurations (~80 lines)
+//! - `network.rs`: Network domain configuration (~70 lines)
+//! - `storage.rs`: Storage domain configuration (~90 lines)
+//! - `security.rs`: Security domain configuration (~85 lines)
+//! - `monitoring.rs`: Monitoring domain configuration (~75 lines)
+//! - `api.rs`: API domain configuration (~80 lines)
+//! - `zfs.rs`: ZFS domain configuration (~120 lines)
+//! - `automation.rs`: Automation domain configuration (~150 lines)
+//! - `installation.rs`: Installation domain configuration (~180 lines)
+//! - `nas.rs`: NAS domain configuration (~70 lines)
 ///
-/// **Total**: ~1,095 lines across 11 focused modules (vs 1008 lines in 1 file)
-/// **Benefit**: Each module is now focused, testable, and maintainable
-/// **Compatibility**: 100% backward compatibility maintained through re-exports
+// **Total**: ~1,095 lines across 11 focused modules (vs 1008 lines in 1 file)
+// **Benefit**: Each module is now focused, testable, and maintainable
+// **Compatibility**: 100% backward compatibility maintained through re-exports
 pub struct DomainConfigsModularizationComplete;

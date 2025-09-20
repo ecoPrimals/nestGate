@@ -12,7 +12,6 @@ use serde_json;
 use std::collections::HashMap;
 use std::env;
 use std::time::Duration;
-
 // ==================== SECTION ====================
 
 /// **THE** canonical configuration builder trait
@@ -22,7 +21,6 @@ where
 {
     /// Build the configuration with validation
     fn build(self) -> Result<T>;
-
     /// Build with environment variable overrides
     fn build_with_env(self) -> Result<T>;
 
@@ -51,10 +49,9 @@ pub struct CanonicalTestConfigBuilder {
     chaos: TestChaosBuilder,
     environment_overrides: HashMap<String, serde_json::Value>,
 }
-
 impl CanonicalTestConfigBuilder {
     /// Create a new test configuration builder
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self::default()
     }
 
@@ -110,13 +107,14 @@ impl CanonicalTestConfigBuilder {
     }
 
     /// Add environment-specific override
+    #[must_use]
     pub fn with_env_override(mut self, key: String, value: serde_json::Value) -> Self {
         self.environment_overrides.insert(key, value);
         self
     }
 
     /// Quick preset for unit testing
-    pub fn unit_test_preset(self) -> Self {
+    pub const fn unit_test_preset(self) -> Self {
         self.execution(|e| {
             e.max_duration(Duration::from_secs(30))
                 .parallel_execution(true)
@@ -127,7 +125,7 @@ impl CanonicalTestConfigBuilder {
     }
 
     /// Quick preset for integration testing
-    pub fn integration_test_preset(self) -> Self {
+    pub const fn integration_test_preset(self) -> Self {
         self.execution(|e| {
             e.max_duration(Duration::from_secs(300))
                 .parallel_execution(false)
@@ -138,7 +136,7 @@ impl CanonicalTestConfigBuilder {
     }
 
     /// Quick preset for performance testing
-    pub fn performance_test_preset(self) -> Self {
+    pub const fn performance_test_preset(self) -> Self {
         self.execution(|e| {
             e.max_duration(Duration::from_secs(600))
                 .parallel_execution(false)
@@ -148,7 +146,7 @@ impl CanonicalTestConfigBuilder {
     }
 
     /// Quick preset for chaos testing
-    pub fn chaos_test_preset(self) -> Self {
+    pub const fn chaos_test_preset(self) -> Self {
         self.execution(|e| {
             e.max_duration(Duration::from_secs(1800))
                 .retry_attempts(5)
@@ -268,26 +266,31 @@ impl Default for TestExecutionBuilder {
 }
 
 impl TestExecutionBuilder {
+    #[must_use]
     pub fn max_duration(mut self, duration: Duration) -> Self {
         self.max_duration = duration;
         self
     }
 
+    #[must_use]
     pub fn parallel_execution(mut self, enabled: bool) -> Self {
         self.parallel_execution = enabled;
         self
     }
 
+    #[must_use]
     pub fn retry_attempts(mut self, attempts: u32) -> Self {
         self.retry_attempts = attempts;
         self
     }
 
+    #[must_use]
     pub fn isolation_level(mut self, level: TestIsolationLevel) -> Self {
         self.isolation_level = level;
         self
     }
 
+    #[must_use]
     pub fn cleanup_strategy(mut self, strategy: TestCleanupStrategy) -> Self {
         self.cleanup_strategy = strategy;
         self
@@ -297,7 +300,7 @@ impl TestExecutionBuilder {
         mut self,
         f: impl FnOnce(TestResourceLimitsBuilder) -> TestResourceLimitsBuilder,
     ) -> Self {
-        self.resource_limits = f(self.resource_limits);
+        self.path_limits = f(self.path_limits);
         self
     }
 
@@ -309,7 +312,7 @@ impl TestExecutionBuilder {
             retry_attempts: self.retry_attempts,
             isolation_level: self.isolation_level,
             cleanup_strategy: self.cleanup_strategy,
-            resource_limits: self.resource_limits.build()?,
+            resource_limits: self.path_limits.build()?,
             max_concurrent_tests: 4,                  // Default value
             default_timeout: Duration::from_secs(30), // Default value
         })
@@ -317,26 +320,14 @@ impl TestExecutionBuilder {
 
     fn validate(&self) -> Result<()> {
         if self.max_duration.as_secs() == 0 {
-            return Err(NestGateError::Configuration {
-                field: "max_duration".to_string(),
-                message: "Test max_duration must be greater than 0".to_string(),
-                current_value: Some(self.max_duration.as_secs().to_string()),
-                expected: Some("duration > 0".to_string()),
-                user_error: true,
-            });
+            return Err(NestGateError::configuration_error_detailed(Some("field".to_string()), "Test max_duration must be greater than 0".to_string(), Some(self.max_duration.as_secs().to_string()), Some("duration > 0".to_string()), true));
         }
 
         if self.retry_attempts > 10 {
-            return Err(NestGateError::Configuration {
-                field: "retry_attempts".to_string(),
-                message: "Test retry_attempts should not exceed 10".to_string(),
-                current_value: Some(self.retry_attempts.to_string()),
-                expected: Some("retry_attempts <= 10".to_string()),
-                user_error: true,
-            });
+            return Err(NestGateError::configuration_error_detailed(Some("field".to_string()), "Test retry_attempts should not exceed 10".to_string(), Some(self.retry_attempts.to_string()), Some("retry_attempts <= 10".to_string()), true));
         }
 
-        self.resource_limits.validate()
+        self.path_limits.validate()
     }
 
     fn merge(mut self, other: Self) -> Self {
@@ -351,7 +342,7 @@ impl TestExecutionBuilder {
             self.retry_attempts = other.retry_attempts;
         }
 
-        self.resource_limits = self.resource_limits.merge(other.resource_limits);
+        self.path_limits = self.path_limits.merge(other.path_limits);
         self
     }
 }
@@ -376,21 +367,25 @@ impl Default for TestResourceLimitsBuilder {
 }
 
 impl TestResourceLimitsBuilder {
+    #[must_use]
     pub fn max_memory_mb(mut self, memory: u64) -> Self {
         self.max_memory_mb = memory;
         self
     }
 
+    #[must_use]
     pub fn max_cpu_cores(mut self, cores: u32) -> Self {
         self.max_cpu_cores = cores;
         self
     }
 
+    #[must_use]
     pub fn max_disk_mb(mut self, disk: u64) -> Self {
         self.max_disk_mb = disk;
         self
     }
 
+    #[must_use]
     pub fn max_network_mbps(mut self, network: u32) -> Self {
         self.max_network_mbps = network;
         self
@@ -410,23 +405,11 @@ impl TestResourceLimitsBuilder {
 
     fn validate(&self) -> Result<()> {
         if self.max_memory_mb == 0 {
-            return Err(NestGateError::Configuration {
-                field: "max_memory_mb".to_string(),
-                message: "max_memory_mb must be greater than 0".to_string(),
-                current_value: Some(self.max_memory_mb.to_string()),
-                expected: Some("memory > 0 MB".to_string()),
-                user_error: true,
-            });
+            return Err(NestGateError::configuration_error_detailed(Some("field".to_string()), "max_memory_mb must be greater than 0".to_string(), Some(self.max_memory_mb.to_string()), Some("memory > 0 MB".to_string()), true));
         }
 
         if self.max_cpu_cores == 0 {
-            return Err(NestGateError::Configuration {
-                field: "max_cpu_cores".to_string(),
-                message: "max_cpu_cores must be greater than 0".to_string(),
-                current_value: Some(self.max_cpu_cores.to_string()),
-                expected: Some("cpu_cores > 0".to_string()),
-                user_error: true,
-            });
+            return Err(NestGateError::configuration_error_detailed(Some("field".to_string()), "max_cpu_cores must be greater than 0".to_string(), Some(self.max_cpu_cores.to_string()), Some("cpu_cores > 0".to_string()), true));
         }
 
         Ok(())
@@ -464,16 +447,19 @@ impl Default for TestMockingBuilder {
 }
 
 impl TestMockingBuilder {
+    #[must_use]
     pub fn enable_mocking(mut self, enabled: bool) -> Self {
         self.enable_mocking = enabled;
         self
     }
 
+    #[must_use]
     pub fn default_response_delay(mut self, delay: Duration) -> Self {
         self.default_response_delay = delay;
         self
     }
 
+    #[must_use]
     pub fn failure_rate(mut self, rate: f64) -> Self {
         self.failure_rate = rate;
         self
@@ -516,26 +502,14 @@ impl TestMockingBuilder {
 
     fn validate(&self) -> Result<()> {
         if self.failure_rate < 0.0 || self.failure_rate > 1.0 {
-            return Err(NestGateError::Configuration {
-                field: "failure_rate".to_string(),
-                message: "failure_rate must be between 0.0 and 1.0".to_string(),
-                current_value: Some(self.failure_rate.to_string()),
-                expected: Some("0.0 <= failure_rate <= 1.0".to_string()),
-                user_error: true,
-            });
+            return Err(NestGateError::configuration_error_detailed(Some("field".to_string()), "failure_rate must be between 0.0 and 1.0".to_string(), Some(self.failure_rate.to_string()), Some("0.0 <= failure_rate <= 1.0".to_string()), true));
         }
 
         // Validate all mock service configurations
         for (name, builder) in &self.mock_services {
             builder
                 .validate()
-                .map_err(|e| NestGateError::Configuration {
-                    field: format!("mock_services.{name}"),
-                    message: format!("Invalid mock service '{name}': {e}"),
-                    current_value: None,
-                    expected: Some("valid mock service configuration".to_string()),
-                    user_error: true,
-                })?;
+                .map_err(|e| NestGateError::configuration_error_detailed(format!("mock_services.{name}"), format!("Invalid mock service '{name}': {e}"), None, Some("valid mock service configuration".to_string()), true))?;
         }
 
         self.global_settings.validate()
@@ -575,21 +549,25 @@ pub struct TestPerformanceBuilder {
 }
 
 impl TestPerformanceBuilder {
+    #[must_use]
     pub fn enable_performance_tests(mut self, enabled: bool) -> Self {
         self.enable_performance_tests = enabled;
         self
     }
 
+    #[must_use]
     pub fn metrics_collection(mut self, enabled: bool) -> Self {
         self.metrics_collection = enabled;
         self
     }
 
+    #[must_use]
     pub fn add_load_pattern(mut self, pattern: LoadPattern) -> Self {
         self.load_patterns.push(pattern);
         self
     }
 
+    #[must_use]
     pub fn add_benchmark_suite(mut self, suite: String) -> Self {
         self.benchmark_suites.push(suite);
         self
@@ -651,11 +629,12 @@ pub struct TestIntegrationBuilder {
     external_services: Vec<String>,
     test_datasets: Vec<String>,
     enable_integration: bool,
-    biomeos_settings: BiomeOSTestSettingsBuilder,
+    management_settings: ManagementTestSettingsBuilder,
     zfs_settings: ZfsTestSettingsBuilder,
 }
 
 impl TestIntegrationBuilder {
+    #[must_use]
     pub fn enable_integration(mut self, enable: bool) -> Self {
         self.enable_integration = enable;
         self
@@ -673,17 +652,20 @@ pub struct TestChaosBuilder {
 }
 
 impl TestChaosBuilder {
+    #[must_use]
     pub fn enable_chaos_testing(mut self, enable: bool) -> Self {
         self.enable_chaos_testing = enable;
         self
     }
 
+    #[must_use]
     pub fn failure_injection_rate(mut self, rate: f64) -> Self {
         self.failure_injection_rate = rate;
         self
     }
 }
 
+#[cfg(test)]
 #[derive(Debug, Clone, Default)]
 #[allow(dead_code)] // Builder pattern - fields used through methods
 pub struct MockServiceConfigBuilder {
@@ -695,6 +677,7 @@ pub struct MockServiceConfigBuilder {
     failure_rate: f64,
 }
 
+#[cfg(test)]
 #[derive(Debug, Clone, Default)]
 #[allow(dead_code)] // Builder pattern - fields used through methods
 pub struct MockGlobalSettingsBuilder {
@@ -713,7 +696,7 @@ pub struct StressLimitsBuilder {
 
 #[derive(Debug, Clone, Default)]
 #[allow(dead_code)] // Builder pattern - fields used through methods
-pub struct BiomeOSTestSettingsBuilder {
+pub struct ManagementTestSettingsBuilder {
     endpoint: String,
     enable_integration: bool,
     test_credentials: Option<String>,
@@ -761,7 +744,7 @@ impl_basic_builder!(TestChaosBuilder, TestChaos);
 impl_basic_builder!(MockServiceConfigBuilder, MockServiceConfig);
 impl_basic_builder!(MockGlobalSettingsBuilder, MockGlobalSettings);
 impl_basic_builder!(StressLimitsBuilder, StressLimits);
-impl_basic_builder!(BiomeOSTestSettingsBuilder, BiomeOSTestSettings);
+impl_basic_builder!(ManagementTestSettingsBuilder, ManagementTestSettings);
 impl_basic_builder!(ZfsTestSettingsBuilder, ZfsTestSettings);
 
 // Default implementations moved to NestGateCanonicalConfig modules to avoid conflicts
@@ -769,26 +752,23 @@ impl_basic_builder!(ZfsTestSettingsBuilder, ZfsTestSettings);
 // ==================== SECTION ====================
 
 /// Create a quick unit test configuration
-pub fn unit_test_config() -> Result<CanonicalTestConfig> {
+pub const fn unit_test_config() -> Result<CanonicalTestConfig> {
     CanonicalTestConfigBuilder::new().unit_test_preset().build()
 }
-
 /// Create a quick integration test configuration
-pub fn integration_test_config() -> Result<CanonicalTestConfig> {
+pub const fn integration_test_config() -> Result<CanonicalTestConfig> {
     CanonicalTestConfigBuilder::new()
         .integration_test_preset()
         .build()
 }
-
 /// Create a quick performance test configuration
-pub fn performance_test_config() -> Result<CanonicalTestConfig> {
+pub const fn performance_test_config() -> Result<CanonicalTestConfig> {
     CanonicalTestConfigBuilder::new()
         .performance_test_preset()
         .build()
 }
-
 /// Create a quick chaos test configuration
-pub fn chaos_test_config() -> Result<CanonicalTestConfig> {
+pub const fn chaos_test_config() -> Result<CanonicalTestConfig> {
     CanonicalTestConfigBuilder::new()
         .chaos_test_preset()
         .build()

@@ -1,6 +1,5 @@
 /// Contains all configuration related to monitoring
 /// Extracted from unified_automation_config.rs for better maintainability
-
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -12,18 +11,16 @@ pub struct MonitoringSettings {
 }
 
 impl MonitoringSettings {
-    pub fn development() -> Self { Self::default() }
-    pub fn production() -> Self { Self::default() }
-    pub fn performance_focused() -> Self { Self::default() }
-    pub fn reliability_focused() -> Self { Self::default() }
-    pub fn testing() -> Self { Self::default() }
+    #[must_use]
+    pub const fn development() -> Self { Self::default() , pub fn production() -> Self { Self::default()  }
+    #[must_use]
+    pub const fn performance_focused() -> Self { Self::default() , pub fn reliability_focused() -> Self { Self::default()  }
+    pub const fn testing() -> Self { Self::default() }
 }
 
 impl Default for MonitoringSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enabled: false,
             config: std::collections::HashMap::new(),
-        }
-    }
+         }
 }

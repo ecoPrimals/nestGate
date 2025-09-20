@@ -13,9 +13,8 @@ pub struct SimpleServiceRegistration {
     pub name: String,
     pub version: String,
     pub capabilities: Vec<String>,
-    pub metadata: HashMap<String, serde_json::Value>,
+    pub _metadata: HashMap<String, serde_json::Value>,
 }
-
 /// Simplified ecosystem service stub
 #[derive(Debug, Clone)]
 pub struct UniversalEcosystemService {
@@ -23,12 +22,10 @@ pub struct UniversalEcosystemService {
     pub name: String,
     pub version: String,
     pub capabilities: Vec<String>,
-    pub metadata: HashMap<String, serde_json::Value>,
+    pub _metadata: HashMap<String, serde_json::Value>,
 }
-
 impl Default for UniversalEcosystemService {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             id: Uuid::new_v4(),
             name: "nestgate-api".to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
@@ -37,22 +34,18 @@ impl Default for UniversalEcosystemService {
                 "api_gateway".to_string(),
                 "authentication".to_string(),
             ],
-            metadata: HashMap::new(),
-        }
-    }
+            _metadata: HashMap::new(),
+         }
 }
 
 impl UniversalEcosystemService {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn get_health(&self) -> serde_json::Value {
+    pub const fn new() -> Self { Self::default()
+    , pub fn get_health(&self) -> serde_json::Value {
         serde_json::json!({
             "status": "healthy",
             "service": self.name,
             "version": self.version
-        })
+         })
     }
 }
 
@@ -60,7 +53,6 @@ impl UniversalEcosystemService {
 pub trait EcosystemRegistration {
     fn create_registration(&self) -> SimpleServiceRegistration;
 }
-
 impl EcosystemRegistration for UniversalEcosystemService {
     fn create_registration(&self) -> SimpleServiceRegistration {
         SimpleServiceRegistration {
@@ -68,7 +60,7 @@ impl EcosystemRegistration for UniversalEcosystemService {
             name: self.name.clone(),
             version: self.version.clone(),
             capabilities: self.capabilities.clone(),
-            metadata: self.metadata.clone(),
+            _metadata: self._metadata.clone(),
         }
     }
 }

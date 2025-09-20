@@ -13,45 +13,38 @@
 
 // ==================== SECTION ====================
 
-/// Service discovery and orchestration settings
-pub mod orchestration;
-
-/// TCP/UDP and protocol-specific settings
-pub mod protocols;
-
-/// VLAN and network segmentation settings
-pub mod vlan;
-
+//! Service discovery and orchestration settings
 /// Connection management and pooling settings
 pub mod connections;
-
-/// Load balancing and routing settings
-pub mod routing;
-
+pub mod orchestration;
+/// TCP/UDP and protocol-specific settings
+pub mod protocols;
 /// Quality of Service settings
 pub mod qos;
-
+/// Load balancing and routing settings
+pub mod routing;
 /// Network security settings
 pub mod security;
-
+/// VLAN and network segmentation settings
+pub mod vlan;
 // ==================== SECTION ====================
 
 // Re-export all types for backward compatibility
+pub use connections::*;
 pub use orchestration::*;
 pub use protocols::*;
-pub use vlan::*;
-pub use connections::*;
-pub use routing::*;
 pub use qos::*;
+pub use routing::*;
 pub use security::*;
+pub use vlan::*;
 
 // ==================== SECTION ====================
 
 use serde::{Deserialize, Serialize};
 
-/// **UNIFIED NETWORK EXTENSIONS**
+// **UNIFIED NETWORK EXTENSIONS**
 /// Consolidates all network-specific configuration patterns
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UnifiedNetworkExtensions {
     /// Orchestration and service discovery settings
     pub orchestration: NetworkOrchestrationSettings,
@@ -67,20 +60,6 @@ pub struct UnifiedNetworkExtensions {
     pub qos: NetworkQosSettings,
     /// Network security settings
     pub security: NetworkSecuritySettings,
-}
-
-impl Default for UnifiedNetworkExtensions {
-    fn default() -> Self {
-        Self {
-            orchestration: NetworkOrchestrationSettings::default(),
-            protocols: NetworkProtocolSettings::default(),
-            vlan: NetworkVlanSettings::default(),
-            connections: NetworkConnectionSettings::default(),
-            routing: NetworkRoutingSettings::default(),
-            qos: NetworkQosSettings::default(),
-            security: NetworkSecuritySettings::default(),
-        }
-    }
 }
 
 /// Network configuration using StandardDomainConfig pattern

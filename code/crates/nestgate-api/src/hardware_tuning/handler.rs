@@ -17,7 +17,6 @@ pub struct HardwareTuningHandler {
     session_manager: Arc<RwLock<HashMap<Uuid, TuningSession>>>,
     compute_adapter: Arc<HardwareTuningAdapter>,
 }
-
 impl Default for HardwareTuningHandler {
     fn default() -> Self {
         Self::new()
@@ -26,15 +25,22 @@ impl Default for HardwareTuningHandler {
 
 impl HardwareTuningHandler {
     /// Create a new hardware tuning handler with universal adapter
-    pub fn new() -> Self {
-        Self {
-            session_manager: Arc::new(RwLock::new(HashMap::new())),
+    #[must_use]
+    pub fn new() -> Self { Self {
+            session_manager: Arc::new(RwLock::new(HashMap::new()),
             compute_adapter: Arc::new(HardwareTuningAdapter::new()),
-        }
-    }
+         }
 
     /// Start a new tuning session
-    pub async fn start_tuning_session(&self, request: HardwareTuningRequest) -> Result<Uuid> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn start_tuning_session(&self, request: HardwareTuningRequest) -> Result<Uuid>  {
         let session_id = Uuid::new_v4();
         let session = TuningSession {
             session_id,
@@ -53,21 +59,34 @@ impl HardwareTuningHandler {
     }
 
     /// Get tuning session status
-    pub async fn get_session_status(&self, session_id: Uuid) -> Result<TuningSession> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_session_status(&self, session_id: Uuid) -> Result<TuningSession>  {
         let sessions = self.session_manager.read().await;
         sessions
             .get(&session_id)
             .cloned()
-            .ok_or_else(|| NestGateError::Internal {
-                message: format!("Session not found: {session_id}"),
-                location: Some(format!("{}:{}", file!(), line!())),
+            .ok_or_else(|| NestGateError::internal_error(
+                location: Some(format!("{"actual_error_details"}:{"actual_error_details"}"), line!()),
                 context: None,
                 is_bug: false,
             })
     }
 
     /// Auto-tune hardware
-    pub async fn auto_tune(&self) -> Result<TuningResult> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn auto_tune(&self) -> Result<TuningResult>  {
         // Get live hardware metrics
         let metrics = self.compute_adapter.get_live_hardware_metrics().await?;
 
@@ -91,7 +110,14 @@ impl HardwareTuningHandler {
     }
 
     /// Get available profiles
-    pub async fn get_profiles(&self) -> Result<Vec<String>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn get_profiles(&self) -> Result<Vec<String>>  {
         Ok(vec![
             "performance".to_string(),
             "balanced".to_string(),
@@ -100,7 +126,14 @@ impl HardwareTuningHandler {
     }
 
     /// Get configuration
-    pub async fn get_config(&self) -> Result<serde_json::Value> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn get_config(&self) -> Result<serde_json::Value>  {
         Ok(serde_json::json!({
             "service": "hardware_tuning",
             "version": "1.0.0",
@@ -109,7 +142,14 @@ impl HardwareTuningHandler {
     }
 
     /// Run benchmark
-    pub async fn benchmark(&self, benchmark_name: &str) -> Result<BenchmarkResult> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn benchmark(&self, benchmark_name: &str) -> Result<BenchmarkResult>  {
         let metrics = self.compute_adapter.get_live_hardware_metrics().await?;
 
         let overall_score = match benchmark_name {
@@ -124,7 +164,7 @@ impl HardwareTuningHandler {
             benchmark_name: benchmark_name.to_string(),
             score: overall_score,
             duration_ms: 1000,
-            metadata: serde_json::json!({
+            _metadata: serde_json::json!({
                 "cpu_usage": metrics._cpu_usage,
                 "memory_usage": metrics.memory_usage
             }),
@@ -132,11 +172,18 @@ impl HardwareTuningHandler {
     }
 
     /// Generate extraction lock
-    pub async fn generate_extraction_lock(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn generate_extraction_lock(
         &self,
         _source: String,
         _destination: String,
-    ) -> Result<ExtractionLock> {
+    ) -> Result<ExtractionLock>  {
         use nestgate_core::hardware_tuning::*;
 
         Ok(ExtractionLock {
@@ -147,25 +194,32 @@ impl HardwareTuningHandler {
                 timestamp: std::time::SystemTime::now(),
                 valid_until: std::time::SystemTime::now() + std::time::Duration::from_secs(3600),
                 algorithm: "test_algorithm".to_string(),
-            },
+            }
             expires_at: std::time::SystemTime::now() + std::time::Duration::from_secs(3600),
             restrictions: ExtractionRestrictions {
                 max_size: Some(1024 * 1024),
                 time_restrictions: None,
                 geographic_restrictions: vec![],
                 usage_restrictions: vec![],
-            },
+            }
             copyleft_requirements: CopyleftRequirements {
                 license_type: "GPL".to_string(),
                 attribution_required: true,
                 share_alike: true,
                 commercial_restrictions: vec![],
-            },
+            }
         })
     }
 
     /// Verify extraction lock
-    pub async fn verify_extraction_lock(&self, _lock_id: Uuid) -> Result<bool> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn verify_extraction_lock(&self, _lock_id: Uuid) -> Result<bool>  {
         Ok(true)
     }
 }

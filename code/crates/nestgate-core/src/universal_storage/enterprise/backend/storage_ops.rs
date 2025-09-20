@@ -30,7 +30,6 @@ impl CanonicalStorageBackend for EnterpriseStorageBackend {
         ])
     }
 
-    fn read(&self, path: &str) -> impl Future<Output = StorageResult<Vec<u8>>> + Send {
         let path = path.to_string();
         let full_path = self.full_path(&path);
         let metrics = self.metrics.clone();
@@ -53,7 +52,7 @@ impl CanonicalStorageBackend for EnterpriseStorageBackend {
                     metrics_guard.concurrent_operations.saturating_add(1);
                 if result.is_ok() {
                     if let Ok(data) = &result {
-                        metrics_guard.throughput_mb_per_sec += data.len() as f64 / 1024.0 / 1024.0;
+                        metrics_guard.throughput_mb_per_sec += ((data.len() as f64)) / 1024.0 / 1024.0;
                     }
                 } else {
                     metrics_guard.error_rate += 0.01; // Increment error rate
@@ -65,7 +64,6 @@ impl CanonicalStorageBackend for EnterpriseStorageBackend {
         }
     }
 
-    fn write(&self, path: &str, data: &[u8]) -> impl Future<Output = StorageResult<()>> + Send {
         let path = path.to_string();
         let full_path = self.full_path(&path);
         let data = data.to_vec();
@@ -100,7 +98,7 @@ impl CanonicalStorageBackend for EnterpriseStorageBackend {
                 metrics_guard.concurrent_operations =
                     metrics_guard.concurrent_operations.saturating_add(1);
                 if result.is_ok() {
-                    metrics_guard.throughput_mb_per_sec += data.len() as f64 / 1024.0 / 1024.0;
+                    metrics_guard.throughput_mb_per_sec += ((data.len() as f64)) / 1024.0 / 1024.0;
                 } else {
                     metrics_guard.error_rate += 0.01; // Increment error rate
                 }
@@ -111,7 +109,6 @@ impl CanonicalStorageBackend for EnterpriseStorageBackend {
         }
     }
 
-    fn delete(&self, path: &str) -> impl Future<Output = StorageResult<()>> + Send {
         let path = path.to_string();
         let full_path = self.full_path(&path);
         let metrics = self.metrics.clone();
@@ -143,7 +140,6 @@ impl CanonicalStorageBackend for EnterpriseStorageBackend {
         }
     }
 
-    fn list(&self, path: &str) -> impl Future<Output = StorageResult<Vec<String>>> + Send {
         let path = path.to_string();
         let full_path = self.full_path(&path);
 
@@ -179,7 +175,6 @@ impl CanonicalStorageBackend for EnterpriseStorageBackend {
 
     fn metadata(
         &self,
-        path: &str,
     ) -> impl Future<Output = StorageResult<CanonicalStorageMetadata>> + Send {
         let path = path.to_string();
         let full_path = self.full_path(&path);
@@ -195,7 +190,6 @@ impl CanonicalStorageBackend for EnterpriseStorageBackend {
                     ))?;
 
             Ok(CanonicalStorageMetadata {
-                path: path.clone(),
                 size: metadata.len(),
                 created: metadata.created().unwrap_or(SystemTime::now()),
                 modified: metadata.modified().unwrap_or(SystemTime::now()),

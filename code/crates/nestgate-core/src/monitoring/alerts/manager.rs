@@ -1,4 +1,4 @@
-//! Alert Manager Implementation
+// Alert Manager Implementation
 
 use super::channels::{AlertChannel, NotificationRecord};
 use super::rules::{AlertRule, SuppressionRule};
@@ -26,9 +26,9 @@ pub struct AlertManager {
     /// Alert evaluation interval
     evaluation_interval: std::time::Duration,
 }
-
 impl AlertManager {
     /// Create a new alert manager
+    #[must_use]
     pub fn new() -> Self {
         Self {
             rules: Arc::new(RwLock::new(HashMap::new())),
@@ -41,7 +41,14 @@ impl AlertManager {
     }
 
     /// Add an alert rule
-    pub async fn add_rule(&self, rule: AlertRule) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn add_rule(&self, rule: AlertRule) -> Result<()>  {
         let mut rules = self.rules.write().await;
         info!("Adding alert rule: {} ({})", rule.name, rule.id);
         rules.insert(rule.id.clone(), rule);
@@ -49,7 +56,14 @@ impl AlertManager {
     }
 
     /// Remove an alert rule
-    pub async fn remove_rule(&self, rule_id: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn remove_rule(&self, rule_id: &str) -> Result<()>  {
         let mut rules = self.rules.write().await;
         if rules.remove(rule_id).is_some() {
             info!("Removed alert rule: {}", rule_id);
@@ -68,7 +82,14 @@ impl AlertManager {
     }
 
     /// Add a notification channel
-    pub async fn add_channel(&self, id: String, channel: AlertChannel) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn add_channel(&self, id: String, channel: AlertChannel) -> Result<()>  {
         let mut channels = self.channels.write().await;
         info!("Adding notification channel: {}", id);
         channels.insert(id, channel);
@@ -86,7 +107,14 @@ impl AlertManager {
     }
 
     /// Acknowledge an alert
-    pub async fn acknowledge_alert(&self, alert_id: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn acknowledge_alert(&self, alert_id: &str) -> Result<()>  {
         let mut alerts = self.alerts.write().await;
         if let Some(alert) = alerts.get_mut(alert_id) {
             alert.status = AlertStatus::Acknowledged;
@@ -101,7 +129,14 @@ impl AlertManager {
     }
 
     /// Resolve an alert
-    pub async fn resolve_alert(&self, alert_id: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn resolve_alert(&self, alert_id: &str) -> Result<()>  {
         let mut alerts = self.alerts.write().await;
         if let Some(alert) = alerts.get_mut(alert_id) {
             alert.status = AlertStatus::Resolved;
@@ -116,7 +151,14 @@ impl AlertManager {
     }
 
     /// Start the alert evaluation loop
-    pub async fn start_evaluation_loop(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn start_evaluation_loop(&self) -> Result<()>  {
         let mut interval = tokio::time::interval(self.evaluation_interval);
 
         loop {

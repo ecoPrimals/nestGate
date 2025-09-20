@@ -3,7 +3,7 @@
 // including tier assignment rules, lifecycle management policies,
 // migration rules, and performance thresholds.
 
-use nestgate_core::types::StorageTier;
+use nestgate_core::canonical_types::StorageTier;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -19,7 +19,6 @@ pub struct TierAssignmentRules {
     /// Performance requirements
     pub performance_requirements: HashMap<StorageTier, PerformanceRequirement>,
 }
-
 /// Size-based tier thresholds for automatic assignment
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierSizeThresholds {
@@ -28,7 +27,6 @@ pub struct TierSizeThresholds {
     /// Files smaller than this go to warm tier (bytes)
     pub warm_max_size: u64,
 }
-
 /// Access pattern rules for tier assignment
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccessPatternRules {
@@ -39,7 +37,6 @@ pub struct AccessPatternRules {
     /// Age in days before moving to cold tier
     pub cold_age_threshold: u32,
 }
-
 /// Performance requirements per tier
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceRequirement {
@@ -47,7 +44,6 @@ pub struct PerformanceRequirement {
     pub min_throughput_mbps: f64,
     pub min_iops: u32,
 }
-
 /// Lifecycle management rules with comprehensive automation policies
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LifecycleRules {
@@ -64,7 +60,6 @@ pub struct LifecycleRules {
     /// Age threshold for archival (days)
     pub archival_age_days: u32,
 }
-
 /// Migration automation rules with scheduling and performance controls
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MigrationRules {
@@ -83,9 +78,8 @@ pub struct MigrationRules {
     /// Auto migration enabled flag (alias for enable_auto_migration)
     pub auto_migration_enabled: bool,
 }
-
 /// Migration scheduling configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MigrationSchedule {
     /// Hours during which migration is allowed
     pub allowed_hours: Vec<u8>,
@@ -94,9 +88,8 @@ pub struct MigrationSchedule {
     /// Priority boost during off-peak hours
     pub off_peak_priority_boost: bool,
 }
-
 /// Performance impact limits for migrations
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MigrationPerformanceLimits {
     /// Maximum CPU usage during migration (%)
     pub max_cpu_usage: f64,
@@ -105,7 +98,6 @@ pub struct MigrationPerformanceLimits {
     /// Maximum IO impact (%)
     pub max_io_impact: f64,
 }
-
 /// Performance thresholds for optimization triggers
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceThresholds {
@@ -118,67 +110,42 @@ pub struct PerformanceThresholds {
     /// Utilization threshold for tier rebalancing (%)
     pub max_utilization: f64,
 }
-
 impl MigrationRules {
     /// Hot tier defaults
-    pub fn hot_tier_defaults() -> Self {
+    pub const fn hot_tier_defaults() -> Self {
         Self {
             enable_auto_migration: true,
-            migration_schedule: MigrationSchedule {
-                allowed_hours: (0..24).collect(),
-                max_concurrent: 3,
-                off_peak_priority_boost: true,
-            },
-            performance_limits: MigrationPerformanceLimits {
-                max_cpu_usage: 50.0,
-                max_memory_usage: 30.0,
-                max_io_impact: 40.0,
-            },
+            migration_schedule: MigrationSchedule::default(),
+            performance_limits: MigrationPerformanceLimits::default(),
             bandwidth_limits: super::types::BandwidthLimits::default(),
             age_threshold_days: 7,
-            access_frequency_threshold: 10.0,
+            access_frequency_threshold: 100.0,
             auto_migration_enabled: true,
         }
     }
 
     /// Warm tier defaults
-    pub fn warm_tier_defaults() -> Self {
+    pub const fn warm_tier_defaults() -> Self {
         Self {
             enable_auto_migration: true,
-            migration_schedule: MigrationSchedule {
-                allowed_hours: (0..24).collect(),
-                max_concurrent: 2,
-                off_peak_priority_boost: true,
-            },
-            performance_limits: MigrationPerformanceLimits {
-                max_cpu_usage: 30.0,
-                max_memory_usage: 20.0,
-                max_io_impact: 25.0,
-            },
+            migration_schedule: MigrationSchedule::default(),
+            performance_limits: MigrationPerformanceLimits::default(),
             bandwidth_limits: super::types::BandwidthLimits::default(),
             age_threshold_days: 30,
-            access_frequency_threshold: 2.0,
+            access_frequency_threshold: 20.0,
             auto_migration_enabled: true,
         }
     }
 
     /// Cold tier defaults
-    pub fn cold_tier_defaults() -> Self {
+    pub const fn cold_tier_defaults() -> Self {
         Self {
             enable_auto_migration: true,
-            migration_schedule: MigrationSchedule {
-                allowed_hours: vec![0, 1, 2, 3, 4, 5], // Night hours only
-                max_concurrent: 1,
-                off_peak_priority_boost: false,
-            },
-            performance_limits: MigrationPerformanceLimits {
-                max_cpu_usage: 15.0,
-                max_memory_usage: 10.0,
-                max_io_impact: 15.0,
-            },
+            migration_schedule: MigrationSchedule::default(),
+            performance_limits: MigrationPerformanceLimits::default(),
             bandwidth_limits: super::types::BandwidthLimits::default(),
             age_threshold_days: 90,
-            access_frequency_threshold: 0.1,
+            access_frequency_threshold: 1.0,
             auto_migration_enabled: true,
         }
     }

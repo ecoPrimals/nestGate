@@ -13,6 +13,7 @@ use nestgate_core::{Result as CoreResult, NestGateError};
 use nestgate_mcp::security::{SecurityManager, SecurityConfig, AuthToken};
 
 /// Test the security system with comprehensive scenarios
+
 #[tokio::test]
 pub async fn test_security_system_comprehensive() -> CoreResult<()> {
     info!("🔒 Testing comprehensive security system");
@@ -30,11 +31,14 @@ pub async fn test_security_system_comprehensive() -> CoreResult<()> {
             let validation = security.validate_token(&token.token).await?;
             assert!(validation.is_valid);
             info!("✅ Token validation successful");
+    Ok(())
         }
         Err(e) => {
             warn!("⚠️ Authentication test with mock credentials expected to fail: {}", e);
             // This is expected behavior for security system
+    Ok(())
         }
+    Ok(())
     }
 
     // Test authorization levels
@@ -87,6 +91,7 @@ pub async fn test_security_error_handling() -> CoreResult<()> {
     match invalid_result {
         Ok(validation) => assert!(!validation.is_valid),
         Err(_) => info!("✅ Invalid token properly rejected"),
+    Ok(())
     }
 
     // Test malformed authentication

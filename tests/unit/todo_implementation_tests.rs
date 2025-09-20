@@ -7,6 +7,7 @@
 //! - File Data Provider (zero-cost data sources)
 
 use nestgate_core::{
+
     canonical::dynamic_config::DynamicConfigManager,
     services::native_async::production::ProductionAsyncServiceManager,
     universal_storage::enterprise::backend::EnterpriseFilesystemBackend,
@@ -27,7 +28,14 @@ async fn test_remote_zfs_backend_implementations() -> Result<()> {
     // Create a mock HTTP server for testing (in real implementation)
     // For now, test that the functions exist and have real implementations
     
-    let backend = RemoteZfsBackend::new("http://localhost:8080".to_string(), None);
+    let backend = RemoteZfsBackend::new(
+        std::env::var("NESTGATE_API_ENDPOINT")
+            .unwrap_or_else(|_| format!("http://{}:{}", 
+                std::env::var("NESTGATE_HOSTNAME").unwrap_or_else(|_| nestgate_core::constants::TEST_HOSTNAME.to_string()),
+                std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string())
+            )), 
+        None
+    );
     
     // Test get_dataset_properties - should make HTTP call, not return empty
     let result = backend.get_dataset_properties("test-dataset").await;
@@ -36,6 +44,7 @@ async fn test_remote_zfs_backend_implementations() -> Result<()> {
         Ok(props) => {
             // If successful, should have attempted HTTP call
             println!("✅ get_dataset_properties made HTTP call (success): {:?}", props);
+    Ok(())
         }
         Err(e) => {
             // Should be network/HTTP error, not "not implemented" error
@@ -45,7 +54,9 @@ async fn test_remote_zfs_backend_implementations() -> Result<()> {
                 "Should be network error from real HTTP attempt, got: {}", error_str
             );
             println!("✅ get_dataset_properties made HTTP call (network error as expected): {}", e);
+    Ok(())
         }
+    Ok(())
     }
     
     // Test set_dataset_properties
@@ -56,6 +67,7 @@ async fn test_remote_zfs_backend_implementations() -> Result<()> {
     match result {
         Ok(_) => {
             println!("✅ set_dataset_properties made HTTP call (success)");
+    Ok(())
         }
         Err(e) => {
             let error_str = format!("{:?}", e);
@@ -64,6 +76,7 @@ async fn test_remote_zfs_backend_implementations() -> Result<()> {
                 "Should be network error from real HTTP attempt, got: {}", error_str
             );
             println!("✅ set_dataset_properties made HTTP call (network error as expected): {}", e);
+    Ok(())
         }
     }
     
@@ -90,7 +103,7 @@ async fn test_remote_zfs_backend_implementations() -> Result<()> {
 #[tokio::test]
 async fn test_enterprise_storage_backend_implementations() -> Result<()> {
     // Test enterprise storage backend implementations
-    let temp_dir = TempDir::new().unwrap();
+    let temp_dir = TempDir::new()?;
     let root_path = temp_dir.path().to_path_buf();
     
     let backend = EnterpriseFilesystemBackend::new(root_path.clone()).await?;
@@ -122,10 +135,13 @@ async fn test_enterprise_storage_backend_implementations() -> Result<()> {
             assert_eq!(snapshot_content, "test data", "Snapshot should contain original data");
             
             println!("✅ Snapshot contains correct data");
+    Ok(())
         }
         Err(e) => {
             panic!("create_snapshot should work with filesystem backend: {}", e);
+    Ok(())
         }
+    Ok(())
     }
     
     Ok(())
@@ -155,6 +171,7 @@ async fn test_production_service_routing_implementations() -> Result<()> {
             // If successful, should have real response data, not mock
             println!("✅ route_request made real service call (success): {} bytes", response.data.len());
             assert!(response.processing_time > 0, "Should have real processing time");
+    Ok(())
         }
         Err(e) => {
             // Should be service/network error, not mock response
@@ -164,7 +181,9 @@ async fn test_production_service_routing_implementations() -> Result<()> {
                 "Should not contain mock responses, got: {}", error_str
             );
             println!("✅ route_request made real service call (network error as expected): {}", e);
+    Ok(())
         }
+    Ok(())
     }
     
     Ok(())
@@ -173,7 +192,7 @@ async fn test_production_service_routing_implementations() -> Result<()> {
 #[tokio::test]
 async fn test_configuration_persistence_implementations() -> Result<()> {
     // Test configuration persistence implementations
-    let temp_dir = TempDir::new().unwrap();
+    let temp_dir = TempDir::new()?;
     let config_path = temp_dir.path().join("test_config.toml");
     
     let manager = DynamicConfigManager::new(config_path.clone());
@@ -195,10 +214,13 @@ async fn test_configuration_persistence_implementations() -> Result<()> {
             
             assert!(file_content.contains("["), "Should contain TOML structure");
             println!("✅ Config file contains TOML data: {} bytes", file_content.len());
+    Ok(())
         }
         Err(e) => {
             panic!("save_config_to_file should work: {}", e);
+    Ok(())
         }
+    Ok(())
     }
     
     // Test load_config_from_file - should parse actual file
@@ -208,11 +230,15 @@ async fn test_configuration_persistence_implementations() -> Result<()> {
         match load_result {
             Ok(_) => {
                 println!("✅ load_config_from_file parsed actual TOML");
+    Ok(())
             }
             Err(e) => {
                 println!("⚠️  load_config_from_file failed (may be expected): {}", e);
+    Ok(())
             }
+    Ok(())
         }
+    Ok(())
     }
     
     // Test create_backup - should create backup file
@@ -247,7 +273,14 @@ async fn test_mock_elimination_completeness() -> Result<()> {
     println!("🔍 Verifying mock elimination completeness...");
     
     // Test 1: Remote ZFS should not return hardcoded empty data
-    let backend = RemoteZfsBackend::new("http://test.invalid".to_string(), None);
+    let backend = RemoteZfsBackend::new(
+        std::env::var("NESTGATE_API_ENDPOINT")
+            .unwrap_or_else(|_| format!("http://{}:{}", 
+                std::env::var("NESTGATE_HOSTNAME").unwrap_or_else(|_| nestgate_core::constants::TEST_HOSTNAME.to_string()),
+                std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string())
+            )), 
+        None
+    );
     let props_result = backend.get_dataset_properties("test").await;
     
     // Should get network error, not empty HashMap
@@ -256,6 +289,7 @@ async fn test_mock_elimination_completeness() -> Result<()> {
             props.is_empty() || props.len() > 0,
             "Should either fail with network error or return parsed response data"
         );
+    Ok(())
     }
     
     // Test 2: Production service should not return mock responses
@@ -277,9 +311,11 @@ async fn test_mock_elimination_completeness() -> Result<()> {
             !response_str.contains("Mock") && !response_str.contains("mock"),
             "Response should not contain mock data: {}", response_str
         );
+    Ok(())
     }
     
     println!("✅ Mock elimination verification complete");
+    Ok(())
 }
 
 /// Test that the FileDataProvider implementation is complete and functional
@@ -288,12 +324,12 @@ async fn test_file_data_provider_implementation() -> Result<()> {
     println!("🧪 Testing FileDataProvider implementation...");
     
     // Create a temporary directory and test file
-    let temp_dir = TempDir::new().unwrap();
+    let temp_dir = TempDir::new()?;
     let test_file_path = temp_dir.path().join("test_data.json");
     
     // Write test data to file
     let test_data = r#"{"message": "Hello from FileDataProvider", "status": "success"}"#;
-    fs::write(&test_file_path, test_data).await.unwrap();
+    fs::write(&test_file_path, test_data).await?;
     
     // Test FileDataProvider creation and validation
     let provider = FileDataProvider::new(temp_dir.path());
@@ -326,20 +362,20 @@ async fn test_file_data_provider_implementation() -> Result<()> {
     
     assert_eq!(metadata.content_type, "application/json");
     assert!(metadata.size.is_some());
-    assert!(metadata.size.unwrap() > 0);
+    assert!(metadata.size? > 0);
     
     // Test reading from stream
     let mut buffer = vec![0u8; 1024];
-    let bytes_read = stream.read(&mut buffer).await.unwrap();
+    let bytes_read = stream.read(&mut buffer).await?;
     assert!(bytes_read > 0);
     
     let read_data = String::from_utf8_lossy(&buffer[..bytes_read]);
     assert!(read_data.contains("Hello from FileDataProvider"));
     
     // Test seeking (should work for files, unlike HTTP streams)
-    stream.seek(0).await.unwrap();
+    stream.seek(0).await?;
     let mut second_buffer = vec![0u8; 10];
-    let second_read = stream.read(&mut second_buffer).await.unwrap();
+    let second_read = stream.read(&mut second_buffer).await?;
     assert_eq!(second_read, 10);
     assert_eq!(&buffer[..10], &second_buffer[..10]);
     

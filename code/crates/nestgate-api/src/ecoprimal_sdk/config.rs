@@ -24,12 +24,11 @@ pub struct PrimalConfig {
     /// Environment variables
     pub environment: HashMap<String, String>,
 }
-
 /// Network configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkConfig {
     /// Bind address
-    pub bind_address: String,
+    pub bind_endpoint: String,
     /// Primary port
     pub port: u16,
     /// Additional ports
@@ -41,7 +40,6 @@ pub struct NetworkConfig {
     /// Network policies
     pub policies: Vec<NetworkPolicy>,
 }
-
 /// Certificate configuration  
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CertificateConfig {
@@ -54,7 +52,6 @@ pub struct CertificateConfig {
     /// Certificate source
     pub source: CertificateSource,
 }
-
 /// Certificate sources
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CertificateSource {
@@ -67,7 +64,6 @@ pub enum CertificateSource {
     /// External certificate manager
     External(String),
 }
-
 /// Network policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkPolicy {
@@ -80,7 +76,6 @@ pub struct NetworkPolicy {
     /// Policy action
     pub action: PolicyAction,
 }
-
 /// Policy actions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PolicyAction {
@@ -93,7 +88,6 @@ pub enum PolicyAction {
     /// Log and deny
     LogDeny,
 }
-
 /// Resource allocation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceAllocation {
@@ -102,7 +96,6 @@ pub struct ResourceAllocation {
     /// Resource requests
     pub requests: ResourceRequests,
 }
-
 /// Resource limits
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceLimits {
@@ -115,7 +108,6 @@ pub struct ResourceLimits {
     /// Network bandwidth limit in bytes per second
     pub network_bps: Option<u64>,
 }
-
 /// Resource requests
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceRequests {
@@ -128,7 +120,6 @@ pub struct ResourceRequests {
     /// Network bandwidth request in bytes per second
     pub network_bps: Option<u64>,
 }
-
 /// Security settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecuritySettings {
@@ -139,7 +130,6 @@ pub struct SecuritySettings {
     /// Audit settings
     pub audit: AuditSettings,
 }
-
 /// Authentication policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthPolicy {
@@ -150,7 +140,6 @@ pub struct AuthPolicy {
     /// Session timeout in seconds
     pub session_timeout: Option<u64>,
 }
-
 /// Authentication methods
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AuthMethod {
@@ -167,7 +156,6 @@ pub enum AuthMethod {
     /// Custom authentication
     Custom(String),
 }
-
 /// Policy scope
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PolicyScope {
@@ -178,7 +166,6 @@ pub enum PolicyScope {
     /// Per-primal policy
     Primal,
 }
-
 /// Encryption settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptionSettings {
@@ -189,7 +176,6 @@ pub struct EncryptionSettings {
     /// Key management settings
     pub key_management: KeyManagementSettings,
 }
-
 /// Key management settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyManagementSettings {
@@ -198,7 +184,6 @@ pub struct KeyManagementSettings {
     /// Key rotation interval in days
     pub rotation_interval_days: Option<u32>,
 }
-
 /// Key management types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum KeyManagementType {
@@ -209,7 +194,6 @@ pub enum KeyManagementType {
     /// Hardware security module
     Hsm(String),
 }
-
 /// Audit settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditSettings {
@@ -220,7 +204,6 @@ pub struct AuditSettings {
     /// Audit destinations
     pub destinations: Vec<AuditDestination>,
 }
-
 /// Audit levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AuditLevel {
@@ -233,7 +216,6 @@ pub enum AuditLevel {
     /// Full auditing
     Full,
 }
-
 /// Audit destinations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AuditDestination {

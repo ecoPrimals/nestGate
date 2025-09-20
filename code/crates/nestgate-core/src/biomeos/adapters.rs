@@ -1,16 +1,16 @@
-//! **BIOMEOS UNIVERSAL ADAPTER INTEGRATION**
-//!
-//! Universal adapter integration and routing functionality for capability-based discovery.
-//! Extracted from biomeos.rs for file size compliance.
+// **BIOMEOS UNIVERSAL ADAPTER INTEGRATION**
+//! Adapters functionality and utilities.
+// Universal adapter integration and routing functionality for capability-based discovery.
+// Extracted from management.rs for file size compliance.
 
 use crate::Result;
 use super::types::TemplateSpec;
 
 /// Route capability request through universal adapter
-pub async fn route_capability_through_adapter(capability: &str) -> Result<Vec<TemplateSpec>> {
+#[must_use]
+pub fn route_capability_through_adapter(capability: &str) -> Result<Vec<TemplateSpec>> {
     // This function routes capability requests through the universal adapter
     // instead of hardcoding primal-specific implementations
-
     // For now, return capability-based templates
     // In full implementation, this would use UniversalAdapter::route_capability()
     match capability {

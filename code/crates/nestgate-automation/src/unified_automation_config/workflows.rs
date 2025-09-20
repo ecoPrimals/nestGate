@@ -3,7 +3,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
 /// Workflow settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowSettings {
@@ -16,8 +15,7 @@ pub struct WorkflowSettings {
     /// Max concurrent workflows
     pub max_concurrent: u32,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowDefinition {
     /// Workflow name
     pub name: String,
@@ -28,16 +26,13 @@ pub struct WorkflowDefinition {
     /// Workflow timeout
     pub timeout: Duration,
 }
-
 impl SmartDefault for WorkflowSettings {
-    fn smart_default() -> Self {
-        Self {
+    fn smart_default() -> Self { Self {
             enabled: true,
             workflows: HashMap::default(),
             default_timeout: Duration::from_secs(300),
             max_concurrent: 10,
-        }
-    }
+         }
 }
 
 impl Default for WorkflowSettings {

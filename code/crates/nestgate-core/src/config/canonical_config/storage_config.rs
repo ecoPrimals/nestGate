@@ -3,7 +3,6 @@
 // backup, replication, and performance tuning.
 
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 use std::time::Duration;
 
 // Import unified constants
@@ -31,7 +30,6 @@ pub struct StorageConfig {
     /// Cache configuration
     pub cache: CacheStorageConfig,
 }
-
 /// Storage tiers configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
@@ -45,12 +43,10 @@ pub struct StorageTiersConfig {
     /// Archive tier configuration
     pub archive: TierConfig,
 }
-
 /// Tier configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierConfig {
     /// Storage path
-    pub path: PathBuf,
     /// Maximum size (bytes)
     pub max_size_bytes: u64,
     /// Compression level (0-9)
@@ -60,7 +56,6 @@ pub struct TierConfig {
     /// Access frequency threshold
     pub access_frequency_threshold: u32,
 }
-
 /// Cache storage configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheStorageConfig {
@@ -73,7 +68,6 @@ pub struct CacheStorageConfig {
     /// Whether cold tier is unlimited
     pub cold_tier_unlimited: bool,
 }
-
 /// Compression configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompressionConfig {
@@ -84,7 +78,6 @@ pub struct CompressionConfig {
     /// Enable compression
     pub enabled: bool,
 }
-
 /// Storage encryption configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageEncryptionConfig {
@@ -95,7 +88,6 @@ pub struct StorageEncryptionConfig {
     /// Key derivation function
     pub kdf: String,
 }
-
 /// Backup configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackupConfig {
@@ -106,7 +98,6 @@ pub struct BackupConfig {
     /// Backup retention
     pub retention_days: u32,
 }
-
 /// Replication configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReplicationConfig {
@@ -117,7 +108,6 @@ pub struct ReplicationConfig {
     /// Replication strategy
     pub strategy: String,
 }
-
 /// Storage performance configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StoragePerformanceConfig {
@@ -128,7 +118,6 @@ pub struct StoragePerformanceConfig {
     /// Write behind enabled
     pub write_behind_enabled: bool,
 }
-
 impl Default for StorageConfig {
     fn default() -> Self {
         Self {
@@ -148,7 +137,6 @@ impl Default for StorageConfig {
 impl Default for TierConfig {
     fn default() -> Self {
         Self {
-            path: PathBuf::from("/tmp/nestgate-storage"),
             max_size_bytes: 1024 * 1024 * 1024, // 1GB
             compression_level: 6,
             retention_days: 30,

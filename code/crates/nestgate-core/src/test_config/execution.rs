@@ -3,7 +3,6 @@
 /// Consolidates: TestExecutionConfig, TestRetryConfig, CleanTestConfig
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
 // ==================== SECTION ====================
 
 /// **Unified test execution configuration**
@@ -25,7 +24,6 @@ pub struct TestExecutionConfig {
     /// Test reporting configuration
     pub reporting: TestReportingConfig,
 }
-
 impl Default for TestExecutionConfig {
     fn default() -> Self {
         Self {
@@ -52,7 +50,6 @@ pub struct TestCleanupConfig {
     /// Cleanup retry attempts
     pub cleanup_retries: u32,
 }
-
 impl Default for TestCleanupConfig {
     fn default() -> Self {
         Self {
@@ -78,7 +75,6 @@ pub struct TestReportingConfig {
     /// Include coverage information
     pub include_coverage: bool,
 }
-
 impl Default for TestReportingConfig {
     fn default() -> Self {
         Self {

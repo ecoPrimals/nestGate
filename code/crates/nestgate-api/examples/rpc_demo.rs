@@ -1,5 +1,7 @@
+use nestgate_api::rest::rpc::{
     BidirectionalStreamManager, JsonRpcRequest, JsonRpcResponse, RpcError, UnifiedRpcRouter,
 };
+use nestgate_api::streaming::{StreamEvent, StreamManager};
 use serde_json::{json, Value};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -59,7 +61,7 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     );
 
     // Test unknown method (error case)
-    let error_request = JsonRpcRequest {
+    let _error_request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
         method: "unknown_method".to_string(),
         params: None,

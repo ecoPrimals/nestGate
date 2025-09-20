@@ -3,11 +3,10 @@
 /// test classifications, and operational status.
 use serde::{Deserialize, Serialize};
 use std::fmt;
-
 // ==================== SECTION ====================
 
-/// **THE** SystemStatus - unified across all modules
-/// Replaces SystemStatus definitions across system monitoring modules
+/// **THE** `SystemStatus` - unified across all modules
+/// Replaces `SystemStatus` definitions across system monitoring modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedSystemStatus {
     /// System is operational
@@ -27,7 +26,6 @@ pub enum UnifiedSystemStatus {
     /// Custom system status
     Custom(String),
 }
-
 impl Default for UnifiedSystemStatus {
     fn default() -> Self {
         Self::Unknown
@@ -51,8 +49,8 @@ impl fmt::Display for UnifiedSystemStatus {
 
 // ==================== SECTION ====================
 
-/// **THE** TestType - unified across all modules
-/// Replaces TestType definitions in test frameworks and automation
+/// **THE** `TestType` - unified across all modules
+/// Replaces `TestType` definitions in test frameworks and automation
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedTestType {
     /// Unit test
@@ -80,7 +78,6 @@ pub enum UnifiedTestType {
     /// Custom test type
     Custom(String),
 }
-
 impl Default for UnifiedTestType {
     fn default() -> Self {
         Self::Unit
@@ -108,8 +105,8 @@ impl fmt::Display for UnifiedTestType {
 
 // ==================== SECTION ====================
 
-/// **THE** MonitoringStatus - unified across all modules
-/// Replaces MonitoringStatus definitions in observability modules
+/// **THE** `MonitoringStatus` - unified across all modules
+/// Replaces `MonitoringStatus` definitions in observability modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedMonitoringStatus {
     /// Monitoring is active
@@ -125,7 +122,6 @@ pub enum UnifiedMonitoringStatus {
     /// Custom monitoring status
     Custom(String),
 }
-
 impl Default for UnifiedMonitoringStatus {
     fn default() -> Self {
         Self::Active

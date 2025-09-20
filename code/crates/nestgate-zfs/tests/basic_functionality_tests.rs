@@ -5,17 +5,18 @@ use nestgate_core::StorageTier;
 use nestgate_zfs::{config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager};
 use std::sync::Arc;
 
-#[test]
-fn test_zfs_config_validation() {
+use nestgate_core::canonical_types::StorageTier;
+#[tokio::test]
+async fn test_zfs_config_validation() -> Result<(), Box<dyn std::error::Error>> {
     let config = ZfsConfig::default();
 
     // Test that default configuration is valid
     assert!(config.validate().is_ok());
 
-    // Test tier configurations
-    assert_eq!(config.tiers.hot.name, "hot");
-    assert_eq!(config.tiers.warm.name, "warm");
-    assert_eq!(config.tiers.cold.name, "cold");
+    // Test ZFS-specific extensions
+    assert!(!config.extensions.pools.auto_discovery);
+    assert_eq!(config.extensions.pools.default_pool_type, "raidz1");
+    assert_eq!(config.extensions.datasets.default_compression, "lz4");
 
     // Test pool discovery settings
     assert!(config.pool_discovery.auto_discovery);
@@ -23,10 +24,11 @@ fn test_zfs_config_validation() {
     // Test health monitoring settings
     assert!(config.health_monitoring.enabled);
     assert_eq!(config.health_monitoring.check_interval_seconds, 30);
+    Ok(())
 }
 
-#[test]
-fn test_storage_tier_functionality() {
+#[tokio::test]
+async fn test_storage_tier_functionality() -> Result<(), Box<dyn std::error::Error>> {
     let hot_tier = StorageTier::Hot;
     let warm_tier = StorageTier::Warm;
     let cold_tier = StorageTier::Cold;
@@ -37,12 +39,13 @@ fn test_storage_tier_functionality() {
     assert_ne!(hot_tier, cold_tier);
 
     // Test serialization/deserialization
-    let tier_str = format!("{hot_tier:?}");
+    let tier_str = format!("{}", "actual_error_details");
     assert!(tier_str.contains("Hot"));
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_pool_manager_basic_operations() {
+async fn test_pool_manager_basic_operations() -> Result<(), Box<dyn std::error::Error>> {
     let config = ZfsConfig::default();
 
     // Test creating pool manager
@@ -60,10 +63,11 @@ async fn test_pool_manager_basic_operations() {
 
     let pool_list = pool_manager.list_pools().await;
     assert!(pool_list.is_ok(), "Should be able to list pools");
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_dataset_manager_creation() {
+async fn test_dataset_manager_creation() -> Result<(), Box<dyn std::error::Error>> {
     let config = ZfsConfig::default();
 
     let pool_manager = match ZfsPoolManager::new(&config).await {
@@ -77,11 +81,12 @@ async fn test_dataset_manager_creation() {
     let _dataset_manager = ZfsDatasetManager::new(config.clone(), pool_manager_arc);
 
     // Just test that we can create the manager
-    assert_eq!(config.pool_discovery.default_pool, "nestpool");
+    assert_eq!(config.pool_discovery.default_pool, "zfspool");
+    Ok(())
 }
 
-#[test]
-fn test_heuristic_tier_recommendation() {
+#[tokio::test]
+async fn test_heuristic_tier_recommendation() -> Result<(), Box<dyn std::error::Error>> {
     // Test heuristic-based tier recommendation (replacing AI functionality)
 
     // Large frequently accessed file should go to hot tier
@@ -114,33 +119,36 @@ fn test_heuristic_tier_recommendation() {
     };
 
     assert_eq!(recommended_tier_cold, StorageTier::Cold);
+    Ok(())
 }
 
-#[test]
-fn test_configuration_defaults() {
+#[tokio::test]
+async fn test_configuration_defaults() -> Result<(), Box<dyn std::error::Error>> {
     let config = ZfsConfig::default();
 
     // Test default values
-    assert_eq!(config.pool_discovery.default_pool, "nestpool");
+    assert_eq!(config.pool_discovery.default_pool, "zfspool");
     assert!(config.pool_discovery.auto_discovery);
     assert!(config.health_monitoring.enabled);
     assert_eq!(config.health_monitoring.check_interval_seconds, 30);
     assert_eq!(config.tiers.hot.name, "hot");
     assert_eq!(config.tiers.warm.name, "warm");
     assert_eq!(config.tiers.cold.name, "cold");
+    Ok(())
 }
 
-#[test]
-fn test_error_handling() {
+#[tokio::test]
+async fn test_error_handling() -> Result<(), Box<dyn std::error::Error>> {
     // Test that the ZFS manager handles errors gracefully
     let config = ZfsConfig::default();
 
     // Test that configurations are valid
     assert!(config.validate().is_ok());
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_concurrent_operations() {
+async fn test_concurrent_operations() -> Result<(), Box<dyn std::error::Error>> {
     // Test concurrent operations don't cause issues
     let tasks = vec![
         tokio::spawn(async {
@@ -169,12 +177,14 @@ async fn test_concurrent_operations() {
                     tracing::error!("Unwrap failed: {:?}", e);
                     return Err(std::io::Error::new(
                         std::io::ErrorKind::Other,
-                        format!("Operation failed: {:?}", e),
+                        format!("Operation failed: {}", e),
                     )
                     .into());
                 })
                 .is_ok(),
             "Configuration should be valid"
         );
+        Ok(())
     }
+    Ok(())
 }

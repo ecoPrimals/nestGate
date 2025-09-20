@@ -18,7 +18,6 @@ use std::collections::HashMap;
 use crate::error::CanonicalResult as Result;
 use crate::canonical_modernization::CanonicalModernizedConfig;
 use serde::{Deserialize, Serialize};
-use std::path::Path;
 use std::time::{Duration, SystemTime};
 use tokio::fs;
 
@@ -36,7 +35,6 @@ pub struct CanonicalStorageDetector {
     /// Detection statistics
     stats: CanonicalDetectionStats,
 }
-
 impl Default for CanonicalStorageDetector {
     fn default() -> Self {
         Self::new()
@@ -45,6 +43,7 @@ impl Default for CanonicalStorageDetector {
 
 impl CanonicalStorageDetector {
     /// Create new canonical storage detector with default configuration
+    #[must_use]
     pub fn new() -> Self {
         Self {
             config: CanonicalDetectionConfig::default(),
@@ -54,6 +53,7 @@ impl CanonicalStorageDetector {
     }
 
     /// Create detector with canonical configuration
+    #[must_use]
     pub fn with_canonical_config(config: CanonicalDetectionConfig) -> Self {
         Self {
             config,
@@ -63,7 +63,19 @@ impl CanonicalStorageDetector {
     }
 
     /// Detect all available storage systems using canonical patterns
-    pub async fn detect_canonical_storage(&mut self) -> Result<Vec<CanonicalDetectedStorage>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn detect_canonical_storage(&mut self) -> Result<Vec<CanonicalDetectedStorage>>   {
         let start_time = SystemTime::now();
         let mut detected_storage = Vec::new();
 
@@ -101,10 +113,22 @@ impl CanonicalStorageDetector {
     }
 
     /// Profile storage performance using canonical benchmarking
-    pub async fn profile_canonical_storage(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn profile_canonical_storage(
         &self,
         storage: &CanonicalDetectedStorage,
-    ) -> Result<CanonicalStorageProfile> {
+    ) -> Result<CanonicalStorageProfile>   {
         let mut profile = CanonicalStorageProfile {
             storage_id: storage.id.clone(),
             benchmark_time: SystemTime::now(),
@@ -131,12 +155,12 @@ impl CanonicalStorageDetector {
     }
 
     /// Get cached detection results
-    pub fn get_canonical_cached_storage(&self) -> Vec<&CanonicalDetectedStorage> {
+    pub const fn get_canonical_cached_storage(&self) -> Vec<&CanonicalDetectedStorage> {
         self.cache.values().collect()
     }
 
     /// Get detection statistics
-    pub fn get_canonical_stats(&self) -> &CanonicalDetectionStats {
+    pub const fn get_canonical_stats(&self) -> &CanonicalDetectionStats {
         &self.stats
     }
 
@@ -151,8 +175,8 @@ impl CanonicalStorageDetector {
         for mount_point in mount_points {
             if let Ok(metadata) = fs::metadata(mount_point).await {
                 let storage = CanonicalDetectedStorage {
-                    id: format!("local_fs_{}", mount_point.replace('/', "_")),
-                    name: format!("Local Filesystem ({})", mount_point),
+                    id: format!("local_fs_{}", mount_point.replace('/', "_"),
+                    name: format!("Local Filesystem ({mount_point})"),
                     storage_type: CanonicalStorageType::LocalFilesystem,
                     location: mount_point.to_string(),
                     capacity: self.get_filesystem_capacity(mount_point).await.unwrap_or_default(),
@@ -194,7 +218,7 @@ impl CanonicalStorageDetector {
                 last_verified: SystemTime::now(),
                 is_available: true,
                 detection_confidence: 0.80,
-            });
+            );
         }
 
         // Check for other cloud providers...
@@ -242,17 +266,14 @@ impl CanonicalStorageDetector {
 
     // ==================== PRIVATE HELPER METHODS ====================
 
-    async fn get_filesystem_capacity(&self, path: &str) -> Result<u64> {
         // Implementation would use statvfs or similar
         Ok(0) // Placeholder
     }
 
-    async fn get_filesystem_available(&self, path: &str) -> Result<u64> {
         // Implementation would use statvfs or similar
         Ok(0) // Placeholder
     }
 
-    async fn detect_filesystem_type(&self, path: &str) -> Option<String> {
         // Implementation would detect filesystem type
         Some("ext4".to_string()) // Placeholder
     }
@@ -272,11 +293,12 @@ impl CanonicalStorageDetector {
         Ok(vec![]) // Placeholder
     }
 
-    async fn get_canonical_block_device_info(&self, path: &Path) -> Result<CanonicalDetectedStorage> {
         // Implementation would get block device information
-        Ok(CanonicalDetectedStorage {
-            id: format!("block_{}", path.file_name().unwrap().to_string_lossy()),
-            name: format!("Block Device ({})", path.display()),
+        Ok(CanonicalDetectedStorage ", 
+                            id: format!("block_{path.file_name()")
+                    .map(|name| name.to_string_lossy().to_string())
+                    .unwrap_or_else(|| "unknown".to_string())),
+            name: format!("Block Device (", path.display()")),
             storage_type: CanonicalStorageType::BlockDevice,
             location: path.to_string_lossy().to_string(),
             capacity: 0, // Would be detected
@@ -560,40 +582,44 @@ impl Default for CanonicalDetectionStats {
 pub struct CanonicalStorageDetectorBuilder {
     config: CanonicalDetectionConfig,
 }
-
 impl CanonicalStorageDetectorBuilder {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             config: CanonicalDetectionConfig::default(),
         }
     }
 
+    #[must_use]
     pub fn with_canonical_config(mut self, canonical_config: CanonicalModernizedConfig) -> Self {
         self.config.canonical_config = canonical_config;
         self
     }
 
+    #[must_use]
     pub fn enable_local_filesystems(mut self, enable: bool) -> Self {
         self.config.detect_local_filesystems = enable;
         self
     }
 
+    #[must_use]
     pub fn enable_cloud_storage(mut self, enable: bool) -> Self {
         self.config.detect_cloud_storage = enable;
         self
     }
 
+    #[must_use]
     pub fn enable_performance_profiling(mut self, enable: bool) -> Self {
         self.config.enable_performance_profiling = enable;
         self
     }
 
+    #[must_use]
     pub fn with_detection_timeout(mut self, timeout: Duration) -> Self {
         self.config.detection_timeout = timeout;
         self
     }
 
-    pub fn build(self) -> CanonicalStorageDetector {
+    pub const fn build(self) -> CanonicalStorageDetector {
         CanonicalStorageDetector::with_canonical_config(self.config)
     }
 }

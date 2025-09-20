@@ -9,7 +9,7 @@ use tracing::info;
 
 /// E2E Chaos Testing - validates system resilience under controlled chaos
 #[tokio::test]
-async fn test_e2e_chaos_resilience() {
+async fn test_e2e_chaos_resilience() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔥 Starting E2E chaos resilience test");
     
     // Test chaos scenarios in sequence
@@ -18,10 +18,11 @@ async fn test_e2e_chaos_resilience() {
     test_resource_exhaustion_recovery().await;
     
     info!("✅ E2E chaos resilience test completed successfully");
+    Ok(())
 }
 
 /// Test network partition and recovery
-async fn test_network_partition_recovery() {
+async fn test_network_partition_recovery() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌐 Testing network partition recovery");
     
     // Simulate network partition with increasing durations
@@ -43,13 +44,15 @@ async fn test_network_partition_recovery() {
             "Partition duration {} should be reasonable for testing",
             partition_duration
         );
+    Ok(())
     }
     
     info!("✅ Network partition recovery test completed");
+    Ok(())
 }
 
 /// Test service degradation handling
-async fn test_service_degradation_handling() {
+async fn test_service_degradation_handling() -> Result<(), Box<dyn std::error::Error>> {
     info!("⚡ Testing service degradation handling");
     
     // Simulate gradual service degradation
@@ -68,13 +71,15 @@ async fn test_service_degradation_handling() {
             degradation_level <= 50,
             "Degradation level should not exceed 50% in tests"
         );
+    Ok(())
     }
     
     info!("✅ Service degradation handling test completed");
+    Ok(())
 }
 
 /// Test resource exhaustion and recovery
-async fn test_resource_exhaustion_recovery() {
+async fn test_resource_exhaustion_recovery() -> Result<(), Box<dyn std::error::Error>> {
     info!("💾 Testing resource exhaustion recovery");
     
     // Simulate memory pressure
@@ -86,6 +91,7 @@ async fn test_resource_exhaustion_recovery() {
         
         if i % 2 == 0 {
             sleep(Duration::from_millis(10)).await;
+    Ok(())
         }
         
         // In a real implementation:
@@ -93,6 +99,7 @@ async fn test_resource_exhaustion_recovery() {
         // 2. Trigger memory pressure alerts
         // 3. Test garbage collection
         // 4. Verify system stability
+    Ok(())
     }
     
     // Verify we can allocate expected amount
@@ -103,11 +110,12 @@ async fn test_resource_exhaustion_recovery() {
     drop(test_buffers);
     
     info!("✅ Resource exhaustion recovery test completed");
+    Ok(())
 }
 
 /// Test cascading failure prevention
 #[tokio::test]
-async fn test_cascading_failure_prevention() {
+async fn test_cascading_failure_prevention() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔗 Testing cascading failure prevention");
     
     // Simulate a chain of service failures
@@ -125,14 +133,16 @@ async fn test_cascading_failure_prevention() {
         sleep(Duration::from_millis(15 * (i + 1) as u64)).await;
         
         assert!(!service.is_empty(), "Service name should be valid");
+    Ok(())
     }
     
     info!("✅ Cascading failure prevention test completed");
+    Ok(())
 }
 
 /// Test system recovery after chaos
 #[tokio::test]
-async fn test_post_chaos_recovery() {
+async fn test_post_chaos_recovery() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔄 Testing post-chaos recovery");
     
     // Simulate recovery scenarios
@@ -150,14 +160,16 @@ async fn test_post_chaos_recovery() {
         sleep(Duration::from_millis(20)).await;
         
         assert!(!phase.is_empty(), "Recovery phase should be specified");
+    Ok(())
     }
     
     info!("✅ Post-chaos recovery test completed");
+    Ok(())
 }
 
 /// Test chaos engineering metrics collection
 #[tokio::test]
-async fn test_chaos_metrics_collection() {
+async fn test_chaos_metrics_collection() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing chaos metrics collection");
     
     let start_time = std::time::Instant::now();
@@ -172,7 +184,9 @@ async fn test_chaos_metrics_collection() {
         
         // Verify metrics collection is working
         assert!(elapsed.as_millis() >= event_duration as u128, "Metrics timing should be accurate");
+    Ok(())
     }
     
     info!("✅ Chaos metrics collection test completed");
+    Ok(())
 } 

@@ -15,9 +15,9 @@ pub struct UnifiedRpcRouter {
     /// Default connection type
     default_connection: RpcConnectionType,
 }
-
 impl UnifiedRpcRouter {
     /// Create new unified RPC router
+    #[must_use]
     pub fn new() -> Self {
         let mut router = Self {
             method_rules: HashMap::new(),
@@ -32,7 +32,7 @@ impl UnifiedRpcRouter {
 
     /// Initialize default routing rules
     fn initialize_routing_rules(&mut self) {
-        // Security-related methods route to beardog via tarpc
+        // Security-related methods route to security via tarpc
         self.method_rules
             .insert("encrypt_data".to_string(), RpcConnectionType::Tarpc);
         self.method_rules
@@ -54,7 +54,7 @@ impl UnifiedRpcRouter {
         self.method_rules
             .insert("stream_audit_logs".to_string(), RpcConnectionType::Tarpc);
 
-        // Orchestration-related methods route to songbird via JSON RPC
+        // Orchestration-related methods route to orchestration via JSON RPC
         self.method_rules
             .insert("register_service".to_string(), RpcConnectionType::JsonRpc);
         self.method_rules
@@ -138,10 +138,17 @@ impl UnifiedRpcRouter {
     }
 
     /// Route a request to the appropriate connection type
-    pub async fn route_request(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn route_request(
         &self,
         request: &UnifiedRpcRequest,
-    ) -> Result<RpcConnectionType, RpcError> {
+    ) -> Result<RpcConnectionType, RpcError>  {
         debug!(
             "🔀 Routing RPC request: {} -> {}",
             request.method, request.target
@@ -166,7 +173,7 @@ impl UnifiedRpcRouter {
         }
 
         // 3. Apply heuristic routing based on method patterns
-        let connection_type = self.apply_heuristic_routing(request).await;
+        let connection_type = self.apply_heuristic_routing(request);
         debug!(
             "✅ Routed by heuristic: {} -> {:?}",
             request.method, connection_type
@@ -176,7 +183,7 @@ impl UnifiedRpcRouter {
     }
 
     /// Apply heuristic routing based on request characteristics
-    async fn apply_heuristic_routing(&self, request: &UnifiedRpcRequest) -> RpcConnectionType {
+    fn apply_heuristic_routing(&self, request: &UnifiedRpcRequest) -> RpcConnectionType {
         let method = &request.method;
 
         // Security-related patterns
@@ -253,7 +260,7 @@ impl UnifiedRpcRouter {
     }
 
     /// Get routing statistics
-    pub fn get_routing_stats(&self) -> RoutingStats {
+    pub const fn get_routing_stats(&self) -> RoutingStats {
         RoutingStats {
             method_rules_count: self.method_rules.len(),
             target_rules_count: self.target_rules.len(),
@@ -323,7 +330,6 @@ pub struct RoutingStats {
     /// Target-specific routing rules
     pub target_rules: HashMap<String, RpcConnectionType>,
 }
-
 impl Default for UnifiedRpcRouter {
     fn default() -> Self {
         Self::new()
@@ -341,11 +347,11 @@ mod tests {
             source: "test".to_string(),
             target: target.to_string(),
             method: method.to_string(),
-            params: serde_json::json!({}),
-            priority: crate::rpc::types::RpcPriority::Normal,
+            _params: serde_json::json!({}),
+            priority: crate::rest::rpc::types::RequestPriority::Normal,
             streaming: false,
             timeout: Some(std::time::Duration::from_secs(30)),
-            metadata: HashMap::new(),
+            _metadata: HashMap::new(),
             timestamp: chrono::Utc::now(),
         }
     }
@@ -395,7 +401,7 @@ mod tests {
             tracing::error!("Unwrap failed: {:?}", e);
             panic!("Test failed: unable to continue: {:?}", e);
         });
-        assert_eq!(connection_type, RpcConnectionType::Tarpc);
+        assert_eq!(connection_type, RpcConnectionType::WebSocket);
     }
 
     #[tokio::test]

@@ -2,7 +2,6 @@
 // Network and security configuration structures for the canonical unified configuration system.
 
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 use std::time::Duration;
 
 use crate::canonical_modernization::canonical_constants::{
@@ -36,7 +35,7 @@ pub struct NetworkConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HttpServerConfig {
     /// Server bind address
-    pub bind_address: String,
+    pub bind_endpoint: String,
     /// Server port
     pub port: u16,
     /// Maximum concurrent connections
@@ -56,7 +55,7 @@ pub struct RpcConfig {
     /// RPC protocol (tarpc, json-rpc, websocket)
     pub protocol: String,
     /// RPC bind address
-    pub bind_address: String,
+    pub bind_endpoint: String,
     /// RPC port
     pub port: u16,
     /// Connection timeout
@@ -214,7 +213,7 @@ pub struct LdapConfig {
 impl Default for HttpServerConfig {
     fn default() -> Self {
         Self {
-            bind_address: DEFAULT_BIND_ADDRESS.to_string(),
+            bind_endpoint: DEFAULT_BIND_ADDRESS.to_string(),
             port: DEFAULT_API_PORT,
             max_connections: 1000,
             keep_alive_timeout: Duration::from_secs(60),
@@ -229,7 +228,7 @@ impl Default for RpcConfig {
     fn default() -> Self {
         Self {
             protocol: "json-rpc".to_string(),
-            bind_address: "127.0.0.1".to_string(),
+            bind_endpoint: "127.0.0.1".to_string(),
             port: 8081,
             connection_timeout: Duration::from_secs(10),
             request_timeout: Duration::from_secs(30),

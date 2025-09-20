@@ -23,9 +23,15 @@ impl ExampleService {
 
 impl MinimalService for ExampleService {
     async fn initialize(&self) -> MinimalResult<()> {
-        println!("🚀 Initializing service: {}", self.config.system.instance_name);
+        println!(
+            "🚀 Initializing service: {}",
+            self.config.system.instance_name
+        );
         println!("📂 Data directory: {:?}", self.config.system.data_dir);
-        println!("🌐 API endpoint: {}:{}", self.config.network.host, self.config.network.port);
+        println!(
+            "🌐 API endpoint: {}:{}",
+            self.config.network.host, self.config.network.port
+        );
         println!("💾 Storage backend: {}", self.config.storage.backend);
         Ok(())
     }
@@ -88,15 +94,20 @@ async fn main() -> MinimalResult<()> {
     println!("\n🚀 Service lifecycle demonstration:");
     let service = ExampleService::new(config.clone());
     service.initialize().await?;
-    
+
     let is_healthy = service.health_check().await?;
-    println!("🏥 Service health: {}", if is_healthy { "Healthy" } else { "Unhealthy" });
+    println!(
+        "🏥 Service health: {}",
+        if is_healthy { "Healthy" } else { "Unhealthy" }
+    );
 
     // 3. Create and use storage
     println!("\n💾 Storage operations demonstration:");
     let storage = ExampleStorage::new(config.storage.clone());
-    
-    storage.write("example.txt", b"Hello, unified NestGate!").await?;
+
+    storage
+        .write("example.txt", b"Hello, unified NestGate!")
+        .await?;
     let data = storage.read("example.txt").await?;
     println!("📄 Read data: {}", String::from_utf8_lossy(&data));
     storage.delete("example.txt").await?;
@@ -104,7 +115,7 @@ async fn main() -> MinimalResult<()> {
     // 4. Configuration file operations
     println!("\n📁 Configuration file operations:");
     let config_path = PathBuf::from("./examples/demo_config.toml");
-    
+
     // Note: This would work if we had TOML serialization
     println!("📋 Configuration would be saved to: {:?}", config_path);
 
@@ -131,4 +142,4 @@ async fn main() -> MinimalResult<()> {
     println!("🎯 Ready for systematic migration expansion");
 
     Ok(())
-} 
+}

@@ -1,7 +1,7 @@
-//! Universal Data Capabilities
-//!
-//! Defines what NestGate can do with data, not where it comes from.
-//! Any external system that can provide these capabilities can integrate.
+// Universal Data Capabilities
+//! Data Capabilities functionality and utilities.
+// Defines what NestGate can do with data, not where it comes from.
+// Any external system that can provide these capabilities can integrate.
 
 use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
@@ -17,7 +17,6 @@ pub struct DataRequest {
     /// Optional metadata
     pub metadata: HashMap<String, String>,
 }
-
 /// Universal data response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataResponse {
@@ -28,7 +27,6 @@ pub struct DataResponse {
     /// Source information (for attribution)
     pub source_info: Option<SourceInfo>,
 }
-
 /// Source information (for attribution only)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SourceInfo {
@@ -39,7 +37,6 @@ pub struct SourceInfo {
     /// Data license/terms
     pub license: Option<String>,
 }
-
 /// Universal data capability trait
 pub trait DataCapability: Send + Sync {
     /// What type of data this capability provides
@@ -54,7 +51,6 @@ pub trait DataCapability: Send + Sync {
     /// Get capability metadata
     fn get_metadata(&self) -> HashMap<String, String>;
 }
-
 /// Genome data capability (for any genome database)
 pub trait GenomeDataCapability: DataCapability {
     /// Search for genome sequences
@@ -63,7 +59,6 @@ pub trait GenomeDataCapability: DataCapability {
     /// Get genome sequence by ID
     fn get_genome_sequence(&self, genome_id: &str) -> impl std::future::Future<Output = Result<GenomeSequence>> + Send;
 }
-
 /// Model data capability (for any AI model repository)
 pub trait ModelDataCapability: DataCapability {
     /// Search for models
@@ -72,7 +67,6 @@ pub trait ModelDataCapability: DataCapability {
     /// Get model information
     fn get_model_info(&self, model_id: &str) -> impl std::future::Future<Output = Result<ModelInfo>> + Send;
 }
-
 /// Research data capability (for any research database)
 pub trait ResearchDataCapability: DataCapability {
     /// Search research papers/data
@@ -81,7 +75,6 @@ pub trait ResearchDataCapability: DataCapability {
     /// Get research data by ID
     fn get_research_data(&self, research_id: &str) -> impl std::future::Future<Output = Result<ResearchData>> + Send;
 }
-
 /// Generic result types (provider-agnostic)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenomeResult {
@@ -90,7 +83,6 @@ pub struct GenomeResult {
     pub organism: Option<String>,
     pub description: Option<String>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenomeSequence {
     pub id: String,

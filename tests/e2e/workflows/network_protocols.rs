@@ -26,11 +26,14 @@ pub async fn test_network_protocol_workflow(config: &UnifiedTestConfig) -> Resul
         Ok(_) => {
             steps_completed += 1;
             println!("    ✅ NFS share setup completed");
+    Ok(())
         }
         Err(e) => {
             error_messages.push(format!("NFS share setup failed: {e}"));
             println!("    ❌ NFS share setup failed: {e}");
+    Ok(())
         }
+    Ok(())
     }
 
     // Step 2: SMB share setup
@@ -39,11 +42,14 @@ pub async fn test_network_protocol_workflow(config: &UnifiedTestConfig) -> Resul
         Ok(_) => {
             steps_completed += 1;
             println!("    ✅ SMB share setup completed");
+    Ok(())
         }
         Err(e) => {
             error_messages.push(format!("SMB share setup failed: {e}"));
             println!("    ❌ SMB share setup failed: {e}");
+    Ok(())
         }
+    Ok(())
     }
 
     // Step 3: Protocol integration test
@@ -52,11 +58,14 @@ pub async fn test_network_protocol_workflow(config: &UnifiedTestConfig) -> Resul
         Ok(_) => {
             steps_completed += 1;
             println!("    ✅ Protocol integration test completed");
+    Ok(())
         }
         Err(e) => {
             error_messages.push(format!("Protocol integration test failed: {e}"));
             println!("    ❌ Protocol integration test failed: {e}");
+    Ok(())
         }
+    Ok(())
     }
 
     let execution_time = start_time.elapsed();

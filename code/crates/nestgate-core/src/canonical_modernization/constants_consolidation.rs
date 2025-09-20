@@ -33,7 +33,6 @@ pub struct ConstantsConsolidationManager {
     /// Domain mappings
     pub domain_mappings: HashMap<String, Vec<String>>,
 }
-
 /// Consolidation statistics
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ConsolidationStats {
@@ -44,7 +43,7 @@ pub struct ConsolidationStats {
     /// Duplicate constants eliminated
     pub duplicates_eliminated: u32,
     /// Hardcoded values replaced
-    pub hardcoded_values_replaced: u32,
+    pub hardcodedvalues_replaced: u32,
     /// Consolidation progress percentage
     pub consolidation_progress: f64,
     /// Domain-specific consolidation counts
@@ -52,7 +51,6 @@ pub struct ConsolidationStats {
     /// Size reduction metrics
     pub size_reduction: SizeReductionMetrics,
 }
-
 /// Size reduction metrics
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SizeReductionMetrics {
@@ -61,11 +59,10 @@ pub struct SizeReductionMetrics {
     /// Duplicate definitions removed
     pub duplicate_definitions_removed: u32,
     /// Hardcoded values centralized
-    pub hardcoded_values_centralized: u32,
+    pub hardcodedvalues_centralized: u32,
     /// Memory footprint reduction (bytes)
     pub memory_footprint_reduction: u64,
 }
-
 /// Consolidation warning
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsolidationWarning {
@@ -78,7 +75,6 @@ pub struct ConsolidationWarning {
     /// Suggested action
     pub suggested_action: String,
 }
-
 /// Consolidation warning categories
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ConsolidationWarningCategory {
@@ -93,7 +89,6 @@ pub enum ConsolidationWarningCategory {
     /// Breaking change potential
     BreakingChange,
 }
-
 impl std::fmt::Display for ConsolidationWarningCategory {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -126,7 +121,6 @@ pub struct ConstantDefinition {
     /// Whether it replaces hardcoded values
     pub replaces_hardcoded: bool,
 }
-
 /// Constant value types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ConstantValue {
@@ -145,9 +139,9 @@ pub enum ConstantValue {
     /// Size constant (bytes)
     Size(u64),
 }
-
 impl ConstantsConsolidationManager {
     /// Create new consolidation manager
+    #[must_use]
     pub fn new() -> Self {
         let mut manager = Self {
             stats: ConsolidationStats::default(),
@@ -217,7 +211,7 @@ impl ConstantsConsolidationManager {
             ("COMPRESSION_GZIP_9", ConstantValue::String("gzip-9".to_string()), "GZIP compression level 9"),
             ("MAX_POOLS", ConstantValue::UnsignedInteger(100), "Maximum ZFS pools"),
             ("MAX_DATASETS", ConstantValue::UnsignedInteger(10000), "Maximum ZFS datasets"),
-            ("MAX_SNAPSHOTS", ConstantValue::UnsignedInteger(100000), "Maximum ZFS snapshots"),
+            ("MAX_SNAPSHOTS", ConstantValue::UnsignedInteger(100_000), "Maximum ZFS snapshots"),
         ]);
 
         // Testing constants
@@ -290,7 +284,15 @@ impl ConstantsConsolidationManager {
 
     /// **CONSOLIDATE SCATTERED CONSTANTS**
     /// Migrate scattered constants to canonical system
-    pub fn consolidate_scattered_constants(&mut self, source_constants: &[ScatteredConstant]) -> Result<ConsolidationResult> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn consolidate_scattered_constants(&mut self, source_constants: &[ScatteredConstant]) -> Result<ConsolidationResult>  {
         let mut consolidation_result = ConsolidationResult {
             consolidated_constants: Vec::new(),
             duplicates_found: Vec::new(),
@@ -327,7 +329,7 @@ impl ConstantsConsolidationManager {
                     value: scattered_const.value.clone(),
                     const_type: scattered_const.const_type.clone(),
                     domain: domain.clone(),
-                    description: format!("Migrated from {}", scattered_const.location),
+                    description: format!("Migrated from {scattered_const.location}"),
                     canonical_location: format!("canonical_constants::{}::{}", domain, scattered_const.name),
                     usage_count: 1,
                     replaces_hardcoded: scattered_const.replaces_hardcoded,
@@ -340,7 +342,7 @@ impl ConstantsConsolidationManager {
                 self.stats.consolidated_count += 1;
                 
                 if scattered_const.replaces_hardcoded {
-                    self.stats.hardcoded_values_replaced += 1;
+                    self.stats.hardcodedvalues_replaced += 1;
                     consolidation_result.hardcoded_replacements.push(scattered_const.clone());
                 }
             }
@@ -348,7 +350,7 @@ impl ConstantsConsolidationManager {
 
         // Update consolidation progress
         self.stats.consolidation_progress = if self.stats.total_constants > 0 {
-            (self.stats.consolidated_count as f64 / self.stats.total_constants as f64) * 100.0
+            (self.stats.f64::from(consolidated_count) / self.stats.f64::from(total_constants)) * 100.0
         } else {
             100.0
         };
@@ -358,8 +360,7 @@ impl ConstantsConsolidationManager {
 
     /// **DETECT HARDCODED VALUES**
     /// Analyze source code for hardcoded values that should be constants
-    pub fn detect_hardcoded_values(&mut self, source_code: &str, file_path: &str) -> Vec<HardcodedValue> {
-        let mut hardcoded_values = Vec::new();
+        let mut hardcodedvalues = Vec::new();
         
         // Common patterns for hardcoded values
         let patterns = [
@@ -369,7 +370,7 @@ impl ConstantsConsolidationManager {
             (r"\.timeout\(Duration::from_secs\((\d+)\)\)", "Timeout duration"),
             
             // Buffer sizes and limits
-            (r"\b(8192|65536|131072)\b", "Buffer size constant"),
+            (r"\b(8192|65536|131_072)\b", "Buffer size constant"),
             (r"Vec::with_capacity\((\d+)\)", "Collection capacity"),
             (r"\.reserve\((\d+)\)", "Memory reservation"),
             
@@ -388,9 +389,9 @@ impl ConstantsConsolidationManager {
             (r"max_attempts.*=.*(\d+)", "Maximum attempts"),
             
             // Common string literals
-            (r#""(admin|user|guest)""#, "Role constants"),
-            (r#""(development|production|test)""#, "Environment constants"),
-            (r#""(lz4|gzip|zstd)""#, "Compression algorithms"),
+            (r""(admin|user|guest)"", "Role constants"),
+            (r""(development|production|test)"", "Environment constants"),
+            (r""(lz4|gzip|zstd)"", "Compression algorithms"),
         ];
 
         for (line_num, line) in source_code.lines().enumerate() {
@@ -398,31 +399,36 @@ impl ConstantsConsolidationManager {
                 if let Ok(regex) = regex::Regex::new(pattern) {
                     for capture in regex.captures_iter(line) {
                         if let Some(matched) = capture.get(1).or_else(|| capture.get(0)) {
-                            let hardcoded_value = HardcodedValue {
+                            let hardcodedvalue = HardcodedValue {
                                 value: matched.as_str().to_string(),
                                 location: format!("{}:{}", file_path, line_num + 1),
                                 context: line.trim().to_string(),
                                 suggested_constant: self.suggest_constant_name(&matched.as_str(), description),
                                 description: description.to_string(),
                             };
-                            hardcoded_values.push(hardcoded_value);
+                            hardcodedvalues.push(hardcodedvalue);
                         }
                     }
                 }
             }
         }
 
-        hardcoded_values
+        hardcodedvalues
     }
 
     /// **GENERATE CONSTANTS MODULE**
     /// Generate consolidated constants module code
-    pub fn generate_constants_module(&self, domain: &str) -> Result<String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn generate_constants_module(&self, domain: &str) -> Result<String>  {
         let domain_constants = self.domain_mappings.get(domain)
-            .ok_or_else(|| NestGateError::Internal {
-                location: format!("constants_consolidation::generate_constants_module::{}", domain),
-                is_bug: false,
-            })?;
+            .ok_or_else(|| NestGateError::internal_error(
 
         let mut module_code = format!(
             "//! **{} CONSTANTS MODULE**\n//!\n//! Consolidated constants for {} domain\n//! Generated by ConstantsConsolidationManager\n\n",
@@ -495,7 +501,7 @@ impl ConstantsConsolidationManager {
     }
 
     /// Suggest constant name for hardcoded value
-    fn suggest_constant_name(&self, value: &str, description: &str) -> String {
+    fn suggest_constant_name(&self, value: &str, description: &str) -> String ", 
         match value {
             "8080" => "DEFAULT_API_PORT".to_string(),
             "3000" => "DEFAULT_DEV_PORT".to_string(),
@@ -512,7 +518,7 @@ impl ConstantsConsolidationManager {
             "user" => "ROLE_USER".to_string(),
             "lz4" => "COMPRESSION_LZ4".to_string(),
             "gzip" => "COMPRESSION_GZIP".to_string(),
-            _ => format!("CONSTANT_{}", value.to_uppercase().replace(".", "_")),
+            _ => format!("CONSTANT_{value.to_uppercase()").replace(".", "_")),
         }
     }
 
@@ -529,13 +535,13 @@ impl ConstantsConsolidationManager {
             message,
             source_location,
             suggested_action,
-        });
+        );
     }
 
     /// Get consolidation summary
-    pub fn get_summary(&self) -> ConsolidationSummary {
+    pub const fn get_summary(&self) -> ConsolidationSummary {
         let progress = if self.stats.total_constants > 0 {
-            (self.stats.consolidated_count as f64 / self.stats.total_constants as f64) * 100.0
+            (self.stats.f64::from(consolidated_count) / self.stats.f64::from(total_constants)) * 100.0
         } else {
             100.0
         };
@@ -555,8 +561,8 @@ impl ConstantsConsolidationManager {
     /// Calculate maintenance reduction estimate
     fn calculate_maintenance_reduction(&self) -> f64 {
         // Estimate based on duplicates eliminated and constants centralized
-        let duplicate_reduction = self.stats.duplicates_eliminated as f64 * 0.8; // 80% reduction per duplicate
-        let centralization_benefit = self.stats.consolidated_count as f64 * 0.3; // 30% benefit per centralized constant
+        let duplicate_reduction = self.stats.f64::from(duplicates_eliminated) * 0.8; // 80% reduction per duplicate
+        let centralization_benefit = self.stats.f64::from(consolidated_count) * 0.3; // 30% benefit per centralized constant
         (duplicate_reduction + centralization_benefit).min(95.0) // Cap at 95%
     }
 }
@@ -572,7 +578,6 @@ pub struct ScatteredConstant {
     pub location: String,
     pub replaces_hardcoded: bool,
 }
-
 /// Hardcoded value detection
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HardcodedValue {
@@ -582,7 +587,6 @@ pub struct HardcodedValue {
     pub suggested_constant: String,
     pub description: String,
 }
-
 /// Consolidation result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsolidationResult {
@@ -591,7 +595,6 @@ pub struct ConsolidationResult {
     pub hardcoded_replacements: Vec<ScatteredConstant>,
     pub warnings: Vec<ConsolidationWarning>,
 }
-
 /// Consolidation summary
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsolidationSummary {
@@ -601,7 +604,6 @@ pub struct ConsolidationSummary {
     pub canonical_constants_count: usize,
     pub estimated_maintenance_reduction: f64,
 }
-
 impl Default for ConstantsConsolidationManager {
     fn default() -> Self {
         Self::new()
@@ -610,7 +612,6 @@ impl Default for ConstantsConsolidationManager {
 
 /// **MIGRATION CONVENIENCE MACROS**
 /// Macros to help with constants consolidation
-
 /// Replace hardcoded value with canonical constant
 #[macro_export]
 macro_rules! use_canonical_constant {
@@ -618,7 +619,6 @@ macro_rules! use_canonical_constant {
         crate::canonical_modernization::canonical_constants::$domain::$constant
     };
 }
-
 /// Register scattered constant for consolidation
 #[macro_export]
 macro_rules! register_scattered_constant {

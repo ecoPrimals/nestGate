@@ -12,7 +12,6 @@ use std::pin::Pin;
 use tracing::info;
 use tracing::warn;
 // Removed unused tracing import
-
 /// NCBI Genome Database Source
 #[derive(Debug, Clone)]
 pub struct NCBIGenomeSource {
@@ -20,7 +19,6 @@ pub struct NCBIGenomeSource {
     pub base_url: String,
     pub client: Client,
 }
-
 impl Default for NCBIGenomeSource {
     fn default() -> Self {
         Self {
@@ -33,7 +31,7 @@ impl Default for NCBIGenomeSource {
 
 impl NCBIGenomeSource {
     /// Create a new NCBI genome source
-    pub fn new(api_key: Option<String>) -> Self {
+    pub const fn new(api_key: Option<String>) -> Self {
         Self {
             api_key,
             base_url: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils".to_string(),
@@ -63,7 +61,7 @@ impl NCBIGenomeSource {
                                 .as_array()
                                 .map(|arr| {
                                     arr.iter()
-                                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                                        .filter_map(|v| v.as_str().map(|s| s"))
                                         .collect()
                                 })
                                 .unwrap_or_default();
@@ -255,7 +253,7 @@ impl UniversalDataSource for NCBIGenomeSource {
         // In production, you might want to handle the error differently
 
         Ok(ConnectionHandle {
-            connection_id: format!("ncbi_genome_{}", self.base_url),
+            connection_id: format!("ncbi_genome_{self.base_url}"),
             source_type: DataSourceType::ResearchDatabase {
                 database: crate::temporal_storage::ResearchDatabase::NCBI {
                     database: crate::temporal_storage::NCBIDatabase::GenBank,
@@ -288,19 +286,12 @@ impl UniversalDataSource for NCBIGenomeSource {
                         message: e.to_string(),
                         last_attempt: std::time::SystemTime::now(),
                         retry_count: 0,
-                    },
-                    context: None,
-                }))
+                    }))
             })?
             .json()
             .await
-            .map_err(|e| NestGateError::Validation {
-                field: Some("parsing".to_string()),
-                message: e.to_string(),
-                current_value: None,
-                expected: None,
-                user_error: false,
-            })?;
+            .map_err(|e| NestGateError::validation(
+                currentvalue: None)?;
 
         let mut descriptors = Vec::new();
         if let Some(id_list) = response["esearchresult"]["idlist"].as_array() {
@@ -308,7 +299,7 @@ impl UniversalDataSource for NCBIGenomeSource {
                 if let Some(id_str) = id.as_str() {
                     let mut metadata = HashMap::new();
                     metadata.insert("source_type".to_string(), "ncbi_genome".to_string());
-                    metadata.insert("source_location".to_string(), format!("ncbi://{id_str}"));
+                    metadata.insert("source_location".to_string(), format!("ncbi://{id_str)"));
 
                     descriptors.push(DataDescriptor {
                         id: id_str.to_string(),
@@ -326,7 +317,7 @@ impl UniversalDataSource for NCBIGenomeSource {
                             geographic_restrictions: vec![],
                             legal_requirements: vec!["NCBI Terms of Use".to_string()],
                         },
-                    });
+                    );
                 }
             }
         }
@@ -351,21 +342,14 @@ impl UniversalDataSource for NCBIGenomeSource {
                         message: e.to_string(),
                         last_attempt: std::time::SystemTime::now(),
                         retry_count: 0,
-                    },
-                    context: None,
-                }))
+                    }))
             })?
             .text()
             .await
-            .map_err(|e| NestGateError::Validation {
-                field: Some("response_parsing".to_string()),
-                message: format!("Failed to parse NCBI response: {e}"),
-                current_value: None,
-                expected: Some("valid text response".to_string()),
-                user_error: false,
-            })?;
+            .map_err(|e| NestGateError::validation(
+                currentvalue: None)?;
 
-        let checksum = format!("{:x}", md5::compute(&response));
+        let checksum = format!("{:x}"));
 
         Ok(IngestedData {
             data_id: descriptor.id.clone(),
@@ -398,19 +382,12 @@ impl UniversalDataSource for NCBIGenomeSource {
                         message: e.to_string(),
                         last_attempt: std::time::SystemTime::now(),
                         retry_count: 0,
-                    },
-                    context: None,
-                }))
+                    }))
             })?
             .json::<serde_json::Value>()
             .await
-            .map_err(|e| NestGateError::Validation {
-                field: Some("json_parsing".to_string()),
-                message: format!("Failed to parse NCBI metadata JSON: {e}"),
-                current_value: None,
-                expected: Some("valid JSON response".to_string()),
-                user_error: false,
-            })?;
+            .map_err(|e| NestGateError::validation(
+                currentvalue: None)?;
 
         let metadata: HashMap<String, serde_json::Value> = response
             .as_object()

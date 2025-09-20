@@ -16,7 +16,7 @@ use nestgate_core::{NestGateError, Result as CoreResult};
 use super::operations::SnapshotOperationType;
 use super::policy::{RetentionPolicy, ScheduleFrequency, SnapshotPolicy};
 use super::types::{SnapshotInfo, SnapshotOperation, SnapshotOperationStatus};
-use crate::config::canonical_master::NestGateCanonicalConfigSource;
+// use crate::config::canonical_master::NestGateCanonicalConfigSource; // Module not yet implemented
 use std::time::Duration;
 use tracing::debug;
 use tracing::error;
@@ -30,10 +30,9 @@ pub struct PolicyScheduler {
     policies: SnapshotPolicyMap,
     operation_queue: Arc<RwLock<Vec<SnapshotOperation>>>,
 }
-
 impl PolicyScheduler {
     /// Create a new policy scheduler
-    pub fn new(
+    pub const fn new(
         dataset_manager: Arc<ZfsDatasetManager>,
         policies: SnapshotPolicyMap,
         operation_queue: Arc<RwLock<Vec<SnapshotOperation>>>,
@@ -54,7 +53,7 @@ impl PolicyScheduler {
                 continue;
             }
 
-            if Self::should_execute_policy(policy).await {
+            if Self::should_execute_policy(policy) {
                 info!("Executing policy: {}", policy.name);
                 if let Err(e) = self.execute_policy(policy).await {
                     error!("Failed to execute policy {}: {}", policy.name, e);
@@ -65,7 +64,7 @@ impl PolicyScheduler {
     }
 
     /// Check if a policy should be executed based on its schedule
-    async fn should_execute_policy(policy: &SnapshotPolicy) -> bool {
+    fn should_execute_policy(policy: &SnapshotPolicy) -> bool {
         let now = SystemTime::now();
         let now_duration = now.duration_since(UNIX_EPOCH).unwrap_or_default();
 
@@ -94,9 +93,9 @@ impl PolicyScheduler {
                     && datetime.hour() == *hour as u32
                     && datetime.minute() < 5
             }
-            ScheduleFrequency::Cron(_) => {
-                // Simplified cron check - would need proper cron parser
-                warn!("Cron schedule not fully implemented");
+            ScheduleFrequency::Custom(_) => {
+                // Simplified custom schedule check - would need proper cron parser
+                warn!("Custom schedule not fully implemented");
                 false
             }
         }
@@ -244,7 +243,7 @@ impl PolicyScheduler {
                     datetime.format("%Y%m")
                 )
             }
-            ScheduleFrequency::Cron(_) => {
+            ScheduleFrequency::Custom(_) => {
                 format!(
                     "{}_{}_{}",
                     policy.name_prefix,
@@ -307,16 +306,14 @@ impl PolicyScheduler {
                 monthly_months,
                 yearly_years,
             } => {
-                snapshots_to_delete = self
-                    .apply_custom_retention(
-                        snapshots,
-                        *hourly_hours,
-                        *daily_days,
-                        *weekly_weeks,
-                        *monthly_months,
-                        *yearly_years,
-                    )
-                    .await;
+                snapshots_to_delete = self.apply_custom_retention(
+                    snapshots,
+                    *hourly_hours,
+                    *daily_days,
+                    *weekly_weeks,
+                    *monthly_months,
+                    *yearly_years,
+                );
             }
         }
 
@@ -349,7 +346,7 @@ impl PolicyScheduler {
 
     /// Apply custom retention policy
     #[allow(clippy::too_many_arguments)] // Retention policy requires multiple time periods
-    async fn apply_custom_retention(
+    fn apply_custom_retention(
         &self,
         snapshots: Vec<SnapshotInfo>,
         hourly_hours: u32,
@@ -376,19 +373,17 @@ impl PolicyScheduler {
     }
 
     /// Parse schedule frequency to duration for next execution
-    pub fn parse_schedule(&self, schedule: &ScheduleFrequency) -> CoreResult<Duration> {
+    pub const fn parse_schedule(&self, schedule: &ScheduleFrequency) -> CoreResult<Duration> {
         match schedule {
             ScheduleFrequency::Minutes(minutes) => Ok(Duration::from_secs(*minutes as u64 * 60)),
             ScheduleFrequency::Hours(hours) => Ok(Duration::from_secs(*hours as u64 * 3600)),
             ScheduleFrequency::Daily(_) => Ok(Duration::from_secs(86400)), // 24 hours
             ScheduleFrequency::Weekly { .. } => Ok(Duration::from_secs(604800)), // 7 days
             ScheduleFrequency::Monthly { .. } => Ok(Duration::from_secs(2629746)), // ~30.44 days
-            ScheduleFrequency::Cron(_) => Err(NestGateError::Configuration {
-                message: "Cron parsing not implemented".to_string(),
-                
-                field: None,
-                
-            }),
+            ScheduleFrequency::Custom(_) => Err(NestGateError::configuration_error(
+                "schedule.frequency",
+                "Custom schedule frequencies not yet implemented",
+            )),
         }
     }
 }

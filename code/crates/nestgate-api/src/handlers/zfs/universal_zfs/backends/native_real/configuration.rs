@@ -5,28 +5,25 @@ use crate::handlers::zfs::universal_zfs::types::UniversalZfsResult;
 use std::collections::HashMap;
 
 /// Optimize ZFS configuration for better performance
-pub async fn optimize(
+pub const fn optimize(
     _service: &NativeZfsService,
     _optimization_type: String,
 ) -> UniversalZfsResult<String> {
     Ok("Optimization completed".to_string())
 }
-
 /// Get analytics data for ZFS optimization
-pub async fn get_optimization_analytics(
+pub fn get_optimization_analytics(
     _service: &NativeZfsService,
 ) -> UniversalZfsResult<HashMap<String, serde_json::Value>> {
     Ok(HashMap::new())
 }
-
 /// Predict optimal storage tier for a dataset
-pub async fn predict_tier(
+pub const fn predict_tier(
     _service: &NativeZfsService,
     _dataset_name: &str,
 ) -> UniversalZfsResult<String> {
     Ok("tier_1".to_string())
 }
-
 /// Get the current configuration of the native ZFS service
 ///
 /// Returns a HashMap containing the current configuration settings
@@ -37,7 +34,7 @@ pub async fn predict_tier(
 ///
 /// # Returns
 /// * `UniversalZfsResult<HashMap<String, serde_json::Value>>` - Configuration map
-pub async fn get_configuration(
+pub fn get_configuration(
     _service: &NativeZfsService,
 ) -> UniversalZfsResult<HashMap<String, serde_json::Value>> {
     let mut config = HashMap::new();
@@ -51,7 +48,6 @@ pub async fn get_configuration(
     );
     Ok(config)
 }
-
 /// Update the configuration of the native ZFS service
 ///
 /// Applies new configuration settings to the native ZFS backend service.
@@ -62,7 +58,7 @@ pub async fn get_configuration(
 ///
 /// # Returns
 /// * `UniversalZfsResult<()>` - Success or error result
-pub async fn update_configuration(
+pub const fn update_configuration(
     _service: &NativeZfsService,
     _config: HashMap<String, serde_json::Value>,
 ) -> UniversalZfsResult<()> {

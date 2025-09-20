@@ -4,7 +4,6 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 /// Storage resource representation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageResource {
@@ -15,7 +14,6 @@ pub struct StorageResource {
     /// Resource type (dataset, pool, volume, etc.)
     pub resource_type: String,
     /// Storage path or location
-    pub path: String,
     /// Resource size in bytes
     pub size_bytes: u64,
     /// Creation timestamp
@@ -29,7 +27,6 @@ pub struct StorageResource {
     /// Access permissions
     pub permissions: Vec<String>,
 }
-
 /// Configuration for creating storage resources
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageResourceConfig {
@@ -44,7 +41,6 @@ pub struct StorageResourceConfig {
     /// Configuration options
     pub options: HashMap<String, serde_json::Value>,
 }
-
 /// Storage metrics and usage statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageMetrics {
@@ -69,14 +65,12 @@ pub struct StorageMetrics {
     /// Storage-specific metrics
     pub custom_metrics: HashMap<String, serde_json::Value>,
 }
-
 impl Default for StorageResource {
     fn default() -> Self {
         Self {
             resource_id: uuid::Uuid::new_v4().to_string(),
             name: "Unnamed Resource".to_string(),
             resource_type: "unknown".to_string(),
-            path: "/".to_string(),
             size_bytes: 0,
             created_at: Utc::now(),
             modified_at: Utc::now(),
@@ -118,25 +112,26 @@ impl Default for StorageMetrics {
 
 impl StorageMetrics {
     /// Calculate available space percentage
-    pub fn available_percent(&self) -> f32 {
+    pub const fn available_percent(&self) -> f32 {
         if self.total_capacity_bytes == 0 {
             0.0
         } else {
-            (self.available_bytes as f32 / self.total_capacity_bytes as f32) * 100.0
+            (self.f32::from(available_bytes) / self.f32::from(total_capacity_bytes)) * 100.0
         }
     }
 
     /// Check if storage is nearly full (>90% used)
-    pub fn is_nearly_full(&self) -> bool {
+    pub const fn is_nearly_full(&self) -> bool {
         self.utilization_percent > 90.0
     }
 
     /// Get total operations per second
-    pub fn total_ops_per_sec(&self) -> f32 {
+    pub const fn total_ops_per_sec(&self) -> f32 {
         self.read_ops_per_sec + self.write_ops_per_sec
     }
 
     /// Add custom metric
+    #[must_use]
     pub fn with_custom_metric(mut self, key: &str, value: serde_json::Value) -> Self {
         self.custom_metrics.insert(key.to_string(), value);
         self
@@ -145,16 +140,15 @@ impl StorageMetrics {
 
 impl StorageResource {
     /// Create a new storage resource
-    pub fn new(name: &str, resource_type: &str, path: &str) -> Self {
         Self {
             name: name.to_string(),
             resource_type: resource_type.to_string(),
-            path: path.to_string(),
             ..Default::default()
         }
     }
 
     /// Add metadata
+    #[must_use]
     pub fn with_metadata(mut self, key: &str, value: serde_json::Value) -> Self {
         self.metadata.insert(key.to_string(), value);
         self.modified_at = Utc::now();
@@ -162,6 +156,7 @@ impl StorageResource {
     }
 
     /// Add tag
+    #[must_use]
     pub fn with_tag(mut self, tag: &str) -> Self {
         if !self.tags.contains(&tag.to_string()) {
             self.tags.push(tag.to_string());
@@ -171,6 +166,7 @@ impl StorageResource {
     }
 
     /// Set size
+    #[must_use]
     pub fn with_size(mut self, size_bytes: u64) -> Self {
         self.size_bytes = size_bytes;
         self.modified_at = Utc::now();
@@ -178,7 +174,7 @@ impl StorageResource {
     }
 
     /// Check if user has permission
-    pub fn has_permission(&self, permission: &str) -> bool {
+    pub const fn has_permission(&self, permission: &str) -> bool {
         self.permissions.contains(&permission.to_string())
     }
 }

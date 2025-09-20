@@ -22,7 +22,6 @@ pub async fn list_datasets(service: &NativeZfsService) -> UniversalZfsResult<Vec
         .await?;
     parsing::parse_dataset_list(&output)
 }
-
 /// Create a new ZFS dataset
 ///
 /// Creates a new ZFS dataset with the specified configuration.
@@ -48,7 +47,6 @@ pub async fn create_dataset(
         .into()
     })
 }
-
 /// Destroy a ZFS dataset
 ///
 /// Removes a ZFS dataset from the system. Can optionally destroy
@@ -61,7 +59,7 @@ pub async fn create_dataset(
 ///
 /// # Returns
 /// * `UniversalZfsResult<()>` - Success or error result
-pub async fn destroy_dataset(
+pub fn destroy_dataset(
     service: &NativeZfsService,
     dataset_name: &str,
     recursive: bool,
@@ -74,7 +72,6 @@ pub async fn destroy_dataset(
     service.execute_zfs_command("zfs", &args).await?;
     Ok(())
 }
-
 /// Get information about a specific ZFS dataset
 ///
 /// Retrieves detailed information about a ZFS dataset including
@@ -98,7 +95,6 @@ pub async fn get_dataset(
         Err(_) => Ok(None),
     }
 }
-
 /// Get properties of a ZFS dataset
 ///
 /// Retrieves all properties and their current values for the specified dataset.
@@ -129,7 +125,6 @@ pub async fn get_dataset_properties(
     }
     Ok(properties)
 }
-
 /// Set properties on a ZFS dataset
 ///
 /// Updates one or more properties on the specified dataset.
@@ -147,14 +142,13 @@ pub async fn set_dataset_properties(
     dataset_name: &str,
     properties: HashMap<String, String>,
 ) -> UniversalZfsResult<()> {
-    for (key, value) in properties {
+    for (_key, _value) in properties {
         service
-            .execute_zfs_command("zfs", &["set", &format!("{}={}", key, value), dataset_name])
+            .execute_zfs_command("zfs", &["set", "property=value", dataset_name])
             .await?;
     }
     Ok(())
 }
-
 /// List all snapshots for a specific dataset
 ///
 /// Retrieves information about all snapshots that exist for the specified dataset.

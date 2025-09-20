@@ -11,7 +11,7 @@ use tracing::info;
 
 /// Test chaos engineering integration configuration
 #[tokio::test]
-async fn test_chaos_engineering_integration_config() {
+async fn test_chaos_engineering_integration_config() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌪️ Starting chaos engineering integration configuration test");
     
     // Test chaos engineering integration configuration creation
@@ -23,11 +23,12 @@ async fn test_chaos_engineering_integration_config() {
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ Chaos engineering integration configuration test completed");
+    Ok(())
 }
 
 /// Test chaos engineering system disruption
 #[tokio::test]
-async fn test_chaos_system_disruption() {
+async fn test_chaos_system_disruption() -> Result<(), Box<dyn std::error::Error>> {
     info!("💥 Testing chaos engineering system disruption");
     
     // Test chaos engineering disruption operations
@@ -47,14 +48,16 @@ async fn test_chaos_system_disruption() {
         // Verify disruption operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ Chaos engineering system disruption completed");
+    Ok(())
 }
 
 /// Test chaos engineering resilience validation
 #[tokio::test]
-async fn test_chaos_resilience_validation() {
+async fn test_chaos_resilience_validation() -> Result<(), Box<dyn std::error::Error>> {
     info!("🛡️ Testing chaos engineering resilience validation");
     
     // Test chaos engineering resilience validation steps
@@ -74,14 +77,16 @@ async fn test_chaos_resilience_validation() {
         // Verify resilience step is valid
         assert!(!step.is_empty(), "Step should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ Chaos engineering resilience validation completed");
+    Ok(())
 }
 
 /// Test chaos engineering monitoring and metrics
 #[tokio::test]
-async fn test_chaos_monitoring_metrics() {
+async fn test_chaos_monitoring_metrics() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing chaos engineering monitoring and metrics");
     
     let start_time = std::time::Instant::now();
@@ -96,14 +101,16 @@ async fn test_chaos_monitoring_metrics() {
         
         // Verify monitoring timing is accurate
         assert!(elapsed.as_millis() >= cycle_time as u128, "Chaos monitoring timing should be accurate");
+    Ok(())
     }
     
     info!("✅ Chaos engineering monitoring and metrics completed");
+    Ok(())
 }
 
 /// Test chaos engineering recovery scenarios
 #[tokio::test]
-async fn test_chaos_recovery_scenarios() {
+async fn test_chaos_recovery_scenarios() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔄 Testing chaos engineering recovery scenarios");
     
     // Test chaos engineering recovery scenarios
@@ -123,14 +130,16 @@ async fn test_chaos_recovery_scenarios() {
         // Verify recovery scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
         assert!(recovery_time > 0, "Recovery time should be positive");
+    Ok(())
     }
     
     info!("✅ Chaos engineering recovery scenarios completed");
+    Ok(())
 }
 
 /// Test chaos engineering fault injection
 #[tokio::test]
-async fn test_chaos_fault_injection() {
+async fn test_chaos_fault_injection() -> Result<(), Box<dyn std::error::Error>> {
     info!("⚡ Testing chaos engineering fault injection");
     
     // Test chaos engineering fault injection types
@@ -150,14 +159,16 @@ async fn test_chaos_fault_injection() {
         // Verify fault injection is valid
         assert!(!fault_type.is_empty(), "Fault type should be specified");
         assert!(injection_time > 0, "Injection time should be positive");
+    Ok(())
     }
     
     info!("✅ Chaos engineering fault injection completed");
+    Ok(())
 }
 
 /// Test chaos engineering environments
 #[tokio::test]
-async fn test_chaos_engineering_environments() {
+async fn test_chaos_engineering_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing chaos engineering integration across environments");
     
     // Test development environment chaos engineering integration
@@ -173,4 +184,5 @@ async fn test_chaos_engineering_environments() {
     info!("Production chaos engineering integration configuration validated");
     
     info!("✅ Chaos engineering integration environment test completed");
+    Ok(())
 } 

@@ -15,7 +15,6 @@ use std::path::PathBuf;
 #[command(version = env!("CARGO_PKG_VERSION"))]
 #[command(long_about = "
 🏠 NestGate - Sovereign Storage System
-
 NestGate provides ZFS capabilities through a modern API-based architecture:
 • Universal ZFS features accessible via REST API
 • Works with any storage backend (local, cloud, network, memory)
@@ -25,7 +24,7 @@ NestGate provides ZFS capabilities through a modern API-based architecture:
 
 EXAMPLES:
   # Start NestGate service
-  nestgate service start --port 8080
+  nestgate service start --port $NESTGATE_API_PORT
 
   # Check system health
   nestgate doctor --comprehensive
@@ -34,7 +33,7 @@ EXAMPLES:
   nestgate storage configure --backend filesystem
 
   # Access ZFS features via API:
-  curl -X POST http://localhost:8080/api/v1/zfs/datasets \\
+  curl -X POST $NESTGATE_API_ENDPOINT/api/v1/zfs/datasets \\
     -H 'Content-Type: application/json' \\
     -d '{\"name\": \"tank/data\", \"compression\": true}'
 
@@ -56,7 +55,6 @@ pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
 }
-
 #[derive(Debug, Subcommand)]
 pub enum Commands {
     /// Service management
@@ -66,7 +64,6 @@ pub enum Commands {
         #[command(subcommand)]
         action: ServiceAction,
     },
-
     /// Storage management
     #[command(name = "storage")]
     #[command(about = "Storage backend configuration")]
@@ -74,7 +71,6 @@ pub enum Commands {
         #[command(subcommand)]
         action: StorageAction,
     },
-
     /// System diagnostics
     #[command(name = "doctor")]
     #[command(about = "System health check and diagnostics")]
@@ -86,7 +82,6 @@ pub enum Commands {
         #[arg(long)]
         fix: bool,
     },
-
     /// Configuration management
     #[command(name = "config")]
     #[command(about = "Configuration management")]
@@ -94,7 +89,13 @@ pub enum Commands {
         #[command(subcommand)]
         action: ConfigAction,
     },
-
+    /// ZFS filesystem operations
+    #[command(name = "zfs")]
+    #[command(about = "ZFS dataset and pool management")]
+    Zfs {
+        #[command(subcommand)]
+        command: crate::commands::zfs::ZfsCommands,
+    },
     /// Performance monitoring
     #[command(name = "monitor")]
     #[command(about = "Performance monitoring and statistics")]
@@ -115,11 +116,11 @@ pub enum Commands {
 pub enum ServiceAction {
     /// Start NestGate service
     Start {
-        /// Port to bind to
-        #[arg(short, long, default_value = "8080")]
+        /// Port to bind to (can be overridden with NESTGATE_API_PORT)
+        #[arg(short, long, default_value_t = nestgate_core::defaults::network::DEFAULT_API_PORT)]
         port: u16,
-        /// Bind address
-        #[arg(long, default_value = "0.0.0.0")]
+        /// Bind address (can be overridden with NESTGATE_BIND_ADDRESS)
+        #[arg(long, default_value = nestgate_core::defaults::network::DEFAULT_BIND_ADDRESS)]
         bind: String,
         /// Run in background
         #[arg(short, long)]
@@ -178,7 +179,6 @@ pub enum StorageAction {
         set: Vec<String>,
     },
 }
-
 #[derive(Debug, Subcommand)]
 pub enum ConfigAction {
     /// Show current configuration
@@ -218,18 +218,65 @@ pub enum ConfigAction {
         input: PathBuf,
     },
 }
+impl Cli {
+    /// Run the CLI application
+    pub async fn run(self) -> crate::error::BinResult<()> {
+        use crate::error::BinErrorHelper;
+
+        // Setup logging
+        setup_logging(self.verbose);
+
+        // Print banner
+        print_banner();
+
+        // Handle commands
+        match self.command {
+            Commands::Zfs { command } => {
+                let mut zfs_handler = crate::commands::zfs::ZfsHandler::new();
+                zfs_handler.execute(command).await.map_err(|e| {
+                    BinErrorHelper::runtime_error(e.to_string(), Some("zfs_command".to_string()))
+                })?;
+            }
+            Commands::Service { action } => {
+                println!("🚀 Service management not yet implemented: {:?}", action);
+            }
+            Commands::Doctor { comprehensive, fix } => {
+                println!(
+                    "🩺 System diagnostics not yet implemented - comprehensive: {}, fix: {}",
+                    comprehensive, fix
+                );
+            }
+            Commands::Storage { action } => {
+                println!("💾 Storage management not yet implemented: {:?}", action);
+            }
+            Commands::Config { action } => {
+                println!(
+                    "⚙️  Configuration management not yet implemented: {:?}",
+                    action
+                );
+            }
+            Commands::Monitor {
+                interval,
+                output,
+                duration,
+            } => {
+                println!("📊 Performance monitoring not yet implemented - interval: {:?}, output: {:?}, duration: {:?}", interval, output, duration);
+            }
+        }
+
+        Ok(())
+    }
+}
 
 /// Initialize CLI and parse arguments
 pub fn parse_args() -> Cli {
     Cli::parse()
 }
-
 /// Setup logging based on CLI arguments
 pub fn setup_logging(verbose: bool) {
     let level = if verbose { "debug" } else { "info" };
-
     tracing_subscriber::fmt()
-        .with_env_filter(format!("{level},nestgate=debug"))
+        .with_env_filter(format!("nestgate={}", level))
         .with_target(false)
         .with_thread_ids(false)
         .with_file(false)

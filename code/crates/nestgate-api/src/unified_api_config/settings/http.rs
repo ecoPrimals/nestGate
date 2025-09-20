@@ -34,10 +34,8 @@ pub struct ApiHttpServerSettings {
     /// Graceful shutdown timeout
     pub graceful_shutdown_timeout: Duration,
 }
-
 impl Default for ApiHttpServerSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enable_cors: true,
             cors_origins: vec!["*".to_string()],
             cors_methods: vec![
@@ -64,6 +62,5 @@ impl Default for ApiHttpServerSettings {
             enable_http2: true,
             enable_graceful_shutdown: true,
             graceful_shutdown_timeout: Duration::from_secs(30),
-        }
-    }
+         }
 } 

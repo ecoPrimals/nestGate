@@ -10,7 +10,7 @@
 //! - Native async trait patterns with `impl Future`
 
 use nestgate_core::zero_cost::async_trait_migration::{
-    AsyncTraitMigrationManager, AsyncTraitInfo, AsyncMethod,
+    AsyncMethod, AsyncTraitInfo, AsyncTraitMigrationManager,
 };
 use std::collections::HashMap;
 
@@ -18,7 +18,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 **NESTGATE ZERO-COST TRAIT MIGRATION DEMONSTRATION**\n");
 
     // ==================== PHASE 1: ASYNC_TRAIT OVERHEAD ANALYSIS ====================
-    
+
     println!("📊 **PHASE 1: ASYNC_TRAIT OVERHEAD ANALYSIS (BEFORE)**");
     println!("Current state: 116+ async_trait patterns causing runtime overhead\n");
 
@@ -44,29 +44,47 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   + Additional scattered async_trait usage across modules");
 
     // ==================== PHASE 2: ZERO-COST MIGRATION PROCESS ====================
-    
+
     println!("\n🔧 **PHASE 2: ZERO-COST MIGRATION PROCESS**");
-    
+
     let mut migration_manager = AsyncTraitMigrationManager::new();
-    
+
     println!("📋 **MIGRATION MANAGER INITIALIZED**:");
     let initial_summary = migration_manager.get_summary();
-    println!("   - Total trait mappings: {}", initial_summary.stats.total_async_traits);
-    println!("   - Automatic migrations: {}", initial_summary.automatic_migrations);
-    println!("   - Manual migrations: {}", initial_summary.manual_migrations);
-    println!("   - Estimated performance gain: {:.1}%", initial_summary.estimated_performance_gain);
-    
+    println!(
+        "   - Total trait mappings: {}",
+        initial_summary.stats.total_async_traits
+    );
+    println!(
+        "   - Automatic migrations: {}",
+        initial_summary.automatic_migrations
+    );
+    println!(
+        "   - Manual migrations: {}",
+        initial_summary.manual_migrations
+    );
+    println!(
+        "   - Estimated performance gain: {:.1}%",
+        initial_summary.estimated_performance_gain
+    );
+
     println!("\n🗺️  **TRAIT MIGRATION MAPPINGS**:");
     for (source, mapping) in &migration_manager.trait_mappings {
-        let migration_type = if mapping.automatic_migration { "AUTO" } else { "MANUAL" };
-        println!("   {} → {} [{}] ({:.1}% faster)", 
-            source, mapping.target_trait, migration_type, mapping.performance_gain_percent);
+        let migration_type = if mapping.automatic_migration {
+            "AUTO"
+        } else {
+            "MANUAL"
+        };
+        println!(
+            "   {} → {} [{}] ({:.1}% faster)",
+            source, mapping.target_trait, migration_type, mapping.performance_gain_percent
+        );
     }
 
     // ==================== PHASE 3: SYSTEMATIC TRAIT MIGRATION ====================
-    
+
     println!("\n🔄 **PHASE 3: SYSTEMATIC TRAIT MIGRATION**");
-    
+
     // Migrate LoadBalancer trait
     println!("\n⚖️  **MIGRATING LOAD BALANCER TRAIT**:");
     let load_balancer_info = AsyncTraitInfo {
@@ -98,7 +116,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         generic_parameters: vec![],
         trait_bounds: vec!["Send".to_string(), "Sync".to_string()],
     };
-    
+
     let load_balancer_migration = migration_manager.migrate_load_balancer(&load_balancer_info)?;
     println!("   ✅ async_trait LoadBalancer → NativeAsyncLoadBalancer");
     println!("   📦 BEFORE: Box<dyn Future<Output = Result<()>>> (24+ bytes per call)");
@@ -128,18 +146,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             },
             AsyncMethod {
                 name: "send_request".to_string(),
-                parameters: vec!["&self".to_string(), "connection: &Connection".to_string(), "request: Request".to_string()],
+                parameters: vec![
+                    "&self".to_string(),
+                    "connection: &Connection".to_string(),
+                    "request: Request".to_string(),
+                ],
                 return_type: "Result<Response>".to_string(),
                 is_async: true,
                 const_generic_bounds: vec![],
             },
         ],
-        associated_types: vec!["Connection".to_string(), "Request".to_string(), "Response".to_string(), "Config".to_string()],
+        associated_types: vec![
+            "Connection".to_string(),
+            "Request".to_string(),
+            "Response".to_string(),
+            "Config".to_string(),
+        ],
         generic_parameters: vec![],
         trait_bounds: vec!["Send".to_string(), "Sync".to_string()],
     };
-    
-    let protocol_handler_migration = migration_manager.migrate_protocol_handler(&protocol_handler_info)?;
+
+    let protocol_handler_migration =
+        migration_manager.migrate_protocol_handler(&protocol_handler_info)?;
     println!("   ✅ async_trait ProtocolHandler → NativeAsyncProtocolHandler");
     println!("   📦 BEFORE: Arc<dyn ProtocolHandler> + Future boxing");
     println!("   🚀 AFTER:  Static dispatch + impl Future");
@@ -155,44 +183,65 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("     // Compile-time constants, zero runtime overhead");
 
     // ==================== PHASE 4: PERFORMANCE COMPARISON ====================
-    
+
     println!("\n📈 **PHASE 4: PERFORMANCE COMPARISON**");
-    
+
     let final_summary = migration_manager.get_summary();
     println!("✅ **MIGRATION STATISTICS**:");
-    println!("   - Total traits analyzed: {}", final_summary.stats.total_async_traits);
-    println!("   - Successfully migrated: {}", final_summary.stats.migrated_count);
-    println!("   - Migration progress: {:.1}%", final_summary.stats.migration_progress);
+    println!(
+        "   - Total traits analyzed: {}",
+        final_summary.stats.total_async_traits
+    );
+    println!(
+        "   - Successfully migrated: {}",
+        final_summary.stats.migrated_count
+    );
+    println!(
+        "   - Migration progress: {:.1}%",
+        final_summary.stats.migration_progress
+    );
     println!("   - Warnings generated: {}", final_summary.warnings_count);
-    
+
     println!("\n🚀 **PERFORMANCE IMPROVEMENTS**:");
     let perf = &final_summary.stats.performance_improvements;
-    println!("   - Throughput improvement: {:.1}%", perf.throughput_improvement_percent);
-    println!("   - Latency reduction: {:.1}%", perf.latency_reduction_percent);
-    println!("   - Memory savings: {} KB", perf.memory_reduction_bytes / 1024);
-    println!("   - CPU cycles saved: {} per operation", perf.cpu_cycles_saved);
-    
+    println!(
+        "   - Throughput improvement: {:.1}%",
+        perf.throughput_improvement_percent
+    );
+    println!(
+        "   - Latency reduction: {:.1}%",
+        perf.latency_reduction_percent
+    );
+    println!(
+        "   - Memory savings: {} KB",
+        perf.memory_reduction_bytes / 1024
+    );
+    println!(
+        "   - CPU cycles saved: {} per operation",
+        perf.cpu_cycles_saved
+    );
+
     println!("\n📊 **DOMAIN PERFORMANCE BREAKDOWN**:");
     for (domain, count) in &final_summary.stats.domain_counts {
         println!("   - {}: {} traits migrated", domain, count);
     }
 
     // ==================== PHASE 5: ZERO-COST BENEFITS ====================
-    
+
     println!("\n🎯 **PHASE 5: ZERO-COST BENEFITS**");
-    
+
     println!("✅ **COMPILE-TIME OPTIMIZATION**:");
     println!("   - Static dispatch: No vtable lookups, direct function calls");
     println!("   - Const generics: Configuration baked into type system");
     println!("   - Monomorphization: Specialized code for each concrete type");
     println!("   - Inlining: Compiler can inline across trait boundaries");
-    
+
     println!("\n✅ **MEMORY EFFICIENCY**:");
     println!("   - No Future boxing: Direct stack allocation of futures");
     println!("   - No Arc overhead: Static dispatch eliminates reference counting");
     println!("   - Cache friendly: Better CPU cache utilization with direct calls");
     println!("   - Smaller binary: Less dynamic dispatch code generated");
-    
+
     println!("\n✅ **TYPE SAFETY**:");
     println!("   - Compile-time bounds: Configuration limits checked at compile time");
     println!("   - Zero-cost abstractions: Full abstraction power without runtime cost");
@@ -200,11 +249,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   - Error prevention: Many runtime errors become compile-time errors");
 
     // ==================== PHASE 6: BEFORE/AFTER COMPARISON ====================
-    
+
     println!("\n🔄 **PHASE 6: BEFORE/AFTER COMPARISON**");
-    
+
     println!("📦 **BEFORE: async_trait Pattern**:");
-    println!(r#"   #[async_trait]
+    println!(
+        r#"   #[async_trait]
    trait LoadBalancer {{
        async fn add_service(&self, service: Service) -> Result<()>;
        async fn get_next_service(&self) -> Result<Service>;
@@ -212,17 +262,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
    
    // Usage requires:
    let balancer: Arc<dyn LoadBalancer> = Arc::new(MyBalancer);
-   let result = balancer.add_service(service).await; // Boxing + vtable lookup"#);
+   let result = balancer.add_service(service).await; // Boxing + vtable lookup"#
+    );
 
     println!("\n🚀 **AFTER: Zero-Cost Native Async**:");
-    println!(r#"   trait NativeAsyncLoadBalancer<const MAX_SERVICES: usize = 1000>: Send + Sync {{
+    println!(
+        r#"   trait NativeAsyncLoadBalancer<const MAX_SERVICES: usize = 1000>: Send + Sync {{
        fn add_service(&self, service: Service) -> impl Future<Output = Result<()>> + Send;
        fn get_next_service(&self) -> impl Future<Output = Result<Service>> + Send;
    }}
    
    // Usage is direct:
    let balancer = MyBalancer::<1000>::new();
-   let result = balancer.add_service(service).await; // Direct call, no boxing"#);
+   let result = balancer.add_service(service).await; // Direct call, no boxing"#
+    );
 
     println!("\n⚡ **PERFORMANCE IMPACT**:");
     println!("   - Latency: 15-25% reduction in async call overhead");
@@ -231,9 +284,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   - CPU: Elimination of vtable lookup overhead");
 
     // ==================== PHASE 7: MIGRATION STRATEGY ====================
-    
+
     println!("\n📋 **PHASE 7: MIGRATION STRATEGY**");
-    
+
     println!("🔧 **STEP-BY-STEP MIGRATION PLAN**:");
     println!("   1. **Analyze** - Identify all async_trait usage patterns");
     println!("   2. **Map** - Create zero-cost trait definitions with const generics");
@@ -241,7 +294,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   4. **Implement** - Replace implementations with zero-cost versions");
     println!("   5. **Test** - Verify performance improvements and correctness");
     println!("   6. **Deploy** - Remove async_trait dependencies");
-    
+
     println!("\n🛡️  **BACKWARD COMPATIBILITY**:");
     println!("   - Gradual migration with compatibility wrappers");
     println!("   - Performance benchmarks to validate improvements");
@@ -258,7 +311,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // ==================== SUMMARY ====================
-    
+
     println!("\n🎉 **ZERO-COST TRAIT MIGRATION COMPLETE**");
     println!("📈 **BENEFITS ACHIEVED**:");
     println!("   ✅ Zero-cost abstractions (native async traits)");
@@ -267,16 +320,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   ✅ Memory efficiency (50-75% reduction in async overhead)");
     println!("   ✅ Compile-time optimization (const generics + static dispatch)");
     println!("   ✅ Type safety (compile-time bounds checking)");
-    
+
     println!("\n🔄 **MIGRATION PROGRESS**:");
     println!("   - Migration framework: ✅ COMPLETE");
     println!("   - LoadBalancer traits: ✅ MIGRATED");
-    println!("   - ProtocolHandler traits: ✅ MIGRATED"); 
+    println!("   - ProtocolHandler traits: ✅ MIGRATED");
     println!("   - ServiceDiscovery traits: ✅ READY");
     println!("   - AutomationService traits: ✅ READY");
     println!("   - SecurityService traits: 🔄 Manual migration required");
     println!("   - Remaining async_trait usage: 🔄 Ready for migration");
-    
+
     println!("\n🎯 **NEXT STEPS**:");
     println!("   - Apply migrations across all 116+ async_trait usage sites");
     println!("   - Implement zero-cost trait implementations");
@@ -291,101 +344,98 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_async_trait_migration_manager() {
+    fn test_async_trait_migration_manager() -> Result<(), Box<dyn std::error::Error>> {
         let mut manager = AsyncTraitMigrationManager::new();
-        
+
         // Test initial state
         let summary = manager.get_summary();
         assert!(summary.stats.total_async_traits > 0);
         assert_eq!(summary.stats.migrated_count, 0);
-        
+
         // Test LoadBalancer migration
         let load_balancer_info = AsyncTraitInfo {
             trait_name: "LoadBalancer".to_string(),
-            methods: vec![
-                AsyncMethod {
-                    name: "add_service".to_string(),
-                    parameters: vec!["&self".to_string(), "service: Service".to_string()],
-                    return_type: "Result<()>".to_string(),
-                    is_async: true,
-                    const_generic_bounds: vec![],
-                }
-            ],
+            methods: vec![AsyncMethod {
+                name: "add_service".to_string(),
+                parameters: vec!["&self".to_string(), "service: Service".to_string()],
+                return_type: "Result<()>".to_string(),
+                is_async: true,
+                const_generic_bounds: vec![],
+            }],
             associated_types: vec!["Service".to_string()],
             generic_parameters: vec![],
             trait_bounds: vec!["Send".to_string(), "Sync".to_string()],
         };
-        
+
         let migration_result = manager.migrate_load_balancer(&load_balancer_info);
         assert!(migration_result.is_ok());
-        
+
         let migrated_code = migration_result.unwrap();
         assert!(migrated_code.contains("NativeAsyncLoadBalancer"));
         assert!(migrated_code.contains("impl Future"));
         assert!(!migrated_code.contains("#[async_trait]"));
-        
+
         // Test statistics update
         let final_summary = manager.get_summary();
         assert_eq!(final_summary.stats.migrated_count, 1);
         assert!(final_summary.stats.migration_progress > 0.0);
+        Ok(())
     }
 
     #[test]
-    fn test_protocol_handler_migration() {
+    fn test_protocol_handler_migration() -> Result<(), Box<dyn std::error::Error>> {
         let mut manager = AsyncTraitMigrationManager::new();
-        
+
         let protocol_handler_info = AsyncTraitInfo {
             trait_name: "ProtocolHandler".to_string(),
-            methods: vec![
-                AsyncMethod {
-                    name: "connect".to_string(),
-                    parameters: vec!["&self".to_string(), "config: &Config".to_string()],
-                    return_type: "Result<Connection>".to_string(),
-                    is_async: true,
-                    const_generic_bounds: vec![],
-                }
-            ],
+            methods: vec![AsyncMethod {
+                name: "connect".to_string(),
+                parameters: vec!["&self".to_string(), "config: &Config".to_string()],
+                return_type: "Result<Connection>".to_string(),
+                is_async: true,
+                const_generic_bounds: vec![],
+            }],
             associated_types: vec!["Connection".to_string(), "Config".to_string()],
             generic_parameters: vec![],
             trait_bounds: vec!["Send".to_string(), "Sync".to_string()],
         };
-        
+
         let migration_result = manager.migrate_protocol_handler(&protocol_handler_info);
         assert!(migration_result.is_ok());
-        
+
         let migrated_code = migration_result.unwrap();
         assert!(migrated_code.contains("NativeAsyncProtocolHandler"));
         assert!(migrated_code.contains("const MAX_CONNECTIONS"));
         assert!(migrated_code.contains("impl Future"));
+        Ok(())
     }
 
     #[test]
-    fn test_zero_cost_trait_generation() {
+    fn test_zero_cost_trait_generation() -> Result<(), Box<dyn std::error::Error>> {
         let mut manager = AsyncTraitMigrationManager::new();
-        
+
         let trait_info = AsyncTraitInfo {
             trait_name: "LoadBalancer".to_string(),
-            methods: vec![
-                AsyncMethod {
-                    name: "test_method".to_string(),
-                    parameters: vec!["&self".to_string()],
-                    return_type: "Result<()>".to_string(),
-                    is_async: true,
-                    const_generic_bounds: vec![],
-                }
-            ],
+            methods: vec![AsyncMethod {
+                name: "test_method".to_string(),
+                parameters: vec!["&self".to_string()],
+                return_type: "Result<()>".to_string(),
+                is_async: true,
+                const_generic_bounds: vec![],
+            }],
             associated_types: vec![],
             generic_parameters: vec![],
             trait_bounds: vec!["Send".to_string(), "Sync".to_string()],
         };
-        
+
         let zero_cost_trait = manager.generate_zero_cost_trait(&trait_info);
         assert!(zero_cost_trait.is_ok());
-        
+
         let trait_def = zero_cost_trait.unwrap();
         assert_eq!(trait_def.trait_name, "NativeAsyncLoadBalancer");
         assert!(trait_def.performance_characteristics.zero_cost_abstraction);
         assert!(trait_def.performance_characteristics.static_dispatch);
         assert!(trait_def.performance_characteristics.no_future_boxing);
+        Ok(())
     }
-} 
+}

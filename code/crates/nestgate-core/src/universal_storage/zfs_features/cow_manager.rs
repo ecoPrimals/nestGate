@@ -13,7 +13,6 @@ use tracing::{debug, info};
 
 /// ZFS Pool Handle type alias
 type ZfsPoolHandle = String;
-
 /// COW manager configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CowConfig {
@@ -26,7 +25,6 @@ pub struct CowConfig {
     /// Enable COW verification
     pub verify_cow_operations: bool,
 }
-
 impl Default for CowConfig {
     fn default() -> Self {
         Self {
@@ -44,18 +42,14 @@ pub struct CowOperation {
     /// Unique operation ID
     pub operation_id: String,
     /// Original data path
-    pub original_path: String,
     /// COW snapshot path
-    pub cow_path: String,
     /// Operation timestamp
     pub timestamp: chrono::DateTime<chrono::Utc>,
     /// Data checksum for verification
     pub checksum: Option<String>,
 }
-
 /// Type alias to reduce complexity
 type CowOperationMap = HashMap<String, CowOperation>;
-
 /// **HIGH-PERFORMANCE COW MANAGER**
 ///
 /// MIGRATION: Arc<dyn CanonicalStorageBackend> → Zero-Cost Generic Backend
@@ -77,16 +71,27 @@ where
     /// COW operation configuration
     config: CowConfig,
 }
-
 /// Default storage backend for backward compatibility
 pub type DefaultStorageBackend = crate::universal_storage::backends::FileSystemBackend;
-
 impl<Backend> CowManager<Backend>
 where
     Backend: CanonicalStorageBackend + Send + Sync + 'static,
 {
     /// Create a new COW manager with zero-cost backend composition
-    pub async fn new(backend: Backend, config: CowConfig) -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub const fn new(backend: Backend, config: CowConfig) -> Result<Self>   {
         info!(
             "Initializing zero-cost COW manager with config: {:?}",
             config
@@ -102,11 +107,9 @@ where
     }
 
     /// Perform a COW write operation with direct dispatch (no virtual calls)
-    pub async fn write_with_cow(&self, path: &str, data: &[u8]) -> Result<String> {
         let operation_id = uuid::Uuid::new_v4().to_string();
 
         debug!(
-            "Starting COW write operation {} for path: {}",
             operation_id, path
         );
 
@@ -127,8 +130,6 @@ where
         // 3. Create COW operation metadata
         let cow_operation = CowOperation {
             operation_id: operation_id.clone(),
-            original_path: path.to_string(),
-            cow_path: cow_path.clone(),
             timestamp: chrono::Utc::now(),
             checksum,
         };
@@ -155,19 +156,26 @@ where
     }
 
     /// Commit a COW operation (make it permanent)
-    pub async fn commit_cow_operation(&self, operation_id: &str) -> Result<()> {
-        debug!("Committing COW operation: {}", operation_id);
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn commit_cow_operation(&self, operation_id: &str) -> Result<()>   {
 
         let cow_operation = {
             let mut active_ops = self.active_operations.write().await;
             active_ops
                 .remove(operation_id)
-                .ok_or_else(|| NestGateError::Internal {
-                    message: format!("COW operation not found: {operation_id}"),
-                    location: Some("get_cow_operation".to_string()),
-                    context: None,
-                    is_bug: false,
-                })?
+                .ok_or_else(|| NestGateError::internal_error(
+                    location: Some("get_cow_operation".to_string())})?
         };
 
         // Move COW data to original location
@@ -175,7 +183,7 @@ where
 
         // Add to operation history
         {
-            let mut history = self.operation_history.write().await;
+            let mut history = self.b_operation_history.write().await;
             history.push(cow_operation);
 
             // Cleanup old history if needed
@@ -189,19 +197,26 @@ where
     }
 
     /// Rollback a COW operation (discard changes)
-    pub async fn rollback_cow_operation(&self, operation_id: &str) -> Result<()> {
-        debug!("Rolling back COW operation: {}", operation_id);
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn rollback_cow_operation(&self, operation_id: &str) -> Result<()>   {
 
         let cow_operation = {
             let mut active_ops = self.active_operations.write().await;
             active_ops
                 .remove(operation_id)
-                .ok_or_else(|| NestGateError::Internal {
-                    message: format!("COW operation not found: {operation_id}"),
-                    location: Some("get_cow_operation".to_string()),
-                    context: None,
-                    is_bug: false,
-                })?
+                .ok_or_else(|| NestGateError::internal_error(
+                    location: Some("get_cow_operation".to_string())})?
         };
 
         // Clean up COW data
@@ -212,23 +227,30 @@ where
     }
 
     /// Write data with COW and checksum verification
-    pub async fn write_with_cow_and_checksum(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn write_with_cow_and_checksum(
         &self,
-        path: &str,
         data: &[u8],
         expected_checksum: String,
-    ) -> Result<String> {
+    ) -> Result<String>   {
         // Verify checksum before write
         let actual_checksum = self.calculate_checksum(data).await?;
         if actual_checksum != expected_checksum {
-            return Err(NestGateError::Internal {
-                message: format!(
-                    "Checksum mismatch: expected {expected_checksum}, got {actual_checksum}"
+            return Err(NestGateError::internal_error(
+                    "Checksum mismatch: expected {expected_checksum), got {actual_checksum}"
                 ),
-                location: Some("write_with_cow_and_checksum".to_string()),
-                context: None,
-                is_bug: false,
-            });
+                location: Some("write_with_cow_and_checksum"));
         }
 
         // Perform COW write with verified checksum
@@ -236,33 +258,53 @@ where
     }
 
     /// Write a reference to deduplicated content
-    pub async fn write_reference(&self, path: &str, content_hash: String) -> Result<()> {
-        debug!("Writing deduplication reference for path: {}", path);
 
         // Create a reference file pointing to the deduplicated content
         let reference_data = format!("dedup_ref:{content_hash}");
         let _operation_id = self.write_with_cow(path, reference_data.as_bytes()).await?;
 
-        info!("Deduplication reference written for path: {}", path);
         Ok(())
     }
 
     /// List all active COW operations
-    pub async fn list_active_operations(&self) -> Result<Vec<CowOperation>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn list_active_operations(&self) -> Result<Vec<CowOperation>>   {
         let active_ops = self.active_operations.read().await;
         Ok(active_ops.values().cloned().collect())
     }
 
     /// Get COW operation history
-    pub async fn get_operation_history(&self) -> Result<Vec<CowOperation>> {
-        let history = self.operation_history.read().await;
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn get_operation_history(&self) -> Result<Vec<CowOperation>>   {
+        let history = self.b_operation_history.read().await;
         Ok(history.clone())
     }
 
     // Private helper methods
 
     /// Create a COW snapshot for the given path
-    async fn create_cow_snapshot(&self, path: &str, operation_id: &str) -> Result<String> {
         let cow_path = format!("{}.{}_{}", path, self.config.snapshot_prefix, operation_id);
 
         debug!("Creating COW snapshot: {} -> {}", path, cow_path);
@@ -286,7 +328,6 @@ where
     }
 
     /// Write data to COW location
-    async fn write_to_cow_location(&self, cow_path: &str, data: &[u8]) -> Result<()> {
         // In a real implementation, this would use the storage backend
         // For now, simulate the write operation
         debug!("Writing {} bytes to COW location: {}", data.len(), cow_path);
@@ -298,17 +339,14 @@ where
     }
 
     /// Verify COW write operation
-    async fn verify_cow_write(&self, cow_operation: &CowOperation) -> Result<()> {
         if let Some(_expected_checksum) = &cow_operation.checksum {
             debug!(
-                "Verifying COW write for operation: {}",
                 cow_operation.operation_id
             );
 
             // In a real implementation, read back the data and verify checksum
             // For now, simulate verification
             debug!(
-                "COW write verification passed for operation: {}",
                 cow_operation.operation_id
             );
         }
@@ -317,7 +355,6 @@ where
     }
 
     /// Commit COW data to original location
-    async fn commit_cow_data(&self, cow_operation: &CowOperation) -> Result<()> {
         debug!(
             "Committing COW data: {} -> {}",
             cow_operation.cow_path, cow_operation.original_path
@@ -331,7 +368,6 @@ where
     }
 
     /// Clean up COW data
-    async fn cleanup_cow_data(&self, cow_operation: &CowOperation) -> Result<()> {
         debug!("Cleaning up COW data: {}", cow_operation.cow_path);
 
         // In a real implementation, this would delete the COW data
@@ -342,14 +378,12 @@ where
     }
 
     /// Check if path exists
-    async fn path_exists(&self, _path: &str) -> Result<bool> {
         // In a real implementation, check if the path exists in the storage backend
         // For now, simulate path existence check
         Ok(true)
     }
 
     /// Copy file for COW operation
-    async fn copy_for_cow(&self, _original_path: &str, _cow_path: &str) -> Result<()> {
         // In a real implementation, copy the original file to COW location
         // For now, simulate the copy operation
         tokio::time::sleep(tokio::time::Duration::from_millis(1)).await;

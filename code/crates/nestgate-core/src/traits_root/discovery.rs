@@ -4,7 +4,6 @@
 /// **MIGRATION NOTE**: This module has been updated to use canonical trait types
 use futures_util::stream::Stream;
 use std::collections::HashMap;
-
 use crate::Result;
 use crate::unified_enums::service_types::UnifiedServiceState as HealthStatus;
 use crate::traits::ServiceRegistration as ServiceInfo;
@@ -17,8 +16,8 @@ pub struct ServiceQuery {
     pub namespace: Option<String>,
     pub healthy_only: bool,
 }
-
 impl ServiceQuery {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             service_name: None,
@@ -29,7 +28,7 @@ impl ServiceQuery {
     }
 
     pub fn with_name<S: Into<String>>(mut self, name: S) -> Self {
-        self.service_name = Some(name.into());
+        self.instance_name = Some(name.into());
         self
     }
 
@@ -43,6 +42,7 @@ impl ServiceQuery {
         self
     }
 
+    #[must_use]
     pub fn include_unhealthy(mut self) -> Self {
         self.healthy_only = false;
         self
@@ -59,7 +59,6 @@ impl Default for ServiceQuery {
 pub trait ServiceDiscovery: Send + Sync {
     /// Register a service with the discovery system
     fn register(&self, service: ServiceInfo) -> impl std::future::Future<Output = Result<()>> + Send;
-
     /// Deregister a service from the discovery system
     fn deregister(&self, service_id: &str) -> impl std::future::Future<Output = Result<()>> + Send;
 
@@ -90,7 +89,6 @@ pub trait ServiceDiscovery: Send + Sync {
 pub enum ServiceEvent {
     /// Service was registered
     Registered(Box<ServiceInfo>),
-
     /// Service was deregistered
     Deregistered(String),
 

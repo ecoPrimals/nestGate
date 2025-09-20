@@ -2,8 +2,8 @@
 /// Demonstrates the rebuilt test modules work properly
 mod common;
 
-use crate::common::MockUniversalService;
 use crate::canonical_modernization::UnifiedServiceType;
+use crate::common::MockUniversalService;
 use nestgate_core::Result;
 use std::time::Duration;
 use tests::common::test_doubles::UniversalService;
@@ -63,7 +63,7 @@ async fn test_mock_services_functionality() -> Result<()> {
 
     let retrieved = storage.retrieve("key1").await?;
     assert!(retrieved.is_some(), "Should retrieve stored value");
-    assert_eq!(retrieved.unwrap(), b"value1".to_vec());
+    assert_eq!(retrieved?, b"value1".to_vec());
     println!("✅ Storage operations work correctly");
 
     let ops_count = storage.get_operation_count();
@@ -100,7 +100,7 @@ async fn test_service_registry() -> Result<()> {
         "Should retrieve registered service"
     );
 
-    let service = retrieved_storage.unwrap();
+    let service = retrieved_storage?;
     assert_eq!(service.service_type, UnifiedServiceType::Storage);
     assert_eq!(service.name, "primary_storage");
     println!("✅ Service retrieval works correctly");
@@ -154,6 +154,7 @@ async fn test_concurrent_operations() -> Result<()> {
     for i in 0..5 {
         let service = MockUniversalService::storage(&format!("storage_{}", i));
         registry.register_universal_service(service).await;
+        Ok(())
     }
 
     // Test concurrent service requests
@@ -166,6 +167,7 @@ async fn test_concurrent_operations() -> Result<()> {
                 if let Some(service) = registry_clone.get_universal_service(&service_name).await {
                     let request = format!("request_from_task_{}", task_id);
                     service.handle_request(&request).await?;
+                    Ok(())
                 }
                 Ok(())
             }

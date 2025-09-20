@@ -1,281 +1,299 @@
-/// Error Response Module
-/// Unified error response handling and formatting
-/// **PROBLEM SOLVED**: Consistent error response patterns across all APIs
-use axum::response::{IntoResponse, Json};
-use chrono::{DateTime, Utc};
+// Error response types and builders
+// Provides unified error response structures for API endpoints
+
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
+use axum::Json;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::SystemTime;
 
-// **MIGRATED**: Using canonical error context instead of deprecated unified_types
-use crate::error::context::ErrorContext as UnifiedErrorContext;
-use crate::NestGateError;
-
-/// Unified error response with multiple formatting options
+/// Unified error response structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedErrorResponse {
-    /// Error context with rich information
-    pub context: UnifiedErrorContext,
-    /// Response format preference (simple or detailed)
-    pub format: ErrorResponseFormat,
-}
+    /// Error message for display
+    pub message: String,
 
-/// Response format preference (simple or detailed)
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ErrorResponseFormat {
-    /// Simple format for public APIs
-    Simple,
-    /// Detailed format for internal services and debugging
-    Detailed,
-    /// Statistical format for monitoring and analytics
-    Statistics,
-}
+    /// Machine-readable error code
+    pub code: String,
 
+    /// Component that generated the error
+    pub component: String,
+
+    /// HTTP status code
+    pub status: u16,
+
+    /// Additional error details
+    pub details: Option<HashMap<String, serde_json::Value>>,
+
+    /// Timestamp of error occurrence
+    pub timestamp: String,
+
+    /// Request correlation ID
+    pub correlation_id: Option<String>,
+}
 impl UnifiedErrorResponse {
-    pub fn simple(message: &str, error_code: &str, service_name: &str) -> Self {
+    /// Create a simple error response
+    #[must_use]
+    pub const fn simple(message: &str, code: &str, component: &str) -> Self {
         Self {
-            context: UnifiedErrorContext {
-                error_id: uuid::Uuid::new_v4().to_string(),
-                component: service_name.to_string(),
-                operation: "error_response".to_string(),
-                timestamp: std::time::SystemTime::now(),
-                metadata: {
-                    let mut map = std::collections::HashMap::new();
-                    map.insert("message".to_string(), message.to_string());
-                    map.insert("error_code".to_string(), error_code.to_string());
-                    map
-                },
-                stack_trace: None,
-                related_errors: Vec::new(),
-                retry_info: None,
-                recovery_suggestions: Vec::new(),
-                performance_metrics: None,
-                environment: None,
-            },
-            format: ErrorResponseFormat::Simple,
+            message: message.to_string(),
+            code: code.to_string(),
+            component: component.to_string(),
+            status: 500,
+            details: None,
+            timestamp: chrono::Utc::now().to_rfc3339(),
+            correlation_id: None,
         }
     }
 
-    pub fn detailed(context: UnifiedErrorContext) -> Self {
+    /// Create an error response with status code
+    #[must_use]
+    pub const fn with_status(message: &str, code: &str, component: &str, status: u16) -> Self {
         Self {
-            context,
-            format: ErrorResponseFormat::Detailed,
+            message: message.to_string(),
+            code: code.to_string(),
+            component: component.to_string(),
+            status,
+            details: None,
+            timestamp: chrono::Utc::now().to_rfc3339(),
+            correlation_id: None,
         }
     }
 
-    pub fn statistics(context: UnifiedErrorContext) -> Self {
-        Self {
-            context,
-            format: ErrorResponseFormat::Statistics,
-        }
-    }
-
-    /// Serialize the response according to its format
-    pub fn serialize(&self) -> serde_json::Value {
-        match self.format {
-            ErrorResponseFormat::Simple => {
-                serde_json::json!({
-                    "error": self.context.metadata.get("message").unwrap_or(&"Unknown error".to_string()),
-                    "code": self.context.metadata.get("error_code").unwrap_or(&"UNKNOWN".to_string()),
-                    "service": self.context.component
-                })
-            }
-            ErrorResponseFormat::Detailed => {
-                serde_json::to_value(&self.context).unwrap_or_default()
-            }
-            ErrorResponseFormat::Statistics => {
-                serde_json::json!({
-                    "error_id": self.context.error_id,
-                    "component": self.context.component,
-                    "operation": self.context.operation,
-                    "timestamp": self.context.timestamp,
-                    "metadata": self.context.metadata
-                })
-            }
-        }
-    }
-
-    /// Set the format type
-    pub fn with_format(mut self, format: ErrorResponseFormat) -> Self {
-        self.format = format;
+    /// Add details to the error response
+    #[must_use]
+    pub fn with_details(mut self, details: HashMap<String, serde_json::Value>) -> Self {
+        self.details = Some(details);
         self
     }
 
-    /// Add additional context
+    /// Add correlation ID to the error response
+    #[must_use]
+    pub fn with_correlation_id(mut self, correlation_id: String) -> Self {
+        self.correlation_id = Some(correlation_id);
+        self
+    }
+
+    /// Add context information to the error response
+    #[must_use]
     pub fn with_context(mut self, key: &str, value: serde_json::Value) -> Self {
-        self.context.metadata.insert(key.to_string(), value.to_string());
+        if self.details.is_none() {
+            self.details = Some(HashMap::new());
+        }
+        if let Some(ref mut details) = self.details {
+            details.insert(key.to_string(), value);
+        }
         self
+    }
+
+    /// Add context chain information to the error response
+    #[must_use]
+    pub fn with_context_chain(self, key: &str, value: serde_json::Value) -> Self {
+        // Removed mut - delegating to with_context
+        self.with_context(key, value)
+    }
+
+    /// Convert to HTTP status code
+    #[must_use]
+    pub const fn to_status_code(&self) -> StatusCode {
+        StatusCode::from_u16(self.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR)
     }
 }
 
 impl IntoResponse for UnifiedErrorResponse {
-    fn into_response(self) -> axum::response::Response {
-        let status = match self.context.error_id.as_str() { // PEDANTIC: Fixed from error_code to error_id
-            "VALIDATION_ERROR" => 400,
-            "AUTHENTICATION_ERROR" => 401,
-            "PERMISSION_DENIED" => 403,
-            "NOT_FOUND" => 404,
-            "TIMEOUT" => 408,
-            "RATE_LIMIT" => 429,
-            "INTERNAL_ERROR" => 500,
-            "SERVICE_UNAVAILABLE" => 503,
-            _ => 500,
-        };
-
-        (status, Json(self.serialize())).into_response()
+    fn into_response(self) -> Response {
+        let status_code = self.to_status_code();
+        (status_code, Json(self)).into_response()
     }
 }
 
-/// **DEPRECATED** - Legacy error response structure for backward compatibility
-/// Use UnifiedErrorResponse for new implementations
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ErrorResponse {
-    /// Error message
-    pub error: String,
-    /// Error code
-    pub code: Option<String>,
-    /// Service name that generated the error
-    pub service: Option<String>,
-    /// Timestamp when error occurred
-    pub timestamp: DateTime<Utc>,
-    /// Additional error context
-    pub context: Option<HashMap<String, serde_json::Value>>,
-}
-
-impl From<ErrorResponse> for UnifiedErrorResponse {
-    fn from(legacy: ErrorResponse) -> Self {
-        let context = UnifiedErrorContext {
-            error_id: uuid::Uuid::new_v4().to_string(),
-            component: legacy.service.as_deref().unwrap_or("unknown").to_string(),
-            operation: "legacy_conversion".to_string(),
-            timestamp: std::time::SystemTime::now(),
-            metadata: {
-                let mut map = std::collections::HashMap::new();
-                map.insert("message".to_string(), legacy.error);
-                map.insert("error_code".to_string(), legacy.code.unwrap_or("UNKNOWN".to_string()));
-                map
-            },
-            stack_trace: None,
-            related_errors: Vec::new(),
-            retry_info: None,
-            recovery_suggestions: Vec::new(),
-            performance_metrics: None,
-            environment: None,
-        };
-
-        Self {
-            context,
-            format: ErrorResponseFormat::Simple,
-        }
-    }
-}
-
-impl ErrorResponse {
-    /// Create a new error response
-    pub fn new(message: &str) -> Self {
-        Self {
-            error: message.to_string(),
-            code: None,
-            service: None,
-            timestamp: chrono::Utc::now(),
-            context: None,
-        }
-    }
-
-    /// Create an error response with error code
-    pub fn with_code(message: &str, code: &str) -> Self {
-        Self {
-            error: message.to_string(),
-            code: Some(code.to_string()),
-            service: None,
-            timestamp: chrono::Utc::now(),
-            context: None,
-        }
-    }
-
-    /// Create an error response with service name
-    pub fn with_service(message: &str, service: &str) -> Self {
-        Self {
-            error: message.to_string(),
-            code: None,
-            service: Some(service.to_string()),
-            timestamp: chrono::Utc::now(),
-            context: None,
-        }
-    }
-
-    /// Add context to the error response
-    pub fn with_context(mut self, key: &str, value: serde_json::Value) -> Self {
-        let mut context = self.context.unwrap_or_default();
-        context.insert(key.to_string(), value);
-        self.context = Some(context);
-        self
-    }
-}
-
-impl IntoResponse for ErrorResponse {
-    fn into_response(self) -> axum::response::Response {
-        (axum::http::StatusCode::BAD_REQUEST, Json(self)).into_response()
-    }
-}
-
-/// Common error response factory methods
+/// Error response factory for common error types
 pub struct ErrorResponseFactory;
-
 impl ErrorResponseFactory {
+    /// Create a bad request error
+    #[must_use]
+    pub const fn bad_request(message: &str) -> UnifiedErrorResponse {
+        UnifiedErrorResponse::with_status(message, "BAD_REQUEST", "nestgate-core", 400)
+    }
+
+    /// Create an internal server error
+    #[must_use]
+    pub const fn internal(message: &str) -> UnifiedErrorResponse {
+        UnifiedErrorResponse::with_status(message, "INTERNAL_ERROR", "nestgate-core", 500)
+    }
+
     /// Create a not found error
-    pub fn not_found(resource: &str) -> UnifiedErrorResponse {
-        UnifiedErrorResponse::simple(
-            &format!("{resource} not found"),
+    #[must_use]
+    pub const fn not_found(path: &str) -> UnifiedErrorResponse {
+        UnifiedErrorResponse::with_status(
+            &format!("{path} not found"),
             "NOT_FOUND",
             "nestgate-core",
+            404,
         )
     }
 
     /// Create an unauthorized error
-    pub fn unauthorized(operation: &str) -> UnifiedErrorResponse {
-        UnifiedErrorResponse::simple(
+    #[must_use]
+    pub const fn unauthorized(operation: &str) -> UnifiedErrorResponse {
+        UnifiedErrorResponse::with_status(
             &format!("Unauthorized to perform {operation}"),
             "UNAUTHORIZED",
             "nestgate-core",
+            401,
+        )
+    }
+
+    /// Create a forbidden error
+    #[must_use]
+    pub const fn forbidden(resource: &str) -> UnifiedErrorResponse {
+        UnifiedErrorResponse::with_status(
+            &format!("Access forbidden to {resource}"),
+            "FORBIDDEN",
+            "nestgate-core",
+            403,
         )
     }
 
     /// Create a validation error
+    #[must_use]
     pub fn validation_error(field: &str, message: &str) -> UnifiedErrorResponse {
-        let mut response = UnifiedErrorResponse::simple(
-            &format!("Validation failed for field '{field}': {message}"),
-            "INVALID_INPUT",
+        let mut details = HashMap::new();
+        details.insert("field".to_string(), serde_json::json!(field));
+
+        UnifiedErrorResponse::with_status(
+            &format!("Validation failed for {field}: {message}"),
+            "VALIDATION_ERROR",
             "nestgate-core",
-        );
-        response = response.with_context("field", serde_json::json!(field));
-        response = response.with_context("validation_message", serde_json::json!(message));
-        response
+            400,
+        )
+        .with_details(details)
     }
 
-    /// Create a service unavailable error
-    pub fn service_unavailable(service: &str) -> UnifiedErrorResponse {
-        UnifiedErrorResponse::simple(
-            &format!("Service '{service}' is currently unavailable"),
-            "SERVICE_UNAVAILABLE",
+    /// Create a conflict error
+    #[must_use]
+    pub const fn conflict(resource: &str) -> UnifiedErrorResponse {
+        UnifiedErrorResponse::with_status(
+            &format!("Conflict with existing {resource}"),
+            "CONFLICT",
             "nestgate-core",
+            409,
         )
     }
 
-    /// Create an internal server error
-    pub fn internal_error(message: &str) -> UnifiedErrorResponse {
-        UnifiedErrorResponse::simple(message, "INTERNAL_ERROR", "nestgate-core")
+    /// Create a rate limit error
+    #[must_use]
+    pub fn rate_limited(retry_after: Option<u64>) -> UnifiedErrorResponse {
+        let mut details = HashMap::new();
+        if let Some(retry_after) = retry_after {
+            details.insert(
+                "retry_after_seconds".to_string(),
+                serde_json::json!(retry_after),
+            );
+        }
+
+        UnifiedErrorResponse::with_status(
+            "Rate limit exceeded",
+            "RATE_LIMITED",
+            "nestgate-core",
+            429,
+        )
+        .with_details(details)
+    }
+
+    /// Create a service unavailable error
+    #[must_use]
+    pub const fn service_unavailable(service: &str) -> UnifiedErrorResponse {
+        UnifiedErrorResponse::with_status(
+            &format!("Service {service} is currently unavailable"),
+            "SERVICE_UNAVAILABLE",
+            "nestgate-core",
+            503,
+        )
     }
 
     /// Create a timeout error
-    pub fn timeout_error(operation: &str, timeout_ms: u64) -> UnifiedErrorResponse {
-        let mut response = UnifiedErrorResponse::simple(
-            &format!("Operation '{operation}' timed out after {timeout_ms}ms"),
+    #[must_use]
+    pub const fn timeout(operation: &str) -> UnifiedErrorResponse {
+        UnifiedErrorResponse::with_status(
+            &format!("Operation {operation} timed out"),
             "TIMEOUT",
             "nestgate-core",
-        );
-        response = response.with_context("operation", serde_json::json!(operation));
-        response = response.with_context("timeout_ms", serde_json::json!(timeout_ms));
-        response
+            408,
+        )
+    }
+}
+
+/// Legacy error response for backward compatibility
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LegacyErrorResponse {
+    pub error: String,
+    pub code: Option<String>,
+    pub timestamp: String,
+}
+impl From<UnifiedErrorResponse> for LegacyErrorResponse {
+    fn from(unified: UnifiedErrorResponse) -> Self {
+        Self {
+            error: unified.message,
+            code: Some(unified.code),
+            timestamp: unified.timestamp,
+        }
+    }
+}
+
+impl IntoResponse for LegacyErrorResponse {
+    fn into_response(self) -> Response {
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(self)).into_response()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_simple_error_response() {
+        let error = UnifiedErrorResponse::simple("Test error", "TEST_ERROR", "test-component");
+        assert_eq!(error.message, "Test error");
+        assert_eq!(error.code, "TEST_ERROR");
+        assert_eq!(error.component, "test-component");
+        assert_eq!(error.status, 500);
+    }
+
+    #[test]
+    fn test_error_response_with_status() {
+        let error = UnifiedErrorResponse::with_status("Bad request", "BAD_REQUEST", "test", 400);
+        assert_eq!(error.status, 400);
+        assert_eq!(error.to_status_code(), StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn test_error_factory_methods() {
+        let bad_request = ErrorResponseFactory::bad_request("Invalid input");
+        assert_eq!(bad_request.status, 400);
+        assert_eq!(bad_request.code, "BAD_REQUEST");
+
+        let not_found = ErrorResponseFactory::not_found("/api/test");
+        assert_eq!(not_found.status, 404);
+        assert_eq!(not_found.code, "NOT_FOUND");
+    }
+
+    #[test]
+    fn test_validation_error_with_details() {
+        let error =
+            ErrorResponseFactory::validation_error("username", "must be at least 3 characters");
+        assert_eq!(error.status, 400);
+        assert!(error.details.is_some());
+
+        let details = error.details.unwrap_or_default();
+        assert_eq!(details["field"], serde_json::json!("username"));
+    }
+
+    #[test]
+    fn test_legacy_error_conversion() {
+        let unified = UnifiedErrorResponse::simple("Test", "TEST", "component");
+        let legacy: LegacyErrorResponse = unified.into();
+        assert_eq!(legacy.error, "Test");
+        assert_eq!(legacy.code, Some("TEST".to_string()));
     }
 }

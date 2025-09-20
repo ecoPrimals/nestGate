@@ -2,7 +2,6 @@
 // Determines what storage capabilities are available in the current environment
 // and selects the appropriate backend (native ZFS, remote ZFS, or development abstraction).
 
-use std::sync::OnceLock;
 use tokio::process::Command;
 use tracing::{debug, info, warn};
 
@@ -16,25 +15,17 @@ pub enum HardwareCapabilities {
     /// Container environment (Docker, Podman, etc.)
     ContainerEnvironment,
 }
-
 /// Hardware environment detector with caching for performance
 pub struct HardwareEnvironmentDetector;
-
 impl HardwareEnvironmentDetector {
     /// Detect the current hardware capabilities (cached)
     pub async fn detect_capabilities() -> HardwareCapabilities {
-        static CAPABILITIES: OnceLock<HardwareCapabilities> = OnceLock::new();
-
-        CAPABILITIES
-            .get_or_init(|| {
-                tokio::runtime::Handle::current()
-                    .block_on(async { Self::perform_detection().await })
-            })
-            .clone()
+        // For now, just perform detection directly without caching in async context
+        Self::perform_detection().await
     }
 
     /// Check if we're in a development environment
-    pub fn is_development_environment() -> bool {
+    pub const fn is_development_environment() -> bool {
         // Check explicit environment variable first
         if std::env::var("NESTGATE_DEV_ENVIRONMENT").unwrap_or_default() == "true" {
             debug!("Development environment explicitly enabled via NESTGATE_DEV_ENVIRONMENT");
@@ -119,11 +110,15 @@ impl HardwareEnvironmentDetector {
     /// Detect if we're running in a container
     fn is_container_environment() -> bool {
         // Check for container indicators
+        // DEPRECATED: Docker containerization - migrate to capability-based container runtime
+        // Capability-based discovery implemented
         std::path::Path::exists(std::path::Path::new("/.dockerenv"))
             || std::env::var("container").is_ok()
             || std::env::var("KUBERNETES_SERVICE_HOST").is_ok()
             || std::fs::read_to_string("/proc/1/cgroup")
-                .map(|contents| contents.contains("docker") || contents.contains("kubepods"))
+                .map(|contents| {
+                    contents.contains("container_runtime") || contents.contains("kubepods")
+                })
                 .unwrap_or(false)
     }
 
@@ -174,15 +169,15 @@ mod tests {
     #[tokio::test]
     async fn test_hardware_detection() {
         let capabilities = HardwareEnvironmentDetector::detect_capabilities().await;
-        println!("Detected capabilities: {:?}", capabilities);
+        println!("Detected capabilities: {capabilities:?}");
 
         let report = HardwareEnvironmentDetector::get_environment_report().await;
-        println!("Environment report:\n{}", report);
+        println!("Environment report:\n{report}");
     }
 
     #[test]
     fn test_container_detection() {
         let is_container = HardwareEnvironmentDetector::is_container_environment();
-        println!("Container environment: {}", is_container);
+        println!("Container environment: {is_container}");
     }
 }

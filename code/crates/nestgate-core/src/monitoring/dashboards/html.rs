@@ -1,7 +1,7 @@
-//! **HTML DASHBOARD GENERATION**
-//!
-//! HTML dashboard generation functionality for development and standalone monitoring.
-//! Extracted from dashboards.rs for file size compliance.
+// **HTML DASHBOARD GENERATION**
+//! Html functionality and utilities.
+// HTML dashboard generation functionality for development and standalone monitoring.
+// Extracted from dashboards.rs for file size compliance.
 
 use crate::monitoring::{ProviderMetrics, SystemMetrics};
 use std::collections::HashMap;
@@ -13,7 +13,7 @@ pub fn generate_html_dashboard(
     provider_metrics: &HashMap<String, ProviderMetrics>,
 ) -> String {
     let mut html = String::from(
-        r#"
+        r"
 <!DOCTYPE html>
 <html>
 <head>
@@ -41,12 +41,11 @@ pub fn generate_html_dashboard(
         </div>
         
         <div class="metrics-grid">
-"#,
+",
     );
-
     // System metrics
     html.push_str(&format!(
-        r#"
+        r"
             <div class="metric-card">
                 <div class="metric-title">CPU Usage</div>
                 <div class="metric-value {}">{:.1}%</div>
@@ -64,7 +63,7 @@ pub fn generate_html_dashboard(
                 <div class="metric-value">{}</div>
                 <div class="metric-description">Current network connections</div>
             </div>
-"#,
+",
         if system_metrics.cpu_usage > 80.0 {
             "status-error"
         } else if system_metrics.cpu_usage > 60.0 {
@@ -75,7 +74,7 @@ pub fn generate_html_dashboard(
         system_metrics.cpu_usage,
         if system_metrics.memory_usage > 0 && system_metrics.memory_available > 0 {
             let total = system_metrics.memory_usage + system_metrics.memory_available;
-            let percent = (system_metrics.memory_usage as f64 / total as f64) * 100.0;
+            let percent = (system_metrics.f64::from(memory_usage) / f64::from(total)) * 100.0;
             if percent > 80.0 {
                 "status-error"
             } else if percent > 60.0 {
@@ -88,7 +87,7 @@ pub fn generate_html_dashboard(
         },
         if system_metrics.memory_usage > 0 && system_metrics.memory_available > 0 {
             let total = system_metrics.memory_usage + system_metrics.memory_available;
-            (system_metrics.memory_usage as f64 / total as f64) * 100.0
+            (system_metrics.f64::from(memory_usage) / f64::from(total)) * 100.0
         } else {
             0.0
         },
@@ -100,19 +99,19 @@ pub fn generate_html_dashboard(
     // Provider metrics
     for (name, metrics) in provider_metrics {
         let success_rate = if metrics.total_requests > 0 {
-            (metrics.successful_requests as f64 / metrics.total_requests as f64) * 100.0
+            (metrics.f64::from(successful_requests) / metrics.f64::from(total_requests)) * 100.0
         } else {
             100.0
         };
 
         html.push_str(&format!(
-            r#"
+            r"
             <div class="metric-card">
                 <div class="metric-title">Provider: {}</div>
                 <div class="metric-value {}">{:.1}%</div>
                 <div class="metric-description">Success rate ({} requests, {:.1}ms avg)</div>
             </div>
-"#,
+",
             name,
             if success_rate < 95.0 {
                 "status-error"
@@ -128,7 +127,7 @@ pub fn generate_html_dashboard(
     }
 
     html.push_str(&format!(
-        r#"
+        r"
         </div>
         
         <div class="timestamp">
@@ -137,7 +136,7 @@ pub fn generate_html_dashboard(
     </div>
 </body>
 </html>
-"#,
+",
         SystemTime::now()
     ));
 

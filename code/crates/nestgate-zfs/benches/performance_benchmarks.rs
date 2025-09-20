@@ -1,11 +1,10 @@
 /// Benchmarks to validate performance characteristics and identify bottlenecks
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use nestgate_zfs::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
 use tokio::runtime::Runtime;
-
-use nestgate_zfs::*;
 
 // Temporary definitions for missing types
 #[derive(Debug, Clone)]
@@ -14,7 +13,6 @@ pub enum OptimizationComplexity {
     Medium,
     High,
 }
-
 #[derive(Debug, Clone)]
 pub enum OptimizationType {
     TierMigration,
@@ -22,7 +20,6 @@ pub enum OptimizationType {
     Deduplication,
     Caching,
 }
-
 #[derive(Debug, Clone)]
 pub struct OptimizationOpportunity {
     pub optimization_type: OptimizationType,
@@ -39,18 +36,16 @@ fn bench_config_creation(c: &mut Criterion) {
         b.iter(|| black_box(ZfsUnifiedUnifiedMcpConfig::default()))
     });
 }
-
 /// Benchmark configuration validation
 fn bench_config_validation(c: &mut Criterion) {
     let config = ZfsUnifiedUnifiedMcpConfig::default();
-
     c.bench_function("config_validation", |b| {
         b.iter(|| {
-            black_box(config.validate()).unwrap_or_else(|e| {
+            black_box(config.validate()).unwrap_or_else(|_e| {
                 tracing::error!("Unwrap failed: {:?}", e);
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Operation failed: {:?}", e),
+                    format!("Operation failed: {}", "actual_error_details"),
                 )
                 .into());
             })
@@ -62,7 +57,6 @@ fn bench_config_validation(c: &mut Criterion) {
 fn bench_tier_config_access(c: &mut Criterion) {
     let config = ZfsUnifiedUnifiedMcpConfig::default();
     let tiers = [StorageTier::Hot, StorageTier::Warm, StorageTier::Cold];
-
     c.bench_function("tier_config_access", |b| {
         b.iter(|| {
             for tier in &tiers {
@@ -78,7 +72,6 @@ fn bench_performance_metrics(c: &mut Criterion) {
         b.iter(|| black_box(crate::performance::CurrentPerformanceMetrics::default()))
     });
 }
-
 /// Benchmark tier metrics generation
 fn bench_tier_metrics_generation(c: &mut Criterion) {
     let tiers = [
@@ -87,10 +80,12 @@ fn bench_tier_metrics_generation(c: &mut Criterion) {
         StorageTier::Cold,
         StorageTier::Cache,
     ];
-
     for tier in &tiers {
         c.bench_with_input(
-            BenchmarkId::new("tier_metrics_generation", format!("{tier:?}")),
+            BenchmarkId::new(
+                "tier_metrics_generation",
+                format!("{}", "actual_error_details"),
+            ),
             tier,
             |b, &tier| {
                 b.iter(|| {
@@ -106,7 +101,6 @@ fn bench_tier_metrics_generation(c: &mut Criterion) {
 /// Benchmark AI optimization opportunity sorting
 fn bench_ai_optimization_sorting(c: &mut Criterion) {
     let mut group = c.benchmark_group("ai_optimization");
-
     for size in [10, 100, 1000].iter() {
         group.bench_with_input(
             BenchmarkId::new("opportunity_sorting", size),
@@ -118,11 +112,11 @@ fn bench_ai_optimization_sorting(c: &mut Criterion) {
                     ops.sort_by(|a, b| {
                         b.expected_impact
                             .partial_cmp(&a.expected_impact)
-                            .unwrap_or_else(|e| {
+                            .unwrap_or_else(|_e| {
                                 tracing::error!("Unwrap failed: {:?}", e);
                                 return Err(std::io::Error::new(
                                     std::io::ErrorKind::Other,
-                                    format!("Operation failed: {:?}", e),
+                                    format!("Operation failed: {}", "actual_error_details"),
                                 )
                                 .into());
                             })
@@ -149,11 +143,9 @@ fn bench_migration_job_creation(c: &mut Criterion) {
         })
     });
 }
-
 /// Benchmark snapshot policy validation
 fn bench_snapshot_policy_validation(c: &mut Criterion) {
     let policy = crate::snapshot::SnapshotPolicy::default();
-
     c.bench_function("snapshot_policy_validation", |b| {
         b.iter(|| {
             // Simulate policy validation logic
@@ -164,15 +156,14 @@ fn bench_snapshot_policy_validation(c: &mut Criterion) {
 
 /// Benchmark concurrent metrics collection
 fn bench_concurrent_metrics(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap_or_else(|e| {
+    let rt = Runtime::new().unwrap_or_else(|_e| {
         tracing::error!("Unwrap failed: {:?}", e);
         return Err(std::io::Error::new(
             std::io::ErrorKind::Other,
-            format!("Operation failed: {:?}", e),
+            format!("Operation failed: {}", "actual_error_details"),
         )
         .into());
     });
-
     c.bench_function("concurrent_metrics_collection", |b| {
         b.to_async(&rt).iter(|| async {
             let handles: Vec<_> = (0..10)
@@ -184,11 +175,11 @@ fn bench_concurrent_metrics(c: &mut Criterion) {
                 .collect();
 
             for handle in handles {
-                black_box(handle.await.unwrap_or_else(|e| {
+                black_box(handle.await.unwrap_or_else(|_e| {
                     tracing::error!("Unwrap failed: {:?}", e);
                     return Err(std::io::Error::new(
                         std::io::ErrorKind::Other,
-                        format!("Operation failed: {:?}", e),
+                        format!("Operation failed: {}", "actual_error_details"),
                     )
                     .into());
                 }));
@@ -200,12 +191,14 @@ fn bench_concurrent_metrics(c: &mut Criterion) {
 /// Benchmark memory allocation patterns
 fn bench_memory_allocation(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_allocation");
-
     group.bench_function("hashmap_creation", |b| {
         b.iter(|| {
             let mut map: HashMap<String, String> = HashMap::new();
             for i in 0..100 {
-                map.insert(format!("key_{i}"), format!("value_{i}"));
+                map.insert(
+                    format!("key_{}", "actual_error_details"),
+                    format!("value_{}", "actual_error_details"),
+                );
             }
             black_box(map)
         })
@@ -215,7 +208,7 @@ fn bench_memory_allocation(c: &mut Criterion) {
         b.iter(|| {
             let mut vec = Vec::new();
             for i in 0..100 {
-                vec.push(format!("item_{i}"));
+                vec.push(format!("item_{}", "actual_error_details");
             }
             black_box(vec)
         })
@@ -227,7 +220,6 @@ fn bench_memory_allocation(c: &mut Criterion) {
 /// Benchmark error handling overhead
 fn bench_error_handling(c: &mut Criterion) {
     use crate::error::*;
-
     c.bench_function("error_creation", |b| {
         b.iter(|| {
             black_box(ZfsError::PoolError {
@@ -237,16 +229,16 @@ fn bench_error_handling(c: &mut Criterion) {
     });
 
     c.bench_function("error_retryability_check", |b| {
-        let errors = vec![
+        let _errors = vec![
             ZfsError::ConfigError {
                 message: "timeout".to_string(),
-            },
+            }
             ZfsError::CommandError {
                 message: "unavailable".to_string(),
-            },
+            }
             ZfsError::PoolError {
                 message: "Pool 'test' not found".to_string(),
-            },
+            }
         ];
 
         b.iter(|| {
@@ -261,16 +253,15 @@ fn bench_error_handling(c: &mut Criterion) {
 fn bench_serialization(c: &mut Criterion) {
     let config = ZfsUnifiedUnifiedMcpConfig::default();
     let metrics = crate::performance::CurrentPerformanceMetrics::default();
-
     let mut group = c.benchmark_group("serialization");
 
     group.bench_function("config_json_serialize", |b| {
         b.iter(|| {
-            black_box(serde_json::to_string(&config).map_err(|e| {
+            black_box(serde_json::to_string(&config).map_err(|_e| {
                 tracing::error!("JSON serialization failed: {}", e);
                 std::io::Error::new(
                     std::io::ErrorKind::InvalidData,
-                    format!("JSON serialization error: {}", e),
+                    format!("JSON serialization error: {}", "actual_error_details"),
                 )
             })?)
         })
@@ -278,31 +269,31 @@ fn bench_serialization(c: &mut Criterion) {
 
     group.bench_function("metrics_json_serialize", |b| {
         b.iter(|| {
-            black_box(serde_json::to_string(&metrics).map_err(|e| {
+            black_box(serde_json::to_string(&metrics).map_err(|_e| {
                 tracing::error!("JSON serialization failed: {}", e);
                 std::io::Error::new(
                     std::io::ErrorKind::InvalidData,
-                    format!("JSON serialization error: {}", e),
+                    format!("JSON serialization error: {}", "actual_error_details"),
                 )
             })?)
         })
     });
 
-    let config_json = serde_json::to_string(&config).map_err(|e| {
+    let config_json = serde_json::to_string(&config).map_err(|_e| {
         tracing::error!("JSON serialization failed: {}", e);
         std::io::Error::new(
             std::io::ErrorKind::InvalidData,
-            format!("JSON serialization error: {}", e),
+            format!("JSON serialization error: {}", "actual_error_details"),
         )
     })?;
     group.bench_function("config_json_deserialize", |b| {
         b.iter(|| {
             black_box(
-                serde_json::from_str::<ZfsMcpConfig>(&config_json).unwrap_or_else(|e| {
+                serde_json::from_str::<ZfsMcpConfig>(&config_json).unwrap_or_else(|_e| {
                     tracing::error!("Unwrap failed: {:?}", e);
                     return Err(std::io::Error::new(
                         std::io::ErrorKind::Other,
-                        format!("Operation failed: {:?}", e),
+                        format!("Operation failed: {}", "actual_error_details"),
                     )
                     .into());
                 }),
@@ -315,15 +306,14 @@ fn bench_serialization(c: &mut Criterion) {
 
 /// Benchmark async operations
 fn bench_async_operations(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap_or_else(|e| {
+    let rt = Runtime::new().unwrap_or_else(|_e| {
         tracing::error!("Unwrap failed: {:?}", e);
         return Err(std::io::Error::new(
             std::io::ErrorKind::Other,
-            format!("Operation failed: {:?}", e),
+            format!("Operation failed: {}", "actual_error_details"),
         )
         .into());
     });
-
     c.bench_function("async_task_spawning", |b| {
         b.to_async(&rt).iter(|| async {
             let handles: Vec<_> = (0..100)
@@ -336,11 +326,11 @@ fn bench_async_operations(c: &mut Criterion) {
                 .collect();
 
             for handle in handles {
-                black_box(handle.await.unwrap_or_else(|e| {
+                black_box(handle.await.unwrap_or_else(|_e| {
                     tracing::error!("Unwrap failed: {:?}", e);
                     return Err(std::io::Error::new(
                         std::io::ErrorKind::Other,
-                        format!("Operation failed: {:?}", e),
+                        format!("Operation failed: {}", "actual_error_details"),
                     )
                     .into());
                 }));
@@ -355,7 +345,7 @@ fn create_test_opportunities(count: usize) -> Vec<OptimizationOpportunity> {
         .map(|i| {
             OptimizationOpportunity {
                 optimization_type: OptimizationType::TierMigration,
-                description: format!("Optimization {i}"),
+                description: format!("Optimization {}", "actual_error_details"),
                 expected_impact: (i as f64 * 3.7) % 100.0, // Pseudo-random impact
                 confidence: 0.5 + (i as f64 * 0.1) % 0.5,
                 complexity: OptimizationComplexity::Medium,
@@ -364,7 +354,6 @@ fn create_test_opportunities(count: usize) -> Vec<OptimizationOpportunity> {
         })
         .collect()
 }
-
 criterion_group!(
     benches,
     bench_config_creation,

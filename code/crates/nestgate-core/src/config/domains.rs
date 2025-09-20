@@ -1,11 +1,10 @@
-//! **DOMAIN CONFIGURATION TYPES**
-//!
-//! This module provides domain-specific configuration structures for NestGate,
+// **DOMAIN CONFIGURATION TYPES**
+//! Configuration types and utilities.
+// This module provides domain-specific configuration structures for NestGate,
 //! organized by functional area (API, Storage, Network, Security, etc.).
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::time::Duration;
 use super::unified_types::CacheConfig;
 
@@ -17,7 +16,7 @@ pub struct ApiConfig<
     const API_PORT: u16 = 8080,
     const TIMEOUT_MS: u64 = 30000,
 > {
-    pub bind_address: String,
+    pub bind_endpoint: String,
     pub port_override: Option<u16>,        // Runtime override for API_PORT
     pub timeout_override: Option<Duration>, // Runtime override for TIMEOUT_MS
     pub max_request_size: u64,
@@ -27,7 +26,6 @@ pub struct ApiConfig<
     pub middleware: Vec<String>,
     pub tls: TlsConfig,
 }
-
 impl<const API_PORT: u16, const TIMEOUT_MS: u64> ApiConfig<API_PORT, TIMEOUT_MS> {
     /// Get API port - compile-time optimized
     pub const fn api_port() -> u16 {
@@ -40,12 +38,12 @@ impl<const API_PORT: u16, const TIMEOUT_MS: u64> ApiConfig<API_PORT, TIMEOUT_MS>
     }
 
     /// Get effective port (runtime override or compile-time)
-    pub fn effective_port(&self) -> u16 {
+    pub const fn effective_port(&self) -> u16 {
         self.port_override.unwrap_or(API_PORT)
     }
 
     /// Get effective timeout (runtime override or compile-time)
-    pub fn effective_timeout(&self) -> Duration {
+    pub const fn effective_timeout(&self) -> Duration {
         self.timeout_override.unwrap_or(Duration::from_millis(TIMEOUT_MS))
     }
 }
@@ -53,7 +51,7 @@ impl<const API_PORT: u16, const TIMEOUT_MS: u64> ApiConfig<API_PORT, TIMEOUT_MS>
 impl<const API_PORT: u16, const TIMEOUT_MS: u64> Default for ApiConfig<API_PORT, TIMEOUT_MS> {
     fn default() -> Self {
         Self {
-            bind_address: "127.0.0.1".to_string(),
+            bind_endpoint: "127.0.0.1".to_string(),
             port_override: None,
             timeout_override: None,
             max_request_size: 10 * 1024 * 1024, // 10MB
@@ -74,29 +72,22 @@ pub struct RateLimitingConfig {
     pub burst_size: u32,
     pub window_seconds: u64,
 }
-
 /// TLS configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TlsConfig {
     pub enabled: bool,
-    pub cert_path: Option<PathBuf>,
-    pub key_path: Option<PathBuf>,
-    pub ca_cert_path: Option<PathBuf>,
     pub verify_client: bool,
 }
-
 // ==================== SECTION ====================
 
 /// **CONST GENERIC SERVER CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerConfig<const MAX_CONNECTIONS: usize = 1000> {
-    pub bind_address: String,
+    pub bind_endpoint: String,
     pub max_connections_override: Option<usize>, // Runtime override for MAX_CONNECTIONS
     pub keep_alive: bool,
     pub connection_timeout: Duration,
     pub tls_enabled: bool,
-    pub cert_path: Option<PathBuf>,
-    pub key_path: Option<PathBuf>,
     pub worker_threads: Option<usize>,
     
     // **CONSOLIDATED**: HTTP server configuration
@@ -114,17 +105,14 @@ pub struct ServerConfig<const MAX_CONNECTIONS: usize = 1000> {
     pub rate_limiting_requests_per_minute: u32,
     pub rate_limiting_burst_size: u32,
 }
-
 impl<const MAX_CONNECTIONS: usize> Default for ServerConfig<MAX_CONNECTIONS> {
     fn default() -> Self {
         Self {
-            bind_address: crate::constants::canonical::network::DEFAULT_BIND_ADDRESS.to_string(),
+            bind_endpoint: crate::constants::DEFAULT_BIND_ADDRESS.to_string(),
             max_connections_override: None,
             keep_alive: true,
             connection_timeout: Duration::from_secs(30),
             tls_enabled: false,
-            cert_path: None,
-            key_path: None,
             worker_threads: None,
             
             // **CONSOLIDATED**: HTTP server defaults
@@ -152,7 +140,7 @@ impl<const MAX_CONNECTIONS: usize> ServerConfig<MAX_CONNECTIONS> {
     }
 
     /// Get effective max connections (runtime override or compile-time default)
-    pub fn effective_max_connections(&self) -> usize {
+    pub const fn effective_max_connections(&self) -> usize {
         self.max_connections_override.unwrap_or(MAX_CONNECTIONS)
     }
 }
@@ -177,7 +165,6 @@ pub struct StorageConfig {
     /// Cache configuration
     pub cache: CacheConfig,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum StorageBackend {
     #[default]
@@ -203,7 +190,6 @@ pub struct ZfsConfig {
     /// Enable deduplication
     pub deduplication: bool,
 }
-
 /// ZFS snapshot configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SnapshotConfig {
@@ -214,7 +200,6 @@ pub struct SnapshotConfig {
     /// Retention policy in days
     pub retention_days: u32,
 }
-
 /// ZFS performance configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ZfsPerformanceConfig {
@@ -227,20 +212,17 @@ pub struct ZfsPerformanceConfig {
     /// Cache mode
     pub cache_mode: String,
 }
-
 /// Storage tier configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TierConfig {
     /// Tier name
     pub name: String,
     /// Storage path
-    pub path: String,
     /// Maximum size in bytes
     pub max_size_bytes: u64,
     /// Compression level
     pub compression_level: u8,
 }
-
 /// Backup configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct BackupConfig {
@@ -253,7 +235,6 @@ pub struct BackupConfig {
     /// Backup destination
     pub destination: String,
 }
-
 /// Compression configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CompressionConfig {
@@ -264,7 +245,6 @@ pub struct CompressionConfig {
     /// Enable compression
     pub enabled: bool,
 }
-
 /// Replication configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ReplicationConfig {
@@ -275,7 +255,6 @@ pub struct ReplicationConfig {
     /// Replication interval in seconds
     pub interval_seconds: u64,
 }
-
 // ==================== SECTION ====================
 
 /// Network configuration
@@ -294,7 +273,6 @@ pub struct NetworkConfig {
     /// Connection pool configuration
     pub connection_pool: ConnectionPoolConfig,
 }
-
 /// Network discovery configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DiscoveryConfig {
@@ -307,7 +285,6 @@ pub struct DiscoveryConfig {
     /// Discovery protocols
     pub protocols: Vec<String>,
 }
-
 /// Load balancer configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct LoadBalancerConfig {
@@ -318,7 +295,6 @@ pub struct LoadBalancerConfig {
     /// Maximum connections
     pub max_connections: usize,
 }
-
 /// Internal network configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct InternalNetworkConfig {
@@ -329,7 +305,6 @@ pub struct InternalNetworkConfig {
     /// Enable internal TLS
     pub tls_enabled: bool,
 }
-
 /// External network configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ExternalNetworkConfig {
@@ -340,7 +315,6 @@ pub struct ExternalNetworkConfig {
     /// Enable external TLS
     pub tls_enabled: bool,
 }
-
 /// Circuit breaker configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CircuitBreakerConfig {
@@ -351,7 +325,6 @@ pub struct CircuitBreakerConfig {
     /// Enable circuit breaker
     pub enabled: bool,
 }
-
 /// Connection pool configuration  
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ConnectionPoolConfig {
@@ -361,7 +334,6 @@ pub struct ConnectionPoolConfig {
     pub connection_timeout_seconds: u64,
     pub idle_timeout_seconds: u64,
 }
-
 // ==================== SECTION ====================
 
 /// Security configuration
@@ -380,7 +352,6 @@ pub struct SecurityConfig {
     /// Encryption at rest configuration
     pub encryption_at_rest: EncryptionAtRestConfig,
 }
-
 /// Authentication configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AuthenticationConfig {
@@ -393,7 +364,6 @@ pub struct AuthenticationConfig {
     /// Enable multi-factor authentication
     pub mfa_enabled: bool,
 }
-
 /// Session configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SessionConfig {
@@ -404,7 +374,6 @@ pub struct SessionConfig {
     /// Session storage type
     pub storage_type: String,
 }
-
 /// Authorization configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AuthorizationConfig {
@@ -415,7 +384,6 @@ pub struct AuthorizationConfig {
     /// Authorization rules
     pub rules: Vec<String>,
 }
-
 /// Encryption configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct EncryptionConfig {
@@ -428,7 +396,6 @@ pub struct EncryptionConfig {
     /// Enable encryption in transit
     pub in_transit_enabled: bool,
 }
-
 /// Key management configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct KeyManagementConfig {
@@ -439,7 +406,6 @@ pub struct KeyManagementConfig {
     /// Enable hardware security module
     pub hsm_enabled: bool,
 }
-
 /// Encryption at rest configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct EncryptionAtRestConfig {
@@ -448,7 +414,6 @@ pub struct EncryptionAtRestConfig {
     pub key_rotation_enabled: bool,
     pub key_rotation_interval_hours: u64,
 }
-
 // ==================== SECTION ====================
 
 /// Monitoring configuration
@@ -467,7 +432,6 @@ pub struct MonitoringConfig {
     /// Health check configuration
     pub health_checks: HealthCheckConfig,
 }
-
 /// Metrics configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MetricsConfig {
@@ -480,7 +444,6 @@ pub struct MetricsConfig {
     /// Retention period in days
     pub retention_days: u32,
 }
-
 /// Logging configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct LoggingConfig {
@@ -493,7 +456,6 @@ pub struct LoggingConfig {
     /// Enable structured logging
     pub structured: bool,
 }
-
 /// Tracing configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TracingConfig {
@@ -506,7 +468,6 @@ pub struct TracingConfig {
     /// Service name for tracing
     pub service_name: String,
 }
-
 /// Alerting configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AlertingConfig {
@@ -519,7 +480,6 @@ pub struct AlertingConfig {
     /// Notification interval in seconds
     pub notification_interval_seconds: u64,
 }
-
 /// Health check configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct HealthCheckConfig {
@@ -532,7 +492,6 @@ pub struct HealthCheckConfig {
     /// Health check endpoints
     pub endpoints: Vec<String>,
 }
-
 // ==================== SECTION ====================
 
 /// Environment configuration
@@ -547,7 +506,6 @@ pub struct EnvironmentConfig {
     /// Feature flags
     pub feature_flags: HashMap<String, bool>,
 }
-
 // ==================== SECTION ====================
 
 /// MCP (Model Context Protocol) configuration
@@ -562,7 +520,6 @@ pub struct McpConfig {
     /// Protocol configuration
     pub protocol: McpProtocolConfig,
 }
-
 /// MCP server configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct McpServerConfig {
@@ -575,7 +532,6 @@ pub struct McpServerConfig {
     /// Connection timeout
     pub timeout_seconds: u64,
 }
-
 /// MCP client configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct McpClientConfig {
@@ -586,7 +542,6 @@ pub struct McpClientConfig {
     /// Retry delay
     pub retry_delay_seconds: u64,
 }
-
 /// MCP protocol configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct McpProtocolConfig {

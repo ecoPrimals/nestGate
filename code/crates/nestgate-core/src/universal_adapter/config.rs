@@ -1,5 +1,6 @@
 /// Universal Adapter Configuration
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 /// Universal adapter configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -17,7 +18,6 @@ pub struct UniversalAdapterConfig {
     /// Discovery methods to use
     pub discovery_methods: Vec<DiscoveryMethod>,
 }
-
 impl Default for UniversalAdapterConfig {
     fn default() -> Self {
         Self {
@@ -45,7 +45,6 @@ pub enum FallbackBehavior {
     /// Use a local implementation
     Local,
 }
-
 /// Discovery methods for finding primal providers
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum DiscoveryMethod {
@@ -57,4 +56,64 @@ pub enum DiscoveryMethod {
     NetworkScan,
     /// Configuration file
     Configuration,
+}
+
+/// Configuration for the universal adapter
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AdapterConfig {
+    pub discovery_timeout: Duration,
+    pub retry_attempts: u32,
+    pub cache_ttl: Duration,
+    pub endpoints: Vec<String>,
+    pub fallback_enabled: bool,
+}
+
+impl AdapterConfig {
+    /// Create a new adapter configuration
+    pub const fn new() -> Self {
+        Self {
+            discovery_timeout: Duration::from_secs(30),
+            retry_attempts: 3,
+            cache_ttl: Duration::from_secs(300), // 5 minutes
+            endpoints: vec![
+                "http://localhost:8083/discovery".to_string(),
+                "http://localhost:8084/discovery".to_string(),
+            ],
+            fallback_enabled: true,
+        }
+    }
+    
+    /// Set discovery timeout
+    #[must_use]
+    pub fn with_discovery_timeout(mut self, timeout: Duration) -> Self {
+        self.discovery_timeout = timeout;
+        self
+    }
+    
+    /// Set retry attempts
+    #[must_use]
+    pub fn with_retry_attempts(mut self, attempts: u32) -> Self {
+        self.retry_attempts = attempts;
+        self
+    }
+    
+    /// Add discovery endpoint
+    #[must_use]
+    pub fn add_endpoint(mut self, endpoint: String) -> Self {
+        self.endpoints.push(endpoint);
+        self
+    }
+    
+    /// Enable or disable fallback providers
+    #[must_use]
+    pub fn with_fallback(mut self, enabled: bool) -> Self {
+        self.fallback_enabled = enabled;
+        self
+    }
+}
+
+impl Default for AdapterConfig {
+    fn default() -> Self {
+        Self::new()
+    }
 }

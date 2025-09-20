@@ -11,13 +11,13 @@ use crate::handlers::zfs::universal_zfs::types::{
 };
 
 // Import zero-copy utilities
-use nestgate_core::zero_copy::lines_zero_copy;
+// Note: zero_copy lines function moved to utilities
+// use nestgate_core::zero_copy::lines_zero_copy; // Module doesn't exist
 
 /// Parse zpool list output into PoolInfo structures
 pub fn parse_zpool_list(output: &str) -> UniversalZfsResult<Vec<PoolInfo>> {
     let mut pools = Vec::new();
-
-    for line in lines_zero_copy(output) {
+    for line in output.lines() {
         let fields: Vec<&str> = line.split('\t').collect();
         if fields.len() >= 5 {
             let name = fields[0].to_string();
@@ -51,12 +51,12 @@ pub fn parse_zpool_list(output: &str) -> UniversalZfsResult<Vec<PoolInfo>> {
                     used_bytes: used_size,
                     available_bytes: available_size,
                     utilization_percent: if total_size > 0 {
-                        (used_size as f64 / total_size as f64) * 100.0
+                        (f64::from(used_size) / f64::from(total_size)) * 100.0
                     } else {
                         0.0
                     },
                 },
-                devices: Vec::new(), // Would need zpool status for this
+                _devices: Vec::new(), // Would need zpool status for this
                 properties: HashMap::new(),
                 created_at: SystemTime::now(),
                 last_scrub: None,
@@ -72,11 +72,10 @@ pub fn parse_zpool_list(output: &str) -> UniversalZfsResult<Vec<PoolInfo>> {
 /// Parse size strings with universal scale support
 /// Handles everything from molecular storage (sub-byte) to cosmic-scale data (10+ generations)
 /// Future-proofs for DNA storage, quantum bits, and federated petabyte systems
-pub fn parse_size_string(size_str: &str) -> UniversalZfsResult<u64> {
+pub const fn parse_size_string(size_str: &str) -> UniversalZfsResult<u64> {
     if size_str == "-" || size_str.is_empty() {
         return Ok(0);
     }
-
     // Handle numeric-only strings (assume bytes)
     if let Ok(bytes) = size_str.parse::<u64>() {
         return Ok(bytes);
@@ -84,11 +83,11 @@ pub fn parse_size_string(size_str: &str) -> UniversalZfsResult<u64> {
 
     // Split into numeric and unit parts
     let (numeric_part, unit_part) = split_size_string(size_str)?;
-    let base_value = numeric_part
+    let basevalue = numeric_part
         .parse::<f64>()
         .map_err(|_| UniversalZfsError::InvalidInput {
-            field: Some("size".to_string()),
-            message: format!("Invalid numeric value: {}", numeric_part),
+            field: "field".to_string(),
+            message: format!("Invalid numeric value: {"actual_error_details"}"),
         })?;
 
     // Universal scale multipliers - from quantum to cosmic
@@ -124,20 +123,19 @@ pub fn parse_size_string(size_str: &str) -> UniversalZfsResult<u64> {
 
         _ => {
             return Err(UniversalZfsError::InvalidInput {
-                field: Some("size_unit".to_string()),
-                message: format!("Unknown size unit: {}", unit_part),
+                field: "field".to_string(),
+                message: format!("Unknown size unit: {"actual_error_details"}"),
             }
             .into());
         }
     };
 
-    Ok((base_value * multiplier) as u64)
+    Ok((basevalue * multiplier) as u64)
 }
 
 /// Split size string into numeric and unit parts
 fn split_size_string(size_str: &str) -> UniversalZfsResult<(&str, &str)> {
     let size_str = size_str.trim();
-
     // Find the boundary between numeric and alphabetic parts
     let split_pos = size_str
         .find(|c: char| c.is_alphabetic())
@@ -145,8 +143,11 @@ fn split_size_string(size_str: &str) -> UniversalZfsResult<(&str, &str)> {
 
     if split_pos == 0 {
         return Err(UniversalZfsError::InvalidInput {
-            field: Some("size".to_string()),
-            message: format!("Size string has no numeric part: {}", size_str),
+            field: "field".to_string(),
+            message: format!(
+                "Size string has no numeric part: {}",
+                "actual_error_details"
+            ),
         }
         .into());
     }
@@ -160,7 +161,6 @@ fn split_size_string(size_str: &str) -> UniversalZfsResult<(&str, &str)> {
 /// Parse dataset information from zfs list output
 pub fn parse_dataset_list(output: &str) -> UniversalZfsResult<Vec<DatasetInfo>> {
     let mut datasets = Vec::new();
-
     for line in output.lines() {
         if line.trim().is_empty() {
             continue;
@@ -200,7 +200,6 @@ pub fn parse_dataset_list(output: &str) -> UniversalZfsResult<Vec<DatasetInfo>> 
 /// Parse snapshot information from zfs list -t snapshot output
 pub fn parse_snapshot_list(output: &str) -> UniversalZfsResult<Vec<SnapshotInfo>> {
     let mut snapshots = Vec::new();
-
     for line in output.lines() {
         if line.trim().is_empty() {
             continue;
@@ -238,7 +237,7 @@ mod tests {
     #[test]
     fn test_parse_size_string() -> std::result::Result<(), Box<dyn std::error::Error>> {
         assert_eq!(
-            parse_size_string("1024").map_err(|e| {
+            parse_size_string("1024").map_err(|_e| {
                 tracing::error!(
                     "Expected operation failed: {} - Error: {:?}",
                     "Test assertion failed",
@@ -246,13 +245,13 @@ mod tests {
                 );
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("{} - Error: {:?}", "Test assertion failed", e),
+                    format!("Error: {"actual_error_details"}"),
                 )
             })?,
             1024
         );
         assert_eq!(
-            parse_size_string("1K").map_err(|e| {
+            parse_size_string("1K").map_err(|_e| {
                 tracing::error!(
                     "Expected operation failed: {} - Error: {:?}",
                     "Test assertion failed",
@@ -260,13 +259,13 @@ mod tests {
                 );
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("{} - Error: {:?}", "Test assertion failed", e),
+                    format!("Error: {"actual_error_details"}"),
                 )
             })?,
             1024
         );
         assert_eq!(
-            parse_size_string("1M").map_err(|e| {
+            parse_size_string("1M").map_err(|_e| {
                 tracing::error!(
                     "Expected operation failed: {} - Error: {:?}",
                     "Test assertion failed",
@@ -274,13 +273,13 @@ mod tests {
                 );
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("{} - Error: {:?}", "Test assertion failed", e),
+                    format!("Error: {"actual_error_details"}"),
                 )
             })?,
             1024 * 1024
         );
         assert_eq!(
-            parse_size_string("1G").map_err(|e| {
+            parse_size_string("1G").map_err(|_e| {
                 tracing::error!(
                     "Expected operation failed: {} - Error: {:?}",
                     "Test assertion failed",
@@ -288,13 +287,13 @@ mod tests {
                 );
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("{} - Error: {:?}", "Test assertion failed", e),
+                    format!("Error: {"actual_error_details"}"),
                 )
             })?,
             1024 * 1024 * 1024
         );
         assert_eq!(
-            parse_size_string("1T").map_err(|e| {
+            parse_size_string("1T").map_err(|_e| {
                 tracing::error!(
                     "Expected operation failed: {} - Error: {:?}",
                     "Test assertion failed",
@@ -302,23 +301,23 @@ mod tests {
                 );
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("{} - Error: {:?}", "Test assertion failed", e),
+                    format!("Error: {"actual_error_details"}"),
                 )
             })?,
             1024_u64.pow(4)
         );
         assert_eq!(
-            parse_size_string("1.5G").map_err(|e| {
+            parse_size_string("1.5G").map_err(|_e| {
                 tracing::error!("Operation failed: {:?}", e);
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Operation failed: {:?}", e),
+                    format!("Operation failed: {"actual_error_details"}"),
                 )
             })?,
             (1.5 * 1024.0 * 1024.0 * 1024.0) as u64
         );
         assert_eq!(
-            parse_size_string("-").map_err(|e| {
+            parse_size_string("-").map_err(|_e| {
                 tracing::error!(
                     "Expected operation failed: {} - Error: {:?}",
                     "Test assertion failed",
@@ -326,13 +325,13 @@ mod tests {
                 );
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("{} - Error: {:?}", "Test assertion failed", e),
+                    format!("Error: {"actual_error_details"}"),
                 )
             })?,
             0
         );
         assert_eq!(
-            parse_size_string("").map_err(|e| {
+            parse_size_string("").map_err(|_e| {
                 tracing::error!(
                     "Expected operation failed: {} - Error: {:?}",
                     "Test assertion failed",
@@ -340,7 +339,7 @@ mod tests {
                 );
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("{} - Error: {:?}", "Test assertion failed", e),
+                    format!("Error: {"actual_error_details"}"),
                 )
             })?,
             0
@@ -350,21 +349,21 @@ mod tests {
 
     #[test]
     fn test_split_size_string() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        let (num, unit) = split_size_string("1024B").map_err(|e| {
+        let (num, unit) = split_size_string("1024B").map_err(|_e| {
             tracing::error!("Operation failed: {:?}", e);
             std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {"actual_error_details"}"),
             )
         })?;
         assert_eq!(num, "1024");
         assert_eq!(unit, "B");
 
-        let (num, unit) = split_size_string("1.5GB").map_err(|e| {
+        let (num, unit) = split_size_string("1.5GB").map_err(|_e| {
             tracing::error!("Operation failed: {:?}", e);
             std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {"actual_error_details"}"),
             )
         })?;
         assert_eq!(num, "1.5");

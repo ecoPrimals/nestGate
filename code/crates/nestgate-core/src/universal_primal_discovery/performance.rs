@@ -5,13 +5,11 @@
 /// - Performance profile optimization
 /// - System capacity analysis
 use crate::Result;
-use std::collections::HashMap;
-use std::time::{Duration, Instant};
-
 /// Performance Test Configuration Management
 /// Handles performance testing configuration, benchmarks, and optimization
 use serde::{Deserialize, Serialize};
-
+use std::collections::HashMap;
+use std::time::{Duration, Instant};
 // 🚀 ECOSYSTEM UNIFICATION: Import unified types
 
 /// Test type enumeration
@@ -25,7 +23,6 @@ pub enum TestType {
     Endurance,
     Scalability,
 }
-
 impl std::fmt::Display for TestType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{self:?}")
@@ -35,9 +32,8 @@ impl std::fmt::Display for TestType {
 // 🚀 FULLY MODERN: Clean imports - no duplicates
 
 // 🚀 MODERNIZATION: UnifiedConfig now uses UnifiedPerformanceTestConfig directly
-/// **MODERNIZED**: UnifiedConfig now uses UnifiedPerformanceTestConfig directly  
+/// **MODERNIZED**: `UnifiedConfig` now uses `UnifiedPerformanceTestConfig` directly  
 pub type PerformanceTestConfig = crate::config::canonical_master::PerformanceConfig;
-
 // 🚀 FULLY MODERN: All performance testing functionality now uses UnifiedPerformanceTestConfig directly
 // No legacy implementation needed - use UnifiedPerformanceTestConfig::default() and methods
 
@@ -49,16 +45,13 @@ pub struct ResponseTimeThresholds {
     pub p99: Duration,
     pub max: Duration,
 }
-
 /// Test data configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TestDataConfig {
     pub use_random_data: bool,
-    pub data_file_path: Option<String>,
     pub data_size: usize,
     pub data_variance: f64,
 }
-
 /// Optimal timeout result
 #[derive(Debug, Clone)]
 pub struct OptimalTimeout {
@@ -67,7 +60,6 @@ pub struct OptimalTimeout {
     pub test_iterations: usize,
     pub baseline_latency: Duration,
 }
-
 /// Performance test result
 #[derive(Debug, Clone)]
 pub struct TestResult {
@@ -77,21 +69,27 @@ pub struct TestResult {
     pub error_message: Option<String>,
     pub timestamp: std::time::Instant,
 }
-
 /// Enhanced Performance Test Runner with unified configuration
 #[derive(Debug)]
 pub struct PerformanceTestRunner {
     pub config: crate::config::canonical_master::PerformanceConfig,
 }
-
 impl PerformanceTestRunner {
     /// Create new performance test runner
-    pub fn new(config: crate::config::canonical_master::PerformanceConfig) -> Self {
+    #[must_use]
+    pub const fn new(config: crate::config::canonical_master::PerformanceConfig) -> Self {
         Self { config }
     }
 
     /// Discover optimal timeout through benchmarking
-    pub async fn discover_optimal_timeout(&self) -> Result<OptimalTimeout> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn discover_optimal_timeout(&self) -> Result<OptimalTimeout>  {
         let mut latencies = Vec::new();
 
         // Run multiple test iterations to gather latency data
@@ -109,16 +107,22 @@ impl PerformanceTestRunner {
         latencies.sort();
 
         // Calculate target percentile timeout
-        let percentile_index =
-            ((latencies.len() as f64 * self.config.testing.percentile_target / 100.0).ceil() as usize - 1)
-                .min(latencies.len() - 1);
+        let percentile_index = (((latencies.len() as f64) * self.config.testing.percentile_target
+            / 100.0)
+            .ceil() as usize
+            - 1)
+        .min(latencies.len() - 1);
 
         let optimal_timeout = latencies[percentile_index];
 
         // Ensure within bounds
         let bounded_timeout = optimal_timeout
-            .max(Duration::from_secs(self.config.testing.baseline_timeout_seconds))
-            .min(Duration::from_secs(self.config.testing.baseline_timeout_seconds));
+            .max(Duration::from_secs(
+                self.config.testing.baseline_timeout_seconds,
+            ))
+            .min(Duration::from_secs(
+                self.config.testing.baseline_timeout_seconds,
+            ));
 
         Ok(OptimalTimeout {
             timeout: bounded_timeout,
@@ -129,6 +133,7 @@ impl PerformanceTestRunner {
     }
 
     /// Generate performance metrics
+    #[must_use]
     pub fn generate_metrics(&self) -> HashMap<String, String> {
         let mut metrics = HashMap::new();
 
@@ -161,7 +166,6 @@ impl PerformanceTestRunner {
 /// Performance Discovery Service
 #[derive(Debug)]
 pub struct PerformanceDiscovery;
-
 impl Default for PerformanceDiscovery {
     fn default() -> Self {
         Self::new()
@@ -170,16 +174,20 @@ impl Default for PerformanceDiscovery {
 
 impl PerformanceDiscovery {
     /// Create new performance discovery service
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self
     }
 
     /// Discover optimal timeout through benchmarking
-    pub async fn discover_optimal_timeout(
-        &self,
-        _service_name: &str,
-        _operation: &str,
-    ) -> Result<Duration> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn discover_optimal_timeout(&self, _service_name: &str) -> Result<Duration>  {
         // Use default performance test config for discovery
         let config = crate::config::canonical_master::PerformanceConfig::default();
         let runner = PerformanceTestRunner::new(config);
@@ -189,7 +197,15 @@ impl PerformanceDiscovery {
     }
 
     /// Discover performance characteristics
-    pub async fn discover_performance(&self) -> Result<HashMap<String, serde_json::Value>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn discover_performance(&self) -> Result<HashMap<String, serde_json::Value>>  {
         let mut characteristics = HashMap::new();
 
         characteristics.insert(

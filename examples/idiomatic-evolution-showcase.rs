@@ -19,6 +19,7 @@ use nestgate_core::error::{NestGateError, Result, ResultExt};
 
 /// **SCENARIO 1**: Configuration Loading (Common Use Case)
 /// Shows how idiomatic patterns make simple operations much cleaner
+use nestgate_core::error::NestGateError;
 fn load_application_config() -> Result<HashMap<String, String>> {
     // IDIOMATIC: External Result integration with context chaining
     let config_data = fs::read_to_string("app.toml")

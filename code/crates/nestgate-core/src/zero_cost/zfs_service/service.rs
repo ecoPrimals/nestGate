@@ -12,10 +12,9 @@ use crate::Result;
 pub struct ZeroCostZfsService {
     service_name: &'static str,
 }
-
 impl ZeroCostZfsService {
     /// Create a new zero-cost ZFS service
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             service_name: "ZeroCostZfsService",
         }

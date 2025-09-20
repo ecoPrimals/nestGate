@@ -3,12 +3,20 @@ use crate::error::CanonicalResult as Result;
 
 impl NestGateFinalConfig {
     /// Create a new configuration with default values
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self::default()
     }
 
     /// Load configuration from environment variables and files
-    pub async fn load() -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn load() -> Result<Self>  {
         use std::env;
         use tokio::fs;
 
@@ -19,7 +27,7 @@ impl NestGateFinalConfig {
             let addr: std::net::IpAddr = bind_host
                 .parse()
                 .unwrap_or(std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST));
-            config.base.network.bind_address = addr.to_string();
+            config.base.network.bind_endpoint = addr.to_string();
         }
 
         if let Ok(http_port) = env::var("NESTGATE_HTTP_PORT") {
@@ -49,6 +57,7 @@ impl NestGateFinalConfig {
     }
 
     /// Create development configuration
+    #[must_use]
     pub fn development() -> Self {
         let mut config = Self::default();
         config.environment.deployment_environment =
@@ -57,6 +66,7 @@ impl NestGateFinalConfig {
     }
 
     /// Create production configuration
+    #[must_use]
     pub fn production() -> Self {
         let mut config = Self::default();
         config.environment.deployment_environment =
@@ -65,7 +75,14 @@ impl NestGateFinalConfig {
     }
 
     /// Validate the configuration consistency (implementation specific)
-    pub fn validate_impl(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate_impl(&self) -> Result<()>  {
         // Comprehensive validation logic would go here
         // For now, basic validation
         if self
@@ -74,35 +91,24 @@ impl NestGateFinalConfig {
             .as_ref()
             .is_none_or(|name| name.is_empty())
         {
-            return Err(NestGateError::Configuration {
-                field: Some("system.instance_name".to_string()),
-                message: "Instance name cannot be empty".to_string(),
-                
-                
-            });
+            return Err(NestGateError::configuration_error(Some("field".to_string()), "Instance name cannot be empty"));
         }
 
         Ok(())
     }
 
     /// Save configuration to file
-    pub async fn save(&self, path: &str) -> Result<()> {
 
-        let toml_content = toml::to_string_pretty(self).map_err(|e| NestGateError::Internal {
-            message: format!("Failed to serialize configuration: {e}"),
-            location: Some(format!("{}:{}", file!(), line!())),
-            context: None,
-            is_bug: false,
-        })?;
+        let toml_content = toml::to_string_pretty(self).map_err(|e| NestGateError::internal_error(
+            location: Some(format!("{})
+            context: None)?;
 
         fs::write(path, toml_content)
             .await
-            .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to write configuration file: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                location: Some(format!("path: {path}")),
+            .map_err(|e| NestGateError::internal_error(
+                location: Some(format!("{})
                 is_bug: false,
-            })?;
+            )?;
 
         Ok(())
     }
@@ -111,7 +117,6 @@ impl NestGateFinalConfig {
     fn merge_configs(_base: Self, override_config: Self) -> Self {
         Self {
             system: override_config.system,
-            environment: override_config.environment,
             features: override_config.features,
             domains: override_config.domains,
             metadata: override_config.metadata,

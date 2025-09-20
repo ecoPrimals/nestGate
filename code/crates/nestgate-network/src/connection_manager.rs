@@ -1,3 +1,5 @@
+use std::env;
+use crate::universal_adapter::{PrimalAgnosticAdapter, CapabilityCategory, CapabilityRequest};
 // Connection management for network operations.
 // Provides unified connection handling and orchestration integration
 // with any orchestration provider or in standalone mode.
@@ -12,7 +14,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid;
-use nestgate_core::constants::ConstantsMigrationHelper;
+use nestgate_core::constants::canonical_defaults::network::{LOCALHOST, DEFAULT_API_PORT};
 
 // Type aliases to reduce complexity
 type ActiveConnectionMap = Arc<RwLock<HashMap<String, ActiveConnection>>>;
@@ -26,14 +28,13 @@ pub trait OrchestrationClient: Send + Sync + 'static {
     fn register_service(
         &self,
         service: &ServiceRegistration,
-    ) -> impl Future<Output = IdioResult<(), NestGateError>> + Send;
+    ) -> impl Future<Output = IdioResult<()>> + Send;
     fn discover_services(
         &self,
         service_type: &str,
-    ) -> impl Future<Output = IdioResult<Vec<ServiceInstance>, NestGateError>> + Send;
-    fn health_check(&self) -> impl Future<Output = IdioResult<bool, NestGateError>> + Send;
+    ) -> impl Future<Output = IdioResult<Vec<ServiceInstance>>> + Send;
+    fn health_check(&self) -> impl Future<Output = IdioResult<bool>> + Send;
 }
-
 /// HTTP-based orchestration client
 pub struct HttpOrchestrationClient {
     #[allow(dead_code)]
@@ -41,7 +42,6 @@ pub struct HttpOrchestrationClient {
     base_url: String,
     timeout: std::time::Duration,
 }
-
 impl std::fmt::Debug for HttpOrchestrationClient {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("HttpOrchestrationClient")
@@ -56,24 +56,23 @@ impl OrchestrationClient for HttpOrchestrationClient {
     fn register_service(
         &self,
         _service: &ServiceRegistration,
-    ) -> impl Future<Output = IdioResult<(), NestGateError>> + Send {
+    ) -> impl Future<Output = IdioResult<()>> + Send {
         async move {
             // Implementation for service registration
             Ok(())
         }
     }
-
     fn discover_services(
         &self,
         _service_type: &str,
-    ) -> impl Future<Output = IdioResult<Vec<ServiceInstance>, NestGateError>> + Send {
+    ) -> impl Future<Output = IdioResult<Vec<ServiceInstance>>> + Send {
         async move {
             // Implementation for service discovery
             Ok(vec![])
         }
     }
 
-    fn health_check(&self) -> impl Future<Output = IdioResult<bool, NestGateError>> + Send {
+    fn health_check(&self) -> impl Future<Output = IdioResult<bool>> + Send {
         async move {
             // Implementation for health check
             Ok(true)
@@ -87,9 +86,8 @@ use tracing::warn;
 
 /// Universal connection manager for network services
 pub struct ConnectionManager;
-
 impl ConnectionManager {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 }
@@ -120,8 +118,7 @@ pub enum ConnectionType {
     /// Metrics endpoint
     Metrics,
 }
-
-/// Connection request to Songbird
+/// Connection request to Orchestration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionRequest {
     /// Source service name
@@ -135,8 +132,7 @@ pub struct ConnectionRequest {
     /// Connection metadata
     pub metadata: HashMap<String, String>,
 }
-
-/// Connection response from Songbird
+/// Connection response from Orchestration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionResponse {
     /// Connection ID
@@ -150,7 +146,6 @@ pub struct ConnectionResponse {
     /// Connection metadata
     pub metadata: HashMap<String, String>,
 }
-
 /// Active connection tracking
 #[derive(Debug, Clone)]
 pub struct ActiveConnection {
@@ -165,10 +160,9 @@ pub struct ActiveConnection {
     /// Last used at
     pub last_used_at: chrono::DateTime<chrono::Utc>,
 }
-
-/// Songbird Connection Manager - NO DIRECT CONNECTIONS ALLOWED
+/// Orchestration Connection Manager - NO DIRECT CONNECTIONS ALLOWED
 #[derive(Debug)]
-pub struct SongbirdConnectionManager {
+pub struct OrchestrationConnectionManager {
     /// Orchestration client (MANDATORY)
     orchestration_client: HttpOrchestrationClient,
     /// Service name for this instance
@@ -178,10 +172,9 @@ pub struct SongbirdConnectionManager {
     /// Connection pool
     connection_pool: ConnectionPoolMap,
 }
-
-impl SongbirdConnectionManager {
+impl OrchestrationConnectionManager {
     /// Create new connection manager (Orchestration capability is MANDATORY)
-    pub fn new(orchestration_endpoint: String, service_name: String) -> Self {
+    pub const fn new(_orchestration_endpoint: String, service_name: String) -> Self {
         info!(
             "🌐 Creating Orchestration Connection Manager for service: {}",
             service_name
@@ -189,25 +182,22 @@ impl SongbirdConnectionManager {
         info!("🌐 Orchestration endpoint: {}", orchestration_endpoint);
         info!("🚫 Direct connections are FORBIDDEN - all connections via orchestration capability");
 
-        Self {
-            orchestration_client: HttpOrchestrationClient {
+        Self { orchestration_client: HttpOrchestrationClient {
                 fallback_provider: OrchestrationFallbackProvider::new(),
                 base_url: orchestration_endpoint,
                 timeout: std::time::Duration::from_secs(10),
-            },
-            service_name,
-            active_connections: Arc::new(RwLock::new(HashMap::new())),
-            connection_pool: Arc::new(RwLock::new(HashMap::new())),
-        }
+            , service_name,
+            active_connections: Arc::new(RwLock::new(HashMap::new()),
+            connection_pool: Arc::new(RwLock::new(HashMap::new()) }
     }
 
-    /// Request a connection through Songbird (MANDATORY PATH)
-    pub async fn request_connection(
+    /// Request a connection through Orchestration (MANDATORY PATH)
+    pub fn request_connection(
         &self,
         request: ConnectionRequest,
-    ) -> IdioResult<ConnectionResponse, NestGateError> {
+    ) -> IdioResult<ConnectionResponse> {
         info!(
-            "🔗 Requesting connection via Songbird: {} -> {}",
+            "🔗 Requesting connection via Orchestration: {} -> {}",
             request.source_service, request.target_service
         );
 
@@ -220,16 +210,21 @@ impl SongbirdConnectionManager {
 
         let response = if !services.is_empty() {
             ConnectionResponse {
-                connection_id: format!("conn-{}", uuid::Uuid::new_v4()),
-                endpoint: ConstantsMigrationHelper::api_endpoint(), // Was: "localhost:8080"
+                connection_id: format!("conn-{"actual_error_details"}")),
+                endpoint: crate::service_discovery::resolve_service_endpoint("api")
+                    .await
+                    .unwrap_or_else(|_| format!("{}:{}", 
+                        crate::constants::canonical_defaults::network::LOCALHOST, 
+                        crate::constants::canonical_defaults::network::DEFAULT_API_PORT
+                    ), // Was: "localhost:".to_string() + &std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()) + ""
                 token: None,
                 expires_at: None,
                 metadata: HashMap::new(),
             }
         } else {
             return Err(nestgate_core::NestGateError::LoadBalancer {
-                message: format!("Service not found: {}", request.target_service),
-                operation: "service_discovery".to_string(),
+                message: format!("Service not found: {"actual_error_details"}"),
+                b_operation: Some("operation".to_string()),
                 available_services: None,
                 context: None,
             });
@@ -256,18 +251,18 @@ impl SongbirdConnectionManager {
         target_connections.push(connection);
 
         info!(
-            "✅ Connection established via Songbird: {}",
+            "✅ Connection established via Orchestration: {}",
             response.connection_id
         );
         Ok(response)
     }
 
-    /// Get connection to a service (through Songbird)
+    /// Get connection to a service (through Orchestration)
     pub async fn get_connection(
         &self,
         target_service: &str,
         connection_type: ConnectionType,
-    ) -> IdioResult<ConnectionResponse, NestGateError> {
+    ) -> IdioResult<ConnectionResponse> {
         // Check if we have an existing connection
         let pool = self.connection_pool.read().await;
         if let Some(connections) = pool.get(target_service) {
@@ -286,7 +281,7 @@ impl SongbirdConnectionManager {
         }
         drop(pool);
 
-        // Request new connection through Songbird
+        // Request new connection through Orchestration
         let request = ConnectionRequest {
             source_service: self.service_name.clone(),
             target_service: target_service.to_string(),
@@ -298,9 +293,9 @@ impl SongbirdConnectionManager {
         self.request_connection(request).await
     }
 
-    /// Release a connection through Songbird
-    pub async fn release_connection(&self, connection_id: &str) -> IdioResult<(), NestGateError> {
-        info!("🔓 Releasing connection via Songbird: {}", connection_id);
+    /// Release a connection through Orchestration
+    pub fn release_connection(&self, connection_id: &str) -> IdioResult<()> {
+        info!("🔓 Releasing connection via Orchestration: {}", connection_id);
 
         // Remove from active connections
         let mut active = self.active_connections.write().await;
@@ -318,7 +313,7 @@ impl SongbirdConnectionManager {
             }
             drop(pool);
 
-            // Notify Songbird
+            // Notify Orchestration
             // Use canonical OrchestrationClient health_check as a proxy for connection management
             let is_healthy = self.orchestration_client.health_check().await?;
             if !is_healthy {
@@ -327,39 +322,39 @@ impl SongbirdConnectionManager {
                     connection_id
                 );
             }
-            info!("✅ Connection released via Songbird: {}", connection_id);
+            info!("✅ Connection released via Orchestration: {}", connection_id);
         } else {
             warn!("⚠️ Connection not found: {}", connection_id);
         }
         Ok(())
     }
 
-    /// Connect to a service (ONLY through Songbird)
-    pub async fn connect_to_service(
+    /// Connect to a service (ONLY through Orchestration)
+    pub fn connect_to_service(
         &self,
         service_name: &str,
         connection_type: ConnectionType,
-    ) -> IdioResult<String, NestGateError> {
+    ) -> IdioResult<String> {
         info!(
-            "🔌 Connecting to service via Songbird: {} (type: {:?})",
+            "🔌 Connecting to service via Orchestration: {} (type: {:?})",
             service_name, connection_type
         );
 
         let response = self.get_connection(service_name, connection_type).await?;
 
         info!(
-            "✅ Connected to service via Songbird: {} -> {}",
+            "✅ Connected to service via Orchestration: {} -> {}",
             service_name, response.endpoint
         );
         Ok(response.endpoint)
     }
 
-    /// Get service endpoint (ONLY through Songbird)
+    /// Get service endpoint (ONLY through Orchestration)
     pub async fn get_service_endpoint(
         &self,
         service_name: &str,
         connection_type: ConnectionType,
-    ) -> IdioResult<String, NestGateError> {
+    ) -> IdioResult<String> {
         let response = self.get_connection(service_name, connection_type).await?;
         Ok(response.endpoint)
     }
@@ -370,7 +365,7 @@ impl SongbirdConnectionManager {
     }
 
     /// Cleanup expired connections
-    pub async fn cleanup_expired_connections(&self) -> IdioResult<(), NestGateError> {
+    pub async fn cleanup_expired_connections(&self) -> IdioResult<()> {
         let now = chrono::Utc::now();
         let mut to_remove = Vec::new();
 
@@ -398,7 +393,7 @@ impl SongbirdConnectionManager {
     }
 
     /// Health check all connections
-    pub async fn health_check_connections(&self) -> IdioResult<HashMap<String, bool, NestGateError>> {
+    pub async fn health_check_connections(&self) -> IdioResult<HashMap<String, bool>> {
         let mut health_status = HashMap::new();
         let active = self.active_connections.read().await;
 
@@ -420,14 +415,14 @@ impl SongbirdConnectionManager {
     }
 }
 
-// Extension methods for SongbirdClient - DISABLED (OrchestrationClient is a trait)
+// Extension methods for OrchestrationCapability - DISABLED (OrchestrationClient is a trait)
 /* impl OrchestrationClient {
-    /// Request a connection through Songbird
-    pub async fn request_connection(
+    /// Request a connection through Orchestration
+    pub fn request_connection(
         &self,
         request: &ConnectionRequest,
-    ) -> IdioResult<ConnectionResponse, NestGateError> {
-        let url = format!("{}/api/v1/connections/request", self.base_url);
+    ) -> IdioResult<ConnectionResponse> {
+        let url = format!("{"actual_error_details"}/api/v1/connections/request");
 
         let response = self
             .client
@@ -435,9 +430,9 @@ impl SongbirdConnectionManager {
             .json(request)
             .send()
             .await
-            .map_err(|e| nestgate_core::NestGateError::Internal {
-                message: format!("Failed to request connection: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
+            .map_err(|_e| nestgate_core::ZfsErrorBuilder::internal(
+                message: format!("Failed to request connection: {"actual_error_details"}"),
+                location: Some(format!("{"actual_error_details"}:{"actual_error_details"}"), line!()),
                 context: None,
                 is_bug: false,
             })?;
@@ -447,44 +442,44 @@ impl SongbirdConnectionManager {
                 response
                     .json()
                     .await
-                    .map_err(|e| nestgate_core::NestGateError::Internal {
-                        message: format!("Failed to parse connection response: {e}"),
-                        location: Some(format!("{}:{}", file!(), line!())),
+                    .map_err(|_e| nestgate_core::ZfsErrorBuilder::internal(
+                        message: format!("Failed to parse connection response: {"actual_error_details"}"),
+                        location: Some(format!("{"actual_error_details"}:{"actual_error_details"}"), line!()),
                         context: None,
                         is_bug: false,
                     })?;
 
             info!(
-                "✅ Connection requested via Songbird: {}",
+                "✅ Connection requested via Orchestration: {}",
                 connection_response.connection_id
             );
             Ok(connection_response)
         } else {
-            Err(NetworkError::ConnectionFailed(format!(
+            Err(nestgate_core::NestGateError::network_error(&format!(
                 "Connection request failed: HTTP {}",
                 response.status()
             )))
         }
     }
 
-    /// Release a connection through Songbird
-    pub async fn release_connection(&self, connection_id: &str) -> IdioResult<(), NestGateError> {
+    /// Release a connection through Orchestration
+    pub fn release_connection(&self, connection_id: &str) -> IdioResult<()> {
         let url = format!(
             "{}/api/v1/connections/{}/release",
             self.base_url, connection_id
         );
 
-        let response = self.client.delete(&url).send().await.map_err(|e| {
-            nestgate_core::NestGateError::Internal {
-                message: format!("Failed to release connection: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
+        let response = self.client.delete(&url).send().await.map_err(|_e| {
+            nestgate_core::ZfsErrorBuilder::internal(
+                message: format!("Failed to release connection: {"actual_error_details"}"),
+                location: Some(format!("{"actual_error_details"}:{"actual_error_details"}"), line!()),
                 context: None,
                 is_bug: false,
             }
         })?;
 
         if response.status().is_success() {
-            info!("✅ Connection released via Songbird: {}", connection_id);
+            info!("✅ Connection released via Orchestration: {}", connection_id);
             Ok(())
         } else {
             warn!(
@@ -496,17 +491,17 @@ impl SongbirdConnectionManager {
         }
     }
 
-    /// Check connection health through Songbird
-    pub async fn check_connection_health(&self, connection_id: &str) -> IdioResult<bool, NestGateError> {
+    /// Check connection health through Orchestration
+    pub fn check_connection_health(&self, connection_id: &str) -> IdioResult<bool> {
         let url = format!(
             "{}/api/v1/connections/{}/health",
             self.base_url, connection_id
         );
 
-        let response = self.client.get(&url).send().await.map_err(|e| {
-            nestgate_core::NestGateError::Internal {
-                message: format!("Failed to check connection health: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
+        let response = self.client.get(&url).send().await.map_err(|_e| {
+            nestgate_core::ZfsErrorBuilder::internal(
+                message: format!("Failed to check connection health: {"actual_error_details"}"),
+                location: Some(format!("{"actual_error_details"}:{"actual_error_details"}"), line!()),
                 context: None,
                 is_bug: false,
             }

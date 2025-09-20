@@ -18,7 +18,6 @@ pub struct SecurityConfig {
     /// Access control settings
     pub access_control: AccessControlConfig,
 }
-
 /// Key management configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyManagementConfig {
@@ -29,7 +28,6 @@ pub struct KeyManagementConfig {
     /// Backup key locations
     pub backup_locations: Vec<PathBuf>,
 }
-
 /// Access control configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccessControlConfig {
@@ -40,7 +38,6 @@ pub struct AccessControlConfig {
     /// Group access rules
     pub group_rules: HashMap<String, Vec<String>>,
 }
-
 impl Default for SecurityConfig {
     fn default() -> Self {
         Self {
@@ -64,7 +61,7 @@ impl Default for KeyManagementConfig {
 
 impl KeyManagementConfig {
     /// Create production-optimized key management configuration
-    pub fn production() -> Self {
+    pub const fn production() -> Self {
         Self {
             key_storage_path: PathBuf::from("/etc/nestgate/zfs/keys/production"),
             rotation_interval_days: 30,
@@ -88,6 +85,7 @@ impl Default for AccessControlConfig {
 
 impl AccessControlConfig {
     /// Create production-optimized access control configuration
+    #[must_use]
     pub fn production() -> Self {
         let mut user_rules = HashMap::new();
         user_rules.insert("zfs-admin".to_string(), vec!["all".to_string()]);
@@ -96,10 +94,14 @@ impl AccessControlConfig {
         let mut group_rules = HashMap::new();
         group_rules.insert(
             "zfs-operators".to_string(),
-            ["read", "create", "snapshot"]
-                .iter()
-                .map(|s| s.to_string())
-                .collect(),
+            [
+                "read".to_string(),
+                "create".to_string(),
+                "snapshot".to_string(),
+            ]
+            .iter()
+            .map(|s| s.to_string())
+            .collect(),
         );
 
         Self {
@@ -112,7 +114,7 @@ impl AccessControlConfig {
 
 impl SecurityConfig {
     /// Create production-optimized security configuration
-    pub fn production() -> Self {
+    pub const fn production() -> Self {
         Self {
             enable_encryption: true,
             encryption_algorithm: "aes-256-gcm".to_string(),

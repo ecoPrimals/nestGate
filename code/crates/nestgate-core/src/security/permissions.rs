@@ -2,7 +2,6 @@ use crate::error::{NetworkError};
 /// Permissions module for NestGate
 ///
 /// This module provides permission-related functionality for the NestGate system.
-
 use std::collections::{HashMap, HashSet};
 // Removed unused std import
 
@@ -13,7 +12,6 @@ use crate::security::{Role, Permission, AccessLevel};
 pub struct PermissionManager {
     /// Permissions by role
     role_permissions: HashMap<Role, HashSet<String>>,
-
     /// Custom permissions by user
     user_permissions: HashMap<String, HashSet<String>>,
 
@@ -23,6 +21,7 @@ pub struct PermissionManager {
 
 impl PermissionManager {
     /// Create a new permission manager
+    #[must_use]
     pub fn new() -> Self {
         let mut manager = Self {
             role_permissions: HashMap::new(),
@@ -117,7 +116,7 @@ impl PermissionManager {
     }
 
     /// Check if a role has a permission
-    pub fn role_has_permission(&self, role: Role, permission: &str) -> bool {
+    pub const fn role_has_permission(&self, role: Role, permission: &str) -> bool {
         // Admin role has all permissions
         if role == Role::Admin {
             return true;
@@ -132,7 +131,7 @@ impl PermissionManager {
     }
 
     /// Check if a user has a permission
-    pub fn user_has_permission(&self, user_id: &str, role: Role, permission: &str) -> bool {
+    pub const fn user_has_permission(&self, user_id: &str, role: Role, permission: &str) -> bool {
         // First check role permissions
         if self.role_has_permission(role, permission) {
             return true;

@@ -1,15 +1,14 @@
 use std::collections::HashMap;
-use std::future::Future;
-/// Extracted from native_async_final_services.rs to maintain file size compliance
+// CLEANED: Removed unused Future import as part of canonical modernization
+// use std::future::Future;
+/// Extracted from `native_async_final_services.rs` to maintain file size compliance
 /// Contains data structures, enums, and type definitions for native async services
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
-
 // UniversalResponseStatus removed - use canonical response types
 
 /// Service request type - re-export from canonical traits
 // UniversalServiceRequest removed - use domain-specific request types
-
 /// Service response type
 #[derive(Debug, Clone)]
 pub struct ServiceResponse {
@@ -27,7 +26,6 @@ pub struct ServiceResponse {
     pub correlation_id: Option<String>,
     pub trace_id: Option<String>,
 }
-
 /// Load balancer statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadBalancerStats {
@@ -40,7 +38,6 @@ pub struct LoadBalancerStats {
     pub health_aware: bool,
     pub uptime_seconds: u64,
 }
-
 /// Service statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceStats {
@@ -52,7 +49,6 @@ pub struct ServiceStats {
     pub health_score: f64,
     pub last_request_time: Option<SystemTime>,
 }
-
 impl Default for ServiceStats {
     fn default() -> Self {
         Self {
@@ -78,7 +74,6 @@ pub struct CommunicationMessage {
     pub timestamp: SystemTime,
     pub priority: MessagePriority,
 }
-
 /// Message priority levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MessagePriority {
@@ -87,7 +82,6 @@ pub enum MessagePriority {
     High,
     Critical,
 }
-
 /// Network address
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkAddress {
@@ -96,18 +90,16 @@ pub struct NetworkAddress {
     pub protocol: String,
     pub metadata: HashMap<String, String>,
 }
-
 /// Connection information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionInfo {
     pub connection_id: String,
-    pub address: NetworkAddress,
+    pub endpoint: NetworkAddress,
     pub established_at: SystemTime,
     pub status: ConnectionStatus,
     pub bytes_sent: u64,
     pub bytes_received: u64,
 }
-
 /// Connection status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ConnectionStatus {
@@ -117,7 +109,6 @@ pub enum ConnectionStatus {
     Disconnected,
     Error(String),
 }
-
 /// MCP session information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MCPSessionInfo {
@@ -129,7 +120,6 @@ pub struct MCPSessionInfo {
     pub message_count: u64,
     pub capabilities: Vec<String>,
 }
-
 /// MCP protocol message
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MCPMessage {
@@ -138,7 +128,6 @@ pub struct MCPMessage {
     pub params: Option<serde_json::Value>,
     pub timestamp: SystemTime,
 }
-
 /// MCP protocol response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MCPResponse {
@@ -147,7 +136,6 @@ pub struct MCPResponse {
     pub error: Option<MCPError>,
     pub timestamp: SystemTime,
 }
-
 /// MCP error information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MCPError {
@@ -155,7 +143,6 @@ pub struct MCPError {
     pub message: String,
     pub data: Option<serde_json::Value>,
 }
-
 /// Workflow execution information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowExecution {
@@ -167,7 +154,6 @@ pub struct WorkflowExecution {
     pub progress: f64,
     pub parameters: HashMap<String, serde_json::Value>,
 }
-
 /// Execution status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ExecutionStatus {

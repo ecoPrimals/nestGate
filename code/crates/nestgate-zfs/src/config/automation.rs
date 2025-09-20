@@ -1,4 +1,3 @@
-
 use serde::{Deserialize, Serialize};
 
 /// Dataset automation configuration
@@ -15,7 +14,6 @@ pub struct DatasetAutomationConfig {
     /// AI integration settings
     pub ai_settings: AiAutomationSettings,
 }
-
 /// AI-powered automation settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AiAutomationSettings {
@@ -28,7 +26,6 @@ pub struct AiAutomationSettings {
     /// AI confidence threshold for recommendations
     pub confidence_threshold: f64,
 }
-
 impl Default for DatasetAutomationConfig {
     fn default() -> Self {
         Self {
@@ -59,7 +56,7 @@ impl Default for AiAutomationSettings {
 
 impl AiAutomationSettings {
     /// Create production-optimized AI automation settings
-    pub fn production() -> Self {
+    pub const fn production() -> Self {
         Self {
             ai_enabled: true,
             model_config: "production-optimized".to_string(),

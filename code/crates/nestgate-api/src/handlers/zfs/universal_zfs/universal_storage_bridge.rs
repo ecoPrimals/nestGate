@@ -13,10 +13,9 @@ use tracing::{debug, info, warn};
 pub struct UniversalStorageBridge {
     preferred_backend: Option<String>,
 }
-
 impl UniversalStorageBridge {
     /// Create a new universal storage bridge
-    pub async fn new() -> UniversalZfsResult<Self> {
+    pub const fn new() -> UniversalZfsResult<Self> {
         Ok(Self {
             preferred_backend: None,
         })
@@ -55,22 +54,20 @@ impl UniversalStorageBridge {
         let backend = self.get_active_backend().await?;
 
         match backend.as_str() {
-            "zfs" => self.list_zfs_pools().await,
-            "filesystem" => self.list_filesystem_pools().await,
-            _ => self.list_fallback_pools().await,
+            "zfs" => self.list_zfs_pools(),
+            "filesystem" => self.list_filesystem_pools(),
+            _ => self.list_fallback_pools(),
         }
     }
 
     /// List ZFS pools (when ZFS is available)
-    async fn list_zfs_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
+    fn list_zfs_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
         info!("📋 Listing ZFS pools");
 
         let output = std::process::Command::new("zpool")
             .args(["list", "-H", "-o", "name,size,alloc,free,health"])
             .output()
-            .map_err(|e| {
-                UniversalZfsError::internal(format!("Failed to execute zpool list: {}", e))
-            })?;
+            .map_err(|_e| UniversalZfsError::internal(format!("Failed to execute ZFS command")))?;
 
         if !output.status.success() {
             return Err(UniversalZfsError::internal("zpool list command failed").into());
@@ -104,7 +101,7 @@ impl UniversalStorageBridge {
                         used_bytes,
                         available_bytes,
                         utilization_percent: if total_bytes > 0 {
-                            (used_bytes as f64 / total_bytes as f64) * 100.0
+                            (f64::from(used_bytes) / f64::from(total_bytes)) * 100.0
                         } else {
                             0.0
                         },
@@ -115,7 +112,7 @@ impl UniversalStorageBridge {
                         "FAULTED" => PoolHealth::Faulted,
                         _ => PoolHealth::Unknown,
                     },
-                    devices: vec![], // Would need additional zpool status call
+                    _devices: vec![], // Would need additional zpool status call
                     errors: vec![],  // Fix: use Vec instead of HashMap
                     created_at: SystemTime::now(), // Would need zpool history
                     last_scrub: None,
@@ -125,18 +122,27 @@ impl UniversalStorageBridge {
             }
         }
 
-        info!("✅ Found {} ZFS pools", pools.len());
+        info!(
+            "✅ Found {},
+    ZFS pools",
+            pools.len()
+        );
         Ok(pools)
     }
 
     /// List filesystem "pools" (mount points as pools)
-    async fn list_filesystem_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
+    fn list_filesystem_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
         info!("📋 Listing filesystem pools (mount points)");
 
         let output = std::process::Command::new("df")
             .args(["-h", "--output=source,fstype,size,used,avail,target"])
             .output()
-            .map_err(|e| UniversalZfsError::internal(format!("Failed to execute df: {}", e)))?;
+            .map_err(|_e| {
+                UniversalZfsError::internal(format!(
+                    "Failed to execute df: {}",
+                    "actual_error_details"
+                ))
+            })?;
 
         if !output.status.success() {
             return Err(UniversalZfsError::internal("df command failed").into());
@@ -156,27 +162,27 @@ impl UniversalStorageBridge {
                 let avail_str = parts[4];
                 let mount_point = parts[5];
 
-                // Only include real storage devices
+                // Only include real storage _devices
                 if self.should_include_filesystem(source, fstype, mount_point) {
                     let total_bytes = self.parse_size_to_bytes(size_str)?;
                     let used_bytes = self.parse_size_to_bytes(used_str)?;
                     let available_bytes = self.parse_size_to_bytes(avail_str)?;
 
                     pools.push(PoolInfo {
-                        name: format!("{} ({})", source, mount_point),
+                        name: "default_pool".to_string(),
                         state: PoolState::Active, // Use correct enum variant
                         capacity: PoolCapacity {
                             total_bytes,
                             used_bytes,
                             available_bytes,
                             utilization_percent: if total_bytes > 0 {
-                                (used_bytes as f64 / total_bytes as f64) * 100.0
+                                (f64::from(used_bytes) / f64::from(total_bytes)) * 100.0
                             } else {
                                 0.0
                             },
                         },
                         health: PoolHealth::Online,
-                        devices: vec![],
+                        _devices: vec![],
                         errors: vec![], // Fix: use Vec instead of HashMap
                         created_at: SystemTime::now(),
                         last_scrub: None,
@@ -197,7 +203,7 @@ impl UniversalStorageBridge {
     }
 
     /// List fallback pools (when no storage backend is available)
-    async fn list_fallback_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
+    fn list_fallback_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
         warn!("📋 Using fallback pool listing");
 
         // Create a minimal pool representing the root filesystem
@@ -211,7 +217,7 @@ impl UniversalStorageBridge {
                 utilization_percent: 0.0,
             },
             health: PoolHealth::Unknown,
-            devices: vec![],
+            _devices: vec![],
             errors: vec![], // Fix: use Vec instead of HashMap
             created_at: SystemTime::now(),
             last_scrub: None,
@@ -248,9 +254,9 @@ impl UniversalStorageBridge {
                 (size_str, "")
             };
 
-        let number: f64 = number_part.parse().map_err(|_| {
-            UniversalZfsError::internal(format!("Failed to parse size: {}", size_str))
-        })?;
+        let number: f64 = number_part
+            .parse()
+            .map_err(|_| UniversalZfsError::internal(format!("Failed to parse size value")))?;
 
         let multiplier = match unit.to_uppercase().as_str() {
             "K" | "KB" => 1024,
@@ -260,18 +266,20 @@ impl UniversalStorageBridge {
             "P" | "PB" => 1024_u64.pow(5),
             "" => 1,
             _ => {
-                return Err(
-                    UniversalZfsError::internal(format!("Unknown size unit: {}", unit)).into(),
-                )
+                return Err(UniversalZfsError::internal(format!(
+                    "Unknown size unit: {}",
+                    "actual_error_details"
+                ))
+                .into())
             }
         };
 
-        Ok((number * multiplier as f64) as u64)
+        Ok((number * f64::from(multiplier)) as u64)
     }
 
     /// Determine if we should include this filesystem as a "pool"
     fn should_include_filesystem(&self, source: &str, fstype: &str, mount_point: &str) -> bool {
-        // Include real storage devices and important mount points
+        // Include real storage _devices and important mount points
         !source.starts_with("tmpfs")
             && !source.starts_with("udev")
             && !source.starts_with("devpts")
@@ -291,7 +299,7 @@ impl UniversalStorageBridge {
     }
 
     /// Create a dataset (directory) via universal storage
-    pub async fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
+    pub fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
         info!("🏗️ Creating dataset: {}", config.name);
 
         let backend = self.get_active_backend().await?;
@@ -310,9 +318,7 @@ impl UniversalStorageBridge {
         let output = std::process::Command::new("zfs")
             .args(["create", &config.name])
             .output()
-            .map_err(|e| {
-                UniversalZfsError::internal(format!("Failed to create ZFS dataset: {}", e))
-            })?;
+            .map_err(|_e| UniversalZfsError::internal(format!("Failed to execute command")))?;
 
         if !output.status.success() {
             let error = String::from_utf8_lossy(&output.stderr);
@@ -332,7 +338,7 @@ impl UniversalStorageBridge {
             parent: None,
             children: vec![],
             created_at: SystemTime::now(), // Add missing field
-            mount_point: Some(format!("/{}", config.name)), // Add missing field
+            mount_point: Some(format!("/{"actual_error_details"}")), // Add missing field
             properties: HashMap::new(),    // Add missing field
         })
     }
@@ -344,9 +350,8 @@ impl UniversalStorageBridge {
     ) -> UniversalZfsResult<DatasetInfo> {
         let path = std::path::Path::new(&config.name);
 
-        std::fs::create_dir_all(path).map_err(|e| {
-            UniversalZfsError::internal(format!("Failed to create directory: {}", e))
-        })?;
+        std::fs::create_dir_all(path)
+            .map_err(|_e| UniversalZfsError::internal(format!("Failed to create directory")))?;
 
         info!("✅ Created filesystem dataset at: {:?}", path);
 

@@ -7,13 +7,14 @@ use super::types::{SnapshotOperation, SnapshotOperationStatus};
 use std::time::SystemTime;
 
 #[test]
-fn test_snapshot_policy_default() {
+fn test_snapshot_policy_default() -> Result<(), Box<dyn std::error::Error>> {
     let policy = SnapshotPolicy::default();
 
     assert_eq!(policy.name, "default");
     assert!(policy.enabled);
     assert_eq!(policy.priority, 50);
     assert_eq!(policy.max_snapshots_per_run, 100);
+    Ok(())
 }
 
 #[test]
@@ -35,16 +36,12 @@ fn test_retention_policy_default() -> std::result::Result<(), Box<dyn std::error
         assert_eq!(yearly_years, 5);
         Ok(())
     } else {
-        Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "Invalid retention policy type - expected Custom".to_string(),
-        )
-        .into())
+        Err(std::io::Error::other("Invalid retention policy type - expected Custom").into())
     }
 }
 
 #[tokio::test]
-async fn test_snapshot_operation_creation() {
+async fn test_snapshot_operation_creation() -> Result<(), Box<dyn std::error::Error>> {
     let operation = SnapshotOperation {
         id: "test-123".to_string(),
         operation_type: SnapshotOperationType::Create,
@@ -61,6 +58,7 @@ async fn test_snapshot_operation_creation() {
     assert_eq!(operation.dataset, "pool/dataset");
     assert_eq!(operation.snapshot_name, Some("test-snapshot".to_string()));
     assert_eq!(operation.status, SnapshotOperationStatus::Queued);
+    Ok(())
 }
 
 #[test]
@@ -72,11 +70,7 @@ fn test_schedule_frequency_hours() -> std::result::Result<(), Box<dyn std::error
             assert_eq!(hours, 6);
             Ok(())
         }
-        _ => Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "Expected Hours schedule frequency".to_string(),
-        )
-        .into()),
+        _ => Err(std::io::Error::other("Expected Hours schedule frequency").into()),
     }
 }
 
@@ -89,16 +83,12 @@ fn test_schedule_frequency_daily() -> std::result::Result<(), Box<dyn std::error
             assert_eq!(hour, 2);
             Ok(())
         }
-        _ => Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "Expected Daily schedule frequency".to_string(),
-        )
-        .into()),
+        _ => Err(std::io::Error::other("Expected Daily schedule frequency").into()),
     }
 }
 
 #[test]
-fn test_operation_types() {
+fn test_operation_types() -> Result<(), Box<dyn std::error::Error>> {
     let create_op = SnapshotOperationType::Create;
     let delete_op = SnapshotOperationType::Delete;
     let clone_op = SnapshotOperationType::Clone;
@@ -107,10 +97,11 @@ fn test_operation_types() {
     assert!(matches!(create_op, SnapshotOperationType::Create));
     assert!(matches!(delete_op, SnapshotOperationType::Delete));
     assert!(matches!(clone_op, SnapshotOperationType::Clone));
+    Ok(())
 }
 
 #[test]
-fn test_operation_status() {
+fn test_operation_status() -> Result<(), Box<dyn std::error::Error>> {
     let queued = SnapshotOperationStatus::Queued;
     let running = SnapshotOperationStatus::Running;
     let completed = SnapshotOperationStatus::Completed;
@@ -122,4 +113,5 @@ fn test_operation_status() {
     assert!(matches!(completed, SnapshotOperationStatus::Completed));
     assert!(matches!(failed, SnapshotOperationStatus::Failed(_)));
     assert!(matches!(cancelled, SnapshotOperationStatus::Cancelled));
+    Ok(())
 }

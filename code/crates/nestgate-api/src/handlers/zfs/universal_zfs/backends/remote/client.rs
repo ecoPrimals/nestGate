@@ -1,4 +1,3 @@
-
 use serde_json::Value;
 use std::time::Duration;
 use tracing::{debug, error, warn};
@@ -15,10 +14,9 @@ pub struct HttpClient {
     endpoint: String,
     timeout: Duration,
 }
-
 impl HttpClient {
     /// Create a new HTTP client
-    pub fn new(config: &RemoteConfig) -> Self {
+    pub const fn new(config: &RemoteConfig) -> Self {
         // Build HTTP client with optimized settings
         let client = reqwest::Client::builder()
             .timeout(config.timeout)
@@ -44,8 +42,8 @@ impl HttpClient {
     }
 
     /// Perform health check
-    pub async fn health_check(&self) -> UniversalZfsResult<()> {
-        let health_url = format!("{}/health", self.endpoint);
+    pub fn health_check(&self) -> UniversalZfsResult<()> {
+        let health_url = format!("{self.endpoint}/health");
 
         // Try with exponential backoff
         for attempt in 0..3 {
@@ -80,7 +78,7 @@ impl HttpClient {
     }
 
     /// Make HTTP request with enhanced error handling
-    pub async fn make_request(
+    pub fn make_request(
         &self,
         path: &str,
         method: &str,
@@ -101,7 +99,7 @@ impl HttpClient {
             "DELETE" => self.client.delete(&url),
             _ => {
                 return Err(UniversalZfsError::Internal {
-                    message: format!("Unsupported HTTP method: {}", method),
+                    message: format!("Unsupported HTTP method: {method}"),
                 });
             }
         };
@@ -132,7 +130,7 @@ impl HttpClient {
                         Err(e) => {
                             error!("Failed to parse JSON response: {}", e);
                             Err(UniversalZfsError::Internal {
-                                message: format!("Failed to parse JSON response: {}", e),
+                                message: format!("Failed to parse JSON response: {e}"),
                             })
                         }
                     }
@@ -148,13 +146,13 @@ impl HttpClient {
             Ok(Err(e)) => {
                 error!("HTTP request failed: {}", e);
                 Err(UniversalZfsError::Network {
-                    message: format!("Request failed: {}", e),
+                    message: format!("Request failed: {e}"),
                 })
             }
             Err(_) => {
                 error!("HTTP request timed out after {:?}", self.timeout);
                 Err(UniversalZfsError::Network {
-                    message: format!("Request timed out after {:?}", self.timeout),
+                    message: format!("Request timed out after {self.timeout:?}"),
                 })
             }
         }

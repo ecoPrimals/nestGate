@@ -1,7 +1,6 @@
 /// 🔬 **VALIDATION STRESS TESTING** 🔬
 /// Direct stress testing of our pure functions to identify gaps
 /// that fuzzing would reveal - no nightly Rust required!
-
 use crate::cache_math::*;
 use crate::consensus_math::*;
 use crate::return_builders::*;
@@ -10,7 +9,6 @@ use crate::validation_predicates::*;
 /// **STRESS TEST RUNNER** - Find real validation gaps
 pub fn run_validation_stress_tests() -> Vec<String> {
     let mut issues = Vec::new();
-
     // Test validation predicates with edge cases
     issues.extend(stress_test_validation_predicates());
 
@@ -29,7 +27,6 @@ pub fn run_validation_stress_tests() -> Vec<String> {
 /// **VALIDATION PREDICATES STRESS TEST**
 fn stress_test_validation_predicates() -> Vec<String> {
     let mut issues = Vec::new();
-
     // Test with extreme strings
     let massive_string = "a".repeat(1_000_000);
     let malicious_strings = vec![
@@ -74,7 +71,6 @@ fn stress_test_validation_predicates() -> Vec<String> {
 /// **CACHE MATH STRESS TEST**
 fn stress_test_cache_math() -> Vec<String> {
     let mut issues = Vec::new();
-
     // Test with extreme values
     let extreme_sizes = vec![0, 1, u64::MAX, u64::MAX - 1];
 
@@ -110,7 +106,6 @@ fn stress_test_cache_math() -> Vec<String> {
 /// **CONSENSUS MATH STRESS TEST**
 fn stress_test_consensus_math() -> Vec<String> {
     let mut issues = Vec::new();
-
     // Test with extreme node counts
     let extreme_nodes = vec![0usize, 1usize, 1000usize, 10000usize];
 
@@ -150,7 +145,6 @@ fn stress_test_consensus_math() -> Vec<String> {
 /// **RETURN BUILDERS STRESS TEST**
 fn stress_test_return_builders() -> Vec<String> {
     let mut issues = Vec::new();
-
     // Test with extreme permission lists
     let huge_permissions = vec!["permission".to_string(); 1_000_000];
     let consensus_nodes = vec!["node".to_string(); 1000];
@@ -198,15 +192,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_stress_validation() {
+    fn test_stress_validation() -> Result<(), Box<dyn std::error::Error>> {
         let issues = run_validation_stress_tests();
 
         // Print all issues found
         for issue in &issues {
-            println!("{}", issue);
+            println!("{issue}");
+    Ok(())
     }
 
         // This test documents issues but doesn't fail - we use it to improve our code
-        println!("📊 Found {} validation issues to address", issues.len());
+        println!("📊 Found ", issues.len() validation issues to address"));
+    Ok(())
     }
+    Ok(())
     }

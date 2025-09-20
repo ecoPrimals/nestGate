@@ -2,7 +2,6 @@
 /// Unified access type definitions for consistent access control
 /// across all NestGate components.
 use serde::{Deserialize, Serialize};
-
 /// Unified access types for consistent permission management
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum UnifiedAccessType {
@@ -19,7 +18,6 @@ pub enum UnifiedAccessType {
     /// No access
     None,
 }
-
 impl Default for UnifiedAccessType {
     fn default() -> Self {
         Self::Read
@@ -28,22 +26,22 @@ impl Default for UnifiedAccessType {
 
 impl UnifiedAccessType {
     /// Check if this access type includes read permissions
-    pub fn can_read(&self) -> bool {
+    pub const fn can_read(&self) -> bool {
         matches!(self, Self::Read | Self::Write | Self::Admin | Self::Full)
     }
 
     /// Check if this access type includes write permissions
-    pub fn can_write(&self) -> bool {
+    pub const fn can_write(&self) -> bool {
         matches!(self, Self::Write | Self::Admin | Self::Full)
     }
 
     /// Check if this access type includes execute permissions
-    pub fn can_execute(&self) -> bool {
+    pub const fn can_execute(&self) -> bool {
         matches!(self, Self::Execute | Self::Admin | Self::Full)
     }
 
     /// Check if this access type includes admin permissions
-    pub fn is_admin(&self) -> bool {
+    pub const fn is_admin(&self) -> bool {
         matches!(self, Self::Admin | Self::Full)
     }
 }
@@ -60,7 +58,6 @@ pub enum AccessLevel {
     /// Restricted access - special approval required
     Restricted,
 }
-
 impl Default for AccessLevel {
     fn default() -> Self {
         Self::Authenticated

@@ -4,28 +4,27 @@
 // regulatory compliance (GDPR, HIPAA, SOX, etc.).
 
 use axum::{
-use std::time::Duration;
-use tracing::info;
-use tracing::warn;
-    extract::{Path, Query, State},
+    extract::{Query, State},
     http::StatusCode,
     response::Json,
-    routing::{get, post, put, delete},
+    routing::{get, post},
     Router,
 };
+use chrono::Duration as ChronoDuration;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
+
 use tokio::sync::RwLock;
+use tracing::{info, warn};
 // Removed unused tracing import
 use uuid::Uuid;
-use chrono::{DateTime, Utc, Duration};
 
 /// Compliance manager state
 pub type ComplianceState = Arc<RwLock<ComplianceManager>>;
-
 /// Compliance manager
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ComplianceManager {
     /// Data retention policies
     pub retention_policies: HashMap<String, RetentionPolicy>,
@@ -38,7 +37,6 @@ pub struct ComplianceManager {
     /// Compliance violations
     pub violations: Vec<ComplianceViolation>,
 }
-
 /// Data retention policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RetentionPolicy {
@@ -63,7 +61,6 @@ pub struct RetentionPolicy {
     /// Updated timestamp
     pub updated_at: DateTime<Utc>,
 }
-
 /// Access control policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccessPolicy {
@@ -86,7 +83,6 @@ pub struct AccessPolicy {
     /// Created timestamp
     pub created_at: DateTime<Utc>,
 }
-
 /// Time restriction
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeRestriction {
@@ -99,7 +95,6 @@ pub struct TimeRestriction {
     /// Timezone
     pub timezone: String,
 }
-
 /// Data classification levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DataClassification {
@@ -114,7 +109,6 @@ pub enum DataClassification {
     /// Top secret data
     TopSecret,
 }
-
 /// Audit event
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditEvent {
@@ -127,7 +121,7 @@ pub struct AuditEvent {
     /// User ID
     pub user_id: Option<String>,
     /// Resource accessed
-    pub resource: String,
+    pub path: String,
     /// Action performed
     pub action: String,
     /// Result status
@@ -139,7 +133,6 @@ pub struct AuditEvent {
     /// User agent
     pub user_agent: Option<String>,
 }
-
 /// Audit event types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AuditEventType {
@@ -161,6 +154,21 @@ pub enum AuditEventType {
     ComplianceViolation,
 }
 
+impl std::fmt::Display for AuditEventType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AuditEventType::DataAccess => write!(f, "Data Access"),
+            AuditEventType::DataModification => write!(f, "Data Modification"),
+            AuditEventType::DataDeletion => write!(f, "Data Deletion"),
+            AuditEventType::PolicyChange => write!(f, "Policy Change"),
+            AuditEventType::Authentication => write!(f, "Authentication"),
+            AuditEventType::Authorization => write!(f, "Authorization"),
+            AuditEventType::SystemConfiguration => write!(f, "System Configuration"),
+            AuditEventType::ComplianceViolation => write!(f, "Compliance Violation"),
+        }
+    }
+}
+
 /// Audit result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AuditResult {
@@ -175,7 +183,6 @@ pub enum AuditResult {
     /// Error
     Error,
 }
-
 /// Regulatory framework
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RegulatoryFramework {
@@ -194,7 +201,6 @@ pub struct RegulatoryFramework {
     /// Compliance status
     pub compliance_status: ComplianceStatus,
 }
-
 /// Regulatory framework types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum RegulatoryType {
@@ -213,7 +219,6 @@ pub enum RegulatoryType {
     /// Custom framework
     Custom(String),
 }
-
 /// Compliance control
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceControl {
@@ -232,7 +237,6 @@ pub struct ComplianceControl {
     /// Next assessment due
     pub next_assessment_due: Option<DateTime<Utc>>,
 }
-
 /// Control types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ControlType {
@@ -245,7 +249,6 @@ pub enum ControlType {
     /// Compensating control
     Compensating,
 }
-
 /// Implementation status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ImplementationStatus {
@@ -260,7 +263,6 @@ pub enum ImplementationStatus {
     /// Non-compliant
     NonCompliant,
 }
-
 /// Compliance status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ComplianceStatus {
@@ -275,7 +277,6 @@ pub enum ComplianceStatus {
     /// Unknown
     Unknown,
 }
-
 /// Compliance violation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceViolation {
@@ -290,7 +291,7 @@ pub struct ComplianceViolation {
     /// Description
     pub description: String,
     /// Affected resource
-    pub resource: String,
+    pub path: String,
     /// Regulatory framework
     pub framework: String,
     /// Resolution status
@@ -300,7 +301,6 @@ pub struct ComplianceViolation {
     /// Assigned to
     pub assigned_to: Option<String>,
 }
-
 /// Violation types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ViolationType {
@@ -320,6 +320,20 @@ pub enum ViolationType {
     Documentation,
 }
 
+impl std::fmt::Display for ViolationType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ViolationType::DataRetention => write!(f, "Data Retention"),
+            ViolationType::AccessControl => write!(f, "Access Control"),
+            ViolationType::Encryption => write!(f, "Encryption"),
+            ViolationType::AuditLogging => write!(f, "Audit Logging"),
+            ViolationType::DataResidency => write!(f, "Data Residency"),
+            ViolationType::Backup => write!(f, "Backup"),
+            ViolationType::Documentation => write!(f, "Documentation"),
+        }
+    }
+}
+
 /// Violation severity
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ViolationSeverity {
@@ -332,7 +346,6 @@ pub enum ViolationSeverity {
     /// Critical severity
     Critical,
 }
-
 /// Resolution status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ResolutionStatus {
@@ -347,9 +360,9 @@ pub enum ResolutionStatus {
     /// Escalated
     Escalated,
 }
-
 impl ComplianceManager {
     /// Create new compliance manager
+    #[must_use]
     pub fn new() -> Self {
         Self {
             retention_policies: HashMap::new(),
@@ -374,24 +387,31 @@ impl ComplianceManager {
 
     /// Log audit event
     pub fn log_audit_event(&mut self, event: AuditEvent) {
-        info!("Logging audit event: {} - {}", event.event_type, event.action);
+        info!(
+            "Logging audit event: {} - {}",
+            event.event_type, event.action
+        );
         self.audit_logs.push(event);
     }
 
     /// Add regulatory framework
     pub fn add_regulatory_framework(&mut self, framework: RegulatoryFramework) {
         info!("Adding regulatory framework: {}", framework.name);
-        self.regulatory_frameworks.insert(framework.id.clone(), framework);
+        self.regulatory_frameworks
+            .insert(framework.id.clone(), framework);
     }
 
     /// Record compliance violation
     pub fn record_violation(&mut self, violation: ComplianceViolation) {
-        warn!("Recording compliance violation: {} - {}", violation.violation_type, violation.description);
+        warn!(
+            "Recording compliance violation: {} - {}",
+            violation.violation_type, violation.description
+        );
         self.violations.push(violation);
     }
 
     /// Check data retention compliance
-    pub fn check_data_retention(&self, data_type: &str, data_age_days: u32) -> bool {
+    pub const fn check_data_retention(&self, data_type: &str, data_age_days: u32) -> bool {
         for policy in self.retention_policies.values() {
             if policy.data_types.contains(&data_type.to_string()) {
                 if policy.legal_hold {
@@ -404,10 +424,16 @@ impl ComplianceManager {
     }
 
     /// Check access compliance
-    pub fn check_access_compliance(&self, user_permissions: &[String], clearance_level: u8) -> bool {
+    pub const fn check_access_compliance(
+        &self,
+        user_permissions: &[String],
+        clearance_level: u8,
+    ) -> bool {
         for policy in self.access_policies.values() {
             if clearance_level >= policy.min_clearance_level {
-                let has_required_permissions = policy.required_permissions.iter()
+                let has_required_permissions = policy
+                    .required_permissions
+                    .iter()
                     .all(|perm| user_permissions.contains(perm));
                 if has_required_permissions {
                     return true;
@@ -418,10 +444,12 @@ impl ComplianceManager {
     }
 
     /// Generate compliance report
-    pub fn generate_compliance_report(&self) -> ComplianceReport {
+    pub const fn generate_compliance_report(&self) -> ComplianceReport {
         let total_policies = self.retention_policies.len() + self.access_policies.len();
         let total_violations = self.violations.len();
-        let critical_violations = self.violations.iter()
+        let critical_violations = self
+            .violations
+            .iter()
             .filter(|v| matches!(v.severity, ViolationSeverity::Critical))
             .count();
 
@@ -442,7 +470,9 @@ impl ComplianceManager {
             return 100.0;
         }
 
-        let total_controls = self.regulatory_frameworks.values()
+        let total_controls = self
+            .regulatory_frameworks
+            .values()
             .map(|f| f.required_controls.len())
             .sum::<usize>() as f32;
 
@@ -450,7 +480,9 @@ impl ComplianceManager {
             return 100.0;
         }
 
-        let violation_weight = self.violations.iter()
+        let violation_weight = self
+            .violations
+            .iter()
             .map(|v| match v.severity {
                 ViolationSeverity::Critical => 10.0,
                 ViolationSeverity::High => 5.0,
@@ -482,16 +514,13 @@ pub struct ComplianceReport {
     /// Recent violations
     pub recent_violations: Vec<ComplianceViolation>,
 }
-
 /// API Routes
-
 /// Get compliance dashboard
 pub async fn get_compliance_dashboard(
     State(state): State<ComplianceState>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
     let compliance = state.read().await;
     let report = compliance.generate_compliance_report();
-
     Ok(Json(serde_json::json!({
         "status": "success",
         "data": {
@@ -508,7 +537,6 @@ pub async fn get_retention_policies(
 ) -> Result<Json<serde_json::Value>, StatusCode> {
     let compliance = state.read().await;
     let policies: Vec<&RetentionPolicy> = compliance.retention_policies.values().collect();
-
     Ok(Json(serde_json::json!({
         "status": "success",
         "data": {
@@ -526,7 +554,6 @@ pub async fn create_retention_policy(
     policy.id = Uuid::new_v4().to_string();
     policy.created_at = Utc::now();
     policy.updated_at = Utc::now();
-
     let mut compliance = state.write().await;
     compliance.add_retention_policy(policy.clone());
 
@@ -542,13 +569,13 @@ pub async fn create_retention_policy(
 /// Get audit logs
 pub async fn get_audit_logs(
     State(state): State<ComplianceState>,
-    Query(params): Query<HashMap<String, String>>,
+    Query(_params): Query<HashMap<String, String>>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
     let compliance = state.read().await;
-    let limit = params.get("limit")
+    let limit = _params
+        .get("limit")
         .and_then(|l| l.parse::<usize>().ok())
         .unwrap_or(100);
-
     let logs: Vec<&AuditEvent> = compliance.audit_logs.iter().rev().take(limit).collect();
 
     Ok(Json(serde_json::json!({
@@ -564,21 +591,22 @@ pub async fn get_audit_logs(
 /// Get compliance violations
 pub async fn get_violations(
     State(state): State<ComplianceState>,
-    Query(params): Query<HashMap<String, String>>,
+    Query(_params): Query<HashMap<String, String>>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
     let compliance = state.read().await;
-    let status_filter = params.get("status");
-
-    let violations: Vec<&ComplianceViolation> = compliance.violations.iter()
+    let status_filter = _params.get("status");
+    let violations: Vec<&ComplianceViolation> = compliance
+        .violations
+        .iter()
         .filter(|v| {
             if let Some(status) = status_filter {
                 matches!(
                     (&v.resolution_status, status.as_str()),
-                    (ResolutionStatus::Open, "open") |
-                    (ResolutionStatus::InProgress, "in_progress") |
-                    (ResolutionStatus::Resolved, "resolved") |
-                    (ResolutionStatus::Closed, "closed") |
-                    (ResolutionStatus::Escalated, "escalated")
+                    (ResolutionStatus::Open, "open")
+                        | (ResolutionStatus::InProgress, "in_progress")
+                        | (ResolutionStatus::Resolved, "resolved")
+                        | (ResolutionStatus::Closed, "closed")
+                        | (ResolutionStatus::Escalated, "escalated")
                 )
             } else {
                 true
@@ -596,7 +624,7 @@ pub async fn get_violations(
 }
 
 /// Create compliance routes
-pub fn create_compliance_routes() -> Router<ComplianceState> {
+pub const fn create_compliance_routes() -> Router<ComplianceState> {
     Router::new()
         .route("/dashboard", get(get_compliance_dashboard))
         .route("/policies/retention", get(get_retention_policies))
@@ -604,11 +632,9 @@ pub fn create_compliance_routes() -> Router<ComplianceState> {
         .route("/audit-logs", get(get_audit_logs))
         .route("/violations", get(get_violations))
 }
-
 /// Initialize compliance manager with default frameworks
 pub fn initialize_compliance_manager() -> ComplianceManager {
     let mut manager = ComplianceManager::new();
-
     // Add default GDPR framework
     let gdpr_framework = RegulatoryFramework {
         id: "gdpr".to_string(),
@@ -622,7 +648,7 @@ pub fn initialize_compliance_manager() -> ComplianceManager {
                 control_type: ControlType::Preventive,
                 implementation_status: ImplementationStatus::PartiallyImplemented,
                 last_assessment: None,
-                next_assessment_due: Some(Utc::now() + Duration::days(90)),
+                next_assessment_due: Some(Utc::now() + ChronoDuration::days(90)),
             },
             ComplianceControl {
                 id: "gdpr-retention".to_string(),
@@ -630,8 +656,8 @@ pub fn initialize_compliance_manager() -> ComplianceManager {
                 description: "Implement data retention and deletion policies".to_string(),
                 control_type: ControlType::Preventive,
                 implementation_status: ImplementationStatus::FullyImplemented,
-                last_assessment: Some(Utc::now() - Duration::days(30)),
-                next_assessment_due: Some(Utc::now() + Duration::days(335)),
+                last_assessment: Some(Utc::now() - ChronoDuration::days(30)),
+                next_assessment_due: Some(Utc::now() + ChronoDuration::days(335)),
             },
         ],
         audit_frequency_days: 365,
@@ -646,7 +672,7 @@ pub fn initialize_compliance_manager() -> ComplianceManager {
         id: "default-retention".to_string(),
         name: "Default Data Retention".to_string(),
         data_classification: DataClassification::Internal,
-        retention_days: 2555, // 7 years
+        retention_days: 2555,           // 7 years
         archive_after_days: Some(1095), // 3 years
         auto_delete: false,
         legal_hold: false,
@@ -674,7 +700,6 @@ mod tests {
         assert!(manager.regulatory_frameworks.is_empty());
         assert!(manager.violations.is_empty());
     }
-
     #[test]
     fn test_data_retention_compliance() {
         let mut manager = ComplianceManager::new();
@@ -723,7 +748,10 @@ mod tests {
         manager.add_access_policy(policy);
 
         // User with sufficient permissions and clearance should be compliant
-        assert!(manager.check_access_compliance(&["read".to_string(), "write".to_string(), "admin".to_string()], 5));
+        assert!(manager.check_access_compliance(
+            &["read".to_string(), "write".to_string(), "admin".to_string()],
+            5
+        ));
 
         // User with insufficient permissions should be non-compliant
         assert!(!manager.check_access_compliance(&["read".to_string()], 5));
@@ -741,17 +769,15 @@ mod tests {
             id: "test-framework".to_string(),
             name: "Test Framework".to_string(),
             framework_type: RegulatoryType::Custom("test".to_string()),
-            required_controls: vec![
-                ComplianceControl {
-                    id: "control-1".to_string(),
-                    name: "Control 1".to_string(),
-                    description: "Test control".to_string(),
-                    control_type: ControlType::Preventive,
-                    implementation_status: ImplementationStatus::FullyImplemented,
-                    last_assessment: None,
-                    next_assessment_due: None,
-                },
-            ],
+            required_controls: vec![ComplianceControl {
+                id: "control-1".to_string(),
+                name: "Control 1".to_string(),
+                description: "Test control".to_string(),
+                control_type: ControlType::Preventive,
+                implementation_status: ImplementationStatus::FullyImplemented,
+                last_assessment: None,
+                next_assessment_due: None,
+            }],
             audit_frequency_days: 365,
             last_audit: None,
             compliance_status: ComplianceStatus::Compliant,
@@ -769,7 +795,7 @@ mod tests {
             violation_type: ViolationType::DataRetention,
             severity: ViolationSeverity::Medium,
             description: "Test violation".to_string(),
-            resource: "test-resource".to_string(),
+            path: "test-resource".to_string(),
             framework: "test-framework".to_string(),
             resolution_status: ResolutionStatus::Open,
             resolution_deadline: None,

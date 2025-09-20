@@ -3,19 +3,14 @@
 /// System-level configuration with const generics for performance optimization.
 /// This module contains all system-level settings including deployment environment,
 /// logging, resource limits, and runtime configuration.
-
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::time::Duration;
-
 // ==================== SECTION ====================
 
 /// System-level configuration with const generics for performance
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SystemConfig<
-    const MAX_CONNECTIONS: usize = 1000,
-    const BUFFER_SIZE: usize = 65536,
-> {
+pub struct SystemConfig<const MAX_CONNECTIONS: usize = 1000, const BUFFER_SIZE: usize = 65536> {
     /// System instance identifier
     pub instance_id: String,
     /// Human-readable instance name
@@ -44,30 +39,35 @@ pub struct SystemConfig<
     pub shutdown_timeout: Duration,
     /// Health check interval
     pub health_check_interval: Duration,
-    /// Runtime override for MAX_CONNECTIONS
+    /// Runtime override for `MAX_CONNECTIONS`
     pub max_connections_override: Option<usize>,
-    /// Runtime override for BUFFER_SIZE
+    /// Runtime override for `BUFFER_SIZE`
     pub buffer_size_override: Option<usize>,
 }
-
-impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize> SystemConfig<MAX_CONNECTIONS, BUFFER_SIZE> {
+impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize>
+    SystemConfig<MAX_CONNECTIONS, BUFFER_SIZE>
+{
     /// Get effective max connections (compile-time optimized)
+    #[must_use]
     pub const fn max_connections() -> usize {
         MAX_CONNECTIONS
     }
-    
+
     /// Get effective buffer size (compile-time optimized)
+    #[must_use]
     pub const fn buffer_size() -> usize {
         BUFFER_SIZE
     }
-    
+
     /// Get runtime max connections (with override support)
-    pub fn effective_max_connections(&self) -> usize {
+    #[must_use]
+    pub const fn effective_max_connections(&self) -> usize {
         self.max_connections_override.unwrap_or(MAX_CONNECTIONS)
     }
-    
+
     /// Get runtime buffer size (with override support)
-    pub fn effective_buffer_size(&self) -> usize {
+    #[must_use]
+    pub const fn effective_buffer_size(&self) -> usize {
         self.buffer_size_override.unwrap_or(BUFFER_SIZE)
     }
 }
@@ -84,7 +84,6 @@ pub enum DeploymentEnvironment {
     Performance,
     Security,
 }
-
 impl Default for DeploymentEnvironment {
     fn default() -> Self {
         Self::Development
@@ -100,7 +99,6 @@ pub enum LogLevel {
     Debug,
     Trace,
 }
-
 impl Default for LogLevel {
     fn default() -> Self {
         Self::Info
@@ -119,7 +117,6 @@ pub struct EnvironmentConfig {
     /// Environment-specific resource limits
     pub resource_limits: ResourceLimits,
 }
-
 impl Default for EnvironmentConfig {
     fn default() -> Self {
         Self {
@@ -132,7 +129,7 @@ impl Default for EnvironmentConfig {
 }
 
 /// Resource limits configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResourceLimits {
     /// Maximum memory usage (bytes)
     pub max_memory_bytes: Option<u64>,
@@ -144,18 +141,6 @@ pub struct ResourceLimits {
     pub max_network_bps: Option<u64>,
     /// Maximum file descriptors
     pub max_file_descriptors: Option<u32>,
-}
-
-impl Default for ResourceLimits {
-    fn default() -> Self {
-        Self {
-            max_memory_bytes: None,
-            max_cpu_percent: None,
-            max_disk_bytes: None,
-            max_network_bps: None,
-            max_file_descriptors: None,
-        }
-    }
 }
 
 /// Feature flags configuration
@@ -175,21 +160,20 @@ pub struct FeatureFlags {
     pub enable_auto_scaling: bool,
     /// Enable load balancing
     pub enable_load_balancing: bool,
-    /// Enable metrics (alias for metrics_collection)
+    /// Enable metrics (alias for `metrics_collection`)
     pub enable_metrics: bool,
-    /// Enable tracing (alias for distributed_tracing)
+    /// Enable tracing (alias for `distributed_tracing`)
     pub enable_tracing: bool,
     /// Feature-specific flags
     pub features: std::collections::HashMap<String, bool>,
 }
-
 impl Default for FeatureFlags {
     fn default() -> Self {
         let mut features = std::collections::HashMap::new();
         features.insert("async_trait_migration".to_string(), false);
         features.insert("zero_cost_abstractions".to_string(), true);
         features.insert("canonical_config".to_string(), true);
-        
+
         Self {
             experimental_features: false,
             performance_monitoring: true,
@@ -221,7 +205,6 @@ pub struct ConfigMetadata {
     /// Configuration schema version
     pub schema_version: String,
 }
-
 impl Default for ConfigMetadata {
     fn default() -> Self {
         // Use a simple timestamp format instead of chrono
@@ -230,7 +213,7 @@ impl Default for ConfigMetadata {
             .unwrap_or_default()
             .as_secs()
             .to_string();
-        
+
         Self {
             version: "1.0.0".to_string(),
             created_at: now.clone(),
@@ -244,21 +227,24 @@ impl Default for ConfigMetadata {
 
 // ==================== SECTION ====================
 
-impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize> Default for SystemConfig<MAX_CONNECTIONS, BUFFER_SIZE> {
+impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize> Default
+    for SystemConfig<MAX_CONNECTIONS, BUFFER_SIZE>
+{
     fn default() -> Self {
         // Generate a simple UUID-like string without external dependencies
-        let instance_id = format!("nestgate-{}", 
+        let instance_id = format!(
+            "nestgate-{}",
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap_or_default()
                 .as_secs()
         );
-        
+
         Self {
             instance_id,
-            instance_name: "nestgate".to_string(),
+            instance_name: "nestgate-default".to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
-            environment: DeploymentEnvironment::Development,
+            environment: DeploymentEnvironment::default(),
             log_level: LogLevel::Info,
             debug_mode: false,
             data_dir: PathBuf::from("./data"),
@@ -273,4 +259,4 @@ impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize> Default for SystemC
             buffer_size_override: None,
         }
     }
-} 
+}

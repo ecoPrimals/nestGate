@@ -4,7 +4,6 @@ use std::collections::HashMap;
 // across multiple targets and storage systems.
 
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 use std::time::SystemTime;
 
 /// Storage replication target
@@ -18,7 +17,6 @@ pub struct StorageTarget {
     pub compression: bool,
     pub encryption: bool,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TargetType {
     Filesystem,
@@ -41,7 +39,6 @@ pub struct ReplicationJob {
     pub estimated_completion: Option<SystemTime>,
     pub error_message: Option<String>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ReplicationStatus {
     Queued,
@@ -63,7 +60,6 @@ pub struct BackupManifest {
     pub total_size: u64,
     pub compression_ratio: f32,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BackupType {
     Full,
@@ -73,7 +69,6 @@ pub enum BackupType {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackupFileEntry {
-    pub path: PathBuf,
     pub size: u64,
     pub checksum: String,
     pub modified_at: SystemTime,
@@ -81,7 +76,7 @@ pub struct BackupFileEntry {
 }
 
 impl StorageTarget {
-    pub fn new(name: String, target_type: TargetType, endpoint: String) -> Self {
+    pub const fn new(name: String, target_type: TargetType, endpoint: String) -> Self {
         Self {
             id: uuid::Uuid::new_v4().to_string(),
             name,
@@ -93,16 +88,19 @@ impl StorageTarget {
         }
     }
 
+    #[must_use]
     pub fn with_credentials(mut self, credentials: HashMap<String, String>) -> Self {
         self.credentials = Some(credentials);
         self
     }
 
+    #[must_use]
     pub fn with_compression(mut self, enabled: bool) -> Self {
         self.compression = enabled;
         self
     }
 
+    #[must_use]
     pub fn with_encryption(mut self, enabled: bool) -> Self {
         self.encryption = enabled;
         self
@@ -110,7 +108,7 @@ impl StorageTarget {
 }
 
 impl ReplicationJob {
-    pub fn new(source_snapshot: String, target: StorageTarget) -> Self {
+    pub const fn new(source_snapshot: String, target: StorageTarget) -> Self {
         Self {
             id: uuid::Uuid::new_v4().to_string(),
             source_snapshot,
@@ -129,7 +127,7 @@ impl ReplicationJob {
         self.bytes_transferred = bytes_transferred;
         self.total_bytes = total_bytes;
         self.progress_percentage = if total_bytes > 0 {
-            (bytes_transferred as f32 / total_bytes as f32) * 100.0
+            (f32::from(bytes_transferred) / f32::from(total_bytes)) * 100.0
         } else {
             0.0
         };

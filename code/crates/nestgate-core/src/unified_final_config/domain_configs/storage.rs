@@ -3,7 +3,6 @@
 // for better maintainability and focused responsibility.
 
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
 /// Storage domain configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -15,7 +14,6 @@ pub struct StorageDomainConfig {
     pub encryption_enabled: bool,
     pub backup_enabled: bool,
 }
-
 impl Default for StorageDomainConfig {
     fn default() -> Self {
         Self {

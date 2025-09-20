@@ -2,7 +2,6 @@
 /// Handles buffer sizes, thread pools, memory management, I/O optimization, and monitoring
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
 /// File system monitor performance settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FsMonitorPerformanceSettings {
@@ -25,7 +24,6 @@ pub struct FsMonitorPerformanceSettings {
     /// Enable event coalescing
     pub enable_event_coalescing: bool,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BufferSizeSettings {
     /// Event buffer size
@@ -37,7 +35,6 @@ pub struct BufferSizeSettings {
     /// Network buffer size
     pub network_buffer_size: usize,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreadPoolSettings {
     /// Minimum threads
@@ -49,7 +46,6 @@ pub struct ThreadPoolSettings {
     /// Queue size
     pub queue_size: usize,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryManagementSettings {
     /// Maximum memory usage (bytes)
@@ -61,7 +57,6 @@ pub struct MemoryManagementSettings {
     /// Pool size
     pub pool_size: usize,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IoOptimizationSettings {
     /// Enable async I/O
@@ -75,7 +70,6 @@ pub struct IoOptimizationSettings {
     /// Compression level (1-9)
     pub compression_level: u8,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMonitoringSettings {
     /// Enable performance monitoring
@@ -87,7 +81,6 @@ pub struct PerformanceMonitoringSettings {
     /// Enable profiling
     pub enable_profiling: bool,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceAlert {
     /// Alert name
@@ -99,7 +92,6 @@ pub struct PerformanceAlert {
     /// Alert enabled
     pub enabled: bool,
 }
-
 impl Default for FsMonitorPerformanceSettings {
     fn default() -> Self {
         Self {
@@ -120,9 +112,9 @@ impl Default for BufferSizeSettings {
     fn default() -> Self {
         Self {
             event_buffer_size: 8192,
-            read_buffer_size: 65536,
-            write_buffer_size: 65536,
-            network_buffer_size: 32768,
+            read_buffer_size: 65_536,
+            write_buffer_size: 65_536,
+            network_buffer_size: 32_768,
         }
     }
 }

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 //
 // Provides comprehensive system metrics collection and analysis.
 
-use crate::error::CanonicalResult as Result;
+use crate::error::Result;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
@@ -25,7 +25,6 @@ pub struct PerformanceMetrics {
     /// Custom application metrics
     pub custom_metrics: HashMap<String, f64>,
 }
-
 impl Default for PerformanceMetrics {
     fn default() -> Self {
         Self {
@@ -47,7 +46,6 @@ pub struct MetricsRegistry {
     max_history: usize,
     custom_metrics: Arc<RwLock<crate::canonical_modernization::unified_types::CustomMetricsMap>>,
 }
-
 impl Default for MetricsRegistry {
     fn default() -> Self {
         Self::new()
@@ -56,6 +54,7 @@ impl Default for MetricsRegistry {
 
 impl MetricsRegistry {
     /// Create a new metrics registry
+    #[must_use]
     pub fn new() -> Self {
         Self {
             metrics_history: Arc::new(RwLock::new(Vec::new())),
@@ -65,7 +64,14 @@ impl MetricsRegistry {
     }
 
     /// Collect current system metrics
-    pub async fn collect_system_metrics(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn collect_system_metrics(&self) -> Result<()>  {
         let metrics = self.gather_system_metrics().await?;
 
         let mut history = self.metrics_history.write().await;
@@ -80,21 +86,45 @@ impl MetricsRegistry {
     }
 
     /// Get current metrics snapshot
-    pub async fn get_current_metrics(&self) -> Result<PerformanceMetrics> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_current_metrics(&self) -> Result<PerformanceMetrics>  {
         self.gather_system_metrics().await
     }
 
     /// Record a custom metric
-    pub async fn record_custom_metric(&self, name: &str, value: f64) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn record_custom_metric(&self, name: &str, value: f64) -> Result<()>  {
         let mut custom = self.custom_metrics.write().await;
-        custom.insert(name.to_string(), crate::canonical_modernization::unified_types::MetricValue::Gauge(value));
+        custom.insert(
+            name.to_string(),
+            crate::canonical_modernization::unified_types::MetricValue::Gauge(value),
+        );
 
         tracing::debug!("Recorded custom metric: {} = {}", name, value);
         Ok(())
     }
 
     /// Get metrics history for a specific duration
-    pub async fn get_metrics_history(&self, duration: Duration) -> Result<Vec<PerformanceMetrics>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_metrics_history(&self, duration: Duration) -> Result<Vec<PerformanceMetrics>>  {
         let history = self.metrics_history.read().await;
         let cutoff_time = SystemTime::now() - duration;
 
@@ -123,8 +153,8 @@ impl MetricsRegistry {
             custom_metrics: custom.iter().map(|(k, v)| {
                 (k.clone(), match v {
                     crate::canonical_modernization::unified_types::MetricValue::Gauge(val) => *val,
-                    crate::canonical_modernization::unified_types::MetricValue::Counter(val) => *val as f64,
-                    crate::canonical_modernization::unified_types::MetricValue::Histogram(val) => val.iter().sum::<f64>() / val.len() as f64,
+                    crate::canonical_modernization::unified_types::MetricValue::Counter(val) => *f64::from(val),
+                    crate::canonical_modernization::unified_types::MetricValue::Histogram(val) => val.iter().sum::<f64>() / (val.len() as f64),
                     crate::canonical_modernization::unified_types::MetricValue::Summary { sum, count: _ } => *sum,
                     crate::canonical_modernization::unified_types::MetricValue::String(_) => 0.0,
                 })
@@ -137,7 +167,6 @@ impl MetricsRegistry {
 pub trait MetricsCollector {
     /// Collect metrics from this component
     fn collect_metrics(&self) -> HashMap<String, f64>;
-
     /// Get component name for metrics labeling
     fn component_name(&self) -> &str;
 }
@@ -165,7 +194,7 @@ mod tests {
         let registry = MetricsRegistry::new();
 
         // Record custom metric
-        let tags: std::collections::HashMap<String, String> = HashMap::new();
+        let _tags: std::collections::HashMap<String, String> = HashMap::new();
         assert!(registry
             .record_custom_metric("test_metric", 42.0)
             .await

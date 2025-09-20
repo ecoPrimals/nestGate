@@ -11,7 +11,7 @@ use tracing::info;
 
 /// Test dual mode authentication security configuration
 #[tokio::test]
-async fn test_dual_mode_auth_security_config() {
+async fn test_dual_mode_auth_security_config() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔐 Starting dual mode authentication security configuration test");
     
     // Test dual mode authentication security configuration creation
@@ -23,11 +23,12 @@ async fn test_dual_mode_auth_security_config() {
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ Dual mode authentication security configuration test completed");
+    Ok(())
 }
 
 /// Test dual mode authentication mechanisms
 #[tokio::test]
-async fn test_dual_mode_authentication_mechanisms() {
+async fn test_dual_mode_authentication_mechanisms() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔑 Testing dual mode authentication mechanisms");
     
     // Test dual mode authentication mechanism simulations
@@ -47,14 +48,16 @@ async fn test_dual_mode_authentication_mechanisms() {
         // Verify authentication mechanism is valid
         assert!(!mechanism.is_empty(), "Mechanism should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ Dual mode authentication mechanisms completed");
+    Ok(())
 }
 
 /// Test security validation protocols
 #[tokio::test]
-async fn test_security_validation_protocols() {
+async fn test_security_validation_protocols() -> Result<(), Box<dyn std::error::Error>> {
     info!("🛡️ Testing security validation protocols");
     
     // Test security validation protocol operations
@@ -74,14 +77,16 @@ async fn test_security_validation_protocols() {
         // Verify validation protocol is valid
         assert!(!protocol.is_empty(), "Protocol should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ Security validation protocols completed");
+    Ok(())
 }
 
 /// Test authentication security monitoring
 #[tokio::test]
-async fn test_authentication_security_monitoring() {
+async fn test_authentication_security_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing authentication security monitoring");
     
     let start_time = std::time::Instant::now();
@@ -96,14 +101,16 @@ async fn test_authentication_security_monitoring() {
         
         // Verify monitoring timing is accurate
         assert!(elapsed.as_millis() >= cycle_time as u128, "Auth security monitoring timing should be accurate");
+    Ok(())
     }
     
     info!("✅ Authentication security monitoring completed");
+    Ok(())
 }
 
 /// Test dual mode security threat detection
 #[tokio::test]
-async fn test_dual_mode_security_threat_detection() {
+async fn test_dual_mode_security_threat_detection() -> Result<(), Box<dyn std::error::Error>> {
     info!("🚨 Testing dual mode security threat detection");
     
     // Test dual mode security threat detection scenarios
@@ -123,14 +130,16 @@ async fn test_dual_mode_security_threat_detection() {
         // Verify threat detection scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
         assert!(detection_time > 0, "Detection time should be positive");
+    Ok(())
     }
     
     info!("✅ Dual mode security threat detection completed");
+    Ok(())
 }
 
 /// Test authentication security resilience
 #[tokio::test]
-async fn test_authentication_security_resilience() {
+async fn test_authentication_security_resilience() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔒 Testing authentication security resilience");
     
     // Test authentication security resilience features
@@ -150,14 +159,16 @@ async fn test_authentication_security_resilience() {
         // Verify resilience feature is valid
         assert!(!feature.is_empty(), "Feature should be specified");
         assert!(processing_time > 0, "Processing time should be positive");
+    Ok(())
     }
     
     info!("✅ Authentication security resilience completed");
+    Ok(())
 }
 
 /// Test dual mode authentication environments
 #[tokio::test]
-async fn test_dual_mode_authentication_environments() {
+async fn test_dual_mode_authentication_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing dual mode authentication security across environments");
     
     // Test development environment dual mode authentication security
@@ -173,4 +184,5 @@ async fn test_dual_mode_authentication_environments() {
     info!("Production dual mode authentication security configuration validated");
     
     info!("✅ Dual mode authentication security environment test completed");
+    Ok(())
 }

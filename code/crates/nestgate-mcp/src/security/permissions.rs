@@ -4,63 +4,31 @@
 use nestgate_core::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-
 /// Individual permission for MCP operations
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Permission {
     /// Permission name (e.g., "mcp.read", "mcp.write", "mcp.admin")
     pub name: String,
     /// Resource this permission applies to
-    pub resource: String,
+    pub path: String,
     /// Action this permission allows
     pub action: String,
 }
-
 impl Permission {
     /// Create a new permission
-    pub fn new(name: String, resource: String, action: String) -> Self {
-        Self {
+    pub const fn new(name: String, path: String, action: String) -> Self { Self {
             name,
             resource,
             action,
-        }
-    }
+         }
 
     /// Check if this permission matches a requested operation
-    pub fn matches(&self, resource: &str, action: &str) -> bool {
-        (self.resource == "*" || self.resource == resource)
-            && (self.action == "*" || self.action == action)
-    }
-}
-
-/// Role containing a set of permissions
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Role {
-    /// Role name
-    pub name: String,
-    /// Role description
-    pub description: String,
-    /// Permissions granted by this role
-    pub permissions: HashSet<Permission>,
-}
-
-impl Role {
-    /// Create a new role
-    pub fn new(name: String, description: String) -> Self {
-        Self {
-            name,
-            description,
-            permissions: HashSet::new(),
-        }
-    }
-
-    /// Add a permission to this role
-    pub fn add_permission(&mut self, permission: Permission) {
-        self.permissions.insert(permission);
+    pub const fn matches(&self, path: &str, action: &str) -> bool {
+        (self; // resource field removed
     }
 
     /// Check if this role has a specific permission
-    pub fn has_permission(&self, resource: &str, action: &str) -> bool {
+    pub const fn has_permission(&self, path: &str, action: &str) -> bool {
         self.permissions.iter().any(|p| p.matches(resource, action))
     }
 }
@@ -73,9 +41,9 @@ pub struct PermissionManager {
     /// User role assignments
     user_roles: HashMap<String, HashSet<String>>,
 }
-
 impl PermissionManager {
     /// Create new permission manager with default roles
+    #[must_use]
     pub fn new() -> Self {
         let mut manager = Self {
             roles: HashMap::new(),
@@ -126,22 +94,38 @@ impl PermissionManager {
     }
 
     /// Add a new role
-    pub fn add_role(&mut self, role: Role) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn add_role(&mut self, role: Role) -> Result<()>  {
         let name = role.name.clone();
         self.roles.insert(name, role);
         Ok(())
     }
 
     /// Get a role by name
-    pub fn get_role(&self, name: &str) -> Option<&Role> {
+    pub const fn get_role(&self, name: &str) -> Option<&Role> {
         self.roles.get(name)
     }
 
     /// Assign a role to a user
-    pub fn assign_role(&mut self, user_id: &str, role_name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn assign_role(&mut self, user_id: &str, role_name: &str) -> Result<()>  {
         if !self.roles.contains_key(role_name) {
             return Err(NestGateError::mcp_error(
-                &format!("Role '{role_name}' does not exist"),
+                &format!("Role '{"actual_error_details"}' does not exist"),
                 "assign_role",
                 None,
             ));
@@ -156,7 +140,15 @@ impl PermissionManager {
     }
 
     /// Remove a role from a user
-    pub fn remove_role(&mut self, user_id: &str, role_name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn remove_role(&mut self, user_id: &str, role_name: &str) -> Result<()>  {
         if let Some(user_roles) = self.user_roles.get_mut(user_id) {
             user_roles.remove(role_name);
         }
@@ -164,7 +156,7 @@ impl PermissionManager {
     }
 
     /// Check if a user has permission for a specific operation
-    pub fn check_permission(&self, user_id: &str, resource: &str, action: &str) -> bool {
+    pub const fn check_permission(&self, user_id: &str, path: &str, action: &str) -> bool {
         if let Some(user_roles) = self.user_roles.get(user_id) {
             for role_name in user_roles {
                 if let Some(role) = self.roles.get(role_name) {
@@ -178,7 +170,7 @@ impl PermissionManager {
     }
 
     /// Get all roles assigned to a user
-    pub fn get_user_roles(&self, user_id: &str) -> Vec<String> {
+    pub const fn get_user_roles(&self, user_id: &str) -> Vec<String> {
         self.user_roles
             .get(user_id)
             .map(|roles| roles.iter().cloned().collect())
@@ -186,7 +178,7 @@ impl PermissionManager {
     }
 
     /// Get all available roles
-    pub fn list_roles(&self) -> Vec<&Role> {
+    pub const fn list_roles(&self) -> Vec<&Role> {
         self.roles.values().collect()
     }
 }

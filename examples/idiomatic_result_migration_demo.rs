@@ -1,30 +1,45 @@
 //! **IDIOMATIC RESULT<T, E> MIGRATION DEMONSTRATION**
 //!
 //! This example demonstrates the evolution from non-idiomatic `Result<T>` patterns
-//! to idiomatic `Result<T, E>` patterns while preserving all benefits of the 
+//! to idiomatic `Result<T, E>` patterns while preserving all benefits of the
 //! sophisticated unified error system.
 //!
 //! **Phase 2: Gradual Adoption** - New Code Migration Examples
 
 use nestgate_core::error::{
+    AnyhowResult,
+    ApiError,
+    ApiResult,
+    BoxedResult,
+
     // Idiomatic Result types - USE THESE FOR NEW CODE
-    IdioResult, ValidationResult, NetworkResult, StorageResult, SecurityResult,
-    ZfsResult, ApiResult, McpResult, AnyhowResult, BoxedResult,
-    
-    // Domain-specific error types
-    ValidationError, NetworkError, StorageError, SecurityError, ZfsError,
-    ApiError, McpError,
-    
+    IdioResult,
+    McpError,
+
+    McpResult,
     // Migration utilities
-    MigrationHelper, WithContext,
-    
+    MigrationHelper,
+    NestGateError,
+    NestGateError,
+    NetworkError,
+    NetworkResult,
     // Legacy Result type (for comparison)
     Result as LegacyResult,
-    NestGateError,
+    SecurityError,
+    SecurityResult,
+    StorageError,
+    StorageResult,
+    // Domain-specific error types
+    ValidationError,
+    ValidationResult,
+    WithContext,
+
+    ZfsError,
+    ZfsResult,
 };
 
 use serde_json;
-use std::time::{SystemTime, Duration};
+use std::time::{Duration, SystemTime};
 
 // ==================== PHASE 2.1: NEW CODE MIGRATION ====================
 
@@ -32,21 +47,13 @@ use std::time::{SystemTime, Duration};
 /// This function uses the old Result<T> pattern (only T is generic)
 fn validate_config_old(config_data: &str) -> LegacyResult<ValidatedConfig> {
     if config_data.is_empty() {
-        return Err(NestGateError::Configuration {
-            message: "Configuration data cannot be empty".to_string(),
-            field: Some("config_data".to_string()),
-            suggested_fix: Some("Provide valid configuration data".to_string()),
-        });
+        return Err(NestGateError::Configuration(_));
     }
-    
+
     if config_data.len() > 10000 {
-        return Err(NestGateError::Configuration {
-            message: "Configuration data too large".to_string(),
-            field: Some("config_data".to_string()),
-            suggested_fix: Some("Reduce configuration size".to_string()),
-        });
+        return Err(NestGateError::Configuration(_));
     }
-    
+
     Ok(ValidatedConfig {
         data: config_data.to_string(),
         validated_at: SystemTime::now(),
@@ -64,7 +71,7 @@ fn validate_config_new(config_data: &str) -> ValidationResult<ValidatedConfig> {
             constraint: Some("non-empty".to_string()),
         });
     }
-    
+
     if config_data.len() > 10000 {
         return Err(ValidationError::ConstraintViolation {
             constraint: "max_length".to_string(),
@@ -73,7 +80,7 @@ fn validate_config_new(config_data: &str) -> ValidationResult<ValidatedConfig> {
             field: Some("config_data".to_string()),
         });
     }
-    
+
     Ok(ValidatedConfig {
         data: config_data.to_string(),
         validated_at: SystemTime::now(),
@@ -85,7 +92,7 @@ fn validate_config_new(config_data: &str) -> ValidationResult<ValidatedConfig> {
 /// **NETWORK OPERATIONS** - Before and After
 mod network_operations {
     use super::*;
-    
+
     /// **BEFORE: Generic Result<T>**
     pub fn connect_to_database_old(url: &str, port: u16) -> LegacyResult<DatabaseConnection> {
         if url.is_empty() {
@@ -97,10 +104,10 @@ mod network_operations {
                 context: None,
             });
         }
-        
+
         // Simulate connection attempt
         std::thread::sleep(Duration::from_millis(100));
-        
+
         Err(NestGateError::Network {
             data: nestgate_core::error::domain_errors::NetworkErrorData {
                 message: "Connection refused".to_string(),
@@ -109,7 +116,7 @@ mod network_operations {
             context: None,
         })
     }
-    
+
     /// **AFTER: Domain-specific NetworkResult<T>**
     pub fn connect_to_database_new(url: &str, port: u16) -> NetworkResult<DatabaseConnection> {
         if url.is_empty() {
@@ -121,10 +128,10 @@ mod network_operations {
                 retry_count: Some(0),
             });
         }
-        
+
         // Simulate connection attempt with timeout
         std::thread::sleep(Duration::from_millis(100));
-        
+
         Err(NetworkError::Timeout {
             operation: "database_connection".to_string(),
             duration: Duration::from_secs(30),
@@ -136,7 +143,7 @@ mod network_operations {
 /// **STORAGE OPERATIONS** - Before and After
 mod storage_operations {
     use super::*;
-    
+
     /// **BEFORE: Generic Result<T>**
     pub fn read_config_file_old(path: &str) -> LegacyResult<String> {
         if !std::path::Path::new(path).exists() {
@@ -148,10 +155,10 @@ mod storage_operations {
                 context: None,
             });
         }
-        
+
         Ok("config file contents".to_string())
     }
-    
+
     /// **AFTER: Domain-specific StorageResult<T>**
     pub fn read_config_file_new(path: &str) -> StorageResult<String> {
         if !std::path::Path::new(path).exists() {
@@ -161,7 +168,7 @@ mod storage_operations {
                 permissions: Some("read".to_string()),
             });
         }
-        
+
         // Simulate permission check
         if path.starts_with("/root/") {
             return Err(StorageError::PermissionDenied {
@@ -171,7 +178,7 @@ mod storage_operations {
                 current_user: "nestgate".to_string(),
             });
         }
-        
+
         Ok("config file contents".to_string())
     }
 }
@@ -179,7 +186,7 @@ mod storage_operations {
 /// **SECURITY OPERATIONS** - Before and After
 mod security_operations {
     use super::*;
-    
+
     /// **BEFORE: Generic Result<T>**
     pub fn authenticate_user_old(token: &str) -> LegacyResult<AuthenticatedUser> {
         if token.is_empty() {
@@ -191,13 +198,13 @@ mod security_operations {
                 context: None,
             });
         }
-        
+
         Ok(AuthenticatedUser {
             id: "user123".to_string(),
             username: "testuser".to_string(),
         })
     }
-    
+
     /// **AFTER: Domain-specific SecurityResult<T>**
     pub fn authenticate_user_new(token: &str) -> SecurityResult<AuthenticatedUser> {
         if token.is_empty() {
@@ -207,14 +214,14 @@ mod security_operations {
                 expired: false,
             });
         }
-        
+
         if token == "expired_token" {
             return Err(SecurityError::TokenExpired {
                 token_type: "JWT".to_string(),
                 expired_at: SystemTime::now(),
             });
         }
-        
+
         Ok(AuthenticatedUser {
             id: "user123".to_string(),
             username: "testuser".to_string(),
@@ -227,28 +234,32 @@ mod security_operations {
 /// **ECOSYSTEM INTEGRATION EXAMPLES**
 mod ecosystem_integration {
     use super::*;
-    
+
     /// **JSON PARSING with anyhow integration**
     pub fn parse_json_config(data: &str) -> AnyhowResult<serde_json::Value> {
         // Direct integration with serde_json using anyhow
         serde_json::from_str(data).map_err(Into::into)
     }
-    
+
     /// **BOXED ERROR for dynamic error handling**
     pub fn flexible_operation(operation_type: &str) -> BoxedResult<String> {
         match operation_type {
             "json" => {
                 let result: Result<serde_json::Value, _> = serde_json::from_str("invalid json");
-                result.map(|_| "success".to_string()).map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
-            },
+                result
+                    .map(|_| "success".to_string())
+                    .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
+            }
             "validation" => {
                 let result = validate_config_new("");
-                result.map(|_| "success".to_string()).map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
-            },
-            _ => Ok("unknown operation".to_string())
+                result
+                    .map(|_| "success".to_string())
+                    .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
+            }
+            _ => Ok("unknown operation".to_string()),
         }
     }
-    
+
     /// **IDIOMATIC with external error types**
     pub fn parse_duration(input: &str) -> IdioResult<Duration, std::num::ParseIntError> {
         let seconds: u64 = input.parse()?;
@@ -261,17 +272,17 @@ mod ecosystem_integration {
 /// **MIGRATION HELPERS in action**
 mod migration_examples {
     use super::*;
-    
+
     /// **Legacy function that returns Result<T>**
     fn legacy_validation() -> LegacyResult<String> {
         Ok("validated data".to_string())
     }
-    
+
     /// **Migrated function using MigrationHelper**
     pub fn migrated_validation() -> ValidationResult<String> {
         MigrationHelper::to_validation_result(legacy_validation())
     }
-    
+
     /// **Context enhancement example**
     pub fn enhanced_operation() -> ValidationResult<String> {
         validate_config_new("test config")
@@ -287,71 +298,71 @@ mod migration_examples {
 pub fn run_idiomatic_migration_demo() -> IdioResult<()> {
     println!("🔄 **IDIOMATIC RESULT<T, E> MIGRATION DEMONSTRATION**");
     println!("====================================================");
-    
+
     // Phase 2.1: New Code Migration
     println!("\n📋 **PHASE 2.1: NEW CODE MIGRATION**");
-    
+
     // Old pattern
     match validate_config_old("") {
         Ok(_) => println!("✅ Old validation succeeded"),
         Err(e) => println!("❌ Old validation failed: {}", e),
     }
-    
+
     // New pattern
     match validate_config_new("") {
         Ok(_) => println!("✅ New validation succeeded"),
         Err(e) => println!("❌ New validation failed: {} (Rich context: {:?})", e, e),
     }
-    
+
     // Phase 2.2: Domain-Specific Migration
     println!("\n🌐 **PHASE 2.2: DOMAIN-SPECIFIC MIGRATION**");
-    
+
     // Network operations
     match network_operations::connect_to_database_new("", 5432) {
         Ok(_) => println!("✅ Database connection succeeded"),
         Err(e) => println!("❌ Database connection failed: {} (Type: NetworkError)", e),
     }
-    
+
     // Storage operations
     match storage_operations::read_config_file_new("/nonexistent/file.conf") {
         Ok(_) => println!("✅ File read succeeded"),
         Err(e) => println!("❌ File read failed: {} (Type: StorageError)", e),
     }
-    
+
     // Security operations
     match security_operations::authenticate_user_new("expired_token") {
         Ok(_) => println!("✅ Authentication succeeded"),
         Err(e) => println!("❌ Authentication failed: {} (Type: SecurityError)", e),
     }
-    
+
     // Phase 2.3: Ecosystem Integration
     println!("\n🔗 **PHASE 2.3: ECOSYSTEM INTEGRATION**");
-    
+
     // JSON parsing with anyhow
     match ecosystem_integration::parse_json_config("invalid json") {
         Ok(_) => println!("✅ JSON parsing succeeded"),
         Err(e) => println!("❌ JSON parsing failed: {} (Type: anyhow::Error)", e),
     }
-    
+
     // Flexible operation with boxed errors
     match ecosystem_integration::flexible_operation("json") {
         Ok(_) => println!("✅ Flexible operation succeeded"),
         Err(e) => println!("❌ Flexible operation failed: {} (Type: BoxedError)", e),
     }
-    
+
     // Migration utilities
     println!("\n🔧 **MIGRATION UTILITIES**");
-    
+
     match migration_examples::migrated_validation() {
         Ok(data) => println!("✅ Migrated validation succeeded: {}", data),
         Err(e) => println!("❌ Migrated validation failed: {}", e),
     }
-    
+
     match migration_examples::enhanced_operation() {
         Ok(data) => println!("✅ Enhanced operation succeeded: {}", data),
         Err(e) => println!("❌ Enhanced operation failed: {}", e),
     }
-    
+
     println!("\n🎉 **MIGRATION DEMONSTRATION COMPLETE**");
     println!("Benefits achieved:");
     println!("  ✅ Idiomatic Rust patterns (Result<T, E>)");
@@ -360,7 +371,7 @@ pub fn run_idiomatic_migration_demo() -> IdioResult<()> {
     println!("  ✅ Ecosystem integration (anyhow, thiserror)");
     println!("  ✅ Zero breaking changes");
     println!("  ✅ Enhanced developer experience");
-    
+
     Ok(())
 }
 
@@ -394,57 +405,71 @@ fn main() -> IdioResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
-    fn test_idiomatic_validation() {
+    fn test_idiomatic_validation() -> Result<(), Box<dyn std::error::Error>> {
         // Test new idiomatic pattern
         let result = validate_config_new("valid config");
         assert!(result.is_ok());
-        
+
         let result = validate_config_new("");
         assert!(result.is_err());
-        
+
         if let Err(ValidationError::FieldValidation { field, .. }) = result {
             assert_eq!(field, "config_data");
         } else {
             panic!("Expected FieldValidation error");
+            Ok(())
         }
+        Ok(())
     }
-    
+
     #[test]
-    fn test_domain_specific_errors() {
+    fn test_domain_specific_errors() -> Result<(), Box<dyn std::error::Error>> {
         // Test network error
         let result = network_operations::connect_to_database_new("", 5432);
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), NetworkError::ConnectionFailed { .. }));
-        
+        assert!(matches!(
+            result.unwrap_err(),
+            NetworkError::ConnectionFailed { .. }
+        ));
+
         // Test storage error
         let result = storage_operations::read_config_file_new("/nonexistent");
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), StorageError::FileNotFound { .. }));
-        
+        assert!(matches!(
+            result.unwrap_err(),
+            StorageError::FileNotFound { .. }
+        ));
+
         // Test security error
         let result = security_operations::authenticate_user_new("expired_token");
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), SecurityError::TokenExpired { .. }));
+        assert!(matches!(
+            result.unwrap_err(),
+            SecurityError::TokenExpired { .. }
+        ));
+        Ok(())
     }
-    
+
     #[test]
-    fn test_migration_utilities() {
+    fn test_migration_utilities() -> Result<(), Box<dyn std::error::Error>> {
         let result = migration_examples::migrated_validation();
         assert!(result.is_ok());
-        
+
         // Verify it's the correct type
         let _: ValidationResult<String> = result;
+        Ok(())
     }
-    
+
     #[test]
-    fn test_ecosystem_integration() {
+    fn test_ecosystem_integration() -> Result<(), Box<dyn std::error::Error>> {
         let result = ecosystem_integration::parse_json_config(r#"{"key": "value"}"#);
         assert!(result.is_ok());
-        
+
         let result = ecosystem_integration::parse_duration("42");
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), Duration::from_secs(42));
+        Ok(())
     }
-} 
+}

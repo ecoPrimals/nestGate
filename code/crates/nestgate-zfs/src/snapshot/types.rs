@@ -38,7 +38,6 @@ pub struct SnapshotInfo {
     /// Snapshot tags for organization
     pub tags: Vec<String>,
 }
-
 /// Snapshot operation status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum SnapshotOperationStatus {
@@ -53,7 +52,6 @@ pub enum SnapshotOperationStatus {
     /// Operation was cancelled
     Cancelled,
 }
-
 /// Snapshot operation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SnapshotOperation {
@@ -78,9 +76,8 @@ pub struct SnapshotOperation {
     /// Associated policy
     pub policy: Option<String>,
 }
-
 /// Snapshot statistics
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SnapshotStatistics {
     /// Total snapshots across all datasets
     pub total_snapshots: u64,
@@ -102,21 +99,4 @@ pub struct SnapshotStatistics {
     pub pending_operations: u32,
     /// Failed operations in last 24 hours
     pub recent_failures: u32,
-}
-
-impl Default for SnapshotStatistics {
-    fn default() -> Self {
-        Self {
-            total_snapshots: 0,
-            total_size: 0,
-            total_referenced_size: 0,
-            total_written_size: 0,
-            average_compression_ratio: 1.0,
-            snapshots_per_tier: HashMap::new(),
-            size_per_tier: HashMap::new(),
-            active_policies: 0,
-            pending_operations: 0,
-            recent_failures: 0,
-        }
-    }
 }

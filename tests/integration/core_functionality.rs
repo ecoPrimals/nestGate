@@ -4,6 +4,8 @@
 
 use crate::common::*;
 use nestgate_core::{
+
+use nestgate_core::canonical_types::StorageTier;
     constants::{network, security, storage},
     error::NestGateError,
     types::{AllocationStatus, HealthStatus, StorageTier, SystemInfo},
@@ -13,7 +15,7 @@ use std::time::Duration;
 
 /// Test core constants are accessible and have expected values
 #[test]
-fn test_core_constants_integration() {
+async fn test_core_constants_integration() -> Result<(), Box<dyn std::error::Error>> {
     // Test network constants
     assert_eq!(network::ports::API_DEFAULT, 8080);
     assert_eq!(network::ports::HEALTH_CHECK, 8081);
@@ -22,16 +24,17 @@ fn test_core_constants_integration() {
     // Test storage constants
     assert_eq!(storage::sizes::KB, 1024);
     assert_eq!(storage::sizes::MB, 1024 * 1024);
-    assert_eq!(storage::zfs::DEFAULT_POOL_NAME, "nestpool");
+    assert_eq!(storage::zfs::DEFAULT_POOL_NAME, "zfspool");
 
     // Test security constants
     assert_eq!(security::crypto::KEY_SIZE_BITS, 256);
     assert_eq!(security::auth::MAX_LOGIN_ATTEMPTS, 5);
+    Ok(())
 }
 
 /// Test unified enum system functionality
 #[test]
-fn test_unified_enums_integration() {
+async fn test_unified_enums_integration() -> Result<(), Box<dyn std::error::Error>> {
     // Test health status enum
     let healthy = UnifiedHealthStatus::Healthy;
     let degraded = UnifiedHealthStatus::Degraded;
@@ -46,11 +49,12 @@ fn test_unified_enums_integration() {
     let info = UnifiedAlertSeverity::Info;
     let critical = UnifiedAlertSeverity::Critical;
     assert_ne!(info, critical);
+    Ok(())
 }
 
 /// Test core types functionality
 #[test]
-fn test_core_types_integration() {
+async fn test_core_types_integration() -> Result<(), Box<dyn std::error::Error>> {
     // Test storage tier
     let hot_tier = StorageTier::Hot;
     let cold_tier = StorageTier::Cold;
@@ -81,18 +85,14 @@ fn test_core_types_integration() {
     assert_eq!(system_info.hostname, "test-system");
     assert_eq!(system_info.cpu_cores, 8);
     assert_eq!(system_info.total_memory, 8 * 1024 * 1024 * 1024);
+    Ok(())
 }
 
 /// Test error handling integration
 #[test]
-fn test_error_handling_integration() {
+async fn test_error_handling_integration() -> Result<(), Box<dyn std::error::Error>> {
     // Test creating different error types
-    let config_error = NestGateError::Configuration {
-        message: "Invalid configuration".to_string(),
-        config_source: nestgate_core::error::UnifiedConfigSource::File("test.toml".to_string()),
-        field: Some("timeout".to_string()),
-        suggested_fix: Some("Set timeout to a positive value".to_string()),
-    };
+    let config_error = NestGateError::configuration_error("test_field", "Invalid configuration".to_string());
 
     // Test error display
     let error_display = format!("{}", config_error);
@@ -101,11 +101,12 @@ fn test_error_handling_integration() {
     // Test error debug
     let error_debug = format!("{:?}", config_error);
     assert!(error_debug.contains("Configuration"));
+    Ok(())
 }
 
 /// Test storage tier operations
 #[test]
-fn test_storage_tier_operations() {
+async fn test_storage_tier_operations() -> Result<(), Box<dyn std::error::Error>> {
     let hot = StorageTier::Hot;
     let warm = StorageTier::Warm;
     let cold = StorageTier::Cold;
@@ -134,11 +135,12 @@ fn test_storage_tier_operations() {
     assert_eq!(hot.to_string(), "Hot");
     assert_eq!(warm.to_string(), "Warm");
     assert_eq!(cold.to_string(), "Cold");
+    Ok(())
 }
 
 /// Test all storage tiers are included in the complete list
 #[test]
-fn test_storage_tier_completeness() {
+async fn test_storage_tier_completeness() -> Result<(), Box<dyn std::error::Error>> {
     let all_tiers = StorageTier::all();
 
     assert_eq!(all_tiers.len(), 5);
@@ -147,11 +149,12 @@ fn test_storage_tier_completeness() {
     assert!(all_tiers.contains(&StorageTier::Cold));
     assert!(all_tiers.contains(&StorageTier::Cache));
     assert!(all_tiers.contains(&StorageTier::Archive));
+    Ok(())
 }
 
 /// Test health status comprehensive functionality
 #[test]
-fn test_health_status_comprehensive() {
+async fn test_health_status_comprehensive() -> Result<(), Box<dyn std::error::Error>> {
     let mut health = HealthStatus::default();
 
     // Test default values
@@ -170,11 +173,12 @@ fn test_health_status_comprehensive() {
     assert!(!health.overall_healthy);
     assert_eq!(health.cpu_usage_percent, 75.5);
     assert_eq!(health.memory_usage_percent, 60.2);
+    Ok(())
 }
 
 /// Test system info comprehensive functionality
 #[test]
-fn test_system_info_comprehensive() {
+async fn test_system_info_comprehensive() -> Result<(), Box<dyn std::error::Error>> {
     let system_info = SystemInfo {
         hostname: "production-server".to_string(),
         os_type: "Ubuntu".to_string(),
@@ -202,11 +206,12 @@ fn test_system_info_comprehensive() {
 
     let memory_usage_percent = (used_memory as f64 / system_info.total_memory as f64) * 100.0;
     assert_eq!(memory_usage_percent, 50.0); // 50% memory usage
+    Ok(())
 }
 
 /// Async integration test for timeout functionality
 #[tokio::test]
-async fn test_async_integration_functionality() {
+async fn test_async_integration_functionality() -> Result<(), Box<dyn std::error::Error>> {
     init_test_logging();
 
     let config = MockConfig::new();
@@ -218,19 +223,20 @@ async fn test_async_integration_functionality() {
 
     // Test storage operations
     let test_data = b"integration_test_data";
-    storage.write("integration_key", test_data).await.unwrap();
+    storage.write("integration_key", test_data).await?;
 
-    let retrieved_data = storage.read("integration_key").await.unwrap();
+    let retrieved_data = storage.read("integration_key").await?;
     assert_eq!(retrieved_data, test_data);
 
     // Test cleanup
-    storage.delete("integration_key").await.unwrap();
+    storage.delete("integration_key").await?;
     assert!(!storage.exists("integration_key").await);
+    Ok(())
 }
 
 /// Test comprehensive storage tier operations
 #[test]
-fn test_comprehensive_storage_tier_operations() {
+fn test_comprehensive_storage_tier_operations() -> Result<(), Box<dyn std::error::Error>> {
     let hot_tier = StorageTier::Hot;
     let warm_tier = StorageTier::Warm;
     let cold_tier = StorageTier::Cold;
@@ -251,14 +257,15 @@ fn test_comprehensive_storage_tier_operations() {
     assert_ne!(cache_tier, hot_tier);
 
     // Test tier serialization
-    let hot_json = serde_json::to_string(&hot_tier).unwrap();
-    let deserialized_hot: StorageTier = serde_json::from_str(&hot_json).unwrap();
+    let hot_json = serde_json::to_string(&hot_tier)?;
+    let deserialized_hot: StorageTier = serde_json::from_str(&hot_json)?;
     assert_eq!(hot_tier, deserialized_hot);
+    Ok(())
 }
 
 /// Test comprehensive allocation status workflows
 #[test]
-fn test_comprehensive_allocation_status_workflows() {
+fn test_comprehensive_allocation_status_workflows() -> Result<(), Box<dyn std::error::Error>> {
     // Test allocation lifecycle
     let pending = AllocationStatus::Pending;
     let active = AllocationStatus::Active;
@@ -274,40 +281,20 @@ fn test_comprehensive_allocation_status_workflows() {
     // Test status serialization
     let statuses = vec![pending, active, failed, inactive];
     for status in statuses {
-        let json = serde_json::to_string(&status).unwrap();
-        let deserialized: AllocationStatus = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&status)?;
+        let deserialized: AllocationStatus = serde_json::from_str(&json)?;
         assert_eq!(status, deserialized);
-    }
+    Ok(())
+}
 }
 
 /// Test comprehensive error handling scenarios
 #[test]
-fn test_comprehensive_error_handling_scenarios() {
+fn test_comprehensive_error_handling_scenarios() -> Result<(), Box<dyn std::error::Error>> {
     // Test different error types
-    let internal_error = NestGateError::Internal {
-        message: "Internal server error".to_string(),
-        location: Some("database connection".to_string()),
-        debug_info: Some("user authentication".to_string()),
-        is_bug: false,
-    };
+    let internal_error = NestGateError::internal_error("Internal server error".to_string(), "test_component");
 
-    let validation_error = NestGateError::Validation {
-        field: "email".to_string(),
-        message: "Invalid input data".to_string(),
-        current_value: Some("invalid-email".to_string()),
-        expected: Some("valid email format".to_string()),
-        user_error: true,
-    };
-
-    let config_error = NestGateError::Configuration {
-        message: "Missing configuration".to_string(),
-        config_source: nestgate_core::error::UnifiedConfigSource::Environment,
-        field: Some("DATABASE_URL".to_string()),
-        suggested_fix: Some("Set DATABASE_URL environment variable".to_string()),
-    };
-
-    // Test error display
-    let internal_display = format!("{}", internal_error);
+    let validation_error = NestGateError::validation_error("validation error");
     let validation_display = format!("{}", validation_error);
     let config_display = format!("{}", config_error);
 
@@ -323,11 +310,12 @@ fn test_comprehensive_error_handling_scenarios() {
     assert!(internal_debug.contains("Internal"));
     assert!(validation_debug.contains("Validation"));
     assert!(config_debug.contains("Configuration"));
+    Ok(())
 }
 
 /// Test comprehensive unified enum operations
 #[test]
-fn test_comprehensive_unified_enum_operations() {
+fn test_comprehensive_unified_enum_operations() -> Result<(), Box<dyn std::error::Error>> {
     // Test UnifiedHealthStatus
     let healthy = UnifiedHealthStatus::Healthy;
     let degraded = UnifiedHealthStatus::Degraded;
@@ -357,7 +345,10 @@ fn test_comprehensive_unified_enum_operations() {
                     "States {:?} and {:?} should be different",
                     state1, state2
                 );
+    Ok(())
             }
+    Ok(())
         }
-    }
+    Ok(())
+}
 }

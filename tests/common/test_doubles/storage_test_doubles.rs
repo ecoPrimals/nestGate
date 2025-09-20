@@ -17,6 +17,7 @@ use nestgate_core::types::StorageTier;
 ///
 /// This is a pure test mock that simulates storage operations for testing purposes.
 /// It can be configured to simulate various failure conditions.
+use nestgate_core::canonical_types::StorageTier;
 pub struct StorageTestDouble {
     config: TestDoubleConfig,
     operations: Arc<Mutex<Vec<String>>>,
@@ -53,7 +54,7 @@ impl StorageTestDouble {
 
     /// Get list of operations that were called
     pub fn get_operations(&self) -> Vec<String> {
-        self.operations.lock().unwrap().clone()
+        self.operations.lock()?.clone()
     }
 
     /// Clear operation history
@@ -161,7 +162,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_storage_test_double() {
+    async fn test_storage_test_double() -> Result<(), Box<dyn std::error::Error>> {
         let test_double = StorageTestDouble::new(TestDoubleConfig::default());
 
         let result = test_double.simulate_operation("test_operation").await;
@@ -173,7 +174,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_mock_storage_creation() {
+    async fn test_mock_storage_creation() -> Result<(), Box<dyn std::error::Error>> {
         let mock = MockStorageForTesting::new();
 
         let result = mock.fake_create_pool("test-pool").await;
@@ -184,7 +185,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_simulated_failures() {
+    async fn test_simulated_failures() -> Result<(), Box<dyn std::error::Error>> {
         let mock = MockStorageForTesting::new();
         mock.simulate_failure("create_pool:fail-pool");
 
@@ -195,7 +196,12 @@ mod tests {
             Err(TestStorageError::SimulatedFailure(op)) => {
                 assert_eq!(op, "create_pool:fail-pool");
             }
-            _ => panic!("Expected SimulatedFailure"),
+            _ => {
+                return Err(Box::new(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    "Test assertion failed",
+                )));
+            }
         }
     }
 }

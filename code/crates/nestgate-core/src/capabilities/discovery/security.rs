@@ -1,10 +1,11 @@
+// Removed unused import for pedantic perfection
+// Commented out until available: CapabilityCategory, CapabilityRequest
 /// **SECURITY CAPABILITY DISCOVERY**
 /// Discovery and management of security-related capabilities
 /// Replaces hardcoded security configurations with dynamic discovery
 use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 /// Security capability types that can be discovered
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum SecurityCapabilityType {
@@ -17,7 +18,6 @@ pub enum SecurityCapabilityType {
     AccessControl,
     SecretManagement,
 }
-
 /// Security capability metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityCapabilityInfo {
@@ -27,16 +27,15 @@ pub struct SecurityCapabilityInfo {
     pub supported_operations: Vec<String>,
     pub metadata: HashMap<String, String>,
 }
-
 /// Security capability discovery manager
 #[derive(Debug)]
 pub struct SecurityCapabilityDiscovery {
     discovered_capabilities:
         tokio::sync::RwLock<HashMap<SecurityCapabilityType, SecurityCapabilityInfo>>,
 }
-
 impl SecurityCapabilityDiscovery {
     /// Create new security capability discovery manager
+    #[must_use]
     pub fn new() -> Self {
         Self {
             discovered_capabilities: tokio::sync::RwLock::new(HashMap::new()),
@@ -44,7 +43,14 @@ impl SecurityCapabilityDiscovery {
     }
 
     /// Discover available security capabilities
-    pub async fn discover_capabilities(&self) -> Result<Vec<SecurityCapabilityInfo>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn discover_capabilities(&self) -> Result<Vec<SecurityCapabilityInfo>>  {
         // Dynamic discovery logic - replaces hardcoded security endpoints
         let mut capabilities = Vec::new();
 
@@ -73,10 +79,17 @@ impl SecurityCapabilityDiscovery {
     }
 
     /// Get specific security capability by type
-    pub async fn get_capability(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_capability(
         &self,
         capability_type: &SecurityCapabilityType,
-    ) -> Result<Option<SecurityCapabilityInfo>> {
+    ) -> Result<Option<SecurityCapabilityInfo>>  {
         let cache = self.discovered_capabilities.read().await;
         Ok(cache.get(capability_type).cloned())
     }
@@ -141,11 +154,10 @@ impl Default for SecurityCapabilityDiscovery {
 
 /// Get authentication endpoint for routing compatibility (replaces hardcoded security)
 pub async fn get_auth_endpoint(
-    _adapter: &crate::ecosystem_integration::universal_adapter::UniversalAdapter,
+    _adapter: &crate::universal_adapter::PrimalAgnosticAdapter,
 ) -> Result<String> {
     let discovery = SecurityCapabilityDiscovery::new();
     let capabilities = discovery.discover_capabilities().await?;
-
     // Find authentication capability
     for capability in capabilities {
         if matches!(

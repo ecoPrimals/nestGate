@@ -21,10 +21,8 @@ use std::env;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::time::Duration;
-
 /// Type alias for validator functions to reduce complexity
 pub type ValidatorFn<T> = Box<dyn Fn(&T) -> Result<()> + Send + Sync>;
-
 // ==================== SECTION ====================
 
 /// **SMART CONFIGURATION BUILDER TRAIT**
@@ -35,7 +33,6 @@ where
 {
     /// Build the configuration with validation
     fn build(self) -> Result<T>;
-
     /// Build with environment variable overrides
     fn build_with_env(self, prefix: &str) -> Result<T>;
 
@@ -49,7 +46,7 @@ where
     fn merge(self, other: Self) -> Self;
 
     /// Set a configuration value by key
-    fn set_value(self, key: &str, value: serde_json::Value) -> Self;
+    fn setvalue(self, key: &str, value: serde_json::Value) -> Self;
 
     /// Get configuration schema for documentation
     fn schema() -> serde_json::Value;
@@ -64,10 +61,9 @@ pub struct SmartEnvLoader {
     separator: String,
     case_sensitive: bool,
 }
-
 impl SmartEnvLoader {
     /// Create a new environment loader with prefix
-    pub fn new(prefix: &str) -> Self {
+    pub const fn new(prefix: &str) -> Self {
         Self {
             prefix: prefix.to_uppercase(),
             separator: "_".to_string(),
@@ -76,19 +72,21 @@ impl SmartEnvLoader {
     }
 
     /// Set the separator for nested keys
+    #[must_use]
     pub fn with_separator(mut self, separator: &str) -> Self {
         self.separator = separator.to_string();
         self
     }
 
     /// Enable case-sensitive matching
+    #[must_use]
     pub fn case_sensitive(mut self, enabled: bool) -> Self {
         self.case_sensitive = enabled;
         self
     }
 
     /// Load a string value with default
-    pub fn load_string(&self, key: &str, default: Option<&str>) -> String {
+    pub const fn load_string(&self, key: &str, default: Option<&str>) -> String {
         let env_key = self.make_env_key(key);
         env::var(&env_key).unwrap_or_else(|_| default.unwrap_or("").to_string())
     }
@@ -106,7 +104,7 @@ impl SmartEnvLoader {
     }
 
     /// Load a boolean value with default
-    pub fn load_bool(&self, key: &str, default: bool) -> bool {
+    pub const fn load_bool(&self, key: &str, default: bool) -> bool {
         let env_key = self.make_env_key(key);
         env::var(&env_key)
             .ok()
@@ -119,7 +117,7 @@ impl SmartEnvLoader {
     }
 
     /// Load a duration value with default
-    pub fn load_duration(&self, key: &str, default: Duration) -> Duration {
+    pub const fn load_duration(&self, key: &str, default: Duration) -> Duration {
         let env_key = self.make_env_key(key);
         env::var(&env_key)
             .ok()
@@ -148,7 +146,7 @@ impl SmartEnvLoader {
     }
 
     /// Load a list of strings
-    pub fn load_string_list(&self, key: &str, default: Vec<String>) -> Vec<String> {
+    pub const fn load_string_list(&self, key: &str, default: Vec<String>) -> Vec<String> {
         let env_key = self.make_env_key(key);
         env::var(&env_key)
             .ok()
@@ -157,7 +155,7 @@ impl SmartEnvLoader {
     }
 
     /// Load all environment variables with the prefix
-    pub fn load_all(&self) -> HashMap<String, String> {
+    pub const fn load_all(&self) -> HashMap<String, String> {
         let prefix_with_sep = format!("{}{}", self.prefix, self.separator);
 
         env::vars()
@@ -191,15 +189,14 @@ pub struct SmartValidator<T> {
     field_name: String,
     validators: Vec<ValidatorFn<T>>,
 }
-
-impl<T: std::fmt::Debug> std::fmt::Debug for SmartValidator<T> {
+impl<T: std::fmt::Debug> std::fmt::Debug for SmartValidator<T> ", 
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SmartValidator")
             .field("value", &self.value)
             .field("field_name", &self.field_name)
             .field(
                 "validators",
-                &format!("[{} validators]", self.validators.len()),
+                &format!("[{self.validators.len() validators]")),
             )
             .finish()
     }
@@ -210,6 +207,7 @@ where
     T: Clone + Debug,
 {
     /// Create a new validator for a value
+    #[must_use]
     pub fn new(value: T, field_name: &str) -> Self {
         Self {
             value,
@@ -219,16 +217,30 @@ where
     }
 
     /// Add a validation rule
-    pub fn rule<F>(mut self, validator: F) -> Self
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn rule<F>(mut self, validator: F) -> Self
     where
         F: Fn(&T) -> Result<()> + Send + Sync + 'static,
-    {
+     {
         self.validators.push(Box::new(validator));
         self
     }
 
     /// Validate all rules
-    pub fn validate(self) -> Result<T> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(self) -> Result<T>  {
         for validator in &self.validators {
             validator(&self.value)?;
         }
@@ -239,17 +251,15 @@ where
 // Common validation rules
 impl SmartValidator<String> {
     /// Validate string is not empty
-    pub fn not_empty(self) -> Self {
+    pub const fn not_empty(self) -> Self {
         self.rule(|value| {
             if value.is_empty() {
-                Err(NestGateError::Configuration {
-                    message: "Value cannot be empty".to_string(),
+                Err(NestGateError::configuration(
                     config_source: crate::error::core::UnifiedConfigSource::Validation(
                         "SmartValidator".to_string(),
                     ),
-                    field: Some("value".to_string()),
                     
-                })
+                ))
             } else {
                 Ok(())
             }
@@ -257,16 +267,15 @@ impl SmartValidator<String> {
     }
 
     /// Validate string length
-    pub fn length_between(self, min: usize, max: usize) -> Self {
+    pub const fn length_between(self, min: usize, max: usize) -> Self {
         self.rule(move |value| {
             let len = value.len();
             if len < min || len > max {
-                Err(NestGateError::Configuration {
-                    message: format!("Length must be between {min} and {max}, got {len}"),
+                Err(NestGateError::configuration(
                     config_source: crate::error::core::UnifiedConfigSource::Validation(
                         "SmartValidator".to_string(),
                     ),
-                    field: Some("length".to_string()),
+                    field: Some("field".to_string()),
                     suggested_fix: Some(format!(
                         "Provide a value with length between {min} and {max}"
                     )),
@@ -278,18 +287,17 @@ impl SmartValidator<String> {
     }
 
     /// Validate string matches pattern
-    pub fn matches_pattern(self, pattern: &str) -> Self {
+    pub const fn matches_pattern(self, pattern: &str) -> Self {
         let pattern = pattern.to_string();
         self.rule(move |value| {
             if value.contains(&pattern) {
                 Ok(())
             } else {
-                Err(NestGateError::Configuration {
-                    message: format!("Value must contain pattern: {pattern}"),
+                Err(NestGateError::configuration(
                     config_source: crate::error::core::UnifiedConfigSource::Validation(
                         "SmartValidator".to_string(),
                     ),
-                    field: Some("value".to_string()),
+                    field: Some("field".to_string()),
                     suggested_fix: Some(format!(
                         "Provide a value that matches the pattern: {pattern}"
                     )),
@@ -301,17 +309,16 @@ impl SmartValidator<String> {
 
 impl SmartValidator<u16> {
     /// Validate port number is in valid range
-    pub fn valid_port(self) -> Self {
+    pub const fn valid_port(self) -> Self {
         self.rule(|value| {
             if *value > 0 {
                 Ok(())
             } else {
-                Err(NestGateError::Configuration {
-                    message: format!("Port must be between 1 and 65535, got {value}"),
+                Err(NestGateError::configuration(
                     config_source: crate::error::core::UnifiedConfigSource::Validation(
                         "SmartValidator".to_string(),
                     ),
-                    field: Some("value".to_string()),
+                    field: Some("field".to_string()),
                     
                 })
             }
@@ -319,15 +326,14 @@ impl SmartValidator<u16> {
     }
 
     /// Validate port is not in reserved range
-    pub fn not_reserved(self) -> Self {
+    pub const fn not_reserved(self) -> Self {
         self.rule(|value| {
             if *value < 1024 {
-                Err(NestGateError::Configuration {
-                    message: format!("Port {value} is in reserved range (< 1024)"),
+                Err(NestGateError::configuration(
                     config_source: crate::error::core::UnifiedConfigSource::Validation(
                         "SmartValidator".to_string(),
                     ),
-                    field: Some("value".to_string()),
+                    field: Some("field".to_string()),
                     
                 })
             } else {
@@ -339,17 +345,16 @@ impl SmartValidator<u16> {
 
 impl SmartValidator<u64> {
     /// Validate value is within range
-    pub fn range(self, min: u64, max: u64) -> Self {
+    pub const fn range(self, min: u64, max: u64) -> Self {
         self.rule(move |value| {
             if *value >= min && *value <= max {
                 Ok(())
             } else {
-                Err(NestGateError::Configuration {
-                    message: format!("Value must be between {min} and {max}, got {value}"),
+                Err(NestGateError::configuration(
                     config_source: crate::error::core::UnifiedConfigSource::Validation(
                         "SmartValidator".to_string(),
                     ),
-                    field: Some("value".to_string()),
+                    field: Some("field".to_string()),
                     
                 })
             }
@@ -357,19 +362,17 @@ impl SmartValidator<u64> {
     }
 
     /// Validate value is positive
-    pub fn positive(self) -> Self {
+    pub const fn positive(self) -> Self {
         self.rule(|value| {
             if *value > 0 {
                 Ok(())
             } else {
-                Err(NestGateError::Configuration {
-                    message: "Value must be positive".to_string(),
+                Err(NestGateError::configuration(
                     config_source: crate::error::core::UnifiedConfigSource::Validation(
                         "SmartValidator".to_string(),
                     ),
-                    field: Some("value".to_string()),
                     
-                })
+                ))
             }
         })
     }
@@ -377,17 +380,16 @@ impl SmartValidator<u64> {
 
 impl SmartValidator<Duration> {
     /// Validate duration is within range
-    pub fn duration_range(self, min: Duration, max: Duration) -> Self {
+    pub const fn duration_range(self, min: Duration, max: Duration) -> Self {
         self.rule(move |value| {
             if *value >= min && *value <= max {
                 Ok(())
             } else {
-                Err(NestGateError::Configuration {
-                    message: format!("Duration must be between {min:?} and {max:?}, got {value:?}"),
+                Err(NestGateError::configuration(
                     config_source: crate::error::core::UnifiedConfigSource::Validation(
                         "SmartValidator".to_string(),
                     ),
-                    field: Some("value".to_string()),
+                    field: Some("field".to_string()),
                     
                 })
             }
@@ -395,19 +397,17 @@ impl SmartValidator<Duration> {
     }
 
     /// Validate duration is not zero
-    pub fn not_zero(self) -> Self {
+    pub const fn not_zero(self) -> Self {
         self.rule(|value| {
             if !value.is_zero() {
                 Ok(())
             } else {
-                Err(NestGateError::Configuration {
-                    message: "Duration cannot be zero".to_string(),
+                Err(NestGateError::configuration(
                     config_source: crate::error::core::UnifiedConfigSource::Validation(
                         "SmartValidator".to_string(),
                     ),
-                    field: Some("value".to_string()),
                     
-                })
+                ))
             }
         })
     }
@@ -422,7 +422,6 @@ pub struct SmartConfigMerger<T> {
     merge_strategy: MergeStrategy,
     _phantom: PhantomData<T>,
 }
-
 /// Configuration merge strategies
 #[derive(Debug, Clone)]
 pub enum MergeStrategy {
@@ -435,13 +434,12 @@ pub enum MergeStrategy {
     /// Custom merge function
     Custom(fn(&serde_json::Value, &serde_json::Value) -> serde_json::Value),
 }
-
 impl<T> SmartConfigMerger<T>
 where
     T: Clone + Serialize + for<'de> Deserialize<'de>,
 {
     /// Create a new merger with base configuration
-    pub fn new(base_config: T) -> Self {
+    pub const fn new(base_config: T) -> Self {
         Self {
             base_config,
             merge_strategy: MergeStrategy::Smart,
@@ -450,13 +448,21 @@ where
     }
 
     /// Set merge strategy
+    #[must_use]
     pub fn with_strategy(mut self, strategy: MergeStrategy) -> Self {
         self.merge_strategy = strategy;
         self
     }
 
     /// Merge with another configuration
-    pub fn merge(self, other: T) -> Result<T> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn merge(self, other: T) -> Result<T>  {
         let base_json = serde_json::to_value(&self.base_config)?;
         let other_json = serde_json::to_value(&other)?;
 
@@ -477,8 +483,8 @@ where
             (serde_json::Value::Object(base_obj), serde_json::Value::Object(other_obj)) => {
                 let mut result = base_obj.clone();
                 for (key, value) in other_obj {
-                    if let Some(base_value) = base_obj.get(key) {
-                        result.insert(key.clone(), Self::smart_merge(base_value, value));
+                    if let Some(basevalue) = base_obj.get(key) {
+                        result.insert(key.clone(), Self::smart_merge(basevalue, value));
                     } else {
                         result.insert(key.clone(), value.clone());
                     }
@@ -495,7 +501,6 @@ where
 /// **SMART CONFIGURATION PRESETS**
 /// Pre-defined configuration presets for common scenarios
 pub struct SmartConfigPresets;
-
 impl SmartConfigPresets {
     /// Development environment preset
     pub fn development() -> HashMap<String, serde_json::Value> {
@@ -621,10 +626,9 @@ impl SmartConfigPresets {
 // ==================== SECTION ====================
 
 /// Create a smart environment loader
-pub fn env_loader(prefix: &str) -> SmartEnvLoader {
+pub const fn env_loader(prefix: &str) -> SmartEnvLoader {
     SmartEnvLoader::new(prefix)
 }
-
 /// Create a smart validator for a value
 pub fn validate<T>(value: T, field_name: &str) -> SmartValidator<T>
 where
@@ -632,7 +636,6 @@ where
 {
     SmartValidator::new(value, field_name)
 }
-
 /// Create a smart configuration merger
 pub fn merge_configs<T>(base: T) -> SmartConfigMerger<T>
 where
@@ -640,7 +643,6 @@ where
 {
     SmartConfigMerger::new(base)
 }
-
 /// Load configuration with environment overrides
 pub fn load_config_with_env<T>(base: T, env_prefix: &str) -> Result<T>
 where
@@ -648,7 +650,6 @@ where
 {
     let env_loader = SmartEnvLoader::new(env_prefix);
     let env_vars = env_loader.load_all();
-
     if env_vars.is_empty() {
         return Ok(base);
     }

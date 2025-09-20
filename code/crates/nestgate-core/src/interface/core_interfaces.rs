@@ -1,6 +1,6 @@
-//! Core Interface Definitions
-//!
-//! This module provides the fundamental interface traits and types that form
+// Core Interface Definitions
+//! Core Interfaces functionality and utilities.
+// This module provides the fundamental interface traits and types that form
 //! the foundation of the NestGate interface system.
 
 use crate::Result;
@@ -14,11 +14,9 @@ pub trait ToUnified<T> {
     /// Convert to unified interface type
     fn to_unified(self) -> T;
 }
-
 /// Universal configuration interface
 pub trait UniversalConfigInterface {
     type Config: Clone + Send + Sync;
-
     /// Get current configuration
     fn get_config(&self) -> impl std::future::Future<Output = Result<Self::Config>> + Send;
 
@@ -32,7 +30,6 @@ pub trait UniversalConfigInterface {
 /// Universal event interface
 pub trait UniversalEventInterface {
     type Event: Clone + Send + Sync;
-
     /// Emit an event
     fn emit_event(&self, event: Self::Event) -> impl std::future::Future<Output = Result<()>> + Send;
 
@@ -46,7 +43,6 @@ pub trait UniversalEventInterface {
 pub trait UniversalProviderInterface {
     type Request: Send + Sync;
     type Response: Send + Sync;
-
     /// Process a request
     fn process_request(&self, request: Self::Request) -> impl std::future::Future<Output = Result<Self::Response>> + Send;
 
@@ -67,7 +63,6 @@ pub struct InterfaceMetadata {
     pub capabilities: Vec<String>,
     pub properties: HashMap<String, String>,
 }
-
 /// Universal interface status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum InterfaceStatus {
@@ -76,7 +71,6 @@ pub enum InterfaceStatus {
     Error(String),
     Maintenance,
 }
-
 impl Default for InterfaceStatus {
     fn default() -> Self {
         Self::Active
@@ -89,9 +83,9 @@ impl Default for InterfaceStatus {
 pub struct InterfaceBuilder {
     metadata: InterfaceMetadata,
 }
-
 impl InterfaceBuilder {
     /// Create a new interface builder
+    #[must_use]
     pub fn new(interface_id: String, version: String) -> Self {
         Self {
             metadata: InterfaceMetadata {
@@ -104,19 +98,21 @@ impl InterfaceBuilder {
     }
 
     /// Add capability to interface
+    #[must_use]
     pub fn with_capability(mut self, capability: String) -> Self {
         self.metadata.capabilities.push(capability);
         self
     }
 
     /// Add property to interface
+    #[must_use]
     pub fn with_property(mut self, key: String, value: String) -> Self {
         self.metadata.properties.insert(key, value);
         self
     }
 
     /// Build the interface metadata
-    pub fn build(self) -> InterfaceMetadata {
+    pub const fn build(self) -> InterfaceMetadata {
         self.metadata
     }
 }
@@ -127,9 +123,9 @@ impl InterfaceBuilder {
 pub struct InterfaceRegistry {
     interfaces: HashMap<String, InterfaceMetadata>,
 }
-
 impl InterfaceRegistry {
     /// Create a new interface registry
+    #[must_use]
     pub fn new() -> Self {
         Self {
             interfaces: HashMap::new(),
@@ -137,19 +133,27 @@ impl InterfaceRegistry {
     }
 
     /// Register an interface
-    pub fn register(&mut self, metadata: InterfaceMetadata) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn register(&mut self, metadata: InterfaceMetadata) -> Result<()>  {
         let interface_id = metadata.interface_id.clone();
         self.interfaces.insert(interface_id, metadata);
         Ok(())
     }
 
     /// Get interface metadata
-    pub fn get_interface(&self, interface_id: &str) -> Option<&InterfaceMetadata> {
+    pub const fn get_interface(&self, interface_id: &str) -> Option<&InterfaceMetadata> {
         self.interfaces.get(interface_id)
     }
 
     /// List all registered interfaces
-    pub fn list_interfaces(&self) -> Vec<&InterfaceMetadata> {
+    pub const fn list_interfaces(&self) -> Vec<&InterfaceMetadata> {
         self.interfaces.values().collect()
     }
 }

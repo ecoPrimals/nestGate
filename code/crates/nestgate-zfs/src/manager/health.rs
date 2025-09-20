@@ -3,8 +3,8 @@
 // ZFS health checking, and system monitoring.
 
 use super::types::*;
-use nestgate_core::error::conversions::create_zfs_error;
-use nestgate_core::error::domain_errors::ZfsOperation;
+use crate::command::ZfsOperations;
+use crate::error::{create_zfs_error, ZfsOperation};
 use nestgate_core::Result;
 use std::time::SystemTime;
 // Removed unused tracing import
@@ -15,7 +15,14 @@ use tracing::info;
 
 impl ZfsManager {
     /// Get comprehensive service status including AI and performance metrics
-    pub async fn get_service_status(&self) -> Result<EnhancedServiceStatus> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_service_status(&self) -> Result<EnhancedServiceStatus>  {
         debug!("Getting comprehensive service status");
 
         // Get health status from health monitor - using a simple default for now
@@ -59,7 +66,7 @@ impl ZfsManager {
             .await;
 
         // Get metrics from metrics collector
-        let metrics_snapshot = self.metrics.get_current_metrics().await;
+        let metrics_snapshot = self.metrics.get_current_metrics();
         let metrics = CurrentMetrics {
             operations_per_second: metrics_snapshot.operations_per_second,
             throughput_bytes_per_second: metrics_snapshot.throughput_bytes_per_second,
@@ -78,7 +85,7 @@ impl ZfsManager {
 
         // Get migration status
         let migration_status = MigrationStatus {
-            active_jobs: self.get_active_migration_jobs().await.unwrap_or(0),
+            active_jobs: self.get_active_migration_jobs().unwrap_or(0),
             queued_jobs: 5,
             completed_jobs: 150,
             failed_jobs: 3,
@@ -107,12 +114,26 @@ impl ZfsManager {
     }
 
     /// Get ZFS health status
-    pub async fn get_zfs_health(&self) -> Result<EnhancedServiceStatus> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_zfs_health(&self) -> Result<EnhancedServiceStatus>  {
         self.get_service_status().await
     }
 
     /// Get real health state from ZFS pools
-    pub async fn get_real_health_state(&self) -> Result<HealthState> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_real_health_state(&self) -> Result<HealthState>  {
         use crate::command::ZfsOperations;
 
         let ops = ZfsOperations::new();
@@ -135,7 +156,6 @@ impl ZfsManager {
 
     /// Get real tier utilization from ZFS
     async fn get_real_tier_utilization(&self, tier: &str) -> Result<f64> {
-
         let ops = ZfsOperations::new();
         let datasets = ops
             .list_datasets(None)
@@ -162,7 +182,7 @@ impl ZfsManager {
     }
 
     /// Get active migration jobs count
-    async fn get_active_migration_jobs(&self) -> Result<u32> {
+    fn get_active_migration_jobs(&self) -> Result<u32> {
         // In a real implementation, this would query the migration engine
         // For now, return a count based on system activity
         Ok(1) // Typically 0-2 active jobs
@@ -170,7 +190,6 @@ impl ZfsManager {
 
     /// Get total snapshots count
     async fn get_total_snapshots(&self) -> Result<u32> {
-
         let ops = ZfsOperations::new();
         let snapshots = ops
             .list_snapshots(None)
@@ -181,16 +200,23 @@ impl ZfsManager {
     }
 
     /// Initialize ZFS system
-    pub async fn initialize_system(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn initialize_system(&self) -> Result<()>  {
         // Removed unused tracing import
 
         info!("Initializing ZFS system");
 
         // Verify ZFS is available
-        if !crate::is_zfs_available().await {
+        if !crate::native::is_zfs_available().await {
             return Err(create_zfs_error(
                 "ZFS is not available on this system".to_string(),
-                ZfsOperation::SystemCheck
+                ZfsOperation::SystemCheck,
             ));
         }
 

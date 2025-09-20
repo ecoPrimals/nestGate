@@ -1,11 +1,11 @@
+use crate::canonical_types::ResponseStatus;
 /// Response builder utilities for service responses
 /// Provides convenient builders for common response patterns using canonical types
-
 use crate::response::api_response::ApiResponse;
-use crate::canonical_types::ResponseStatus;
 use std::collections::HashMap;
 
 /// Build a successful service response using canonical types
+#[must_use]
 pub fn build_success_response(
     request_id: String,
     data: serde_json::Value,
@@ -22,8 +22,8 @@ pub fn build_success_response(
         processing_time_ms: 0,
     }
 }
-
 /// Build an error response
+#[must_use]
 pub fn build_error_response(
     request_id: String,
     error_message: String,

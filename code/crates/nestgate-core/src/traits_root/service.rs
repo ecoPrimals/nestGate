@@ -8,7 +8,6 @@
 pub trait Service: Send + Sync {
     /// Service name identifier
     fn name(&self) -> &str;
-
     /// Initialize the service
     fn initialize(&self) -> impl std::future::Future<Output = crate::Result<()>> + Send;
 

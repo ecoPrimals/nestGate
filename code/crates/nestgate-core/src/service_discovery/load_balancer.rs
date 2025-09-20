@@ -1,7 +1,6 @@
 /// Load Balancing for Service Discovery
 /// Load balancing strategies and implementation for distributing requests
 /// across discovered service endpoints.
-
 use super::config::LoadBalancingStrategy;
 use super::types::{HealthStatus, ServiceEndpoint};
 use std::collections::HashMap;
@@ -13,9 +12,9 @@ pub struct LoadBalancer {
     strategy: LoadBalancingStrategy,
     round_robin_counters: Arc<RwLock<HashMap<String, usize>>>,
     }
-
 impl LoadBalancer {
     /// Create a new load balancer
+    #[must_use]
     pub fn new(strategy: LoadBalancingStrategy) -> Self {
         Self {
             strategy,
@@ -24,7 +23,7 @@ impl LoadBalancer {
     }
 
     /// Select an endpoint from available services
-    pub async fn select_endpoint(
+    pub fn select_endpoint(
         &self,
         service_name: &str,
         endpoints: &[ServiceEndpoint],

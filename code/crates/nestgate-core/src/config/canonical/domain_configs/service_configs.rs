@@ -7,7 +7,6 @@ use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
 /// **CANONICAL SERVICE CONFIGURATION**
 /// Replaces: ServiceConfig, DiscoveryConfig, AutomationConfig, LifecycleConfig,
 /// EcosystemConfig, and 10+ other service config structures
@@ -28,7 +27,6 @@ pub struct CanonicalServiceConfig {
     /// Environment-specific overrides
     pub environment_overrides: HashMap<String, serde_json::Value>,
 }
-
 impl CanonicalDomainConfig for CanonicalServiceConfig {
     fn domain() -> &'static str {
         "service"

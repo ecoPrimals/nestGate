@@ -1,7 +1,7 @@
-//! **TRACING MACROS AND UTILITIES**
-//!
-//! Structured logging macros and utility functions.
-//! Extracted from tracing_setup.rs for file size compliance.
+// **TRACING MACROS AND UTILITIES**
+//! Macros functionality and utilities.
+// Structured logging macros and utility functions.
+// Extracted from tracing_setup.rs for file size compliance.
 
 /// Structured logging macros
 #[macro_export]
@@ -41,7 +41,6 @@ macro_rules! log_with_context {
         }
     };
 }
-
 /// Log an error with structured context
 #[macro_export]
 macro_rules! log_error {
@@ -49,7 +48,6 @@ macro_rules! log_error {
         $crate::log_with_context!("error", $context, $msg)
     };
 }
-
 /// Log a warning with structured context
 #[macro_export]
 macro_rules! log_warn {
@@ -57,7 +55,6 @@ macro_rules! log_warn {
         $crate::log_with_context!("warn", $context, $msg)
     };
 }
-
 /// Log info with structured context
 #[macro_export]
 macro_rules! log_info {
@@ -65,7 +62,6 @@ macro_rules! log_info {
         $crate::log_with_context!("info", $context, $msg)
     };
 }
-
 /// Log debug with structured context
 #[macro_export]
 macro_rules! log_debug {

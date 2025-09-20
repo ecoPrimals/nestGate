@@ -1,4 +1,3 @@
-
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -18,10 +17,9 @@ pub struct ConnectionStats {
     /// Number of consecutive failures (resets on success)
     pub consecutive_failures: u32,
 }
-
 impl ConnectionStats {
     /// Create new connection stats
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self::default()
     }
 
@@ -47,15 +45,15 @@ impl ConnectionStats {
     }
 
     /// Get success rate as percentage
-    pub fn success_rate(&self) -> f64 {
+    pub const fn success_rate(&self) -> f64 {
         if self.total_requests == 0 {
             return 100.0;
         }
-        (self.successful_requests as f64 / self.total_requests as f64) * 100.0
+        (self.f64::from(successful_requests) / self.f64::from(total_requests)) * 100.0
     }
 
     /// Check if connection is healthy
-    pub fn is_healthy(&self) -> bool {
+    pub const fn is_healthy(&self) -> bool {
         self.consecutive_failures < 3 && self.success_rate() > 80.0
     }
 }
@@ -66,7 +64,6 @@ pub enum ConnectionError {
     /// Connection timeout occurred
     #[error("Connection timeout: {0}")]
     Timeout(String),
-
     /// Connection was refused by the remote service
     #[error("Connection refused: {0}")]
     Refused(String),

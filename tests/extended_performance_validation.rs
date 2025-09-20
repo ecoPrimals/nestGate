@@ -15,6 +15,7 @@ use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 
 /// Test zero-copy configuration operations performance
+
 #[tokio::test]
 async fn test_zero_copy_config_performance() -> Result<()> {
     println!("🧪 Testing zero-copy configuration performance...");
@@ -226,7 +227,7 @@ async fn test_canonical_scalability() -> Result<()> {
             .take(std::cmp::min(scale, 100))
             .map(|config| {
                 tokio::spawn(async move {
-                    let _serialized = serde_json::to_string(&config).unwrap();
+                    let _serialized = serde_json::to_string(&config)?;
                 })
             })
             .collect();
@@ -244,6 +245,7 @@ async fn test_canonical_scalability() -> Result<()> {
             creation_rate > 1000.0,
             "Should maintain >1000 configs/sec at scale {scale}"
         );
+        Ok(())
     }
 
     println!("✅ Canonical configuration scalability validated");
