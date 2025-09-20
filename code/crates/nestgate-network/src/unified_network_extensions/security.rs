@@ -11,7 +11,6 @@ pub struct NetworkSecuritySettings {
     /// Enable encryption
     pub encryption_enabled: bool,
 }
-
 impl Default for NetworkSecuritySettings {
     fn default() -> Self {
         Self {

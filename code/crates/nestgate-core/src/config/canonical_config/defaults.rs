@@ -8,10 +8,9 @@ use super::*;
 
 impl NestGateCanonicalConfig {
     /// Create a testing configuration preset
-    pub fn testing() -> Self {
+    pub const fn testing() -> Self {
         Self {
             system: SystemConfig {
-                environment: DeploymentEnvironment::Development,
                 log_level: "debug".to_string(),
                 ..SystemConfig::default()
             },
@@ -31,10 +30,9 @@ impl NestGateCanonicalConfig {
     }
 
     /// Create a minimal configuration preset
-    pub fn minimal() -> Self {
+    pub const fn minimal() -> Self {
         Self {
             system: SystemConfig {
-                environment: DeploymentEnvironment::Development,
                 log_level: "warn".to_string(),
                 ..SystemConfig::default()
             },
@@ -49,6 +47,7 @@ impl NestGateCanonicalConfig {
     }
 
     /// Create a high-performance configuration preset
+    #[must_use]
     pub fn high_performance() -> Self {
         let mut config = Self::production();
         
@@ -69,6 +68,7 @@ impl NestGateCanonicalConfig {
     }
 
     /// Create a security-hardened configuration preset
+    #[must_use]
     pub fn security_hardened() -> Self {
         let mut config = Self::production();
         

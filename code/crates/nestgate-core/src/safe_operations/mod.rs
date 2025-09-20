@@ -1,7 +1,6 @@
-/// **UNIFIED**: Use the main Result type from error module
-/// This eliminates duplicate Result type definitions
+// **UNIFIED**: Use the main Result type from error module
+// This eliminates duplicate Result type definitions
 pub use crate::Result;
-
 // **REMOVED**: Deprecated SafeResult<T> type alias eliminated
 // Use unified Result<T> type directly
 
@@ -34,9 +33,9 @@ pub use services::*;
 pub use testing::*;
 pub use threading::*;
 
-/// Safe adapter initialization helper
-/// Handles adapter initialization with proper error handling and logging
-pub async fn safe_adapter_init<T>(init_result: Result<T>, adapter_name: &str) -> Result<Option<T>> {
+// Safe adapter initialization helper
+// Handles adapter initialization with proper error handling and logging
+pub fn safe_adapter_init<T>(init_result: Result<T>, adapter_name: &str) -> Result<Option<T>> {
     match init_result {
         Ok(adapter) => {
             tracing::info!("✅ {} initialized successfully", adapter_name);
@@ -46,6 +45,23 @@ pub async fn safe_adapter_init<T>(init_result: Result<T>, adapter_name: &str) ->
             tracing::warn!("⚠️ {} initialization failed: {}", adapter_name, e);
             // Return None instead of error to allow graceful degradation
             Ok(None)
+        }
+    }
+}
+
+/// Safe connection pool return operation
+///
+/// Wraps connection pool return operations with proper error handling
+/// to prevent panics and provide meaningful error messages.
+pub fn safe_connection_pool_return<T>(
+    result: Result<T>,
+    operation: &str,
+) -> Result<Result<T>> {
+    match result {
+        Ok(value) => Ok(Ok(value)),
+        Err(e) => {
+            tracing::warn!("Connection pool operation '{}' failed: {}", operation, e);
+            Ok(Err(e))
         }
     }
 }

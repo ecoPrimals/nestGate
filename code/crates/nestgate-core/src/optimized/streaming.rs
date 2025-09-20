@@ -39,7 +39,6 @@ pub struct StreamingConfig {
     /// Enable adaptive buffering
     pub adaptive_buffering: bool,
 }
-
 impl Default for StreamingConfig {
     fn default() -> Self {
         Self {
@@ -70,7 +69,6 @@ pub struct AdvancedStreamReader {
     /// Last read timestamp
     last_read: Instant,
 }
-
 /// Advanced streaming writer with backpressure handling
 pub struct AdvancedStreamWriter {
     /// Underlying data sink
@@ -86,7 +84,6 @@ pub struct AdvancedStreamWriter {
     /// Last write timestamp
     last_write: Instant,
 }
-
 /// Streaming performance metrics
 #[derive(Debug, Default)]
 pub struct StreamingMetrics {
@@ -109,10 +106,9 @@ pub struct StreamingMetrics {
     /// Buffer efficiency percentage
     pub buffer_efficiency: f64,
 }
-
 impl AdvancedStreamReader {
     /// Create new advanced stream reader
-    pub fn new(
+    pub const fn new(
         source: Box<dyn AsyncRead + Send + Unpin>,
         config: StreamingConfig,
     ) -> Self {
@@ -127,7 +123,14 @@ impl AdvancedStreamReader {
     }
     
     /// Read next chunk with adaptive sizing
-    pub async fn read_chunk(&mut self) -> Result<Option<AdvancedZeroCopyBuffer<'static>>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn read_chunk(&mut self) -> Result<Option<AdvancedZeroCopyBuffer<'static>>>  {
         let start_time = Instant::now();
         
         // Adaptive chunk size adjustment
@@ -161,7 +164,7 @@ impl AdvancedStreamReader {
             
             let elapsed = start_time.elapsed().as_secs_f64();
             if elapsed > 0.0 {
-                metrics.read_throughput = metrics.bytes_read as f64 / elapsed;
+                metrics.read_throughput = metrics.f64::from(bytes_read) / elapsed;
             }
         }
         
@@ -173,7 +176,7 @@ impl AdvancedStreamReader {
     }
     
     /// Create chunked stream for large data processing
-    pub fn into_chunked_stream(self) -> ChunkedStream {
+    pub const fn into_chunked_stream(self) -> ChunkedStream {
         ChunkedStream::new(self)
     }
     
@@ -211,7 +214,7 @@ impl AdvancedStreamReader {
             }
             Poll::Ready(Err(e)) => Err(NestGateError::internal_error(
                 "Read error",
-                format!("IO error: {}", e)
+                format!("IO error: {e}")
             )),
             Poll::Pending => Ok(0), // Would need proper async handling in real implementation
         }
@@ -220,7 +223,7 @@ impl AdvancedStreamReader {
 
 impl AdvancedStreamWriter {
     /// Create new advanced stream writer
-    pub fn new(
+    pub const fn new(
         sink: Box<dyn AsyncWrite + Send + Unpin>,
         config: StreamingConfig,
     ) -> Self {
@@ -235,7 +238,14 @@ impl AdvancedStreamWriter {
     }
     
     /// Write chunk with backpressure handling
-    pub async fn write_chunk(&mut self, data: AdvancedZeroCopyBuffer<'_>) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn write_chunk(&mut self, data: AdvancedZeroCopyBuffer<'_>) -> Result<()>  {
         let start_time = Instant::now();
         let data_len = data.len();
         
@@ -262,7 +272,7 @@ impl AdvancedStreamWriter {
             
             let elapsed = start_time.elapsed().as_secs_f64();
             if elapsed > 0.0 {
-                metrics.write_throughput = metrics.bytes_written as f64 / elapsed;
+                metrics.write_throughput = metrics.f64::from(bytes_written) / elapsed;
             }
         }
         
@@ -271,12 +281,19 @@ impl AdvancedStreamWriter {
     }
     
     /// Flush all buffered data
-    pub async fn flush(&mut self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn flush(&mut self) -> Result<()>  {
         use tokio::io::AsyncWriteExt;
         self.sink.flush().await
             .map_err(|e| NestGateError::internal_error(
                 "Flush error",
-                format!("IO error: {}", e)
+                format!("IO error: {e}")
             ))
     }
     
@@ -288,7 +305,7 @@ impl AdvancedStreamWriter {
     /// Check if backpressure should be applied
     async fn should_apply_backpressure(&self) -> bool {
         let metrics = self.metrics.read().await;
-        let buffer_usage = self.buffer.len() as f64 / self.config.max_buffer_size as f64;
+        let buffer_usage = self.(buffer.len() as f64) / self.config.f64::from(max_buffer_size);
         buffer_usage > self.config.backpressure_threshold
     }
     
@@ -316,7 +333,7 @@ impl AdvancedStreamWriter {
         self.sink.write_all(data).await
             .map_err(|e| NestGateError::internal_error(
                 "Write error",
-                format!("IO error: {}", e)
+                format!("IO error: {e}")
             ))
     }
 }
@@ -325,10 +342,9 @@ impl AdvancedStreamWriter {
 pub struct ChunkedStream {
     reader: AdvancedStreamReader,
 }
-
 impl ChunkedStream {
     /// Create new chunked stream
-    pub fn new(reader: AdvancedStreamReader) -> Self {
+    pub const fn new(reader: AdvancedStreamReader) -> Self {
         Self { reader }
     }
 }
@@ -348,16 +364,22 @@ impl Stream for ChunkedStream {
 
 /// Streaming compression utilities
 pub struct StreamingCompression;
-
 impl StreamingCompression {
     /// Compress data stream with adaptive compression
-    pub async fn compress_stream<S>(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn compress_stream<S>(
         stream: S,
         config: &StreamingConfig,
     ) -> Result<impl Stream<Item = Result<AdvancedZeroCopyBuffer<'static>>>>
     where
         S: Stream<Item = Result<AdvancedZeroCopyBuffer<'static>>> + Send,
-    {
+     {
         // Simplified implementation - would use actual compression in production
         Ok(stream.map(|chunk| {
             match chunk {
@@ -376,12 +398,19 @@ impl StreamingCompression {
     }
     
     /// Decompress data stream
-    pub async fn decompress_stream<S>(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn decompress_stream<S>(
         stream: S,
     ) -> Result<impl Stream<Item = Result<AdvancedZeroCopyBuffer<'static>>>>
     where
         S: Stream<Item = Result<AdvancedZeroCopyBuffer<'static>>> + Send,
-    {
+     {
         // Simplified implementation - would use actual decompression in production
         Ok(stream.map(|chunk| {
             match chunk {
@@ -398,10 +427,9 @@ impl StreamingCompression {
 
 /// Streaming utilities for common operations
 pub struct StreamingUtils;
-
 impl StreamingUtils {
     /// Create buffered reader with optimal settings
-    pub fn create_buffered_reader(
+    pub const fn create_buffered_reader(
         source: Box<dyn AsyncRead + Send + Unpin>,
         config: Option<StreamingConfig>,
     ) -> AdvancedStreamReader {
@@ -409,7 +437,7 @@ impl StreamingUtils {
     }
     
     /// Create buffered writer with optimal settings
-    pub fn create_buffered_writer(
+    pub const fn create_buffered_writer(
         sink: Box<dyn AsyncWrite + Send + Unpin>,
         config: Option<StreamingConfig>,
     ) -> AdvancedStreamWriter {
@@ -417,14 +445,21 @@ impl StreamingUtils {
     }
     
     /// Copy stream with zero-copy optimization
-    pub async fn copy_stream<R, W>(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn copy_stream<R, W>(
         reader: &mut AdvancedStreamReader,
         writer: &mut AdvancedStreamWriter,
     ) -> Result<u64>
     where
         R: AsyncRead + Send + Unpin,
         W: AsyncWrite + Send + Unpin,
-    {
+     {
         let mut total_bytes = 0u64;
         
         while let Some(chunk) = reader.read_chunk().await? {

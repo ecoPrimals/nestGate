@@ -1,3 +1,18 @@
+// **LOCALHOST HARDCODING DEPRECATION NOTICE**
+//!
+//! ⚠️  DEPRECATION WARNING: This file contains hardcoded localhost patterns
+//! that are being migrated to dynamic endpoint resolution.
+//!
+//! **MIGRATION STATUS**: 🔄 FINAL CLEANUP PHASE
+//! **TARGET**: Replace with environment-driven endpoint resolution
+//! **TIMELINE**: Immediate migration recommended
+//!
+//! **MIGRATION PATTERN**:
+//! ```rust
+//! // OLD: "http://localhost:8080"
+//! // NEW: resolve_service_endpoint("api").await.unwrap_or_else(|_| build_api_url())
+//! ```
+
 //
 // **Comprehensive integration tests for the NestGate main binary**
 //
@@ -37,7 +52,7 @@
 //
 // ```rust
 // #[test]
-// fn test_service_startup_with_valid_config() {
+// fn test_service_startup_with_valid_config() -> Result<(), Box<dyn std::error::Error>> {
 //     let config = create_test_config();
 //     let service = start_nestgate_service(config);
 //     assert!(service.is_healthy());
@@ -45,15 +60,21 @@
 // }
 // ```
 
+use crate::constants::canonical_defaults::network;
+use crate::constants::canonical_defaults::network;
+use crate::constants::canonical_defaults::network;
+use crate::constants::canonical_defaults::network;
+use std::env;
+use std::env;
 use std::process::{Command, Stdio};
 use std::time::Duration;
 
 #[tokio::test]
-async fn test_binary_help_output() {
+async fn test_binary_help_output() -> Result<(), Box<dyn std::error::Error>> {
     let output = Command::new("cargo")
         .args(["run", "--bin", "nestgate", "--", "--help"])
         .output()
-        .unwrap_or_else(|e| {
+        .unwrap_or_else(|_e| {
             tracing::error!(
                 "Expect failed ({}): {:?}",
                 "Failed to execute nestgate binary",
@@ -63,7 +84,7 @@ async fn test_binary_help_output() {
                 std::io::ErrorKind::Other,
                 format!(
                     "Operation failed - {}: {:?}",
-                    "{}", "Failed to execute nestgate binary", e
+                    "Failed to execute nestgate binary", e
                 ),
             )
             .into());
@@ -79,10 +100,11 @@ async fn test_binary_help_output() {
     assert!(stdout.contains("ECOSYSTEM MODE"));
     assert!(stdout.contains("NESTGATE_PORT"));
     assert!(stdout.contains("SONGBIRD_URL"));
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_binary_starts_successfully() {
+async fn test_binary_starts_successfully() -> Result<(), Box<dyn std::error::Error>> {
     // Set test environment variables
     std::env::set_var("NESTGATE_PORT", "0"); // Use random port
     std::env::set_var("NESTGATE_SERVICE_NAME", "test-nestgate");
@@ -92,7 +114,7 @@ async fn test_binary_starts_successfully() {
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .unwrap_or_else(|e| {
+        .unwrap_or_else(|_e| {
             tracing::error!(
                 "Expect failed ({}): {:?}",
                 "Failed to start nestgate binary",
@@ -124,18 +146,20 @@ async fn test_binary_starts_successfully() {
                 std::io::ErrorKind::Other,
                 "Process exited unexpectedly with status: {status}".to_string(),
             )
-            .into())
+            .into());
+            Ok(())
         }
         Ok(None) => {
             // Process is still running, which is good
             println!("✅ Binary started successfully and is running");
+            Ok(())
         }
         Err(e) => {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
                 "Error checking process status: {e}".to_string(),
             )
-            .into())
+            .into());
         }
     }
 
@@ -149,12 +173,12 @@ async fn test_binary_starts_successfully() {
 }
 
 #[tokio::test]
-async fn test_binary_with_invalid_config() {
+async fn test_binary_with_invalid_config() -> Result<(), Box<dyn std::error::Error>> {
     // Test with invalid port - just verify env var handling
     std::env::set_var("NESTGATE_PORT", "invalid_port");
 
     // Test that we can detect invalid configuration without running the binary
-    let port_value = std::env::var("NESTGATE_PORT").map_err(|e| {
+    let portvalue = std::env::var("NESTGATE_PORT").map_err(|_e| {
         tracing::error!(
             "Environment variable '{}' not found: {}",
             "NESTGATE_PORT",
@@ -162,25 +186,26 @@ async fn test_binary_with_invalid_config() {
         );
         std::io::Error::new(
             std::io::ErrorKind::NotFound,
-            format!("Missing environment variable: {}", "NESTGATE_PORT"),
+            format!("Missing environment variable: {}", "actual_error_details"),
         )
     })?;
-    assert_eq!(port_value, "invalid_port");
+    assert_eq!(portvalue, "invalid_port");
 
     // Test port parsing logic
-    let is_valid_port = port_value.parse::<u16>().is_ok();
+    let is_valid_port = portvalue.parse::<u16>().is_ok();
     assert!(!is_valid_port, "Should detect invalid port");
 
     println!("✅ Invalid config detection works correctly");
     std::env::remove_var("NESTGATE_PORT");
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_client_binary_help() {
+async fn test_client_binary_help() -> Result<(), Box<dyn std::error::Error>> {
     let output = Command::new("cargo")
         .args(["run", "--bin", "nestgate-client", "--", "--help"])
         .output()
-        .unwrap_or_else(|e| {
+        .unwrap_or_else(|_e| {
             tracing::error!(
                 "Expect failed ({}): {:?}",
                 "Failed to execute nestgate-client binary",
@@ -200,7 +225,7 @@ async fn test_client_binary_help() {
     let stderr = String::from_utf8_lossy(&output.stderr);
 
     // Check for client-specific content
-    let combined_output = format!("{stdout}{stderr}");
+    let combined_output = format!("{stdout}{}", "actual_error_details");
     assert!(
         combined_output.contains("client")
             || combined_output.contains("Client")
@@ -208,10 +233,11 @@ async fn test_client_binary_help() {
             || output.status.success(),
         "Client binary should provide help or exist"
     );
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_gui_binary_exists() {
+async fn test_gui_binary_exists() -> Result<(), Box<dyn std::error::Error>> {
     // Test that the GUI binary target exists in the project structure
     // This is a lightweight test that doesn't actually run the GUI
 
@@ -221,6 +247,7 @@ async fn test_gui_binary_exists() {
         println!("✅ GUI binary source file exists");
     } else {
         println!("ℹ️ GUI binary source not found at expected location");
+        Ok(())
     }
 
     // Test GUI-related environment variables
@@ -230,38 +257,45 @@ async fn test_gui_binary_exists() {
 
     println!("✅ GUI binary configuration test complete");
     std::env::remove_var("DISPLAY");
+    Ok(())
 }
 
 #[cfg(test)]
 mod cli_tests {
 
     #[test]
-    fn test_environment_variable_parsing() {
+    fn test_environment_variable_parsing() -> Result<(), Box<dyn std::error::Error>> {
         // Test various environment variable combinations
         let test_cases = vec![
             ("NESTGATE_PORT", "8080"),
             ("NESTGATE_SERVICE_NAME", "test-service"),
-            ("SONGBIRD_URL", "http://localhost:8081"),
+            (
+                "SONGBIRD_URL",
+                "http://localhost:".to_string()
+                    + &env::var("NESTGATE_SECURITY_PORT").unwrap_or_else(|_| "8081".to_string()),
+            ),
             ("BEARDOG_URL", "http://localhost:8082"),
         ];
 
         for (key, value) in test_cases {
             std::env::set_var(key, value);
-            let retrieved = std::env::var(key).unwrap_or_else(|e| {
+            let retrieved = std::env::var(key).unwrap_or_else(|_e| {
                 tracing::error!("Unwrap failed: {:?}", e);
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Operation failed: {:?}", e),
+                    format!("Operation failed: {}", "actual_error_details"),
                 )
                 .into());
             });
             assert_eq!(retrieved, value);
             std::env::remove_var(key);
+            Ok(())
         }
+        Ok(())
     }
 
     #[test]
-    fn test_service_name_generation() {
+    fn test_service_name_generation() -> Result<(), Box<dyn std::error::Error>> {
         // Test that service names can be generated if not provided
         std::env::remove_var("NESTGATE_SERVICE_NAME");
 
@@ -269,6 +303,7 @@ mod cli_tests {
         // This is a placeholder for the actual implementation
         let default_prefix = "nestgate";
         assert!(default_prefix.starts_with("nestgate"));
+        Ok(())
     }
 }
 
@@ -276,21 +311,21 @@ mod cli_tests {
 mod configuration_tests {
 
     #[test]
-    fn test_default_configuration_values() {
+    fn test_default_configurationvalues() -> Result<(), Box<dyn std::error::Error>> {
         // Test that default values are reasonable
         let default_port = 8080;
         let default_service_prefix = "nestgate";
 
-        assert!(default_port > 0 && default_port < 65536);
+        assert!(default_port > 0 && default_port < 65_536);
         assert!(!default_service_prefix.is_empty());
+        Ok(())
     }
-
     #[test]
-    fn test_configuration_precedence() {
+    fn test_configuration_precedence() -> Result<(), Box<dyn std::error::Error>> {
         // Test that environment variables override defaults
         std::env::set_var("NESTGATE_PORT", "9090");
 
-        let port = std::env::var("NESTGATE_PORT").map_err(|e| {
+        let port = std::env::var("NESTGATE_PORT").map_err(|_e| {
             tracing::error!(
                 "Environment variable '{}' not found: {}",
                 "NESTGATE_PORT",
@@ -298,12 +333,13 @@ mod configuration_tests {
             );
             std::io::Error::new(
                 std::io::ErrorKind::NotFound,
-                format!("Missing environment variable: {}", "NESTGATE_PORT"),
+                format!("Missing environment variable: {}", "actual_error_details"),
             )
         })?;
         assert_eq!(port, "9090");
 
         std::env::remove_var("NESTGATE_PORT");
+        Ok(())
     }
 }
 
@@ -311,7 +347,7 @@ mod configuration_tests {
 mod integration_mode_tests {
 
     #[test]
-    fn test_standalone_mode_configuration() {
+    fn test_standalone_mode_configuration() -> Result<(), Box<dyn std::error::Error>> {
         // Test standalone mode (no external URLs)
         std::env::remove_var("SONGBIRD_URL");
         std::env::remove_var("BEARDOG_URL");
@@ -320,10 +356,10 @@ mod integration_mode_tests {
         // ✅ SOVEREIGNTY COMPLIANT: Check capability-based environment variables
         assert!(std::env::var("ORCHESTRATION_ENDPOINT").is_err());
         assert!(std::env::var("SECURITY_ENDPOINT").is_err());
+        Ok(())
     }
-
     #[test]
-    fn test_ecosystem_mode_configuration() {
+    fn test_ecosystem_mode_configuration() -> Result<(), Box<dyn std::error::Error>> {
         // ✅ SOVEREIGNTY COMPLIANT: Test capability-based configuration
         std::env::set_var(
             "ORCHESTRATION_ENDPOINT",
@@ -344,7 +380,7 @@ mod integration_mode_tests {
         );
 
         assert_eq!(
-            std::env::var("ORCHESTRATION_ENDPOINT").map_err(|e| {
+            std::env::var("ORCHESTRATION_ENDPOINT").map_err(|_e| {
                 tracing::error!(
                     "Environment variable '{}' not found: {}",
                     "ORCHESTRATION_ENDPOINT",
@@ -352,7 +388,7 @@ mod integration_mode_tests {
                 );
                 std::io::Error::new(
                     std::io::ErrorKind::NotFound,
-                    format!("Missing environment variable: {}", "ORCHESTRATION_ENDPOINT"),
+                    format!("Missing environment variable: {}", "actual_error_details"),
                 )
             })?,
             format!(
@@ -362,7 +398,7 @@ mod integration_mode_tests {
             )
         );
         assert_eq!(
-            std::env::var("SECURITY_ENDPOINT").map_err(|e| {
+            std::env::var("SECURITY_ENDPOINT").map_err(|_e| {
                 tracing::error!(
                     "Environment variable '{}' not found: {}",
                     "SECURITY_ENDPOINT",
@@ -370,7 +406,7 @@ mod integration_mode_tests {
                 );
                 std::io::Error::new(
                     std::io::ErrorKind::NotFound,
-                    format!("Missing environment variable: {}", "SECURITY_ENDPOINT"),
+                    format!("Missing environment variable: {}", "actual_error_details"),
                 )
             })?,
             format!(

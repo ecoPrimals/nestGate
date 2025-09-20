@@ -18,7 +18,6 @@ pub struct SecurityConfig {
     /// Security policies
     pub policies: SecurityPoliciesConfig,
 }
-
 /// Authentication configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthenticationConfig {
@@ -29,7 +28,6 @@ pub struct AuthenticationConfig {
     /// Enable multi-factor authentication
     pub enable_mfa: bool,
 }
-
 /// Authorization configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthorizationConfig {
@@ -38,7 +36,6 @@ pub struct AuthorizationConfig {
     /// Default permissions
     pub default_permissions: Vec<String>,
 }
-
 /// Encryption configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptionConfig {
@@ -47,7 +44,6 @@ pub struct EncryptionConfig {
     /// Key size
     pub key_size: u32,
 }
-
 /// Security policies configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
@@ -57,7 +53,6 @@ pub struct SecurityPoliciesConfig {
     /// Session policy
     pub session_policy: SessionPolicyConfig,
 }
-
 /// Password policy configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PasswordPolicyConfig {
@@ -68,7 +63,6 @@ pub struct PasswordPolicyConfig {
     /// Require numbers
     pub require_numbers: bool,
 }
-
 /// Session policy configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionPolicyConfig {
@@ -77,7 +71,6 @@ pub struct SessionPolicyConfig {
     /// Maximum concurrent sessions
     pub max_concurrent: u32,
 }
-
 
 impl Default for AuthenticationConfig {
     fn default() -> Self {

@@ -2,7 +2,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
 // ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -26,8 +25,7 @@ pub struct MiddlewarePerformanceSettings {
     /// Memory optimization
     pub memory_optimization: MemoryOptimizationSettings,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreadPoolSettings {
     /// Minimum threads
     pub min_threads: usize,
@@ -40,8 +38,7 @@ pub struct ThreadPoolSettings {
     /// Work stealing enabled
     pub work_stealing: bool,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemorySettings {
     /// Maximum memory usage (bytes)
     pub max_memory: Option<usize>,
@@ -52,8 +49,7 @@ pub struct MemorySettings {
     /// Memory pressure threshold
     pub pressure_threshold: f64,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CachingSettings {
     /// Enable caching
     pub enabled: bool,
@@ -66,16 +62,14 @@ pub struct CachingSettings {
     /// Cache eviction policy
     pub eviction_policy: EvictionPolicy,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CacheBackend {
     Memory,
     Redis,
     Database,
     Custom(String),
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EvictionPolicy {
     Lru,
     Lfu,
@@ -83,8 +77,7 @@ pub enum EvictionPolicy {
     Random,
     Custom(String),
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionPoolingSettings {
     /// Enable connection pooling
     pub enabled: bool,
@@ -99,8 +92,7 @@ pub struct ConnectionPoolingSettings {
     /// Pool validation
     pub validate_connections: bool,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RequestOptimizationSettings {
     /// Enable request compression
     pub compression: CompressionSettings,
@@ -111,8 +103,7 @@ pub struct RequestOptimizationSettings {
     /// Request batching
     pub batching: BatchingSettings,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompressionSettings {
     /// Enable compression
     pub enabled: bool,
@@ -123,8 +114,7 @@ pub struct CompressionSettings {
     /// Minimum size for compression
     pub min_size: usize,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CompressionAlgorithm {
     Gzip,
     Deflate,
@@ -132,8 +122,7 @@ pub enum CompressionAlgorithm {
     Zstd,
     Custom(String),
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SizeLimits {
     /// Maximum request body size
     pub max_body_size: usize,
@@ -142,8 +131,7 @@ pub struct SizeLimits {
     /// Maximum number of headers
     pub max_headers: usize,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BatchingSettings {
     /// Enable request batching
     pub enabled: bool,
@@ -152,8 +140,7 @@ pub struct BatchingSettings {
     /// Batch timeout
     pub batch_timeout: Duration,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResponseOptimizationSettings {
     /// Response caching
     pub caching: ResponseCachingSettings,
@@ -162,8 +149,7 @@ pub struct ResponseOptimizationSettings {
     /// Response compression
     pub compression: CompressionSettings,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResponseCachingSettings {
     /// Enable response caching
     pub enabled: bool,
@@ -172,8 +158,7 @@ pub struct ResponseCachingSettings {
     /// Default cache TTL
     pub default_ttl: Duration,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheRule {
     /// Path pattern
     pub pattern: String,
@@ -182,16 +167,14 @@ pub struct CacheRule {
     /// Cache key strategy
     pub key_strategy: CacheKeyStrategy,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CacheKeyStrategy {
     Url,
     UrlWithQuery,
     UrlWithHeaders,
     Custom(String),
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StreamingSettings {
     /// Enable streaming
     pub enabled: bool,
@@ -200,8 +183,7 @@ pub struct StreamingSettings {
     /// Streaming threshold
     pub threshold: usize,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MemoryOptimizationSettings {
     /// Enable memory optimization
     pub enabled: bool,
@@ -228,8 +210,7 @@ pub struct MiddlewareObservabilitySettings {
     /// Alert configuration
     pub alerting: AlertingSettings,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoggingSettings {
     /// Log level
     pub level: LogLevel,
@@ -240,8 +221,7 @@ pub struct LoggingSettings {
     /// Request logging
     pub request_logging: RequestLoggingSettings,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LogLevel {
     Trace,
     Debug,
@@ -249,15 +229,13 @@ pub enum LogLevel {
     Warn,
     Error,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LogFormat {
     Json,
     Text,
     Custom(String),
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LogDestination {
     Stdout,
     Stderr,
@@ -265,8 +243,7 @@ pub enum LogDestination {
     Syslog,
     Custom(String),
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RequestLoggingSettings {
     /// Enable request logging
     pub enabled: bool,
@@ -279,8 +256,7 @@ pub struct RequestLoggingSettings {
     /// Log response body
     pub log_response_body: bool,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricsSettings {
     /// Enable metrics collection
     pub enabled: bool,
@@ -291,16 +267,14 @@ pub struct MetricsSettings {
     /// Collection interval
     pub interval: Duration,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MetricsBackend {
     Prometheus,
     StatsD,
     InfluxDB,
     Custom(String),
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TracingSettings {
     /// Enable distributed tracing
     pub enabled: bool,
@@ -309,16 +283,14 @@ pub struct TracingSettings {
     /// Sampling rate
     pub sampling_rate: f64,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TracingBackend {
     Jaeger,
     Zipkin,
     OpenTelemetry,
     Custom(String),
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthMonitoringSettings {
     /// Enable health monitoring
     pub enabled: bool,
@@ -327,8 +299,7 @@ pub struct HealthMonitoringSettings {
     /// Health endpoints
     pub endpoints: Vec<HealthEndpoint>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthEndpoint {
     /// Endpoint name
     pub name: String,
@@ -337,8 +308,7 @@ pub struct HealthEndpoint {
     /// Check timeout
     pub timeout: Duration,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AlertingSettings {
     /// Enable alerting
     pub enabled: bool,
@@ -347,8 +317,7 @@ pub struct AlertingSettings {
     /// Alert destinations
     pub destinations: Vec<AlertDestination>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertRule {
     /// Rule name
     pub name: String,
@@ -357,16 +326,14 @@ pub struct AlertRule {
     /// Alert severity
     pub severity: AlertSeverity,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AlertSeverity {
     Low,
     Medium,
     High,
     Critical,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AlertDestination {
     Email(String),
     Slack(String),
@@ -377,8 +344,7 @@ pub enum AlertDestination {
 // ==================== SECTION ====================
 
 impl Default for MiddlewarePerformanceSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             thread_pool: ThreadPoolSettings::default(),
             memory: MemorySettings::default(),
             caching: CachingSettings::default(),
@@ -388,222 +354,187 @@ impl Default for MiddlewarePerformanceSettings {
             worker_threads: num_cpus::get(),
             queue_capacity: 1000,
             memory_optimization: MemoryOptimizationSettings::default(),
-        }
-    }
+         }
 }
 
 impl MiddlewarePerformanceSettings {
     /// Development performance settings
-    pub fn development() -> Self {
-        Self {
+    pub const fn development() -> Self { Self {
             worker_threads: 2,
             queue_capacity: 100,
             caching: CachingSettings {
                 enabled: false, // Disabled for development
                 ..Default::default()
-            },
-            connection_pooling: ConnectionPoolingSettings {
+            , connection_pooling: ConnectionPoolingSettings {
                 enabled: true,
                 min_connections: 1,
                 max_connections: 10,
                 ..Default::default()
-            },
+             }
             memory_optimization: MemoryOptimizationSettings {
                 enabled: false, // Disabled for easier debugging
                 ..Default::default()
-            },
+            }
             ..Default::default()
         }
     }
 
     /// Production performance settings
-    pub fn production() -> Self {
-        Self {
+    pub const fn production() -> Self { Self {
             worker_threads: num_cpus::get() * 2,
-            queue_capacity: 10000,
+            queue_capacity: 10_000,
             caching: CachingSettings {
                 enabled: true,
-                max_size: 10000,
+                max_size: 10_000,
                 default_ttl: Duration::from_secs(300),
                 ..Default::default()
-            },
-            connection_pooling: ConnectionPoolingSettings {
+            , connection_pooling: ConnectionPoolingSettings {
                 enabled: true,
                 min_connections: 10,
                 max_connections: 100,
                 ..Default::default()
-            },
+             }
             memory_optimization: MemoryOptimizationSettings {
                 enabled: true,
                 object_pooling: true,
                 string_interning: true,
                 ..Default::default()
-            },
+            }
             ..Default::default()
         }
     }
 }
 
 impl Default for ThreadPoolSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             min_threads: 1,
             max_threads: num_cpus::get(),
             idle_timeout: Duration::from_secs(60),
             stack_size: None,
             work_stealing: true,
-        }
-    }
+         }
 }
 
 impl Default for MemorySettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             max_memory: None,
             pool_size: 1024,
             gc_interval: Duration::from_secs(30),
             pressure_threshold: 0.8,
-        }
-    }
+         }
 }
 
 impl Default for CachingSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enabled: false,
             backend: CacheBackend::Memory,
             default_ttl: Duration::from_secs(3600),
             max_size: 1000,
             eviction_policy: EvictionPolicy::Lru,
-        }
-    }
+         }
 }
 
 impl Default for ConnectionPoolingSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enabled: true,
             min_connections: 5,
             max_connections: 50,
             connection_timeout: Duration::from_secs(30),
             idle_timeout: Duration::from_secs(300),
             validate_connections: true,
-        }
-    }
+         }
 }
 
 impl Default for RequestOptimizationSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             compression: CompressionSettings::default(),
             timeout: Duration::from_secs(30),
             size_limits: SizeLimits::default(),
             batching: BatchingSettings::default(),
-        }
-    }
+         }
 }
 
 impl Default for CompressionSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enabled: false,
             algorithm: CompressionAlgorithm::Gzip,
             level: 6,
             min_size: 1024,
-        }
-    }
+         }
 }
 
 impl Default for SizeLimits {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             max_body_size: 1024 * 1024 * 10, // 10MB
             max_header_size: 8192,           // 8KB
             max_headers: 100,
-        }
-    }
+         }
 }
 
 impl Default for BatchingSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enabled: false,
             batch_size: 10,
             batch_timeout: Duration::from_millis(100),
-        }
-    }
+         }
 }
 
 impl Default for ResponseCachingSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enabled: false,
             cache_rules: Vec::new(),
             default_ttl: Duration::from_secs(300),
-        }
-    }
+         }
 }
 
 impl Default for StreamingSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enabled: false,
             buffer_size: 8192,
             threshold: 1024 * 1024, // 1MB
-        }
-    }
+         }
 }
 
 impl Default for LoggingSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             level: LogLevel::Info,
             format: LogFormat::Json,
             destination: LogDestination::Stdout,
             request_logging: RequestLoggingSettings::default(),
-        }
-    }
+         }
 }
 
 impl Default for RequestLoggingSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enabled: true,
             log_headers: false,
             log_body: false,
             log_response_headers: false,
             log_response_body: false,
-        }
-    }
+         }
 }
 
 impl Default for MetricsSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enabled: false,
             backend: MetricsBackend::Prometheus,
             prefix: "nestgate_middleware".to_string(),
             interval: Duration::from_secs(60),
-        }
-    }
+         }
 }
 
 impl Default for TracingSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enabled: false,
             backend: TracingBackend::Jaeger,
             sampling_rate: 0.1,
-        }
-    }
+         }
 }
 
 impl Default for HealthMonitoringSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enabled: false,
             check_interval: Duration::from_secs(30),
             endpoints: Vec::new(),
-        }
-    }
+         }
 }

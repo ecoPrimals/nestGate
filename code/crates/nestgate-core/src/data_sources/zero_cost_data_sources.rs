@@ -6,7 +6,6 @@ use std::collections::HashMap;
 
 use crate::{Result};
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
 use tokio::fs;
 use tokio::io::{AsyncReadExt, AsyncSeekExt};
 
@@ -18,7 +17,6 @@ pub trait ZeroCostDataCapability {
     type Config: Clone + Send + Sync;
     type Stream: ZeroCostDataStream;
     type Error: Into<NestGateError>;
-
     /// Get the capability name at compile time
     const CAPABILITY_NAME: &'static str;
 
@@ -40,7 +38,6 @@ pub trait ZeroCostDataCapability {
 pub trait ZeroCostDataStream {
     type Item: Send + Sync;
     type Error: Into<NestGateError>;
-
     /// Read data from the stream
     async fn read(&mut self, buffer: &mut [u8]) -> std::result::Result<usize, Self::Error>;
 
@@ -62,7 +59,6 @@ pub struct DataConfig {
     pub retry_attempts: u32,
     pub headers: std::collections::HashMap<String, String>,
 }
-
 impl Default for DataConfig {
     fn default() -> Self {
         Self {
@@ -83,7 +79,6 @@ pub struct StreamMetadata {
     pub encoding: Option<String>,
     pub last_modified: Option<std::time::SystemTime>,
 }
-
 // ==================== SECTION ====================
 
 /// HTTP data provider with zero-cost abstractions
@@ -91,14 +86,12 @@ pub struct HttpDataProvider {
     client: reqwest::Client,
     base_url: String,
 }
-
 /// HTTP data stream
 pub struct HttpDataStream {
     response: Option<reqwest::Response>,
     metadata: StreamMetadata,
     position: u64,
 }
-
 /// HTTP data errors
 #[derive(Debug, thiserror::Error)]
 pub enum HttpDataError {
@@ -109,20 +102,14 @@ pub enum HttpDataError {
     #[error("Stream error: {0}")]
     StreamError(String),
 }
-
 impl From<HttpDataError> for NestGateError {
     fn from(error: HttpDataError) -> Self {
-        NestGateError::Internal {
-            message: error.to_string(),
-            location: Some("HttpDataError conversion".to_string()),
-            context: None,
-            is_bug: false,
-        }
+        NestGateError::internal_error(
     }
 }
 
 impl HttpDataProvider {
-    pub fn new(base_url: String) -> Self {
+    pub const fn new(base_url: String) -> Self {
         Self {
             client: reqwest::Client::new(),
             base_url,
@@ -230,16 +217,13 @@ impl ZeroCostDataStream for HttpDataStream {
 
 /// File data provider with zero-cost abstractions
 pub struct FileDataProvider {
-    base_path: PathBuf,
 }
-
 /// File data stream
 pub struct FileDataStream {
     file: Option<tokio::fs::File>,
     metadata: StreamMetadata,
     position: u64,
 }
-
 /// File data errors
 #[derive(Debug, thiserror::Error)]
 pub enum FileDataError {
@@ -252,22 +236,14 @@ pub enum FileDataError {
     #[error("Permission denied: {0}")]
     PermissionDenied(String),
 }
-
 impl From<FileDataError> for NestGateError {
     fn from(error: FileDataError) -> Self {
-        NestGateError::Internal {
-            message: error.to_string(),
-            location: Some("FileDataError conversion".to_string()),
-            context: None,
-            is_bug: false,
-        }
+        NestGateError::internal_error(
     }
 }
 
 impl FileDataProvider {
-    pub fn new<P: AsRef<Path>>(base_path: P) -> Self {
         Self {
-            base_path: base_path.as_ref().to_path_buf(),
         }
     }
 }
@@ -294,7 +270,7 @@ impl ZeroCostDataCapability for FileDataProvider {
             } else {
                 FileDataError::IoError(e)
             }
-        })?;
+        )?;
 
         let file = fs::File::open(&file_path).await.map_err(|e| {
             if e.kind() == std::io::ErrorKind::PermissionDenied {
@@ -302,7 +278,7 @@ impl ZeroCostDataCapability for FileDataProvider {
             } else {
                 FileDataError::IoError(e)
             }
-        })?;
+        )?;
 
         // Determine content type from file extension
         let content_type = file_path
@@ -393,25 +369,34 @@ pub struct ZeroCostDataManager<T: ZeroCostDataCapability> {
     provider: T,
     config: T::Config,
 }
-
 impl<T: ZeroCostDataCapability> ZeroCostDataManager<T> {
-    pub fn new(provider: T, config: T::Config) -> Result<Self> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub const fn new(provider: T, config: T::Config) -> Result<Self>  {
         T::validate_config(&config).map_err(|e| e.into())?;
         Ok(Self { provider, config })
     }
 
-    pub async fn create_stream(&self) -> Result<T::Stream> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn create_stream(&self) -> Result<T::Stream>  {
         self.provider
             .create_stream(self.config.clone())
             .await
             .map_err(|e| e.into())
     }
 
-    pub fn capability_name() -> &'static str {
+    pub const fn capability_name() -> &'static str {
         T::CAPABILITY_NAME
     }
 
-    pub fn supported_formats() -> &'static [&'static str] {
+    pub const fn supported_formats() -> &'static [&'static str] {
         T::supported_formats()
     }
 }
@@ -420,22 +405,34 @@ impl<T: ZeroCostDataCapability> ZeroCostDataManager<T> {
 
 /// Zero-cost data factory for compile-time provider selection
 pub struct ZeroCostDataFactory;
-
 impl ZeroCostDataFactory {
     /// Create HTTP data manager
-    pub fn create_http_manager(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn create_http_manager(
         base_url: String,
         config: DataConfig,
-    ) -> Result<ZeroCostDataManager<HttpDataProvider>> {
+    ) -> Result<ZeroCostDataManager<HttpDataProvider>>  {
         let provider = HttpDataProvider::new(base_url);
         ZeroCostDataManager::new(provider, config)
     }
 
     /// Create file data manager
-    pub fn create_file_manager<P: AsRef<Path>>(
-        base_path: P,
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_file_manager<P: AsRef<Path>>(
         config: DataConfig,
-    ) -> Result<ZeroCostDataManager<FileDataProvider>> {
+    ) -> Result<ZeroCostDataManager<FileDataProvider>>  {
         let provider = FileDataProvider::new(base_path);
         ZeroCostDataManager::new(provider, config)
     }

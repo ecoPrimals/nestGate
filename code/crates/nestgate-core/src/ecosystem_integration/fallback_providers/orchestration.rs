@@ -1,10 +1,10 @@
-//! Orchestration Fallback Provider
-//! Local service coordination when external orchestration primals are unavailable
+// Orchestration Fallback Provider
+// Local service coordination when external orchestration primals are unavailable
 
 use std::collections::HashMap;
 use tracing::debug;
 
-use crate::ecosystem_integration::mock_router::{FallbackProvider, MockRoutingError};
+use crate::ecosystem_integration::capability_router::{FallbackProvider, CapabilityRoutingError};
 
 #[derive(Debug, Clone)]
 pub struct OrchestrationFallbackConfig {
@@ -33,11 +33,11 @@ pub struct OrchestrationFallbackProvider {
 }
 
 impl OrchestrationFallbackProvider {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self::with_config(OrchestrationFallbackConfig::default())
     }
 
-    pub fn with_config(config: OrchestrationFallbackConfig) -> Self {
+    pub const fn with_config(config: OrchestrationFallbackConfig) -> Self {
         Self { _config: config }
     }
 
@@ -45,13 +45,13 @@ impl OrchestrationFallbackProvider {
     async fn register_service_fallback(
         &self,
         params: serde_json::Value,
-    ) -> Result<serde_json::Value, MockRoutingError> {
+    ) -> Result<serde_json::Value, CapabilityRoutingError> {
         debug!("🔄 Orchestration fallback: Local service registration");
 
         let service_name = params
             .get("name")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| MockRoutingError::FallbackError("Missing service name".to_string()))?;
+            .ok_or_else(|| CapabilityRoutingError::FallbackError("Missing service name".to_string()))?;
 
         debug!(
             "📝 Registered service locally: {} (will sync when orchestration becomes available)",
@@ -60,7 +60,7 @@ impl OrchestrationFallbackProvider {
 
         Ok(serde_json::json!({
             "success": true,
-            "service_id": format!("local_{}", uuid::Uuid::new_v4()),
+            "service_id": format!("local_{uuid::Uuid::new_v4(}")),
             "status": "registered_locally",
             "message": "Service registered locally - will sync when orchestration becomes available",
             "provider": "orchestration_fallback"
@@ -71,7 +71,7 @@ impl OrchestrationFallbackProvider {
     async fn discover_services_fallback(
         &self,
         params: serde_json::Value,
-    ) -> Result<serde_json::Value, MockRoutingError> {
+    ) -> Result<serde_json::Value, CapabilityRoutingError> {
         debug!("🔄 Orchestration fallback: Local service discovery");
 
         let service_type = params
@@ -84,7 +84,7 @@ impl OrchestrationFallbackProvider {
             "success": true,
             "services": [],
             "count": 0,
-            "message": format!("No local services found for type: {}", service_type),
+            "message": format!("No local services found for type: {service_type}"),
             "provider": "orchestration_fallback"
         }))
     }
@@ -93,7 +93,7 @@ impl OrchestrationFallbackProvider {
     async fn coordinate_workflow_fallback(
         &self,
         params: serde_json::Value,
-    ) -> Result<serde_json::Value, MockRoutingError> {
+    ) -> Result<serde_json::Value, CapabilityRoutingError> {
         debug!("🔄 Orchestration fallback: Local workflow coordination");
 
         let workflow_id = params
@@ -115,12 +115,12 @@ impl OrchestrationFallbackProvider {
         &self,
         operation: &str,
         _params: &str,
-    ) -> Result<String, MockRoutingError> {
+    ) -> Result<String, CapabilityRoutingError> {
         match operation {
             "deploy_service" => Ok("Service deployment initiated".to_string()),
             "scale_service" => Ok("Service scaling completed".to_string()),
             "health_check" => Ok("All services healthy".to_string()),
-            _ => Err(MockRoutingError::FallbackError(format!(
+            _ => Err(CapabilityRoutingError::FallbackError(format!(
                 "Unsupported orchestration operation: {operation}"
             ))),
         }
@@ -132,13 +132,13 @@ impl FallbackProvider for OrchestrationFallbackProvider {
         &self,
         operation: &str,
         params: serde_json::Value,
-    ) -> Result<serde_json::Value, MockRoutingError> {
+    ) -> Result<serde_json::Value, CapabilityRoutingError> {
         match operation {
             "register_service" => self.register_service_fallback(params).await,
             "discover_services" => self.discover_services_fallback(params).await,
             "coordinate_workflow" => self.coordinate_workflow_fallback(params).await,
-            _ => Err(MockRoutingError::FallbackError(format!(
-                "Unsupported orchestration operation: {operation}"
+            _ => Err(CapabilityRoutingError::FallbackError(format!(
+                "Unsupported fallback operation: {operation}"
             ))),
         }
     }

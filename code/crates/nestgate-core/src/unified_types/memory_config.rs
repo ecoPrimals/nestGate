@@ -4,7 +4,6 @@
 /// Split from unified_types/mod.rs for better maintainability and 2000-line compliance.
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
 // ==================== SECTION ====================
 
 /// Unified Memory Configuration - consolidates all memory management settings
@@ -23,7 +22,6 @@ pub struct UnifiedMemoryConfig {
     /// Memory monitoring
     pub monitoring: MemoryMonitoringConfig,
 }
-
 impl Default for UnifiedMemoryConfig {
     fn default() -> Self {
         Self {
@@ -55,7 +53,6 @@ pub struct MemoryPoolConfig {
     /// Pool types configuration
     pub pools: Vec<PoolTypeConfig>,
 }
-
 impl Default for MemoryPoolConfig {
     fn default() -> Self {
         Self {
@@ -100,7 +97,6 @@ pub struct PoolTypeConfig {
     /// Maximum number of blocks
     pub max_blocks: u32,
 }
-
 /// Types of memory pools
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum PoolType {
@@ -113,7 +109,6 @@ pub enum PoolType {
     /// Custom pool type
     Custom(String),
 }
-
 // ==================== SECTION ====================
 
 /// Memory allocation strategy
@@ -130,7 +125,6 @@ pub struct AllocationStrategy {
     /// Allocation tracking
     pub tracking: AllocationTracking,
 }
-
 impl Default for AllocationStrategy {
     fn default() -> Self {
         Self {
@@ -157,7 +151,6 @@ pub enum AllocationMethod {
     /// Custom allocation method
     Custom(String),
 }
-
 /// Allocation tracking configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AllocationTracking {
@@ -170,7 +163,6 @@ pub struct AllocationTracking {
     /// Maximum tracked allocations
     pub max_tracked: u32,
 }
-
 impl Default for AllocationTracking {
     fn default() -> Self {
         Self {
@@ -198,7 +190,6 @@ pub struct MemoryLimits {
     /// Out-of-memory handling
     pub oom_handling: OomHandling,
 }
-
 impl Default for MemoryLimits {
     fn default() -> Self {
         Self {
@@ -223,7 +214,6 @@ pub struct MemoryPressureThresholds {
     /// Critical pressure threshold (percentage)
     pub critical_threshold: f64,
 }
-
 impl Default for MemoryPressureThresholds {
     fn default() -> Self {
         Self {
@@ -245,7 +235,6 @@ pub struct OomHandling {
     /// Recovery actions
     pub recovery_actions: Vec<RecoveryAction>,
 }
-
 impl Default for OomHandling {
     fn default() -> Self {
         Self {
@@ -272,7 +261,6 @@ pub enum OomStrategy {
     /// Custom OOM handling
     Custom(String),
 }
-
 /// Recovery actions for memory pressure
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum RecoveryAction {
@@ -287,7 +275,6 @@ pub enum RecoveryAction {
     /// Custom recovery action
     Custom(String),
 }
-
 // ==================== SECTION ====================
 
 /// Garbage collection configuration
@@ -302,7 +289,6 @@ pub struct GarbageCollectionConfig {
     /// GC tuning parameters
     pub tuning: GcTuning,
 }
-
 impl Default for GarbageCollectionConfig {
     fn default() -> Self {
         Self {
@@ -328,7 +314,6 @@ pub enum GcStrategy {
     /// Custom GC strategy
     Custom(String),
 }
-
 /// Garbage collection trigger conditions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GcTriggers {
@@ -341,7 +326,6 @@ pub struct GcTriggers {
     /// Pressure-based triggering
     pub pressure_based: bool,
 }
-
 impl Default for GcTriggers {
     fn default() -> Self {
         Self {
@@ -365,7 +349,6 @@ pub struct GcTuning {
     /// GC logging
     pub logging: GcLogging,
 }
-
 impl Default for GcTuning {
     fn default() -> Self {
         Self {
@@ -389,7 +372,6 @@ pub struct HeapSizing {
     /// Heap shrink threshold
     pub shrink_threshold: f64,
 }
-
 impl Default for HeapSizing {
     fn default() -> Self {
         Self {
@@ -413,7 +395,6 @@ pub struct GcLogging {
     /// Log file path
     pub log_file: Option<String>,
 }
-
 // ==================== SECTION ====================
 
 /// Memory monitoring configuration
@@ -430,7 +411,6 @@ pub struct MemoryMonitoringConfig {
     /// Alert thresholds
     pub alerts: MemoryAlerts,
 }
-
 impl Default for MemoryMonitoringConfig {
     fn default() -> Self {
         Self {
@@ -471,7 +451,6 @@ pub enum MemoryMetric {
     /// Custom memory metric
     Custom(String),
 }
-
 /// Memory profiling configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryProfiling {
@@ -484,9 +463,7 @@ pub struct MemoryProfiling {
     /// Profile output format
     pub output_format: ProfileFormat,
     /// Profile output path
-    pub output_path: String,
 }
-
 impl Default for MemoryProfiling {
     fn default() -> Self {
         Self {
@@ -494,7 +471,6 @@ impl Default for MemoryProfiling {
             mode: ProfilingMode::Sampling,
             sample_rate: 0.01, // 1% sampling
             output_format: ProfileFormat::Pprof,
-            output_path: "/tmp/memory_profile".to_string(),
         }
     }
 }
@@ -509,7 +485,6 @@ pub enum ProfilingMode {
     /// Hybrid profiling
     Hybrid,
 }
-
 /// Profile output formats
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ProfileFormat {
@@ -520,7 +495,6 @@ pub enum ProfileFormat {
     /// Custom format
     Custom(String),
 }
-
 /// Memory alert configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryAlerts {
@@ -531,7 +505,6 @@ pub struct MemoryAlerts {
     /// Alert cooldown period
     pub cooldown: Duration,
 }
-
 impl Default for MemoryAlerts {
     fn default() -> Self {
         Self {
@@ -567,7 +540,6 @@ pub struct MemoryAlertRule {
     /// Duration condition must be true
     pub duration: Duration,
 }
-
 /// Memory alert conditions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AlertCondition {
@@ -582,7 +554,6 @@ pub enum AlertCondition {
     /// Custom alert condition
     Custom(String),
 }
-
 /// Alert severity levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum AlertSeverity {

@@ -26,7 +26,6 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
 use uuid::Uuid;
-
 // ==================== SECTION ====================
 
 /// **SMART SERVICE FACTORY**
@@ -36,9 +35,9 @@ pub struct SmartServiceFactory {
     service_registry: Arc<RwLock<HashMap<String, ServiceMetadata>>>,
     default_config: ServiceFactoryConfig,
 }
-
 impl SmartServiceFactory {
     /// Create a new smart service factory
+    #[must_use]
     pub fn new() -> Self {
         Self {
             service_registry: Arc::new(RwLock::new(HashMap::new())),
@@ -47,13 +46,20 @@ impl SmartServiceFactory {
     }
 
     /// Create a service with intelligent defaults
-    pub async fn create_service<T>(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_service<T>(
         &self,
         service_type: UnifiedServiceType,
     ) -> Result<Box<dyn SmartService>>
     where
         T: SmartService + 'static,
-    {
+     {
         let service_id = Uuid::new_v4().to_string();
         let metadata = ServiceMetadata {
             service_id: service_id.clone(),
@@ -77,12 +83,19 @@ impl SmartServiceFactory {
     }
 
     /// Create a mock service for testing
-    pub async fn create_mock_service(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_mock_service(
         &self,
         service_type: UnifiedServiceType,
         behavior: MockServiceBehavior,
-    ) -> Result<Box<dyn SmartService>> {
-        let service_id = format!("mock-{}", Uuid::new_v4());
+    ) -> Result<Box<dyn SmartService>>  {
+        let service_id = format!("mock-{Uuid::new_v4(}"));
         let metadata = ServiceMetadata {
             service_id: service_id.clone(),
             service_type,
@@ -149,7 +162,7 @@ impl SmartServiceFactory {
         );
         endpoints.insert(
             "metrics".to_string(),
-            format!("http://localhost:{}/metrics", base_port + 1),
+            format!("http://localhost:{base_port + 1}/metrics"),
         );
         endpoints.insert(
             "api".to_string(),
@@ -203,7 +216,6 @@ impl Default for SmartServiceFactory {
 pub trait SmartService: Send + Sync {
     /// Get service metadata
     fn metadata(&self) -> &ServiceMetadata;
-
     /// Start the service with intelligent initialization
     fn start(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
 
@@ -213,11 +225,11 @@ pub trait SmartService: Send + Sync {
     /// Get current health status
     fn health_check(&self) -> impl std::future::Future<Output = Result<UnifiedHealthStatus>> + Send;
 
-    /// Handle service requests with intelligent routing
-    async fn handle_request(
+    /// Handle service requests with intelligent routing - **NATIVE ASYNC**: Zero-cost request handling
+    fn handle_request(
         &self,
         request: UniversalServiceRequest,
-    ) -> Result<UniversalServiceResponse>;
+    ) -> impl std::future::Future<Output = Result<UniversalServiceResponse>> + Send;
 
     /// Get service metrics
     fn get_metrics(&self) -> impl std::future::Future<Output = Result<ServiceMetrics>> + Send;
@@ -242,7 +254,6 @@ pub struct ServiceMetadata {
     pub endpoints: HashMap<String, String>,
     pub configuration: HashMap<String, String>,
 }
-
 /// Service factory configuration
 #[derive(Debug, Clone)]
 pub struct ServiceFactoryConfig {
@@ -252,7 +263,6 @@ pub struct ServiceFactoryConfig {
     pub enable_metrics: bool,
     pub enable_tracing: bool,
 }
-
 impl Default for ServiceFactoryConfig {
     fn default() -> Self {
         Self {
@@ -277,7 +287,6 @@ pub struct ServiceMetrics {
     pub cpu_usage_percent: f64,
     pub custom_metrics: HashMap<String, f64>,
 }
-
 impl Default for ServiceMetrics {
     fn default() -> Self {
         Self {
@@ -304,9 +313,8 @@ pub struct SmartServiceWrapper {
     metrics: ServiceMetrics,
     start_time: Option<SystemTime>,
 }
-
 impl SmartServiceWrapper {
-    pub fn new(metadata: ServiceMetadata, config: ServiceFactoryConfig) -> Self {
+    pub const fn new(metadata: ServiceMetadata, config: ServiceFactoryConfig) -> Self {
         Self {
             metadata,
             config,
@@ -370,47 +378,45 @@ impl SmartService for SmartServiceWrapper {
         }
     }
 
-    async fn handle_request(
+    fn handle_request(
         &self,
         request: UniversalServiceRequest,
-    ) -> Result<UniversalServiceResponse> {
-        let start_time = std::time::Instant::now();
+    ) -> impl std::future::Future<Output = Result<UniversalServiceResponse>> + Send {
+        async move {
+            let start_time = std::time::Instant::now();
 
-        // Intelligent request routing based on operation
-        let response_data = match request.operation.as_str() {
-            "ping" => Some(serde_json::json!({"pong": true})),
-            "status" => Some(serde_json::json!({
-                "service_id": self.metadata.service_id,
-                "state": format!("{:?}", self.state),
-                "uptime_seconds": self.get_uptime_seconds(),
-            })),
-            "capabilities" => Some(serde_json::json!({
-                "capabilities": self.metadata.capabilities
-            })),
-            _ => None,
-        };
+            // Intelligent request routing based on service type
+            let response_data = match self.metadata.service_type {
+                UnifiedServiceType::Storage => {
+                    Some(b"Storage service response".to_vec())
+                }
+                UnifiedServiceType::Network => {
+                    Some(b"Network service response".to_vec())
+                }
+                UnifiedServiceType::Security => {
+                    Some(b"Security service response".to_vec())
+                }
+                _ => None,
+            };
 
-        let response = UniversalServiceResponse {
-            request_id: request.request_id,
-            status: if response_data.is_some() {
-                crate::traits::UniversalResponseStatus::Success
-            } else {
-                crate::traits::UniversalResponseStatus::NotSupported
-            },
-            data: response_data,
-            error: None,
-            metadata: {
-                let mut meta = HashMap::new();
-                meta.insert("service_id".to_string(), self.metadata.service_id.clone());
-                meta.insert(
-                    "response_time_ms".to_string(),
-                    start_time.elapsed().as_millis().to_string(),
-                );
-                meta
-            },
-        };
+            // Update metrics
+            let processing_time = start_time.elapsed().as_millis() as u64;
+            // Note: In a real implementation, you'd update metrics atomically
 
-        Ok(response)
+            let response = UniversalServiceResponse {
+                request_id: request.request_id,
+                service_id: self.metadata.service_id.clone(),
+                status: if response_data.is_some() {
+                    crate::traits::UniversalResponseStatus::Success
+                } else {
+                    crate::traits::UniversalResponseStatus::NotSupported
+                },
+                data: response_data,
+                error: None,
+            };
+
+            Ok(response)
+        }
     }
 
     async fn get_metrics(&self) -> Result<ServiceMetrics> {
@@ -453,6 +459,7 @@ impl SmartServiceWrapper {
 // ==================== SECTION ====================
 
 /// Mock service behavior configuration
+#[cfg(test)]
 #[derive(Debug, Clone)]
 pub struct MockServiceBehavior {
     pub response_delay: Duration,
@@ -460,7 +467,7 @@ pub struct MockServiceBehavior {
     pub custom_responses: HashMap<String, serde_json::Value>,
     pub health_status: UnifiedHealthStatus,
 }
-
+#[cfg(test)]
 impl Default for MockServiceBehavior {
     fn default() -> Self {
         Self {
@@ -473,6 +480,7 @@ impl Default for MockServiceBehavior {
 }
 
 /// Mock smart service for testing
+#[cfg(test)]
 pub struct MockSmartService {
     metadata: ServiceMetadata,
     behavior: MockServiceBehavior,
@@ -480,9 +488,8 @@ pub struct MockSmartService {
     metrics: ServiceMetrics,
     start_time: Option<SystemTime>,
 }
-
 impl MockSmartService {
-    pub fn new(metadata: ServiceMetadata, behavior: MockServiceBehavior) -> Self {
+    pub const fn new(metadata: ServiceMetadata, behavior: MockServiceBehavior) -> Self {
         Self {
             metadata,
             behavior,
@@ -513,43 +520,41 @@ impl SmartService for MockSmartService {
         Ok(self.behavior.health_status.clone())
     }
 
-    async fn handle_request(
+    fn handle_request(
         &self,
         request: UniversalServiceRequest,
-    ) -> Result<UniversalServiceResponse> {
-        // Simulate response delay
-        tokio::time::sleep(self.behavior.response_delay).await;
+    ) -> impl std::future::Future<Output = Result<UniversalServiceResponse>> + Send {
+        let behavior = self.behavior.clone();
+        async move {
+            // Simulate response delay
+            tokio::time::sleep(behavior.response_delay).await;
 
-        // Simulate failures
-        if self.behavior.failure_rate > 0.0 && rand::random::<f64>() < self.behavior.failure_rate {
-            return Ok(UniversalServiceResponse {
+            // Simulate failures
+            if behavior.failure_rate > 0.0 && rand::random::<f64>() < behavior.failure_rate {
+                return Ok(UniversalServiceResponse {
+                    request_id: request.request_id,
+                    service_id: "mock-service".to_string(),
+                    status: crate::traits::UniversalResponseStatus::Error,
+                    data: None,
+                    error: Some("Simulated failure".to_string()),
+                );
+            }
+
+            // Check for custom responses
+            let response_data = behavior
+                .custom_responses
+                .get(&request.operation)
+                .cloned()
+                .or_else(|| Some(b"Mock response".to_vec()));
+
+            Ok(UniversalServiceResponse {
                 request_id: request.request_id,
-                status: crate::traits::UniversalResponseStatus::Error,
-                data: None,
-                error: Some("Simulated failure".to_string()),
-                metadata: HashMap::new(),
-            });
+                service_id: "mock-service".to_string(),
+                status: crate::traits::UniversalResponseStatus::Success,
+                data: response_data,
+                error: None,
+            })
         }
-
-        // Check for custom responses
-        let response_data = self
-            .behavior
-            .custom_responses
-            .get(&request.operation)
-            .cloned()
-            .or_else(|| Some(serde_json::json!({"mock": true, "operation": request.operation})));
-
-        Ok(UniversalServiceResponse {
-            request_id: request.request_id,
-            status: crate::traits::UniversalResponseStatus::Success,
-            data: response_data,
-            error: None,
-            metadata: {
-                let mut meta = HashMap::new();
-                meta.insert("mock_service".to_string(), "true".to_string());
-                meta
-            },
-        })
     }
 
     async fn get_metrics(&self) -> Result<ServiceMetrics> {
@@ -573,7 +578,6 @@ pub struct SmartServiceDiscovery {
     services: Arc<RwLock<HashMap<String, ServiceRegistration>>>,
     health_monitor: Arc<RwLock<HashMap<String, HealthRecord>>>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceRegistration {
     pub service_id: String,
@@ -593,6 +597,7 @@ pub struct HealthRecord {
 }
 
 impl SmartServiceDiscovery {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             services: Arc::new(RwLock::new(HashMap::new())),
@@ -601,7 +606,15 @@ impl SmartServiceDiscovery {
     }
 
     /// Register a service with intelligent defaults
-    pub async fn register_service(&self, service: &dyn SmartService) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn register_service(&self, service: &dyn SmartService) -> Result<()>  {
         let metadata = service.metadata();
         let registration = ServiceRegistration {
             service_id: metadata.service_id.clone(),
@@ -674,7 +687,14 @@ impl SmartServiceDiscovery {
     }
 
     /// Start health monitoring background task
-    pub async fn start_health_monitoring(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn start_health_monitoring(&self) -> Result<()>  {
         let services = self.services.clone();
         let health_monitor = self.health_monitor.clone();
 
@@ -708,7 +728,7 @@ impl SmartServiceDiscovery {
                     }
                 }
             }
-        });
+        );
 
         Ok(())
     }
@@ -723,10 +743,9 @@ impl Default for SmartServiceDiscovery {
 // ==================== SECTION ====================
 
 /// Create a smart service factory with default configuration
-pub fn create_service_factory() -> SmartServiceFactory {
+pub const fn create_service_factory() -> SmartServiceFactory {
     SmartServiceFactory::new()
 }
-
 /// Create a mock service with default behavior
 pub async fn create_mock_service(
     service_type: UnifiedServiceType,
@@ -736,8 +755,7 @@ pub async fn create_mock_service(
         .create_mock_service(service_type, MockServiceBehavior::default())
         .await
 }
-
 /// Create a service discovery system
-pub fn create_service_discovery() -> SmartServiceDiscovery {
+pub const fn create_service_discovery() -> SmartServiceDiscovery {
     SmartServiceDiscovery::new()
 }

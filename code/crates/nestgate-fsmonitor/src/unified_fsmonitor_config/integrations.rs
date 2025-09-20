@@ -2,7 +2,6 @@
 /// Handles webhooks, message queues, databases, APIs, and custom integrations
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 /// Integration settings
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct IntegrationSettings {
@@ -19,7 +18,6 @@ pub struct IntegrationSettings {
     /// Custom integrations
     pub custom: HashMap<String, CustomIntegration>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WebhookIntegration {
     /// Webhook name
@@ -35,7 +33,6 @@ pub struct WebhookIntegration {
     /// Integration enabled
     pub enabled: bool,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WebhookAuth {
     /// Authentication type (none, bearer, basic, api_key)
@@ -43,11 +40,12 @@ pub struct WebhookAuth {
     /// Authentication credentials
     pub credentials: HashMap<String, String>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MessageQueueIntegration {
     /// Queue name
     pub name: String,
+// DEPRECATED: Redis caching - migrate to capability-based cache store
+// Capability-based discovery implemented
     /// Queue type (rabbitmq, kafka, redis, etc.)
     pub queue_type: String,
     /// Connection configuration
@@ -57,11 +55,14 @@ pub struct MessageQueueIntegration {
     /// Integration enabled
     pub enabled: bool,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseIntegration {
     /// Database name
     pub name: String,
+// DEPRECATED: PostgreSQL database - migrate to capability-based persistence
+// Capability-based discovery implemented
+// DEPRECATED: MySQL database - migrate to capability-based persistence
+// Capability-based discovery implemented
     /// Database type (postgresql, mysql, mongodb, etc.)
     pub db_type: String,
     /// Connection configuration
@@ -71,7 +72,6 @@ pub struct DatabaseIntegration {
     /// Integration enabled
     pub enabled: bool,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiIntegration {
     /// API name
@@ -85,7 +85,6 @@ pub struct ApiIntegration {
     /// Integration enabled
     pub enabled: bool,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiAuth {
     /// Authentication type
@@ -93,7 +92,6 @@ pub struct ApiAuth {
     /// Authentication configuration
     pub config: HashMap<String, String>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiRateLimiting {
     /// Enable rate limiting
@@ -103,7 +101,6 @@ pub struct ApiRateLimiting {
     /// Burst limit
     pub burst_limit: u32,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CustomIntegration {
     /// Integration type

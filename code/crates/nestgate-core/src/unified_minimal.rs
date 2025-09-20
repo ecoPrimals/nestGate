@@ -1,14 +1,13 @@
-//! **MINIMAL UNIFIED SYSTEM**
-//!
-//! This module provides a minimal, working unified system that compiles cleanly
+// **MINIMAL UNIFIED SYSTEM**
+//! Unified Minimal functionality and utilities.
+// This module provides a minimal, working unified system that compiles cleanly
 //! and serves as the foundation for gradual migration from legacy systems.
-//!
-//! **STRATEGY**: Start with a working minimal system, then gradually expand
+//! Unified Minimal functionality and utilities.
+// **STRATEGY**: Start with a working minimal system, then gradually expand
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::IpAddr;
-use std::path::PathBuf;
 use std::time::Duration;
 
 // ==================== SECTION ====================
@@ -23,7 +22,6 @@ pub struct MinimalUnifiedConfig {
     /// Storage settings
     pub storage: MinimalStorageConfig,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MinimalSystemConfig {
     /// Instance name
@@ -68,7 +66,6 @@ pub enum MinimalUnifiedError {
     /// General error
     General { message: String },
 }
-
 impl std::fmt::Display for MinimalUnifiedError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -84,7 +81,6 @@ impl std::error::Error for MinimalUnifiedError {}
 
 /// Minimal unified result type
 pub type MinimalResult<T> = std::result::Result<T, MinimalUnifiedError>;
-
 // ==================== SECTION ====================
 
 impl Default for MinimalUnifiedConfig {
@@ -140,42 +136,36 @@ pub trait MinimalService: Send + Sync {
     /// Shutdown the service
     async fn shutdown(&self) -> MinimalResult<()>;
 }
-
 /// Minimal storage trait that compiles
 pub trait MinimalStorage: Send + Sync {
     /// Read data
-    async fn read(&self, path: &str) -> MinimalResult<Vec<u8>>;
     
     /// Write data
-    async fn write(&self, path: &str, data: &[u8]) -> MinimalResult<()>;
     
     /// Delete data
-    async fn delete(&self, path: &str) -> MinimalResult<()>;
 }
-
 // ==================== SECTION ====================
 
 impl MinimalUnifiedConfig {
     /// Validate configuration
-    pub fn validate(&self) -> MinimalResult<()> {
+    pub const fn validate(&self) -> MinimalResult<()> {
         if self.system.instance_name.is_empty() {
             return Err(MinimalUnifiedError::Config {
                 message: "Instance name cannot be empty".to_string(),
-            });
+            );
         }
         Ok(())
     }
 
     /// Load from file
-    pub fn from_file(path: &PathBuf) -> MinimalResult<Self> {
         let content = std::fs::read_to_string(path)
             .map_err(|e| MinimalUnifiedError::Config {
-                message: format!("Cannot read config file: {}", e),
-            })?;
+                message: format!("Cannot read config file: {e}"),
+            )?;
 
         toml::from_str(&content)
             .map_err(|e| MinimalUnifiedError::Config {
-                message: format!("Invalid TOML: {}", e),
+                message: format!("Invalid TOML: {e}"),
             })
     }
 }
@@ -186,10 +176,9 @@ impl MinimalUnifiedConfig {
 pub struct MigrationBridge {
     pub minimal_config: MinimalUnifiedConfig,
 }
-
 impl MigrationBridge {
     /// Create from legacy configuration
-    pub fn from_legacy(legacy_config: &str) -> MinimalResult<Self> {
+    pub const fn from_legacy(legacy_config: &str) -> MinimalResult<Self> {
         // Simple migration logic
         Ok(Self {
             minimal_config: MinimalUnifiedConfig::default(),
@@ -197,7 +186,7 @@ impl MigrationBridge {
     }
 
     /// Convert to full unified config when ready
-    pub fn to_full_unified(&self) -> MinimalResult<String> {
+    pub const fn to_full_unified(&self) -> MinimalResult<String> {
         // Placeholder for future full conversion
         Ok("Full unified config conversion pending".to_string())
     }

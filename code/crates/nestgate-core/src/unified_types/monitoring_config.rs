@@ -6,7 +6,6 @@ use std::collections::HashMap;
 use crate::idiomatic_evolution::{SmartDefault, SafeResultExt};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
 // ==================== SECTION ====================
 
 /// Unified Monitoring Configuration - consolidates all monitoring settings
@@ -21,7 +20,6 @@ pub struct UnifiedMonitoringConfig {
     pub collection_interval_seconds: u64,
     pub retention_days: u32,
 }
-
 impl SmartDefault for UnifiedMonitoringConfig {
     fn smart_default() -> Self {
         // Can use derive(Default) since all fields implement Default
@@ -53,7 +51,6 @@ pub struct MetricsConfig {
     /// Enable high-cardinality metrics
     pub high_cardinality: bool,
 }
-
 impl Default for MetricsConfig {
     fn default() -> Self {
         Self {
@@ -82,7 +79,6 @@ pub enum MetricsFormat {
     /// Custom format
     Custom(String),
 }
-
 /// Custom metric definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CustomMetric {
@@ -97,7 +93,6 @@ pub struct CustomMetric {
     /// Collection function or query
     pub collection_source: String,
 }
-
 /// Types of metrics
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum MetricType {
@@ -110,7 +105,6 @@ pub enum MetricType {
     /// Summary metric (quantiles)
     Summary,
 }
-
 // ==================== SECTION ====================
 
 /// Logging configuration
@@ -131,7 +125,6 @@ pub struct LoggingConfig {
     /// Log filtering rules
     pub filters: Vec<LogFilter>,
 }
-
 impl Default for LoggingConfig {
     fn default() -> Self {
         Self {
@@ -168,7 +161,6 @@ pub enum LogLevel {
     /// Error level (least verbose)
     Error,
 }
-
 /// Log formats
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum LogFormat {
@@ -181,7 +173,6 @@ pub enum LogFormat {
     /// Custom format
     Custom(String),
 }
-
 /// Log output destinations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LogOutput {
@@ -198,7 +189,6 @@ pub enum LogOutput {
     /// Database output
     Database(String),
 }
-
 /// Log rotation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogRotationConfig {
@@ -213,7 +203,6 @@ pub struct LogRotationConfig {
     /// Compress rotated files
     pub compress: bool,
 }
-
 impl Default for LogRotationConfig {
     fn default() -> Self {
         Self {
@@ -240,7 +229,6 @@ pub enum RotationSchedule {
     /// No scheduled rotation (size-based only)
     None,
 }
-
 /// Log filtering rule
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogFilter {
@@ -249,13 +237,11 @@ pub struct LogFilter {
     /// Field to filter on
     pub field: String,
     /// Filter operation
-    pub operation: FilterOperation,
     /// Filter value
     pub value: String,
     /// Action to take when filter matches
     pub action: FilterAction,
 }
-
 /// Filter operations
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum FilterOperation {
@@ -270,7 +256,6 @@ pub enum FilterOperation {
     /// Less than (for numeric values)
     LessThan,
 }
-
 /// Filter actions
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum FilterAction {
@@ -283,7 +268,6 @@ pub enum FilterAction {
     /// Add additional fields
     AddFields(std::collections::HashMap<String, String>),
 }
-
 // ==================== SECTION ====================
 
 /// Distributed tracing configuration
@@ -302,7 +286,6 @@ pub struct TracingConfig {
     /// Trace retention period
     pub retention_period: Duration,
 }
-
 impl Default for TracingConfig {
     fn default() -> Self {
         Self {
@@ -330,7 +313,6 @@ pub enum TracingBackend {
     /// Custom backend
     Custom(String),
 }
-
 /// Trace sampling configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SamplingConfig {
@@ -341,7 +323,6 @@ pub struct SamplingConfig {
     /// Per-operation sampling rules
     pub per_operation_rules: Vec<OperationSamplingRule>,
 }
-
 impl Default for SamplingConfig {
     fn default() -> Self {
         Self {
@@ -366,7 +347,6 @@ pub enum SamplingStrategy {
     /// Adaptive sampling
     Adaptive,
 }
-
 /// Per-operation sampling rule
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OperationSamplingRule {
@@ -379,7 +359,6 @@ pub struct OperationSamplingRule {
     /// Maximum traces per second
     pub max_traces_per_second: Option<u32>,
 }
-
 // ==================== SECTION ====================
 
 /// Alerting configuration
@@ -396,7 +375,6 @@ pub struct AlertingConfig {
     /// Alert routing rules
     pub routing_rules: Vec<AlertRoutingRule>,
 }
-
 impl Default for AlertingConfig {
     fn default() -> Self {
         Self {
@@ -429,7 +407,6 @@ pub struct AlertRule {
     /// Custom annotations for this alert
     pub annotations: std::collections::HashMap<String, String>,
 }
-
 /// Alert severity levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum AlertSeverity {
@@ -444,7 +421,6 @@ pub enum AlertSeverity {
     /// Informational alerts
     Info,
 }
-
 /// Notification channel configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NotificationChannel {
@@ -457,7 +433,6 @@ pub struct NotificationChannel {
     /// Enable this channel
     pub enabled: bool,
 }
-
 /// Notification channel types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ChannelType {
@@ -474,7 +449,6 @@ pub enum ChannelType {
     /// Custom notification channel
     Custom(String),
 }
-
 /// Alert grouping configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertGroupingConfig {
@@ -489,7 +463,6 @@ pub struct AlertGroupingConfig {
     /// Repeat interval for ongoing alerts
     pub repeat_interval: Duration,
 }
-
 impl Default for AlertGroupingConfig {
     fn default() -> Self {
         Self {
@@ -514,18 +487,15 @@ pub struct AlertRoutingRule {
     /// Continue processing other rules
     pub continue_processing: bool,
 }
-
 /// Alert matcher for routing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertMatcher {
     /// Label name to match
     pub label: String,
     /// Match operation
-    pub operation: MatchOperation,
     /// Value to match against
     pub value: String,
 }
-
 /// Match operations for alert routing
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum MatchOperation {
@@ -538,7 +508,6 @@ pub enum MatchOperation {
     /// Not regex match
     NotRegex,
 }
-
 // ==================== SECTION ====================
 
 /// Dashboard configuration
@@ -555,7 +524,6 @@ pub struct DashboardConfig {
     /// Dashboard access configuration
     pub access: DashboardAccessConfig,
 }
-
 impl Default for DashboardConfig {
     fn default() -> Self {
         Self {
@@ -578,7 +546,6 @@ pub enum DashboardProvider {
     /// Custom dashboard provider
     Custom(String),
 }
-
 /// Dashboard definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Dashboard {
@@ -593,7 +560,6 @@ pub struct Dashboard {
     /// Dashboard variables
     pub variables: std::collections::HashMap<String, String>,
 }
-
 /// Dashboard panel definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DashboardPanel {
@@ -608,7 +574,6 @@ pub struct DashboardPanel {
     /// Panel-specific configuration
     pub config: std::collections::HashMap<String, serde_json::Value>,
 }
-
 /// Dashboard panel types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum PanelType {
@@ -625,7 +590,6 @@ pub enum PanelType {
     /// Custom panel type
     Custom(String),
 }
-
 /// Panel layout configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PanelLayout {
@@ -638,7 +602,6 @@ pub struct PanelLayout {
     /// Height
     pub height: u32,
 }
-
 /// Dashboard access configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DashboardAccessConfig {
@@ -651,7 +614,6 @@ pub struct DashboardAccessConfig {
     /// Dashboard sharing settings
     pub sharing: DashboardSharingConfig,
 }
-
 impl Default for DashboardAccessConfig {
     fn default() -> Self {
         Self {
@@ -675,7 +637,6 @@ pub struct DashboardSharingConfig {
     /// Allow anonymous access to shared links
     pub allow_anonymous: bool,
 }
-
 impl Default for DashboardSharingConfig {
     fn default() -> Self {
         Self {

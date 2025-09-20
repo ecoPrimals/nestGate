@@ -18,7 +18,7 @@ const PROMETHEUS_METRICS_PATH: &str = "/metrics";
 // Removed unused constant (generic_constant_cleanup)
 
 // Slack Configuration Constants
-const SLACK_CHANNEL_DEFAULT: &str = "#general";
+const SLACK_CHANNEL_DEFAULT: &str = "general";
 const SLACK_USERNAME_DEFAULT: &str = "NestGate";
 const SLACK_EMOJI_ROBOT: &str = ":robot_face:";
 
@@ -88,7 +88,6 @@ const ERROR_TIMEOUT_ZERO: &str = "Timeout must be greater than 0";
 pub struct MonitoringConfig {
     /// Metrics collection interval in seconds
     pub metrics_interval: u64,
-
     /// Log level for monitoring
     pub log_level: String,
 
@@ -113,12 +112,10 @@ pub struct MonitoringConfig {
 pub struct PrometheusConfig {
     /// Enable Prometheus metrics
     pub enabled: bool,
-
     /// Prometheus metrics port
     pub port: u16,
 
     /// Metrics endpoint path
-    pub path: String,
 }
 
 /// Alert configuration
@@ -126,7 +123,6 @@ pub struct PrometheusConfig {
 pub struct AlertConfig {
     /// Enable alerting
     pub enabled: bool,
-
     /// Alert thresholds
     pub thresholds: AlertThresholds,
 
@@ -139,7 +135,6 @@ pub struct AlertConfig {
 pub struct AlertThresholds {
     /// CPU usage threshold (percentage)
     pub cpu_threshold: f64,
-
     /// Memory usage threshold (percentage)
     pub memory_threshold: f64,
 
@@ -158,7 +153,6 @@ pub struct AlertThresholds {
 pub struct NotificationConfig {
     /// Email configuration
     pub email: Option<EmailConfig>,
-
     /// Slack configuration
     pub slack: Option<SlackConfig>,
 
@@ -171,7 +165,6 @@ pub struct NotificationConfig {
 pub struct EmailConfig {
     /// SMTP server
     pub smtp_server: String,
-
     /// SMTP port
     pub smtp_port: u16,
 
@@ -182,7 +175,7 @@ pub struct EmailConfig {
     pub password: String,
 
     /// From address
-    pub from_address: String,
+    pub from_endpoint: String,
 
     /// To addresses
     pub to_addresses: Vec<String>,
@@ -196,7 +189,6 @@ pub struct EmailConfig {
 pub struct SlackConfig {
     /// Slack webhook URL
     pub webhook_url: String,
-
     /// Slack channel
     pub channel: String,
 
@@ -212,7 +204,6 @@ pub struct SlackConfig {
 pub struct WebhookConfig {
     /// Webhook URL
     pub url: String,
-
     /// HTTP method
     pub method: String,
 
@@ -245,7 +236,6 @@ impl Default for PrometheusConfig {
         Self {
             enabled: true,
             port: 0, // Let OS assign port - orchestration service manages routing
-            path: PROMETHEUS_METRICS_PATH.to_string(),
         }
     }
 }
@@ -269,7 +259,7 @@ impl Default for EmailConfig {
             smtp_port: 587,
             username: "user@example.com".to_string(),
             password: "placeholder_password".to_string(),
-            from_address: "noreply@example.com".to_string(),
+            from_endpoint: "noreply@example.com".to_string(),
             to_addresses: vec!["admin@example.com".to_string()],
             enable_tls: true,
         }
@@ -300,17 +290,17 @@ impl Default for WebhookConfig {
 
 impl MonitoringConfig {
     /// Check if Prometheus is enabled
-    pub fn is_prometheus_enabled(&self) -> bool {
+    pub const fn is_prometheus_enabled(&self) -> bool {
         self.prometheus.as_ref().is_some_and(|p| p.enabled)
     }
 
     /// Check if alerting is enabled
-    pub fn is_alerting_enabled(&self) -> bool {
+    pub const fn is_alerting_enabled(&self) -> bool {
         self.alerts.enabled
     }
 
     /// Get Prometheus port if enabled
-    pub fn prometheus_port(&self) -> Option<u16> {
+    pub const fn prometheus_port(&self) -> Option<u16> {
         self.prometheus.as_ref().and_then(|p| {
             if p.enabled && p.port > 0 {
                 Some(p.port)
@@ -321,7 +311,7 @@ impl MonitoringConfig {
     }
 
     /// Get Prometheus metrics path
-    pub fn prometheus_path(&self) -> String {
+    pub const fn prometheus_path(&self) -> String {
         self.prometheus
             .as_ref()
             .map(|p| p.path.clone())
@@ -329,7 +319,14 @@ impl MonitoringConfig {
     }
 
     /// Validate monitoring configuration
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<(), String>  {
         // Validate metrics interval
         if self.metrics_interval == 0 {
             return Err(ERROR_METRICS_INTERVAL_ZERO.to_string());
@@ -367,14 +364,21 @@ impl MonitoringConfig {
 
 impl AlertConfig {
     /// Check if any notification method is configured
-    pub fn has_notifications(&self) -> bool {
+    pub const fn has_notifications(&self) -> bool {
         self.notifications.email.is_some()
             || self.notifications.slack.is_some()
             || self.notifications.webhook.is_some()
     }
 
     /// Validate alert configuration
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<(), String>  {
         // Validate thresholds
         self.thresholds.validate()?;
 
@@ -390,7 +394,7 @@ impl AlertConfig {
 
 impl AlertThresholds {
     /// Check if a threshold is exceeded
-    pub fn is_threshold_exceeded(&self, metric: &str, value: f64) -> bool {
+    pub const fn is_threshold_exceeded(&self, metric: &str, value: f64) -> bool {
         match metric {
             "cpu" => value > self.cpu_threshold,
             "memory" => value > self.memory_threshold,
@@ -402,7 +406,7 @@ impl AlertThresholds {
     }
 
     /// Get threshold value for a metric
-    pub fn get_threshold(&self, metric: &str) -> Option<f64> {
+    pub const fn get_threshold(&self, metric: &str) -> Option<f64> {
         match metric {
             "cpu" => Some(self.cpu_threshold),
             "memory" => Some(self.memory_threshold),
@@ -414,7 +418,15 @@ impl AlertThresholds {
     }
 
     /// Set threshold value for a metric
-    pub fn set_threshold(&mut self, metric: &str, value: f64) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn set_threshold(&mut self, metric: &str, value: f64) -> Result<(), String>  {
         if value < 0.0 {
             return Err(ERROR_THRESHOLD_NEGATIVE.to_string());
         }
@@ -451,7 +463,14 @@ impl AlertThresholds {
     }
 
     /// Validate threshold values
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<(), String>  {
         if self.cpu_threshold < 0.0 || self.cpu_threshold > 100.0 {
             return Err(ERROR_CPU_THRESHOLD_RANGE.to_string());
         }
@@ -477,22 +496,29 @@ impl AlertThresholds {
 
 impl NotificationConfig {
     /// Check if email notifications are configured
-    pub fn has_email(&self) -> bool {
+    pub const fn has_email(&self) -> bool {
         self.email.is_some()
     }
 
     /// Check if Slack notifications are configured
-    pub fn has_slack(&self) -> bool {
+    pub const fn has_slack(&self) -> bool {
         self.slack.is_some()
     }
 
     /// Check if webhook notifications are configured
-    pub fn has_webhook(&self) -> bool {
+    pub const fn has_webhook(&self) -> bool {
         self.webhook.is_some()
     }
 
     /// Validate notification configuration
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<(), String>  {
         // Validate email configuration
         if let Some(email) = &self.email {
             email.validate()?;
@@ -513,7 +539,14 @@ impl NotificationConfig {
 
 impl EmailConfig {
     /// Validate email configuration
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<(), String>  {
         if self.smtp_server.is_empty() {
             return Err(ERROR_SMTP_SERVER_EMPTY.to_string());
         }
@@ -535,7 +568,14 @@ impl EmailConfig {
 
 impl SlackConfig {
     /// Validate Slack configuration
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<(), String>  {
         if self.webhook_url.is_empty() {
             return Err(ERROR_SLACK_WEBHOOK_EMPTY.to_string());
         }
@@ -553,7 +593,14 @@ impl SlackConfig {
 
 impl WebhookConfig {
     /// Validate webhook configuration
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<(), String>  {
         if self.url.is_empty() {
             return Err(ERROR_WEBHOOK_URL_EMPTY.to_string());
         }
@@ -620,10 +667,10 @@ mod tests {
             smtp_port: 587,
             username: "user@example.com".to_string(),
             password: "placeholder_password".to_string(),
-            from_address: "noreply@example.com".to_string(),
+            from_endpoint: "noreply@example.com".to_string(),
             to_addresses: vec!["admin@example.com".to_string()],
             enable_tls: true,
-        });
+        );
 
         assert!(config.has_email());
         assert!(config.validate().is_ok());

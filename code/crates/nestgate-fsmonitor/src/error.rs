@@ -10,56 +10,49 @@ use std::path::PathBuf;
 pub enum FsMonitorError {
     #[error("Failed to initialize file system watcher: {message}")]
     WatcherInit { message: String },
-
     #[error("Failed to watch path {path:?}: {message}")]
     WatchPath { path: PathBuf, message: String },
-
     #[error("Event processing error: {message}")]
     EventProcessing { message: String },
-
     #[error("Configuration error: {message}")]
     Configuration { message: String },
-
     #[error("Handler error: {message}")]
     Handler { message: String },
 }
-
 // Note: SmartDefault functionality moved to canonical modernization
 // For now, use standard Default trait
 
 impl From<FsMonitorError> for nestgate_core::NestGateError {
     fn from(err: FsMonitorError) -> Self {
         match err {
-            FsMonitorError::WatcherInit { message } => nestgate_core::NestGateError::Internal {
-                message: format!("FS Monitor watcher init: {message}"),
-                location: Some("nestgate-fsmonitor".to_string()),
-                context: None,
-                is_bug: false,
-            },
-            FsMonitorError::WatchPath { path, message } => nestgate_core::NestGateError::Internal {
-                message: format!("FS Monitor watch path {path:?}: {message}"),
-                location: Some("nestgate-fsmonitor".to_string()),
+            FsMonitorError::WatcherInit { message ) => nestgate_core::NestGateError::internal_error(
+                component: "nestgate-fsmonitor".to_string(),
+                location: None,
                 is_bug: false,
                 context: None,
             },
-            FsMonitorError::EventProcessing { message } => nestgate_core::NestGateError::Internal {
-                message: format!("FS Monitor event processing: {message}"),
-                location: Some("nestgate-fsmonitor".to_string()),
-                context: None,
+            FsMonitorError::WatchPath { path, message ) => nestgate_core::NestGateError::internal_error(
+                component: "nestgate-fsmonitor".to_string(),
+                location: None,
                 is_bug: false,
+                context: None,
             },
-            FsMonitorError::Configuration { message } => nestgate_core::NestGateError::Validation {
-                field: Some("fsmonitor_config".to_string()),
-                message: format!("FS Monitor config: {message}"),
+            FsMonitorError::EventProcessing { message ) => nestgate_core::NestGateError::internal_error(
+                component: "nestgate-fsmonitor".to_string(),
+                location: None,
+                is_bug: false,
+                context: None,
+            },
+            FsMonitorError::Configuration { message ) => nestgate_core::NestGateError::validation(
                 expected: Some("valid filesystem monitor configuration".to_string()),
-                current_value: Some("invalid configuration".to_string()),
+                currentvalue: Some("invalid configuration".to_string()),
                 context: None,
             },
-            FsMonitorError::Handler { message } => nestgate_core::NestGateError::Internal {
-                message: format!("FS Monitor handler: {message}"),
-                location: Some("nestgate-fsmonitor".to_string()),
-                context: None,
+            FsMonitorError::Handler { message ) => nestgate_core::NestGateError::internal_error(
+                component: "nestgate-fsmonitor".to_string(),
+                location: None,
                 is_bug: false,
+                context: None,
             },
         }
     }
@@ -73,7 +66,7 @@ pub use nestgate_core::error::Result;
 impl From<notify::Error> for FsMonitorError {
     fn from(err: notify::Error) -> Self {
         FsMonitorError::WatcherInit {
-            message: format!("Notify error: {err}"),
+            message: format!("Notify error: {"actual_error_details"}"),
         }
     }
 }
@@ -81,7 +74,7 @@ impl From<notify::Error> for FsMonitorError {
 impl From<std::io::Error> for FsMonitorError {
     fn from(err: std::io::Error) -> Self {
         FsMonitorError::EventProcessing {
-            message: format!("IO error: {err}"),
+            message: format!("IO error: {"actual_error_details"}"),
         }
     }
 }
@@ -89,42 +82,38 @@ impl From<std::io::Error> for FsMonitorError {
 impl From<nestgate_core::error::NestGateError> for FsMonitorError {
     fn from(err: nestgate_core::error::NestGateError) -> Self {
         FsMonitorError::EventProcessing {
-            message: format!("NestGate error: {err}"),
+            message: format!("NestGate error: {"actual_error_details"}"),
         }
     }
 }
 
 /// Helper function to create watcher initialization errors
-pub fn watcher_init_error(message: &str) -> FsMonitorError {
+pub const fn watcher_init_error(message: &str) -> FsMonitorError {
     FsMonitorError::WatcherInit {
         message: message.to_string(),
     }
 }
-
 /// Helper function to create watch path errors
-pub fn watch_path_error(path: PathBuf, message: &str) -> FsMonitorError {
+pub const fn watch_path_error(path: PathBuf, message: &str) -> FsMonitorError {
     FsMonitorError::WatchPath {
         path,
         message: message.to_string(),
     }
 }
-
 /// Helper function to create event processing errors
-pub fn event_processing_error(message: &str) -> FsMonitorError {
+pub const fn event_processing_error(message: &str) -> FsMonitorError {
     FsMonitorError::EventProcessing {
         message: message.to_string(),
     }
 }
-
 /// Helper function to create configuration errors
-pub fn configuration_error(message: &str) -> FsMonitorError {
+pub const fn configuration(message: &str) -> FsMonitorError {
     FsMonitorError::Configuration {
         message: message.to_string(),
     }
 }
-
 /// Helper function to create handler errors
-pub fn handler_error(message: &str) -> FsMonitorError {
+pub const fn handler_error(message: &str) -> FsMonitorError {
     FsMonitorError::Handler {
         message: message.to_string(),
     }

@@ -20,13 +20,14 @@ pub struct AuthService {
 }
 
 impl AuthService {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             authenticated_users: HashMap::new(),
         }
     }
 
-    pub async fn authenticate(
+    pub const fn authenticate(
         &self,
         _credentials: &nestgate_core::universal_traits::Credentials,
     ) -> bool {
@@ -34,7 +35,7 @@ impl AuthService {
         true
     }
 
-    pub async fn get_auth_status(&self) -> AuthStatus {
+    pub const fn get_auth_status(&self) -> AuthStatus {
         AuthStatus {
             authenticated: true,
             user_id: Some("stub_user".to_string()),
@@ -42,12 +43,12 @@ impl AuthService {
         }
     }
 
-    pub async fn security_primal_available(&self) -> bool {
+    pub const fn security_primal_available(&self) -> bool {
         // Stub - assume available
         true
     }
 
-    pub fn get_mode(&self) -> AuthMode {
+    pub const fn get_mode(&self) -> AuthMode {
         AuthMode::Development
     }
 }
@@ -58,7 +59,6 @@ pub struct AuthCredentials {
     pub username: String,
     pub password: String,
 }
-
 /// Authentication status response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthStatus {
@@ -66,7 +66,6 @@ pub struct AuthStatus {
     pub user_id: Option<String>,
     pub permissions: Vec<String>,
 }
-
 /// Authentication mode
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AuthMode {
@@ -74,7 +73,6 @@ pub enum AuthMode {
     Production,
     Testing,
 }
-
 /// Authentication challenge
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthChallenge {
@@ -82,7 +80,6 @@ pub struct AuthChallenge {
     pub timestamp: u64,
     pub expires_at: u64,
 }
-
 /// Authentication request
 #[derive(Debug, Deserialize)]
 pub struct AuthRequest {
@@ -93,7 +90,6 @@ pub struct AuthRequest {
     /// Optional domain for domain-based authentication
     pub domain: Option<String>,
 }
-
 /// Authentication response
 #[derive(Debug, Serialize)]
 pub struct AuthResponse {
@@ -108,18 +104,16 @@ pub struct AuthResponse {
     /// Human-readable message describing the result
     pub message: String,
 }
-
 /// Authentication router
-pub fn auth_router() -> Router<crate::routes::AppState> {
+pub const fn auth_router() -> Router<crate::routes::AppState> {
     Router::new()
         .route("/login", post(login))
         .route("/status", get(get_status))
         .route("/mode", post(set_mode))
 }
-
 /// Login endpoint
 #[debug_handler]
-async fn login(
+fn login(
     State(app_state): State<crate::routes::AppState>,
     Json(request): Json<AuthRequest>,
 ) -> Json<AuthResponse> {
@@ -129,7 +123,6 @@ async fn login(
         domain: request.domain,
         token: None,
     };
-
     let auth_service = AuthService::new();
     let auth_result = auth_service.authenticate(&credentials).await;
 
@@ -165,7 +158,6 @@ async fn get_status(State(app_state): State<crate::routes::AppState>) -> Json<Au
     let auth_service = AuthService::new();
     Json(auth_service.get_auth_status().await)
 }
-
 /// Set authentication mode endpoint
 #[debug_handler]
 async fn set_mode(
@@ -213,14 +205,12 @@ async fn set_mode(
         }
     }
 }
-
 /// Set mode request
 #[derive(Debug, Deserialize)]
 pub struct SetModeRequest {
     /// Authentication mode to set ("standalone", "security_primal", etc.)
     pub mode: String,
 }
-
 /// Set mode response
 #[derive(Debug, Serialize)]
 pub struct SetModeResponse {
@@ -231,13 +221,11 @@ pub struct SetModeResponse {
     /// Human-readable message describing the result
     pub message: String,
 }
-
 /// AppState with auth service
 pub struct AppStateWithAuth {
     pub auth_service: AuthService,
     pub zfs_manager: std::sync::Arc<crate::routes::ZfsManager>,
 }
-
 impl From<crate::routes::AppState> for AppStateWithAuth {
     fn from(state: crate::routes::AppState) -> Self {
         Self {
@@ -260,7 +248,6 @@ mod tests {
         assert_eq!(mode, nestgate_core::cert::types::CertMode::Development);
         assert!(!service.security_primal_available().await);
     }
-
     #[tokio::test]
     async fn test_auth_service_with_adapter() {
         let config = create_default_adapter_config();
@@ -304,7 +291,7 @@ mod tests {
         let result = service.authenticate(&credentials).await;
         assert!(result.is_err());
 
-        let error_message = result
+        let _error_message = result
             .expect_err("Expected authentication to fail")
             .to_string();
         assert!(error_message.contains("Decentralized authentication required"));
@@ -328,7 +315,7 @@ mod tests {
 }
 
 /// Authenticate user with credentials
-pub async fn authenticate_user(
+pub fn authenticate_user(
     State(app_state): State<crate::routes::AppState>,
     Json(credentials): Json<AuthCredentials>,
 ) -> impl IntoResponse {
@@ -348,7 +335,7 @@ pub async fn authenticate_user(
                 "status": "success",
                 "message": "Authentication successful",
                 "authenticated": true
-            })),
+            }),
         ),
         false => (
             StatusCode::UNAUTHORIZED,
@@ -356,11 +343,10 @@ pub async fn authenticate_user(
                 "status": "error",
                 "message": "Authentication failed",
                 "authenticated": false
-            })),
+            }),
         ),
     }
 }
-
 /// Get authentication status
 pub async fn get_auth_status(
     State(app_state): State<crate::routes::AppState>,
@@ -368,7 +354,6 @@ pub async fn get_auth_status(
     let auth_service = AuthService::new();
     Json(auth_service.get_auth_status().await)
 }
-
 /// Get system security status
 pub async fn get_security_status(
     State(app_state): State<crate::routes::AppState>,

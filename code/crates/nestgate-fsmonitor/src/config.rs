@@ -2,7 +2,6 @@
 /// **ECOSYSTEM UNIFICATION**: This module now uses the unified type system from nestgate-core
 /// to eliminate file system monitor config fragmentation and ensure consistency.
 use serde::{Deserialize, Serialize};
-
 /// File system event types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum FsEventType {
@@ -28,6 +27,5 @@ pub enum FsEventType {
     /// Metadata changed
     MetadataChanged,
 }
-
 // **DEPRECATED IMPLEMENTATION REMOVED**
 // FileSystemConfig struct has been removed - use UnifiedFsMonitorConfig from unified_fsmonitor_config.rs instead

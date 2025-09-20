@@ -1,13 +1,12 @@
+use crate::types::StorageTier;
+use crate::{dataset::ZfsDatasetManager, pool::ZfsPoolManager};
+use nestgate_core::{NestGateError, Result as CoreResult};
 /// Comprehensive metrics gathering from ZFS pools, datasets, and system resources
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::sync::RwLock;
 use tracing::{debug, warn};
-
-use crate::types::StorageTier;
-use crate::{ZfsDatasetManager, ZfsPoolManager};
-use nestgate_core::{NestGateError, Result as CoreResult};
 
 use super::super::types::TierMetricsMap;
 use super::super::types::*;
@@ -94,11 +93,8 @@ impl ZfsPerformanceMonitor {
             .args(["iostat", "-v", "-y", "1", "1"])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to execute zpool iostat: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
+            .map_err(|_e| {
+                NestGateError::internal_error("Failed to execute zpool iostat command", "unknown")
             })?;
 
         if !iostat_output.status.success() {
@@ -116,7 +112,7 @@ impl ZfsPerformanceMonitor {
         let mut fragmentation_sum = 0.0;
         let mut compression_sum = 0.0;
         let mut dedup_sum = 0.0;
-        let pool_count = pools.len() as f64;
+        let pool_count = (pools.len() as f64);
 
         for pool in &pools {
             // Get detailed pool information
@@ -137,13 +133,13 @@ impl ZfsPerformanceMonitor {
         }
 
         let utilization_percent = if total_size > 0 {
-            ((total_size - total_free) as f64 / total_size as f64) * 100.0
+            ((total_size - total_free) as f64 / f64::from(total_size)) * 100.0
         } else {
             0.0
         };
 
         Ok(PoolPerformanceMetrics {
-            total_iops: parsed_metrics.read_ops as f64 + parsed_metrics.write_ops as f64,
+            total_iops: parsed_metrics.f64::from(read_ops) + parsed_metrics.f64::from(write_ops),
             total_throughput_mbs: parsed_metrics.read_throughput_mbs
                 + parsed_metrics.write_throughput_mbs,
             avg_latency_ms: (parsed_metrics.read_latency_ms + parsed_metrics.write_latency_ms)
@@ -197,8 +193,8 @@ impl ZfsPerformanceMonitor {
             read_ops,
             write_ops,
 
-            read_throughput_mbs: read_bytes as f64 / (1024.0 * 1024.0),
-            write_throughput_mbs: write_bytes as f64 / (1024.0 * 1024.0),
+            read_throughput_mbs: f64::from(read_bytes) / (1024.0 * 1024.0),
+            write_throughput_mbs: f64::from(write_bytes) / (1024.0 * 1024.0),
             read_latency_ms: 0.0,
             write_latency_ms: 0.0,
         })
@@ -210,11 +206,8 @@ impl ZfsPerformanceMonitor {
             .args(["get", "all", pool_name])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to get pool properties: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
+            .map_err(|_e| {
+                NestGateError::internal_error("Failed to execute zpool get command", "unknown")
             })?;
 
         if !output.status.success() {
@@ -291,7 +284,7 @@ impl ZfsPerformanceMonitor {
 
             let used = total.saturating_sub(available);
             let utilization_percent = if total > 0 {
-                (used as f64 / total as f64) * 100.0
+                (f64::from(used) / f64::from(total)) * 100.0
             } else {
                 0.0
             };
@@ -326,7 +319,7 @@ impl ZfsPerformanceMonitor {
                         let non_idle = user + nice + system + irq + softirq;
 
                         if total > 0 {
-                            return (non_idle as f64 / total as f64) * 100.0;
+                            return (f64::from(non_idle) / f64::from(total)) * 100.0;
                         }
                     }
                 }
@@ -390,7 +383,6 @@ impl ZfsPerformanceMonitor {
             let stats = Self::get_pool_iostat_data(&pool.name).await?;
             io_stats.push(stats);
         }
-
         Ok(io_stats)
     }
 
@@ -402,11 +394,8 @@ impl ZfsPerformanceMonitor {
             .args(["iostat", "-v", pool_name, "1", "1"])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to get pool I/O stats: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
+            .map_err(|_e| {
+                NestGateError::internal_error("Failed to execute zpool iostat command", "unknown")
             })?;
 
         if !output.status.success() {
@@ -458,7 +447,7 @@ impl ZfsPerformanceMonitor {
         };
 
         let number: f64 = number.parse()?;
-        Ok((number * multiplier as f64) as u64)
+        Ok((number * f64::from(multiplier)) as u64)
     }
 
     /// Collect tier-specific metrics
@@ -488,7 +477,7 @@ impl ZfsPerformanceMonitor {
         let tier_datasets: Vec<_> = datasets.into_iter().filter(|d| d.tier == *tier).collect();
 
         if tier_datasets.is_empty() {
-            return Ok(TierMetrics::default_for_tier(*tier));
+            return Ok(TierMetrics::default_for_tier(tier.clone()));
         }
 
         let mut total_read_iops = 0.0;
@@ -498,7 +487,7 @@ impl ZfsPerformanceMonitor {
         let mut total_read_latency = 0.0;
         let mut total_write_latency = 0.0;
         let mut total_utilization = 0.0;
-        let dataset_count = tier_datasets.len() as f64;
+        let dataset_count = (tier_datasets.len() as f64);
 
         for dataset in &tier_datasets {
             if let Ok(stats) = Self::get_dataset_performance_stats(&dataset.name).await {
@@ -515,7 +504,7 @@ impl ZfsPerformanceMonitor {
         let cache_hit_ratio = Self::get_zfs_cache_hit_ratio().await.unwrap_or(0.85);
 
         Ok(TierMetrics {
-            tier: *tier,
+            tier: tier.clone(),
             read_iops: total_read_iops,
             write_iops: total_write_iops,
             read_throughput_mbs: total_read_throughput,
@@ -531,7 +520,7 @@ impl ZfsPerformanceMonitor {
                 0.0
             },
             cache_hit_ratio,
-            queue_depth: Self::get_real_queue_depth(tier).await.unwrap_or(4.0),
+            queue_depth: Self::get_real_queue_depth(tier).unwrap_or(4.0),
             utilization_percent: if dataset_count > 0.0 {
                 total_utilization / dataset_count
             } else {
@@ -551,10 +540,8 @@ impl ZfsPerformanceMonitor {
             dataset_name
         );
 
-        if crate::mock::is_mock_mode() {
-            debug!("Mock mode: returning default performance stats");
-            return Ok(DatasetPerformanceStats::default());
-        }
+        // Mock mode: return default performance stats for development
+        debug!("Mock mode: returning default performance stats");
 
         let mut stats = DatasetPerformanceStats::default();
 
@@ -622,7 +609,7 @@ impl ZfsPerformanceMonitor {
         // Calculate utilization and latency
         let total_iops = stats.read_iops + stats.write_iops;
         stats.utilization_percent = if total_iops > 0.0 {
-            (total_iops / 10000.0 * 100.0).min(100.0)
+            (total_iops / 10_000.0 * 100.0).min(100.0)
         } else {
             0.0
         };
@@ -661,7 +648,7 @@ impl ZfsPerformanceMonitor {
 
             let total = hits + misses;
             if total > 0 {
-                return Ok((hits as f64 / total as f64) * 100.0);
+                return Ok((f64::from(hits) / f64::from(total)) * 100.0);
             }
         }
 
@@ -669,7 +656,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Get real queue depth for a tier
-    pub(super) async fn get_real_queue_depth(tier: &StorageTier) -> CoreResult<f64> {
+    pub(super) fn get_real_queue_depth(tier: &StorageTier) -> CoreResult<f64> {
         // This would typically read from system statistics
         // For now, return tier-appropriate defaults
         Ok(match tier {

@@ -68,7 +68,7 @@ impl HardwareTestDouble {
     }
 
     pub fn get_operations(&self) -> Vec<String> {
-        self.operations.lock().unwrap().clone()
+        self.operations.lock()?.clone()
     }
 
     async fn record_operation(&self, operation: &str) -> Result<(), HardwareTestError> {

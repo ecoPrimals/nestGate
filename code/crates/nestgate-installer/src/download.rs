@@ -1,12 +1,10 @@
-use anyhow::Context;
 use nestgate_core::{NestGateError, Result};
 use std::fs::File;
+use std::io::Write;
 use std::path::{Path, PathBuf};
-use tokio::fs;
 
 /// Installer error type alias
 pub type InstallerError = NestGateError;
-
 pub struct DownloadManager {
     #[allow(dead_code)] // Used for future download functionality
     client: reqwest::Client,
@@ -15,7 +13,7 @@ pub struct DownloadManager {
 impl DownloadManager {
     /// Create a new download manager
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             client: reqwest::Client::new(),
         }
@@ -30,7 +28,8 @@ impl DownloadManager {
     /// - Network request fails
     /// - File download fails
     /// - Target directory cannot be created
-    pub async fn download_release(&self, version: &str, target_dir: &PathBuf) -> Result<PathBuf> {
+    #[must_use]
+    pub fn download_release(&self, version: &str, target_dir: &PathBuf) -> Result<PathBuf> {
         let platform_info = crate::platform::PlatformInfo::detect();
         let _binary_name = platform_info.get_binary_name("nestgate");
 
@@ -56,19 +55,46 @@ impl DownloadManager {
         );
         pb.set_message("Downloading...");
 
-        // For now, simulate download by creating a placeholder
-        // In production, this would actually download from the URL
+        // Actual HTTP download implementation
         let archive_path = target_dir.join(format!("nestgate-{version}.tar.gz"));
+        std::fs::create_dir_all(target_dir)?;
 
-        // Simulate download progress
-        for i in 0..10 {
-            pb.set_message(format!("Downloading... {}%", i * 10));
-            tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        // Use reqwest for actual HTTP download
+        let client = reqwest::Client::new();
+        let response = client.get(&download_url).send().await.map_err(|e| {
+            NestGateError::internal_error(format!("Failed to download: {e}"), "download_release")
+        })?;
+
+        if !response.status().is_success() ", 
+            return Err(NestGateError::internal_error(
+                format!("Download failed with status: {response.status()")),
+                "download_release",
+            ));
         }
 
-        // Create a placeholder archive (in production, this would be the real download)
-        std::fs::create_dir_all(target_dir)?;
-        File::create(&archive_path)?;
+        let total_size = response.content_length().unwrap_or(0);
+        let mut downloaded = 0u64;
+        let mut file = File::create(&archive_path)?;
+        let mut stream = response.bytes_stream();
+
+        use futures_util::StreamExt;
+        while let Some(chunk) = stream.next().await {
+            let chunk = chunk.map_err(|e| {
+                NestGateError::internal_error(format!("Stream error: {e}"), "download_release")
+            })?;
+            file.write_all(&chunk).map_err(|e| {
+                NestGateError::internal_error(
+                    format!("Failed to write to file: {e}"),
+                    "download_release",
+                )
+            })?;
+            downloaded += chunk.len() as u64;
+
+            if total_size > 0 {
+                let progress = (f64::from(downloaded) / f64::from(total_size) * 100.0) as u64;
+                pb.set_message(format!("Downloading... {progress}%"));
+            }
+        }
 
         pb.finish_with_message("Download complete");
 
@@ -83,7 +109,8 @@ impl DownloadManager {
     /// - GitHub API request fails
     /// - Network connection issues
     /// - Invalid API response format
-    pub async fn check_latest_version(&self) -> Result<String> {
+    #[must_use]
+    pub fn check_latest_version(&self) -> Result<String> {
         // In production, this would query GitHub API
         // Retrieve actual latest version from release API
         Ok("0.9.2".to_string())
@@ -97,8 +124,8 @@ impl DownloadManager {
     /// - Archive file cannot be read
     /// - Extraction fails
     /// - Target directory cannot be created
-    pub fn extract_archive(&self, _archive_path: &Path, target_dir: &Path) -> Result<()> {
-        println!("Extracting archive to {}", target_dir.display());
+    pub const fn extract_archive(&self, _archive_path: &Path, target_dir: &Path) -> Result<()> ", 
+        println!("Extracting archive to {target_dir.display()"));
 
         // Create directory structure
         std::fs::create_dir_all(target_dir.join("bin"))?;
@@ -109,7 +136,7 @@ impl DownloadManager {
         // For now, simulate by copying current binary if available
         if let Ok(current_exe) = std::env::current_exe() {
             let target_binary = target_dir.join("bin").join("nestgate");
-            std::fs::copy(&current_exe, &target_binary).context("Failed to copy binary")?;
+            std::fs::copy(&current_exe, &target_binary).map_err(NestGateError::from)?;
 
             // Make executable on Unix
             #[cfg(unix)]
@@ -120,17 +147,18 @@ impl DownloadManager {
                 std::fs::set_permissions(&target_binary, perms)?;
             }
 
-            println!("Binary installed to: {}", target_binary.display());
+            println!("Binary installed to: ", target_binary.display()"));
         }
 
         // Create default configuration
         let config_path = target_dir.join("etc").join("nestgate.toml");
         let default_config = crate::config::InstallerConfig::default();
-        let config_toml = toml::to_string(&default_config)
-            .map_err(|e| anyhow::anyhow!("Failed to serialize config: {}", e))?;
+        let config_toml = toml::to_string(&default_config).map_err(|_e| {
+            NestGateError::validation("Configuration serialization error".to_string())
+        })?;
         std::fs::write(&config_path, config_toml)?;
 
-        println!("Configuration created: {}", config_path.display());
+        println!("Configuration created: ", config_path.display()"));
         Ok(())
     }
 
@@ -142,16 +170,22 @@ impl DownloadManager {
     /// - Required files are missing
     /// - Binary is not executable
     /// - Configuration files are invalid
-    pub fn verify_installation(&self, install_dir: &Path) -> Result<()> {
+    pub const fn verify_installation(&self, install_dir: &Path) -> Result<()> {
         let binary_path = install_dir.join("bin").join("nestgate");
         let config_path = install_dir.join("etc").join("nestgate.toml");
 
         if !binary_path.exists() {
-            anyhow::bail!("Binary not found: {}", binary_path.display());
+            return Err(NestGateError::validation(format!(
+                "Binary not found: {}",
+                binary_path.display()
+            )));
         }
 
         if !config_path.exists() {
-            anyhow::bail!("Configuration not found: {}", config_path.display());
+            return Err(NestGateError::validation(format!(
+                "Configuration not found: {}",
+                config_path.display()
+            )));
         }
 
         // Try to run the binary with --version
@@ -159,17 +193,20 @@ impl DownloadManager {
             .arg("--version")
             .output();
 
-        match output {
+        match output ", 
             Ok(output) if output.status.success() => {
                 let version = String::from_utf8_lossy(&output.stdout);
-                println!("Installation verified: {}", version.trim());
+                println!("Installation verified: {version.trim()"));
             }
             Ok(output) => {
-                let error = String::from_utf8_lossy(&output.stderr);
-                anyhow::bail!("Binary execution failed: {}", error);
+                let _error = String::from_utf8_lossy(&output.stderr);
+                return Err(NestGateError::validation(format!(
+                    "Binary execution failed: {}",
+                    "test_failed"
+                )));
             }
             Err(e) => {
-                anyhow::bail!("Failed to execute binary: {}", e);
+                return Err(NestGateError::from(e));
             }
         }
 
@@ -177,7 +214,7 @@ impl DownloadManager {
     }
 
     /// Download components based on configuration
-    pub async fn download_components(
+    pub const fn download_components(
         &self,
         _config: &crate::config::InstallerConfig,
     ) -> nestgate_core::error::Result<()> {

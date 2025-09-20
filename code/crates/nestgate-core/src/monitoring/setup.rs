@@ -1,12 +1,11 @@
-//! **TRACING SETUP AND CONFIGURATION**
-//!
-//! This module provides tracing system initialization, configuration management,
+// **TRACING SETUP AND CONFIGURATION**
+//! Monitoring and observability functionality.
+// This module provides tracing system initialization, configuration management,
 //! and the main TracingManager for coordinating logging and distributed tracing.
 
 use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{mpsc, RwLock};
@@ -28,7 +27,6 @@ pub struct TracingConfig {
     /// Enable file logging
     pub file_enabled: bool,
     /// Log file path
-    pub file_path: Option<PathBuf>,
     /// Enable JSON formatting
     pub json_format: bool,
     /// Enable distributed tracing
@@ -40,14 +38,12 @@ pub struct TracingConfig {
     /// Custom fields to include in all logs
     pub custom_fields: HashMap<String, String>,
 }
-
 impl Default for TracingConfig {
     fn default() -> Self {
         Self {
             level: "info".to_string(),
             console_enabled: true,
             file_enabled: true,
-            file_path: Some(PathBuf::from("logs/nestgate.log")),
             json_format: true,
             distributed_tracing: false,
             jaeger_endpoint: None,
@@ -71,7 +67,6 @@ pub struct LogAggregationConfig {
     /// Log retention settings
     pub retention: LogRetentionConfig,
 }
-
 impl Default for LogAggregationConfig {
     fn default() -> Self {
         Self {
@@ -98,7 +93,6 @@ pub struct DistributedTracingConfig {
     /// Custom tags to include in all spans
     pub custom_tags: HashMap<String, String>,
 }
-
 impl Default for DistributedTracingConfig {
     fn default() -> Self {
         Self {
@@ -127,9 +121,9 @@ pub struct TracingContext {
     /// Custom tags
     pub tags: HashMap<String, String>,
 }
-
 impl TracingContext {
     /// Create a new tracing context
+    #[must_use]
     pub fn new(service_name: &str, operation_name: &str) -> Self {
         Self {
             trace_id: uuid::Uuid::new_v4().to_string(),
@@ -142,18 +136,19 @@ impl TracingContext {
     }
 
     /// Create a child span from this context
-    pub fn create_child_span(&self, operation_name: &str) -> Self {
+    pub const fn create_child_span(&self, operation_name: &str) -> Self {
         Self {
             trace_id: self.trace_id.clone(),
             span_id: uuid::Uuid::new_v4().to_string(),
             parent_span_id: Some(self.span_id.clone()),
-            service_name: self.service_name.clone(),
+            service_name: self.instance_name.clone(),
             operation_name: operation_name.to_string(),
             tags: self.tags.clone(),
         }
     }
 
     /// Add a tag to the context
+    #[must_use]
     pub fn with_tag(mut self, key: &str, value: &str) -> Self {
         self.tags.insert(key.to_string(), value.to_string());
         self
@@ -174,10 +169,9 @@ pub struct TracingManager {
     /// Current tracing context
     pub current_context: Arc<RwLock<Option<TracingContext>>>,
 }
-
 impl TracingManager {
     /// Create a new tracing manager
-    pub fn new(config: TracingConfig) -> Self {
+    pub const fn new(config: TracingConfig) -> Self {
         let distributed_config = DistributedTracingConfig {
             enabled: config.distributed_tracing,
             jaeger_endpoint: config.jaeger_endpoint.clone(),
@@ -193,7 +187,14 @@ impl TracingManager {
     }
 
     /// Initialize the tracing system
-    pub async fn initialize(&mut self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn initialize(&mut self) -> Result<()>  {
         info!("🚀 Initializing NestGate tracing system");
 
         // Create log directory if needed
@@ -201,13 +202,9 @@ impl TracingManager {
             if let Some(parent) = file_path.parent() {
                 tokio::fs::create_dir_all(parent).await.map_err(|e| {
                     NestGateError::Io {
-                        message: format!("Failed to create log directory: {}", e),
-                        operation: "create_log_dir".to_string(),
-                        path: Some(parent.display().to_string()),
-                        retryable: true,
-                        context: None,
-                    }
-                })?;
+                        message: format!("Failed to create log directory: {e}"),
+                        // retryable: true}
+                )?;
             }
         }
 
@@ -264,12 +261,8 @@ impl TracingManager {
                     .append(true)
                     .open(file_path)
                     .map_err(|e| NestGateError::Io {
-                        message: format!("Failed to open log file: {}", e),
-                        operation: "open_log_file".to_string(),
-                        path: Some(file_path.display().to_string()),
-                        retryable: true,
-                        context: None,
-                    })?;
+                        message: format!("Failed to open log file: {e}"),
+                        // retryable: true)?;
 
                 if self.config.json_format {
                     subscriber.with(
@@ -315,7 +308,7 @@ impl TracingManager {
             if let Err(e) = aggregator_task.start().await {
                 error!("Log aggregator failed: {}", e);
             }
-        });
+        );
 
         debug!("Log aggregation system initialized");
         Ok(())
@@ -345,7 +338,7 @@ impl TracingManager {
 
     /// Create a new tracing context for an operation
     pub async fn start_operation(&self, operation_name: &str) -> TracingContext {
-        let context = TracingContext::new(&self.distributed_config.service_name, operation_name);
+        let context = TracingContext::new(&self.distributed_config.instance_name, operation_name);
         self.set_context(Some(context.clone())).await;
         context
     }
@@ -356,7 +349,14 @@ impl TracingManager {
     }
 
     /// Send a log entry to the aggregator
-    pub async fn send_log(&self, entry: LogEntry) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn send_log(&self, entry: LogEntry) -> Result<()>  {
         if let Some(aggregator) = &self.aggregator {
             aggregator.send_log(entry).await?;
         }
@@ -364,7 +364,14 @@ impl TracingManager {
     }
 
     /// Shutdown the tracing system gracefully
-    pub async fn shutdown(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn shutdown(&self) -> Result<()>  {
         info!("🔄 Shutting down tracing system");
 
         if let Some(aggregator) = &self.aggregator {
@@ -401,72 +408,76 @@ pub struct TracingStatistics {
     pub active_spans: u32,
     pub completed_traces: u64,
 }
-
 // ==================== SECTION ====================
 
 /// Builder for tracing configuration
 pub struct TracingConfigBuilder {
     config: TracingConfig,
 }
-
 impl TracingConfigBuilder {
     /// Create a new configuration builder
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             config: TracingConfig::default(),
         }
     }
 
     /// Set log level
+    #[must_use]
     pub fn level(mut self, level: &str) -> Self {
         self.config.level = level.to_string();
         self
     }
 
     /// Enable/disable console logging
+    #[must_use]
     pub fn console(mut self, enabled: bool) -> Self {
         self.config.console_enabled = enabled;
         self
     }
 
     /// Enable/disable file logging
+    #[must_use]
     pub fn file(mut self, enabled: bool) -> Self {
         self.config.file_enabled = enabled;
         self
     }
 
     /// Set log file path
-    pub fn file_path(mut self, path: impl Into<PathBuf>) -> Self {
         self.config.file_path = Some(path.into());
         self
     }
 
     /// Enable/disable JSON formatting
+    #[must_use]
     pub fn json_format(mut self, enabled: bool) -> Self {
         self.config.json_format = enabled;
         self
     }
 
     /// Enable/disable distributed tracing
+    #[must_use]
     pub fn distributed_tracing(mut self, enabled: bool) -> Self {
         self.config.distributed_tracing = enabled;
         self
     }
 
     /// Set Jaeger endpoint
+    #[must_use]
     pub fn jaeger_endpoint(mut self, endpoint: &str) -> Self {
         self.config.jaeger_endpoint = Some(endpoint.to_string());
         self
     }
 
     /// Add custom field
+    #[must_use]
     pub fn custom_field(mut self, key: &str, value: &str) -> Self {
         self.config.custom_fields.insert(key.to_string(), value.to_string());
         self
     }
 
     /// Build the configuration
-    pub fn build(self) -> TracingConfig {
+    pub const fn build(self) -> TracingConfig {
         self.config
     }
 }
@@ -486,7 +497,6 @@ pub async fn init_default_tracing() -> Result<TracingManager> {
     manager.initialize().await?;
     Ok(manager)
 }
-
 /// Initialize tracing for production environment
 pub async fn init_production_tracing() -> Result<TracingManager> {
     let config = TracingConfigBuilder::new()
@@ -497,7 +507,6 @@ pub async fn init_production_tracing() -> Result<TracingManager> {
         .json_format(true)
         .distributed_tracing(true)
         .build();
-
     let mut manager = TracingManager::new(config);
     manager.initialize().await?;
     Ok(manager)
@@ -512,7 +521,6 @@ pub async fn init_development_tracing() -> Result<TracingManager> {
         .json_format(false)
         .distributed_tracing(false)
         .build();
-
     let mut manager = TracingManager::new(config);
     manager.initialize().await?;
     Ok(manager)

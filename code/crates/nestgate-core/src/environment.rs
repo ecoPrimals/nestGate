@@ -7,7 +7,6 @@ use std::collections::HashMap;
 ///
 /// The system automatically detects the environment and configures itself accordingly.
 use std::env;
-
 /// Operating mode for NestGate
 #[derive(Debug, Clone, PartialEq)]
 pub enum OperationMode {
@@ -16,7 +15,6 @@ pub enum OperationMode {
     /// Orchestration-enhanced mode: Orchestration module handles networking
     OrchestrationEnhanced,
 }
-
 /// Environment detection and configuration
 #[derive(Debug, Clone)]
 pub struct Environment {
@@ -29,10 +27,8 @@ pub struct Environment {
     /// External service endpoints
     pub external_services: HashMap<String, String>,
 }
-
 /// **CANONICAL MODERNIZATION** - Use canonical service configuration
 pub use crate::canonical_types::service::ServiceConfig;
-
 /// Network configuration
 #[derive(Debug, Clone)]
 pub struct NetworkConfig {
@@ -45,7 +41,6 @@ pub struct NetworkConfig {
     /// Enable service discovery
     pub discovery_enabled: bool,
 }
-
 impl Default for Environment {
     fn default() -> Self {
         Self::detect()
@@ -54,7 +49,7 @@ impl Default for Environment {
 
 impl Environment {
     /// Detect the current environment and configure accordingly
-    pub fn detect() -> Self {
+    pub const fn detect() -> Self {
         let mode = Self::detect_mode();
         let service = Self::detect_service_config();
         let network = Self::detect_network_config(&mode);

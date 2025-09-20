@@ -6,7 +6,7 @@ use tokio::runtime::Runtime;
 // Import NestGate core types
 use nestgate_core::{
     config::canonical_config::CanonicalConfig,
-    error::{NestGateError, IdioResult},
+    error::{IdioResult, NestGateError},
     traits::UniversalService,
 };
 
@@ -14,7 +14,7 @@ use nestgate_core::{
 /// Tests the unified configuration system vs fragmented approach
 fn benchmark_config_loading(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
-    
+
     c.bench_function("unified_config_loading", |b| {
         b.iter(|| {
             rt.block_on(async {
@@ -24,7 +24,7 @@ fn benchmark_config_loading(c: &mut Criterion) {
             })
         })
     });
-    
+
     c.bench_function("fragmented_config_simulation", |b| {
         b.iter(|| {
             // Simulate old fragmented approach with multiple config objects
@@ -32,7 +32,12 @@ fn benchmark_config_loading(c: &mut Criterion) {
             let _network_config = std::collections::HashMap::<String, String>::new();
             let _storage_config = std::collections::HashMap::<String, String>::new();
             let _security_config = std::collections::HashMap::<String, String>::new();
-            black_box((_system_config, _network_config, _storage_config, _security_config));
+            black_box((
+                _system_config,
+                _network_config,
+                _storage_config,
+                _security_config,
+            ));
         })
     });
 }
@@ -50,7 +55,7 @@ fn benchmark_error_handling(c: &mut Criterion) {
             black_box(error);
         })
     });
-    
+
     c.bench_function("unified_error_context", |b| {
         b.iter(|| {
             let mut error = NestGateError::validation_error(
@@ -69,12 +74,15 @@ fn benchmark_error_handling(c: &mut Criterion) {
 /// Compares native async traits vs async_trait macro overhead
 fn benchmark_trait_patterns(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
-    
+
     // Modern zero-cost trait implementation
     struct ModernService;
-    
+
     impl ModernService {
-        fn process_data(&self, data: Vec<u8>) -> impl std::future::Future<Output = IdioResult<Vec<u8>>> + Send {
+        fn process_data(
+            &self,
+            data: Vec<u8>,
+        ) -> impl std::future::Future<Output = IdioResult<Vec<u8>>> + Send {
             async move {
                 // Simulate processing
                 let mut result = data;
@@ -83,7 +91,7 @@ fn benchmark_trait_patterns(c: &mut Criterion) {
             }
         }
     }
-    
+
     c.bench_function("zero_cost_async_trait", |b| {
         let service = ModernService;
         b.iter(|| {
@@ -94,14 +102,14 @@ fn benchmark_trait_patterns(c: &mut Criterion) {
             })
         })
     });
-    
+
     // Simulate legacy async_trait overhead with boxed futures
     c.bench_function("legacy_async_trait_simulation", |b| {
         b.iter(|| {
             rt.block_on(async {
                 let data = vec![1u8; 1024];
                 // Simulate the boxing overhead of async_trait
-                let future: Box<dyn std::future::Future<Output = IdioResult<Vec<u8>>> + Send> = 
+                let future: Box<dyn std::future::Future<Output = IdioResult<Vec<u8>>> + Send> =
                     Box::new(async move {
                         let mut result = data;
                         result.reverse();
@@ -129,7 +137,7 @@ fn benchmark_memory_efficiency(c: &mut Criterion) {
             black_box(unified_data);
         })
     });
-    
+
     c.bench_function("fragmented_data_simulation", |b| {
         b.iter(|| {
             // Simulate fragmented data structures with poor cache locality
@@ -151,13 +159,13 @@ fn benchmark_compilation_metrics(c: &mut Criterion) {
             fn process_buffer<const SIZE: usize>(buffer: &[u8; SIZE]) -> usize {
                 buffer.len()
             }
-            
+
             let buffer: [u8; 1024] = [0; 1024];
             let result = process_buffer(&buffer);
             black_box(result);
         })
     });
-    
+
     c.bench_function("runtime_size_calculation", |b| {
         b.iter(|| {
             // Simulate runtime size calculation (less efficient)
@@ -165,7 +173,7 @@ fn benchmark_compilation_metrics(c: &mut Criterion) {
                 assert_eq!(buffer.len(), size);
                 size
             }
-            
+
             let buffer = vec![0u8; 1024];
             let result = process_buffer_runtime(&buffer, buffer.len());
             black_box(result);
@@ -177,19 +185,17 @@ fn benchmark_compilation_metrics(c: &mut Criterion) {
 /// Tests API ergonomics and ease of use
 fn benchmark_developer_experience(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
-    
+
     c.bench_function("ergonomic_error_handling", |b| {
         b.iter(|| {
             rt.block_on(async {
                 // Simulate ergonomic error handling patterns
                 let result: IdioResult<String> = Ok("success".to_string());
-                let processed = result
-                    .map(|s| format!("processed: {}", s))
-                    .map_err(|e| {
-                        let mut error = e;
-                        error.add_context("operation", "benchmark");
-                        error
-                    });
+                let processed = result.map(|s| format!("processed: {}", s)).map_err(|e| {
+                    let mut error = e;
+                    error.add_context("operation", "benchmark");
+                    error
+                });
                 black_box(processed);
             })
         })
@@ -199,18 +205,18 @@ fn benchmark_developer_experience(c: &mut Criterion) {
 /// Integration benchmark testing full system performance
 fn benchmark_integration_performance(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
-    
+
     c.bench_function("full_system_integration", |b| {
         b.iter(|| {
             rt.block_on(async {
                 // Simulate full system operation with unified components
                 let config = CanonicalConfig::default();
                 let data = vec![1u8; 1024];
-                
+
                 // Process through unified system
                 let mut result = data;
                 result.extend_from_slice(config.system.service_name.as_bytes());
-                
+
                 // Add error context for monitoring
                 if result.len() > 2000 {
                     let error = NestGateError::validation_error(
@@ -238,4 +244,4 @@ criterion_group!(
     benchmark_integration_performance
 );
 
-criterion_main!(benches); 
+criterion_main!(benches);

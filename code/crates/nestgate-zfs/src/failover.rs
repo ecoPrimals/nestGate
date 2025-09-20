@@ -11,7 +11,7 @@ use tokio::sync::RwLock;
 // Removed unused tracing import
 
 use crate::config::ZfsConfig;
-use nestgate_core::{NestGateError, Result};
+use nestgate_core::Result;
 use std::time::Duration;
 use tracing::debug;
 use tracing::error;
@@ -105,7 +105,11 @@ pub struct PoolTakeoverManager {
 
 impl PoolTakeoverManager {
     /// Create a new pool takeover manager
-    pub fn new(config: ZfsConfig, failover_config: CanonicalFailoverConfig, node_id: String) -> Self {
+    pub fn new(
+        config: ZfsConfig,
+        failover_config: CanonicalFailoverConfig,
+        node_id: String,
+    ) -> Self {
         Self {
             config,
             failover_config,
@@ -115,7 +119,15 @@ impl PoolTakeoverManager {
     }
 
     /// Attempt to import pools that were previously owned by another node
-    pub async fn attempt_pool_takeover(&self, failed_node_id: &str) -> Result<Vec<String>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn attempt_pool_takeover(&self, failed_node_id: &str) -> Result<Vec<String>>  {
         info!(
             "Attempting pool takeover from failed node: {}",
             failed_node_id
@@ -166,49 +178,42 @@ impl PoolTakeoverManager {
             .args(["import", "-f", pool_name])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to execute zpool import: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
+            .map_err(|e| {
+                crate::error::ZfsErrorBuilder::new(&format!("Failed to execute zpool import: {e}"))
             })?;
 
         if !output.status.success() {
-            return Err(NestGateError::Internal {
-                message: format!(
-                    "Pool import failed: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                ),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
-            });
+            return Err(crate::error::ZfsErrorBuilder::new(&format!(
+                "Pool import failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            )));
         }
 
         let verification = self.get_pool_status().await;
         if verification.is_empty() {
-            return Err(NestGateError::Internal {
-                message: format!("Pool verification failed after import: {pool_name}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
-            });
+            return Err(crate::error::ZfsErrorBuilder::new(&format!(
+                "Pool verification failed after import: {pool_name}"
+            )));
         }
 
         Ok(())
     }
 
     /// Verify that a pool was successfully imported
-    pub async fn verify_pool_import(&self, pool_name: &str) -> Result<bool> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn verify_pool_import(&self, pool_name: &str) -> Result<bool>  {
         let output = TokioCommand::new("zpool")
             .args(["status", pool_name])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to verify pool import: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
+            .map_err(|e| {
+                crate::error::ZfsErrorBuilder::new(&format!("Failed to verify pool import: {e}"))
             })?;
 
         Ok(output.status.success())
@@ -222,11 +227,8 @@ impl PoolTakeoverManager {
             .args(["import"])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to execute zpool import: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
+            .map_err(|e| {
+                crate::error::ZfsErrorBuilder::new(&format!("Failed to execute zpool import: {e}"))
             })?;
 
         // Note: zpool import returns non-zero when no pools available, which is normal
@@ -330,30 +332,30 @@ impl PoolTakeoverManager {
     }
 
     /// Export a pool (preparation for graceful handover)
-    pub async fn export_pool(&self, pool_name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn export_pool(&self, pool_name: &str) -> Result<()>  {
         info!("Exporting pool for handover: {}", pool_name);
 
         let output = TokioCommand::new("zpool")
             .args(["export", pool_name])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to execute zpool export: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
+            .map_err(|e| {
+                crate::error::ZfsErrorBuilder::new(&format!("Failed to execute zpool export: {e}"))
             })?;
 
         if !output.status.success() {
-            return Err(NestGateError::Internal {
-                message: format!(
-                    "Pool export failed: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                ),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
-            });
+            return Err(crate::error::ZfsErrorBuilder::new(&format!(
+                "Pool export failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            )));
         }
 
         // Update metadata
@@ -384,6 +386,7 @@ pub struct NodeHealth {
 }
 
 impl NodeHealthMonitor {
+    #[must_use]
     pub fn new(config: CanonicalFailoverConfig) -> Self {
         Self {
             known_nodes: Arc::new(RwLock::new(HashMap::new())),
@@ -392,7 +395,14 @@ impl NodeHealthMonitor {
     }
 
     /// Detect nodes that have failed (haven't sent heartbeat in timeout period)
-    pub async fn detect_failed_nodes(&self) -> Result<Vec<NodeHealth>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn detect_failed_nodes(&self) -> Result<Vec<NodeHealth>>  {
         let nodes = self.known_nodes.read().await;
         let now = SystemTime::now();
         let timeout = Duration::from_secs(self.config.node_failure_timeout_secs);

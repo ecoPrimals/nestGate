@@ -6,9 +6,7 @@ use super::CanonicalDomainConfig;
 use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::time::Duration;
-
 /// **CANONICAL NETWORK CONFIGURATION**
 /// Replaces: NetworkConfig, ServerConfig, StreamConfig, ServiceMeshConfig,
 /// NetworkFsConfig, and 8+ other network config structures
@@ -29,7 +27,6 @@ pub struct CanonicalNetworkConfig {
     /// Environment-specific overrides
     pub environment_overrides: HashMap<String, serde_json::Value>,
 }
-
 impl CanonicalDomainConfig for CanonicalNetworkConfig {
     fn domain() -> &'static str {
         "network"
@@ -70,7 +67,7 @@ impl CanonicalDomainConfig for CanonicalNetworkConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkServer {
-    pub bind_address: String,
+    pub bind_endpoint: String,
     pub port: u16,
     pub max_connections: u32,
     pub keep_alive: bool,
@@ -123,8 +120,6 @@ pub struct HttpProtocolConfig {
 pub struct HttpsProtocolConfig {
     pub tls_version: TlsVersion,
     pub cipher_suites: Vec<String>,
-    pub certificate_path: PathBuf,
-    pub private_key_path: PathBuf,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -167,7 +162,7 @@ pub enum GrpcCompression {
 impl Default for NetworkServer {
     fn default() -> Self {
         Self {
-            bind_address: "0.0.0.0".to_string(),
+            bind_endpoint: "0.0.0.0".to_string(),
             port: 8080,
             max_connections: 1000,
             keep_alive: true,
@@ -230,8 +225,6 @@ impl Default for HttpsProtocolConfig {
         Self {
             tls_version: TlsVersion::Tls1_3,
             cipher_suites: vec!["TLS_AES_256_GCM_SHA384".to_string()],
-            certificate_path: PathBuf::from("/etc/ssl/certs/server.crt"),
-            private_key_path: PathBuf::from("/etc/ssl/private/server.key"),
         }
     }
 }

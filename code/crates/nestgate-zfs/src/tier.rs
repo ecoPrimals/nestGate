@@ -24,7 +24,6 @@ pub struct TierManager {
     dataset_manager: Arc<ZfsDatasetManager>,
     tier_stats: TierStatsMap,
 }
-
 #[derive(Debug, Clone, Default)]
 pub struct TierStats {
     pub total_capacity: u64,
@@ -32,7 +31,6 @@ pub struct TierStats {
     pub file_count: u64,
     pub active_operations: u32,
 }
-
 #[derive(Debug, Clone)]
 pub struct TierStatus {
     pub tier: StorageTier,
@@ -40,14 +38,41 @@ pub struct TierStatus {
     pub utilization: f64,
     pub stats: TierStats,
 }
-
 impl TierManager {
+    /// Create tier manager for testing
+    #[must_use]
+    pub fn new_for_testing() -> Self {
+        let mut tier_stats_inner = HashMap::new();
+        tier_stats_inner.insert(StorageTier::Hot, TierStats::default());
+        tier_stats_inner.insert(StorageTier::Warm, TierStats::default());
+        tier_stats_inner.insert(StorageTier::Cold, TierStats::default());
+        let tier_stats = Arc::new(RwLock::new(tier_stats_inner));
+
+        Self {
+            config: ZfsConfig::default(),
+            pool_manager: Arc::new(ZfsPoolManager::new_production(ZfsConfig::default())),
+            dataset_manager: Arc::new({
+                let config = ZfsConfig::default();
+                let pool_manager = Arc::new(ZfsPoolManager::new_production(config.clone()));
+                ZfsDatasetManager::new(config, pool_manager)
+            }),
+            tier_stats,
+        }
+    }
+
     /// Create a new tier manager
-    pub async fn new(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn new(
         config: &ZfsConfig,
         pool_manager: Arc<ZfsPoolManager>,
         dataset_manager: Arc<ZfsDatasetManager>,
-    ) -> Result<Self> {
+    ) -> Result<Self>  {
         info!("Initializing tier manager");
 
         let mut tier_stats = HashMap::new();
@@ -70,7 +95,15 @@ impl TierManager {
     }
 
     /// Initialize tier configurations
-    pub async fn initialize_tiers(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn initialize_tiers(&self) -> Result<()>  {
         // Initialize all storage tiers
         for tier in [
             StorageTier::Hot,
@@ -78,12 +111,12 @@ impl TierManager {
             StorageTier::Cold,
             StorageTier::Cache,
         ] {
-            self.configure_tier_properties(&tier).await?;
+            self.configure_tier_properties(&tier)?;
         }
         Ok(())
     }
 
-    async fn configure_tier_properties(&self, tier: &StorageTier) -> Result<()> {
+    fn configure_tier_properties(&self, tier: &StorageTier) -> Result<()> {
         info!("Configuring properties for {:?} tier", tier);
         // Real tier configuration would set ZFS properties based on tier type
         // e.g., compression, recordsize, primarycache, etc.
@@ -91,12 +124,19 @@ impl TierManager {
     }
 
     /// Get tier status
-    pub async fn get_tier_status(&self, tier: StorageTier) -> Result<TierStatus> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_tier_status(&self, tier: StorageTier) -> Result<TierStatus>  {
         let stats = self.tier_stats.read().await;
         let tier_stats = stats.get(&tier).cloned().unwrap_or_default();
 
         let utilization = if tier_stats.total_capacity > 0 {
-            (tier_stats.used_capacity as f64 / tier_stats.total_capacity as f64) * 100.0
+            (tier_stats.f64::from(used_capacity) / tier_stats.f64::from(total_capacity)) * 100.0
         } else {
             0.0
         };
@@ -118,7 +158,14 @@ impl TierManager {
     }
 
     /// Graceful shutdown
-    pub async fn shutdown(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn shutdown(&self) -> Result<()>  {
         info!("Shutting down tier manager gracefully");
 
         // Cancel any active operations
@@ -137,7 +184,12 @@ impl TierManager {
         Ok(())
     }
 
-    pub async fn get_all_tier_status(&self) -> Result<Vec<TierStatus>> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn get_all_tier_status(&self) -> Result<Vec<TierStatus>>  {
         let mut statuses = Vec::new();
 
         for tier in [
@@ -152,7 +204,12 @@ impl TierManager {
         Ok(statuses)
     }
 
-    pub async fn refresh_tier_stats(&self) -> Result<()> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn refresh_tier_stats(&self) -> Result<()>  {
         info!("Refreshing tier statistics");
 
         let datasets = self.dataset_manager.list_datasets().await?;

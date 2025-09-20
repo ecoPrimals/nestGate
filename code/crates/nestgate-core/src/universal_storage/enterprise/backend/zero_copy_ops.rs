@@ -12,7 +12,6 @@ use super::core::EnterpriseStorageBackend;
 /// **ZERO-COST NATIVE ASYNC IMPLEMENTATION**
 /// Performance optimized implementation using native async patterns
 impl ZeroCopyStorage for EnterpriseStorageBackend {
-    fn read_zero_copy(&self, path: &str) -> impl std::future::Future<Output = Result<ZeroCopyBuffer<'static>>> + Send {
         let path = path.to_string();
         async move {
             // For now, implement as regular read - zero-copy would use memory mapping
@@ -20,8 +19,6 @@ impl ZeroCopyStorage for EnterpriseStorageBackend {
             Ok(ZeroCopyBuffer::owned(data))
         }
     }
-
-    fn write_zero_copy(&self, path: &str, data: ZeroCopyBuffer<'_>) -> impl std::future::Future<Output = Result<()>> + Send {
         let path = path.to_string();
         let data_slice = data.as_slice().to_vec(); // Own the data for async move
         async move {
@@ -30,7 +27,6 @@ impl ZeroCopyStorage for EnterpriseStorageBackend {
         }
     }
 
-    fn stream_read(&self, path: &str) -> impl std::future::Future<Output = Result<Box<dyn tokio::io::AsyncRead + Send + Unpin>>> + Send {
         let path = path.to_string();
         async move {
             // Simplified implementation - would use actual streaming in production
@@ -39,7 +35,6 @@ impl ZeroCopyStorage for EnterpriseStorageBackend {
         }
     }
 
-    fn stream_write(&self, path: &str) -> impl std::future::Future<Output = Result<Box<dyn tokio::io::AsyncWrite + Send + Unpin>>> + Send {
         let path = path.to_string();
         async move {
             // Simplified implementation - would use actual streaming in production
@@ -50,12 +45,11 @@ impl ZeroCopyStorage for EnterpriseStorageBackend {
                     "create_file",
                     Some(&path),
                 )
-            })?;
+            )?;
             Ok(Box::new(file) as Box<dyn tokio::io::AsyncWrite + Send + Unpin>)
         }
     }
 
-    fn append_zero_copy(&self, path: &str, data: ZeroCopyBuffer<'_>) -> impl std::future::Future<Output = Result<()>> + Send {
         let path = path.to_string();
         let data_slice = data.as_slice().to_vec(); // Own the data for async move
         async move {
@@ -71,7 +65,7 @@ impl ZeroCopyStorage for EnterpriseStorageBackend {
                         "open_file",
                         Some(&path),
                     )
-                })?;
+                )?;
 
             use tokio::io::AsyncWriteExt;
             file.write_all(&data_slice).await.map_err(|e| {
@@ -91,7 +85,7 @@ impl ZeroCopyStorage for EnterpriseStorageBackend {
             if let Some(parent) = to_path.parent() {
                 tokio::fs::create_dir_all(parent).await.map_err(|e| {
                     NestGateError::storage_error(&format!("Failed to create directory: {e}"), "create_directory", Some(&to))
-                })?;
+                )?;
             }
 
             tokio::fs::copy(&from_path, &to_path).await.map_err(|e| {

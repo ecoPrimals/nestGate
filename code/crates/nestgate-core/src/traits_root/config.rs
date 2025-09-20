@@ -2,7 +2,6 @@
 /// Configuration traits for universal service orchestration
 use futures_util::Stream;
 use serde::{Deserialize, Serialize};
-
 use crate::config::federation::FederationConfig;
 use crate::config::network::{HttpConfig, WebSocketConfig};
 use crate::Result;
@@ -14,7 +13,6 @@ where
 {
     /// Load configuration from the provider
     fn load_config(&self) -> impl std::future::Future<Output = Result<T>> + Send;
-
     /// Reload configuration (useful for file-based configs)
     fn reload_config(&self) -> impl std::future::Future<Output = Result<T>> + Send;
 
@@ -36,7 +34,6 @@ pub struct ConfigProviderInfo {
     pub supports_reload: bool,
     pub supports_watch: bool,
 }
-
 /// Configuration metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfigMetadata {
@@ -45,7 +42,6 @@ pub struct ConfigMetadata {
     pub checksum: String,
     pub version: u64,
 }
-
 /// Network configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkConfig {

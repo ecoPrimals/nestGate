@@ -16,7 +16,6 @@ pub enum PolicyPriority {
     High,
     Critical,
 }
-
 /// Policy conditions container that defines when and how automation rules apply
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PolicyConditions {
@@ -24,7 +23,6 @@ pub struct PolicyConditions {
     pub migration_rules: Vec<MigrationRule>,
     pub lifecycle_rules: Vec<LifecycleRule>,
 }
-
 /// Simple tier rule for basic automation - defines target tier based on conditions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierRule {
@@ -32,7 +30,6 @@ pub struct TierRule {
     pub target_tier: StorageTier,
     pub priority: u32,
 }
-
 /// Simple migration rule for automated dataset movement between tiers
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MigrationRule {
@@ -42,7 +39,6 @@ pub struct MigrationRule {
     pub bandwidth_limits: BandwidthLimits,
     pub schedule: String,
 }
-
 /// Simple lifecycle rule for dataset lifecycle management
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LifecycleRule {
@@ -51,7 +47,6 @@ pub struct LifecycleRule {
     pub conditions: Vec<String>,
     pub actions: Vec<String>,
 }
-
 /// Dataset lifecycle management policy with complete configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AutomationPolicy {
@@ -64,7 +59,6 @@ pub struct AutomationPolicy {
     pub created: SystemTime,
     pub last_modified: SystemTime,
 }
-
 /// Dataset lifecycle stages with automation rules
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum LifecycleStage {
@@ -79,7 +73,6 @@ pub enum LifecycleStage {
     /// Marked for potential cleanup
     Obsolete,
 }
-
 impl std::fmt::Display for LifecycleStage {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -105,7 +98,6 @@ pub struct DatasetLifecycle {
     pub lifecycle_stage: LifecycleStage,
     pub automation_history: Vec<AutomationEvent>,
 }
-
 /// Automation event tracking for audit and debugging
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AutomationEvent {
@@ -115,7 +107,6 @@ pub struct AutomationEvent {
     pub details: String,
     pub success: bool,
 }
-
 /// Types of automation events for categorization and filtering
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AutomationEventType {
@@ -127,7 +118,6 @@ pub enum AutomationEventType {
     Archival,
     PolicyUpdate,
 }
-
 /// Bandwidth limits for migrations and operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BandwidthLimits {
@@ -136,12 +126,11 @@ pub struct BandwidthLimits {
     /// Maximum migration bandwidth during off-peak hours (MB/s)
     pub off_peak_max_mbps: u64,
 }
-
 impl Default for BandwidthLimits {
     fn default() -> Self {
         Self {
-            peak_max_mbps: 100,     // 100 MB/s during peak hours
-            off_peak_max_mbps: 200, // 200 MB/s during off-peak hours
+            peak_max_mbps: 1000,
+            off_peak_max_mbps: 2000,
         }
     }
 }
@@ -155,7 +144,6 @@ pub struct AutomationStatus {
     pub total_migrations_performed: u32,
     pub last_automation_cycle: SystemTime,
 }
-
 /// Dataset metadata for tier evaluation and decision making
 #[derive(Debug, Default)]
 pub struct DatasetMetadata {

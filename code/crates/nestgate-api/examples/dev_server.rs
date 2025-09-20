@@ -60,7 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     };
 
     info!("API server configuration:");
-    info!("  Bind address: {}", api_config.bind_addr);
+    info!("  Bind endpoint: {}", api_config.bind_addr);
     info!("  ZFS API enabled: {}", api_config.enable_zfs_api);
     info!("  SSE enabled: {}", api_config.enable_sse);
     info!("  WebSockets enabled: {}", api_config.enable_websockets);
@@ -92,6 +92,6 @@ fn print_available_endpoints() {
         port
     );
     info!("       -H 'Content-Type: application/json' \\");
-    info!("       -d '{{\"name\":\"test-pool\",\"devices\":[\"/dev/loop0\"]}}'");
+    info!("       -d '{{\"name\":\"test-pool\",\"devices\":[\"/dev/loop0\"]}'");
     info!("Web interface (if available): http://localhost:{}/", port);
 }

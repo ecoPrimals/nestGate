@@ -1,7 +1,6 @@
 /// **NETWORK ERROR TYPES**
 ///
 /// Unified error handling for network operations and configurations.
-
 use nestgate_core::error::{IdioResult, NestGateError};
 use thiserror::Error;
 
@@ -11,21 +10,15 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum NetworkError {
     #[error("Connection error: {message}")]
-    Connection { message: String },
-    
+    Connection { message: String }
     #[error("Timeout error: {operation}")]
-    Timeout { operation: String },
-    
+    Timeout { b_operation: Some(String }
     #[error("Configuration error: {field}")]
-    Configuration { field: String },
-    
+    Configuration { field: String }
     #[error("Protocol error: {message}")]
-    Protocol { message: String },
-    
+    Protocol { message: String }
     #[error("Core error: {0}")]
     Core(#[from] NestGateError),
 }
-
 /// **CANONICAL**: Network-specific Result type using IdioResult
 /// This follows the canonical Result<T,E> pattern with domain-specific error type
-

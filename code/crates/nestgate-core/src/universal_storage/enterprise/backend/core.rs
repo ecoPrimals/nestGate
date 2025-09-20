@@ -1,7 +1,6 @@
 use crate::error::NestGateError;
 use std::collections::HashMap;
 
-use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -24,7 +23,6 @@ pub struct EnterpriseStorageBackend {
     /// Configuration
     pub config: serde_json::Value,
     /// Root path for storage operations
-    pub(super) root_path: PathBuf,
     /// Snapshot registry
     pub(super) snapshots: SnapshotRegistry,
     /// Replication jobs registry
@@ -32,20 +30,30 @@ pub struct EnterpriseStorageBackend {
     /// Metrics tracking
     pub(super) metrics: Arc<RwLock<DetailedMetrics>>,
 }
-
 impl EnterpriseStorageBackend {
     /// Create new enterprise storage backend
-    pub async fn new<P: AsRef<Path>>(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn new<P: AsRef<Path>>(
         id: String,
         config: serde_json::Value,
-        root_path: P,
-    ) -> Result<Self> {
+    ) -> Result<Self>   {
         let root_path = root_path.as_ref().to_path_buf();
 
         // Ensure root directory exists
         tokio::fs::create_dir_all(&root_path).await.map_err(|e| {
             NestGateError::storage_error(&format!("Failed to create root directory: {e}"), "storage_operation", None)
-        })?;
+        )?;
 
         Ok(Self {
             id,
@@ -58,19 +66,17 @@ impl EnterpriseStorageBackend {
     }
 
     /// Get the root path
-    pub fn root_path(&self) -> &Path {
+    pub const fn root_path(&self) -> &Path {
         &self.root_path
     }
 
     /// Get the full path for a given relative path
-    pub(super) fn full_path(&self, path: &str) -> PathBuf {
         self.root_path.join(path.trim_start_matches('/'))
     }
 
     /// Update internal metrics
     pub(super) async fn update_metrics(
         &self,
-        operation: &str,
         duration: std::time::Duration,
         success: bool,
     ) {
@@ -95,7 +101,21 @@ impl EnterpriseStorageBackend {
     }
 
     /// Get enterprise capabilities
-    pub async fn capabilities(&self) -> Result<Vec<ServiceCapability>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        #[must_use]
+        pub fn capabilities(&self) -> Result<Vec<ServiceCapability>>   {
         Ok(vec![
             ServiceCapability {
                 capability_id: "enterprise.filesystem".to_string(),

@@ -3,7 +3,6 @@
 // resource limits, and operational parameters.
 
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 use std::time::Duration;
 
 // Import unified constants
@@ -19,7 +18,6 @@ pub struct SystemConfig {
     /// Service version
     pub version: String,
     /// Environment (development, staging, production)
-    pub environment: DeploymentEnvironment,
     /// Log level
     pub log_level: String,
     /// Working directory
@@ -37,7 +35,6 @@ pub struct SystemConfig {
     /// Health check interval
     pub health_check_interval: Duration,
 }
-
 /// Deployment environment enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[derive(Default)]
@@ -52,13 +49,11 @@ pub enum DeploymentEnvironment {
     /// Production environment
     Production,
 }
-
 impl Default for SystemConfig {
     fn default() -> Self {
         Self {
             service_name: DEFAULT_SERVICE_NAME.to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
-            environment: DeploymentEnvironment::Development,
             log_level: DEFAULT_LOG_LEVEL.to_string(),
             working_directory: std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")),
             pid_file: None,
@@ -92,14 +87,13 @@ impl std::str::FromStr for DeploymentEnvironment {
             "testing" | "test" => Ok(DeploymentEnvironment::Testing),
             "staging" | "stage" => Ok(DeploymentEnvironment::Staging),
             "production" | "prod" => Ok(DeploymentEnvironment::Production),
-            _ => Err(format!("Unknown environment: {s}")),
         }
     }
 }
 
 impl SystemConfig {
     /// Create a new system configuration with custom service name
-    pub fn with_service_name(service_name: impl Into<String>) -> Self {
+    pub const fn with_service_name(service_name: impl Into<String>) -> Self {
         Self {
             service_name: service_name.into(),
             ..Default::default()
@@ -107,18 +101,19 @@ impl SystemConfig {
     }
 
     /// Set the deployment environment
-    pub fn with_environment(mut self, environment: DeploymentEnvironment) -> Self {
         self.environment = environment;
         self
     }
 
     /// Set the log level
+    #[must_use]
     pub fn with_log_level(mut self, log_level: impl Into<String>) -> Self {
         self.log_level = log_level.into();
         self
     }
 
     /// Set resource limits
+    #[must_use]
     pub fn with_resource_limits(mut self, max_memory_mb: Option<u64>, max_cpu_cores: Option<usize>) -> Self {
         self.max_memory_mb = max_memory_mb;
         self.max_cpu_cores = max_cpu_cores;
@@ -126,17 +121,17 @@ impl SystemConfig {
     }
 
     /// Check if running in production environment
-    pub fn is_production(&self) -> bool {
+    pub const fn is_production(&self) -> bool {
         self.environment == DeploymentEnvironment::Production
     }
 
     /// Check if running in development environment
-    pub fn is_development(&self) -> bool {
+    pub const fn is_development(&self) -> bool {
         self.environment == DeploymentEnvironment::Development
     }
 
     /// Get effective memory limit in bytes
-    pub fn effective_memory_limit_bytes(&self) -> Option<u64> {
+    pub const fn effective_memory_limit_bytes(&self) -> Option<u64> {
         self.max_memory_mb.map(|mb| mb * 1024 * 1024)
     }
 } 

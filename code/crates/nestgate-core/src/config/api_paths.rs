@@ -1,6 +1,6 @@
-//! API Paths Configuration Module
-//!
-//! Centralized management of API endpoints and paths to eliminate hardcoded strings
+// API Paths Configuration Module
+//! Configuration types and utilities.
+// Centralized management of API endpoints and paths to eliminate hardcoded strings
 //! throughout the codebase. This enables easy customization and versioning of APIs.
 
 use serde::{Deserialize, Serialize};
@@ -23,7 +23,6 @@ const PATH_DIAGNOSTICS: &str = "/diagnostics";
 pub struct ApiPathsConfig {
     /// Base API version prefix
     pub api_version: String,
-
     /// ZFS API paths
     pub zfs: ZfsApiPaths,
 
@@ -45,7 +44,6 @@ pub struct ApiPathsConfig {
 pub struct ZfsApiPaths {
     /// Base ZFS path
     pub base: String,
-
     /// Pool operations
     pub pools: String,
     pub pools_detail: String,
@@ -72,7 +70,6 @@ pub struct ZfsApiPaths {
 pub struct StorageApiPaths {
     /// Base storage path
     pub base: String,
-
     /// Storage information
     pub info: String,
     pub capacity: String,
@@ -95,7 +92,6 @@ pub struct SystemApiPaths {
     pub info: String,
     pub status: String,
     pub version: String,
-
     /// Configuration
     pub config: String,
     pub config_reload: String,
@@ -115,7 +111,6 @@ pub struct HealthApiPaths {
     pub health_detailed: String,
     pub health_zfs: String,
     pub health_storage: String,
-
     /// Metrics endpoints
     pub metrics: String,
     pub metrics_prometheus: String,
@@ -134,6 +129,7 @@ impl Default for ApiPathsConfig {
 }
 
 impl ApiPathsConfig {
+    #[must_use]
     pub fn default_with_version(api_version: &str) -> Self {
         Self {
             api_version: api_version.to_string(),
@@ -147,31 +143,31 @@ impl ApiPathsConfig {
 }
 
 impl ZfsApiPaths {
-    pub fn default_with_version(api_version: &str) -> Self {
+    pub const fn default_with_version(api_version: &str) -> Self {
         let base = format!("/api/{api_version}/zfs");
 
         Self {
             base: base.clone(),
             pools: format!("{base}/pools"),
-            pools_detail: format!("{base}/pools/{{name}}"),
+            pools_detail: format!("{base}/pools/{{name}"),
             pools_create: format!("{base}/pools"),
-            pools_destroy: format!("{base}/pools/{{name}}"),
-            pools_scrub: format!("{base}/pools/{{name}}/scrub"),
-            pools_export: format!("{base}/pools/{{name}}/export"),
-            pools_import: format!("{base}/pools/{{name}}/import"),
+            pools_destroy: format!("{base}/pools/{{name}"),
+            pools_scrub: format!("{base}/pools/{{name}/scrub"),
+            pools_export: format!("{base}/pools/{{name}/export"),
+            pools_import: format!("{base}/pools/{{name}/import"),
             datasets: format!("{base}/datasets"),
             datasets_create: format!("{base}/datasets"),
-            datasets_destroy: format!("{base}/datasets/{{name}}"),
+            datasets_destroy: format!("{base}/datasets/{{name}"),
             snapshots: format!("{base}/snapshots"),
             snapshots_create: format!("{base}/snapshots"),
-            snapshots_destroy: format!("{base}/snapshots/{{name}}"),
-            snapshots_rollback: format!("{base}/snapshots/{{name}}/rollback"),
+            snapshots_destroy: format!("{base}/snapshots/{{name}"),
+            snapshots_rollback: format!("{base}/snapshots/{{name}/rollback"),
         }
     }
 }
 
 impl StorageApiPaths {
-    pub fn default_with_version(api_version: &str) -> Self {
+    pub const fn default_with_version(api_version: &str) -> Self {
         let base = format!("/api/{api_version}/storage");
 
         Self {
@@ -189,7 +185,7 @@ impl StorageApiPaths {
 }
 
 impl SystemApiPaths {
-    pub fn default_with_version(api_version: &str) -> Self {
+    pub const fn default_with_version(api_version: &str) -> Self {
         let base = format!("/api/{api_version}/system");
 
         Self {
@@ -199,9 +195,9 @@ impl SystemApiPaths {
             config: format!("{base}/config"),
             config_reload: format!("{base}/config/reload"),
             services: format!("{base}/services"),
-            service_start: format!("{base}/services/{{name}}/start"),
-            service_stop: format!("{base}/services/{{name}}/stop"),
-            service_restart: format!("{base}/services/{{name}}/restart"),
+            service_start: format!("{base}/services/{{name}/start"),
+            service_stop: format!("{base}/services/{{name}/stop"),
+            service_restart: format!("{base}/services/{{name}/restart"),
         }
     }
 }
@@ -226,7 +222,7 @@ impl Default for HealthApiPaths {
 
 impl ApiPathsConfig {
     /// Get a custom endpoint or default path
-    pub fn get_endpoint(&self, key: &str, default: &str) -> String {
+    pub const fn get_endpoint(&self, key: &str, default: &str) -> String {
         self.custom_endpoints
             .get(key)
             .cloned()
@@ -234,12 +230,11 @@ impl ApiPathsConfig {
     }
 
     /// Add or update a custom endpoint
-    pub fn set_custom_endpoint(&mut self, key: String, path: String) {
         self.custom_endpoints.insert(key, path);
     }
 
     /// Get all ZFS endpoints as a vector
-    pub fn all_zfs_endpoints(&self) -> Vec<String> {
+    pub const fn all_zfs_endpoints(&self) -> Vec<String> {
         vec![
             self.zfs.pools.clone(),
             self.zfs.datasets.clone(),
@@ -248,7 +243,7 @@ impl ApiPathsConfig {
     }
 
     /// Get all storage endpoints as a vector
-    pub fn all_storage_endpoints(&self) -> Vec<String> {
+    pub const fn all_storage_endpoints(&self) -> Vec<String> {
         vec![
             self.storage.info.clone(),
             self.storage.capacity.clone(),
@@ -257,12 +252,19 @@ impl ApiPathsConfig {
     }
 
     /// Get all health endpoints as a vector
-    pub fn all_health_endpoints(&self) -> Vec<String> {
+    pub const fn all_health_endpoints(&self) -> Vec<String> {
         vec![self.health.health.clone(), self.health.metrics.clone()]
     }
 
     /// Validate all paths are properly formatted
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<(), String>  {
         // Check that all paths start with /
         let endpoints = vec![
             ("health", &self.health.health),
@@ -285,6 +287,7 @@ impl ApiPathsConfig {
     }
 
     /// Get environment-specific configuration
+    #[must_use]
     pub fn from_environment() -> Self {
         let mut config = Self::default();
 

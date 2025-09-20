@@ -6,7 +6,6 @@
 /// - Cache statistics and monitoring
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
-
 /// Cache entry with TTL
 #[derive(Debug, Clone)]
 pub struct CacheEntry {
@@ -16,9 +15,9 @@ pub struct CacheEntry {
     pub access_count: u64,
     pub last_accessed: SystemTime,
 }
-
 impl CacheEntry {
-    pub fn new(value: String, ttl: Duration) -> Self {
+    #[must_use]
+    pub const fn new(value: String, ttl: Duration) -> Self {
         let now = SystemTime::now();
         Self {
             value,
@@ -29,7 +28,8 @@ impl CacheEntry {
         }
     }
 
-    pub fn is_expired(&self) -> bool {
+    #[must_use]
+    pub const fn is_expired(&self) -> bool {
         self.created_at.elapsed().unwrap_or(Duration::ZERO) > self.ttl
     }
 
@@ -56,7 +56,6 @@ pub struct DiscoveryCache {
     /// Maximum cache size
     max_cache_size: usize,
 }
-
 impl Default for DiscoveryCache {
     fn default() -> Self {
         Self::new()
@@ -65,6 +64,7 @@ impl Default for DiscoveryCache {
 
 impl DiscoveryCache {
     /// Create new discovery cache
+    #[must_use]
     pub fn new() -> Self {
         Self {
             port_cache: HashMap::new(),
@@ -77,7 +77,7 @@ impl DiscoveryCache {
     }
 
     /// **PORT CACHING**: Store port discovery result
-    pub async fn store_port_discovery(&mut self, service_name: &str, port: u16) {
+    pub fn store_port_discovery(&mut self, service_name: &str, port: u16) {
         let key = format!("port:{service_name}");
         let entry = CacheEntry::new(port.to_string(), self.default_ttl);
 
@@ -88,23 +88,23 @@ impl DiscoveryCache {
     }
 
     /// **PORT RETRIEVAL**: Get cached port discovery
-    pub async fn get_port_discovery(&mut self, service_name: &str) -> Option<u16> {
+    #[must_use]
+    pub fn get_port_discovery(&mut self, service_name: &str) -> Option<u16> {
         let key = format!("port:{service_name}");
 
         if let Some(entry) = self.port_cache.get_mut(&key) {
             if !entry.is_expired() {
                 let value = entry.access();
                 return value.parse::<u16>().ok();
-            } else {
-                self.port_cache.remove(&key);
             }
+            self.port_cache.remove(&key);
         }
 
         None
     }
 
     /// **ENDPOINT CACHING**: Store endpoint discovery result
-    pub async fn store_endpoint_discovery(&mut self, service_name: &str, endpoint: &str) {
+    pub fn store_endpoint_discovery(&mut self, service_name: &str, endpoint: &str) {
         let key = format!("endpoint:{service_name}");
         let entry = CacheEntry::new(endpoint.to_string(), self.default_ttl);
 
@@ -119,22 +119,22 @@ impl DiscoveryCache {
     }
 
     /// **ENDPOINT RETRIEVAL**: Get cached endpoint discovery
-    pub async fn get_endpoint_discovery(&mut self, service_name: &str) -> Option<String> {
+    #[must_use]
+    pub fn get_endpoint_discovery(&mut self, service_name: &str) -> Option<String> {
         let key = format!("endpoint:{service_name}");
 
         if let Some(entry) = self.endpoint_cache.get_mut(&key) {
             if !entry.is_expired() {
                 return Some(entry.access());
-            } else {
-                self.endpoint_cache.remove(&key);
             }
+            self.endpoint_cache.remove(&key);
         }
 
         None
     }
 
     /// **TIMEOUT CACHING**: Store timeout discovery result
-    pub async fn store_timeout_discovery(&mut self, service_name: &str, timeout: Duration) {
+    pub fn store_timeout_discovery(&mut self, service_name: &str, timeout: Duration) {
         let key = format!("timeout:{service_name}");
         let entry = CacheEntry::new(format!("{timeout:?}"), self.default_ttl);
 
@@ -149,7 +149,8 @@ impl DiscoveryCache {
     }
 
     /// **TIMEOUT RETRIEVAL**: Get cached timeout discovery
-    pub async fn get_timeout_discovery(&mut self, service_name: &str) -> Option<Duration> {
+    #[must_use]
+    pub fn get_timeout_discovery(&mut self, service_name: &str) -> Option<Duration> {
         let key = format!("timeout:{service_name}");
 
         if let Some(entry) = self.timeout_cache.get_mut(&key) {
@@ -181,20 +182,20 @@ impl DiscoveryCache {
     }
 
     /// **GENERAL RETRIEVAL**: Get cached discovery result
-    pub async fn get_discovery(&mut self, key: &str) -> Option<String> {
+    #[must_use]
+    pub fn get_discovery(&mut self, key: &str) -> Option<String> {
         if let Some(entry) = self.general_cache.get_mut(key) {
             if !entry.is_expired() {
                 return Some(entry.access());
-            } else {
-                self.general_cache.remove(key);
             }
+            self.general_cache.remove(key);
         }
 
         None
     }
 
     /// **CACHE INVALIDATION**: Invalidate specific cache entries
-    pub async fn invalidate(&mut self, pattern: &str) {
+    pub fn invalidate(&mut self, pattern: &str) {
         let keys_to_remove: Vec<String> = self
             .general_cache
             .keys()
@@ -209,7 +210,7 @@ impl DiscoveryCache {
     }
 
     /// **CACHE CLEANUP**: Remove expired entries
-    pub async fn cleanup_expired(&mut self) {
+    pub fn cleanup_expired(&mut self) {
         // Cleanup port cache
         self.port_cache.retain(|_, entry| !entry.is_expired());
 
@@ -262,7 +263,7 @@ impl DiscoveryCache {
     }
 
     /// **CACHE STATISTICS**: Get cache statistics
-    pub async fn get_cache_stats(&self) -> usize {
+    pub fn get_cache_stats(&self) -> usize {
         self.port_cache.len()
             + self.endpoint_cache.len()
             + self.timeout_cache.len()
@@ -270,7 +271,7 @@ impl DiscoveryCache {
     }
 
     /// **DETAILED STATISTICS**: Get detailed cache statistics
-    pub async fn get_detailed_stats(&self) -> HashMap<String, usize> {
+    pub fn get_detailed_stats(&self) -> HashMap<String, usize> {
         let mut stats = HashMap::new();
 
         stats.insert("port_cache_size".to_string(), self.port_cache.len());

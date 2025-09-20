@@ -1,6 +1,6 @@
-//! NCBI Live Provider
-//!
-//! A real implementation that connects to NCBI's actual APIs to provide
+// NCBI Live Provider
+//! Ncbi Live Provider functionality and utilities.
+// A real implementation that connects to NCBI's actual APIs to provide
 //! genome data capabilities. This demonstrates how external databases
 //! can integrate with NestGate without NestGate being coupled to NCBI.
 
@@ -18,10 +18,17 @@ pub struct NCBILiveProvider {
     api_key: Option<String>,
     email: Option<String>, // NCBI requires email for API usage
 }
-
 impl NCBILiveProvider {
     /// Create a new NCBI provider with optional API key and email
-    pub fn new(api_key: Option<String>, email: Option<String>) -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn new(api_key: Option<String>, email: Option<String>) -> Result<Self>  {
         let mut config_builder = HttpProviderConfigBuilder::new(
             "https://eutils.ncbi.nlm.nih.gov/entrez/eutils".to_string(),
             "genome_data".to_string()
@@ -80,22 +87,12 @@ impl NCBILiveProvider {
         // Parse NCBI ESearch response
         let esearch_result = response
             .get("esearchresult")
-            .ok_or_else(|| NestGateError::Internal {
-                message: "Invalid NCBI ESearch response format".to_string(),
-                location: Some("NCBILiveProvider::esearch".to_string()),
-                context: None,
-                is_bug: false,
-            })?;
+            .ok_or_else(|| NestGateError::internal_error(
 
         let id_list = esearch_result
             .get("idlist")
             .and_then(|v| v.as_array())
-            .ok_or_else(|| NestGateError::Internal {
-                message: "No ID list in NCBI response".to_string(),
-                location: Some("NCBILiveProvider::esearch".to_string()),
-                context: None,
-                is_bug: false,
-            })?;
+            .ok_or_else(|| NestGateError::internal_error(
 
         let ids: Vec<String> = id_list
             .iter()
@@ -103,7 +100,7 @@ impl NCBILiveProvider {
             .map(|s| s.to_string())
             .collect();
 
-        debug!("🔍 NCBI ESearch found {} results for query: {}", ids.len(), query);
+        debug!("🔍 NCBI ESearch found {) results for query: {}", ids.len(), query);
         Ok(ids)
     }
 
@@ -192,12 +189,7 @@ impl DataCapability for NCBILiveProvider {
         let query = request.parameters
             .get("query")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| NestGateError::Internal {
-                message: "Missing 'query' parameter for NCBI request".to_string(),
-                location: Some("NCBILiveProvider::execute_request".to_string()),
-                context: None,
-                is_bug: false,
-            })?;
+            .ok_or_else(|| NestGateError::internal_error(
 
         // Determine database (default to nucleotide)
         let database = request.parameters
@@ -221,14 +213,14 @@ impl DataCapability for NCBILiveProvider {
                     "total_count": 0,
                     "query": query,
                     "database": database
-                }),
+                )),
                 metadata: request.metadata.clone(),
                 source_info: Some(SourceInfo {
                     provider_type: "genome_database".to_string(),
                     provider_name: Some("NCBI".to_string()),
                     license: Some("NCBI Usage Guidelines".to_string()),
                 }),
-            });
+            );
         }
 
         // Get summaries
@@ -254,7 +246,7 @@ impl DataCapability for NCBILiveProvider {
             "database": database,
             "provider": "NCBI",
             "api_version": "E-utilities"
-        });
+        );
 
         Ok(DataResponse {
             data: response_data,
@@ -338,20 +330,40 @@ impl GenomeDataCapability for NCBILiveProvider {
 
 /// Factory for creating NCBI providers
 pub struct NCBIProviderFactory;
-
 impl NCBIProviderFactory {
     /// Create NCBI provider with API key (recommended for production)
-    pub fn create_with_api_key(api_key: String, email: String) -> Result<Arc<NCBILiveProvider>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn create_with_api_key(api_key: String, email: String) -> Result<Arc<NCBILiveProvider>>  {
         Ok(Arc::new(NCBILiveProvider::new(Some(api_key), Some(email))?))
     }
 
     /// Create NCBI provider without API key (rate limited)
-    pub fn create_basic(email: String) -> Result<Arc<NCBILiveProvider>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn create_basic(email: String) -> Result<Arc<NCBILiveProvider>>  {
         Ok(Arc::new(NCBILiveProvider::new(None, Some(email))?))
     }
 
     /// Create NCBI provider from environment variables
-    pub fn create_from_env() -> Result<Arc<NCBILiveProvider>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn create_from_env() -> Result<Arc<NCBILiveProvider>>  {
         let api_key = std::env::var("NCBI_API_KEY").ok();
         let email = std::env::var("NCBI_EMAIL")
             .or_else(|_| std::env::var("USER_EMAIL"))

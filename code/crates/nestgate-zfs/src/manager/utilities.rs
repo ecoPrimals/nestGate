@@ -3,8 +3,7 @@
 // and other helper functions used throughout the ZFS manager.
 
 use super::types::CapacityInfo;
-use nestgate_core::error::conversions::create_zfs_error;
-use nestgate_core::error::domain_errors::ZfsOperation;
+use crate::error::{create_zfs_error, ZfsOperation};
 use nestgate_core::Result;
 // Removed unused tracing import
 
@@ -14,11 +13,18 @@ use tracing::warn;
 
 impl ZfsManager {
     /// Calculate system utilization as percentage
-    pub async fn _calculate_system_utilization(&self) -> Result<f64> {
-        let pools = self.pool_manager.list_pools().await.map_err(|e| {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn _calculate_system_utilization(&self) -> Result<f64>  {
+        let pools = self.pool_manager.list_pools().await.map_err(|_e| {
             create_zfs_error(
-                format!("Failed to list pools: {e}"),
-                ZfsOperation::SystemCheck
+                format!("Failed to list pools: {"actual_error_details"}"),
+                ZfsOperation::SystemCheck,
             )
         })?;
 
@@ -34,10 +40,10 @@ impl ZfsManager {
                 .pool_manager
                 .get_pool_status(&pool.name)
                 .await
-                .map_err(|e| {
+                .map_err(|_e| {
                     create_zfs_error(
-                        format!("Failed to get pool status: {e}"),
-                        ZfsOperation::PoolCreate
+                        format!("Failed to get pool status: {"actual_error_details"}"),
+                        ZfsOperation::PoolCreate,
                     )
                 })?;
 
@@ -50,14 +56,14 @@ impl ZfsManager {
         }
 
         if total_available > 0 {
-            Ok(total_used as f64 / total_available as f64)
+            Ok(f64::from(total_used) / f64::from(total_available))
         } else {
             Ok(0.0)
         }
     }
 
     /// Parse capacity information from status string
-    pub fn _parse_capacity_from_status(&self, status: &str) -> Option<CapacityInfo> {
+    pub const fn _parse_capacity_from_status(&self, status: &str) -> Option<CapacityInfo> {
         // Parse ZFS status output to extract capacity information
         debug!("Parsing ZFS status for capacity info");
 
@@ -80,11 +86,11 @@ impl ZfsManager {
         for line in status.lines() {
             let line = line.trim();
             if line.starts_with("size:") {
-                if let Some(size) = self._parse_size_value(line) {
+                if let Some(size) = self._parse_sizevalue(line) {
                     total_bytes = size;
                 }
             } else if line.starts_with("allocated:") {
-                if let Some(size) = self._parse_size_value(line) {
+                if let Some(size) = self._parse_sizevalue(line) {
                     used_bytes = size;
                 }
             }
@@ -99,13 +105,14 @@ impl ZfsManager {
             // Return reasonable defaults if parsing fails
             warn!("Failed to parse ZFS capacity information, using defaults");
             Some(CapacityInfo {
-                used_bytes: 1000000,   // 1MB default
-                total_bytes: 10000000, // 10MB default
+                used_bytes: 1_000_000,   // 1MB default
+                total_bytes: 10_000_000, // 10MB default
             })
         }
     }
 
     /// Parse a capacity line like "1.23T allocated, 456G used, 789G available"
+    #[must_use]
     pub fn _parse_capacity_line(&self, line: &str) -> Option<CapacityInfo> {
         // Split by commas and parse each segment
         let parts: Vec<&str> = line.split(',').collect();
@@ -136,7 +143,7 @@ impl ZfsManager {
     }
 
     /// Parse size value from lines like "size: 1.23T"
-    pub fn _parse_size_value(&self, line: &str) -> Option<u64> {
+    pub const fn _parse_sizevalue(&self, line: &str) -> Option<u64> {
         let parts: Vec<&str> = line.split(':').collect();
         if parts.len() >= 2 {
             let size_str = parts[1].trim();
@@ -147,7 +154,7 @@ impl ZfsManager {
     }
 
     /// Parse size from segment like "1.23T allocated" or "456G"
-    pub fn _parse_size_from_segment(&self, segment: &str) -> Option<u64> {
+    pub const fn _parse_size_from_segment(&self, segment: &str) -> Option<u64> {
         // Extract the size part (e.g., "1.23T" from "1.23T allocated")
         let size_str = segment.split_whitespace().next()?;
 
@@ -180,6 +187,6 @@ impl ZfsManager {
             _ => 1, // Default to bytes for unknown units
         };
 
-        Some((number * multiplier as f64) as u64)
+        Some((number * f64::from(multiplier)) as u64)
     }
 }

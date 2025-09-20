@@ -4,7 +4,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
-
 /// Core error information for the unified error context
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedErrorCore {
@@ -23,7 +22,6 @@ pub struct UnifiedErrorCore {
     /// Debug message for developers
     pub debug_message: Option<String>,
 }
-
 /// Request context information for errors
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedRequestContext {
@@ -40,7 +38,6 @@ pub struct UnifiedRequestContext {
     /// Request processing duration
     pub duration: Option<Duration>,
 }
-
 /// System state context at time of error
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedSystemContext {
@@ -59,7 +56,6 @@ pub struct UnifiedSystemContext {
     /// System uptime
     pub uptime: Option<Duration>,
 }
-
 /// User context information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedUserContext {
@@ -76,7 +72,6 @@ pub struct UnifiedUserContext {
     /// User's roles
     pub roles: Vec<String>,
 }
-
 /// Error statistics for aggregated error reporting
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedErrorStatistics {
@@ -95,7 +90,6 @@ pub struct UnifiedErrorStatistics {
     /// Last occurrence timestamp
     pub last_occurrence: SystemTime,
 }
-
 /// Unified error severity levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum UnifiedErrorSeverity {
@@ -110,7 +104,6 @@ pub enum UnifiedErrorSeverity {
     /// Catastrophic impact - data loss possible
     Fatal,
 }
-
 /// Unified error types for categorization
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum UnifiedErrorType {
@@ -141,79 +134,47 @@ pub enum UnifiedErrorType {
     /// Unknown/unclassified errors
     Unknown,
 }
-
 /// Comprehensive error context for the unified error system
 /// Provides rich debugging information and recovery guidance
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedErrorContext {
-    /// Core error information
-    pub error: UnifiedErrorCore,
-    /// Request context (if applicable)
-    pub request_context: Option<UnifiedRequestContext>,
-    /// System context at time of error
-    pub system_context: Option<UnifiedSystemContext>,
-    /// User context (if applicable)
-    pub user_context: Option<UnifiedUserContext>,
-    /// Error statistics
-    pub statistics: Option<UnifiedErrorStatistics>,
-    /// Recovery suggestions for users/operators
-    pub recovery_suggestions: Vec<String>,
-    /// Additional metadata for debugging
-    pub metadata: HashMap<String, serde_json::Value>,
-
-    // Convenience fields for backward compatibility - directly accessible
-    /// Error code (convenience field)
     pub error_code: String,
-    /// Error message (convenience field)
     pub message: String,
+    pub metadata: HashMap<String, String>,
 }
-
 impl Default for UnifiedErrorContext {
     fn default() -> Self {
         Self {
-            error: UnifiedErrorCore {
-                message: "Unknown error occurred".to_string(),
-                error_code: "UNKNOWN_ERROR".to_string(),
-                severity: UnifiedErrorSeverity::Error,
-                error_type: UnifiedErrorType::Unknown,
-                service_name: "unknown".to_string(),
-                timestamp: SystemTime::now(),
-                debug_message: None,
-            },
-            request_context: None,
-            system_context: None,
-            user_context: None,
-            statistics: None,
-            recovery_suggestions: Vec::new(),
-            metadata: HashMap::new(),
-
-            // Initialize convenience fields
             error_code: "UNKNOWN_ERROR".to_string(),
             message: "Unknown error occurred".to_string(),
+            metadata: HashMap::new(),
         }
     }
 }
 
 impl UnifiedErrorContext {
-    /// Create a simple error context with just core error information
-    pub fn simple(message: &str, error_code: &str, service_name: &str) -> Self {
+    #[must_use]
+    pub fn new(error_code: &str, message: &str) -> Self {
         Self {
-            error: UnifiedErrorCore {
-                message: message.to_string(),
-                error_code: error_code.to_string(),
-                severity: UnifiedErrorSeverity::Error,
-                error_type: UnifiedErrorType::Unknown,
-                service_name: service_name.to_string(),
-                timestamp: SystemTime::now(),
-                debug_message: None,
-            },
             error_code: error_code.to_string(),
             message: message.to_string(),
-            ..Default::default()
+            metadata: HashMap::new(),
         }
     }
+}
 
+/// Comprehensive error response for the unified error system
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnifiedErrorResponse {
+    pub error: UnifiedErrorCore,
+    pub request_context: Option<UnifiedRequestContext>,
+    pub recovery_suggestions: Vec<String>,
+    pub metadata: HashMap<String, serde_json::Value>,
+}
+
+impl UnifiedErrorResponse {
     /// Create error context with request information
+    #[must_use]
     pub fn with_request(
         mut self,
         request_id: &str,
@@ -232,13 +193,15 @@ impl UnifiedErrorContext {
     }
 
     /// Add recovery suggestions
+    #[must_use]
     pub fn with_recovery_suggestions(mut self, suggestions: Vec<String>) -> Self {
         self.recovery_suggestions = suggestions;
         self
     }
 
     /// Create a statistics response from the error context
-    pub fn to_statistics_response(&self) -> SimpleErrorResponse {
+    #[must_use]
+    pub const fn to_statistics_response(&self) -> SimpleErrorResponse {
         SimpleErrorResponse {
             error_code: self.error.error_code.clone(),
             message: self.error.message.clone(),
@@ -251,29 +214,32 @@ impl UnifiedErrorContext {
     }
 
     /// Add additional context to the error
+    #[must_use]
     pub fn with_context(mut self, key: &str, value: serde_json::Value) -> Self {
         self.metadata.insert(key.to_string(), value);
         self
     }
 
     /// Create a detailed response from the error context
-    pub fn to_detailed_response(&self) -> DetailedErrorResponse {
+    #[must_use]
+    pub const fn to_detailed_response(&self) -> DetailedErrorResponse {
         DetailedErrorResponse {
             error: self.error.clone(),
             request_context: self.request_context.clone(),
-            recovery_suggestions: self.recovery_suggestions.clone(),
             metadata: self.metadata.clone(),
         }
     }
 
     /// Add metadata for debugging
+    #[must_use]
     pub fn with_metadata(mut self, key: &str, value: serde_json::Value) -> Self {
         self.metadata.insert(key.to_string(), value);
         self
     }
 
     /// Convert to simple error response for API responses
-    pub fn to_simple_response(&self) -> SimpleErrorResponse {
+    #[must_use]
+    pub const fn to_simple_response(&self) -> SimpleErrorResponse {
         SimpleErrorResponse {
             message: self.error.message.clone(),
             error_code: self.error.error_code.clone(),
@@ -294,12 +260,10 @@ pub struct SimpleErrorResponse {
     pub timestamp: SystemTime,
     pub request_id: Option<String>,
 }
-
 /// Detailed error response for internal APIs and debugging
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DetailedErrorResponse {
     pub error: UnifiedErrorCore,
     pub request_context: Option<UnifiedRequestContext>,
-    pub recovery_suggestions: Vec<String>,
     pub metadata: HashMap<String, serde_json::Value>,
 }

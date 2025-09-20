@@ -1,6 +1,6 @@
-//! Health Check System
-//!
-//! Comprehensive health monitoring for all NestGate components including
+// Health Check System
+//! Monitoring and observability functionality.
+// Comprehensive health monitoring for all NestGate components including
 //! providers, storage backends, system resources, and dependencies.
 
 use crate::Result;
@@ -23,15 +23,14 @@ pub enum HealthStatus {
     /// Unknown status (startup, maintenance, etc.)
     Unknown,
 }
-
 impl HealthStatus {
     /// Check if the status indicates the system is operational
-    pub fn is_operational(&self) -> bool {
-        matches!(self, HealthStatus::Healthy | HealthStatus::Degraded { .. })
+    pub const fn is_operational(&self) -> bool {
+        matches!(self, Self::Healthy | Self::Degraded { .. })
     }
 
     /// Get severity level (0 = healthy, 1 = degraded, 2 = unhealthy, 3 = unknown)
-    pub fn severity_level(&self) -> u8 {
+    pub const fn severity_level(&self) -> u8 {
         match self {
             HealthStatus::Healthy => 0,
             HealthStatus::Degraded { .. } => 1,
@@ -59,7 +58,6 @@ pub struct ComponentHealth {
     /// Health check history (last N checks)
     pub history: Vec<HealthCheckResult>,
 }
-
 /// Result of a health check
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheckResult {
@@ -72,7 +70,6 @@ pub struct HealthCheckResult {
     /// Any error message if check failed
     pub error_message: Option<String>,
 }
-
 /// System-wide health information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemHealth {
@@ -87,7 +84,6 @@ pub struct SystemHealth {
     /// Health check summary
     pub summary: HealthSummary,
 }
-
 /// Summary of health check results
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthSummary {
@@ -102,7 +98,6 @@ pub struct HealthSummary {
     /// Number of components with unknown status
     pub unknown_components: usize,
 }
-
 /// Health check configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheckConfig {
@@ -117,7 +112,6 @@ pub struct HealthCheckConfig {
     /// Custom health check endpoints
     pub custom_endpoints: Vec<String>,
 }
-
 impl Default for HealthCheckConfig {
     fn default() -> Self {
         Self {
@@ -135,7 +129,6 @@ impl Default for HealthCheckConfig {
 pub trait HealthCheckable: Send + Sync + 'static {
     /// Perform a health check on this component
     fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus>> + Send;
-
     /// Get the component name
     fn component_name(&self) -> &str;
 
@@ -159,9 +152,9 @@ pub struct HealthCheckManager {
     /// Manager start time
     start_time: Instant,
 }
-
 impl HealthCheckManager {
     /// Create a new health check manager
+    #[must_use]
     pub fn new(config: HealthCheckConfig) -> Self {
         info!("🏥 Initializing health check manager");
 
@@ -219,7 +212,14 @@ impl HealthCheckManager {
     }
 
     /// Perform health checks on all registered components
-    pub async fn check_all_components(&self) -> Result<SystemHealth> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn check_all_components(&self) -> Result<SystemHealth>  {
         debug!("🔍 Performing health checks on all components");
 
         let components = self.components.read().await;
@@ -251,7 +251,7 @@ impl HealthCheckManager {
                     Ok(Ok(status)) => (status, None),
                     Ok(Err(e)) => (
                         HealthStatus::Unhealthy {
-                            errors: vec![format!("Health check error: {}", e)],
+                            errors: vec![format!("Health check error: {e}")],
                         },
                         Some(e.to_string()),
                     ),
@@ -264,7 +264,7 @@ impl HealthCheckManager {
                 };
 
                 (name, status, duration, error_message)
-            });
+            );
 
             check_futures.push(future);
         }
@@ -435,18 +435,18 @@ impl HealthCheckManager {
         let health = self.get_system_health().await;
 
         let mut report = String::new();
-        report.push_str("# NestGate Health Report\n\n");
+        report.push_str(" NestGate Health Report\n\n");
 
         // Overall status
         report.push_str(&format!(
             "**Overall Status**: {:?}\n",
             health.overall_status
         ));
-        report.push_str(&format!("**Uptime**: {:?}\n", health.uptime));
-        report.push_str(&format!("**Last Updated**: {:?}\n\n", health.last_updated));
+        report.push_str(&format!("**Uptime**: {health.uptime:?}\n"));
+        report.push_str(&format!("**Last Updated**: {health.last_updated:?}\n\n"));
 
         // Summary
-        report.push_str("## Summary\n\n");
+        report.push_str("# Summary\n\n");
         report.push_str(&format!(
             "- Total Components: {}\n",
             health.summary.total_components
@@ -469,11 +469,11 @@ impl HealthCheckManager {
         ));
 
         // Component details
-        report.push_str("## Component Details\n\n");
+        report.push_str("# Component Details\n\n");
         for (name, component) in &health.components {
-            report.push_str(&format!("### {} ({})\n", name, component.component_type));
-            report.push_str(&format!("- Status: {:?}\n", component.status));
-            report.push_str(&format!("- Last Check: {:?}\n", component.last_check));
+            report.push_str(&format!("## {} ({})\n", name, component.component_type);
+            report.push_str(&format!("- Status: {component.status:?}\n"));
+            report.push_str(&format!("- Last Check: {component.last_check:?}\n"));
             report.push_str(&format!(
                 "- Check Duration: {:?}\n",
                 component.check_duration
@@ -511,12 +511,16 @@ pub struct GenericHealthChecker {
     component_type: String,
     health_check_fn: Arc<dyn Fn() -> Result<HealthStatus> + Send + Sync>,
 }
-
 impl GenericHealthChecker {
-    pub fn new<F>(name: String, component_type: String, health_check_fn: F) -> Self
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn new<F>(name: String, component_type: String, health_check_fn: F) -> Self
     where
         F: Fn() -> Result<HealthStatus> + Send + Sync + 'static,
-    {
+     {
         Self {
             name,
             component_type,

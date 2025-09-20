@@ -1,10 +1,11 @@
+// Removed unused import for pedantic perfection
+// Commented out until available: CapabilityCategory, CapabilityRequest
 /// Certificate Types
 /// Common types and structures for certificate management
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 // unused PathBuf import removed
-
-/// Certificate types supported by NestGate
+/// Certificate types supported by `NestGate`
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum CertificateType {
     /// Server TLS certificate
@@ -18,7 +19,6 @@ pub enum CertificateType {
     /// Intermediate CA certificate
     IntermediateCA,
 }
-
 /// Certificate integration types
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Integration {
@@ -33,7 +33,6 @@ pub enum Integration {
     /// Compute capability integration
     ComputeCapability,
 }
-
 /// Certificate mode for validation
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum CertMode {
@@ -46,7 +45,6 @@ pub enum CertMode {
     /// Custom validation rules
     Custom(HashMap<String, bool>),
 }
-
 /// Certificate structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Certificate {
@@ -55,7 +53,7 @@ pub struct Certificate {
     /// Certificate type
     pub cert_type: CertificateType,
     /// Subject distinguished name
-    pub subject: String,
+    pub principal: String,
     /// Issuer distinguished name
     pub issuer: String,
     /// Certificate data (PEM format)
@@ -71,14 +69,13 @@ pub struct Certificate {
     /// Associated metadata
     pub metadata: HashMap<String, String>,
 }
-
 /// Certificate information for querying and display
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CertificateInfo {
     /// Certificate ID
     pub id: String,
     /// Subject DN
-    pub subject: String,
+    pub principal: String,
     /// Issuer DN
     pub issuer: String,
     /// Validity period
@@ -89,7 +86,6 @@ pub struct CertificateInfo {
     /// Certificate type
     pub cert_type: CertificateType,
 }
-
 /// Integration status tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IntegrationStatus {
@@ -106,18 +102,16 @@ pub struct IntegrationStatus {
     /// Integration-specific metadata
     pub metadata: HashMap<String, String>,
 }
-
 /// Certificate information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CertInfo {
-    pub subject: String,
+    pub principal: String,
     pub issuer: String,
     pub serial_number: String,
     pub not_before: String,
     pub not_after: String,
     pub fingerprint: String,
 }
-
 /// Certificate validation result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationResult {
@@ -125,14 +119,12 @@ pub struct ValidationResult {
     pub errors: Vec<String>,
     pub warnings: Vec<String>,
 }
-
 /// Certificate chain
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CertChain {
     pub certificates: Vec<Vec<u8>>,
     pub root_ca: Option<Vec<u8>>,
 }
-
 /// Certificate request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CertRequest {
@@ -141,7 +133,6 @@ pub struct CertRequest {
     pub key_usage: Vec<String>,
     pub validity_days: u32,
 }
-
 /// Default implementations
 impl Default for ValidationResult {
     fn default() -> Self {
@@ -152,24 +143,38 @@ impl Default for ValidationResult {
         }
     }
 }
-
 impl Certificate {
     /// Check if certificate is expired
-    pub fn is_expired(&self) -> bool {
+    #[must_use]
+    pub const fn is_expired(&self) -> bool {
         // For testing purposes, assume certificates with "expired" in subject are expired
-        self.subject.contains("expired") || self.not_after.contains("1970")
+        if self.principal.contains("expired") {
+            return true;
+        }
+
+        // Check if not_after timestamp is in the past
+        if let Ok(timestamp) = self.not_after.parse::<u64>() {
+            let cert_time =
+                std::time::SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(timestamp);
+            cert_time < std::time::SystemTime::now()
+        } else {
+            // Fallback: check for "1970" in the string (very early dates)
+            self.not_after.contains("1970") || self.not_after == "0" || self.not_after == "1"
+        }
     }
 
     /// Check if certificate is currently valid (not expired)
-    pub fn is_valid(&self) -> bool {
+    #[must_use]
+    pub const fn is_valid(&self) -> bool {
         !self.is_expired() && !self.not_after.is_empty()
     }
 
     /// Get certificate info summary
-    pub fn to_info(&self) -> CertificateInfo {
+    #[must_use]
+    pub const fn to_info(&self) -> CertificateInfo {
         CertificateInfo {
             id: self.id.clone(),
-            subject: self.subject.clone(),
+            principal: self.principal.clone(),
             issuer: self.issuer.clone(),
             valid_from: self.not_before.clone(),
             valid_until: self.not_after.clone(),

@@ -21,7 +21,6 @@ pub struct NetworkDiscoverySettings {
     /// Discovery timeout
     pub timeout: Duration,
 }
-
 impl Default for NetworkDiscoverySettings {
     fn default() -> Self {
         Self {
@@ -32,7 +31,7 @@ impl Default for NetworkDiscoverySettings {
 }
 
 impl NetworkDiscoverySettings {
-    pub fn validate(&self) -> crate::Result<()> {
+    pub const fn validate(&self) -> crate::Result<()> {
         Ok(())
     }
-} 
+}

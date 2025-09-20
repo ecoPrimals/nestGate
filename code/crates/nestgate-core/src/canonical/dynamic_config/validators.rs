@@ -5,7 +5,6 @@ use crate::error::CanonicalResult as Result;
 
 /// Storage configuration validator
 pub struct StorageValidator;
-
 impl ConfigValidator for StorageValidator {
     async fn validate(
         &self,
@@ -17,16 +16,15 @@ impl ConfigValidator for StorageValidator {
 
         // Example validation logic for storage configuration
         if let Ok(storage_config) =
-            serde_json::from_value::<StorageConfig>(change.new_value.clone())
+            serde_json::from_value::<StorageConfig>(change.newvalue.clone())
         {
             // Validate storage backend type
-            if format!("{:?}", storage_config.backend_type).is_empty() {
+            if format!("{storage_config.backend_type:?}").is_empty() {
                 errors.push(ValidationError {
                     code: "INVALID_BACKEND".to_string(),
                     message: "Storage backend type cannot be empty".to_string(),
-                    path: "storage.backend_type".to_string(),
                     severity: ErrorSeverity::Critical,
-                });
+                );
             }
 
             // Validate cache size
@@ -36,11 +34,10 @@ impl ConfigValidator for StorageValidator {
                 warnings.push(ValidationWarning {
                     code: "LARGE_CACHE".to_string(),
                     message: "Cache size is very large and may impact system memory".to_string(),
-                    path: "storage.cache.max_size_mb".to_string(),
                     recommendation: Some(
                         "Consider reducing cache size or monitoring memory usage".to_string(),
                     ),
-                });
+                );
             }
         }
 
@@ -63,7 +60,6 @@ impl ConfigValidator for StorageValidator {
 
 /// Network configuration validator
 pub struct NetworkValidator;
-
 impl ConfigValidator for NetworkValidator {
     async fn validate(
         &self,
@@ -75,27 +71,25 @@ impl ConfigValidator for NetworkValidator {
 
         // Example validation logic for network configuration
         if let Ok(network_config) =
-            serde_json::from_value::<NetworkConfig>(change.new_value.clone())
+            serde_json::from_value::<NetworkConfig>(change.newvalue.clone())
         {
             // Validate port ranges
             if network_config.api.port < 1024 {
                 warnings.push(ValidationWarning {
                     code: "PRIVILEGED_PORT".to_string(),
                     message: "Using privileged port, may require elevated permissions".to_string(),
-                    path: "network.api_port".to_string(),
                     recommendation: Some("Consider using port > 1024".to_string()),
-                });
+                );
             }
 
             // Validate bind address
-            if network_config.bind_address.is_empty() {
+            if network_config.bind_endpoint.is_empty() {
                 warnings.push(ValidationWarning {
                     code: "UNSPECIFIED_BIND".to_string(),
                     message: "Binding to all interfaces (0.0.0.0) may be a security risk"
                         .to_string(),
-                    path: "network.bind_address".to_string(),
                     recommendation: Some("Consider binding to specific interface".to_string()),
-                });
+                );
             }
         }
 
@@ -116,7 +110,6 @@ impl ConfigValidator for NetworkValidator {
 
 /// Security configuration validator
 pub struct SecurityValidator;
-
 impl ConfigValidator for SecurityValidator {
     async fn validate(
         &self,
@@ -128,18 +121,17 @@ impl ConfigValidator for SecurityValidator {
 
         // Example validation logic for security configuration
         if let Ok(security_config) =
-            serde_json::from_value::<SecurityConfig>(change.new_value.clone())
+            serde_json::from_value::<SecurityConfig>(change.newvalue.clone())
         {
             // Validate TLS settings
             if security_config.tls_cert_path.is_none() {
                 warnings.push(ValidationWarning {
                     code: "TLS_DISABLED".to_string(),
                     message: "TLS certificate path is empty, TLS may not be configured".to_string(),
-                    path: "security.tls_cert_path".to_string(),
                     recommendation: Some(
                         "Configure TLS certificate path for production".to_string(),
                     ),
-                });
+                );
             }
 
             // Validate authentication
@@ -152,9 +144,8 @@ impl ConfigValidator for SecurityValidator {
                 errors.push(ValidationError {
                     code: "NO_AUTH_METHODS".to_string(),
                     message: "Authentication enabled but JWT secret is empty".to_string(),
-                    path: "security.jwt_secret".to_string(),
                     severity: ErrorSeverity::Critical,
-                });
+                );
             }
         }
 
@@ -198,9 +189,9 @@ mod tests {
             tracing::error!("Operation failed: {:?}", e);
             std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {e:?}"),
             )
-        })?;
+        )?;
         let config_path = temp_dir.path().join("config.toml");
         let backup_path = temp_dir.path().join("backups");
 
@@ -210,9 +201,9 @@ mod tests {
                 tracing::error!("Operation failed: {:?}", e);
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Operation failed: {:?}", e),
+                    format!("Operation failed: {e:?}"),
                 )
-            })?;
+            )?;
 
         let current = manager.get_current_config().await;
         let initial_config = CanonicalConfig::default();
@@ -230,9 +221,9 @@ mod tests {
             tracing::error!("Operation failed: {:?}", e);
             std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {e:?}"),
             )
-        })?;
+        )?;
         let config_path = temp_dir.path().join("config.toml");
         let backup_path = temp_dir.path().join("backups");
 
@@ -244,22 +235,21 @@ mod tests {
                 tracing::error!("Operation failed: {:?}", e);
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Operation failed: {:?}", e),
+                    format!("Operation failed: {e:?}"),
                 )
-            })?;
+            )?;
 
         let change = ConfigChange {
             section: ConfigSection::Storage,
             change_type: ChangeType::Modify,
-            old_value: None,
-            new_value: serde_json::to_value(&initial_config.storage).map_err(|e| {
+            old_
+            newvalue: serde_json::to_value(&initial_config.storage).map_err(|e| {
                 tracing::error!("Operation failed: {:?}", e);
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Operation failed: {:?}", e),
+                    format!("Operation failed: {e:?}"),
                 )
             })?,
-            path: "storage".to_string(),
             description: "Test change".to_string(),
         };
 
@@ -267,9 +257,9 @@ mod tests {
             tracing::error!("Operation failed: {:?}", e);
             std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {e:?}"),
             )
-        })?;
+        )?;
         assert!(report.is_valid);
         Ok(())
     }
@@ -281,9 +271,9 @@ mod tests {
             tracing::error!("Operation failed: {:?}", e);
             std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {e:?}"),
             )
-        })?;
+        )?;
         let config_path = temp_dir.path().join("config.toml");
         let backup_path = temp_dir.path().join("backups");
 
@@ -295,18 +285,18 @@ mod tests {
                 tracing::error!("Operation failed: {:?}", e);
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Operation failed: {:?}", e),
+                    format!("Operation failed: {e:?}"),
                 )
-            })?;
+            )?;
 
         // Export configuration
         let backup = manager.export_config(false).await.map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
             std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {e:?}"),
             )
-        })?;
+        )?;
         assert!(!backup.backup_id.is_empty());
         assert_eq!(
             backup.current_config.storage.backend_type,
@@ -318,9 +308,9 @@ mod tests {
             tracing::error!("Operation failed: {:?}", e);
             std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {e:?}"),
             )
-        })?;
+        )?;
         assert!(!snapshot_id.is_empty());
         Ok(())
     }

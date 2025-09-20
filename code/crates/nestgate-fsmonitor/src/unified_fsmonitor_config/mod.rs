@@ -1,4 +1,3 @@
-
 use nestgate_core::config::canonical_master::NestGateCanonicalConfig as StandardDomainConfig;
 use serde::{Deserialize, Serialize};
 
@@ -25,8 +24,8 @@ pub use security::*;
 pub use storage::*;
 pub use watch_settings::*;
 
-/// **UNIFIED FILE SYSTEM MONITOR EXTENSIONS**
-/// Main configuration structure that composes all specialized modules
+//! **UNIFIED FILE SYSTEM MONITOR EXTENSIONS**
+//! Main configuration structure that composes all specialized modules
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UnifiedFsMonitorExtensions {
     /// Watch configuration settings
@@ -46,8 +45,7 @@ pub struct UnifiedFsMonitorExtensions {
     /// Security and access control settings
     pub security: FsMonitorSecuritySettings,
 }
-
-/// **UNIFIED FILE SYSTEM MONITOR CONFIGURATION**
-/// The main configuration type following StandardDomainConfig pattern
-/// CANONICAL MODERNIZATION: Simplified type alias without type parameters
+//! **UNIFIED FILE SYSTEM MONITOR CONFIGURATION**
+//! The main configuration type following StandardDomainConfig pattern
+//! CANONICAL MODERNIZATION: Simplified type alias without type parameters
 pub type UnifiedFsMonitorConfig = StandardDomainConfig;

@@ -10,8 +10,8 @@ use std::time::SystemTime;
 use tokio::sync::RwLock;
 // Removed unused tracing import
 
+use crate::manager::ZfsManager;
 use crate::types::StorageTier;
-use crate::ZfsManager;
 use nestgate_core::{NestGateError, Result};
 use tracing::error;
 use tracing::info;
@@ -25,7 +25,6 @@ pub struct McpMountRequest {
     pub tier: StorageTier,
     pub size_gb: u64,
 }
-
 /// MCP volume request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpVolumeRequest {
@@ -33,7 +32,6 @@ pub struct McpVolumeRequest {
     pub tier: StorageTier,
     pub size_gb: u64,
 }
-
 /// Mount status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MountStatus {
@@ -41,7 +39,6 @@ pub enum MountStatus {
     Inactive,
     Error(String),
 }
-
 /// Volume status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum VolumeStatus {
@@ -49,7 +46,6 @@ pub enum VolumeStatus {
     Inactive,
     Error(String),
 }
-
 /// ZFS mount information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsMountInfo {
@@ -60,7 +56,6 @@ pub struct ZfsMountInfo {
     pub created_at: SystemTime,
     pub status: MountStatus,
 }
-
 /// ZFS volume information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsVolumeInfo {
@@ -71,7 +66,6 @@ pub struct ZfsVolumeInfo {
     pub created_at: SystemTime,
     pub status: VolumeStatus,
 }
-
 /// ZFS MCP configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsMcpConfig {
@@ -82,7 +76,6 @@ pub struct ZfsMcpConfig {
     /// Default tier for new resources
     pub default_tier: StorageTier,
 }
-
 impl Default for ZfsMcpConfig {
     fn default() -> Self {
         Self {
@@ -95,33 +88,30 @@ impl Default for ZfsMcpConfig {
 
 impl ZfsMcpConfig {
     /// Validate the configuration settings
-    pub fn validate(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<()>  {
         if self.max_concurrent_operations == 0 {
-            return Err(NestGateError::Validation {
-                field: Some("input".to_string()),
-                message: "max_concurrent_operations must be greater than 0".to_string(),
-                current_value: None,
-                expected: None,
-                user_error: true,
-                context: None,
-            });
+            return Err(NestGateError::validation(
+                "max_concurrent_operations must be greater than 0",
+            ));
         }
 
         if self.max_concurrent_operations > 1000 {
-            return Err(NestGateError::Validation {
-                field: Some("input".to_string()),
-                message: "max_concurrent_operations must be less than or equal to 1000".to_string(),
-                current_value: None,
-                expected: None,
-                user_error: true,
-                context: None,
-            });
+            return Err(NestGateError::validation(
+                "max_concurrent_operations cannot exceed 1000",
+            ));
         }
         Ok(())
     }
 
     /// Get tier configuration for a specific tier
-    pub fn get_tier_config(&self, tier: &StorageTier) -> TierConfig {
+    pub const fn get_tier_config(&self, tier: &StorageTier) -> TierConfig {
         match tier {
             StorageTier::Hot => TierConfig {
                 priority: 1,
@@ -165,7 +155,6 @@ pub struct TierConfig {
     pub compression: bool,
     pub replication: u32,
 }
-
 /// ZFS MCP Storage Provider
 pub struct ZfsMcpStorageProvider {
     zfs_manager: Arc<ZfsManager>,
@@ -173,9 +162,9 @@ pub struct ZfsMcpStorageProvider {
     active_mounts: Arc<RwLock<HashMap<String, ZfsMountInfo>>>,
     active_volumes: Arc<RwLock<HashMap<String, ZfsVolumeInfo>>>,
 }
-
 impl ZfsMcpStorageProvider {
     /// Create new ZFS MCP storage provider
+    #[must_use]
     pub fn new(zfs_manager: Arc<ZfsManager>, config: ZfsMcpConfig) -> Self {
         Self {
             zfs_manager,
@@ -186,12 +175,21 @@ impl ZfsMcpStorageProvider {
     }
 
     /// Create mount for MCP system
-    pub async fn create_mount(&self, request: McpMountRequest) -> Result<ZfsMountInfo> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn create_mount(&self, request: McpMountRequest) -> Result<ZfsMountInfo>  {
         info!("Creating ZFS mount for MCP: {}", request.mount_id);
 
-        let tier = request.tier;
-        let dataset_name = format!("nestpool/mcp/mounts/{}", request.mount_id);
-        let mount_path = format!("/mcp/mounts/{}", request.mount_id);
+        let tier = request.tier.clone();
+        let tier_clone = tier.clone(); // Clone before move
+        let dataset_name = format!("nestpool/mcp/mounts/{"actual_error_details"}");
+        let mount_path = format!("/mcp/mounts/{"actual_error_details"}");
 
         // Create the dataset using the new API
         let dataset_name_parts: Vec<&str> = dataset_name.split('/').collect();
@@ -210,7 +208,7 @@ impl ZfsMcpStorageProvider {
                     mount_id: request.mount_id.clone(),
                     dataset_path: dataset_name,
                     mount_point: mount_path,
-                    tier,
+                    tier: tier_clone,
                     created_at: SystemTime::now(),
                     status: MountStatus::Active,
                 };
@@ -229,18 +227,27 @@ impl ZfsMcpStorageProvider {
                     "Failed to create dataset for mount {}: {}",
                     request.mount_id, e
                 );
-                Err(nestgate_core::NestGateError::Internal {
-                    message: format!("Dataset creation failed: {e}"),
-                    location: Some(format!("{}:{}", file!(), line!())),
-                    context: None,
-                    is_bug: false,
-                })
+                Err(nestgate_core::NestGateError::internal_error(
+                    format!(
+                        "MCP Integration: Failed to unmount filesystem for mount_id: {}",
+                        request.mount_id
+                    ),
+                    "mcp-integration",
+                ))
             }
         }
     }
 
     /// Remove mount
-    pub async fn remove_mount(&self, mount_id: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn remove_mount(&self, mount_id: &str) -> Result<()>  {
         info!("Removing ZFS mount: {}", mount_id);
 
         if let Some(mount_info) = self.active_mounts.write().await.remove(mount_id) {
@@ -248,7 +255,6 @@ impl ZfsMcpStorageProvider {
                 .zfs_manager
                 .dataset_manager
                 .delete_dataset(&mount_info.dataset_path)
-                .await
             {
                 Ok(_) => {
                     info!("Successfully removed ZFS mount: {}", mount_id);
@@ -256,29 +262,40 @@ impl ZfsMcpStorageProvider {
                 }
                 Err(e) => {
                     error!("Failed to destroy dataset for mount {}: {}", mount_id, e);
-                    Err(nestgate_core::NestGateError::Internal {
-                        message: format!("Dataset destruction failed: {e}"),
-                        location: Some(format!("{}:{}", file!(), line!())),
-                        context: None,
-                        is_bug: false,
-                    })
+                    Err(nestgate_core::NestGateError::internal_error(
+                        format!(
+                            "MCP Integration: Failed to destroy dataset for mount {}: {}",
+                            mount_id, e
+                        ),
+                        "mcp-integration",
+                    ))
                 }
             }
         } else {
             warn!("Mount not found: {}", mount_id);
             // IDIOMATIC EVOLUTION: Simple constructor with context
-            Err(nestgate_core::NestGateError::simple(format!(
-                "Mount not found: {mount_id}"
-            )))
+            Err(nestgate_core::NestGateError::internal_error(
+                format!("Mount not found: {mount_id}"),
+                "mcp-integration",
+            ))
         }
     }
 
     /// Create volume
-    pub async fn create_volume(&self, request: McpVolumeRequest) -> Result<ZfsVolumeInfo> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn create_volume(&self, request: McpVolumeRequest) -> Result<ZfsVolumeInfo>  {
         info!("Creating ZFS volume for MCP: {}", request.volume_id);
 
-        let tier = request.tier;
-        let dataset_name = format!("nestpool/mcp/volumes/{}", request.volume_id);
+        let tier = request.tier.clone();
+        let tier_clone = tier.clone(); // Clone before move
+        let dataset_name = format!("nestpool/mcp/volumes/{"actual_error_details"}");
 
         // Create the dataset using the new API
         let dataset_name_parts: Vec<&str> = dataset_name.split('/').collect();
@@ -296,7 +313,7 @@ impl ZfsMcpStorageProvider {
                 let volume_info = ZfsVolumeInfo {
                     volume_id: request.volume_id.clone(),
                     dataset_path: dataset_name,
-                    tier,
+                    tier: tier_clone,
                     size_bytes: request.size_gb * 1024 * 1024 * 1024,
                     created_at: SystemTime::now(),
                     status: VolumeStatus::Active,
@@ -315,18 +332,27 @@ impl ZfsMcpStorageProvider {
                     "Failed to create dataset for volume {}: {}",
                     request.volume_id, e
                 );
-                Err(nestgate_core::NestGateError::Internal {
-                    message: format!("Dataset creation failed: {e}"),
-                    location: Some(format!("{}:{}", file!(), line!())),
-                    context: None,
-                    is_bug: false,
-                })
+                Err(nestgate_core::NestGateError::internal_error(
+                    format!(
+                        "MCP Integration: Failed to destroy filesystem for volume_id: {}",
+                        request.volume_id
+                    ),
+                    "mcp-integration",
+                ))
             }
         }
     }
 
     /// Remove volume
-    pub async fn remove_volume(&self, volume_id: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn remove_volume(&self, volume_id: &str) -> Result<()>  {
         info!("Removing ZFS volume: {}", volume_id);
 
         if let Some(volume_info) = self.active_volumes.write().await.remove(volume_id) {
@@ -334,7 +360,6 @@ impl ZfsMcpStorageProvider {
                 .zfs_manager
                 .dataset_manager
                 .delete_dataset(&volume_info.dataset_path)
-                .await
             {
                 Ok(_) => {
                     info!("Successfully removed ZFS volume: {}", volume_id);
@@ -342,38 +367,52 @@ impl ZfsMcpStorageProvider {
                 }
                 Err(e) => {
                     error!("Failed to destroy dataset for volume {}: {}", volume_id, e);
-                    Err(nestgate_core::NestGateError::Internal {
-                        message: format!("Dataset destruction failed: {e}"),
-                        location: Some(format!("{}:{}", file!(), line!())),
-                        context: None,
-                        is_bug: false,
-                    })
+                    Err(nestgate_core::NestGateError::internal_error(
+                        format!(
+                            "MCP Integration: Failed to create snapshot for volume_id: {}",
+                            volume_id
+                        ),
+                        "mcp-integration",
+                    ))
                 }
             }
         } else {
             warn!("Volume not found: {}", volume_id);
             // IDIOMATIC EVOLUTION: Simple constructor with context
-            Err(nestgate_core::NestGateError::simple(format!(
-                "Volume not found: {volume_id}"
-            )))
+            Err(nestgate_core::NestGateError::internal_error(
+                format!("Volume not found: {volume_id}"),
+                "mcp-integration",
+            ))
         }
     }
 
     /// List all volumes
-    pub async fn list_volumes(&self) -> Result<Vec<ZfsVolumeInfo>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn list_volumes(&self) -> Result<Vec<ZfsVolumeInfo>>  {
         let volumes = self.active_volumes.read().await;
         Ok(volumes.values().cloned().collect())
     }
 
     /// Trigger AI optimization
-    pub async fn trigger_ai_optimization(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn trigger_ai_optimization(&self) -> Result<()>  {
         if !self.config.enable_ai_optimization {
-            return Err(nestgate_core::NestGateError::Internal {
-                message: "AI optimization not enabled".to_string(),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
-            });
+            return Err(nestgate_core::NestGateError::internal_error(
+                "MCP integration - AI optimization is disabled".to_string(),
+                "mcp-integration",
+            ));
         }
 
         info!("Triggering AI optimization for MCP resources");

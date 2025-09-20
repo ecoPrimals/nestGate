@@ -25,7 +25,6 @@ pub enum InputValidationError {
     #[error("Pattern compilation failed: {message}")]
     PatternError { message: String },
 }
-
 /// Input validation configuration
 #[derive(Debug, Clone)]
 pub struct ValidationConfig {
@@ -42,7 +41,6 @@ pub struct ValidationConfig {
     /// Enable path traversal detection
     pub enable_path_traversal_detection: bool,
 }
-
 impl Default for ValidationConfig {
     fn default() -> Self {
         Self {
@@ -62,7 +60,6 @@ pub struct InputValidator {
     config: ValidationConfig,
     patterns: ValidationPatterns,
 }
-
 /// Compiled regex patterns for validation
 #[derive(Debug)]
 struct ValidationPatterns {
@@ -71,7 +68,6 @@ struct ValidationPatterns {
     uuid: Regex,
     alphanumeric: Regex,
     safe_filename: Regex,
-
     // Security patterns
     sql_injection: Regex,
     xss_script: Regex,
@@ -127,20 +123,34 @@ impl Default for ValidationPatterns {
 
 impl InputValidator {
     /// Create a new input validator with default patterns
-    pub fn new() -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn new() -> Result<Self>  {
         let patterns = ValidationPatterns::new()?;
         let config = ValidationConfig::default();
         Ok(Self { patterns, config })
     }
 
     /// Create a new input validator with custom configuration
-    pub fn with_config(config: ValidationConfig) -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn with_config(config: ValidationConfig) -> Result<Self>  {
         let patterns = ValidationPatterns::new()?;
         Ok(Self { patterns, config })
     }
 
     /// Validate a string input with security checks
-    pub fn validate_string(
+    pub const fn validate_string(
         &self,
         field: &str,
         value: &str,
@@ -155,14 +165,14 @@ impl InputValidator {
             return Err(ValidationError::InvalidField {
                 field: field.to_string(),
                 reason: format!("too short, minimum {min_len} characters"),
-            });
+            );
         }
 
         if value.len() > max_len {
             return Err(ValidationError::InvalidField {
                 field: field.to_string(),
                 reason: format!("too long, maximum {max_len} characters"),
-            });
+            );
         }
 
         // Security validation - convert SecurityError to ValidationError for this context
@@ -170,7 +180,7 @@ impl InputValidator {
             return Err(ValidationError::InvalidField {
                 field: field.to_string(),
                 reason: "contains security violations".to_string(),
-            });
+            );
         }
 
         // Sanitize and return
@@ -178,12 +188,12 @@ impl InputValidator {
     }
 
     /// Validate an email address
-    pub fn validate_email(&self, field: &str, email: &str) -> ValidationResult<String> {
+    pub const fn validate_email(&self, field: &str, email: &str) -> ValidationResult<String> {
         if !self.patterns.email.is_match(email) {
             return Err(ValidationError::InvalidField {
                 field: field.to_string(),
                 reason: "invalid email format".to_string(),
-            });
+            );
         }
 
         self.validate_string(field, email, Some(5), Some(254))
@@ -194,24 +204,24 @@ impl InputValidator {
     }
 
     /// Validate a UUID
-    pub fn validate_uuid(&self, field: &str, uuid: &str) -> ValidationResult<String> {
+    pub const fn validate_uuid(&self, field: &str, uuid: &str) -> ValidationResult<String> {
         if !self.patterns.uuid.is_match(uuid) {
             return Err(ValidationError::InvalidField {
                 field: field.to_string(),
                 reason: "invalid UUID format".to_string(),
-            });
+            );
         }
 
         Ok(uuid.to_string())
     }
 
     /// Validate a password with security requirements
-    pub fn validate_password(&self, _field: &str, password: &str) -> SecurityResult<String> {
+    pub const fn validate_password(&self, _field: &str, password: &str) -> SecurityResult<String> {
         if password.len() < self.config.min_password_length {
             return Err(SecurityError::WeakCredentials {
-                requirement: format!("minimum {} characters", self.config.min_password_length),
+                requirement: format!("minimum {self.config.min_password_length} characters"),
                 provided: "password too short".to_string(),
-            });
+            );
         }
 
         // Check for common password patterns
@@ -219,19 +229,19 @@ impl InputValidator {
             return Err(SecurityError::WeakCredentials {
                 requirement: "strong password".to_string(),
                 provided: "common password detected".to_string(),
-            });
+            );
         }
 
         Ok(password.to_string())
     }
 
     /// Validate a filename for safe filesystem operations
-    pub fn validate_filename(&self, field: &str, filename: &str) -> ValidationResult<String> {
+    pub const fn validate_filename(&self, field: &str, filename: &str) -> ValidationResult<String> {
         if !self.patterns.safe_filename.is_match(filename) {
             return Err(ValidationError::InvalidField {
                 field: field.to_string(),
                 reason: "unsafe filename format".to_string(),
-            });
+            );
         }
 
         // Check for path traversal
@@ -241,7 +251,7 @@ impl InputValidator {
             return Err(ValidationError::InvalidField {
                 field: field.to_string(),
                 reason: "path traversal detected".to_string(),
-            });
+            );
         }
 
         self.validate_string(field, filename, Some(1), Some(255))
@@ -252,7 +262,7 @@ impl InputValidator {
     }
 
     /// Validate a network address (IP or domain)
-    pub fn validate_network_address(&self, field: &str, address: &str) -> ValidationResult<String> {
+    pub const fn validate_network_address(&self, field: &str, endpoint: &str) -> ValidationResult<String> {
         // Try IPv4 first
         if self.patterns.ipv4.is_match(address) {
             return Ok(address.to_string());
@@ -275,12 +285,12 @@ impl InputValidator {
     }
 
     /// Validate a port number
-    pub fn validate_port(&self, field: &str, port: &str) -> ValidationResult<u16> {
+    pub const fn validate_port(&self, field: &str, port: &str) -> ValidationResult<u16> {
         if !self.patterns.port.is_match(port) {
             return Err(ValidationError::InvalidField {
                 field: field.to_string(),
                 reason: "invalid port format".to_string(),
-            });
+            );
         }
 
         port.parse::<u16>()
@@ -303,7 +313,7 @@ impl InputValidator {
                     "collection too large, maximum {} items",
                     self.config.max_collection_size
                 ),
-            });
+            );
         }
         Ok(())
     }
@@ -317,7 +327,7 @@ impl InputValidator {
                 attack_type: "SQL injection".to_string(),
                 field: field.to_string(),
                 pattern: "SQL keywords detected".to_string(),
-            });
+            );
         }
 
         // XSS detection
@@ -329,7 +339,7 @@ impl InputValidator {
                 attack_type: "XSS".to_string(),
                 field: field.to_string(),
                 pattern: "script tags or dangerous attributes detected".to_string(),
-            });
+            );
         }
 
         // Path traversal detection
@@ -340,7 +350,7 @@ impl InputValidator {
                 attack_type: "path traversal".to_string(),
                 field: field.to_string(),
                 pattern: "directory traversal sequences detected".to_string(),
-            });
+            );
         }
 
         // Command injection detection
@@ -349,7 +359,7 @@ impl InputValidator {
                 attack_type: "command injection".to_string(),
                 field: field.to_string(),
                 pattern: "shell command sequences detected".to_string(),
-            });
+            );
         }
 
         Ok(())
@@ -368,13 +378,13 @@ impl InputValidator {
     }
 
     /// Validate a map of key-value pairs
-    pub fn validate_map(&self, field: &str, map: &HashMap<String, String>) -> ValidationResult<()> {
+    pub const fn validate_map(&self, field: &str, map: &HashMap<String, String>) -> ValidationResult<()> {
         // Validate collection size
         self.validate_collection_size(field, &map.iter().collect::<Vec<_>>())
             .map_err(|_| ValidationError::InvalidField {
                 field: field.to_string(),
                 reason: "map validation failed".to_string(),
-            })?;
+            )?;
 
         // Validate each key and value
         for (key, value) in map {
@@ -382,12 +392,12 @@ impl InputValidator {
                 .map_err(|_| ValidationError::InvalidField {
                     field: field.to_string(),
                     reason: "invalid key format".to_string(),
-                })?;
+                )?;
             self.validate_string(&format!("{field}.value"), value, None, None)
                 .map_err(|_| ValidationError::InvalidField {
                     field: field.to_string(),
                     reason: "invalid value format".to_string(),
-                })?;
+                )?;
         }
 
         Ok(())
@@ -395,56 +405,51 @@ impl InputValidator {
 }
 
 /// Validate a service name for universal service registration
-pub fn validate_service_name(name: &str) -> ValidationResult<String> {
+pub const fn validate_service_name(name: &str) -> ValidationResult<String> {
     let validator = InputValidator::new().map_err(|_| ValidationError::InvalidField {
-        field: Some("validator".to_string()),
+        field: Some("field".to_string()),
         reason: "failed to create validator".to_string(),
-    })?;
-
+    )?;
     if !validator.patterns.alphanumeric.is_match(name) {
         return Err(ValidationError::InvalidField {
-            field: Some("service_name".to_string()),
+            field: Some("field".to_string()),
             reason: "service name must be alphanumeric".to_string(),
-        });
+        );
     }
 
     Ok(name.to_string())
 }
 
 /// Validate an endpoint path for API registration
-pub fn validate_endpoint_path(path: &str) -> ValidationResult<String> {
     // Additional path-specific validation
     if !path.starts_with('/') {
         return Err(ValidationError::InvalidField {
-            field: Some("endpoint_path".to_string()),
+            field: Some("field".to_string()),
             reason: "path must start with '/'".to_string(),
-        });
+        );
     }
-
     Ok(path.to_string())
 }
 
 /// Validate an API key
-pub fn validate_api_key(key: &str) -> ValidationResult<String> {
+pub const fn validate_api_key(key: &str) -> ValidationResult<String> {
     let validator = InputValidator::new().map_err(|_| ValidationError::InvalidField {
-        field: Some("validator".to_string()),
+        field: Some("field".to_string()),
         reason: "failed to create validator".to_string(),
-    })?;
+    )?;
     validator.validate_string("api_key", key, Some(32), Some(128))
 }
-
 /// Validate a username for authentication
-pub fn validate_username(username: &str) -> ValidationResult<String> {
+pub const fn validate_username(username: &str) -> ValidationResult<String> {
     let validator = InputValidator::new().map_err(|_| ValidationError::InvalidField {
-        field: Some("validator".to_string()),
+        field: Some("field".to_string()),
         reason: "failed to create validator".to_string(),
-    })?;
-
+    )?;
     if !validator.patterns.alphanumeric.is_match(username) {
         return Err(ValidationError::InvalidField {
-            field: Some("username".to_string()),
+            field: Some("field".to_string()),
             reason: "username must be alphanumeric".to_string(),
-        });
+        );
     }
 
     Ok(username.to_string())

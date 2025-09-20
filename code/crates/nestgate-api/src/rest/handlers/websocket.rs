@@ -1,6 +1,6 @@
 //
 // Pure data layer WebSocket handlers for real-time data streams.
-// These handlers provide live data feeds for biomeOS dashboards
+// These handlers provide live data feeds for management dashboards
 // without any authentication or user management overhead.
 
 use axum::extract::ws::{Message, WebSocket};
@@ -9,10 +9,12 @@ use axum::{
     response::Response,
 };
 use serde::Deserialize;
+use std::hash::{DefaultHasher, Hash, Hasher};
 use tokio::time::{interval, Duration};
 use tracing::{debug, error, info};
 
-use crate::rest::models::*;
+use crate::rest::models::types::ZfsMetrics;
+use crate::rest::models::{DiskIoMetrics, NetworkIoMetrics, SystemMetrics};
 use crate::rest::ApiState;
 
 // ==================== SECTION ====================
@@ -27,40 +29,36 @@ pub struct WebSocketQuery {
     /// Log level filter (for logs endpoint)
     pub level: Option<String>,
 }
-
 /// Live metrics WebSocket stream
 /// GET /ws/metrics
-pub async fn metrics_websocket(
+pub fn metrics_websocket(
     ws: WebSocketUpgrade,
     State(state): State<ApiState>,
     Query(query): Query<WebSocketQuery>,
 ) -> Response {
     debug!("Upgrading to metrics WebSocket connection");
-
     ws.on_upgrade(move |socket| handle_metrics_websocket(socket, state, query))
 }
 
 /// Live logs WebSocket stream  
 /// GET /ws/logs
-pub async fn logs_websocket(
+pub fn logs_websocket(
     ws: WebSocketUpgrade,
     State(state): State<ApiState>,
     Query(query): Query<WebSocketQuery>,
 ) -> Response {
     debug!("Upgrading to logs WebSocket connection");
-
     ws.on_upgrade(move |socket| handle_logs_websocket(socket, state, query))
 }
 
 /// System events WebSocket stream
 /// GET /ws/events
-pub async fn events_websocket(
+pub fn events_websocket(
     ws: WebSocketUpgrade,
     State(state): State<ApiState>,
     Query(query): Query<WebSocketQuery>,
 ) -> Response {
     debug!("Upgrading to events WebSocket connection");
-
     ws.on_upgrade(move |socket| handle_events_websocket(socket, state, query))
 }
 
@@ -71,7 +69,6 @@ pub async fn events_websocket(
 /// Handle metrics WebSocket connection
 async fn handle_metrics_websocket(mut socket: WebSocket, state: ApiState, query: WebSocketQuery) {
     info!("Metrics WebSocket connection established");
-
     let update_interval = Duration::from_secs(query.interval.unwrap_or(5));
     let mut ticker = interval(update_interval);
 
@@ -88,7 +85,7 @@ async fn handle_metrics_websocket(mut socket: WebSocket, state: ApiState, query:
         };
 
         // Send metrics as JSON
-        let message = match serde_json::to_string(&metrics) {
+        let _message = match serde_json::to_string(&metrics) {
             Ok(json) => Message::Text(json),
             Err(e) => {
                 error!("Failed to serialize metrics: {}", e);
@@ -96,7 +93,7 @@ async fn handle_metrics_websocket(mut socket: WebSocket, state: ApiState, query:
             }
         };
 
-        if socket.send(message).await.is_err() {
+        if socket.send(_message).await.is_err() {
             debug!("Metrics WebSocket connection closed");
             break;
         }
@@ -108,7 +105,6 @@ async fn handle_metrics_websocket(mut socket: WebSocket, state: ApiState, query:
 /// Handle logs WebSocket connection
 async fn handle_logs_websocket(mut socket: WebSocket, _state: ApiState, query: WebSocketQuery) {
     info!("Logs WebSocket connection established");
-
     let level_filter = query.level.unwrap_or_else(|| "info".to_string());
     let update_interval = Duration::from_secs(query.interval.unwrap_or(1));
     let mut ticker = interval(update_interval);
@@ -119,7 +115,7 @@ async fn handle_logs_websocket(mut socket: WebSocket, _state: ApiState, query: W
         // Generate sample log entries (in production, would stream real logs)
         let log_entry = generate_sample_log_entry(&level_filter);
 
-        let message = match serde_json::to_string(&log_entry) {
+        let _message = match serde_json::to_string(&log_entry) {
             Ok(json) => Message::Text(json),
             Err(e) => {
                 error!("Failed to serialize log entry: {}", e);
@@ -127,7 +123,7 @@ async fn handle_logs_websocket(mut socket: WebSocket, _state: ApiState, query: W
             }
         };
 
-        if socket.send(message).await.is_err() {
+        if socket.send(_message).await.is_err() {
             debug!("Logs WebSocket connection closed");
             break;
         }
@@ -139,7 +135,6 @@ async fn handle_logs_websocket(mut socket: WebSocket, _state: ApiState, query: W
 /// Handle events WebSocket connection
 async fn handle_events_websocket(mut socket: WebSocket, state: ApiState, query: WebSocketQuery) {
     info!("Events WebSocket connection established");
-
     let update_interval = Duration::from_secs(query.interval.unwrap_or(10));
     let mut ticker = interval(update_interval);
 
@@ -177,53 +172,66 @@ async fn get_current_metrics(state: &ApiState) -> Result<SystemMetrics, String> 
     let mut total_datasets = 0;
     let total_snapshots = 0;
     let mut total_used_bytes = 0;
-    let mut total_available_bytes = 0;
+    let mut _total_available_bytes = 0;
     let mut compression_ratios = Vec::new();
-
-    for (_name, engine) in engines.iter() {
-        let stats = engine.stats().await;
+    for (_name, _engine) in engines.iter() {
+        // Placeholder stats - _engine is now just a String
         total_datasets += 1;
         // Use available stats instead of cow_stats
-        total_used_bytes += stats.total_operations * 1024; // Estimate based on operations
-        total_available_bytes += 1024 * 1024 * 1024; // 1GB per dataset
+        total_used_bytes += 1024 * 1024; // Placeholder - 1MB per dataset
+        _total_available_bytes += 1024 * 1024 * 1024; // 1GB per dataset
 
         // Access compression stats directly (not optional in ModernZfsStats)
         {
-            let compression_stats = &stats.compression_stats;
-            compression_ratios.push(compression_stats.compression_ratio());
+            // Placeholder compression stats
+            compression_ratios.push(2.5); // Placeholder compression ratio
         }
     }
 
     let overall_compression_ratio = if compression_ratios.is_empty() {
         1.0
     } else {
-        compression_ratios.iter().sum::<f64>() / compression_ratios.len() as f64
+        compression_ratios.iter().sum::<f64>() / (compression_ratios.len() as f64)
     };
 
     Ok(SystemMetrics {
-        timestamp: chrono::Utc::now(),
         cpu_usage_percent: generate_realtime_cpu_usage(),
         memory_usage_percent: generate_realtime_memory_usage(),
+        load_average: 0.5,    // Placeholder value
+        uptime_seconds: 3600, // Placeholder value
+        timestamp: chrono::Utc::now(),
         disk_io: DiskIoMetrics {
+            read_bytes_per_sec: generate_realtime_disk_read() * 1024.0 * 1024.0, // Convert MB to bytes
+            write_bytes_per_sec: generate_realtime_disk_write() * 1024.0 * 1024.0,
+            read_ops_per_sec: generate_realtime_read_iops() as f64,
+            write_ops_per_sec: generate_realtime_write_iops() as f64,
             read_mbps: generate_realtime_disk_read(),
             write_mbps: generate_realtime_disk_write(),
-            read_iops: generate_realtime_read_iops(),
-            write_iops: generate_realtime_write_iops(),
+            read_iops: generate_realtime_read_iops() as f64,
+            write_iops: generate_realtime_write_iops() as f64,
             avg_queue_depth: generate_realtime_queue_depth(),
         },
         network_io: NetworkIoMetrics {
-            rx_bytes_per_sec: generate_realtime_network_rx(),
-            tx_bytes_per_sec: generate_realtime_network_tx(),
-            rx_packets_per_sec: generate_realtime_network_rx_packets(),
-            tx_packets_per_sec: generate_realtime_network_tx_packets(),
+            bytes_sent: (generate_realtime_network_tx() as f64 * 1024.0 * 1024.0) as u64, // Convert MB to bytes
+            bytes_received: (generate_realtime_network_rx() as f64 * 1024.0 * 1024.0) as u64,
+            packets_sent: generate_realtime_network_tx_packets() as u64,
+            packets_received: generate_realtime_network_rx_packets() as u64,
+            rx_bytes_per_sec: generate_realtime_network_rx() as f64,
+            tx_bytes_per_sec: generate_realtime_network_tx() as f64,
+            rx_packets_per_sec: generate_realtime_network_rx_packets() as f64,
+            tx_packets_per_sec: generate_realtime_network_tx_packets() as f64,
         },
         zfs_metrics: ZfsMetrics {
+            arc_hit_ratio: generate_realtime_cache_hit_ratio(),
+            arc_size_bytes: 2_147_483_648, // 2GB
+            arc_target_size_bytes: 2_147_483_648,
+            read_throughput_mbps: 100.0,
+            write_throughput_mbps: 50.0,
+            compression_ratio: overall_compression_ratio,
+            deduplication_ratio: 1.2,
             total_datasets,
             total_snapshots: total_snapshots.try_into().unwrap_or(0),
             total_used_bytes,
-            total_available_bytes,
-            overall_compression_ratio,
-            cache_hit_ratio: generate_realtime_cache_hit_ratio(),
         },
     })
 }
@@ -242,12 +250,10 @@ pub struct LogEntry {
     /// Thread that generated the log entry
     pub thread: String,
 }
-
 /// Generate sample log entry
 fn generate_sample_log_entry(level_filter: &str) -> LogEntry {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
-
     let mut hasher = DefaultHasher::new();
     chrono::Utc::now().timestamp_millis().hash(&mut hasher);
     let seed = hasher.finish();
@@ -262,7 +268,7 @@ fn generate_sample_log_entry(level_filter: &str) -> LogEntry {
 
     let level = levels[(seed % levels.len() as u64) as usize];
 
-    let messages = vec![
+    let _messages = vec![
         "ZFS dataset operation completed successfully",
         "Storage backend health check passed",
         "Snapshot created for dataset tank/data",
@@ -286,9 +292,9 @@ fn generate_sample_log_entry(level_filter: &str) -> LogEntry {
     LogEntry {
         timestamp: chrono::Utc::now(),
         level: level.to_string(),
-        message: messages[(seed % messages.len() as u64) as usize].to_string(),
+        message: _messages[(seed % _messages.len() as u64) as usize].to_string(),
         module: modules[((seed >> 8) % modules.len() as u64) as usize].to_string(),
-        thread: format!("worker-{}", (seed % 4) + 1),
+        thread: format!("worker-{((seed >> 16}") % 8) + 1),
     }
 }
 
@@ -308,10 +314,8 @@ pub struct SystemEvent {
     /// Event severity level
     pub severity: String,
 }
-
 /// Generate sample system event
 async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
-
     let mut hasher = DefaultHasher::new();
     chrono::Utc::now().timestamp_millis().hash(&mut hasher);
     let seed = hasher.finish();
@@ -334,7 +338,7 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
         "dataset_created" => (
             "New ZFS dataset created".to_string(),
             serde_json::json!({
-                "dataset_name": format!("tank/data_{}", (seed % 100)),
+                "dataset_name": format!("tank/data_{((seed >> 8}") % 100)),
                 "backend": "filesystem",
                 "compression": true
             }),
@@ -343,8 +347,8 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
             "Automatic snapshot created".to_string(),
             serde_json::json!({
                 "dataset": "tank/data",
-                "snapshot_name": format!("auto-{}", chrono::Utc::now().format("%Y%m%d-%H%M%S")),
-                "size_bytes": (seed % 1000000) + 1000000
+                "snapshot_name": format!("auto-{chrono::Utc::now(}").format("%Y%m%d-%H%M%S")),
+                "size_bytes": (seed % 1_000_000) + 1_000_000
             }),
         ),
         "storage_scanned" => (
@@ -367,7 +371,7 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
             serde_json::json!({
                 "metric": "cpu_usage_percent",
                 "threshold": 80.0,
-                "current_value": generate_realtime_cpu_usage()
+                "currentvalue": generate_realtime_cpu_usage()
             }),
         ),
         _ => (
@@ -377,7 +381,7 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
     };
 
     SystemEvent {
-        id: format!("event_{}", seed),
+        id: format!("event_{"actual_error_details"}"),
         timestamp: chrono::Utc::now(),
         event_type: event_type.to_string(),
         description,
@@ -388,7 +392,6 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
 
 // Real-time metric generators (with more variation than historical)
 fn generate_realtime_cpu_usage() -> f64 {
-
     let mut hasher = DefaultHasher::new();
     chrono::Utc::now().timestamp_millis().hash(&mut hasher);
     let seed = hasher.finish();
@@ -399,7 +402,6 @@ fn generate_realtime_cpu_usage() -> f64 {
 }
 
 fn generate_realtime_memory_usage() -> f64 {
-
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 1).hash(&mut hasher);
     let seed = hasher.finish();
@@ -410,7 +412,6 @@ fn generate_realtime_memory_usage() -> f64 {
 }
 
 fn generate_realtime_disk_read() -> f64 {
-
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 2).hash(&mut hasher);
     let seed = hasher.finish();
@@ -421,7 +422,6 @@ fn generate_realtime_disk_read() -> f64 {
 }
 
 fn generate_realtime_disk_write() -> f64 {
-
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 3).hash(&mut hasher);
     let seed = hasher.finish();
@@ -440,7 +440,6 @@ fn generate_realtime_write_iops() -> u64 {
 }
 
 fn generate_realtime_queue_depth() -> f64 {
-
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 4).hash(&mut hasher);
     let seed = hasher.finish();
@@ -451,7 +450,6 @@ fn generate_realtime_queue_depth() -> f64 {
 }
 
 fn generate_realtime_network_rx() -> u64 {
-
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 5).hash(&mut hasher);
     let seed = hasher.finish();
@@ -474,7 +472,6 @@ fn generate_realtime_network_tx_packets() -> u64 {
 }
 
 fn generate_realtime_cache_hit_ratio() -> f64 {
-
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 6).hash(&mut hasher);
     let seed = hasher.finish();

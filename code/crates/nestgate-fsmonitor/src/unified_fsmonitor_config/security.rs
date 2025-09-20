@@ -3,7 +3,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
 /// Security and access control settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FsMonitorSecuritySettings {
@@ -24,7 +23,6 @@ pub struct FsMonitorSecuritySettings {
     /// Authorization settings
     pub authorization: AuthorizationSettings,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccessControlSettings {
     /// Enable access control
@@ -46,7 +44,6 @@ pub struct AccessControlSettings {
     /// Process blacklist
     pub process_blacklist: Vec<String>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptionSettings {
     /// Enable encryption
@@ -60,7 +57,6 @@ pub struct EncryptionSettings {
     /// Encrypt data in transit
     pub encrypt_in_transit: bool,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyManagementSettings {
     /// Key provider (local, hsm, cloud)
@@ -74,7 +70,6 @@ pub struct KeyManagementSettings {
     /// Key storage location
     pub storage_location: String,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditLoggingSettings {
     /// Enable audit logging
@@ -90,7 +85,6 @@ pub struct AuditLoggingSettings {
     /// Log retention period
     pub retention_period: Duration,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogRotationSettings {
     /// Enable log rotation
@@ -102,7 +96,6 @@ pub struct LogRotationSettings {
     /// Rotation interval
     pub interval: Duration,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthenticationSettings {
     /// Enable authentication
@@ -118,7 +111,6 @@ pub struct AuthenticationSettings {
     /// Password policy
     pub password_policy: HashMap<String, serde_json::Value>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthorizationSettings {
     /// Enable authorization
@@ -132,7 +124,6 @@ pub struct AuthorizationSettings {
     /// Role definitions
     pub roles: HashMap<String, Vec<String>>,
 }
-
 impl Default for FsMonitorSecuritySettings {
     fn default() -> Self {
         Self {

@@ -1,7 +1,7 @@
-//! **LOG COLLECTORS AND AGGREGATION**
-//!
-//! Log aggregation and collection functionality for forwarding logs to external systems.
-//! Extracted from tracing_setup.rs for file size compliance.
+// **LOG COLLECTORS AND AGGREGATION**
+//! Collectors functionality and utilities.
+// Log aggregation and collection functionality for forwarding logs to external systems.
+// Extracted from tracing_setup.rs for file size compliance.
 
 use crate::{NestGateError, Result};
 use std::collections::HashMap;
@@ -25,10 +25,9 @@ pub struct LogAggregator {
     /// Shutdown channel
     shutdown_tx: Option<mpsc::Sender<()>>,
 }
-
 impl LogAggregator {
     /// Create new log aggregator
-    pub fn new(config: LogAggregationConfig) -> Self {
+    pub const fn new(config: LogAggregationConfig) -> Self {
         info!(
             "📋 Initializing log aggregator with {} destinations",
             config.destinations.len()
@@ -43,7 +42,15 @@ impl LogAggregator {
     }
 
     /// Start log aggregation background task
-    pub async fn start(&mut self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn start(&mut self) -> Result<()>  {
         if !self.config.enabled {
             debug!("Log aggregation disabled");
             return Ok(());
@@ -76,14 +83,14 @@ impl LogAggregator {
                     }
                 }
             }
-        });
+        );
 
         info!("✅ Log aggregator started");
         Ok(())
     }
 
     /// Add log entry to buffer
-    pub async fn add_log(&self, entry: LogEntry) {
+    pub fn add_log(&self, entry: LogEntry) {
         if !self.config.enabled {
             return;
         }
@@ -174,7 +181,7 @@ impl LogAggregator {
                     "_index": index,
                     "_type": "_doc"
                 }
-            });
+            );
             if let Ok(index_json) = serde_json::to_string(&index_line) {
                 bulk_body.push_str(&index_json);
                 bulk_body.push('\n');
@@ -207,12 +214,8 @@ impl LogAggregator {
             };
         }
 
-        let response = request.send().await.map_err(|e| NestGateError::Internal {
-            message: format!("Failed to send to Elasticsearch: {e}"),
-            location: Some(file!().to_string()),
-            context: None,
-            is_bug: false,
-        })?;
+        let response = request.send().await.map_err(|e| NestGateError::internal_error(
+            location: Some(file!()"))?;
 
         if response.status().is_success() {
             debug!("✅ Sent {} logs to Elasticsearch", logs.len());
@@ -259,7 +262,7 @@ impl LogAggregator {
 
         let payload = serde_json::json!({
             "streams": streams
-        });
+        );
 
         let mut request = client
             .post(&push_url)
@@ -277,12 +280,8 @@ impl LogAggregator {
             };
         }
 
-        let response = request.send().await.map_err(|e| NestGateError::Internal {
-            message: format!("Failed to send to Loki: {e}"),
-            location: Some(file!().to_string()),
-            context: None,
-            is_bug: false,
-        })?;
+        let response = request.send().await.map_err(|e| NestGateError::internal_error(
+            location: Some(file!()"))?;
 
         if response.status().is_success() {
             debug!("✅ Sent {} logs to Loki", logs.len());
@@ -363,18 +362,14 @@ impl LogAggregator {
             "logs": logs,
             "count": logs.len(),
             "timestamp": SystemTime::now()
-        });
+        );
 
         let mut request = match method.to_uppercase().as_str() {
             "POST" => client.post(url).json(&payload),
             "PUT" => client.put(url).json(&payload),
             _ => {
-                return Err(NestGateError::Internal {
-                    message: format!("Unsupported HTTP method for webhook: {method}"),
-                    location: Some(file!().to_string()),
-                    context: None,
-                    is_bug: false,
-                })
+                return Err(NestGateError::internal_error(
+                    location: Some(file!().to_string())})
             }
         };
 
@@ -382,12 +377,8 @@ impl LogAggregator {
             request = request.header(key, value);
         }
 
-        let response = request.send().await.map_err(|e| NestGateError::Internal {
-            message: format!("Failed to send to webhook: {e}"),
-            location: Some(file!().to_string()),
-            context: None,
-            is_bug: false,
-        })?;
+        let response = request.send().await.map_err(|e| NestGateError::internal_error(
+            location: Some(file!()"))?;
 
         if response.status().is_success() {
             debug!("✅ Sent {} logs to webhook", logs.len());
@@ -399,7 +390,14 @@ impl LogAggregator {
     }
 
     /// Stop log aggregation
-    pub async fn stop(&mut self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn stop(&mut self) -> Result<()>  {
         if let Some(shutdown_tx) = self.shutdown_tx.take() {
             let _ = shutdown_tx.send(()).await;
             info!("Log aggregator stop signal sent");

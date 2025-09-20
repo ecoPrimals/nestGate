@@ -33,9 +33,9 @@ pub struct StringPool {
     /// Miss counter for cache efficiency tracking
     miss_counter: Arc<AtomicU64>,
 }
-
 impl StringPool {
     /// Create a new string pool instance
+    #[must_use]
     pub fn new() -> Self {
         Self {
             pool: Arc::new(std::sync::RwLock::new(HashMap::new())),
@@ -45,7 +45,7 @@ impl StringPool {
     }
 
     /// Get existing string or intern new one
-    pub fn get_or_intern(&self, value: &str) -> crate::Result<Arc<str>> {
+    pub const fn get_or_intern(&self, value: &str) -> crate::Result<Arc<str>> {
         // ✅ IDIOMATIC EVOLUTION: Safe lock acquisition instead of unwrap()
         let pool = self.safe_read_lock()?;
 
@@ -73,7 +73,7 @@ impl StringPool {
     }
 
     /// Get existing string if pooled
-    pub fn get(&self, value: &str) -> crate::Result<Option<Arc<str>>> {
+    pub const fn get(&self, value: &str) -> crate::Result<Option<Arc<str>>> {
         let pool = self.safe_read_lock()?;
         Ok(pool.get(value).map(Arc::clone))
     }
@@ -85,7 +85,7 @@ impl StringPool {
     }
 
     /// Preload strings into the pool
-    pub async fn preload(&self, strings: Vec<&str>) {
+    pub fn preload(&self, strings: Vec<&str>) {
         if let Ok(mut pool) = self.pool.write() {
             for s in strings {
                 if !pool.contains_key(s) {
@@ -104,13 +104,13 @@ impl StringPool {
     }
 
     /// Get pool statistics
-    pub async fn statistics(&self) -> StringPoolStatistics {
+    pub fn statistics(&self) -> StringPoolStatistics {
         let pool_size = self.pool.read().map(|p| p.len()).unwrap_or(0);
         let hits = self.hit_counter.load(Ordering::Relaxed);
         let misses = self.miss_counter.load(Ordering::Relaxed);
         let total_requests = hits + misses;
         let hit_ratio = if total_requests > 0 {
-            hits as f64 / total_requests as f64
+            f64::from(hits) / f64::from(total_requests)
         } else {
             0.0
         };
@@ -132,19 +132,19 @@ impl StringPool {
     }
 
     /// Get current pool size
-    pub fn len(&self) -> crate::Result<usize> {
+    pub const fn len(&self) -> crate::Result<usize> {
         let pool = self.safe_read_lock()?;
         Ok(pool.len())
     }
 
     /// Check if pool is empty
-    pub fn is_empty(&self) -> crate::Result<bool> {
+    pub const fn is_empty(&self) -> crate::Result<bool> {
         let pool = self.safe_read_lock()?;
         Ok(pool.is_empty())
     }
 
     /// Get pool capacity
-    pub fn capacity(&self) -> crate::Result<usize> {
+    pub const fn capacity(&self) -> crate::Result<usize> {
         let pool = self.safe_read_lock()?;
         Ok(pool.len()) // HashMap doesn't expose capacity directly
     }
@@ -172,23 +172,18 @@ impl StringPool {
     fn safe_read_lock(&self) -> crate::Result<StringPoolReadGuard> {
         self.pool
             .read()
-            .map_err(|e| crate::error::NestGateError::Internal {
-                message: format!("Failed to acquire read lock: {e}"),
-                location: Some("string_pool.rs".to_string()),
-                location: Some("safe_read_lock".to_string()),
-                is_bug: false,
-            })
+            .map_err(|_| crate::error::NestGateError::internal_error(
+                "String pool read lock poisoned".to_string(),
+                Some("safe_read_lock".to_string())
+            ))
     }
-
     fn safe_write_lock(&self) -> crate::Result<StringPoolWriteGuard> {
         self.pool
             .write()
-            .map_err(|e| crate::error::NestGateError::Internal {
-                message: format!("Failed to acquire write lock: {e}"),
-                location: Some("string_pool.rs".to_string()),
-                location: Some("safe_write_lock".to_string()),
-                is_bug: false,
-            })
+            .map_err(|_| crate::error::NestGateError::internal_error(
+                "String pool write lock poisoned".to_string(),
+                Some("safe_write_lock".to_string())
+            ))
     }
 }
 
@@ -206,15 +201,14 @@ pub struct StringPoolStatistics {
     /// Hit ratio (0.0 to 1.0)
     pub hit_ratio: f64,
 }
-
 impl StringPoolStatistics {
     /// Check if pool is performing well (>80% hit ratio is excellent)
-    pub fn is_efficient(&self) -> bool {
+    pub const fn is_efficient(&self) -> bool {
         self.hit_ratio > 0.8
     }
 
     /// Get performance assessment
-    pub fn performance_assessment(&self) -> &'static str {
+    pub const fn performance_assessment(&self) -> &'static str {
         match self.hit_ratio {
             r if r > 0.95 => "Excellent",
             r if r > 0.8 => "Very Good",
@@ -264,33 +258,29 @@ lazy_static::lazy_static! {
 }
 
 /// Global string interning function - high performance API
-pub fn intern_string(value: &str) -> Arc<str> {
+pub const fn intern_string(value: &str) -> Arc<str> {
     // ✅ IDIOMATIC EVOLUTION: Safe error handling instead of blocking on non-future
     GLOBAL_STRING_POOL.get_or_intern(value).unwrap_or_else(|_| {
         // Fallback: create Arc<str> directly if pool fails
         Arc::from(value)
     })
 }
-
 /// Global string retrieval function
-pub fn get_string(value: &str) -> Option<Arc<str>> {
+pub const fn get_string(value: &str) -> Option<Arc<str>> {
     GLOBAL_STRING_POOL
         .get(value)
         .unwrap_or_default_with_log("global_string_get")
 }
-
 /// Preload additional strings into global pool
 pub fn preload_strings(strings: Vec<&str>) {
     GLOBAL_STRING_POOL.preload_sync(strings);
 }
-
 /// Get global string pool statistics
-pub fn global_string_pool_statistics() -> StringPoolStatistics {
+pub const fn global_string_pool_statistics() -> StringPoolStatistics {
     tokio::task::block_in_place(|| {
         tokio::runtime::Handle::current().block_on(GLOBAL_STRING_POOL.statistics())
     })
 }
-
 /// Macro for compile-time string interning
 #[macro_export]
 macro_rules! intern {
@@ -298,16 +288,14 @@ macro_rules! intern {
         $crate::string_pool::intern_string($s)
     };
 }
-
 /// Macro for creating Arc<str> from string literal at compile time
 #[macro_export]
 macro_rules! static_str {
     ($s:literal) => {{
         static CACHED: std::sync::OnceLock<std::sync::Arc<str>> = std::sync::OnceLock::new();
         CACHED.get_or_init(|| std::sync::Arc::from($s)).clone()
-    }};
+    };
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;

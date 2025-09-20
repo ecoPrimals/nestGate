@@ -4,7 +4,6 @@ use std::future::Future;
 /// 
 /// High-performance storage traits that eliminate async_trait overhead
 /// and provide compile-time optimizations.
-
 use crate::error::CanonicalResult as Result;
 use crate::universal_storage::{
     BackendInfo, ChangeStream, DataStream, StreamRequest, 
@@ -27,7 +26,6 @@ use serde::{Deserialize, Serialize};
 pub trait ZeroCostUnifiedStorageBackend: Send + Sync + 'static {
     /// Storage backend configuration type
     type Config: Clone + Send + Sync + 'static;
-
     /// Storage health information type
     type Health: Clone + Send + Sync + 'static;
 
@@ -37,24 +35,18 @@ pub trait ZeroCostUnifiedStorageBackend: Send + Sync + 'static {
     // ==================== BASIC OPERATIONS (Native Async) ====================
 
     /// Read data from storage - native async, no boxing overhead
-    fn read(&self, path: &str) -> impl Future<Output = Result<Vec<u8>>> + Send;
 
     /// Write data to storage - native async
-    fn write(&self, path: &str, data: &[u8]) -> impl Future<Output = Result<()>> + Send;
 
     /// Delete from storage - native async
-    fn delete(&self, path: &str) -> impl Future<Output = Result<()>> + Send;
 
     /// Check if path exists - native async
-    fn exists(&self, path: &str) -> impl Future<Output = Result<bool>> + Send;
 
     /// List items at path - native async
-    fn list(&self, path: &str) -> impl Future<Output = Result<Vec<UnifiedStorageItem>>> + Send;
 
     /// Get metadata for item - native async
     fn get_metadata(
         &self,
-        path: &str,
     ) -> impl Future<Output = Result<UnifiedStorageMetadata>> + Send;
 
     // ==================== ADVANCED OPERATIONS (Native Async) ====================
@@ -72,7 +64,6 @@ pub trait ZeroCostUnifiedStorageBackend: Send + Sync + 'static {
     ) -> impl Future<Output = Result<DataStream>> + Send;
 
     /// Monitor changes for real-time synchronization - native async
-    fn monitor_changes(&self, path: &str) -> impl Future<Output = Result<ChangeStream>> + Send;
 
     // ==================== BACKEND MANAGEMENT (Direct Access) ====================
 
@@ -123,7 +114,6 @@ pub trait ZeroCostUnifiedStorageBackend: Send + Sync + 'static {
 pub trait ZeroCostUnifiedStorageProvider: Send + Sync + 'static {
     /// Provider configuration type
     type Config: Clone + Send + Sync + 'static;
-
     /// Provider health type
     type Health: Clone + Send + Sync + 'static;
 
@@ -189,7 +179,6 @@ pub trait ZeroCostBatchStorageOperations: ZeroCostUnifiedStorageBackend {
             Ok(results)
         }
     }
-
     /// Batch write operations - native async
     fn batch_write(&self, operations: &[(&str, &[u8])]) -> impl Future<Output = Result<()>> + Send {
         async move {
@@ -219,12 +208,9 @@ pub trait ZeroCostCachingStorageOperations<const CACHE_SIZE: usize>:
 {
     /// Cache type for storage operations
     type Cache: Clone + Send + Sync + 'static;
-
     /// Get cached data - direct method call (no async overhead for cache hits)
-    fn get_cached(&self, path: &str) -> Option<Vec<u8>>;
 
     /// Set cached data - direct method call
-    fn set_cached(&self, path: String, data: Vec<u8>);
 
     /// Clear cache - direct method call
     fn clear_cache(&self);
@@ -233,7 +219,6 @@ pub trait ZeroCostCachingStorageOperations<const CACHE_SIZE: usize>:
     fn cache_stats(&self) -> (usize, usize, f64); // (hits, misses, hit_ratio)
 
     /// Read with caching - native async with cache optimization
-    fn cached_read(&self, path: &str) -> impl Future<Output = Result<Vec<u8>>> + Send {
         async move {
             // Check cache first (zero-cost for hits)
             if let Some(cached_data) = self.get_cached(path) {
@@ -256,15 +241,14 @@ pub trait ZeroCostCachingStorageOperations<const CACHE_SIZE: usize>:
 pub struct ZeroCostStorageAdapter<T> {
     inner: T,
 }
-
 impl<T> ZeroCostStorageAdapter<T> {
     /// Create new storage adapter
-    pub fn new(backend: T) -> Self {
+    pub const fn new(backend: T) -> Self {
         Self { inner: backend }
     }
 
     /// Get reference to inner backend
-    pub fn inner(&self) -> &T {
+    pub const fn inner(&self) -> &T {
         &self.inner
     }
 
@@ -274,7 +258,7 @@ impl<T> ZeroCostStorageAdapter<T> {
     }
 
     /// Consume adapter and return inner backend
-    pub fn into_inner(self) -> T {
+    pub const fn into_inner(self) -> T {
         self.inner
     }
 }

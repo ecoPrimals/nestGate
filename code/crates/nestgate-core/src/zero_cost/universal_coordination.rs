@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 ///
 /// Zero-cost replacement for the async_trait-based UniversalCoordination trait.
 /// Provides the same functionality with native async methods and compile-time optimization.
-
 // ==================== SECTION ====================
 
 /// Storage provisioning request
@@ -18,7 +17,6 @@ pub struct ZeroCostStorageProvisionRequest {
     pub replication_factor: u8,
     pub metadata: HashMap<String, String>,
 }
-
 /// Volume mount request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostVolumeMountRequest {
@@ -27,7 +25,6 @@ pub struct ZeroCostVolumeMountRequest {
     pub read_only: bool,
     pub options: HashMap<String, String>,
 }
-
 /// Backup operation request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostBackupRequest {
@@ -37,7 +34,6 @@ pub struct ZeroCostBackupRequest {
     pub compression: bool,
     pub schedule: Option<String>,
 }
-
 /// Coordination result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostCoordinationResult {
@@ -47,7 +43,6 @@ pub struct ZeroCostCoordinationResult {
     pub message: String,
     pub metadata: HashMap<String, String>,
 }
-
 /// Coordination status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CoordinationStatus {
@@ -56,7 +51,6 @@ pub enum CoordinationStatus {
     Failed,
     Timeout,
 }
-
 // ==================== SECTION ====================
 
 /// **Zero-cost universal coordination trait**
@@ -70,7 +64,6 @@ pub trait ZeroCostUniversalCoordination: Send + Sync + 'static {
         &self,
         request: ZeroCostStorageProvisionRequest,
     ) -> impl Future<Output = Result<Vec<ZeroCostCoordinationResult>>> + Send;
-
     /// Coordinate volume mounting with compute services  
     /// Native async - zero allocation overhead
     fn coordinate_volume_mounting(
@@ -104,7 +97,6 @@ pub struct CoordinationHealth {
     pub average_latency_ms: f64,
     pub connected_services: Vec<String>,
 }
-
 // ==================== SECTION ====================
 
 /// Example zero-cost coordination service
@@ -112,7 +104,6 @@ pub struct ZeroCostCoordinationService<const MAX_CONCURRENT: usize = 1000> {
     service_id: String,
     active_operations: std::sync::atomic::AtomicUsize,
 }
-
 impl<const MAX_CONCURRENT: usize> ZeroCostCoordinationService<MAX_CONCURRENT> {
     /// Create new zero-cost coordination service
     pub const fn new(service_id: String) -> Self {
@@ -123,7 +114,7 @@ impl<const MAX_CONCURRENT: usize> ZeroCostCoordinationService<MAX_CONCURRENT> {
     }
 
     /// Get current operation count
-    pub fn active_operation_count(&self) -> usize {
+    pub const fn active_operation_count(&self) -> usize {
         self.active_operations
             .load(std::sync::atomic::Ordering::Relaxed)
     }
@@ -143,7 +134,7 @@ impl<const MAX_CONCURRENT: usize> ZeroCostUniversalCoordination
         // Simulate coordination logic
         let result = ZeroCostCoordinationResult {
             service_id: self.service_id.clone(),
-            operation_id: format!("storage_provision_{}", uuid::Uuid::new_v4()),
+            operation_id: format!("storage_provision_{uuid::Uuid::new_v4(}")),
             status: CoordinationStatus::Success,
             message: format!(
                 "Provisioned {} GB volume: {}",
@@ -166,7 +157,7 @@ impl<const MAX_CONCURRENT: usize> ZeroCostUniversalCoordination
 
         let result = ZeroCostCoordinationResult {
             service_id: self.service_id.clone(),
-            operation_id: format!("volume_mount_{}", uuid::Uuid::new_v4()),
+            operation_id: format!("volume_mount_{uuid::Uuid::new_v4(}")),
             status: CoordinationStatus::Success,
             message: format!("Mounted {} at {}", request.volume_name, request.mount_point),
             metadata: HashMap::new(),
@@ -186,7 +177,7 @@ impl<const MAX_CONCURRENT: usize> ZeroCostUniversalCoordination
 
         let result = ZeroCostCoordinationResult {
             service_id: self.service_id.clone(),
-            operation_id: format!("backup_{}", uuid::Uuid::new_v4()),
+            operation_id: format!("backup_{uuid::Uuid::new_v4(}")),
             status: CoordinationStatus::Success,
             message: format!("Backup from {} to {}", request.source, request.destination),
             metadata: HashMap::new(),
@@ -202,7 +193,7 @@ impl<const MAX_CONCURRENT: usize> ZeroCostUniversalCoordination
             "storage_provisioning".to_string(),
             "volume_mounting".to_string(),
             "backup_operations".to_string(),
-            format!("max_concurrent_{}", MAX_CONCURRENT),
+            format!("max_concurrent_{MAX_CONCURRENT}"),
         ]
     }
 
@@ -223,36 +214,56 @@ impl<const MAX_CONCURRENT: usize> ZeroCostUniversalCoordination
 pub struct CoordinationCompatibilityBridge<T> {
     inner: T,
 }
-
 impl<T> CoordinationCompatibilityBridge<T>
 where
     T: ZeroCostUniversalCoordination,
 {
-    pub fn new(inner: T) -> Self {
+    pub const fn new(inner: T) -> Self {
         Self { inner }
     }
 
     /// Bridge method for storage provisioning
-    pub async fn coordinate_storage_provisioning(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn coordinate_storage_provisioning(
         &self,
         request: ZeroCostStorageProvisionRequest,
-    ) -> Result<Vec<ZeroCostCoordinationResult>> {
+    ) -> Result<Vec<ZeroCostCoordinationResult>>  {
         self.inner.coordinate_storage_provisioning(request).await
     }
 
     /// Bridge method for volume mounting
-    pub async fn coordinate_volume_mounting(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn coordinate_volume_mounting(
         &self,
         request: ZeroCostVolumeMountRequest,
-    ) -> Result<Vec<ZeroCostCoordinationResult>> {
+    ) -> Result<Vec<ZeroCostCoordinationResult>>  {
         self.inner.coordinate_volume_mounting(request).await
     }
 
     /// Bridge method for backup operations
-    pub async fn coordinate_backup_operations(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn coordinate_backup_operations(
         &self,
         request: ZeroCostBackupRequest,
-    ) -> Result<Vec<ZeroCostCoordinationResult>> {
+    ) -> Result<Vec<ZeroCostCoordinationResult>>  {
         self.inner.coordinate_backup_operations(request).await
     }
 }
@@ -261,13 +272,10 @@ where
 
 /// Production coordination service (high concurrency)
 pub type ProductionCoordination = ZeroCostCoordinationService<10000>;
-
 /// Development coordination service (moderate concurrency)
 pub type DevelopmentCoordination = ZeroCostCoordinationService<1000>;
-
 /// Testing coordination service (low concurrency)
 pub type TestingCoordination = ZeroCostCoordinationService<100>;
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -291,10 +299,10 @@ mod tests {
                 tracing::error!("Unwrap failed: {:?}", e);
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Operation failed: {:?}", e),
+                    format!("Operation failed: {e:?}"),
                 )
                 .into());
-            });
+            );
         assert_eq!(results.len(), 1);
         assert!(matches!(results[0].status, CoordinationStatus::Success));
     }
@@ -306,10 +314,10 @@ mod tests {
             tracing::error!("Unwrap failed: {:?}", e);
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {e:?}"),
             )
             .into());
-        });
+        );
         assert_eq!(health.active_coordinations, 0);
         assert!(!health.connected_services.is_empty());
     }

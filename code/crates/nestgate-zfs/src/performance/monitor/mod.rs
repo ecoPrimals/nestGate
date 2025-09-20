@@ -1,15 +1,14 @@
-/// Split from monolithic monitor.rs for maintainability and 2000-line compliance
-/// Core monitoring implementation with specialized metrics, analysis, and reporting modules
+//! Split from monolithic monitor.rs for maintainability and 2000-line compliance
+//! Core monitoring implementation with specialized metrics, analysis, and reporting modules
+use crate::types::StorageTier;
+use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager};
+use nestgate_core::Result as CoreResult;
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
 use tokio::time::interval;
 use tracing::{error, info};
-
-use crate::types::StorageTier;
-use crate::{ZfsDatasetManager, ZfsPoolManager};
-use nestgate_core::Result as CoreResult;
 
 use super::types::*;
 
@@ -20,7 +19,29 @@ pub mod real_metrics;
 pub mod reporting;
 
 impl ZfsPerformanceMonitor {
+    /// Create performance monitor for testing
+    pub const fn new_for_testing() -> Self {
+        Self {
+            pool_manager: Arc::new(ZfsPoolManager::new_production(ZfsConfig::default())),
+            dataset_manager: Arc::new({
+                let config = ZfsConfig::default();
+                let pool_manager = Arc::new(ZfsPoolManager::new_production(config.clone()));
+                ZfsDatasetManager::new(config, pool_manager)
+            }),
+            current_metrics: Arc::new(RwLock::new(CurrentPerformanceMetrics::default())),
+            metrics_history: Arc::new(RwLock::new(VecDeque::new())),
+            tier_metrics: Arc::new(RwLock::new(HashMap::new())),
+            alert_conditions: Arc::new(RwLock::new(Vec::new())),
+            active_alerts: Arc::new(RwLock::new(Vec::new())),
+            collection_task: None,
+            analysis_task: None,
+            alert_task: None,
+            alert_sender: None,
+        }
+    }
+
     /// Create a new performance monitor
+    #[must_use]
     pub fn new(pool_manager: Arc<ZfsPoolManager>, dataset_manager: Arc<ZfsDatasetManager>) -> Self {
         Self {
             // config field removed - using shared ZfsConfig instead
@@ -58,7 +79,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Stop performance monitoring
-    pub async fn stop(&mut self) -> CoreResult<()> {
+    pub fn stop(&mut self) -> CoreResult<()> {
         info!("Stopping ZFS performance monitoring");
 
         // Stop all background tasks
@@ -103,7 +124,7 @@ impl ZfsPerformanceMonitor {
             description: "IOPS exceeds safe threshold".to_string(),
             metric: AlertMetric::Iops,
             operator: AlertOperator::GreaterThan,
-            threshold: 10000.0, // 10K IOPS
+            threshold: 10_000.0, // 10K IOPS
             duration: Duration::from_secs(
                 std::env::var("NESTGATE_ZFS_IOPS_ALERT_DURATION_SECS")
                     .ok()
@@ -160,7 +181,7 @@ impl ZfsPerformanceMonitor {
         for tier in [StorageTier::Hot, StorageTier::Warm, StorageTier::Cold] {
             let _targets = match tier {
                 StorageTier::Hot => TierPerformanceTargets {
-                    target_iops: 10000.0,
+                    target_iops: 10_000.0,
                     target_throughput_mbs: 500.0,
                     target_latency_ms: 10.0,
                     target_utilization_percent: 80.0,
@@ -197,9 +218,9 @@ impl ZfsPerformanceMonitor {
             };
 
             tier_metrics.insert(
-                tier,
+                tier.clone(),
                 TierPerformanceData {
-                    tier,
+                    tier: tier.clone(),
                     current_metrics: TierMetrics::default_for_tier(tier),
                     history: VecDeque::new(),
                     trends: PerformanceTrends::default(),

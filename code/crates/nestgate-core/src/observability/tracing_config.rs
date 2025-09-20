@@ -2,7 +2,7 @@ use crate::error::NestGateError;
 //
 // Provides structured logging and distributed tracing setup.
 
-use crate::{Result};
+use crate::Result;
 
 /// Tracing configuration
 #[derive(Debug, Clone)]
@@ -18,7 +18,6 @@ pub struct TracingConfig {
     /// Environment name
     pub environment: String,
 }
-
 impl Default for TracingConfig {
     fn default() -> Self {
         Self {
@@ -32,9 +31,8 @@ impl Default for TracingConfig {
 }
 
 /// Initialize tracing with the given configuration
-pub fn init_tracing(config: TracingConfig) -> Result<()> {
+pub const fn init_tracing(config: TracingConfig) -> Result<()> {
     use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-
     let level = match config.level.as_str() {
         "trace" => tracing::Level::TRACE,
         "debug" => tracing::Level::DEBUG,
@@ -51,9 +49,9 @@ pub fn init_tracing(config: TracingConfig) -> Result<()> {
             .with(tracing_subscriber::filter::LevelFilter::from_level(level))
             .try_init()
             .map_err(|e| {
-                NestGateError::configuration_error_with_field(
-                    format!("Failed to initialize JSON tracing: {e}"),
-                    "tracing".to_string(),
+                NestGateError::configuration_error(
+                    "tracing",
+                    &format!("Failed to initialize JSON tracing: {e}"),
                 )
             })?;
     } else {
@@ -63,9 +61,9 @@ pub fn init_tracing(config: TracingConfig) -> Result<()> {
             .with(tracing_subscriber::filter::LevelFilter::from_level(level))
             .try_init()
             .map_err(|e| {
-                NestGateError::configuration_error_with_field(
-                    format!("Failed to initialize tracing: {e}"),
-                    "tracing".to_string(),
+                NestGateError::configuration_error(
+                    "tracing",
+                    &format!("Failed to initialize tracing: {e}"),
                 )
             })?;
     }
@@ -89,6 +87,6 @@ mod tests {
         let config = TracingConfig::default();
         assert_eq!(config.level, "info");
         assert!(!config.json_format);
-        assert_eq!(config.name, "nestgate");
+        assert_eq!(config.service_name, "nestgate");
     }
 }

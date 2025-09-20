@@ -3,15 +3,15 @@
 //! This test validates sovereign science QA functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::unified::NestGateUnifiedConfig as NestGateUnifiedConfig;
 use nestgate_core::config::defaults::Environment;
+use nestgate_core::config::unified::NestGateUnifiedConfig;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
 
 /// Test sovereign science QA configuration
 #[tokio::test]
-async fn test_sovereign_science_qa_config() {
+async fn test_sovereign_science_qa_config() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔬 Starting sovereign science QA configuration test");
 
     // Test sovereign science QA configuration creation
@@ -24,11 +24,12 @@ async fn test_sovereign_science_qa_config() {
     assert!(!dev_config.system.instance_name.is_empty());
 
     info!("✅ Sovereign science QA configuration test completed");
+    Ok(())
 }
 
 /// Test sovereign science validation processes
 #[tokio::test]
-async fn test_sovereign_science_validation() {
+async fn test_sovereign_science_validation() -> Result<(), Box<dyn std::error::Error>> {
     info!("✅ Testing sovereign science validation processes");
 
     // Test sovereign science validation steps
@@ -48,14 +49,16 @@ async fn test_sovereign_science_validation() {
         // Verify validation step is valid
         assert!(!step.is_empty(), "Validation step should be specified");
         assert!(validation_time > 0, "Validation time should be positive");
+        Ok(())
     }
 
     info!("✅ Sovereign science validation processes completed");
+    Ok(())
 }
 
 /// Test sovereign science quality assurance
 #[tokio::test]
-async fn test_sovereign_science_quality_assurance() {
+async fn test_sovereign_science_quality_assurance() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔍 Testing sovereign science quality assurance");
 
     // Test quality assurance checks
@@ -75,14 +78,16 @@ async fn test_sovereign_science_quality_assurance() {
         // Verify QA check is valid
         assert!(!check_type.is_empty(), "Check type should be specified");
         assert!(check_time > 0, "Check time should be positive");
+        Ok(())
     }
 
     info!("✅ Sovereign science quality assurance completed");
+    Ok(())
 }
 
 /// Test sovereign science research integrity
 #[tokio::test]
-async fn test_sovereign_science_research_integrity() {
+async fn test_sovereign_science_research_integrity() -> Result<(), Box<dyn std::error::Error>> {
     info!("🧬 Testing sovereign science research integrity");
 
     // Test research integrity components
@@ -102,14 +107,16 @@ async fn test_sovereign_science_research_integrity() {
         // Verify integrity component is valid
         assert!(!component.is_empty(), "Component should be specified");
         assert!(review_time > 0, "Review time should be positive");
+        Ok(())
     }
 
     info!("✅ Sovereign science research integrity completed");
+    Ok(())
 }
 
 /// Test sovereign science peer review process
 #[tokio::test]
-async fn test_sovereign_science_peer_review() {
+async fn test_sovereign_science_peer_review() -> Result<(), Box<dyn std::error::Error>> {
     info!("👥 Testing sovereign science peer review process");
 
     // Test peer review stages
@@ -129,14 +136,16 @@ async fn test_sovereign_science_peer_review() {
         // Verify review stage is valid
         assert!(!stage.is_empty(), "Stage should be specified");
         assert!(stage_time > 0, "Stage time should be positive");
+        Ok(())
     }
 
     info!("✅ Sovereign science peer review process completed");
+    Ok(())
 }
 
 /// Test sovereign science metrics and reporting
 #[tokio::test]
-async fn test_sovereign_science_metrics() {
+async fn test_sovereign_science_metrics() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing sovereign science metrics and reporting");
 
     let start_time = std::time::Instant::now();
@@ -159,14 +168,16 @@ async fn test_sovereign_science_metrics() {
             elapsed.as_millis() >= metrics_cycle as u128,
             "Metrics timing should be accurate"
         );
+        Ok(())
     }
 
     info!("✅ Sovereign science metrics and reporting completed");
+    Ok(())
 }
 
 /// Test sovereign science environments
 #[tokio::test]
-async fn test_sovereign_science_environments() {
+async fn test_sovereign_science_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing sovereign science across environments");
 
     // Test development environment sovereign science
@@ -184,4 +195,5 @@ async fn test_sovereign_science_environments() {
     info!("Production sovereign science configuration validated");
 
     info!("✅ Sovereign science environment test completed");
+    Ok(())
 }

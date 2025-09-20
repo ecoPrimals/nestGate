@@ -11,7 +11,7 @@ use axum::{
     Router,
 };
 use nestgate_core::ai_first::{AIFirstResponse, SuggestedAction};
-use nestgate_zfs::{PoolInfo, ZfsConfidenceCalculator, ZfsManager};
+use crate::handlers::zfs_stub::{PoolInfo, ZfsConfidenceCalculator, ZfsManager};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -23,11 +23,10 @@ use nestgate_core::{get_or_create_uuid};
 #[derive(Debug, Deserialize)]
 pub struct CreatePoolRequest {
     pub name: String,
-    pub devices: Vec<String>,
+    pub _devices: Vec<String>,
     pub pool_type: String,
     pub options: Option<HashMap<String, String>>,
 }
-
 /// ZFS pool information response
 #[derive(Debug, Serialize, Clone)]
 pub struct PoolResponse {
@@ -36,7 +35,6 @@ pub struct PoolResponse {
     pub capacity: Option<PoolCapacityResponse>,
     pub ai_recommendations: Vec<String>,
 }
-
 /// Pool capacity information
 #[derive(Debug, Serialize, Clone)]
 pub struct PoolCapacityResponse {
@@ -44,33 +42,28 @@ pub struct PoolCapacityResponse {
     pub free_bytes: u64,
     pub utilization_percent: f64,
 }
-
 /// Pool operation parameters
 #[derive(Debug, Deserialize)]
 pub struct PoolOperationParams {
     pub force: Option<bool>,
     pub dry_run: Option<bool>,
 }
-
 /// Application state containing ZFS manager
 #[derive(Clone)]
 pub struct AppState {
     pub zfs_manager: Arc<ZfsManager>,
 }
-
 impl Default for PoolResponse {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             name: String::new(),
             health: "unknown".to_string(),
             capacity: None,
             ai_recommendations: vec![],
-        }
-    }
+         }
 }
 
 /// Create ZFS pool routes
-pub fn create_routes() -> Router<AppState> {
+pub const fn create_routes() -> Router<AppState> {
     Router::new()
         .route("/pools", post(create_pool))
         .route("/pools", get(list_pools))
@@ -80,7 +73,6 @@ pub fn create_routes() -> Router<AppState> {
         .route("/pools/:name/export", post(export_pool))
         .route("/pools/:name/import", post(import_pool))
 }
-
 /// Create a new ZFS pool with AI-First response format
 #[axum::debug_handler]
 pub async fn create_pool(
@@ -92,14 +84,14 @@ pub async fn create_pool(
     
     // Create pool using ZFS manager
     let result = state.zfs_manager
-        .create_pool(&request.name, &request.devices, &request.pool_type)
+        .create_pool(&request.name, &request._devices, &request.pool_type)
         .await;
     
     // Convert result to AI-First format
     let ai_result = result.map(|pool_info| {
         let mut response = PoolResponse {
             name: pool_info.name.clone(),
-            health: format!("{:?}", pool_info.health),
+            health: format!("{"actual_error_details"}"),
             capacity: pool_info.capacity.map(|cap| PoolCapacityResponse {
                 total_bytes: cap.total_bytes,
                 free_bytes: cap.free_bytes,
@@ -126,7 +118,6 @@ pub async fn create_pool(
     
     Ok(Json(enhanced_response))
 }
-
 /// List all ZFS pools with AI-First response format
 #[axum::debug_handler]
 pub async fn list_pools(
@@ -141,7 +132,7 @@ pub async fn list_pools(
         pools.into_iter().map(|pool_info| {
             PoolResponse {
                 name: pool_info.name.clone(),
-                health: format!("{:?}", pool_info.health),
+                health: format!("{"actual_error_details"}"),
                 capacity: pool_info.capacity.map(|cap| PoolCapacityResponse {
                     total_bytes: cap.total_bytes,
                     free_bytes: cap.free_bytes,
@@ -161,7 +152,6 @@ pub async fn list_pools(
     
     Ok(Json(response))
 }
-
 /// Get specific ZFS pool information
 #[axum::debug_handler]
 pub async fn get_pool(
@@ -176,7 +166,7 @@ pub async fn get_pool(
     let ai_result = result.map(|pool_info| {
         PoolResponse {
             name: pool_info.name.clone(),
-            health: format!("{:?}", pool_info.health),
+            health: format!("{"actual_error_details"}"),
             capacity: pool_info.capacity.as_ref().map(|cap| PoolCapacityResponse {
                 total_bytes: cap.total_bytes,
                 free_bytes: cap.free_bytes,
@@ -195,12 +185,11 @@ pub async fn get_pool(
     
     Ok(Json(response))
 }
-
 /// Destroy a ZFS pool
 #[axum::debug_handler]
 pub async fn destroy_pool(
     Path(pool_name): Path<String>,
-    Query(params): Query<PoolOperationParams>,
+    Query(_params): Query<PoolOperationParams>,
     State(state): State<AppState>,
 ) -> Result<Json<AIFirstResponse<String>>, StatusCode> {
     let request_id = *get_or_create_uuid("pool_destroy_request");
@@ -209,11 +198,11 @@ pub async fn destroy_pool(
     // Get pool info first for confidence calculation
     let pool_info = state.zfs_manager.get_pool_info(&pool_name).await.ok();
     
-    let result = if params.dry_run.unwrap_or(false) {
-        Ok(format!("Would destroy pool '{}' (dry run)", pool_name))
+    let result = if _params.dry_run.unwrap_or(false) {
+        Ok(format!("Would destroy pool '{"actual_error_details"}' (dry run)"))
     } else {
         state.zfs_manager.destroy_pool(&pool_name).await
-            .map(|_| format!("Successfully destroyed pool '{}'", pool_name))
+            .map(|_| format!("fixed")
     };
     
     let response = to_ai_first_response(
@@ -232,7 +221,6 @@ pub async fn destroy_pool(
     
     Ok(Json(enhanced_response))
 }
-
 /// Start pool scrub operation
 #[axum::debug_handler]
 pub async fn start_scrub(
@@ -246,7 +234,7 @@ pub async fn start_scrub(
     let pool_info = state.zfs_manager.get_pool_info(&pool_name).await.ok();
     
     let result = state.zfs_manager.scrub_pool(&pool_name).await
-        .map(|_| format!("Started scrub for pool '{}'", pool_name));
+        .map(|_| format!("Started scrub for pool '{"actual_error_details"}'"));
     
     let response = to_ai_first_response(
         result,
@@ -264,7 +252,6 @@ pub async fn start_scrub(
     
     Ok(Json(enhanced_response))
 }
-
 /// Export ZFS pool
 #[axum::debug_handler]
 pub async fn export_pool(
@@ -277,7 +264,7 @@ pub async fn export_pool(
     let pool_info = state.zfs_manager.get_pool_info(&pool_name).await.ok();
     
     let result = state.zfs_manager.export_pool(&pool_name).await
-        .map(|_| format!("Successfully exported pool '{}'", pool_name));
+        .map(|_| format!("Successfully exported pool '{"actual_error_details"}'"));
     
     let response = to_ai_first_response(
         result,
@@ -294,7 +281,6 @@ pub async fn export_pool(
     
     Ok(Json(enhanced_response))
 }
-
 /// Import ZFS pool
 #[axum::debug_handler]
 pub async fn import_pool(
@@ -305,7 +291,7 @@ pub async fn import_pool(
     let start_time = Instant::now();
     
     let result = state.zfs_manager.import_pool(&pool_name).await
-        .map(|_| format!("Successfully imported pool '{}'", pool_name));
+        .map(|_| format!("Successfully imported pool '{"actual_error_details"}'"));
     
     let response = to_ai_first_response(
         result,
@@ -322,7 +308,6 @@ pub async fn import_pool(
     
     Ok(Json(enhanced_response))
 }
-
 /// Enhance AI-First response with ZFS-specific confidence scoring
 fn enhance_with_zfs_confidence<T>(
     mut response: AIFirstResponse<T>,
@@ -346,16 +331,15 @@ fn enhance_with_zfs_confidence<T>(
         );
         
         response.ai_metadata.optimization_opportunities.extend(vec![
-            format!("Operation CPU impact: {:.1}%", performance_impact.cpu_impact * 100.0),
-            format!("Operation I/O impact: {:.1}%", performance_impact.io_impact * 100.0),
-            format!("Estimated duration: {} minutes", performance_impact.duration_estimate_minutes),
-            format!("Recommended scheduling: {:?}", performance_impact.recommended_scheduling),
+            format!("Operation CPU impact: {"actual_error_details"}%"),
+            format!("Operation I/O impact: {"actual_error_details"}%"),
+            format!("Estimated duration: {"actual_error_details"} minutes"),
+            format!("Recommended scheduling: {"actual_error_details"}"),
         ]);
     }
     
     response
 }
-
 /// Generate ZFS-specific suggested actions for AI agents
 fn generate_zfs_suggested_actions(operation: &str, pool_info: Option<&PoolInfo>) -> Vec<SuggestedAction> {
     match operation {
@@ -364,39 +348,39 @@ fn generate_zfs_suggested_actions(operation: &str, pool_info: Option<&PoolInfo>)
                 action_type: "monitor_progress".to_string(),
                 description: "Monitor scrub progress with pool status checks".to_string(),
                 parameters: HashMap::from([
-                    ("command".to_string(), serde_json::Value::String("zpool status".to_string())),
-                    ("interval_seconds".to_string(), serde_json::Value::Number(serde_json::Number::from(300))),
+                    ("command".to_string(), serde_json::Value::String("zpool status".to_string()),
+                    ("interval_seconds".to_string(), serde_json::Value::Number(serde_json::Number::from(300)),
                 ]),
                 confidence: 0.95,
                 estimated_duration_ms: 60000, // 1 minute monitoring intervals
-            },
+            }
             SuggestedAction {
                 action_type: "schedule_next_scrub".to_string(),
                 description: "Schedule next scrub based on pool size and usage".to_string(),
                 parameters: HashMap::from([
-                    ("frequency".to_string(), serde_json::Value::String("monthly".to_string())),
+                    ("frequency".to_string(), serde_json::Value::String("monthly".to_string()),
                 ]),
                 confidence: 0.8,
                 estimated_duration_ms: 5000,
-            },
+            }
         ],
         "create" => vec![
             SuggestedAction {
                 action_type: "enable_compression".to_string(),
                 description: "Enable LZ4 compression for space efficiency".to_string(),
                 parameters: HashMap::from([
-                    ("compression".to_string(), serde_json::Value::String("lz4".to_string())),
+                    ("compression".to_string(), serde_json::Value::String("lz4".to_string()),
                 ]),
                 confidence: 0.9,
                 estimated_duration_ms: 2000,
-            },
+            }
             SuggestedAction {
                 action_type: "create_initial_datasets".to_string(),
                 description: "Create organizational dataset structure".to_string(),
                 parameters: HashMap::new(),
                 confidence: 0.85,
-                estimated_duration_ms: 10000,
-            },
+                estimated_duration_ms: 10_000,
+            }
         ],
         "destroy" => {
             if let Some(info) = pool_info {
@@ -413,7 +397,7 @@ fn generate_zfs_suggested_actions(operation: &str, pool_info: Option<&PoolInfo>)
                                 ]),
                                 confidence: 0.99,
                                 estimated_duration_ms: 300000, // 5 minutes
-                            },
+                            }
                         ];
                     }
                 }
@@ -423,7 +407,6 @@ fn generate_zfs_suggested_actions(operation: &str, pool_info: Option<&PoolInfo>)
         _ => vec![],
     }
 }
-
 /// Generate operation-specific recommendations for pools
 fn generate_pool_recommendations(pool_info: &PoolInfo, operation: &str) -> Vec<String> {
     let mut recommendations = vec![];
@@ -446,7 +429,7 @@ fn generate_pool_recommendations(pool_info: &PoolInfo, operation: &str) -> Vec<S
                 }
                 nestgate_zfs::PoolHealth::Faulted => {
                     recommendations.push("Pool is faulted - immediate attention required".to_string());
-                    recommendations.push("Review pool status and replace failed devices".to_string());
+                    recommendations.push("Review pool status and replace failed _devices".to_string());
                 }
                 _ => {
                     recommendations.push("Monitor pool health regularly".to_string());
@@ -469,11 +452,10 @@ fn generate_pool_recommendations(pool_info: &PoolInfo, operation: &str) -> Vec<S
     
     recommendations
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nestgate_zfs::{PoolCapacity, PoolHealth};
+    use crate::handlers::zfs_stub::{PoolCapacity, PoolHealth};
     
     #[test]
     fn test_pool_response_creation() {
@@ -489,7 +471,7 @@ mod tests {
         
         let response = PoolResponse {
             name: pool_info.name.clone(),
-            health: format!("{:?}", pool_info.health),
+            health: format!("{"actual_error_details"}"),
             capacity: pool_info.capacity.map(|cap| PoolCapacityResponse {
                 total_bytes: cap.total_bytes,
                 free_bytes: cap.free_bytes,

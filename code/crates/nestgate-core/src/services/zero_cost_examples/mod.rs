@@ -10,18 +10,14 @@
 
 // ==================== SECTION ====================
 
-/// Configuration management service examples
+// Configuration management service examples
 pub mod config_manager;
-
-/// Legacy async_trait implementations
+// Legacy async_trait implementations
 pub mod legacy_implementations;
-
-/// Zero-cost native async implementations
+// Zero-cost native async implementations
 pub mod zero_cost_implementations;
-
-/// Performance comparison utilities
+// Performance comparison utilities
 pub mod performance_comparison;
-
 // ==================== SECTION ====================
 
 pub use config_manager::*;

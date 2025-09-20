@@ -1,8 +1,7 @@
 ///
 /// Unified storage type definitions for consistent storage operations
-/// across all NestGate storage backends and services.
+/// across all `NestGate` storage backends and services.
 use serde::{Deserialize, Serialize};
-
 /// Unified storage backend types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum UnifiedStorageType {
@@ -21,7 +20,6 @@ pub enum UnifiedStorageType {
     /// Custom storage backend
     Custom(String),
 }
-
 impl Default for UnifiedStorageType {
     fn default() -> Self {
         Self::Local
@@ -52,7 +50,6 @@ pub enum StorageOperation {
     /// Restore from backup
     Restore,
 }
-
 /// Storage tier levels for data lifecycle management
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum StorageTier {
@@ -67,7 +64,6 @@ pub enum StorageTier {
     /// Frozen storage - long-term archival
     Frozen = 4,
 }
-
 impl Default for StorageTier {
     fn default() -> Self {
         Self::Hot
@@ -76,7 +72,8 @@ impl Default for StorageTier {
 
 impl StorageTier {
     /// Get the expected access frequency for this tier
-    pub fn access_frequency(&self) -> &'static str {
+    #[must_use]
+    pub const fn access_frequency(&self) -> &'static str {
         match self {
             Self::Hot => "multiple times per day",
             Self::Warm => "weekly to monthly",
@@ -87,7 +84,8 @@ impl StorageTier {
     }
 
     /// Get the relative cost factor for this tier (Hot = 1.0)
-    pub fn cost_factor(&self) -> f32 {
+    #[must_use]
+    pub const fn cost_factor(&self) -> f32 {
         match self {
             Self::Hot => 1.0,
             Self::Warm => 0.7,
@@ -110,13 +108,13 @@ pub struct StorageCapacity {
     /// Storage utilization percentage
     pub utilization_percent: f64,
 }
-
 impl StorageCapacity {
     /// Create a new storage capacity report
-    pub fn new(total_bytes: u64, used_bytes: u64) -> Self {
+    #[must_use]
+    pub const fn new(total_bytes: u64, used_bytes: u64) -> Self {
         let available_bytes = total_bytes.saturating_sub(used_bytes);
         let utilization_percent = if total_bytes > 0 {
-            (used_bytes as f64 / total_bytes as f64) * 100.0
+            (f64::from(used_bytes) / f64::from(total_bytes)) * 100.0
         } else {
             0.0
         };
@@ -130,12 +128,14 @@ impl StorageCapacity {
     }
 
     /// Check if storage is nearly full (>90% utilization)
-    pub fn is_nearly_full(&self) -> bool {
+    #[must_use]
+    pub const fn is_nearly_full(&self) -> bool {
         self.utilization_percent > 90.0
     }
 
     /// Check if storage is critically full (>95% utilization)
-    pub fn is_critically_full(&self) -> bool {
+    #[must_use]
+    pub const fn is_critically_full(&self) -> bool {
         self.utilization_percent > 95.0
     }
 }
@@ -144,4 +144,25 @@ impl Default for StorageCapacity {
     fn default() -> Self {
         Self::new(0, 0)
     }
+}
+
+/// Storage capability flags for different storage backend features
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum UnifiedStorageCapability {
+    /// Compression support
+    Compression,
+    /// Encryption support
+    Encryption,
+    /// Deduplication support
+    Deduplication,
+    /// Snapshot support
+    Snapshots,
+    /// Journaling support
+    Journaling,
+    /// Replication support
+    Replication,
+    /// Versioning support
+    Versioning,
+    /// Backup support
+    Backup,
 }

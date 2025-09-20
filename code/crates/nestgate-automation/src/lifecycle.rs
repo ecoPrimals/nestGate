@@ -29,7 +29,6 @@ pub enum LifecycleStage {
     /// Deleted dataset
     Deleted,
 }
-
 /// Lifecycle policy for dataset management
 #[derive(Debug, Clone)]
 pub struct LifecyclePolicy {
@@ -44,7 +43,6 @@ pub struct LifecyclePolicy {
     /// Whether this policy is active
     pub enabled: bool,
 }
-
 /// Transition rule between lifecycle stages
 #[derive(Debug, Clone)]
 pub struct LifecycleTransition {
@@ -56,7 +54,6 @@ pub struct LifecycleTransition {
     /// Whether this transition requires manual approval
     pub requires_approval: bool,
 }
-
 /// Condition for stage transitions
 #[derive(Debug, Clone)]
 pub enum TransitionCondition {
@@ -71,7 +68,6 @@ pub enum TransitionCondition {
     /// Custom condition based on metrics
     CustomMetric(String, f64, ComparisonOperator),
 }
-
 /// Comparison operators for conditions
 #[derive(Debug, Clone)]
 pub enum ComparisonOperator {
@@ -81,7 +77,6 @@ pub enum ComparisonOperator {
     GreaterThanOrEqual,
     LessThanOrEqual,
 }
-
 /// Actions to perform during lifecycle management
 #[derive(Debug, Clone)]
 pub enum LifecycleAction {
@@ -102,7 +97,6 @@ pub enum LifecycleAction {
     /// Update dataset properties
     UpdateProperties(HashMap<String, String>),
 }
-
 /// Dataset lifecycle state
 #[derive(Debug, Clone)]
 pub struct DatasetLifecycleState {
@@ -114,7 +108,6 @@ pub struct DatasetLifecycleState {
     pub pending_actions: Vec<LifecycleAction>,
     pub metrics: HashMap<String, f64>,
 }
-
 /// Lifecycle evaluation result
 #[derive(Debug, Clone)]
 pub struct LifecycleEvaluation {
@@ -126,7 +119,6 @@ pub struct LifecycleEvaluation {
     pub evaluation_timestamp: SystemTime,
     pub next_evaluation: SystemTime,
 }
-
 /// Dataset lifecycle manager
 #[derive(Debug)]
 pub struct DatasetLifecycleManager {
@@ -141,7 +133,6 @@ pub struct DatasetLifecycleManager {
     /// Statistics
     stats: RwLock<LifecycleStats>,
 }
-
 /// Configuration for lifecycle management
 #[derive(Debug, Clone)]
 pub struct LifecycleConfig {
@@ -154,10 +145,8 @@ pub struct LifecycleConfig {
     /// Default policies to apply to new datasets
     pub default_policies: Vec<String>,
 }
-
 impl Default for LifecycleConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             evaluation_interval: Duration::from_secs(
                 std::env::var("NESTGATE_LIFECYCLE_EVALUATION_INTERVAL_SECS")
                     .ok()
@@ -167,8 +156,7 @@ impl Default for LifecycleConfig {
             max_concurrent_actions: 5,
             require_approval_for_destructive: true,
             default_policies: vec!["standard".to_string()],
-        }
-    }
+         }
 }
 
 /// Scheduled task for lifecycle management
@@ -179,7 +167,6 @@ pub enum ScheduledTask {
     PolicyUpdate,
     StatsCollection,
 }
-
 /// Lifecycle management statistics
 #[derive(Debug, Clone, Default)]
 pub struct LifecycleStats {
@@ -190,7 +177,6 @@ pub struct LifecycleStats {
     pub last_evaluation_time: Option<SystemTime>,
     pub average_evaluation_duration: Duration,
 }
-
 impl Default for DatasetLifecycleManager {
     fn default() -> Self {
         Self::new()
@@ -198,18 +184,16 @@ impl Default for DatasetLifecycleManager {
 }
 
 impl DatasetLifecycleManager {
-    pub fn new() -> Self {
-        Self::with_config(LifecycleConfig::default())
-    }
-
-    pub fn with_config(config: LifecycleConfig) -> Self {
+    #[must_use]
+    pub fn new() -> Self { Self::with_config(LifecycleConfig::default())
+    #[must_use]
+    , pub fn with_config(config: LifecycleConfig) -> Self {
         let manager = Self {
-            policies: RwLock::new(Vec::new()),
+            policies: RwLock::new(Vec::new())),
             dataset_states: RwLock::new(HashMap::new()),
             scheduler: RwLock::new(None),
             config,
-            stats: RwLock::new(LifecycleStats::default()),
-        };
+            stats: RwLock::new(LifecycleStats::default()) };
 
         // Add default policies
         tokio::spawn(async move {
@@ -221,7 +205,14 @@ impl DatasetLifecycleManager {
     }
 
     /// Initialize the lifecycle manager
-    pub async fn initialize(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn initialize(&self) -> Result<()>  {
         info!("Initializing dataset lifecycle manager");
 
         // Add default policies
@@ -235,7 +226,14 @@ impl DatasetLifecycleManager {
     }
 
     /// Shutdown the lifecycle manager
-    pub async fn shutdown(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn shutdown(&self) -> Result<()>  {
         info!("Shutting down dataset lifecycle manager");
 
         // Stop scheduler
@@ -248,7 +246,15 @@ impl DatasetLifecycleManager {
     }
 
     /// Add a dataset to lifecycle management
-    pub async fn add_dataset(&self, dataset_name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn add_dataset(&self, dataset_name: &str) -> Result<()>  {
         info!("Adding dataset {} to lifecycle management", dataset_name);
 
         let state = DatasetLifecycleState {
@@ -272,7 +278,15 @@ impl DatasetLifecycleManager {
     }
 
     /// Remove a dataset from lifecycle management
-    pub async fn remove_dataset(&self, dataset_name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn remove_dataset(&self, dataset_name: &str) -> Result<()>  {
         info!(
             "Removing dataset {} from lifecycle management",
             dataset_name
@@ -282,7 +296,15 @@ impl DatasetLifecycleManager {
     }
 
     /// Evaluate a specific dataset's lifecycle
-    pub async fn evaluate_dataset(&self, dataset_name: &str) -> Result<LifecycleEvaluation> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn evaluate_dataset(&self, dataset_name: &str) -> Result<LifecycleEvaluation>  {
         debug!("Evaluating lifecycle for dataset: {}", dataset_name);
 
         let start_time = SystemTime::now();
@@ -333,7 +355,15 @@ impl DatasetLifecycleManager {
     }
 
     /// Execute a lifecycle action
-    pub async fn execute_action(&self, dataset_name: &str, action: LifecycleAction) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn execute_action(&self, dataset_name: &str, action: LifecycleAction) -> Result<()>  {
         info!(
             "Executing lifecycle action for {}: {:?}",
             dataset_name, action
@@ -391,7 +421,15 @@ impl DatasetLifecycleManager {
     }
 
     /// Add a lifecycle policy
-    pub async fn add_policy(&self, policy: LifecyclePolicy) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn add_policy(&self, policy: LifecyclePolicy) -> Result<()>  {
         info!("Adding lifecycle policy: {}", policy.name);
         self.policies.write().await.push(policy);
         Ok(())
@@ -467,7 +505,7 @@ impl DatasetLifecycleManager {
                             .unwrap_or(60), // 1 minute default
                     ),
                     requires_approval: false,
-                },
+                }
                 LifecycleTransition {
                     from_stage: LifecycleStage::Active,
                     to_stage: LifecycleStage::Aging,
@@ -477,7 +515,7 @@ impl DatasetLifecycleManager {
                     ],
                     min_stage_duration: Duration::from_secs(7 * 24 * 3600), // 7 days
                     requires_approval: false,
-                },
+                }
                 LifecycleTransition {
                     from_stage: LifecycleStage::Aging,
                     to_stage: LifecycleStage::Archived,
@@ -487,7 +525,7 @@ impl DatasetLifecycleManager {
                     ],
                     min_stage_duration: Duration::from_secs(30 * 24 * 3600), // 30 days
                     requires_approval: false,
-                },
+                }
             ],
             stage_actions: {
                 let mut actions = HashMap::new();
@@ -511,7 +549,7 @@ impl DatasetLifecycleManager {
                     ],
                 );
                 actions
-            },
+            }
             priority: 100,
             enabled: true,
         };
@@ -547,7 +585,7 @@ impl DatasetLifecycleManager {
                     ],
                 );
                 actions
-            },
+            }
             priority: 200,
             enabled: true,
         };
@@ -622,7 +660,7 @@ impl DatasetLifecycleManager {
     }
 
     /// Evaluate a single transition condition
-    async fn evaluate_single_condition(
+    fn evaluate_single_condition(
         &self,
         condition: &TransitionCondition,
         state: &DatasetLifecycleState,
@@ -634,7 +672,7 @@ impl DatasetLifecycleManager {
                     .unwrap_or_default();
                 age > *threshold
             }
-            TransitionCondition::AccessBelowThreshold(threshold) => {
+    TransitionCondition::AccessBelowThreshold(threshold) => {
                 // In a real implementation, this would check actual access patterns
                 let access_count = state.metrics.get("daily_access_count").unwrap_or(&10.0);
                 (*access_count as u32) < *threshold

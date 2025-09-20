@@ -45,7 +45,7 @@
 //
 // ```rust
 // #[test]
-// fn test_token_validation_rejects_invalid_tokens() {
+// fn test_token_validation_rejects_invalid_tokens() -> Result<(), Box<dyn std::error::Error>> {
 //     let invalid_token = "malicious_token";
 //     let result = validate_security_token(invalid_token);
 //     assert!(result.is_err());
@@ -63,11 +63,11 @@ use tempfile::TempDir;
 mod tests {
 
     fn create_test_certs() -> (TempDir, TlsConfig) {
-        let temp_dir = TempDir::new().unwrap_or_else(|e| {
+        let temp_dir = TempDir::new().unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: {"actual_error_details"}")
 ).into())
 });
         let ca_cert = temp_dir.path().join("ca.pem");
@@ -75,15 +75,15 @@ mod tests {
         let client_key = temp_dir.path().join("key.pem");
 
         // Create dummy cert files
-        std::fs::write(&ca_cert, "-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgAwIBAgIJAJC1\n-----END CERTIFICATE-----").map_err(|e| {
+        std::fs::write(&ca_cert, "-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgAwIBAgIJAJC1\n-----END CERTIFICATE-----").map_err(|_e| {
     tracing::error!("Failed to write file: {}", e);
     e
 })?;
-        std::fs::write(&client_cert, "-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgAwIBAgIJAJC1\n-----END CERTIFICATE-----").map_err(|e| {
+        std::fs::write(&client_cert, "-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgAwIBAgIJAJC1\n-----END CERTIFICATE-----").map_err(|_e| {
     tracing::error!("Failed to write file: {}", e);
     e
 })?;
-        std::fs::write(&client_key, "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC\n-----END PRIVATE KEY-----").map_err(|e| {
+        std::fs::write(&client_key, "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC\n-----END PRIVATE KEY-----").map_err(|_e| {
     tracing::error!("Failed to write file: {}", e);
     e
 })?;
@@ -99,17 +99,18 @@ mod tests {
     }
 
     #[test]
-    fn test_security_manager_creation() {
+    async fn test_security_manager_creation() -> Result<(), Box<dyn std::error::Error>> {
         let (_temp_dir, tls_config) = create_test_certs();
         let manager = SecurityManager::new(Some(tls_config), "test-token".to_string());
 
         assert_eq!(manager.get_current_token(), "test-token");
         assert_eq!(manager.token_rotation_interval, Duration::from_secs(12 * 60 * 60));
         assert!(!manager.needs_rotation());
+    Ok(())
     }
 
     #[tokio::test]
-    async fn test_token_rotation() {
+    async fn test_token_rotation() -> Result<(), Box<dyn std::error::Error>> {
         let (_temp_dir, tls_config) = create_test_certs();
         let mut manager = SecurityManager::new(Some(tls_config), "test-token".to_string());
         let initial_token = manager.get_current_token().to_string();
@@ -119,10 +120,11 @@ mod tests {
 
         assert_ne!(initial_token, new_token);
         assert!(!manager.needs_rotation());
+    Ok(())
     }
 
     #[tokio::test]
-    async fn test_token_rotation_interval() {
+    async fn test_token_rotation_interval() -> Result<(), Box<dyn std::error::Error>> {
         let (_temp_dir, tls_config) = create_test_certs();
         let mut manager = SecurityManager::new(Some(tls_config), "test-token".to_string());
 
@@ -133,19 +135,21 @@ mod tests {
         assert!(manager.needs_rotation());
         manager.rotate_token().await;
         assert!(!manager.needs_rotation());
+    Ok(())
     }
 
     #[test]
-    fn test_tls_config_validation() {
+    async fn test_tls_config_validation() -> Result<(), Box<dyn std::error::Error>> {
         let (_temp_dir, tls_config) = create_test_certs();
         let manager = SecurityManager::new(Some(tls_config), "test-token".to_string());
 
         let result = manager.configure_tls();
         assert!(result.is_ok());
+    Ok(())
     }
 
     #[test]
-    fn test_tls_config_missing() {
+    async fn test_tls_config_missing() -> Result<(), Box<dyn std::error::Error>> {
         let manager = SecurityManager::new(None, "test-token".to_string());
         let result = manager.configure_tls();
         assert!(result.is_err());
@@ -155,11 +159,13 @@ mod tests {
     std::io::ErrorKind::Other,
     "Expected ConfigError".to_string()
 ).into()),
+    Ok(())
         }
+    Ok(())
     }
 
     #[test]
-    fn test_tls_config_invalid_paths() {
+    async fn test_tls_config_invalid_paths() -> Result<(), Box<dyn std::error::Error>> {
         let config = TlsConfig {
             ca_cert: PathBuf::from("/nonexistent/ca.pem"),
             client_cert: PathBuf::from("/nonexistent/client.pem"),
@@ -176,21 +182,24 @@ mod tests {
     std::io::ErrorKind::Other,
     "Expected ConfigError".to_string()
 ).into()),
+    Ok(())
         }
+    Ok(())
     }
 
     #[test]
-    fn test_tls_config_skip_verify() {
+    async fn test_tls_config_skip_verify() -> Result<(), Box<dyn std::error::Error>> {
         let (_temp_dir, mut tls_config) = create_test_certs();
         tls_config.skip_verify = true;
 
         let manager = SecurityManager::new(Some(tls_config), "test-token".to_string());
         let result = manager.configure_tls();
         assert!(result.is_ok());
+    Ok(())
     }
 
     #[tokio::test]
-    async fn test_token_rotation_service() {
+    async fn test_token_rotation_service() -> Result<(), Box<dyn std::error::Error>> {
         let (_temp_dir, tls_config) = create_test_certs();
         let mut manager = SecurityManager::new(Some(tls_config), "test-token".to_string());
 
@@ -203,20 +212,22 @@ mod tests {
 
         let new_token = manager.get_current_token().to_string();
         assert_ne!(initial_token, new_token);
+    Ok(())
     }
 
     #[test]
-    fn test_token_generation() {
+    fn test_token_generation() -> Result<(), Box<dyn std::error::Error>> {
         let (_temp_dir, tls_config) = create_test_certs();
         let manager = SecurityManager::new(Some(tls_config), "test-token".to_string());
 
         // Verify token is valid base64
         let token = manager.get_current_token();
         assert!(BASE64.decode(token).is_ok());
+    Ok(())
     }
 
     #[test]
-    fn test_mcp_security_config_validation() {
+    fn test_mcp_security_config_validation() -> Result<(), Box<dyn std::error::Error>> {
         let config = McpSecurityConfig {
             admin_password: Some("valid".to_string()),
             user_store_path: "/valid/path/that/exists".to_string(),
@@ -226,10 +237,11 @@ mod tests {
 
         let validation_result = config.validate();
         assert!(validation_result.is_ok());
+    Ok(())
     }
 
     #[test]
-    fn test_mcp_security_config_missing_admin_password() {
+    fn test_mcp_security_config_missing_admin_password() -> Result<(), Box<dyn std::error::Error>> {
         let config = McpSecurityConfig {
             admin_password: None,
             user_store_path: "/valid/path/that/exists".to_string(),
@@ -241,13 +253,16 @@ mod tests {
         match validation_result {
             Err(Error::Configuration(msg)) => {
                 assert!(msg.contains("Admin password is required"));
+    Ok(())
             }
             _ => assert!(false, "Expected ConfigError"),
+    Ok(())
         }
+    Ok(())
     }
 
     #[test]
-    fn test_mcp_security_config_invalid_user_store_path() {
+    fn test_mcp_security_config_invalid_user_store_path() -> Result<(), Box<dyn std::error::Error>> {
         let config = McpSecurityConfig {
             admin_password: Some("valid".to_string()),
             user_store_path: "/invalid/path/that/does/not/exist".to_string(),
@@ -259,13 +274,16 @@ mod tests {
         match validation_result {
             Err(Error::Configuration(msg)) => {
                 assert!(msg.contains("Invalid user store path"));
+    Ok(())
             }
             _ => assert!(false, "Expected ConfigError"),
+    Ok(())
         }
+    Ok(())
     }
 
     #[test]
-    fn test_mcp_security_config_invalid_token_expiry() {
+    fn test_mcp_security_config_invalid_token_expiry() -> Result<(), Box<dyn std::error::Error>> {
         let config = McpSecurityConfig {
             admin_password: Some("valid".to_string()),
             user_store_path: "/valid/path/that/exists".to_string(),
@@ -277,8 +295,12 @@ mod tests {
         match validation_result {
             Err(Error::Configuration(msg)) => {
                 assert!(msg.contains("token expiry") || msg.contains("Invalid"));
+    Ok(())
             }
             _ => assert!(false, "Expected ConfigError"),
+    Ok(())
         }
+    Ok(())
     }
+    Ok(())
 }

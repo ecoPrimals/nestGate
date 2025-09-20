@@ -9,6 +9,7 @@ use nestgate_core::StorageTier as CoreStorageTier;
 use nestgate_zfs::performance::TierMetrics;
 use nestgate_zfs::performance::{AlertCondition, AlertMetric, AlertOperator, AlertSeverity};
 use nestgate_zfs::{
+use nestgate_core::canonical_types::StorageTier;
     automation::{DatasetLifecycle, LifecycleRule, LifecycleStage},
     config::ZfsConfig,
     migration::{MigrationJob, MigrationPriority, MigrationStatus},
@@ -21,7 +22,7 @@ mod heuristic_unit_tests {
     use super::*;
 
     #[test]
-    fn test_heuristic_config_defaults() {
+    fn test_heuristic_config_defaults() -> Result<(), Box<dyn std::error::Error>> {
         // Heuristic configuration test (AI functionality has been sunset)
         let config = ZfsConfig::default();
 
@@ -29,10 +30,10 @@ mod heuristic_unit_tests {
         assert!(!config.tiers.hot.name.is_empty());
         assert!(!config.tiers.warm.name.is_empty());
         assert!(!config.tiers.cold.name.is_empty());
+    Ok(())
     }
-
     #[test]
-    fn test_performance_expectation() {
+    fn test_performance_expectation() -> Result<(), Box<dyn std::error::Error>> {
         let hot_tier_expectation =
             nestgate_automation::types::optimization::PerformanceExpectation {
                 expected_iops: 2000,
@@ -44,5 +45,7 @@ mod heuristic_unit_tests {
 
         assert_eq!(hot_tier_expectation.expected_latency_ms, 1.0);
         assert_eq!(hot_tier_expectation.expected_bandwidth_mbps, 500.0);
+    Ok(())
     }
+    Ok(())
 } 

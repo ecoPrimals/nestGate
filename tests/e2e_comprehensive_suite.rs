@@ -18,6 +18,7 @@ async fn test_complete_zfs_storage_lifecycle() -> Result<(), Box<dyn std::error:
             "hot": {"compression": "lz4", "cache_size": "1GB"},
             "warm": {"compression": "zstd", "cache_size": "512MB"},
             "cold": {"compression": "gzip-9", "cache_size": "256MB"}
+    Ok(())
         }
     });
 
@@ -115,11 +116,13 @@ async fn test_performance_under_load() -> Result<(), Box<dyn std::error::Error>>
             format!("Operation {i} completed")
         });
         handles.push(handle);
+        Ok(())
     }
 
     // 2. Wait for all operations to complete
     for handle in handles {
         handle.await?;
+        Ok(())
     }
 
     println!("  ✅ Performance under load test successful");

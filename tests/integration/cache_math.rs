@@ -7,7 +7,7 @@ use nestgate_core::cache_math::*;
 
 /// Test cache size calculations
 #[test]
-fn test_cache_size_calculations() {
+fn test_cache_size_calculations() -> Result<(), Box<dyn std::error::Error>> {
     // Test basic cache size calculations
     let cache_size = calculate_optimal_cache_size(1024 * 1024 * 1024); // 1GB memory
     assert!(cache_size > 0);
@@ -20,11 +20,12 @@ fn test_cache_size_calculations() {
     assert!(small_cache < large_cache); // Larger memory should allow larger cache
     assert!(small_cache > 0);
     assert!(large_cache > 0);
+    Ok(())
 }
 
 /// Test cache hit ratio calculations
 #[test]
-fn test_cache_hit_ratio() {
+fn test_cache_hit_ratio() -> Result<(), Box<dyn std::error::Error>> {
     // Test perfect hit ratio
     assert_eq!(calculate_hit_ratio(100, 0), 1.0);
     
@@ -37,11 +38,12 @@ fn test_cache_hit_ratio() {
     
     // Test edge cases
     assert_eq!(calculate_hit_ratio(0, 0), 0.0); // No requests
+    Ok(())
 }
 
 /// Test cache eviction algorithms
 #[test]
-fn test_cache_eviction_scoring() {
+fn test_cache_eviction_scoring() -> Result<(), Box<dyn std::error::Error>> {
     // Test LRU scoring
     let now = std::time::SystemTime::now();
     let old_time = now - std::time::Duration::from_secs(3600); // 1 hour ago
@@ -54,11 +56,12 @@ fn test_cache_eviction_scoring() {
     assert!(recent_score > old_score);
     assert!(old_score >= 0.0);
     assert!(recent_score >= 0.0);
+    Ok(())
 }
 
 /// Test cache memory efficiency calculations
 #[test]
-fn test_memory_efficiency() {
+fn test_memory_efficiency() -> Result<(), Box<dyn std::error::Error>> {
     // Test memory overhead calculations
     let data_size = 1024; // 1KB of actual data
     let overhead = calculate_memory_overhead(data_size);
@@ -69,11 +72,12 @@ fn test_memory_efficiency() {
     // Test total memory usage
     let total_usage = calculate_total_memory_usage(data_size, overhead);
     assert_eq!(total_usage, data_size + overhead);
+    Ok(())
 }
 
 /// Test cache performance predictions
 #[test]
-fn test_performance_predictions() {
+fn test_performance_predictions() -> Result<(), Box<dyn std::error::Error>> {
     // Test access time predictions
     let cache_access_time = predict_cache_access_time(1000); // 1000 entries
     let large_cache_time = predict_cache_access_time(100000); // 100k entries
@@ -84,11 +88,12 @@ fn test_performance_predictions() {
     // Larger caches might have slightly longer access times
     // but should still be reasonable
     assert!(large_cache_time >= cache_access_time);
+    Ok(())
 }
 
 /// Test cache optimization algorithms
 #[test]
-fn test_cache_optimization() {
+fn test_cache_optimization() -> Result<(), Box<dyn std::error::Error>> {
     // Test optimal cache tier distribution
     let total_size = 1024 * 1024 * 1024; // 1GB
     let tier_distribution = calculate_optimal_tier_distribution(total_size);
@@ -103,11 +108,12 @@ fn test_cache_optimization() {
                            tier_distribution.warm_tier_size + 
                            tier_distribution.cold_tier_size;
     assert!(total_distributed <= total_size);
+    Ok(())
 }
 
 /// Test mathematical utility functions
 #[test]
-fn test_math_utilities() {
+fn test_math_utilities() -> Result<(), Box<dyn std::error::Error>> {
     // Test power of 2 calculations
     assert!(is_power_of_two(1024));
     assert!(is_power_of_two(2048));
@@ -123,11 +129,12 @@ fn test_math_utilities() {
     assert_eq!(log2_floor(1024), 10);
     assert_eq!(log2_floor(1000), 9);
     assert_eq!(log2_floor(1), 0);
+    Ok(())
 }
 
 /// Test statistical calculations for cache performance
 #[test]
-fn test_cache_statistics() {
+fn test_cache_statistics() -> Result<(), Box<dyn std::error::Error>> {
     let access_times = vec![0.1, 0.2, 0.15, 0.3, 0.25, 0.18, 0.22];
     
     // Test average calculation
@@ -144,11 +151,12 @@ fn test_cache_statistics() {
     let std_dev = calculate_standard_deviation(&access_times);
     assert!(std_dev >= 0.0);
     assert!(std_dev < average); // Should be reasonable relative to average
+    Ok(())
 }
 
 /// Test cache load balancing calculations
 #[test]
-fn test_load_balancing() {
+fn test_load_balancing() -> Result<(), Box<dyn std::error::Error>> {
     let cache_loads = vec![0.8, 0.6, 0.9, 0.4, 0.7]; // Cache utilization ratios
     
     // Test load balancing score
@@ -160,11 +168,12 @@ fn test_load_balancing() {
     let balanced_loads = vec![0.5, 0.5, 0.5, 0.5];
     let perfect_score = calculate_load_balance_score(&balanced_loads);
     assert!(perfect_score > balance_score); // Should be better balanced
+    Ok(())
 }
 
 /// Test cache replacement algorithms
 #[test]
-fn test_replacement_algorithms() {
+fn test_replacement_algorithms() -> Result<(), Box<dyn std::error::Error>> {
     // Test LFU (Least Frequently Used) scoring
     let access_counts = vec![10, 5, 15, 3, 8];
     let lfu_scores = calculate_lfu_scores(&access_counts);
@@ -172,15 +181,16 @@ fn test_replacement_algorithms() {
     assert_eq!(lfu_scores.len(), access_counts.len());
     
     // Items with fewer accesses should have lower scores (more likely to be evicted)
-    let min_access_idx = access_counts.iter().position(|&x| x == 3).unwrap();
-    let max_access_idx = access_counts.iter().position(|&x| x == 15).unwrap();
+    let min_access_idx = access_counts.iter().position(|&x| x == 3)?;
+    let max_access_idx = access_counts.iter().position(|&x| x == 15)?;
     
     assert!(lfu_scores[min_access_idx] < lfu_scores[max_access_idx]);
+    Ok(())
 }
 
 /// Comprehensive cache math integration test
 #[test]
-fn test_comprehensive_cache_math() {
+fn test_comprehensive_cache_math() -> Result<(), Box<dyn std::error::Error>> {
     // Simulate a realistic cache scenario
     let total_memory = 2 * 1024 * 1024 * 1024; // 2GB
     let optimal_cache_size = calculate_optimal_cache_size(total_memory);
@@ -208,6 +218,7 @@ fn test_comprehensive_cache_math() {
         
         hit_counts.push(hits.max(0));
         miss_counts.push(misses.max(0));
+    Ok(())
     }
     
     // Calculate performance metrics
@@ -223,4 +234,5 @@ fn test_comprehensive_cache_math() {
     assert!(optimal_cache_size > 0);
     assert!(optimal_cache_size <= total_memory);
     assert!(distribution.hot_tier_size + distribution.warm_tier_size + distribution.cold_tier_size <= optimal_cache_size);
+    Ok(())
 } 

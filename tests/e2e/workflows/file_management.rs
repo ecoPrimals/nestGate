@@ -11,7 +11,7 @@ use tracing::info;
 
 /// Test file management E2E workflow configuration
 #[tokio::test]
-async fn test_file_management_workflow_config() {
+async fn test_file_management_workflow_config() -> Result<(), Box<dyn std::error::Error>> {
     info!("📁 Starting file management E2E workflow configuration test");
     
     // Test file management E2E workflow configuration creation
@@ -23,11 +23,12 @@ async fn test_file_management_workflow_config() {
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ File management E2E workflow configuration test completed");
+    Ok(())
 }
 
 /// Test file operations workflow
 #[tokio::test]
-async fn test_file_operations_workflow() {
+async fn test_file_operations_workflow() -> Result<(), Box<dyn std::error::Error>> {
     info!("📄 Testing file operations workflow");
     
     // Test file operations workflow simulations
@@ -47,14 +48,16 @@ async fn test_file_operations_workflow() {
         // Verify file operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ File operations workflow completed");
+    Ok(())
 }
 
 /// Test directory management workflow
 #[tokio::test]
-async fn test_directory_management_workflow() {
+async fn test_directory_management_workflow() -> Result<(), Box<dyn std::error::Error>> {
     info!("📂 Testing directory management workflow");
     
     // Test directory management workflow simulations
@@ -74,14 +77,16 @@ async fn test_directory_management_workflow() {
         // Verify directory operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ Directory management workflow completed");
+    Ok(())
 }
 
 /// Test file management workflow monitoring
 #[tokio::test]
-async fn test_file_management_workflow_monitoring() {
+async fn test_file_management_workflow_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing file management workflow monitoring");
     
     let start_time = std::time::Instant::now();
@@ -96,14 +101,16 @@ async fn test_file_management_workflow_monitoring() {
         
         // Verify monitoring timing is accurate
         assert!(elapsed.as_millis() >= cycle_time as u128, "File management monitoring timing should be accurate");
+    Ok(())
     }
     
     info!("✅ File management workflow monitoring completed");
+    Ok(())
 }
 
 /// Test file management security and permissions
 #[tokio::test]
-async fn test_file_management_security_permissions() {
+async fn test_file_management_security_permissions() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔐 Testing file management security and permissions");
     
     // Test file management security scenarios
@@ -123,14 +130,16 @@ async fn test_file_management_security_permissions() {
         // Verify security scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
         assert!(processing_time > 0, "Processing time should be positive");
+    Ok(())
     }
     
     info!("✅ File management security and permissions completed");
+    Ok(())
 }
 
 /// Test file management workflow performance
 #[tokio::test]
-async fn test_file_management_workflow_performance() {
+async fn test_file_management_workflow_performance() -> Result<(), Box<dyn std::error::Error>> {
     info!("🚀 Testing file management workflow performance");
     
     // Test file management workflow performance features
@@ -150,14 +159,16 @@ async fn test_file_management_workflow_performance() {
         // Verify performance feature is valid
         assert!(!feature.is_empty(), "Feature should be specified");
         assert!(processing_time > 0, "Processing time should be positive");
+    Ok(())
     }
     
     info!("✅ File management workflow performance completed");
+    Ok(())
 }
 
 /// Test file management workflow environments
 #[tokio::test]
-async fn test_file_management_workflow_environments() {
+async fn test_file_management_workflow_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing file management E2E workflow across environments");
     
     // Test development environment file management E2E workflow
@@ -173,4 +184,5 @@ async fn test_file_management_workflow_environments() {
     info!("Production file management E2E workflow configuration validated");
     
     info!("✅ File management E2E workflow environment test completed");
+    Ok(())
 }

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 //
 // Comprehensive health monitoring for all system components.
 
-use crate::error::CanonicalResult as Result;
+use crate::error::Result;
 use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::sync::RwLock;
@@ -22,7 +22,6 @@ pub enum HealthStatus {
     /// Component status is unknown
     Unknown,
 }
-
 /// System-wide health information
 #[derive(Debug, Clone)]
 pub struct SystemHealth {
@@ -35,7 +34,6 @@ pub struct SystemHealth {
     /// Overall health score (0.0 to 1.0)
     pub health_score: f64,
 }
-
 /// Health information for a specific component
 #[derive(Debug, Clone)]
 pub struct ComponentHealth {
@@ -50,23 +48,21 @@ pub struct ComponentHealth {
     /// Additional metadata
     pub metadata: HashMap<String, String>,
 }
-
 /// Health checker for system monitoring
 pub struct HealthChecker {
     components: HealthProviderMap,
 }
-
 /// Trait for components that can provide health information
 pub trait HealthCheckProvider {
     /// Perform health check for this component
     fn check_health(&self) -> Result<ComponentHealth>;
-
     /// Get component name
     fn component_name(&self) -> &str;
 }
 
 impl HealthChecker {
     /// Create a new health checker
+    #[must_use]
     pub fn new() -> Self {
         Self {
             components: Arc::new(RwLock::new(HashMap::new())),
@@ -83,7 +79,14 @@ impl HealthChecker {
     }
 
     /// Run health checks for all registered components
-    pub async fn run_health_checks(&self) -> Result<SystemHealth> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn run_health_checks(&self) -> Result<SystemHealth>  {
         let mut component_health = HashMap::new();
         let mut healthy_count = 0;
         let mut total_count = 0;
@@ -116,7 +119,7 @@ impl HealthChecker {
 
         // Calculate overall health
         let health_score = if total_count > 0 {
-            healthy_count as f64 / total_count as f64
+            f64::from(healthy_count) / f64::from(total_count)
         } else {
             1.0 // No components registered, assume healthy
         };
@@ -138,7 +141,14 @@ impl HealthChecker {
     }
 
     /// Get system health status
-    pub async fn get_system_health(&self) -> Result<SystemHealth> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_system_health(&self) -> Result<SystemHealth>  {
         self.run_health_checks().await
     }
 }
@@ -151,7 +161,6 @@ impl Default for HealthChecker {
 
 /// Basic system health check provider
 pub struct SystemHealthProvider;
-
 impl HealthCheckProvider for SystemHealthProvider {
     fn check_health(&self) -> Result<ComponentHealth> {
         // Basic system checks
@@ -205,25 +214,29 @@ mod tests {
 
     #[tokio::test]
     async fn test_health_checker() -> crate::Result<()> {
-        let mut checker = HealthChecker::new();
+        let checker = HealthChecker::new();
 
         // Add healthy component
-        checker.register_provider(
-            "test1".to_string(),
-            Box::new(MockHealthProvider {
-                name: "test1".to_string(),
-                status: HealthStatus::Healthy,
-            }),
-        );
+        checker
+            .register_provider(
+                "test1".to_string(),
+                Box::new(MockHealthProvider {
+                    name: "test1".to_string(),
+                    status: HealthStatus::Healthy,
+                }),
+            )
+            .await;
 
         // Add unhealthy component
-        checker.register_provider(
-            "test2".to_string(),
-            Box::new(MockHealthProvider {
-                name: "test2".to_string(),
-                status: HealthStatus::Unhealthy,
-            }),
-        );
+        checker
+            .register_provider(
+                "test2".to_string(),
+                Box::new(MockHealthProvider {
+                    name: "test2".to_string(),
+                    status: HealthStatus::Unhealthy,
+                }),
+            )
+            .await;
 
         let health = checker.get_system_health().await?;
         assert_eq!(health.overall_status, HealthStatus::Warning);

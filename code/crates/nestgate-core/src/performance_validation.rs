@@ -30,24 +30,20 @@ pub async fn run_performance_validation() -> crate::error::CanonicalResult<Vec<B
     let validator = PerformanceValidator::default();
     Ok(validator.run_full_validation().await)
 }
-
 /// Convenience function to validate performance targets
-pub fn validate_targets(results: &[BenchmarkResults]) -> crate::error::CanonicalResult<()> {
+pub const fn validate_targets(results: &[BenchmarkResults]) -> crate::error::CanonicalResult<()> {
     let validator = PerformanceValidator::default();
     validator.validate_performance_targets(results)
 }
-
 /// Generate a comprehensive performance report
 pub async fn generate_performance_report() -> crate::error::CanonicalResult<String> {
     let results = run_performance_validation().await?;
     let metrics = PerformanceMetrics::from_results(&results);
     Ok(metrics.generate_report())
 }
-
 /// Validate that zero-cost patterns are properly implemented
 pub fn validate_zero_cost_patterns() -> crate::error::CanonicalResult<()> {
     use crate::performance::zero_cost_validators::ZeroCostValidator;
-
     ZeroCostValidator::validate_arc_dyn_elimination()?;
     ZeroCostValidator::validate_async_trait_elimination()?;
     ZeroCostValidator::validate_string_optimization()?;

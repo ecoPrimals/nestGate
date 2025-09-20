@@ -1,0 +1,240 @@
+# NestGate Production Security Configuration
+# Enterprise-grade security hardening for production deployment
+
+[security]
+# Global security settings
+enabled = true
+security_mode = "production"
+audit_all_operations = true
+fail_secure = true
+
+[security.authentication]
+enabled = true
+methods = ["Certificate", "Token", "OAuth"]
+session_timeout = "1h"
+max_login_attempts = 3
+lockout_duration = "15m"
+require_strong_passwords = true
+password_min_length = 12
+password_complexity_required = true
+multi_factor_auth_required = false  # Set to true for high-security environments
+
+[security.authorization]
+enabled = true
+rbac_enabled = true
+default_permissions = ["read"]
+permission_cache_ttl = "5m"
+audit_authorization = true
+deny_by_default = true
+
+[security.encryption]
+enabled = true
+algorithm = "AES-256-GCM"
+key_size = 256
+key_rotation_interval = "24h"
+key_derivation_algorithm = "PBKDF2"
+key_derivation_iterations = 100000
+salt_size = 32
+encrypt_at_rest = true
+encrypt_in_transit = true
+
+[security.tls]
+enabled = true
+version = "1.3"
+cert_path = "/opt/nestgate/certs/nestgate.crt"
+key_path = "/opt/nestgate/certs/nestgate.key"
+ca_path = "/opt/nestgate/certs/ca.crt"
+cipher_suites = [
+    "TLS_AES_256_GCM_SHA384",
+    "TLS_CHACHA20_POLY1305_SHA256",
+    "TLS_AES_128_GCM_SHA256"
+]
+client_auth_required = true
+verify_client_certificates = true
+
+[security.network]
+bind_interface = "127.0.0.1"
+allowed_ips = [
+    "10.0.0.0/8",      # Private Class A
+    "172.16.0.0/12",   # Private Class B
+    "192.168.0.0/16"   # Private Class C
+]
+blocked_ips = []
+enable_rate_limiting = true
+rate_limit_requests_per_minute = 100
+rate_limit_burst_size = 20
+enable_ddos_protection = true
+max_connections_per_ip = 10
+
+[security.audit]
+enabled = true
+log_level = "INFO"
+log_format = "json"
+retention_days = 90
+compress_logs = true
+events_to_audit = [
+    "authentication",
+    "authorization",
+    "file_access",
+    "configuration_change",
+    "security_event",
+    "network_connection",
+    "privilege_escalation",
+    "data_access",
+    "system_modification"
+]
+
+[security.threat_detection]
+enabled = true
+ml_enabled = false  # Enable if ML threat detection is available
+rules_enabled = true
+alert_threshold = 0.8
+response_actions = [
+    "log",
+    "alert",
+    "block_ip"
+]
+
+[security.data_protection]
+enable_data_classification = true
+default_classification = "internal"
+enable_data_loss_prevention = true
+scan_outbound_data = true
+block_sensitive_data_transfer = true
+
+[security.access_control]
+enable_ip_whitelisting = true
+enable_user_whitelisting = true
+enable_process_whitelisting = true
+default_policy = "deny"
+
+# IP whitelist (private networks only)
+ip_whitelist = [
+    "127.0.0.1/32",
+    "10.0.0.0/8",
+    "172.16.0.0/12",
+    "192.168.0.0/16"
+]
+
+# User whitelist (service accounts only)
+user_whitelist = [
+    "nestgate",
+    "backup",
+    "monitoring"
+]
+
+# Process whitelist (only essential processes)
+process_whitelist = [
+    "nestgate",
+    "systemd",
+    "ssh",
+    "rsyslog"
+]
+
+[security.compliance]
+# Security compliance standards
+pci_dss_compliant = false
+hipaa_compliant = false
+gdpr_compliant = true
+sox_compliant = false
+
+# Compliance features
+enable_data_retention_policies = true
+enable_right_to_be_forgotten = true
+enable_consent_management = false
+
+[security.incident_response]
+enabled = true
+auto_response_enabled = true
+escalation_enabled = true
+notification_channels = [
+    "email",
+    "webhook",
+    "syslog"
+]
+
+# Incident severity levels
+critical_response_time = "5m"
+high_response_time = "15m"
+medium_response_time = "1h"
+low_response_time = "24h"
+
+[security.vulnerability_management]
+enabled = true
+auto_scan_enabled = false  # Enable for automated vulnerability scanning
+scan_interval = "24h"
+patch_management_enabled = true
+security_updates_auto_install = false  # Manual approval recommended
+
+[security.backup_security]
+encrypt_backups = true
+backup_encryption_algorithm = "AES-256-GCM"
+verify_backup_integrity = true
+secure_backup_storage = true
+offsite_backup_required = true
+
+[security.monitoring]
+enabled = true
+real_time_monitoring = true
+security_dashboard_enabled = true
+alert_on_anomalies = true
+baseline_learning_period = "7d"
+
+# Security metrics to monitor
+monitor_failed_logins = true
+monitor_privilege_escalation = true
+monitor_file_integrity = true
+monitor_network_anomalies = true
+monitor_resource_usage = true
+
+[security.headers]
+# HTTP security headers
+enable_security_headers = true
+x_frame_options = "DENY"
+x_content_type_options = "nosniff"
+x_xss_protection = "1; mode=block"
+strict_transport_security = "max-age=31536000; includeSubDomains"
+content_security_policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+referrer_policy = "strict-origin-when-cross-origin"
+
+[security.session_management]
+secure_session_cookies = true
+http_only_cookies = true
+same_site_cookies = "Strict"
+session_regeneration_on_login = true
+concurrent_session_limit = 3
+
+[security.password_policy]
+min_length = 12
+require_uppercase = true
+require_lowercase = true
+require_numbers = true
+require_special_chars = true
+password_history_count = 5
+password_expiry_days = 90
+
+[security.api_security]
+enable_api_authentication = true
+enable_api_rate_limiting = true
+api_key_required = true
+validate_request_signatures = true
+enable_cors_protection = true
+allowed_origins = []  # Empty means same-origin only
+
+[security.file_system]
+enable_file_integrity_monitoring = true
+monitor_critical_files = true
+critical_files = [
+    "/opt/nestgate/config/",
+    "/opt/nestgate/bin/",
+    "/etc/systemd/system/nestgate.service"
+]
+file_change_alert = true
+unauthorized_access_alert = true
+
+[security.logging_security]
+tamper_proof_logs = true
+log_encryption = true
+centralized_logging = false  # Set to true if using centralized log server
+log_integrity_verification = true
+secure_log_transmission = true 

@@ -16,7 +16,6 @@ pub struct EcosystemConfig {
     pub services: Vec<ServiceInfo>,
     pub metadata: HashMap<String, String>,
 }
-
 // ServiceInfo definition removed - use canonical_types::service::ServiceInfo
 
 /// Capability provider for ecosystem integration
@@ -29,7 +28,6 @@ pub struct CapabilityProvider {
     pub status: ProviderStatus,
     pub metadata: HashMap<String, String>,
 }
-
 /// Provider status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ProviderStatus {
@@ -38,16 +36,13 @@ pub enum ProviderStatus {
     Error,
     Unknown,
 }
-
 impl Default for CapabilityProvider {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             id: "default".to_string(),
             name: "Default Provider".to_string(),
             capabilities: vec!["storage".to_string()],
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: nestgate_core::constants::canonical_defaults::network::build_api_url(),
             status: ProviderStatus::Active,
             metadata: HashMap::new(),
-        }
-    }
+         }
 }

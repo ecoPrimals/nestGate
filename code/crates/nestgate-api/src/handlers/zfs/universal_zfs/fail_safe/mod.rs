@@ -1,7 +1,7 @@
 //
 // This module contains the fail-safe ZFS service implementation split into logical submodules:
 // - circuit_breaker: Circuit breaker implementation
-// - retry_executor: Retry logic implementation  
+// - retry_executor: Retry logic implementation
 // - core: Main service structure and core methods
 // - pool_operations: Pool fail-safe operations
 // - dataset_operations: Dataset fail-safe operations
@@ -9,7 +9,7 @@
 // - optimization: Optimization and configuration operations
 
 mod circuit_breaker;
-mod core;
+pub mod core;
 mod dataset_operations;
 mod optimization;
 mod pool_operations;

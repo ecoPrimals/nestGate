@@ -17,17 +17,21 @@ pub struct RiskForecaster {
 }
 
 impl RiskForecaster {
-    pub fn new(zfs_manager: Arc<ZfsManager>) -> Self {
-        Self { zfs_manager }
-    }
+    pub const fn new(zfs_manager: Arc<ZfsManager>) -> Self { Self { zfs_manager  }
 
     /// Create with default configuration - PRODUCTION READY
     /// Replaces mock() with real ZFS integration
-    pub async fn new_with_default_config() -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn new_with_default_config() -> Result<Self>  {
         let config = nestgate_zfs::ZfsConfig::default();
-        let zfs_manager = Arc::new(ZfsManager::new(config).await.map_err(|e| {
-            NestGateError::Internal {
-                message: format!("Failed to initialize ZFS manager for risk forecasting: {}", e),
+        let zfs_manager = Arc::new(ZfsManager::new(config).await.map_err(|_e| {
+            NestGateError::internal_error(
                 location: Some(file!().to_string()),
                 context: None,
                 is_bug: false,
@@ -38,14 +42,19 @@ impl RiskForecaster {
 
     /// Create mock instance for testing only
     #[cfg(test)]
-    pub fn mock() -> Self {
-        Self {
+    pub const fn mock() -> Self { Self {
             zfs_manager: Arc::new(nestgate_zfs::ZfsManager::mock()),
-        }
-    }
+         }
 
     /// Generate comprehensive performance forecast
-    pub async fn generate_forecast(&self) -> Result<PerformanceForecast> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn generate_forecast(&self) -> Result<PerformanceForecast>  {
         debug!("🔮 Generating comprehensive performance forecast");
         
         match self.zfs_manager.get_performance_analytics().await {
@@ -55,18 +64,18 @@ impl RiskForecaster {
                 let predicted_metrics = vec![
                     PredictedMetric {
                         metric_name: "total_throughput".to_string(),
-                        current_value: analytics.total_throughput_mbs,
-                        predicted_value: analytics.total_throughput_mbs * 1.15, // 15% increase forecast
+                        currentvalue: analytics.total_throughput_mbs,
+                        predictedvalue: analytics.total_throughput_mbs * 1.15, // 15% increase forecast
                         confidence_level: 0.78,
                         forecast_period_days: 30,
-                    },
+                    }
                     PredictedMetric {
                         metric_name: "storage_utilization".to_string(),
-                        current_value: analytics.pools.iter().map(|p| p.utilization_percentage).sum::<f64>() / analytics.pools.len() as f64,
-                        predicted_value: analytics.pools.iter().map(|p| p.utilization_percentage * 1.08).sum::<f64>() / analytics.pools.len() as f64, // 8% growth
+                        currentvalue: analytics.pools.iter().map(|p| p.utilization_percentage).sum::<f64>() / analytics.(pools.len() as f64),
+                        predictedvalue: analytics.pools.iter().map(|p| p.utilization_percentage * 1.08).sum::<f64>() / analytics.(pools.len() as f64), // 8% growth
                         confidence_level: 0.85,
                         forecast_period_days: 30,
-                    },
+                    }
                 ];
                 
                 let confidence_intervals = Self::generate_confidence_intervals(&predicted_metrics);
@@ -93,18 +102,18 @@ impl RiskForecaster {
                     predicted_metrics: vec![
                         PredictedMetric {
                             metric_name: "total_throughput".to_string(),
-                            current_value: 450.0,
-                            predicted_value: 520.0,
+                            currentvalue: 450.0,
+                            predictedvalue: 520.0,
                             confidence_level: 0.70,
                             forecast_period_days: 30,
-                        },
+                        }
                     ],
                     capacity_forecast: CapacityForecast {
-                        current_utilization: 65.0,
-                        projected_utilization_30d: 72.0,
-                        projected_utilization_90d: 85.0,
-                        projected_full_date: None,
-                        growth_rate_per_day: 0.23,
+                        current_usage_percentage: 65.0,
+                        projected_usage_in_30_days: 72.0,
+                        projected_usage_in_90_days: 85.0,
+                        growth_points: vec![],
+                        recommendations: vec![],
                     },
                     confidence_intervals: vec![],
                     assumptions: vec!["Fallback forecast based on typical patterns".to_string()],
@@ -114,7 +123,14 @@ impl RiskForecaster {
     }
 
     /// Assess comprehensive system risks
-    pub async fn assess_risks(&self) -> Result<RiskAssessment> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn assess_risks(&self) -> Result<RiskAssessment>  {
         debug!("⚠️ Assessing comprehensive system risks");
         
         match self.zfs_manager.get_performance_analytics().await {
@@ -127,13 +143,12 @@ impl RiskForecaster {
                         risks.push(RiskFactor {
                             risk_type: "capacity".to_string(),
                             severity: "Critical".to_string(),
-                            description: format!("Pool '{}' is {}% full - imminent capacity exhaustion", 
-                                               pool.name, pool.utilization_percentage as u32),
+                            description: format!("Pool '{"actual_error_details"}' is {"actual_error_details"}% full - imminent capacity exhaustion"),
                             likelihood: 0.95,
                             impact: "High".to_string(),
                             mitigation_steps: vec![
-                                format!("Immediately expand pool '{}'", pool.name),
-                                "Add additional storage devices".to_string(),
+                                format!("Immediately expand pool '{"actual_error_details"}'"),
+                                "Add additional storage _devices".to_string(),
                                 "Archive or delete old data".to_string(),
                             ],
                             estimated_time_to_impact: Some(7), // 7 days
@@ -142,12 +157,11 @@ impl RiskForecaster {
                         risks.push(RiskFactor {
                             risk_type: "capacity".to_string(),
                             severity: "High".to_string(),
-                            description: format!("Pool '{}' is {}% full - approaching capacity limits", 
-                                               pool.name, pool.utilization_percentage as u32),
+                            description: format!("Pool '{"actual_error_details"}' is {"actual_error_details"}% full - approaching capacity limits"),
                             likelihood: 0.75,
                             impact: "High".to_string(),
                             mitigation_steps: vec![
-                                format!("Plan expansion for pool '{}'", pool.name),
+                                format!("Plan expansion for pool '{"actual_error_details"}'"),
                                 "Monitor growth trends closely".to_string(),
                                 "Implement data lifecycle policies".to_string(),
                             ],
@@ -156,17 +170,16 @@ impl RiskForecaster {
                     }
                     
                     // Performance risk assessment
-                    if pool.read_ops + pool.write_ops > 10000 {
+                    if pool.read_ops + pool.write_ops > 10_000 {
                         risks.push(RiskFactor {
                             risk_type: "performance".to_string(),
                             severity: "Medium".to_string(),
-                            description: format!("Pool '{}' experiencing high IOPS load ({} ops)", 
-                                               pool.name, pool.read_ops + pool.write_ops),
+                            description: format!("Pool '{"actual_error_details"}' experiencing high IOPS load ({"actual_error_details"} ops)"),
                             likelihood: 0.60,
                             impact: "Medium".to_string(),
                             mitigation_steps: vec![
-                                "Add L2ARC devices for read caching".to_string(),
-                                "Consider SLOG devices for write optimization".to_string(),
+                                "Add L2ARC _devices for read caching".to_string(),
+                                "Consider SLOG _devices for write optimization".to_string(),
                                 "Review application I/O patterns".to_string(),
                             ],
                             estimated_time_to_impact: Some(60), // 60 days
@@ -179,12 +192,11 @@ impl RiskForecaster {
                             risks.push(RiskFactor {
                                 risk_type: "fragmentation".to_string(),
                                 severity: "Medium".to_string(),
-                                description: format!("Pool '{}' has {:.1}% fragmentation - performance degradation risk", 
-                                                   pool.name, fragmentation),
+                                description: format!("Pool '{"actual_error_details"}' has {"actual_error_details"}% fragmentation - performance degradation risk"),
                                 likelihood: 0.70,
                                 impact: "Medium".to_string(),
                                 mitigation_steps: vec![
-                                    format!("Schedule defragmentation for pool '{}'", pool.name),
+                                    format!("Schedule defragmentation for pool '{"actual_error_details"}'"),
                                     "Plan maintenance window for optimization".to_string(),
                                     "Monitor I/O performance trends".to_string(),
                                 ],
@@ -199,8 +211,7 @@ impl RiskForecaster {
                     risks.push(RiskFactor {
                         risk_type: "performance".to_string(),
                         severity: "Medium".to_string(),
-                        description: format!("ARC hit ratio is low ({:.1}%) - potential performance impact", 
-                                           analytics.arc_hit_ratio),
+                        description: format!("ARC hit ratio is low ({"actual_error_details"}%) - potential performance impact"),
                         likelihood: 0.65,
                         impact: "Medium".to_string(),
                         mitigation_steps: vec![
@@ -219,11 +230,11 @@ impl RiskForecaster {
                 let medium_risks = risks.iter().filter(|r| r.severity == "Medium").count();
                 
                 let overall_risk_score = if critical_risks > 0 {
-                    90.0 + (critical_risks as f64 * 2.0)
+                    90.0 + (f64::from(critical_risks) * 2.0)
                 } else if high_risks > 0 {
-                    70.0 + (high_risks as f64 * 5.0)
+                    70.0 + (f64::from(high_risks) * 5.0)
                 } else if medium_risks > 0 {
-                    40.0 + (medium_risks as f64 * 3.0)
+                    40.0 + (f64::from(medium_risks) * 3.0)
                 } else {
                     20.0 // Low baseline risk
                 }.min(100.0);
@@ -284,7 +295,7 @@ impl RiskForecaster {
                 let total_used: u64 = analytics.pools.iter().map(|p| p.used_capacity).sum();
                 
                 let current_utilization = if total_capacity > 0 {
-                    (total_used as f64 / total_capacity as f64) * 100.0
+                    (f64::from(total_used) / f64::from(total_capacity)) * 100.0
                 } else {
                     0.0
                 };
@@ -313,21 +324,21 @@ impl RiskForecaster {
                 };
                 
                 Ok(CapacityForecast {
-                    current_utilization,
-                    projected_utilization_30d: projected_30d,
-                    projected_utilization_90d: projected_90d,
-                    projected_full_date,
-                    growth_rate_per_day: daily_growth_rate,
+                    current_usage_percentage: current_utilization,
+                    projected_usage_in_30_days: projected_30d,
+                    projected_usage_in_90_days: projected_90d,
+                    growth_points: vec![],
+                    recommendations: vec![],
                 })
             }
             Err(_) => {
                 // Fallback capacity forecast
                 Ok(CapacityForecast {
-                    current_utilization: 65.0,
-                    projected_utilization_30d: 72.0,
-                    projected_utilization_90d: 85.0,
-                    projected_full_date: None,
-                    growth_rate_per_day: 0.23,
+                    current_usage_percentage: 65.0,
+                    projected_usage_in_30_days: 72.0,
+                    projected_usage_in_90_days: 85.0,
+                    growth_points: vec![],
+                    recommendations: vec![],
                 })
             }
         }
@@ -336,14 +347,14 @@ impl RiskForecaster {
     /// Generate confidence intervals for predicted metrics
     fn generate_confidence_intervals(predicted_metrics: &[PredictedMetric]) -> Vec<ConfidenceInterval> {
         predicted_metrics.iter().map(|metric| {
-            let variance = (1.0 - metric.confidence_level) * metric.predicted_value * 0.2; // 20% of value as variance basis
+            let variance = (1.0 - metric.confidence_level) * metric.predictedvalue * 0.2; // 20% of value as variance basis
             
             ConfidenceInterval {
                 metric_name: metric.metric_name.clone(),
                 confidence_level: 95.0, // 95% confidence interval
-                lower_bound: metric.predicted_value - (variance * 1.96), // 95% CI lower bound
-                upper_bound: metric.predicted_value + (variance * 1.96), // 95% CI upper bound
-                expected_value: metric.predicted_value,
+                lower_bound: metric.predictedvalue - (variance * 1.96), // 95% CI lower bound
+                upper_bound: metric.predictedvalue + (variance * 1.96), // 95% CI upper bound
+                expectedvalue: metric.predictedvalue,
             }
         }).collect()
     }

@@ -17,7 +17,6 @@ use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 use uuid::Uuid;
-
 // ==================== SECTION ====================
 
 /// **Zero-cost universal service trait**
@@ -27,7 +26,6 @@ use uuid::Uuid;
 pub trait ZeroCostUniversalService: Send + Sync + 'static {
     /// Service configuration type (must be cloneable and thread-safe)
     type Config: Clone + Send + Sync + 'static;
-
     /// Health status type (must be cloneable and thread-safe)  
     type Health: Clone + Send + Sync + 'static;
 
@@ -102,7 +100,6 @@ pub trait ZeroCostUniversalService: Send + Sync + 'static {
 pub trait ZeroCostDiscoverableService: ZeroCostUniversalService {
     /// Service capabilities type
     type Capabilities: Clone + Send + Sync + 'static;
-
     /// Get service capabilities - direct access
     fn capabilities(&self) -> Self::Capabilities;
 
@@ -122,7 +119,6 @@ pub trait ZeroCostDiscoverableService: ZeroCostUniversalService {
 pub trait ZeroCostConfigurableService: ZeroCostUniversalService {
     /// Configuration schema type
     type Schema: Clone + Send + Sync + 'static;
-
     /// Get configuration schema - direct access
     fn config_schema(&self) -> Self::Schema;
 
@@ -174,7 +170,6 @@ pub enum ZeroCostServiceHealth {
         reason: String,
     },
 }
-
 /// **Health metrics for zero-cost services**
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct HealthMetrics {
@@ -191,7 +186,6 @@ pub struct HealthMetrics {
     /// Average response time in milliseconds
     pub avg_response_time_ms: f64,
 }
-
 // ==================== SECTION ====================
 
 /// **Zero-cost service metadata**
@@ -218,11 +212,10 @@ pub struct ZeroCostServiceMetadata {
     /// Custom properties
     pub properties: std::collections::HashMap<String, String>,
 }
-
 // ==================== SECTION ====================
 
 /// **Create default health metrics**
-pub fn default_health_metrics() -> HealthMetrics {
+pub const fn default_health_metrics() -> HealthMetrics {
     HealthMetrics {
         cpu_usage: 0.0,
         memory_usage: 0,
@@ -232,33 +225,29 @@ pub fn default_health_metrics() -> HealthMetrics {
         avg_response_time_ms: 0.0,
     }
 }
-
 /// **Create healthy status with current timestamp**
-pub fn healthy_status() -> ZeroCostServiceHealth {
+pub const fn healthy_status() -> ZeroCostServiceHealth {
     ZeroCostServiceHealth::Healthy {
         last_check: SystemTime::now(),
         metrics: Some(default_health_metrics()),
     }
 }
-
 /// **Create degraded status with reason**
-pub fn degraded_status(reason: String, severity: u8) -> ZeroCostServiceHealth {
+pub const fn degraded_status(reason: String, severity: u8) -> ZeroCostServiceHealth {
     ZeroCostServiceHealth::Degraded {
         reason,
         severity: severity.min(10), // Cap at 10
         last_check: SystemTime::now(),
     }
 }
-
 /// **Create unhealthy status with error**
-pub fn unhealthy_status(error: String, recovery_hint: Option<String>) -> ZeroCostServiceHealth {
+pub const fn unhealthy_status(error: String, recovery_hint: Option<String>) -> ZeroCostServiceHealth {
     ZeroCostServiceHealth::Unhealthy {
         error,
         last_check: SystemTime::now(),
         recovery_hint,
     }
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -358,10 +347,10 @@ mod tests {
             tracing::error!("Unwrap failed: {:?}", e);
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {e:?}"),
             )
             .into());
-        });
+        );
         assert_eq!(service.current_config().max_connections, 200);
 
         // Test health check
@@ -371,13 +360,10 @@ mod tests {
         // Test stopping service
         service.stop().await.map_err(|e| {
             tracing::error!("Failed to stop service: {:?}", e);
-            NestGateError::Internal {
-                message: format!("Service shutdown failed: {:?}", e),
+            NestGateError::internal_error(
                 location: Some("universal_service.rs:417".to_string()),
-                location: Some("stop operation".to_string()),
-                is_bug: false,
-            }
-        })?;
+                location: Some("stop operation".to_string())}
+        )?;
         let health = service.health_check().await;
         assert!(matches!(health, ZeroCostServiceHealth::Unhealthy { .. }));
     }
@@ -399,27 +385,27 @@ mod tests {
             tracing::error!("Unwrap failed: {:?}", e);
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {e:?}"),
             )
             .into());
-        });
+        );
         let health = service.health_check_compat().await.unwrap_or_else(|e| {
             tracing::error!("Unwrap failed: {:?}", e);
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {e:?}"),
             )
             .into());
-        });
+        );
         assert!(matches!(health, ZeroCostServiceHealth::Healthy { .. }));
 
         service.stop_compat().await.unwrap_or_else(|e| {
             tracing::error!("Unwrap failed: {:?}", e);
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {e:?}"),
             )
             .into());
-        });
+        );
     }
 }

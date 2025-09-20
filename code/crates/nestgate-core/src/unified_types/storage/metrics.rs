@@ -5,7 +5,6 @@
 /// maintainability and 2000-line compliance.
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
 // ==================== SECTION ====================
 
 /// Comprehensive storage metrics
@@ -13,7 +12,6 @@ use std::time::Duration;
 pub struct StorageMetrics {
     /// Performance metrics
     pub performance: StoragePerformanceMetrics,
-
     /// I/O statistics
     pub io_stats: StorageIOStats,
 
@@ -38,7 +36,6 @@ pub struct StorageMetrics {
 pub struct StoragePerformanceMetrics {
     /// Read IOPS (Input/Output Operations Per Second)
     pub read_iops: f64,
-
     /// Write IOPS
     pub write_iops: f64,
 
@@ -66,7 +63,6 @@ pub struct StoragePerformanceMetrics {
 pub struct StorageIOStats {
     /// Total read operations
     pub read_ops: u64,
-
     /// Total write operations
     pub write_ops: u64,
 
@@ -94,7 +90,6 @@ pub struct StorageIOStats {
 pub struct StorageCacheStats {
     /// Cache hits
     pub cache_hits: u64,
-
     /// Cache misses
     pub cache_misses: u64,
 
@@ -122,7 +117,6 @@ pub struct StorageCacheStats {
 pub struct StorageReplicationStats {
     /// Number of replicas
     pub replica_count: u32,
-
     /// Healthy replicas
     pub healthy_replicas: u32,
 
@@ -144,7 +138,6 @@ pub struct StorageReplicationStats {
 pub struct StorageSnapshotStats {
     /// Total snapshots
     pub total_snapshots: u32,
-
     /// Snapshot size in bytes
     pub snapshot_size: u64,
 
@@ -168,7 +161,6 @@ pub struct StorageSnapshotStats {
 pub struct StoragePerformanceRequirements {
     /// Minimum IOPS requirement
     pub min_iops: Option<u32>,
-
     /// Minimum throughput in MB/s
     pub min_throughput_mb: Option<u32>,
 
@@ -194,7 +186,6 @@ pub enum ConsistencyLevel {
     /// Bounded staleness
     BoundedStaleness,
 }
-
 /// Storage durability levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum DurabilityLevel {
@@ -207,7 +198,6 @@ pub enum DurabilityLevel {
     /// Cross-region durability
     CrossRegion,
 }
-
 // ==================== SECTION ====================
 
 impl Default for StorageMetrics {
@@ -275,17 +265,17 @@ impl StorageMetrics {
     }
 
     /// Calculate total IOPS
-    pub fn total_iops(&self) -> f64 {
+    pub const fn total_iops(&self) -> f64 {
         self.performance.read_iops + self.performance.write_iops
     }
 
     /// Calculate total throughput
-    pub fn total_throughput(&self) -> u64 {
+    pub const fn total_throughput(&self) -> u64 {
         self.performance.read_throughput + self.performance.write_throughput
     }
 
     /// Calculate average latency
-    pub fn average_latency(&self) -> f64 {
+    pub const fn average_latency(&self) -> f64 {
         (self.performance.read_latency_ms + self.performance.write_latency_ms) / 2.0
     }
 }
@@ -295,16 +285,16 @@ impl StorageCacheStats {
     pub fn calculate_hit_ratio(&mut self) {
         let total_requests = self.cache_hits + self.cache_misses;
         if total_requests > 0 {
-            self.hit_ratio = self.cache_hits as f64 / total_requests as f64;
+            self.hit_ratio = self.f64::from(cache_hits) / f64::from(total_requests);
         } else {
             self.hit_ratio = 0.0;
         }
     }
 
     /// Get cache utilization percentage
-    pub fn cache_utilization(&self) -> f64 {
+    pub const fn cache_utilization(&self) -> f64 {
         if self.cache_size > 0 {
-            (self.used_cache_size as f64 / self.cache_size as f64) * 100.0
+            (self.f64::from(used_cache_size) / self.f64::from(cache_size)) * 100.0
         } else {
             0.0
         }
@@ -313,20 +303,20 @@ impl StorageCacheStats {
 
 impl StorageIOStats {
     /// Calculate total operations
-    pub fn total_operations(&self) -> u64 {
+    pub const fn total_operations(&self) -> u64 {
         self.read_ops + self.write_ops
     }
 
     /// Calculate total bytes transferred
-    pub fn total_bytes(&self) -> u64 {
+    pub const fn total_bytes(&self) -> u64 {
         self.bytes_read + self.bytes_written
     }
 
     /// Calculate error rate
-    pub fn error_rate(&self) -> f64 {
+    pub const fn error_rate(&self) -> f64 {
         let total_ops = self.total_operations();
         if total_ops > 0 {
-            ((self.read_errors + self.write_errors) as f64 / total_ops as f64) * 100.0
+            ((self.read_errors + self.write_errors) as f64 / f64::from(total_ops)) * 100.0
         } else {
             0.0
         }

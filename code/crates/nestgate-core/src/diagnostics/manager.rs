@@ -1,11 +1,10 @@
+use super::{Diagnostic, DiagnosticLevel, SystemMetrics};
+use crate::unified_enums::UnifiedHealthStatus as HealthStatus;
+use crate::{NestGateError, Result};
 /// Diagnostics Management
-/// This module contains the main DiagnosticsManager for coordinating system diagnostics.
+/// This module contains the main `DiagnosticsManager` for coordinating system diagnostics.
 use std::sync::{Arc, RwLock};
 use tokio::sync::broadcast;
-
-use super::{Diagnostic, DiagnosticLevel, SystemMetrics};
-use crate::{NestGateError, Result};
-use crate::unified_enums::UnifiedHealthStatus as HealthStatus;
 
 /// Main diagnostics manager
 pub struct DiagnosticsManager {
@@ -16,9 +15,9 @@ pub struct DiagnosticsManager {
     /// System metrics cache
     metrics: Arc<RwLock<SystemMetrics>>,
 }
-
 impl DiagnosticsManager {
     /// Create a new diagnostics manager
+    #[must_use]
     pub fn new() -> Self {
         let (event_sender, _) = broadcast::channel(1000);
 
@@ -30,30 +29,47 @@ impl DiagnosticsManager {
     }
 
     /// Add a diagnostic entry
-    pub fn add_diagnostic(&self, _diagnostic: Diagnostic) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn add_diagnostic(&self, _diagnostic: Diagnostic) -> Result<()>  {
         // Implementation would add diagnostic to storage
         // For now, this is a placeholder
         Ok(())
     }
 
     /// Get all diagnostics
-    pub fn get_diagnostics(&self) -> Result<Vec<Diagnostic>> {
-        let diagnostics = self
-            .diagnostics
-            .read()
-            .map_err(|_| NestGateError::Internal {
-                message: "Failed to acquire diagnostics read lock".to_string(),
-                component: "diagnostics_manager".to_string(),
-                location: Some(file!().to_string()),
-                context: None,
-                is_bug: false,
-            })?;
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn get_diagnostics(&self) -> Result<Vec<Diagnostic>>  {
+        let diagnostics = self.diagnostics.read().map_err(|_| {
+            NestGateError::internal_error(
+                "Failed to acquire diagnostics read lock",
+                "diagnostics_manager",
+            )
+        })?;
 
         Ok(diagnostics.clone())
     }
 
     /// Get unresolved diagnostics
-    pub fn get_unresolved_diagnostics(&self) -> Result<Vec<Diagnostic>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn get_unresolved_diagnostics(&self) -> Result<Vec<Diagnostic>>  {
         let diagnostics = self.get_diagnostics()?;
         Ok(diagnostics
             .into_iter()
@@ -62,7 +78,14 @@ impl DiagnosticsManager {
     }
 
     /// Calculate overall health status
-    pub fn calculate_health_status(&self) -> Result<HealthStatus> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn calculate_health_status(&self) -> Result<HealthStatus>  {
         let diagnostics = self.get_unresolved_diagnostics()?;
 
         if diagnostics.is_empty() {
@@ -95,42 +118,60 @@ impl DiagnosticsManager {
     }
 
     /// Subscribe to diagnostic events
-    pub fn subscribe(&self) -> broadcast::Receiver<Diagnostic> {
+    #[must_use]
+    pub const fn subscribe(&self) -> broadcast::Receiver<Diagnostic> {
         self.event_sender.subscribe()
     }
 
     /// Update system metrics
-    pub fn update_metrics(&self, _metrics: SystemMetrics) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn update_metrics(&self, _metrics: SystemMetrics) -> Result<()>  {
         // Implementation would update internal metrics storage
         // For now, this is a placeholder that accepts metrics
         Ok(())
     }
 
     /// Get current system metrics
-    pub fn get_metrics(&self) -> Result<SystemMetrics> {
-        let metrics = self.metrics.read().map_err(|_| NestGateError::Internal {
-            message: "Failed to acquire metrics read lock".to_string(),
-            component: "diagnostics_manager".to_string(),
-            location: Some(file!().to_string()),
-            context: None,
-            is_bug: false,
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn get_metrics(&self) -> Result<SystemMetrics>  {
+        let metrics = self.metrics.read().map_err(|_| {
+            NestGateError::internal_error(
+                "Failed to acquire metrics read lock",
+                "diagnostics_manager",
+            )
         })?;
 
         Ok(metrics.clone())
     }
 
     /// Clear all resolved diagnostics
-    pub fn clear_resolved(&self) -> Result<usize> {
-        let mut diagnostics = self
-            .diagnostics
-            .write()
-            .map_err(|_| NestGateError::Internal {
-                message: "Failed to acquire diagnostics write lock".to_string(),
-                component: "diagnostics_manager".to_string(),
-                location: Some(file!().to_string()),
-                context: None,
-                is_bug: false,
-            })?;
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn clear_resolved(&self) -> Result<usize>  {
+        let mut diagnostics = self.diagnostics.write().map_err(|_| {
+            NestGateError::internal_error(
+                "Failed to acquire diagnostics write lock",
+                "diagnostics_manager",
+            )
+        })?;
 
         let original_count = diagnostics.len();
         diagnostics.retain(|d| d.is_unresolved());

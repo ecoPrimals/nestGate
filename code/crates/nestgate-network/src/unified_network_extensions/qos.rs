@@ -11,7 +11,6 @@ pub struct NetworkQosSettings {
     /// Default priority level
     pub default_priority: u8,
 }
-
 impl Default for NetworkQosSettings {
     fn default() -> Self {
         Self {

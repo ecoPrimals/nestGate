@@ -1,17 +1,16 @@
-//! AI Fallback Provider
-//! Heuristic-based AI operations when external AI primals are unavailable
+// AI Fallback Provider
+// Heuristic-based AI operations when external AI primals are unavailable
 
 use std::collections::HashMap;
 use tracing::debug;
 
-use crate::ecosystem_integration::mock_router::{FallbackProvider, MockRoutingError};
+use crate::ecosystem_integration::capability_router::{FallbackProvider, CapabilityRoutingError};
 
 /// AI fallback provider using heuristic algorithms
 #[derive(Debug)]
 pub struct AiFallbackProvider {
     config: AiFallbackConfig,
 }
-
 #[derive(Debug, Clone)]
 pub struct AiFallbackConfig {
     pub confidence_threshold: f64,
@@ -34,11 +33,11 @@ impl Default for AiFallbackProvider {
 }
 
 impl AiFallbackProvider {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self::with_config(AiFallbackConfig::default())
     }
 
-    pub fn with_config(config: AiFallbackConfig) -> Self {
+    pub const fn with_config(config: AiFallbackConfig) -> Self {
         Self { config }
     }
 
@@ -46,7 +45,7 @@ impl AiFallbackProvider {
     async fn optimize_storage_fallback(
         &self,
         _params: serde_json::Value,
-    ) -> Result<serde_json::Value, MockRoutingError> {
+    ) -> Result<serde_json::Value, CapabilityRoutingError> {
         debug!("🔄 AI fallback: Storage optimization using heuristics");
 
         Ok(serde_json::json!({
@@ -66,7 +65,7 @@ impl AiFallbackProvider {
     async fn predict_storage_fallback(
         &self,
         _params: serde_json::Value,
-    ) -> Result<serde_json::Value, MockRoutingError> {
+    ) -> Result<serde_json::Value, CapabilityRoutingError> {
         debug!("🔄 AI fallback: Storage prediction using heuristics");
 
         Ok(serde_json::json!({
@@ -87,7 +86,7 @@ impl AiFallbackProvider {
         &self,
         request_type: &str,
         _params: &str,
-    ) -> Result<String, MockRoutingError> {
+    ) -> Result<String, CapabilityRoutingError> {
         // Mock AI request processing
         Ok(format!("Processed AI request: {request_type}"))
     }
@@ -97,7 +96,7 @@ impl AiFallbackProvider {
         &self,
         content_type: &str,
         _prompt: &str,
-    ) -> Result<String, MockRoutingError> {
+    ) -> Result<String, CapabilityRoutingError> {
         // Mock content generation
         Ok(format!("Generated {content_type} content"))
     }
@@ -107,12 +106,12 @@ impl AiFallbackProvider {
         &self,
         operation: &str,
         _params: &str,
-    ) -> Result<String, MockRoutingError> {
+    ) -> Result<String, CapabilityRoutingError> {
         match operation {
             "generate_text" => Ok("Generated AI text response".to_string()),
             "analyze_data" => Ok("AI data analysis complete".to_string()),
             "predict_trends" => Ok("Trend predictions generated".to_string()),
-            _ => Err(MockRoutingError::FallbackError(format!(
+            _ => Err(CapabilityRoutingError::FallbackError(format!(
                 "Unsupported AI operation: {operation}"
             ))),
         }
@@ -124,12 +123,12 @@ impl FallbackProvider for AiFallbackProvider {
         &self,
         operation: &str,
         params: serde_json::Value,
-    ) -> Result<serde_json::Value, MockRoutingError> {
+    ) -> Result<serde_json::Value, CapabilityRoutingError> {
         match operation {
             "optimize_storage" => self.optimize_storage_fallback(params).await,
             "predict_storage" => self.predict_storage_fallback(params).await,
-            _ => Err(MockRoutingError::FallbackError(format!(
-                "Unsupported AI operation: {operation}"
+            _ => Err(CapabilityRoutingError::FallbackError(format!(
+                "Unsupported storage operation: {operation}"
             ))),
         }
     }

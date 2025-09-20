@@ -3,7 +3,6 @@
 /// **PROBLEM SOLVED**: Eliminates 150+ duplicate timeout fields
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
 /// **THE** Unified Timeout Configuration - eliminates 150+ duplicate timeout fields
 /// Consolidates all timeout patterns across the entire system
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -25,7 +24,6 @@ pub struct UnifiedTimeoutConfig {
     /// Service discovery timeout
     pub discovery_timeout: Duration,
 }
-
 impl Default for UnifiedTimeoutConfig {
     fn default() -> Self {
         Self {
@@ -43,7 +41,8 @@ impl Default for UnifiedTimeoutConfig {
 
 impl UnifiedTimeoutConfig {
     /// Create a production-optimized timeout configuration
-    pub fn production() -> Self {
+    #[must_use]
+    pub const fn production() -> Self {
         Self {
             default_timeout: Duration::from_secs(60),
             connection_timeout: Duration::from_secs(15),
@@ -57,7 +56,8 @@ impl UnifiedTimeoutConfig {
     }
 
     /// Create a development-optimized timeout configuration
-    pub fn development() -> Self {
+    #[must_use]
+    pub const fn development() -> Self {
         Self {
             default_timeout: Duration::from_secs(10),
             connection_timeout: Duration::from_secs(5),

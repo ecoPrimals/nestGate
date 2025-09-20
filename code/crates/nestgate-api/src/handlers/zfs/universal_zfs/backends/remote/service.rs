@@ -1,4 +1,3 @@
-
 use std::time::SystemTime;
 use tokio::sync::RwLock;
 use tracing::info;
@@ -17,7 +16,6 @@ pub struct RemoteZfsService {
     start_time: SystemTime,
     connection_stats: RwLock<ConnectionStats>,
 }
-
 impl Clone for RemoteZfsService {
     fn clone(&self) -> Self {
         Self {
@@ -33,7 +31,7 @@ impl Clone for RemoteZfsService {
 
 impl RemoteZfsService {
     /// Create a new remote ZFS service with enhanced configuration
-    pub fn new(config: RemoteConfig) -> Self {
+    pub const fn new(config: RemoteConfig) -> Self {
         info!("Initializing remote ZFS service: {}", config.endpoint);
 
         let client = HttpClient::new(&config);
@@ -49,22 +47,22 @@ impl RemoteZfsService {
     }
 
     /// Get service name
-    pub fn service_name(&self) -> &str {
+    pub const fn service_name(&self) -> &str {
         &self.service_name
     }
 
     /// Get service version
-    pub fn service_version(&self) -> &str {
+    pub const fn service_version(&self) -> &str {
         &self.service_version
     }
 
     /// Get configuration
-    pub fn config(&self) -> &RemoteConfig {
+    pub const fn config(&self) -> &RemoteConfig {
         &self.config
     }
 
     /// Get HTTP client
-    pub fn client(&self) -> &HttpClient {
+    pub const fn client(&self) -> &HttpClient {
         &self.client
     }
 
@@ -91,7 +89,7 @@ impl RemoteZfsService {
     }
 
     /// Get service uptime
-    pub fn uptime(&self) -> std::time::Duration {
+    pub const fn uptime(&self) -> std::time::Duration {
         self.start_time.elapsed().unwrap_or_default()
     }
 }

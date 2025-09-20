@@ -1,19 +1,16 @@
 /// **SECURITY DOMAIN**
 /// Security-specific business logic and operations.
-
 use crate::{NestGateError, Result};
 
 /// Security domain operations
 pub struct SecurityDomain {
     // Domain-specific state
     }
-
 impl SecurityDomain {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {}
     }
 
-    pub async fn handle_security_operation(&self, operation: &str) -> Result<()> {
     }
     }
 

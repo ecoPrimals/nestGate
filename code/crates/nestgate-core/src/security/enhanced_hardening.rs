@@ -12,14 +12,12 @@ use tokio::sync::RwLock;
 
 /// Type alias for sliding window storage
 type SlidingWindowMap = Arc<RwLock<HashMap<String, SlidingWindow>>>;
-
 /// Enhanced rate limiter with sliding window
 pub struct EnhancedRateLimiter {
     window_size: Duration,
     max_requests: usize,
     windows: SlidingWindowMap,
 }
-
 struct SlidingWindow {
     requests: Vec<Instant>,
     last_cleanup: Instant,
@@ -27,6 +25,7 @@ struct SlidingWindow {
 
 impl EnhancedRateLimiter {
     /// Create new enhanced rate limiter
+    #[must_use]
     pub fn new(window_size: Duration, max_requests: usize) -> Self {
         Self {
             windows: Arc::new(RwLock::new(HashMap::new())),
@@ -36,7 +35,14 @@ impl EnhancedRateLimiter {
     }
 
     /// Check if request is allowed for given identifier
-    pub async fn is_allowed(&self, identifier: &str) -> Result<bool> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn is_allowed(&self, identifier: &str) -> Result<bool>  {
         let mut windows = self.windows.write().await;
         let now = Instant::now();
 
@@ -45,7 +51,7 @@ impl EnhancedRateLimiter {
             .or_insert_with(|| SlidingWindow {
                 requests: Vec::new(),
                 last_cleanup: now,
-            });
+            );
 
         // Clean old requests
         let cutoff = now - self.window_size;
@@ -78,19 +84,20 @@ impl EnhancedRateLimiter {
 
 /// Input sanitization and validation utilities
 pub struct InputSanitizer;
-
 impl InputSanitizer {
     /// Sanitize string input to prevent injection attacks
-    pub fn sanitize_string(input: &str, max_length: usize) -> Result<String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn sanitize_string(input: &str, max_length: usize) -> Result<String>  {
         if input.len() > max_length {
-            return Err(NestGateError::Validation {
-                field: Some("input".to_string()),
-                message: format!("Input too long: {} > {max_length}", input.len()),
-                current_value: Some(input[..50.min(input.len())].to_string()),
-                expected: Some(format!("Length <= {max_length}")),
-                user_error: true,
-                context: None,
-            });
+            return Err(NestGateError::validation(
+                actual: Some(input[..50.min(input.len())].to_string())}"))context: None,
+            );
         }
 
         // Remove potentially dangerous characters
@@ -134,7 +141,6 @@ impl InputSanitizer {
     }
 
     /// Validate file path to prevent directory traversal
-    pub fn validate_file_path(path: &str) -> Result<String> {
         let path = path.trim();
 
         // Check for directory traversal attempts
@@ -146,22 +152,21 @@ impl InputSanitizer {
 
         // Ensure path is within allowed boundaries
         let normalized =
-            std::path::Path::new(path)
                 .canonicalize()
-                .map_err(|e| NestGateError::Validation {
-                    field: Some("file_path".to_string()),
-                    message: format!("Invalid file path: {e}"),
-                    current_value: Some(path.to_string()),
-                    expected: Some("Valid file path".to_string()),
-                    user_error: true,
-                context: None,
-                })?;
+                .map_err(|e| NestGateError::validation(
 
         Ok(normalized.to_string_lossy().to_string())
-    }
+    )
 
     /// Validate network address to prevent SSRF attacks
-    pub fn validate_network_address(address: &str) -> Result<String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate_network_address(endpoint: &str) -> Result<String>  {
         // Parse as IP address
         if let Ok(ip) = address.parse::<IpAddr>() {
             // Block private and loopback addresses in production
@@ -189,14 +194,12 @@ impl InputSanitizer {
 
 /// Type alias for attempt record storage
 type AttemptRecordMap = Arc<RwLock<HashMap<String, AttemptRecord>>>;
-
 /// Brute force protection
 pub struct BruteForceProtection {
     max_attempts: u32,
     lockout_duration: Duration,
     attempts: AttemptRecordMap,
 }
-
 struct AttemptRecord {
     count: usize,
     last_attempt: Instant,
@@ -205,6 +208,7 @@ struct AttemptRecord {
 
 impl BruteForceProtection {
     /// Create new brute force protection
+    #[must_use]
     pub fn new(max_attempts: usize, lockout_duration: Duration) -> Self {
         Self {
             attempts: Arc::new(RwLock::new(HashMap::new())),
@@ -214,7 +218,14 @@ impl BruteForceProtection {
     }
 
     /// Record failed authentication attempt
-    pub async fn record_failed_attempt(&self, identifier: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn record_failed_attempt(&self, identifier: &str) -> Result<()>  {
         let mut attempts = self.attempts.write().await;
         let now = Instant::now();
 
@@ -224,7 +235,7 @@ impl BruteForceProtection {
                 count: 0,
                 last_attempt: now,
                 lockout_until: None,
-            });
+            );
 
         record.count += 1;
         record.last_attempt = now;
@@ -242,7 +253,14 @@ impl BruteForceProtection {
     }
 
     /// Check if identifier is currently locked out
-    pub async fn is_locked_out(&self, identifier: &str) -> Result<bool> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn is_locked_out(&self, identifier: &str) -> Result<bool>  {
         let attempts = self.attempts.read().await;
         let now = Instant::now();
 
@@ -258,7 +276,14 @@ impl BruteForceProtection {
     }
 
     /// Record successful authentication (reset counter)
-    pub async fn record_successful_attempt(&self, identifier: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn record_successful_attempt(&self, identifier: &str) -> Result<()>  {
         let mut attempts = self.attempts.write().await;
         attempts.remove(identifier);
         Ok(())
@@ -270,7 +295,6 @@ pub struct SecurityEventLogger {
     events: Arc<RwLock<Vec<SecurityEvent>>>,
     max_events: usize,
 }
-
 #[derive(Debug, Clone)]
 pub struct SecurityEvent {
     pub timestamp: Instant,
@@ -282,6 +306,7 @@ pub struct SecurityEvent {
 
 impl SecurityEventLogger {
     /// Create new security event logger
+    #[must_use]
     pub fn new(max_events: usize) -> Self {
         Self {
             events: Arc::new(RwLock::new(Vec::new())),
@@ -290,13 +315,20 @@ impl SecurityEventLogger {
     }
 
     /// Log security event
-    pub async fn log_event(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn log_event(
         &self,
         event_type: &str,
         severity: &str,
         source_ip: Option<IpAddr>,
         details: HashMap<String, String>,
-    ) -> Result<()> {
+    ) -> Result<()>  {
         let mut events = self.events.write().await;
 
         let event = SecurityEvent {
@@ -325,7 +357,14 @@ impl SecurityEventLogger {
     }
 
     /// Get recent security events
-    pub async fn get_recent_events(&self, limit: usize) -> Result<Vec<SecurityEvent>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_recent_events(&self, limit: usize) -> Result<Vec<SecurityEvent>>  {
         let events = self.events.read().await;
         let start = events.len().saturating_sub(limit);
         Ok(events[start..].to_vec())
@@ -338,10 +377,9 @@ pub struct SecurityMiddleware {
     brute_force_protection: BruteForceProtection,
     event_logger: SecurityEventLogger,
 }
-
 impl SecurityMiddleware {
     /// Create new security middleware with production settings
-    pub fn new_production() -> Self {
+    pub const fn new_production() -> Self {
         Self {
             rate_limiter: EnhancedRateLimiter::new(Duration::from_secs(60), 100),
             brute_force_protection: BruteForceProtection::new(5, Duration::from_secs(300)),
@@ -350,7 +388,7 @@ impl SecurityMiddleware {
     }
 
     /// Create new security middleware with development settings
-    pub fn new_development() -> Self {
+    pub const fn new_development() -> Self {
         Self {
             rate_limiter: EnhancedRateLimiter::new(Duration::from_secs(60), 1000),
             brute_force_protection: BruteForceProtection::new(10, Duration::from_secs(60)),
@@ -359,12 +397,18 @@ impl SecurityMiddleware {
     }
 
     /// Validate incoming request
-    pub async fn validate_request(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn validate_request(
         &self,
         client_ip: IpAddr,
-        path: &str,
         user_agent: Option<&str>,
-    ) -> Result<bool> {
+    ) -> Result<bool>  {
         let client_id = client_ip.to_string();
 
         // Check rate limiting
@@ -449,7 +493,14 @@ impl SecurityMiddleware {
     }
 
     /// Get security statistics
-    pub async fn get_security_stats(&self) -> Result<HashMap<String, usize>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_security_stats(&self) -> Result<HashMap<String, usize>>  {
         let mut stats = HashMap::new();
 
         let recent_events = self.event_logger.get_recent_events(1000).await?;

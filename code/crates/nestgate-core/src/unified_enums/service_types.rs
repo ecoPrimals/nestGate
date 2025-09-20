@@ -3,11 +3,10 @@
 /// and service lifecycle management.
 use serde::{Deserialize, Serialize};
 use std::fmt;
-
 // ==================== SECTION ====================
 
-/// **THE** ServiceType - unified across all modules
-/// Replaces 2+ fragmented ServiceType definitions
+/// **THE** `ServiceType` - unified across all modules
+/// Replaces 2+ fragmented `ServiceType` definitions
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedServiceType {
     /// AI and machine learning services
@@ -37,7 +36,6 @@ pub enum UnifiedServiceType {
     /// Custom service type with name
     Custom(String),
 }
-
 impl Default for UnifiedServiceType {
     fn default() -> Self {
         Self::Unknown
@@ -66,8 +64,8 @@ impl fmt::Display for UnifiedServiceType {
 
 // ==================== SECTION ====================
 
-/// **THE** HealthStatus - unified across all modules
-/// Replaces 4+ fragmented HealthStatus definitions across health checks, monitoring, etc.
+/// **THE** `HealthStatus` - unified across all modules
+/// Replaces 4+ fragmented `HealthStatus` definitions across health checks, monitoring, etc.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedHealthStatus {
     /// Service is healthy and operational
@@ -95,7 +93,6 @@ pub enum UnifiedHealthStatus {
     /// Custom health status
     Custom(String),
 }
-
 impl Default for UnifiedHealthStatus {
     fn default() -> Self {
         Self::Unknown
@@ -123,9 +120,9 @@ impl fmt::Display for UnifiedHealthStatus {
 
 // ==================== SECTION ====================
 
-/// **THE** ServiceState - unified across all modules  
-/// Replaces 6+ fragmented ServiceStatus enum definitions across diagnostics, network, etc.
-/// Note: This is different from UnifiedServiceStatus struct which contains metadata
+/// **THE** `ServiceState` - unified across all modules  
+/// Replaces 6+ fragmented `ServiceStatus` enum definitions across diagnostics, network, etc.
+/// Note: This is different from `UnifiedServiceStatus` struct which contains metadata
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedServiceState {
     /// Service is running and operational
@@ -147,7 +144,6 @@ pub enum UnifiedServiceState {
     /// Custom service state
     Custom(String),
 }
-
 impl Default for UnifiedServiceState {
     fn default() -> Self {
         Self::Unknown
@@ -172,8 +168,8 @@ impl fmt::Display for UnifiedServiceState {
 
 // ==================== SECTION ====================
 
-/// **THE** ConnectionStatus - unified across all modules
-/// Replaces ConnectionStatus definitions across network and service modules
+/// **THE** `ConnectionStatus` - unified across all modules
+/// Replaces `ConnectionStatus` definitions across network and service modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedConnectionStatus {
     /// Connection is active and operational
@@ -195,7 +191,6 @@ pub enum UnifiedConnectionStatus {
     /// Custom connection status
     Custom(String),
 }
-
 impl Default for UnifiedConnectionStatus {
     fn default() -> Self {
         Self::Unknown

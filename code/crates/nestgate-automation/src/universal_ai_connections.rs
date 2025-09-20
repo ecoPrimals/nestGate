@@ -1,6 +1,6 @@
 //
 // **ZERO-COST MODERNIZATION**: Generic composition eliminates Arc<dyn> overhead
-// Provides connections to AI primals (Squirrel, etc.) with compile-time dispatch
+// Provides connections to AI primals (Intelligence, etc.) with compile-time dispatch
 // for maximum performance in AI inference operations.
 
 use serde::{Deserialize, Serialize};
@@ -23,7 +23,6 @@ pub enum ConnectionState {
     /// Connection failed with error
     Failed(String),
 }
-
 /// AI request structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIRequest {
@@ -36,7 +35,6 @@ pub struct AIRequest {
     /// Request metadata
     pub metadata: std::collections::HashMap<String, String>,
 }
-
 /// AI response structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIResponse {
@@ -51,7 +49,6 @@ pub struct AIResponse {
     /// Response metadata
     pub metadata: std::collections::HashMap<String, String>,
 }
-
 /// AI operation errors
 #[derive(Debug, thiserror::Error)]
 pub enum AIError {
@@ -65,7 +62,6 @@ pub enum AIError {
     #[error("Request processing error: {0}")]
     ProcessingError(String),
 }
-
 /// **ZERO-COST AI CONNECTION MANAGER**
 /// **PERFORMANCE**: Generic compile-time dispatch eliminates Arc<dyn> overhead
 pub struct UniversalAIConnections<P> 
@@ -79,40 +75,43 @@ where
     /// Generic marker for compile-time optimization
     _marker: PhantomData<P>,
 }
-
 impl<P> UniversalAIConnections<P>
 where
     P: ComputePrimalProvider + Send + Sync + 'static,
 {
     /// Create new AI connections manager
-    pub fn new() -> Self {
-        Self {
+    pub const fn new() -> Self { Self {
             provider: None,
             state: Arc::new(RwLock::new(ConnectionState::Disconnected)),
             _marker: PhantomData,
-        }
-    }
+         }
 
     /// Set provider with zero-cost generic dispatch
-    pub fn with_provider(mut self, provider: Arc<P>) -> Self {
-        self.provider = Some(provider);
+    #[must_use]
+    pub fn with_provider(mut self, provider: Arc<P>) -> Self { self.provider = Some(provider);
         self
-    }
-
-    /// Get provider with compile-time dispatch
-    pub async fn get_provider(&self) -> Option<Arc<P>> {
+    , /// Get provider with compile-time dispatch
+    #[must_use]
+    pub fn get_provider(&self) -> Option<Arc<P>> {
         self.provider.clone()
-    }
+     }
 
     /// Execute AI request with zero-cost dispatch
-    pub async fn execute_request(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn execute_request(
         &self,
         request: AIRequest,
-    ) -> Result<AIResponse, AIError> {
+    ) -> Result<AIResponse, AIError>  {
         if let Some(provider) = &self.provider {
             // Convert AIRequest to provider-specific request format
             let provider_request = serde_json::to_value(&request)
-                .map_err(|e| AIError::ProcessingError(e.to_string()))?;
+                .map_err(|_e| AIError::ProcessingError(e.to_string()))?;
             
             match provider.process_compute_request(provider_request).await {
                 Ok(response) => {
@@ -124,7 +123,7 @@ where
                         metadata: std::collections::HashMap::new(),
                     })
                 }
-                Err(e) => Err(AIError::ProviderError(e.to_string())),
+                Err(e) => Err(AIError::ProviderError(e.to_string()),
             }
         } else {
             Err(AIError::NoProvider)
@@ -163,7 +162,6 @@ where
     /// Pool configuration
     config: PoolConfig,
 }
-
 /// Pool configuration
 #[derive(Debug, Clone)]
 pub struct PoolConfig {
@@ -174,15 +172,12 @@ pub struct PoolConfig {
     /// Connection timeout in seconds
     pub connection_timeout: u64,
 }
-
 impl Default for PoolConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             max_connections: 10,
             health_check_interval: 30,
             connection_timeout: 30,
-        }
-    }
+         }
 }
 
 impl<P> UniversalAIConnectionPool<P>
@@ -190,12 +185,11 @@ where
     P: ComputePrimalProvider + Send + Sync + 'static,
 {
     /// Create new AI connection pool
-    pub fn new(config: PoolConfig) -> Self {
-        Self {
+    #[must_use]
+    pub fn new(config: PoolConfig) -> Self { Self {
             connections: std::collections::HashMap::new(),
             config,
-        }
-    }
+         }
 
     /// Add provider to pool with zero-cost dispatch
     pub fn add_provider(&mut self, provider_id: String, provider: Arc<P>) {
@@ -204,12 +198,19 @@ where
     }
 
     /// Get provider connection by ID
-    pub fn get_connection(&self, provider_id: &str) -> Option<&UniversalAIConnections<P>> {
+    pub const fn get_connection(&self, provider_id: &str) -> Option<&UniversalAIConnections<P>> {
         self.connections.get(provider_id)
     }
 
     /// Execute request on best available provider
-    pub async fn execute_request(&self, request: AIRequest) -> Result<AIResponse, AIError> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn execute_request(&self, request: AIRequest) -> Result<AIResponse, AIError>  {
         // Simple round-robin for now - can be enhanced with load balancing
         if let Some((_, connection)) = self.connections.iter().next() {
             connection.execute_request(request).await

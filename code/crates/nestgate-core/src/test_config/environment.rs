@@ -4,7 +4,6 @@ use std::collections::HashMap;
 /// networks, and environment setup.
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
 // ==================== SECTION ====================
 
 /// **Unified test environment configuration**
@@ -19,7 +18,6 @@ pub struct TestEnvironmentConfig {
     /// Resource limits
     pub resource_limits: ResourceLimits,
 }
-
 /// **Container configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ContainerConfig {
@@ -32,7 +30,6 @@ pub struct ContainerConfig {
     /// Container volumes
     pub volumes: HashMap<String, String>,
 }
-
 /// **Network configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NetworkConfig {
@@ -45,20 +42,15 @@ pub struct NetworkConfig {
     /// SSL/TLS configuration
     pub ssl_config: Option<SslConfig>,
 }
-
 /// **SSL configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SslConfig {
     /// Enable SSL
     pub enabled: bool,
     /// Certificate path
-    pub cert_path: Option<String>,
     /// Key path
-    pub key_path: Option<String>,
     /// CA path
-    pub ca_path: Option<String>,
 }
-
 /// **Resource limits**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResourceLimits {

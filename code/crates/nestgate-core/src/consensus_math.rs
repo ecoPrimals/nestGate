@@ -3,43 +3,39 @@
 /// Extracted from complex business logic to enable precise testing
 /// and catch arithmetic mutations (+ vs -, * vs /, >= vs >).
 /// **MUTATION TESTING TARGET**: This module specifically addresses:
-/// - `((active_nodes.len() as f64) * self.config.min_consensus).ceil() as usize` mutations
-/// - `consensus_percentage = (successful_verifications.len() as f64) / (active_nodes.len() as f64)` mutations
+/// - `(((active_nodes.len() as f64)) * self.config.min_consensus).ceil() as usize` mutations
+/// - `consensus_percentage = ((successful_verifications.len() as f64)) / ((active_nodes.len() as f64))` mutations
 /// - Comparison mutations in consensus evaluation
-
 /// Calculate required consensus count from node count and minimum threshold
 /// **PURE FUNCTION**: No side effects, deterministic output
 /// **TESTABLE**: Can verify exact arithmetic with edge cases
-pub fn calculate_required_consensus(node_count: usize, min_consensus: f64) -> usize {
+pub const fn calculate_required_consensus(node_count: usize, min_consensus: f64) -> usize {
     if node_count == 0 {
         return 0;
     }
-
-    ((node_count as f64) * min_consensus).ceil() as usize
+    ((f64::from(node_count)) * min_consensus).ceil() as usize
     }
 
 /// Calculate consensus percentage from successful and total counts
 /// **PURE FUNCTION**: No side effects, handles division by zero
 /// **TESTABLE**: Can verify exact division with floating point precision
-pub fn calculate_consensus_percentage(successful: usize, total: usize) -> f64 {
+pub const fn calculate_consensus_percentage(successful: usize, total: usize) -> f64 {
     if total == 0 {
         0.0
     } else {
-        successful as f64 / total as f64
+        f64::from(successful) / f64::from(total)
     }
     }
-
 /// Check if consensus threshold is achieved
 /// **PURE FUNCTION**: Simple comparison logic
 /// **TESTABLE**: Can verify boundary conditions precisely
-pub fn is_consensus_achieved(percentage: f64, minimum: f64) -> bool {
+pub const fn is_consensus_achieved(percentage: f64, minimum: f64) -> bool {
     percentage >= minimum
     }
-
 /// Calculate consensus expiry from verification results
 /// **PURE FUNCTION**: Minimum value calculation
 /// **TESTABLE**: Can verify min() logic with exact inputs
-pub fn calculate_consensus_expiry(valid_until_times: &[i64], default_duration: i64) -> i64 {
+pub const fn calculate_consensus_expiry(valid_until_times: &[i64], default_duration: i64) -> i64 {
     if valid_until_times.is_empty() {
         // Default expiry: current time + default duration
         std::time::SystemTime::now()
@@ -58,7 +54,6 @@ pub fn calculate_consensus_expiry(valid_until_times: &[i64], default_duration: i
         )
     }
     }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -67,7 +62,7 @@ mod tests {
     /// These tests are specifically designed to catch mutations in arithmetic operations
 
     #[test]
-    fn test_consensus_calculation_exact_values() {
+    fn test_consensus_calculation_exactvalues() {
         // ✅ CATCHES MULTIPLICATION MUTATIONS (* vs +, * vs -)
         assert_eq!(calculate_required_consensus(10, 0.6), 6); // 10 * 0.6 = 6.0 -> ceil -> 6
         assert_eq!(calculate_required_consensus(10, 0.7), 7); // 10 * 0.7 = 7.0 -> ceil -> 7

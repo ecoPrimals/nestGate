@@ -1,5 +1,5 @@
-//! Fallback Providers
-//! Local implementations that provide capabilities when external primals are unavailable
+// Fallback Providers
+// Local implementations that provide capabilities when external primals are unavailable
 
 pub mod ai;
 pub mod orchestration;

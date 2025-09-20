@@ -31,12 +31,11 @@ pub struct NetworkConfig {
     /// TLS/SSL configuration
     pub tls: TlsConfig,
 }
-
 /// HTTP server configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HttpServerConfig {
     /// Server bind address
-    pub bind_address: String,
+    pub bind_endpoint: String,
     /// Server port
     pub port: u16,
     /// Maximum concurrent connections
@@ -50,7 +49,6 @@ pub struct HttpServerConfig {
     /// Enable compression
     pub enable_compression: bool,
 }
-
 /// RPC configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RpcConfig {
@@ -65,7 +63,6 @@ pub struct RpcConfig {
     /// Enable TLS
     pub enable_tls: bool,
 }
-
 /// Load balancing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadBalancingConfig {
@@ -78,7 +75,6 @@ pub struct LoadBalancingConfig {
     /// Recovery threshold
     pub recovery_threshold: u32,
 }
-
 /// Load balancing strategy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
@@ -93,7 +89,6 @@ pub enum LoadBalancingStrategy {
     /// Random
     Random,
 }
-
 /// Circuit breaker configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CircuitBreakerConfig {
@@ -106,7 +101,6 @@ pub struct CircuitBreakerConfig {
     /// Minimum request threshold
     pub min_request_threshold: u32,
 }
-
 /// Rate limiting configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RateLimitConfig {
@@ -119,7 +113,6 @@ pub struct RateLimitConfig {
     /// Enable rate limiting
     pub enabled: bool,
 }
-
 /// Timeout configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeoutConfig {
@@ -132,7 +125,6 @@ pub struct TimeoutConfig {
     /// Idle timeout
     pub idle_timeout: Duration,
 }
-
 /// Connection pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionPoolConfig {
@@ -147,7 +139,6 @@ pub struct ConnectionPoolConfig {
     /// Maximum lifetime
     pub max_lifetime: Duration,
 }
-
 /// TLS/SSL configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
@@ -164,11 +155,10 @@ pub struct TlsConfig {
     pub verify_client: bool,
 }
 
-
 impl Default for HttpServerConfig {
     fn default() -> Self {
         Self {
-            bind_address: DEFAULT_BIND_ADDRESS.to_string(),
+            bind_endpoint: DEFAULT_BIND_ADDRESS.to_string(),
             port: DEFAULT_API_PORT,
             max_connections: 10_000,
             keep_alive_timeout: Duration::from_secs(60),

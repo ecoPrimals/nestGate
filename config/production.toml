@@ -16,13 +16,13 @@ deployment_region = "us-east-1"  # Customize for your region
 [network]
 # Network binding configuration
 bind_address = "0.0.0.0"
-api_port = 8080
+api_port = "${NESTGATE_API_PORT:-8080}"
 metrics_port = 9090
 health_port = 8081
 
 # Connection management
 max_connections = 1000
-request_timeout_ms = 30000
+request_timeout_ms = "${NESTGATE_REQUEST_TIMEOUT_MS:-30000}"
 keep_alive_timeout_ms = 60000
 connection_pool_size = 100
 
@@ -137,11 +137,48 @@ discovery_enabled = true
 discovery_timeout_ms = 30000
 discovery_interval_seconds = 60
 
+# DEPRECATED: Primal-specific preferences replaced with universal adapter capabilities
 # Service preferences (optional - will auto-discover if not specified)
-preferred_security_primal = "beardog"
-preferred_orchestration_primal = "songbird" 
-preferred_ai_primal = "squirrel"
-preferred_compute_primal = "toadstool"
+# preferred_security_primal = "beardog"        # Use [universal_adapter.security] instead
+# preferred_orchestration_primal = "songbird"   # Use [universal_adapter.orchestration] instead
+# preferred_ai_primal = "squirrel"              # Use [universal_adapter.artificial_intelligence] instead  
+# preferred_compute_primal = "toadstool"        # Use [universal_adapter.compute] instead
+
+# ✅ UNIVERSAL ADAPTER CONFIGURATION - Modern capability-based discovery
+[universal_adapter]
+enabled = true
+discovery_method = "hybrid"  # auto, network_scan, environment, service_registry, hybrid
+max_concurrent_discoveries = 10
+discovery_timeout_secs = 30
+capability_cache_ttl_secs = 300
+
+[universal_adapter.security]
+enabled = true
+capability_type = "security"
+discovery_method = "auto"
+performance_requirements = { max_latency_ms = 2000, min_reliability_percent = 99.5 }
+fallback_strategy = { local_fallback = true, degraded_mode_enabled = false }
+
+[universal_adapter.artificial_intelligence]
+enabled = true
+capability_type = "artificial_intelligence"
+discovery_method = "auto"
+performance_requirements = { max_latency_ms = 30000, min_reliability_percent = 95.0 }
+fallback_strategy = { local_fallback = true, degraded_mode_enabled = true }
+
+[universal_adapter.orchestration]
+enabled = true
+capability_type = "orchestration"
+discovery_method = "auto"
+performance_requirements = { max_latency_ms = 3000, min_reliability_percent = 98.0 }
+fallback_strategy = { local_fallback = true, degraded_mode_enabled = true }
+
+[universal_adapter.compute]
+enabled = true
+capability_type = "compute"
+discovery_method = "auto"
+performance_requirements = { max_latency_ms = 10000, min_reliability_percent = 95.0 }
+fallback_strategy = { local_fallback = true, degraded_mode_enabled = true }
 
 # Fallback behavior
 enable_graceful_fallbacks = true

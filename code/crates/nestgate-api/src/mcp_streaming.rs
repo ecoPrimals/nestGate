@@ -23,7 +23,6 @@ pub struct McpStreamingManager {
     /// Event broadcaster
     event_broadcaster: broadcast::Sender<StreamEvent>,
 }
-
 /// Stream statistics snapshot
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StreamStatsSnapshot {
@@ -40,7 +39,6 @@ pub struct StreamStatsSnapshot {
     /// Total number of errors encountered
     pub errors: u64,
 }
-
 /// Stream statistics (real-time)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StreamStats {
@@ -57,7 +55,6 @@ pub struct StreamStats {
     /// Timestamp of last activity on the stream
     pub last_activity: SystemTime,
 }
-
 /// Information about an active stream
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StreamInfo {
@@ -76,7 +73,6 @@ pub struct StreamInfo {
     /// Last activity timestamp
     pub last_activity: SystemTime,
 }
-
 /// Types of MCP streams
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum StreamType {
@@ -89,7 +85,6 @@ pub enum StreamType {
     /// State synchronization
     StateSynchronization,
 }
-
 /// Stream configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StreamConfig {
@@ -105,10 +100,9 @@ pub struct StreamConfig {
     pub batch_size: usize,
     /// Interval for flushing buffered data
     pub flush_interval: Duration,
-    /// Additional stream metadata
-    pub metadata: HashMap<String, String>,
+    /// Additional stream _metadata
+    pub _metadata: HashMap<String, String>,
 }
-
 /// Stream status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum StreamStatus {
@@ -121,7 +115,6 @@ pub enum StreamStatus {
     /// Stream encountered an error
     Error(String),
 }
-
 /// Stream events
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StreamEvent {
@@ -134,7 +127,6 @@ pub struct StreamEvent {
     /// Event occurrence timestamp
     pub timestamp: SystemTime,
 }
-
 /// Stream event types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum StreamEventType {
@@ -149,7 +141,6 @@ pub enum StreamEventType {
     /// An error occurred on the stream
     Error,
 }
-
 impl Default for McpStreamingManager {
     fn default() -> Self {
         Self::new()
@@ -184,7 +175,7 @@ impl McpStreamingManager {
     /// ```rust
     /// use nestgate_api::mcp_streaming::McpStreamingManager;
     ///
-    /// let mcp_manager = McpStreamingManager::new();
+    /// let mcp_manager = Self::new();
     ///
     /// // Start background cleanup
     /// let _cleanup_task = mcp_manager.start_cleanup_task();
@@ -203,11 +194,12 @@ impl McpStreamingManager {
     ///
     /// The manager uses optimized broadcasting and connection pooling to handle
     /// high-throughput AI workloads with minimal latency overhead.
+    #[must_use]
     pub fn new() -> Self {
         let (event_broadcaster, _) = broadcast::channel(1000);
 
         Self {
-            active_streams: Arc::new(RwLock::new(HashMap::new())),
+            active_streams: Arc::new(RwLock::new(HashMap::new()),
             stats: Arc::new(RwLock::new(StreamStatsSnapshot {
                 total_streams: 0,
                 active_streams: 0,
@@ -215,16 +207,23 @@ impl McpStreamingManager {
                 messages_sent: 0,
                 messages_received: 0,
                 errors: 0,
-            })),
+            }),
             event_broadcaster,
         }
     }
 
     /// Create a new stream
-    pub async fn create_stream(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_stream(
         &self,
         config: StreamConfig,
-    ) -> Result<StreamInfo, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<StreamInfo, Box<dyn std::error::Error + Send + Sync>>  {
         let stream_id = Uuid::new_v4();
         let now = SystemTime::now();
 
@@ -239,7 +238,7 @@ impl McpStreamingManager {
                 errors: 0,
                 created_at: now,
                 last_activity: now,
-            },
+            }
             status: StreamStatus::Active,
             created_at: now,
             last_activity: now,
@@ -273,7 +272,7 @@ impl McpStreamingManager {
     }
 
     /// Get stream statistics
-    pub fn get_stats(&self) -> StreamStatsSnapshot {
+    pub const fn get_stats(&self) -> StreamStatsSnapshot {
         // For now, return a basic snapshot
         StreamStatsSnapshot {
             total_streams: 0,
@@ -286,11 +285,18 @@ impl McpStreamingManager {
     }
 
     /// Send data to a specific stream
-    pub async fn send_to_stream(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn send_to_stream(
         &self,
         stream_id: &Uuid,
         _data: serde_json::Value,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>  {
         let streams = self.active_streams.read().await;
         if streams.contains_key(stream_id) {
             info!("Sending data to stream: {}", stream_id);
@@ -339,10 +345,17 @@ impl McpStreamingManager {
     }
 
     /// Close a stream
-    pub async fn close_stream(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn close_stream(
         &self,
         stream_id: &Uuid,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>  {
         let mut streams = self.active_streams.write().await;
         if streams.remove(stream_id).is_some() {
             // Update statistics
@@ -358,11 +371,9 @@ impl McpStreamingManager {
 }
 
 impl Clone for McpStreamingManager {
-    fn clone(&self) -> Self {
-        Self {
+    fn clone(&self) -> Self { Self {
             active_streams: Arc::clone(&self.active_streams),
             stats: Arc::clone(&self.stats),
             event_broadcaster: self.event_broadcaster.clone(),
-        }
-    }
+         }
 }

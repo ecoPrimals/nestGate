@@ -2,74 +2,87 @@
 // This module handles performance analysis and trend detection with real ZFS metrics.
 // Split into logical sub-modules to maintain code organization and comply with file size limits.
 
-use crate::error::ApiResult;
+// Note: error module moved to nestgate-core
+// use crate::error::ApiResult;
 use nestgate_core::canonical_modernization::canonical_constants;
+use nestgate_core::error::ApiResult;
 use serde::{Deserialize, Serialize};
 
 // **CANONICAL MODERNIZATION**: Use canonical constants instead of scattered definitions
 use canonical_constants::api::{
-    IMPACT_HIGH, IMPACT_MEDIUM, IMPACT_LOW,
-    TITLE_EXPAND_STORAGE, TITLE_SCHEDULE_DEFRAG
+    IMPACT_HIGH, IMPACT_LOW, IMPACT_MEDIUM, TITLE_EXPAND_STORAGE, TITLE_SCHEDULE_DEFRAG,
 };
 
-/// Performance analysis impact levels
-pub struct ImpactLevels;
+/// **IMPACT LEVELS**
+///
+/// Standard impact level constants for performance insights.
+pub struct ImpactLevel;
 
-impl ImpactLevels {
+impl ImpactLevel {
+    /// High impact performance issue requiring immediate attention
     pub const HIGH: &'static str = IMPACT_HIGH;
-    pub const MEDIUM: &'static str = IMPACT_MEDIUM; 
+    /// Medium impact performance issue requiring attention
+    pub const MEDIUM: &'static str = IMPACT_MEDIUM;
+    /// Low impact performance issue for future consideration
     pub const LOW: &'static str = IMPACT_LOW;
 }
 
-/// Performance analysis titles
-pub struct AnalysisTitles;
+/// **OPTIMIZATION TITLES**
+///
+/// Standard titles for optimization recommendations.
+pub struct OptimizationTitle;
 
-impl AnalysisTitles {
+impl OptimizationTitle {
+    /// Recommendation to expand storage capacity
     pub const EXPAND_STORAGE: &'static str = TITLE_EXPAND_STORAGE;
+    /// Recommendation to schedule defragmentation
     pub const SCHEDULE_DEFRAG: &'static str = TITLE_SCHEDULE_DEFRAG;
 }
 
-/// Performance analysis result
+/// **PERFORMANCE INSIGHT**
+///
+/// A performance insight with recommendations for system optimization.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AnalysisResult {
+pub struct PerformanceInsight {
+    /// Impact level of this insight
     pub impact: String,
+    /// Title describing the insight
     pub title: String,
+    /// Detailed description of the performance issue
     pub description: String,
+    /// List of recommended actions
     pub recommendations: Vec<String>,
 }
-
 /// Performance analyzer
+#[derive(Debug)]
 pub struct PerformanceAnalyzer;
-
 impl PerformanceAnalyzer {
     /// Create new analyzer
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
-    
-    /// Analyze storage performance
-    pub fn analyze_storage(&self) -> ApiResult<AnalysisResult> {
-        Ok(AnalysisResult {
-            impact: ImpactLevels::HIGH.to_string(),
-            title: AnalysisTitles::EXPAND_STORAGE.to_string(),
-            description: "Storage capacity optimization needed".to_string(),
+
+    /// Analyze storage performance and capacity
+    pub const fn analyze_storage(&self) -> ApiResult<PerformanceInsight> {
+        Ok(PerformanceInsight {
+            impact: ImpactLevel::HIGH.to_string(),
+            title: OptimizationTitle::EXPAND_STORAGE.to_string(),
+            description: "Storage capacity approaching limits".to_string(),
             recommendations: vec![
-                "Add additional storage tiers".to_string(),
-                "Implement data compression".to_string(),
+                "Add additional storage capacity".to_string(),
+                "Archive old data".to_string(),
+                "Enable compression".to_string(),
             ],
         })
     }
-    
-    /// Analyze pool fragmentation
-    pub fn analyze_fragmentation(&self) -> ApiResult<AnalysisResult> {
-        Ok(AnalysisResult {
-            impact: ImpactLevels::MEDIUM.to_string(),
-            title: AnalysisTitles::SCHEDULE_DEFRAG.to_string(),
-            description: "Pool defragmentation recommended".to_string(),
-            recommendations: vec![
-                "Schedule during low usage".to_string(),
-                "Monitor performance during defrag".to_string(),
-            ],
+
+    /// Analyze system fragmentation levels
+    pub const fn analyze_fragmentation(&self) -> ApiResult<PerformanceInsight> {
+        Ok(PerformanceInsight {
+            impact: ImpactLevel::HIGH.to_string(),
+            title: OptimizationTitle::SCHEDULE_DEFRAG.to_string(),
+            description: "System fragmentation detected".to_string(),
+            recommendations: vec!["Schedule defragmentation".to_string()],
         })
     }
-} 
+}

@@ -1,8 +1,7 @@
 
 /// Validation result type
-// Use canonical ValidationResult from error::idiomatic_evolution
-pub use crate::error::idiomatic_evolution::ValidationResult;
-
+// Use canonical ValidationResult from error::idiomatic
+pub use crate::error::idiomatic::ValidationResult;
 /// Validation error types
 #[derive(Debug, Clone)]
 pub enum ValidationError {
@@ -17,7 +16,6 @@ pub enum ValidationError {
         max: Option<i64>,
     },
 }
-
 impl std::fmt::Display for ValidationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -42,9 +40,8 @@ impl std::error::Error for ValidationError {}
 /// Basic validation utilities
 pub mod utils {
     use super::{ValidationError, ValidationResult};
-
     /// Validate that a string is not empty
-    pub fn validate_non_empty(field: &str, value: &str) -> ValidationResult<()> {
+    pub const fn validate_non_empty(field: &str, value: &str) -> ValidationResult<()> {
         if value.trim().is_empty() {
             Err(ValidationError::MissingField {
                 field: field.to_string(),
@@ -55,7 +52,7 @@ pub mod utils {
     }
 
     /// Validate that a number is within range
-    pub fn validate_range(
+    pub const fn validate_range(
         field: &str,
         value: i64,
         min: Option<i64>,
@@ -67,7 +64,7 @@ pub mod utils {
                     field: field.to_string(),
                     min,
                     max,
-                });
+                );
             }
         }
         if let Some(max_val) = max {
@@ -76,7 +73,7 @@ pub mod utils {
                     field: field.to_string(),
                     min,
                     max,
-                });
+                );
             }
         }
         Ok(())

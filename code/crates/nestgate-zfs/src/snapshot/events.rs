@@ -14,7 +14,6 @@ pub enum SnapshotEventType {
     RetentionApplied,
     Error,
 }
-
 /// Snapshot event for tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SnapshotEvent {
@@ -25,7 +24,6 @@ pub struct SnapshotEvent {
     pub details: String,
     pub success: bool,
 }
-
 /// Policy execution statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PolicyStats {
@@ -36,7 +34,6 @@ pub struct PolicyStats {
     pub last_execution: SystemTime,
     pub total_size_bytes: u64,
 }
-
 /// Snapshot automation status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SnapshotAutomationStatus {

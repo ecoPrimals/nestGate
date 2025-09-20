@@ -1,9 +1,9 @@
-//! Intelligence Adapter
-//!
-//! This module provides the adapter-based implementation for AI and intelligence operations,
-//! replacing hardcoded HuggingFace/Squirrel integrations with the universal adapter pattern.
+// Intelligence Adapter
+//! Intelligence Adapter functionality and utilities.
+// This module provides the adapter-based implementation for AI and intelligence operations,
+//! replacing hardcoded HuggingFace/Intelligence integrations with the universal adapter pattern.
 
-use crate::ecosystem_integration::universal_adapter::CapabilityRequest;
+use crate::universal_adapter::CapabilityRequest;
 use crate::ecosystem_integration::{
     DataAnalysisRequest, DataAnalysisResponse, ModelInferenceRequest, ModelInferenceResponse,
     OptimizationRequest, OptimizationResponse, UniversalAdapter,
@@ -24,7 +24,6 @@ pub struct ModelMetadata {
     pub capabilities: Vec<String>,
     pub parameters: HashMap<String, serde_json::Value>,
 }
-
 /// AI inference request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIInferenceRequest {
@@ -33,7 +32,6 @@ pub struct AIInferenceRequest {
     pub parameters: HashMap<String, serde_json::Value>,
     pub timeout_seconds: Option<u64>,
 }
-
 /// AI inference response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIInferenceResponse {
@@ -43,7 +41,6 @@ pub struct AIInferenceResponse {
     pub processing_time_ms: u64,
     pub metadata: HashMap<String, serde_json::Value>,
 }
-
 /// Data analysis task
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnalysisTask {
@@ -52,7 +49,6 @@ pub struct AnalysisTask {
     pub dataset: serde_json::Value,
     pub parameters: HashMap<String, serde_json::Value>,
 }
-
 /// Analysis results
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnalysisResults {
@@ -62,7 +58,6 @@ pub struct AnalysisResults {
     pub statistics: HashMap<String, f64>,
     pub visualizations: Vec<String>,
 }
-
 /// Intelligence adapter using universal adapter pattern
 #[derive(Debug, Clone)]
 pub struct IntelligenceAdapter {
@@ -71,10 +66,9 @@ pub struct IntelligenceAdapter {
     /// Service name for AI operations
     service_name: String,
 }
-
 impl IntelligenceAdapter {
     /// Create new intelligence adapter
-    pub fn new(adapter: Arc<UniversalAdapter>, service_name: String) -> Self {
+    pub const fn new(adapter: Arc<UniversalAdapter>, service_name: String) -> Self {
         info!("🧠 Creating Intelligence Adapter via Universal Adapter");
         info!("🧠 Service: {}", service_name);
 
@@ -84,23 +78,21 @@ impl IntelligenceAdapter {
         }
     }
 
-    /// Create adapter with mock capabilities for testing
-    pub fn new_with_mock() -> Result<Self> {
-        // For now, return an error since we need the actual adapter infrastructure
-        // This will be implemented when the universal adapter is fully available
-        Err(NestGateError::Internal {
-            message: "Mock intelligence adapter not yet implemented - use real adapter".to_string(),
-            location: Some(format!("{}:{}", file!(), line!())),
-            context: None,
-            is_bug: false,
-        })
-    }
+    // CANONICAL MODERNIZATION: Mock methods removed from production code
+    // All testing should use proper test doubles or feature-gated test implementations
 
     /// Run model inference via intelligence adapter
-    pub async fn model_inference(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn model_inference(
         &self,
         request: &AIInferenceRequest,
-    ) -> Result<AIInferenceResponse> {
+    ) -> Result<AIInferenceResponse>  {
         info!(
             "🧠 Running model inference via intelligence adapter: {}",
             request.model_id
@@ -115,23 +107,14 @@ impl IntelligenceAdapter {
         };
 
         let payload =
-            serde_json::to_vec(&inference_request).map_err(|e| NestGateError::Internal {
-                message: format!("Failed to serialize inference request: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
-            })?;
+            serde_json::to_vec(&inference_request).map_err(|e| NestGateError::internal_error(
+                location: Some(format!("{})
+                context: None)?;
 
         let capability_request = CapabilityRequest {
             request_id: uuid::Uuid::new_v4().to_string(),
             capability_id: "ai.model_inference".to_string(),
             payload,
-            metadata: {
-                let mut metadata = std::collections::HashMap::new();
-                metadata.insert("service".to_string(), self.name.clone());
-                metadata.insert("model_id".to_string(), request.model_id.clone());
-                metadata
-            },
             performance_requirements: None,
             timeout: Some(std::time::Duration::from_secs(
                 request.timeout_seconds.unwrap_or(300),
@@ -146,13 +129,10 @@ impl IntelligenceAdapter {
                 if response.success {
                     let inference_response: ModelInferenceResponse =
                         serde_json::from_slice(&response.payload).map_err(|e| {
-                            NestGateError::Internal {
-                                message: format!("Failed to deserialize inference response: {e}"),
-                                location: Some(format!("{}:{}", file!(), line!())),
-                                context: None,
-                                is_bug: false,
-                            }
-                        })?;
+                            NestGateError::internal_error(
+                                location: Some(format!("{})
+                                context: None}
+                        )?;
 
                     let ai_response = AIInferenceResponse {
                         prediction: inference_response.prediction,
@@ -173,28 +153,30 @@ impl IntelligenceAdapter {
                         .map(|e| format!("{e:?}"))
                         .unwrap_or_else(|| "Unknown error".to_string());
                     error!("❌ Model inference failed via adapter: {}", error_msg);
-                    Err(NestGateError::Internal {
-                        message: format!("Model inference failed: {error_msg}"),
-                        location: Some(format!("{}:{}", file!(), line!())),
-                        context: None,
-                        is_bug: false,
-                    })
+                    Err(NestGateError::internal_error(
+                        location: Some(format!("{e})
+                        context: None})
                 }
             }
             Err(e) => {
-                error!("❌ Intelligence adapter communication failed: {}", e);
-                Err(NestGateError::Internal {
-                    message: format!("Intelligence adapter communication failed: {e}"),
-                    location: Some(format!("{}:{}", file!(), line!())),
-                    context: None,
-                    is_bug: false,
-                })
+                error!("❌ Intelligence adapter communication failed: {e}");
+                Err(NestGateError::internal_error(
+                    location: Some(format!("{})
+                    context: None})
             }
         }
     }
 
     /// Perform data analysis via intelligence adapter
-    pub async fn analyze_data(&self, task: &AnalysisTask) -> Result<AnalysisResults> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn analyze_data(&self, task: &AnalysisTask) -> Result<AnalysisResults>  {
         info!(
             "🧠 Analyzing data via intelligence adapter: {} ({})",
             task.task_id, task.analysis_type
@@ -207,24 +189,14 @@ impl IntelligenceAdapter {
         };
 
         let payload =
-            serde_json::to_vec(&analysis_request).map_err(|e| NestGateError::Internal {
-                message: format!("Failed to serialize analysis request: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
-            })?;
+            serde_json::to_vec(&analysis_request).map_err(|e| NestGateError::internal_error(
+                location: Some(format!("{})
+                context: None)?;
 
         let capability_request = CapabilityRequest {
             request_id: uuid::Uuid::new_v4().to_string(),
             capability_id: "ai.data_analysis".to_string(),
             payload,
-            metadata: {
-                let mut metadata = std::collections::HashMap::new();
-                metadata.insert("service".to_string(), self.name.clone());
-                metadata.insert("task_id".to_string(), task.task_id.clone());
-                metadata.insert("analysis_type".to_string(), task.analysis_type.clone());
-                metadata
-            },
             performance_requirements: None,
             timeout: Some(std::time::Duration::from_secs(600)), // 10 minutes for analysis
             priority: 6,                                        // Medium-high priority for analysis
@@ -236,13 +208,10 @@ impl IntelligenceAdapter {
                 if response.success {
                     let analysis_response: DataAnalysisResponse =
                         serde_json::from_slice(&response.payload).map_err(|e| {
-                            NestGateError::Internal {
-                                message: format!("Failed to deserialize analysis response: {e}"),
-                                location: Some(format!("{}:{}", file!(), line!())),
-                                context: None,
-                                is_bug: false,
-                            }
-                        })?;
+                            NestGateError::internal_error(
+                                location: Some(format!("{})
+                                context: None}
+                        )?;
 
                     let results = AnalysisResults {
                         task_id: task.task_id.clone(),
@@ -264,33 +233,34 @@ impl IntelligenceAdapter {
                         .map(|e| format!("{e:?}"))
                         .unwrap_or_else(|| "Unknown error".to_string());
                     error!("❌ Data analysis failed via adapter: {}", error_msg);
-                    Err(NestGateError::Internal {
-                        message: format!("Data analysis failed: {error_msg}"),
-                        location: Some(format!("{}:{}", file!(), line!())),
-                        context: None,
-                        is_bug: false,
-                    })
+                    Err(NestGateError::internal_error(
+                        location: Some(format!("{e})
+                        context: None})
                 }
             }
             Err(e) => {
-                error!("❌ Intelligence adapter communication failed: {}", e);
-                Err(NestGateError::Internal {
-                    message: format!("Intelligence adapter communication failed: {e}"),
-                    location: Some(format!("{}:{}", file!(), line!())),
-                    context: None,
-                    is_bug: false,
-                })
+                error!("❌ Intelligence adapter communication failed: {e}");
+                Err(NestGateError::internal_error(
+                    location: Some(format!("{})
+                    context: None})
             }
         }
     }
 
     /// Get optimization suggestions via intelligence adapter
-    pub async fn get_optimization_suggestions(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn get_optimization_suggestions(
         &self,
         target_system: &str,
         current_metrics: HashMap<String, f64>,
         constraints: Vec<String>,
-    ) -> Result<OptimizationResponse> {
+    ) -> Result<OptimizationResponse>  {
         info!(
             "🧠 Getting optimization suggestions via intelligence adapter: {}",
             target_system
@@ -308,23 +278,14 @@ impl IntelligenceAdapter {
         };
 
         let payload =
-            serde_json::to_vec(&optimization_request).map_err(|e| NestGateError::Internal {
-                message: format!("Failed to serialize optimization request: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
-            })?;
+            serde_json::to_vec(&optimization_request).map_err(|e| NestGateError::internal_error(
+                location: Some(format!("{})
+                context: None)?;
 
         let capability_request = CapabilityRequest {
             request_id: uuid::Uuid::new_v4().to_string(),
             capability_id: "ai.optimization_suggestions".to_string(),
             payload,
-            metadata: {
-                let mut metadata = std::collections::HashMap::new();
-                metadata.insert("service".to_string(), self.name.clone());
-                metadata.insert("target_system".to_string(), target_system.to_string());
-                metadata
-            },
             performance_requirements: None,
             timeout: Some(std::time::Duration::from_secs(120)), // 2 minutes for optimization
             priority: 5,                                        // Medium priority for optimization
@@ -336,15 +297,12 @@ impl IntelligenceAdapter {
                 if response.success {
                     let optimization_response: OptimizationResponse =
                         serde_json::from_slice(&response.payload).map_err(|e| {
-                            NestGateError::Internal {
-                                message: format!(
-                                    "Failed to deserialize optimization response: {e}"
+                            NestGateError::internal_error(
+                                    "Failed to deserialize optimization response: {e)"
                                 ),
-                                location: Some(format!("{}:{}", file!(), line!())),
-                                context: None,
-                                is_bug: false,
-                            }
-                        })?;
+                                location: Some(format!("{})
+                                context: None}
+                        )?;
 
                     info!("✅ Optimization suggestions received via intelligence adapter: {} ({} suggestions, confidence: {:.2})", 
                           target_system, optimization_response.suggestions.len(), optimization_response.confidence_score);
@@ -358,43 +316,42 @@ impl IntelligenceAdapter {
                         "❌ Optimization suggestions failed via adapter: {}",
                         error_msg
                     );
-                    Err(NestGateError::Internal {
-                        message: format!("Optimization suggestions failed: {error_msg}"),
-                        location: Some(format!("{}:{}", file!(), line!())),
-                        context: None,
-                        is_bug: false,
-                    })
+                    Err(NestGateError::internal_error(
+                        location: Some(format!("{e})
+                        context: None})
                 }
             }
             Err(e) => {
-                error!("❌ Intelligence adapter communication failed: {}", e);
-                Err(NestGateError::Internal {
-                    message: format!("Intelligence adapter communication failed: {e}"),
-                    location: Some(format!("{}:{}", file!(), line!())),
-                    context: None,
-                    is_bug: false,
-                })
+                error!("❌ Intelligence adapter communication failed: {e}");
+                Err(NestGateError::internal_error(
+                    location: Some(format!("{})
+                    context: None})
             }
         }
     }
 
     /// Discover available AI models via intelligence adapter
-    pub async fn discover_models(&self, model_type: Option<String>) -> Result<Vec<ModelMetadata>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn discover_models(&self, model_type: Option<String>) -> Result<Vec<ModelMetadata>>  {
         info!("🧠 Discovering AI models via intelligence adapter");
 
         let discovery_request = serde_json::json!({
             "model_type": model_type,
             "service": self.name,
             "capabilities": ["inference", "analysis"]
-        });
+        );
 
         let payload =
-            serde_json::to_vec(&discovery_request).map_err(|e| NestGateError::Internal {
-                message: format!("Failed to serialize model discovery request: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
-            })?;
+            serde_json::to_vec(&discovery_request).map_err(|e| NestGateError::internal_error(
+                location: Some(format!("{})
+                context: None)?;
 
         let capability_request = CapabilityRequest {
             request_id: uuid::Uuid::new_v4().to_string(),
@@ -411,12 +368,9 @@ impl IntelligenceAdapter {
             Ok(response) => {
                 if response.success {
                     let models_data: serde_json::Value = serde_json::from_slice(&response.payload)
-                        .map_err(|e| NestGateError::Internal {
-                            message: format!("Failed to deserialize model discovery response: {e}"),
-                            location: Some(format!("{}:{}", file!(), line!())),
-                            context: None,
-                            is_bug: false,
-                        })?;
+                        .map_err(|e| NestGateError::internal_error(
+                            location: Some(format!("{})
+                            context: None)?;
 
                     let models: Vec<ModelMetadata> = models_data
                         .get("models")
@@ -450,20 +404,25 @@ impl IntelligenceAdapter {
     }
 
     /// Health check for intelligence adapter
-    pub async fn health_check(&self) -> Result<bool> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn health_check(&self) -> Result<bool>  {
         info!("🧠 Performing intelligence adapter health check");
 
         let health_request = serde_json::json!({
             "service": self.name,
             "check_type": "ai_connectivity"
-        });
+        );
 
-        let payload = serde_json::to_vec(&health_request).map_err(|e| NestGateError::Internal {
-            message: format!("Failed to serialize health check request: {e}"),
-            location: Some(format!("{}:{}", file!(), line!())),
-            context: None,
-            is_bug: false,
-        })?;
+        let payload = serde_json::to_vec(&health_request).map_err(|e| NestGateError::internal_error(
+            location: Some(format!("{})
+            context: None)?;
 
         let capability_request = CapabilityRequest {
             request_id: uuid::Uuid::new_v4().to_string(),

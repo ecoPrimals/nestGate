@@ -10,6 +10,7 @@ use nestgate_zfs::performance::TierMetrics;
 use nestgate_zfs::performance::{AlertCondition, AlertMetric, AlertOperator, AlertSeverity};
 use nestgate_zfs::{
 use std::time::Duration;
+use nestgate_core::canonical_types::StorageTier;
     automation::{DatasetLifecycle, LifecycleRule, LifecycleStage},
     config::ZfsConfig,
     migration::{MigrationJob, MigrationPriority, MigrationStatus},
@@ -53,7 +54,7 @@ mod phase2_lifecycle_management_tests {
     use super::*;
 
     #[test]
-    fn test_lifecycle_stage_progression() {
+    fn test_lifecycle_stage_progression() -> Result<(), Box<dyn std::error::Error>> {
         // Test stage progression logic
         let test_cases = vec![
             (0.5, 10.0, 1.0, LifecycleStage::New),        // New dataset
@@ -68,11 +69,13 @@ mod phase2_lifecycle_management_tests {
                 stage, expected_stage,
                 "Failed for age: {age_days}, access: {access_count}, since: {days_since_access}"
             );
+    Ok(())
         }
+    Ok(())
     }
 
     #[test]
-    fn test_condition_parsing_and_evaluation() {
+    fn test_condition_parsing_and_evaluation() -> Result<(), Box<dyn std::error::Error>> {
         let test_conditions = vec![
             ("age_days>30", 45.0, 10.0, 100.0, 1024, true),
             ("age_days<30", 45.0, 10.0, 100.0, 1024, false),
@@ -95,11 +98,13 @@ mod phase2_lifecycle_management_tests {
                 result, expected,
                 "Condition evaluation failed for: {condition}"
             );
+    Ok(())
         }
+    Ok(())
     }
 
     #[test]
-    fn test_automated_lifecycle_transitions() {
+    fn test_automated_lifecycle_transitions() -> Result<(), Box<dyn std::error::Error>> {
         let mut dataset = DatasetLifecycle {
             dataset_name: "test-dataset".to_string(),
             current_tier: StorageTier::Hot.into(),
@@ -122,5 +127,7 @@ mod phase2_lifecycle_management_tests {
 
         dataset.lifecycle_stage = new_stage;
         assert_eq!(dataset.lifecycle_stage, LifecycleStage::Archived);
+    Ok(())
     }
+    Ok(())
 } 

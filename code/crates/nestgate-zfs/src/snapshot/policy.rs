@@ -27,7 +27,6 @@ pub enum RetentionPolicy {
         yearly_years: u32,
     },
 }
-
 impl Default for RetentionPolicy {
     fn default() -> Self {
         Self::Custom {
@@ -51,12 +50,11 @@ pub enum ScheduleFrequency {
     Daily(u8),
     /// Take snapshots weekly on specific day and hour
     Weekly { day: u8, hour: u8 },
-    /// Take snapshots monthly on specific day and hour
+    /// Monthly schedule
     Monthly { day: u8, hour: u8 },
     /// Custom cron-like schedule
-    Cron(String),
+    Custom(String),
 }
-
 /// Snapshot policy configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SnapshotPolicy {
@@ -85,7 +83,6 @@ pub struct SnapshotPolicy {
     /// Priority (higher number = higher priority)
     pub priority: u32,
 }
-
 impl Default for SnapshotPolicy {
     fn default() -> Self {
         Self {

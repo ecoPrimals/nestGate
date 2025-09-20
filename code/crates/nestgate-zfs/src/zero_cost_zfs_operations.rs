@@ -1,13 +1,13 @@
-use nestgate_core::error::conversions::create_zfs_error;
-use nestgate_core::types::StorageTier;
+use crate::error::create_zfs_error;
 /// **ZERO-COST ZFS OPERATIONS**
 /// This module replaces Arc<dyn> patterns in ZFS operations with compile-time dispatch
 /// for maximum performance in storage-critical paths.
 ///
-use nestgate_core::{error::domain_errors::ZfsOperation, Result};
+use crate::error::ZfsOperation;
+use nestgate_core::canonical_types::StorageTier;
+use nestgate_core::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 use std::path::PathBuf;
 use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
@@ -23,8 +23,8 @@ type SnapshotInfoMap = Arc<RwLock<HashMap<String, ZeroCostSnapshotInfo>>>;
 /// Replaces Arc<dyn ZfsOperations> with native async methods
 pub trait ZeroCostZfsOperations<
     const MAX_POOLS: usize = 100,
-    const MAX_DATASETS: usize = 10000,
-    const MAX_SNAPSHOTS: usize = 100000,
+    const MAX_DATASETS: usize = 10_000,
+    const MAX_SNAPSHOTS: usize = 100_000,
 >
 {
     type Pool: Clone + Send + Sync + 'static;
@@ -32,7 +32,6 @@ pub trait ZeroCostZfsOperations<
     type Snapshot: Clone + Send + Sync + 'static;
     type Properties: Clone + Send + Sync + 'static;
     type Error: Send + Sync + 'static;
-
     /// Create ZFS pool - native async, no boxing
     fn create_pool(
         &self,
@@ -120,7 +119,6 @@ pub struct ZeroCostPoolInfo {
     #[serde(with = "serde_system_time")]
     pub created_at: std::time::SystemTime,
 }
-
 /// **ZERO-COST DATASET INFORMATION**
 /// High-performance dataset data structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -135,7 +133,6 @@ pub struct ZeroCostDatasetInfo {
     #[serde(with = "serde_system_time")]
     pub created_at: std::time::SystemTime,
 }
-
 /// **ZERO-COST SNAPSHOT INFORMATION**
 /// High-performance snapshot data structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -147,12 +144,10 @@ pub struct ZeroCostSnapshotInfo {
     pub created_at: std::time::SystemTime,
     pub properties: HashMap<String, String>,
 }
-
 /// Helper module for serializing SystemTime
 mod serde_system_time {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
     use std::time::{SystemTime, UNIX_EPOCH};
-
     type SerializeResult<S> = Result<<S as Serializer>::Ok, <S as Serializer>::Error>;
 
     pub fn serialize<S>(time: &SystemTime, serializer: S) -> SerializeResult<S>
@@ -165,10 +160,15 @@ mod serde_system_time {
         duration.as_secs().serialize(serializer)
     }
 
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<SystemTime, D::Error>
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn deserialize<'de, D>(deserializer: D) -> Result<SystemTime, D::Error>
     where
         D: Deserializer<'de>,
-    {
+     {
         let secs = u64::deserialize(deserializer)?;
         Ok(UNIX_EPOCH + std::time::Duration::from_secs(secs))
     }
@@ -187,7 +187,6 @@ pub struct ZeroCostZfsManager<
     #[allow(dead_code)]
     request_id_counter: AtomicU64,
 }
-
 impl<
         const MAX_POOLS: usize,
         const MAX_DATASETS: usize,
@@ -208,7 +207,7 @@ impl<
     > ZeroCostZfsManager<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS, COMMAND_TIMEOUT_MS>
 {
     /// Create new ZFS manager with compile-time configuration
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             pools: Arc::new(RwLock::new(HashMap::with_capacity(MAX_POOLS))),
             datasets: Arc::new(RwLock::new(HashMap::with_capacity(MAX_DATASETS))),
@@ -222,6 +221,42 @@ impl<
         Duration::from_millis(COMMAND_TIMEOUT_MS)
     }
 
+    /// Set dataset properties - API compatibility method
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn set_dataset_properties(
+        &self,
+        dataset_name: &str,
+        properties: &std::collections::HashMap<String, String>,
+    ) -> Result<()>  {
+        // Implementation using ZFS set command
+        for (key, value) in properties {
+            self.execute_zfs_command(&["set", &format!("{}={}", key, value), dataset_name])
+                .await?;
+        }
+        Ok(())
+    }
+
+    /// Destroy snapshot - API compatibility method
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn destroy_snapshot(&self, snapshot_name: &str) -> Result<()>  {
+        // Implementation using ZFS destroy command
+        self.execute_zfs_command(&["destroy", snapshot_name])
+            .await?;
+        Ok(())
+    }
+
     /// Execute ZFS command with compile-time timeout
     async fn execute_zfs_command(&self, args: &[&str]) -> Result<String> {
         let mut cmd = tokio::process::Command::new("zfs");
@@ -231,14 +266,14 @@ impl<
             .await
             .map_err(|_| {
                 create_zfs_error(
-                    format!("ZFS command timed out after {:?}", Self::command_timeout()),
-                    ZfsOperation::Command
+                    format!("ZFS command timed out after {"actual_error_details"}"),
+                    ZfsOperation::Command,
                 )
             })?
-            .map_err(|e| {
+            .map_err(|_e| {
                 create_zfs_error(
-                    format!("Failed to execute ZFS command: {e}"),
-                    ZfsOperation::Command
+                    format!("Failed to execute ZFS command: {"actual_error_details"}"),
+                    ZfsOperation::Command,
                 )
             })?;
 
@@ -248,7 +283,7 @@ impl<
                     "ZFS command failed: {}",
                     String::from_utf8_lossy(&output.stderr)
                 ),
-                ZfsOperation::Command
+                ZfsOperation::Command,
             ));
         }
 
@@ -304,8 +339,11 @@ impl<
         // Check capacity at runtime
         if !self.can_create_more_pools().await {
             return Err(create_zfs_error(
-                format!("Cannot create pool: maximum pools ({MAX_POOLS}) reached"),
-                ZfsOperation::PoolCreate
+                format!(
+                    "Cannot create pool: maximum pools ({}) reached",
+                    "actual_error_details"
+                ),
+                ZfsOperation::PoolCreate,
             ));
         }
 
@@ -351,7 +389,6 @@ impl<
             let mut pools_map = self.pools.write().await;
             pools_map.insert(pool_info.name.clone(), pool_info.clone());
         }
-
         Ok(pool_info)
     }
 
@@ -364,12 +401,15 @@ impl<
         // Check capacity at runtime
         if !self.can_create_more_datasets().await {
             return Err(create_zfs_error(
-                format!("Cannot create dataset: maximum datasets ({MAX_DATASETS}) reached"),
-                ZfsOperation::DatasetCreate
+                format!(
+                    "Cannot create dataset: maximum datasets ({}) reached",
+                    "actual_error_details"
+                ),
+                ZfsOperation::DatasetCreate,
             ));
         }
 
-        let dataset_path = format!("{}/{}", pool.name, name);
+        let dataset_path = "dataset.name().to_string()".to_string();
 
         // Build create command with tier-specific properties
         let mut args = vec!["create"];
@@ -444,21 +484,27 @@ impl<
             let mut datasets_map = self.datasets.write().await;
             datasets_map.insert(dataset_info.name.clone(), dataset_info.clone());
         }
-
         Ok(dataset_info)
     }
 
-    async fn create_snapshot(&self, dataset: &Self::Dataset, name: &str) -> Result<Self::Snapshot> {
+    async fn create_snapshot(
+        &self,
+        _dataset: &Self::Dataset,
+        name: &str,
+    ) -> Result<Self::Snapshot> {
         // Check capacity at runtime
         if !self.can_create_more_snapshots().await {
             return Err(create_zfs_error(
-                format!("Cannot create snapshot: maximum snapshots ({MAX_SNAPSHOTS}) reached"),
-                ZfsOperation::SystemCheck
+                format!(
+                    "Cannot create snapshot: maximum snapshots ({}) reached",
+                    "actual_error_details"
+                ),
+                ZfsOperation::SystemCheck,
             ));
         }
 
-        let dataset_path = format!("{}/{}", dataset.pool, dataset.name);
-        let snapshot_path = format!("{dataset_path}@{name}");
+        let dataset_path = "dataset.name().to_string()".to_string();
+        let snapshot_path = format!("{dataset_path}@snapshot_name");
 
         // Execute snapshot command
         self.execute_zfs_command(&["snapshot", &snapshot_path])
@@ -489,7 +535,6 @@ impl<
             let mut snapshots_map = self.snapshots.write().await;
             snapshots_map.insert(snapshot_info.name.clone(), snapshot_info.clone());
         }
-
         Ok(snapshot_info)
     }
 
@@ -600,7 +645,7 @@ impl<
             if parts.len() >= 4 && parts[0] != pool.name {
                 let full_name = parts[0].to_string();
                 let name = full_name
-                    .strip_prefix(&format!("{}/", pool.name))
+                    .strip_prefix(&format!("{pool.name}/"))
                     .unwrap_or(&full_name)
                     .to_string();
                 let used = parts[1].parse().unwrap_or(0);
@@ -632,8 +677,8 @@ impl<
         Ok(datasets)
     }
 
-    async fn list_snapshots(&self, dataset: &Self::Dataset) -> Result<Vec<Self::Snapshot>> {
-        let dataset_path = format!("{}/{}", dataset.pool, dataset.name);
+    async fn list_snapshots(&self, _dataset: &Self::Dataset) -> Result<Vec<Self::Snapshot>> {
+        let dataset_path = "dataset.name().to_string()".to_string();
 
         // Get snapshots from ZFS
         let output = self
@@ -681,24 +726,18 @@ impl<
 /// Pre-configured ZFS managers for different use cases
 ///
 /// Development ZFS manager: Small limits, fast timeout
-pub type DevelopmentZfsManager = ZeroCostZfsManager<10, 100, 1000, 10000>; // 10 pools, 100 datasets, 1k snapshots, 10s timeout
-
+pub type DevelopmentZfsManager = ZeroCostZfsManager<10, 100, 1000, 10_000>; // 10 pools, 100 datasets, 1k snapshots, 10s timeout
 /// Production ZFS manager: Large limits, standard timeout
-pub type ProductionZfsManager = ZeroCostZfsManager<100, 10000, 100000, 30000>; // 100 pools, 10k datasets, 100k snapshots, 30s timeout
-
+pub type ProductionZfsManager = ZeroCostZfsManager<100, 10_000, 100_000, 30000>; // 100 pools, 10k datasets, 100k snapshots, 30s timeout
 /// High-performance ZFS manager: Optimized limits, balanced timeout
 pub type HighPerformanceZfsManager = ZeroCostZfsManager<200, 20000, 200000, 45000>; // 200 pools, 20k datasets, 200k snapshots, 45s timeout
-
 /// Testing ZFS manager: Tiny limits, very fast timeout
 pub type TestingZfsManager = ZeroCostZfsManager<2, 10, 100, 5000>; // 2 pools, 10 datasets, 100 snapshots, 5s timeout
-
 /// Enterprise ZFS manager: Very large limits, long timeout
-pub type EnterpriseZfsManager = ZeroCostZfsManager<1000, 100000, 1000000, 60000>; // 1k pools, 100k datasets, 1M snapshots, 60s timeout
-
+pub type EnterpriseZfsManager = ZeroCostZfsManager<1000, 100_000, 1_000_000, 60000>; // 1k pools, 100k datasets, 1M snapshots, 60s timeout
 /// **MIGRATION UTILITIES**
 /// Help migrate from Arc<dyn ZfsOperations> to zero-cost patterns
 pub struct ZfsMigrationGuide;
-
 impl ZfsMigrationGuide {
     /// Get migration steps
     pub fn migration_steps() -> Vec<String> {
@@ -715,7 +754,7 @@ impl ZfsMigrationGuide {
     }
 
     /// Expected performance improvements
-    pub fn expected_improvements() -> (f64, f64, f64) {
+    pub const fn expected_improvements() -> (f64, f64, f64) {
         (
             80.0, // Performance gain % (high due to storage I/O optimization)
             50.0, // Memory reduction % (eliminating Arc overhead)
@@ -727,7 +766,6 @@ impl ZfsMigrationGuide {
 /// **PERFORMANCE BENCHMARKING**
 /// Tools for measuring ZFS performance improvements
 pub struct ZfsBenchmark;
-
 impl ZfsBenchmark {
     /// Benchmark ZFS operations
     pub async fn benchmark_zfs_operations<Z>(_zfs: &Z, operations: u32) -> Duration
@@ -744,7 +782,7 @@ impl ZfsBenchmark {
     }
 
     /// Compare old vs new ZFS performance
-    pub async fn performance_comparison() -> (Duration, Duration, f64) {
+    pub const fn performance_comparison() -> (Duration, Duration, f64) {
         // Expected results based on eliminating Arc<dyn> overhead in storage operations
         let old_duration = Duration::from_millis(5000); // Old Arc<dyn> approach
         let new_duration = Duration::from_millis(1000); // New zero-cost approach

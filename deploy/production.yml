@@ -1,0 +1,150 @@
+version: '3.8'
+
+services:
+  nestgate:
+    image: nestgate:latest
+    container_name: nestgate-production
+    restart: unless-stopped
+    
+    # Environment Configuration (Sovereignty Compliant)
+    environment:
+      # Core Service Configuration
+      NESTGATE_API_PORT: ${NESTGATE_API_PORT:-8080}
+      NESTGATE_BIND_ADDRESS: ${NESTGATE_BIND_ADDRESS:-0.0.0.0}
+      NESTGATE_WORKERS: ${NESTGATE_WORKERS:-auto}
+      
+      # Storage Configuration  
+      NESTGATE_STORAGE_BACKEND: ${NESTGATE_STORAGE_BACKEND:-zfs}
+      NESTGATE_STORAGE_ZFS_POOL: ${NESTGATE_STORAGE_ZFS_POOL:-tank}
+      NESTGATE_STORAGE_DATA_DIR: ${NESTGATE_STORAGE_DATA_DIR:-/var/lib/nestgate}
+      
+      # Performance Configuration
+      NESTGATE_ZERO_COPY: ${NESTGATE_ZERO_COPY:-true}
+      NESTGATE_BUFFER_SIZE: ${NESTGATE_BUFFER_SIZE:-65536}
+      NESTGATE_THREAD_POOL_SIZE: ${NESTGATE_THREAD_POOL_SIZE:-auto}
+      
+      # Security Configuration
+      NESTGATE_TLS_ENABLED: ${NESTGATE_TLS_ENABLED:-true}
+      NESTGATE_AUTH_MODE: ${NESTGATE_AUTH_MODE:-primal}
+      NESTGATE_CERT_PATH: ${NESTGATE_CERT_PATH:-/etc/nestgate/certs}
+      
+      # Monitoring Configuration
+      NESTGATE_METRICS_ENABLED: ${NESTGATE_METRICS_ENABLED:-true}
+      NESTGATE_HEALTH_CHECK_INTERVAL: ${NESTGATE_HEALTH_CHECK_INTERVAL:-30}
+      NESTGATE_LOG_LEVEL: ${NESTGATE_LOG_LEVEL:-info}
+      
+      # Ecosystem Integration
+      NESTGATE_ECOSYSTEM_DISCOVERY: ${NESTGATE_ECOSYSTEM_DISCOVERY:-true}
+      NESTGATE_SONGBIRD_ENDPOINT: ${NESTGATE_SONGBIRD_ENDPOINT:-http://discovery:8081/capabilities/orchestration}
+      NESTGATE_BEARDOG_ENDPOINT: ${NESTGATE_BEARDOG_ENDPOINT:-http://discovery:8082/capabilities/security}
+      NESTGATE_BIOMEOS_ENDPOINT: ${NESTGATE_BIOMEOS_ENDPOINT:-http://biomeos:8083}
+    
+    # Port Mapping
+    ports:
+      - "${NESTGATE_API_PORT:-8080}:${NESTGATE_API_PORT:-8080}"
+      - "${NESTGATE_HEALTH_PORT:-8090}:8090"
+    
+    # Volume Mounts
+    volumes:
+      - nestgate-data:/var/lib/nestgate
+      - nestgate-config:/etc/nestgate
+      - nestgate-logs:/var/log/nestgate
+      - /dev/zfs:/dev/zfs:rw  # ZFS device access
+    
+    # Resource Limits (Production Optimized)
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    
+    # Health Check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${NESTGATE_API_PORT:-8080}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Logging Configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+    
+    # Network Configuration
+    networks:
+      - ecoprimals-network
+    
+    # Privileged mode for ZFS operations
+    privileged: true
+    
+    # Device access for storage
+    devices:
+      - /dev/zfs:/dev/zfs
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: nestgate-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    networks:
+      - ecoprimals-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: nestgate-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - ecoprimals-network
+
+# Volumes
+volumes:
+  nestgate-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${NESTGATE_DATA_PATH:-/opt/nestgate/data}
+  
+  nestgate-config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${NESTGATE_CONFIG_PATH:-/opt/nestgate/config}
+  
+  nestgate-logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${NESTGATE_LOGS_PATH:-/opt/nestgate/logs}
+  
+  prometheus-data:
+  grafana-data:
+
+# Networks
+networks:
+  ecoprimals-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16 

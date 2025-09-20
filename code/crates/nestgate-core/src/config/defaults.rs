@@ -4,12 +4,10 @@ use super::canonical::{
 use super::federation::McpConfig;
 use super::network::ServiceEndpoints;
 use super::*;
-use std::path::PathBuf;
 use uuid;
 
 /// Network port defaults with environment variable support
 pub struct NetworkPortDefaults;
-
 impl NetworkPortDefaults {
     /// Default API port - configurable via NESTGATE_API_PORT
     pub const fn api_port() -> u16 {
@@ -52,12 +50,12 @@ impl NetworkPortDefaults {
     }
 
     /// Common service discovery ports
-    pub fn common_ports() -> Vec<u16> {
+    pub const fn common_ports() -> Vec<u16> {
         vec![8080, 8081, 8082, 8090, 3000, 3001, 3002, 3010, 9000, 9001]
     }
 
     /// Get API port from environment or default
-    pub fn get_api_port() -> u16 {
+    pub const fn get_api_port() -> u16 {
         std::env::var("NESTGATE_API_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -65,7 +63,7 @@ impl NetworkPortDefaults {
     }
 
     /// Get WebSocket port from environment or default
-    pub fn get_websocket_port() -> u16 {
+    pub const fn get_websocket_port() -> u16 {
         std::env::var("NESTGATE_WEBSOCKET_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -73,7 +71,7 @@ impl NetworkPortDefaults {
     }
 
     /// Get HTTP port from environment or default
-    pub fn get_http_port() -> u16 {
+    pub const fn get_http_port() -> u16 {
         std::env::var("NESTGATE_HTTP_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -81,7 +79,7 @@ impl NetworkPortDefaults {
     }
 
     /// Get NAS HTTP port from environment or default
-    pub fn get_nas_http_port() -> u16 {
+    pub const fn get_nas_http_port() -> u16 {
         std::env::var("NESTGATE_NAS_HTTP_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -89,7 +87,7 @@ impl NetworkPortDefaults {
     }
 
     /// Get development server port from environment or default
-    pub fn get_dev_server_port() -> u16 {
+    pub const fn get_dev_server_port() -> u16 {
         std::env::var("NESTGATE_DEV_SERVER_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -97,7 +95,7 @@ impl NetworkPortDefaults {
     }
 
     /// Get metrics port from environment or default
-    pub fn get_metrics_port() -> u16 {
+    pub const fn get_metrics_port() -> u16 {
         std::env::var("NESTGATE_METRICS_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -105,7 +103,7 @@ impl NetworkPortDefaults {
     }
 
     /// Get health check port from environment or default
-    pub fn get_health_port() -> u16 {
+    pub const fn get_health_port() -> u16 {
         std::env::var("NESTGATE_HEALTH_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -113,7 +111,7 @@ impl NetworkPortDefaults {
     }
 
     /// Get orchestrator port from environment or default
-    pub fn get_orchestrator_port() -> u16 {
+    pub const fn get_orchestrator_port() -> u16 {
         std::env::var("NESTGATE_ORCHESTRATOR_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -121,21 +119,20 @@ impl NetworkPortDefaults {
     }
 
     /// Get WebSocket base URL from environment or build from config
-    pub fn get_websocket_base_url() -> String {
+    pub const fn get_websocket_base_url() -> String {
         std::env::var("NESTGATE_WS_BASE_URL")
-            .unwrap_or_else(|_| format!("ws://localhost:{}", Self::get_websocket_port()))
+            .unwrap_or_else(|_| format!("ws://localhost:{Self::get_websocket_port(}")))
     }
 
     /// Get API base URL from environment or build from config
-    pub fn get_api_base_url() -> String {
+    pub const fn get_api_base_url() -> String {
         std::env::var("NESTGATE_API_BASE_URL")
-            .unwrap_or_else(|_| format!("http://localhost:{}", Self::get_api_port()))
+            .unwrap_or_else(|_| format!("http://localhost:{Self::get_api_port(}")))
     }
 }
 
 /// Network address defaults with environment variable support
 pub struct NetworkAddressDefaults;
-
 impl NetworkAddressDefaults {
     /// Default bind address for production (localhost only - secure default)
     pub const fn secure_bind() -> &'static str {
@@ -153,30 +150,29 @@ impl NetworkAddressDefaults {
     }
 
     /// Get bind address from environment or secure default
-    pub fn get_bind_address() -> String {
+    pub const fn get_bind_address() -> String {
         std::env::var("NESTGATE_BIND_ADDRESS").unwrap_or_else(|_| Self::secure_bind().to_string())
     }
 
     /// Get development bind address (used for dev servers)
-    pub fn get_development_bind_address() -> String {
+    pub const fn get_development_bind_address() -> String {
         std::env::var("NESTGATE_DEV_BIND_ADDRESS")
             .unwrap_or_else(|_| Self::development_bind().to_string())
     }
 
     /// Get hostname from environment or default
-    pub fn get_hostname() -> String {
+    pub const fn get_hostname() -> String {
         std::env::var("NESTGATE_HOSTNAME").unwrap_or_else(|_| Self::hostname().to_string())
     }
 
     /// Get external hostname from environment or default
-    pub fn get_external_hostname() -> String {
+    pub const fn get_external_hostname() -> String {
         std::env::var("NESTGATE_EXTERNAL_HOSTNAME").unwrap_or_else(|_| Self::hostname().to_string())
     }
 }
 
 /// Timeout defaults with environment variable support
 pub struct TimeoutDefaults;
-
 impl TimeoutDefaults {
     /// Default connection timeout in milliseconds
     pub const fn connection_timeout_ms() -> u64 {
@@ -194,7 +190,7 @@ impl TimeoutDefaults {
     }
 
     /// Get connection timeout from environment or default
-    pub fn get_connection_timeout_ms() -> u64 {
+    pub const fn get_connection_timeout_ms() -> u64 {
         std::env::var("NESTGATE_CONNECTION_TIMEOUT_MS")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -202,7 +198,7 @@ impl TimeoutDefaults {
     }
 
     /// Get request timeout from environment or default
-    pub fn get_request_timeout_ms() -> u64 {
+    pub const fn get_request_timeout_ms() -> u64 {
         std::env::var("NESTGATE_REQUEST_TIMEOUT_MS")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -216,7 +212,6 @@ fn create_mcp_config(node_id: &str) -> McpConfig {
         node_id: node_id.to_string(),
         ..Default::default()
     };
-
     tracing::info!("🔧 MCP config created for node: {}", node_id);
     mcp_config
 }
@@ -235,7 +230,6 @@ impl Default for NestGateConfig {
             system: SystemConfig {
                 instance_id: None,
                 instance_name: "nestgate-instance".to_string(),
-                environment: Environment::Development,
                 log_level: "info".to_string(),
                 data_dir: PathBuf::from("./data"),
                 config_dir: PathBuf::from("./config"),
@@ -258,7 +252,7 @@ impl Default for NestGateConfig {
 mod tests {
 
     #[test]
-    fn test_config_default_values() {
+    fn test_config_defaultvalues() {
         let config = Config::default();
 
         // Test system config
@@ -282,7 +276,7 @@ mod tests {
         assert!(!config.security.authorization.enabled);
 
         // Test monitoring config
-        assert!(config.monitoring.metrics.enabled);
+        assert!(config.monitoring.enabled);
         assert_eq!(config.monitoring.metrics.interval.as_secs(), 30);
         assert_eq!(config.monitoring.logging.level, "info");
 

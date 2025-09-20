@@ -22,6 +22,7 @@ async fn test_core_functionality_works() -> Result<()> {
     match result {
         Ok(value) => println!("✅ Success: {value}"),
         Err(e) => return Err(e),
+    Ok(())
     }
 
     println!("🎉 All core functionality tests passed!");
@@ -55,7 +56,9 @@ async fn test_performance_simulation() -> Result<()> {
     for i in 0..100 {
         if i % 10 == 0 {
             sleep(Duration::from_millis(1)).await;
+            Ok(())
         }
+        Ok(())
     }
 
     let duration = start.elapsed();
@@ -72,7 +75,7 @@ async fn test_performance_simulation() -> Result<()> {
 }
 
 #[test]
-fn test_sync_operations() {
+async fn test_sync_operations() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚡ Testing synchronous operations");
 
     // Test service type matching
@@ -90,10 +93,13 @@ fn test_sync_operations() {
             UnifiedServiceType::Security => println!("✅ Security service recognized"),
             UnifiedServiceType::Compute => println!("✅ Compute service recognized"),
             _ => println!("✅ Other service type: {service_type:?}"),
+    Ok(())
         }
+        Ok(())
     }
 
     println!("🎉 Sync operations test passed!");
+    Ok(())
 }
 
 #[tokio::test]
@@ -109,6 +115,7 @@ async fn test_concurrent_operations() -> Result<()> {
             format!("Task {i} completed")
         });
         handles.push(handle);
+        Ok(())
     }
 
     // Wait for all tasks to complete
@@ -121,6 +128,7 @@ async fn test_concurrent_operations() -> Result<()> {
             )
         })?;
         results.push(result);
+        Ok(())
     }
 
     println!("✅ Completed {} concurrent tasks", results.len());

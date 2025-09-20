@@ -1,0 +1,655 @@
+//! **ERROR VARIANTS - CANONICAL MODERNIZED**
+//!
+//! This module provides the main NestGateUnifiedError enum with boxed variants
+//! for optimal performance and memory usage following canonical modernization principles.
+
+use serde::{Deserialize, Serialize};
+use std::time::Duration;
+use thiserror::Error;
+
+use super::context::ErrorContext;
+use super::data::{
+    AutomationErrorData, FsMonitorErrorData, InstallerErrorData, McpErrorData, MiddlewareErrorData,
+    NetworkErrorData, PrimalErrorData, SecurityErrorData, StorageErrorData, UniversalZfsErrorData,
+};
+
+// ==================== BOXED ERROR DETAILS STRUCTS ====================
+
+/// Network error details - boxed to reduce enum size
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NetworkErrorDetails {
+    /// Error message
+    pub message: String,
+    /// Network operation that failed
+    pub operation: String,
+    /// Remote address if applicable
+    pub address: Option<String>,
+    /// Remote address (alias for compatibility)
+    pub remote_address: Option<String>,
+    /// Network endpoint
+    pub endpoint: Option<String>,
+    /// Retry after duration in seconds
+    pub retry_after: Option<u64>,
+    /// Network-specific error code
+    pub network_code: Option<String>,
+    /// Whether the operation is retryable
+    pub retryable: bool,
+    /// Whether the error is recoverable (alias for retryable)
+    pub recoverable: bool,
+    /// Network-specific error data - BOXED for performance
+    pub network_data: Option<Box<NetworkErrorData>>,
+    /// Error context - BOXED for performance
+    pub context: Option<Box<ErrorContext>>,
+}
+
+/// Validation error details - boxed to reduce enum size
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ValidationErrorDetails {
+    /// Error message
+    pub message: String,
+    /// Field or data that failed validation
+    pub field: String,
+    /// Current invalid value
+    pub value: Option<String>,
+    /// Current invalid value (alias for compatibility)
+    pub current_value: Option<String>,
+    /// Expected format or constraint
+    pub constraint: Option<String>,
+    /// Expected value (alias for compatibility)
+    pub expected: Option<String>,
+    /// Error context - BOXED for performance
+    pub context: Option<Box<ErrorContext>>,
+}
+
+impl ValidationErrorDetails {
+    /// Create a new validation error details
+    pub fn new(
+        message: String,
+        field: String,
+        value: Option<String>,
+        current_value: Option<String>,
+        constraint: Option<String>,
+        expected: Option<String>,
+        context: Option<Box<ErrorContext>>,
+    ) -> Self { Self {
+            message,
+            field,
+            value,
+            current_value,
+            constraint,
+            expected,
+            context,
+         }
+
+    /// Create a simple validation error
+    pub fn simple(message: String, field: String) -> Self { Self {
+            message,
+            field,
+            value: None,
+            current_value: None,
+            constraint: None,
+            expected: None,
+            context: None,
+         }
+}
+
+// ==================== SECTION ====================
+
+/// **THE** definitive NestGate error type - canonical modernized with boxed variants
+#[derive(Debug, Clone, Error, Serialize, Deserialize)]
+pub enum NestGateUnifiedError {
+    /// Configuration-related errors
+    #[error("Configuration error in {field}: {message}")]
+    Configuration {
+        /// The configuration field that caused the error
+        field: String,
+        /// Error message
+        message: String,
+        /// Current invalid value
+        current_value: Option<String>,
+        /// Expected value or format
+        expected: Option<String>,
+        /// Whether this is a user configuration error
+        user_error: bool,
+    }
+    /// API-related errors - CANONICAL MODERNIZED with boxed context
+    #[error("API error: {message}")]
+    Api {
+        /// Error message
+        message: String,
+        /// HTTP status code
+        status_code: Option<u16>,
+        /// Request ID for tracing
+        request_id: Option<String>,
+        /// API endpoint that failed
+        endpoint: Option<String>,
+        /// Error context - BOXED for performance
+        context: Option<Box<ErrorContext>>,
+    }
+    /// Storage and ZFS errors - CANONICAL MODERNIZED with boxed data
+    #[error("Storage error: {message}")]
+    Storage {
+        /// Error message
+        message: String,
+        /// Storage operation that failed
+        operation: String,
+        /// Resource involved (path, pool, dataset)
+        resource: Option<String>,
+        /// Whether the operation is retryable
+        retryable: bool,
+        /// Storage-specific error data - BOXED for performance
+        storage_data: Option<Box<StorageErrorData>>,
+        /// Error context - BOXED for performance
+        context: Option<Box<ErrorContext>>,
+    }
+    /// Network and communication errors - CANONICAL MODERNIZED with boxed data
+    #[error("Network error: {}", .0.message)]
+    Network(Box<NetworkErrorDetails>),
+
+    /// Security and authentication errors - CANONICAL MODERNIZED with boxed data
+    #[error("Security error: {message}")]
+    Security {
+        /// Error message
+        message: String,
+        /// Security operation that failed
+        operation: String,
+        /// User or entity involved
+        subject: Option<String>,
+        /// Whether the operation is retryable
+        retryable: bool,
+        /// Security-specific error data - BOXED for performance
+        security_data: Option<Box<SecurityErrorData>>,
+        /// Error context - BOXED for performance
+        context: Option<Box<ErrorContext>>,
+    }
+    /// ZFS-specific errors - CANONICAL MODERNIZED with boxed data
+    #[error("ZFS error: {message}")]
+    Zfs {
+        /// Error message
+        message: String,
+        /// ZFS operation that failed
+        operation: String,
+        /// ZFS resource (pool, dataset, snapshot)
+        resource: Option<String>,
+        /// Whether the operation is retryable
+        retryable: bool,
+        /// ZFS-specific error data - BOXED for performance
+        zfs_data: Option<Box<UniversalZfsErrorData>>,
+        /// Error context - BOXED for performance
+        context: Option<Box<ErrorContext>>,
+    }
+    /// MCP-specific errors - CANONICAL MODERNIZED with boxed data
+    #[error("MCP error: {message}")]
+    Mcp {
+        /// Error message
+        message: String,
+        /// MCP operation that failed
+        operation: String,
+        /// MCP resource or session
+        resource: Option<String>,
+        /// Whether the operation is retryable
+        retryable: bool,
+        /// MCP-specific error data - BOXED for performance
+        mcp_data: Option<Box<McpErrorData>>,
+        /// Error context - BOXED for performance
+        context: Option<Box<ErrorContext>>,
+    }
+    /// Automation workflow errors - CANONICAL MODERNIZED with boxed data
+    #[error("Automation error: {message}")]
+    Automation {
+        /// Error message
+        message: String,
+        /// Automation workflow that failed
+        workflow: String,
+        /// Step or task that failed
+        step: Option<String>,
+        /// Whether the operation is retryable
+        retryable: bool,
+        /// Automation-specific error data - BOXED for performance
+        automation_data: Option<Box<AutomationErrorData>>,
+        /// Error context - BOXED for performance
+        context: Option<Box<ErrorContext>>,
+    }
+    /// Middleware errors - CANONICAL MODERNIZED with boxed data
+    #[error("Middleware error: {message}")]
+    Middleware {
+        /// Error message
+        message: String,
+        /// Middleware component that failed
+        component: String,
+        /// Request or operation context
+        request_context: Option<String>,
+        /// Whether the operation is retryable
+        retryable: bool,
+        /// Middleware-specific error data - BOXED for performance
+        middleware_data: Option<Box<MiddlewareErrorData>>,
+        /// Error context - BOXED for performance
+        context: Option<Box<ErrorContext>>,
+    }
+    /// File system monitor errors - CANONICAL MODERNIZED with boxed data
+    #[error("FS Monitor error: {message}")]
+    FsMonitor {
+        /// Error message
+        message: String,
+        /// File system path being monitored
+        path: String,
+        /// Monitor operation that failed
+        operation: Option<String>,
+        /// Whether the operation is retryable
+        retryable: bool,
+        /// FS monitor-specific error data - BOXED for performance
+        fsmonitor_data: Option<Box<FsMonitorErrorData>>,
+        /// Error context - BOXED for performance
+        context: Option<Box<ErrorContext>>,
+    }
+    /// Installation and setup errors - CANONICAL MODERNIZED with boxed data
+    #[error("Installation error: {message}")]
+    Installation {
+        /// Error message
+        message: String,
+        /// Component being installed
+        component: String,
+        /// Installation step that failed
+        step: Option<String>,
+        /// Installation phase
+        phase: Option<String>,
+        /// Whether the operation is retryable
+        retryable: bool,
+        /// Installation-specific error data - BOXED for performance
+        installation_data: Option<Box<InstallerErrorData>>,
+        /// Error context - BOXED for performance
+        context: Option<Box<ErrorContext>>,
+    }
+    /// Universal ZFS backend errors - CANONICAL MODERNIZED with boxed data
+    #[error("Universal ZFS error: {message}")]
+    UniversalZfs {
+        /// Error message
+        message: String,
+        /// Backend that failed
+        backend: String,
+        /// Operation that failed
+        operation: Option<String>,
+        /// Whether the operation is retryable
+        retryable: bool,
+        /// Universal ZFS-specific error data - BOXED for performance
+        universal_zfs_data: Option<Box<UniversalZfsErrorData>>,
+        /// Error context - BOXED for performance
+        context: Option<Box<ErrorContext>>,
+    }
+    /// Primal integration errors - CANONICAL MODERNIZED with boxed data
+    #[error("Primal error: {message}")]
+    Primal {
+        /// Error message
+        message: String,
+        /// Primal service that failed
+        service: String,
+        /// Operation that failed
+        operation: Option<String>,
+        /// Whether the operation is retryable
+        retryable: bool,
+        /// Primal-specific error data - BOXED for performance
+        primal_data: Option<Box<PrimalErrorData>>,
+        /// Error context - BOXED for performance
+        context: Option<Box<ErrorContext>>,
+    }
+    /// I/O and file system errors - CANONICAL MODERNIZED with boxed context
+    #[error("I/O error: {message}")]
+    Io {
+        /// Error message
+        message: String,
+        /// I/O operation that failed
+        operation: String,
+        /// File or resource path
+        path: Option<String>,
+        /// Error context - BOXED for performance
+        context: Option<Box<ErrorContext>>,
+    }
+    /// Validation errors - CANONICAL MODERNIZED with boxed context
+    #[error("Validation error: {}", .0.message)]
+    Validation(Box<ValidationErrorDetails>),
+
+    /// Timeout errors - CANONICAL MODERNIZED with boxed context
+    #[error("Timeout error: {message}")]
+    Timeout {
+        /// Error message
+        message: String,
+        /// Operation that timed out
+        operation: String,
+        /// Timeout duration that was exceeded
+        timeout: Duration,
+        /// Error context - BOXED for performance
+        context: Option<Box<ErrorContext>>,
+    }
+    /// Resource exhaustion errors - CANONICAL MODERNIZED with boxed context
+    #[error("Resource exhausted: {message}")]
+    ResourceExhausted {
+        /// Error message
+        message: String,
+        /// Resource type that was exhausted
+        resource_type: String,
+        /// Current resource usage
+        current_usage: Option<String>,
+        /// Error context - BOXED for performance
+        context: Option<Box<ErrorContext>>,
+    }
+    /// Internal system errors - CANONICAL MODERNIZED with boxed context
+    #[error("Internal error: {message}")]
+    Internal {
+        /// Error message
+        message: String,
+        /// Component where error occurred
+        component: String,
+        /// Error context - BOXED for performance
+        context: Option<Box<ErrorContext>>,
+    }
+    /// System-level errors - CANONICAL MODERNIZED with boxed context
+    #[error("System error: {message}")]
+    System {
+        /// Error message
+        message: String,
+        /// System operation that failed
+        operation: String,
+        /// System resource involved
+        resource: Option<String>,
+        /// Exit code if applicable
+        exit_code: Option<i32>,
+        /// Error context - BOXED for performance
+        context: Option<Box<ErrorContext>>,
+    }
+    /// Unknown or unclassified errors - CANONICAL MODERNIZED with boxed context
+    #[error("Unknown error: {message}")]
+    Unknown {
+        /// Error message
+        message: String,
+        /// Error context - BOXED for performance
+        context: Option<Box<ErrorContext>>,
+    }
+}
+
+// ==================== CANONICAL MODERNIZATION HELPERS ====================
+
+impl NestGateUnifiedError {
+    /// Create API error with boxed context
+    pub fn api_with_context(message: String, context: ErrorContext) -> Self { Self::Api {
+            message,
+            status_code: None,
+            request_id: None,
+            endpoint: None,
+            context: Some(Box::new(context)),
+         }
+
+    /// Create storage error with boxed data
+    pub fn storage_with_data(
+        message: String,
+        operation: String,
+        storage_data: StorageErrorData,
+    ) -> Self { Self::Storage {
+            message,
+            operation,
+            resource: None,
+            retryable: false,
+            storage_data: Some(Box::new(storage_data)),
+            context: None,
+         }
+
+    /// Create network error with boxed data
+    pub fn network_with_data(
+        message: String,
+        operation: String,
+        network_data: NetworkErrorData,
+    ) -> Self {
+        Self::Network(Box::new(NetworkErrorDetails {
+            message,
+            operation,
+            address: None,
+            remote_address: None,
+            endpoint: None,
+            retry_after: None,
+            network_code: None,
+            retryable: false,
+            recoverable: false,
+            network_data: Some(Box::new(network_data)),
+            context: None,
+        }))
+    }
+
+    /// Get error context if available
+    pub fn context(&self) -> Option<&str> {
+        match self {
+            Self::Api { context, .. } => context.as_deref(),
+            Self::Storage { context, .. } => context.as_deref(),
+            Self::Network(details) => Some(&details.context),
+            _ => None,
+        }
+    }
+
+    /// Check if error is retryable
+    pub fn is_retryable(&self) -> bool {
+        match self {
+            Self::Storage { retryable, .. } => *retryable,
+            Self::Network(details) => details.retryable,
+            Self::Security { retryable, .. } => *retryable,
+            _ => false,
+        }
+    }
+}
+
+// ==================== CANONICAL ERROR CONSTRUCTORS ====================
+
+/// Canonical error construction helpers for consistent error creation
+impl NestGateUnifiedError {
+    /// Create a simple configuration error
+    pub fn config_error(field: &str, message: &str) -> Self { Self::Configuration {
+            field: field.to_string(),
+            message: message.to_string(),
+            current_value: None,
+            expected: None,
+            user_error: true,
+         }
+
+    /// Create a simple API error
+    pub fn api_error(message: &str) -> Self { Self::Api {
+            message: message.to_string(),
+            status_code: None,
+            request_id: None,
+            endpoint: None,
+            context: None,
+         }
+
+    /// Create a simple storage error
+    pub fn storage_error(message: &str, operation: &str) -> Self { Self::Storage {
+            message: message.to_string(),
+            operation: operation.to_string(),
+            resource: None,
+            retryable: false,
+            storage_data: None,
+            context: None,
+         }
+
+    /// Create a simple network error
+    pub fn network_error(message: &str, operation: &str) -> Self {
+        Self::Network(Box::new(NetworkErrorDetails {
+            message: message.to_string(),
+            operation: operation.to_string(),
+            address: None,
+            remote_address: None,
+            endpoint: None,
+            retry_after: None,
+            network_code: None,
+            retryable: false,
+            recoverable: false,
+            network_data: None,
+            context: None,
+        }))
+    }
+
+    /// Create a simple internal error
+    pub fn internal_error(message: &str, component: &str) -> Self { Self::Internal {
+            message: message.to_string(),
+            component: component.to_string(),
+            context: None,
+         }
+
+    /// Create an internal error with debug context
+    pub fn internal_error_with_debug_context(
+        message: &str,
+        component: &str,
+        location: &str,
+    ) -> Self { Self::Internal {
+            message: message.to_string(),
+            component: component.to_string(),
+            context: Some(Box::new(crate::error::context::ErrorContext {
+                error_id: uuid::Uuid::new_v4().to_string(),
+                stack_trace: None,
+                related_errors: vec![],
+                operation: "internal_error".to_string(),
+                component: component.to_string(),
+                metadata: {
+                    let mut map = std::collections::HashMap::new();
+                    map.insert("location".to_string(), location.to_string());
+                    map
+                },
+                timestamp: std::time::SystemTime::now(),
+                retry_info: None,
+                recovery_suggestions: vec![],
+                performance_metrics: None,
+                environment: None })),
+        }
+    }
+
+    /// Create a timeout error
+    pub fn timeout_error(operation: &str, duration_ms: u64) -> Self {
+        Self::Timeout {
+            message: format!(
+                "Operation '{operation}' timed out after {duration_ms}ms"
+            ),
+            operation: operation.to_string(),
+            timeout: Duration::from_millis(duration_ms),
+            context: None,
+        }
+    }
+
+    /// Create an invalid input error
+    pub fn invalid_input(message: String) -> Self {
+        Self::Validation(Box::new(ValidationErrorDetails {
+            field: "input".to_string(),
+            message,
+            value: None,
+            current_value: None,
+            constraint: None,
+            expected: None,
+            context: None,
+        }))
+    }
+
+    /// Create an invalid input error with field
+    pub fn invalid_input_with_field(field: &str, message: String) -> Self {
+        Self::Validation(Box::new(ValidationErrorDetails {
+            field: field.to_string(),
+            message,
+            value: None,
+            current_value: None,
+            constraint: None,
+            expected: None,
+            context: None,
+        }))
+    }
+
+    /// Create a configuration error
+    pub fn configuration_error(message: String) -> Self { Self::Configuration {
+            field: "general".to_string(),
+            message,
+            current_value: None,
+            expected: None,
+            user_error: true,
+         }
+
+    /// Create a configuration error with field details
+    pub fn configuration_error_with_field(
+        field: &str,
+        message: String,
+        current: Option<String>,
+        expected: Option<String>,
+    ) -> Self { Self::Configuration {
+            field: field.to_string(),
+            message,
+            current_value: current,
+            expected,
+            user_error: true,
+         }
+
+    /// Create a permission denied error with operation
+    pub fn permission_denied_with_operation(operation: &str, resource: &str) -> Self {
+        Self::Security {
+            message: format!(
+                "Permission denied for operation '{operation}' on resource '{resource}'"
+            ),
+            operation: operation.to_string(),
+            subject: None,
+            retryable: false,
+            security_data: None,
+            context: None,
+        }
+    }
+
+    /// PEDANTIC: Create validation error with full context
+    pub fn validation_error(
+        message: String,
+        field: String,
+        current_value: Option<String>,
+        value: Option<String>,
+        constraint: Option<String>,
+        expected: Option<String>,
+    ) -> Self {
+        Self::Validation(Box::new(ValidationErrorDetails {
+            field,
+            message,
+            current_value,
+            value,
+            constraint,
+            expected,
+            context: None,
+        }))
+    }
+
+    /// PEDANTIC: Create simple validation error with minimal context
+    pub fn simple_validation_error(message: String, field: String) -> Self {
+        Self::Validation(Box::new(ValidationErrorDetails {
+            field,
+            message,
+            current_value: None,
+            value: None,
+            constraint: None,
+            expected: None,
+            context: None,
+        }))
+    }
+}
+
+// ==================== FROM IMPLEMENTATIONS FOR EXTERNAL ERRORS ====================
+
+impl From<serde_json::Error> for NestGateUnifiedError {
+    fn from(err: serde_json::Error) -> Self {
+        Self::internal_error(&format!("JSON serialization error: {err}"), "serde_json")
+    }
+}
+
+impl From<std::io::Error> for NestGateUnifiedError {
+    fn from(err: std::io::Error) -> Self {
+        Self::internal_error(&format!("IO error: {err}"), "std_io")
+    }
+}
+
+impl From<std::fmt::Error> for NestGateUnifiedError {
+    fn from(err: std::fmt::Error) -> Self {
+        Self::internal_error(&format!("Format error: {err}"), "std_fmt")
+    }
+}
+
+impl From<uuid::Error> for NestGateUnifiedError {
+    fn from(err: uuid::Error) -> Self {
+        Self::internal_error(&format!("UUID error: {err}"), "uuid")
+    }
+}
+
+// ==================== CANONICAL MODERNIZATION COMPLETE ====================

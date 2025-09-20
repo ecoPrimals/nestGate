@@ -5,14 +5,13 @@
 /// primal integrations to the universal provider interface, enabling gradual
 /// migration to the universal architecture.
 use std::sync::Arc;
-
 // universal_traits consolidated - using specific imports from zero_cost providers
 use crate::universal_providers_zero_cost::*;
 use crate::{NestGateError, Result};
 use std::time::{Duration, SystemTime};
 
 /// Universal Security Provider Wrapper
-/// Provides a universal interface for any security provider (BearDog, custom, enterprise)
+/// Provides a universal interface for any security provider (Security, custom, enterprise)
 #[allow(dead_code)]
 pub struct UniversalSecurityWrapper {
     provider_name: String,
@@ -20,8 +19,7 @@ pub struct UniversalSecurityWrapper {
     capabilities: Vec<String>,
     client: Option<Arc<dyn SecurityPrimalProvider>>,
 }
-
-/// Trait for any security client (BearDog, Vault, etc.)
+/// Trait for any security client (Security, Vault, etc.)
 pub trait SecurityClient: Send + Sync {
     fn authenticate(&self, credentials: &Credentials) -> impl std::future::Future<Output = Result<AuthToken>> + Send;
     fn encrypt(&self, data: &[u8], algorithm: &str) -> impl std::future::Future<Output = Result<Vec<u8>> + Send;
@@ -30,10 +28,9 @@ pub trait SecurityClient: Send + Sync {
     fn verify_signature(&self, data: &[u8], signature: &Signature) -> impl std::future::Future<Output = Result<bool>> + Send;
     fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send;
 }
-
 impl UniversalSecurityWrapper {
     /// Create a new universal security wrapper
-    pub fn new(provider_name: String, endpoint: String, capabilities: Vec<String>) -> Self {
+    pub const fn new(provider_name: String, endpoint: String, capabilities: Vec<String>) -> Self {
         Self {
             provider_name,
             endpoint,
@@ -42,14 +39,15 @@ impl UniversalSecurityWrapper {
         }
     }
 
-    /// Set the underlying security client (BearDog, etc.)
+    /// Set the underlying security client (Security, etc.)
+    #[must_use]
     pub fn with_client(mut self, client: Arc<dyn SecurityPrimalProvider>) -> Self {
         self.client = Some(client);
         self
     }
 
     /// Auto-detect security provider type from endpoint (capability-based)
-    pub fn auto_detect_provider_type(endpoint: &str) -> String {
+    pub const fn auto_detect_provider_type(endpoint: &str) -> String {
         // Use standard security ports for generic detection
         if endpoint.contains("8443") || endpoint.contains("https") {
             "secure-provider".to_string()
@@ -72,8 +70,8 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
             if credentials.username.is_empty() || credentials.password.is_empty() {
                 return Err(NestGateError::Unauthorized {
                     message: "Invalid credentials".to_string(),
-                    location: Some(format!("{}:{}", file!(), line!())),
-                });
+                    location: Some(format!("{})
+                );
             }
 
             // Basic credential validation (in production, integrate with local auth store)
@@ -91,7 +89,7 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
                         .as_secs()
                         .to_string(),
                 );
-                let token = format!("fallback_{:x}", hasher.finalize());
+                let token = format!("fallback_{:x}"));
 
                 Ok(AuthToken {
                     token,
@@ -101,7 +99,7 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
             } else {
                 Err(NestGateError::Unauthorized {
                     message: "Password too short".to_string(),
-                    location: Some(format!("{}:{}", file!(), line!())),
+                    location: Some(format!("{})
                 })
             }
         }
@@ -141,7 +139,7 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
             // Fallback signing - simplified implementation without external crypto deps
             // In production, this should route through SecurityAdapter
 
-            let key = format!("fallback_key_{}", self.provider_name);
+            let key = format!("fallback_key_{self.provider_name}");
             let mut hasher = Sha256::new();
             hasher.update(&key);
             hasher.update(data);
@@ -150,7 +148,7 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
             Ok(Signature {
                 algorithm: "sha256-fallback".to_string(),
                 signature: hex::encode(signature_bytes),
-                key_id: format!("{}_fallback_key", self.provider_name),
+                key_id: format!("{self.provider_name}_fallback_key"),
             })
         }
     }
@@ -165,7 +163,7 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
             }
 
 
-            let key = format!("fallback_key_{}", self.provider_name);
+            let key = format!("fallback_key_{self.provider_name}");
             let mut hasher = Sha256::new();
             hasher.update(&key);
             hasher.update(data);
@@ -183,7 +181,7 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
             // In production, this should route through SecurityAdapter
 
             let mut hasher = Sha256::new();
-            hasher.update(format!("fallback_encryption_key_{}", self.provider_name));
+            hasher.update(format!("fallback_encryption_key_{self.provider_name}"));
             let key_bytes = hasher.finalize();
 
             let mut encrypted = Vec::with_capacity(data.len());
@@ -203,7 +201,7 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
             // In production, this should route through SecurityAdapter
 
             let mut hasher = Sha256::new();
-            hasher.update(format!("fallback_encryption_key_{}", self.provider_name));
+            hasher.update(format!("fallback_encryption_key_{self.provider_name}"));
             let key_bytes = hasher.finalize();
 
             let mut decrypted = Vec::with_capacity(encrypted_data.len());
@@ -217,7 +215,7 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
 
     async fn get_key_id(&self) -> Result<String> {
         // Default implementation - could be customized per provider type
-        Ok(format!("{}-key", self.provider_name))
+        Ok(format!("{self.provider_name}-key"))
     }
 
     async fn generate_validation_token(&self, data: &[u8]) -> Result<String> {
@@ -225,14 +223,13 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
         let mut hasher = Sha256::new();
         hasher.update(data);
         hasher.update(self.provider_name.as_bytes());
-        Ok(format!("{:x}", hasher.finalize()))
+        Ok(format!("{:x}")))
     }
 
     async fn evaluate_boundary_access(
         &self,
         source: &str,
         destination: &str,
-        operation: &str,
     ) -> Result<SecurityDecision> {
         // Allow operations within same source/destination or read operations
         if source == destination || operation == "read" {
@@ -244,7 +241,7 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
 }
 
 /// Universal Orchestration Provider Wrapper  
-/// Provides a universal interface for any orchestration provider (Songbird, Kubernetes, etc.)
+/// Provides a universal interface for any orchestration provider (Orchestration, Kubernetes, etc.)
 #[allow(dead_code)]
 pub struct UniversalOrchestrationWrapper {
     provider_name: String,
@@ -252,8 +249,7 @@ pub struct UniversalOrchestrationWrapper {
     capabilities: Vec<String>,
     client: Option<Arc<dyn OrchestrationPrimalProvider>>,
 }
-
-/// Trait for any orchestration client (Songbird, Kubernetes, etc.)
+/// Trait for any orchestration client (Orchestration, Kubernetes, etc.)
 pub trait OrchestrationClient: Send + Sync {
     fn register_service(&self, service: &ServiceRegistration) -> impl std::future::Future<Output = Result<String>> + Send;
     fn discover_services(&self, service_type: &str) -> impl std::future::Future<Output = Result<Vec<ServiceInstance>> + Send;
@@ -261,9 +257,8 @@ pub trait OrchestrationClient: Send + Sync {
     fn release_port(&self, service: &str, port: u16) -> impl std::future::Future<Output = Result<()>> + Send;
     fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send;
 }
-
 impl UniversalOrchestrationWrapper {
-    pub fn new(provider_name: String, endpoint: String, capabilities: Vec<String>) -> Self {
+    pub const fn new(provider_name: String, endpoint: String, capabilities: Vec<String>) -> Self {
         Self {
             provider_name,
             endpoint,
@@ -272,19 +267,24 @@ impl UniversalOrchestrationWrapper {
         }
     }
 
+    #[must_use]
     pub fn with_client(mut self, client: Arc<dyn OrchestrationPrimalProvider>) -> Self {
         self.client = Some(client);
         self
     }
 
-    pub fn auto_detect_provider_type(endpoint: &str) -> String {
+    pub const fn auto_detect_provider_type(endpoint: &str) -> String {
         // Use standard orchestration patterns for generic detection
         if endpoint.contains("8000") || endpoint.contains("orchestration") {
             "orchestration-provider".to_string()
-        } else if endpoint.contains("kubernetes") || endpoint.contains("6443") {
-            "kubernetes".to_string()
-        } else if endpoint.contains("consul") || endpoint.contains("8500") {
-            "consul".to_string()
+    #[deprecated(since = "3.0.0", note = "Use capability-based orchestration instead of vendor-specific container platforms")]
+        } else if endpoint.contains("container_orchestrator".to_string()) || endpoint.contains("6443") {
+    #[deprecated(since = "3.0.0", note = "Use capability-based orchestration instead of vendor-specific container platforms")]
+            "container_orchestrator".to_string().to_string()
+    #[deprecated(since = "3.0.0", note = "Use capability-based discovery instead of vendor-specific service discovery")]
+        } else if endpoint.contains("service_discovery") || endpoint.contains("8500") {
+    #[deprecated(since = "3.0.0", note = "Use capability-based discovery instead of vendor-specific service discovery")]
+            "service_discovery".to_string().to_string()
         } else {
             "generic-orchestration".to_string()
         }
@@ -297,7 +297,7 @@ impl OrchestrationPrimalProvider for UniversalOrchestrationWrapper {
             client.register_service(service).await
         } else {
             // Return a mock service ID
-            Ok(format!("{}-{}", self.provider_name, uuid::Uuid::new_v4()))
+            Ok(format!("{}-{}", self.provider_name, uuid::Uuid::new_v4())
         }
     }
 
@@ -367,7 +367,6 @@ pub struct UniversalComputeWrapper {
     capabilities: Vec<String>,
     client: Option<Arc<dyn ComputePrimalProvider>>,
 }
-
 /// Trait for any compute client (ToadStool, Docker, etc.)
 pub trait ComputeClient: Send + Sync {
     fn allocate_resources(&self, spec: &ResourceSpec) -> impl std::future::Future<Output = Result<ResourceAllocation>> + Send;
@@ -378,9 +377,8 @@ pub trait ComputeClient: Send + Sync {
     ) -> Result<PerformanceMetrics>;
     fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send;
 }
-
 impl UniversalComputeWrapper {
-    pub fn new(provider_name: String, endpoint: String, capabilities: Vec<String>) -> Self {
+    pub const fn new(provider_name: String, endpoint: String, capabilities: Vec<String>) -> Self {
         Self {
             provider_name,
             endpoint,
@@ -389,19 +387,22 @@ impl UniversalComputeWrapper {
         }
     }
 
+    #[must_use]
     pub fn with_client(mut self, client: Arc<dyn ComputePrimalProvider>) -> Self {
         self.client = Some(client);
         self
     }
 
-    pub fn auto_detect_provider_type(endpoint: &str) -> String {
+    pub const fn auto_detect_provider_type(endpoint: &str) -> String {
         // Use standard compute patterns for generic detection
         if endpoint.contains("9000") || endpoint.contains("compute") {
             "compute-provider".to_string()
-        } else if endpoint.contains("docker") {
-            "docker".to_string()
-        } else if endpoint.contains("kubernetes") {
-            "kubernetes".to_string()
+        } else if endpoint.contains("container_runtime") {
+            "container_runtime".to_string().to_string()
+    #[deprecated(since = "3.0.0", note = "Use capability-based orchestration instead of vendor-specific container platforms")]
+        } else if endpoint.contains("container_orchestrator".to_string()) {
+    #[deprecated(since = "3.0.0", note = "Use capability-based orchestration instead of vendor-specific container platforms")]
+            "container_orchestrator".to_string().to_string()
         } else {
             "generic-compute".to_string()
         }
@@ -418,7 +419,6 @@ impl ComputePrimalProvider for UniversalComputeWrapper {
                 service: "compute-capability".to_string(),
                 message: "No compute capability available for resource allocation".to_string(),
                 endpoint: None,
-                recoverable: true,
                 circuit_breaker_open: false,
             })
         }
@@ -433,7 +433,6 @@ impl ComputePrimalProvider for UniversalComputeWrapper {
                 service: "compute-capability".to_string(),
                 message: "No compute capability available for workload execution".to_string(),
                 endpoint: None,
-                recoverable: true,
                 circuit_breaker_open: false,
             })
         }
@@ -451,7 +450,6 @@ impl ComputePrimalProvider for UniversalComputeWrapper {
                 service: "compute-capability".to_string(),
                 message: "No compute capability available for performance monitoring".to_string(),
                 endpoint: None,
-                recoverable: true,
                 circuit_breaker_open: false,
             })
         }
@@ -470,7 +468,6 @@ impl ComputePrimalProvider for UniversalComputeWrapper {
                 service: "compute-capability".to_string(),
                 message: "No compute capability available for resource scaling".to_string(),
                 endpoint: None,
-                recoverable: true,
                 circuit_breaker_open: false,
             })
         }
@@ -486,46 +483,78 @@ impl ComputePrimalProvider for UniversalComputeWrapper {
                 message: "No compute capability available for resource utilization monitoring"
                     .to_string(),
                 endpoint: None,
-                recoverable: true,
                 circuit_breaker_open: false,
             })
         }
     }
 
     async fn detect_platform(&self) -> Result<PlatformCapabilities> {
-        // Return mock platform capabilities
-        Ok(PlatformCapabilities {
-            architecture: "x86_64".to_string(),
-            os_type: "linux".to_string(),
-            container_runtime: "docker".to_string(),
-            gpu_support: false,
-            features: vec!["containers".to_string(), "networking".to_string()],
-        })
+        if let Some(client) = &self.client {
+            client.detect_platform().await
+        } else {
+            // Detect actual platform capabilities from system
+            Ok(PlatformCapabilities {
+                architecture: std::env::consts::ARCH.to_string(),
+                os_type: std::env::consts::OS.to_string(),
+                container_runtime: std::env::var("CONTAINER_RUNTIME").unwrap_or_else(|_| "unknown".to_string()),
+                gpu_support: std::path::Path::new("/dev/nvidia0").exists(),
+                features: self.detect_system_features(),
+            })
+        }
     }
 
     async fn optimize_allocation(
         &self,
         current: &ResourceAllocation,
-        _metrics: &PerformanceMetrics,
+        metrics: &PerformanceMetrics,
     ) -> Result<OptimizationRecommendation> {
-        // Return mock optimization recommendation
-        Ok(OptimizationRecommendation {
-            recommendations: vec![
-                format!("Consider scaling down allocation {}", current.id),
-                "Enable CPU throttling for better power efficiency".to_string(),
-            ],
-            expected_improvement: 0.15,
+        if let Some(client) = &self.client {
+            client.optimize_allocation(current, metrics).await
+        } else {
+            // Basic optimization based on actual metrics
+            let mut recommendations = Vec::new();
+            
+            if metrics.cpu_usage < 0.3 {
+                recommendations.push(format!("Consider reducing CPU allocation for {current.id}"));
+            }
+            if metrics.memory_usage < 0.4 {
+                recommendations.push(format!("Consider reducing memory allocation for {current.id}"));
+            }
+            
+            Ok(OptimizationRecommendation {
+                recommendations,
+                expected_improvement: if recommendations.is_empty() { 0.0 } else { 0.1 },
             confidence: 0.8,
         })
+    }
+    
+    fn detect_system_features(&self) -> Vec<String> {
+        let mut features = Vec::new();
+        
+        // Check for container runtime
+        if std::env::var("CONTAINER_RUNTIME").is_ok() || std::path::Path::new("/.dockerenv").exists() {
+            features.push("containers".to_string());
+        }
+        
+        // Check for networking capabilities
+        if std::path::Path::new("/proc/net/tcp").exists() {
+            features.push("networking".to_string());
+        }
+        
+        // Check for ZFS support
+        if std::path::Path::new("/sys/module/zfs").exists() {
+            features.push("zfs".to_string());
+        }
+        
+        features
     }
 }
 
 /// Factory for creating universal provider wrappers
 pub struct UniversalProviderFactory;
-
 impl UniversalProviderFactory {
     /// Create a security provider from discovered primal info
-    pub fn create_security_provider(
+    pub const fn create_security_provider(
         provider_info: &crate::universal_adapter::discovery::DiscoveredPrimal,
     ) -> Arc<dyn SecurityPrimalProvider> {
         Arc::new(UniversalSecurityWrapper::new(
@@ -536,7 +565,7 @@ impl UniversalProviderFactory {
     }
 
     /// Create an orchestration provider from discovered primal info
-    pub fn create_orchestration_provider(
+    pub const fn create_orchestration_provider(
         provider_info: &crate::universal_adapter::discovery::DiscoveredPrimal,
     ) -> Arc<dyn OrchestrationPrimalProvider> {
         Arc::new(UniversalOrchestrationWrapper::new(
@@ -547,7 +576,7 @@ impl UniversalProviderFactory {
     }
 
     /// Create a compute provider from discovered primal info
-    pub fn create_compute_provider(
+    pub const fn create_compute_provider(
         provider_info: &crate::universal_adapter::discovery::DiscoveredPrimal,
     ) -> Arc<dyn ComputePrimalProvider> {
         Arc::new(UniversalComputeWrapper::new(
@@ -605,6 +634,7 @@ mod tests {
         let wrapper = UniversalOrchestrationWrapper::new(
             "test".to_string(),
             "http://test:8000".to_string(),
+    #[deprecated(since = "3.0.0", note = "Use capability-based discovery instead of vendor-specific service discovery")]
             vec!["service_discovery".to_string()],
         );
 

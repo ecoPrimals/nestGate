@@ -1,11 +1,10 @@
-//! **CORE CONFIGURATION TYPES**
-//!
-//! This module provides the core configuration structures for NestGate,
+// **CORE CONFIGURATION TYPES**
+//! Configuration types and utilities.
+// This module provides the core configuration structures for NestGate,
 //! including the main NestGateCanonicalConfig struct and system-level configuration.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
 // Duration import removed - unused
 
 use crate::{NestGateError, Result};
@@ -13,6 +12,7 @@ use super::domains::{
     ApiConfig, ServerConfig, StorageConfig, NetworkConfig, SecurityConfig,
     MonitoringConfig, EnvironmentConfig, McpConfig
 };
+use super::canonical_master::SystemConfig;
 
 // ==================== SECTION ====================
 
@@ -45,7 +45,6 @@ pub struct NestGateCanonicalConfig<
     /// Monitoring configuration
     pub monitoring: MonitoringConfig,
     /// Environment configuration
-    pub environment: EnvironmentConfig,
     /// MCP (Model Context Protocol) configuration
     pub mcp: McpConfig,
     /// Feature flags
@@ -53,65 +52,7 @@ pub struct NestGateCanonicalConfig<
     /// Environment-specific overrides
     pub environment_overrides: HashMap<String, String>,
 }
-
-/// **CONST GENERIC SYSTEM CONFIGURATION**
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SystemConfig<
-    const MAX_CONNECTIONS: usize = 1000,
-    const BUFFER_SIZE: usize = 65536,
-> {
-    pub service_name: String,
-    pub version: String,
-    pub environment: String,
-    pub log_level: LogLevel,
-    pub debug_mode: bool,
-    pub metrics_enabled: bool,
-    pub tracing_enabled: bool,
-    pub max_concurrent_requests: Option<usize>, // Runtime override for MAX_CONNECTIONS
-    pub buffer_size_override: Option<usize>,    // Runtime override for BUFFER_SIZE
-    pub data_dir: PathBuf,
-    pub config_dir: PathBuf,
-}
-
-impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize> SystemConfig<MAX_CONNECTIONS, BUFFER_SIZE> {
-    /// Get max connections - compile-time optimized
-    pub const fn max_connections() -> usize {
-        MAX_CONNECTIONS
-    }
-
-    /// Get buffer size - compile-time optimized  
-    pub const fn buffer_size() -> usize {
-        BUFFER_SIZE
-    }
-
-    /// Get effective max connections (runtime override or compile-time)
-    pub fn effective_max_connections(&self) -> usize {
-        self.max_concurrent_requests.unwrap_or(MAX_CONNECTIONS)
-    }
-
-    /// Get effective buffer size (runtime override or compile-time)
-    pub fn effective_buffer_size(&self) -> usize {
-        self.buffer_size_override.unwrap_or(BUFFER_SIZE)
-    }
-}
-
-impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize> Default for SystemConfig<MAX_CONNECTIONS, BUFFER_SIZE> {
-    fn default() -> Self {
-        Self {
-            service_name: "nestgate".to_string(),
-            version: env!("CARGO_PKG_VERSION").to_string(),
-            environment: "development".to_string(),
-            log_level: LogLevel::Info,
-            debug_mode: false,
-            metrics_enabled: true,
-            tracing_enabled: true,
-            max_concurrent_requests: None,
-            buffer_size_override: None,
-            data_dir: PathBuf::from("./data"),
-            config_dir: PathBuf::from("./config"),
-        }
-    }
-}
+// SystemConfig is now imported from canonical_master
 
 /// Log level enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -122,7 +63,6 @@ pub enum LogLevel {
     Debug,
     Trace,
 }
-
 impl Default for LogLevel {
     fn default() -> Self {
         LogLevel::Info
@@ -133,6 +73,7 @@ impl Default for LogLevel {
 
 impl NestGateCanonicalConfig {
     /// Create production configuration
+    #[must_use]
     pub fn production() -> Self {
         let mut config = Self::default();
         config.system.environment = "production".to_string();
@@ -142,6 +83,7 @@ impl NestGateCanonicalConfig {
     }
 
     /// Create development configuration
+    #[must_use]
     pub fn development() -> Self {
         let mut config = Self::default();
         config.system.environment = "development".to_string();
@@ -151,28 +93,23 @@ impl NestGateCanonicalConfig {
     }
 
     /// Validate configuration consistency
-    pub fn validate(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<()>  {
         // Validate system configuration
-        if self.system.service_name.is_empty() {
-            return Err(NestGateError::Configuration {
-                field: "system.service_name".to_string(),
-                message: "Service name cannot be empty".to_string(),
-                current_value: Some(self.system.service_name.clone()),
-                expected: Some("non-empty string".to_string()),
-                user_error: true,
-            });
+        if self.system.instance_name.is_empty() {
+            return Err(NestGateError::configuration_error_detailed(Some("field".to_string()), "Service name cannot be empty".to_string(), Some(self.system.instance_name.clone()), Some("non-empty string".to_string()), true));
         }
 
         // Validate data directory exists or can be created
         if !self.system.data_dir.exists() {
             std::fs::create_dir_all(&self.system.data_dir)
-                .map_err(|e| NestGateError::Configuration {
-                    field: "system.data_dir".to_string(),
-                    message: format!("Cannot create data directory: {}", e),
-                    current_value: Some(self.system.data_dir.display().to_string()),
-                    expected: Some("writable directory path".to_string()),
-                    user_error: true,
-                })?;
+                .map_err(|e| NestGateError::configuration_error(Some("field".to_string()), format!("Cannot create data directory: {}"))?;
         }
 
         // Additional validations can be added here
@@ -180,31 +117,25 @@ impl NestGateCanonicalConfig {
     }
 
     /// Load configuration from environment variables
-    pub fn from_environment() -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn from_environment() -> Result<Self>  {
         // Implementation for environment variable loading
         // This would use the existing environment loading patterns
         Ok(Self::default())
     }
 
     /// Load configuration from TOML file
-    pub fn from_file(path: &PathBuf) -> Result<Self> {
         let content = std::fs::read_to_string(path)
-            .map_err(|e| NestGateError::Configuration {
-                field: "file_path".to_string(),
-                message: format!("Cannot read config file: {}", e),
-                current_value: Some(path.display().to_string()),
-                expected: Some("readable file path".to_string()),
-                user_error: true,
-            })?;
+            .map_err(|e| NestGateError::configuration_error(Some("field".to_string()), format!("Cannot read config file: {}"))?;
 
         toml::from_str(&content)
-            .map_err(|e| NestGateError::Configuration {
-                field: "toml_content".to_string(),
-                message: format!("Invalid TOML configuration: {}", e),
-                current_value: Some(content.chars().take(100).collect::<String>() + "..."),
-                expected: Some("valid TOML format".to_string()),
-                user_error: true,
-            })
+            .map_err(|e| NestGateError::configuration_error(Some("field".to_string()), format!("Invalid TOML configuration: {}"))
     }
 }
 
@@ -218,7 +149,6 @@ impl Default for NestGateCanonicalConfig {
             network: NetworkConfig::default(),
             security: SecurityConfig::default(),
             monitoring: MonitoringConfig::default(),
-            environment: EnvironmentConfig::default(),
             mcp: McpConfig::default(),
             features: HashMap::new(),
             environment_overrides: HashMap::new(),

@@ -2,65 +2,80 @@
 name = "nestgate-mcp"
 version = "0.1.0"
 edition = "2021"
-authors = ["NestGate Team"]
+authors = [ "NestGate Team",]
 description = "Enhanced MCP protocol integration for NestGate v2 with enhanced NestGate capabilities"
-license = "AGPL-3.0-or-later"
+license = "AGPL-3.0-only"
 repository = "https://github.com/DataScienceBioLab/NestGateV2"
+readme = "README.md"
+keywords = [ "mcp", "protocol", "messaging", "rust", "nestgate",]
+categories = [ "network-programming", "protocols",]
 
 [dependencies]
-# Async runtime and utilities
-tokio = { workspace = true, features = ["full"] }
-futures = { workspace = true }
-async-trait = { workspace = true }
-
-# Serialization and data handling
-serde = { workspace = true, features = ["derive"] }
-serde_json = { workspace = true }
-serde_yaml = { workspace = true }
-
-# Logging and tracing
-tracing = { workspace = true }
-tracing-subscriber = { workspace = true, features = ["env-filter"] }
-
-# UUID generation
-uuid = { workspace = true, features = ["v4", "serde"] }
-
-# Time handling
-chrono = { workspace = true, features = ["serde"] }
-
-# Error handling
-thiserror = { workspace = true }
-anyhow = { workspace = true }
-
-# NestGate dependencies
-nestgate-core = { path = "../nestgate-core" }
-
-# Collections and utilities
-indexmap = { workspace = true }
-
-# System information
 gethostname = "0.4"
-
-# Random number generation
 fastrand = "2.0"
 rand = "0.8"
-
-# HTTP client
-reqwest = { workspace = true, features = ["json"] }
-
-# Cryptography
 sha2 = "0.10"
 
-# Configuration
-config = { workspace = true }
-
-# Optional features for different protocols
 [features]
 default = []
 metrics = []
 security = []
 federation = []
-full = ["metrics", "security", "federation"]
+full = [ "metrics", "security", "federation",]
 
 [dev-dependencies]
-tokio-test = "0.4" 
+tokio-test = "0.4"
+
+[dependencies.tokio]
+workspace = true
+features = [ "full",]
+
+[dependencies.futures]
+workspace = true
+
+[dependencies.async-trait]
+workspace = true
+
+[dependencies.serde]
+workspace = true
+features = [ "derive",]
+
+[dependencies.serde_json]
+workspace = true
+
+[dependencies.serde_yaml]
+workspace = true
+
+[dependencies.tracing]
+workspace = true
+
+[dependencies.tracing-subscriber]
+workspace = true
+features = [ "env-filter",]
+
+[dependencies.uuid]
+workspace = true
+features = [ "v4", "serde",]
+
+[dependencies.chrono]
+workspace = true
+features = [ "serde",]
+
+[dependencies.thiserror]
+workspace = true
+
+[dependencies.anyhow]
+workspace = true
+
+[dependencies.nestgate-core]
+path = "../nestgate-core"
+
+[dependencies.indexmap]
+workspace = true
+
+[dependencies.reqwest]
+workspace = true
+features = [ "json",]
+
+[dependencies.config]
+workspace = true

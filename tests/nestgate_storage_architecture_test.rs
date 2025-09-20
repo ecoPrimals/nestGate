@@ -3,30 +3,30 @@
 //! This test validates storage architecture using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::unified::NestGateUnifiedConfig as NestGateUnifiedConfig;
-use nestgate_core::config::defaults::Environment;
+use nestgate_core::config::canonical_master::{DeploymentEnvironment, NestGateCanonicalConfig};
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
 
 /// Test storage architecture configuration
 #[tokio::test]
-async fn test_storage_architecture_config() {
+async fn test_storage_architecture_config() -> Result<(), Box<dyn std::error::Error>> {
     info!("🏗️ Starting storage architecture configuration test");
 
     // Test architecture configuration creation
-    let config = NestGateCanonicalUnifiedConfig::default();
+    let config = NestGateCanonicalConfig::default();
     assert!(!config.system.instance_name.is_empty());
 
     // Test that storage section exists in architecture
     let _storage_config = &config.storage;
 
     info!("✅ Storage architecture configuration test completed");
+    Ok(())
 }
 
 /// Test storage architecture initialization
 #[tokio::test]
-async fn test_storage_architecture_init() {
+async fn test_storage_architecture_init() -> Result<(), Box<dyn std::error::Error>> {
     info!("⚡ Testing storage architecture initialization");
 
     // Simulate architecture initialization phases
@@ -40,14 +40,16 @@ async fn test_storage_architecture_init() {
 
         // Verify phase is valid
         assert!(!phase.is_empty(), "Architecture phase should be specified");
+        Ok(())
     }
 
     info!("✅ Storage architecture initialization completed");
+    Ok(())
 }
 
 /// Test storage architecture layers
 #[tokio::test]
-async fn test_storage_architecture_layers() {
+async fn test_storage_architecture_layers() -> Result<(), Box<dyn std::error::Error>> {
     info!("📚 Testing storage architecture layers");
 
     // Simulate different architecture layers
@@ -67,14 +69,16 @@ async fn test_storage_architecture_layers() {
         // Verify layer is valid
         assert!(!layer.is_empty(), "Layer should be specified");
         assert!(processing_time > 0, "Processing time should be positive");
+        Ok(())
     }
 
     info!("✅ Storage architecture layers test completed");
+    Ok(())
 }
 
 /// Test storage architecture patterns
 #[tokio::test]
-async fn test_storage_architecture_patterns() {
+async fn test_storage_architecture_patterns() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔧 Testing storage architecture patterns");
 
     // Test architecture patterns
@@ -88,14 +92,16 @@ async fn test_storage_architecture_patterns() {
 
         // Verify pattern is valid
         assert!(!pattern.is_empty(), "Pattern should be specified");
+        Ok(())
     }
 
     info!("✅ Storage architecture patterns test completed");
+    Ok(())
 }
 
 /// Test storage architecture performance
 #[tokio::test]
-async fn test_storage_architecture_performance() {
+async fn test_storage_architecture_performance() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing storage architecture performance");
 
     let start_time = std::time::Instant::now();
@@ -118,29 +124,40 @@ async fn test_storage_architecture_performance() {
             elapsed.as_millis() >= operation_time as u128,
             "Architecture timing should be accurate"
         );
+        Ok(())
     }
 
     info!("✅ Storage architecture performance test completed");
+    Ok(())
 }
 
 /// Test storage architecture environments
 #[tokio::test]
-async fn test_storage_architecture_environments() {
+async fn test_storage_architecture_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing storage architecture across environments");
 
     // Test development environment architecture
-    let dev_config =
-        nestgate_core::config::unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(
+        DeploymentEnvironment::Development,
+    );
     assert!(!dev_config.system.instance_name.is_empty());
-    assert!(matches!(dev_config.environment, Environment::Development));
+    assert!(matches!(
+        dev_config.environment,
+        DeploymentEnvironment::Development
+    ));
     info!("Development architecture configuration validated");
 
     // Test production environment architecture
-    let prod_config =
-        nestgate_core::config::unified::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(
+        DeploymentEnvironment::Production,
+    );
     assert!(!prod_config.system.instance_name.is_empty());
-    assert!(matches!(prod_config.environment, Environment::Production));
+    assert!(matches!(
+        prod_config.environment,
+        DeploymentEnvironment::Production
+    ));
     info!("Production architecture configuration validated");
 
     info!("✅ Storage architecture environment test completed");
+    Ok(())
 }

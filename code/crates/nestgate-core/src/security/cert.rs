@@ -1,6 +1,5 @@
 /// Simple certificate types and validation for API compatibility
 use serde::{Deserialize, Serialize};
-
 /// Certificate validation mode
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum CertMode {
@@ -14,16 +13,13 @@ pub enum CertMode {
     /// Custom validation mode
     Custom(String),
 }
-
 /// Certificate types module
 pub mod types {
     pub use super::CertMode;
 }
-
 /// Certificate validator module
 pub mod validator {
     use super::*;
-
     /// Simple certificate validator
     #[derive(Debug, Clone)]
     pub struct CertificateValidator {
@@ -31,17 +27,17 @@ pub mod validator {
     }
 
     impl CertificateValidator {
-        pub fn new(mode: CertMode) -> Self {
+        pub const fn new(mode: CertMode) -> Self {
             Self { mode }
         }
 
-        pub fn mode(&self) -> &CertMode {
+        pub const fn mode(&self) -> &CertMode {
             &self.mode
         }
     }
 
     /// Create default certificate validator
-    pub fn create_default_certificate_validator() -> CertificateValidator {
+    pub const fn create_default_certificate_validator() -> CertificateValidator {
         CertificateValidator::new(CertMode::Development)
     }
 }

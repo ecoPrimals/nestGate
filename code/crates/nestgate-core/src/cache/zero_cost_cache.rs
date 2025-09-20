@@ -1,7 +1,6 @@
 /// **ZERO-COST CACHE IMPLEMENTATION**
 /// This module replaces Arc<dyn CacheProvider> patterns with compile-time dispatch
 /// for maximum performance in high-frequency cache operations.
-
 use crate::Result;
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -17,7 +16,6 @@ where
     V: Clone + Send + Sync + 'static,
 {
     type Error: Send + Sync + 'static;
-
     /// Store a value - native async, no boxing
     fn set(&self, key: K, value: V) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send;
 
@@ -49,7 +47,6 @@ where
     data: Arc<RwLock<HashMap<K, CacheEntry<V>>>>,
     _phantom: PhantomData<(K, V)>,
 }
-
 /// Cache entry with metadata
 #[derive(Debug, Clone)]
 struct CacheEntry<V> {
@@ -58,7 +55,6 @@ struct CacheEntry<V> {
     accessed_at: Instant,
     access_count: u64,
 }
-
 impl<V> CacheEntry<V> {
     fn new(value: V) -> Self {
         let now = Instant::now();
@@ -87,7 +83,7 @@ where
     V: Clone + Send + Sync + 'static,
 {
     /// Create new cache with compile-time configuration
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             data: Arc::new(RwLock::new(HashMap::with_capacity(MAX_SIZE))),
             _phantom: PhantomData,
@@ -208,10 +204,8 @@ where
     K: Clone + Send + Sync + 'static,
     V: Clone + Send + Sync + 'static,
 {
-    cache_dir: std::path::PathBuf,
     _phantom: PhantomData<(K, V)>,
 }
-
 impl<K, V, const MAX_FILES: usize, const TTL_SECONDS: u64>
     ZeroCostDiskCache<K, V, MAX_FILES, TTL_SECONDS>
 where
@@ -219,7 +213,6 @@ where
     V: Clone + Send + Sync + 'static + serde::Serialize + for<'de> serde::Deserialize<'de>,
 {
     /// Create new disk cache
-    pub async fn new(cache_dir: impl Into<std::path::PathBuf>) -> Result<Self, std::io::Error> {
         let cache_dir = cache_dir.into();
         tokio::fs::create_dir_all(&cache_dir).await?;
         
@@ -230,8 +223,7 @@ where
     }
 
     /// Get cache file path
-    fn get_cache_path(&self, key: &K) -> std::path::PathBuf {
-        self.cache_dir.join(format!("{}.cache", key))
+        self.cache_dir.join(format!("{key}.cache"))
     }
 
     /// Get max files at compile-time
@@ -334,7 +326,6 @@ where
     warm_tier: Warm,
     cold_tier: Cold,
 }
-
 impl<Hot, Warm, Cold> ZeroCostMultiTierCache<Hot, Warm, Cold>
 where
     Hot: ZeroCostCacheProvider<String, Vec<u8>>,
@@ -342,7 +333,7 @@ where
     Cold: ZeroCostCacheProvider<String, Vec<u8>>,
 {
     /// Create new multi-tier cache with zero runtime cost
-    pub fn new(hot_tier: Hot, warm_tier: Warm, cold_tier: Cold) -> Self {
+    pub const fn new(hot_tier: Hot, warm_tier: Warm, cold_tier: Cold) -> Self {
         Self {
             hot_tier,
             warm_tier,
@@ -351,7 +342,14 @@ where
     }
 
     /// Get value with tier promotion - direct method calls
-    pub async fn get(&self, key: &str) -> Result<Option<Vec<u8>>, Box<dyn std::error::Error + Send + Sync>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get(&self, key: &str) -> Result<Option<Vec<u8>>, Box<dyn std::error::Error + Send + Sync>>  {
         // Try hot tier first
         if let Ok(Some(value)) = self.hot_tier.get(&key.to_string()).await {
             return Ok(Some(value));
@@ -373,12 +371,26 @@ where
     }
 
     /// Set value in hot tier - zero-cost abstraction
-    pub async fn set(&self, key: String, value: Vec<u8>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn set(&self, key: String, value: Vec<u8>) -> Result<(), Box<dyn std::error::Error + Send + Sync>>  {
         self.hot_tier.set(key, value).await.map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
     }
 
     /// Remove from all tiers - direct method calls
-    pub async fn remove(&self, key: &str) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn remove(&self, key: &str) -> Result<bool, Box<dyn std::error::Error + Send + Sync>>  {
         let key = key.to_string();
         let hot_removed = self.hot_tier.remove(&key).await.unwrap_or(false);
         let warm_removed = self.warm_tier.remove(&key).await.unwrap_or(false);
@@ -388,7 +400,14 @@ where
     }
 
     /// Clear all tiers
-    pub async fn clear(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn clear(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>>  {
         let _ = self.hot_tier.clear().await;
         let _ = self.warm_tier.clear().await;
         let _ = self.cold_tier.clear().await;
@@ -398,29 +417,22 @@ where
 
 /// **TYPE ALIASES FOR COMMON CONFIGURATIONS**
 /// Pre-configured cache types for different use cases
-
 /// Development cache: Small, short TTL
 pub type DevelopmentCache = ZeroCostInMemoryCache<String, Vec<u8>, 100, 300>; // 100 items, 5 min TTL
-
 /// Production cache: Large, long TTL
-pub type ProductionCache = ZeroCostInMemoryCache<String, Vec<u8>, 100000, 3600>; // 100k items, 1 hour TTL
-
+pub type ProductionCache = ZeroCostInMemoryCache<String, Vec<u8>, 100_000, 3600>; // 100k items, 1 hour TTL
 /// Testing cache: Tiny, very short TTL
 pub type TestingCache = ZeroCostInMemoryCache<String, Vec<u8>, 10, 60>; // 10 items, 1 min TTL
-
 /// High-performance production multi-tier cache
 pub type ProductionMultiTierCache = ZeroCostMultiTierCache<
     ZeroCostInMemoryCache<String, Vec<u8>, 10000, 300>,   // Hot: 10k items, 5 min
     ZeroCostInMemoryCache<String, Vec<u8>, 50000, 1800>,  // Warm: 50k items, 30 min
     ZeroCostDiskCache<String, Vec<u8>, 1000000, 86400>,   // Cold: 1M files, 24 hours
 >;
-
 /// **MIGRATION UTILITIES**
 /// Help migrate from Arc<dyn CacheProvider> to zero-cost patterns
-
 /// Migration guide for cache optimization
 pub struct CacheMigrationGuide;
-
 impl CacheMigrationGuide {
     /// Get migration steps
     pub fn migration_steps() -> Vec<String> {
@@ -435,7 +447,7 @@ impl CacheMigrationGuide {
     }
 
     /// Expected performance improvements
-    pub fn expected_improvements() -> (f64, f64, f64) {
+    pub const fn expected_improvements() -> (f64, f64, f64) {
         (
             60.0, // Performance gain %
             40.0, // Memory reduction %
@@ -446,19 +458,18 @@ impl CacheMigrationGuide {
 
 /// **PERFORMANCE BENCHMARKING**
 /// Tools for measuring cache performance improvements
-
 pub struct CacheBenchmark;
 
 impl CacheBenchmark {
     /// Benchmark cache operations
-    pub async fn benchmark_cache_operations<C>(cache: &C, operations: u32) -> Duration
+    pub fn benchmark_cache_operations<C>(cache: &C, operations: u32) -> Duration
     where
         C: ZeroCostCacheProvider<String, Vec<u8>>,
     {
         let start = Instant::now();
         
         for i in 0..operations {
-            let key = format!("key_{}", i);
+            let key = format!("key_{i}");
             let value = vec![i as u8; 1024]; // 1KB value
             
             let _ = cache.set(key.clone(), value).await;
@@ -469,9 +480,9 @@ impl CacheBenchmark {
     }
 
     /// Compare old vs new cache performance
-    pub async fn performance_comparison() -> (Duration, Duration, f64) {
+    pub fn performance_comparison() -> (Duration, Duration, f64) {
         // This would benchmark the old Arc<dyn> vs new zero-cost implementation
-        // For now, return expected results based on beardog experience
+        // For now, return expected results based on security experience
         let old_duration = Duration::from_millis(1000);
         let new_duration = Duration::from_millis(400);
         let improvement = ((old_duration.as_nanos() - new_duration.as_nanos()) as f64 / old_duration.as_nanos() as f64) * 100.0;

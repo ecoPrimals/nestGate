@@ -6,7 +6,6 @@
 /// - `handler_common` - Common configuration types shared by all handlers
 /// - `handler_types` - Handler-specific configuration structures
 /// - This module - Integration and convenience functions
-
 // Re-export all types from split modules
 pub use super::handler_common::*;
 pub use super::handler_types::*;
@@ -21,56 +20,54 @@ pub struct HandlerConfigBuilder<T> {
     common: CommonHandlerConfig,
     specific: Option<T>,
 }
-
 impl<T> HandlerConfigBuilder<T> {
     /// Create a new builder with default common configuration
-    pub fn new() -> Self {
-        Self {
+    pub const fn new() -> Self { Self {
             common: CommonHandlerConfig::default(),
             specific: None,
-        }
-    }
+         }
 
     /// Set the handler name
-    pub fn with_name(mut self, name: String) -> Self {
-        self.common.handler_name = name;
+    #[must_use]
+    pub fn with_name(mut self, name: String) -> Self { self.common.handler_name = name;
         self
-    }
-
-    /// Enable or disable the handler
+    , /// Enable or disable the handler
+    #[must_use]
     pub fn enabled(mut self, enabled: bool) -> Self {
         self.common.enabled = enabled;
         self
-    }
+     }
 
     /// Set the request timeout
-    pub fn with_timeout(mut self, timeout: std::time::Duration) -> Self {
-        self.common.timeout = timeout;
+    #[must_use]
+    pub fn with_timeout(mut self, timeout: std::time::Duration) -> Self { self.common.timeout = timeout;
         self
-    }
-
-    /// Set maximum concurrent requests
+    , /// Set maximum concurrent requests
+    #[must_use]
     pub fn with_max_concurrent(mut self, max: usize) -> Self {
         self.common.max_concurrent_requests = max;
         self
-    }
+     }
 
     /// Set handler-specific configuration
-    pub fn with_specific(mut self, specific: T) -> Self {
-        self.specific = Some(specific);
+    #[must_use]
+    pub fn with_specific(mut self, specific: T) -> Self { self.specific = Some(specific);
         self
-    }
-
-    /// Build the final configuration
-    pub fn build(self) -> Result<HandlerConfig<T>, ConfigError>
+    , /// Build the final configuration
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        #[must_use]
+        pub fn build(self) -> Result<HandlerConfig<T>, ConfigError>
     where
         T: Default,
-    {
+     {
         let specific = self.specific.unwrap_or_default();
         let extensions = HandlerExtensions {
             common: self.common,
-            specific,
-        };
+            specific };
         
         // Use the StandardDomainConfig pattern
         Ok(HandlerConfig::new(extensions))
@@ -91,7 +88,6 @@ pub struct ConfigError {
     pub field: String,
     pub message: String,
 }
-
 impl std::fmt::Display for ConfigError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Configuration error in {}: {}", self.field, self.message)
@@ -104,7 +100,6 @@ impl std::error::Error for ConfigError {}
 pub trait ConfigValidator {
     /// Validate the configuration and return any errors
     fn validate(&self) -> Vec<ConfigError>;
-
     /// Check if the configuration is valid
     fn is_valid(&self) -> bool {
         self.validate().is_empty()
@@ -118,21 +113,21 @@ impl ConfigValidator for CommonHandlerConfig {
 
         if self.handler_name.is_empty() {
             errors.push(ConfigError {
-                field: Some("handler_name".to_string()),
+                field: Some("field".to_string()),
                 message: "Handler name cannot be empty".to_string(),
             });
         }
 
         if self.max_concurrent_requests == 0 {
             errors.push(ConfigError {
-                field: Some("max_concurrent_requests".to_string()),
+                field: Some("field".to_string()),
                 message: "Max concurrent requests must be greater than 0".to_string(),
             });
         }
 
         if self.timeout.as_secs() == 0 {
             errors.push(ConfigError {
-                field: Some("timeout".to_string()),
+                field: Some("field".to_string()),
                 message: "Timeout must be greater than 0".to_string(),
             });
         }
@@ -145,10 +140,9 @@ impl ConfigValidator for CommonHandlerConfig {
 
 /// Factory functions for creating pre-configured handler configs
 pub struct HandlerConfigFactory;
-
 impl HandlerConfigFactory {
     /// Create a ZFS handler configuration with sensible defaults
-    pub fn zfs_handler(name: String) -> HandlerConfigBuilder<ZfsHandlerSpecificConfig> {
+    pub const fn zfs_handler(name: String) -> HandlerConfigBuilder<ZfsHandlerSpecificConfig> {
         HandlerConfigBuilder::new()
             .with_name(name)
             .with_timeout(std::time::Duration::from_secs(60)) // ZFS operations can be slow
@@ -156,7 +150,7 @@ impl HandlerConfigFactory {
     }
 
     /// Create a performance handler configuration
-    pub fn performance_handler(name: String) -> HandlerConfigBuilder<PerformanceHandlerSpecificConfig> {
+    pub const fn performance_handler(name: String) -> HandlerConfigBuilder<PerformanceHandlerSpecificConfig> {
         HandlerConfigBuilder::new()
             .with_name(name)
             .with_timeout(std::time::Duration::from_secs(30))
@@ -164,7 +158,7 @@ impl HandlerConfigFactory {
     }
 
     /// Create a dashboard handler configuration
-    pub fn dashboard_handler(name: String) -> HandlerConfigBuilder<DashboardHandlerSpecificConfig> {
+    pub const fn dashboard_handler(name: String) -> HandlerConfigBuilder<DashboardHandlerSpecificConfig> {
         HandlerConfigBuilder::new()
             .with_name(name)
             .with_timeout(std::time::Duration::from_secs(10)) // Fast UI responses
@@ -172,7 +166,7 @@ impl HandlerConfigFactory {
     }
 
     /// Create a load testing handler configuration
-    pub fn load_testing_handler(name: String) -> HandlerConfigBuilder<LoadTestingHandlerSpecificConfig> {
+    pub const fn load_testing_handler(name: String) -> HandlerConfigBuilder<LoadTestingHandlerSpecificConfig> {
         HandlerConfigBuilder::new()
             .with_name(name)
             .with_timeout(std::time::Duration::from_secs(300)) // Long-running tests
@@ -180,7 +174,7 @@ impl HandlerConfigFactory {
     }
 
     /// Create a workspace handler configuration
-    pub fn workspace_handler(name: String) -> HandlerConfigBuilder<WorkspaceHandlerSpecificConfig> {
+    pub const fn workspace_handler(name: String) -> HandlerConfigBuilder<WorkspaceHandlerSpecificConfig> {
         HandlerConfigBuilder::new()
             .with_name(name)
             .with_timeout(std::time::Duration::from_secs(45))
@@ -188,7 +182,7 @@ impl HandlerConfigFactory {
     }
 
     /// Create an auth handler configuration
-    pub fn auth_handler(name: String) -> HandlerConfigBuilder<AuthHandlerSpecificConfig> {
+    pub const fn auth_handler(name: String) -> HandlerConfigBuilder<AuthHandlerSpecificConfig> {
         HandlerConfigBuilder::new()
             .with_name(name)
             .with_timeout(std::time::Duration::from_secs(15)) // Fast auth responses
@@ -204,7 +198,6 @@ pub trait FromEnvironment {
     fn from_env_with_prefix(prefix: &str) -> Result<Self, ConfigError>
     where
         Self: Sized;
-
     /// Load configuration from environment variables with default prefix
     fn from_env() -> Result<Self, ConfigError>
     where
@@ -220,14 +213,12 @@ pub trait FromEnvironment {
 pub struct HandlerConfigRegistry {
     configs: HashMap<String, Box<dyn std::any::Any + Send + Sync>>,
 }
-
 impl HandlerConfigRegistry {
     /// Create a new empty registry
-    pub fn new() -> Self {
-        Self {
+    #[must_use]
+    pub fn new() -> Self { Self {
             configs: HashMap::new(),
-        }
-    }
+         }
 
     /// Register a handler configuration
     pub fn register<T>(&mut self, name: String, config: HandlerConfig<T>)
@@ -248,7 +239,7 @@ impl HandlerConfigRegistry {
     }
 
     /// List all registered handler names
-    pub fn list_handlers(&self) -> Vec<String> {
+    pub const fn list_handlers(&self) -> Vec<String> {
         self.configs.keys().cloned().collect()
     }
 
@@ -269,83 +260,82 @@ impl Default for HandlerConfigRegistry {
 // ==================== SECTION ====================
 
 /// Create a default configuration for a specific handler type
-pub fn default_config_for_handler(handler_type: &str) -> Result<Box<dyn std::any::Any>, ConfigError> {
+pub const fn default_config_for_handler(handler_type: &str) -> Result<Box<dyn std::any::Any>, ConfigError> {
     match handler_type {
         "zfs" => Ok(Box::new(
             HandlerConfigFactory::zfs_handler("default_zfs".to_string())
                 .build()
-                .unwrap_or_else(|e| {
+                .unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: {"actual_error_details"}")
 ).into())
 }),
         )),
         "performance" => Ok(Box::new(
             HandlerConfigFactory::performance_handler("default_performance".to_string())
                 .build()
-                .unwrap_or_else(|e| {
+                .unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: {"actual_error_details"}")
 ).into())
 }),
         )),
         "dashboard" => Ok(Box::new(
             HandlerConfigFactory::dashboard_handler("default_dashboard".to_string())
                 .build()
-                .unwrap_or_else(|e| {
+                .unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: {"actual_error_details"}")
 ).into())
 }),
         )),
         "load_testing" => Ok(Box::new(
             HandlerConfigFactory::load_testing_handler("default_load_testing".to_string())
                 .build()
-                .unwrap_or_else(|e| {
+                .unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: {"actual_error_details"}")
 ).into())
 }),
         )),
         "workspace" => Ok(Box::new(
             HandlerConfigFactory::workspace_handler("default_workspace".to_string())
                 .build()
-                .unwrap_or_else(|e| {
+                .unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: {"actual_error_details"}")
 ).into())
 }),
         )),
         "auth" => Ok(Box::new(
             HandlerConfigFactory::auth_handler("default_auth".to_string())
                 .build()
-                .unwrap_or_else(|e| {
+                .unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: {"actual_error_details"}")
 ).into())
 }),
         )),
         _ => Err(ConfigError {
-            field: Some("handler_type".to_string()),
-            message: format!("Unknown handler type: {}", handler_type),
+            field: Some("field".to_string()),
+            message: format!("Unknown handler type: {"actual_error_details"}"),
         }),
     }
 }
-
 /// Get the list of supported handler types
-pub fn supported_handler_types() -> Vec<&'static str> {
+pub const fn supported_handler_types() -> Vec<&'static str> {
     vec![
         "zfs",
         "performance", 
@@ -355,7 +345,6 @@ pub fn supported_handler_types() -> Vec<&'static str> {
         "auth",
     ]
 }
-
 // ==================== SECTION ====================
 
 #[cfg(test)]
@@ -368,11 +357,11 @@ mod tests {
             .enabled(true)
             .with_max_concurrent(25)
             .build()
-            .unwrap_or_else(|e| {
+            .unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: {"actual_error_details"}")
 ).into())
 });
 
@@ -387,7 +376,7 @@ mod tests {
         config.handler_name = String::new(); // Invalid empty name
         config.max_concurrent_requests = 0; // Invalid zero value
 
-        let errors = config.validate();
+        let _errors = config.validate();
         assert_eq!(errors.len(), 2);
         assert!(!config.is_valid());
     }
@@ -397,11 +386,11 @@ mod tests {
         let mut registry = HandlerConfigRegistry::new();
         let config = HandlerConfigFactory::zfs_handler("test".to_string())
             .build()
-            .unwrap_or_else(|e| {
+            .unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: {"actual_error_details"}")
 ).into())
 });
 

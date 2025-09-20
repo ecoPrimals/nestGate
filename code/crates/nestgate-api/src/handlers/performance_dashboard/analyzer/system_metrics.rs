@@ -13,12 +13,15 @@ use tracing::debug;
 pub struct SystemMetricsCollector;
 
 impl SystemMetricsCollector {
-    pub fn new() -> Self {
-        Self
-    }
-
-    /// Collect comprehensive system resource metrics
-    pub async fn collect_system_resources(&self) -> Result<SystemResourceMetrics> {
+    #[must_use]
+    pub fn new() -> Self { Self
+    , /// Collect comprehensive system resource metrics
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn collect_system_resources(&self) -> Result<SystemResourceMetrics>  {
         debug!("🖥️ Collecting comprehensive system resource metrics");
         
         // Collect all system metrics in parallel
@@ -43,8 +46,7 @@ impl SystemMetricsCollector {
             network_interfaces,
             load_average,
             arc_stats,
-            l2arc_stats,
-        })
+            l2arc_stats })
     }
 
     /// Get real CPU usage from /proc/stat
@@ -66,7 +68,7 @@ impl SystemMetricsCollector {
                         let total = total_active + idle;
                         
                         if total > 0 {
-                            let usage = (total_active as f64 / total as f64) * 100.0;
+                            let usage = (f64::from(total_active) / f64::from(total)) * 100.0;
                             debug!("📊 Real CPU usage: {:.2}%", usage);
                             return Ok(usage);
                         }
@@ -116,7 +118,7 @@ impl SystemMetricsCollector {
                 
                 if mem_total > 0 {
                     let memory_used = mem_total.saturating_sub(mem_available);
-                    let memory_usage_percent = (memory_used as f64 / mem_total as f64) * 100.0;
+                    let memory_usage_percent = (f64::from(memory_used) / f64::from(mem_total)) * 100.0;
                     
                     debug!("🧠 Real memory: {:.2}% ({} GB / {} GB)", 
                            memory_usage_percent, 
@@ -243,7 +245,7 @@ impl SystemMetricsCollector {
                 
                 let total = hits + misses;
                 let hit_ratio = if total > 0 {
-                    (hits as f64 / total as f64) * 100.0
+                    (f64::from(hits) / f64::from(total)) * 100.0
                 } else {
                     90.0 // Default good ratio
                 };
@@ -290,7 +292,7 @@ impl SystemMetricsCollector {
                 
                 let total = l2_hits + l2_misses;
                 let hit_ratio = if total > 0 {
-                    (l2_hits as f64 / total as f64) * 100.0
+                    (f64::from(l2_hits) / f64::from(total)) * 100.0
                 } else {
                     70.0 // Default reasonable L2ARC ratio
                 };
@@ -316,11 +318,9 @@ impl SystemMetricsCollector {
 }
 
 impl Default for ArcStats {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             hit_ratio: 85.0,
             size_bytes: 2 * 1024 * 1024 * 1024,     // 2GB
             max_size_bytes: 4 * 1024 * 1024 * 1024, // 4GB
-        }
-    }
+         }
 } 

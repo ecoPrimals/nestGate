@@ -1,0 +1,130 @@
+# NestGate Environment Configuration
+# Copy this file to .env and customize for your deployment
+
+# ============================================================================
+# NETWORK CONFIGURATION
+# ============================================================================
+
+# API Base URL for service health checks and API calls
+NESTGATE_API_BASE_URL=http://localhost:8080
+
+# Test endpoint for performance benchmarks and testing
+NESTGATE_TEST_ENDPOINT=127.0.0.1:8080
+
+# Test host for service discovery and integration tests
+NESTGATE_TEST_HOST=localhost
+
+# Default server for protocol connections
+NESTGATE_DEFAULT_SERVER=localhost
+
+# Bind address for network services
+NESTGATE_BIND_ADDRESS=0.0.0.0:8080
+
+# Hostname for service identification
+NESTGATE_HOSTNAME=localhost
+
+# Discovery service address
+NESTGATE_DISCOVERY_ADDRESS=127.0.0.1
+
+# ============================================================================
+# DATABASE CONFIGURATION
+# ============================================================================
+
+# Database host
+NESTGATE_DB_HOST=localhost
+
+# Database port
+NESTGATE_DB_PORT=5432
+
+# Database name
+NESTGATE_DB_NAME=nestgate
+
+# Database URL (overrides individual DB settings)
+NESTGATE_DATABASE_URL=postgresql://localhost/nestgate
+
+# ============================================================================
+# API CONFIGURATION  
+# ============================================================================
+
+# API port
+NESTGATE_API_PORT=8080
+
+# API endpoint (full URL)
+NESTGATE_API_ENDPOINT=http://localhost:8080
+
+# API URL for client connections
+NESTGATE_API_URL=http://localhost:8080
+
+# ============================================================================
+# DEVELOPMENT & TESTING
+# ============================================================================
+
+# Enable development mode
+NESTGATE_DEV_MODE=true
+
+# Log level (trace, debug, info, warn, error)
+NESTGATE_LOG_LEVEL=info
+
+# Test environment flag
+NESTGATE_TEST_ENV=false
+
+# ============================================================================
+# PRODUCTION DEPLOYMENT
+# ============================================================================
+
+# Environment (development, staging, production)
+NESTGATE_ENVIRONMENT=development
+
+# Enable metrics collection
+NESTGATE_METRICS_ENABLED=true
+
+# Metrics endpoint
+NESTGATE_METRICS_ENDPOINT=http://localhost:9090
+
+# Health check interval (seconds)
+NESTGATE_HEALTH_CHECK_INTERVAL=30
+
+# ============================================================================
+# SECURITY
+# ============================================================================
+
+# Enable TLS
+NESTGATE_TLS_ENABLED=false
+
+# TLS certificate path
+NESTGATE_TLS_CERT_PATH=/etc/nestgate/certs/cert.pem
+
+# TLS private key path
+NESTGATE_TLS_KEY_PATH=/etc/nestgate/certs/key.pem
+
+# JWT secret key
+NESTGATE_JWT_SECRET=your-secret-key-here
+
+# ============================================================================
+# PERFORMANCE TUNING
+# ============================================================================
+
+# Worker thread count
+NESTGATE_WORKER_THREADS=4
+
+# Connection pool size
+NESTGATE_CONNECTION_POOL_SIZE=10
+
+# Request timeout (seconds)
+NESTGATE_REQUEST_TIMEOUT=30
+
+# ============================================================================
+# STORAGE CONFIGURATION
+# ============================================================================
+
+# Storage backend (local, s3, gcs)
+NESTGATE_STORAGE_BACKEND=local
+
+# Local storage path
+NESTGATE_STORAGE_PATH=/var/lib/nestgate
+
+# S3 bucket (if using S3)
+NESTGATE_S3_BUCKET=nestgate-storage
+
+# S3 region (if using S3)
+NESTGATE_S3_REGION=us-east-1 

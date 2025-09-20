@@ -9,23 +9,37 @@ pub mod device_detection;
 pub mod validation;
 
 // Re-export main types for convenience
-pub use config::*;
-pub use creation::{PoolCreator, PoolSetupResult};
-pub use device_detection::{DeviceScanner, DeviceType, SpeedClass, StorageDevice};
-pub use validation::{PoolSetupConfig, PoolSetupValidator, PoolTopology, ValidationResult};
+pub use config::{
+    DeviceDetectionConfig, DeviceType as ConfigDeviceType, PoolSetupConfig, PoolTopology,
+    RedundancyLevel, StorageTier as ConfigStorageTier,
+};
+pub use creation::PoolCreator;
+pub use device_detection::{
+    DeviceScanner, DeviceType as DetectionDeviceType, SpeedClass, StorageDevice,
+};
+pub use validation::{PoolSetupValidator, ValidationResult};
 
 use std::collections::HashMap;
 // Removed unused tracing import
-
-use crate::types::StorageTier;
 use nestgate_core::{NestGateError, Result as CoreResult};
+use serde::{Deserialize, Serialize};
+
+/// Convert detection DeviceType to config DeviceType
+fn convert_device_type(detection_type: &DetectionDeviceType) -> ConfigDeviceType {
+    match detection_type {
+        DetectionDeviceType::NvmeSsd => ConfigDeviceType::NvmeSsd,
+        DetectionDeviceType::SataSsd => ConfigDeviceType::SataSsd,
+        DetectionDeviceType::Hdd => ConfigDeviceType::SpinningDisk,
+        DetectionDeviceType::OptaneMemory => ConfigDeviceType::OptaneMemory,
+        DetectionDeviceType::Unknown => ConfigDeviceType::SpinningDisk, // Default fallback
+    }
+}
 
 /// Pool setup specific errors
 #[derive(Debug, thiserror::Error)]
 pub enum PoolSetupError {
     #[error("Device validation failed: {0}")]
     DeviceValidation(String),
-
     #[error("Pool creation failed: {0}")]
     PoolCreation(String),
 
@@ -45,6 +59,21 @@ pub enum PoolSetupError {
     Core(#[from] NestGateError),
 }
 
+/// Result of pool setup operations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PoolSetupResult {
+    /// Pool name that was created
+    pub pool_name: String,
+    /// Whether the operation succeeded
+    pub success: bool,
+    /// Operation result message
+    pub message: String,
+    /// Devices used in the pool
+    pub devices_used: Vec<String>,
+    /// Pool topology that was created
+    pub topology: config::PoolTopology,
+}
+
 /// Main ZFS pool setup orchestrator
 pub struct ZfsPoolSetup {
     /// Available storage devices
@@ -53,7 +82,7 @@ pub struct ZfsPoolSetup {
     existing_pools: Vec<String>,
     /// Configuration
     #[allow(dead_code)]
-    config: PoolSetupConfiguration,
+    config: PoolSetupConfig,
     /// Device scanner
     scanner: DeviceScanner,
     /// Validator
@@ -61,13 +90,12 @@ pub struct ZfsPoolSetup {
     /// Pool creator
     creator: PoolCreator,
 }
-
 impl ZfsPoolSetup {
     /// Create new pool setup with custom configuration
-    pub async fn new_with_config(config: PoolSetupConfiguration) -> CoreResult<Self> {
+    pub fn new_with_config(config: PoolSetupConfig) -> CoreResult<Self> {
         let scanner = DeviceScanner::new(config.device_detection.clone());
         let validator = PoolSetupValidator::new(config.clone());
-        let creator = PoolCreator::new(config.clone());
+        let creator = PoolCreator::new();
 
         let mut setup = Self {
             devices: Vec::new(),
@@ -87,7 +115,7 @@ impl ZfsPoolSetup {
 
     /// Create new pool setup with default configuration
     pub async fn new() -> CoreResult<Self> {
-        Self::new_with_config(PoolSetupConfiguration::default()).await
+        Self::new_with_config(PoolSetupConfig::default()).await
     }
 
     /// Scan for available storage devices
@@ -130,31 +158,36 @@ impl ZfsPoolSetup {
     }
 
     /// Get available (unused) devices
-    pub fn get_available_devices(&self) -> Vec<&StorageDevice> {
+    pub const fn get_available_devices(&self) -> Vec<&StorageDevice> {
         DeviceScanner::filter_available(&self.devices)
     }
 
     /// Get devices by type
-    pub fn get_devices_by_type(&self, device_type: DeviceType) -> Vec<&StorageDevice> {
+    pub const fn get_devices_by_type(&self, device_type: DetectionDeviceType) -> Vec<&StorageDevice> {
         DeviceScanner::filter_by_type(&self.devices, device_type)
     }
 
     /// Get devices by speed class
-    pub fn get_devices_by_speed(&self, speed_class: SpeedClass) -> Vec<&StorageDevice> {
+    pub const fn get_devices_by_speed(&self, speed_class: SpeedClass) -> Vec<&StorageDevice> {
         DeviceScanner::filter_by_speed(&self.devices, speed_class)
     }
 
     /// Recommend pool configuration based on available devices
-    pub fn recommend_pool_config(&self, pool_name: &str) -> CoreResult<PoolSetupConfig> {
+    pub const fn recommend_pool_config(&self, pool_name: &str) -> CoreResult<PoolSetupConfig> {
+        if pool_name.is_empty() {
+            return Err(NestGateError::internal_error(
+                "Pool name cannot be empty".to_string(),
+                "pool_validation",
+            ));
+        }
+
         let available_devices = self.get_available_devices();
 
         if available_devices.is_empty() {
-            return Err(NestGateError::Internal {
-                message: "No available devices found".to_string(),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
-            });
+            return Err(NestGateError::internal_error(
+                "No available devices found for pool setup",
+                "recommend_pool_config",
+            ));
         }
 
         info!(
@@ -210,33 +243,37 @@ impl ZfsPoolSetup {
             properties,
             create_tiers: true,
             tier_mappings,
+            redundancy: RedundancyLevel::None,
+            device_detection: DeviceDetectionConfig::default(),
         })
     }
 
     /// Configure tier mappings based on available devices
     fn configure_tier_mappings(
         &self,
-        tier_mappings: &mut HashMap<StorageTier, Vec<DeviceType>>,
+        tier_mappings: &mut HashMap<ConfigStorageTier, Vec<ConfigDeviceType>>,
         devices: &[&StorageDevice],
     ) -> CoreResult<()> {
-        let device_types: std::collections::HashSet<_> =
-            devices.iter().map(|d| d.device_type.clone()).collect();
+        let device_types: std::collections::HashSet<ConfigDeviceType> = devices
+            .iter()
+            .map(|d| convert_device_type(&d.device_type))
+            .collect();
 
         if device_types.len() == 1 {
             // Single device type - use for all tiers
             let primary_type = device_types
                 .iter()
                 .next()
-                .ok_or_else(|| NestGateError::Internal {
-                    message: "No device types available for tier configuration".to_string(),
-                    location: Some(format!("{}:{}", file!(), line!())),
-                    context: None,
-                    is_bug: false,
+                .ok_or_else(|| {
+                    NestGateError::internal_error(
+                        "No device types found for tier mapping",
+                        "configure_tier_mappings",
+                    )
                 })?
                 .clone();
-            tier_mappings.insert(StorageTier::Hot, vec![primary_type.clone()]);
-            tier_mappings.insert(StorageTier::Warm, vec![primary_type.clone()]);
-            tier_mappings.insert(StorageTier::Cold, vec![primary_type]);
+            tier_mappings.insert(ConfigStorageTier::Hot, vec![primary_type.clone()]);
+            tier_mappings.insert(ConfigStorageTier::Warm, vec![primary_type.clone()]);
+            tier_mappings.insert(ConfigStorageTier::Cold, vec![primary_type]);
         } else {
             // Multiple device types - optimize assignment
             let mut hot_types = Vec::new();
@@ -245,20 +282,16 @@ impl ZfsPoolSetup {
 
             for device_type in &device_types {
                 match device_type {
-                    DeviceType::OptaneMemory | DeviceType::NvmeSsd => {
+                    ConfigDeviceType::OptaneMemory | ConfigDeviceType::NvmeSsd => {
                         hot_types.push(device_type.clone());
                         warm_types.push(device_type.clone());
                     }
-                    DeviceType::SataSsd => {
+                    ConfigDeviceType::SataSsd => {
                         warm_types.push(device_type.clone());
                         cold_types.push(device_type.clone());
                     }
-                    DeviceType::Hdd => {
+                    ConfigDeviceType::SpinningDisk => {
                         cold_types.push(device_type.clone());
-                    }
-                    DeviceType::Unknown => {
-                        // Conservative assignment
-                        warm_types.push(device_type.clone());
                     }
                 }
             }
@@ -271,56 +304,52 @@ impl ZfsPoolSetup {
                 if let Some(device_type) = device_types.iter().next() {
                     warm_types = vec![device_type.clone()];
                 } else {
-                    return Err(NestGateError::Internal {
-                        message: "No device types available for warm tier".to_string(),
-                        location: Some(format!("{}:{}", file!(), line!())),
-                        context: None,
-                        is_bug: false,
-                    });
+                    return Err(NestGateError::internal_error(
+                        "Invalid tier configuration detected",
+                        "configure_tier_mappings",
+                    ));
                 }
             }
             if cold_types.is_empty() {
                 cold_types = warm_types.clone();
             }
 
-            tier_mappings.insert(StorageTier::Hot, hot_types);
-            tier_mappings.insert(StorageTier::Warm, warm_types);
-            tier_mappings.insert(StorageTier::Cold, cold_types);
+            tier_mappings.insert(ConfigStorageTier::Hot, hot_types);
+            tier_mappings.insert(ConfigStorageTier::Warm, warm_types);
+            tier_mappings.insert(ConfigStorageTier::Cold, cold_types);
         }
         Ok(())
     }
 
     /// Validate device
-    pub fn validate_device(&self, device: &StorageDevice) -> ValidationResult {
+    pub const fn validate_device(&self, device: &StorageDevice) -> ValidationResult {
         self.validator.validate_device(device)
     }
 
     /// Validate pool configuration
-    pub fn validate_pool_config(&self, config: &PoolSetupConfig) -> ValidationResult {
+    pub const fn validate_pool_config(&self, config: &PoolSetupConfig) -> ValidationResult {
         self.validator.validate_pool_config(config)
     }
 
     /// Create pool with safety checks
-    pub async fn create_pool_safe(&self, config: &PoolSetupConfig) -> CoreResult<PoolSetupResult> {
+    pub fn create_pool_safe(&self, config: &PoolSetupConfig) -> CoreResult<PoolSetupResult> {
         // Pre-flight validation
         let validation = self.validate_pool_config(config);
         if !validation.is_valid {
-            return Err(NestGateError::Internal {
-                message: format!(
+            return Err(NestGateError::internal_error(
+                format!(
                     "Pool configuration validation failed: {:?}",
                     validation.issues
                 ),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
-            });
+                "create_pool_safe",
+            ));
         }
 
         self.creator.create_pool_safe(config).await
     }
 
     /// Get system report
-    pub fn get_system_report(&self) -> SystemReport {
+    pub const fn get_system_report(&self) -> SystemReport {
         SystemReport {
             total_devices: self.devices.len(),
             available_devices: self.get_available_devices().len(),
@@ -331,7 +360,7 @@ impl ZfsPoolSetup {
         }
     }
 
-    fn get_device_type_summary(&self) -> HashMap<DeviceType, usize> {
+    fn get_device_type_summary(&self) -> HashMap<DetectionDeviceType, usize> {
         let mut summary = HashMap::new();
         for device in &self.devices {
             *summary.entry(device.device_type.clone()).or_insert(0) += 1;
@@ -382,16 +411,14 @@ impl ZfsPoolSetup {
 pub struct SystemReport {
     pub total_devices: usize,
     pub available_devices: usize,
-    pub devices_by_type: HashMap<DeviceType, usize>,
+    pub devices_by_type: HashMap<DetectionDeviceType, usize>,
     pub devices_by_speed: HashMap<SpeedClass, usize>,
     pub existing_pools: Vec<String>,
     pub recommendations: Vec<String>,
 }
-
 /// Production ZFS setup function
 pub async fn setup_production_zfs() -> CoreResult<PoolSetupResult> {
     info!("Setting up production ZFS configuration");
-
     let setup = ZfsPoolSetup::new().await?;
     let config = setup.recommend_pool_config("nestgate-main")?;
 

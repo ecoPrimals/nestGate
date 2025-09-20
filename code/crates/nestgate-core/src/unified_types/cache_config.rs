@@ -1,10 +1,9 @@
 ///
 /// This module contains all cache-related configuration types including cache strategies,
 /// eviction policies, and replication settings.
-/// Split from unified_types/mod.rs for better maintainability and 2000-line compliance.
+/// Split from `unified_types/mod.rs` for better maintainability and 2000-line compliance.
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
 // ==================== SECTION ====================
 
 /// Unified Cache Configuration - consolidates all caching settings
@@ -31,14 +30,13 @@ pub struct UnifiedCacheConfig {
     /// Cache partitioning
     pub partitioning: CachePartitioningConfig,
 }
-
 impl Default for UnifiedCacheConfig {
     fn default() -> Self {
         Self {
             enabled: true,
             cache_type: CacheType::Read,
-            cache_size_bytes: 1024 * 1024 * 100,    // 100MB
-            ttl: Duration::from_secs(3600), // 1 hour
+            cache_size_bytes: 1024 * 1024 * 100, // 100MB
+            ttl: Duration::from_secs(3600),      // 1 hour
             eviction_strategy: EvictionPolicy::Lru,
             compression: false,
             persistence: false,
@@ -67,7 +65,6 @@ pub enum CacheType {
     /// Custom cache type
     Custom(String),
 }
-
 // ==================== SECTION ====================
 
 /// Cache eviction policies
@@ -88,7 +85,6 @@ pub enum EvictionPolicy {
     /// Custom eviction policy
     Custom(String),
 }
-
 // ==================== SECTION ====================
 
 /// Cache replication configuration
@@ -107,7 +103,6 @@ pub struct CacheReplicationConfig {
     /// Conflict resolution
     pub conflict_resolution: ConflictResolution,
 }
-
 impl Default for CacheReplicationConfig {
     fn default() -> Self {
         Self {
@@ -133,7 +128,6 @@ pub enum CacheConsistency {
     /// Weak consistency
     Weak,
 }
-
 /// Replication strategies
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ReplicationStrategy {
@@ -146,7 +140,6 @@ pub enum ReplicationStrategy {
     /// Custom replication strategy
     Custom(String),
 }
-
 /// Conflict resolution strategies
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ConflictResolution {
@@ -161,7 +154,6 @@ pub enum ConflictResolution {
     /// Custom conflict resolution
     Custom(String),
 }
-
 // ==================== SECTION ====================
 
 /// Cache monitoring configuration
@@ -178,7 +170,6 @@ pub struct CacheMonitoringConfig {
     /// Alert configuration
     pub alerts: CacheAlertConfig,
 }
-
 impl Default for CacheMonitoringConfig {
     fn default() -> Self {
         Self {
@@ -217,7 +208,6 @@ pub enum CacheMetric {
     /// Custom cache metric
     Custom(String),
 }
-
 /// Cache performance thresholds
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheThresholds {
@@ -230,7 +220,6 @@ pub struct CacheThresholds {
     /// Maximum eviction rate
     pub max_eviction_rate: f64,
 }
-
 impl Default for CacheThresholds {
     fn default() -> Self {
         Self {
@@ -252,7 +241,6 @@ pub struct CacheAlertConfig {
     /// Alert cooldown period
     pub cooldown: Duration,
 }
-
 impl Default for CacheAlertConfig {
     fn default() -> Self {
         Self {
@@ -288,7 +276,6 @@ pub struct CacheAlertRule {
     /// Duration condition must be true
     pub duration: Duration,
 }
-
 /// Cache alert conditions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CacheAlertCondition {
@@ -303,7 +290,6 @@ pub enum CacheAlertCondition {
     /// Custom alert condition
     Custom(String),
 }
-
 /// Cache alert severity levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum CacheAlertSeverity {
@@ -314,7 +300,6 @@ pub enum CacheAlertSeverity {
     /// Critical alert
     Critical,
 }
-
 // ==================== SECTION ====================
 
 /// Cache partitioning configuration
@@ -331,7 +316,6 @@ pub struct CachePartitioningConfig {
     /// Load balancing across partitions
     pub load_balancing: PartitionLoadBalancing,
 }
-
 impl Default for CachePartitioningConfig {
     fn default() -> Self {
         Self {
@@ -356,7 +340,6 @@ pub enum PartitioningStrategy {
     /// Custom partitioning strategy
     Custom(String),
 }
-
 /// Partition key functions
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum PartitionKeyFunction {
@@ -369,7 +352,6 @@ pub enum PartitionKeyFunction {
     /// Custom key function
     Custom(String),
 }
-
 /// Partition load balancing strategies
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum PartitionLoadBalancing {
@@ -382,7 +364,6 @@ pub enum PartitionLoadBalancing {
     /// Custom load balancing
     Custom(String),
 }
-
 // ==================== SECTION ====================
 
 /// Cache storage configuration
@@ -391,18 +372,15 @@ pub struct CacheStorageConfig {
     /// Storage backend
     pub backend: CacheStorageBackend,
     /// Storage path (for file-based backends)
-    pub storage_path: Option<String>,
     /// Storage compression
     pub compression: StorageCompressionConfig,
     /// Storage encryption
     pub encryption: StorageEncryptionConfig,
 }
-
 impl Default for CacheStorageConfig {
     fn default() -> Self {
         Self {
             backend: CacheStorageBackend::Memory,
-            storage_path: None,
             compression: StorageCompressionConfig::default(),
             encryption: StorageEncryptionConfig::default(),
         }
@@ -425,7 +403,6 @@ pub enum CacheStorageBackend {
     /// Custom storage backend
     Custom(String),
 }
-
 /// Storage compression configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageCompressionConfig {
@@ -438,7 +415,6 @@ pub struct StorageCompressionConfig {
     /// Minimum size threshold for compression
     pub min_size_threshold: u64,
 }
-
 impl Default for StorageCompressionConfig {
     fn default() -> Self {
         Self {
@@ -464,7 +440,6 @@ pub enum CompressionAlgorithm {
     /// Custom compression algorithm
     Custom(String),
 }
-
 /// Storage encryption configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageEncryptionConfig {
@@ -477,7 +452,6 @@ pub struct StorageEncryptionConfig {
     /// Key rotation interval
     pub key_rotation_interval: Duration,
 }
-
 impl Default for StorageEncryptionConfig {
     fn default() -> Self {
         Self {
@@ -496,12 +470,11 @@ pub enum EncryptionAlgorithm {
     Aes256,
     /// AES-128 encryption
     Aes128,
-    /// ChaCha20 encryption
+    /// `ChaCha20` encryption
     ChaCha20,
     /// Custom encryption algorithm
     Custom(String),
 }
-
 /// Key derivation functions
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum KeyDerivationFunction {
@@ -514,7 +487,6 @@ pub enum KeyDerivationFunction {
     /// Custom key derivation function
     Custom(String),
 }
-
 // ==================== SECTION ====================
 
 /// Cache warming configuration
@@ -531,7 +503,6 @@ pub struct CacheWarmingConfig {
     /// Warming concurrency
     pub concurrency: u32,
 }
-
 impl Default for CacheWarmingConfig {
     fn default() -> Self {
         Self {
@@ -556,7 +527,6 @@ pub enum WarmingStrategy {
     /// Custom warming strategy
     Custom(String),
 }
-
 /// Cache warming schedules
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum WarmingSchedule {
@@ -569,7 +539,6 @@ pub enum WarmingSchedule {
     /// Custom warming schedule
     Custom(String),
 }
-
 /// Cache warming data source
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WarmingDataSource {
@@ -584,7 +553,6 @@ pub struct WarmingDataSource {
     /// Priority for this data source
     pub priority: u32,
 }
-
 /// Data source types for cache warming
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum DataSourceType {

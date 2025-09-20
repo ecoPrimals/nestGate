@@ -7,10 +7,10 @@ use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
 /// **CANONICAL TEST CONFIGURATION**
 /// Replaces: UnifiedTestConfig, TestExecutionConfig, TestMockConfig, TestPerformanceConfig,
 /// TestNetworkConfig, TestSecurityConfig, and 15+ other test config structures
+use crate::error::NestGateError;
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CanonicalTestConfig {
     /// Test execution settings
@@ -30,7 +30,6 @@ pub struct CanonicalTestConfig {
     /// Environment-specific overrides
     pub environment_overrides: HashMap<String, serde_json::Value>,
 }
-
 impl CanonicalDomainConfig for CanonicalTestConfig {
     fn validate(&self) -> Result<()> {
         // Validate test execution settings
@@ -122,7 +121,6 @@ pub struct TestExecution {
     pub max_concurrent_tests: usize,
     pub default_timeout: Duration,
 }
-
 /// Test mocking configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TestMocking {
@@ -132,7 +130,6 @@ pub struct TestMocking {
     pub mock_services: HashMap<String, MockServiceConfig>,
     pub global_settings: MockGlobalSettings,
 }
-
 /// Test performance configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TestPerformance {
@@ -143,7 +140,6 @@ pub struct TestPerformance {
     pub metrics_collection: bool,
     pub target_throughput: f64,
 }
-
 /// Test security configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TestSecurity {
@@ -153,7 +149,6 @@ pub struct TestSecurity {
     pub enable_encryption: bool,
     pub penetration_testing: bool,
 }
-
 /// Test network configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TestNetwork {
@@ -169,7 +164,6 @@ pub struct TestNetwork {
     pub enable_tls: bool,
     pub custom_headers: HashMap<String, String>,
 }
-
 /// Test integration configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TestIntegration {
@@ -180,10 +174,9 @@ pub struct TestIntegration {
     // Legacy field names for backward compatibility
     pub test_datasets: Vec<String>,
     pub enable_integration: bool,
-    pub biomeos_settings: BiomeOSTestSettings,
+    pub management_settings: ManagementTestSettings,
     pub zfs_settings: ZfsTestSettings,
 }
-
 /// Test chaos configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TestChaos {
@@ -197,7 +190,6 @@ pub struct TestChaos {
     pub enable_chaos_testing: bool,
     pub failure_injection_rate: f64,
 }
-
 // ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -254,6 +246,7 @@ impl Default for TestResourceLimits {
     }
 }
 
+#[cfg(test)]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MockServiceConfig {
     pub service_name: String,
@@ -262,6 +255,7 @@ pub struct MockServiceConfig {
     pub failure_modes: Vec<String>,
 }
 
+#[cfg(test)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MockGlobalSettings {
     pub enable_request_logging: bool,
@@ -316,14 +310,13 @@ impl Default for ChaosBlastRadius {
 
 // ==================== SECTION ====================
 
-/// Legacy test settings for BiomeOS integration (used by builders)
+/// Legacy test settings for Management integration (used by builders)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct BiomeOSTestSettings {
+pub struct ManagementTestSettings {
     pub endpoint: String,
     pub enable_integration: bool,
     pub test_credentials: Option<String>,
 }
-
 /// Legacy test settings for ZFS integration (used by builders)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ZfsTestSettings {
@@ -332,15 +325,15 @@ pub struct ZfsTestSettings {
     pub test_dataset_prefix: String,
     pub cleanup_after_tests: bool,
 }
-
 /// Legacy consistency level for mock services (used by builders)
+#[cfg(test)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MockConsistencyLevel {
     Eventual,
     Strong,
     Weak,
 }
-
+#[cfg(test)]
 impl Default for MockConsistencyLevel {
     fn default() -> Self {
         Self::Eventual
@@ -352,7 +345,7 @@ impl Default for MockConsistencyLevel {
 impl Default for TestNetwork {
     fn default() -> Self {
         Self {
-            test_endpoints: vec!["http://localhost:8080".to_string()],
+            test_endpoints: vec!["http://localhost:".to_string() + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()).to_string()],
             network_simulation: false,
             latency_simulation: Duration::from_millis(0),
             packet_loss_rate: 0.0,
@@ -375,7 +368,7 @@ impl Default for TestIntegration {
             test_data_isolation: true,
             test_datasets: Vec::new(),
             enable_integration: false,
-            biomeos_settings: BiomeOSTestSettings::default(),
+            management_settings: ManagementTestSettings::default(),
             zfs_settings: ZfsTestSettings::default(),
         }
     }

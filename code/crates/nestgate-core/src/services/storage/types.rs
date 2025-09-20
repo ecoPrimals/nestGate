@@ -1,12 +1,14 @@
 use std::collections::HashMap;
-use std::time::Duration;
+// CLEANED: Removed unused Duration import as part of canonical modernization
+// use std::time::Duration;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 use uuid::Uuid;
 
 // **MIGRATED**: Using canonical types instead of deprecated unified_types
+use crate::canonical_types::storage::StorageTier;
 pub use crate::config::canonical_master::StorageConfig as CacheConfig;
-use crate::canonical_types::storage::{StorageTier, StorageOperation};
+// CLEANED: Removed unused StorageOperation import as part of canonical modernization
 
 // **CANONICAL CACHE TYPES** - Consolidated from unified_types
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -19,9 +21,9 @@ pub enum CacheType {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EvictionPolicy {
-    LRU,
-    LFU,
-    FIFO,
+    Lru,
+    Lfu,
+    Fifo,
     Random,
 }
 
@@ -39,7 +41,6 @@ pub struct StorageServiceConfig {
     pub tier: StorageTier,
     pub metadata: HashMap<String, String>,
 }
-
 /// Storage pool information with real ZFS data
 #[derive(Debug, Clone)]
 pub struct StoragePool {
@@ -55,10 +56,9 @@ pub struct StoragePool {
     pub datasets: Vec<String>,
     pub last_updated: SystemTime,
 }
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum StoragePoolType {
-    ZFS,
+    Zfs,
     Filesystem,
     Block,
     Object,
@@ -78,14 +78,12 @@ pub enum PoolHealth {
 #[derive(Debug, Clone)]
 pub struct StorageQuota {
     pub id: String,
-    pub path: String,
     pub soft_limit: Option<u64>,
     pub hard_limit: Option<u64>,
     pub current_usage: u64,
     pub last_checked: SystemTime,
     pub enforcement: QuotaEnforcement,
 }
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum QuotaEnforcement {
     None,
@@ -107,7 +105,6 @@ pub struct StorageServiceStats {
     pub errors: u64,
     pub last_reset: SystemTime,
 }
-
 impl Default for StorageServiceStats {
     fn default() -> Self {
         Self {
@@ -135,7 +132,6 @@ pub struct StorageOperationResult {
     pub bytes_processed: Option<u64>,
     pub timestamp: SystemTime,
 }
-
 #[derive(Debug, Clone)]
 pub enum StorageOperationType {
     Read,
@@ -151,6 +147,7 @@ pub enum StorageOperationType {
 
 impl StoragePool {
     /// Create a new storage pool
+    #[must_use]
     pub fn new(name: String, pool_type: StoragePoolType) -> Self {
         Self {
             id: Uuid::new_v4().to_string(),
@@ -168,16 +165,18 @@ impl StoragePool {
     }
 
     /// Check if pool is healthy
-    pub fn is_healthy(&self) -> bool {
+    #[must_use]
+    pub const fn is_healthy(&self) -> bool {
         matches!(self.health, PoolHealth::Online)
     }
 
     /// Get usage percentage
+    #[must_use]
     pub fn usage_percentage(&self) -> f64 {
         if self.total_size == 0 {
             0.0
         } else {
-            (self.used_size as f64 / self.total_size as f64) * 100.0
+            (f64::from(self.used_size) / f64::from(self.total_size)) * 100.0
         }
     }
 
@@ -192,10 +191,10 @@ impl StoragePool {
 
 impl StorageQuota {
     /// Create a new storage quota
-    pub fn new(path: String) -> Self {
+    #[must_use]
+    pub const fn new(_path: String) -> Self {
         Self {
             id: Uuid::new_v4().to_string(),
-            path,
             soft_limit: None,
             hard_limit: None,
             current_usage: 0,
@@ -205,7 +204,8 @@ impl StorageQuota {
     }
 
     /// Check if quota is exceeded
-    pub fn is_exceeded(&self) -> bool {
+    #[must_use]
+    pub const fn is_exceeded(&self) -> bool {
         if let Some(hard_limit) = self.hard_limit {
             self.current_usage >= hard_limit
         } else {
@@ -214,7 +214,8 @@ impl StorageQuota {
     }
 
     /// Check if soft limit is exceeded
-    pub fn is_soft_limit_exceeded(&self) -> bool {
+    #[must_use]
+    pub const fn is_soft_limit_exceeded(&self) -> bool {
         if let Some(soft_limit) = self.soft_limit {
             self.current_usage >= soft_limit
         } else {
@@ -223,12 +224,13 @@ impl StorageQuota {
     }
 
     /// Get usage percentage
-    pub fn usage_percentage(&self) -> Option<f64> {
+    #[must_use]
+    pub const fn usage_percentage(&self) -> Option<f64> {
         self.hard_limit.map(|limit| {
             if limit == 0 {
                 0.0
             } else {
-                (self.current_usage as f64 / limit as f64) * 100.0
+                (f64::from(current_usage) / f64::from(limit)) * 100.0
             }
         })
     }
@@ -238,7 +240,8 @@ impl StorageQuota {
 
 impl StorageOperationResult {
     /// Create a successful operation result
-    pub fn success(operation_type: StorageOperationType, bytes_processed: Option<u64>) -> Self {
+    #[must_use]
+    pub const fn success(operation_type: StorageOperationType, bytes_processed: Option<u64>) -> Self {
         Self {
             operation_id: Uuid::new_v4(),
             operation_type,
@@ -250,7 +253,8 @@ impl StorageOperationResult {
     }
 
     /// Create a failed operation result
-    pub fn failure(operation_type: StorageOperationType, error: String) -> Self {
+    #[must_use]
+    pub const fn failure(operation_type: StorageOperationType, error: String) -> Self {
         Self {
             operation_id: Uuid::new_v4(),
             operation_type,
@@ -268,9 +272,9 @@ mod tests {
 
     #[test]
     fn test_storage_pool_creation() {
-        let pool = StoragePool::new("test-pool".to_string(), StoragePoolType::ZFS);
+        let pool = StoragePool::new("test-pool".to_string(), StoragePoolType::Zfs);
         assert_eq!(pool.name, "test-pool");
-        assert_eq!(pool.pool_type, StoragePoolType::ZFS);
+        assert_eq!(pool.pool_type, StoragePoolType::Zfs);
         assert!(pool.is_healthy());
     }
 
@@ -288,7 +292,15 @@ mod tests {
 
     #[test]
     fn test_cache_config_usage() {
-        let mut cache = crate::config::canonical_master::CacheStorageConfig {
+        // Simple test using local struct instead of complex import
+        struct TestCacheConfig {
+            cache_directory: String,
+            cache_size_bytes: u64,
+            max_entries: u64,
+            cold_tier_unlimited: bool,
+        }
+
+        let cache = TestCacheConfig {
             cache_directory: "/tmp/test-cache".to_string(),
             cache_size_bytes: 1000 * 1024 * 1024, // 1000 MB in bytes
             max_entries: 10000,

@@ -5,7 +5,6 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::time::Duration;
-
 /// Dynamic configuration manager that loads settings from environment variables
 #[derive(Debug, Clone)]
 pub struct DynamicConfigManager {
@@ -14,9 +13,9 @@ pub struct DynamicConfigManager {
     /// Configuration prefix for environment variables
     prefix: String,
 }
-
 impl DynamicConfigManager {
     /// Create a new configuration manager with the specified prefix
+    #[must_use]
     pub fn new(prefix: &str) -> Self {
         Self {
             config_cache: HashMap::new(),
@@ -25,7 +24,7 @@ impl DynamicConfigManager {
     }
 
     /// Create a default configuration manager with "NESTGATE" prefix
-    pub fn with_default_prefix() -> Self {
+    pub const fn with_default_prefix() -> Self {
         Self::new("NESTGATE")
     }
 
@@ -34,10 +33,10 @@ impl DynamicConfigManager {
     where
         T: FromConfigValue + Clone,
     {
-        let env_key = format!("{}_{}", self.prefix, key.to_uppercase());
+        let env_key = format!("{}_{}", self.prefix, key.to_uppercase();
 
         if let Ok(value) = env::var(&env_key) {
-            if let Ok(parsed) = T::from_config_value(&value) {
+            if let Ok(parsed) = T::from_configvalue(&value) {
                 return parsed;
             }
         }
@@ -46,15 +45,22 @@ impl DynamicConfigManager {
     }
 
     /// Get a required configuration value that must be set
-    pub fn get_required<T>(&self, key: &str) -> Result<T, ConfigError>
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn get_required<T>(&self, key: &str) -> Result<T, ConfigError>
     where
         T: FromConfigValue,
-    {
-        let env_key = format!("{}_{}", self.prefix, key.to_uppercase());
+     {
+        let env_key = format!("{}_{}", self.prefix, key.to_uppercase();
 
         let value = env::var(&env_key).map_err(|_| ConfigError::Missing(env_key.clone()))?;
 
-        T::from_config_value(&value).map_err(|e| ConfigError::InvalidValue {
+        T::from_configvalue(&value).map_err(|e| ConfigError::InvalidValue {
             key: env_key,
             value,
             error: e,
@@ -63,16 +69,24 @@ impl DynamicConfigManager {
 
     /// Set a configuration value (useful for testing)
     pub fn set(&mut self, key: &str, value: &str) {
-        let env_key = format!("{}_{}", self.prefix, key.to_uppercase());
+        let env_key = format!("{}_{}", self.prefix, key.to_uppercase();
         env::set_var(&env_key, value);
     }
 
     /// Load all configuration from environment variables matching the prefix
-    pub fn load_from_env(&mut self) -> Result<(), ConfigError> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn load_from_env(&mut self) -> Result<(), ConfigError>  {
         self.config_cache.clear();
 
         for (key, value) in env::vars() {
-            if key.starts_with(&format!("{}_", self.prefix)) {
+            if key.starts_with(&format!("{self.prefix}_")) {
                 self.config_cache.insert(key, value);
             }
         }
@@ -81,7 +95,7 @@ impl DynamicConfigManager {
     }
 
     /// Get all loaded configuration as a map
-    pub fn get_all_config(&self) -> &HashMap<String, String> {
+    pub const fn get_all_config(&self) -> &HashMap<String, String> {
         &self.config_cache
     }
 }
@@ -96,7 +110,6 @@ pub enum ConfigError {
         error: String,
     },
 }
-
 impl std::fmt::Display for ConfigError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -115,42 +128,41 @@ impl std::error::Error for ConfigError {}
 
 /// Trait for types that can be parsed from configuration values
 pub trait FromConfigValue: Sized {
-    fn from_config_value(value: &str) -> Result<Self, String>;
+    fn from_configvalue(value: &str) -> Result<Self, String>;
 }
-
 // Implementations for common types
 impl FromConfigValue for String {
-    fn from_config_value(value: &str) -> Result<Self, String> {
+    fn from_configvalue(value: &str) -> Result<Self, String> {
         Ok(value.to_string())
     }
 }
 
 impl FromConfigValue for u16 {
-    fn from_config_value(value: &str) -> Result<Self, String> {
+    fn from_configvalue(value: &str) -> Result<Self, String> {
         value.parse().map_err(|e| format!("Invalid u16: {e}"))
     }
 }
 
 impl FromConfigValue for u32 {
-    fn from_config_value(value: &str) -> Result<Self, String> {
+    fn from_configvalue(value: &str) -> Result<Self, String> {
         value.parse().map_err(|e| format!("Invalid u32: {e}"))
     }
 }
 
 impl FromConfigValue for u64 {
-    fn from_config_value(value: &str) -> Result<Self, String> {
+    fn from_configvalue(value: &str) -> Result<Self, String> {
         value.parse().map_err(|e| format!("Invalid u64: {e}"))
     }
 }
 
 impl FromConfigValue for usize {
-    fn from_config_value(value: &str) -> Result<Self, String> {
+    fn from_configvalue(value: &str) -> Result<Self, String> {
         value.parse().map_err(|e| format!("Invalid usize: {e}"))
     }
 }
 
 impl FromConfigValue for bool {
-    fn from_config_value(value: &str) -> Result<Self, String> {
+    fn from_configvalue(value: &str) -> Result<Self, String> {
         match value.to_lowercase().as_str() {
             "true" | "1" | "yes" | "on" => Ok(true),
             "false" | "0" | "no" | "off" => Ok(false),
@@ -160,7 +172,7 @@ impl FromConfigValue for bool {
 }
 
 impl FromConfigValue for Duration {
-    fn from_config_value(value: &str) -> Result<Self, String> {
+    fn from_configvalue(value: &str) -> Result<Self, String> {
         // Support formats like "30s", "5m", "2h", or just seconds as number
         if let Ok(seconds) = value.parse::<u64>() {
             return Ok(Duration::from_secs(seconds));
@@ -205,11 +217,10 @@ pub struct DynamicNetworkConfig {
     /// Request timeout (default: 30s)
     pub request_timeout: Duration,
     /// Bind address (default: "0.0.0.0")
-    pub bind_address: String,
+    pub bind_endpoint: String,
 }
-
 impl DynamicNetworkConfig {
-    pub fn from_env() -> Self {
+    pub const fn from_env() -> Self {
         let config_manager = DynamicConfigManager::with_default_prefix();
 
         Self {
@@ -219,7 +230,7 @@ impl DynamicNetworkConfig {
             max_connections: config_manager.get_or_default("MAX_CONNECTIONS", 1000),
             request_timeout: config_manager
                 .get_or_default("REQUEST_TIMEOUT", Duration::from_secs(30)),
-            bind_address: config_manager.get_or_default("BIND_ADDRESS", "0.0.0.0".to_string()),
+            bind_endpoint: config_manager.get_or_default("BIND_ADDRESS", "0.0.0.0".to_string()),
         }
     }
 }
@@ -238,13 +249,11 @@ pub struct DynamicStorageConfig {
     /// Snapshot retention days (default: 30)
     pub snapshot_retention_days: u32,
     /// ZFS binary path (default: "/usr/sbin/zfs")
-    pub zfs_binary_path: String,
     /// Use sudo for ZFS commands (default: true)
     pub use_sudo: bool,
 }
-
 impl DynamicStorageConfig {
-    pub fn from_env() -> Self {
+    pub const fn from_env() -> Self {
         let config_manager = DynamicConfigManager::with_default_prefix();
 
         Self {
@@ -254,7 +263,6 @@ impl DynamicStorageConfig {
             max_pools: config_manager.get_or_default("MAX_POOLS", 1000),
             max_datasets: config_manager.get_or_default("MAX_DATASETS", 10000),
             snapshot_retention_days: config_manager.get_or_default("SNAPSHOT_RETENTION_DAYS", 30),
-            zfs_binary_path: config_manager
                 .get_or_default("ZFS_BINARY_PATH", "/usr/sbin/zfs".to_string()),
             use_sudo: config_manager.get_or_default("USE_SUDO", true),
         }
@@ -275,9 +283,8 @@ pub struct DynamicPerformanceConfig {
     /// Metrics collection interval (default: 5s)
     pub metrics_interval: Duration,
 }
-
 impl DynamicPerformanceConfig {
-    pub fn from_env() -> Self {
+    pub const fn from_env() -> Self {
         let config_manager = DynamicConfigManager::with_default_prefix();
 
         Self {
@@ -299,10 +306,9 @@ pub struct DynamicConfig {
     pub storage: DynamicStorageConfig,
     pub performance: DynamicPerformanceConfig,
 }
-
 impl DynamicConfig {
     /// Load complete configuration from environment variables
-    pub fn from_env() -> Self {
+    pub const fn from_env() -> Self {
         Self {
             network: DynamicNetworkConfig::from_env(),
             storage: DynamicStorageConfig::from_env(),
@@ -311,7 +317,7 @@ impl DynamicConfig {
     }
 
     /// Create configuration with all defaults (for testing)
-    pub fn with_defaults_only() -> Self {
+    pub const fn with_defaults_only() -> Self {
         // Temporarily clear environment to get pure defaults
         let original_env: Vec<(String, String)> = std::env::vars()
             .filter(|(k, _)| k.starts_with("NESTGATE_"))
@@ -335,12 +341,10 @@ impl DynamicConfig {
 
 /// Global configuration instance (lazy-loaded, thread-safe)
 static GLOBAL_CONFIG: std::sync::OnceLock<DynamicConfig> = std::sync::OnceLock::new();
-
 /// Get the global dynamic configuration instance
-pub fn get_config() -> &'static DynamicConfig {
+pub const fn get_config() -> &'static DynamicConfig {
     GLOBAL_CONFIG.get_or_init(DynamicConfig::from_env)
 }
-
 /// Reload the global configuration from environment variables
 /// Note: OnceLock doesn't support reloading, so this creates a new instance
 /// For production use, consider using RwLock<DynamicConfig> if reloading is needed
@@ -349,7 +353,6 @@ pub fn reload_config() {
     // This is a design limitation - consider using Arc<RwLock<DynamicConfig>> if needed
     tracing::warn!("Configuration reload requested but OnceLock doesn't support reloading. Restart required for config changes.");
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -386,28 +389,28 @@ mod tests {
     #[test]
     fn test_duration_parsing() {
         assert_eq!(
-            Duration::from_config_value("30").unwrap_or_else(|e| {
+            Duration::from_configvalue("30").unwrap_or_else(|e| {
                 tracing::error!("Failed to parse duration: {:?}", e);
                 Duration::from_secs(0) // Return default duration
             }),
             Duration::from_secs(30)
         );
         assert_eq!(
-            Duration::from_config_value("30s").unwrap_or_else(|e| {
+            Duration::from_configvalue("30s").unwrap_or_else(|e| {
                 tracing::error!("Failed to parse duration: {:?}", e);
                 Duration::from_secs(0) // Return default duration
             }),
             Duration::from_secs(30)
         );
         assert_eq!(
-            Duration::from_config_value("5m").unwrap_or_else(|e| {
+            Duration::from_configvalue("5m").unwrap_or_else(|e| {
                 tracing::error!("Failed to parse duration: {:?}", e);
                 Duration::from_secs(0) // Return default duration
             }),
             Duration::from_secs(300)
         );
         assert_eq!(
-            Duration::from_config_value("2h").unwrap_or_else(|e| {
+            Duration::from_configvalue("2h").unwrap_or_else(|e| {
                 tracing::error!("Failed to parse duration: {:?}", e);
                 Duration::from_secs(0) // Return default duration
             }),
@@ -418,42 +421,42 @@ mod tests {
     #[test]
     fn test_bool_parsing() {
         assert_eq!(
-            bool::from_config_value("true").unwrap_or_else(|e| {
+            bool::from_configvalue("true").unwrap_or_else(|e| {
                 tracing::error!("Failed to parse bool: {:?}", e);
                 false // Return default bool
             }),
             true
         );
         assert_eq!(
-            bool::from_config_value("false").unwrap_or_else(|e| {
+            bool::from_configvalue("false").unwrap_or_else(|e| {
                 tracing::error!("Failed to parse bool: {:?}", e);
                 false // Return default bool
             }),
             false
         );
         assert_eq!(
-            bool::from_config_value("1").unwrap_or_else(|e| {
+            bool::from_configvalue("1").unwrap_or_else(|e| {
                 tracing::error!("Failed to parse bool: {:?}", e);
                 false // Return default bool
             }),
             true
         );
         assert_eq!(
-            bool::from_config_value("0").unwrap_or_else(|e| {
+            bool::from_configvalue("0").unwrap_or_else(|e| {
                 tracing::error!("Failed to parse bool: {:?}", e);
                 false // Return default bool
             }),
             false
         );
         assert_eq!(
-            bool::from_config_value("yes").unwrap_or_else(|e| {
+            bool::from_configvalue("yes").unwrap_or_else(|e| {
                 tracing::error!("Failed to parse bool: {:?}", e);
                 false // Return default bool
             }),
             true
         );
         assert_eq!(
-            bool::from_config_value("no").unwrap_or_else(|e| {
+            bool::from_configvalue("no").unwrap_or_else(|e| {
                 tracing::error!("Failed to parse bool: {:?}", e);
                 false // Return default bool
             }),
@@ -466,7 +469,7 @@ mod tests {
         // Test with defaults
         let config = DynamicNetworkConfig::from_env();
         assert_eq!(config.api_port, 8000);
-        assert_eq!(config.bind_address, "0.0.0.0");
+        assert_eq!(config.bind_endpoint, "0.0.0.0");
     }
 
     #[test]

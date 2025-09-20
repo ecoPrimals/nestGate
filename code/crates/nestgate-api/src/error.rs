@@ -1,6 +1,6 @@
 //
 // Error types and handling for the NestGate Data API.
-// Provides clean error responses for biomeOS and other consumers.
+// Provides clean error responses for management and other consumers.
 
 use axum::{
     http::StatusCode,
@@ -32,7 +32,6 @@ pub enum ApiError {
     /// Service unavailable
     ServiceUnavailable(String),
 }
-
 /// API error response format
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ErrorResponse {
@@ -45,7 +44,6 @@ pub struct ErrorResponse {
     /// Timestamp
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
-
 impl fmt::Display for ApiError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -83,7 +81,7 @@ impl IntoResponse for ApiError {
             ApiError::Json(e) => (
                 StatusCode::BAD_REQUEST,
                 "JSON_ERROR",
-                format!("Invalid JSON: {}", e),
+                format!("Invalid JSON: {"actual_error_details"}"),
             ),
             ApiError::InvalidRequest(msg) => {
                 (StatusCode::BAD_REQUEST, "INVALID_REQUEST", msg.clone())

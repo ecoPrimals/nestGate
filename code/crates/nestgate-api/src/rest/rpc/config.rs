@@ -2,8 +2,14 @@
 // **MIGRATION COMPLETE**: This module now uses canonical modernization patterns.
 // Legacy fragmented config structs have been replaced with canonical equivalents.
 
+use nestgate_core::config::canonical_master::domains::performance::MetricsConfig;
+use nestgate_core::config::canonical_master::domains::security_canonical::TlsSecurityConfig;
+use nestgate_core::config::NetworkConfig;
+use nestgate_core::config::SecurityConfig;
+
 use std::time::Duration;
-use nestgate_core::canonical_modernization::{CanonicalModernizedConfig, NetworkConfig, SecurityConfig};
+// Note: canonical_modernization module structure changed
+use nestgate_core::canonical_modernization::CanonicalModernizedConfig;
 
 /// **CANONICAL RPC CONFIGURATION**
 /// Extends the canonical modernization system with RPC-specific settings
@@ -14,7 +20,6 @@ pub struct CanonicalRpcConfig {
     /// RPC-specific extensions
     pub rpc_extensions: RpcExtensions,
 }
-
 /// RPC-specific configuration extensions
 #[derive(Debug, Clone)]
 pub struct RpcExtensions {
@@ -29,11 +34,27 @@ pub struct RpcExtensions {
     /// Stream registry settings
     pub streams: StreamConfig,
 }
-
-// CANONICAL MODERNIZATION: Legacy NestGateRpcConfig removed - use CanonicalRpcConfig instead
-
-/// Connection pool configuration
+/// **NESTGATE RPC CONFIGURATION**
+///
+/// Comprehensive RPC system configuration including connection pooling,
+/// security, load balancing, health monitoring, metrics, and streaming.
 #[derive(Debug, Clone)]
+pub struct NestGateRpcConfig {
+    /// Connection pool configuration for managing RPC connections
+    pub connection_pool: ConnectionPoolConfig,
+    /// Security configuration for RPC authentication and encryption
+    pub security: RpcSecurityConfig,
+    /// Load balancing configuration for distributing RPC requests
+    pub load_balancing: LoadBalancingConfig,
+    /// Health monitoring configuration for connection health checks
+    pub health_monitoring: HealthMonitoringConfig,
+    /// Metrics collection configuration for RPC performance monitoring
+    pub metrics: MetricsConfig,
+    /// Streaming configuration for bidirectional RPC communication
+    pub streams: StreamConfig,
+}
+/// Connection pool configuration
+#[derive(Debug, Clone, Default)]
 pub struct ConnectionPoolConfig {
     /// Maximum number of connections per service
     pub max_connections: usize,
@@ -46,7 +67,6 @@ pub struct ConnectionPoolConfig {
     /// Retry backoff duration
     pub retry_backoff: Duration,
 }
-
 /// RPC security configuration
 #[derive(Debug, Clone)]
 pub struct RpcSecurityConfig {
@@ -69,9 +89,8 @@ pub struct RpcSecurityConfig {
     /// Rate limit per minute
     pub rate_limit_per_minute: u32,
 }
-
 /// Load balancing configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct LoadBalancingConfig {
     /// Load balancing strategy
     pub strategy: String, // "round_robin", "least_connections", "weighted"
@@ -80,9 +99,8 @@ pub struct LoadBalancingConfig {
     /// Circuit breaker configuration
     pub circuit_breaker: CircuitBreakerConfig,
 }
-
 /// Circuit breaker configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct CircuitBreakerConfig {
     /// Failure threshold before opening circuit
     pub failure_threshold: u32,
@@ -91,9 +109,8 @@ pub struct CircuitBreakerConfig {
     /// Timeout before attempting to close circuit
     pub timeout: Duration,
 }
-
 /// Health monitoring configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct HealthMonitoringConfig {
     /// Enable health monitoring
     pub enabled: bool,
@@ -106,14 +123,13 @@ pub struct HealthMonitoringConfig {
     /// Healthy threshold (consecutive successes)
     pub healthy_threshold: u32,
 }
-
 /// **CANONICAL MODERNIZATION** - Use canonical metrics configuration
-pub use nestgate_core::CanonicalMetricsConfig as MetricsConfig;
-
+// Note: CanonicalMetricsConfig moved or renamed
+// pub use nestgate_core::CanonicalMetricsConfig as MetricsConfig;
 // ==================== SECTION ====================
 
 /// Stream configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct StreamConfig {
     /// Maximum concurrent streams per connection
     pub max_streams_per_connection: usize,
@@ -122,7 +138,6 @@ pub struct StreamConfig {
     /// Buffer size for stream events
     pub buffer_size: usize,
 }
-
 impl Default for NestGateRpcConfig {
     fn default() -> Self {
         Self {
@@ -161,10 +176,12 @@ impl Default for NestGateRpcConfig {
                 healthy_threshold: 2,
             },
             metrics: MetricsConfig {
-                enabled: true,
                 collection_interval: Duration::from_secs(60),
-                retention_period: Duration::from_secs(86400), // 24 hours
-                detailed_metrics: false,
+                metrics: vec![
+                    nestgate_core::config::canonical_master::domains::performance::monitoring::PerformanceMetric::CpuUsage,
+                    nestgate_core::config::canonical_master::domains::performance::monitoring::PerformanceMetric::MemoryUsage,
+                ],
+                retention: Duration::from_secs(86400), // 24 hours
             },
             streams: StreamConfig {
                 max_streams_per_connection: 10,
@@ -200,30 +217,37 @@ impl Default for RpcExtensions {
 
 impl CanonicalRpcConfig {
     /// Create canonical RPC config from legacy config
+    #[must_use]
     pub fn from_legacy(legacy: NestGateRpcConfig) -> Self {
         let mut canonical = Self::default();
-        
+
         // Migrate security settings to canonical base
-        canonical.base.security.tls_enabled = legacy.security.enable_tls;
-        canonical.base.security.mtls_enabled = legacy.security.enable_mtls;
-        
+        // Note: SecurityConfig uses TlsSecurityConfig from canonical_master
+        if legacy.security.enable_tls {
+            canonical.base.security.security_settings.insert(
+                "tls_enabled".to_string(),
+                serde_json::to_value(TlsSecurityConfig::default())
+                    .unwrap_or(serde_json::Value::Bool(true)),
+            );
+        }
+
         // Keep RPC-specific settings in extensions
         canonical.rpc_extensions.connection_pool = legacy.connection_pool;
         canonical.rpc_extensions.load_balancing = legacy.load_balancing;
         canonical.rpc_extensions.health_monitoring = legacy.health_monitoring;
         canonical.rpc_extensions.metrics = legacy.metrics;
         canonical.rpc_extensions.streams = legacy.streams;
-        
+
         canonical
     }
-    
+
     /// Get network configuration from canonical base
-    pub fn network(&self) -> &NetworkConfig {
+    pub const fn network(&self) -> &NetworkConfig {
         &self.base.network
     }
-    
+
     /// Get security configuration from canonical base
-    pub fn security(&self) -> &SecurityConfig {
+    pub const fn security(&self) -> &SecurityConfig {
         &self.base.security
     }
 }

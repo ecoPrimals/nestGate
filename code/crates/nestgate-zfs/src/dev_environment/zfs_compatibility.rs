@@ -17,10 +17,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{info, warn};
 
-use crate::error::CanonicalResult as Result;
-use nestgate_core::error::conversions::create_zfs_error;
-use nestgate_core::error::domain_errors::ZfsOperation;
-use nestgate_core::types::StorageTier;
+use crate::error::{create_zfs_error, ZfsOperation};
+use nestgate_core::canonical_types::StorageTier;
+use nestgate_core::error::CanonicalResult as Result;
 
 /// Development Environment ZFS Service
 ///
@@ -36,7 +35,6 @@ pub struct DevEnvironmentZfsService {
     /// Configuration for the development environment
     config: DevEnvironmentConfig,
 }
-
 /// Configuration for development environment ZFS compatibility
 #[derive(Debug, Clone)]
 pub struct DevEnvironmentConfig {
@@ -47,7 +45,6 @@ pub struct DevEnvironmentConfig {
     /// Simulated pool sizes (in bytes)
     pub default_pool_size: u64,
 }
-
 impl Default for DevEnvironmentConfig {
     fn default() -> Self {
         Self {
@@ -68,11 +65,10 @@ struct DevPool {
     health: String,
     created_at: std::time::SystemTime,
 }
-
 impl DevPool {
     /// Create a new development pool
     #[allow(dead_code)]
-    pub fn new(name: String, size_bytes: u64) -> Self {
+    pub const fn new(name: String, size_bytes: u64) -> Self {
         Self {
             name,
             health: "ONLINE".to_string(),
@@ -83,27 +79,23 @@ impl DevPool {
     }
 
     #[allow(dead_code)]
-    pub fn name(&self) -> &str {
+    pub const fn name(&self) -> &str {
         &self.name
     }
-
     #[allow(dead_code)]
-    pub fn health(&self) -> &str {
+    pub const fn health(&self) -> &str {
         &self.health
     }
-
     #[allow(dead_code)]
-    pub fn size_bytes(&self) -> u64 {
+    pub const fn size_bytes(&self) -> u64 {
         self.size_bytes
     }
-
     #[allow(dead_code)]
-    pub fn used_bytes(&self) -> u64 {
+    pub const fn used_bytes(&self) -> u64 {
         self.used_bytes
     }
-
     #[allow(dead_code)]
-    pub fn created_at(&self) -> std::time::SystemTime {
+    pub const fn created_at(&self) -> std::time::SystemTime {
         self.created_at
     }
 }
@@ -119,7 +111,6 @@ struct DevDataset {
     tier: StorageTier,
     properties: HashMap<String, String>,
 }
-
 #[allow(dead_code)] // Development environment methods
 impl DevDataset {
     /// Create a new development dataset
@@ -139,41 +130,40 @@ impl DevDataset {
             properties: HashMap::new(),
         }
     }
-
     /// Get dataset name
-    pub fn name(&self) -> &str {
+    pub const fn name(&self) -> &str {
         &self.name
     }
 
     /// Get parent pool
-    pub fn pool(&self) -> &str {
+    pub const fn pool(&self) -> &str {
         &self.pool
     }
 
     /// Get mount point
-    pub fn mount_point(&self) -> &std::path::PathBuf {
+    pub const fn mount_point(&self) -> &std::path::PathBuf {
         &self.mount_point
     }
 
     /// Get dataset size
-    pub fn size_bytes(&self) -> u64 {
+    pub const fn size_bytes(&self) -> u64 {
         self.size_bytes
     }
 
     /// Get storage tier
-    pub fn tier(&self) -> &StorageTier {
+    pub const fn tier(&self) -> &StorageTier {
         &self.tier
     }
 
     /// Get properties
-    pub fn properties(&self) -> &HashMap<String, String> {
+    pub const fn properties(&self) -> &HashMap<String, String> {
         &self.properties
     }
 }
 
 impl DevEnvironmentZfsService {
     /// Create new development environment ZFS service
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         let config = DevEnvironmentConfig::default();
 
         info!("🔧 Initializing Development Environment ZFS Compatibility Layer");
@@ -187,7 +177,7 @@ impl DevEnvironmentZfsService {
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: DevEnvironmentConfig) -> Self {
+    pub const fn with_config(config: DevEnvironmentConfig) -> Self {
         info!("🔧 Initializing Development Environment ZFS with custom config");
         info!("📁 Base directory: {:?}", config.base_directory);
 
@@ -199,12 +189,22 @@ impl DevEnvironmentZfsService {
     }
 
     /// Initialize the development environment (create directories, etc.)
-    pub async fn initialize(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn initialize(&self) -> Result<()>  {
         if let Err(e) = tokio::fs::create_dir_all(&self.config.base_directory).await {
             warn!("Failed to create base directory: {}", e);
             return Err(create_zfs_error(
-                format!("Failed to create base directory: {e}"),
-                ZfsOperation::Configuration
+                format!(
+                    "Failed to create base directory: {}",
+                    "actual_error_details"
+                ),
+                ZfsOperation::Configuration,
             ));
         }
 
@@ -290,7 +290,7 @@ mod tests {
         assert!(result.is_ok());
 
         let report = service.get_environment_report().await;
-        println!("Development environment report:\n{}", report);
+        println!("Development environment report:\n{report}");
     }
 
     #[test]

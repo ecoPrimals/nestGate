@@ -6,7 +6,6 @@ use super::validation::BenchmarkResults;
 
 /// Performance comparison utilities
 pub struct PerformanceComparison;
-
 impl PerformanceComparison {
     /// Compare benchmark results between different implementations
     pub fn compare_implementations(
@@ -40,7 +39,7 @@ impl PerformanceComparison {
     }
 
     /// Generate performance trend analysis
-    pub fn analyze_trends(historical_results: &[Vec<BenchmarkResults>]) -> TrendAnalysis {
+    pub const fn analyze_trends(historical_results: &[Vec<BenchmarkResults>]) -> TrendAnalysis {
         if historical_results.is_empty() {
             return TrendAnalysis::default();
         }
@@ -70,10 +69,9 @@ pub struct ComparisonReport {
     pub regressions: HashMap<String, f64>,
     pub total_patterns_compared: usize,
 }
-
 impl ComparisonReport {
     /// Generate a summary of the comparison
-    pub fn summary(&self) -> String {
+    pub const fn summary(&self) -> String {
         format!(
             "Performance Comparison Summary:\n\
              - Patterns compared: {}\n\
@@ -94,10 +92,9 @@ pub struct TrendAnalysis {
     pub trends: HashMap<String, Vec<(usize, f64)>>,
     pub total_snapshots: usize,
 }
-
 impl TrendAnalysis {
     /// Calculate the trend direction for a specific pattern
-    pub fn trend_direction(&self, pattern_name: &str) -> TrendDirection {
+    pub const fn trend_direction(&self, pattern_name: &str) -> TrendDirection {
         if let Some(data) = self.trends.get(pattern_name) {
             if data.len() < 2 {
                 return TrendDirection::Stable;

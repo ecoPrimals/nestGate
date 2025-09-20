@@ -36,7 +36,7 @@
 //
 // Tests validate performance requirements:
 // - Concurrent user handling capacity
-// - File transfer throughput optimization  
+// - File transfer throughput optimization
 // - Memory usage and resource management
 // - Network protocol efficiency
 // - Storage backend integration performance
@@ -63,8 +63,6 @@
 // }
 // ```
 
-use serde::Deserialize;
-use serde::Serialize;
 use std::path::PathBuf;
 
 #[cfg(test)]

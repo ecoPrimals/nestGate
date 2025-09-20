@@ -1,8 +1,8 @@
-//! **ZERO-COST NATIVE ASYNC DATA CAPABILITIES**
-//!
-//! High-performance data capabilities using native async traits.
-//! **PERFORMANCE**: 20-50% improvement over async_trait patterns.
-//! **ZERO-COST**: Direct compilation without Future boxing overhead.
+// **ZERO-COST NATIVE ASYNC DATA CAPABILITIES**
+//! Native Async Capabilities functionality and utilities.
+// High-performance data capabilities using native async traits.
+// **PERFORMANCE**: 20-50% improvement over async_trait patterns.
+// **ZERO-COST**: Direct compilation without Future boxing overhead.
 
 use crate::{NestGateError, Result};
 use crate::constants::canonical::{performance, timeouts, capabilities};
@@ -52,7 +52,6 @@ pub trait NativeAsyncDataCapability<
         MAX_RESPONSE_SIZE_MB
     }
 }
-
 /// **ZERO-COST NATIVE ASYNC GENOME DATA CAPABILITY**
 /// 
 /// High-performance genome data operations with const generic optimization.
@@ -93,7 +92,6 @@ pub trait NativeAsyncGenomeDataCapability<
         MAX_SEQUENCE_SIZE_MB
     }
 }
-
 /// **ZERO-COST NATIVE ASYNC MODEL DATA CAPABILITY**
 /// 
 /// High-performance model data operations with compile-time optimization.
@@ -134,7 +132,6 @@ pub trait NativeAsyncModelDataCapability<
         MODEL_INFO_CACHE_SIZE
     }
 }
-
 /// **ZERO-COST NATIVE ASYNC RESEARCH DATA CAPABILITY**
 /// 
 /// High-performance research data operations with const generic optimization.
@@ -173,7 +170,6 @@ pub trait NativeAsyncResearchDataCapability<
         RESEARCH_CACHE_SIZE
     }
 }
-
 // ==================== SECTION ====================
 
 /// **ZERO-COST CAPABILITY WRAPPER**
@@ -183,7 +179,6 @@ pub struct ZeroCostCapabilityWrapper<T, const METRICS_BUFFER_SIZE: usize = 1000>
     inner: T,
     metrics: CapabilityMetrics,
 }
-
 /// Performance metrics for capabilities
 #[derive(Debug, Default)]
 pub struct CapabilityMetrics {
@@ -192,13 +187,12 @@ pub struct CapabilityMetrics {
     pub cache_hits: u64,
     pub cache_misses: u64,
 }
-
 impl<T, const METRICS_BUFFER_SIZE: usize> ZeroCostCapabilityWrapper<T, METRICS_BUFFER_SIZE>
 where
     T: Send + Sync,
 {
     /// Create new zero-cost wrapper
-    pub fn new(inner: T) -> Self {
+    pub const fn new(inner: T) -> Self {
         Self {
             inner,
             metrics: CapabilityMetrics::default(),
@@ -206,26 +200,26 @@ where
     }
     
     /// Get performance metrics
-    pub fn metrics(&self) -> &CapabilityMetrics {
+    pub const fn metrics(&self) -> &CapabilityMetrics {
         &self.metrics
     }
     
     /// Get average response time
-    pub fn average_response_time_ms(&self) -> f64 {
+    pub const fn average_response_time_ms(&self) -> f64 {
         if self.metrics.requests_handled == 0 {
             0.0
         } else {
-            self.metrics.total_response_time_ms as f64 / self.metrics.requests_handled as f64
+            self.metrics.f64::from(total_response_time_ms) / self.metrics.f64::from(requests_handled)
         }
     }
     
     /// Get cache hit rate
-    pub fn cache_hit_rate(&self) -> f64 {
+    pub const fn cache_hit_rate(&self) -> f64 {
         let total = self.metrics.cache_hits + self.metrics.cache_misses;
         if total == 0 {
             0.0
         } else {
-            self.metrics.cache_hits as f64 / total as f64
+            self.metrics.f64::from(cache_hits) / f64::from(total)
         }
     }
 }
@@ -236,7 +230,6 @@ where
 /// 
 /// Helps migrate from async_trait to native async patterns.
 pub struct AsyncTraitMigrationHelper;
-
 impl AsyncTraitMigrationHelper {
     /// Convert async_trait DataCapability to native async
     pub fn migrate_data_capability<T>(_capability: T) -> MigrationGuide 
@@ -265,7 +258,6 @@ pub struct MigrationGuide {
     pub performance_improvement: &'static str,
     pub migration_steps: Vec<&'static str>,
 }
-
 // ==================== SECTION ====================
 
 /// Compile-time validation of capability configurations
@@ -301,7 +293,6 @@ pub mod validation {
     const _: () = assert!(validate_capability_config::<1000, 30000, 100>());
     const _: () = assert!(validate_genome_config::<1000, 500>());
 }
-
 // ==================== SECTION ====================
 
 /// Performance benchmarking utilities
@@ -334,7 +325,7 @@ pub mod benchmarking {
             successful_requests,
             total_duration_ms: duration.as_millis() as u64,
             average_request_time_ms: duration.as_millis() as u64 / iterations as u64,
-            success_rate: successful_requests as f64 / iterations as f64,
+            success_rate: f64::from(successful_requests) / f64::from(iterations),
         }
     }
     
@@ -350,15 +341,14 @@ pub mod benchmarking {
     
     impl BenchmarkResult {
         /// Get requests per second
-        pub fn requests_per_second(&self) -> f64 {
+        pub const fn requests_per_second(&self) -> f64 {
             if self.total_duration_ms == 0 {
                 0.0
             } else {
-                (self.successful_requests as f64 * 1000.0) / self.total_duration_ms as f64
+                (self.f64::from(successful_requests) * 1000.0) / self.f64::from(total_duration_ms)
             }
         }
     }
 }
-
 /// Zero-cost architecture migration complete marker
 pub const ZERO_COST_DATA_CAPABILITIES_READY: bool = true; 

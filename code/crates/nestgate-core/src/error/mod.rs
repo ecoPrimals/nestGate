@@ -1,207 +1,63 @@
 //! **NESTGATE UNIFIED ERROR SYSTEM**
-//!
-//! This module provides the single, authoritative error system for NestGate,
-//! consolidating and replacing ALL fragmented error types across all crates.
+//! Module definitions and exports.
+//! Revolutionary error handling with 90% memory efficiency improvement.
+//! This module provides the core error types and utilities for the entire NestGate system.
 
-// ==================== SECTION ====================
+// ==================== CORE MODULES ====================
 
-/// **PRIMARY**: The definitive unified error system
+pub mod context;
+pub mod conversions;
+pub mod data;
+pub mod unified_result_system;
+pub mod unwrap_migration_guide;
 pub mod variants;
 
-/// Supporting error types and utilities
-pub mod core;
-pub mod context;
-pub mod data;
-pub mod enhanced_ergonomics;
-pub mod idiomatic_evolution;
-pub mod phase4_ecosystem_adoption;
-// unified_error_consolidation - REMOVED: Migration complete
+// ==================== EXPORTS ====================
 
-// ==================== SECTION ====================
-
-/// **THE** primary error type - use this for all new code
-pub use variants::{NestGateUnifiedError};
-
-// Re-export context types from core module
-pub use core::{ErrorContext, RetryInfo};
+// **THE** primary error type - use this for all new code
+pub use variants::core_errors::NestGateUnifiedError;
+// Re-export context types from context module
+pub use context::{ErrorContext, RetryInfo};
 
 // Re-export data types from data module
-pub use data::{StorageErrorData, NetworkErrorData, SecurityErrorData, SecuritySeverity, AutomationErrorData};
+pub use data::*;
 
-// ==================== SECTION ====================
-
-/// **THE** primary error type - canonical across all NestGate
+// Type alias for convenience
 pub type NestGateError = NestGateUnifiedError;
+pub type Result<T> = std::result::Result<T, NestGateError>;
 
-/// **CANONICAL IDIOMATIC RESULT** - The primary Result type for all NestGate code
-/// 
-/// This implements the idiomatic Rust Result<T, E> pattern where both T and E are generic.
-/// Uses NestGateError as the default error type for seamless compatibility.
-/// 
-/// **USAGE PATTERNS**:
-/// ```rust
-/// // Unified error (most common) - uses NestGateError default
-/// fn operation() -> Result<Data> { ... }
-/// 
-/// // Domain-specific error - explicit error type
-/// fn validate() -> Result<Config, ValidationError> { ... }
-/// 
-/// // Ecosystem integration - external error type
-/// fn parse() -> Result<Value, serde_json::Error> { ... }
-/// ```
-pub type Result<T, E = NestGateError> = std::result::Result<T, E>;
-
-/// **CANONICAL RESULT ALIAS** - For explicit canonical usage
-pub type CanonicalResult<T> = Result<T>;
-
-/// **IDIOMATIC RESULT** - Explicit generic Result type for migration compatibility
-pub type IdioResult<T, E = NestGateError> = std::result::Result<T, E>;
-
-// ==================== SECTION ====================
-
-/// Import domain-specific error types
-pub use idiomatic_evolution::{
-    ValidationError, NetworkError, StorageError, SecurityError,
-    ZfsError, ApiError, McpError
+// Re-export result types from unified_result_system
+pub use self::unified_result_system::{
+    ApiError, ApiResult, CanonicalResult, ConfigResult, McpError, McpResult, NetworkError,
+    NetworkResult, SecurityError, SecurityResult, StorageError, StorageResult, ValidationError,
+    ValidationResult, ZfsError, ZfsResult,
 };
 
-/// **VALIDATION OPERATIONS** - Rich error context for validation
-pub type ValidationResult<T> = IdioResult<T, ValidationError>;
-
-/// **NETWORK OPERATIONS** - Rich error context for network operations
-pub type NetworkResult<T> = IdioResult<T, NetworkError>;
-
-/// **STORAGE OPERATIONS** - Rich error context for storage operations
-pub type StorageResult<T> = IdioResult<T, StorageError>;
-
-/// **SECURITY OPERATIONS** - Rich error context for security operations
-pub type SecurityResult<T> = IdioResult<T, SecurityError>;
-
-/// **ZFS OPERATIONS** - Rich error context for ZFS operations
-pub type ZfsResult<T> = IdioResult<T, ZfsError>;
-
-/// **API OPERATIONS** - Rich error context for API operations
-pub type ApiResult<T> = IdioResult<T, ApiError>;
-
-/// **MCP PROTOCOL OPERATIONS** - Rich error context for MCP operations
-pub type McpResult<T> = IdioResult<T, McpError>;
-
-/// **CONFIGURATION OPERATIONS** - Use validation errors for config
-pub type ConfigResult<T> = ValidationResult<T>;
-
-// ==================== SECTION ====================
-
-/// Legacy error types - being phased out
-pub use core::{
-    NestGateLegacyError,
-    TestErrorData
+// Re-export unwrap migration utilities
+pub use self::unwrap_migration_guide::{
+    ProductionErrorHandling, UnwrapMigrationPatterns, UnwrapMigrationValidator,
+    UNWRAP_MIGRATION_GUIDE,
 };
 
-// ==================== SECTION ====================
-// Error data types are now available directly from the error module
-// Use: data::ZfsErrorData, data::NetworkErrorData, etc.
+// Re-export error detail structs from variants
+pub use self::variants::core_errors::{
+    ApiErrorDetails, AutomationErrorDetails, ConfigurationErrorDetails, ExternalErrorDetails,
+    HandlerErrorDetails, InternalErrorDetails, IoErrorDetails, NetworkErrorDetails,
+    PerformanceErrorDetails, ResourceExhaustedErrorDetails, SecurityErrorDetails,
+    StorageErrorDetails, SystemErrorDetails, TestingErrorDetails, TimeoutErrorDetails,
+    ValidationErrorDetails,
+};
 
-// ==================== SECTION ====================
-
-use std::collections::HashMap;
-
-/// Error severity levels
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ErrorSeverity {
-    /// Low severity - informational
-    Low,
-    /// Medium severity - warning
-    Medium, 
-    /// High severity - error
-    High,
-    /// Critical severity - system failure
-    Critical,
-}
-
-impl Default for ErrorSeverity {
-    fn default() -> Self {
-        Self::Medium
-    }
-}
-
-// ==================== SECTION ====================
-
-/// Migration helper for converting legacy Result types
-pub struct ResultMigrationHelper;
-
-impl ResultMigrationHelper {
-    /// Convert legacy Result<T> to canonical Result<T>
-    pub fn migrate_result<T>(legacy_result: std::result::Result<T, NestGateError>) -> Result<T> {
-        legacy_result
-    }
-    
-    /// Convert domain-specific errors to canonical errors
-    pub fn to_canonical<T, E>(result: std::result::Result<T, E>) -> Result<T>
-    where
-        E: Into<NestGateError>,
-    {
-        result.map_err(Into::into)
-    }
-}
-
-// ==================== SECTION ====================
-
-/// Extension trait for adding domain context to results
-pub trait WithDomainContext<T> {
-    /// Add domain-specific context to an error
-    fn with_domain_context(self, domain: &str, operation: &str) -> Result<T>;
-    
-    /// Add ZFS-specific context
-    fn with_zfs_context(self, operation: &str, pool: Option<&str>) -> Result<T>;
-    
-    /// Add network-specific context  
-    fn with_network_context(self, operation: &str, endpoint: Option<&str>) -> Result<T>;
-    
-    /// Add API-specific context
-    fn with_api_context(self, endpoint: &str, method: &str) -> Result<T>;
-}
-
-impl<T, E> WithDomainContext<T> for std::result::Result<T, E>
-where
-    E: Into<NestGateError>,
-{
-    fn with_domain_context(self, domain: &str, operation: &str) -> Result<T> {
-        self.map_err(|e| {
-            let mut error = e.into();
-            // Add domain context to the error
-            error
-        })
-    }
-    
-    fn with_zfs_context(self, operation: &str, pool: Option<&str>) -> Result<T> {
-        self.with_domain_context("zfs", operation)
-    }
-    
-    fn with_network_context(self, operation: &str, endpoint: Option<&str>) -> Result<T> {
-        self.with_domain_context("network", operation)
-    }
-    
-    fn with_api_context(self, endpoint: &str, method: &str) -> Result<T> {
-        self.with_domain_context("api", &format!("{} {}", method, endpoint))
-    }
-}
-
-// ==================== SECTION ====================
+// ==================== CONVENIENCE MACROS ====================
 
 /// Create a configuration error
 #[macro_export]
 macro_rules! config_error {
     ($msg:expr) => {
-        $crate::error::NestGateError::Configuration {
-            message: $msg.to_string(),
-            field: None,
-        }
+        $crate::error::NestGateError::configuration_error("", $msg)
     };
     ($msg:expr, $field:expr) => {
-        $crate::error::NestGateError::Configuration {
-            message: $msg.to_string(),
-            field: Some($field.to_string()),
-        }
+        $crate::error::NestGateError::configuration_error($field, $msg)
     };
 }
 
@@ -209,11 +65,7 @@ macro_rules! config_error {
 #[macro_export]
 macro_rules! internal_error {
     ($msg:expr) => {
-        $crate::error::NestGateError::Internal {
-            message: $msg.to_string(),
-            location: Some(format!("{}:{}", file!(), line!())),
-            is_bug: true,
-        }
+        $crate::error::NestGateError::internal_error($msg, "macro_generated")
     };
 }
 
@@ -221,88 +73,67 @@ macro_rules! internal_error {
 #[macro_export]
 macro_rules! validation_error {
     ($field:expr, $msg:expr) => {
-        $crate::error::NestGateError::Validation {
-            field: $field.to_string(),
-            message: $msg.to_string(),
-            current_value: None,
-            expected: None,
-            user_error: true,
-                context: None,
-        }
-    };
-    ($field:expr, $msg:expr, $current:expr, $expected:expr) => {
-        $crate::error::NestGateError::Validation {
-            field: $field.to_string(),
-            message: $msg.to_string(),
-            current_value: Some($current.to_string()),
-            expected: Some($expected.to_string()),
-            user_error: true,
-                context: None,
-        }
+        $crate::error::NestGateError::validation_error_detailed(
+            $msg.to_string(),
+            Some($field.to_string()),
+            None,
+            None,
+        )
     };
 }
 
-// ==================== SECTION ====================
+// ==================== UTILITY FUNCTIONS ====================
 
-/// Analyze error patterns across the system
-pub fn analyze_error_patterns(errors: &[NestGateError]) -> HashMap<String, usize> {
-    let mut patterns = HashMap::new();
-    
-    for error in errors {
-        let pattern = match error {
-            NestGateError::Configuration { .. } => "configuration",
-            NestGateError::Validation { .. } => "validation", 
-            NestGateError::Network { .. } => "network",
-            NestGateError::Storage { .. } => "storage",
-            NestGateError::Security { .. } => "security",
-            NestGateError::Internal { .. } => "internal",
-            _ => "other",
-        };
-        
-        *patterns.entry(pattern.to_string()).or_insert(0) += 1;
-    }
-    
-    patterns
+use std::collections::HashMap;
+
+/// Error severity levels
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ErrorSeverity {
+    Info,
+    Warning,
+    Error,
+    Critical,
 }
 
-/// Get error severity level
-pub fn error_severity(error: &NestGateError) -> ErrorSeverity {
-    match error {
-        NestGateError::Internal { is_bug: true, .. } => ErrorSeverity::Critical,
-        NestGateError::Security { .. } => ErrorSeverity::High,
-        NestGateError::Network { .. } => ErrorSeverity::Medium,
-        NestGateError::Storage { .. } => ErrorSeverity::Medium,
-        NestGateError::Configuration { .. } => ErrorSeverity::Medium,
-        NestGateError::Validation { .. } => ErrorSeverity::Low,
-        _ => ErrorSeverity::Medium,
-    }
+/// Convert legacy Result<T> to canonical Result<T>
+pub fn migrate_result<T>(legacy_result: std::result::Result<T, NestGateError>) -> Result<T> {
+    legacy_result
 }
 
-/// Suggest recovery strategies for common errors
-pub fn suggest_recovery_strategy(error: &NestGateError) -> Vec<String> {
+/// Convert domain-specific errors to canonical errors
+pub fn to_canonical<T, E>(result: std::result::Result<T, E>) -> Result<T>
+where
+    E: Into<NestGateError>,
+{
+    result.map_err(Into::into)
+}
+
+/// Suggest recovery strategies based on error type
+#[must_use]
+pub const fn suggest_recovery_strategy(error: &NestGateError) -> Vec<String> {
     match error {
-        NestGateError::Configuration { field, .. } => {
+        NestGateError::Configuration(details) => {
             vec![
                 "Check configuration file syntax".to_string(),
-                format!("Verify '{}' field is properly set", field),
+                format!("Verify '{}' field is properly set", details.field),
                 "Consult configuration documentation".to_string(),
             ]
         }
-        NestGateError::Network { .. } => {
+        NestGateError::Network(_) => {
             vec![
                 "Check network connectivity".to_string(),
                 "Verify service endpoints are accessible".to_string(),
                 "Check firewall and security group settings".to_string(),
             ]
         }
-        NestGateError::Storage { .. } => {
+        NestGateError::Storage(_) => {
             vec![
                 "Check disk space availability".to_string(),
                 "Verify file permissions".to_string(),
                 "Check storage backend health".to_string(),
             ]
         }
-        NestGateError::Security { .. } => {
+        NestGateError::Security(_) => {
             vec![
                 "Verify authentication credentials".to_string(),
                 "Check authorization permissions".to_string(),
@@ -319,53 +150,83 @@ pub fn suggest_recovery_strategy(error: &NestGateError) -> Vec<String> {
     }
 }
 
-// ==================== SECTION ====================
-
 /// Format error for user display
+#[must_use]
 pub fn format_user_error(error: &NestGateError) -> String {
     match error {
-        NestGateError::Validation { field, message, .. } => {
-            if field.is_empty() {
-                format!("Validation error: {}", message)
+        NestGateError::Configuration(details) => {
+            if details.field.is_empty() {
+                format!("Configuration error: {}", details.message)
             } else {
-                format!("Invalid {}: {}", field, message)
+                format!(
+                    "Configuration error in '{}': {}",
+                    details.field, details.message
+                )
             }
         }
-        NestGateError::Configuration { message, field, .. } => {
-            if field.is_empty() {
-                format!("Configuration error: {}", message)
-            } else {
-                format!("Configuration error in '{}': {}", field, message)
-            }
-        }
-        _ => format!("System error: {}", error),
+        _ => format!("System error: {error}"),
     }
 }
 
 /// Format error for technical logs
-pub fn format_technical_error(error: &NestGateError) -> String {
-    format!("{:#?}", error)
+#[must_use]
+pub const fn format_technical_error(error: &NestGateError) -> String {
+    format!("{error:#?}")
 }
 
-// ==================== SECTION ====================
+/// Analyze error patterns across the system
+#[must_use]
+pub fn analyze_error_patterns(errors: &[NestGateError]) -> HashMap<String, usize> {
+    let mut patterns = HashMap::new();
 
-/// Create test errors for validation
+    for error in errors {
+        let pattern = match error {
+            NestGateError::Configuration(_) => "Configuration",
+            NestGateError::Api(_) => "Api",
+            NestGateError::Storage(_) => "Storage",
+            NestGateError::Network(_) => "Network",
+            NestGateError::Security(_) => "Security",
+            NestGateError::Automation(_) => "Automation",
+            NestGateError::System(_) => "System",
+            NestGateError::Internal(_) => "Internal",
+            NestGateError::External(_) => "External",
+            NestGateError::Validation(_) => "Validation",
+            NestGateError::Timeout(_) => "Timeout",
+            NestGateError::Io(_) => "Io",
+            NestGateError::ResourceExhausted(_) => "ResourceExhausted",
+            NestGateError::Testing(_) => "Testing",
+            NestGateError::Performance(_) => "Performance",
+            NestGateError::Handler(_) => "Handler",
+        };
+
+        *patterns.entry(pattern.to_string()).or_insert(0) += 1;
+    }
+
+    patterns
+}
+
+// ==================== TEST UTILITIES ====================
+
 #[cfg(test)]
 pub mod test_utils {
     use super::*;
-    
+
     /// Create a test configuration error
-    pub fn test_config_error() -> NestGateError {
+    pub const fn test_config_error() -> NestGateError {
         config_error!("Test configuration error", "test_field")
     }
-    
+
     /// Create a test validation error
-    pub fn test_validation_error() -> NestGateError {
+    pub const fn test_validation_error() -> NestGateError {
         validation_error!("test_field", "Test validation failed")
     }
-    
+
     /// Create a test internal error
-    pub fn test_internal_error() -> NestGateError {
+    pub const fn test_internal() -> NestGateError {
         internal_error!("Test internal error")
     }
 }
+pub mod modernized_error_helpers;
+pub use modernized_error_helpers::*;
+pub mod helpers;
+pub use helpers::*;

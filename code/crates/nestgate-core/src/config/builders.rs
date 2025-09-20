@@ -1,9 +1,8 @@
-//! **CONFIGURATION BUILDERS AND MIGRATION UTILITIES**
-//!
-//! This module provides builders and migration utilities for constructing
+// **CONFIGURATION BUILDERS AND MIGRATION UTILITIES**
+//! Configuration types and utilities.
+// This module provides builders and migration utilities for constructing
 //! and transitioning configuration objects.
 
-use std::path::PathBuf;
 
 use crate::Result;
 use super::core::{NestGateCanonicalConfig, LogLevel};
@@ -14,65 +13,69 @@ use super::core::{NestGateCanonicalConfig, LogLevel};
 pub struct ConfigBuilder {
     config: NestGateCanonicalConfig,
 }
-
 impl ConfigBuilder {
     /// Create a new configuration builder
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             config: NestGateCanonicalConfig::default(),
         }
     }
 
     /// Set service name
+    #[must_use]
     pub fn service_name(mut self, name: impl Into<String>) -> Self {
-        self.config.system.service_name = name.into();
+        self.config.system.instance_name = name.into();
         self
     }
 
     /// Set environment
+    #[must_use]
     pub fn environment(mut self, env: impl Into<String>) -> Self {
         self.config.system.environment = env.into();
         self
     }
 
     /// Set log level
+    #[must_use]
     pub fn log_level(mut self, level: LogLevel) -> Self {
         self.config.system.log_level = level;
         self
     }
 
     /// Enable debug mode
+    #[must_use]
     pub fn debug_mode(mut self, enabled: bool) -> Self {
         self.config.system.debug_mode = enabled;
         self
     }
 
     /// Set data directory
-    pub fn data_dir(mut self, path: impl Into<PathBuf>) -> Self {
         self.config.system.data_dir = path.into();
         self
     }
 
     /// Set API bind address
-    pub fn api_bind_address(mut self, address: impl Into<String>) -> Self {
-        self.config.api.bind_address = address.into();
+    #[must_use]
+    pub fn api_bind_address(mut self, endpoint: impl Into<String>) -> Self {
+        self.config.api.bind_endpoint = address.into();
         self
     }
 
     /// Set API port override
+    #[must_use]
     pub fn api_port(mut self, port: u16) -> Self {
         self.config.api.port_override = Some(port);
         self
     }
 
     /// Set server bind address
-    pub fn server_bind_address(mut self, address: impl Into<String>) -> Self {
-        self.config.server.bind_address = address.into();
+    #[must_use]
+    pub fn server_bind_address(mut self, endpoint: impl Into<String>) -> Self {
+        self.config.server.bind_endpoint = address.into();
         self
     }
 
     /// Enable TLS
-    pub fn enable_tls(mut self, cert_path: impl Into<PathBuf>, key_path: impl Into<PathBuf>) -> Self {
         self.config.server.tls_enabled = true;
         self.config.server.cert_path = Some(cert_path.into());
         self.config.server.key_path = Some(key_path.into());
@@ -80,19 +83,28 @@ impl ConfigBuilder {
     }
 
     /// Add feature flag
+    #[must_use]
     pub fn feature_flag(mut self, key: impl Into<String>, value: bool) -> Self {
         self.config.features.insert(key.into(), value);
         self
     }
 
     /// Add environment override
+    #[must_use]
     pub fn environment_override(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.config.environment_overrides.insert(key.into(), value.into());
         self
     }
 
     /// Build the configuration
-    pub fn build(self) -> Result<NestGateCanonicalConfig> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn build(self) -> Result<NestGateCanonicalConfig>  {
         let config = self.config;
         config.validate()?;
         Ok(config)
@@ -108,25 +120,23 @@ impl Default for ConfigBuilder {
 // ==================== SECTION ====================
 
 /// Create production configuration
-pub fn create_production_config() -> Result<NestGateCanonicalConfig> {
+pub const fn create_production_config() -> Result<NestGateCanonicalConfig> {
     ConfigBuilder::new()
         .environment("production")
         .log_level(LogLevel::Warn)
         .debug_mode(false)
         .build()
 }
-
 /// Create development configuration
-pub fn create_development_config() -> Result<NestGateCanonicalConfig> {
+pub const fn create_development_config() -> Result<NestGateCanonicalConfig> {
     ConfigBuilder::new()
         .environment("development")
         .log_level(LogLevel::Debug)
         .debug_mode(true)
         .build()
 }
-
 /// Create testing configuration
-pub fn create_testing_config() -> Result<NestGateCanonicalConfig> {
+pub const fn create_testing_config() -> Result<NestGateCanonicalConfig> {
     ConfigBuilder::new()
         .environment("testing")
         .log_level(LogLevel::Info)
@@ -134,7 +144,6 @@ pub fn create_testing_config() -> Result<NestGateCanonicalConfig> {
         .data_dir("./test_data")
         .build()
 }
-
 // ==================== SECTION ====================
 
 // ==================== SECTION ====================
@@ -143,7 +152,7 @@ pub fn create_testing_config() -> Result<NestGateCanonicalConfig> {
 
         // Migrate common environment variables
         if let Ok(service_name) = std::env::var("NESTGATE_SERVICE_NAME") {
-            builder = builder.service_name(service_name);
+            builder = builder.instance_name(service_name);
         }
 
         if let Ok(env) = std::env::var("NESTGATE_ENVIRONMENT") {
@@ -186,7 +195,7 @@ pub fn create_testing_config() -> Result<NestGateCanonicalConfig> {
     }
 
     /// Generate migration report
-    pub fn generate_report(&self) -> String {
+    pub const fn generate_report(&self) -> String {
         format!(
             "Migration Report:\n\
              - Configurations migrated: {}\n\
@@ -211,10 +220,17 @@ impl Default for ConfigMigrationManager {
 
 /// Configuration validation utilities
 pub struct ConfigValidator;
-
 impl ConfigValidator {
     /// Validate configuration for production deployment
-    pub fn validate_production(config: &NestGateCanonicalConfig) -> Result<Vec<String>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn validate_production(config: &NestGateCanonicalConfig) -> Result<Vec<String>>  {
         let mut warnings = Vec::new();
 
         // Check production-specific requirements
@@ -238,7 +254,15 @@ impl ConfigValidator {
     }
 
     /// Validate configuration for security compliance
-    pub fn validate_security(config: &NestGateCanonicalConfig) -> Result<Vec<String>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn validate_security(config: &NestGateCanonicalConfig) -> Result<Vec<String>>  {
         let mut warnings = Vec::new();
 
         // Check security-specific requirements
@@ -267,14 +291,12 @@ impl ConfigValidator {
 /// **BACKWARD COMPATIBILITY**: Standard configuration without const generics
 /// This maintains compatibility with existing code while providing upgrade path
 pub type StandardNestGateConfig = NestGateCanonicalConfig<1000, 65536, 30000, 8080>;
-
 /// Create standard configuration for backward compatibility
-pub fn create_standard_config() -> StandardNestGateConfig {
+pub const fn create_standard_config() -> StandardNestGateConfig {
     StandardNestGateConfig::default()
 }
-
 /// Create configuration for specific environment
-pub fn create_config_for_environment(env: &str) -> Result<NestGateCanonicalConfig> {
+pub const fn create_config_for_environment(env: &str) -> Result<NestGateCanonicalConfig> {
     match env.to_lowercase().as_str() {
         "production" | "prod" => create_production_config(),
         "development" | "dev" => create_development_config(),

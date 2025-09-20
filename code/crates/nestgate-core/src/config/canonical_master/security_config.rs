@@ -1,7 +1,6 @@
 /// **SECURITY CONFIGURATION**
 ///
 /// Security and authentication configuration types.
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -15,7 +14,6 @@ pub struct SecurityConfig {
     /// Security settings
     pub security_settings: HashMap<String, serde_json::Value>,
 }
-
 /// Authentication configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthConfig {
@@ -26,7 +24,6 @@ pub struct AuthConfig {
     /// Auth settings
     pub auth_settings: HashMap<String, serde_json::Value>,
 }
-
 impl Default for SecurityConfig {
     fn default() -> Self {
         Self {
@@ -45,4 +42,4 @@ impl Default for AuthConfig {
             auth_settings: HashMap::new(),
         }
     }
-} 
+}

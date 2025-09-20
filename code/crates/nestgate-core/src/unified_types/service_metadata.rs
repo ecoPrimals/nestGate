@@ -1,20 +1,19 @@
+use crate::unified_enums::service_types::UnifiedServiceType;
 /// Universal Service Metadata Module
 /// **CONSOLIDATION COMPLETE**: Unifies all fragmented service information structures
 ///
 /// This module replaces and consolidates:
-/// - UnifiedServiceInfo (interface/service_types.rs)
-/// - PrimalMetadata (ecoprimal_sdk/types.rs)
-/// - ServiceMetadata (service_discovery/types.rs)
-/// - ServiceInfo (zfs/manager/types.rs)
-/// - ServiceInfo (mcp/protocol.rs)
+/// - `UnifiedServiceInfo` (`interface/service_types.rs`)
+/// - `PrimalMetadata` (`ecoprimal_sdk/types.rs`)
+/// - `ServiceMetadata` (`service_discovery/types.rs`)
+/// - `ServiceInfo` (zfs/manager/types.rs)
+/// - `ServiceInfo` (mcp/protocol.rs)
 ///
 /// **PROBLEM SOLVED**: Single source of truth for all service metadata
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
-
-use crate::unified_enums::service_types::UnifiedServiceType;
 
 /// **THE** Universal Service Metadata Structure
 /// Comprehensive service information that encompasses all use cases across the ecosystem
@@ -29,7 +28,6 @@ pub struct UniversalServiceMetadata {
     pub version: String,
     /// Service description
     pub description: String,
-
     // === SERVICE CLASSIFICATION ===
     /// Service type classification (unified enum)
     pub service_type: UnifiedServiceType,
@@ -99,7 +97,6 @@ pub enum ServiceCapability {
     WebSocket,
     TcpServer,
     UdpServer,
-
     // === DATA & STORAGE ===
     Database,
     FileSystem,
@@ -157,7 +154,6 @@ pub struct ServiceEndpoint {
     /// Whether this endpoint is primary
     pub is_primary: bool,
 }
-
 /// Communication protocol enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum CommunicationProtocol {
@@ -170,7 +166,6 @@ pub enum CommunicationProtocol {
     Grpc,
     Custom(String),
 }
-
 /// Endpoint type classification
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum EndpointType {
@@ -182,7 +177,6 @@ pub enum EndpointType {
     WebSocket,
     Custom(String),
 }
-
 /// Contact information for maintainers
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContactInfo {
@@ -193,7 +187,6 @@ pub struct ContactInfo {
     /// Website or profile URL
     pub website: Option<String>,
 }
-
 /// Service operational status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ServiceStatus {
@@ -212,7 +205,6 @@ pub enum ServiceStatus {
     /// Status is unknown
     Unknown,
 }
-
 /// Health state enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum HealthState {
@@ -227,7 +219,6 @@ pub enum HealthState {
     /// Health state is unknown
     Unknown,
 }
-
 /// Resource requirements for service
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceRequirements {
@@ -240,7 +231,6 @@ pub struct ResourceRequirements {
     /// Network bandwidth in Mbps
     pub network_mbps: Option<u64>,
 }
-
 // === DEFAULT IMPLEMENTATIONS ===
 
 impl Default for UniversalServiceMetadata {
@@ -282,7 +272,8 @@ impl Default for UniversalServiceMetadata {
 
 impl UniversalServiceMetadata {
     /// Create new service metadata with minimal required information
-    pub fn new(name: &str, service_type: UnifiedServiceType) -> Self {
+    #[must_use]
+    pub const fn new(name: &str, service_type: UnifiedServiceType) -> Self {
         Self {
             name: name.to_string(),
             service_type,
@@ -291,7 +282,8 @@ impl UniversalServiceMetadata {
     }
 
     /// Builder pattern for service metadata
-    pub fn builder(
+    #[must_use]
+    pub const fn builder(
         name: &str,
         service_type: UnifiedServiceType,
     ) -> UniversalServiceMetadataBuilder {
@@ -320,12 +312,14 @@ impl UniversalServiceMetadata {
     }
 
     /// Check if service has a specific capability
-    pub fn has_capability(&self, capability: &ServiceCapability) -> bool {
+    #[must_use]
+    pub const fn has_capability(&self, capability: &ServiceCapability) -> bool {
         self.capabilities.contains(capability)
     }
 
     /// Get primary endpoint URL
-    pub fn get_primary_endpoint(&self) -> Option<&str> {
+    #[must_use]
+    pub const fn get_primary_endpoint(&self) -> Option<&str> {
         // First check explicit primary endpoint
         if let Some(ref primary) = self.primary_endpoint {
             return Some(primary);
@@ -343,53 +337,61 @@ impl UniversalServiceMetadata {
     }
 }
 
-/// Builder for UniversalServiceMetadata
+/// Builder for `UniversalServiceMetadata`
 pub struct UniversalServiceMetadataBuilder {
     metadata: UniversalServiceMetadata,
 }
-
 impl UniversalServiceMetadataBuilder {
-    pub fn new(name: &str, service_type: UnifiedServiceType) -> Self {
+    #[must_use]
+    pub const fn new(name: &str, service_type: UnifiedServiceType) -> Self {
         Self {
             metadata: UniversalServiceMetadata::new(name, service_type),
         }
     }
 
+    #[must_use]
     pub fn version(mut self, version: &str) -> Self {
         self.metadata.version = version.to_string();
         self
     }
 
+    #[must_use]
     pub fn description(mut self, description: &str) -> Self {
         self.metadata.description = description.to_string();
         self
     }
 
+    #[must_use]
     pub fn capability(mut self, capability: ServiceCapability) -> Self {
         self.metadata.add_capability(capability);
         self
     }
 
+    #[must_use]
     pub fn endpoint(mut self, endpoint: ServiceEndpoint) -> Self {
         self.metadata.add_endpoint(endpoint);
         self
     }
 
+    #[must_use]
     pub fn primary_endpoint(mut self, url: &str) -> Self {
         self.metadata.primary_endpoint = Some(url.to_string());
         self
     }
 
+    #[must_use]
     pub fn tag(mut self, tag: &str) -> Self {
         self.metadata.tags.push(tag.to_string());
         self
     }
 
+    #[must_use]
     pub fn maintainer(mut self, maintainer: ContactInfo) -> Self {
         self.metadata.maintainer = Some(maintainer);
         self
     }
 
+    #[must_use]
     pub fn build(mut self) -> UniversalServiceMetadata {
         self.metadata.updated_at = Utc::now();
         self.metadata
@@ -399,7 +401,8 @@ impl UniversalServiceMetadataBuilder {
 // === MIGRATION UTILITIES ===
 
 impl UniversalServiceMetadata {
-    /// Migrate from legacy UnifiedServiceInfo
+    /// Migrate from legacy `UnifiedServiceInfo`
+    #[must_use]
     pub fn from_unified_service_config(
         config: &crate::unified_types::UnifiedServiceConfig,
     ) -> Self {

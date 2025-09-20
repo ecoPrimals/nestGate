@@ -12,7 +12,6 @@ use nestgate_core::Result as CoreResult;
 
 /// Real system metrics collector
 pub struct RealMetricsCollector;
-
 impl RealMetricsCollector {
     /// Collect real system resource metrics from the OS
     pub async fn collect_system_metrics() -> CoreResult<SystemResourceMetrics> {
@@ -73,7 +72,7 @@ impl RealMetricsCollector {
                         let active = total - idle;
 
                         if total > 0 {
-                            return Ok((active as f64 / total as f64) * 100.0);
+                            return Ok((f64::from(active) / f64::from(total)) * 100.0);
                         }
                     }
                 }
@@ -144,7 +143,7 @@ impl RealMetricsCollector {
                             .sum();
 
                         if total > 0 {
-                            return Ok((iowait as f64 / total as f64) * 100.0);
+                            return Ok((f64::from(iowait) / f64::from(total)) * 100.0);
                         }
                     }
                 }
@@ -172,14 +171,14 @@ impl RealMetricsCollector {
             }
 
             // Convert to MB/s (very rough approximation)
-            return Ok(total_bytes as f64 / (1024.0 * 1024.0 * 60.0)); // Assume 60 second average
+            return Ok(f64::from(total_bytes) / (1024.0 * 1024.0 * 60.0)); // Assume 60 second average
         }
 
         Ok(100.0) // Fallback value
     }
 
     /// Collect real ZFS pool metrics
-    pub async fn collect_pool_metrics(pool_name: &str) -> CoreResult<PoolPerformanceMetrics> {
+    pub fn collect_pool_metrics(pool_name: &str) -> CoreResult<PoolPerformanceMetrics> {
         debug!("Collecting real ZFS pool metrics for: {}", pool_name);
 
         let mut metrics = PoolPerformanceMetrics::default();

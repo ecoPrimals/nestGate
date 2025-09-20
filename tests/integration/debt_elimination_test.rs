@@ -11,7 +11,7 @@ use tracing::info;
 
 /// Test debt elimination configuration
 #[tokio::test]
-async fn test_debt_elimination_config() {
+async fn test_debt_elimination_config() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔧 Starting debt elimination configuration test");
     
     // Test debt elimination configuration creation
@@ -23,11 +23,12 @@ async fn test_debt_elimination_config() {
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ Debt elimination configuration test completed");
+    Ok(())
 }
 
 /// Test debt elimination processes
 #[tokio::test]
-async fn test_debt_elimination_processes() {
+async fn test_debt_elimination_processes() -> Result<(), Box<dyn std::error::Error>> {
     info!("⚡ Testing debt elimination processes");
     
     // Test debt elimination process operations
@@ -47,14 +48,16 @@ async fn test_debt_elimination_processes() {
         // Verify elimination process is valid
         assert!(!process.is_empty(), "Process should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ Debt elimination processes completed");
+    Ok(())
 }
 
 /// Test debt elimination validation
 #[tokio::test]
-async fn test_debt_elimination_validation() {
+async fn test_debt_elimination_validation() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔍 Testing debt elimination validation");
     
     // Test debt elimination validation steps
@@ -74,14 +77,16 @@ async fn test_debt_elimination_validation() {
         // Verify validation step is valid
         assert!(!step.is_empty(), "Step should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ Debt elimination validation completed");
+    Ok(())
 }
 
 /// Test debt elimination monitoring
 #[tokio::test]
-async fn test_debt_elimination_monitoring() {
+async fn test_debt_elimination_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing debt elimination monitoring");
     
     let start_time = std::time::Instant::now();
@@ -96,14 +101,16 @@ async fn test_debt_elimination_monitoring() {
         
         // Verify monitoring timing is accurate
         assert!(elapsed.as_millis() >= cycle_time as u128, "Debt monitoring timing should be accurate");
+    Ok(())
     }
     
     info!("✅ Debt elimination monitoring completed");
+    Ok(())
 }
 
 /// Test debt elimination error handling
 #[tokio::test]
-async fn test_debt_elimination_error_handling() {
+async fn test_debt_elimination_error_handling() -> Result<(), Box<dyn std::error::Error>> {
     info!("💥 Testing debt elimination error handling");
     
     // Test debt elimination error scenarios
@@ -126,14 +133,16 @@ async fn test_debt_elimination_error_handling() {
         // Verify error handling is valid
         assert!(!error_type.is_empty(), "Error type should be specified");
         assert!(recovery_time > 0, "Recovery time should be positive");
+    Ok(())
     }
     
     info!("✅ Debt elimination error handling completed");
+    Ok(())
 }
 
 /// Test debt elimination performance
 #[tokio::test]
-async fn test_debt_elimination_performance() {
+async fn test_debt_elimination_performance() -> Result<(), Box<dyn std::error::Error>> {
     info!("🚀 Testing debt elimination performance");
     
     // Test debt elimination performance scenarios
@@ -153,14 +162,16 @@ async fn test_debt_elimination_performance() {
         // Verify performance scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
         assert!(benchmark_time > 0, "Benchmark time should be positive");
+    Ok(())
     }
     
     info!("✅ Debt elimination performance completed");
+    Ok(())
 }
 
 /// Test debt elimination environments
 #[tokio::test]
-async fn test_debt_elimination_environments() {
+async fn test_debt_elimination_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing debt elimination across environments");
     
     // Test development environment debt elimination
@@ -176,4 +187,5 @@ async fn test_debt_elimination_environments() {
     info!("Production debt elimination configuration validated");
     
     info!("✅ Debt elimination environment test completed");
+    Ok(())
 }

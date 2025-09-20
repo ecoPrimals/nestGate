@@ -3,7 +3,7 @@
 /// Complete demonstration of NestGate's time-agnostic universal storage system
 /// Comprehensive demonstration of universal storage capabilities
 #[tokio::test]
-async fn test_universal_nas_demonstration() {
+async fn test_universal_nas_demonstration() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌟 NESTGATE UNIVERSAL NAS DEMONSTRATION");
     println!("========================================");
 
@@ -21,6 +21,7 @@ async fn test_universal_nas_demonstration() {
 
     println!("\n🎯 DEMONSTRATION COMPLETE");
     println!("Universal NAS successfully demonstrated across all technology eras!");
+    Ok(())
 }
 
 async fn demonstrate_temporal_device_detection() {
@@ -169,7 +170,7 @@ async fn demonstrate_cross_era_optimization() {
 
 /// Demonstrate API-first architecture
 #[tokio::test]
-async fn test_api_first_architecture() {
+async fn test_api_first_architecture() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔌 API-FIRST ARCHITECTURE DEMONSTRATION");
     println!("========================================");
 
@@ -195,16 +196,17 @@ async fn test_api_first_architecture() {
 
     println!("\n✨ API Architecture Benefits:");
     println!("  🤖 Zero UI dependency - pure AI operation");
-    println!("  🔄 Seamless ecosystem integration via Songbird orchestrator");
+    println!("  🔄 Seamless ecosystem integration via dynamic orchestration discovery");
     println!("  📈 Structured data optimized for machine learning");
     println!("  🔧 Extensible plugin architecture for new technologies");
 
     assert!(true, "API-first architecture successfully demonstrated");
+    Ok(())
 }
 
 /// Demonstrate complete universality across time and technology
 #[tokio::test]
-async fn test_complete_universality() {
+async fn test_complete_universality() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌟 COMPLETE UNIVERSALITY DEMONSTRATION");
     println!("======================================");
 
@@ -244,4 +246,5 @@ async fn test_complete_universality() {
     println!("  ✅ AI-ready: Pure API architecture for autonomous operation");
 
     assert!(true, "Complete universality successfully demonstrated");
+    Ok(())
 }

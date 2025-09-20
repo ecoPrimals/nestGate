@@ -24,7 +24,6 @@ pub struct BatchProcessingConfig {
     pub enable_adaptive_sizing: bool,
     pub target_latency: Duration,
 }
-
 impl Default for BatchProcessingConfig {
     fn default() -> Self {
         Self {
@@ -45,7 +44,6 @@ pub struct BatchItem<T> {
     pub timestamp: Instant,
     pub priority: BatchPriority,
 }
-
 /// Batch priority levels
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum BatchPriority {
@@ -54,7 +52,6 @@ pub enum BatchPriority {
     High,
     Critical,
 }
-
 /// A batch of items ready for processing
 #[derive(Debug)]
 pub struct Batch<T> {
@@ -62,7 +59,6 @@ pub struct Batch<T> {
     pub created_at: Instant,
     pub estimated_processing_time: Duration,
 }
-
 /// High-performance batch processor with intelligent sizing
 pub struct BatchProcessor<T, R> {
     pending_items: PendingItemsQueue<T>,
@@ -71,7 +67,6 @@ pub struct BatchProcessor<T, R> {
     config: BatchProcessingConfig,
     metrics: Arc<BatchMetrics>,
 }
-
 /// Batch processing metrics
 #[derive(Debug, Default)]
 pub struct BatchMetrics {
@@ -81,9 +76,8 @@ pub struct BatchMetrics {
     pub average_processing_time: std::sync::atomic::AtomicU64,
     pub queue_depth: std::sync::atomic::AtomicUsize,
 }
-
 impl<T: Send + Sync + 'static, R: Send + Sync + 'static> BatchProcessor<T, R> {
-    pub fn new(processor_fn: ProcessorFunction<T, R>, config: BatchProcessingConfig) -> Self {
+    pub const fn new(processor_fn: ProcessorFunction<T, R>, config: BatchProcessingConfig) -> Self {
         Self {
             pending_items: Arc::new(Mutex::new(VecDeque::new())),
             processing_queue: Arc::new(Mutex::new(VecDeque::new())),
@@ -93,7 +87,13 @@ impl<T: Send + Sync + 'static, R: Send + Sync + 'static> BatchProcessor<T, R> {
         }
     }
 
-    pub async fn add_item(&self, item: T, priority: BatchPriority) -> Result<()> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        #[must_use]
+        pub fn add_item(&self, item: T, priority: BatchPriority) -> Result<()>  {
         let batch_item = BatchItem {
             data: item,
             timestamp: Instant::now(),
@@ -105,7 +105,7 @@ impl<T: Send + Sync + 'static, R: Send + Sync + 'static> BatchProcessor<T, R> {
         if pending.len() >= self.config.max_pending_items {
             return Err(crate::error::NestGateError::validation_error(
                 "queue_full",
-                &format!("Pending queue is full ({})", self.config.max_pending_items),
+                &format!("Pending queue is full ({self.config.max_pending_items})"),
                 Some(pending.len().to_string()),
             ));
         }
@@ -114,7 +114,12 @@ impl<T: Send + Sync + 'static, R: Send + Sync + 'static> BatchProcessor<T, R> {
         Ok(())
     }
 
-    pub async fn process_batches(&self) -> Result<Vec<R>> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn process_batches(&self) -> Result<Vec<R>>  {
         // Create batches from pending items
         self.create_batches().await?;
 

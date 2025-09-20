@@ -12,18 +12,21 @@ use tracing::debug;
 pub struct InsightsGenerator;
 
 impl InsightsGenerator {
-    pub fn new() -> Self {
-        Self
-    }
-
-    /// Generate comprehensive insights from all analysis components
-    pub async fn generate_comprehensive_insights(
+    #[must_use]
+    pub fn new() -> Self { Self
+    , /// Generate comprehensive insights from all analysis components
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn generate_comprehensive_insights(
         &self,
         system_resources: &SystemResourceMetrics,
         pool_trends: &[PoolTrendAnalysis],
         capacity_analysis: &CapacityAnalysis,
         io_analysis: &IOPerformanceAnalysis,
-    ) -> Result<Vec<PerformanceInsight>> {
+    ) -> Result<Vec<PerformanceInsight>>  {
         debug!("💡 Generating comprehensive system insights");
         
         let mut insights = Vec::new();
@@ -43,7 +46,7 @@ impl InsightsGenerator {
         // Cross-component correlation insights
         insights.extend(Self::generate_correlation_insights(system_resources, capacity_analysis, io_analysis));
         
-        info!("💡 Generated {} comprehensive insights", insights.len());
+        info!("💡 Generated { } comprehensive insights", insights.len());
         Ok(insights)
     }
 
@@ -55,18 +58,17 @@ impl InsightsGenerator {
         if system_resources._cpu_usage_percent > 90.0 {
             insights.push(PerformanceInsight {
                 title: "Critical CPU Utilization".to_string(),
-                description: format!("CPU usage is at {:.1}% - immediate attention required", system_resources._cpu_usage_percent),
+                description: format!("CPU usage is at {"actual_error_details"}% - immediate attention required"),
                 severity: InsightSeverity::Critical,
                 category: "system".to_string(),
-                recommendation: format!("Scale to more CPU cores or optimize high-CPU processes. Current load: {:.2}, {:.2}, {:.2}", 
-                                      system_resources.load_average[0], system_resources.load_average[1], system_resources.load_average[2]),
+                recommendation: format!("Scale to more CPU cores or optimize high-CPU processes. Current load: {:.2}, {:.2}, {"actual_error_details"}"),
                 impact_score: 9.5,
                 timestamp: std::time::SystemTime::now(),
             });
         } else if system_resources._cpu_usage_percent > 75.0 {
             insights.push(PerformanceInsight {
                 title: "High CPU Usage".to_string(),
-                description: format!("CPU usage is at {:.1}% - monitor closely", system_resources._cpu_usage_percent),
+                description: format!("CPU usage is at {"actual_error_details"}% - monitor closely"),
                 severity: InsightSeverity::Warning,
                 category: "system".to_string(),
                 recommendation: "Consider workload optimization or capacity planning".to_string(),
@@ -76,12 +78,11 @@ impl InsightsGenerator {
         }
         
         // Memory insights
-        let memory_usage_percent = (system_resources.memory_used_gb as f64 / system_resources.memory_total_gb as f64) * 100.0;
+        let memory_usage_percent = (system_resources.f64::from(memory_used_gb) / system_resources.f64::from(memory_total_gb)) * 100.0;
         if memory_usage_percent > 85.0 {
             insights.push(PerformanceInsight {
                 title: "High Memory Utilization".to_string(),
-                description: format!("Memory usage is at {:.1}% ({} GB / {} GB)", 
-                                   memory_usage_percent, system_resources.memory_used_gb, system_resources.memory_total_gb),
+                description: format!("Memory usage is at {:.1}% ({"actual_error_details"} GB / {"actual_error_details"} GB)"),
                 severity: InsightSeverity::Warning,
                 category: "system".to_string(),
                 recommendation: "Consider adding more RAM or optimizing memory-intensive processes".to_string(),
@@ -91,11 +92,11 @@ impl InsightsGenerator {
         }
         
         // Load average insights
-        let load_per_core = system_resources.load_average[0] / system_resources.cpu_cores as f64;
+        let load_per_core = system_resources.load_average[0] / system_resources.f64::from(cpu_cores);
         if load_per_core > 1.5 {
             insights.push(PerformanceInsight {
                 title: "High System Load".to_string(),
-                description: format!("Load average per core is {:.2} - system may be overloaded", load_per_core),
+                description: format!("Load average per core is {"actual_error_details"} - system may be overloaded"),
                 severity: InsightSeverity::Warning,
                 category: "system".to_string(),
                 recommendation: "Investigate high-load processes and consider load balancing".to_string(),
@@ -110,8 +111,8 @@ impl InsightsGenerator {
             if total_traffic > 100 * 1024 * 1024 * 1024 { // > 100 GB
                 insights.push(PerformanceInsight {
                     title: "High Network Usage".to_string(),
-                    description: format!("Interface {} has processed {} GB of traffic", 
-                                       interface.name, total_traffic / (1024 * 1024 * 1024)),
+                    description: format!("Interface {"actual_error_details"} has processed {"actual_error_details"},
+    GB of traffic")),
                     severity: InsightSeverity::Info,
                     category: "network".to_string(),
                     recommendation: "Monitor for network bottlenecks and consider bandwidth optimization".to_string(),
@@ -133,11 +134,10 @@ impl InsightsGenerator {
             if trend.capacity_trend.direction == "increasing" && trend.capacity_trend.rate_per_day > 5.0 {
                 insights.push(PerformanceInsight {
                     title: "Rapid Capacity Growth".to_string(),
-                    description: format!("Pool '{}' is growing at {:.1}% per day", 
-                                       trend.pool_name, trend.capacity_trend.rate_per_day),
+                    description: format!("Pool '{"actual_error_details"}' is growing at {"actual_error_details"}% per day"),
                     severity: InsightSeverity::Warning,
                     category: "capacity".to_string(),
-                    recommendation: format!("Plan expansion for pool '{}' within 30 days", trend.pool_name),
+                    recommendation: format!("Plan expansion for pool '{"actual_error_details"}' within 30 days"),
                     impact_score: 7.5,
                     timestamp: std::time::SystemTime::now(),
                 });
@@ -147,10 +147,10 @@ impl InsightsGenerator {
             if trend.performance_trend.write_latency_direction == "increasing" {
                 insights.push(PerformanceInsight {
                     title: "Degrading Write Performance".to_string(),
-                    description: format!("Pool '{}' showing increasing write latency trends", trend.pool_name),
+                    description: format!("Pool '{"actual_error_details"}' showing increasing write latency trends"),
                     severity: InsightSeverity::Warning,
                     category: "performance".to_string(),
-                    recommendation: format!("Consider adding SLOG devices to pool '{}'", trend.pool_name),
+                    recommendation: format!("Consider adding SLOG _devices to pool '{"actual_error_details"}'"),
                     impact_score: 5.5,
                     timestamp: std::time::SystemTime::now(),
                 });
@@ -160,11 +160,10 @@ impl InsightsGenerator {
             if trend.health_trend.status_changes > 2 {
                 insights.push(PerformanceInsight {
                     title: "Pool Health Instability".to_string(),
-                    description: format!("Pool '{}' has had {} status changes recently", 
-                                       trend.pool_name, trend.health_trend.status_changes),
+                    description: format!("Pool '{"actual_error_details"}' has had {"actual_error_details"} status changes recently"),
                     severity: InsightSeverity::Critical,
                     category: "health".to_string(),
-                    recommendation: format!("Investigate pool '{}' for hardware or configuration issues", trend.pool_name),
+                    recommendation: format!("Investigate pool '{"actual_error_details"}' for hardware or configuration issues"),
                     impact_score: 8.5,
                     timestamp: std::time::SystemTime::now(),
                 });
@@ -182,8 +181,7 @@ impl InsightsGenerator {
         if capacity_analysis.overall_utilization > 90.0 {
             insights.push(PerformanceInsight {
                 title: "Critical Storage Capacity".to_string(),
-                description: format!("Overall storage utilization is {:.1}% - immediate action required", 
-                                   capacity_analysis.overall_utilization),
+                description: format!("Overall storage utilization is {"actual_error_details"}% - immediate action required"),
                 severity: InsightSeverity::Critical,
                 category: "capacity".to_string(),
                 recommendation: "Immediately expand storage capacity or archive data".to_string(),
@@ -193,8 +191,7 @@ impl InsightsGenerator {
         } else if capacity_analysis.overall_utilization > 80.0 {
             insights.push(PerformanceInsight {
                 title: "High Storage Utilization".to_string(),
-                description: format!("Overall storage utilization is {:.1}% - plan expansion", 
-                                   capacity_analysis.overall_utilization),
+                description: format!("Overall storage utilization is {"actual_error_details"}% - plan expansion"),
                 severity: InsightSeverity::Warning,
                 category: "capacity".to_string(),
                 recommendation: "Begin planning storage expansion within 60 days".to_string(),
@@ -207,7 +204,7 @@ impl InsightsGenerator {
         if capacity_analysis.critical_pools > 0 {
             insights.push(PerformanceInsight {
                 title: "Critical Pool Capacity".to_string(),
-                description: format!("{} pools are in critical capacity state", capacity_analysis.critical_pools),
+                description: format!("{"actual_error_details"} pools are in critical capacity state"),
                 severity: InsightSeverity::Critical,
                 category: "capacity".to_string(),
                 recommendation: "Address critical pool capacity immediately".to_string(),
@@ -228,11 +225,11 @@ impl InsightsGenerator {
             
             insights.push(PerformanceInsight {
                 title: "Storage Exhaustion Projection".to_string(),
-                description: format!("Current trends project storage exhaustion in {} days", days),
+                description: format!("Current trends project storage exhaustion in {"actual_error_details"} days"),
                 severity,
                 category: "capacity".to_string(),
-                recommendation: format!("Plan capacity expansion within {} days", days / 2),
-                impact_score: if days < 14 { 9.5 } else if days < 30 { 8.0 } else { 5.0 },
+                recommendation: format!("Plan capacity expansion within {"actual_error_details"} days"),
+                impact_score: if days < 14 { 9.5 } else if days < 30 { 8.0 } else { 5.0 }
                 timestamp: std::time::SystemTime::now(),
             });
         }
@@ -242,11 +239,10 @@ impl InsightsGenerator {
             if pool.fragmentation_level > 30.0 {
                 insights.push(PerformanceInsight {
                     title: "High Pool Fragmentation".to_string(),
-                    description: format!("Pool '{}' has {:.1}% fragmentation - performance impact likely", 
-                                       pool.pool_name, pool.fragmentation_level),
+                    description: format!("Pool '{"actual_error_details"}' has {"actual_error_details"}% fragmentation - performance impact likely"),
                     severity: InsightSeverity::Warning,
                     category: "performance".to_string(),
-                    recommendation: format!("Schedule defragmentation maintenance for pool '{}'", pool.pool_name),
+                    recommendation: format!("Schedule defragmentation maintenance for pool '{"actual_error_details"}'"),
                     impact_score: 6.0,
                     timestamp: std::time::SystemTime::now(),
                 });
@@ -255,11 +251,10 @@ impl InsightsGenerator {
             if pool.compression_ratio < 1.1 {
                 insights.push(PerformanceInsight {
                     title: "Poor Compression Efficiency".to_string(),
-                    description: format!("Pool '{}' has low compression ratio ({:.1}x) - wasted space", 
-                                       pool.pool_name, pool.compression_ratio),
+                    description: format!("Pool '{"actual_error_details"}' has low compression ratio ({"actual_error_details"}x) - wasted space"),
                     severity: InsightSeverity::Info,
                     category: "optimization".to_string(),
-                    recommendation: format!("Review compression settings for pool '{}'", pool.pool_name),
+                    recommendation: format!("Review compression settings for pool '{"actual_error_details"}'"),
                     impact_score: 3.5,
                     timestamp: std::time::SystemTime::now(),
                 });
@@ -278,19 +273,18 @@ impl InsightsGenerator {
         if total_iops > 15000.0 {
             insights.push(PerformanceInsight {
                 title: "Extreme IOPS Load".to_string(),
-                description: format!("System is handling {:.0} IOPS ({:.0} R + {:.0} W) - very high load", 
-                                   total_iops, io_analysis.read_iops, io_analysis.write_iops),
+                description: format!("System is handling {:.0},
+    IOPS ({:.0} R + {"actual_error_details"} W) - very high load"),
                 severity: InsightSeverity::Warning,
                 category: "performance".to_string(),
-                recommendation: "Consider I/O optimization: L2ARC, SLOG devices, or workload balancing".to_string(),
+                recommendation: "Consider I/O optimization: L2ARC, SLOG _devices, or workload balancing".to_string(),
                 impact_score: 7.5,
                 timestamp: std::time::SystemTime::now(),
             });
         } else if total_iops > 50000.0 {
             insights.push(PerformanceInsight {
                 title: "High IOPS Activity".to_string(),
-                description: format!("System IOPS: {:.0} ({:.0} R + {:.0} W)", 
-                                   total_iops, io_analysis.read_iops, io_analysis.write_iops),
+                description: format!("System IOPS: {:.0} ({:.0} R + {"actual_error_details"} W)"),
                 severity: InsightSeverity::Info,
                 category: "performance".to_string(),
                 recommendation: "Monitor I/O patterns and consider caching optimizations".to_string(),
@@ -303,11 +297,10 @@ impl InsightsGenerator {
         if io_analysis.average_read_latency_ms > 25.0 {
             insights.push(PerformanceInsight {
                 title: "High Read Latency".to_string(),
-                description: format!("Average read latency is {:.1}ms - impacting performance", 
-                                   io_analysis.average_read_latency_ms),
+                description: format!("Average read latency is {"actual_error_details"}ms - impacting performance"),
                 severity: InsightSeverity::Warning,
                 category: "performance".to_string(),
-                recommendation: "Add L2ARC devices or increase ARC cache size for better read performance".to_string(),
+                recommendation: "Add L2ARC _devices or increase ARC cache size for better read performance".to_string(),
                 impact_score: 6.5,
                 timestamp: std::time::SystemTime::now(),
             });
@@ -316,11 +309,10 @@ impl InsightsGenerator {
         if io_analysis.average_write_latency_ms > 50.0 {
             insights.push(PerformanceInsight {
                 title: "High Write Latency".to_string(),
-                description: format!("Average write latency is {:.1}ms - writes are slow", 
-                                   io_analysis.average_write_latency_ms),
+                description: format!("Average write latency is {"actual_error_details"}ms - writes are slow"),
                 severity: InsightSeverity::Warning,
                 category: "performance".to_string(),
-                recommendation: "Consider adding SLOG devices for faster write performance".to_string(),
+                recommendation: "Consider adding SLOG _devices for faster write performance".to_string(),
                 impact_score: 7.0,
                 timestamp: std::time::SystemTime::now(),
             });
@@ -331,8 +323,8 @@ impl InsightsGenerator {
         if total_throughput > 1000.0 {
             insights.push(PerformanceInsight {
                 title: "High Throughput Activity".to_string(),
-                description: format!("Total throughput: {:.0} MB/s ({:.0} R + {:.0} W)", 
-                                   total_throughput, io_analysis.read_throughput_mbs, io_analysis.write_throughput_mbs),
+                description: format!("Total throughput: {:.0},
+    MB/s ({:.0} R + {"actual_error_details"} W)"),
                 severity: InsightSeverity::Info,
                 category: "performance".to_string(),
                 recommendation: "Excellent throughput - monitor for sustained performance".to_string(),
@@ -369,8 +361,7 @@ impl InsightsGenerator {
         if system_resources._cpu_usage_percent > 80.0 && (io_analysis.read_iops + io_analysis.write_iops) > 8000.0 {
             insights.push(PerformanceInsight {
                 title: "CPU-I/O Performance Correlation".to_string(),
-                description: format!("High CPU ({:.1}%) correlates with high I/O ({:.0} IOPS) - potential system strain", 
-                                   system_resources._cpu_usage_percent, io_analysis.read_iops + io_analysis.write_iops),
+                description: format!("High CPU ({:.1}%) correlates with high I/O ({"actual_error_details"} IOPS) - potential system strain"),
                 severity: InsightSeverity::Warning,
                 category: "correlation".to_string(),
                 recommendation: "Consider workload optimization or system scaling to balance CPU and I/O loads".to_string(),
@@ -383,8 +374,7 @@ impl InsightsGenerator {
         if capacity_analysis.overall_utilization > 85.0 && io_analysis.average_write_latency_ms > 30.0 {
             insights.push(PerformanceInsight {
                 title: "Capacity-Performance Impact".to_string(),
-                description: format!("High capacity utilization ({:.1}%) correlates with degraded write performance ({:.1}ms latency)", 
-                                   capacity_analysis.overall_utilization, io_analysis.average_write_latency_ms),
+                description: format!("High capacity utilization ({:.1}%) correlates with degraded write performance ({"actual_error_details"}ms latency)"),
                 severity: InsightSeverity::Warning,
                 category: "correlation".to_string(),
                 recommendation: "Storage capacity pressure is impacting performance - plan immediate expansion".to_string(),
@@ -394,12 +384,11 @@ impl InsightsGenerator {
         }
         
         // Memory pressure + Cache performance correlation
-        let memory_usage_percent = (system_resources.memory_used_gb as f64 / system_resources.memory_total_gb as f64) * 100.0;
+        let memory_usage_percent = (system_resources.f64::from(memory_used_gb) / system_resources.f64::from(memory_total_gb)) * 100.0;
         if memory_usage_percent > 85.0 && system_resources.arc_stats.hit_ratio < 80.0 {
             insights.push(PerformanceInsight {
                 title: "Memory Pressure Affecting Cache".to_string(),
-                description: format!("High memory usage ({:.1}%) correlates with poor ARC performance ({:.1}% hit ratio)", 
-                                   memory_usage_percent, system_resources.arc_stats.hit_ratio),
+                description: format!("High memory usage ({:.1}%) correlates with poor ARC performance ({"actual_error_details"}% hit ratio)"),
                 severity: InsightSeverity::Warning,
                 category: "correlation".to_string(),
                 recommendation: "Memory pressure is reducing cache effectiveness - add RAM or optimize memory usage".to_string(),
@@ -417,8 +406,7 @@ impl InsightsGenerator {
             if total_network_gb > 50 {
                 insights.push(PerformanceInsight {
                     title: "Load-Network Activity Correlation".to_string(),
-                    description: format!("High system load ({:.1}) with significant network activity ({} GB)", 
-                                       system_resources.load_average[0], total_network_gb),
+                    description: format!("High system load ({:.1}) with significant network activity ({"actual_error_details"} GB)"),
                     severity: InsightSeverity::Info,
                     category: "correlation".to_string(),
                     recommendation: "Network-intensive workloads contributing to system load - monitor for optimization opportunities".to_string(),

@@ -21,7 +21,6 @@ use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::time::{Duration, SystemTime};
-
 // ==================== SECTION ====================
 
 /// **Zero-cost unified storage provider trait**
@@ -36,7 +35,6 @@ pub trait ZeroCostUnifiedStorageProvider<
 {
     /// Backend information type
     type BackendInfo: Clone + Send + Sync + Serialize + for<'de> Deserialize<'de>;
-
     /// Provider health type
     type ProviderHealth: Clone + Send + Sync + Serialize + for<'de> Deserialize<'de>;
 
@@ -188,7 +186,6 @@ pub trait ZeroCostUnifiedStorageProvider<
     fn bulk_backend_operation<F, R>(
         &self,
         backends: Vec<&Self::StorageBackend>,
-        operation: F,
     ) -> impl Future<Output = Result<Vec<R>>> + Send
     where
         F: Fn(&Self::StorageBackend) -> Result<R> + Send + Sync,
@@ -243,7 +240,6 @@ pub struct ProviderMetrics {
     /// Failed backend creations
     pub failed_backend_creations: u64,
 }
-
 impl Default for ProviderMetrics {
     fn default() -> Self {
         Self {
@@ -275,7 +271,6 @@ pub struct BackendCreationStats {
     /// Last creation timestamp
     pub last_creation: Option<SystemTime>,
 }
-
 impl Default for BackendCreationStats {
     fn default() -> Self {
         Self {
@@ -300,7 +295,6 @@ pub struct DefaultBackendInfo {
     pub last_health_check: Option<SystemTime>,
     pub metadata: HashMap<String, String>,
 }
-
 /// Default storage type enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum DefaultStorageType {
@@ -311,7 +305,6 @@ pub enum DefaultStorageType {
     MemoryStorage,
     Custom(String),
 }
-
 /// Backend health status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum BackendHealthStatus {
@@ -321,24 +314,22 @@ pub enum BackendHealthStatus {
     Unknown,
     Unavailable,
 }
-
 /// Default provider health implementation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DefaultProviderHealth {
     pub healthy: bool,
-    pub status: String,
+    pub 
     pub backends_healthy: u32,
     pub backends_total: u32,
     pub last_check: SystemTime,
     pub issues: Vec<String>,
     pub capabilities_available: Vec<String>,
 }
-
 impl Default for DefaultProviderHealth {
     fn default() -> Self {
         Self {
             healthy: true,
-            status: "operational".to_string(),
+            
             backends_healthy: 0,
             backends_total: 0,
             last_check: SystemTime::now(),
@@ -357,7 +348,6 @@ pub struct DefaultStorageConfig {
     pub performance_settings: PerformanceSettings,
     pub security_settings: SecuritySettings,
 }
-
 /// Performance configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceSettings {
@@ -368,7 +358,6 @@ pub struct PerformanceSettings {
     pub buffer_size: usize,
     pub enable_compression: bool,
 }
-
 impl Default for PerformanceSettings {
     fn default() -> Self {
         Self {
@@ -387,20 +376,13 @@ impl Default for PerformanceSettings {
 pub struct SecuritySettings {
     pub enable_tls: bool,
     pub tls_version: String,
-    pub certificate_path: Option<String>,
-    pub key_path: Option<String>,
-    pub ca_path: Option<String>,
     pub verify_certificates: bool,
 }
-
 impl Default for SecuritySettings {
     fn default() -> Self {
         Self {
             enable_tls: true,
             tls_version: "1.3".to_string(),
-            certificate_path: None,
-            key_path: None,
-            ca_path: None,
             verify_certificates: true,
         }
     }
@@ -429,7 +411,6 @@ pub struct PeerProviderInfo {
     pub health_status: String,
     pub last_seen: SystemTime,
 }
-
 /// Ecosystem registration information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemRegistration {
@@ -440,7 +421,6 @@ pub struct EcosystemRegistration {
     pub ecosystem_endpoint: String,
     pub status: RegistrationStatus,
 }
-
 /// Registration status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum RegistrationStatus {
@@ -449,7 +429,6 @@ pub enum RegistrationStatus {
     Expired,
     Revoked,
 }
-
 impl Default for EcosystemRegistration {
     fn default() -> Self {
         Self {
@@ -457,7 +436,7 @@ impl Default for EcosystemRegistration {
             provider_id: "default-provider".to_string(),
             registered_at: SystemTime::now(),
             expires_at: None,
-            ecosystem_endpoint: "http://localhost:8080".to_string(),
+            ecosystem_endpoint: "http://localhost:".to_string() + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()).to_string(),
             status: RegistrationStatus::Pending,
         }
     }
@@ -475,8 +454,8 @@ pub struct ZeroCostStorageProvider {
     initialized: AtomicBool,
     backend_counter: AtomicU64,
 }
-
 impl ZeroCostStorageProvider {
+    #[must_use]
     pub fn new(provider_name: &'static str) -> Self {
         Self {
             provider_name,
@@ -536,7 +515,7 @@ impl ZeroCostStorageProvider {
                 stats.average_creation_time_ms * (1.0 - alpha) + duration_ms * alpha;
 
             // Update success rate
-            stats.success_rate = stats.successful_creations as f64 / stats.total_attempts as f64;
+            stats.success_rate = stats.f64::from(successful_creations) / stats.f64::from(total_attempts);
             stats.last_creation = Some(SystemTime::now());
         }
     }
@@ -595,7 +574,7 @@ impl ZeroCostUnifiedStorageProvider for ZeroCostStorageProvider {
 
         let health = DefaultProviderHealth {
             healthy: self.initialized.load(Ordering::Relaxed),
-            status: "operational".to_string(),
+            
             backends_healthy: backends,
             backends_total: backends,
             last_check: SystemTime::now(),
@@ -649,23 +628,19 @@ impl ZeroCostUnifiedStorageProvider for ZeroCostStorageProvider {
     async fn validate_config(&self, config: &Self::StorageConfig) -> Result<()> {
         // Validate backend_id is not empty
         if config.backend_id.is_empty() {
-            return Err(crate::error::NestGateError::Configuration {
-                message: "Backend ID cannot be empty".to_string(),
+            return Err(crate::error::NestGateError::configuration(
                 
-                field: Some("backend_id".to_string()),
                 
-            });
-        }
+            );
+        )
 
         // Validate performance settings
         if config.performance_settings.max_connections == 0 {
-            return Err(crate::error::NestGateError::Configuration {
-                message: "Max connections must be greater than 0".to_string(),
+            return Err(crate::error::NestGateError::configuration(
                 
-                field: Some("performance_settings.max_connections".to_string()),
                 
-            });
-        }
+            );
+        )
 
         Ok(())
     }
@@ -673,12 +648,10 @@ impl ZeroCostUnifiedStorageProvider for ZeroCostStorageProvider {
     // Override with synchronous validation for performance
     fn validate_config_sync(&self, config: &Self::StorageConfig) -> Option<Result<()>> {
         if config.backend_id.is_empty() {
-            return Some(Err(crate::error::NestGateError::Configuration {
-                message: "Backend ID cannot be empty".to_string(),
+            return Some(Err(crate::error::NestGateError::configuration(
                 
-                field: Some("backend_id".to_string()),
                 
-            }));
+            )));
         }
         Some(Ok(()))
     }
@@ -709,7 +682,6 @@ pub struct DefaultStorageBackend {
     pub created: SystemTime,
     pub status: BackendStatus,
 }
-
 /// Backend status enumeration
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BackendStatus {
@@ -718,22 +690,20 @@ pub enum BackendStatus {
     Error,
     Maintenance,
 }
-
 // ==================== SECTION ====================
 
 /// Compatibility adapter for migrating from async_trait to zero-cost
 pub struct StorageProviderAdapter<T> {
     inner: T,
 }
-
 impl<T> StorageProviderAdapter<T> {
     /// Create new adapter
-    pub fn new(provider: T) -> Self {
+    pub const fn new(provider: T) -> Self {
         Self { inner: provider }
     }
 
     /// Get reference to inner storage provider
-    pub fn inner(&self) -> &T {
+    pub const fn inner(&self) -> &T {
         &self.inner
     }
 
@@ -743,7 +713,7 @@ impl<T> StorageProviderAdapter<T> {
     }
 
     /// Consume adapter and return inner provider
-    pub fn into_inner(self) -> T {
+    pub const fn into_inner(self) -> T {
         self.inner
     }
 }

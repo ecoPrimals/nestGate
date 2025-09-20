@@ -2,7 +2,6 @@
 /// This module contains the fundamental types used throughout the diagnostics system.
 use serde::{Deserialize, Serialize};
 use std::fmt;
-
 /// System diagnostic level
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum DiagnosticLevel {
@@ -15,7 +14,6 @@ pub enum DiagnosticLevel {
     /// Critical error diagnostic
     Critical,
 }
-
 impl fmt::Display for DiagnosticLevel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -47,7 +45,6 @@ pub enum ComponentType {
     /// Cache
     Cache,
 }
-
 impl fmt::Display for ComponentType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -72,15 +69,11 @@ pub struct ServiceInfo {
     pub start_time: Option<std::time::SystemTime>,
     pub pid: Option<u32>,
     pub memory_bytes: Option<u64>,
-    pub log_path: Option<String>,
-    pub environment: Option<String>,
     pub description: Option<String>,
     pub dependencies: Option<Vec<String>>,
     pub cpu_percent: Option<f64>,
-    pub config_path: Option<String>,
     pub command_line: Option<String>,
 }
-
 impl Default for ServiceInfo {
     fn default() -> Self {
         Self {
@@ -90,12 +83,9 @@ impl Default for ServiceInfo {
             start_time: None,
             pid: None,
             memory_bytes: None,
-            log_path: None,
-            environment: None,
             description: None,
             dependencies: None,
             cpu_percent: None,
-            config_path: None,
             command_line: None,
         }
     }

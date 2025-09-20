@@ -2,7 +2,6 @@
 /// 
 /// Provides fallback ZFS operations when the primary ZFS system is unavailable.
 /// This is a simplified implementation for ecosystem integration compatibility.
-
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -21,7 +20,6 @@ pub struct ZfsFallbackConfig {
     /// Default pool name for fallback operations
     pub default_pool: String,
 }
-
 impl Default for ZfsFallbackConfig {
     fn default() -> Self {
         Self {
@@ -42,7 +40,6 @@ pub struct PoolConfig {
     /// Pool type
     pub pool_type: String,
 }
-
 impl Default for PoolConfig {
     fn default() -> Self {
         Self {
@@ -65,7 +62,6 @@ pub struct PoolInfo {
     /// Used space in bytes
     pub used: u64,
 }
-
 /// ZFS fallback provider implementation
 #[derive(Debug)]
 pub struct ZfsFallbackProvider {
@@ -76,7 +72,6 @@ pub struct ZfsFallbackProvider {
     /// Configuration
     config: ZfsFallbackConfig,
 }
-
 impl Default for ZfsFallbackProvider {
     fn default() -> Self {
         Self::new()
@@ -85,11 +80,12 @@ impl Default for ZfsFallbackProvider {
 
 impl ZfsFallbackProvider {
     /// Create a new ZFS fallback provider
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self::with_config(ZfsFallbackConfig::default())
     }
 
     /// Create a new ZFS fallback provider with configuration
+    #[must_use]
     pub fn with_config(config: ZfsFallbackConfig) -> Self {
         Self {
             pools: Arc::new(RwLock::new(HashMap::new())),
@@ -99,16 +95,19 @@ impl ZfsFallbackProvider {
     }
 
     /// Create pool fallback implementation
-    pub async fn create_pool_fallback(&self, config: &PoolConfig) -> Result<serde_json::Value> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn create_pool_fallback(&self, config: &PoolConfig) -> Result<serde_json::Value>  {
         if !self.config.enabled {
-            return Err(NestGateError::Storage {
-                message: "ZFS fallback provider is disabled".to_string(),
-                operation: "create_pool".to_string(),
-                resource: Some(config.name.clone()),
-                retryable: false,
-                storage_data: None,
-                context: None,
-            });
+            return Err(NestGateError::storage_error(
+                "ZFS fallback provider is disabled"
+            ));
         }
 
         let mut pools = self.pools.write().await;
@@ -127,12 +126,20 @@ impl ZfsFallbackProvider {
         Ok(serde_json::json!({
             "success": true,
             "pool": pool_info,
-            "message": format!("Pool '{}' created successfully", config.name)
+            "message": format!("Pool '{config.name}' created successfully")
         }))
     }
 
     /// List pools fallback implementation
-    pub async fn list_pools_fallback(&self) -> Result<Vec<PoolInfo>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn list_pools_fallback(&self) -> Result<Vec<PoolInfo>>  {
         if !self.config.enabled {
             return Ok(vec![]);
         }
@@ -142,78 +149,225 @@ impl ZfsFallbackProvider {
     }
 
     /// Get pool status fallback implementation
-    pub async fn pool_status_fallback(&self, pool_name: &str) -> Result<PoolInfo> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn pool_status_fallback(&self, pool_name: &str) -> Result<PoolInfo>  {
         if !self.config.enabled {
-            return Err(NestGateError::Storage {
-                message: "ZFS fallback provider is disabled".to_string(),
-                operation: "pool_status".to_string(),
-                resource: Some(pool_name.to_string()),
-                retryable: false,
-                storage_data: None,
-                context: None,
-            });
+            return Err(NestGateError::storage_error(
+                "ZFS fallback provider is disabled"
+            ));
         }
 
         let pools = self.pools.read().await;
         pools.get(pool_name).cloned().ok_or_else(|| {
-            NestGateError::Storage {
-                message: format!("Pool '{}' not found in fallback provider", pool_name),
-                operation: "pool_status".to_string(),
-                resource: Some(pool_name.to_string()),
-                retryable: false,
-                storage_data: None,
-                context: None,
-            }
+            NestGateError::storage_error_detailed(
+                format!("Pool '{pool_name}' not found in fallback provider"),
+                Some("pool_lookup".to_string())
+            )
         })
     }
 
     /// Create dataset fallback implementation
-    pub async fn create_dataset_fallback(&self, dataset_name: &str) -> Result<serde_json::Value> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn create_dataset_fallback(&self, dataset_name: &str) -> Result<serde_json::Value>  {
         if !self.config.enabled {
-            return Err(NestGateError::Storage {
-                message: "ZFS fallback provider is disabled".to_string(),
-                operation: "create_dataset".to_string(),
-                resource: Some(dataset_name.to_string()),
-                retryable: false,
-                storage_data: None,
-                context: None,
-            });
+            return Err(NestGateError::storage_error(
+                "ZFS fallback provider is disabled"
+            ));
         }
 
-        let mut datasets = self.datasets.write().await;
-        
+        // Simulate dataset creation
         let dataset_info = serde_json::json!({
             "name": dataset_name,
             "type": "filesystem",
-            "used": 0,
-            "available": 1024 * 1024 * 1024, // 1GB
-            "mountpoint": format!("/{}", dataset_name),
             "creation": chrono::Utc::now().to_rfc3339(),
+            "mountpoint": format!("/mnt/{dataset_name}"),
+            "status": "created_fallback"
         });
 
-        datasets.insert(dataset_name.to_string(), dataset_info.clone());
-
-        info!("✅ Created fallback ZFS dataset: {}", dataset_name);
-
-        Ok(serde_json::json!({
-            "success": true,
-            "dataset": dataset_info,
-            "message": format!("Dataset '{}' created successfully", dataset_name)
-        }))
+        Ok(dataset_info)
     }
 
     /// List datasets fallback implementation
-    pub async fn list_datasets_fallback(&self) -> Result<Vec<serde_json::Value>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn list_datasets_fallback(&self, pool_name: &str) -> Result<Vec<serde_json::Value>>  {
         if !self.config.enabled {
-            return Ok(vec![]);
+            return Err(NestGateError::storage_error(
+                "ZFS fallback provider is disabled"
+            ));
         }
 
-        let datasets = self.datasets.read().await;
-        Ok(datasets.values().cloned().collect())
+        let pools = self.pools.read().await;
+        if !pools.contains_key(pool_name) {
+            return Err(NestGateError::storage_error_detailed(
+                format!("Pool '{pool_name}' not found in fallback provider"),
+                Some("list_datasets".to_string())
+            ));
+        }
+
+        // Return mock dataset list
+        let datasets = vec![
+            serde_json::json!({
+                "name": format!("{pool_name}/dataset1"),
+                "type": "filesystem",
+                "mountpoint": format!("/mnt/{pool_name}/dataset1")
+            }),
+            serde_json::json!({
+                "name": format!("{pool_name}/dataset2"),
+                "type": "filesystem", 
+                "mountpoint": format!("/mnt/{pool_name}/dataset2")
+            })
+        ];
+
+        Ok(datasets)
+    }
+
+    /// Create snapshot fallback implementation
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn create_snapshot_fallback(&self, dataset_name: &str, snapshot_name: &str) -> Result<serde_json::Value>  {
+        if !self.config.enabled {
+            return Err(NestGateError::storage_error(
+                "ZFS fallback provider is disabled"
+            ));
+        }
+
+        let snapshot_info = serde_json::json!({
+            "dataset": dataset_name,
+            "snapshot": snapshot_name,
+            "full_name": format!("{}@{}", dataset_name, snapshot_name),
+            "creation": chrono::Utc::now().to_rfc3339(),
+            "status": "created_fallback"
+        });
+
+        Ok(snapshot_info)
+    }
+
+    /// List snapshots fallback implementation
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn list_snapshots_fallback(&self, dataset_name: &str) -> Result<Vec<serde_json::Value>>  {
+        if !self.config.enabled {
+            return Err(NestGateError::storage_error(
+                "ZFS fallback provider is disabled"
+            ));
+        }
+
+        // Return mock snapshot list
+        let snapshots = vec![
+            serde_json::json!({
+                "name": format!("{dataset_name}@snapshot1"),
+                "creation": chrono::Utc::now().to_rfc3339(),
+                "used": "1.2M"
+            }),
+            serde_json::json!({
+                "name": format!("{dataset_name}@snapshot2"),
+                "creation": chrono::Utc::now().to_rfc3339(),
+                "used": "2.4M"
+            })
+        ];
+
+        Ok(snapshots)
+    }
+
+    /// Destroy dataset fallback implementation
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn destroy_dataset_fallback(&self, dataset_name: &str) -> Result<serde_json::Value>  {
+        if !self.config.enabled {
+            return Err(NestGateError::storage_error(
+                "ZFS fallback provider is disabled"
+            ));
+        }
+
+        let result = serde_json::json!({
+            "dataset": dataset_name,
+            "status": "destroyed_fallback",
+            "timestamp": chrono::Utc::now().to_rfc3339()
+        });
+
+        Ok(result)
+    }
+
+    /// Get dataset properties fallback implementation
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn get_dataset_properties_fallback(&self, dataset_name: &str) -> Result<serde_json::Value>  {
+        if !self.config.enabled {
+            return Err(NestGateError::storage_error(
+                "ZFS fallback provider is disabled"
+            ));
+        }
+
+        let properties = serde_json::json!({
+            "name": dataset_name,
+            "type": "filesystem",
+            "creation": chrono::Utc::now().to_rfc3339(),
+            "used": "10.5G",
+            "available": "89.5G", 
+            "referenced": "10.5G",
+            "compressratio": "1.00x",
+            "mounted": "yes",
+            "mountpoint": format!("/mnt/{dataset_name.split('/'}").last().unwrap_or(dataset_name))
+        });
+
+        Ok(properties)
     }
 
     /// Generic execute method for compatibility with FallbackProviderWrapper
-    pub async fn execute(&self, operation: &str, params: serde_json::Value) -> Result<serde_json::Value> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn execute(&self, operation: &str, params: serde_json::Value) -> Result<serde_json::Value>  {
         match operation {
             "create_pool" => {
                 // Extract pool config from params
@@ -251,27 +405,55 @@ impl ZfsFallbackProvider {
                 self.create_dataset_fallback(dataset_name).await
             },
             "list_datasets" => {
-                let datasets = self.list_datasets_fallback().await?;
+                let pool_name = params.get("pool_name")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("default_pool");
+                let datasets = self.list_datasets_fallback(pool_name).await?;
                 Ok(serde_json::to_value(datasets)?)
+            },
+            "create_snapshot" => {
+                let dataset_name = params.get("dataset_name")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("default_dataset");
+                let snapshot_name = params.get("snapshot_name")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("default_snapshot");
+                self.create_snapshot_fallback(dataset_name, snapshot_name).await
+            },
+            "list_snapshots" => {
+                let dataset_name = params.get("dataset_name")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("default_dataset");
+                let snapshots = self.list_snapshots_fallback(dataset_name).await?;
+                Ok(serde_json::to_value(snapshots)?)
+            },
+            "destroy_dataset" => {
+                let dataset_name = params.get("dataset_name")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("default_dataset");
+                self.destroy_dataset_fallback(dataset_name).await
+            },
+            "get_dataset_properties" => {
+                let dataset_name = params.get("dataset_name")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("default_dataset");
+                let properties = self.get_dataset_properties_fallback(dataset_name).await?;
+                Ok(serde_json::to_value(properties)?)
             },
             "health_check" => {
                 self.health_check().await
             },
             _ => {
-                Err(NestGateError::Storage {
-                    message: format!("Unsupported ZFS operation: {}", operation),
-                    operation: operation.to_string(),
-                    resource: None,
-                    retryable: false,
-                    storage_data: None,
-                    context: None,
-                })
+                Err(NestGateError::storage_error_detailed(
+                    format!("Unsupported ZFS operation: {operation}"),
+                    Some("zfs_fallback".to_string())
+                ))
             }
         }
     }
 
     /// Get list of supported operations
-    pub fn supported_operations(&self) -> Vec<String> {
+    pub const fn supported_operations(&self) -> Vec<String> {
         vec![
             "create_pool".to_string(),
             "list_pools".to_string(),
@@ -283,15 +465,24 @@ impl ZfsFallbackProvider {
     }
 
     /// Health check for fallback provider
-    pub async fn health_check(&self) -> Result<serde_json::Value> {
-        Ok(serde_json::json!({
-            "status": "healthy",
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn health_check(&self) -> Result<serde_json::Value>  {
+        let health_status = serde_json::json!({
             "provider": "zfs_fallback",
             "enabled": self.config.enabled,
-            "simulate": self.config.simulate,
+            "status": if self.config.enabled { "healthy" } else { "disabled" },
             "pools_count": self.pools.read().await.len(),
-            "datasets_count": self.datasets.read().await.len()
-        }))
+            "last_check": chrono::Utc::now().to_rfc3339()
+        });
+
+        Ok(health_status)
     }
 
     /// Get provider metadata

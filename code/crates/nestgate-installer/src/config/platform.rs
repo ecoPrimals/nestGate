@@ -2,7 +2,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-
 // Type alias to reduce complexity
 type ComponentConfigMap = HashMap<String, HashMap<String, String>>;
 
@@ -27,7 +26,6 @@ pub struct InstallationSettings {
     /// Enable verbose output
     pub verbose: bool,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComponentSettings {
     /// Component selection
@@ -41,7 +39,6 @@ pub struct ComponentSettings {
     /// Enable component validation
     pub validate_components: bool,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComponentSelection {
     /// Install API component
@@ -67,7 +64,6 @@ pub struct ComponentSelection {
     /// Custom components
     pub custom_components: Vec<String>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemIntegrationSettings {
     /// Install as system service
@@ -87,7 +83,6 @@ pub struct SystemIntegrationSettings {
     /// Desktop integration
     pub desktop_integration: bool,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PackageManagementSettings {
     /// Package manager type
@@ -126,7 +121,6 @@ pub enum InstallMode {
     /// Cloud deployment
     Cloud,
 }
-
 /// Deployment mode enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DeploymentMode {
@@ -143,7 +137,6 @@ pub enum DeploymentMode {
     /// Hybrid deployment
     Hybrid,
 }
-
 /// Supported platform types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PlatformType {
@@ -160,7 +153,6 @@ pub enum PlatformType {
     /// FreeBSD
     FreeBsd,
 }
-
 /// Package manager types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PackageManagerType {
@@ -183,7 +175,6 @@ pub enum PackageManagerType {
     /// Manual installation
     Manual,
 }
-
 /// System resource requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemRequirements {
@@ -206,7 +197,6 @@ pub struct SystemRequirements {
     /// Optional dependencies
     pub optional_packages: Vec<String>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceConstraints {
     /// CPU limit
@@ -218,15 +208,20 @@ pub struct ResourceConstraints {
     /// Network limit
     pub network_limit: Option<String>,
 }
-
 impl Default for InstallationSettings {
     fn default() -> Self {
         Self {
             mode: InstallMode::Standalone,
-            install_dir: PathBuf::from("/opt/nestgate"),
+            install_dir: PathBuf::from(
+                std::env::var("NESTGATE_INSTALL_DIR")
+                    .unwrap_or_else(|_| "/opt/nestgate".to_string()),
+            ),
             config_dir: PathBuf::from("/etc/nestgate"),
             data_dir: PathBuf::from("/var/lib/nestgate"),
-            log_dir: PathBuf::from("/var/log/nestgate"),
+            log_dir: PathBuf::from(
+                std::env::var("NESTGATE_LOG_DIR")
+                    .unwrap_or_else(|_| "/var/log/nestgate".to_string()),
+            ),
             temp_dir: std::env::temp_dir().join("nestgate-install"),
             force_install: false,
             interactive: true,
@@ -324,7 +319,6 @@ pub struct PostInstallSettings {
     /// Start services automatically
     pub start_services: bool,
 }
-
 impl Default for PostInstallSettings {
     fn default() -> Self {
         Self {
@@ -345,7 +339,6 @@ pub struct DeploymentSettings {
     /// Rollback on failure
     pub rollback_on_failure: bool,
 }
-
 impl Default for DeploymentSettings {
     fn default() -> Self {
         Self {

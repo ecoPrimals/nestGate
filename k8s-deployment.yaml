@@ -1,0 +1,373 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nestgate
+  labels:
+    app: nestgate
+    version: v1.0.0
+    component: storage-management
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: nestgate
+  template:
+    metadata:
+      labels:
+        app: nestgate
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8083"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: nestgate
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+      containers:
+      - name: nestgate
+        image: nestgate:v1.0.0-production
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: api
+          containerPort: 8080
+          protocol: TCP
+        - name: websocket
+          containerPort: 8081
+          protocol: TCP
+        - name: health
+          containerPort: 8082
+          protocol: TCP
+        - name: metrics
+          containerPort: 8083
+          protocol: TCP
+        env:
+        - name: NESTGATE_ENVIRONMENT
+          value: "production"
+        - name: NESTGATE_CONFIG_PATH
+          value: "/etc/nestgate/config.toml"
+        - name: RUST_LOG
+          value: "info"
+        - name: RUST_BACKTRACE
+          value: "0"
+        - name: NESTGATE_API_PORT
+          value: "8080"
+        - name: NESTGATE_WS_PORT
+          value: "8081"
+        - name: NESTGATE_HEALTH_PORT
+          value: "8082"
+        - name: NESTGATE_METRICS_PORT
+          value: "8083"
+        - name: NESTGATE_BIND_ADDRESS
+          value: "0.0.0.0"
+        - name: NESTGATE_DISCOVERY_ENDPOINT
+          value: "http://nestgate-discovery:8084/discovery"
+        volumeMounts:
+        - name: config
+          mountPath: /etc/nestgate
+          readOnly: true
+        - name: data
+          mountPath: /var/lib/nestgate
+        - name: logs
+          mountPath: /var/log/nestgate
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: health
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: health
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        startupProbe:
+          httpGet:
+            path: /health
+            port: health
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - NET_BIND_SERVICE
+      volumes:
+      - name: config
+        configMap:
+          name: nestgate-config
+      - name: data
+        persistentVolumeClaim:
+          claimName: nestgate-data
+      - name: logs
+        emptyDir: {}
+      nodeSelector:
+        node-type: storage
+      tolerations:
+      - key: "storage-node"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - nestgate
+              topologyKey: kubernetes.io/hostname
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nestgate
+  labels:
+    app: nestgate
+spec:
+  type: ClusterIP
+  ports:
+  - name: api
+    port: 8080
+    targetPort: api
+    protocol: TCP
+  - name: websocket
+    port: 8081
+    targetPort: websocket
+    protocol: TCP
+  - name: health
+    port: 8082
+    targetPort: health
+    protocol: TCP
+  - name: metrics
+    port: 8083
+    targetPort: metrics
+    protocol: TCP
+  selector:
+    app: nestgate
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nestgate-headless
+  labels:
+    app: nestgate
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: api
+    port: 8080
+    targetPort: api
+    protocol: TCP
+  selector:
+    app: nestgate
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nestgate
+  labels:
+    app: nestgate
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: nestgate
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: nestgate
+subjects:
+- kind: ServiceAccount
+  name: nestgate
+roleRef:
+  kind: Role
+  name: nestgate
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nestgate-config
+  labels:
+    app: nestgate
+data:
+  config.toml: |
+    [server]
+    bind_address = "0.0.0.0"
+    api_port = 8080
+    websocket_port = 8081
+    health_port = 8082
+    metrics_port = 8083
+    
+    [storage]
+    backend = "native"
+    data_path = "/var/lib/nestgate/data"
+    
+    [logging]
+    level = "info"
+    format = "json"
+    output = "/var/log/nestgate/nestgate.log"
+    
+    [monitoring]
+    metrics_enabled = true
+    health_check_interval = 30
+    
+    [security]
+    enable_tls = false
+    certificate_path = "/etc/nestgate/certs/tls.crt"
+    private_key_path = "/etc/nestgate/certs/tls.key"
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nestgate-data
+  labels:
+    app: nestgate
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: fast-ssd
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nestgate
+  labels:
+    app: nestgate
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/websocket-services: "nestgate"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  tls:
+  - hosts:
+    - nestgate.example.com
+    secretName: nestgate-tls
+  rules:
+  - host: nestgate.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nestgate
+            port:
+              number: 8080
+      - path: /ws
+        pathType: Prefix
+        backend:
+          service:
+            name: nestgate
+            port:
+              number: 8081
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: nestgate
+  labels:
+    app: nestgate
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: nestgate
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nestgate
+  labels:
+    app: nestgate
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nestgate
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+      - type: Pods
+        value: 4
+        periodSeconds: 15
+      selectPolicy: Max 

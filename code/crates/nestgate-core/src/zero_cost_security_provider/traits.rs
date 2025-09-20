@@ -6,7 +6,6 @@ use super::types::{ZeroCostAuthToken, ZeroCostCredentials, ZeroCostSignature};
 /// using zero-cost abstractions for maximum performance.
 ///
 use crate::Result;
-
 // ==================== SECTION ====================
 
 /// **Zero-cost security provider trait**
@@ -19,7 +18,6 @@ use crate::Result;
 pub trait ZeroCostSecurityProvider: Send + Sync + 'static {
     /// Security provider configuration type
     type Config: Clone + Send + Sync + 'static;
-
     /// Security health information type
     type Health: Clone + Send + Sync + 'static;
 
@@ -127,7 +125,6 @@ pub trait AuthenticationProvider: Send + Sync {
         &self,
         credentials: &ZeroCostCredentials,
     ) -> impl std::future::Future<Output = Result<ZeroCostAuthToken>> + Send;
-
     /// Validate token
     fn validate_token(&self, token: &str)
         -> impl std::future::Future<Output = Result<bool>> + Send;
@@ -151,7 +148,6 @@ pub trait EncryptionProvider: Send + Sync {
         data: &[u8],
         algorithm: &str,
     ) -> impl std::future::Future<Output = Result<Vec<u8>>> + Send;
-
     /// Decrypt data with specified algorithm
     fn decrypt(
         &self,
@@ -176,7 +172,6 @@ pub trait SigningProvider: Send + Sync {
         &self,
         data: &[u8],
     ) -> impl std::future::Future<Output = Result<ZeroCostSignature>> + Send;
-
     /// Verify signature
     fn verify_signature(
         &self,
@@ -196,7 +191,6 @@ pub trait SigningProvider: Send + Sync {
 pub trait SecurityHealthProvider: Send + Sync {
     /// Health information type
     type Health: Clone + Send + Sync + 'static;
-
     /// Get security health status
     fn health_check(&self) -> impl std::future::Future<Output = Self::Health> + Send;
 
@@ -209,7 +203,6 @@ pub trait SecurityHealthProvider: Send + Sync {
 pub trait SecurityMetricsProvider: Send + Sync {
     /// Metrics type
     type Metrics: Clone + Send + Sync + 'static;
-
     /// Get security metrics
     fn get_metrics(&self) -> impl std::future::Future<Output = Self::Metrics> + Send;
 

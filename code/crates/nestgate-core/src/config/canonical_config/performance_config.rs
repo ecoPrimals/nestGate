@@ -22,7 +22,6 @@ pub struct PerformanceConfig {
     /// Metrics collection
     pub metrics: MetricsConfig,
 }
-
 /// Buffer configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BufferConfig {
@@ -33,7 +32,6 @@ pub struct BufferConfig {
     /// Network buffer size
     pub network_buffer_size: usize,
 }
-
 /// Thread pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreadPoolConfig {
@@ -44,7 +42,6 @@ pub struct ThreadPoolConfig {
     /// Thread keep-alive time
     pub keep_alive_time: Duration,
 }
-
 /// Memory configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryConfig {
@@ -55,7 +52,6 @@ pub struct MemoryConfig {
     /// Garbage collection frequency
     pub gc_frequency: Duration,
 }
-
 /// I/O configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IoConfig {
@@ -66,7 +62,6 @@ pub struct IoConfig {
     /// Enable direct I/O
     pub direct_io: bool,
 }
-
 /// Cache configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheConfig {
@@ -77,7 +72,6 @@ pub struct CacheConfig {
     /// Enable cache warming
     pub enable_warming: bool,
 }
-
 /// Metrics configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricsConfig {
@@ -88,7 +82,6 @@ pub struct MetricsConfig {
     /// Metrics retention
     pub retention_days: u32,
 }
-
 
 impl Default for BufferConfig {
     fn default() -> Self {

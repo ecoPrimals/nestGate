@@ -3,6 +3,7 @@
 //! This example demonstrates how to evolve from our current Result<T> patterns
 //! to more idiomatic Result<T, E> patterns, following Songbird's insights.
 
+use nestgate_core::error::NestGateError;
 use nestgate_core::error::{IdioResult, NestGateError, NetworkError, StorageError};
 use nestgate_core::Result;
 type AnalysisResult<T> = Result<T>;

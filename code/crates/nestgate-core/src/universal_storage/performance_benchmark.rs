@@ -17,16 +17,13 @@ use crate::error::CanonicalResult as Result;
 /// Performance benchmark results
 #[derive(Debug, Clone)]
 pub struct BenchmarkResults {
-    pub operation: String,
     pub traditional_time: Duration,
     pub zero_copy_time: Duration,
     pub improvement_percentage: f64,
     pub memory_saved_bytes: u64,
 }
-
 impl BenchmarkResults {
-    pub fn new(
-        operation: String,
+    pub const fn new(
         traditional_time: Duration,
         zero_copy_time: Duration,
         memory_saved_bytes: u64,
@@ -49,11 +46,11 @@ impl BenchmarkResults {
     }
 
     pub fn print_summary(&self) {
-        println!("\n🚀 **{}**", self.operation);
-        println!("   Traditional: {:?}", self.traditional_time);
-        println!("   Zero-Copy:   {:?}", self.zero_copy_time);
-        println!("   Improvement: {:.1}% faster", self.improvement_percentage);
-        println!("   Memory Saved: {} bytes", self.memory_saved_bytes);
+        println!("\n🚀 **{self.b_operation}**");
+        println!("   Traditional: {self.traditional_time:?}");
+        println!("   Zero-Copy:   {self.zero_copy_time:?}");
+        println!("   Improvement: {:.1}% faster");
+        println!("   Memory Saved: {self.memory_saved_bytes} bytes");
     }
 }
 
@@ -62,9 +59,13 @@ pub struct PerformanceBenchmark {
     temp_dir: TempDir,
     test_data_sizes: Vec<usize>,
 }
-
 impl PerformanceBenchmark {
-    pub fn new() -> Result<Self> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub const fn new() -> Result<Self>  {
         Ok(Self {
             temp_dir: TempDir::new().map_err(|e| {
                 crate::error::NestGateError::storage_error(
@@ -88,7 +89,19 @@ impl PerformanceBenchmark {
     }
 
     /// Benchmark filesystem operations
-    pub async fn benchmark_filesystem_operations(&self) -> Result<Vec<BenchmarkResults>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn benchmark_filesystem_operations(&self) -> Result<Vec<BenchmarkResults>>   {
         let mut results = Vec::new();
 
         for &size in &self.test_data_sizes {
@@ -235,7 +248,19 @@ impl PerformanceBenchmark {
     }
 
     /// Benchmark memory operations
-    pub async fn benchmark_memory_operations(&self) -> Result<Vec<BenchmarkResults>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn benchmark_memory_operations(&self) -> Result<Vec<BenchmarkResults>>   {
         let mut results = Vec::new();
 
         for &size in &self.test_data_sizes {
@@ -288,7 +313,19 @@ impl PerformanceBenchmark {
     }
 
     /// Benchmark concurrent operations
-    pub async fn benchmark_concurrent_operations(&self) -> Result<BenchmarkResults> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn benchmark_concurrent_operations(&self) -> Result<BenchmarkResults>   {
         let concurrency_level = 100;
         let data_size = 10_240; // 10KB
         let test_data = Self::generate_test_data(data_size);
@@ -306,7 +343,7 @@ impl PerformanceBenchmark {
                 backend.write(&key, &data).await?;
                 backend.read(&key).await?;
                 Ok::<(), crate::error::NestGateError>(())
-            });
+            );
             traditional_tasks.push(task);
         }
 
@@ -331,7 +368,7 @@ impl PerformanceBenchmark {
                 backend.write_zero_copy(&key, buffer).await?;
                 backend.read_zero_copy(&key).await?;
                 Ok::<(), crate::error::NestGateError>(())
-            });
+            );
             zero_copy_tasks.push(task);
         }
 
@@ -351,7 +388,19 @@ impl PerformanceBenchmark {
     }
 
     /// Run comprehensive performance benchmark suite
-    pub async fn run_comprehensive_benchmark(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn run_comprehensive_benchmark(&self) -> Result<()>   {
         println!("\n🔬 **NESTGATE ZERO-COPY PERFORMANCE BENCHMARK**");
         println!("================================================\n");
 
@@ -389,7 +438,7 @@ impl PerformanceBenchmark {
             .iter()
             .map(|r| r.improvement_percentage)
             .sum::<f64>()
-            / results.len() as f64;
+            / ((results.len() as f64));
 
         let total_memory_saved = results.iter().map(|r| r.memory_saved_bytes).sum::<u64>();
 
@@ -397,7 +446,7 @@ impl PerformanceBenchmark {
         println!(
             "💾 Total Memory Saved: {} bytes ({:.1} MB)",
             total_memory_saved,
-            total_memory_saved as f64 / 1_048_576.0
+            f64::from(total_memory_saved) / 1_048_576.0
         );
         println!(
             "🚀 Concurrent Improvement: {:.1}%",
@@ -412,7 +461,7 @@ impl PerformanceBenchmark {
         let throughput_improvement_target = 50.0; // 50% improvement target
 
         let memory_efficiency = if total_memory_saved > 0 {
-            (total_memory_saved as f64 / (total_memory_saved as f64 + 1_000_000.0)) * 100.0
+            (f64::from(total_memory_saved) / (f64::from(total_memory_saved) + 1_000_000.0)) * 100.0
         } else {
             0.0
         };
@@ -458,7 +507,6 @@ impl PerformanceBenchmark {
 /// Quick performance validation function
 pub async fn validate_zero_copy_performance() -> Result<()> {
     println!("🚀 Validating Zero-Copy Performance...");
-
     let benchmark = PerformanceBenchmark::new()?;
     benchmark.run_comprehensive_benchmark().await?;
 
@@ -475,9 +523,9 @@ mod tests {
             tracing::error!("Operation failed: {:?}", e);
             std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {e:?}"),
             )
-        })?;
+        )?;
         assert!(!benchmark.test_data_sizes.is_empty());
     }
 

@@ -7,7 +7,6 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 // Removed unused tracing import
-
 use super::types::*;
 use crate::Result;
 
@@ -18,10 +17,23 @@ pub struct SyncEngine {
     /// Active sync operations
     active_syncs: Arc<RwLock<HashMap<String, SyncOperation>>>,
 }
-
 impl SyncEngine {
     /// Create a new sync service
-    pub fn new() -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        #[must_use]
+        pub fn new() -> Result<Self>   {
         Ok(Self {
             sync_policies: Arc::new(RwLock::new(HashMap::new())),
             active_syncs: Arc::new(RwLock::new(HashMap::new())),
@@ -29,35 +41,77 @@ impl SyncEngine {
     }
 
     /// Start the sync service
-    pub fn start(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn start(&self) -> Result<()>  {
         // Implementation would start sync service
         // For now, this is a placeholder
         Ok(())
     }
 
     /// Add a synchronization policy
-    pub async fn add_sync_policy(&self, policy: SyncPolicy) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn add_sync_policy(&self, policy: SyncPolicy) -> Result<()>   {
         let mut policies = self.sync_policies.write().await;
         policies.insert(policy.name.clone(), policy);
         Ok(())
     }
 
     /// Remove a synchronization policy
-    pub async fn remove_sync_policy(&self, name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn remove_sync_policy(&self, name: &str) -> Result<()>   {
         let mut policies = self.sync_policies.write().await;
         policies.remove(name);
         Ok(())
     }
 
     /// Start a sync operation
-    pub async fn start_sync(&self, operation: SyncOperation) -> Result<()> {
         let mut syncs = self.active_syncs.write().await;
         syncs.insert(operation.id.clone(), operation);
         Ok(())
     }
 
     /// Monitor sync operations
-    pub async fn monitor_sync(&self, operation_id: &str) -> Result<SyncStatus> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn monitor_sync(&self, operation_id: &str) -> Result<SyncStatus>   {
         let syncs = self.active_syncs.read().await;
         if let Some(operation) = syncs.get(operation_id) {
             Ok(operation.status.clone())
@@ -67,7 +121,6 @@ impl SyncEngine {
     }
 
     /// Detect conflicts in synchronization
-    pub async fn detect_conflicts(&self, _path: &str) -> Result<Vec<String>> {
         // Placeholder implementation
         Ok(Vec::new())
     }

@@ -17,18 +17,15 @@ pub struct SystemStatus {
     /// Current timestamp
     pub timestamp: u64,
 }
-
 static START_TIME: std::sync::OnceLock<SystemTime> = std::sync::OnceLock::new();
 
 /// Initialize system uptime tracking
 pub fn initialize_uptime() {
     START_TIME.set(SystemTime::now()).ok();
 }
-
 /// Get system status handler
-pub async fn get_status() -> Json<SystemStatus> {
+pub const fn get_status() -> Json<SystemStatus> {
     info!("Status endpoint called");
-
     let start_time = START_TIME.get().copied().unwrap_or_else(SystemTime::now);
     let uptime = SystemTime::now()
         .duration_since(start_time)

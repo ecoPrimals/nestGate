@@ -34,7 +34,6 @@ pub struct PoolAllocator<T, const POOL_SIZE: usize = 1024> {
     total_allocations: AtomicUsize,
     _phantom: PhantomData<T>,
 }
-
 struct PoolNode<T> {
     data: std::mem::MaybeUninit<T>,
     next: AtomicPtr<PoolNode<T>>,
@@ -71,7 +70,7 @@ impl<T, const POOL_SIZE: usize> PoolAllocator<T, POOL_SIZE> {
 
     /// Allocate object from pool
     /// PERFORMANCE: O(1) allocation, no fragmentation
-    pub fn allocate(&self) -> Option<NonNull<T>> {
+    pub const fn allocate(&self) -> Option<NonNull<T>> {
         loop {
             let head = self.free_list.load(Ordering::Acquire);
             
@@ -100,6 +99,14 @@ impl<T, const POOL_SIZE: usize> PoolAllocator<T, POOL_SIZE> {
 
     /// Deallocate object back to pool
     /// PERFORMANCE: O(1) deallocation
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that:
+    /// - `ptr` was obtained from a valid allocation from this pool
+    /// - `ptr` has not been deallocated before
+    /// - No other references to the object exist
+    /// - The object is properly dropped before deallocation
     pub unsafe fn deallocate(&self, ptr: NonNull<T>) {
         // Find the node containing this data pointer
         let node_ptr = self.find_node_for_ptr(ptr.as_ptr());
@@ -123,7 +130,7 @@ impl<T, const POOL_SIZE: usize> PoolAllocator<T, POOL_SIZE> {
     }
 
     /// Get pool statistics
-    pub fn stats(&self) -> PoolStats {
+    pub const fn stats(&self) -> PoolStats {
         PoolStats {
             pool_size: POOL_SIZE,
             allocated_count: self.allocated_count.load(Ordering::Relaxed),
@@ -148,12 +155,10 @@ impl<T, const POOL_SIZE: usize> PoolAllocator<T, POOL_SIZE> {
 }
 
 impl<T> PoolNode<T> {
-    const fn new() -> Self {
-        Self {
+    const fn new() -> Self { Self {
             data: std::mem::MaybeUninit::uninit(),
             next: AtomicPtr::new(std::ptr::null_mut()),
-        }
-    }
+         }
 }
 
 #[derive(Debug, Clone)]
@@ -177,21 +182,18 @@ pub struct StackAllocator<const STACK_SIZE: usize = 1048576> {
     high_water_mark: AtomicUsize,
     allocations: AtomicUsize,
 }
-
 impl<const STACK_SIZE: usize> StackAllocator<STACK_SIZE> {
     /// Create new stack allocator
-    pub const fn new() -> Self {
-        Self {
+    pub const fn new() -> Self { Self {
             memory: [0u8; STACK_SIZE],
             top: AtomicUsize::new(0),
             high_water_mark: AtomicUsize::new(0),
             allocations: AtomicUsize::new(0),
-        }
-    }
+         }
 
     /// Allocate memory from stack
     /// PERFORMANCE: O(1) allocation, cache-friendly
-    pub fn allocate(&self, layout: Layout) -> Option<NonNull<u8>> {
+    pub const fn allocate(&self, layout: Layout) -> Option<NonNull<u8>> {
         let size = layout.size();
         let align = layout.align();
         
@@ -243,7 +245,7 @@ impl<const STACK_SIZE: usize> StackAllocator<STACK_SIZE> {
     }
 
     /// Create a checkpoint for partial reset
-    pub fn checkpoint(&self) -> StackCheckpoint {
+    pub const fn checkpoint(&self) -> StackCheckpoint {
         StackCheckpoint {
             top: self.top.load(Ordering::Acquire),
         }
@@ -255,7 +257,7 @@ impl<const STACK_SIZE: usize> StackAllocator<STACK_SIZE> {
     }
 
     /// Get stack statistics
-    pub fn stats(&self) -> StackStats {
+    pub const fn stats(&self) -> StackStats {
         let current_top = self.top.load(Ordering::Relaxed);
         
         StackStats {
@@ -264,7 +266,7 @@ impl<const STACK_SIZE: usize> StackAllocator<STACK_SIZE> {
             available_bytes: STACK_SIZE - current_top,
             high_water_mark: self.high_water_mark.load(Ordering::Relaxed),
             total_allocations: self.allocations.load(Ordering::Relaxed),
-            utilization_percent: (current_top as f64 / STACK_SIZE as f64) * 100.0,
+            utilization_percent: (f64::from(current_top) / f64::from(STACK_SIZE)) * 100.0,
         }
     }
 }
@@ -273,8 +275,7 @@ impl<const STACK_SIZE: usize> StackAllocator<STACK_SIZE> {
 pub struct StackCheckpoint {
     top: usize,
 }
-
-#[derive(Debug, Clone)]
+    #[derive(Debug, Clone)]
 pub struct StackStats {
     pub total_size: usize,
     pub used_bytes: usize,
@@ -297,22 +298,19 @@ pub struct RingBufferAllocator<const BUFFER_SIZE: usize = 2097152> {
     allocations: AtomicUsize,
     deallocations: AtomicUsize,
 }
-
 impl<const BUFFER_SIZE: usize> RingBufferAllocator<BUFFER_SIZE> {
     /// Create new ring buffer allocator
-    pub const fn new() -> Self {
-        Self {
+    pub const fn new() -> Self { Self {
             memory: [0u8; BUFFER_SIZE],
             head: AtomicUsize::new(0),
             tail: AtomicUsize::new(0),
             allocations: AtomicUsize::new(0),
             deallocations: AtomicUsize::new(0),
-        }
-    }
+         }
 
     /// Allocate from ring buffer
     /// PERFORMANCE: O(1) allocation, optimal for streaming
-    pub fn allocate(&self, layout: Layout) -> Option<NonNull<u8>> {
+    pub const fn allocate(&self, layout: Layout) -> Option<NonNull<u8>> {
         let size = layout.size();
         let align = layout.align();
         
@@ -372,7 +370,7 @@ impl<const BUFFER_SIZE: usize> RingBufferAllocator<BUFFER_SIZE> {
     }
 
     /// Get ring buffer statistics
-    pub fn stats(&self) -> RingBufferStats {
+    pub const fn stats(&self) -> RingBufferStats {
         let head = self.head.load(Ordering::Relaxed);
         let tail = self.tail.load(Ordering::Relaxed);
         
@@ -390,7 +388,7 @@ impl<const BUFFER_SIZE: usize> RingBufferAllocator<BUFFER_SIZE> {
             tail_position: tail,
             total_allocations: self.allocations.load(Ordering::Relaxed),
             total_deallocations: self.deallocations.load(Ordering::Relaxed),
-            utilization_percent: (used_bytes as f64 / BUFFER_SIZE as f64) * 100.0,
+            utilization_percent: (f64::from(used_bytes) / f64::from(BUFFER_SIZE)) * 100.0,
         }
     }
 }
@@ -418,20 +416,17 @@ pub struct SimdAlignedAllocator<const ALIGNMENT: usize = 64> {
     simd_allocations: AtomicUsize,
     alignment_waste: AtomicUsize,
 }
-
 impl<const ALIGNMENT: usize> SimdAlignedAllocator<ALIGNMENT> {
     /// Create new SIMD-aligned allocator
-    pub const fn new() -> Self {
-        Self {
+    pub const fn new() -> Self { Self {
             base_allocator: StackAllocator::new(),
             simd_allocations: AtomicUsize::new(0),
             alignment_waste: AtomicUsize::new(0),
-        }
-    }
+         }
 
     /// Allocate SIMD-aligned memory
     /// PERFORMANCE: Optimal alignment for vectorized operations
-    pub fn allocate_simd(&self, size: usize) -> Option<NonNull<u8>> {
+    pub const fn allocate_simd(&self, size: usize) -> Option<NonNull<u8>> {
         let layout = Layout::from_size_align(size, ALIGNMENT).ok()?;
         
         if let Some(ptr) = self.base_allocator.allocate(layout) {
@@ -455,7 +450,7 @@ impl<const ALIGNMENT: usize> SimdAlignedAllocator<ALIGNMENT> {
     }
 
     /// Get SIMD allocator statistics
-    pub fn stats(&self) -> SimdAllocatorStats {
+    pub const fn stats(&self) -> SimdAllocatorStats {
         let base_stats = self.base_allocator.stats();
         
         SimdAllocatorStats {
@@ -464,10 +459,10 @@ impl<const ALIGNMENT: usize> SimdAlignedAllocator<ALIGNMENT> {
             alignment_bytes: ALIGNMENT,
             alignment_waste: self.alignment_waste.load(Ordering::Relaxed),
             waste_percentage: if base_stats.used_bytes > 0 {
-                (self.alignment_waste.load(Ordering::Relaxed) as f64 / base_stats.used_bytes as f64) * 100.0
+                (self.alignment_waste.load(Ordering::Relaxed) as f64 / base_stats.f64::from(used_bytes)) * 100.0
             } else {
                 0.0
-            },
+            }
         }
     }
 }
@@ -495,19 +490,16 @@ pub struct NestGateGlobalAllocator {
     simd_allocator: SimdAlignedAllocator<64>,
     fallback_count: AtomicUsize,
 }
-
 impl NestGateGlobalAllocator {
     /// Create new NestGate global allocator
-    pub const fn new() -> Self {
-        Self {
+    pub const fn new() -> Self { Self {
             pool_allocator_small: PoolAllocator::new(),
             pool_allocator_medium: PoolAllocator::new(),
             stack_allocator: StackAllocator::new(),
             ring_allocator: RingBufferAllocator::new(),
             simd_allocator: SimdAlignedAllocator::new(),
             fallback_count: AtomicUsize::new(0),
-        }
-    }
+         }
 
     /// Initialize all sub-allocators
     pub fn initialize(&mut self) {
@@ -522,7 +514,7 @@ impl NestGateGlobalAllocator {
     }
 
     /// Get comprehensive allocator statistics
-    pub fn get_stats(&self) -> GlobalAllocatorStats {
+    pub const fn get_stats(&self) -> GlobalAllocatorStats {
         GlobalAllocatorStats {
             pool_small_stats: self.pool_allocator_small.stats(),
             pool_medium_stats: self.pool_allocator_medium.stats(),
@@ -548,7 +540,7 @@ unsafe impl GlobalAlloc for NestGateGlobalAllocator {
                 } else {
                     self.fallback_alloc(layout)
                 }
-            },
+            }
             // Medium fixed-size allocations  
             (65..=1024, 1..=8) => {
                 if let Some(ptr) = self.pool_allocator_medium.allocate() {
@@ -556,7 +548,7 @@ unsafe impl GlobalAlloc for NestGateGlobalAllocator {
                 } else {
                     self.fallback_alloc(layout)
                 }
-            },
+            }
             // SIMD-aligned allocations
             (_, 32..=64) => {
                 if let Some(ptr) = self.simd_allocator.allocate_simd(size) {
@@ -564,7 +556,7 @@ unsafe impl GlobalAlloc for NestGateGlobalAllocator {
                 } else {
                     self.fallback_alloc(layout)
                 }
-            },
+            }
             // Stack allocations for temporary data
             (1025..=16384, 1..=16) => {
                 if let Some(ptr) = self.stack_allocator.allocate(layout) {
@@ -572,15 +564,15 @@ unsafe impl GlobalAlloc for NestGateGlobalAllocator {
                 } else {
                     self.fallback_alloc(layout)
                 }
-            },
+            }
             // Ring buffer for streaming data
-            (16385..=65536, 1..=8) => {
+            (16385..=65_536, 1..=8) => {
                 if let Some(ptr) = self.ring_allocator.allocate(layout) {
                     ptr.as_ptr()
                 } else {
                     self.fallback_alloc(layout)
                 }
-            },
+            }
             // Fallback to system allocator
             _ => self.fallback_alloc(layout),
         }
@@ -597,12 +589,12 @@ unsafe impl GlobalAlloc for NestGateGlobalAllocator {
                 if let Some(nn_ptr) = NonNull::new(ptr as *mut [u8; 64]) {
                     self.pool_allocator_small.deallocate(nn_ptr);
                 }
-            },
+            }
             65..=1024 => {
                 if let Some(nn_ptr) = NonNull::new(ptr as *mut [u8; 1024]) {
                     self.pool_allocator_medium.deallocate(nn_ptr);
                 }
-            },
+            }
             _ => {
                 // Stack and ring allocators use bulk deallocation
                 // SIMD allocator resets periodically
@@ -635,9 +627,8 @@ pub struct GlobalAllocatorStats {
 pub mod benchmarks {
     use super::*;
     use std::time::Instant;
-
     /// Benchmark pool allocator performance
-    pub async fn benchmark_pool_allocator() -> (u64, u64, f64) {
+    pub fn benchmark_pool_allocator() -> (u64, u64, f64) {
         let mut allocator = PoolAllocator::<[u8; 1024], 1000>::new();
         allocator.initialize();
         
@@ -662,7 +653,7 @@ pub mod benchmarks {
         // System allocator would be 5-10x slower
         let system_time = pool_time * 7;
         
-        let improvement = ((system_time - pool_time) as f64 / system_time as f64) * 100.0;
+        let improvement = ((system_time - pool_time) as f64 / f64::from(system_time)) * 100.0;
         
         tracing::info!(
             "Pool Allocator: {}ns, System: {}ns (est), Improvement: {:.1}%",
@@ -673,14 +664,15 @@ pub mod benchmarks {
     }
 
     /// Benchmark stack allocator performance  
-    pub async fn benchmark_stack_allocator() -> (u64, u64, f64) {
+    pub const fn benchmark_stack_allocator() -> (u64, u64, f64) {
         let allocator = StackAllocator::<1048576>::new();
         const ITERATIONS: u32 = 10_000;
         
         let start = Instant::now();
         
         for _ in 0..ITERATIONS {
-            let layout = Layout::from_size_align(1024, 8).unwrap();
+            let layout = Layout::from_size_align(1024, 8)
+                .map_err(|_e| AllocationError::InvalidLayout(format!("Layout creation failed: {"actual_error_details"}")))?;
             let _ = allocator.allocate(layout);
         }
         
@@ -689,7 +681,7 @@ pub mod benchmarks {
         let stack_time = start.elapsed().as_nanos() as u64;
         let malloc_time = stack_time * 20; // Stack allocation is typically 20x faster
         
-        let improvement = ((malloc_time - stack_time) as f64 / malloc_time as f64) * 100.0;
+        let improvement = ((malloc_time - stack_time) as f64 / f64::from(malloc_time)) * 100.0;
         
         tracing::info!(
             "Stack Allocator: {}ns, Malloc: {}ns (est), Improvement: {:.1}%",
@@ -708,8 +700,8 @@ mod tests {
         let mut allocator = PoolAllocator::<u64, 10>::new();
         allocator.initialize();
         
-        let ptr1 = allocator.allocate().expect("Should allocate");
-        let ptr2 = allocator.allocate().expect("Should allocate");
+        let ptr1 = allocator.allocate()?;
+        let ptr2 = allocator.allocate()?;
         
         unsafe {
             allocator.deallocate(ptr1);
@@ -725,9 +717,9 @@ mod tests {
     fn test_stack_allocator() {
         let allocator = StackAllocator::<1024>::new();
         
-        let layout = Layout::from_size_align(256, 8).unwrap();
-        let ptr1 = allocator.allocate(layout).expect("Should allocate");
-        let ptr2 = allocator.allocate(layout).expect("Should allocate");
+        let layout = Layout::from_size_align(256, 8)?;
+        let ptr1 = allocator.allocate(layout)?;
+        let ptr2 = allocator.allocate(layout)?;
         
         let stats = allocator.stats();
         assert!(stats.used_bytes >= 512);
@@ -741,9 +733,9 @@ mod tests {
     fn test_ring_buffer_allocator() {
         let allocator = RingBufferAllocator::<1024>::new();
         
-        let layout = Layout::from_size_align(256, 8).unwrap();
-        let _ptr1 = allocator.allocate(layout).expect("Should allocate");
-        let _ptr2 = allocator.allocate(layout).expect("Should allocate");
+        let layout = Layout::from_size_align(256, 8)?;
+        let _ptr1 = allocator.allocate(layout)?;
+        let _ptr2 = allocator.allocate(layout)?;
         
         let stats = allocator.stats();
         assert!(stats.used_bytes >= 512);
@@ -757,7 +749,7 @@ mod tests {
     fn test_simd_aligned_allocator() {
         let allocator = SimdAlignedAllocator::<64>::new();
         
-        let ptr = allocator.allocate_simd(1024).expect("Should allocate");
+        let ptr = allocator.allocate_simd(1024)?;
         let addr = ptr.as_ptr() as usize;
         
         // Verify alignment

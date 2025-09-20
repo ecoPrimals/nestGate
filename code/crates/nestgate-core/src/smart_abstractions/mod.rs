@@ -1,9 +1,9 @@
-//! Smart Abstractions Module
-//!
-//! This module implements intelligent abstractions that dramatically reduce
+// Smart Abstractions Module
+//! Module definitions and exports.
+// This module implements intelligent abstractions that dramatically reduce
 //! complexity and boilerplate across the NestGate codebase.
-//!
-//! **COMPLEXITY REDUCTION ACHIEVED**:
+//! Module definitions and exports.
+// **COMPLEXITY REDUCTION ACHIEVED**:
 //! - SmartDefault: Eliminates 200+ manual impl Default blocks (~3000 lines)
 //! - MetadataContainer: Reduces AI-first response types by 63%
 //! - NotificationChannel: Eliminates large enum patterns in alerts system
@@ -15,6 +15,7 @@
 pub mod config_builders;
 pub mod metadata_container;
 pub mod notification_channels;
+pub mod production;
 pub mod service_patterns;
 pub mod smart_default;
 // TEMPORARILY DISABLED: pub mod test_factory; // Needs type migration to unified storage types
@@ -40,7 +41,7 @@ pub use service_patterns::{
     ServiceMetadata, ServiceMetrics, SmartService, SmartServiceDiscovery, SmartServiceFactory,
 };
 
-/// Smart abstraction prelude - import common patterns
+// Smart abstraction prelude - import common patterns
 pub mod prelude {
     pub use super::config_builders::{SmartConfigBuilder, SmartEnvLoader};
     pub use super::metadata_container::{MetadataContainer, MetadataExtensions};
@@ -48,7 +49,6 @@ pub mod prelude {
     pub use super::service_patterns::{SmartService, SmartServiceFactory};
     pub use super::smart_default::SmartDefault;
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -65,7 +65,7 @@ mod tests {
         let error = NotificationError::Configuration {
             message: "Network timeout".to_string(),
         };
-        let error_str = format!("{}", error);
+        let error_str = format!("{error}");
         assert!(error_str.contains("Channel configuration error"));
         assert!(error_str.contains("Network timeout"));
     }
@@ -127,7 +127,7 @@ mod tests {
         let success: NotificationResult<String> = Ok("success".to_string());
         let error: NotificationResult<String> = Err(NotificationError::Configuration {
             message: "test error".to_string(),
-        });
+        );
 
         assert!(success.is_ok());
         assert!(error.is_err());

@@ -4,9 +4,9 @@
 //! to achieve the target 90% test coverage for production readiness.
 
 use nestgate_core::{
+    canonical_modernization::unified_enums::UnifiedCapabilityType,
     config::unified::{CanonicalConfig, Environment},
     error::{NestGateError, Result},
-    canonical_modernization::unified_enums::UnifiedCapabilityType,
     UnifiedServiceState,
 };
 use std::time::Duration;
@@ -19,7 +19,14 @@ async fn test_canonical_config_creation() -> Result<()> {
     // Verify system configuration
     match config.system.environment {
         Environment::Development => {} // Expected default
-        _ => panic!("Expected Development environment"),
+        _ => {
+            return Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Test assertion failed",
+            )));
+    Ok(())
+        }
+    Ok(())
     }
     assert!(!config.system.instance_name.is_empty());
     assert_eq!(config.system.log_level, "info");
@@ -88,18 +95,22 @@ async fn test_config_serialization() -> Result<()> {
 #[tokio::test]
 async fn test_error_handling() -> Result<()> {
     // Test error creation
-    let error = NestGateError::validation_error(
-        "test_field",
-        "test message",
-        Some("invalid_value".to_string()),
-    );
+    let error = NestGateError::validation_error("test_field", "validation error");
 
     match error {
-        NestGateError::Validation { field, message, .. } => {
+        NestGateError::Validation(_) => {
             assert_eq!(field, "test_field");
             assert_eq!(message, "test message");
+    Ok(())
         }
-        _ => panic!("Expected Validation error"),
+        _ => {
+            return Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Test assertion failed",
+            )));
+    Ok(())
+        }
+    Ok(())
     }
 
     // Test error conversion
@@ -110,10 +121,16 @@ async fn test_error_handling() -> Result<()> {
     match nestgate_error {
         NestGateError::Configuration { .. } => {
             println!("✅ Configuration error variant correctly created");
+    Ok(())
         }
         _ => {
-            panic!("Unexpected error variant: {nestgate_error:?}");
+            return Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Test assertion failed",
+            )));
+    Ok(())
         }
+    Ok(())
     }
 
     Ok(())
@@ -140,8 +157,11 @@ async fn test_service_states() -> Result<()> {
             UnifiedServiceState::Stopped => assert_eq!(format!("{state:?}"), "Stopped"),
             UnifiedServiceState::Error(_) => {
                 assert!(format!("{state:?}").contains("Error"));
+    Ok(())
             }
+    Ok(())
         }
+        Ok(())
     }
 
     Ok(())
@@ -162,6 +182,7 @@ async fn test_capability_types() -> Result<()> {
 
     for capability in capabilities {
         let _debug_str = format!("{capability:?}");
+        Ok(())
     }
 
     Ok(())
@@ -191,6 +212,7 @@ async fn test_concurrent_operations() -> Result<()> {
             debug_info: None,
             is_bug: false,
         })?;
+        Ok(())
     }
 
     // Test performance characteristics
@@ -223,14 +245,22 @@ async fn test_resource_cleanup() -> Result<()> {
 #[tokio::test]
 async fn test_edge_cases() -> Result<()> {
     // Test empty string handling
-    let error = NestGateError::validation_error("", "", None);
+    let error = NestGateError::validation_error("validation error");
 
     match error {
-        NestGateError::Validation { field, message, .. } => {
+        NestGateError::Validation(_) => {
             assert!(field.is_empty());
             assert!(message.is_empty());
+    Ok(())
         }
-        _ => panic!("Expected Validation error"),
+        _ => {
+            return Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Test assertion failed",
+            )));
+    Ok(())
+        }
+    Ok(())
     }
 
     Ok(())
@@ -244,6 +274,7 @@ async fn test_performance_characteristics() -> Result<()> {
     // Perform 1000 configuration creations
     for _ in 0..1000 {
         let _config = CanonicalConfig::default();
+        Ok(())
     }
 
     let duration = start.elapsed();
@@ -269,6 +300,7 @@ async fn test_memory_usage() -> Result<()> {
     // Verify they're all valid
     for config in &configs {
         assert!(!config.system.instance_name.is_empty());
+        Ok(())
     }
 
     Ok(())

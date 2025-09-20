@@ -1,5 +1,5 @@
 // Removed unused error imports
-/// Hardware tuning types and configurations for NestGate
+/// Hardware tuning types and configurations for `NestGate`
 ///
 /// This module provides hardware-agnostic tuning capabilities that can be
 /// used by primals to optimize system performance.
@@ -8,7 +8,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 use std::time::SystemTime;
-
 /// Hardware-agnostic tuning engine
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HardwareAgnosticTuner {
@@ -19,9 +18,9 @@ pub struct HardwareAgnosticTuner {
     /// Performance metrics
     pub metrics: HashMap<String, f64>,
 }
-
 impl HardwareAgnosticTuner {
     /// Create a new hardware tuner
+    #[must_use]
     pub fn new() -> Self {
         Self {
             profiles: HashMap::new(),
@@ -36,14 +35,22 @@ impl HardwareAgnosticTuner {
     }
 
     /// Apply a tuning configuration
-    pub fn apply_config(&mut self, config: HardwareConfiguration) -> Result<TuningResult> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn apply_config(&mut self, config: HardwareConfiguration) -> Result<TuningResult>  {
         self.active_config = Some(config.clone());
 
         Ok(TuningResult {
             success: true,
             performance_improvement: 15.0,
             energy_savings: 10.0,
-            applied_settings: config.settings.clone(),
+            applied_settings: config.settings,
             warnings: Vec::new(),
             errors: Vec::new(),
         })
@@ -70,7 +77,6 @@ pub struct HardwareConfiguration {
     /// Storage configuration
     pub storage_config: StorageConfiguration,
 }
-
 impl Default for HardwareConfiguration {
     fn default() -> Self {
         Self {
@@ -93,7 +99,6 @@ pub struct PowerManagement {
     /// GPU power limit
     pub gpu_power_limit: Option<f64>,
 }
-
 impl Default for PowerManagement {
     fn default() -> Self {
         Self {
@@ -114,7 +119,6 @@ pub struct MemoryConfiguration {
     /// Memory voltage
     pub voltage: Option<f64>,
 }
-
 /// Storage configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct StorageConfiguration {
@@ -123,18 +127,15 @@ pub struct StorageConfiguration {
     /// Cache configuration
     pub cache_config: HashMap<String, String>,
 }
-
 /// Storage device configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageDevice {
     /// Device path
-    pub path: String,
     /// Device type
     pub device_type: StorageType,
     /// Performance tier
     pub performance_tier: crate::temporal_storage::PerformanceTier,
 }
-
 /// Storage device type
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum StorageType {
@@ -143,12 +144,11 @@ pub enum StorageType {
     SSD,
     /// Hard Disk Drive
     HDD,
-    /// NVMe drive
+    /// `NVMe` drive
     NVMe,
     /// Network storage
     Network,
 }
-
 /// Tuning profile
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TuningProfile {
@@ -163,7 +163,6 @@ pub struct TuningProfile {
     /// Compatibility requirements
     pub requirements: Vec<String>,
 }
-
 impl Default for TuningProfile {
     fn default() -> Self {
         Self {
@@ -193,17 +192,86 @@ pub struct TuningResult {
     pub errors: Vec<String>,
 }
 
-impl Default for TuningResult {
-    fn default() -> Self {
-        Self {
-            success: false,
-            performance_improvement: 0.0,
-            energy_savings: 0.0,
-            applied_settings: HashMap::new(),
-            warnings: Vec::new(),
-            errors: Vec::new(),
-        }
-    }
+/// Benchmark result for hardware performance testing
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BenchmarkResult {
+    /// Benchmark name
+    pub name: String,
+    /// Execution time in milliseconds
+    pub execution_time_ms: u64,
+    /// Performance score
+    pub performance_score: f64,
+    /// Resource utilization metrics
+    pub resource_utilization: HashMap<String, f64>,
+}
+
+/// Live hardware metrics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LiveHardwareMetrics {
+    /// CPU utilization percentage
+    pub cpu_utilization: f64,
+    /// Memory utilization percentage
+    pub memory_utilization: f64,
+    /// GPU utilization percentage
+    pub gpu_utilization: Option<f64>,
+    /// Temperature readings
+    pub temperatures: HashMap<String, f64>,
+    /// Power consumption in watts
+    pub power_consumption: Option<f64>,
+}
+
+/// Compute resource allocation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ComputeAllocation {
+    /// CPU cores allocated
+    pub cpu_cores: u32,
+    /// Memory allocated in GB
+    pub memory_gb: u64,
+    /// Storage allocated in GB
+    pub storage_gb: u64,
+    /// Network bandwidth in Mbps
+    pub network_bandwidth_mbps: Option<u32>,
+}
+
+/// GPU resource allocation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GpuAllocation {
+    /// GPU device ID
+    pub device_id: u32,
+    /// Memory allocated in GB
+    pub memory_gb: u64,
+    /// Compute units allocated
+    pub compute_units: u32,
+    /// Power limit in watts
+    pub power_limit_watts: Option<u32>,
+}
+
+/// Compute resource request
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ComputeResourceRequest {
+    /// Requested CPU cores
+    pub cpu_cores: u32,
+    /// Requested memory in GB
+    pub memory_gb: u64,
+    /// Requested storage in GB
+    pub storage_gb: u64,
+    /// GPU requirements
+    pub gpu_requirements: Option<GpuAllocation>,
+    /// Priority level
+    pub priority: String,
+}
+
+/// Tuning service registration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TuningServiceRegistration {
+    /// Service name
+    pub name: String,
+    /// Service endpoint
+    pub endpoint: String,
+    /// Supported tuning profiles
+    pub supported_profiles: Vec<String>,
+    /// Service capabilities
+    pub capabilities: Vec<String>,
 }
 
 /// External lock type for resource extraction
@@ -217,7 +285,6 @@ pub enum ExternalLockType {
     /// Temporary lock
     Temporary,
 }
-
 /// Extraction lock for resource access
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExtractionLock {
@@ -234,7 +301,6 @@ pub struct ExtractionLock {
     /// Copyleft requirements
     pub copyleft_requirements: CopyleftRequirements,
 }
-
 /// Cryptographic proof for extraction
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CryptographicProof {
@@ -247,7 +313,6 @@ pub struct CryptographicProof {
     /// Proof algorithm
     pub algorithm: String,
 }
-
 impl Default for CryptographicProof {
     fn default() -> Self {
         Self {
@@ -271,7 +336,6 @@ pub struct ExtractionRestrictions {
     /// Usage restrictions
     pub usage_restrictions: Vec<String>,
 }
-
 /// Time-based restrictions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeRestrictions {
@@ -284,7 +348,6 @@ pub struct TimeRestrictions {
     /// Recurring restrictions
     pub recurring: Option<String>,
 }
-
 impl Default for TimeRestrictions {
     fn default() -> Self {
         Self {
@@ -308,7 +371,6 @@ pub struct CopyleftRequirements {
     /// Commercial use restrictions
     pub commercial_restrictions: Vec<String>,
 }
-
 impl Default for CopyleftRequirements {
     fn default() -> Self {
         Self {

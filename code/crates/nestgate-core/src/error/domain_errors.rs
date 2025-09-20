@@ -5,9 +5,7 @@
 /// to provide rich, domain-specific context.
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-// Removed unused import: use std::fmt;
 use std::time::{Duration, SystemTime};
-
 // ==================== SECTION ====================
 
 /// Automation system error data
@@ -17,7 +15,6 @@ pub struct AutomationErrorData {
     /// Error message
     pub message: String,
     /// Automation operation that failed
-    pub operation: AutomationOperation,
     /// Target resource (dataset, pool, etc.)
     pub target: Option<String>,
     /// Analysis context if applicable
@@ -27,7 +24,6 @@ pub struct AutomationErrorData {
     /// Cache context if applicable
     pub cache_context: Option<CacheContext>,
 }
-
 /// Automation operations that can fail
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AutomationOperation {
@@ -42,7 +38,6 @@ pub enum AutomationOperation {
     Optimization,
     Scheduling,
 }
-
 /// Analysis context for automation errors
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnalysisContext {
@@ -55,7 +50,6 @@ pub struct AnalysisContext {
     /// Partial results if available
     pub partial_results: Option<serde_json::Value>,
 }
-
 /// Discovery context for automation errors
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiscoveryContext {
@@ -68,12 +62,10 @@ pub struct DiscoveryContext {
     /// Last successful discovery time
     pub last_success: Option<SystemTime>,
 }
-
 /// Cache context for automation errors
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheContext {
     /// Cache operation that failed
-    pub operation: String,
     /// Cache key
     pub key: Option<String>,
     /// Cache size at time of error
@@ -81,7 +73,6 @@ pub struct CacheContext {
     /// Cache hit rate
     pub hit_rate: Option<f64>,
 }
-
 // ==================== SECTION ====================
 
 /// Middleware system error data
@@ -99,7 +90,6 @@ pub struct MiddlewareErrorData {
     /// Handler context if applicable
     pub handler_context: Option<HandlerContext>,
 }
-
 /// Middleware components that can fail
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MiddlewareComponent {
@@ -114,14 +104,12 @@ pub enum MiddlewareComponent {
     Cors,
     Compression,
 }
-
 /// Request context for middleware errors
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RequestContext {
     /// HTTP method
     pub method: String,
     /// Request path
-    pub path: String,
     /// Request headers
     pub headers: HashMap<String, String>,
     /// Request ID for tracing
@@ -129,7 +117,6 @@ pub struct RequestContext {
     /// Client IP address
     pub client_ip: Option<String>,
 }
-
 /// Validation context for middleware errors
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationContext {
@@ -138,13 +125,12 @@ pub struct ValidationContext {
     /// Validation rule that failed
     pub rule: String,
     /// Actual value
-    pub actual_value: Option<String>,
+    pub actualvalue: Option<String>,
     /// Expected value or pattern
     pub expected: Option<String>,
     /// All validation errors
     pub all_errors: Vec<String>,
 }
-
 /// Handler context for middleware errors
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HandlerContext {
@@ -157,7 +143,6 @@ pub struct HandlerContext {
     /// Previous handlers in chain
     pub previous_handlers: Vec<String>,
 }
-
 // ==================== SECTION ====================
 
 /// File system monitor error data
@@ -167,15 +152,12 @@ pub struct FsMonitorErrorData {
     /// Error message
     pub message: String,
     /// Monitor operation that failed
-    pub operation: FsMonitorOperation,
     /// File system path
-    pub path: Option<String>,
     /// Watch context if applicable
     pub watch_context: Option<WatchContext>,
     /// Event context if applicable
     pub event_context: Option<EventContext>,
 }
-
 /// File system monitor operations that can fail
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum FsMonitorOperation {
@@ -187,12 +169,10 @@ pub enum FsMonitorOperation {
     EventFiltering,
     NotificationDelivery,
 }
-
 /// Watch context for file system monitor errors
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WatchContext {
     /// Path being watched
-    pub path: String,
     /// Watch options
     pub options: HashMap<String, serde_json::Value>,
     /// Number of active watches
@@ -200,20 +180,17 @@ pub struct WatchContext {
     /// Watch start time
     pub started_at: SystemTime,
 }
-
 /// Event context for file system monitor errors
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventContext {
     /// Event type (create, modify, delete, etc.)
     pub event_type: String,
     /// File path that triggered event
-    pub file_path: String,
     /// Event timestamp
     pub timestamp: SystemTime,
     /// Event queue size
     pub queue_size: Option<usize>,
 }
-
 // ==================== SECTION ====================
 
 /// Installer system error data
@@ -223,13 +200,11 @@ pub struct InstallerErrorData {
     /// Error message
     pub message: String,
     /// Installation operation that failed
-    pub operation: InstallerOperation,
     /// Installation context
     pub install_context: Option<InstallContext>,
     /// System requirements context
     pub requirements_context: Option<RequirementsContext>,
 }
-
 /// Installer operations that can fail
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum InstallerOperation {
@@ -243,7 +218,6 @@ pub enum InstallerOperation {
     Rollback,
     Uninstall,
 }
-
 /// Installation context for installer errors
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstallContext {
@@ -258,7 +232,6 @@ pub struct InstallContext {
     /// Failed step
     pub failed_step: Option<String>,
 }
-
 /// System requirements context for installer errors
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RequirementsContext {
@@ -275,7 +248,6 @@ pub struct RequirementsContext {
     /// Missing requirements
     pub missing_requirements: Vec<String>,
 }
-
 // ==================== SECTION ====================
 
 /// ZFS system error data
@@ -285,7 +257,6 @@ pub struct ZfsErrorData {
     /// Error message
     pub message: String,
     /// ZFS operation that failed
-    pub operation: ZfsOperation,
     /// Pool name if applicable
     pub pool: Option<String>,
     /// Dataset name if applicable
@@ -297,11 +268,7 @@ pub struct ZfsErrorData {
     /// System error code if available
     pub error_code: Option<i32>,
     /// Recovery suggestions
-    pub recovery_suggestions: Vec<String>,
-                    performance_metrics: None,
-                    environment: None,
 }
-
 /// ZFS operations that can fail
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ZfsOperation {
@@ -325,7 +292,6 @@ pub enum ZfsOperation {
     Storage,
     Command,
 }
-
 // ==================== SECTION ====================
 
 /// Primal SDK error data
@@ -335,7 +301,6 @@ pub struct PrimalErrorData {
     /// Error message
     pub message: String,
     /// Primal operation that failed
-    pub operation: PrimalOperation,
     /// Primal ID if applicable
     pub primal_id: Option<String>,
     /// Request context if applicable
@@ -345,7 +310,6 @@ pub struct PrimalErrorData {
     /// Metadata for debugging
     pub metadata: HashMap<String, String>,
 }
-
 /// Primal operations that can fail
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PrimalOperation {
@@ -365,20 +329,17 @@ pub enum PrimalOperation {
     RateLimit,
     ServiceUnavailable,
 }
-
 /// Primal request context for error debugging
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimalRequestContext {
     /// Request ID
     pub request_id: String,
     /// Operation being performed
-    pub operation: String,
     /// Parameters passed
     pub parameters: HashMap<String, String>,
     /// Timestamp of request
     pub timestamp: SystemTime,
 }
-
 // ==================== SECTION ====================
 
 /// Universal ZFS error data
@@ -388,11 +349,9 @@ pub struct UniversalZfsErrorData {
     /// Error message
     pub message: String,
     /// Universal ZFS operation
-    pub operation: String,
     /// Backend that failed
     pub backend: Option<String>,
     /// Resource involved
-    pub resource: Option<String>,
     /// Timeout duration if applicable
     pub duration: Option<Duration>,
     /// Circuit breaker state
@@ -400,7 +359,6 @@ pub struct UniversalZfsErrorData {
     /// Rate limit information
     pub rate_limit_info: Option<RateLimitInfo>,
 }
-
 /// Rate limiting information for errors
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RateLimitInfo {
@@ -413,7 +371,6 @@ pub struct RateLimitInfo {
     /// Reset time
     pub reset_time: SystemTime,
 }
-
 // ==================== SECTION ====================
 
 /// Network system error data
@@ -423,13 +380,11 @@ pub struct NetworkErrorData {
     /// Error message
     pub message: String,
     /// Network operation that failed
-    pub operation: String,
     /// Network endpoint if applicable
     pub endpoint: Option<String>,
     /// Additional context for debugging
     pub context: Option<HashMap<String, String>>,
 }
-
 // ==================== SECTION ====================
 
 /// MCP (Model Context Protocol) error data
@@ -439,13 +394,11 @@ pub struct McpErrorData {
     /// Error message
     pub message: String,
     /// MCP operation that failed
-    pub operation: String,
     /// Session ID if applicable
     pub session_id: Option<String>,
     /// Additional context for debugging
     pub context: Option<HashMap<String, String>>,
 }
-
 // ==================== SECTION ====================
 
 /// API system error data
@@ -457,13 +410,11 @@ pub struct ApiErrorData {
     /// HTTP method
     pub method: Option<String>,
     /// Request path
-    pub path: Option<String>,
     /// HTTP status code
     pub status_code: Option<u16>,
     /// Additional context for debugging
     pub context: Option<HashMap<String, String>>,
 }
-
 // ==================== SECTION ====================
 
 /// Security system error data
@@ -473,15 +424,12 @@ pub struct SecurityErrorData {
     /// Error message
     pub message: String,
     /// Security operation (auth, authz, etc.)
-    pub operation: String,
     /// Resource being accessed
-    pub resource: Option<String>,
     /// User or principal
     pub principal: Option<String>,
     /// Additional context for debugging
     pub context: Option<HashMap<String, String>>,
 }
-
 // ==================== SECTION ====================
 
 impl From<AutomationErrorData> for crate::error::NestGateError {
@@ -518,67 +466,67 @@ impl From<UniversalZfsErrorData> for crate::error::NestGateError {
 
 impl std::fmt::Display for ZfsErrorData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} (operation: {:?})", self.message, self.operation)
+        write!(f, "ZFS Error: {}", self.message)
     }
 }
 
 impl std::fmt::Display for PrimalErrorData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} (operation: {:?})", self.message, self.operation)
+        write!(f, "Primal Error: {}", self.message)
     }
 }
 
 impl std::fmt::Display for UniversalZfsErrorData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} (operation: {})", self.message, self.operation)
+        write!(f, "Universal ZFS Error: {}", self.message)
     }
 }
 
 impl std::fmt::Display for AutomationErrorData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} (operation: {:?})", self.message, self.operation)
+        write!(f, "Automation Error: {}", self.message)
     }
 }
 
 impl std::fmt::Display for MiddlewareErrorData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} (component: {:?})", self.message, self.component)
+        write!(f, "Middleware Error: {}", self.message)
     }
 }
 
 impl std::fmt::Display for FsMonitorErrorData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} (operation: {:?})", self.message, self.operation)
+        write!(f, "File System Monitor Error: {}", self.message)
     }
 }
 
 impl std::fmt::Display for InstallerErrorData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} (operation: {:?})", self.message, self.operation)
+        write!(f, "Installer Error: {}", self.message)
     }
 }
 
 impl std::fmt::Display for NetworkErrorData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} (operation: {})", self.message, self.operation)
+        write!(f, "Network Error: {}", self.message)
     }
 }
 
 impl std::fmt::Display for ApiErrorData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.message)
+        write!(f, "API Error: {}", self.message)
     }
 }
 
 impl std::fmt::Display for SecurityErrorData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} (operation: {})", self.message, self.operation)
+        write!(f, "Security Error: {}", self.message)
     }
 }
 
 impl std::fmt::Display for McpErrorData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} (operation: {})", self.message, self.operation)
+        write!(f, "MCP Error: {}", self.message)
     }
 }
 

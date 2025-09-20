@@ -1,0 +1,165 @@
+//! Zero-copy buffer implementations and memory management.
+
+use bytes::Bytes;
+use std::ops::Deref;
+
+/// Zero-copy data buffer for storage operations
+///
+/// This enum allows us to handle data without copying, using either:
+/// - Borrowed data (zero-copy from caller)
+/// - Owned data (when copying is necessary)
+/// - Shared data (reference-counted for multiple readers)
+#[derive(Debug, Clone)]
+pub enum ZeroCopyBuffer<'a> {
+    /// Borrowed data - no allocation, points to caller's memory
+    Borrowed(&'a [u8]),
+    /// Owned data - allocated when necessary
+    Owned(Vec<u8>),
+    /// Shared data - reference counted for multiple consumers
+    Shared(Bytes),
+}
+
+impl<'a> ZeroCopyBuffer<'a> {
+    /// Create a zero-copy buffer from borrowed data
+    pub const fn borrowed(data: &'a [u8]) -> Self {
+        Self::Borrowed(data)
+    }
+
+    /// Create a zero-copy buffer from owned data
+    pub const fn owned(data: Vec<u8>) -> Self {
+        Self::Owned(data)
+    }
+
+    /// Create a zero-copy buffer from shared data
+    pub const fn shared(data: Bytes) -> Self {
+        Self::Shared(data)
+    }
+
+    /// Get the data as a slice
+    pub const fn as_slice(&self) -> &[u8] {
+        match self {
+            Self::Borrowed(data) => data,
+            Self::Owned(data) => data.as_slice(),
+            Self::Shared(data) => data.as_ref(),
+        }
+    }
+
+    /// Get the length of the buffer
+    pub const fn len(&self) -> usize {
+        match self {
+            Self::Borrowed(data) => data.len(),
+            Self::Owned(data) => data.len(),
+            Self::Shared(data) => data.len(),
+        }
+    }
+
+    /// Check if the buffer is empty
+    pub const fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// Convert to owned bytes
+    pub const fn to_bytes(self) -> Bytes {
+        match self {
+            Self::Borrowed(data) => Bytes::copy_from_slice(data),
+            Self::Owned(data) => Bytes::from(data),
+            Self::Shared(data) => data,
+        }
+    }
+}
+
+impl<'a> Deref for ZeroCopyBuffer<'a> {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        self.as_slice()
+    }
+}
+
+impl<'a> AsRef<[u8]> for ZeroCopyBuffer<'a> {
+    fn as_ref(&self) -> &[u8] {
+        self.as_slice()
+    }
+}
+
+/// Advanced zero-copy buffer with memory pool integration
+#[derive(Debug)]
+pub enum AdvancedZeroCopyBuffer<'a> {
+    /// Standard zero-copy buffer
+    Standard(ZeroCopyBuffer<'a>),
+    /// Pooled buffer for efficient reuse
+    Pooled(PooledBuffer),
+    /// Memory-mapped buffer for large files
+    Mmap(Bytes),
+}
+
+/// Pooled buffer for efficient memory reuse
+#[derive(Debug)]
+pub struct PooledBuffer {
+    data: Vec<u8>,
+    capacity: usize,
+    pool_id: Option<usize>,
+}
+
+impl PooledBuffer {
+    /// Create a new pooled buffer
+    pub const fn new(capacity: usize) -> Self {
+        Self {
+            data: Vec::with_capacity(capacity),
+            capacity,
+            pool_id: None,
+        }
+    }
+
+    /// Get the data as a slice
+    pub const fn as_slice(&self) -> &[u8] {
+        &self.data
+    }
+
+    /// Get mutable access to the data
+    pub fn as_mut_slice(&mut self) -> &mut [u8] {
+        &mut self.data
+    }
+
+    /// Resize the buffer
+    pub fn resize(&mut self, new_len: usize) {
+        self.data.resize(new_len, 0);
+    }
+
+    /// Clear the buffer for reuse
+    pub fn clear(&mut self) {
+        self.data.clear();
+    }
+
+    /// Get the capacity
+    pub const fn capacity(&self) -> usize {
+        self.capacity
+    }
+
+    /// Get the current length
+    pub const fn len(&self) -> usize {
+        self.data.len()
+    }
+
+    /// Check if empty
+    pub const fn is_empty(&self) -> bool {
+        self.data.is_empty()
+    }
+}
+
+impl Deref for PooledBuffer {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        &self.data
+    }
+}
+
+/// Access pattern hint for optimization
+#[derive(Debug, Clone, Copy)]
+pub enum AccessPattern {
+    Sequential,
+    Random,
+    WriteOnce,
+    ReadMany,
+} 

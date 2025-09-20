@@ -1,4 +1,3 @@
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -7,7 +6,7 @@ pub struct StorageDiscoverySettings {
 }
 
 impl StorageDiscoverySettings {
-    pub fn validate(&self) -> crate::Result<()> {
+    pub const fn validate(&self) -> crate::Result<()> {
         Ok(())
     }
-} 
+}

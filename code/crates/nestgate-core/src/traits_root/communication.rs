@@ -4,7 +4,6 @@ use chrono::{DateTime, Utc};
 use futures_util::Stream;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 use crate::Result;
 
 /// Communication layer trait
@@ -15,7 +14,6 @@ pub trait CommunicationLayer: Send + Sync {
         target: ServiceAddress,
         message: ServiceMessage,
     ) -> Result<CommunicationResponse>;
-
     /// Broadcast a message to all services
     fn broadcast(&self, message: ServiceMessage) -> impl std::future::Future<Output = Result<Vec<CommunicationResponse>> + Send;
 
@@ -48,7 +46,6 @@ pub struct ServiceAddress {
     pub instance_id: Option<String>,
     pub endpoint: Option<String>,
 }
-
 /// Message between services
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceMessage {
@@ -62,7 +59,6 @@ pub struct ServiceMessage {
     pub reply_to: Option<ServiceAddress>,
     pub ttl: Option<u64>,
 }
-
 /// Communication response (renamed to avoid conflict with service::ServiceResponse)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommunicationResponse {
@@ -72,7 +68,6 @@ pub struct CommunicationResponse {
     pub error: Option<String>,
     pub timestamp: DateTime<Utc>,
 }
-
 /// Type of message
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum MessageType {
@@ -82,7 +77,6 @@ pub enum MessageType {
     Command,
     Notification,
 }
-
 /// Communication statistics
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct CommunicationStats {

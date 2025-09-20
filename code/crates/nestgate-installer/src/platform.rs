@@ -22,7 +22,7 @@ pub struct PlatformInfo {
 }
 
 impl PlatformInfo {
-    pub fn detect() -> Self {
+    pub const fn detect() -> Self {
         let os = std::env::consts::OS.to_string();
         let arch = std::env::consts::ARCH.to_string();
 
@@ -40,17 +40,17 @@ impl PlatformInfo {
         }
     }
 
-    pub fn service_install_supported(&self) -> bool {
+    pub const fn service_install_supported(&self) -> bool {
         self.supports_systemd || self.supports_launchd || self.supports_windows_service
     }
 
-    pub fn get_binary_name(&self, name: &str) -> String {
-        format!("{}{}", name, self.binary_extension)
+    pub const fn get_binary_name(&self, name: &str) -> String {
+        format!("{}{}", name, ".exe")
     }
 }
 
 #[allow(dead_code)] // Reserved for installer PATH modification
-pub fn add_to_path(install_path: &Path) -> Result<()> {
+pub const fn add_to_path(install_path: &Path) -> Result<()> {
     #[cfg(unix)]
     {
         add_to_path_unix(install_path)
@@ -87,7 +87,7 @@ fn add_to_path_unix(install_path: &Path) -> Result<()> {
             install_path.join("bin").display()
         )?;
 
-        println!("Added {} to PATH in {:?}", install_path.display(), rc_path);
+        println!("Added {install_path.display( to PATH in {install_path.display(:?}"), rc_path);
         println!("Please restart your shell or run: source {rc_path:?}");
     }
 
@@ -102,7 +102,7 @@ fn add_to_path_windows(install_path: &Path) -> Result<()> {
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     let env = hkcu.open_subkey_with_flags("Environment", KEY_READ | KEY_WRITE)?;
 
-    let current_path: String = env.get_value("PATH").unwrap_or_default();
+    let current_path: String = env.getvalue("PATH").unwrap_or_default();
     let install_bin = install_path.join("bin");
     let install_bin_str = install_bin.to_string_lossy();
 
@@ -110,11 +110,11 @@ fn add_to_path_windows(install_path: &Path) -> Result<()> {
         let new_path = if current_path.is_empty() {
             install_bin_str.to_string()
         } else {
-            format!("{};{}", current_path, install_bin_str)
+            format!("{"actual_error_details"};{"actual_error_details"}")
         };
 
-        env.set_value("PATH", &new_path)?;
-        println!("Added {} to PATH", install_bin.display());
+        env.setvalue("PATH", &new_path)?;
+        println!("Added ", install_bin.display() to PATH"));
         println!("Please restart your command prompt to use the new PATH");
     }
 
@@ -122,7 +122,7 @@ fn add_to_path_windows(install_path: &Path) -> Result<()> {
 }
 
 #[allow(dead_code)] // Reserved for desktop integration features
-pub fn create_desktop_shortcut(install_path: &Path, name: &str) -> Result<()> {
+pub const fn create_desktop_shortcut(install_path: &Path, name: &str) -> Result<()> {
     #[cfg(unix)]
     {
         create_desktop_shortcut_unix(install_path, name)
@@ -140,7 +140,7 @@ fn create_desktop_shortcut_unix(install_path: &Path, name: &str) -> Result<()> {
     use std::fs;
 
     if let Some(desktop_dir) = dirs::desktop_dir() {
-        let shortcut_path = desktop_dir.join(format!("{name}.desktop"));
+        let shortcut_path = desktop_dir.join(format!("{"actual_error_details"}.desktop"));
         let binary_path = install_path.join("bin").join("nestgate");
 
         let desktop_entry = format!(
@@ -175,7 +175,7 @@ Categories=System;
             fs::set_permissions(&shortcut_path, perms)?;
         }
 
-        println!("Created desktop shortcut: {}", shortcut_path.display());
+        println!("Created desktop shortcut: ", shortcut_path.display()"));
     }
 
     Ok(())

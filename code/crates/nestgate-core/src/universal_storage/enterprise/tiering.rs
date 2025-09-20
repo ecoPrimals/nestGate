@@ -16,7 +16,6 @@ pub struct TieringReport {
     pub potential_cost_savings: f32,
     pub performance_impact_assessment: String,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierDistribution {
     pub tier_name: String,
@@ -31,7 +30,6 @@ pub struct TierDistribution {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierMigration {
-    pub file_path: String,
     pub current_tier: String,
     pub recommended_tier: String,
     pub migration_reason: String,
@@ -45,7 +43,6 @@ pub struct TierMigration {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccessPattern {
-    pub file_path: String,
     pub access_count_last_30_days: u32,
     pub access_count_last_90_days: u32,
     pub average_access_interval: Duration,
@@ -63,6 +60,7 @@ impl Default for TieringReport {
 }
 
 impl TieringReport {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             generated_at: SystemTime::now(),
@@ -94,7 +92,7 @@ impl TieringReport {
             .sum();
     }
 
-    pub fn get_high_confidence_migrations(&self, min_confidence: f32) -> Vec<&TierMigration> {
+    pub const fn get_high_confidence_migrations(&self, min_confidence: f32) -> Vec<&TierMigration> {
         self.recommended_migrations
             .iter()
             .filter(|m| m.confidence_score >= min_confidence)
@@ -103,6 +101,7 @@ impl TieringReport {
 }
 
 impl TierDistribution {
+    #[must_use]
     pub fn new(tier_name: String, tier_type: String) -> Self {
         Self {
             tier_name,
@@ -128,13 +127,12 @@ impl TierDistribution {
     pub fn calculate_utilization(&mut self, capacity_bytes: u64) {
         if capacity_bytes > 0 {
             self.utilization_percent =
-                (self.total_size_bytes as f32 / capacity_bytes as f32) * 100.0;
+                (self.f32::from(total_size_bytes) / f32::from(capacity_bytes)) * 100.0;
         }
     }
 }
 
 impl AccessPattern {
-    pub fn new(file_path: String) -> Self {
         Self {
             file_path,
             access_count_last_30_days: 0,
@@ -148,17 +146,17 @@ impl AccessPattern {
         }
     }
 
-    pub fn is_frequently_accessed(&self) -> bool {
+    pub const fn is_frequently_accessed(&self) -> bool {
         self.access_count_last_30_days > 10
             || self.average_access_interval < Duration::from_secs(86400) // Daily
     }
 
-    pub fn is_archive_candidate(&self) -> bool {
+    pub const fn is_archive_candidate(&self) -> bool {
         self.access_count_last_90_days == 0
             || self.average_access_interval > Duration::from_secs(86400 * 90) // 90 days
     }
 
-    pub fn get_tier_recommendation(&self) -> String {
+    pub const fn get_tier_recommendation(&self) -> String {
         if self.access_count_last_30_days > 50 {
             "hot".to_string()
         } else if self.access_count_last_30_days > 5 {

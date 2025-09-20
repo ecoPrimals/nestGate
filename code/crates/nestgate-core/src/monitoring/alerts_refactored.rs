@@ -1,17 +1,17 @@
-//! **SMART REFACTORED ALERT MANAGEMENT SYSTEM**
-//!
-//! This is the intelligently refactored version of the alerts system that demonstrates
+// **SMART REFACTORED ALERT MANAGEMENT SYSTEM**
+//! Monitoring and observability functionality.
+// This is the intelligently refactored version of the alerts system that demonstrates
 //! the power of smart abstractions to eliminate complexity without losing functionality.
-//!
-//! **COMPLEXITY REDUCTION ACHIEVED**:
+//! Monitoring and observability functionality.
+// **COMPLEXITY REDUCTION ACHIEVED**:
 //! - SmartDefault: Eliminates 15+ manual impl Default blocks
 //! - NotificationChannel trait: Replaces large AlertChannel enum (200+ lines → trait system)
 //! - Consolidated alert types with smart defaults
 //! - Builder pattern for complex alert rule construction
 //! - Type-safe state management
-//!
-//! **Original**: 1,052 lines with high cognitive complexity
-//! **Refactored**: ~400 lines with clear separation of concerns
+//! Monitoring and observability functionality.
+// **Original**: 1,052 lines with high cognitive complexity
+// **Refactored**: ~400 lines with clear separation of concerns
 
 use crate::smart_abstractions::prelude::*;
 use crate::{NestGateError, Result};
@@ -30,7 +30,6 @@ pub enum AlertSeverity {
     Error,
     Critical,
 }
-
 impl SmartDefault for AlertSeverity {
     fn smart_default() -> Self {
         Self::Warning
@@ -39,17 +38,17 @@ impl SmartDefault for AlertSeverity {
 
 impl AlertSeverity {
     /// Get numeric value for comparison
-    pub fn level(&self) -> u8 {
+    pub const fn level(&self) -> u8 {
         match self {
-            AlertSeverity::Info => 0,
-            AlertSeverity::Warning => 1,
-            AlertSeverity::Error => 2,
-            AlertSeverity::Critical => 3,
+            Self::Info => 0,
+            Self::Warning => 1,
+            Self::Error => 2,
+            Self::Critical => 3,
         }
     }
 
     /// Get color for UI display
-    pub fn color(&self) -> &'static str {
+    pub const fn color(&self) -> &'static str {
         match self {
             AlertSeverity::Info => "blue",
             AlertSeverity::Warning => "yellow",
@@ -69,7 +68,6 @@ pub enum ThresholdOperator {
     Equal,
     NotEqual,
 }
-
 impl SmartDefault for ThresholdOperator {
     fn smart_default() -> Self {
         Self::GreaterThan
@@ -101,7 +99,6 @@ pub enum AlertCondition {
     /// Custom condition with expression
     Custom { expression: String },
 }
-
 impl SmartDefault for AlertCondition {
     fn smart_default() -> Self {
         Self::Threshold {
@@ -119,7 +116,6 @@ pub struct TimeWindow {
     pub end_hour: u8,
     pub days_of_week: Vec<u8>, // 0 = Sunday, 1 = Monday, etc.
 }
-
 impl SmartDefault for TimeWindow {
     fn smart_default() -> Self {
         Self {
@@ -140,7 +136,6 @@ pub struct SuppressionRule {
     /// Maximum alert frequency
     pub max_frequency: Option<Duration>,
 }
-
 impl SmartDefault for SuppressionRule {
     fn smart_default() -> Self {
         Self {
@@ -175,11 +170,10 @@ pub struct AlertRule {
     /// Suppression rules
     pub suppression: Option<SuppressionRule>,
 }
-
 impl SmartDefault for AlertRule {
     fn smart_default() -> Self {
         Self {
-            id: format!("rule_{}", uuid::Uuid::new_v4().to_string()[..8].to_string()),
+            id: format!("rule_{uuid::Uuid::new_v4(}").to_string()[..8].to_string()),
             name: "Default Alert Rule".to_string(),
             description: "Default alert rule description".to_string(),
             condition: AlertCondition::smart_default(),
@@ -207,7 +201,6 @@ pub enum AlertStatus {
     /// Alert has been suppressed
     Suppressed,
 }
-
 impl SmartDefault for AlertStatus {
     fn smart_default() -> Self {
         Self::Pending
@@ -234,16 +227,15 @@ pub struct Alert {
     /// Alert status
     pub status: AlertStatus,
     /// Values that triggered the alert
-    pub trigger_values: HashMap<String, serde_json::Value>,
+    pub triggervalues: HashMap<String, serde_json::Value>,
     /// Notification history using the new system
     pub notifications: Vec<DeliveryRecord>,
 }
-
 impl SmartDefault for Alert {
     fn smart_default() -> Self {
         let now = SystemTime::now();
         Self {
-            id: format!("alert_{}", uuid::Uuid::new_v4().to_string()[..8].to_string()),
+            id: format!("alert_{uuid::Uuid::new_v4(}").to_string()[..8].to_string()),
             rule_id: "default_rule".to_string(),
             severity: AlertSeverity::smart_default(),
             title: "Alert Triggered".to_string(),
@@ -251,7 +243,7 @@ impl SmartDefault for Alert {
             triggered_at: now,
             last_updated: now,
             status: AlertStatus::smart_default(),
-            trigger_values: HashMap::smart_default(),
+            triggervalues: HashMap::smart_default(),
             notifications: Vec::smart_default(),
         }
     }
@@ -277,10 +269,9 @@ pub struct AlertManager {
     /// Metric history for trend analysis
     metric_history: Arc<RwLock<HashMap<String, Vec<serde_json::Value>>>>,
 }
-
 impl AlertManager {
     /// Create new alert manager with smart defaults
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         info!("🚨 Initializing smart refactored alert manager");
 
         Self {
@@ -304,7 +295,14 @@ impl AlertManager {
     }
 
     /// Add alert rule with smart validation
-    pub async fn add_rule(&self, rule: AlertRule) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn add_rule(&self, rule: AlertRule) -> Result<()>  {
         let mut rules = self.rules.write().await;
         info!("📋 Adding smart alert rule: {} ({})", rule.name, rule.id);
         rules.insert(rule.id.clone(), rule);
@@ -312,7 +310,14 @@ impl AlertManager {
     }
 
     /// Remove alert rule
-    pub async fn remove_rule(&self, rule_id: &str) -> Result<bool> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn remove_rule(&self, rule_id: &str) -> Result<bool>  {
         let mut rules = self.rules.write().await;
         if rules.remove(rule_id).is_some() {
             info!("🗑️ Removed alert rule: {}", rule_id);
@@ -323,7 +328,14 @@ impl AlertManager {
     }
 
     /// Add notification channel using the new trait system
-    pub async fn add_notification_channel(&self, channel: Box<dyn NotificationChannel>) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn add_notification_channel(&self, channel: Box<dyn NotificationChannel>) -> Result<()>  {
         let mut manager = self.notification_manager.write().await;
         let channel_id = channel.channel_id().to_string();
         let channel_name = channel.channel_name().to_string();
@@ -334,14 +346,17 @@ impl AlertManager {
     }
 
     /// Trigger alert with smart notification handling
-    pub async fn trigger_alert(&self, rule_id: &str, trigger_values: HashMap<String, serde_json::Value>) -> Result<String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn trigger_alert(&self, rule_id: &str, triggervalues: HashMap<String, serde_json::Value>) -> Result<String>  {
         let rules = self.rules.read().await;
-        let rule = rules.get(rule_id).ok_or_else(|| NestGateError::Internal {
-            message: format!("Alert rule not found: {}", rule_id),
-            location: Some("AlertManager::trigger_alert".to_string()),
-            context: None,
-            is_bug: false,
-        })?;
+        let rule = rules.get(rule_id).ok_or_else(|| NestGateError::internal_error(
+            location: Some("AlertManager::trigger_alert"))?;
 
         if !rule.enabled {
             debug!("Skipping disabled alert rule: {}", rule_id);
@@ -352,9 +367,9 @@ impl AlertManager {
         let mut alert = Alert::smart_default();
         alert.rule_id = rule_id.to_string();
         alert.severity = rule.severity.clone();
-        alert.title = format!("Alert: {}", rule.name);
+        alert.title = format!("Alert: {rule.name}");
         alert.description = rule.description.clone();
-        alert.trigger_values = trigger_values;
+        alert.triggervalues = triggervalues;
         alert.status = AlertStatus::Firing;
 
         // Send notifications using the new channel system
@@ -381,8 +396,8 @@ impl AlertManager {
         let content = NotificationContent {
             title: alert.title.clone(),
             message: alert.description.clone(),
-            severity: format!("{:?}", alert.severity).to_lowercase(),
-            fields: alert.trigger_values.clone(),
+            severity: format!("{alert.severity:?}").to_lowercase(),
+            fields: alert.triggervalues.clone(),
             formatting: NotificationFormatting::smart_default(),
         };
 
@@ -405,7 +420,14 @@ impl AlertManager {
     }
 
     /// Resolve alert
-    pub async fn resolve_alert(&self, alert_id: &str) -> Result<bool> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn resolve_alert(&self, alert_id: &str) -> Result<bool>  {
         let mut active_alerts = self.active_alerts.write().await;
         if let Some(mut alert) = active_alerts.remove(alert_id) {
             alert.status = AlertStatus::Resolved;
@@ -445,12 +467,8 @@ impl AlertManager {
         
         // Convert NotificationResult to our Result type
         validation_results.into_iter().map(|(id, result)| {
-            let converted_result = result.map_err(|e| NestGateError::Internal {
-                message: format!("Notification channel validation failed: {}", e),
-                location: Some("AlertManager::validate_channels".to_string()),
-                context: None,
-                is_bug: false,
-            });
+            let converted_result = result.map_err(|e| NestGateError::internal_error(
+                location: Some("AlertManager::validate_channels"));
             (id, converted_result)
         }).collect()
     }
@@ -496,8 +514,8 @@ impl AlertManager {
             // Smart condition evaluation
             let should_trigger = match &rule.condition {
                 AlertCondition::Threshold { metric, operator, value } => {
-                    if let Some(current_value) = current_metrics.get(metric) {
-                        Self::evaluate_threshold_condition(current_value, operator, *value)
+                    if let Some(currentvalue) = current_metrics.get(metric) {
+                        Self::evaluate_threshold_condition(currentvalue, operator, *value)
                     } else {
                         false
                     }
@@ -510,13 +528,13 @@ impl AlertManager {
             };
 
             if should_trigger {
-                let trigger_values = HashMap::from([
+                let triggervalues = HashMap::from([
                     ("rule_id".to_string(), serde_json::json!(rule_id)),
                     ("condition".to_string(), serde_json::json!(rule.condition)),
                     ("current_metrics".to_string(), serde_json::json!(current_metrics)),
                 ]);
 
-                if let Err(e) = manager.trigger_alert(rule_id, trigger_values).await {
+                if let Err(e) = manager.trigger_alert(rule_id, triggervalues).await {
                     error!("Failed to trigger alert for rule {}: {}", rule_id, e);
                 }
             }
@@ -527,11 +545,11 @@ impl AlertManager {
 
     /// Evaluate threshold condition
     fn evaluate_threshold_condition(
-        current_value: &serde_json::Value,
+        currentvalue: &serde_json::Value,
         operator: &ThresholdOperator,
         threshold: f64,
     ) -> bool {
-        if let Some(value) = current_value.as_f64() {
+        if let Some(value) = currentvalue.as_f64() {
             match operator {
                 ThresholdOperator::GreaterThan => value > threshold,
                 ThresholdOperator::LessThan => value < threshold,
@@ -555,21 +573,21 @@ impl AlertManager {
         
         // Handle simple comparison expressions like "cpu_usage > 80"
         if let Some(captures) = regex::Regex::new(r"(\w+)\s*([><=!]+)\s*(\d+(?:\.\d+)?)")
-            .unwrap_or_else(|_| regex::Regex::new(r"").unwrap())
+            .unwrap_or_else(|_| regex::Regex::new(r").unwrap())
             .captures(expr) 
         {
             if captures.len() >= 4 {
                 let variable = &captures[1];
                 let operator = &captures[2];
                 
-                if let (Ok(value), Some(current_value)) = (captures[3].parse::<f64>(), metrics.get(variable).and_then(|v| v.as_f64())) {
+                if let (Ok(value), Some(currentvalue)) = (captures[3].parse::<f64>(), metrics.get(variable).and_then(|v| v.as_f64())) {
                     match operator {
-                        ">" => return current_value > value,
-                        "<" => return current_value < value,
-                        ">=" => return current_value >= value,
-                        "<=" => return current_value <= value,
-                        "==" | "=" => return (current_value - value).abs() < f64::EPSILON,
-                        "!=" => return (current_value - value).abs() >= f64::EPSILON,
+                        ">" => return currentvalue > value,
+                        "<" => return currentvalue < value,
+                        ">=" => return currentvalue >= value,
+                        "<=" => return currentvalue <= value,
+                        "==" | "=" => return (currentvalue - value).abs() < f64::EPSILON,
+                        "!=" => return (currentvalue - value).abs() >= f64::EPSILON,
                         _ => {}
                     }
                 }
@@ -586,19 +604,19 @@ impl AlertManager {
         }
         
         // Handle string comparisons like "status == 'healthy'"
-        if let Some(captures) = regex::Regex::new(r#"(\w+)\s*([=!]+)\s*["']([^"']+)["']"#)
-            .unwrap_or_else(|_| regex::Regex::new(r"").unwrap())
+        if let Some(captures) = regex::Regex::new(r"(\w+)\s*([=!]+)\s*["']([^"']+)["']")
+            .unwrap_or_else(|_| regex::Regex::new(r").unwrap())
             .captures(expr)
         {
             if captures.len() >= 4 {
                 let variable = &captures[1];
                 let operator = &captures[2];
-                let expected_value = &captures[3];
+                let expectedvalue = &captures[3];
                 
-                if let Some(current_value) = metrics.get(variable).and_then(|v| v.as_str()) {
+                if let Some(currentvalue) = metrics.get(variable).and_then(|v| v.as_str()) {
                     match operator {
-                        "==" | "=" => return current_value == expected_value,
-                        "!=" => return current_value != expected_value,
+                        "==" | "=" => return currentvalue == expectedvalue,
+                        "!=" => return currentvalue != expectedvalue,
                         _ => {}
                     }
                 }
@@ -643,24 +661,26 @@ impl SmartDefault for AlertManager {
 pub struct AlertRuleBuilder {
     rule: AlertRule,
 }
-
-impl AlertRuleBuilder {
+impl AlertRuleBuilder ", 
     /// Create new alert rule builder with smart defaults
+    #[must_use]
     pub fn new(name: &str) -> Self {
         let mut rule = AlertRule::smart_default();
         rule.name = name.to_string();
-        rule.id = format!("rule_{}_{}", name.to_lowercase().replace(' ', "_"), uuid::Uuid::new_v4().to_string()[..8].to_string());
+        rule.id = format!("rule_{name.to_lowercase()_", name.to_lowercase()").replace(' ', "_"), uuid::Uuid::new_v4().to_string()[..8].to_string());
         
         Self { rule }
     }
 
     /// Set rule description
+    #[must_use]
     pub fn description(mut self, description: &str) -> Self {
         self.rule.description = description.to_string();
         self
     }
 
     /// Set threshold condition
+    #[must_use]
     pub fn threshold_condition(mut self, metric: &str, operator: ThresholdOperator, value: f64) -> Self {
         self.rule.condition = AlertCondition::Threshold {
             metric: metric.to_string(),
@@ -671,37 +691,42 @@ impl AlertRuleBuilder {
     }
 
     /// Set alert severity
+    #[must_use]
     pub fn severity(mut self, severity: AlertSeverity) -> Self {
         self.rule.severity = severity;
         self
     }
 
     /// Set notification channels
+    #[must_use]
     pub fn channels(mut self, channels: Vec<String>) -> Self {
         self.rule.channels = channels;
         self
     }
 
     /// Add a tag
+    #[must_use]
     pub fn tag(mut self, key: &str, value: &str) -> Self {
         self.rule.tags.insert(key.to_string(), value.to_string());
         self
     }
 
     /// Set duration before alerting
+    #[must_use]
     pub fn duration(mut self, duration: Duration) -> Self {
         self.rule.duration = duration;
         self
     }
 
     /// Enable/disable the rule
+    #[must_use]
     pub fn enabled(mut self, enabled: bool) -> Self {
         self.rule.enabled = enabled;
         self
     }
 
     /// Build the final alert rule
-    pub fn build(self) -> AlertRule {
+    pub const fn build(self) -> AlertRule {
         self.rule
     }
 }

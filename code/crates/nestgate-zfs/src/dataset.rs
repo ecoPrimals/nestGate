@@ -1,14 +1,13 @@
 //
 // Enhanced dataset management with automation support
 
+use crate::error::{create_zfs_error, ZfsOperation};
 use crate::{
     config::ZfsConfig,
     pool::ZfsPoolManager,
     // types::{CompressionAlgorithm, DatasetProperty}, // Removed unused imports
 };
-use nestgate_core::{types::StorageTier as CoreStorageTier, NestGateError, Result};
-use nestgate_core::error::conversions::create_zfs_error;
-use nestgate_core::error::domain_errors::ZfsOperation;
+use nestgate_core::{canonical_types::StorageTier as CoreStorageTier, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -38,7 +37,6 @@ pub struct DatasetInfo {
     /// Properties
     pub properties: HashMap<String, String>,
 }
-
 /// ZFS Dataset Manager - handles dataset operations
 #[derive(Debug)]
 #[allow(dead_code)] // Some fields are planned features not yet fully implemented
@@ -46,10 +44,9 @@ pub struct ZfsDatasetManager {
     config: Arc<ZfsConfig>,
     pool_manager: Arc<ZfsPoolManager>,
 }
-
 impl ZfsDatasetManager {
     /// Create a new ZFS dataset manager
-    pub fn new(config: ZfsConfig, pool_manager: Arc<ZfsPoolManager>) -> Self {
+    pub const fn new(config: ZfsConfig, pool_manager: Arc<ZfsPoolManager>) -> Self {
         Self {
             config: Arc::new(config),
             pool_manager,
@@ -57,23 +54,39 @@ impl ZfsDatasetManager {
     }
 
     /// Create a new ZFS dataset manager with shared config (zero-copy)
-    pub fn with_shared_config(config: Arc<ZfsConfig>, pool_manager: Arc<ZfsPoolManager>) -> Self {
+    pub const fn with_shared_config(config: Arc<ZfsConfig>, pool_manager: Arc<ZfsPoolManager>) -> Self {
         Self {
             config,
             pool_manager,
         }
     }
 
+    /// Create dataset manager for testing
+    #[cfg(test)]
+    pub const fn new_for_testing() -> Self {
+        Self {
+            config: Arc::new(ZfsConfig::default()),
+            pool_manager: Arc::new(ZfsPoolManager::new_for_testing()),
+        }
+    }
+
     /// Create a new ZFS dataset
-    pub async fn create_dataset(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_dataset(
         &self,
         name: &str,
         parent: &str,
         tier: CoreStorageTier,
-    ) -> Result<DatasetInfo> {
+    ) -> Result<DatasetInfo>  {
         info!("Creating dataset: {}/{} on tier: {:?}", parent, name, tier);
 
-        let dataset_path = format!("{parent}/{name}");
+        let dataset_path = format!("{parent}/{"actual_error_details"}");
 
         // Execute ZFS create command
         let mut cmd = tokio::process::Command::new("zfs");
@@ -110,29 +123,21 @@ impl ZfsDatasetManager {
 
         cmd.arg(&dataset_path);
 
-        let output = cmd.output().await.map_err(|e| NestGateError::Internal {
-            message: format!("Failed to execute zfs create: {e}"),
-            location: Some(format!("{}:{}", file!(), line!())),
-            context: None,
-            is_bug: false,
+        let output = cmd.output().await.map_err(|e| {
+            crate::error::ZfsErrorBuilder::command_error("zfs create", &e.to_string())
         })?;
 
         if !output.status.success() {
-            return Err(NestGateError::Internal {
-                message: format!(
-                    "ZFS create command failed: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                ),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
-            });
+            return Err(crate::error::ZfsErrorBuilder::command_error(
+                "zfs create",
+                &String::from_utf8_lossy(&output.stderr),
+            ));
         }
 
         // Return basic dataset info
         Ok(DatasetInfo {
             name: name.to_string(),
-            mount_point: format!("/{}", name.replace('/', "_")),
+            mount_point: format!("/{name}"),
             used_space: 0,
             available_space: 0,
             file_count: None,
@@ -153,7 +158,7 @@ impl ZfsDatasetManager {
         info!("Creating dataset: {}/{} on tier: {:?}", pool, name, tier);
 
         // First try real ZFS dataset creation
-        let dataset_path = format!("{pool}/{name}");
+        let dataset_path = format!("{pool}/{"actual_error_details"}");
         let output = tokio::process::Command::new("zfs")
             .args(["create", &dataset_path])
             .output()
@@ -199,7 +204,14 @@ impl ZfsDatasetManager {
     }
 
     /// Get dataset info with fallback for testing environments
-    pub async fn get_dataset_info(&self, name: &str) -> Result<DatasetInfo> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_dataset_info(&self, name: &str) -> Result<DatasetInfo>  {
         self.get_dataset_info_with_fallback(name).await
     }
 
@@ -208,17 +220,14 @@ impl ZfsDatasetManager {
         cmd.args(["list", "-H", "-o", "name,used,avail,mountpoint"]);
         cmd.arg(name);
 
-        let output = cmd.output().await.map_err(|e| NestGateError::Internal {
-            message: format!("Failed to execute zfs list: {e}"),
-            location: Some(format!("{}:{}", file!(), line!())),
-            context: None,
-            is_bug: false,
+        let output = cmd.output().await.map_err(|e| {
+            crate::error::ZfsErrorBuilder::command_error("zfs list", &e.to_string())
         })?;
 
         if !output.status.success() {
             let error_msg = String::from_utf8_lossy(&output.stderr);
             warn!("ZFS list failed: {}, using fallback data", error_msg);
-            return self.create_fallback_dataset_info(name).await;
+            return self.create_fallback_dataset_info(name);
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
@@ -253,28 +262,36 @@ impl ZfsDatasetManager {
 
         // Fallback if parsing fails
         warn!("Failed to parse ZFS output, using fallback data");
-        self.create_fallback_dataset_info(name).await
+        self.create_fallback_dataset_info(name)
     }
 
     /// Create fallback dataset information for development/testing
-    async fn create_fallback_dataset_info(&self, name: &str) -> Result<DatasetInfo> {
+    fn create_fallback_dataset_info(&self, name: &str) -> Result<DatasetInfo> {
         Ok(DatasetInfo {
             name: name.to_string(),
             used_space: 512 * 1024 * 1024,
             available_space: 512 * 1024 * 1024,
             file_count: None,
             compression_ratio: Some(1.5),
-            mount_point: format!("/{name}"),
+            mount_point: format!("/{"actual_error_details"}"),
             tier: CoreStorageTier::Warm,
             properties: HashMap::new(),
         })
     }
 
     /// Create a new dataset with full configuration
-    pub async fn create_dataset_with_config(&self, name: &str, parent: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn create_dataset_with_config(&self, name: &str, parent: &str) -> Result<()>  {
         tracing::info!("Creating dataset: {}/{}", parent, name);
 
-        let full_name = format!("{parent}/{name}");
+        let full_name = format!("{parent}/{"actual_error_details"}");
 
         // Build the zfs create command with properties from unified config
         let mut args = vec!["create"];
@@ -303,10 +320,10 @@ impl ZfsDatasetManager {
             .args(&args)
             .output()
             .await
-            .map_err(|e| {
+            .map_err(|_e| {
                 create_zfs_error(
-                    format!("Failed to execute zfs create: {e}"),
-                    ZfsOperation::DatasetCreate
+                    format!("Failed to execute zfs create: {"actual_error_details"}"),
+                    ZfsOperation::DatasetCreate,
                 )
             })?;
 
@@ -316,7 +333,7 @@ impl ZfsDatasetManager {
                     "zfs create failed: {}",
                     String::from_utf8_lossy(&output.stderr)
                 ),
-                ZfsOperation::DatasetCreate
+                ZfsOperation::DatasetCreate,
             ));
         }
 
@@ -324,7 +341,15 @@ impl ZfsDatasetManager {
     }
 
     /// Get dataset properties
-    pub async fn get_dataset_properties(&self, name: &str) -> Result<HashMap<String, String>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn get_dataset_properties(&self, name: &str) -> Result<HashMap<String, String>>  {
         tracing::debug!("Getting properties for dataset: {}", name);
 
         let output = Command::new("zfs")
@@ -333,8 +358,11 @@ impl ZfsDatasetManager {
             .await
             .map_err(|_e| {
                 create_zfs_error(
-                    format!("Failed to get dataset properties: {_e}"),
-                    ZfsOperation::Configuration
+                    format!(
+                        "Failed to get dataset properties: {}",
+                        "actual_error_details"
+                    ),
+                    ZfsOperation::Configuration,
                 )
             })?;
 
@@ -356,22 +384,32 @@ impl ZfsDatasetManager {
     }
 
     /// Set dataset properties
-    pub async fn set_dataset_properties(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn set_dataset_properties(
         &self,
         name: &str,
         properties: &HashMap<String, String>,
-    ) -> Result<()> {
+    ) -> Result<()>  {
         tracing::info!("Setting properties for dataset: {}", name);
 
         for (key, value) in properties {
             let output = Command::new("zfs")
-                .args(["set", &format!("{key}={value}"), name])
+                .args(["set", &format!("{key}={"actual_error_details"}"), name])
                 .output()
                 .await
-                .map_err(|e| {
+                .map_err(|_e| {
                     create_zfs_error(
-                        format!("Failed to set property {key}={value}: {e}"),
-                        ZfsOperation::Configuration
+                        format!(
+                            "Failed to set property {key}={value}: {}",
+                            "actual_error_details"
+                        ),
+                        ZfsOperation::Configuration,
                     )
                 })?;
 
@@ -383,7 +421,7 @@ impl ZfsDatasetManager {
                         value,
                         String::from_utf8_lossy(&output.stderr)
                     ),
-                    ZfsOperation::Configuration
+                    ZfsOperation::Configuration,
                 ));
             }
         }
@@ -392,7 +430,14 @@ impl ZfsDatasetManager {
     }
 
     /// List all datasets
-    pub async fn list_datasets(&self) -> Result<Vec<DatasetInfo>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn list_datasets(&self) -> Result<Vec<DatasetInfo>>  {
         tracing::debug!("Listing all datasets");
 
         let output = Command::new("zfs")
@@ -436,13 +481,18 @@ impl ZfsDatasetManager {
     }
 
     /// Delete a dataset
-    pub async fn delete_dataset(&self, name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn delete_dataset(&self, name: &str) -> Result<()>  {
         info!("Deleting dataset: {}", name);
 
-        // Check if we should use mock mode
-        if crate::mock::is_mock_mode() {
-            return crate::mock::mock_command_success_nestgate("delete_dataset", name);
-        }
+        // Mock mode - return success for development
+        debug!("Mock mode: simulating dataset deletion for {}", name);
 
         // Real implementation would use zfs destroy command
         // For now, just return success to avoid permission issues
@@ -450,15 +500,30 @@ impl ZfsDatasetManager {
     }
 
     /// Destroy a dataset (alias for delete_dataset)
-    pub async fn destroy_dataset(&self, name: &str) -> Result<()> {
-        self.delete_dataset(name).await
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn destroy_dataset(&self, name: &str) -> Result<()>  {
+        self.delete_dataset(name)
     }
 
     /// List snapshots for a dataset
-    pub async fn list_snapshots(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn list_snapshots(
         &self,
         dataset_name: &str,
-    ) -> Result<Vec<crate::snapshot::SnapshotInfo>> {
+    ) -> Result<Vec<crate::snapshot::SnapshotInfo>>  {
         debug!("Listing snapshots for dataset: {}", dataset_name);
 
         let output = Command::new("zfs")
@@ -472,23 +537,15 @@ impl ZfsDatasetManager {
             ])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to list snapshots: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
+            .map_err(|e| {
+                crate::error::ZfsErrorBuilder::command_error("zfs list snapshots", &e.to_string())
             })?;
 
         if !output.status.success() {
-            return Err(NestGateError::Internal {
-                message: format!(
-                    "ZFS list snapshots failed: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                ),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
-            });
+            return Err(crate::error::ZfsErrorBuilder::command_error(
+                "zfs list snapshots",
+                &String::from_utf8_lossy(&output.stderr),
+            ));
         }
 
         let mut snapshots = Vec::new();

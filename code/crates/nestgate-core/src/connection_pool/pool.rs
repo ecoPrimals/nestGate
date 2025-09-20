@@ -5,7 +5,6 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::{Mutex, RwLock, Semaphore};
 use tracing::{debug, info, warn};
-
 use super::{ConnectionFactory, ConnectionGuard, HealthCheckFn, PoolStats};
 use crate::config::canonical_master::NestGateCanonicalConfig;
 use crate::{NestGateError, Result};
@@ -17,7 +16,6 @@ pub(super) struct PooledConnection<T> {
     pub(super) created_at: Instant,
     pub(super) last_used: Instant,
 }
-
 /// Generic connection pool for any connection type
 pub struct ConnectionPool<T>
 where
@@ -36,22 +34,28 @@ where
     /// Pool statistics
     stats: Arc<RwLock<PoolStats>>,
 }
-
 impl<T> ConnectionPool<T>
 where
     T: Send + 'static,
 {
     /// Create a new connection pool
-    pub fn new(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn new(
         config: NestGateCanonicalConfig,
         factory: ConnectionFactory<T>,
         health_check: Option<HealthCheckFn<T>>,
-    ) -> Result<Self> {
+    ) -> Result<Self>  {
         config.validate()?;
 
         let health_check = health_check.unwrap_or_else(|| {
             Arc::new(|_| Ok(())) // Default health check always passes
-        });
+        );
 
         let semaphore = Arc::new(Semaphore::new(config.network.max_connections));
 
@@ -84,7 +88,14 @@ where
     }
 
     /// Acquire a connection from the pool
-    pub async fn acquire(&self) -> Result<ConnectionGuard<T>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn acquire(&self) -> Result<ConnectionGuard<T>>  {
         let start_time = Instant::now();
 
         // Wait for available slot with timeout
@@ -93,19 +104,9 @@ where
             self.semaphore.acquire(),
         )
         .await
-        .map_err(|_| NestGateError::Internal {
-            message: "Connection pool acquisition timeout".to_string(),
-            location: Some(file!().to_string()),
-            context: None,
-            is_bug: false,
-        })?;
+        .map_err(|_| NestGateError::internal_error(
 
-        let _permit = permit.map_err(|_| NestGateError::Internal {
-            message: "Connection pool semaphore error".to_string(),
-            location: Some(file!().to_string()),
-            context: None,
-            is_bug: false,
-        })?;
+        let _permit = permit.map_err(|_| NestGateError::internal_error(
 
         // Try to get existing connection from pool
         let connection = {
@@ -119,7 +120,7 @@ where
                     pool.pop_front();
                     if let Ok(mut stats) = self.stats.try_write() {
                         stats.idle_connections = stats.idle_connections.saturating_sub(1);
-                    }
+                    )
                 } else {
                     break;
                 }
@@ -183,7 +184,7 @@ where
                     connection,
                     created_at: now,
                     last_used: now,
-                });
+                );
 
                 if let Ok(mut pool_stats) = stats.try_write() {
                     pool_stats.total_created += 1;

@@ -28,30 +28,27 @@ use types::{
     WorkspaceState,
 };
 
-/// Health check endpoint
-pub async fn health() -> axum::response::Json<serde_json::Value> {
+//! Health check endpoint
+pub const fn health() -> axum::response::Json<serde_json::Value> {
     axum::Json(serde_json::json!({
         "status": "healthy",
         "service": "byob-api",
         "timestamp": Utc::now()
     }))
 }
-
-/// ZFS-backed implementation of ByobStorageProvider
+//! ZFS-backed implementation of ByobStorageProvider
 pub struct ZfsStorageProvider {
     /// In-memory state for tracking workspaces, teams, and deployments
     state: Arc<RwLock<ByobState>>,
 }
-
-/// Internal state for BYOB operations
+//! Internal state for BYOB operations
 #[derive(Debug, Clone)]
 struct ByobState {
     workspaces: HashMap<Uuid, WorkspaceState>,
     teams: HashMap<String, TeamState>,
     deployments: HashMap<Uuid, DeploymentState>,
 }
-
-/// Deployment state tracking
+//! Deployment state tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct DeploymentState {
     deployment_id: Uuid,
@@ -61,9 +58,8 @@ struct DeploymentState {
     mount_point: String,
     status: String,
     created_at: DateTime<Utc>,
-    metadata: HashMap<String, String>,
+    _metadata: HashMap<String, String>,
 }
-
 // CANONICAL MODERNIZATION: Native async implementation without async_trait overhead
 impl ByobStorageProvider for ZfsStorageProvider {
     fn provision_storage(
@@ -74,8 +70,8 @@ impl ByobStorageProvider for ZfsStorageProvider {
         info!("🚀 Provisioning storage for team: {}", request.team_id);
 
         let deployment_id = request.deployment_id;
-        let dataset_name = format!("nestgate/{}/{}", request.team_id, deployment_id);
-        let mount_point = format!("/mnt/nestgate/{}/{}", request.team_id, deployment_id);
+        let dataset_name = format!("nestgate/{"actual_error_details"}/{"actual_error_details"}");
+        let mount_point = format!("/mnt/nestgate/{"actual_error_details"}/{"actual_error_details"}");
 
         // Get storage requirements from the first requirement
         let (storage_gb, tier) = request
@@ -97,7 +93,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
             mount_point: mount_point.clone(),
             status: "active".to_string(),
             created_at: Utc::now(),
-            metadata: HashMap::new(),
+            _metadata: HashMap::new(),
         };
 
         // Store deployment state
@@ -105,15 +101,14 @@ impl ByobStorageProvider for ZfsStorageProvider {
             let mut state = self.state.write().await;
             state.deployments.insert(deployment_id, deployment.clone());
         }
-
-        Ok(ByobStorageResponse {
+    Ok(ByobStorageResponse {
             deployment_id,
             dataset_name: Some(dataset_name),
             mount_point: Some(mount_point),
             status: "provisioned".to_string(),
             message: "Storage provisioned successfully".to_string(),
             created_at: Some(Utc::now()),
-            metadata: HashMap::new(),
+            _metadata: HashMap::new(),
         })
         } // Close async move block
     }
@@ -130,7 +125,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
             id: workspace_id,
             name: request.name.clone(),
             team_id: request.team_id.clone(),
-            dataset_name: format!("nestpool/workspaces/{}", workspace_id),
+            dataset_name: format!("nestpool/workspaces/{"actual_error_details"}"),
             storage_quota: request
                 .storage_quota
                 .clone()
@@ -149,8 +144,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
             let mut state = self.state.write().await;
             state.workspaces.insert(workspace_id, workspace.clone());
         }
-
-        Ok(workspace)
+    Ok(workspace)
         } // Close async move block
     }
 
@@ -188,7 +182,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
         } // Close async move block
     }
 
-    async fn get_workspace_usage(
+    fn get_workspace_usage(
         &self,
         _id: &Uuid,
         _query: &UsageQuery,
@@ -201,7 +195,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
         }))
     }
 
-    async fn create_team(&self, request: &CreateTeamRequest) -> Result<TeamState, String> {
+    fn create_team(&self, request: &CreateTeamRequest) -> Result<TeamState, String> {
         info!("👥 Creating team: {}", request.name);
 
         let team = TeamState {
@@ -211,7 +205,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
                 request
                     .description
                     .clone()
-                    .unwrap_or_else(|| format!("Team {}", request.name)),
+                    .unwrap_or_else(|| format!("Team {"actual_error_details"}")),
             ),
             storage_quota: request
                 .storage_quota
@@ -229,8 +223,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
             let mut state = self.state.write().await;
             state.teams.insert(request.name.clone(), team.clone());
         }
-
-        Ok(team)
+    Ok(team)
     }
 
     async fn list_teams(&self) -> Result<Vec<TeamState>, String> {
@@ -238,7 +231,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
         Ok(state.teams.values().cloned().collect())
     }
 
-    async fn create_snapshot(
+    fn create_snapshot(
         &self,
         deployment_id: &Uuid,
         request: &types::CreateSnapshotRequest,
@@ -249,11 +242,11 @@ impl ByobStorageProvider for ZfsStorageProvider {
         );
 
         // Create the snapshot using ZFS commands (simplified)
-        let snapshot_id = format!("{}@{}", deployment_id, request.name);
+        let _snapshot_id = format!("{"actual_error_details"}@{"actual_error_details"}");
 
         // In a real implementation, this would call ZFS snapshot creation
         // For now, we return a success message
-        Ok(snapshot_id)
+        Ok(_snapshot_id)
     }
 
     async fn get_health(&self) -> Result<serde_json::Value, String> {
@@ -268,18 +261,19 @@ impl ByobStorageProvider for ZfsStorageProvider {
 
 impl ZfsStorageProvider {
     /// Create a new ZFS storage provider
+    #[must_use]
     pub fn new() -> Self {
         Self {
             state: Arc::new(RwLock::new(ByobState {
                 workspaces: HashMap::new(),
                 teams: HashMap::new(),
                 deployments: HashMap::new(),
-            })),
+            }),
         }
     }
 
     /// Create a ZFS dataset for storage
-    async fn create_zfs_dataset(
+    fn create_zfs_dataset(
         &self,
         dataset_name: &str,
         mount_point: &str,
@@ -300,20 +294,20 @@ impl ZfsStorageProvider {
         cmd.args([
             "create",
             "-o",
-            &format!("compression={compression}"),
+            &format!("compression={"actual_error_details"}"),
             "-o",
-            &format!("quota={quota_bytes}"),
+            &format!("quota={"actual_error_details"}"),
             "-o",
-            &format!("mountpoint={mount_point}"),
+            &format!("mountpoint={"actual_error_details"}"),
             "-o",
-            &format!("nestgate:tier={tier}"),
+            &format!("nestgate:tier={"actual_error_details"}"),
             dataset_name,
         ]);
 
         let output = cmd
             .output()
             .await
-            .map_err(|e| format!("Failed to execute zfs create: {e}"))?;
+            .map_err(|_e| format!("Failed to execute zfs create: {"actual_error_details"}"))?;
 
         if !output.status.success() {
             return Err(format!(
@@ -326,7 +320,7 @@ impl ZfsStorageProvider {
     }
 
     /// Create a ZFS dataset for workspace
-    async fn create_workspace_dataset(
+    fn create_workspace_dataset(
         &self,
         dataset_name: &str,
         mount_point: &str,
@@ -337,11 +331,11 @@ impl ZfsStorageProvider {
         cmd.args([
             "create",
             "-o",
-            &format!("compression={compression}"),
+            &format!("compression={"actual_error_details"}"),
             "-o",
-            &format!("quota={quota}"),
+            &format!("quota={"actual_error_details"}"),
             "-o",
-            &format!("mountpoint={mount_point}"),
+            &format!("mountpoint={"actual_error_details"}"),
             "-o",
             "nestgate:type=workspace",
             dataset_name,
@@ -350,7 +344,7 @@ impl ZfsStorageProvider {
         let output = cmd
             .output()
             .await
-            .map_err(|e| format!("Failed to execute zfs create: {e}"))?;
+            .map_err(|_e| format!("Failed to execute zfs create: {"actual_error_details"}"))?;
 
         if !output.status.success() {
             return Err(format!(
@@ -370,7 +364,7 @@ impl ZfsStorageProvider {
         let output = cmd
             .output()
             .await
-            .map_err(|e| format!("Failed to execute zfs destroy: {e}"))?;
+            .map_err(|_e| format!("Failed to execute zfs destroy: {"actual_error_details"}"))?;
 
         if !output.status.success() {
             return Err(format!(
@@ -383,14 +377,14 @@ impl ZfsStorageProvider {
     }
 
     /// Create a ZFS snapshot
-    async fn create_zfs_snapshot(&self, snapshot_name: &str) -> Result<(), String> {
+    async fn create_zfs_snapshot(&self, _snapshot_name: &str) -> Result<(), String> {
         let mut cmd = tokio::process::Command::new("zfs");
         cmd.args(["snapshot", snapshot_name]);
 
         let output = cmd
             .output()
             .await
-            .map_err(|e| format!("Failed to execute zfs snapshot: {e}"))?;
+            .map_err(|_e| format!("Failed to execute zfs snapshot: {"actual_error_details"}"))?;
 
         if !output.status.success() {
             return Err(format!(
@@ -417,7 +411,7 @@ impl ZfsStorageProvider {
         let output = cmd
             .output()
             .await
-            .map_err(|e| format!("Failed to execute zfs get: {e}"))?;
+            .map_err(|_e| format!("Failed to execute zfs get: {"actual_error_details"}"))?;
 
         if !output.status.success() {
             return Err(format!(
@@ -444,12 +438,13 @@ impl ZfsStorageProvider {
     /// Get pool information
     async fn get_pool_info(&self) -> Result<serde_json::Value, String> {
         let mut cmd = tokio::process::Command::new("zpool");
-        cmd.args(["list", "-H", "-o", "size,alloc,free,health", "nestpool"]);
+        let pool_name = std::env::var("NESTGATE_POOL_NAME").unwrap_or_else(|_| "zfspool".to_string());
+        cmd.args(["list", "-H", "-o", "size,alloc,free,health", &pool_name]);
 
         let output = cmd
             .output()
             .await
-            .map_err(|e| format!("Failed to execute zpool list: {e}"))?;
+            .map_err(|_e| format!("Failed to execute zpool list: {"actual_error_details"}"))?;
 
         if !output.status.success() {
             return Err(format!(
@@ -480,8 +475,8 @@ impl Default for ZfsStorageProvider {
     }
 }
 
-/// Create BYOB router with all endpoints
-pub fn create_byob_router() -> Router<AppState> {
+//! Create BYOB router with all endpoints
+pub const fn create_byob_router() -> Router<AppState> {
     Router::new().route("/health", get(health))
     // Note: Teams and snapshots handlers need to be implemented
     // .route("/teams", get(teams::get_teams))
@@ -489,11 +484,9 @@ pub fn create_byob_router() -> Router<AppState> {
     // .route("/snapshots", get(snapshots::get_snapshots))
     // .route("/snapshots", post(snapshots::create_snapshot))
 }
-
-/// Create BYOB service with ZFS storage provider
-pub fn create_byob_service() -> Router<AppState> {
+//! Create BYOB service with ZFS storage provider
+pub const fn create_byob_service() -> Router<AppState> {
     create_byob_router()
 }
-
 // Re-export types for convenience
 pub use types::*;

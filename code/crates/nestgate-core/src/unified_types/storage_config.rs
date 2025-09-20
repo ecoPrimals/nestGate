@@ -18,7 +18,6 @@ pub struct UnifiedStorageConfig {
     pub performance_config: StoragePerformanceConfig,
     pub metadata: HashMap<String, String>,
 }
-
 impl Default for UnifiedStorageConfig {
     fn default() -> Self {
         Self {
@@ -42,7 +41,6 @@ pub struct StorageCacheConfig {
     pub ttl_secs: u64,
     pub write_through: bool,
 }
-
 impl Default for StorageCacheConfig {
     fn default() -> Self {
         Self {
@@ -62,7 +60,6 @@ pub struct StorageReplicationConfig {
     pub sync_interval: Duration,
     pub conflict_resolution: ConflictResolutionStrategy,
 }
-
 impl Default for StorageReplicationConfig {
     fn default() -> Self {
         Self {
@@ -82,7 +79,6 @@ pub struct StorageCompressionConfig {
     pub level: CompressionLevel,
     pub min_file_size_bytes: usize,
 }
-
 impl Default for StorageCompressionConfig {
     fn default() -> Self {
         Self {
@@ -102,7 +98,6 @@ pub struct StorageEncryptionConfig {
     pub key_rotation_days: u32,
     pub encrypt_metadata: bool,
 }
-
 impl Default for StorageEncryptionConfig {
     fn default() -> Self {
         Self {
@@ -122,7 +117,6 @@ pub struct StoragePerformanceConfig {
     pub retry_attempts: usize,
     pub batch_size: usize,
 }
-
 impl Default for StoragePerformanceConfig {
     fn default() -> Self {
         Self {
@@ -142,7 +136,6 @@ pub enum ConflictResolutionStrategy {
     Manual,
     Merge,
 }
-
 /// Compression algorithms
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CompressionAlgorithm {
@@ -152,7 +145,6 @@ pub enum CompressionAlgorithm {
     Zstd,
     Brotli,
 }
-
 /// Compression levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CompressionLevel {
@@ -161,7 +153,6 @@ pub enum CompressionLevel {
     High,
     Maximum,
 }
-
 /// Encryption algorithms
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EncryptionAlgorithm {

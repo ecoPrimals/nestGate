@@ -2,7 +2,6 @@
 ///
 /// Common types and enums used across all configuration modules.
 /// This module contains shared types that don't belong to a specific domain.
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -25,7 +24,6 @@ pub struct MonitoringConfig {
     /// Custom monitoring settings
     pub custom_settings: HashMap<String, serde_json::Value>,
 }
-
 impl Default for MonitoringConfig {
     fn default() -> Self {
         Self {
@@ -53,7 +51,6 @@ pub struct McpConfig {
     /// Protocol-specific settings
     pub protocol_settings: HashMap<String, serde_json::Value>,
 }
-
 impl Default for McpConfig {
     fn default() -> Self {
         Self {
@@ -72,7 +69,6 @@ pub struct AutomationConfig {
     /// Enable automation
     pub enabled: bool,
     /// Automation scripts directory
-    pub scripts_dir: std::path::PathBuf,
     /// Maximum concurrent tasks
     pub max_concurrent_tasks: usize,
     /// Task timeout
@@ -80,12 +76,10 @@ pub struct AutomationConfig {
     /// Automation-specific settings
     pub automation_settings: HashMap<String, serde_json::Value>,
 }
-
 impl Default for AutomationConfig {
     fn default() -> Self {
         Self {
             enabled: false,
-            scripts_dir: std::path::PathBuf::from("./automation"),
             max_concurrent_tasks: 10,
             task_timeout: Duration::from_secs(300),
             automation_settings: HashMap::new(),
@@ -99,18 +93,15 @@ pub struct FsMonitorConfig {
     /// Enable file system monitoring
     pub enabled: bool,
     /// Watched directories
-    pub watch_paths: Vec<std::path::PathBuf>,
     /// File patterns to ignore
     pub ignore_patterns: Vec<String>,
     /// Event processing settings
     pub event_settings: HashMap<String, serde_json::Value>,
 }
-
 impl Default for FsMonitorConfig {
     fn default() -> Self {
         Self {
             enabled: false,
-            watch_paths: vec![std::path::PathBuf::from("./data")],
             ignore_patterns: vec!["*.tmp".to_string(), "*.log".to_string()],
             event_settings: HashMap::new(),
         }
@@ -118,7 +109,7 @@ impl Default for FsMonitorConfig {
 }
 
 /// NAS configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NasConfig {
     /// Enable NAS functionality
     pub enabled: bool,
@@ -129,29 +120,16 @@ pub struct NasConfig {
     /// NAS-specific settings
     pub nas_settings: HashMap<String, serde_json::Value>,
 }
-
 /// NAS share configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NasShare {
     /// Share name
     pub name: String,
     /// Share path
-    pub path: std::path::PathBuf,
     /// Read-only flag
     pub read_only: bool,
     /// Access permissions
     pub permissions: HashMap<String, String>,
-}
-
-impl Default for NasConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            mount_points: Vec::new(),
-            shares: Vec::new(),
-            nas_settings: HashMap::new(),
-        }
-    }
 }
 
 /// Middleware configuration
@@ -166,7 +144,6 @@ pub struct MiddlewareConfig {
     /// Response processing settings
     pub response_settings: HashMap<String, serde_json::Value>,
 }
-
 impl Default for MiddlewareConfig {
     fn default() -> Self {
         Self {
@@ -180,4 +157,4 @@ impl Default for MiddlewareConfig {
             response_settings: HashMap::new(),
         }
     }
-} 
+}

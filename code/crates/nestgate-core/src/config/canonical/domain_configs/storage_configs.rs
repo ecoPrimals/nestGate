@@ -6,9 +6,7 @@ use super::CanonicalDomainConfig;
 use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::time::Duration;
-
 /// **CANONICAL STORAGE CONFIGURATION**
 /// Replaces: StorageConfig, BackendConfig, ReplicationConfig, StorageResourceConfig,
 /// FilesystemConfig, BlockStorageConfig, ObjectStorageConfig, NetworkFsConfig, and 10+ others
@@ -29,7 +27,6 @@ pub struct CanonicalStorageConfig {
     /// Environment-specific overrides
     pub environment_overrides: HashMap<String, serde_json::Value>,
 }
-
 impl CanonicalDomainConfig for CanonicalStorageConfig {
     fn domain() -> &'static str {
         "storage"
@@ -160,14 +157,12 @@ pub struct TierConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FilesystemBackend {
-    pub base_path: PathBuf,
     pub permissions: u32,
     pub enable_compression: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BlockBackend {
-    pub device_path: String,
     pub block_size: u32,
     pub enable_encryption: bool,
 }
@@ -199,7 +194,6 @@ pub struct ZfsBackend {
 pub struct MemoryBackend {
     pub max_size_mb: u64,
     pub enable_persistence: bool,
-    pub persistence_path: Option<PathBuf>,
 }
 
 // ==================== SECTION ====================

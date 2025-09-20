@@ -21,13 +21,12 @@ use nestgate_core::ExtractionLock;
 // Removed unused tracing import
 use uuid::Uuid;
 
-/// Auto-tune hardware endpoint with live Toadstool integration
+/// Auto-tune hardware endpoint with live Compute integration
 pub async fn auto_tune(
     State(state): State<AppState>,
     Json(_request): Json<HardwareTuningRequest>,
 ) -> std::result::Result<ResponseJson<HardwareTuningResponse>, StatusCode> {
     let service = &state.hardware_tuning_service;
-
     info!("🚀 Auto-tuning hardware with live compute integration");
 
     match service.auto_tune().await {
@@ -51,7 +50,7 @@ pub async fn auto_tune(
                     access_level: "standard".to_string(),
                     restrictions: vec![],
                     expires_at: None,
-                },
+                }
                 recommendations: TuningRecommendations {
                     cpu_recommendations: vec![
                         "Hardware tuning completed with live compute data".to_string(),
@@ -61,7 +60,7 @@ pub async fn auto_tune(
                     ],
                     storage_recommendations: vec![],
                     network_recommendations: vec![],
-                },
+                }
                 warnings: vec![],
             }))
         }
@@ -77,7 +76,6 @@ pub async fn get_config(
     State(state): State<AppState>,
 ) -> std::result::Result<ResponseJson<serde_json::Value>, StatusCode> {
     let service = &state.hardware_tuning_service;
-
     info!("📊 Getting hardware configuration with live compute data");
 
     match service.get_config().await {
@@ -85,19 +83,18 @@ pub async fn get_config(
             info!("✅ Hardware configuration retrieved with live metrics");
             Ok(ResponseJson(config))
         }
-        Err(e) => {
+    Err(e) => {
             error!("❌ Failed to get configuration: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
 }
 
-/// Get tuning profiles from Toadstool
+/// Get tuning profiles from Compute
 pub async fn get_profiles(
     State(state): State<AppState>,
 ) -> std::result::Result<ResponseJson<serde_json::Value>, StatusCode> {
     let service = &state.hardware_tuning_service;
-
     info!("📋 Getting tuning profiles from compute service");
 
     match service.get_profiles().await {
@@ -119,8 +116,8 @@ pub async fn get_profiles(
     }
 }
 
-/// Run live benchmark with Toadstool compute resources
-pub async fn run_benchmark(
+/// Run live benchmark with Compute compute resources
+pub fn run_benchmark(
     State(state): State<AppState>,
     Json(request): Json<serde_json::Value>,
 ) -> std::result::Result<ResponseJson<serde_json::Value>, StatusCode> {
@@ -129,7 +126,6 @@ pub async fn run_benchmark(
         .get("benchmark_name")
         .and_then(|v| v.as_str())
         .unwrap_or("overall");
-
     info!(
         "🏁 Running live benchmark '{}' with compute resources",
         benchmark_name
@@ -155,17 +151,16 @@ pub async fn run_benchmark(
     }
 }
 
-/// Generate extraction lock with BearDog integration
-pub async fn generate_extraction_lock(
+/// Generate extraction lock with Security integration
+pub fn generate_extraction_lock(
     State(state): State<AppState>,
     Json(request): Json<serde_json::Value>,
 ) -> std::result::Result<ResponseJson<ExtractionLock>, StatusCode> {
     let service = &state.hardware_tuning_service;
-
     let source = request
         .get("source")
         .and_then(|v| v.as_str())
-        .unwrap_or("localhost")
+        .unwrap_or(nestgate_core::constants::canonical_defaults::network::LOCALHOST)
         .to_string();
     let destination = request
         .get("destination")
@@ -183,20 +178,19 @@ pub async fn generate_extraction_lock(
             info!("✅ Extraction lock generated with cryptographic proof");
             Ok(ResponseJson(lock))
         }
-        Err(e) => {
+    Err(e) => {
             error!("❌ Failed to generate extraction lock: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
 }
 
-/// Verify extraction lock with BearDog validation
-pub async fn verify_extraction_lock(
+/// Verify extraction lock with Security validation
+pub fn verify_extraction_lock(
     State(state): State<AppState>,
     Json(request): Json<serde_json::Value>,
 ) -> std::result::Result<ResponseJson<serde_json::Value>, StatusCode> {
     let service = &state.hardware_tuning_service;
-
     let lock_id = request
         .get("lock_id")
         .and_then(|v| v.as_str())
@@ -227,12 +221,11 @@ pub async fn verify_extraction_lock(
 }
 
 /// Get session status
-pub async fn get_session_status(
+pub fn get_session_status(
     State(state): State<AppState>,
     Path(session_id): Path<Uuid>,
 ) -> Result<impl IntoResponse, StatusCode> {
     info!("🔍 Getting session status for: {}", session_id);
-
     // Get session from hardware tuning service
     let session = state
         .hardware_tuning_service

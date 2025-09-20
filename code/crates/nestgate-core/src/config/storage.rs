@@ -7,7 +7,6 @@ use std::collections::HashMap;
 pub struct StorageConfig {
     /// Cache size in bytes
     pub cache_size: u64,
-
     /// Maximum file size in bytes
     pub max_file_size: u64,
 
@@ -23,12 +22,10 @@ pub struct StorageConfig {
 pub struct StorageTierConfig {
     /// Tier name
     pub name: String,
-
     /// Tier type (hot, warm, cold, archive)
     pub tier_type: String,
 
     /// Storage path
-    pub path: String,
 
     /// Maximum capacity in bytes
     pub capacity: u64,
@@ -42,7 +39,6 @@ pub struct StorageTierConfig {
 pub struct TierPerformanceConfig {
     /// Maximum IOPS
     pub max_iops: u64,
-
     /// Maximum throughput in MB/s
     pub max_throughput: u64,
 
@@ -55,7 +51,6 @@ pub struct TierPerformanceConfig {
 pub struct StorageProtocolsConfig {
     /// NFS configuration
     pub nfs: Option<NfsConfig>,
-
     /// SMB configuration
     pub smb: Option<SmbConfig>,
 
@@ -71,9 +66,7 @@ pub struct StorageProtocolsConfig {
 pub struct NfsConfig {
     /// NFS version (3, 4, 4.1, 4.2)
     pub version: String,
-
     /// Export path
-    pub export_path: String,
 
     /// Allowed clients
     pub allowed_clients: Vec<String>,
@@ -87,7 +80,6 @@ pub struct NfsConfig {
 pub struct SmbConfig {
     /// SMB version (2, 3, 3.1)
     pub version: String,
-
     /// Share name
     pub share_name: String,
 
@@ -103,7 +95,6 @@ pub struct SmbConfig {
 pub struct IscsiConfig {
     /// Target name
     pub target_name: String,
-
     /// Portal address
     pub portal: String,
 
@@ -116,7 +107,6 @@ pub struct IscsiConfig {
 pub struct IscsiAuthConfig {
     /// CHAP username
     pub username: Option<String>,
-
     /// CHAP secret
     pub secret: Option<String>,
 
@@ -129,7 +119,6 @@ pub struct IscsiAuthConfig {
 pub struct S3Config {
     /// S3 endpoint
     pub endpoint: String,
-
     /// Bucket name
     pub bucket: String,
 
@@ -166,11 +155,12 @@ impl Default for TierPerformanceConfig {
 
 impl StorageConfig {
     /// Get a storage tier configuration by name
-    pub fn get_tier(&self, name: &str) -> Option<&StorageTierConfig> {
+    pub const fn get_tier(&self, name: &str) -> Option<&StorageTierConfig> {
         self.tiers.iter().find(|tier| tier.name == name)
     }
 
     /// Get a mutable storage tier configuration by name
+    #[must_use]
     pub fn get_tier_mut(&mut self, name: &str) -> Option<&mut StorageTierConfig> {
         self.tiers.iter_mut().find(|tier| tier.name == name)
     }
@@ -181,6 +171,7 @@ impl StorageConfig {
     }
 
     /// Remove a storage tier configuration by name
+    #[must_use]
     pub fn remove_tier(&mut self, name: &str) -> Option<StorageTierConfig> {
         if let Some(pos) = self.tiers.iter().position(|tier| tier.name == name) {
             Some(self.tiers.remove(pos))
@@ -190,17 +181,17 @@ impl StorageConfig {
     }
 
     /// Get all tier names
-    pub fn tier_names(&self) -> Vec<&str> {
+    pub const fn tier_names(&self) -> Vec<&str> {
         self.tiers.iter().map(|tier| tier.name.as_str()).collect()
     }
 
     /// Get total storage capacity across all tiers
-    pub fn total_capacity(&self) -> u64 {
+    pub const fn total_capacity(&self) -> u64 {
         self.tiers.iter().map(|tier| tier.capacity).sum()
     }
 
     /// Check if a protocol is enabled
-    pub fn is_protocol_enabled(&self, protocol: &str) -> bool {
+    pub const fn is_protocol_enabled(&self, protocol: &str) -> bool {
         match protocol {
             "nfs" => self.protocols.nfs.is_some(),
             "smb" => self.protocols.smb.is_some(),
@@ -213,7 +204,6 @@ impl StorageConfig {
 
 impl StorageTierConfig {
     /// Create a new storage tier configuration
-    pub fn new(name: String, tier_type: String, path: String, capacity: u64) -> Self {
         Self {
             name,
             tier_type,
@@ -224,26 +214,26 @@ impl StorageTierConfig {
     }
 
     /// Get the tier utilization percentage (0-100)
-    pub fn utilization_percent(&self, used_bytes: u64) -> f64 {
+    pub const fn utilization_percent(&self, used_bytes: u64) -> f64 {
         if self.capacity == 0 {
             0.0
         } else {
-            (used_bytes as f64 / self.capacity as f64) * 100.0
+            (f64::from(used_bytes) / self.f64::from(capacity)) * 100.0
         }
     }
 
     /// Get available capacity in bytes
-    pub fn available_capacity(&self, used_bytes: u64) -> u64 {
+    pub const fn available_capacity(&self, used_bytes: u64) -> u64 {
         self.capacity.saturating_sub(used_bytes)
     }
 
     /// Check if the tier is full (>95% utilization)
-    pub fn is_full(&self, used_bytes: u64) -> bool {
+    pub const fn is_full(&self, used_bytes: u64) -> bool {
         self.utilization_percent(used_bytes) > 95.0
     }
 
     /// Check if the tier is nearly full (>90% utilization)
-    pub fn is_nearly_full(&self, used_bytes: u64) -> bool {
+    pub const fn is_nearly_full(&self, used_bytes: u64) -> bool {
         self.utilization_percent(used_bytes) > 90.0
     }
 }
@@ -320,10 +310,9 @@ mod tests {
 
         config.protocols.nfs = Some(NfsConfig {
             version: "4".to_string(),
-            export_path: "/export".to_string(),
             allowed_clients: vec!["*".to_string()],
             mount_options: HashMap::new(),
-        });
+        );
 
         assert!(config.is_protocol_enabled("nfs"));
         assert!(!config.is_protocol_enabled("smb"));

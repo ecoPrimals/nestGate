@@ -10,7 +10,7 @@ use rand::Rng;
 
 /// Test network partition resilience
 #[tokio::test]
-async fn test_network_partition_resilience() {
+async fn test_network_partition_resilience() -> Result<(), Box<dyn std::error::Error>> {
     init_test_logging();
     
     println!("🌪️ CHAOS: Network Partition Simulation");
@@ -30,7 +30,7 @@ async fn test_network_partition_resilience() {
     
     // Verify local operations still work during "partition"
     assert!(storage.exists(test_key).await);
-    let retrieved_data = storage.read(test_key).await.expect("Should read during partition");
+    let retrieved_data = storage.read(test_key).await?;
     assert_eq!(retrieved_data, test_data);
     
     // Phase 3: Simulate recovery
@@ -49,11 +49,12 @@ async fn test_network_partition_resilience() {
     // Cleanup
     let _ = storage.delete(test_key).await;
     let _ = storage.delete(recovery_key).await;
+    Ok(())
 }
 
 /// Test random service failures
 #[tokio::test]
-async fn test_random_service_failures() {
+async fn test_random_service_failures() -> Result<(), Box<dyn std::error::Error>> {
     init_test_logging();
     
     println!("🌪️ CHAOS: Random Service Failures");
@@ -78,10 +79,13 @@ async fn test_random_service_failures() {
                 Ok(_) => {
                     successful_operations += 1;
                     println!("    ✅ Round {} succeeded", round);
+    Ok(())
                 }
                 Err(_) => {
                     println!("    ❌ Round {} failed (unexpected)", round);
+    Ok(())
                 }
+    Ok(())
             }
         } else {
             // Simulated failure - still try operation but expect it might fail
@@ -93,14 +97,19 @@ async fn test_random_service_failures() {
                 Ok(Ok(_)) => {
                     successful_operations += 1;
                     println!("    ✅ Round {} succeeded despite fault injection", round);
+    Ok(())
                 }
                 Ok(Err(_)) => {
                     println!("    ⚠️ Round {} failed as expected from fault injection", round);
+    Ok(())
                 }
                 Err(_) => {
                     println!("    ⏰ Round {} timed out (fault injection effect)", round);
+    Ok(())
                 }
+    Ok(())
             }
+    Ok(())
         }
         
         // Small delay between rounds
@@ -118,7 +127,7 @@ async fn test_random_service_failures() {
 
 /// Test memory pressure handling
 #[tokio::test]
-async fn test_memory_pressure_resilience() {
+async fn test_memory_pressure_resilience() -> Result<(), Box<dyn std::error::Error>> {
     init_test_logging();
     
     println!("🌪️ CHAOS: Memory Pressure Simulation");
@@ -150,19 +159,24 @@ async fn test_memory_pressure_resilience() {
                 println!("    ✅ Large operation {} succeeded", i);
                 
                 // Verify we can still read it
-                let retrieved = storage.read(&large_key).await.expect("Should read large data");
+                let retrieved = storage.read(&large_key).await?;
                 assert_eq!(retrieved.len(), MEDIUM_DATA_SIZE);
                 
                 // Cleanup immediately to free memory
                 let _ = storage.delete(&large_key).await;
+    Ok(())
             }
             Ok(Err(e)) => {
                 println!("    ⚠️ Large operation {} failed: {:?}", i, e);
+    Ok(())
             }
             Err(_) => {
                 println!("    ⏰ Large operation {} timed out", i);
+    Ok(())
             }
+    Ok(())
         }
+    Ok(())
     }
     
     // Phase 3: Verify normal operations still work
@@ -171,11 +185,11 @@ async fn test_memory_pressure_resilience() {
     let recovery_data = b"Memory recovery test";
     assert!(storage.write(recovery_key, recovery_data).await.is_ok());
     
-    let retrieved_recovery = storage.read(recovery_key).await.expect("Should read recovery data");
+    let retrieved_recovery = storage.read(recovery_key).await?;
     assert_eq!(retrieved_recovery, recovery_data);
     
     // Verify original data is still accessible
-    let retrieved_normal = storage.read(normal_key).await.expect("Should read normal data");
+    let retrieved_normal = storage.read(normal_key).await?;
     assert_eq!(retrieved_normal, normal_data);
     
     let elapsed = start_time.elapsed();
@@ -196,7 +210,7 @@ async fn test_memory_pressure_resilience() {
 
 /// Test concurrent operations under stress
 #[tokio::test]
-async fn test_concurrent_stress_resilience() {
+async fn test_concurrent_stress_resilience() -> Result<(), Box<dyn std::error::Error>> {
     init_test_logging();
     
     println!("🌪️ CHAOS: Concurrent Stress Test");
@@ -230,18 +244,25 @@ async fn test_concurrent_stress_resilience() {
                                 match storage_clone.delete(&key).await {
                                     Ok(_) => (true, "write-read-delete cycle successful".to_string()),
                                     Err(e) => (false, format!("delete failed: {:?}", e)),
+    Ok(())
                                 }
                             } else {
                                 (false, "data mismatch on read".to_string())
+    Ok(())
                             }
+    Ok(())
                         }
                         Err(e) => (false, format!("read failed: {:?}", e)),
+    Ok(())
                     }
+    Ok(())
                 }
                 Err(e) => (false, format!("write failed: {:?}", e)),
+    Ok(())
             }
         });
         handles.push(handle);
+    Ok(())
     }
     
     // Wait for all operations to complete

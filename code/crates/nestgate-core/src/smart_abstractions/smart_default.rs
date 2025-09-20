@@ -1,10 +1,10 @@
-//! Smart Default Implementation
-//!
-//! Provides intelligent default value generation that eliminates the need
+// Smart Default Implementation
+//! Smart Default functionality and utilities.
+// Provides intelligent default value generation that eliminates the need
 //! for manual impl Default blocks across the codebase.
-//!
-//! **PROBLEM SOLVED**: 200+ manual impl Default blocks (~3000 lines of boilerplate)
-//! **SOLUTION**: Attribute-based smart defaults with intelligent inference
+//! Smart Default functionality and utilities.
+// **PROBLEM SOLVED**: 200+ manual impl Default blocks (~3000 lines of boilerplate)
+// **SOLUTION**: Attribute-based smart defaults with intelligent inference
 
 use std::collections::HashMap;
 use std::time::Duration;
@@ -18,7 +18,6 @@ use std::time::Duration;
 pub trait SmartDefault {
     fn smart_default() -> Self;
 }
-
 // Implement for common types with sensible defaults
 impl SmartDefault for String {
     fn smart_default() -> Self {
@@ -82,20 +81,21 @@ impl<T> SmartDefault for Option<T> {
 
 /// Smart default values for common configuration patterns
 pub struct SmartDefaults;
-
 impl SmartDefaults {
-    pub const DEFAULT_HOST: &'static str = "127.0.0.1";
-    pub const DEFAULT_PORT: u16 = 8080;
+    /// Use canonical constant for default host
+    pub use crate::constants::LOCALHOST as DEFAULT_HOST;
+    /// Use canonical constant for default port
+    pub use crate::constants::API_PORT as DEFAULT_PORT;
     pub const DEFAULT_TIMEOUT_SECS: u64 = 30;
     pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
     pub const DEFAULT_BUFFER_SIZE: usize = 8192;
     pub const DEFAULT_MAX_CONNECTIONS: usize = 1000;
 
-    pub fn default_host() -> String {
+    pub const fn default_host() -> String {
         Self::DEFAULT_HOST.to_string()
     }
 
-    pub fn default_timeout() -> Duration {
+    pub const fn default_timeout() -> Duration {
         Duration::from_secs(Self::DEFAULT_TIMEOUT_SECS)
     }
 

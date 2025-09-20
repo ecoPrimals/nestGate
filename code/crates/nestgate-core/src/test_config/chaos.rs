@@ -3,7 +3,6 @@
 /// failure injection, network chaos, resource chaos, and recovery testing.
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
 // ==================== SECTION ====================
 
 /// **Unified chaos engineering configuration**
@@ -18,7 +17,6 @@ pub struct TestChaosConfig {
     /// Recovery testing configuration
     pub recovery: RecoveryTestConfig,
 }
-
 /// **Failure injection configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct FailureInjectionConfig {
@@ -31,7 +29,6 @@ pub struct FailureInjectionConfig {
     /// Injection duration
     pub injection_duration: Duration,
 }
-
 /// **Network chaos configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NetworkChaosConfig {
@@ -44,7 +41,6 @@ pub struct NetworkChaosConfig {
     /// Bandwidth limitation (Mbps)
     pub bandwidth_limit_mbps: f64,
 }
-
 /// **Resource chaos configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResourceChaosConfig {
@@ -57,7 +53,6 @@ pub struct ResourceChaosConfig {
     /// Disk stress MB/s
     pub disk_stress_mbps: f64,
 }
-
 /// **Recovery test configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RecoveryTestConfig {

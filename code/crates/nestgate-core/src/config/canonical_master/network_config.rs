@@ -3,7 +3,6 @@
 /// Network and connectivity configuration with const generics for performance.
 /// This module contains all network-related settings including API ports,
 /// timeouts, load balancing, and service discovery.
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr};
@@ -13,12 +12,9 @@ use std::time::Duration;
 
 /// Network configuration with const generics for performance
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NetworkConfig<
-    const API_PORT: u16 = 8080,
-    const TIMEOUT_MS: u64 = 30000,
-> {
+pub struct NetworkConfig<const API_PORT: u16 = 8080, const TIMEOUT_MS: u64 = 30000> {
     /// API server bind address
-    pub bind_address: IpAddr,
+    pub bind_endpoint: IpAddr,
     /// API server port (compile-time optimized)
     pub port: u16,
     /// Request timeout (compile-time optimized)
@@ -32,9 +28,7 @@ pub struct NetworkConfig<
     /// Enable TLS
     pub tls_enabled: bool,
     /// TLS certificate path
-    pub tls_cert_path: Option<std::path::PathBuf>,
     /// TLS private key path
-    pub tls_key_path: Option<std::path::PathBuf>,
     /// Load balancer configuration
     pub load_balancer: LoadBalancerConfig,
     /// Service discovery configuration
@@ -44,19 +38,21 @@ pub struct NetworkConfig<
     /// Network-specific settings
     pub network_settings: HashMap<String, serde_json::Value>,
 }
-
 impl<const API_PORT: u16, const TIMEOUT_MS: u64> NetworkConfig<API_PORT, TIMEOUT_MS> {
     /// Get effective API port (compile-time optimized)
+    #[must_use]
     pub const fn api_port() -> u16 {
         API_PORT
     }
-    
+
     /// Get effective timeout (compile-time optimized)
+    #[must_use]
     pub const fn timeout_ms() -> u64 {
         TIMEOUT_MS
     }
-    
+
     /// Get timeout as Duration
+    #[must_use]
     pub const fn timeout_duration() -> Duration {
         Duration::from_millis(TIMEOUT_MS)
     }
@@ -74,7 +70,6 @@ pub struct LoadBalancerConfig {
     /// Health check configuration
     pub health_check: HealthCheckConfig,
 }
-
 /// Load balancing algorithms
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LoadBalancingAlgorithm {
@@ -84,12 +79,11 @@ pub enum LoadBalancingAlgorithm {
     IpHash,
     Random,
 }
-
 /// Backend server configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackendServer {
     /// Server address
-    pub address: String,
+    pub endpoint: String,
     /// Server port
     pub port: u16,
     /// Server weight (for weighted algorithms)
@@ -97,7 +91,6 @@ pub struct BackendServer {
     /// Server health status
     pub healthy: bool,
 }
-
 /// Health check configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheckConfig {
@@ -112,7 +105,6 @@ pub struct HealthCheckConfig {
     /// Expected HTTP status code
     pub expected_status: u16,
 }
-
 /// Service discovery configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceDiscoveryConfig {
@@ -125,7 +117,6 @@ pub struct ServiceDiscoveryConfig {
     /// Discovery settings
     pub discovery_settings: HashMap<String, serde_json::Value>,
 }
-
 /// External network configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExternalNetworkConfig {
@@ -134,7 +125,6 @@ pub struct ExternalNetworkConfig {
     /// External port
     pub port: u16,
 }
-
 impl Default for ExternalNetworkConfig {
     fn default() -> Self {
         Self {
@@ -153,7 +143,6 @@ pub enum ServiceDiscoveryProtocol {
     Kubernetes,
     Static,
 }
-
 /// Service registration configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceRegistrationConfig {
@@ -166,21 +155,18 @@ pub struct ServiceRegistrationConfig {
     /// Health check settings for registration
     pub health_check: Option<HealthCheckConfig>,
 }
-
 // ==================== SECTION ====================
 
 impl<const API_PORT: u16, const TIMEOUT_MS: u64> Default for NetworkConfig<API_PORT, TIMEOUT_MS> {
     fn default() -> Self {
         Self {
-            bind_address: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+            bind_endpoint: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
             port: API_PORT,
             request_timeout: Duration::from_millis(TIMEOUT_MS),
             connection_timeout: Duration::from_secs(10),
             max_connections: 1000,
             keep_alive_timeout: Duration::from_secs(60),
             tls_enabled: false,
-            tls_cert_path: None,
-            tls_key_path: None,
             load_balancer: LoadBalancerConfig::default(),
             service_discovery: ServiceDiscoveryConfig::default(),
             external: ExternalNetworkConfig::default(),
@@ -232,4 +218,4 @@ impl Default for ServiceRegistrationConfig {
             health_check: Some(HealthCheckConfig::default()),
         }
     }
-} 
+}

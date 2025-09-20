@@ -26,7 +26,6 @@ pub struct DetailedMetrics {
     pub last_updated: SystemTime,
     pub custom_metrics: HashMap<String, f64>,
 }
-
 /// Storage optimization analysis and recommendations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizationReport {
@@ -36,7 +35,6 @@ pub struct OptimizationReport {
     pub estimated_total_savings: EstimatedSavings,
     pub performance_insights: Vec<PerformanceInsight>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizationRecommendation {
     pub id: String,
@@ -91,7 +89,7 @@ pub struct EstimatedSavings {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceInsight {
     pub metric_name: String,
-    pub current_value: f64,
+    pub currentvalue: f64,
     pub optimal_range: (f64, f64),
     pub trend: String, // "improving", "degrading", "stable"
     pub impact_assessment: String,
@@ -109,7 +107,6 @@ pub struct DeduplicationReport {
     pub analysis_duration: Duration,
     pub generated_at: SystemTime,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DuplicateGroup {
     pub content_hash: String,
@@ -126,6 +123,7 @@ impl Default for DetailedMetrics {
 }
 
 impl DetailedMetrics {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             read_ops_per_sec: 0.0,
@@ -163,6 +161,7 @@ impl Default for OptimizationReport {
 }
 
 impl OptimizationReport {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             generated_at: SystemTime::now(),
@@ -188,9 +187,9 @@ impl OptimizationReport {
 }
 
 impl DeduplicationReport {
-    pub fn calculate_savings_ratio(&self) -> f32 {
+    pub const fn calculate_savings_ratio(&self) -> f32 {
         if self.total_size_bytes > 0 {
-            self.potential_savings_bytes as f32 / self.total_size_bytes as f32
+            self.f32::from(potential_savings_bytes) / self.f32::from(total_size_bytes)
         } else {
             0.0
         }

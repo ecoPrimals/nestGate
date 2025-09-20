@@ -12,12 +12,12 @@ use tracing::{error, info, warn};
 // Removed unused tracing import
 
 /// Get all workspaces with real ZFS integration
-pub async fn get_workspaces() -> Result<Json<Value>, StatusCode> {
+#[must_use]
+pub fn get_workspaces() -> Result<Json<Value>, StatusCode> {
     info!("📁 Getting all workspaces from ZFS datasets");
-
     let pool_name =
-        std::env::var("NESTGATE_WORKSPACE_POOL").unwrap_or_else(|_| "nestpool".to_string());
-    let workspaces_path = format!("{pool_name}/workspaces");
+        std::env::var("NESTGATE_WORKSPACE_POOL").unwrap_or_else(|_| "zfspool".to_string());
+    let workspaces_path = format!("{"actual_error_details"}/workspaces");
 
     // Query ZFS for workspace datasets
     let list_output = Command::new("zfs")
@@ -54,7 +54,7 @@ pub async fn get_workspaces() -> Result<Json<Value>, StatusCode> {
                     let mountpoint = fields[4];
                     let creation = fields[5];
 
-                    // Extract workspace ID from dataset name (e.g., "nestpool/workspaces/ws-123" -> "ws-123")
+                    // Extract workspace ID from dataset name (e.g., "zfspool/workspaces/ws-123" -> "ws-123")
                     if let Some(workspace_id) = full_name.split('/').next_back() {
                         // Skip the parent dataset itself
                         if workspace_id == "workspaces" {
@@ -92,8 +92,8 @@ pub async fn get_workspaces() -> Result<Json<Value>, StatusCode> {
             })))
         }
         Ok(output) => {
-            let error_msg = String::from_utf8_lossy(&output.stderr);
-            warn!("⚠️ ZFS list command failed: {}", error_msg);
+            let _error_msg = String::from_utf8_lossy(&output.stderr);
+            warn!("⚠️ ZFS list command failed: {}", _error_msg);
 
             // Return empty list if workspaces dataset doesn't exist yet
             Ok(Json(json!({
@@ -112,9 +112,8 @@ pub async fn get_workspaces() -> Result<Json<Value>, StatusCode> {
 }
 
 /// Create a new workspace with real ZFS dataset creation
-pub async fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>, StatusCode> {
+pub fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>, StatusCode> {
     info!("🆕 Creating new workspace: {:?}", request);
-
     let workspace_name = request
         .get("name")
         .and_then(|v| v.as_str())
@@ -125,7 +124,7 @@ pub async fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>,
     let workspace_id = uuid_manager.workspace_id();
 
     let pool_name =
-        std::env::var("NESTGATE_WORKSPACE_POOL").unwrap_or_else(|_| "nestpool".to_string());
+        std::env::var("NESTGATE_WORKSPACE_POOL").unwrap_or_else(|_| "zfspool".to_string());
     let dataset_name = format!("{pool_name}/workspaces/{workspace_id}");
 
     // Validate workspace name
@@ -195,8 +194,8 @@ pub async fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>,
             })))
         }
         Ok(output) => {
-            let error_msg = String::from_utf8_lossy(&output.stderr);
-            error!("❌ Failed to create ZFS dataset: {}", error_msg);
+            let _error_msg = String::from_utf8_lossy(&output.stderr);
+            error!("❌ Failed to create ZFS dataset: {}", _error_msg);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
         Err(e) => {
@@ -207,9 +206,8 @@ pub async fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>,
 }
 
 /// Get workspace details with real ZFS properties
-pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
+pub fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
     info!("📋 Getting workspace details: {}", workspace_id);
-
     // Validate workspace ID
     if workspace_id.is_empty() || workspace_id.contains('/') {
         warn!("❌ Invalid workspace ID: {}", workspace_id);
@@ -217,7 +215,7 @@ pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Valu
     }
 
     let pool_name =
-        std::env::var("NESTGATE_WORKSPACE_POOL").unwrap_or_else(|_| "nestpool".to_string());
+        std::env::var("NESTGATE_WORKSPACE_POOL").unwrap_or_else(|_| "zfspool".to_string());
     let dataset_name = format!("{pool_name}/workspaces/{workspace_id}");
 
     // Get comprehensive ZFS properties
@@ -251,7 +249,7 @@ pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Valu
             let used_bytes = parse_size(properties.get("used").unwrap_or(&"0".to_string()));
             let quota_bytes = parse_size(properties.get("quota").unwrap_or(&"0".to_string()));
             let utilization = if quota_bytes > 0 {
-                (used_bytes as f64 / quota_bytes as f64) * 100.0
+                (f64::from(used_bytes) / f64::from(quota_bytes)) * 100.0
             } else {
                 0.0
             };
@@ -292,10 +290,10 @@ pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Valu
             })))
         }
         Ok(output) => {
-            let error_msg = String::from_utf8_lossy(&output.stderr);
+            let _error_msg = String::from_utf8_lossy(&output.stderr);
             warn!(
                 "⚠️ Workspace not found or inaccessible: {} - {}",
-                workspace_id, error_msg
+                workspace_id, _error_msg
             );
             Err(StatusCode::NOT_FOUND)
         }
@@ -307,7 +305,7 @@ pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Valu
 }
 
 /// Update workspace configuration with real ZFS properties
-pub async fn update_workspace_config(
+pub fn update_workspace_config(
     Path(workspace_id): Path<String>,
     Json(config): Json<Value>,
 ) -> Result<Json<Value>, StatusCode> {
@@ -315,7 +313,6 @@ pub async fn update_workspace_config(
         "⚙️ Updating workspace config: {} -> {:?}",
         workspace_id, config
     );
-
     // Validate workspace ID
     if workspace_id.is_empty() || workspace_id.contains('/') {
         warn!("❌ Invalid workspace ID: {}", workspace_id);
@@ -323,7 +320,7 @@ pub async fn update_workspace_config(
     }
 
     let pool_name =
-        std::env::var("NESTGATE_WORKSPACE_POOL").unwrap_or_else(|_| "nestpool".to_string());
+        std::env::var("NESTGATE_WORKSPACE_POOL").unwrap_or_else(|_| "zfspool".to_string());
     let dataset_name = format!("{pool_name}/workspaces/{workspace_id}");
 
     let mut updated_properties = Vec::new();
@@ -342,8 +339,11 @@ pub async fn update_workspace_config(
                 info!("✅ Updated quota to: {}", quota);
             }
             Ok(output) => {
-                let error_msg = String::from_utf8_lossy(&output.stderr);
-                errors.push(format!("Failed to update quota: {error_msg}"));
+                let _error_msg = String::from_utf8_lossy(&output.stderr);
+                errors.push(format!(
+                    "Failed to update quota: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                ));
             }
             Err(e) => {
                 errors.push(format!("Quota update command failed: {e}"));
@@ -360,15 +360,21 @@ pub async fn update_workspace_config(
 
         match compression_result {
             Ok(output) if output.status.success() => {
-                updated_properties.push(format!("compression: {compression}"));
+                updated_properties.push(format!("compression: {"actual_error_details"}"));
                 info!("✅ Updated compression to: {}", compression);
             }
             Ok(output) => {
-                let error_msg = String::from_utf8_lossy(&output.stderr);
-                errors.push(format!("Failed to update compression: {error_msg}"));
+                let _error_msg = String::from_utf8_lossy(&output.stderr);
+                errors.push(format!(
+                    "Failed to update compression: {}",
+                    "actual_error_details"
+                ));
             }
-            Err(e) => {
-                errors.push(format!("Compression update command failed: {e}"));
+            Err(_e) => {
+                errors.push(format!(
+                    "Compression update command failed: {}",
+                    "actual_error_details"
+                ));
             }
         }
     }
@@ -378,7 +384,7 @@ pub async fn update_workspace_config(
         let name_result = Command::new("zfs")
             .args([
                 "set",
-                &format!("org.nestgate:workspace_name={name}"),
+                &format!("org.nestgate:workspace_name={"actual_error_details"}"),
                 &dataset_name,
             ])
             .output()
@@ -386,15 +392,18 @@ pub async fn update_workspace_config(
 
         match name_result {
             Ok(output) if output.status.success() => {
-                updated_properties.push(format!("name: {name}"));
+                updated_properties.push(format!("name: {"actual_error_details"}"));
                 info!("✅ Updated workspace name to: {}", name);
             }
             Ok(output) => {
-                let error_msg = String::from_utf8_lossy(&output.stderr);
-                errors.push(format!("Failed to update name: {error_msg}"));
+                let _error_msg = String::from_utf8_lossy(&output.stderr);
+                errors.push(format!("Failed to update name: {"actual_error_details"}"));
             }
-            Err(e) => {
-                errors.push(format!("Name update command failed: {e}"));
+            Err(_e) => {
+                errors.push(format!(
+                    "Name update command failed: {}",
+                    "actual_error_details"
+                ));
             }
         }
     }
@@ -426,6 +435,65 @@ pub async fn update_workspace_config(
     }
 }
 
+/// **DELETE WORKSPACE**
+///
+/// Delete an existing workspace by ID.
+pub fn delete_workspace(Path(workspace_id): Path<String>) -> Result<StatusCode, StatusCode> {
+    tracing::info!("Deleting workspace: {}", workspace_id);
+
+    // Validate workspace ID format
+    if workspace_id.is_empty() || workspace_id.contains("..") || workspace_id.contains("/") {
+        tracing::error!("Invalid workspace ID: {}", workspace_id);
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    // Construct dataset name
+    let dataset_name = format!("rpool/workspaces/{workspace_id}");
+
+    // First check if dataset exists
+    let check_output = Command::new("zfs")
+        .args(&["list", "-H", "-o", "name", &dataset_name])
+        .output()
+        .await;
+
+    match check_output {
+        Ok(output) if output.status.success() => {
+            // Dataset exists, proceed with deletion
+            tracing::info!("Found workspace dataset: {}", dataset_name);
+        }
+        Ok(_) => {
+            tracing::warn!("Workspace dataset not found: {}", dataset_name);
+            return Err(StatusCode::NOT_FOUND);
+        }
+        Err(e) => {
+            tracing::error!("Failed to check workspace existence: {}", e);
+            return Err(StatusCode::INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Delete the ZFS dataset (recursive to handle any child datasets/snapshots)
+    let delete_output = Command::new("zfs")
+        .args(&["destroy", "-r", &dataset_name])
+        .output()
+        .await;
+
+    match delete_output {
+        Ok(output) if output.status.success() => {
+            tracing::info!("Successfully deleted workspace: {}", workspace_id);
+            Ok(StatusCode::NO_CONTENT)
+        }
+        Ok(output) => {
+            let error_msg = String::from_utf8_lossy(&output.stderr);
+            tracing::error!("Failed to delete workspace {}: {}", workspace_id, error_msg);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+        Err(e) => {
+            tracing::error!("Failed to execute zfs destroy command: {}", e);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
+}
+
 // Helper functions
 
 /// Get additional workspace properties
@@ -441,7 +509,6 @@ async fn get_workspace_properties(dataset_name: &str) -> (String, String, String
         ])
         .output()
         .await;
-
     if let Ok(output) = props_output {
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
@@ -464,11 +531,10 @@ async fn get_workspace_properties(dataset_name: &str) -> (String, String, String
 }
 
 /// Get workspace details for a specific workspace ID
-async fn get_workspace_details(workspace_id: &str) -> Value {
+async fn get_workspace_details(_workspace_id: &str) -> Value {
     let pool_name =
-        std::env::var("NESTGATE_WORKSPACE_POOL").unwrap_or_else(|_| "nestpool".to_string());
-    let dataset_name = format!("{pool_name}/workspaces/{workspace_id}");
-
+        std::env::var("NESTGATE_WORKSPACE_POOL").unwrap_or_else(|_| "zfspool".to_string());
+    let dataset_name = format!("{pool_name}/workspaces/{"actual_error_details"}");
     let props_output = Command::new("zfs")
         .args([
             "get",
@@ -510,7 +576,6 @@ async fn get_snapshot_count(dataset_name: &str) -> u32 {
         .args(["list", "-H", "-t", "snapshot", "-d", "1", dataset_name])
         .output()
         .await;
-
     if let Ok(output) = snapshot_output {
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
@@ -526,7 +591,6 @@ fn parse_size(size_str: &str) -> u64 {
     if size_str == "none" || size_str == "-" {
         return 0;
     }
-
     let size_str = size_str.trim();
     if size_str.is_empty() {
         return 0;
@@ -556,7 +620,7 @@ fn parse_size(size_str: &str) -> u64 {
             _ => 1,
         };
 
-        (number * multiplier as f64) as u64
+        (number * f64::from(multiplier)) as u64
     } else {
         0
     }

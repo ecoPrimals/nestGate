@@ -2,10 +2,8 @@
 ///
 /// This module contains all the detailed configuration structures
 /// used by the canonical master configuration system.
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::time::Duration;
 
 // ==================== SECTION ====================
@@ -56,7 +54,6 @@ pub enum LogFormat {
 pub enum LogOutput {
     StdOut,
     StdErr,
-    File { path: PathBuf, rotation: FileRotation },
     Syslog,
 }
 
@@ -140,7 +137,7 @@ pub struct McpConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct McpServerConfig {
-    pub bind_address: String,
+    pub bind_endpoint: String,
     pub port: u16,
     pub max_connections: usize,
     pub timeout: Duration,
@@ -230,7 +227,6 @@ pub struct FsMonitorConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WatchPath {
-    pub path: PathBuf,
     pub recursive: bool,
     pub include_patterns: Vec<String>,
     pub exclude_patterns: Vec<String>,
@@ -265,7 +261,6 @@ pub struct NotificationsConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum NotificationChannel {
     Webhook { url: String },
-    File { path: PathBuf },
     Database { connection_string: String },
     Queue { queue_name: String },
 }
@@ -291,7 +286,6 @@ pub struct NasConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NasShare {
     pub name: String,
-    pub path: PathBuf,
     pub read_only: bool,
     pub allowed_hosts: Vec<String>,
     pub protocols: Vec<NasProtocol>,
@@ -520,8 +514,6 @@ pub struct AuditConfig {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SecurityTlsConfig {
     pub enabled: bool,
-    pub cert_path: Option<PathBuf>,
-    pub key_path: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

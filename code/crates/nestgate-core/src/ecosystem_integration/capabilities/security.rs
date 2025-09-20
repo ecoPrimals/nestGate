@@ -1,11 +1,11 @@
-/// Security Capabilities (BearDog Primal Integration)
+use crate::universal_adapter::{PrimalAgnosticAdapter, CapabilityCategory, CapabilityRequest};
+/// Security Capabilities (Security Primal Integration)
 ///
 /// Defines capability interfaces for authentication, authorization, and encryption
-/// through the BearDog security primal.
+/// through the Security security primal.
 use super::{CapabilityRequest, CapabilityResponse, UniversalCapability};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 /// Authentication request parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthenticationRequest {
@@ -14,7 +14,6 @@ pub struct AuthenticationRequest {
     pub credential_data: HashMap<String, serde_json::Value>,
     pub context: Option<HashMap<String, String>>,
 }
-
 /// Authentication response data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthenticationResponse {
@@ -24,16 +23,13 @@ pub struct AuthenticationResponse {
     pub expires_at: Option<String>,
     pub permissions: Vec<String>,
 }
-
 /// Authorization request parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthorizationRequest {
     pub user_id: String,
-    pub resource: String,
     pub action: String,
     pub context: HashMap<String, serde_json::Value>,
 }
-
 /// Authorization response data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthorizationResponse {
@@ -41,7 +37,6 @@ pub struct AuthorizationResponse {
     pub reason: Option<String>,
     pub required_permissions: Vec<String>,
 }
-
 /// Encryption request parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptionRequest {
@@ -50,7 +45,6 @@ pub struct EncryptionRequest {
     pub key_id: Option<String>,
     pub metadata: HashMap<String, String>,
 }
-
 /// Encryption response data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptionResponse {
@@ -59,35 +53,33 @@ pub struct EncryptionResponse {
     pub algorithm_used: String,
     pub checksum: String,
 }
-
-/// Security capability trait for BearDog integration
+/// Security capability trait for Security integration
+/// **MODERNIZED**: Native async patterns for zero-cost security operations
 pub trait SecurityCapability: UniversalCapability {
-    /// Authenticate user credentials
-    async fn authenticate(
+    /// Authenticate user credentials - native async, no Future boxing
+    fn authenticate(
         &self,
         request: AuthenticationRequest,
-    ) -> Result<AuthenticationResponse, Box<dyn std::error::Error + Send + Sync>>;
-
-    /// Check authorization for resource access
-    async fn authorize(
+    ) -> impl std::future::Future<Output = Result<AuthenticationResponse, Box<dyn std::error::Error + Send + Sync>>> + Send;
+    /// Check authorization for resource access - native async
+    fn authorize(
         &self,
         request: AuthorizationRequest,
-    ) -> Result<AuthorizationResponse, Box<dyn std::error::Error + Send + Sync>>;
+    ) -> impl std::future::Future<Output = Result<AuthorizationResponse, Box<dyn std::error::Error + Send + Sync>>> + Send;
 
-    /// Encrypt sensitive data
-    async fn encrypt(
+    /// Encrypt sensitive data - native async
+    fn encrypt(
         &self,
         request: EncryptionRequest,
-    ) -> Result<EncryptionResponse, Box<dyn std::error::Error + Send + Sync>>;
+    ) -> impl std::future::Future<Output = Result<EncryptionResponse, Box<dyn std::error::Error + Send + Sync>>> + Send;
 }
 
 /// Mock implementation for testing
 pub struct MockSecurityCapability {
     enabled: bool,
 }
-
 impl MockSecurityCapability {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self { enabled: true }
     }
 }

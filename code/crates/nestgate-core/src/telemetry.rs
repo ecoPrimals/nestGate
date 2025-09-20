@@ -20,7 +20,7 @@ use tracing::debug;
 use tracing::info;
 use tracing::warn;
 // Removed unused tracing import
-
+use serde::{Serialize, Deserialize};
 /// Telemetry configuration
 #[derive(Debug, Clone)]
 pub struct TelemetryConfig {
@@ -35,7 +35,6 @@ pub struct TelemetryConfig {
     /// Export endpoints configuration
     pub export_endpoints: Vec<ExportEndpoint>,
 }
-
 impl Default for TelemetryConfig {
     fn default() -> Self {
         Self {
@@ -56,23 +55,30 @@ pub struct ExportEndpoint {
     pub format: ExportFormat,
     pub interval: Duration,
 }
-
-/// Supported export formats
-#[derive(Debug, Clone, Copy)]
+/// Export format for telemetry data
+/// MODERNIZED: Uses capability-based discovery instead of vendor hardcoding
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ExportFormat {
-    Prometheus,
     Json,
+    // DEPRECATED: Prometheus hardcoding - migrate to capability-based monitoring
+    #[deprecated(since = "3.0.0", note = "Use capability-based monitoring discovery")]
+    Prometheus,
+    Custom(String),
+    // DEPRECATED: InfluxDB hardcoding - migrate to capability-based monitoring  
+    #[deprecated(since = "3.0.0", note = "Use capability-based monitoring discovery")]
     InfluxDb,
-    Custom,
+    /// NEW: Capability-based monitoring export
+    MonitoringCapability {
+        capability_type: String,
+        format: String,
+    },
 }
-
 /// Core telemetry collector
 pub struct TelemetryCollector {
     config: TelemetryConfig,
     metrics_registry: Arc<RwLock<MetricsRegistry>>,
     collection_tasks: Arc<RwLock<Vec<tokio::task::JoinHandle<()>>>>,
 }
-
 /// Centralized metrics registry
 #[derive(Debug, Default)]
 pub struct MetricsRegistry {
@@ -85,7 +91,6 @@ pub struct MetricsRegistry {
     /// Time series data for historical tracking
     time_series: HashMap<String, TimeSeries>,
 }
-
 /// Counter metric (monotonically increasing)
 #[derive(Debug, Clone)]
 pub struct CounterMetric {
@@ -95,7 +100,6 @@ pub struct CounterMetric {
     pub labels: HashMap<String, String>,
     pub last_updated: SystemTime,
 }
-
 /// Gauge metric (current value)
 #[derive(Debug, Clone)]
 pub struct GaugeMetric {
@@ -105,7 +109,6 @@ pub struct GaugeMetric {
     pub labels: HashMap<String, String>,
     pub last_updated: SystemTime,
 }
-
 /// Histogram metric (distribution of values)
 #[derive(Debug, Clone)]
 pub struct HistogramMetric {
@@ -118,14 +121,12 @@ pub struct HistogramMetric {
     pub labels: HashMap<String, String>,
     pub last_updated: SystemTime,
 }
-
 /// Time series data point
 #[derive(Debug, Clone)]
 pub struct DataPoint {
     pub timestamp: SystemTime,
     pub value: f64,
 }
-
 /// Time series data collection
 #[derive(Debug)]
 pub struct TimeSeries {
@@ -133,9 +134,9 @@ pub struct TimeSeries {
     pub data_points: Vec<DataPoint>,
     pub max_points: usize,
 }
-
 impl TelemetryCollector {
     /// Create a new telemetry collector
+    #[must_use]
     pub fn new(config: TelemetryConfig) -> Self {
         Self {
             config,
@@ -145,7 +146,14 @@ impl TelemetryCollector {
     }
 
     /// Start the telemetry collection system
-    pub async fn start(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn start(&self) -> Result<()>  {
         info!("🔍 Starting comprehensive telemetry collection system");
 
         // Start system metrics collection
@@ -390,7 +398,7 @@ impl TelemetryCollector {
 
                 debug!("System metrics collected");
             }
-        });
+        );
 
         self.collection_tasks.write().await.push(task);
         Ok(())
@@ -438,7 +446,7 @@ impl TelemetryCollector {
 
                 debug!("Performance metrics collected");
             }
-        });
+        );
 
         self.collection_tasks.write().await.push(task);
         Ok(())
@@ -451,7 +459,7 @@ impl TelemetryCollector {
         stats: &crate::memory_pool::PoolStatistics,
     ) {
         let hit_ratio = if stats.hits + stats.misses > 0 {
-            stats.hits as f64 / (stats.hits + stats.misses) as f64
+            stats.f64::from(hits) / (stats.hits + stats.misses) as f64
         } else {
             0.0
         };
@@ -487,7 +495,7 @@ impl TelemetryCollector {
                 labels: labels.clone(),
                 last_updated: SystemTime::now(),
             });
-        counter.value = stats.total_acquisitions as f64;
+        counter.value = stats.f64::from(total_acquisitions);
         counter.last_updated = SystemTime::now();
     }
 
@@ -515,7 +523,7 @@ impl TelemetryCollector {
 
                 debug!("Telemetry data cleanup completed");
             }
-        });
+        );
 
         self.collection_tasks.write().await.push(task);
         Ok(())
@@ -537,16 +545,26 @@ impl TelemetryCollector {
                         ExportFormat::Json => {
                             Self::export_json(&endpoint, &reg).await;
                         }
+                        // DEPRECATED: Use capability-based monitoring instead
+                        #[allow(deprecated)]
                         ExportFormat::Prometheus => {
-                            Self::export_prometheus(&endpoint, &reg).await;
+                            Self::export_monitoring_capability(&endpoint, &reg, "prometheus").await;
                         }
-                        _ => {
-                            warn!("Export format {:?} not yet implemented", endpoint.format);
+                        ExportFormat::Custom(format_type) => {
+                            Self::export_custom(&endpoint, &reg, &format_type).await;
+                        }
+                        // DEPRECATED: Use capability-based monitoring instead  
+                        #[allow(deprecated)]
+                        ExportFormat::InfluxDb => {
+                            Self::export_monitoring_capability(&endpoint, &reg, "influxdb").await;
+                        }
+                        ExportFormat::MonitoringCapability { capability_type, format } => {
+                            Self::export_monitoring_capability(&endpoint, &reg, &format).await;
                         }
                     }
                 }
             }
-        });
+        );
 
         self.collection_tasks.write().await.push(task);
         Ok(())
@@ -562,6 +580,29 @@ impl TelemetryCollector {
     async fn export_prometheus(endpoint: &ExportEndpoint, _registry: &MetricsRegistry) {
         debug!("Exporting Prometheus metrics to {}", endpoint.url);
         // Implementation would send metrics in Prometheus format
+    }
+
+    /// Export metrics using a capability-based monitoring endpoint
+    async fn export_monitoring_capability(
+        endpoint: &ExportEndpoint,
+        registry: &MetricsRegistry,
+        capability_type: &str,
+    ) {
+        debug!("Exporting metrics to capability-based monitoring endpoint: {}", endpoint.url);
+        // Implementation would send metrics in the specified format
+        // This is a placeholder and would require actual implementation
+        // based on the capability_type (e.g., Prometheus, InfluxDB, etc.)
+    }
+
+    /// Export metrics in a custom format
+    async fn export_custom(
+        endpoint: &ExportEndpoint,
+        registry: &MetricsRegistry,
+        format_type: &str,
+    ) {
+        debug!("Exporting custom metrics to {} in format: {}", endpoint.url, format_type);
+        // Implementation would send metrics in the specified custom format
+        // This is a placeholder and would require actual implementation
     }
 
     /// Get current CPU usage
@@ -582,7 +623,7 @@ impl TelemetryCollector {
                     let active = total - idle - iowait;
 
                     if total > 0 {
-                        return Ok((active as f64 / total as f64) * 100.0);
+                        return Ok((f64::from(active) / f64::from(total)) * 100.0);
                     }
                 }
             }
@@ -610,7 +651,7 @@ impl TelemetryCollector {
 
             if total_mem > 0 {
                 let used_mem = total_mem - available_mem;
-                return Ok((used_mem as f64 / total_mem as f64) * 100.0);
+                return Ok((f64::from(used_mem) / f64::from(total_mem)) * 100.0);
             }
         }
         Ok(0.0)
@@ -619,7 +660,7 @@ impl TelemetryCollector {
 
 impl TimeSeries {
     /// Get recent data points within a time window
-    pub fn get_recent_data(&self, window: Duration) -> Vec<&DataPoint> {
+    pub const fn get_recent_data(&self, window: Duration) -> Vec<&DataPoint> {
         let cutoff_time = SystemTime::now() - window;
         self.data_points
             .iter()
@@ -628,14 +669,14 @@ impl TimeSeries {
     }
 
     /// Calculate average value over time window
-    pub fn average_over_window(&self, window: Duration) -> Option<f64> {
+    pub const fn average_over_window(&self, window: Duration) -> Option<f64> {
         let recent_data = self.get_recent_data(window);
         if recent_data.is_empty() {
             return None;
         }
 
         let sum: f64 = recent_data.iter().map(|point| point.value).sum();
-        Some(sum / recent_data.len() as f64)
+        Some(sum / (recent_data.len() as f64))
     }
 }
 
@@ -684,7 +725,7 @@ mod tests {
         for i in 0..10 {
             time_series.data_points.push(DataPoint {
                 timestamp: SystemTime::now(),
-                value: i as f64,
+                value: f64::from(i),
             });
         }
 

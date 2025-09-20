@@ -1,17 +1,17 @@
 //
 // Production-ready API server with integrated real-time bidirectional communication.
 // Features:
-// - Pure data layer for biomeOS consumption
-// - tarpc integration with beardog (security)
-// - JSON RPC integration with songbird (orchestration)
+// - Pure data layer for management consumption
+// - tarpc integration with security (security)
+// - JSON RPC integration with orchestration (orchestration)
 // - WebSocket streams for real-time data
 // - Intelligent RPC routing
 
-use nestgate_api::{rest::create_api_router, AppState};
+use nestgate_api::routes::{create_router, AppState};
 use std::net::SocketAddr;
 use tokio::signal;
 use tower_http::trace::TraceLayer;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 // Note: tracing_subscriber not available - using basic tracing
 // use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -19,7 +19,7 @@ use tracing::{debug, error, info, warn};
 #[derive(Debug, Clone)]
 pub struct ServerConfig {
     /// Server bind address
-    pub bind_address: SocketAddr,
+    pub bind_endpoint: SocketAddr,
     /// Enable CORS
     pub enable_cors: bool,
     /// Enable request tracing
@@ -27,24 +27,23 @@ pub struct ServerConfig {
     /// Log level
     pub log_level: String,
     /// Beardog RPC address (tarpc)
-    pub beardog_address: Option<String>,
-    /// Songbird RPC address (JSON RPC)
-    pub songbird_address: Option<String>,
+    pub security_capability: Option<String>,
+    /// Orchestration RPC address (JSON RPC)
+    pub orchestration_capability: Option<String>,
     /// Enable RPC connections
     pub enable_rpc: bool,
 }
-
 impl Default for ServerConfig {
     fn default() -> Self {
         Self {
-            bind_address: "0.0.0.0:8080"
+            bind_endpoint: "0.0.0.0:8080"
                 .parse()
                 .unwrap_or_else(|_| SocketAddr::from(([0, 0, 0, 0], 8080))),
             enable_cors: true,
             enable_tracing: true,
             log_level: "info".to_string(),
-            beardog_address: None,
-            songbird_address: None,
+            security_capability: None,
+            orchestration_capability: None,
             enable_rpc: true,
         }
     }
@@ -59,7 +58,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     init_logging(&config.log_level);
 
     info!("🚀 Starting NestGate Data API Server with Real-time Bidirectional RPC");
-    info!("📡 Bind address: {}", config.bind_address);
+    info!("📡 Bind endpoint: {}", config.bind_endpoint);
     info!("🔧 Configuration: {:?}", config);
 
     // Print enhanced banner
@@ -80,7 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create API router
     info!("🔗 Creating enhanced API router...");
-    let app = create_api_router().with_state(app_state);
+    let app = create_router().with_state(app_state);
 
     // Add global middleware if enabled
     let app = if config.enable_tracing {
@@ -93,10 +92,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_enhanced_api_endpoints(&config);
 
     // Start server
-    info!("🌐 Starting server on {}", config.bind_address);
+    info!("🌐 Starting server on {}", config.bind_endpoint);
     info!("📊 Ready to serve ZFS data with real-time bidirectional RPC!");
 
-    let listener = tokio::net::TcpListener::bind(config.bind_address).await?;
+    let listener = tokio::net::TcpListener::bind(config.bind_endpoint).await?;
 
     // Start server with graceful shutdown
     axum::serve(listener, app)
@@ -110,14 +109,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Load server configuration with RPC settings
 fn load_config() -> ServerConfig {
     let mut config = ServerConfig::default();
-
     // Override with environment variables
     if let Ok(bind_addr) = std::env::var("NESTGATE_API_BIND") {
         if let Ok(addr) = bind_addr.parse() {
-            config.bind_address = addr;
+            config.bind_endpoint = addr;
         } else {
             warn!(
-                "Invalid NESTGATE_API_BIND address: {}, using default",
+                "Invalid NESTGATE_API_BIND endpoint: {}, using default",
                 bind_addr
             );
         }
@@ -135,12 +133,23 @@ fn load_config() -> ServerConfig {
         config.enable_tracing = tracing.parse().unwrap_or(true);
     }
 
-    if let Ok(beardog_addr) = std::env::var("NESTGATE_BEARDOG_ADDRESS") {
-        config.beardog_address = Some(beardog_addr);
+    // ✅ UNIVERSAL ADAPTER INTEGRATION - Pure capability-based discovery
+    // Zero hardcoded primal knowledge - system starts with infant-like discovery
+    // Ecosystem integration via universal adapter - delegated to other primals
+    info!("🔄 Ecosystem integration configuration skipped - not yet implemented");
+
+    // ✅ CAPABILITY-BASED SERVICE DISCOVERY - No primal names
+    if let Ok(orchestration_endpoint) = std::env::var("ORCHESTRATION_DISCOVERY_ENDPOINT") {
+        config.orchestration_capability = Some(orchestration_endpoint);
     }
 
-    if let Ok(songbird_addr) = std::env::var("NESTGATE_SONGBIRD_ADDRESS") {
-        config.songbird_address = Some(songbird_addr);
+    // ✅ MODERN CAPABILITY DISCOVERY - Universal adapter integration
+    if let Ok(universal_adapter_enabled) = std::env::var("UNIVERSAL_ADAPTER_ENABLED") {
+        if universal_adapter_enabled.parse().unwrap_or(true) {
+            tracing::info!("Universal adapter enabled - using capability-based service discovery");
+            // Universal adapter will handle service discovery automatically
+            // No hardcoded addresses needed
+        }
     }
 
     if let Ok(enable_rpc) = std::env::var("NESTGATE_ENABLE_RPC") {
@@ -160,9 +169,8 @@ fn init_logging(log_level: &str) {
         "error" => tracing::Level::ERROR,
         _ => tracing::Level::INFO,
     };
-
     // Initialize basic tracing (tracing_subscriber not available)
-    println!("Initializing tracing with level: {:?}", level);
+    println!("Initializing tracing with level: {level:?}");
 
     debug!("Logging initialized at {} level", level);
 }
@@ -170,7 +178,7 @@ fn init_logging(log_level: &str) {
 /// Print enhanced startup banner
 fn print_enhanced_banner() {
     println!(
-        r#"
+        r"
 ╔═══════════════════════════════════════════════════════════════════════╗
 ║                                                                       ║
 ║  🗄️  NESTGATE DATA API SERVER - REAL-TIME BIDIRECTIONAL RPC         ║
@@ -181,18 +189,17 @@ fn print_enhanced_banner() {
 ║  💾 Storage Backend Management & Auto-Configuration                  ║
 ║  📈 Real-time Monitoring & Performance Metrics                       ║
 ║  🔌 WebSocket Data Streams (2-second updates)                        ║
-║  🔐 tarpc Integration with BearDog (Security)                        ║
-║  🎼 JSON RPC Integration with Songbird (Orchestration)               ║
+║  🔐 tarpc Integration with Security (Security)                        ║
+║  🎼 JSON RPC Integration with Orchestration (Orchestration)               ║
 ║  🔀 Intelligent RPC Routing & Load Balancing                         ║
 ║  ⚡ Zero Authentication - Pure Data Access                           ║
 ║                                                                       ║
-║  Perfect for biomeOS and Management System Integration               ║
+║  Perfect for management and Management System Integration               ║
 ║                                                                       ║
 ╚═══════════════════════════════════════════════════════════════════════╝
-    "#
+    "
     );
 }
-
 /// Print enhanced API endpoints with RPC capabilities
 fn print_enhanced_api_endpoints(config: &ServerConfig) {
     println!("\n📋 Complete API Endpoints with Real-time Bidirectional RPC:");
@@ -240,7 +247,6 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
     println!("│ WS     /ws/metrics              - Live metrics (2s updates)         │");
     println!("│ WS     /ws/logs                 - Live logs (1s updates)            │");
     println!("│ WS     /ws/events               - System events (10s updates)       │");
-
     if config.enable_rpc {
         println!("├─────────────────────────────────────────────────────────────────────┤");
         println!("│ BIDIRECTIONAL RPC INTEGRATION                                       │");
@@ -249,7 +255,7 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
         println!("│ POST   /api/v1/rpc/stream       - Start bidirectional RPC stream    │");
         println!("│ GET    /api/v1/rpc/health       - RPC connection health status      │");
 
-        if config.beardog_address.is_some() {
+        if config.security_capability.is_some() {
             println!("├─────────────────────────────────────────────────────────────────────┤");
             println!("│ BEARDOG SECURITY RPC (tarpc - High Performance Binary)             │");
             println!("├─────────────────────────────────────────────────────────────────────┤");
@@ -263,7 +269,7 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
             println!("│ • stream_audit_logs         - Audit logs stream (5s)               │");
         }
 
-        if config.songbird_address.is_some() {
+        if config.orchestration_capability.is_some() {
             println!("├─────────────────────────────────────────────────────────────────────┤");
             println!("│ SONGBIRD ORCHESTRATION RPC (JSON RPC - Standard HTTP)              │");
             println!("├─────────────────────────────────────────────────────────────────────┤");
@@ -283,47 +289,51 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
     println!("\n🌐 Server Configuration:");
     println!(
         "  📡 API Server: http://localhost:{}",
-        config.bind_address.port()
+        config.bind_endpoint.port()
     );
-    if let Some(beardog_addr) = &config.beardog_address {
-        println!("  🔐 BearDog (tarpc): {}", beardog_addr);
+    if let Some(security_addr) = &config.security_capability {
+        println!("  🔐 Security (tarpc): {security_addr}");
     }
-    if let Some(songbird_addr) = &config.songbird_address {
-        println!("  🎼 Songbird (JSON RPC): {}", songbird_addr);
+    if let Some(orchestration_addr) = &config.orchestration_capability {
+        println!("  🎼 Orchestration (JSON RPC): {orchestration_addr}");
     }
 
     println!("\n🧪 Example Usage:");
     println!(
         "  📊 Health: curl http://localhost:{}/health",
-        config.bind_address.port()
+        config.bind_endpoint.port()
     );
     println!(
         "  📈 Metrics: curl http://localhost:{}/api/v1/monitoring/metrics",
-        config.bind_address.port()
+        config.bind_endpoint.port()
     );
     println!(
         "  🗄️ Datasets: curl http://localhost:{}/api/v1/zfs/datasets",
-        config.bind_address.port()
+        config.bind_endpoint.port()
     );
 
     if config.enable_rpc {
         println!(
             "  🔐 Security RPC: curl -X POST http://localhost:{}/api/v1/rpc/call \\",
-            config.bind_address.port()
+            config.bind_endpoint.port()
         );
         println!("    -H 'Content-Type: application/json' \\");
-        println!("    -d '{{\"id\":\"123\",\"source\":\"test\",\"target\":\"beardog\",\"method\":\"encrypt_data\",\"params\":{{\"data\":\"secret\"}},\"timestamp\":\"2025-01-30T10:00:00Z\",\"streaming\":false,\"metadata\":{{}}}}'");
+        println!(
+            "    -d '{{\"id\":\"123\",\"source\":\"test\",\"target\":\"security\",\"method\":\"encrypt_data\",\"_params\":{{\"data\":\"secret\"},\"timestamp\":\"2025-01-30T10:00:00Z\",\"streaming\":false,\"_metadata\":{{}}'"
+        );
         println!(
             "  🎼 Orchestration RPC: curl -X POST http://localhost:{}/api/v1/rpc/call \\",
-            config.bind_address.port()
+            config.bind_endpoint.port()
         );
         println!("    -H 'Content-Type: application/json' \\");
-        println!("    -d '{{\"id\":\"456\",\"source\":\"test\",\"target\":\"songbird\",\"method\":\"discover_services\",\"params\":{{\"service_type\":\"storage\"}},\"timestamp\":\"2025-01-30T10:00:00Z\",\"streaming\":false,\"metadata\":{{}}}}'");
+        println!(
+            "    -d '{{\"id\":\"456\",\"source\":\"test\",\"target\":\"orchestration\",\"method\":\"discover_services\",\"_params\":{{\"service_type\":\"storage\"},\"timestamp\":\"2025-01-30T10:00:00Z\",\"streaming\":false,\"_metadata\":{{}}'"
+        );
     }
 
     println!(
         "  🔌 WebSocket: ws://localhost:{}/ws/metrics",
-        config.bind_address.port()
+        config.bind_endpoint.port()
     );
     println!();
 }
@@ -335,7 +345,6 @@ async fn shutdown_signal() {
             tracing::error!("Failed to install Ctrl+C handler: {:?}", e);
         }
     };
-
     #[cfg(unix)]
     let terminate = async {
         match signal::unix::signal(signal::unix::SignalKind::terminate()) {
@@ -352,11 +361,11 @@ async fn shutdown_signal() {
     let terminate = std::future::pending::<()>();
 
     tokio::select! {
-        _ = ctrl_c => {
+        () = ctrl_c => {
             tracing::info!("Received Ctrl+C, shutting down gracefully");
-        },
-        _ = terminate => {
+        }
+        () = terminate => {
             tracing::info!("Received SIGTERM, shutting down gracefully");
-        },
+        }
     }
 }

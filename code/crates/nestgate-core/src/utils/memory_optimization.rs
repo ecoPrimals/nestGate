@@ -1,6 +1,6 @@
-//! Memory optimization utilities to reduce allocations and improve performance
-//!
-//! This module provides utilities and patterns for reducing memory allocations
+// Memory optimization utilities to reduce allocations and improve performance
+//! Memory Optimization functionality and utilities.
+// This module provides utilities and patterns for reducing memory allocations
 //! and improving performance through zero-copy patterns and efficient string handling.
 
 use std::borrow::Cow;
@@ -19,7 +19,6 @@ pub mod constants {
     pub const READ_DIRECTORY: &str = "read_directory";
     pub const ATOMIC_WRITE: &str = "atomic_write";
     pub const SYNC_FILE: &str = "sync_file";
-
     /// Common status strings
     pub const INITIALIZED: &str = "initialized";
     pub const RUNNING: &str = "running";
@@ -38,10 +37,9 @@ pub struct ErrorMessageBuilder {
     base_message: &'static str,
     details: Option<String>,
 }
-
 impl ErrorMessageBuilder {
     /// Create a new error message builder with a static base message
-    pub fn new(base_message: &'static str) -> Self {
+    pub const fn new(base_message: &'static str) -> Self {
         Self {
             base_message,
             details: None,
@@ -55,10 +53,10 @@ impl ErrorMessageBuilder {
     }
 
     /// Build the final error message, avoiding allocation if no details
-    pub fn build(self) -> Cow<'static, str> {
+    pub const fn build(self) -> Cow<'static, str> {
         match self.details {
             None => Cow::Borrowed(self.base_message),
-            Some(details) => Cow::Owned(format!("{}: {}", self.base_message, details)),
+            Some(details) => Cow::Owned(format!("{}: {}", self.base_message, details),
         }
     }
 }
@@ -67,9 +65,9 @@ impl ErrorMessageBuilder {
 pub struct StringMapBuilder {
     map: HashMap<&'static str, String>,
 }
-
 impl StringMapBuilder {
     /// Create a new string map builder
+    #[must_use]
     pub fn new() -> Self {
         Self {
             map: HashMap::new(),
@@ -77,13 +75,14 @@ impl StringMapBuilder {
     }
 
     /// Add a static key-value pair (no allocation for key)
+    #[must_use]
     pub fn insert_static(mut self, key: &'static str, value: impl Into<String>) -> Self {
         self.map.insert(key, value.into());
         self
     }
 
     /// Build the final map
-    pub fn build(self) -> HashMap<String, String> {
+    pub const fn build(self) -> HashMap<String, String> {
         self.map
             .into_iter()
             .map(|(k, v)| (k.to_string(), v))
@@ -91,7 +90,7 @@ impl StringMapBuilder {
     }
 
     /// Build the final map with static keys (more efficient)
-    pub fn build_static_keys(self) -> HashMap<&'static str, String> {
+    pub const fn build_static_keys(self) -> HashMap<&'static str, String> {
         self.map
     }
 }
@@ -114,7 +113,6 @@ macro_rules! efficient_error {
             .build()
     };
 }
-
 /// Macro for creating string maps with static keys
 #[macro_export]
 macro_rules! static_string_map {
@@ -128,13 +126,10 @@ macro_rules! static_string_map {
         }
     };
 }
-
 /// Efficient path validation that avoids string allocations
-pub fn validate_path_efficient(path: &str) -> Result<(), &'static str> {
     if path.is_empty() {
         return Err("Path cannot be empty");
     }
-
     if path.starts_with('/') {
         return Err("Absolute paths are not allowed");
     }
@@ -151,7 +146,7 @@ pub fn validate_path_efficient(path: &str) -> Result<(), &'static str> {
 }
 
 /// Efficient content type detection using static strings
-pub fn detect_content_type_efficient(extension: &str) -> &'static str {
+pub const fn detect_content_type_efficient(extension: &str) -> &'static str {
     match extension {
         "txt" => "text/plain",
         "json" => "application/json",
@@ -172,16 +167,14 @@ pub fn detect_content_type_efficient(extension: &str) -> &'static str {
         _ => "application/octet-stream",
     }
 }
-
 /// Pool of reusable string buffers for temporary operations
 pub struct StringBufferPool {
     buffers: Vec<String>,
     max_size: usize,
 }
-
 impl StringBufferPool {
     /// Create a new string buffer pool
-    pub fn new(max_size: usize) -> Self {
+    pub const fn new(max_size: usize) -> Self {
         Self {
             buffers: Vec::with_capacity(max_size),
             max_size,

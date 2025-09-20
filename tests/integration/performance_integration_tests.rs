@@ -9,6 +9,7 @@ use tokio::time::sleep;
 
 use nestgate_core::{Result as CoreResult, StorageTier};
 use nestgate_zfs::{
+use nestgate_core::canonical_types::StorageTier;
     performance::ZfsPerformanceMonitor,
     config::ZfsConfig,
     performance::PerformanceConfig,
@@ -39,6 +40,7 @@ pub async fn test_performance_monitoring_real_metrics() -> CoreResult<()> {
               i + 1, metrics.cpu_usage, metrics.memory_usage, metrics.io_operations_per_second);
         
         sleep(Duration::from_millis(500)).await;
+    Ok(())
     }
     let collection_time = start_time.elapsed();
     
@@ -54,6 +56,7 @@ pub async fn test_performance_monitoring_real_metrics() -> CoreResult<()> {
     info!("💡 Got {} optimization suggestions", optimizations.len());
     for suggestion in optimizations {
         info!("  📝 {}: {}", suggestion.category, suggestion.description);
+    Ok(())
     }
 
     info!("✅ Performance monitoring test completed successfully");
@@ -89,16 +92,21 @@ pub async fn test_performance_under_load() -> CoreResult<()> {
                 if i % 5 == 0 {
                     info!("📊 Load test iteration {}: CPU: {:.1}%, Memory: {:.1}%", 
                           i, metrics.cpu_usage, metrics.memory_usage);
+    Ok(())
                 }
+    Ok(())
             }
             Err(e) => {
                 failed_collections += 1;
                 warn!("⚠️ Metrics collection failed at iteration {}: {}", i, e);
+    Ok(())
             }
+    Ok(())
         }
         
         // Small delay to prevent overwhelming the system
         sleep(Duration::from_millis(100)).await;
+    Ok(())
     }
     
     let total_time = start_time.elapsed();

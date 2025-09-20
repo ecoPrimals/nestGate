@@ -1,59 +1,66 @@
 /// Universal Service Registry Implementation  
-/// Extracted from universal_service_discovery.rs to maintain file size compliance
-/// Contains the main InMemoryServiceRegistry implementation and trait definitions
-use std::collections::HashMap;
-use std::sync::Arc;
+/// Extracted from `universal_service_discovery.rs` to maintain file size compliance
+/// Contains the main `InMemoryServiceRegistry` implementation and trait definitions
+use super::types::*;
+use crate::Result;
+use std::{collections::HashMap, sync::Arc};
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-use super::types::*;
-use crate::{NestGateError, Result};
+// Type aliases to reduce complexity
+type ServiceMap = Arc<RwLock<HashMap<Uuid, UniversalServiceRegistration>>>;
+type CapabilityIndexMap = Arc<RwLock<HashMap<ServiceCapability, Vec<Uuid>>>>;
 
 /// Universal service registry trait - capability-based service discovery
-#[async_trait::async_trait]
+/// **MODERNIZED**: Native async implementation without `async_trait` overhead
 pub trait UniversalServiceRegistry: Send + Sync {
     /// Register a service with the registry
-    async fn register_service(
+    fn register_service(
         &self,
         registration: UniversalServiceRegistration,
-    ) -> Result<ServiceHandle>;
-
+    ) -> impl std::future::Future<Output = Result<ServiceHandle>> + Send;
     /// Discover services by required capabilities
-    async fn discover_by_capabilities(
+    fn discover_by_capabilities(
         &self,
         capabilities: Vec<ServiceCapability>,
-    ) -> Result<Vec<ServiceInfo>>;
+    ) -> impl std::future::Future<Output = Result<Vec<ServiceInfo>>> + Send;
 
     /// Discover services by role
-    async fn discover_by_role(&self, role: ServiceRole) -> Result<Vec<ServiceInfo>>;
+    fn discover_by_role(
+        &self,
+        role: ServiceRole,
+    ) -> impl std::future::Future<Output = Result<Vec<ServiceInfo>>> + Send;
 
     /// Find the optimal service based on requirements and preferences
-    async fn find_optimal_service(
+    fn find_optimal_service(
         &self,
         requirements: ServiceRequirements,
         preferences: SelectionPreferences,
-    ) -> Result<ServiceInfo>;
+    ) -> impl std::future::Future<Output = Result<ServiceInfo>> + Send;
 
     /// Update service capabilities
-    async fn update_capabilities(
+    fn update_capabilities(
         &self,
         service_id: Uuid,
         capabilities: Vec<ServiceCapability>,
-    ) -> Result<()>;
+    ) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Deregister a service
-    async fn deregister_service(&self, service_id: Uuid) -> Result<()>;
+    fn deregister_service(
+        &self,
+        service_id: Uuid,
+    ) -> impl std::future::Future<Output = Result<()>> + Send;
 }
 
 /// In-memory implementation of the Universal Service Registry
 #[derive(Debug)]
 pub struct InMemoryServiceRegistry {
-    services: Arc<RwLock<HashMap<Uuid, UniversalServiceRegistration>>>,
-    capability_index: Arc<RwLock<HashMap<ServiceCapability, Vec<Uuid>>>>,
+    services: ServiceMap,
+    capability_index: CapabilityIndexMap,
 }
-
 impl InMemoryServiceRegistry {
     /// Create a new in-memory service registry
+    #[must_use]
     pub fn new() -> Self {
         Self {
             services: Arc::new(RwLock::new(HashMap::new())),
@@ -68,7 +75,6 @@ impl Default for InMemoryServiceRegistry {
     }
 }
 
-#[async_trait::async_trait]
 impl UniversalServiceRegistry for InMemoryServiceRegistry {
     async fn register_service(
         &self,
@@ -156,14 +162,10 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
 
         // Sophisticated service selection algorithm based on multiple criteria
         if candidates.is_empty() {
-            return Err(crate::error::NestGateError::System {
-                message: "No services found matching requirements".to_string(),
-                operation: "select_service".to_string(),
-                resource: Some(format!("requirements: {requirements:?}")),
-                utilization: None,
-                retryable: true,
-                context: None,
-            });
+            return Err(crate::error::NestGateError::internal_error(
+                "No services found matching requirements",
+                "service_discovery",
+            ));
         }
 
         // Score each candidate based on multiple criteria
@@ -211,7 +213,7 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
 
                 // Capability match quality - 10% weight
                 // IMPLEMENTATION: Enhanced capability matching with preference-based selection
-                let capability_match_score = service.capabilities.len() as f64; // Simple count for now
+                let capability_match_score = capabilities.len() as f64; // Simple count for now
                 score += (capability_match_score / 5.0).min(10.0); // Cap at 10.0
 
                 (service, score)
@@ -223,35 +225,17 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
             .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // Get services count before creating the error
-        let services_count = self.services.read().await.len();
+        let _services_count = self.services.read().await.len(); // Prefixed with underscore - planned for error context
 
         scored_candidates
             .into_iter()
             .next()
             .map(|(service, _score)| service)
-            .ok_or_else(|| NestGateError::Internal {
-                message: "No suitable services found matching the requirements".to_string(),
-                component: "service_discovery_registry".to_string(),
-                location: Some(format!("{}:{}", file!(), line!())),
-                is_bug: false,
-                context: Some(crate::error::context::ErrorContext {
-                    error_id: "error".to_string(),
-                    stack_trace: None,
-                    related_errors: vec![],
-                    operation: "service_discovery".to_string(),
-                    component: "service_registry".to_string(),
-                    metadata: {
-                        let mut map = std::collections::HashMap::new();
-                        map.insert("details".to_string(), "Service discovery returned no candidates".to_string());
-                        map.insert("registry_size".to_string(), services_count.to_string());
-                        map
-                    },
-                    timestamp: std::time::SystemTime::now(),
-                    retry_info: None,
-                    recovery_suggestions: vec!["Check service registration".to_string()],
-                    performance_metrics: None,
-                    environment: None,
-                }),
+            .ok_or_else(|| {
+                crate::error::NestGateError::internal_error(
+                    "No suitable services found matching the requirements",
+                    "service_discovery_registry",
+                )
             })
     }
 
@@ -265,14 +249,10 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
             registration.capabilities = capabilities;
             Ok(())
         } else {
-            Err(NestGateError::System {
-                message: "Service not found".to_string(),
-                operation: "update_capabilities".to_string(),
-                resource: Some(format!("service_id: {service_id}")),
-                utilization: None,
-                retryable: false,
-                context: None,
-            })
+            Err(crate::error::NestGateError::internal_error(
+                "Service not found",
+                "service_discovery",
+            ))
         }
     }
 
@@ -351,10 +331,17 @@ impl InMemoryServiceRegistry {
     }
 
     /// Get services by category
-    pub async fn get_services_by_category(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_services_by_category(
         &self,
         category: ServiceCategory,
-    ) -> Result<Vec<ServiceInfo>> {
+    ) -> Result<Vec<ServiceInfo>>  {
         let services = self.services.read().await;
         let matching_services: Vec<ServiceInfo> = services
             .values()

@@ -23,10 +23,9 @@ pub struct DashboardOverviewQuery {
     /// Include detailed metrics (optional)
     pub detailed: Option<bool>,
 }
-
 /// GET /dashboard/overview
 pub async fn dashboard_overview(
-    Query(params): Query<DashboardOverviewQuery>,
+    Query(_params): Query<DashboardOverviewQuery>,
 ) -> Result<Json<ApiResponse<DashboardOverview>>, StatusCode> {
     let dashboard = PerformanceDashboard::new(DashboardConfig::default());
     let time_range = TimeRange::last_hour(); // Default time range
@@ -35,7 +34,7 @@ pub async fn dashboard_overview(
         Ok(overview) => {
             debug!("Dashboard overview retrieved successfully");
             Ok(Json(ApiResponse::success(overview)))
-        },
+        }
         Err(e) => {
             error!("Dashboard overview error: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)

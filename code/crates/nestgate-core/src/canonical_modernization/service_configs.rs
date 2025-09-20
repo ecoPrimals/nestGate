@@ -29,14 +29,16 @@ pub struct CanonicalServiceConfigs {
     /// Retry and backoff configuration
     pub retry: CanonicalRetryConfig,
 }
-
 // ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CanonicalDiscoveryConfig {
     /// Discovery mechanism
     pub discovery_enabled: bool,
-    pub discovery_method: String, // "dns", "consul", "etcd", "k8s"
+    #[deprecated(since = "3.0.0", note = "Use capability-based discovery instead of vendor-specific service discovery")]
+    #[deprecated(since = "3.0.0", note = "Use capability-based storage instead of vendor-specific key-value stores")]
+    #[deprecated(since = "3.0.0", note = "Use capability-based orchestration instead of vendor-specific container platforms")]
+    pub discovery_method: String, // "dns", "service_discovery".to_string(), "keyvalue_store".to_string(), "container_orchestrator".to_string()
     pub discovery_endpoint: Option<String>,
     /// Service registration
     pub auto_register: bool,
@@ -48,7 +50,6 @@ pub struct CanonicalDiscoveryConfig {
     pub refresh_interval: Duration,
     /// Health integration
     pub health_check_enabled: bool,
-    pub health_check_path: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -70,11 +71,10 @@ pub struct CanonicalLoadBalancingConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackendConfig {
-    pub address: String,
+    pub endpoint: String,
     pub port: u16,
     pub weight: u32,
     pub max_connections: Option<usize>,
-    pub health_check_path: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -151,7 +151,8 @@ pub struct CanonicalRateLimitingConfig {
     pub per_ip_rate_limit: Option<RateLimit>,
     pub per_user_rate_limit: Option<RateLimit>,
     /// Rate limiting backend
-    pub backend: String, // "memory", "redis", "database"
+    #[deprecated(since = "3.0.0", note = "Use capability-based caching instead of vendor-specific cache implementations")]
+    pub backend: String, // "memory", "cache_store".to_string(), "database"
     pub backend_config: HashMap<String, String>,
     /// Response configuration
     pub rate_limit_headers: bool,
@@ -187,11 +188,10 @@ pub struct CanonicalRetryConfig {
 impl Default for BackendConfig {
     fn default() -> Self {
         Self {
-            address: "localhost".to_string(),
+            endpoint: "localhost".to_string(),
             port: 8080,
             weight: 1,
             max_connections: None,
-            health_check_path: Some("/health".to_string()),
         }
     }
 }

@@ -20,7 +20,6 @@ pub struct RuntimeConfig {
     /// Security configuration
     pub security: SecurityRuntimeConfig,
 }
-
 /// Network runtime configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkRuntimeConfig {
@@ -33,13 +32,12 @@ pub struct NetworkRuntimeConfig {
     /// Metrics port (from NESTGATE_METRICS_PORT or api_port + 3)
     pub metrics_port: u16,
     /// Bind address (from NESTGATE_BIND_ADDRESS or secure default)
-    pub bind_address: String,
+    pub bind_endpoint: String,
     /// External hostname (from NESTGATE_HOSTNAME or localhost)
     pub hostname: String,
     /// Custom service endpoints
     pub service_endpoints: HashMap<String, String>,
 }
-
 /// Service runtime configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceRuntimeConfig {
@@ -48,22 +46,18 @@ pub struct ServiceRuntimeConfig {
     /// Service name (from NESTGATE_SERVICE_NAME or default)
     pub service_name: String,
     /// Environment (from NESTGATE_ENV or "development")
-    pub environment: String,
     /// Log level (from NESTGATE_LOG_LEVEL or "info")
     pub log_level: String,
 }
-
 /// Storage runtime configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageRuntimeConfig {
     /// ZFS backend (from NESTGATE_ZFS_BACKEND or "auto")
     pub zfs_backend: String,
     /// Storage root path (from NESTGATE_STORAGE_PATH or "/var/lib/nestgate")
-    pub storage_path: String,
     /// Temporary directory (from NESTGATE_TEMP_DIR or "/tmp/nestgate")
     pub temp_dir: String,
 }
-
 /// Security runtime configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityRuntimeConfig {
@@ -74,14 +68,13 @@ pub struct SecurityRuntimeConfig {
     /// TLS enabled (from NESTGATE_TLS_ENABLED or false)
     pub tls_enabled: bool,
 }
-
 impl RuntimeConfig {
     /// Create configuration from environment with intelligent defaults
-    pub fn from_environment() -> Self {
-        let network = NetworkRuntimeConfig::from_environment();
-        let service = ServiceRuntimeConfig::from_environment();
-        let storage = StorageRuntimeConfig::from_environment();
-        let security = SecurityRuntimeConfig::from_environment();
+    pub const fn from_environment() -> Self {
+        let network = NetworkSelf::from_environment();
+        let service = ServiceSelf::from_environment();
+        let storage = StorageSelf::from_environment();
+        let security = SecuritySelf::from_environment();
 
         Self {
             network,
@@ -92,11 +85,11 @@ impl RuntimeConfig {
     }
 
     /// Get the primary API socket address
-    pub fn api_socket_addr(&self) -> SocketAddr {
+    pub const fn api_socket_addr(&self) -> SocketAddr {
         let addr = if self.security.localhost_only {
-            format!("127.0.0.1:{}", self.network.api_port)
+            format!("127.0.0.1:{self.network.api_port}")
         } else {
-            format!("{}:{}", self.network.bind_address, self.network.api_port)
+            format!("{}:{}", self.network.bind_endpoint, self.network.api_port)
         };
 
         SocketAddr::from_str(&addr).unwrap_or_else(|_| {
@@ -106,7 +99,7 @@ impl RuntimeConfig {
     }
 
     /// Get service endpoint URL
-    pub fn service_endpoint(&self, service_type: &str) -> String {
+    pub const fn service_endpoint(&self, service_type: &str) -> String {
         if let Some(endpoint) = self.network.service_endpoints.get(service_type) {
             endpoint.clone()
         } else {
@@ -141,12 +134,12 @@ impl RuntimeConfig {
     }
 
     /// Check if running in production mode
-    pub fn is_production(&self) -> bool {
+    pub const fn is_production(&self) -> bool {
         matches!(self.service.environment.as_str(), "production" | "prod")
     }
 
     /// Check if running in development mode
-    pub fn is_development(&self) -> bool {
+    pub const fn is_development(&self) -> bool {
         matches!(self.service.environment.as_str(), "development" | "dev")
     }
 }
@@ -167,7 +160,7 @@ impl NetworkRuntimeConfig {
                 } else {
                     8080
                 }
-            });
+            );
 
         let websocket_port = env::var("NESTGATE_WS_PORT")
             .ok()
@@ -191,7 +184,7 @@ impl NetworkRuntimeConfig {
             } else {
                 "127.0.0.1".to_string()
             }
-        });
+        );
 
         let hostname = env::var("NESTGATE_HOSTNAME").unwrap_or_else(|_| "localhost".to_string());
 
@@ -220,7 +213,7 @@ impl NetworkRuntimeConfig {
 impl ServiceRuntimeConfig {
     fn from_environment() -> Self {
         let service_id = env::var("NESTGATE_SERVICE_ID")
-            .unwrap_or_else(|_| format!("nestgate-{}", uuid::Uuid::new_v4().simple()));
+            .unwrap_or_else(|_| format!("nestgate-{uuid::Uuid::new_v4(}").simple()));
 
         let service_name =
             env::var("NESTGATE_SERVICE_NAME").unwrap_or_else(|_| "nestgate".to_string());
@@ -238,7 +231,7 @@ impl ServiceRuntimeConfig {
                 } else {
                     "info".to_string()
                 }
-            });
+            );
 
         Self {
             service_id,
@@ -275,7 +268,7 @@ impl SecurityRuntimeConfig {
             .unwrap_or_else(|_| {
                 // Default to secure: localhost only unless explicitly configured
                 env::var("NESTGATE_ALLOW_EXTERNAL").is_err()
-            });
+            );
 
         let api_key = env::var("NESTGATE_API_KEY").ok();
 
@@ -293,27 +286,22 @@ impl SecurityRuntimeConfig {
 
 /// Global runtime configuration instance
 static RUNTIME_CONFIG: std::sync::OnceLock<RuntimeConfig> = std::sync::OnceLock::new();
-
 /// Initialize the global runtime configuration
 pub fn init_runtime_config() {
     RUNTIME_CONFIG.get_or_init(RuntimeConfig::from_environment);
 }
-
 /// Get the global runtime configuration
-pub fn get_runtime_config() -> &'static RuntimeConfig {
+pub const fn get_runtime_config() -> &'static RuntimeConfig {
     RUNTIME_CONFIG.get_or_init(RuntimeConfig::from_environment)
 }
-
 /// Get a dynamic port for a service (eliminates hardcoding)
-pub fn get_service_port(service_type: &str) -> u16 {
+pub const fn get_service_port(service_type: &str) -> u16 {
     get_runtime_config().dynamic_port_for_service(service_type)
 }
-
 /// Get a service endpoint URL (eliminates hardcoded URLs)
-pub fn get_service_endpoint(service_type: &str) -> String {
+pub const fn get_service_endpoint(service_type: &str) -> String {
     get_runtime_config().service_endpoint(service_type)
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -353,6 +341,6 @@ mod tests {
     fn test_secure_defaults() {
         env::remove_var("NESTGATE_ALLOW_EXTERNAL");
         let config = NetworkRuntimeConfig::from_environment();
-        assert_eq!(config.bind_address, "127.0.0.1");
+        assert_eq!(config.bind_endpoint, "127.0.0.1");
     }
 }

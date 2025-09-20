@@ -19,7 +19,6 @@ pub struct ZfsMetrics {
     /// Start time for metrics collection
     start_time: SystemTime,
 }
-
 /// Current metrics snapshot
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricsSnapshot {
@@ -32,10 +31,14 @@ pub struct MetricsSnapshot {
     pub uptime_seconds: u64,
     pub timestamp: SystemTime,
 }
-
 impl ZfsMetrics {
+    /// Create metrics collector for testing
+    pub const fn new_for_testing() -> Self {
+        Self::new()
+    }
+
     /// Create a new metrics collector
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             total_operations: AtomicU64::new(0),
             total_bytes: AtomicU64::new(0),
@@ -65,7 +68,7 @@ impl ZfsMetrics {
     }
 
     /// Get current metrics snapshot
-    pub async fn get_current_metrics(&self) -> MetricsSnapshot {
+    pub const fn get_current_metrics(&self) -> MetricsSnapshot {
         let now = SystemTime::now();
         let uptime = now
             .duration_since(self.start_time)
@@ -77,13 +80,13 @@ impl ZfsMetrics {
         let errors = self.error_count.load(Ordering::Relaxed);
 
         let ops_per_second = if uptime > 0 {
-            total_ops as f64 / uptime as f64
+            f64::from(total_ops) / f64::from(uptime)
         } else {
             0.0
         };
         let throughput_bps = if uptime > 0 { total_bytes / uptime } else { 0 };
         let error_rate = if total_ops > 0 {
-            errors as f64 / total_ops as f64
+            f64::from(errors) / f64::from(total_ops)
         } else {
             0.0
         };

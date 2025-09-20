@@ -1,6 +1,5 @@
-/// Smart refactoring of 1,265-line monolith into focused, maintainable modules.
-/// Each module handles a specific automation concern with clear boundaries.
-
+//! Smart refactoring of 1,265-line monolith into focused, maintainable modules.
+//! Each module handles a specific automation concern with clear boundaries.
 use nestgate_core::config::defaults::NetworkPortDefaults as StandardDomainConfig;
 use nestgate_core::smart_abstractions::prelude::SmartDefault;
 use serde::{Deserialize, Serialize};
@@ -19,8 +18,8 @@ pub use optimization::*;
 pub use scheduling::*;
 pub use workflows::*;
 
-/// **UNIFIED AUTOMATION EXTENSIONS**
-/// Main configuration structure that composes all specialized modules
+//! **UNIFIED AUTOMATION EXTENSIONS**
+//! Main configuration structure that composes all specialized modules
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedAutomationExtensions {
     /// Lifecycle management settings
@@ -34,22 +33,18 @@ pub struct UnifiedAutomationExtensions {
     /// Scheduling configuration
     pub scheduling: SchedulingSettings,
 }
-
-/// **UNIFIED AUTOMATION CONFIGURATION**
-/// The main configuration type following StandardDomainConfig pattern
-/// CANONICAL MODERNIZATION: Simplified type alias without type parameters
+//! **UNIFIED AUTOMATION CONFIGURATION**
+//! The main configuration type following StandardDomainConfig pattern
+//! CANONICAL MODERNIZATION: Simplified type alias without type parameters
 pub type UnifiedAutomationConfig = StandardDomainConfig;
-
 impl SmartDefault for UnifiedAutomationExtensions {
-    fn smart_default() -> Self {
-        Self {
+    fn smart_default() -> Self { Self {
             lifecycle: LifecycleSettings::smart_default(),
             ml_prediction: MlPredictionSettings::smart_default(),
             workflows: WorkflowSettings::smart_default(),
             optimization: OptimizationSettings::smart_default(),
             scheduling: SchedulingSettings::smart_default(),
-        }
-    }
+         }
 }
 
 impl Default for UnifiedAutomationExtensions {

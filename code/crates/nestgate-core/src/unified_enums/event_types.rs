@@ -9,9 +9,8 @@
 /// - AuditEventType (nestgate-api/src/handlers/compliance.rs)
 /// - SseEventType (nestgate-api/src/sse.rs)
 /// - StreamEventType (nestgate-api/src/mcp_streaming.rs)
-/// - BiomeOSEventType (nestgate-api/src/ecosystem/biomeos_integration.rs)
+/// - ManagementEventType (nestgate-api/src/ecosystem/management_integration.rs)
 use serde::{Deserialize, Serialize};
-
 /// **CANONICAL**: Unified event type for all system events
 /// This replaces multiple scattered EventType enums with a single, comprehensive classification
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -27,7 +26,6 @@ pub enum UnifiedEventType {
     Ping,
     /// Pong response
     Pong,
-
     // === DATA EVENTS ===
     /// Data access event
     DataAccess,
@@ -127,7 +125,7 @@ impl Default for UnifiedEventType {
 
 impl UnifiedEventType {
     /// Get the event category for grouping and filtering
-    pub fn category(&self) -> EventCategory {
+    pub const fn category(&self) -> EventCategory {
         match self {
             Self::ConnectionEstablished
             | Self::ConnectionClosed
@@ -181,7 +179,7 @@ impl UnifiedEventType {
     }
 
     /// Check if this event type requires authentication
-    pub fn requires_auth(&self) -> bool {
+    pub const fn requires_auth(&self) -> bool {
         matches!(
             self,
             Self::DataModification
@@ -194,7 +192,7 @@ impl UnifiedEventType {
     }
 
     /// Check if this event should be audited
-    pub fn should_audit(&self) -> bool {
+    pub const fn should_audit(&self) -> bool {
         matches!(
             self,
             Self::DataAccess
@@ -209,7 +207,7 @@ impl UnifiedEventType {
     }
 
     /// Get the priority level for this event type
-    pub fn priority(&self) -> EventPriority {
+    pub const fn priority(&self) -> EventPriority {
         match self {
             Self::SecurityViolation | Self::SystemError => EventPriority::Critical,
             Self::ConnectionError | Self::StreamError | Self::WorkflowFailed => EventPriority::High,
@@ -235,7 +233,6 @@ pub enum EventCategory {
     Workflow,
     Custom,
 }
-
 /// Event priority levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum EventPriority {
@@ -244,10 +241,8 @@ pub enum EventPriority {
     High = 3,
     Critical = 4,
 }
-
 /// **MIGRATION HELPERS**
 /// These functions help migrate from old EventType enums to the unified system
-
 impl From<&str> for UnifiedEventType {
     fn from(s: &str) -> Self {
         match s.to_lowercase().as_str() {
@@ -287,21 +282,15 @@ impl std::fmt::Display for UnifiedEventType {
 
 /// **BACKWARD COMPATIBILITY**
 /// Type aliases for existing code during migration
-
 /// WebSocket event type compatibility
 pub type WebSocketEventType = UnifiedEventType;
-
 /// Coordinated event type compatibility  
 pub type CoordinatedEventType = UnifiedEventType;
-
 /// Audit event type compatibility
 pub type AuditEventType = UnifiedEventType;
-
 /// SSE event type compatibility
 pub type SseEventType = UnifiedEventType;
-
 /// Stream event type compatibility
 pub type StreamEventType = UnifiedEventType;
-
-/// BiomeOS event type compatibility
-pub type BiomeOSEventType = UnifiedEventType;
+/// Management event type compatibility
+pub type ManagementEventType = UnifiedEventType;

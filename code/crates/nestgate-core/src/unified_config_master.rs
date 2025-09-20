@@ -17,9 +17,7 @@
 /// - Migration utilities from legacy configurations
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::time::{Duration, SystemTime};
-
 use crate::{NestGateError, Result};
 use crate::unified_config_consolidation::StandardDomainConfig;
 use crate::unified_types::{
@@ -36,7 +34,6 @@ use crate::unified_types::{
 pub struct NestGateMasterConfig {
     /// Core system configuration
     pub system: SystemMasterConfig,
-
     /// Unified base configurations (shared across all domains)
     pub unified: UnifiedBaseConfig,
 
@@ -47,7 +44,6 @@ pub struct NestGateMasterConfig {
     pub features: HashMap<String, bool>,
 
     /// Environment-specific overrides
-    pub environment: HashMap<String, serde_json::Value>,
 
     /// Configuration metadata
     pub metadata: ConfigMetadata,
@@ -61,7 +57,6 @@ pub struct SystemMasterConfig {
     /// Human-readable instance name
     pub instance_name: String,
     /// Deployment environment
-    pub environment: DeploymentEnvironment,
     /// Data directory for persistent storage
     pub data_dir: PathBuf,
     /// Configuration directory
@@ -73,7 +68,6 @@ pub struct SystemMasterConfig {
     /// System-wide resource limits
     pub resource_limits: ResourceLimits,
 }
-
 /// Unified base configurations shared across all domains
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UnifiedBaseConfig {
@@ -98,7 +92,6 @@ pub struct UnifiedBaseConfig {
     /// Connection pool configuration
     pub connection_pool: UnifiedConnectionPoolConfig,
 }
-
 /// All domain-specific configurations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DomainConfigurations {
@@ -119,7 +112,6 @@ pub struct DomainConfigurations {
     /// Middleware domain configuration
     pub middleware: StandardDomainConfig<MiddlewareDomainExtensions>,
 }
-
 /// Configuration metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfigMetadata {
@@ -134,7 +126,6 @@ pub struct ConfigMetadata {
     /// Validation status
     pub validation_status: ValidationStatus,
 }
-
 /// Deployment environment types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum DeploymentEnvironment {
@@ -144,7 +135,6 @@ pub enum DeploymentEnvironment {
     Production,
     Custom(String),
 }
-
 /// System resource limits
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResourceLimits {
@@ -157,7 +147,6 @@ pub struct ResourceLimits {
     /// Maximum concurrent connections
     pub max_connections: Option<u32>,
 }
-
 /// Configuration source information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ConfigSource {
@@ -168,7 +157,6 @@ pub enum ConfigSource {
     Remote(String),
     Merged(Vec<ConfigSource>),
 }
-
 /// Validation status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ValidationStatus {
@@ -176,7 +164,6 @@ pub enum ValidationStatus {
     Warning(Vec<String>),
     Error(Vec<String>),
 }
-
 // ==================== SECTION ====================
 
 /// API domain-specific configuration extensions
@@ -193,7 +180,6 @@ pub struct ApiDomainExtensions {
     /// CORS configuration
     pub cors: CorsConfig,
 }
-
 /// ZFS domain-specific configuration extensions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ZfsDomainExtensions {
@@ -208,7 +194,6 @@ pub struct ZfsDomainExtensions {
     /// Performance tuning
     pub performance_tuning: ZfsPerformanceConfig,
 }
-
 /// MCP domain-specific configuration extensions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct McpDomainExtensions {
@@ -221,7 +206,6 @@ pub struct McpDomainExtensions {
     /// Model configurations
     pub models: ModelConfigurations,
 }
-
 /// Network domain-specific configuration extensions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NetworkDomainExtensions {
@@ -234,7 +218,6 @@ pub struct NetworkDomainExtensions {
     /// Network optimization settings
     pub optimization: NetworkOptimizationConfig,
 }
-
 /// Automation domain-specific configuration extensions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AutomationDomainExtensions {
@@ -247,7 +230,6 @@ pub struct AutomationDomainExtensions {
     /// Integration settings
     pub integrations: AutomationIntegrationsConfig,
 }
-
 /// File system monitor domain-specific configuration extensions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct FsMonitorDomainExtensions {
@@ -260,7 +242,6 @@ pub struct FsMonitorDomainExtensions {
     /// Performance settings
     pub performance: FsMonitorPerformanceConfig,
 }
-
 /// NAS domain-specific configuration extensions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NasDomainExtensions {
@@ -273,7 +254,6 @@ pub struct NasDomainExtensions {
     /// Backup configuration
     pub backup: BackupConfig,
 }
-
 /// Middleware domain-specific configuration extensions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MiddlewareDomainExtensions {
@@ -286,7 +266,6 @@ pub struct MiddlewareDomainExtensions {
     /// Custom middleware chain
     pub custom_chain: Vec<CustomMiddlewareConfig>,
 }
-
 // ==================== SECTION ====================
 // Note: These would be defined in detail based on the specific needs
 // For now, providing placeholder structures
@@ -535,9 +514,8 @@ pub struct CustomMiddlewareConfig {
 impl Default for SystemMasterConfig {
     fn default() -> Self {
         Self {
-            instance_id: format!("nestgate-{}", std::process::id()),
+            instance_id: format!("nestgate-{std::process::id(}")),
             instance_name: "nestgate-instance".to_string(),
-            environment: DeploymentEnvironment::Development,
             data_dir: PathBuf::from("./data"),
             config_dir: PathBuf::from("./config"),
             dev_mode: true,
@@ -577,12 +555,20 @@ impl Default for ConfigMetadata {
 
 impl NestGateMasterConfig {
     /// Create a new master configuration with defaults
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self::default()
     }
 
     /// Load configuration from environment variables
-    pub fn from_environment() -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn from_environment() -> Result<Self>  {
         // Implementation would load from environment variables
         // For now, return default with environment source
         let mut config = Self::default();
@@ -591,11 +577,10 @@ impl NestGateMasterConfig {
     }
 
     /// Load configuration from file
-    pub fn from_file<P: AsRef<std::path::Path>>(path: P) -> Result<Self> {
         let path = path.as_ref();
         let contents = std::fs::read_to_string(path).map_err(|e| {
             NestGateError::configuration_error(format!("Failed to read config file: {e}"), None)
-        })?;
+        )?;
 
         let mut config: Self = if path.extension().and_then(|s| s.to_str()) == Some("yaml") {
             // For now, only support JSON until serde_yaml is added as dependency
@@ -614,7 +599,14 @@ impl NestGateMasterConfig {
     }
 
     /// Validate the configuration
-    pub fn validate(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<()>  {
         // Implementation would perform comprehensive validation
         // For now, basic validation
         if self.system.instance_name.is_empty() {
@@ -630,13 +622,14 @@ impl NestGateMasterConfig {
                     format!("Failed to create data directory: {e}"),
                     Some("data_dir".to_string()),
                 )
-            })?;
+            )?;
         }
 
         Ok(())
     }
 
     /// Merge with another configuration
+    #[must_use]
     pub fn merge(mut self, other: Self) -> Self {
         // Implementation would perform deep merge
         // For now, simple override of domains
@@ -650,18 +643,18 @@ impl NestGateMasterConfig {
     }
 
     /// Get configuration schema for documentation
-    pub fn schema() -> serde_json::Value {
+    pub const fn schema() -> serde_json::Value {
         // Implementation would generate JSON schema
         serde_json::json!({
             "type": "object",
             "description": "NestGate Master Configuration Schema",
             "properties": {
-                "system": {"$ref": "#/definitions/SystemMasterConfig"},
-                "unified": {"$ref": "#/definitions/UnifiedBaseConfig"},
-                "domains": {"$ref": "#/definitions/DomainConfigurations"},
+                "system": {"$ref": "/definitions/SystemMasterConfig"},
+                "unified": {"$ref": "/definitions/UnifiedBaseConfig"},
+                "domains": {"$ref": "/definitions/DomainConfigurations"},
                 "features": {"type": "object"},
                 "environment": {"type": "object"},
-                "metadata": {"$ref": "#/definitions/ConfigMetadata"}
+                "metadata": {"$ref": "/definitions/ConfigMetadata"}
             }
         })
     }
@@ -674,7 +667,6 @@ pub trait DomainConfigValidator {
     fn validate(&self) -> Result<()>;
     fn schema() -> serde_json::Value;
 }
-
 impl DomainConfigValidator for ApiDomainExtensions {
     fn validate(&self) -> Result<()> {
         // API-specific validation

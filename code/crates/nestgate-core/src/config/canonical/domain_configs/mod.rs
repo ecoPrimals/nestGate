@@ -1,33 +1,31 @@
 use crate::Result;
-/// **CANONICAL DOMAIN CONFIGURATION SYSTEM**
+// **CANONICAL DOMAIN CONFIGURATION SYSTEM**
 ///
-/// This module provides the single source of truth for all domain-specific configurations
-/// across the NestGate ecosystem, replacing 80+ scattered configuration structures.
+// This module provides the single source of truth for all domain-specific configurations
+//! across the NestGate ecosystem, replacing 80+ scattered configuration structures.
 ///
-/// **CONSOLIDATES**:
-/// - Test configurations (UnifiedTestConfig, TestExecutionConfig, etc.)
-/// - Storage configurations (StorageConfig, BackendConfig, etc.)
-/// - Network configurations (NetworkConfig, ServerConfig, etc.)
-/// - Security configurations (SecurityConfig, AuthConfig, etc.)
-/// - Performance configurations (PerformanceConfig, MetricsConfig, etc.)
-/// - Service configurations (ServiceConfig, DiscoveryConfig, etc.)
+// **CONSOLIDATES**:
+//! - Test configurations (UnifiedTestConfig, TestExecutionConfig, etc.)
+//! - Storage configurations (StorageConfig, BackendConfig, etc.)
+//! - Network configurations (NetworkConfig, ServerConfig, etc.)
+//! - Security configurations (SecurityConfig, AuthConfig, etc.)
+//! - Performance configurations (PerformanceConfig, MetricsConfig, etc.)
+//! - Service configurations (ServiceConfig, DiscoveryConfig, etc.)
 ///
-/// **PROVIDES**:
-/// - Unified configuration traits and builders
-/// - Environment-driven configuration loading
-/// - Compile-time validation
-/// - Domain-specific configuration hierarchies
+// **PROVIDES**:
+//! - Unified configuration traits and builders
+//! - Environment-driven configuration loading
+//! - Compile-time validation
+//! - Domain-specific configuration hierarchies
 use serde::{Deserialize, Serialize};
-
 // ==================== SECTION ====================
 
-/// **THE** canonical configuration trait that all domain configurations must implement
+// **THE** canonical configuration trait that all domain configurations must implement
 pub trait CanonicalDomainConfig:
     Clone + Serialize + for<'de> Deserialize<'de> + Send + Sync + 'static
 {
     /// Configuration domain identifier
     fn domain() -> &'static str;
-
     /// Validate configuration consistency
     fn validate(&self) -> Result<()>;
 
@@ -54,7 +52,7 @@ pub mod test_configs;
 
 // Test configurations
 pub use test_configs::{
-    BiomeOSTestSettings, CanonicalTestConfig, ChaosBlastRadius, ChaosType, LoadPattern,
+    ManagementTestSettings, CanonicalTestConfig, ChaosBlastRadius, ChaosType, LoadPattern,
     MockConsistencyLevel, MockGlobalSettings, MockServiceConfig, StressLimits, TestChaos,
     TestCleanupStrategy, TestExecution, TestIntegration, TestIsolationLevel, TestMocking,
     TestNetwork, TestPerformance, TestResourceLimits, TestSecurity, ZfsTestSettings,

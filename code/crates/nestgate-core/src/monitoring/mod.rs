@@ -1,6 +1,6 @@
-//! Monitoring and Observability
-//!
-//! Comprehensive monitoring system for NestGate including metrics collection,
+// Monitoring and Observability
+//! Module definitions and exports.
+// Comprehensive monitoring system for NestGate including metrics collection,
 //! distributed tracing, health checks, and alerting capabilities.
 
 pub mod alerts;
@@ -16,4 +16,4 @@ pub use metrics::{
     MetricsCollector, MetricsExporter, PerformanceMetrics, ProviderMetrics, StorageMetrics,
     SystemMetrics,
 };
-pub use tracing::{create_span, init_tracing, TraceContext, TracingConfig};
+pub use tracing::{create_span, initialize_tracing, TraceContext, TracingConfig};

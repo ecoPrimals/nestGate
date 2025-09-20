@@ -1,260 +1,260 @@
-//
-// Contains all AI-related operations for tier optimization including heuristic
-// recommendations, file analysis, and tier benefit estimation.
+use crate::Result;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use tracing::{debug, info};
 
-use super::types::{FileAnalysis, TierBenefits};
-use nestgate_core::error::conversions::create_zfs_error;
-use nestgate_core::error::domain_errors::ZfsOperation;
-// Removed unresolved automation imports - using local tier types
-use nestgate_core::types::StorageTier as CoreStorageTier;
-use nestgate_core::Result;
-
-// Placeholder type until TierPrediction is available in automation crate
-#[derive(Debug)]
-pub struct TierPrediction {
-    pub recommended_tier: CoreStorageTier,
-    pub confidence: f32,
-    pub reasons: Vec<String>,
+/// AI-driven tier optimization for ZFS storage
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AiTierOptimizer {
+    /// Configuration for AI optimization
+    config: AiOptimizationConfig,
+    /// Historical performance data
+    performance_history: HashMap<String, Vec<PerformanceMetric>>,
 }
-// Removed unused tracing import
+/// Configuration for AI tier optimization
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AiOptimizationConfig {
+    /// Enable AI optimization
+    pub enabled: bool,
+    /// Optimization interval in seconds
+    pub optimization_interval: u64,
+    /// Minimum data points required for optimization
+    pub min_data_points: usize,
+    /// Performance threshold for tier migration
+    pub performance_threshold: f64,
+}
+/// Performance metrics for AI optimization
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PerformanceMetric {
+    /// Timestamp of the metric
+    pub timestamp: u64,
+    /// Read operations per second
+    pub read_ops: u64,
+    /// Write operations per second
+    pub write_ops: u64,
+    /// Average latency in microseconds
+    pub avg_latency: f64,
+    /// Data access pattern
+    pub access_pattern: AccessPattern,
+}
+/// Data access patterns for optimization
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum AccessPattern {
+    /// Sequential access pattern
+    Sequential,
+    /// Random access pattern
+    Random,
+    /// Mixed access pattern
+    Mixed,
+}
+impl Default for AiOptimizationConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            optimization_interval: 3600, // 1 hour
+            min_data_points: 100,
+            performance_threshold: 0.8,
+        }
+    }
+}
 
-use super::ZfsManager;
-use tracing::debug;
+impl AiTierOptimizer {
+    /// Create a new AI tier optimizer
+    #[must_use]
+    pub fn new(config: AiOptimizationConfig) -> Self {
+        Self {
+            config,
+            performance_history: HashMap::new(),
+        }
+    }
 
-impl ZfsManager {
-    /// Get heuristic tier recommendation for a file (replaces AI recommendations)
-    pub async fn get_ai_tier_recommendation(
-        &self,
-        file_path: &str,
-    ) -> Result<Option<TierPrediction>> {
-        debug!(
-            "Getting heuristic tier recommendation for file: {}",
-            file_path
+    /// Add a performance metric
+    pub fn add_metric(&mut self, dataset: String, metric: PerformanceMetric) {
+        self.performance_history
+            .entry(dataset)
+            .or_default()
+            .push(metric);
+    }
+
+    /// Analyze performance and recommend tier optimizations
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn analyze_and_optimize(&self) -> Result<Vec<TierOptimizationRecommendation>>  {
+        if !self.config.enabled {
+            debug!("AI tier optimization is disabled");
+            return Ok(vec![]);
+        }
+
+        let mut recommendations = Vec::new();
+
+        for (dataset, metrics) in &self.performance_history {
+            if metrics.len() < self.config.min_data_points {
+                debug!("Insufficient data points for dataset: {}", dataset);
+                continue;
+            }
+
+            if let Some(recommendation) = self.analyze_dataset(dataset, metrics).await? {
+                recommendations.push(recommendation);
+            }
+        }
+
+        info!(
+            "Generated {} tier optimization recommendations",
+            recommendations.len()
         );
+        Ok(recommendations)
+    }
 
-        let file_analysis = self.analyze_file_for_tier_prediction(file_path).await?;
-        let recommended_tier = self.get_heuristic_tier_recommendation(&file_analysis);
+    /// Analyze a specific dataset
+    async fn analyze_dataset(
+        &self,
+        dataset: &str,
+        metrics: &[PerformanceMetric],
+    ) -> Result<Option<TierOptimizationRecommendation>> {
+        let avg_latency = metrics.iter().map(|m| m.avg_latency).sum::<f64>() / (metrics.len() as f64);
+        let total_ops = metrics
+            .iter()
+            .map(|m| m.read_ops + m.write_ops)
+            .sum::<u64>();
 
-        // Convert core StorageTier to automation TierType
-        let _tier_type = match recommended_tier {
-            CoreStorageTier::Hot => "hot",
-            CoreStorageTier::Warm => "warm", 
-            CoreStorageTier::Cold => "cold",
-            CoreStorageTier::Cache => "hot",
-            CoreStorageTier::Archive => "cold",
+        let access_pattern = self.determine_access_pattern(metrics);
+        let current_tier = self.determine_current_tier(dataset).await?;
+
+        let recommended_tier = match (avg_latency, total_ops, access_pattern) {
+            (latency, ops, AccessPattern::Sequential) if latency < 100.0 && ops > 1000 => {
+                TierType::Hot
+            }
+            (latency, ops, AccessPattern::Random) if latency < 500.0 && ops > 500 => TierType::Warm,
+            (_, ops, _) if ops < 100 => TierType::Cold,
+            _ => current_tier.clone(),
         };
 
-        Ok(Some(TierPrediction {
-            recommended_tier: CoreStorageTier::Hot, // Use canonical StorageTier
-            confidence: 0.75,
-            reasons: vec![
-                "AI-optimized tier assignment based on dataset characteristics and access patterns".to_string(),
-                "ZFS Dataset type".to_string(),
-            ],
-        }))
-    }
-
-    /// Analyze file for tier prediction
-    async fn analyze_file_for_tier_prediction(&self, file_path: &str) -> Result<FileAnalysis> {
-        let metadata = std::fs::metadata(file_path).map_err(|e| {
-            create_zfs_error(
-                format!("Failed to read file metadata: {e}"),
-                ZfsOperation::Configuration
-            )
-        })?;
-
-        let file_extension = std::path::Path::new(file_path)
-            .extension()
-            .and_then(|ext| ext.to_str())
-            .unwrap_or("")
-            .to_lowercase();
-
-        Ok(FileAnalysis {
-            file_path: file_path.to_string(),
-            file_size: metadata.len(),
-            file_extension: file_extension.clone(),
-            file_type: self.classify_file_type(&file_extension).to_string(),
-            estimated_access_frequency: self.estimate_access_frequency_heuristic(file_path),
-            is_system_critical: self.is_system_critical_file(file_path),
-            estimated_compression_ratio: self.estimate_compression_ratio(&file_extension),
-        })
-    }
-
-    /// Simple heuristic tier recommendation
-    fn get_heuristic_tier_recommendation(&self, file_analysis: &FileAnalysis) -> CoreStorageTier {
-        // Heuristic tier recommendation based on file characteristics
-
-        // System critical files go to hot tier
-        if file_analysis.is_system_critical {
-            return CoreStorageTier::Hot;
-        }
-
-        // High access frequency files go to hot tier
-        if file_analysis.estimated_access_frequency > 8.0 {
-            return CoreStorageTier::Hot;
-        }
-
-        // Large files with low access frequency go to cold tier
-        if file_analysis.file_size > 100 * 1024 * 1024
-            && file_analysis.estimated_access_frequency < 1.0
-        {
-            return CoreStorageTier::Cold;
-        }
-
-        // Archive and backup files go to cold tier
-        if matches!(file_analysis.file_type.as_str(), "archive" | "backup") {
-            return CoreStorageTier::Cold;
-        }
-
-        // Database files go to hot tier
-        if file_analysis.file_type == "database" {
-            return CoreStorageTier::Hot;
-        }
-
-        // Default to warm tier
-        CoreStorageTier::Warm
-    }
-
-    /// Estimate benefits of placing file in recommended tier
-    #[allow(dead_code)] // Helper method for tier analysis
-    fn estimate_tier_benefits(&self, tier: crate::types::StorageTier) -> TierBenefits {
-        match tier {
-            crate::types::StorageTier::Hot => TierBenefits {
-                performance_improvement: 25.0,
-                cost_savings: -10.0, // Higher cost
-                storage_efficiency: 15.0,
-            },
-            crate::types::StorageTier::Warm => TierBenefits {
-                performance_improvement: 10.0,
-                cost_savings: 0.0, // Baseline
-                storage_efficiency: 20.0,
-            },
-            crate::types::StorageTier::Cold => TierBenefits {
-                performance_improvement: -5.0, // Slower
-                cost_savings: 30.0,            // Much cheaper
-                storage_efficiency: 40.0,
-            },
-            crate::types::StorageTier::Cache => TierBenefits {
-                performance_improvement: 50.0, // Fastest
-                cost_savings: -20.0,           // Most expensive
-                storage_efficiency: 5.0,
-            },
-            crate::types::StorageTier::Archive => TierBenefits {
-                performance_improvement: -10.0, // Slower for archival
-                cost_savings: 50.0,             // Very cost-effective
-                storage_efficiency: 60.0,       // Excellent compression
-            },
+        if recommended_tier != current_tier {
+            Ok(Some(TierOptimizationRecommendation {
+                dataset: dataset.to_string(),
+                current_tier: current_tier.clone(),
+                recommended_tier: recommended_tier.clone(),
+                confidence: self.calculate_confidence(metrics),
+                reason: self.generate_reason(
+                    &current_tier,
+                    &recommended_tier,
+                    avg_latency,
+                    total_ops,
+                ),
+            }))
+        } else {
+            Ok(None)
         }
     }
 
-    /// Classify file type based on extension for storage optimization
-    fn classify_file_type(&self, extension: &str) -> &'static str {
-        match extension {
-            "db" | "sqlite" | "sqlite3" => "database",
-            "jpg" | "jpeg" | "png" | "gif" | "bmp" | "tiff" => "image",
-            "mp4" | "avi" | "mkv" | "mov" | "webm" => "video",
-            "mp3" | "wav" | "flac" | "ogg" => "audio",
-            "pdf" | "doc" | "docx" | "txt" | "rtf" => "document",
-            "zip" | "tar" | "gz" | "bz2" | "7z" | "rar" => "archive",
-            "log" | "out" | "err" => "log",
-            "bak" | "backup" => "backup",
-            _ => "unknown",
-        }
-    }
-
-    /// Estimate access frequency based on file path patterns
-    fn estimate_access_frequency_heuristic(&self, file_path: &str) -> f64 {
-        // Heuristic based on file path patterns
-        if file_path.contains("/tmp/") || file_path.contains("/cache/") {
-            return 10.0; // High frequency for temp/cache files
-        }
-        if file_path.contains("/backup/") || file_path.contains("/archive/") {
-            return 0.1; // Low frequency for backups
-        }
-        if file_path.contains("/var/log/") {
-            return 2.0; // Medium frequency for logs
-        }
-        if file_path.contains("/home/") || file_path.contains("/usr/") {
-            return 5.0; // Medium-high for user/system files
-        }
-        3.0 // Default medium frequency
-    }
-
-    /// Check if file is system critical
-    fn is_system_critical_file(&self, file_path: &str) -> bool {
-        file_path.starts_with("/boot/")
-            || file_path.starts_with("/etc/")
-            || file_path.starts_with("/usr/bin/")
-            || file_path.contains("/vmlinuz")
-            || file_path.contains("/initrd")
-    }
-
-    /// Estimate compression ratio based on file extension
-    fn estimate_compression_ratio(&self, extension: &str) -> f64 {
-        match extension {
-            "txt" | "log" | "csv" | "json" | "xml" | "html" => 0.3, // High compression
-            "db" | "sqlite" | "sqlite3" => 0.6,                     // Medium compression
-            "jpg" | "jpeg" | "png" | "mp4" | "mp3" => 0.95,         // Already compressed
-            "zip" | "gz" | "bz2" | "7z" => 0.98,                    // Already compressed
-            _ => 0.7,                                               // Default medium compression
-        }
-    }
-
-    /// Check if path is system critical
-    fn _is_system_critical_path(&self, file_path: &str) -> bool {
-        let critical_paths = [
-            "/boot",
-            "/etc",
-            "/usr/bin",
-            "/usr/sbin",
-            "/lib",
-            "/lib64",
-            "/var/log",
-            "/var/cache",
-            "/var/spool",
-            "/var/run",
-        ];
-
-        critical_paths
+    /// Determine the access pattern from metrics
+    fn determine_access_pattern(&self, metrics: &[PerformanceMetric]) -> AccessPattern {
+        let sequential_count = metrics
             .iter()
-            .any(|&path| file_path.starts_with(path))
-    }
+            .filter(|m| matches!(m.access_pattern, AccessPattern::Sequential))
+            .count();
+        let random_count = metrics
+            .iter()
+            .filter(|m| matches!(m.access_pattern, AccessPattern::Random))
+            .count();
 
-    /// Check if directory is frequently accessed
-    fn _is_frequently_accessed_directory(&self, file_path: &str) -> bool {
-        let frequent_dirs = [
-            "/home",
-            "/var/www",
-            "/opt",
-            "/srv",
-            "/tmp",
-            "/var/cache",
-            "/var/spool",
-        ];
-
-        frequent_dirs.iter().any(|&dir| file_path.starts_with(dir))
-    }
-
-    /// Estimate access pattern for file type optimization
-    async fn _estimate_access_pattern(&self, file_path: &str, file_type: &str) -> &'static str {
-        let _file_path = file_path; // Avoid unused variable warning
-
-        match file_type {
-            "database" => "random_read_write",
-            "vm_image" => "random_read_write",
-            "media" => "sequential_read",
-            "document" => "occasional_read",
-            "source_code" => "frequent_read_write",
-            "config" => "infrequent_read",
-            "log" => "sequential_write",
-            "archive" => "infrequent_read",
-            "backup" => "write_once_read_rarely",
-            _ => match file_type {
-                _ if file_type.contains("read_write") => "frequent_read_write",
-                _ if file_type.contains("write") => "sequential_write",
-                _ if file_type.contains("rarely") => "write_once_read_rarely",
-                _ => "unknown",
-            },
+        if sequential_count > random_count * 2 {
+            AccessPattern::Sequential
+        } else if random_count > sequential_count * 2 {
+            AccessPattern::Random
+        } else {
+            AccessPattern::Mixed
         }
     }
+
+    /// Determine the current tier of a dataset
+    async fn determine_current_tier(&self, _dataset: &str) -> Result<TierType> {
+        // This would integrate with actual ZFS tier information
+        // For now, return a default
+        Ok(TierType::Warm)
+    }
+
+    /// Calculate confidence in the recommendation
+    fn calculate_confidence(&self, metrics: &[PerformanceMetric]) -> f64 {
+        // Simple confidence calculation based on data consistency
+        let variance = self.calculate_variance(metrics);
+        if variance < 0.1 {
+            0.9
+        } else if variance < 0.3 {
+            0.7
+        } else {
+            0.5
+        }
+    }
+
+    /// Calculate variance in performance metrics
+    fn calculate_variance(&self, metrics: &[PerformanceMetric]) -> f64 {
+        if metrics.is_empty() {
+            return 1.0;
+        }
+
+        let mean = metrics.iter().map(|m| m.avg_latency).sum::<f64>() / (metrics.len() as f64);
+        let variance = metrics
+            .iter()
+            .map(|m| (m.avg_latency - mean).powi(2))
+            .sum::<f64>()
+            / (metrics.len() as f64);
+
+        variance.sqrt() / mean
+    }
+
+    /// Generate a human-readable reason for the recommendation
+    fn generate_reason(
+        &self,
+        current: &TierType,
+        recommended: &TierType,
+        latency: f64,
+        ops: u64,
+    ) -> String {
+        match (current, recommended) {
+            (TierType::Cold, TierType::Hot) => format!(
+                "High activity detected: {} ops with {}μs latency",
+                ops, latency
+            ),
+            (TierType::Cold, TierType::Warm) => format!("Moderate activity detected: {ops} ops"),
+            (TierType::Warm, TierType::Hot) => {
+                format!("Performance critical: {latency}μs latency")
+            }
+            (TierType::Hot, TierType::Warm) => format!("Activity decreased: {ops} ops"),
+            (TierType::Warm, TierType::Cold) => format!("Low activity: {ops} ops"),
+            (TierType::Hot, TierType::Cold) => format!("Minimal usage: {ops} ops"),
+            _ => "No change recommended".to_string(),
+        }
+    }
+}
+
+/// Storage tier types
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum TierType {
+    /// Hot tier - fast access, expensive storage
+    Hot,
+    /// Warm tier - moderate access, balanced storage
+    Warm,
+    /// Cold tier - slow access, cheap storage
+    Cold,
+}
+/// Tier optimization recommendation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TierOptimizationRecommendation {
+    /// Dataset name
+    pub dataset: String,
+    /// Current tier
+    pub current_tier: TierType,
+    /// Recommended tier
+    pub recommended_tier: TierType,
+    /// Confidence in the recommendation (0.0 to 1.0)
+    pub confidence: f64,
+    /// Human-readable reason for the recommendation
+    pub reason: String,
 }

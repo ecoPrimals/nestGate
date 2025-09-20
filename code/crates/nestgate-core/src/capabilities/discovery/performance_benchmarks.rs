@@ -1,12 +1,11 @@
 /// **UNIFIED CONFIG PERFORMANCE BENCHMARKS**
 /// Benchmarking and performance measurement for the unified configuration system
 /// **DEMONSTRATES**: Performance improvements from configuration unification
-
 use crate::capabilities::discovery::{
     UnifiedDynamicDiscoveryConfig,
     ConfigUnificationImpactReport,
 };
-use crate::ecosystem_integration::universal_adapter::adapter::UniversalAdapter;
+use crate::universal_adapter::PrimalAgnosticAdapter;
 use crate::Result;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -18,9 +17,9 @@ pub struct UnifiedConfigBenchmarks {
     unified_config: UnifiedDynamicDiscoveryConfig,
     benchmark_results: Vec<BenchmarkResult>,
     }
-
 impl UnifiedConfigBenchmarks {
     /// Create a new benchmark suite
+    #[must_use]
     pub fn new(adapter: Arc<UniversalAdapter>) -> Self {
         Self {
             unified_config: UnifiedDynamicDiscoveryConfig::new(adapter),
@@ -30,7 +29,14 @@ impl UnifiedConfigBenchmarks {
 
     /// **COMPREHENSIVE PERFORMANCE BENCHMARK**
     /// Measures performance across all discovery operations
-    pub async fn run_comprehensive_benchmark(&mut self) -> Result<ComprehensiveBenchmarkReport> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn run_comprehensive_benchmark(&mut self) -> Result<ComprehensiveBenchmarkReport>  {
         println!("🚀 **RUNNING UNIFIED CONFIG PERFORMANCE BENCHMARKS**");
         println!("════════════════════════════════════════════════════");
         println!();
@@ -68,61 +74,55 @@ impl UnifiedConfigBenchmarks {
         let start = Instant::now();
         let _result = self.unified_config.discover_storage_config(Some("benchmark")).await?;
         let storage_time = start.elapsed();
-        println!("   ✅ Storage Discovery: {:?}", storage_time);
+        println!("   ✅ Storage Discovery: {storage_time:?}");
         self.benchmark_results.push(BenchmarkResult {
-            operation: "Storage Discovery".to_string(),
             duration: storage_time,
-        });
+        );
 
         // Auth Discovery
         let start = Instant::now();
         let _result = self.unified_config.discover_auth_config(Some("benchmark")).await?;
         let auth_time = start.elapsed();
-        println!("   ✅ Auth Discovery: {:?}", auth_time);
+        println!("   ✅ Auth Discovery: {auth_time:?}");
         self.benchmark_results.push(BenchmarkResult {
-            operation: "Auth Discovery".to_string(),
             duration: auth_time,
-        });
+        );
 
         // Network Discovery
         let start = Instant::now();
         let _result = self.unified_config.discover_network_config(Some("benchmark")).await?;
         let network_time = start.elapsed();
-        println!("   ✅ Network Discovery: {:?}", network_time);
+        println!("   ✅ Network Discovery: {network_time:?}");
         self.benchmark_results.push(BenchmarkResult {
-            operation: "Network Discovery".to_string(),
             duration: network_time,
-        });
+        );
 
         // Timeout Discovery
         let start = Instant::now();
         let _result = self.unified_config.discover_timeout_config("api").await?;
         let timeout_time = start.elapsed();
-        println!("   ✅ Timeout Discovery: {:?}", timeout_time);
+        println!("   ✅ Timeout Discovery: {timeout_time:?}");
         self.benchmark_results.push(BenchmarkResult {
-            operation: "Timeout Discovery".to_string(),
             duration: timeout_time,
-        });
+        );
 
         // Security Discovery
         let start = Instant::now();
         let _result = self.unified_config.discover_security_config(Some("benchmark")).await?;
         let security_time = start.elapsed();
-        println!("   ✅ Security Discovery: {:?}", security_time);
+        println!("   ✅ Security Discovery: {security_time:?}");
         self.benchmark_results.push(BenchmarkResult {
-            operation: "Security Discovery".to_string(),
             duration: security_time,
-        });
+        );
 
         // Environment Discovery
         let start = Instant::now();
         let _result = self.unified_config.discover_environment_config(Some("benchmark")).await?;
         let environment_time = start.elapsed();
-        println!("   ✅ Environment Discovery: {:?}", environment_time);
+        println!("   ✅ Environment Discovery: {environment_time:?}");
         self.benchmark_results.push(BenchmarkResult {
-            operation: "Environment Discovery".to_string(),
             duration: environment_time,
-        });
+        );
 
         let total_individual = storage_time + auth_time + network_time + timeout_time + security_time + environment_time;
 
@@ -145,11 +145,10 @@ impl UnifiedConfigBenchmarks {
         let start = Instant::now();
         let _result = self.unified_config.discover_all_configs().await?;
         let comprehensive_time = start.elapsed();
-        println!("   ✅ Comprehensive Discovery: {:?}", comprehensive_time);
+        println!("   ✅ Comprehensive Discovery: {comprehensive_time:?}");
         self.benchmark_results.push(BenchmarkResult {
-            operation: "Comprehensive Discovery".to_string(),
             duration: comprehensive_time,
-        });
+        );
 
         Ok(ComprehensiveDiscoveryBenchmarks {
             comprehensive_discovery_time: comprehensive_time,
@@ -169,21 +168,19 @@ impl UnifiedConfigBenchmarks {
         let start = Instant::now();
         let _result = self.unified_config.discover_storage_config(Some("cache-test")).await?;
         let cache_miss_time = start.elapsed();
-        println!("   ✅ Storage Discovery (Cache Miss): {:?}", cache_miss_time);
+        println!("   ✅ Storage Discovery (Cache Miss): {cache_miss_time:?}");
         self.benchmark_results.push(BenchmarkResult {
-            operation: "Storage Discovery (Cache Miss)".to_string(),
             duration: cache_miss_time,
-        });
+        );
 
         // Second run (cache hit)
         let start = Instant::now();
         let _result = self.unified_config.discover_storage_config(Some("cache-test")).await?;
         let cache_hit_time = start.elapsed();
-        println!("   ✅ Storage Discovery (Cache Hit): {:?}", cache_hit_time);
+        println!("   ✅ Storage Discovery (Cache Hit): {cache_hit_time:?}");
         self.benchmark_results.push(BenchmarkResult {
-            operation: "Storage Discovery (Cache Hit)".to_string(),
             duration: cache_hit_time,
-        });
+        );
 
         let cache_improvement = cache_miss_time.as_nanos() as f64 / cache_hit_time.as_nanos() as f64;
 
@@ -216,11 +213,10 @@ impl UnifiedConfigBenchmarks {
         let start = Instant::now();
         let _result = self.unified_config.discover_all_configs().await?;
         let parallel_time = start.elapsed();
-        println!("   ✅ Parallel Comprehensive Discovery: {:?}", parallel_time);
+        println!("   ✅ Parallel Comprehensive Discovery: {parallel_time:?}");
         self.benchmark_results.push(BenchmarkResult {
-            operation: "Parallel Comprehensive Discovery".to_string(),
             duration: parallel_time,
-        });
+        );
 
         let parallel_improvement = sequential_time.as_nanos() as f64 / parallel_time.as_nanos() as f64;
 
@@ -232,7 +228,6 @@ impl UnifiedConfigBenchmarks {
     }
 
     /// Helper method to time operations
-    async fn time_operation<F, Fut, T>(&mut self, operation_name: &str, operation: F) -> Result<Duration>
     where
         F: FnOnce() -> Fut,
         Fut: std::future::Future<Output = Result<T>>,
@@ -243,9 +238,8 @@ impl UnifiedConfigBenchmarks {
         
         println!("   ✅ {}: {:?}", operation_name, duration);
         self.benchmark_results.push(BenchmarkResult {
-            operation: operation_name.to_string(),
             duration,
-        });
+        );
         
         Ok(duration)
     }
@@ -272,33 +266,33 @@ impl UnifiedConfigBenchmarks {
         println!("═══════════════════════════════════════");
         
         println!("📊 **Individual Discovery Performance**:");
-        println!("   Storage:     {:?}", report.individual_discovery.storage_discovery);
-        println!("   Auth:        {:?}", report.individual_discovery.auth_discovery);
-        println!("   Network:     {:?}", report.individual_discovery.network_discovery);
-        println!("   Timeout:     {:?}", report.individual_discovery.timeout_discovery);
-        println!("   Security:    {:?}", report.individual_discovery.security_discovery);
-        println!("   Environment: {:?}", report.individual_discovery.environment_discovery);
-        println!("   Total Individual: {:?}", report.individual_discovery.total_individual_time);
+        println!("   Storage:     {report.individual_discovery.storage_discovery:?}");
+        println!("   Auth:        {report.individual_discovery.auth_discovery:?}");
+        println!("   Network:     {report.individual_discovery.network_discovery:?}");
+        println!("   Timeout:     {report.individual_discovery.timeout_discovery:?}");
+        println!("   Security:    {report.individual_discovery.security_discovery:?}");
+        println!("   Environment: {report.individual_discovery.environment_discovery:?}");
+        println!("   Total Individual: {report.individual_discovery.total_individual_time:?}");
         println!();
 
         println!("⚡ **Comprehensive Discovery Performance**:");
-        println!("   Comprehensive: {:?}", report.comprehensive_discovery.comprehensive_discovery_time);
-        println!("   Parallel Efficiency: {:.1}x", report.comprehensive_discovery.parallel_efficiency);
+        println!("   Comprehensive: {report.comprehensive_discovery.comprehensive_discovery_time:?}");
+        println!("   Parallel Efficiency: {:.1}x");
         println!();
 
         println!("🚀 **Cache Performance**:");
-        println!("   Cache Miss:  {:?}", report.cache_performance.cache_miss_time);
-        println!("   Cache Hit:   {:?}", report.cache_performance.cache_hit_time);
-        println!("   Cache Improvement: {:.1}x faster", report.cache_performance.cache_improvement_factor);
+        println!("   Cache Miss:  {report.cache_performance.cache_miss_time:?}");
+        println!("   Cache Hit:   {report.cache_performance.cache_hit_time:?}");
+        println!("   Cache Improvement: {:.1}x faster");
         println!();
 
         println!("🔀 **Parallel vs Sequential**:");
-        println!("   Sequential:  {:?}", report.parallel_performance.sequential_time);
-        println!("   Parallel:    {:?}", report.parallel_performance.parallel_time);
-        println!("   Parallel Improvement: {:.1}x faster", report.parallel_performance.parallel_improvement_factor);
+        println!("   Sequential:  {report.parallel_performance.sequential_time:?}");
+        println!("   Parallel:    {report.parallel_performance.parallel_time:?}");
+        println!("   Parallel Improvement: {:.1}x faster");
         println!();
 
-        println!("🏆 **OVERALL PERFORMANCE IMPROVEMENT: {:.1}x**", report.overall_performance_improvement);
+        println!("🏆 **OVERALL PERFORMANCE IMPROVEMENT: {:.1}x**");
         println!();
 
         // Generate impact report
@@ -312,10 +306,8 @@ impl UnifiedConfigBenchmarks {
 /// Individual benchmark result
 #[derive(Debug, Clone)]
 pub struct BenchmarkResult {
-    pub operation: String,
     pub duration: Duration,
     }
-
 /// Individual discovery benchmarks
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IndividualDiscoveryBenchmarks {
@@ -327,14 +319,12 @@ pub struct IndividualDiscoveryBenchmarks {
     pub environment_discovery: Duration,
     pub total_individual_time: Duration,
     }
-
 /// Comprehensive discovery benchmarks
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComprehensiveDiscoveryBenchmarks {
     pub comprehensive_discovery_time: Duration,
     pub parallel_efficiency: f64,
     }
-
 /// Cache performance benchmarks
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CachePerformanceBenchmarks {
@@ -342,7 +332,6 @@ pub struct CachePerformanceBenchmarks {
     pub cache_hit_time: Duration,
     pub cache_improvement_factor: f64,
     }
-
 /// Parallel discovery benchmarks
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ParallelDiscoveryBenchmarks {
@@ -350,7 +339,6 @@ pub struct ParallelDiscoveryBenchmarks {
     pub parallel_time: Duration,
     pub parallel_improvement_factor: f64,
     }
-
 /// Comprehensive benchmark report
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComprehensiveBenchmarkReport {
@@ -360,7 +348,6 @@ pub struct ComprehensiveBenchmarkReport {
     pub parallel_performance: ParallelDiscoveryBenchmarks,
     pub overall_performance_improvement: f64,
     }
-
 /// **BENCHMARK RUNNER UTILITY**
 /// Easy-to-use function for running benchmarks
 pub async fn run_unified_config_benchmarks(

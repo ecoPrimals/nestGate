@@ -3,15 +3,15 @@
 //! This test validates storage functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::unified::NestGateUnifiedConfig as NestGateUnifiedConfig;
 use nestgate_core::config::defaults::Environment;
+use nestgate_core::config::unified::NestGateUnifiedConfig;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
 
 /// Test basic storage configuration
 #[tokio::test]
-async fn test_storage_configuration() {
+async fn test_storage_configuration() -> Result<(), Box<dyn std::error::Error>> {
     info!("🗄️ Starting storage configuration test");
 
     // Test storage configuration creation
@@ -24,11 +24,12 @@ async fn test_storage_configuration() {
     assert!(!dev_config.system.instance_name.is_empty());
 
     info!("✅ Storage configuration test completed");
+    Ok(())
 }
 
 /// Test storage system validation
 #[tokio::test]
-async fn test_storage_system_validation() {
+async fn test_storage_system_validation() -> Result<(), Box<dyn std::error::Error>> {
     info!("📁 Testing storage system validation");
 
     let config = NestGateCanonicalUnifiedConfig::default();
@@ -41,11 +42,12 @@ async fn test_storage_system_validation() {
     let _storage_config = &config.storage;
 
     info!("✅ Storage system validation completed");
+    Ok(())
 }
 
 /// Test storage initialization simulation
 #[tokio::test]
-async fn test_storage_initialization() {
+async fn test_storage_initialization() -> Result<(), Box<dyn std::error::Error>> {
     info!("⚡ Testing storage initialization simulation");
 
     // Simulate storage initialization phases
@@ -64,14 +66,16 @@ async fn test_storage_initialization() {
 
         // Verify phase is valid
         assert!(!phase.is_empty(), "Init phase should be specified");
+        Ok(())
     }
 
     info!("✅ Storage initialization simulation completed");
+    Ok(())
 }
 
 /// Test storage operations simulation
 #[tokio::test]
-async fn test_storage_operations() {
+async fn test_storage_operations() -> Result<(), Box<dyn std::error::Error>> {
     info!("📝 Testing storage operations simulation");
 
     // Simulate basic storage operations
@@ -86,14 +90,16 @@ async fn test_storage_operations() {
         // Verify operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
         assert!(duration > 0, "Duration should be positive");
+        Ok(())
     }
 
     info!("✅ Storage operations simulation completed");
+    Ok(())
 }
 
 /// Test storage performance characteristics
 #[tokio::test]
-async fn test_storage_performance() {
+async fn test_storage_performance() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing storage performance characteristics");
 
     let start_time = std::time::Instant::now();
@@ -116,14 +122,16 @@ async fn test_storage_performance() {
             elapsed.as_millis() >= operation_time as u128,
             "Storage timing should be accurate"
         );
+        Ok(())
     }
 
     info!("✅ Storage performance test completed");
+    Ok(())
 }
 
 /// Test storage error handling
 #[tokio::test]
-async fn test_storage_error_handling() {
+async fn test_storage_error_handling() -> Result<(), Box<dyn std::error::Error>> {
     info!("💥 Testing storage error handling");
 
     // Test storage error scenarios
@@ -148,14 +156,16 @@ async fn test_storage_error_handling() {
         // Verify error type is valid
         assert!(!error_type.is_empty(), "Error type should be specified");
         assert!(recovery_time > 0, "Recovery time should be positive");
+        Ok(())
     }
 
     info!("✅ Storage error handling test completed");
+    Ok(())
 }
 
 /// Test storage configuration environments
 #[tokio::test]
-async fn test_storage_environments() {
+async fn test_storage_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing storage configuration across environments");
 
     // Test development environment storage
@@ -173,4 +183,5 @@ async fn test_storage_environments() {
     info!("Production storage configuration validated");
 
     info!("✅ Storage environment configuration test completed");
+    Ok(())
 }

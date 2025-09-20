@@ -14,7 +14,6 @@ use tracing::info;
 pub struct NativeZfsPoolManager {
     command_executor: Arc<NativeZfsCommandExecutor>,
 }
-
 // PoolHealth is now imported from crate::types
 
 /// ZFS pool statistics
@@ -29,15 +28,21 @@ pub struct PoolStats {
     pub deduplication_ratio: f64,
     pub compression_ratio: f64,
 }
-
 impl NativeZfsPoolManager {
     /// Create a new pool manager
-    pub fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
+    pub const fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
         Self { command_executor }
     }
 
     /// List all ZFS pools
-    pub async fn list_pools(&self) -> Result<Vec<String>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn list_pools(&self) -> Result<Vec<String>>  {
         let output = self
             .command_executor
             .execute_command_expect_success(&["list", "-H", "-o", "name", "-t", "pool"])
@@ -51,7 +56,14 @@ impl NativeZfsPoolManager {
     }
 
     /// Get detailed pool information
-    pub async fn get_pool_info(&self, pool_name: &str) -> Result<PoolInfo> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_pool_info(&self, pool_name: &str) -> Result<PoolInfo>  {
         // Get pool properties
         let properties = self.get_pool_properties(pool_name).await?;
 
@@ -105,7 +117,14 @@ impl NativeZfsPoolManager {
     }
 
     /// Get pool statistics
-    pub async fn get_pool_stats(&self, pool_name: &str) -> Result<PoolStats> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_pool_stats(&self, pool_name: &str) -> Result<PoolStats>  {
         let properties = self.get_pool_properties(pool_name).await?;
 
         let size_bytes = properties
@@ -136,7 +155,7 @@ impl NativeZfsPoolManager {
             free_bytes,
             health: health.into(),
             capacity_percentage: if size_bytes > 0 {
-                (allocated_bytes as f64 / size_bytes as f64) * 100.0
+                (f64::from(allocated_bytes) / f64::from(size_bytes)) * 100.0
             } else {
                 0.0
             },
@@ -152,7 +171,14 @@ impl NativeZfsPoolManager {
     }
 
     /// Check pool health
-    pub async fn check_pool_health(&self, pool_name: &str) -> Result<PoolHealth> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn check_pool_health(&self, pool_name: &str) -> Result<PoolHealth>  {
         let properties = self.get_pool_properties(pool_name).await?;
         let health_str = properties
             .get("health")
@@ -162,7 +188,14 @@ impl NativeZfsPoolManager {
     }
 
     /// Import a ZFS pool
-    pub async fn import_pool(&self, pool_name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn import_pool(&self, pool_name: &str) -> Result<()>  {
         self.command_executor
             .execute_command_expect_success(&["import", pool_name])
             .await?;
@@ -172,7 +205,14 @@ impl NativeZfsPoolManager {
     }
 
     /// Export a ZFS pool
-    pub async fn export_pool(&self, pool_name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn export_pool(&self, pool_name: &str) -> Result<()>  {
         self.command_executor
             .execute_command_expect_success(&["export", pool_name])
             .await?;
@@ -182,7 +222,14 @@ impl NativeZfsPoolManager {
     }
 
     /// Scrub a ZFS pool
-    pub async fn scrub_pool(&self, pool_name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn scrub_pool(&self, pool_name: &str) -> Result<()>  {
         self.command_executor
             .execute_command_expect_success(&["scrub", pool_name])
             .await?;

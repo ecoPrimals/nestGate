@@ -1,12 +1,10 @@
-//! **TRACING CONFIGURATION**
-//!
-//! Configuration types and structures for the tracing system.
-//! Extracted from tracing_setup.rs for file size compliance.
+//! # Tracing Configuration
+//! Configuration types and utilities.
+// Configuration structures for tracing, logging, and log aggregation
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
 
 /// Tracing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -18,7 +16,6 @@ pub struct TracingConfig {
     /// Enable file logging
     pub file_enabled: bool,
     /// Log file path
-    pub file_path: Option<PathBuf>,
     /// Enable JSON formatting
     pub json_format: bool,
     /// Enable distributed tracing
@@ -30,14 +27,12 @@ pub struct TracingConfig {
     /// Custom fields to include in all logs
     pub custom_fields: HashMap<String, String>,
 }
-
 impl Default for TracingConfig {
     fn default() -> Self {
         Self {
             level: "info".to_string(),
             console_enabled: true,
             file_enabled: true,
-            file_path: Some(PathBuf::from("logs/nestgate.log")),
             json_format: true,
             distributed_tracing: false,
             jaeger_endpoint: None,
@@ -61,7 +56,6 @@ pub struct LogAggregationConfig {
     /// Log retention settings
     pub retention: LogRetentionConfig,
 }
-
 impl Default for LogAggregationConfig {
     fn default() -> Self {
         Self {
@@ -102,21 +96,18 @@ pub enum LogDestination {
         headers: HashMap<String, String>,
     },
 }
-
 /// Elasticsearch authentication
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ElasticsearchAuth {
     Basic { username: String, password: String },
     ApiKey { key: String },
 }
-
 /// Loki authentication
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LokiAuth {
     Basic { username: String, password: String },
     Bearer { token: String },
 }
-
 /// Log retention configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogRetentionConfig {
@@ -129,7 +120,6 @@ pub struct LogRetentionConfig {
     /// Enable log compression
     pub compress: bool,
 }
-
 impl Default for LogRetentionConfig {
     fn default() -> Self {
         Self {
@@ -137,74 +127,6 @@ impl Default for LogRetentionConfig {
             max_size: 100 * 1024 * 1024,                  // 100 MB
             max_files: 10,
             compress: true,
-        }
-    }
-}
-
-/// Structured log entry
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LogEntry {
-    /// Log timestamp
-    pub timestamp: SystemTime,
-    /// Log level
-    pub level: String,
-    /// Log message
-    pub message: String,
-    /// Source module/file
-    pub module: Option<String>,
-    /// Source line number
-    pub line: Option<u32>,
-    /// Trace ID for distributed tracing
-    pub trace_id: Option<String>,
-    /// Span ID for distributed tracing
-    pub span_id: Option<String>,
-    /// Custom fields
-    pub fields: HashMap<String, serde_json::Value>,
-    /// Service name
-    pub service: String,
-    /// Service version
-    pub version: String,
-    /// Host/instance information
-    pub host: String,
-}
-
-/// Trace context for distributed tracing
-#[derive(Debug, Clone)]
-pub struct TraceContext {
-    /// Trace ID
-    pub trace_id: String,
-    /// Span ID
-    pub span_id: String,
-    /// Parent span ID
-    pub parent_span_id: Option<String>,
-    /// Trace flags
-    pub flags: u8,
-}
-
-impl Default for TraceContext {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl TraceContext {
-    /// Create a new trace context with random IDs
-    pub fn new() -> Self {
-        Self {
-            trace_id: uuid::Uuid::new_v4().to_string(),
-            span_id: uuid::Uuid::new_v4().to_string(),
-            parent_span_id: None,
-            flags: 0,
-        }
-    }
-
-    /// Create a child trace context
-    pub fn child(&self) -> Self {
-        Self {
-            trace_id: self.trace_id.clone(),
-            span_id: uuid::Uuid::new_v4().to_string(),
-            parent_span_id: Some(self.span_id.clone()),
-            flags: self.flags,
         }
     }
 } 

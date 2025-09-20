@@ -1,28 +1,26 @@
+use crate::unified_enums::UnifiedTierType;
+use crate::Result;
 /// **CONSOLIDATED STORAGE TYPES MODULE**
-/// Single source of truth for ALL storage-related types across NestGate
+/// Single source of truth for ALL storage-related types across `NestGate`
 ///
 /// This module consolidates and replaces fragmented storage types from:
-/// - universal_storage/types.rs
-/// - interface/storage_types.rs  
+/// - `universal_storage/types.rs`
+/// - `interface/storage_types.rs`  
 /// - mcp/types/storage.rs
-/// - temporal_storage.rs (storage types)
-/// - hardware_tuning.rs (StorageDevice, StorageType)
-/// - biomeos.rs (StorageResources, BiomeStorage)
+/// - `temporal_storage.rs` (storage types)
+/// - `hardware_tuning.rs` (`StorageDevice`, `StorageType`)
+/// - management.rs (`StorageResources`, `BiomeStorage`)
 /// - Various API handler storage structs
 ///
 /// **PROBLEM SOLVED**: Single authoritative source for all storage operations
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::time::Duration;
-
-use crate::unified_enums::UnifiedTierType;
-use crate::Result;
 
 // ==================== SECTION ====================
 
-/// **THE** Universal Storage Type - replaces all StorageType enums
+/// **THE** Universal Storage Type - replaces all `StorageType` enums
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UniversalStorageType {
     /// Local file system storage
@@ -50,7 +48,6 @@ pub enum UniversalStorageType {
     /// Custom storage type
     Custom(String),
 }
-
 /// NFS protocol versions
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum NfsVersion {
@@ -59,7 +56,6 @@ pub enum NfsVersion {
     V41,
     V42,
 }
-
 /// SMB protocol versions  
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum SmbVersion {
@@ -67,7 +63,6 @@ pub enum SmbVersion {
     V3,
     V31,
 }
-
 /// Cloud storage providers
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum CloudProvider {
@@ -76,7 +71,6 @@ pub enum CloudProvider {
     GCP { project_id: String },
     Custom { endpoint: String },
 }
-
 // ==================== SECTION ====================
 
 /// **THE** Universal Storage Resource - consolidates all storage resource types
@@ -91,7 +85,6 @@ pub struct UniversalStorageResource {
     /// Resource type (dataset, pool, volume, etc.)
     pub resource_type: StorageResourceType,
     /// Storage path or location
-    pub path: PathBuf,
     /// Resource size in bytes
     pub size_bytes: u64,
     /// Available space in bytes
@@ -119,7 +112,6 @@ pub struct UniversalStorageResource {
     /// Health status
     pub health_status: StorageHealthStatus,
 }
-
 /// Storage resource types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum StorageResourceType {
@@ -138,7 +130,6 @@ pub enum StorageResourceType {
     /// Custom resource type
     Custom(String),
 }
-
 /// Storage capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum StorageCapability {
@@ -156,7 +147,6 @@ pub enum StorageCapability {
     Monitoring,
     Custom(String),
 }
-
 /// Storage permissions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StoragePermissions {
@@ -169,7 +159,6 @@ pub struct StoragePermissions {
     /// Access control list
     pub acl: HashMap<String, Vec<String>>,
 }
-
 /// Storage health status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum StorageHealthStatus {
@@ -180,7 +169,6 @@ pub enum StorageHealthStatus {
     Maintenance,
     Unknown,
 }
-
 // ==================== SECTION ====================
 
 /// Storage performance metrics
@@ -203,7 +191,6 @@ pub struct StoragePerformanceMetrics {
     /// Last updated timestamp
     pub last_updated: DateTime<Utc>,
 }
-
 /// Storage I/O metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageIoMetrics {
@@ -220,58 +207,43 @@ pub struct StorageIoMetrics {
     /// Average response time
     pub avg_response_time: Duration,
 }
-
 // ==================== SECTION ====================
 
 /// Universal storage request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum UniversalStorageRequest {
     Read {
-        path: String,
         range: Option<std::ops::Range<u64>>,
     },
     Write {
-        path: String,
         data: Vec<u8>,
         overwrite: bool,
     },
     Delete {
-        path: String,
         recursive: bool,
     },
     List {
-        path: String,
         recursive: bool,
         filter: Option<String>,
     },
     CreateResource {
-        config: StorageResourceConfig,
+        config: Box<StorageResourceConfig>,
     },
-    GetMetadata {
-        path: String,
-    },
+    GetMetadata {},
     SetMetadata {
-        path: String,
         metadata: HashMap<String, serde_json::Value>,
     },
     Snapshot {
-        path: String,
         name: String,
     },
-    Restore {
-        snapshot_path: String,
-        target_path: String,
-    },
+    Restore {},
     Stream {
-        path: String,
         range: Option<std::ops::Range<u64>>,
     },
     Monitor {
-        path: String,
         events: Vec<StorageEventType>,
     },
 }
-
 /// Universal storage response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum UniversalStorageResponse {
@@ -289,9 +261,7 @@ pub enum UniversalStorageResponse {
     ListResponse {
         items: Vec<StorageItem>,
     },
-    CreateResponse {
-        resource: Box<UniversalStorageResource>,
-    },
+    CreateResponse {},
     MetadataResponse {
         metadata: StorageMetadata,
     },
@@ -316,7 +286,6 @@ pub enum UniversalStorageResponse {
         error_code: String,
     },
 }
-
 /// Storage resource configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageResourceConfig {
@@ -337,7 +306,6 @@ pub struct StorageResourceConfig {
     /// Performance requirements
     pub performance_requirements: Option<StoragePerformanceRequirements>,
 }
-
 /// Storage performance requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StoragePerformanceRequirements {
@@ -352,7 +320,6 @@ pub struct StoragePerformanceRequirements {
     /// Required availability percentage
     pub required_availability: Option<f64>,
 }
-
 // ==================== SECTION ====================
 
 /// Storage event types
@@ -369,7 +336,6 @@ pub enum StorageEventType {
     PerformanceAlert,
     Error,
 }
-
 /// Storage event
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageEvent {
@@ -378,7 +344,6 @@ pub struct StorageEvent {
     /// Event type
     pub event_type: StorageEventType,
     /// Resource path
-    pub path: String,
     /// Event timestamp
     pub timestamp: DateTime<Utc>,
     /// Event metadata
@@ -386,7 +351,6 @@ pub struct StorageEvent {
     /// Related resource ID
     pub resource_id: Option<String>,
 }
-
 // ==================== SECTION ====================
 
 /// Storage item (file or directory)
@@ -395,7 +359,6 @@ pub struct StorageItem {
     /// Item name
     pub name: String,
     /// Full path
-    pub path: String,
     /// Item type
     pub item_type: StorageItemType,
     /// Size in bytes
@@ -413,7 +376,6 @@ pub struct StorageItem {
     /// Extended metadata
     pub metadata: HashMap<String, serde_json::Value>,
 }
-
 /// Storage item types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum StorageItemType {
@@ -426,7 +388,6 @@ pub enum StorageItemType {
     Socket,
     Unknown,
 }
-
 /// Storage metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageMetadata {
@@ -438,25 +399,23 @@ pub struct StorageMetadata {
     pub content_language: Option<String>,
     /// Cache control
     pub cache_control: Option<String>,
-    /// ETag
+    /// `ETag`
     pub etag: Option<String>,
     /// Custom metadata
     pub custom: HashMap<String, String>,
     /// System metadata
     pub system: HashMap<String, serde_json::Value>,
 }
-
 // ==================== SECTION ====================
 
 /// **THE** Universal Storage Backend trait
 /// Consolidates all storage backend interfaces
 pub trait UniversalStorageBackend: Send + Sync {
     /// Handle a storage request
-    async fn handle_request(
+    fn handle_request(
         &self,
         request: UniversalStorageRequest,
-    ) -> Result<UniversalStorageResponse>;
-
+    ) -> impl std::future::Future<Output = Result<UniversalStorageResponse>> + Send;
     /// Get backend type
     fn backend_type(&self) -> UniversalStorageType;
 
@@ -467,13 +426,19 @@ pub trait UniversalStorageBackend: Send + Sync {
     fn is_available(&self) -> impl std::future::Future<Output = bool> + Send;
 
     /// Perform health check
-    fn health_check(&self) -> impl std::future::Future<Output = Result<StorageHealthStatus>> + Send;
+    fn health_check(&self)
+        -> impl std::future::Future<Output = Result<StorageHealthStatus>> + Send;
 
     /// Get performance metrics
-    fn get_metrics(&self) -> impl std::future::Future<Output = Result<StoragePerformanceMetrics>> + Send;
+    fn get_metrics(
+        &self,
+    ) -> impl std::future::Future<Output = Result<StoragePerformanceMetrics>> + Send;
 
     /// Initialize backend with configuration
-    fn initialize(&mut self, config: StorageResourceConfig) -> impl std::future::Future<Output = Result<()>> + Send;
+    fn initialize(
+        &mut self,
+        config: StorageResourceConfig,
+    ) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Shutdown backend gracefully
     fn shutdown(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
@@ -529,20 +494,19 @@ impl Default for StoragePerformanceMetrics {
 
 impl UniversalStorageType {
     /// Check if storage type supports a capability
-    pub fn supports_capability(&self, capability: &StorageCapability) -> bool {
+    #[must_use]
+    pub const fn supports_capability(&self, capability: &StorageCapability) -> bool {
         matches!(
             (self, capability),
-            (Self::Zfs, StorageCapability::Snapshots)
-                | (Self::Zfs, StorageCapability::Compression)
-                | (Self::Zfs, StorageCapability::Deduplication)
+            (Self::Zfs, StorageCapability::Snapshots | StorageCapability::Compression | StorageCapability::Deduplication)
                 | (Self::Object, StorageCapability::Versioning)
-                | (Self::Memory, StorageCapability::ReadWrite)
-                | (Self::Cache, StorageCapability::ReadWrite)
+                | (Self::Memory | Self::Cache, StorageCapability::ReadWrite)
         )
     }
 
     /// Get default capabilities for storage type
-    pub fn default_capabilities(&self) -> Vec<StorageCapability> {
+    #[must_use]
+    pub const fn default_capabilities(&self) -> Vec<StorageCapability> {
         match self {
             Self::Zfs => vec![
                 StorageCapability::ReadWrite,
@@ -564,6 +528,7 @@ impl UniversalStorageType {
 
 impl StorageResourceConfig {
     /// Create a new storage resource configuration
+    #[must_use]
     pub fn new(name: String, storage_type: UniversalStorageType) -> Self {
         Self {
             name,
@@ -578,22 +543,43 @@ impl StorageResourceConfig {
     }
 
     /// Set storage tier
+    #[must_use]
     pub fn with_tier(mut self, tier: UnifiedTierType) -> Self {
         self.tier = Some(tier);
         self
     }
 
     /// Set initial size
+    #[must_use]
     pub fn with_size(mut self, size: u64) -> Self {
         self.initial_size = Some(size);
         self
     }
 
     /// Add capability
+    #[must_use]
     pub fn with_capability(mut self, capability: StorageCapability) -> Self {
         if !self.capabilities.contains(&capability) {
             self.capabilities.push(capability);
         }
         self
     }
+}
+
+/// Storage request structure for handling storage operations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StorageRequest {
+    pub operation: String,
+    pub path: Option<String>,
+    pub data: Option<Vec<u8>>,
+    pub metadata: HashMap<String, String>,
+}
+
+/// Storage response structure for returning operation results
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StorageResponse {
+    pub success: bool,
+    pub data: Option<Vec<u8>>,
+    pub metadata: HashMap<String, String>,
+    pub error: Option<String>,
 }

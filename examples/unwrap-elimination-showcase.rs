@@ -9,6 +9,7 @@ use std::time::Duration;
 
 // ==================== BEFORE: UNWRAP() PATTERNS ====================
 
+use nestgate_core::error::NestGateError;
 mod before_unwrap {
     use super::*;
 

@@ -13,7 +13,6 @@ pub struct NasDomainConfig {
     pub raid_level: String,
     pub default_share_permissions: String,
 }
-
 impl Default for NasDomainConfig {
     fn default() -> Self {
         Self {

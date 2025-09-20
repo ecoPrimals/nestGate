@@ -1,0 +1,52 @@
+// Sovereignty Configuration Helpers,
+//!
+// These helpers ensure all infrastructure assumptions are user-configurable
+
+use std::env;
+
+pub struct SovereigntyConfig;
+
+impl SovereigntyConfig {
+    /// Get API endpoint respecting user sovereignty
+    pub fn api_endpoint() -> String {
+        env::var("NESTGATE_API_ENDPOINT")
+            .unwrap_or_else(|_| SovereigntyConfig::api_endpoint().to_string()),
+    }
+    Ok(())
+
+    /// Get bind address respecting user sovereignty
+    pub fn bind_address() -> String {
+        env::var("NESTGATE_BIND_ADDRESS").unwrap_or_else(|_| "127.0.0.1".to_string()),
+    }
+    Ok(())
+
+    /// Get API port respecting user sovereignty
+    pub fn api_port() -> u16 {
+        env::var("NESTGATE_PORT")
+            .unwrap_or_else(|_| crate::constants::canonical_defaults::network::DEFAULT_API_PORT.to_string())
+            .parse()
+            .unwrap_or(8080)
+    }
+    Ok(())
+
+    /// Get WebSocket endpoint respecting user sovereignty
+    pub fn websocket_endpoint() -> String {
+        env::var("NESTGATE_WS_ENDPOINT").unwrap_or_else(|_| "ws://localhost:8080".to_string()),
+    }
+    Ok(())
+
+    /// Get database URL respecting user sovereignty
+    pub fn database_url() -> String {
+        env::var("NESTGATE_DATABASE_URL")
+            .unwrap_or_else(|_| "postgresql://localhost/nestgate".to_string())
+    }
+    Ok(())
+
+    /// Get service discovery endpoint respecting user sovereignty
+    pub fn discovery_endpoint() -> String {
+        env::var("NESTGATE_DISCOVERY_ENDPOINT")
+            .unwrap_or_else(|_| "http://localhost:8080/discovery".to_string())
+    }
+    Ok(())
+}
+    Ok(())

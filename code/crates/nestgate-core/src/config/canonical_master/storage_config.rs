@@ -3,7 +3,6 @@
 /// Storage and ZFS configuration types.
 /// This module contains all storage-related settings including ZFS pools,
 /// caching, replication, and backend configurations.
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -25,7 +24,6 @@ pub struct StorageConfig {
     /// Storage-specific settings
     pub storage_settings: HashMap<String, serde_json::Value>,
 }
-
 /// Storage backend configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageBackend {
@@ -34,9 +32,8 @@ pub struct StorageBackend {
     /// Backend configuration
     pub config: HashMap<String, serde_json::Value>,
 }
-
 /// ZFS configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ZfsConfig {
     /// Enable ZFS
     pub enabled: bool,
@@ -45,7 +42,6 @@ pub struct ZfsConfig {
     /// ZFS settings
     pub zfs_settings: HashMap<String, serde_json::Value>,
 }
-
 /// ZFS pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsPool {
@@ -56,7 +52,6 @@ pub struct ZfsPool {
     /// Pool properties
     pub properties: HashMap<String, String>,
 }
-
 /// Cache configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheConfig {
@@ -81,7 +76,6 @@ pub struct CacheConfig {
     /// Cache settings
     pub cache_settings: HashMap<String, serde_json::Value>,
 }
-
 // ==================== SECTION ====================
 
 impl Default for StorageConfig {
@@ -93,16 +87,6 @@ impl Default for StorageConfig {
             zfs: ZfsConfig::default(),
             cache: CacheConfig::default(),
             storage_settings: HashMap::new(),
-        }
-    }
-}
-
-impl Default for ZfsConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            pools: Vec::new(),
-            zfs_settings: HashMap::new(),
         }
     }
 }
@@ -126,14 +110,15 @@ impl Default for CacheConfig {
 
 impl CacheConfig {
     /// Development cache configuration
+    #[must_use]
     pub fn development() -> Self {
         Self {
             enabled: true,
             size_bytes: 256 * 1024 * 1024, // 256MB
             cache_type: "lru".to_string(),
-            cache_dir: Some(std::path::PathBuf::from("/tmp/nestgate-cache-dev")),
+            cache_dir: Some("/tmp/nestgate/cache".to_string().into()),
             policy: Some("lru".to_string()),
-            hot_tier_size: Some(64 * 1024 * 1024), // 64MB
+            hot_tier_size: Some(64 * 1024 * 1024),   // 64MB
             warm_tier_size: Some(128 * 1024 * 1024), // 128MB
             cold_tier_unlimited: Some(false),
             ttl_seconds: Some(3600), // 1 hour
@@ -142,12 +127,13 @@ impl CacheConfig {
     }
 
     /// High performance cache configuration
+    #[must_use]
     pub fn high_performance() -> Self {
         Self {
             enabled: true,
             size_bytes: 4 * 1024 * 1024 * 1024, // 4GB
             cache_type: "lru".to_string(),
-            cache_dir: Some(std::path::PathBuf::from("/var/cache/nestgate")),
+            cache_dir: Some("/var/cache/nestgate".to_string().into()),
             policy: Some("lru".to_string()),
             hot_tier_size: Some(1024 * 1024 * 1024), // 1GB
             warm_tier_size: Some(2 * 1024 * 1024 * 1024), // 2GB
@@ -156,4 +142,4 @@ impl CacheConfig {
             cache_settings: HashMap::new(),
         }
     }
-} 
+}

@@ -25,7 +25,6 @@ pub enum SessionState {
     /// Session is closed
     Closed,
 }
-
 /// Client authentication level
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum AuthLevel {
@@ -38,7 +37,6 @@ pub enum AuthLevel {
     /// Certificate authentication
     Certificate,
 }
-
 /// Session information
 #[derive(Debug, Clone)]
 pub struct Session {
@@ -55,13 +53,11 @@ pub struct Session {
     /// Last activity time
     pub last_activity: DateTime<Utc>,
     /// Client address
-    pub client_address: String,
+    pub client_endpoint: String,
 }
-
 impl Session {
     /// Create a new session
-    pub fn new(client_id: String, client_address: String) -> Self {
-        let now = Utc::now();
+    pub const fn new(client_id: String, client_endpoint: String) -> Self { let now = Utc::now();
 
         Self {
             id: Uuid::new_v4().to_string(),
@@ -71,8 +67,7 @@ impl Session {
             created_at: now,
             last_activity: now,
             client_address,
-        }
-    }
+         }
 
     /// Update last activity time
     pub fn update_activity(&mut self) {
@@ -80,7 +75,7 @@ impl Session {
     }
 
     /// Check if session is expired
-    pub fn is_expired(&self, timeout: Duration) -> bool {
+    pub const fn is_expired(&self, timeout: Duration) -> bool {
         let now = Utc::now();
         let last_activity = self.last_activity;
 
@@ -111,18 +106,16 @@ pub struct SessionManager {
     /// Session timeout
     timeout: Duration,
 }
-
 impl SessionManager {
     /// Create a new session manager
-    pub fn new() -> Self {
-        Self {
+    #[must_use]
+    pub fn new() -> Self { Self {
             sessions: HashMap::new(),
             timeout: nestgate_core::constants::timeouts::REQUEST_DEFAULT,
-        }
-    }
+         }
 
     /// Create a new session for a client
-    pub fn create_session(&mut self, client_id: String, client_address: String) -> Session {
+    pub fn create_session(&mut self, client_id: String, client_endpoint: String) -> Session {
         let session = Session::new(client_id, client_address.clone());
         let id = session.id.clone();
 
@@ -133,16 +126,24 @@ impl SessionManager {
     }
 
     /// Get a session by ID
-    pub fn get_session(&self, id: &str) -> Option<Session> {
+    pub const fn get_session(&self, id: &str) -> Option<Session> {
         self.sessions.get(id).cloned()
     }
 
     /// Update a session
-    pub fn update_session(&mut self, session: Session) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn update_session(&mut self, session: Session) -> Result<()>  {
         if !self.sessions.contains_key(&session.id) {
-            return Err(nestgate_core::NestGateError::invalid_input(
+            return Err(nestgate_core::NestGateError::validation(
                 "session_id".to_string(),
-                format!("Session not found: {}", session.id),
+                format!("Session not found: {"actual_error_details"}"),
             ));
         }
 
@@ -151,7 +152,15 @@ impl SessionManager {
     }
 
     /// Close a session
-    pub fn close_session(&mut self, id: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn close_session(&mut self, id: &str) -> Result<()>  {
         if let Some(mut session) = self.sessions.get(id).cloned() {
             session.set_state(SessionState::Closing);
             self.sessions.insert(id.to_string(), session);
@@ -160,21 +169,29 @@ impl SessionManager {
             debug!("Closed session {}", id);
             Ok(())
         } else {
-            Err(nestgate_core::NestGateError::invalid_input(
+            Err(nestgate_core::NestGateError::validation(
                 "session_id".to_string(),
-                format!("Session not found: {id}"),
+                format!("Session not found: {"actual_error_details"}"),
             ))
         }
     }
 
     /// Close all sessions
-    pub async fn close_all(&mut self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn close_all(&mut self) -> Result<()>  {
         let ids: Vec<String> = self.sessions.keys().cloned().collect();
 
         for id in ids {
             self.close_session(&id)?;
         }
-        Ok(())
+    Ok(())
     }
 
     /// Clean up expired sessions
@@ -200,7 +217,7 @@ impl SessionManager {
     }
 
     /// Get the number of active sessions
-    pub fn active_count(&self) -> usize {
+    pub const fn active_count(&self) -> usize {
         self.sessions
             .values()
             .filter(|s| s.state == SessionState::Active)
@@ -208,7 +225,7 @@ impl SessionManager {
     }
 
     /// Get all sessions
-    pub fn all_sessions(&self) -> Vec<Session> {
+    pub const fn all_sessions(&self) -> Vec<Session> {
         self.sessions.values().cloned().collect()
     }
 
@@ -218,7 +235,7 @@ impl SessionManager {
     }
 
     /// Get session timeout
-    pub fn timeout(&self) -> Duration {
+    pub const fn timeout(&self) -> Duration {
         self.timeout
     }
 }

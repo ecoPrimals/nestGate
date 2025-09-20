@@ -14,30 +14,22 @@
 
 // ==================== SECTION ====================
 
-/// Configuration settings and structures
+// Configuration settings and structures
 pub mod settings;
-
-/// Main discovery manager implementation
+// Main discovery manager implementation
 pub mod manager;
-
-/// Timeout configuration and management
+// Timeout configuration and management
 pub mod timeout;
-
-/// Network discovery configuration
+// Network discovery configuration
 pub mod network;
-
-/// Security discovery configuration
+// Security discovery configuration
 pub mod security;
-
-/// Environment discovery configuration
+// Environment discovery configuration
 pub mod environment;
-
-/// Storage discovery configuration
+// Storage discovery configuration
 pub mod storage;
-
-/// Cache discovery configuration
+// Cache discovery configuration
 pub mod cache;
-
 // ==================== SECTION ====================
 
 pub use settings::*;
@@ -45,6 +37,5 @@ pub use manager::*;
 pub use timeout::*;
 pub use network::*;
 pub use security::*;
-pub use environment::*;
 pub use storage::*;
 pub use cache::*; 

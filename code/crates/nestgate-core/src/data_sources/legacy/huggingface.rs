@@ -12,7 +12,6 @@ use std::pin::Pin;
 use tracing::info;
 use tracing::warn;
 // Removed unused tracing import
-
 /// HuggingFace Model Hub Source
 #[derive(Debug, Clone)]
 pub struct HuggingFaceModelSource {
@@ -20,7 +19,6 @@ pub struct HuggingFaceModelSource {
     pub cache_dir: String,
     pub client: Client,
 }
-
 impl Default for HuggingFaceModelSource {
     fn default() -> Self {
         Self {
@@ -35,7 +33,7 @@ impl Default for HuggingFaceModelSource {
 
 impl HuggingFaceModelSource {
     /// Create a new HuggingFace model source
-    pub fn new(api_token: Option<String>) -> Self {
+    pub const fn new(api_token: Option<String>) -> Self {
         Self {
             api_token,
             cache_dir: "/tmp/nestgate_cache".to_string(),
@@ -332,19 +330,12 @@ impl UniversalDataSource for HuggingFaceModelSource {
                         message: e.to_string(),
                         last_attempt: std::time::SystemTime::now(),
                         retry_count: 0,
-                    },
-                    context: None,
-                }))
+                    }))
             })?
             .json::<serde_json::Value>()
             .await
-            .map_err(|e| NestGateError::Validation {
-                field: Some("parsing".to_string()),
-                message: e.to_string(),
-                current_value: None,
-                expected: None,
-                user_error: false,
-            })?;
+            .map_err(|e| NestGateError::validation(
+                currentvalue: None)?;
 
         let mut descriptors = Vec::new();
         if let Some(models) = response.as_array() {
@@ -352,7 +343,7 @@ impl UniversalDataSource for HuggingFaceModelSource {
                 if let Some(id) = model["id"].as_str() {
                     let mut metadata = HashMap::new();
                     metadata.insert("source_type".to_string(), "huggingface_model".to_string());
-                    metadata.insert("source_location".to_string(), format!("hf://{id}"));
+                    metadata.insert("source_location".to_string(), format!("hf://{id)"));
 
                     descriptors.push(DataDescriptor {
                         id: id.to_string(),
@@ -370,7 +361,7 @@ impl UniversalDataSource for HuggingFaceModelSource {
                             geographic_restrictions: vec![],
                             legal_requirements: vec!["HuggingFace Terms of Service".to_string()],
                         },
-                    });
+                    );
                 }
             }
         }
@@ -380,7 +371,7 @@ impl UniversalDataSource for HuggingFaceModelSource {
 
     async fn ingest_data(&self, descriptor: &DataDescriptor) -> Result<IngestedData> {
         let client = reqwest::Client::new();
-        let model_url = format!("https://huggingface.co/api/models/{}", descriptor.id);
+        let model_url = format!("https://huggingface.co/api/models/{descriptor.id}");
         let model_info = client
             .get(&model_url)
             .send()
@@ -392,22 +383,15 @@ impl UniversalDataSource for HuggingFaceModelSource {
                         message: e.to_string(),
                         last_attempt: std::time::SystemTime::now(),
                         retry_count: 0,
-                    },
-                    context: None,
-                }))
+                    }))
             })?
             .json::<serde_json::Value>()
             .await
-            .map_err(|e| NestGateError::Validation {
-                field: Some("parsing".to_string()),
-                message: e.to_string(),
-                current_value: None,
-                expected: None,
-                user_error: false,
-            })?;
+            .map_err(|e| NestGateError::validation(
+                currentvalue: None)?;
 
         let data = model_info.to_string().into_bytes();
-        let checksum = format!("{:x}", md5::compute(&data));
+        let checksum = format!("{:x)", md5::compute(&data);
 
         Ok(IngestedData {
             data_id: descriptor.id.clone(),
@@ -436,19 +420,12 @@ impl UniversalDataSource for HuggingFaceModelSource {
                         message: e.to_string(),
                         last_attempt: std::time::SystemTime::now(),
                         retry_count: 0,
-                    },
-                    context: None,
-                }))
+                    }))
             })?
             .json::<serde_json::Value>()
             .await
-            .map_err(|e| NestGateError::Validation {
-                field: Some("parsing".to_string()),
-                message: e.to_string(),
-                current_value: None,
-                expected: None,
-                user_error: false,
-            })?;
+            .map_err(|e| NestGateError::validation(
+                currentvalue: None)?;
 
         let metadata: HashMap<String, serde_json::Value> = response
             .as_object()
@@ -456,7 +433,7 @@ impl UniversalDataSource for HuggingFaceModelSource {
             .unwrap_or_default();
 
         Ok(metadata)
-    }
+    )
 
     async fn stream_data(&self, descriptor: &DataDescriptor) -> Result<Box<dyn DataStream>> {
         let stream = HuggingFaceModelStream::new(self.clone(), descriptor.source_location.clone());

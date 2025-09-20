@@ -1,15 +1,15 @@
+use super::network_settings::*;
+// CANONICAL MODERNIZATION: Use canonical unified types instead
+use crate::types::NetworkConfig;
 /// Contains the main UnifiedNetworkConfig struct and core network configuration logic.
 /// Extracted from the large unified_network_config.rs to achieve file size compliance.
-
 use serde::{Deserialize, Serialize};
-use nestgate_core::unified_final_config::supporting_types::StandardDomainConfig;
-use super::network_settings::*;
-
+use std::time::Duration;
 // ==================== SECTION ====================
 
 /// Network-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NetworkExtensions {
     /// VLAN configuration
     pub vlan: NetworkVlanSettings,
@@ -27,46 +27,46 @@ pub struct NetworkExtensions {
     pub load_balancing: NetworkLoadBalancingSettings,
     /// Quality of Service settings
     pub qos: NetworkQosSettings,
-    }
-
+}
 /// **UNIFIED NETWORK CONFIGURATION**
 /// The single source of truth for all network configuration across the system
 /// CANONICAL MODERNIZATION: Simplified type alias without type parameters
-pub type UnifiedNetworkConfig = StandardDomainConfig;
+pub type UnifiedNetworkConfig = crate::types::NetworkConfig;
 
-impl Default for NetworkExtensions {
-    fn default() -> Self {
-        Self {
-            vlan: NetworkVlanSettings::default(),
-            protocols: NetworkProtocolSettings::default(),
-            connections: NetworkConnectionSettings::default(),
-            ports: NetworkPortSettings::default(),
-            api_endpoints: NetworkApiSettings::default(),
-            file_systems: NetworkFileSystemSettings::default(),
-            load_balancing: NetworkLoadBalancingSettings::default(),
-            qos: NetworkQosSettings::default(),
-    }
-    }
-    }
+pub trait NetworkConfigExt {
+    fn development() -> Self;
+    fn production() -> Self;
+    fn high_performance() -> Self;
+    fn testing() -> Self;
+}
 
-impl UnifiedNetworkConfig {
+impl NetworkConfigExt for NetworkConfig {
     /// Create development configuration optimized for local development
-    pub fn development() -> Self {
-        Self::create_for_environment("development")
+    fn development() -> Self {
+        Self::default()
     }
 
     /// Create production configuration optimized for high-load production
-    pub fn production() -> Self {
-        Self::create_for_environment("production")
+    fn production() -> Self {
+        let mut config = Self::default();
+        config.network.max_connections = 10000;
+        config.network.connection_timeout = Duration::from_secs(60);
+        config
     }
 
     /// Create high-performance configuration for maximum throughput
-    pub fn high_performance() -> Self {
-        Self::create_for_workload("high-performance")
+    fn high_performance() -> Self {
+        let mut config = Self::default();
+        config.network.max_connections = 50000;
+        config.network.connection_timeout = Duration::from_secs(120);
+        config
     }
 
     /// Create testing configuration optimized for integration tests
-    pub fn testing() -> Self {
-        Self::create_for_environment("testing")
+    fn testing() -> Self {
+        let mut config = Self::default();
+        config.network.max_connections = 100;
+        config.network.connection_timeout = Duration::from_secs(10);
+        config
     }
-} 
+}

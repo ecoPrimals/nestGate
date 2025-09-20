@@ -10,12 +10,10 @@
 //! - Type safety validation (100% coverage target)
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use nestgate_core::config::unified::{
-    NestGateCanonicalUnifiedConfig, PerformanceBenefits,
-};
 use nestgate_core::canonical_modernization::migration_utils::{
     migrate_from_legacy_configs, validate_canonical_config,
 };
+use nestgate_core::config::unified::{NestGateCanonicalUnifiedConfig, PerformanceBenefits};
 use std::time::{Duration, Instant};
 
 /// **CONFIGURATION LOADING BENCHMARKS**

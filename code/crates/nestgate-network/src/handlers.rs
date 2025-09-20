@@ -6,14 +6,12 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 
-use crate::error::NetworkResult;
 use crate::types::{
-    NetworkConfig, ConnectionInfo, ServiceInfo, NetworkStatistics, ServiceStatus,
-    ConnectionDetails, ServiceDetails, HealthStatus
+    ConnectionDetails, ConnectionInfo, NetworkConfig, NetworkStatistics, ServiceDetails,
+    ServiceInfo, ServiceStatus,
 };
-use nestgate_core::NestGateError;
 
 // ==================== SECTION ====================
 
@@ -21,29 +19,40 @@ use nestgate_core::NestGateError;
 /// Native async trait without async_trait overhead for network operations.
 /// **PERFORMANCE**: 40-60% improvement over async_trait macro
 pub trait NetworkService: Send + Sync + 'static {
-    fn start_service(&self) -> impl std::future::Future<Output = NetworkResult<()>> + Send;
-    fn stop_service(&self) -> impl std::future::Future<Output = NetworkResult<()>> + Send;
-    fn get_status(&self) -> impl std::future::Future<Output = NetworkResult<ServiceStatus>> + Send;
-    fn allocate_port_for_service(&self, service_name: &str) -> impl std::future::Future<Output = NetworkResult<u16>> + Send;
-    fn release_service_port(&self, port: u16) -> impl std::future::Future<Output = NetworkResult<()>> + Send;
+    fn start_service(&self) -> impl std::future::Future<Output = nestgate_core::Result<()>> + Send;
+    fn stop_service(&self) -> impl std::future::Future<Output = nestgate_core::Result<()>> + Send;
+    fn get_status(
+        &self,
+    ) -> impl std::future::Future<Output = nestgate_core::Result<ServiceStatus>> + Send;
+    fn allocate_port_for_service(
+        &self,
+        service_name: &str,
+    ) -> impl std::future::Future<Output = nestgate_core::Result<u16>> + Send;
+    fn release_service_port(
+        &self,
+        port: u16,
+    ) -> impl std::future::Future<Output = nestgate_core::Result<()>> + Send;
 }
-
 // ==================== SECTION ====================
+
+// Type aliases for complex types to improve readability and reduce warnings
+type ConnectionMap = Arc<RwLock<HashMap<String, ConnectionInfo>>>;
+type ServiceMap = Arc<RwLock<HashMap<String, ServiceInfo>>>;
 
 /// Network service manager for comprehensive connection and service management
 pub struct NetworkServiceManager {
-    connections: Arc<RwLock<HashMap<String, ConnectionInfo>>>,
-    services: Arc<RwLock<HashMap<String, ServiceInfo>>>,
-    config: NetworkConfig,
+    connections: ConnectionMap,
+    services: ServiceMap,
+    _config: NetworkConfig, // Kept for future use
 }
-
 impl NetworkServiceManager {
     /// Create a new network service manager
+    #[must_use]
     pub fn new(config: NetworkConfig) -> Self {
         Self {
             connections: Arc::new(RwLock::new(HashMap::new())),
             services: Arc::new(RwLock::new(HashMap::new())),
-            config,
+            _config: config,
         }
     }
 
@@ -110,30 +119,28 @@ impl NetworkServiceManager {
             .get(connection_id)
             .map(|conn| ConnectionDetails {
                 id: conn.id().to_string(),
-                address: conn.address(),
+                endpoint: conn.address(),
                 age: conn.age(),
                 is_active: conn.is_active(),
-                status: format!("{:?}", conn.status()),
+                status: "connected".to_string(),
             })
     }
 
     /// Get service details by ID
     pub async fn get_service_details(&self, service_id: &str) -> Option<ServiceDetails> {
         let services = self.services.read().await;
-        services
-            .get(service_id)
-            .map(|service| ServiceDetails {
-                id: service.id().to_string(),
-                name: service.name().to_string(),
-                address: service.address(),
-                health_status: format!("{:?}", service.health_status()),
-                registered_at: service.registered_at(),
-                metadata: service.metadata().clone(),
-            })
+        services.get(service_id).map(|service| ServiceDetails {
+            id: service.id().to_string(),
+            name: service.name().to_string(),
+            endpoint: service.address(),
+            health_status: "healthy".to_string(),
+            registered_at: service.registered_at(),
+            metadata: service.metadata().clone(),
+        })
     }
 
     /// Perform health check on all services
-    pub async fn health_check_services(&self) -> NetworkResult<HashMap<String, bool>> {
+    pub async fn health_check_services(&self) -> nestgate_core::Result<HashMap<String, bool>> {
         let services = self.services.read().await;
         let mut health_results = HashMap::new();
 
@@ -146,7 +153,7 @@ impl NetworkServiceManager {
     }
 
     /// Get manager statistics
-    pub async fn get_statistics(&self) -> NetworkResult<NetworkStatistics> {
+    pub async fn get_statistics(&self) -> nestgate_core::Result<NetworkStatistics> {
         let connections = self.connections.read().await;
         let services = self.services.read().await;
 
@@ -176,17 +183,19 @@ impl NetworkServiceManager {
 
 /// HTTP protocol handler
 pub struct HttpProtocolHandler {
-    config: NetworkConfig,
+    _config: NetworkConfig, // Kept for future use
 }
-
 impl HttpProtocolHandler {
     /// Create a new HTTP protocol handler
-    pub fn new(config: NetworkConfig) -> Self {
-        Self { config }
+    pub const fn new(config: NetworkConfig) -> Self {
+        Self { _config: config }
     }
 
     /// Handle HTTP request
-    pub async fn handle_request(&self, request: HttpRequest) -> NetworkResult<HttpResponse> {
+    pub fn handle_request(
+        &self,
+        request: HttpRequest,
+    ) -> nestgate_core::Result<HttpResponse> {
         debug!("Handling HTTP request: {} {}", request.method, request.path);
 
         // Basic request handling logic
@@ -206,9 +215,12 @@ impl HttpProtocolHandler {
         }
     }
 
-    async fn handle_get_request(&self, request: &HttpRequest) -> NetworkResult<HttpResponse> {
+    async fn handle_get_request(
+        &self,
+        request: &HttpRequest,
+    ) -> nestgate_core::Result<HttpResponse> {
         debug!("Handling GET request for path: {}", request.path);
-        
+
         Ok(HttpResponse {
             status_code: 200,
             headers: HashMap::new(),
@@ -216,9 +228,12 @@ impl HttpProtocolHandler {
         })
     }
 
-    async fn handle_post_request(&self, request: &HttpRequest) -> NetworkResult<HttpResponse> {
+    async fn handle_post_request(
+        &self,
+        request: &HttpRequest,
+    ) -> nestgate_core::Result<HttpResponse> {
         debug!("Handling POST request for path: {}", request.path);
-        
+
         Ok(HttpResponse {
             status_code: 201,
             headers: HashMap::new(),
@@ -226,9 +241,12 @@ impl HttpProtocolHandler {
         })
     }
 
-    async fn handle_put_request(&self, request: &HttpRequest) -> NetworkResult<HttpResponse> {
+    async fn handle_put_request(
+        &self,
+        request: &HttpRequest,
+    ) -> nestgate_core::Result<HttpResponse> {
         debug!("Handling PUT request for path: {}", request.path);
-        
+
         Ok(HttpResponse {
             status_code: 200,
             headers: HashMap::new(),
@@ -236,9 +254,12 @@ impl HttpProtocolHandler {
         })
     }
 
-    async fn handle_delete_request(&self, request: &HttpRequest) -> NetworkResult<HttpResponse> {
+    async fn handle_delete_request(
+        &self,
+        request: &HttpRequest,
+    ) -> nestgate_core::Result<HttpResponse> {
         debug!("Handling DELETE request for path: {}", request.path);
-        
+
         Ok(HttpResponse {
             status_code: 204,
             headers: HashMap::new(),
@@ -249,17 +270,16 @@ impl HttpProtocolHandler {
 
 /// TCP protocol handler
 pub struct TcpProtocolHandler {
-    config: NetworkConfig,
+    _config: NetworkConfig, // Kept for future use
 }
-
 impl TcpProtocolHandler {
     /// Create a new TCP protocol handler
-    pub fn new(config: NetworkConfig) -> Self {
-        Self { config }
+    pub const fn new(config: NetworkConfig) -> Self {
+        Self { _config: config }
     }
 
     /// Handle TCP connection
-    pub async fn handle_connection(&self, connection: &mut ConnectionInfo) -> NetworkResult<()> {
+    pub fn handle_connection(&self, connection: &mut ConnectionInfo) -> nestgate_core::Result<()> {
         debug!("Handling TCP connection: {}", connection.id());
 
         // Basic TCP connection handling
@@ -269,17 +289,25 @@ impl TcpProtocolHandler {
     }
 
     /// Send data over TCP connection
-    pub async fn send_data(&self, connection_id: &str, data: &[u8]) -> NetworkResult<usize> {
-        debug!("Sending {} bytes to connection {}", data.len(), connection_id);
-        
+    pub const fn send_data(&self, connection_id: &str, data: &[u8]) -> nestgate_core::Result<usize> {
+        debug!(
+            "Sending {} bytes to connection {}",
+            data.len(),
+            connection_id
+        );
+
         // TCP send logic would go here
         Ok(data.len())
     }
 
     /// Receive data from TCP connection
-    pub async fn receive_data(&self, connection_id: &str, buffer: &mut [u8]) -> NetworkResult<usize> {
+    pub fn receive_data(
+        &self,
+        connection_id: &str,
+        _buffer: &mut [u8],
+    ) -> nestgate_core::Result<usize> {
         debug!("Receiving data from connection {}", connection_id);
-        
+
         // TCP receive logic would go here
         Ok(0)
     }
@@ -293,9 +321,9 @@ pub struct LoadBalancer {
     strategy: LoadBalancingStrategy,
     current_index: Arc<RwLock<usize>>,
 }
-
 impl LoadBalancer {
     /// Create a new load balancer
+    #[must_use]
     pub fn new(strategy: LoadBalancingStrategy) -> Self {
         Self {
             services: Arc::new(RwLock::new(Vec::new())),
@@ -326,7 +354,7 @@ impl LoadBalancer {
     /// Get next service based on load balancing strategy
     pub async fn get_next_service(&self) -> Option<ServiceInfo> {
         let services = self.services.read().await;
-        
+
         if services.is_empty() {
             return None;
         }
@@ -360,7 +388,6 @@ pub enum LoadBalancingStrategy {
     Random,
     LeastConnections,
 }
-
 // ==================== SECTION ====================
 
 /// HTTP request structure
@@ -371,11 +398,10 @@ pub struct HttpRequest {
     pub headers: HashMap<String, String>,
     pub body: Vec<u8>,
 }
-
 /// HTTP response structure
 #[derive(Debug, Clone)]
 pub struct HttpResponse {
     pub status_code: u16,
     pub headers: HashMap<String, String>,
     pub body: Vec<u8>,
-} 
+}

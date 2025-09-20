@@ -7,13 +7,12 @@
 // - Production-ready performance and reliability
 
 use nestgate_bin::{
-use nestgate_core::constants::ConstantsMigrationHelper;
     cli::{parse_args, setup_logging, print_banner, Commands, ServiceAction, StorageAction, ConfigAction},
     commands::zfs::ZfsCommandHandler,
     error::Result,
 };
 use tracing::{info, error, debug};
-use nestgate_core::constants::ConstantsMigrationHelper;
+use nestgate_core::constants::canonical_defaults::network::DEFAULT_API_PORT;
 
 mod error;
 
@@ -38,8 +37,7 @@ async fn main() -> Result<()> {
             let mut handler = ZfsCommandHandler::new();
             handler.handle(zfs_args).await?;
         }
-        
-        Commands::Service { action } => {
+    Commands::Service { action } => {
             handle_service_command(action).await?;
         }
         
@@ -63,7 +61,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn handle_service_command(action: ServiceAction) -> Result<()> {
+fn handle_service_command(action: ServiceAction) -> Result<()> {
     match action {
         ServiceAction::Start { port, bind, daemon } => {
             info!("🚀 Starting NestGate service");
@@ -126,8 +124,7 @@ async fn handle_storage_command(action: StorageAction) -> Result<()> {
             println!();
             println!("Legend: ✅ Available  ⏳ Coming Soon");
         }
-        
-        StorageAction::Scan { path, cloud, network } => {
+    StorageAction::Scan { path, cloud, network } => {
             println!("🔍 Scanning for available storage");
             println!("   Path: {}", path.display());
             println!("   Include cloud: {}", cloud);
@@ -180,7 +177,7 @@ async fn handle_storage_command(action: StorageAction) -> Result<()> {
     Ok(())
 }
 
-async fn handle_doctor_command(comprehensive: bool, fix: bool) -> Result<()> {
+fn handle_doctor_command(comprehensive: bool, fix: bool) -> Result<()> {
     println!("🩺 NestGate System Health Check");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     
@@ -238,7 +235,7 @@ async fn handle_doctor_command(comprehensive: bool, fix: bool) -> Result<()> {
     Ok(())
 }
 
-async fn handle_config_command(action: ConfigAction) -> Result<()> {
+fn handle_config_command(action: ConfigAction) -> Result<()> {
     match action {
         ConfigAction::Show => {
             println!("⚙️ NestGate Configuration");
@@ -250,8 +247,7 @@ async fn handle_config_command(action: ConfigAction) -> Result<()> {
             println!("service.bind: 0.0.0.0");
             println!("logging.level: info");
         }
-        
-        ConfigAction::Set { key, value } => {
+    ConfigAction::Set { key, value } => {
             println!("⚙️ Setting configuration: {} = {}", key, value);
             println!("✅ Configuration updated");
         }
@@ -261,7 +257,7 @@ async fn handle_config_command(action: ConfigAction) -> Result<()> {
             match key.as_str() {
                 "storage.default_backend" => println!("filesystem"),
                 "storage.compression" => println!("true"),
-                "service.port" => println!(ConstantsMigrationHelper::api_port_string()),
+                "service.port" => println!("{}", DEFAULT_API_PORT),
                 _ => println!("Configuration key not found: {}", key),
             }
         }
@@ -302,7 +298,7 @@ async fn handle_config_command(action: ConfigAction) -> Result<()> {
     Ok(())
 }
 
-async fn handle_monitor_command(interval: u64, output: Option<std::path::PathBuf>, duration: Option<u64>) -> Result<()> {
+fn handle_monitor_command(interval: u64, output: Option<std::path::PathBuf>, duration: Option<u64>) -> Result<()> {
     println!("📊 NestGate Performance Monitor");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!("   Interval: {} seconds", interval);

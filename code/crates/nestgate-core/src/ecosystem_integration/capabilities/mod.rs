@@ -1,12 +1,11 @@
-/// External Primal Capability Interfaces
-///
-/// This module defines the capability interfaces for integrating with external primals
-/// through the Universal Adapter pattern, eliminating hardcoded dependencies.
-pub mod compute; // Toadstool compute capabilities
+// External Primal Capability Interfaces
+//
+// This module defines the capability interfaces for integrating with external primals
+// through the Universal Adapter pattern, eliminating hardcoded dependencies.
+pub mod compute; // Compute compute capabilities
 pub mod intelligence;
-pub mod orchestration; // Songbird orchestration capabilities
-pub mod security; // BearDog security capabilities // Squirrel AI capabilities
-
+pub mod orchestration; // Orchestration orchestration capabilities
+pub mod security; // Security security capabilities // Intelligence AI capabilities
 // Re-export commonly used capability types
 pub use compute::*;
 pub use intelligence::*;
@@ -16,15 +15,15 @@ pub use security::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Base capability request structure
+// Base capability request structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityRequest {
     pub capability_id: String,
     pub parameters: serde_json::Value,
     pub metadata: HashMap<String, String>,
 }
-
 impl CapabilityRequest {
+    #[must_use]
     pub fn new(capability_id: impl Into<String>, parameters: serde_json::Value) -> Self {
         Self {
             capability_id: capability_id.into(),
@@ -33,13 +32,14 @@ impl CapabilityRequest {
         }
     }
 
+    #[must_use]
     pub fn with_metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.metadata.insert(key.into(), value.into());
         self
     }
 }
 
-/// Base capability response structure
+// Base capability response structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityResponse {
     pub success: bool,
@@ -47,8 +47,8 @@ pub struct CapabilityResponse {
     pub metadata: HashMap<String, String>,
     pub error_message: Option<String>,
 }
-
 impl CapabilityResponse {
+    #[must_use]
     pub fn success(data: serde_json::Value) -> Self {
         Self {
             success: true,
@@ -58,6 +58,7 @@ impl CapabilityResponse {
         }
     }
 
+    #[must_use]
     pub fn error(message: impl Into<String>) -> Self {
         Self {
             success: false,
@@ -68,17 +69,17 @@ impl CapabilityResponse {
     }
 }
 
-/// Universal capability trait that all external primal adapters must implement
+// Universal capability trait that all external primal adapters must implement
+// **MODERNIZED**: Native async patterns for zero-cost abstractions
 pub trait UniversalCapability: Send + Sync {
-    /// Execute a capability request
-    async fn execute(
+    /// Execute a capability request - native async, no Future boxing
+    fn execute(
         &self,
         request: CapabilityRequest,
-    ) -> Result<CapabilityResponse, Box<dyn std::error::Error + Send + Sync>>;
-
+    ) -> impl std::future::Future<Output = Result<CapabilityResponse, Box<dyn std::error::Error + Send + Sync>>> + Send;
     /// Get capability metadata and supported operations
     fn get_metadata(&self) -> HashMap<String, serde_json::Value>;
 
-    /// Health check for the capability
+    /// Health check for the capability - native async
     fn health_check(&self) -> impl std::future::Future<Output = bool> + Send;
 }

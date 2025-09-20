@@ -2,7 +2,7 @@ use std::fs;
 use std::path::Path;
 
 #[test]
-fn test_no_hardcoded_values() {
+fn test_no_hardcoded_values() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Testing for hardcoded values...");
 
     let mut violations = Vec::new();
@@ -17,7 +17,9 @@ fn test_no_hardcoded_values() {
     for path in check_paths {
         if Path::new(path).exists() {
             scan_directory(path, &mut violations);
+            Ok(())
         }
+        Ok(())
     }
 
     if violations.is_empty() {
@@ -28,11 +30,15 @@ fn test_no_hardcoded_values() {
             if i < 20 {
                 // Show first 20 violations
                 println!("  {}. {}", i + 1, violation);
+                Ok(())
             }
+            Ok(())
         }
         if violations.len() > 20 {
             println!("  ... and {} more violations", violations.len() - 20);
+            Ok(())
         }
+        Ok(())
     }
 
     // For now, just warn but don't fail the test - increase threshold to see violations
@@ -41,6 +47,7 @@ fn test_no_hardcoded_values() {
         "Too many potential hardcoded values found: {}",
         violations.len()
     );
+    Ok(())
 }
 
 fn scan_directory(dir_path: &str, violations: &mut Vec<String>) {
@@ -51,7 +58,9 @@ fn scan_directory(dir_path: &str, violations: &mut Vec<String>) {
                 scan_directory(&path.to_string_lossy(), violations);
             } else if path.extension().is_some_and(|ext| ext == "rs") {
                 scan_file(&path.to_string_lossy(), violations);
+                Ok(())
             }
+            Ok(())
         }
     }
 }
@@ -68,7 +77,9 @@ fn scan_file(file_path: &str, violations: &mut Vec<String>) {
             }
 
             // Check for hardcoded localhost
-            if line.contains("localhost") && !line.contains("env::var") && !line.contains("config.")
+            if line.contains(nestgate_core::constants::TEST_HOSTNAME)
+                && !line.contains("env::var")
+                && !line.contains("config.")
             {
                 violations.push(format!(
                     "{}:{} - localhost: {}",

@@ -29,29 +29,24 @@ use tracing::warn;
 /// RPC client for connecting to remote NestGate services
 #[derive(Clone)]
 pub struct RpcClient;
-
 /// RPC server for hosting NestGate services
 #[derive(Clone)]
 pub struct RpcServer;
-
 impl RpcClient {
-    async fn connect(_addr: &str) -> Result<Self, String> {
+    fn connect(_addr: &str) -> Result<Self, String> {
         Ok(RpcClient)
     }
 
-    async fn health_check(&self) -> Result<bool, String> {
+    fn health_check(&self) -> Result<bool, String> {
         Ok(true)
     }
 }
 
 impl RpcServer {
-    fn new() -> Self {
-        RpcServer
-    }
-
-    async fn start(&self, _addr: &str) -> Result<(), String> {
+    fn new() -> Self { RpcServer
+    , fn start(&self, _addr: &str) -> Result<(), String> {
         Ok(())
-    }
+     }
 }
 
 /// Enhanced tarpc service manager with service mesh integration
@@ -69,7 +64,6 @@ pub struct TarpcServiceManager {
     /// Performance metrics
     metrics: Arc<RwLock<ServiceMetrics>>,
 }
-
 /// Service mesh configuration
 #[derive(Debug, Clone)]
 pub struct ServiceMeshConfig {
@@ -90,10 +84,8 @@ pub struct ServiceMeshConfig {
     /// Request timeout duration
     pub request_timeout: Duration,
 }
-
 impl Default for ServiceMeshConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enable_load_balancing: true,
             enable_circuit_breaker: true,
             enable_retry: true,
@@ -102,8 +94,7 @@ impl Default for ServiceMeshConfig {
             health_check_interval: Duration::from_secs(30),
             connection_timeout: Duration::from_secs(10),
             request_timeout: Duration::from_secs(30),
-        }
-    }
+         }
 }
 
 /// Health monitoring for RPC services
@@ -112,7 +103,6 @@ struct HealthMonitor {
     service_health: HashMap<String, ServiceHealthInfo>,
     circuit_breakers: HashMap<String, CircuitBreaker>,
 }
-
 /// Service health information
 #[derive(Debug, Clone)]
 struct ServiceHealthInfo {
@@ -126,7 +116,6 @@ struct ServiceHealthInfo {
     pub successful_requests: u64,
     pub failed_requests: u64,
 }
-
 /// Circuit breaker implementation
 #[derive(Debug, Clone)]
 struct CircuitBreaker {
@@ -139,7 +128,6 @@ struct CircuitBreaker {
     pub threshold: f64,
     pub timeout: Duration,
 }
-
 /// Circuit breaker states
 #[derive(Debug, Clone, PartialEq)]
 enum CircuitBreakerState {
@@ -147,7 +135,6 @@ enum CircuitBreakerState {
     Open,     // Failing fast
     HalfOpen, // Testing recovery
 }
-
 /// Service performance metrics
 #[derive(Debug, Default)]
 struct ServiceMetrics {
@@ -160,29 +147,34 @@ struct ServiceMetrics {
     pub peak_connections: usize,
     pub bytes_transferred: u64,
 }
-
 impl TarpcServiceManager {
     /// Create a new tarpc service manager
-    pub fn new(mesh_config: ServiceMeshConfig) -> Self {
-        let service_registry = Arc::new(InMemoryServiceRegistry::new());
+    #[must_use]
+    pub fn new(mesh_config: ServiceMeshConfig) -> Self { let service_registry = Arc::new(InMemoryServiceRegistry::new());
 
         Self {
             service_registry,
-            connection_pool: Arc::new(Mutex::new(HashMap::new())),
-            servers: Arc::new(RwLock::new(HashMap::new())),
+            connection_pool: Arc::new(Mutex::new(HashMap::new()),
+            servers: Arc::new(RwLock::new(HashMap::new()),
             mesh_config,
-            health_monitor: Arc::new(RwLock::new(HealthMonitor::default())),
-            metrics: Arc::new(RwLock::new(ServiceMetrics::default())),
-        }
-    }
+            health_monitor: Arc::new(RwLock::new(RwLock::new(HealthMonitor::default()),::default())),
+            metrics: Arc::new(RwLock::new(RwLock::new(ServiceMetrics::default()),::default())),
+         }
 
     /// Start an RPC server with service registration
-    pub async fn start_server(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn start_server(
         &self,
         service_name: &str,
-        address: &str,
+        endpoint: &str,
         port: u16,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>  {
         info!(
             "🚀 Starting tarpc server: {} on {}:{}",
             service_name, address, port
@@ -190,7 +182,7 @@ impl TarpcServiceManager {
 
         // Create and start server
         let server = RpcServer::new();
-        let bind_addr = format!("{address}:{port}");
+        let bind_addr = format!("{address}:{"actual_error_details"}");
 
         // Start server in background
         let server_clone = server.clone();
@@ -209,23 +201,23 @@ impl TarpcServiceManager {
 
         // Register service in service registry
         let _service_endpoint = ServiceEndpoint {
-            url: format!("http://{}:{}", address, port),
+            url: format!("http://{"actual_error_details"}:{"actual_error_details"}"),
             protocol: nestgate_core::service_discovery::types::CommunicationProtocol::HTTP,
-            health_check: Some(format!("http://{}:{}/health", address, port)),
+            health_check: Some(format!("http://{"actual_error_details"}:{"actual_error_details"}/health")),
         };
 
         // Create service registration
         let service_registration =
             nestgate_core::service_discovery::types::UniversalServiceRegistration {
                 service_id: uuid::Uuid::new_v4(),
-                metadata: {
-                    let mut metadata = nestgate_core::canonical_modernization::service_metadata::UniversalServiceMetadata::default();
-                    metadata.name = service_name.to_string();
-                    metadata.version = "1.0.0".to_string();
-                    metadata.description = "RPC service".to_string();
-                    metadata.health_endpoint = Some(format!("http://{}:{}/health", address, port));
-                    metadata
-                },
+                _metadata: {
+                    let mut _metadata = nestgate_core::canonical_modernization::service_metadata::UniversalServiceMetadata::default();
+                    _metadata.name = service_name.to_string();
+                    _metadata.version = "1.0.0".to_string();
+                    _metadata.description = "RPC service".to_string();
+                    _metadata.health_endpoint = Some(format!("http://{"actual_error_details"}:{"actual_error_details"}/health"));
+                    _metadata
+                }
                 resources: nestgate_core::service_discovery::types::ResourceSpec::default(),
                 integration: nestgate_core::service_discovery::types::IntegrationPreferences::default(),
                 extensions: HashMap::new(),
@@ -234,7 +226,7 @@ impl TarpcServiceManager {
         self.service_registry
             .register_service(service_registration)
             .await
-            .map_err(|e| format!("Failed to register service: {e}"))?;
+            .map_err(|_e| format!("Failed to register service: {"actual_error_details"}"))?;
 
         // Start health monitoring
         self.start_health_monitoring(service_name, &bind_addr)
@@ -245,7 +237,14 @@ impl TarpcServiceManager {
     }
 
     /// Get or create an RPC client with load balancing and circuit breaker
-    pub async fn get_client(&self, service_name: &str) -> Result<Arc<RpcClient>, String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_client(&self, service_name: &str) -> Result<Arc<RpcClient>, String>  {
         // Check circuit breaker
         if self.is_circuit_breaker_open(service_name).await {
             return Err("Service unavailable due to circuit breaker".to_string());
@@ -270,7 +269,7 @@ impl TarpcServiceManager {
 
         // Use the first endpoint from the selected service
         let service_endpoint = selected_service
-            .metadata.endpoints
+            ._metadata.endpoints
             .first()
             .ok_or("Service has no endpoints".to_string())?;
 
@@ -287,7 +286,7 @@ impl TarpcServiceManager {
         // Create new client
         let client = RpcClient::connect(&service_addr)
             .await
-            .map_err(|e| format!("Failed to connect: {e}"))?;
+            .map_err(|_e| format!("Failed to connect: {"actual_error_details"}"))?;
 
         let client_arc = Arc::new(client);
 
@@ -305,10 +304,17 @@ impl TarpcServiceManager {
     }
 
     /// Execute RPC call with circuit breaker and retry logic
-    pub async fn execute_with_resilience<F, R>(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn execute_with_resilience<F, R>(
         &self,
         service_name: &str,
-        operation: F,
+        b_operation: Some(F,
     ) -> Result<R, String>
     where
         F: Fn(
@@ -318,7 +324,7 @@ impl TarpcServiceManager {
             + Send
             + 'static,
         R: Send + 'static,
-    {
+     {
         let start_time = Instant::now();
         let mut attempts = 0;
         let max_attempts = if self.mesh_config.enable_retry {
@@ -341,7 +347,7 @@ impl TarpcServiceManager {
                                 .await;
                             return Ok(result);
                         }
-                        Ok(Err(e)) => {
+    Ok(Err(e)) => {
                             // Record failure
                             self.record_failure(service_name).await;
 
@@ -378,7 +384,7 @@ impl TarpcServiceManager {
     async fn start_health_monitoring(
         &self,
         service_name: &str,
-        address: &str,
+        endpoint: &str,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let service_name = service_name.to_string();
         let address = address.to_string();
@@ -439,7 +445,7 @@ impl TarpcServiceManager {
     }
 
     /// Check if circuit breaker is open
-    async fn is_circuit_breaker_open(&self, service_name: &str) -> bool {
+    fn is_circuit_breaker_open(&self, service_name: &str) -> bool {
         if !self.mesh_config.enable_circuit_breaker {
             return false;
         }
@@ -468,7 +474,7 @@ impl TarpcServiceManager {
     }
 
     /// Record successful request
-    async fn record_success(&self, service_name: &str, response_time: Duration) {
+    fn record_success(&self, service_name: &str, response_time: Duration) {
         if let Ok(mut monitor) = self.health_monitor.try_write() {
             let health_info = monitor
                 .service_health
@@ -488,7 +494,7 @@ impl TarpcServiceManager {
             health_info.total_requests += 1;
             health_info.response_time = response_time;
             health_info.success_rate =
-                health_info.successful_requests as f64 / health_info.total_requests as f64;
+                health_info.f64::from(successful_requests) / health_info.f64::from(total_requests);
 
             // Update circuit breaker
             let breaker = monitor
@@ -522,7 +528,7 @@ impl TarpcServiceManager {
     }
 
     /// Record failed request
-    async fn record_failure(&self, service_name: &str) {
+    fn record_failure(&self, service_name: &str) {
         if let Ok(mut monitor) = self.health_monitor.try_write() {
             let health_info = monitor
                 .service_health
@@ -541,7 +547,7 @@ impl TarpcServiceManager {
             health_info.failed_requests += 1;
             health_info.total_requests += 1;
             health_info.success_rate =
-                health_info.successful_requests as f64 / health_info.total_requests as f64;
+                health_info.f64::from(successful_requests) / health_info.f64::from(total_requests);
 
             // Update circuit breaker
             let breaker = monitor
@@ -561,7 +567,7 @@ impl TarpcServiceManager {
             breaker.last_failure_time = Some(Instant::now());
 
             // Check if we should open the circuit breaker
-            let failure_rate = breaker.failure_count as f64
+            let failure_rate = breaker.f64::from(failure_count)
                 / (breaker.failure_count + breaker.success_count) as f64;
 
             if failure_rate >= breaker.threshold && breaker.state == CircuitBreakerState::Closed {
@@ -582,7 +588,7 @@ impl TarpcServiceManager {
     }
 
     /// Get service statistics
-    pub async fn get_service_stats(&self) -> HashMap<String, serde_json::Value> {
+    pub fn get_service_stats(&self) -> HashMap<String, serde_json::Value> {
         let mut stats = HashMap::new();
 
         if let Ok(monitor) = self.health_monitor.try_read() {
@@ -603,7 +609,7 @@ impl TarpcServiceManager {
                             HealthStatus::Critical => "critical",
                             HealthStatus::Error => "error",
                             HealthStatus::Custom(ref status) => status.as_str(),
-                        },
+                        }
                         "success_rate": health_info.success_rate,
                         "total_requests": health_info.total_requests,
                         "successful_requests": health_info.successful_requests,
@@ -622,8 +628,8 @@ impl TarpcServiceManager {
                     "successful_requests": metrics.successful_requests,
                     "failed_requests": metrics.failed_requests,
                     "success_rate": if metrics.total_requests > 0 {
-                        metrics.successful_requests as f64 / metrics.total_requests as f64
-                    } else { 0.0 },
+                        metrics.f64::from(successful_requests) / metrics.f64::from(total_requests)
+                    } else { 0.0 }
                     "active_connections": metrics.active_connections,
                     "peak_connections": metrics.peak_connections,
                     "bytes_transferred": metrics.bytes_transferred,
@@ -635,7 +641,14 @@ impl TarpcServiceManager {
     }
 
     /// Stop all servers and clean up resources
-    pub async fn shutdown(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn shutdown(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>>  {
         info!("🛑 Shutting down tarpc service manager");
 
         // Clear connection pool
@@ -656,7 +669,7 @@ impl TarpcServiceManager {
 }
 
 /// Create a production-ready tarpc service manager
-pub fn create_production_service_manager() -> TarpcServiceManager {
+pub const fn create_production_service_manager() -> TarpcServiceManager {
     let mesh_config = ServiceMeshConfig {
         enable_load_balancing: true,
         enable_circuit_breaker: true,
@@ -667,7 +680,6 @@ pub fn create_production_service_manager() -> TarpcServiceManager {
         connection_timeout: Duration::from_secs(5),
         request_timeout: Duration::from_secs(30),
     };
-
     TarpcServiceManager::new(mesh_config)
 }
 
@@ -682,7 +694,6 @@ mod tests {
         assert!(manager.mesh_config.enable_circuit_breaker);
         assert!(manager.mesh_config.enable_retry);
     }
-
     #[tokio::test]
     async fn test_circuit_breaker_functionality() {
         let manager = create_production_service_manager();

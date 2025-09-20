@@ -18,29 +18,62 @@ where
     /// Direct storage backend composition - zero virtual call overhead
     backend: Backend,
 }
-
 /// Default storage backend for backward compatibility
 pub type DefaultStorageBackend = crate::universal_storage::backends::FileSystemBackend;
-
 impl<Backend> DeduplicationManager<Backend>
 where
     Backend: CanonicalStorageBackend + Send + Sync + 'static,
 {
     /// Create new deduplication manager with zero-cost backend
-    pub fn new(backend: Backend) -> Self {
+    pub const fn new(backend: Backend) -> Self {
         Self { backend }
     }
 
     /// Perform deduplication with direct dispatch (no virtual calls)
-    pub async fn deduplicate(&self, data: &[u8]) -> Result<String> {
-        Ok(ContentHash("placeholder_hash".to_string()))
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub const fn deduplicate(&self, data: &[u8]) -> Result<String>   {
+        Ok(ContentHash("placeholder_hash"))
     }
 
-    pub async fn resolve_reference(&self, _data: &[u8]) -> Result<Vec<u8>> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub const fn resolve_reference(&self, _data: &[u8]) -> Result<Vec<u8>>   {
         Ok(vec![])
     }
 
-    pub async fn get_stats(&self) -> Result<DedupStats> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub const fn get_stats(&self) -> Result<DedupStats>   {
         Ok(DedupStats::default())
     }
 }

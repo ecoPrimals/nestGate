@@ -12,12 +12,11 @@ use uuid::Uuid;
 use crate::routes::AppState;
 
 /// Create a new dataset
-pub async fn create_dataset(
+pub fn create_dataset(
     State(_state): State<AppState>,
     Json(request): Json<serde_json::Value>,
 ) -> impl IntoResponse {
     use tracing::{error, info};
-
     let dataset_name = request["name"].as_str().unwrap_or("unnamed_dataset");
     let project_id = request["project_id"].as_str().unwrap_or_default();
     let quota = request["quota"].as_str().unwrap_or("10G");
@@ -27,9 +26,9 @@ pub async fn create_dataset(
 
     let dataset_id = Uuid::new_v4();
     let full_dataset_name = if project_id.is_empty() {
-        format!("nestpool/datasets/{}", dataset_id)
+        format!("nestpool/datasets/{"actual_error_details"}")
     } else {
-        format!("nestpool/projects/{}/datasets/{}", project_id, dataset_id)
+        format!("nestpool/projects/{"actual_error_details"}/datasets/{"actual_error_details"}")
     };
 
     // Create ZFS dataset
@@ -37,15 +36,15 @@ pub async fn create_dataset(
     cmd.args([
         "create",
         "-o",
-        &format!("compression={}", compression),
+        &format!("compression={"actual_error_details"}"),
         "-o",
-        &format!("quota={}", quota),
+        &format!("quota={"actual_error_details"}"),
         "-o",
-        &format!("mountpoint=/mnt/datasets/{}", dataset_id),
+        &format!("mountpoint=/mnt/datasets/{"actual_error_details"}"),
         "-o",
-        &format!("nestgate:dataset_name={}", dataset_name),
+        &format!("nestgate:dataset_name={"actual_error_details"}"),
         "-o",
-        &format!("nestgate:project_id={}", project_id),
+        &format!("nestgate:project_id={"actual_error_details"}"),
         &full_dataset_name,
     ]);
 
@@ -57,7 +56,7 @@ pub async fn create_dataset(
                 "name": dataset_name,
                 "project_id": project_id,
                 "dataset_name": full_dataset_name,
-                "mount_point": format!("/mnt/datasets/{}", dataset_id),
+                "mount_point": format!("/mnt/datasets/{"actual_error_details"}"),
                 "quota": quota,
                 "compression": compression,
                 "status": "created",
@@ -87,7 +86,7 @@ pub async fn create_dataset(
 }
 
 /// Get a specific dataset
-pub async fn get_dataset(
+pub fn get_dataset(
     State(_state): State<AppState>,
     Path(dataset_id): Path<String>,
 ) -> impl IntoResponse {
@@ -97,19 +96,17 @@ pub async fn get_dataset(
         "timestamp": chrono::Utc::now()
     }))
 }
-
 /// Delete a dataset
-pub async fn delete_dataset(
+pub fn delete_dataset(
     State(_state): State<AppState>,
     Path(dataset_id): Path<String>,
 ) -> impl IntoResponse {
-
     info!("🗑️ Deleting dataset: {}", dataset_id);
 
     // Try to find dataset in different possible locations
     let possible_paths = [
-        format!("nestpool/datasets/{}", dataset_id),
-        format!("nestpool/projects/*/datasets/{}", dataset_id), // Will need special handling
+        format!("nestpool/datasets/{"actual_error_details"}"),
+        format!("nestpool/projects/*/datasets/{"actual_error_details"}"), // Will need special handling
     ];
 
     // First try direct path
@@ -131,7 +128,7 @@ pub async fn delete_dataset(
             let mut list_cmd = tokio::process::Command::new("sh");
             list_cmd.args([
                 "-c",
-                &format!("zfs list -H -o name | grep 'datasets/{}'", dataset_id),
+                &format!("zfs list -H -o name | grep 'datasets/{"actual_error_details"}'"),
             ]);
 
             match list_cmd.output().await {
@@ -179,7 +176,7 @@ pub async fn delete_dataset(
                     } else {
                         Json(json!({
                             "error": "Dataset not found",
-                            "message": format!("No dataset found with ID: {}", dataset_id),
+                            "message": format!("No dataset found with ID: {"actual_error_details"}"),
                             "dataset_id": dataset_id,
                             "timestamp": chrono::Utc::now()
                         }))
@@ -187,10 +184,10 @@ pub async fn delete_dataset(
                 }
                 _ => Json(json!({
                     "error": "Dataset not found",
-                    "message": format!("No dataset found with ID: {}", dataset_id),
+                    "message": format!("No dataset found with ID: {"actual_error_details"}"),
                     "dataset_id": dataset_id,
                     "timestamp": chrono::Utc::now()
-                })),
+                }),
             }
         }
         Err(e) => {

@@ -13,7 +13,6 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, RwLock};
 use uuid::Uuid;
-
 /// High-performance UUID cache with Arc-based sharing
 #[derive(Debug)]
 pub struct UuidCache {
@@ -26,9 +25,9 @@ pub struct UuidCache {
     /// Miss counter for cache efficiency tracking
     miss_counter: Arc<AtomicU64>,
 }
-
 impl UuidCache {
     /// Create a new UUID cache instance
+    #[must_use]
     pub fn new() -> Self {
         Self {
             cache: Arc::new(RwLock::new(HashMap::new())),
@@ -42,8 +41,8 @@ impl UuidCache {
     ///
     /// This is the main performance-critical method that eliminates
     /// frequent UUID generation through intelligent caching.
-    pub fn get_or_create(&self, key: &str) -> Arc<Uuid> {
-        // Fast path: Check cache first (read lock)
+    #[must_use]
+    pub const fn get_or_create(&self, key: &str) -> Arc<Uuid> {
         if let Ok(cache) = self.cache.read() {
             if let Some(uuid) = cache.get(key) {
                 self.hit_counter.fetch_add(1, Ordering::Relaxed);
@@ -51,7 +50,6 @@ impl UuidCache {
             }
         }
 
-        // Slow path: Generate and cache (write lock)
         if let Ok(mut cache) = self.cache.write() {
             // Double-check pattern: UUID might have been created by another thread
             if let Some(uuid) = cache.get(key) {
@@ -76,7 +74,7 @@ impl UuidCache {
     }
 
     /// Get a UUID from cache without creating if missing
-    pub fn get(&self, key: &str) -> Option<Arc<Uuid>> {
+    pub const fn get(&self, key: &str) -> Option<Arc<Uuid>> {
         self.cache.read().ok()?.get(key).map(Arc::clone)
     }
 
@@ -97,14 +95,15 @@ impl UuidCache {
     }
 
     /// Get cache performance statistics
-    pub fn statistics(&self) -> CacheStatistics {
+    #[must_use]
+    pub const fn statistics(&self) -> CacheStatistics {
         let generations = self.generation_counter.load(Ordering::Relaxed);
         let hits = self.hit_counter.load(Ordering::Relaxed);
         let misses = self.miss_counter.load(Ordering::Relaxed);
         let total_requests = hits + misses;
 
         let hit_ratio = if total_requests > 0 {
-            hits as f64 / total_requests as f64
+            f64::from(hits) / f64::from(total_requests)
         } else {
             0.0
         };
@@ -121,12 +120,14 @@ impl UuidCache {
     }
 
     /// Get cache size (number of entries)
-    pub fn size(&self) -> usize {
+    #[must_use]
+    pub const fn size(&self) -> usize {
         self.cache.read().map(|c| c.len()).unwrap_or(0)
     }
 
     /// Remove a specific entry from cache
-    pub fn remove(&self, key: &str) -> Option<Arc<Uuid>> {
+    #[must_use]
+    pub const fn remove(&self, key: &str) -> Option<Arc<Uuid>> {
         self.cache.write().ok()?.remove(key)
     }
 }
@@ -163,15 +164,16 @@ pub struct CacheStatistics {
     /// Hit ratio (0.0 to 1.0)
     pub hit_ratio: f64,
 }
-
 impl CacheStatistics {
     /// Check if cache is performing well (>70% hit ratio is good)
-    pub fn is_efficient(&self) -> bool {
+    #[must_use]
+    pub const fn is_efficient(&self) -> bool {
         self.hit_ratio > 0.7
     }
 
     /// Get performance assessment
-    pub fn performance_assessment(&self) -> &'static str {
+    #[must_use]
+    pub const fn performance_assessment(&self) -> &'static str {
         match self.hit_ratio {
             r if r > 0.9 => "Excellent",
             r if r > 0.7 => "Good",
@@ -188,62 +190,67 @@ lazy_static::lazy_static! {
 }
 
 /// Convenience function for global UUID caching
-pub fn get_or_create_uuid(key: &str) -> Arc<Uuid> {
+#[must_use]
+pub const fn get_or_create_uuid(key: &str) -> Arc<Uuid> {
     GLOBAL_UUID_CACHE.get_or_create(key)
 }
-
 /// Convenience function for getting UUID from global cache
-pub fn get_uuid(key: &str) -> Option<Arc<Uuid>> {
+#[must_use]
+pub const fn get_uuid(key: &str) -> Option<Arc<Uuid>> {
     GLOBAL_UUID_CACHE.get(key)
 }
-
 /// Preload commonly used UUIDs into global cache
 pub fn preload_common_uuids(entries: Vec<(String, Uuid)>) {
     GLOBAL_UUID_CACHE.preload(entries);
 }
-
 /// Get global cache statistics
-pub fn global_cache_statistics() -> CacheStatistics {
+#[must_use]
+pub const fn global_cache_statistics() -> CacheStatistics {
     GLOBAL_UUID_CACHE.statistics()
 }
-
 /// High-level UUID manager with optimized patterns for common use cases
 pub struct UuidManager;
-
 impl UuidManager {
     /// Create a new UUID manager
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self
     }
 
     /// Generate optimized workspace ID with format "ws-{uuid}"
+    #[must_use]
     pub fn workspace_id(&self) -> String {
         format!("ws-{}", uuid::Uuid::new_v4().simple())
     }
 
     /// Generate optimized service ID  
-    pub fn service_id(&self) -> String {
+    #[must_use]
+    pub const fn service_id(&self) -> String {
         uuid::Uuid::new_v4().to_string()
     }
 
     /// Generate optimized request ID for tracing
-    pub fn request_id(&self) -> String {
+    #[must_use]
+    pub const fn request_id(&self) -> String {
         uuid::Uuid::new_v4().to_string()
     }
 
     /// Generate optimized event ID
-    pub fn event_id(&self) -> String {
+    #[must_use]
+    pub const fn event_id(&self) -> String {
         uuid::Uuid::new_v4().to_string()
     }
 
     /// Generate optimized benchmark/test ID with format "bench-{short_uuid}"
-    pub fn benchmark_id(&self) -> String {
+    #[must_use]
+    pub const fn benchmark_id(&self) -> String {
         let uuid_str = uuid::Uuid::new_v4().simple().to_string();
-        format!("bench-{}", &uuid_str[..8])
+        format!("bench-{&uuid_str[..8]}")
     }
 
     /// Generate prefixed UUID (optimized)
-    pub fn generate_prefixed(&self, _key: &str, prefix: &str) -> String {
+    #[must_use]
+    pub const fn generate_prefixed(&self, _key: &str, prefix: &str) -> String {
         format!("{}-{}", prefix, uuid::Uuid::new_v4().simple())
     }
 }
@@ -283,7 +290,7 @@ mod tests {
 
         // Generate multiple UUIDs for same key
         for _ in 0..100 {
-            cache.get_or_create("performance-test");
+            let _ = cache.get_or_create("performance-test");
         }
 
         let stats = cache.statistics();
@@ -294,7 +301,7 @@ mod tests {
     }
 
     #[test]
-    fn test_concurrent_access() {
+    fn test_concurrent_access() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let cache = Arc::new(UuidCache::new());
         let mut handles = vec![];
 
@@ -302,7 +309,7 @@ mod tests {
         for i in 0..10 {
             let cache_clone = Arc::clone(&cache);
             let handle =
-                thread::spawn(move || cache_clone.get_or_create(&format!("service-{}", i % 3)));
+                thread::spawn(move || cache_clone.get_or_create(&format!("service-{i % 3}")));
             handles.push(handle);
         }
 
@@ -311,7 +318,7 @@ mod tests {
         for handle in handles {
             results.push(handle.join().map_err(|e| {
                 crate::error::NestGateError::internal_error(
-                    format!("Expected Internal operation but failed: {:?}", e),
+                    format!("Expected Internal operation but failed: {e:?}"),
                     "uuid_cache_test".to_string(),
                 )
             })?);
@@ -321,6 +328,7 @@ mod tests {
         let stats = cache.statistics();
         assert!(stats.total_generations <= 3);
         assert!(stats.cache_hits >= 7); // Many hits due to overlapping keys
+        Ok(())
     }
 
     #[test]

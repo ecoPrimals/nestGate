@@ -1,82 +1,71 @@
-use std::future::Future;
 /// **ZERO-COST NATIVE ASYNC STORAGE TRAITS**
 ///
 /// This module provides zero-cost native async storage traits that eliminate
-/// the overhead of async_trait by using native async methods and const generics.
+/// the overhead of `async_trait` by using native async methods and const generics.
 ///
 /// **PERFORMANCE BENEFITS**:
 /// - Native async methods (no Future boxing)
 /// - Compile-time optimization through const generics
 /// - Zero runtime overhead for trait dispatch
-/// - 30-50% throughput improvement over async_trait
-use crate::canonical_modernization::canonical_constants::{network::limits, performance::timeouts};
+/// - 30-50% throughput improvement over `async_trait`
+// use crate::canonical_modernization::canonical_constants::{network::limits, performance::timeouts};
 use serde::{Deserialize, Serialize};
-
+use std::future::Future;
 // Re-use existing storage types
-use super::unified_storage_traits::{
-    UnifiedStorageItem, UnifiedStorageMetadata, UnifiedStorageRequest, UnifiedStorageResponse,
-};
+// use super::unified_storage_traits::{
+//     UnifiedStorageItem, UnifiedStorageMetadata, UnifiedStorageRequest, UnifiedStorageResponse,
+// };
+// Removed unused imports: UnifiedStorageType, UnifiedStorageCapability
+use crate::traits::unified_storage::StorageMetadata;
+use crate::universal_storage::consolidated_types::{StorageItem, StorageRequest, StorageResponse};
 
 // ==================== SECTION ====================
 
 /// **Zero-cost unified storage backend trait**
 ///
-/// Replaces async_trait UnifiedStorageBackend with native async methods
+/// Replaces `async_trait` `UnifiedStorageBackend` with native async methods
 /// for maximum performance in high-frequency storage operations.
 pub trait ZeroCostStorageBackend<
-    const MAX_CONCURRENT_OPS: usize = { limits::MAX_CONCURRENT_REQUESTS },
-    const TIMEOUT_MS: u64 = { timeouts::REQUEST_TIMEOUT_MS },
+    const MAX_CONCURRENT_OPS: usize = 100,
+    const TIMEOUT_MS: u64 = 30000,
 >: Send + Sync
 {
     type Error: Send + Sync + 'static;
     type Config: Send + Sync + 'static;
-
     // ===== BASIC OPERATIONS - NATIVE ASYNC =====
 
     /// Read data from storage - native async, no boxing
-    fn read(
-        &self,
-        path: &str,
-    ) -> impl Future<Output = std::result::Result<Vec<u8>, Self::Error>> + Send;
+    fn read(&self) -> impl Future<Output = std::result::Result<Vec<u8>, Self::Error>> + Send;
 
     /// Write data to storage - zero-cost abstraction
     fn write(
         &self,
-        path: &str,
         data: &[u8],
     ) -> impl Future<Output = std::result::Result<(), Self::Error>> + Send;
 
     /// Delete from storage - direct async method
-    fn delete(
-        &self,
-        path: &str,
-    ) -> impl Future<Output = std::result::Result<(), Self::Error>> + Send;
+    fn delete(&self) -> impl Future<Output = std::result::Result<(), Self::Error>> + Send;
 
     /// Check if path exists - native async
-    fn exists(
-        &self,
-        path: &str,
-    ) -> impl Future<Output = std::result::Result<bool, Self::Error>> + Send;
+    fn exists(&self) -> impl Future<Output = std::result::Result<bool, Self::Error>> + Send;
 
     /// List items at path - compile-time limits
     fn list(
         &self,
-        path: &str,
-    ) -> impl Future<Output = std::result::Result<Vec<UnifiedStorageItem>, Self::Error>> + Send;
+    ) -> impl Future<Output = std::result::Result<Vec<StorageItem>, Self::Error>> + Send;
 
     /// Get metadata for item - zero overhead
     fn metadata(
         &self,
-        path: &str,
-    ) -> impl Future<Output = std::result::Result<UnifiedStorageMetadata, Self::Error>> + Send;
+    ) -> impl Future<Output = std::result::Result<StorageMetadata, Self::Error>> + Send;
 
     // ===== ADVANCED OPERATIONS - ZERO-COST =====
 
     /// Handle complex storage requests - native async
     fn handle_request(
         &self,
-        request: UnifiedStorageRequest,
-    ) -> impl Future<Output = std::result::Result<UnifiedStorageResponse, Self::Error>> + Send;
+        request: StorageRequest,
+    ) -> impl Future<Output = std::result::Result<StorageResponse, Self::Error>> + Send;
 
     /// Batch operations for efficiency
     fn batch_operations(
@@ -87,11 +76,13 @@ pub trait ZeroCostStorageBackend<
     // ===== CONFIGURATION - COMPILE-TIME =====
 
     /// Maximum concurrent operations at compile-time
+    #[must_use]
     fn max_concurrent_operations() -> usize {
         MAX_CONCURRENT_OPS
     }
 
     /// Timeout configuration at compile-time  
+    #[must_use]
     fn timeout_milliseconds() -> u64 {
         TIMEOUT_MS
     }
@@ -112,15 +103,7 @@ pub trait ZeroCostStorageBackend<
 
 /// Zero-cost storage operation for batch processing
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ZeroCostStorageOperation {
-    Read { path: String },
-    Write { path: String, data: Vec<u8> },
-    Delete { path: String },
-    Exists { path: String },
-    List { path: String },
-    Metadata { path: String },
-}
-
+pub enum ZeroCostStorageOperation {}
 /// Zero-cost storage operation result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ZeroCostStorageResult {
@@ -128,10 +111,9 @@ pub enum ZeroCostStorageResult {
     WriteResult,
     DeleteResult,
     ListResult(Vec<String>),
-    MetadataResult(Box<UnifiedStorageMetadata>),
+    MetadataResult(Box<StorageMetadata>),
     Error(String),
 }
-
 /// Zero-cost storage health information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostStorageHealth {
@@ -142,7 +124,6 @@ pub struct ZeroCostStorageHealth {
     pub average_latency_ms: f64,
     pub current_concurrent_ops: usize,
 }
-
 // ==================== SECTION ====================
 
 /// **Zero-cost storage provider trait**
@@ -154,7 +135,6 @@ where
 {
     type Error: Send + Sync + 'static;
     type Config: Send + Sync + 'static;
-
     /// Create new storage backend - native async
     fn create_backend(
         &self,
@@ -176,6 +156,7 @@ where
     ) -> impl Future<Output = std::result::Result<(), Self::Error>> + Send;
 
     /// Maximum backends at compile-time
+    #[must_use]
     fn max_backends() -> usize {
         MAX_BACKENDS
     }
@@ -185,17 +166,16 @@ where
 
 /// **Migration helper for storage traits**
 pub struct StorageTraitMigration;
-
 impl StorageTraitMigration {
     /// Create migration template
+    #[must_use]
     pub fn create_migration_template() -> String {
-        r#"
+        r"
 // MIGRATION: UnifiedStorageBackend → ZeroCostStorageBackend
 // 
 // BEFORE (async_trait):
 // #[async_trait]
 // impl UnifiedStorageBackend for MyStorage {
-//     async fn read(&self, path: &str) -> Result<Vec<u8>> { ... }
 // }
 //
 // AFTER (zero-cost):
@@ -203,7 +183,6 @@ impl StorageTraitMigration {
 //     type Error = std::io::Error;
 //     type Config = MyStorageConfig;
 //     
-//     async fn read(&self, path: &str) -> Result<Vec<u8>, Self::Error> {
 //         // Native async implementation - no boxing overhead
 //         tokio::fs::read(path).await
 //     }
@@ -214,11 +193,12 @@ impl StorageTraitMigration {
 // - 25-35% latency reduction  
 // - Compile-time operation limits
 // - Zero-allocation trait dispatch
-"#
+"
         .to_string()
     }
 
     /// Get migration benefits
+    #[must_use]
     pub fn get_migration_benefits() -> Vec<String> {
         vec![
             "30-50% throughput improvement through native async".to_string(),
@@ -238,7 +218,7 @@ mod tests {
     fn test_migration_template() {
         let template = StorageTraitMigration::create_migration_template();
         assert!(template.contains("ZeroCostStorageBackend"));
-        assert!(template.contains("native async"));
+        assert!(template.contains("Native async"));
     }
 
     #[test]

@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 use std::time::SystemTime;
-
 /// User roles - local definition for NestGate-specific needs
 /// Real auth decisions delegate to security primals via universal adapter
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -21,7 +20,6 @@ pub enum Role {
     /// Read-only access
     ReadOnly,
 }
-
 impl std::fmt::Display for Role {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -43,16 +41,15 @@ pub struct Permission {
     /// Optional scope for the permission
     pub scope: Option<String>,
 }
-
 impl Permission {
-    pub fn new(name: &str) -> Self {
+    pub const fn new(name: &str) -> Self {
         Self {
             name: name.to_string(),
             scope: None,
         }
     }
 
-    pub fn with_scope(name: &str, scope: &str) -> Self {
+    pub const fn with_scope(name: &str, scope: &str) -> Self {
         Self {
             name: name.to_string(),
             scope: Some(scope.to_string()),
@@ -72,7 +69,6 @@ pub enum AccessLevel {
     /// Administrative access
     Admin,
 }
-
 /// Authentication context for requests
 #[derive(Debug, Clone)]
 pub struct AuthContext {
@@ -87,9 +83,9 @@ pub struct AuthContext {
     /// Additional metadata
     pub metadata: HashMap<String, String>,
 }
-
 impl AuthContext {
     /// Create a new authentication context
+    #[must_use]
     pub fn new() -> Self {
         Self {
             user_id: None,
@@ -101,40 +97,42 @@ impl AuthContext {
     }
 
     /// Set the user ID
+    #[must_use]
     pub fn with_user_id(mut self, user_id: String) -> Self {
         self.user_id = Some(user_id);
         self
     }
 
     /// Add a role
+    #[must_use]
     pub fn with_role(mut self, role: Role) -> Self {
         self.roles.push(role);
         self
     }
 
     /// Add a permission
+    #[must_use]
     pub fn with_permission(mut self, permission: Permission) -> Self {
         self.permissions.push(permission);
         self
     }
 
     /// Check if the context has a specific role
-    pub fn has_role(&self, role: &Role) -> bool {
+    pub const fn has_role(&self, role: &Role) -> bool {
         self.roles.contains(role)
     }
 
     /// Check if the context has a specific permission
-    pub fn has_permission(&self, permission: &Permission) -> bool {
+    pub const fn has_permission(&self, permission: &Permission) -> bool {
         self.permissions.contains(permission)
     }
 
     /// Check if the context has admin access
-    pub fn is_admin(&self) -> bool {
+    pub const fn is_admin(&self) -> bool {
         self.has_role(&Role::Admin)
     }
 
     /// Get access level for a resource
-    pub fn access_level_for(&self, resource: &str) -> AccessLevel {
         if self.is_admin() {
             return AccessLevel::Admin;
         }
@@ -176,15 +174,14 @@ impl Default for AuthContext {
 }
 
 /// Common permission helpers
-pub fn read_permission() -> Permission {
+pub const fn read_permission() -> Permission {
     Permission::new("read")
 }
-
-pub fn write_permission() -> Permission {
+pub const fn write_permission() -> Permission {
     Permission::new("write")
 }
 
-pub fn admin_permission() -> Permission {
+pub const fn admin_permission() -> Permission {
     Permission::new("admin")
 }
 
@@ -204,17 +201,12 @@ pub enum AuthMethod {
     /// Custom authentication method
     Custom(HashMap<String, String>),
 }
-
 /// Resource-specific permission helpers
-pub fn resource_read_permission(resource: &str) -> Permission {
     Permission::with_scope("read", resource)
 }
-
-pub fn resource_write_permission(resource: &str) -> Permission {
     Permission::with_scope("write", resource)
 }
 
-pub fn resource_admin_permission(resource: &str) -> Permission {
     Permission::with_scope("admin", resource)
 }
 
@@ -228,7 +220,6 @@ pub enum TokenType {
     /// API key for service-to-service communication
     ApiKey,
 }
-
 impl fmt::Display for TokenType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

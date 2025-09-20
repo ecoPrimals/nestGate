@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::env;
 //
 // This module provides the fundamental type definitions used throughout
 // the canonical modernization system.
@@ -12,84 +13,68 @@ use std::sync::{Arc, RwLock};
 /// Registry for tracking capability providers in the universal adapter system.
 /// This provides zero-cost type aliasing for complex provider storage.
 pub type ProviderRegistry = Arc<RwLock<HashMap<String, String>>>;
-
 /// **Canonical Capability Index Map**
 ///
 /// Index mapping capabilities to their providers for fast lookup.
 /// Enables O(1) capability discovery in the universal adapter.
 pub type CapabilityIndexMap = Arc<RwLock<HashMap<String, Vec<String>>>>;
-
 /// **Canonical Health Monitor Registry**
 ///
 /// Registry for tracking health status of various system components.
 /// Provides centralized health monitoring across all capabilities.
 pub type HealthMonitorRegistry = Arc<RwLock<HashMap<String, String>>>;
-
 /// **Canonical Service Registry**
 ///
 /// Registry for tracking discovered services and their metadata.
 pub type ServiceRegistry = Arc<RwLock<HashMap<String, ServiceInfo>>>;
-
 /// **Canonical Configuration Registry**
 ///
 /// Registry for dynamic configuration management across the system.
 pub type ConfigurationRegistry = Arc<RwLock<HashMap<String, serde_json::Value>>>;
-
 /// **Canonical Event Registry**
 ///
 /// Registry for tracking system events and their handlers.
 pub type EventRegistry = Arc<RwLock<HashMap<String, Vec<EventHandler>>>>;
-
 /// **Canonical Timestamp Changes Map**
 ///
 /// Map for tracking timestamp changes in storage operations.
 pub type TimestampChangesMap = HashMap<String, std::time::SystemTime>;
-
 /// **Canonical Attribute Changes Map**
 ///
 /// Map for tracking attribute changes in storage operations.
 pub type AttributeChangesMap = HashMap<String, serde_json::Value>;
-
 /// **Canonical Memory Pool**
 ///
 /// Generic memory pool type for efficient memory management.
 pub type MemoryPool<T> = Arc<RwLock<Vec<T>>>;
-
 /// **Canonical Pool Statistics Tuple**
 ///
 /// Tuple type for memory pool statistics (used, available, total).
 pub type PoolStatisticsTuple = (usize, usize, usize);
-
 /// **Canonical Alert Registry**
 ///
 /// Registry for tracking alert rules and configurations.
 pub type AlertRegistry = Arc<RwLock<HashMap<String, AlertRule>>>;
-
 /// **Canonical Alert Map**
 ///
 /// Map for tracking active alerts and their states.
 pub type AlertMap = Arc<RwLock<HashMap<String, Alert>>>;
-
 /// **Canonical Alert Channel Map**
 ///
 /// Map for tracking alert notification channels.
 pub type AlertChannelMap = Arc<RwLock<HashMap<String, AlertChannel>>>;
-
 /// **Canonical Suppression Rule Map**
 ///
 /// Map for tracking alert suppression rules.
 pub type SuppressionRuleMap = Arc<RwLock<HashMap<String, SuppressionRule>>>;
-
 /// **Canonical Health Check Map**
 ///
 /// Map for tracking health check configurations.
 pub type HealthCheckMap = Arc<RwLock<HashMap<String, HealthCheck>>>;
-
 /// **Canonical Health Check Function**
 ///
 /// Type alias for health check functions.
 pub type HealthCheckFunction = Arc<dyn Fn() -> bool + Send + Sync>;
-
 // ==================== SECTION ====================
 
 /// **Service Information Structure**
@@ -104,7 +89,6 @@ pub struct ServiceInfo {
     pub health_status: String,
     pub metadata: HashMap<String, String>,
 }
-
 /// **Event Handler Structure**
 ///
 /// Canonical structure for event handling in the system.
@@ -114,7 +98,6 @@ pub struct EventHandler {
     pub event_type: String,
     pub handler_function: String, // Function name or identifier
 }
-
 /// **Alert Rule Structure**
 ///
 /// Canonical structure for defining alert rules.
@@ -126,7 +109,6 @@ pub struct AlertRule {
     pub severity: String,
     pub enabled: bool,
 }
-
 /// **Alert Structure**
 ///
 /// Canonical structure for active alerts.
@@ -139,7 +121,6 @@ pub struct Alert {
     pub timestamp: std::time::SystemTime,
     pub resolved: bool,
 }
-
 /// **Alert Channel Structure**
 ///
 /// Canonical structure for alert notification channels.
@@ -150,7 +131,6 @@ pub struct AlertChannel {
     pub endpoint: String,
     pub enabled: bool,
 }
-
 /// **Suppression Rule Structure**
 ///
 /// Canonical structure for alert suppression rules.
@@ -162,7 +142,6 @@ pub struct SuppressionRule {
     pub duration_seconds: u64,
     pub enabled: bool,
 }
-
 /// **Health Check Structure**
 ///
 /// Canonical structure for health check configurations.
@@ -175,7 +154,6 @@ pub struct HealthCheck {
     pub timeout_seconds: u64,
     pub enabled: bool,
 }
-
 // ==================== SECTION ====================
 
 impl Default for ServiceInfo {
@@ -184,7 +162,8 @@ impl Default for ServiceInfo {
             service_id: "unknown".to_string(),
             service_type: "generic".to_string(),
             capabilities: Vec::new(),
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: "http://localhost:".to_string()
+                + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()),
             health_status: "unknown".to_string(),
             metadata: HashMap::new(),
         }
@@ -260,4 +239,4 @@ impl Default for HealthCheck {
             enabled: true,
         }
     }
-} 
+}

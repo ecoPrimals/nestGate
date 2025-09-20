@@ -5,10 +5,8 @@ use crate::config::canonical_master::NestGateCanonicalConfig;
 use reqwest::Client;
 use std::sync::Arc;
 use std::time::Duration;
-
 /// Type alias for HTTP connection pool
 pub type HttpConnectionPool = ConnectionPool<Client>;
-
 /// Create a pre-configured HTTP connection pool
 /// This factory function creates a connection pool optimized for HTTP clients,
 /// with reasonable defaults for web service communication.
@@ -28,8 +26,7 @@ pub fn create_http_pool(
         config.enable_metrics = true;
         config.pool_name = "http-client-pool".to_string();
         config
-    });
-
+    );
     let pool_config = unified_config;
 
     // Create HTTP client factory
@@ -37,13 +34,10 @@ pub fn create_http_pool(
         Client::builder()
             .timeout(Duration::from_secs(30))
             .build()
-            .map_err(|e| crate::NestGateError::Internal {
-                message: format!("Failed to create HTTP client: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                location: Some(format!("Error: {e}")),
-                is_bug: false,
-            })
-    });
+            .map_err(|e| crate::NestGateError::internal_error(
+                location: Some(format!("{})
+                location: Some(format!("Error: {e}"))})
+    );
 
     // Create health check function for HTTP clients
     let health_check: Option<Arc<dyn Fn(&Client) -> crate::Result<()> + Send + Sync>> =
@@ -71,11 +65,5 @@ where
 {
     // This is a placeholder implementation
     // Real implementation would parse connection_string and create appropriate connections
-    Err(crate::NestGateError::Validation {
-        field: Some("connection_type".to_string()),
-        message: "Database connection pools not yet implemented".to_string(),
-        current_value: Some(connection_string.to_string()),
-        expected: Some("HTTP client pools only".to_string()),
-        user_error: false,
-    })
+    Err(crate::NestGateError::validation(
 }

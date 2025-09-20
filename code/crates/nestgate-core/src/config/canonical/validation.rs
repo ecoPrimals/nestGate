@@ -1,17 +1,23 @@
-//! Configuration Validation
-//!
-//! This module handles validation logic for configuration.
-//! Single responsibility: Validate configuration correctness.
+// Configuration Validation
+//! Validation functionality and utilities.
+// This module handles validation logic for configuration.
+// Single responsibility: Validate configuration correctness.
 
 use super::types::*;
 use crate::{NestGateError, Result};
 
 /// Configuration validator
 pub struct ConfigValidator;
-
 impl ConfigValidator {
     /// Validate a complete configuration
-    pub fn validate(config: &CanonicalConfig) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(config: &CanonicalConfig) -> Result<()>  {
         Self::validate_system(&config.system)?;
         Self::validate_network(&config.network)?;
         Self::validate_storage(&config.storage)?;
@@ -23,14 +29,8 @@ impl ConfigValidator {
 
     fn validate_system(system: &SystemConfig) -> Result<()> {
         if system.instance_name.is_empty() {
-            return Err(NestGateError::Validation {
-                field: Some("system.instance_name".to_string()),
-                message: "Instance name cannot be empty".to_string(),
-                current_value: Some(system.instance_name.clone()),
-                expected: Some("non-empty string".to_string()),
-                context: None,
-            });
-        }
+            return Err(NestGateError::validation(
+        )
         Ok(())
     }
 
@@ -41,14 +41,8 @@ impl ConfigValidator {
 
     fn validate_api_server(api: &ApiServerConfig) -> Result<()> {
         if api.port == 0 {
-            return Err(NestGateError::Validation {
-                field: Some("network.api.port".to_string()),
-                message: "Port cannot be 0".to_string(),
-                current_value: Some(api.port.to_string()),
-                expected: Some("port number 1-65535".to_string()),
-                context: None,
-            });
-        }
+            return Err(NestGateError::validation(
+        )
         Ok(())
     }
 

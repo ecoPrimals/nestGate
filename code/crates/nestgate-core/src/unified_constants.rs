@@ -17,14 +17,12 @@
 /// - Compile-time constant validation
 /// - Easy maintenance and updates
 use std::time::Duration;
-
 // ==================== SECTION ====================
 
 /// API versioning and endpoint constants
 pub mod api {
     /// Current API version
     pub const VERSION: &str = "v1";
-
     /// API prefix for all endpoints
     pub const PREFIX: &str = "/api/v1";
 
@@ -101,7 +99,6 @@ pub mod api {
 
 /// Protocol-specific constants
 pub mod protocols {
-
     /// HTTP protocol constants
     pub mod http {
         pub const DEFAULT_PORT: u16 = 80;
@@ -137,7 +134,7 @@ pub mod protocols {
 
     /// ZFS protocol constants
     pub mod zfs {
-        pub const DEFAULT_RECORD_SIZE: u32 = 131072; // 128KB
+        pub const DEFAULT_RECORD_SIZE: u32 = 131_072; // 128KB
         pub const MIN_RECORD_SIZE: u32 = 512;
         pub const MAX_RECORD_SIZE: u32 = 1048576; // 1MB
         pub const DEFAULT_COMPRESSION: &str = "lz4";
@@ -174,7 +171,6 @@ pub mod protocols {
 
 /// Network and connectivity constants
 pub mod network {
-
     /// Default network addresses (configurable via environment)
     pub mod addresses {
         pub const LOCALHOST: &str = "127.0.0.1";
@@ -183,11 +179,11 @@ pub mod network {
         pub const ANY_ADDRESS_IPV6: &str = "::";
 
         /// Environment-driven address resolution
-        pub fn bind_address() -> String {
+        pub const fn bind_address() -> String {
             std::env::var("NESTGATE_BIND_ADDRESS").unwrap_or_else(|_| ANY_ADDRESS.to_string())
         }
 
-        pub fn discovery_address() -> String {
+        pub const fn discovery_address() -> String {
             std::env::var("NESTGATE_DISCOVERY_ADDRESS").unwrap_or_else(|_| LOCALHOST.to_string())
         }
     }
@@ -204,21 +200,21 @@ pub mod network {
         pub const ADMIN_PORT: u16 = 9091;
 
         /// Environment-driven port resolution
-        pub fn api_port() -> u16 {
+        pub const fn api_port() -> u16 {
             std::env::var("NESTGATE_API_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(API_PORT)
         }
 
-        pub fn health_port() -> u16 {
+        pub const fn health_port() -> u16 {
             std::env::var("NESTGATE_HEALTH_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(HEALTH_PORT)
         }
 
-        pub fn metrics_port() -> u16 {
+        pub const fn metrics_port() -> u16 {
             std::env::var("NESTGATE_METRICS_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
@@ -237,7 +233,7 @@ pub mod network {
         pub const SHUTDOWN_TIMEOUT_SECS: u64 = 30;
 
         /// Environment-driven timeout resolution
-        pub fn connection_timeout() -> Duration {
+        pub const fn connection_timeout() -> Duration {
             std::env::var("NESTGATE_CONNECTION_TIMEOUT_SECS")
                 .ok()
                 .and_then(|t| t.parse().ok())
@@ -245,7 +241,7 @@ pub mod network {
                 .unwrap_or_else(|| Duration::from_secs(CONNECTION_TIMEOUT_SECS))
         }
 
-        pub fn request_timeout() -> Duration {
+        pub const fn request_timeout() -> Duration {
             std::env::var("NESTGATE_REQUEST_TIMEOUT_SECS")
                 .ok()
                 .and_then(|t| t.parse().ok())
@@ -253,7 +249,7 @@ pub mod network {
                 .unwrap_or_else(|| Duration::from_secs(REQUEST_TIMEOUT_SECS))
         }
 
-        pub fn health_check_timeout() -> Duration {
+        pub const fn health_check_timeout() -> Duration {
             std::env::var("NESTGATE_HEALTH_CHECK_TIMEOUT_SECS")
                 .ok()
                 .and_then(|t| t.parse().ok())
@@ -281,14 +277,13 @@ pub mod storage {
         pub const WARM: &str = "warm";
         pub const COLD: &str = "cold";
         pub const ARCHIVE: &str = "archive";
-
         /// Tier transition thresholds (configurable)
         pub mod thresholds {
             pub const HOT_TO_WARM_DAYS: u32 = 30;
             pub const WARM_TO_COLD_DAYS: u32 = 90;
             pub const COLD_TO_ARCHIVE_DAYS: u32 = 365;
 
-            pub fn hot_to_warm_days() -> u32 {
+            pub const fn hot_to_warm_days() -> u32 {
                 std::env::var("NESTGATE_HOT_TO_WARM_DAYS")
                     .ok()
                     .and_then(|d| d.parse().ok())
@@ -307,7 +302,7 @@ pub mod storage {
         pub const MAX_FILE_SIZE_GB: u64 = 16 * 1024; // 16TB
 
         /// Environment-driven limits
-        pub fn default_pool_size_bytes() -> u64 {
+        pub const fn default_pool_size_bytes() -> u64 {
             std::env::var("NESTGATE_DEFAULT_POOL_SIZE_GB")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -339,8 +334,7 @@ pub mod performance {
         pub const MAX_CACHE_SIZE_MB: u64 = 16 * 1024; // 16GB
         pub const DEFAULT_TTL_SECS: u64 = 300; // 5 minutes
         pub const CACHE_LINE_SIZE: usize = 64;
-
-        pub fn cache_size_bytes() -> u64 {
+        pub const fn cache_size_bytes() -> u64 {
             std::env::var("NESTGATE_CACHE_SIZE_MB")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -357,7 +351,7 @@ pub mod performance {
         pub const MAX_WORKER_THREADS: usize = 1024;
         pub const DEFAULT_BLOCKING_THREADS: usize = 512;
 
-        pub fn worker_threads() -> usize {
+        pub const fn worker_threads() -> usize {
             std::env::var("NESTGATE_WORKER_THREADS")
                 .ok()
                 .and_then(|t| t.parse().ok())
@@ -379,7 +373,6 @@ pub mod performance {
 
 /// Security and cryptography constants
 pub mod security {
-
     /// Authentication constants
     pub mod auth {
         pub const DEFAULT_SESSION_TIMEOUT_SECS: u64 = 3600; // 1 hour
@@ -387,7 +380,7 @@ pub mod security {
         pub const LOCKOUT_DURATION_SECS: u64 = 300; // 5 minutes
         pub const TOKEN_REFRESH_THRESHOLD_SECS: u64 = 300; // 5 minutes before expiry
 
-        pub fn session_timeout() -> std::time::Duration {
+        pub const fn session_timeout() -> std::time::Duration {
             std::env::var("NESTGATE_SESSION_TIMEOUT_SECS")
                 .ok()
                 .and_then(|t| t.parse().ok())
@@ -420,7 +413,6 @@ pub mod security {
 
 /// Monitoring and observability constants
 pub mod monitoring {
-
     /// Metrics constants
     pub mod metrics {
         pub const COLLECTION_INTERVAL_SECS: u64 = 15;
@@ -428,7 +420,7 @@ pub mod monitoring {
         pub const BATCH_SIZE: usize = 1000;
         pub const FLUSH_INTERVAL_SECS: u64 = 60;
 
-        pub fn collection_interval() -> std::time::Duration {
+        pub const fn collection_interval() -> std::time::Duration {
             std::env::var("NESTGATE_METRICS_INTERVAL_SECS")
                 .ok()
                 .and_then(|i| i.parse().ok())
@@ -459,7 +451,6 @@ pub mod monitoring {
 
 /// Testing framework constants
 pub mod testing {
-
     /// Test execution constants
     pub mod execution {
         pub const DEFAULT_TEST_TIMEOUT_SECS: u64 = 60;
@@ -469,7 +460,7 @@ pub mod testing {
         pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
         pub const MAX_RETRY_ATTEMPTS: u32 = 10;
 
-        pub fn test_timeout() -> std::time::Duration {
+        pub const fn test_timeout() -> std::time::Duration {
             std::env::var("TEST_TIMEOUT_SECS")
                 .ok()
                 .and_then(|t| t.parse().ok())
@@ -507,10 +498,9 @@ pub mod testing {
 pub mod zfs {
     /// ZFS pool names
     pub mod pools {
-        pub const DEFAULT: &str = "nestpool";
+        pub const DEFAULT: &str = "zfspool";
         pub const PRODUCTION: &str = "nestpool-prod";
     }
-
     /// ZFS property names
     pub mod properties {
         pub const COMPRESSION: &str = "compression";
@@ -569,7 +559,6 @@ pub mod services {
         pub const MAINTAINER_EMAIL: &str = "team@nestgate.dev";
         pub const ORGANIZATION: &str = "EcoPrimals Foundation";
     }
-
     /// Universal service types
     pub mod types {
         pub const UNIVERSAL_SECURITY: &str = "universal-security-service";
@@ -586,7 +575,6 @@ pub mod services {
 
 /// Timeout configurations for various operations
 pub mod timeouts {
-
     /// File operation timeouts
     pub const MOUNT_TIMEOUT: Duration = Duration::from_secs(5);
     pub const UNMOUNT_TIMEOUT: Duration = Duration::from_secs(5);
@@ -630,18 +618,17 @@ pub mod compile_time {
     pub const SIZE_16384: usize = 16384;
     pub const SIZE_32768: usize = 32768;
     pub const SIZE_65536: usize = 65536;
-    pub const SIZE_131072: usize = 131072;
-    pub const SIZE_262144: usize = 262144;
+    pub const SIZE_131072: usize = 131_072;
+    pub const SIZE_262144: usize = 262_144;
     pub const SIZE_524288: usize = 524288;
     pub const SIZE_1048576: usize = 1048576; // 1MB
 }
-
 // ==================== SECTION ====================
 
 /// Convenience functions for working with unified constants
 impl UnifiedConstants {
     /// Get default port for a service type
-    pub fn default_port_for_service(service_type: &str) -> u16 {
+    pub const fn default_port_for_service(service_type: &str) -> u16 {
         match service_type {
             services::types::API => network::ports::API_PORT,
             services::types::STORAGE => 2049, // NFS default
@@ -650,9 +637,8 @@ impl UnifiedConstants {
             _ => 80,                          // HTTP default
         }
     }
-
     /// Get compression algorithm for storage tier
-    pub fn compression_for_tier(tier: &str) -> &'static str {
+    pub const fn compression_for_tier(tier: &str) -> &'static str {
         match tier {
             storage::tiers::HOT => "lz4",
             storage::tiers::WARM => "zstd",
@@ -662,7 +648,7 @@ impl UnifiedConstants {
     }
 
     /// Get buffer size for performance level
-    pub fn buffer_size_for_performance(level: &str) -> usize {
+    pub const fn buffer_size_for_performance(level: &str) -> usize {
         match level {
             "high" => 1048576, // 1MB buffer
             "medium" => 65536, // 64KB buffer
@@ -674,7 +660,6 @@ impl UnifiedConstants {
 
 /// Main unified constants struct for namespace organization
 pub struct UnifiedConstants;
-
 // ==================== SECTION ====================
 
 pub use api::capabilities::*;
@@ -684,7 +669,6 @@ pub use api::roles::*;
 // API constants
 pub use api::PREFIX as API_PREFIX_V1;
 pub use api::VERSION as API_VERSION_V1;
-
 // Network constants
 pub use network::ports::*;
 

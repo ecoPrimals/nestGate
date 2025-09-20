@@ -55,7 +55,7 @@ async fn test_nas_config_unified() -> Result<()> {
         bind_address: "127.0.0.1".to_string(),
         smb_port: 445,
         nfs_port: 2049,
-        http_port: 8080,
+        http_port: nestgate_core::constants::DEFAULT_API_PORT,
         share_root: PathBuf::from("/tmp/test"),
     };
 

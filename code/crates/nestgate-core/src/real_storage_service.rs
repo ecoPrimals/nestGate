@@ -4,7 +4,6 @@ use std::collections::HashMap;
 //
 // Provides actual file system storage operations replacing mock implementations.
 
-use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::fs;
@@ -19,7 +18,6 @@ use crate::canonical_modernization::consolidated_storage_types::*;
 #[derive(Debug)]
 pub struct RealStorageService {
     /// Storage root directory
-    root_path: PathBuf,
     /// File metadata cache
     metadata_cache: Arc<RwLock<HashMap<String, StorageDirectoryEntry>>>,
     /// Storage statistics
@@ -27,7 +25,6 @@ pub struct RealStorageService {
     /// Configuration
     config: StorageConfig,
 }
-
 /// Storage configuration
 #[derive(Debug, Clone)]
 pub struct StorageConfig {
@@ -37,7 +34,6 @@ pub struct StorageConfig {
     pub compression_enabled: bool,
     pub backup_enabled: bool,
 }
-
 /// Storage statistics
 #[derive(Debug, Clone, Default)]
 pub struct StorageStatistics {
@@ -49,7 +45,6 @@ pub struct StorageStatistics {
     pub cache_hits: u64,
     pub cache_misses: u64,
 }
-
 impl Default for StorageConfig {
     fn default() -> Self {
         Self {
@@ -64,7 +59,15 @@ impl Default for StorageConfig {
 
 impl RealStorageService {
     /// Create a new real storage service
-    pub async fn new(config: StorageConfig) -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn new(config: StorageConfig) -> Result<Self>  {
         info!(
             "Initializing real storage service with root: {}",
             config.root_directory
@@ -76,7 +79,7 @@ impl RealStorageService {
         if !root_path.exists() {
             fs::create_dir_all(&root_path).await.map_err(|e| {
                 e.into_nestgate_error_with_context("Failed to create storage directory")
-            })?;
+            )?;
             info!("Created storage directory: {}", root_path.display());
         }
 
@@ -95,7 +98,6 @@ impl RealStorageService {
     }
 
     /// Write data to storage
-    pub async fn write_file(&self, path: &str, data: &[u8]) -> Result<()> {
         debug!("Writing file: {} ({} bytes)", path, data.len());
 
         if data.len() as u64 > self.config.max_file_size {
@@ -144,7 +146,6 @@ impl RealStorageService {
     }
 
     /// Read data from storage
-    pub async fn read_file(&self, path: &str) -> Result<Vec<u8>> {
         debug!("Reading file: {}", path);
 
         // Check cache first if enabled
@@ -185,7 +186,6 @@ impl RealStorageService {
     }
 
     /// Delete file from storage
-    pub async fn delete_file(&self, path: &str) -> Result<()> {
         debug!("Deleting file: {}", path);
 
         let full_path = self.root_path.join(path);
@@ -200,88 +200,6 @@ impl RealStorageService {
         // Get file size for statistics
         let metadata = fs::metadata(&full_path)
             .await
-            .map_err(|e| e.into_nestgate_error_with_context("Failed to get file metadata: {}"))?;
-
-        let file_size = metadata.len();
-
-        // Delete the file
-        fs::remove_file(&full_path)
-            .await
-            .map_err(|e| e.into_nestgate_error_with_context("Failed to delete file: {}"))?;
-
-        // Remove from cache
-        let mut cache = self.metadata_cache.write().await;
-        cache.remove(path);
-
-        // Update statistics
-        let mut stats = self.stats.write().await;
-        stats.total_files = stats.total_files.saturating_sub(1);
-        stats.total_size = stats.total_size.saturating_sub(file_size);
-
-        info!("Successfully deleted file: {}", path);
-        Ok(())
-    }
-
-    /// List files in a directory
-    pub async fn list_directory(&self, path: &str) -> Result<Vec<StorageDirectoryEntry>> {
-        debug!("Listing directory: {}", path);
-
-        let full_path = if path.is_empty() || path == "/" {
-            self.root_path.clone()
-        } else {
-            self.root_path.join(path)
-        };
-
-        if !full_path.exists() {
-            return Err(NestGateError::invalid_input(
-                "directory_path".to_string(),
-                format!("Directory not found: {path}"),
-            ));
-        }
-
-        if !full_path.is_dir() {
-            return Err(NestGateError::invalid_input(
-                "directory_path".to_string(),
-                format!("Path is not a directory: {path}"),
-            ));
-        }
-
-        let mut entries = Vec::new();
-        let mut dir = fs::read_dir(&full_path)
-            .await
-            .map_err(|e| e.into_nestgate_error_with_context("Failed to read directory: {}"))?;
-
-        while let Some(entry) = dir
-            .next_entry()
-            .await
-            .map_err(|e| e.into_nestgate_error_with_context("Failed to read directory entry: {}"))?
-        {
-            let entry_path = entry.path();
-            let metadata = entry.metadata().await.map_err(|e| {
-                e.into_nestgate_error_with_context("Failed to get entry metadata: {}")
-            })?;
-
-            let relative_path = entry_path
-                .strip_prefix(&self.root_path)
-                .unwrap_or(&entry_path)
-                .to_string_lossy()
-                .to_string();
-
-            let entry_info = StorageDirectoryEntry {
-                name: entry.file_name().to_string_lossy().to_string(),
-                path: relative_path,
-                is_directory: metadata.is_dir(),
-                size: metadata.len(),
-                modified: {
-                    let timestamp = metadata
-                        .modified()
-                        .unwrap_or(SystemTime::UNIX_EPOCH)
-                        .duration_since(SystemTime::UNIX_EPOCH)
-                        .unwrap_or_default()
-                        .as_secs();
-                    chrono::DateTime::from_timestamp(timestamp as i64, 0)
-                        .unwrap_or_else(chrono::Utc::now)
-                },
                 permissions: None,
                 owner: None,
                 group: None,
@@ -300,14 +218,12 @@ impl RealStorageService {
     }
 
     /// Update file metadata in cache
-    async fn update_file_metadata(&self, path: &str, size: u64) -> Result<()> {
         let entry = StorageDirectoryEntry {
             name: Path::new(path)
                 .file_name()
                 .unwrap_or_default()
                 .to_string_lossy()
                 .to_string(),
-            path: path.to_string(),
             is_directory: false,
             size,
             modified: chrono::Utc::now(),
@@ -358,7 +274,6 @@ impl RealStorageService {
     #[allow(clippy::only_used_in_recursion)]
     fn scan_directory_recursive<'a>(
         &'a self,
-        dir_path: &'a Path,
         relative_prefix: &'a str,
     ) -> std::pin::Pin<
         Box<dyn std::future::Future<Output = Result<Vec<StorageDirectoryEntry>>> + Send + 'a>,
@@ -379,31 +294,6 @@ impl RealStorageService {
             })? {
                 let entry_path = entry.path();
                 let metadata = entry.metadata().await.map_err(|e| {
-                    e.into_nestgate_error_with_context("Failed to get entry metadata: {}")
-                })?;
-
-                let name = entry.file_name().to_string_lossy().to_string();
-                let relative_path = if relative_prefix.is_empty() {
-                    name.clone()
-                } else {
-                    format!("{relative_prefix}/{name}")
-                };
-
-                let entry_info = StorageDirectoryEntry {
-                    name,
-                    path: relative_path.clone(),
-                    is_directory: metadata.is_dir(),
-                    size: metadata.len(),
-                    modified: {
-                        let timestamp = metadata
-                            .modified()
-                            .unwrap_or(SystemTime::UNIX_EPOCH)
-                            .duration_since(SystemTime::UNIX_EPOCH)
-                            .unwrap_or_default()
-                            .as_secs();
-                        chrono::DateTime::from_timestamp(timestamp as i64, 0)
-                            .unwrap_or_else(chrono::Utc::now)
-                    },
                     permissions: None,
                     owner: None,
                     group: None,
@@ -425,7 +315,6 @@ impl RealStorageService {
     }
 
     /// Create backup of a file
-    pub async fn create_backup(&self, path: &str) -> Result<String> {
         if !self.config.backup_enabled {
             return Err(NestGateError::invalid_input(
                 "backup_config".to_string(),
@@ -446,11 +335,4 @@ impl RealStorageService {
 
 /// Storage service trait - **ZERO-COST NATIVE ASYNC**
 pub trait StorageService: Send + Sync {
-    fn write(&self, path: &str, data: &[u8]) -> impl std::future::Future<Output = Result<()>> + Send;
-    fn read(&self, path: &str) -> impl std::future::Future<Output = Result<Vec<u8>>> + Send;
-    fn delete(&self, path: &str) -> impl std::future::Future<Output = Result<()>> + Send;
-    fn list(&self, path: &str) -> impl std::future::Future<Output = Result<Vec<StorageDirectoryEntry>>> + Send;
-    fn exists(&self, path: &str) -> impl std::future::Future<Output = Result<bool>> + Send;
-    fn get_metadata(&self, path: &str) -> impl std::future::Future<Output = Result<StorageDirectoryEntry>> + Send;
 }
-

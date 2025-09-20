@@ -18,7 +18,6 @@ use std::future::Future;
 use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
-
 // ==================== SECTION ====================
 
 /// **Zero-cost load balancer trait**
@@ -30,7 +29,6 @@ pub trait ZeroCostLoadBalancer<const MAX_SERVICES: usize = 1000, const MAX_HISTO
 {
     /// Service information type
     type ServiceInfo: Clone + Send + Sync + std::fmt::Debug;
-
     /// Service request type
     type ServiceRequest: Clone + Send + Sync;
 
@@ -166,10 +164,9 @@ pub enum ZeroCostLoadBalancingAlgorithm {
     /// Custom algorithm
     Custom(String),
 }
-
 impl ZeroCostLoadBalancingAlgorithm {
     /// Get algorithm name
-    pub fn name(&self) -> &str {
+    pub const fn name(&self) -> &str {
         match self {
             Self::RoundRobin => "round-robin",
             Self::WeightedRoundRobin => "weighted-round-robin",
@@ -185,7 +182,7 @@ impl ZeroCostLoadBalancingAlgorithm {
     }
 
     /// Check if algorithm supports weights
-    pub fn supports_weights(&self) -> bool {
+    pub const fn supports_weights(&self) -> bool {
         matches!(
             self,
             Self::WeightedRoundRobin | Self::WeightedRandom | Self::Custom(_)
@@ -193,7 +190,7 @@ impl ZeroCostLoadBalancingAlgorithm {
     }
 
     /// Check if algorithm requires health monitoring
-    pub fn requires_health_monitoring(&self) -> bool {
+    pub const fn requires_health_monitoring(&self) -> bool {
         matches!(
             self,
             Self::HealthAware | Self::LatencyBased | Self::CpuBased | Self::MemoryBased
@@ -217,9 +214,8 @@ pub struct DefaultServiceInfo {
     pub memory_usage: f64,
     pub last_seen: SystemTime,
 }
-
 impl DefaultServiceInfo {
-    pub fn new(id: String, name: String, endpoint: String) -> Self {
+    pub const fn new(id: String, name: String, endpoint: String) -> Self {
         Self {
             id,
             name,
@@ -234,7 +230,7 @@ impl DefaultServiceInfo {
         }
     }
 
-    pub fn is_healthy(&self) -> bool {
+    pub const fn is_healthy(&self) -> bool {
         self.health_score >= 0.5
     }
 
@@ -284,14 +280,12 @@ impl DefaultServiceInfo {
 pub struct DefaultServiceRequest {
     pub id: String,
     pub method: String,
-    pub path: String,
     pub headers: HashMap<String, String>,
     pub body: Vec<u8>,
     pub timestamp: SystemTime,
     pub priority: RequestPriority,
     pub session_id: Option<String>,
 }
-
 /// Request priority levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum RequestPriority {
@@ -300,7 +294,6 @@ pub enum RequestPriority {
     High,
     Critical,
 }
-
 impl Default for RequestPriority {
     fn default() -> Self {
         Self::Normal
@@ -317,7 +310,6 @@ pub struct DefaultServiceResponse {
     pub timestamp: SystemTime,
     pub success: bool,
 }
-
 /// Default load balancer statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DefaultLoadBalancerStats {
@@ -332,7 +324,6 @@ pub struct DefaultLoadBalancerStats {
     pub uptime_seconds: u64,
     pub last_reset: SystemTime,
 }
-
 impl Default for DefaultLoadBalancerStats {
     fn default() -> Self {
         Self {
@@ -358,7 +349,6 @@ pub struct DefaultWeightUpdate {
     pub reason: String,
     pub timestamp: SystemTime,
 }
-
 // ==================== SECTION ====================
 
 /// High-performance round-robin load balancer
@@ -367,7 +357,6 @@ pub struct ZeroCostRoundRobinBalancer {
     stats: std::sync::RwLock<DefaultLoadBalancerStats>,
     weights: std::sync::RwLock<HashMap<String, f64>>,
 }
-
 impl Default for ZeroCostRoundRobinBalancer {
     fn default() -> Self {
         Self::new()
@@ -375,6 +364,7 @@ impl Default for ZeroCostRoundRobinBalancer {
 }
 
 impl ZeroCostRoundRobinBalancer {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             current_index: std::sync::atomic::AtomicUsize::new(0),
@@ -397,25 +387,21 @@ impl ZeroCostLoadBalancer for ZeroCostRoundRobinBalancer {
         _request: &Self::ServiceRequest,
     ) -> Result<Self::ServiceInfo> {
         if services.is_empty() {
-            return Err(crate::NestGateError::Configuration {
-                message: "No services available".to_string(),
+            return Err(crate::NestGateError::configuration(
                 
-                field: Some("services".to_string()),
                 
-            });
-        }
+            );
+        )
 
         // Filter healthy services
         let healthy_services: Vec<_> = services.iter().filter(|s| s.is_healthy()).collect();
 
         if healthy_services.is_empty() {
-            return Err(crate::NestGateError::Configuration {
-                message: "No healthy services available".to_string(),
+            return Err(crate::NestGateError::configuration(
                 
-                field: Some("healthy_services".to_string()),
                 
-            });
-        }
+            );
+        )
 
         // Zero-cost round-robin selection
         let index = self
@@ -503,15 +489,14 @@ impl ZeroCostLoadBalancer for ZeroCostRoundRobinBalancer {
 pub struct LoadBalancerAdapter<T> {
     inner: T,
 }
-
 impl<T> LoadBalancerAdapter<T> {
     /// Create new adapter
-    pub fn new(balancer: T) -> Self {
+    pub const fn new(balancer: T) -> Self {
         Self { inner: balancer }
     }
 
     /// Get reference to inner load balancer
-    pub fn inner(&self) -> &T {
+    pub const fn inner(&self) -> &T {
         &self.inner
     }
 
@@ -521,7 +506,7 @@ impl<T> LoadBalancerAdapter<T> {
     }
 
     /// Consume adapter and return inner load balancer
-    pub fn into_inner(self) -> T {
+    pub const fn into_inner(self) -> T {
         self.inner
     }
 }

@@ -20,7 +20,6 @@ pub struct ServiceInfo {
     /// Performance monitoring features
     pub monitoring_features: Vec<String>,
 }
-
 /// Tier benefits analysis
 #[derive(Debug, Clone)]
 pub struct TierBenefits {
@@ -28,7 +27,6 @@ pub struct TierBenefits {
     pub cost_savings: f64,
     pub storage_efficiency: f64,
 }
-
 /// File analysis data for AI predictions
 #[derive(Debug, Clone)]
 pub struct FileAnalysisData {
@@ -41,7 +39,6 @@ pub struct FileAnalysisData {
     pub is_frequently_accessed_dir: bool,
     pub estimated_access_pattern: String,
 }
-
 /// Current metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CurrentMetrics {
@@ -50,7 +47,6 @@ pub struct CurrentMetrics {
     pub average_latency_ms: f64,
     pub error_rate: f64,
 }
-
 impl Default for CurrentMetrics {
     fn default() -> Self {
         Self {
@@ -75,7 +71,6 @@ pub struct EnhancedServiceStatus {
     pub metrics: CurrentMetrics,
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
-
 /// AI integration status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AiIntegrationStatus {
@@ -85,7 +80,6 @@ pub struct AiIntegrationStatus {
     pub last_optimization: SystemTime,
     pub prediction_accuracy: f64,
 }
-
 /// Migration status
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MigrationStatus {
@@ -95,7 +89,6 @@ pub struct MigrationStatus {
     pub failed_jobs: u64,
     pub total_bytes_migrated: u64,
 }
-
 /// Snapshot status
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SnapshotStatus {
@@ -104,7 +97,6 @@ pub struct SnapshotStatus {
     pub pending_operations: u32,
     pub recent_failures: u32,
 }
-
 /// Performance analytics data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceAnalytics {
@@ -113,7 +105,6 @@ pub struct PerformanceAnalytics {
     pub active_alerts: Vec<crate::performance::ActiveAlert>,
     pub tier_analytics: HashMap<StorageTier, crate::performance::TierPerformanceData>,
 }
-
 /// Optimization result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizationResult {
@@ -121,7 +112,6 @@ pub struct OptimizationResult {
     pub results: Vec<String>,
     pub success: bool,
 }
-
 /// Health state enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum HealthState {
@@ -130,7 +120,6 @@ pub enum HealthState {
     Critical,
     Unknown,
 }
-
 /// Pool overall status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolOverallStatus {
@@ -139,7 +128,6 @@ pub struct PoolOverallStatus {
     pub total_capacity: u64,
     pub available_capacity: u64,
 }
-
 /// Tier overall status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierOverallStatus {
@@ -148,7 +136,6 @@ pub struct TierOverallStatus {
     pub cold_utilization: f64,
     pub migration_queue_size: usize,
 }
-
 /// File analysis data structure for heuristic tier prediction
 #[derive(Debug, Clone)]
 pub struct FileAnalysis {
@@ -160,7 +147,6 @@ pub struct FileAnalysis {
     pub is_system_critical: bool,
     pub estimated_compression_ratio: f64,
 }
-
 /// Capacity information helper struct
 #[derive(Debug)]
 pub struct CapacityInfo {

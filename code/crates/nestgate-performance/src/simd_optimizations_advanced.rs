@@ -27,24 +27,28 @@ use std::marker::PhantomData;
 pub struct SimdBulkProcessor<const BUFFER_SIZE: usize = 8192> {
     _phantom: PhantomData<[u8; BUFFER_SIZE]>,
 }
-
 impl<const BUFFER_SIZE: usize> SimdBulkProcessor<BUFFER_SIZE> {
     /// Create new SIMD processor with compile-time buffer size
-    pub const fn new() -> Self {
-        Self {
+    pub const fn new() -> Self { Self {
             _phantom: PhantomData,
-        }
-    }
+         }
 
     /// Transform bulk data using SIMD instructions
-    pub fn transform_bulk_data(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn transform_bulk_data(
         &self,
         input: &[u8],
         output: &mut [u8],
         key: u64,
-    ) -> Result<()> {
+    ) -> Result<()>  {
         if input.len() != output.len() {
-            return Err(NestGateError::storage_error("simd_transform", "Buffer size mismatch", None));
+            return Err(NestGateError::storage_error("simd_transform", None));
         }
 
         // SIMD processing implementation (simplified for compilation)
@@ -62,15 +66,12 @@ pub struct SimdStorageBackend<const BUFFER_SIZE: usize = 8192> {
     base_path: String,
     processor: SimdBulkProcessor<BUFFER_SIZE>,
 }
-
 impl<const BUFFER_SIZE: usize> SimdStorageBackend<BUFFER_SIZE> {
     /// Create new SIMD storage backend
-    pub fn new(base_path: String) -> Self {
-        Self {
+    pub const fn new(base_path: String) -> Self { Self {
             base_path,
             processor: SimdBulkProcessor::new(),
-        }
-    }
+         }
 
     /// Generate deterministic key from path for SIMD operations
     fn generate_key_from_path(&self, path: &str) -> u64 {
@@ -99,7 +100,7 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
     }
 
     fn read(&self, path: &str) -> impl std::future::Future<Output = StorageResult<Vec<u8>>> + Send {
-        let full_path = format!("{}/{}", self.base_path, path);
+        let full_path = format!("{"actual_error_details"}/{"actual_error_details"}");
         let path = path.to_string();
         async move {
             // SIMD-accelerated file reading with vectorized decompression
@@ -114,13 +115,13 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
                     
                     Ok(processed)
                 }
-                Err(e) => Err(NestGateError::storage_error("read", &e.to_string(), Some(full_path))),
+    Err(e) => Err(NestGateError::storage_error("read", &e.to_string(), Some(full_path)),
             }
         }
     }
 
     fn write(&self, path: &str, data: &[u8]) -> impl std::future::Future<Output = StorageResult<()>> + Send {
-        let full_path = format!("{}/{}", self.base_path, path);
+        let full_path = format!("{"actual_error_details"}/{"actual_error_details"}");
         let path = path.to_string();
         let data = data.to_vec();
         async move {
@@ -133,16 +134,16 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
             
             tokio::fs::write(&full_path, &processed)
                 .await
-                .map_err(|e| NestGateError::storage_error("write", &e.to_string(), Some(full_path)))
+                .map_err(|_e| &e.to_string(), Some(full_path)))
         }
     }
 
     fn delete(&self, path: &str) -> impl std::future::Future<Output = StorageResult<()>> + Send {
-        let full_path = format!("{}/{}", self.base_path, path);
+        let full_path = format!("{"actual_error_details"}/{"actual_error_details"}");
         async move {
             tokio::fs::remove_file(&full_path)
                 .await
-                .map_err(|e| NestGateError::storage_error("delete", &e.to_string(), Some(full_path)))
+                .map_err(|_e| &e.to_string(), Some(full_path)))
         }
     }
 
@@ -191,17 +192,22 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
 pub struct SimdBatchProcessor<const BATCH_SIZE: usize = 1024> {
     _phantom: PhantomData<[u8; BATCH_SIZE]>,
 }
-
 impl<const BATCH_SIZE: usize> SimdBatchProcessor<BATCH_SIZE> {
     /// Create new batch processor
-    pub const fn new() -> Self {
-        Self {
+    pub const fn new() -> Self { Self {
             _phantom: PhantomData,
-        }
-    }
+         }
 
     /// Process batch of data with SIMD acceleration
-    pub fn process_batch(&self, batch: &mut [u8]) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn process_batch(&self, batch: &mut [u8]) -> Result<()>  {
         // SIMD batch processing implementation
         Ok(())
     }
@@ -223,7 +229,6 @@ mod tests {
         // Note: This would fail in actual test due to directory not existing
         // but demonstrates the API
     }
-
     #[test]
     fn test_simd_processor() {
         let processor = SimdBulkProcessor::<256>::new();

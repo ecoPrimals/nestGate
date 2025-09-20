@@ -20,7 +20,6 @@ pub struct BulkheadConfig {
     /// Enable queue overflow rejection
     pub reject_on_queue_full: bool,
 }
-
 impl Default for BulkheadConfig {
     fn default() -> Self {
         Self {
@@ -40,7 +39,6 @@ pub struct Bulkhead {
     semaphore: Arc<Semaphore>,
     metrics: Arc<RwLock<BulkheadMetrics>>,
 }
-
 /// Bulkhead metrics for monitoring
 #[derive(Debug, Clone)]
 pub struct BulkheadMetrics {
@@ -53,7 +51,6 @@ pub struct BulkheadMetrics {
     pub average_wait_time: Duration,
     pub total_wait_time: Duration,
 }
-
 /// Bulkhead status information
 #[derive(Debug, Clone)]
 pub struct BulkheadStatus {
@@ -65,7 +62,6 @@ pub struct BulkheadStatus {
     pub max_queue_size: usize,
     pub is_at_capacity: bool,
 }
-
 /// Permit holder that automatically releases on drop
 pub struct BulkheadPermit<'a> {
     _permit: SemaphorePermit<'a>,
@@ -73,7 +69,6 @@ pub struct BulkheadPermit<'a> {
     acquired_at: Instant,
     metrics: Arc<RwLock<BulkheadMetrics>>,
 }
-
 impl Drop for BulkheadPermit<'_> {
     fn drop(&mut self) {
         // Record the operation duration when permit is dropped
@@ -88,7 +83,7 @@ impl Drop for BulkheadPermit<'_> {
                     m.average_wait_time = m.total_wait_time / m.successful_acquisitions as u32;
                 }
             }
-        });
+        );
 
         tracing::debug!(
             "Released bulkhead permit for '{}' after {:?}",
@@ -100,7 +95,7 @@ impl Drop for BulkheadPermit<'_> {
 
 impl Bulkhead {
     /// Create a new bulkhead
-    pub fn new(name: String, config: BulkheadConfig) -> Self {
+    pub const fn new(name: String, config: BulkheadConfig) -> Self {
         let semaphore = Arc::new(Semaphore::new(config.max_concurrent));
         let metrics = Arc::new(RwLock::new(BulkheadMetrics {
             total_requests: 0,
@@ -122,7 +117,14 @@ impl Bulkhead {
     }
 
     /// Acquire a permit to access the protected resource
-    pub async fn acquire_permit(&self) -> Result<BulkheadPermit<'_>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn acquire_permit(&self) -> Result<BulkheadPermit<'_>>  {
         let start_time = Instant::now();
 
         // Update metrics
@@ -196,7 +198,15 @@ impl Bulkhead {
     }
 
     /// Try to acquire a permit without waiting
-    pub fn try_acquire_permit(&self) -> Result<Option<BulkheadPermit<'_>>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn try_acquire_permit(&self) -> Result<Option<BulkheadPermit<'_>>>  {
         match self.semaphore.try_acquire() {
             Ok(permit) => {
                 // Update metrics
@@ -215,7 +225,7 @@ impl Bulkhead {
                             m.max_concurrent_reached = current_concurrent;
                         }
                     }
-                });
+                );
 
                 Ok(Some(BulkheadPermit {
                     _permit: permit,
@@ -229,10 +239,18 @@ impl Bulkhead {
     }
 
     /// Get current bulkhead status
-    pub async fn get_status(&self) -> Result<BulkheadStatus> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn get_status(&self) -> Result<BulkheadStatus>  {
         let available_permits = self.semaphore.available_permits();
         let current_concurrent = self.config.max_concurrent - available_permits;
-        let utilization = (current_concurrent as f64 / self.config.max_concurrent as f64) * 100.0;
+        let utilization = (f64::from(current_concurrent) / self.config.f64::from(max_concurrent)) * 100.0;
 
         Ok(BulkheadStatus {
             name: self.name.clone(),
@@ -246,13 +264,19 @@ impl Bulkhead {
     }
 
     /// Get bulkhead metrics
-    pub async fn get_metrics(&self) -> Result<BulkheadMetrics> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_metrics(&self) -> Result<BulkheadMetrics>  {
         let metrics = self.metrics.read().await;
         Ok(metrics.clone())
     }
 
     /// Execute operation with bulkhead protection
-    pub async fn execute_with_bulkhead<F, T>(&self, operation: F) -> Result<T>
     where
         F: std::future::Future<Output = Result<T>>,
     {
@@ -261,19 +285,19 @@ impl Bulkhead {
     }
 
     /// Get utilization percentage
-    pub fn get_utilization(&self) -> f64 {
+    pub const fn get_utilization(&self) -> f64 {
         let available = self.semaphore.available_permits();
         let used = self.config.max_concurrent - available;
-        (used as f64 / self.config.max_concurrent as f64) * 100.0
+        (f64::from(used) / self.config.f64::from(max_concurrent)) * 100.0
     }
 
     /// Check if bulkhead is at capacity
-    pub fn is_at_capacity(&self) -> bool {
+    pub const fn is_at_capacity(&self) -> bool {
         self.semaphore.available_permits() == 0
     }
 
     /// Get available permits count
-    pub fn available_permits(&self) -> usize {
+    pub const fn available_permits(&self) -> usize {
         self.semaphore.available_permits()
     }
 
@@ -288,7 +312,14 @@ impl Bulkhead {
     }
 
     /// Reset bulkhead metrics
-    pub async fn reset_metrics(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn reset_metrics(&self) -> Result<()>  {
         let mut metrics = self.metrics.write().await;
         *metrics = BulkheadMetrics {
             total_requests: 0,

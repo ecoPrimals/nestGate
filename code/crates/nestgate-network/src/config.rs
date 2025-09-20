@@ -1,7 +1,6 @@
 ///
 /// Core network configuration types and utilities.
 use serde::{Deserialize, Serialize};
-
 // ==================== SECTION ====================
 
 // Re-export the canonical network configuration
@@ -17,12 +16,11 @@ pub type NetworkConfig = UnifiedNetworkConfig;
 // ==================== SECTION ====================
 
 /// Create default network configuration
-pub fn create_default_config() -> UnifiedNetworkConfig {
+pub const fn create_default_config() -> UnifiedNetworkConfig {
     UnifiedNetworkConfig::default()
 }
-
 /// Validate network configuration
-pub fn validate_config(config: &UnifiedNetworkConfig) -> Result<(), String> {
+pub const fn validate_config(config: &UnifiedNetworkConfig) -> Result<(), String> {
     // Basic validation - can be expanded as needed
     if config.base.ports.api_port == 0 {
         return Err("API port cannot be 0".to_string());
@@ -31,10 +29,8 @@ pub fn validate_config(config: &UnifiedNetworkConfig) -> Result<(), String> {
     if config.base.timeouts.connection_timeout_ms == 0 {
         return Err("Connection timeout cannot be 0".to_string());
     }
-    
     Ok(())
 }
-
 /// Network service status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ServiceStatus {
@@ -53,7 +49,6 @@ pub enum ServiceStatus {
     /// Service status is unknown
     Unknown,
 }
-
 impl Default for ServiceStatus {
     fn default() -> Self {
         ServiceStatus::Unknown

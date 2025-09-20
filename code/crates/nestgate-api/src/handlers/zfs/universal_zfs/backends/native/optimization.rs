@@ -12,7 +12,6 @@ use tracing::warn;
 /// Optimize ZFS pools and datasets (zero-copy optimized)
 pub async fn optimize(service: &NativeZfsService) -> UniversalZfsResult<String> {
     info!("Starting ZFS optimization operations");
-
     let mut results = Vec::new();
 
     // Get all pools
@@ -32,19 +31,28 @@ pub async fn optimize(service: &NativeZfsService) -> UniversalZfsResult<String> 
                 let _ = service
                     .execute_zfs_command(&["set", "compression=lz4", pool])
                     .await;
-                results.push(format!("Optimized compression for {pool}"));
+                results.push(format!(
+                    "Optimized compression for {}",
+                    "actual_error_details"
+                ));
 
                 // Optimize record size for large files
                 let _ = service
                     .execute_zfs_command(&["set", "recordsize=128k", pool])
                     .await;
-                results.push(format!("Optimized record size for {pool}"));
+                results.push(format!(
+                    "Optimized record size for {}",
+                    "actual_error_details"
+                ));
 
                 // Enable deduplication if beneficial
                 let _ = service
                     .execute_zfs_command(&["set", "dedup=on", pool])
                     .await;
-                results.push(format!("Enabled deduplication for {pool}"));
+                results.push(format!(
+                    "Enabled deduplication for {}",
+                    "actual_error_details"
+                ));
             }
         }
     }
@@ -61,7 +69,6 @@ pub async fn get_optimization_analytics(
     service: &NativeZfsService,
 ) -> UniversalZfsResult<serde_json::Value> {
     info!("Collecting ZFS optimization analytics");
-
     // Get pool statistics
     let pools_output = service
         .execute_zfs_command(&["list", "-H", "-o", "name,used,available,compressratio"])
@@ -93,10 +100,16 @@ pub async fn get_optimization_analytics(
 
             // Generate recommendations
             if compression_ratio < 1.2 {
-                recommendations.push(format!("Consider enabling compression for {}", parts[0]));
+                recommendations.push(format!(
+                    "Consider enabling compression for {}",
+                    "actual_error_details"
+                ));
             }
             if available < used / 10 {
-                recommendations.push(format!("Pool {} is running low on space", parts[0]));
+                recommendations.push(format!(
+                    "Pool {} is running low on space",
+                    "actual_error_details"
+                ));
             }
 
             // Safely access the pools array, or skip if corrupted
@@ -119,7 +132,7 @@ pub async fn get_optimization_analytics(
     analytics["total_used"] = total_used.into();
     analytics["total_available"] = total_available.into();
     analytics["average_compression_ratio"] = if !compression_ratios.is_empty() {
-        (compression_ratios.iter().sum::<f64>() / compression_ratios.len() as f64).into()
+        (compression_ratios.iter().sum::<f64>() / (compression_ratios.len() as f64)).into()
     } else {
         1.0.into()
     };
@@ -129,16 +142,15 @@ pub async fn get_optimization_analytics(
 }
 
 /// Predict optimal storage tier for a file (zero-copy optimized)
-pub async fn predict_tier(
+pub fn predict_tier(
     service: &NativeZfsService,
     file_path: &str,
 ) -> UniversalZfsResult<String> {
     info!("Predicting optimal tier for file: {}", file_path);
-
     // Get file statistics
     let stat_output = service.execute_zfs_command(&["stat", file_path]).await;
 
-    let tier = match stat_output {
+    let tier = match &stat_output {
         Ok(output) => {
             // Parse file size and access patterns
             let size_mb = extract_file_size(&output).unwrap_or(0) / (1024 * 1024);
@@ -146,20 +158,20 @@ pub async fn predict_tier(
 
             // Simple tier prediction logic
             if size_mb < 10 {
-                "hot" // Small files go to hot tier
+                "hot".to_string() // Small files go to hot tier
             } else if size_mb < 1000 {
                 if access_time.is_some_and(|t| t < 7) {
-                    "warm" // Recently accessed medium files go to warm
+                    "warm".to_string() // Recently accessed medium files go to warm
                 } else {
-                    "cold" // Old medium files go to cold
+                    "cold".to_string() // Old medium files go to cold
                 }
             } else {
-                "cold" // Large files go to cold tier
+                "cold".to_string() // Large files go to cold tier
             }
         }
-        Err(_) => {
+        Err(_e) => {
             // If we can't stat the file, default to warm tier
-            "warm"
+            "warm".to_string()
         }
     };
 
@@ -171,7 +183,6 @@ fn parse_size(size_str: &str) -> Option<u64> {
     if size_str == "-" {
         return Some(0);
     }
-
     let size_str = size_str.trim();
     if size_str.is_empty() {
         return None;
@@ -199,7 +210,7 @@ fn parse_size(size_str: &str) -> Option<u64> {
     };
 
     let number: f64 = number_part.parse().ok()?;
-    Some((number * multiplier as f64) as u64)
+    Some((number * f64::from(multiplier)) as u64)
 }
 
 /// Extract file size from stat output (zero-copy optimized)
@@ -215,7 +226,6 @@ fn extract_file_size(stat_output: &str) -> Option<u64> {
     }
     None
 }
-
 /// Extract access time from stat output (returns days since access) (zero-copy optimized)
 fn extract_access_time(stat_output: &str) -> Option<u64> {
     // Simple extraction - in real implementation would parse properly

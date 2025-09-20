@@ -2,7 +2,6 @@
 // Storage and API configuration structures for the canonical unified configuration system.
 
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 use std::time::Duration;
 
 use crate::canonical_modernization::canonical_constants::{
@@ -59,7 +58,6 @@ pub struct StorageTiersConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierConfig {
     /// Storage path
-    pub path: PathBuf,
     /// Maximum size (bytes)
     pub max_size_bytes: u64,
     /// Compression level (0-9)
@@ -98,7 +96,6 @@ pub struct RestApiConfig {
     /// API version
     pub version: String,
     /// Base path prefix
-    pub base_path: String,
     /// Enable API documentation
     pub enable_docs: bool,
     /// Enable CORS
@@ -209,7 +206,6 @@ pub struct LoadTestingConfig {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct WorkspaceConfig {
     pub enabled: bool,
-    pub base_path: PathBuf,
     pub max_workspaces: u32,
 }
 
@@ -271,7 +267,6 @@ impl Default for CacheStorageConfig {
 impl Default for TierConfig {
     fn default() -> Self {
         Self {
-            path: PathBuf::from("/tmp/nestgate-storage"),
             max_size_bytes: 1024 * 1024 * 1024, // 1GB
             compression_level: 6,
             retention_days: 30,
@@ -300,7 +295,6 @@ impl Default for RestApiConfig {
     fn default() -> Self {
         Self {
             version: "v1".to_string(),
-            base_path: "/api".to_string(),
             enable_docs: true,
             enable_cors: true,
             cors_origins: vec!["*".to_string()],

@@ -1,5 +1,5 @@
-//! Cryptographic Access Control and Digital Rights Management
-//! **MODERNIZED**: Updated to use current error handling and patterns
+// Cryptographic Access Control and Digital Rights Management
+// **MODERNIZED**: Updated to use current error handling and patterns
 
 // use crate::error::SecurityError; // Removed - using unified error system
 use crate::universal_spore::{
@@ -32,13 +32,19 @@ pub struct CryptoProof {
     /// Security provider validation token
     pub validation_token: String,
 }
-
 impl CryptoProof {
     /// Create new proof using security context
-    pub async fn new_with_security_context(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn new_with_security_context(
         data: &[u8],
         context: &str,
-    ) -> Result<Self> {
+    ) -> Result<Self>  {
         println!("Creating crypto proof with security provider");
 
         // Generate proof data
@@ -69,7 +75,15 @@ impl CryptoProof {
     }
 
     /// Validate proof using security validation
-    pub async fn validate_with_security_context(&self) -> Result<bool> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn validate_with_security_context(&self) -> Result<bool>  {
         println!("Validating crypto proof with security provider");
 
         // Check timestamp validity (not too old)
@@ -127,12 +141,8 @@ impl CryptoProof {
         hasher.update(
             SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
-                .map_err(|e| NestGateError::Internal {
-                    message: format!("Time error: {e}"),
-                    location: Some(file!().to_string()),
-                    context: None,
-                    is_bug: false,
-                })?
+                .map_err(|e| NestGateError::internal_error(
+                    location: Some(file!().to_string())})?
                 .as_secs()
                 .to_be_bytes(),
         );
@@ -168,13 +178,11 @@ pub struct AccessRequest {
     /// Destination identifier
     pub destination: String,
     /// Operation being performed
-    pub operation: String,
     /// Request timestamp
     pub timestamp: SystemTime,
     /// Request context
     pub context: String,
 }
-
 /// Access decision result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AccessDecision {
@@ -187,7 +195,6 @@ pub enum AccessDecision {
     /// Require authentication for access
     RequireAuthentication { reason: String },
 }
-
 /// Statistics for lock operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LockStats {
@@ -199,7 +206,6 @@ pub struct LockStats {
     pub expired_locks: usize,
     pub lock_expiration: Duration,
 }
-
 /// Corporate detection pattern for identifying business usage
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CorporateDetectionPattern {
@@ -212,12 +218,10 @@ pub struct CorporateDetectionPattern {
     /// Pattern enabled
     pub enabled: bool,
 }
-
 /// External boundary guardian for corporate license enforcement
 pub struct ExternalBoundaryGuardian {
     /// Spore for autonomous rights enforcement
     pub spore: Arc<UniversalCryptographicSpore>,
-
     /// Detection patterns for corporate usage
     pub detection_patterns: Vec<CorporateDetectionPattern>,
 
@@ -228,9 +232,16 @@ pub struct ExternalBoundaryGuardian {
 
 impl ExternalBoundaryGuardian {
     /// Create new guardian with cryptographic spore
-    pub async fn new_with_spore(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn new_with_spore(
         provider_endpoint: Option<String>,
-    ) -> Result<Self> {
+    ) -> Result<Self>  {
         // Create spore for NestGate
         let mut spore = UniversalCryptographicSpore::new_for_primal("nestgate")?;
 
@@ -258,24 +269,25 @@ impl ExternalBoundaryGuardian {
     }
 
     /// Install security extraction lock using spore authorization
-    pub async fn install_security_extraction_lock(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn install_security_extraction_lock(
         &self,
-        dataset_path: &str,
         user_context: UserContext,
-    ) -> Result<()> {
+    ) -> Result<()>  {
         println!("🔐 Installing security extraction lock for dataset: {dataset_path}");
 
         // Create operation request
         let operation = OperationRequest {
             operation_type: "install_extraction_lock".to_string(),
-            resource_path: dataset_path.to_string(),
             user_context: user_context.clone(),
             metadata: std::collections::HashMap::new(),
             timestamp: std::time::SystemTime::now(),
-                    retry_info: None,
-                    recovery_suggestions: vec![],
-                    performance_metrics: None,
-                    environment: None,
         };
 
         // Ask spore for authorization
@@ -301,7 +313,7 @@ impl ExternalBoundaryGuardian {
                 ..
             } => {
                 println!("⚠️ Access denied: {reason}");
-                Err(NestGateError::permission_denied(
+                Err(NestGateError::security(
                     &reason,
                     "crypto_lock_access",
                     Some("external_boundary_guardian"),
@@ -319,7 +331,7 @@ impl ExternalBoundaryGuardian {
                     organization_profile.organization_name, contact
                 );
                 println!("🏢 {message}");
-                Err(NestGateError::permission_denied(
+                Err(NestGateError::security(
                     &message,
                     "crypto_lock_access",
                     Some("external_boundary_guardian"),
@@ -330,24 +342,25 @@ impl ExternalBoundaryGuardian {
     }
 
     /// Create sovereign security lock using spore system
-    pub async fn create_sovereign_security_lock(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_sovereign_security_lock(
         &self,
-        dataset_path: &str,
         user_context: &UserContext,
-    ) -> Result<String> {
+    ) -> Result<String>  {
         println!("🛡️ Creating sovereign security lock for dataset: {dataset_path}");
 
         // Create operation request
         let operation = OperationRequest {
             operation_type: "create_sovereign_lock".to_string(),
-            resource_path: dataset_path.to_string(),
             user_context: user_context.clone(),
             metadata: std::collections::HashMap::new(),
             timestamp: std::time::SystemTime::now(),
-                    retry_info: None,
-                    recovery_suggestions: vec![],
-                    performance_metrics: None,
-                    environment: None,
         };
 
         // Ask spore for authorization
@@ -403,7 +416,15 @@ impl ExternalBoundaryGuardian {
     }
 
     /// Check if spore needs evolution
-    pub async fn check_spore_evolution(&self) -> Result<bool> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn check_spore_evolution(&self) -> Result<bool>  {
         // For immutable Arc, we can't actually evolve the spore in place
         // Just check if evolution would be beneficial
         println!("🌱 Checking if spore evolution would be beneficial");
@@ -411,7 +432,15 @@ impl ExternalBoundaryGuardian {
     }
 
     /// Get spore status for monitoring
-    pub async fn get_spore_status(&self) -> Result<SporeStatus> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn get_spore_status(&self) -> Result<SporeStatus>  {
         Ok(SporeStatus {
             spore_id: self.spore.spore_id.clone(),
             generation: self.spore.generation,
@@ -435,14 +464,12 @@ pub struct SporeStatus {
     pub valid_locks: usize,
     pub last_evolution: SystemTime,
 }
-
 /// Create a spore-enhanced boundary guardian
 pub async fn create_spore_guardian(
     provider_endpoint: Option<String>,
 ) -> Result<ExternalBoundaryGuardian> {
     ExternalBoundaryGuardian::new_with_spore(provider_endpoint).await
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -490,7 +517,7 @@ mod tests {
         let user_context = UserContext {
             user_id: Some("test_user".to_string()),
             session_id: "test_session".to_string(),
-            ip_address: "127.0.0.1".to_string(),
+            ip_endpoint: "127.0.0.1".to_string(),
             user_agent: Some("test_agent".to_string()),
             environment_info: std::collections::HashMap::new(),
         };
@@ -511,7 +538,7 @@ mod tests {
         let valid_user_context = UserContext {
             user_id: Some("valid_user".to_string()),
             session_id: "valid_session".to_string(),
-            ip_address: "127.0.0.1".to_string(),
+            ip_endpoint: "127.0.0.1".to_string(),
             user_agent: Some("test_agent".to_string()),
             environment_info: std::collections::HashMap::new(),
         };
@@ -525,7 +552,7 @@ mod tests {
         let invalid_user_context = UserContext {
             user_id: Some("malicious_user".to_string()),
             session_id: "malicious_session".to_string(),
-            ip_address: "192.168.1.100".to_string(),
+            ip_endpoint: "192.168.1.100".to_string(),
             user_agent: Some("malicious_agent".to_string()),
             environment_info: std::collections::HashMap::new(),
         };

@@ -1,54 +1,83 @@
 //
 // Team creation, listing, and workspace team association functionality.
 
-use axum::{extract::Json, http::StatusCode};
-use serde_json::{json, Value};
-use tracing::info;
-// Removed unused tracing import
+use axum::{http::StatusCode, response::Json};
+use serde::{Deserialize, Serialize};
 
-/// Get all teams
-pub async fn get_teams() -> Result<Json<Value>, StatusCode> {
-    info!("👥 Getting all teams");
-
-    let teams = vec![
-        json!({
-            "id": "team-1",
-            "name": "Development Team",
-            "members": 5,
-            "workspaces": 3,
-            "storage_used": "25GB"
-        }),
-        json!({
-            "id": "team-2",
-            "name": "QA Team",
-            "members": 3,
-            "workspaces": 2,
-            "storage_used": "15GB"
-        }),
-    ];
-
-    Ok(Json(json!({
-        "status": "success",
-        "teams": teams,
-        "count": teams.len()
-    })))
+/// **TEAM CREATION REQUEST**
+///
+/// Request structure for creating a new team.
+#[derive(Debug, Deserialize)]
+pub struct CreateTeamRequest {
+    /// Team name
+    pub name: String,
+    /// Team description
+    pub description: Option<String>,
+    /// Initial team members
+    pub members: Vec<String>,
 }
 
-/// Create a new team
-pub async fn create_team(Json(request): Json<Value>) -> Result<Json<Value>, StatusCode> {
-    info!("👥 Creating new team: {:?}", request);
+/// **TEAM INFO**
+///
+/// Information about a team.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TeamInfo {
+    /// Team identifier
+    pub id: String,
+    /// Team name
+    pub name: String,
+    /// Team description
+    pub description: Option<String>,
+    /// Team members
+    pub members: Vec<String>,
+    /// Team creation timestamp
+    pub created_at: std::time::SystemTime,
+}
 
-    let team_name = request
-        .get("name")
-        .and_then(|v| v.as_str())
-        .unwrap_or("unnamed-team");
+/// **CREATE TEAM HANDLER**
+///
+/// Create a new team with the specified configuration.
+pub fn create_team(
+    Json(request): Json<CreateTeamRequest>,
+) -> Result<Json<TeamInfo>, StatusCode> {
+    let team = TeamInfo {
+        id: format!(
+            "team_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+        ),
+        name: request.name,
+        description: request.description,
+        members: request.members,
+        created_at: std::time::SystemTime::now(),
+    };
 
-    let team_id = uuid::Uuid::new_v4().to_string();
+    Ok(Json(team))
+}
 
-    Ok(Json(json!({
-        "status": "success",
-        "message": "Team created successfully",
-        "team_id": team_id,
-        "name": team_name
-    })))
+/// **GET TEAMS HANDLER**
+///
+/// Retrieve all teams.
+#[must_use]
+pub fn get_teams() -> Result<Json<Vec<TeamInfo>>, StatusCode> {
+    let teams = vec![
+        TeamInfo {
+            id: "team_001".to_string(),
+            name: "Development Team".to_string(),
+            description: Some("Core development team".to_string()),
+            members: vec!["alice".to_string(), "bob".to_string()],
+            created_at: std::time::SystemTime::now(),
+        },
+        TeamInfo {
+            id: "team_002".to_string(),
+            name: "Operations Team".to_string(),
+            description: Some("Infrastructure and operations".to_string()),
+            members: vec!["charlie".to_string(), "diana".to_string()],
+            created_at: std::time::SystemTime::now(),
+        },
+    ];
+
+    Ok(Json(teams))
 }

@@ -80,7 +80,14 @@ impl AttackVector {
     pub fn new() -> Self {
         Self {
             attack_type: AttackType::SqlInjection,
-            target: "http://localhost:8080/api/test".to_string(),
+            target: std::env::var("NESTGATE_API_ENDPOINT").unwrap_or_else(|_| {
+                format!(
+                    "http://{}:{}/api/test",
+                    std::env::var("NESTGATE_HOSTNAME")
+                        .unwrap_or_else(|_| nestgate_core::constants::TEST_HOSTNAME.to_string()),
+                    std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string())
+                )
+            }),
             parameters: HashMap::new(),
             should_fail: true,
         }

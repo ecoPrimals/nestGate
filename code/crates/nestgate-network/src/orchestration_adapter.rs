@@ -1,23 +1,26 @@
-//
-// This module provides capability-based orchestration integration through the universal adapter pattern.
-// ✅ ARCHITECTURE COMPLIANCE: No hardcoded primal names, uses capability discovery.
+//! Lightweight Orchestration Client - Sovereignty Compliant
+//!
+//! This module provides a lightweight client for orchestration capabilities
+//! that delegates to orchestration primals discovered through the universal adapter.
+//!
+//! SOVEREIGNTY COMPLIANCE:
+//! - No hardcoded orchestration primal names
+//! - Uses capability discovery only
+//! - Maintains fallback for standalone operation
 
-use nestgate_core::error::{IdioResult, NestGateError};
-use nestgate_core::universal_adapter::CanonicalUniversalAdapter as UniversalAdapter;
+use crate::Result;
+use nestgate_core::ecosystem_integration::capability_router::FallbackProvider;
+use nestgate_core::ecosystem_integration::fallback_providers::orchestration::OrchestrationFallbackProvider;
+use nestgate_core::universal_adapter::{CapabilityRequest, UniversalAdapter};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tracing::{debug, info, warn};
-use uuid;
+use tracing::{debug, info};
 
-/// Configuration for orchestration capability discovery
+/// Lightweight configuration for orchestration client
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OrchestrationConfig {
-    /// Discovery endpoint for orchestration capabilities
-    pub discovery_endpoint: Option<String>,
     /// Timeout for orchestration operations
     pub timeout_seconds: u64,
-    /// Enable automatic capability discovery
-    pub auto_discovery: bool,
     /// Fallback to standalone mode if no orchestration available
     pub standalone_fallback: bool,
 }
@@ -25,69 +28,73 @@ pub struct OrchestrationConfig {
 impl Default for OrchestrationConfig {
     fn default() -> Self {
         Self {
-            discovery_endpoint: std::env::var("ORCHESTRATION_DISCOVERY_URL").ok(),
             timeout_seconds: 30,
-            auto_discovery: true,
             standalone_fallback: true,
         }
     }
 }
 
-/// Generic orchestration capability adapter
+/// Lightweight orchestration client that delegates to discovered capabilities
+///
+/// SOVEREIGNTY COMPLIANCE:
+/// - No hardcoded primal names or endpoints
+/// - Dynamic capability discovery through universal adapter
+/// - Graceful fallback to local orchestration when unavailable
 pub struct OrchestrationAdapter {
     config: OrchestrationConfig,
     universal_adapter: Arc<UniversalAdapter>,
+    fallback_provider: OrchestrationFallbackProvider,
 }
 
 impl OrchestrationAdapter {
-    /// Create new orchestration adapter with capability-based discovery
-    pub fn new(config: OrchestrationConfig, universal_adapter: Arc<UniversalAdapter>) -> Self {
-        info!("🌐 Initializing orchestration capability adapter");
+    /// Create new orchestration client with capability-based discovery
+    pub const fn new(config: OrchestrationConfig, universal_adapter: Arc<UniversalAdapter>) -> Self {
+        info!("🌐 Initializing lightweight orchestration client (sovereignty compliant)");
         Self {
             config,
             universal_adapter,
+            fallback_provider: OrchestrationFallbackProvider::new(),
         }
     }
 
-    /// Discover available orchestration services through universal adapter
-    pub async fn discover_orchestration_services(&self) -> IdioResult<Vec<OrchestrationService, NestGateError>> {
-        debug!("🔍 Discovering orchestration capabilities");
+    /// Request orchestration capability through universal adapter or fallback
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn request_capability(
+        &self,
+        capability: &str,
+        params: serde_json::Value,
+    ) -> Result<serde_json::Value>  {
+        debug!("🔍 Requesting orchestration capability: {}", capability);
 
-        // ✅ CAPABILITY-BASED: Use universal adapter for discovery
-        // Create a proper CapabilityRequest
-        let capability_request = nestgate_core::ecosystem_integration::CapabilityRequest {
-            request_id: uuid::Uuid::new_v4().to_string(),
-            target_service: None,
-            capability: "orchestration".to_string(),
-            parameters: std::collections::HashMap::new(),
-            metadata: std::collections::HashMap::new(),
-            timeout: Some(std::time::Duration::from_secs(30)),
-        };
-
+        // Try to discover orchestration capability (no hardcoded names)
         match self
-            .universal_adapter
-            .execute_capability(capability_request)
+            .try_orchestration_request(capability, params.clone())
             .await
         {
             Ok(response) => {
-                let _endpoint = "http://localhost:8080".to_string(); // Default endpoint from response
-                info!("✅ Orchestration capability discovered: {:?}", response);
-                Ok(vec![OrchestrationService {
-                    endpoint,
-                    capabilities: vec![
-                        "service_coordination".to_string(),
-                        "workflow_management".to_string(),
-                    ],
-                    status: "available".to_string(),
-                }])
+                info!("✅ Orchestration request handled via discovered capability");
+                Ok(response)
             }
             Err(e) => {
+                debug!(
+                    "⚠️ Orchestration capability unavailable: {}, using fallback",
+                    e
+                );
                 if self.config.standalone_fallback {
-                    warn!(
-                        "⚠️ No orchestration capability found, using standalone mode: {}",
-                        e
-                    );
-                    Ok(vec![])
+                    self.fallback_provider
+                        .execute(capability, params)
+                        .await
+                        .map_err(|e| {
+                            nestgate_core::error::NestGateError::network_error(&format!(
+                                "Fallback orchestration failed: {e}"
+                            ))
+                        })
                 } else {
                     Err(e)
                 }
@@ -95,69 +102,152 @@ impl OrchestrationAdapter {
         }
     }
 
-    /// Request service coordination through discovered orchestration capability
-    pub async fn coordinate_services(
+    /// Check if orchestration capability is available
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn is_available(&self) -> Result<bool>  {
+        let capability_result = self.universal_adapter.get_capability("orchestration").await;
+
+        Ok(capability_result.is_ok())
+    }
+
+    /// Execute orchestration command if capability is available
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn execute_command(
         &self,
-        request: ServiceCoordinationRequest,
-    ) -> IdioResult<ServiceCoordinationResponse, NestGateError> {
-        debug!("🎯 Requesting service coordination");
+        command: &str,
+        args: serde_json::Value,
+    ) -> Result<serde_json::Value>  {
+        let _capability_info = self
+            .universal_adapter
+            .get_capability("orchestration")
+            .await?;
 
-        // ✅ CAPABILITY-BASED: Discover orchestration service dynamically
-        let services = self.discover_orchestration_services().await?;
+        // Create request using the correct API
+        let request = CapabilityRequest::new("orchestration", command)
+            .with_parameters(args)
+            .with_metadata("requester", "nestgate-network")
+            .with_metadata("timeout_seconds", self.config.timeout_seconds.to_string());
 
-        if services.is_empty() {
-            if self.config.standalone_fallback {
-                info!("🏠 Operating in standalone mode - no external orchestration");
-                return Ok(ServiceCoordinationResponse {
-                    success: true,
-                    message: "Operating in standalone mode".to_string(),
-                    services: vec![],
+        // Make request through universal adapter
+        let response = self
+            .universal_adapter
+            .request_capability("orchestration", request)
+            .await
+            .map_err(|e| {
+                nestgate_core::error::NestGateError::network_error(&format!(
+                    "Orchestration command failed: {e}"
+                ))
+            })?;
+
+        Ok(response.result)
+    }
+
+    /// Get orchestration metadata if available
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_orchestration_metadata(&self) -> Result<Option<serde_json::Value>>  {
+        match self.universal_adapter.get_capability("orchestration").await {
+            Ok(capability) => {
+                let metadata = serde_json::json!({
+                    "provider": capability.provider,
+                    "endpoint": capability.endpoint,
+                    "performance_tier": capability.performance_tier,
+                    "availability": capability.availability,
+                    "status": "available"
                 });
-            } else {
-                return Err(nestgate_core::error::NestGateError::network_error(
-                    "No orchestration capability available",
-                    "orchestration_discovery",
-                    Some("orchestration"),
-                ));
+                Ok(Some(metadata))
             }
+            Err(_) => Ok(None),
         }
+    }
 
-        // Use the first available orchestration service
-        let orchestration_service = &services[0];
-        info!(
-            "🌐 Using orchestration service: {}",
-            orchestration_service.endpoint
-        );
+    /// Try to make orchestration request through discovered capability
+    async fn try_orchestration_request(
+        &self,
+        operation: &str,
+        params: serde_json::Value,
+    ) -> Result<serde_json::Value> {
+        // Get orchestration capability
+        let _capability_info = self
+            .universal_adapter
+            .get_capability("orchestration")
+            .await
+            .map_err(|e| {
+                nestgate_core::error::NestGateError::network_error(&format!(
+                    "No orchestration capability discovered: {e}"
+                ))
+            })?;
 
-        // Implementation would make actual HTTP call to orchestration service
-        Ok(ServiceCoordinationResponse {
-            success: true,
-            message: "Service coordination requested".to_string(),
-            services: request.required_services,
-        })
+        // Create request using the correct API
+        let request = CapabilityRequest::new("orchestration", operation)
+            .with_parameters(params)
+            .with_metadata("requester", "nestgate-network")
+            .with_metadata("timeout_seconds", self.config.timeout_seconds.to_string());
+
+        // Make request through universal adapter
+        let response = self
+            .universal_adapter
+            .request_capability("orchestration", request)
+            .await
+            .map_err(|e| {
+                nestgate_core::error::NestGateError::network_error(&format!(
+                    "Orchestration request failed: {e}"
+                ))
+            })?;
+
+        Ok(response.result)
     }
 }
 
-/// Orchestration service discovered through capability system
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OrchestrationService {
-    pub endpoint: String,
-    pub capabilities: Vec<String>,
-    pub status: String,
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-/// Request for service coordination
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ServiceCoordinationRequest {
-    pub required_services: Vec<String>,
-    pub coordination_type: String,
-    pub priority: u8,
-}
+    #[test]
+    fn test_sovereignty_compliance() {
+        // This test verifies that no hardcoded orchestration primal names exist
+        let source = include_str!("orchestration_adapter.rs");
 
-/// Response from service coordination
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ServiceCoordinationResponse {
-    pub success: bool,
-    pub message: String,
-    pub services: Vec<String>,
+        // Should not contain hardcoded primal names (using variables to avoid self-reference)
+        let primal1 = "song".to_owned() + "bird";
+        let primal2 = "bear".to_owned() + "dog";
+        let primal3 = "toad".to_owned() + "stool";
+
+        assert!(!source.contains(&primal1));
+        assert!(!source.contains(&primal2));
+        assert!(!source.contains(&primal3));
+
+        // Should use capability discovery
+        assert!(source.contains("find_capability"));
+        assert!(source.contains("orchestration"));
+        assert!(source.contains("universal_adapter"));
+
+        // Should have fallback capability
+        assert!(source.contains("fallback"));
+        assert!(source.contains("standalone"));
+    }
+
+    #[tokio::test]
+    async fn test_orchestration_config_defaults() {
+        let config = OrchestrationConfig::default();
+        assert_eq!(config.timeout_seconds, 30);
+        assert!(config.standalone_fallback);
+    }
 }

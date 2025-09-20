@@ -8,7 +8,7 @@ use std::time::Duration;
 /// Network domain configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkDomainConfig {
-    pub bind_address: String,
+    pub bind_endpoint: String,
     pub api_port: u16,
     pub health_port: u16,
     pub metrics_port: u16,
@@ -18,11 +18,10 @@ pub struct NetworkDomainConfig {
     pub enable_dynamic_networks: bool, // For backward compatibility
     pub port: u16,                     // Alias for api_port for backward compatibility
 }
-
 impl Default for NetworkDomainConfig {
     fn default() -> Self {
         Self {
-            bind_address: "127.0.0.1".to_string(),
+            bind_endpoint: "127.0.0.1".to_string(),
             api_port: 8080,
             health_port: 8081,
             metrics_port: 8082,

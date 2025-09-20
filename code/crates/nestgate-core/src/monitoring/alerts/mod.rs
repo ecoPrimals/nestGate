@@ -1,6 +1,6 @@
-//! Alert Management System
-//!
-//! Comprehensive alerting system for NestGate monitoring including rule evaluation,
+// Alert Management System
+//! Module definitions and exports.
+// Comprehensive alerting system for NestGate monitoring including rule evaluation,
 //! notification channels, escalation policies, and alert suppression.
 
 pub mod channels;

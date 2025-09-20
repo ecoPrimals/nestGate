@@ -19,29 +19,27 @@ use uuid::Uuid;
 pub struct ClusterConfig {
     pub cluster_name: String,
     pub node_id: String,
-    pub bind_address: SocketAddr,
+    pub bind_endpoint: SocketAddr,
     pub nodes: Vec<ClusterNodeConfig>,
     pub election_timeout_ms: u64,
     pub heartbeat_interval_ms: u64,
     pub max_missed_heartbeats: u32,
     pub discovery_enabled: bool,
-    pub discovery_multicast_address: String,
+    pub discovery_multicast_endpoint: String,
     pub discovery_port: u16,
     pub encryption_enabled: bool,
     pub cluster_secret: Option<String>,
 }
-
 /// Individual cluster node configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClusterNodeConfig {
     pub node_id: String,
-    pub address: SocketAddr,
+    pub endpoint: SocketAddr,
     pub region: Option<String>,
     pub zone: Option<String>,
     pub weight: u32,
     pub tags: HashMap<String, String>,
 }
-
 /// Cluster manager for coordinating multiple NestGate instances
 pub struct ClusterManager {
     config: Arc<ClusterConfig>,
@@ -54,19 +52,17 @@ pub struct ClusterManager {
     shutdown_sender: mpsc::Sender<()>,
     shutdown_receiver: Arc<RwLock<Option<mpsc::Receiver<()>>>>,
 }
-
 /// Individual cluster node
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClusterNode {
     pub node_id: String,
-    pub address: SocketAddr,
+    pub endpoint: SocketAddr,
     pub status: NodeStatus,
     pub role: NodeRole,
     pub last_heartbeat: SystemTime,
     pub metadata: NodeMetadata,
     pub capabilities: Vec<NodeCapability>,
 }
-
 /// Node status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum NodeStatus {
@@ -77,7 +73,6 @@ pub enum NodeStatus {
     Leaving,
     Failed,
 }
-
 /// Node role in cluster
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum NodeRole {
@@ -86,7 +81,6 @@ pub enum NodeRole {
     Candidate,
     Observer,
 }
-
 /// Node metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NodeMetadata {
@@ -98,7 +92,6 @@ pub struct NodeMetadata {
     pub tags: HashMap<String, String>,
     pub resources: NodeResources,
 }
-
 /// Node resource information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NodeResources {
@@ -110,7 +103,6 @@ pub struct NodeResources {
     pub memory_usage_percent: f64,
     pub storage_usage_percent: f64,
 }
-
 /// Node capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum NodeCapability {
@@ -121,7 +113,6 @@ pub enum NodeCapability {
     Analytics,
     Backup,
 }
-
 /// Overall cluster state
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClusterState {
@@ -133,7 +124,6 @@ pub struct ClusterState {
     pub partition_info: PartitionInfo,
     pub last_updated: SystemTime,
 }
-
 /// Cluster health assessment
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClusterHealth {
@@ -145,7 +135,6 @@ pub struct ClusterHealth {
     pub leader_available: bool,
     pub data_consistency: ConsistencyStatus,
 }
-
 /// Cluster health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ClusterHealthStatus {
@@ -154,7 +143,6 @@ pub enum ClusterHealthStatus {
     Critical,
     Failed,
 }
-
 /// Data consistency status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ConsistencyStatus {
@@ -163,7 +151,6 @@ pub enum ConsistencyStatus {
     Repairing,
     Unknown,
 }
-
 /// Partition information for network splits
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PartitionInfo {
@@ -171,7 +158,6 @@ pub struct PartitionInfo {
     pub majority_partition: Option<String>,
     pub split_brain_detected: bool,
 }
-
 /// Network partition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Partition {
@@ -180,7 +166,6 @@ pub struct Partition {
     pub has_leader: bool,
     pub quorum_size: u32,
 }
-
 /// Leader election manager
 pub struct LeaderElection {
     current_term: u64,
@@ -190,7 +175,6 @@ pub struct LeaderElection {
     votes_received: HashSet<String>,
     election_state: ElectionState,
 }
-
 /// Election state
 #[derive(Debug, Clone, PartialEq)]
 pub enum ElectionState {
@@ -198,26 +182,23 @@ pub enum ElectionState {
     Candidate,
     Leader,
 }
-
 /// Node discovery manager
 pub struct NodeDiscovery {
     discovery_enabled: bool,
-    multicast_address: String,
+    multicast_endpoint: String,
     discovery_port: u16,
     discovered_nodes: HashMap<String, DiscoveredNode>,
     last_discovery: SystemTime,
 }
-
 /// Discovered node information
 #[derive(Debug, Clone)]
 pub struct DiscoveredNode {
     pub node_id: String,
-    pub address: SocketAddr,
+    pub endpoint: SocketAddr,
     pub discovered_at: SystemTime,
     pub capabilities: Vec<NodeCapability>,
     pub metadata: HashMap<String, String>,
 }
-
 /// Heartbeat manager
 pub struct HeartbeatManager {
     heartbeat_interval: Duration,
@@ -225,7 +206,6 @@ pub struct HeartbeatManager {
     node_heartbeats: HashMap<String, HeartbeatInfo>,
     last_heartbeat_sent: Option<SystemTime>,
 }
-
 /// Heartbeat information
 #[derive(Debug, Clone)]
 pub struct HeartbeatInfo {
@@ -233,7 +213,6 @@ pub struct HeartbeatInfo {
     pub missed_count: u32,
     pub rtt_ms: u64,
 }
-
 /// Cluster events
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ClusterEvent {
@@ -246,7 +225,6 @@ pub enum ClusterEvent {
     PartitionHealed,
     ClusterHealthChanged(ClusterHealthStatus),
 }
-
 /// Cluster status for external reporting
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClusterStatus {
@@ -261,17 +239,24 @@ pub struct ClusterStatus {
     pub quorum_available: bool,
     pub last_updated: SystemTime,
 }
-
 impl ClusterManager {
     /// Create new cluster manager
-    pub async fn new(config: ClusterConfig) -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn new(config: ClusterConfig) -> Result<Self>  {
         let cluster_id = Uuid::new_v4().to_string();
         let node_id = config.node_id.clone();
         
         // Create local node
         let local_node = ClusterNode {
             node_id: node_id.clone(),
-            address: config.bind_address,
+            endpoint: config.bind_endpoint,
             status: NodeStatus::Starting,
             role: NodeRole::Follower,
             last_heartbeat: SystemTime::now(),
@@ -337,7 +322,7 @@ impl ClusterManager {
         
         let node_discovery = NodeDiscovery {
             discovery_enabled: config.discovery_enabled,
-            multicast_address: config.discovery_multicast_address.clone(),
+            multicast_endpoint: config.discovery_multicast_address.clone(),
             discovery_port: config.discovery_port,
             discovered_nodes: HashMap::new(),
             last_discovery: SystemTime::now(),
@@ -367,8 +352,16 @@ impl ClusterManager {
     }
     
     /// Start cluster services
-    pub async fn start(&self) -> Result<()> {
-        println!("🔗 Starting cluster manager for cluster '{}'...", self.config.cluster_name);
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn start(&self) -> Result<()>  {
+        println!("🔗 Starting cluster manager for cluster '{self.config.cluster_name}'...");
         
         // Update local node status
         {
@@ -396,7 +389,14 @@ impl ClusterManager {
     }
     
     /// Stop cluster services
-    pub async fn stop(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn stop(&self) -> Result<()>  {
         println!("🛑 Stopping cluster manager...");
         
         // Update local node status
@@ -418,7 +418,14 @@ impl ClusterManager {
     }
     
     /// Get current cluster status
-    pub async fn get_status(&self) -> Result<ClusterStatus> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_status(&self) -> Result<ClusterStatus>  {
         let cluster_state = self.cluster_state.read().await;
         let local_node = self.local_node.read().await;
         
@@ -437,7 +444,7 @@ impl ClusterManager {
     }
     
     /// Subscribe to cluster events
-    pub fn subscribe_events(&self) -> broadcast::Receiver<ClusterEvent> {
+    pub const fn subscribe_events(&self) -> broadcast::Receiver<ClusterEvent> {
         self.event_sender.subscribe()
     }
     
@@ -473,7 +480,7 @@ impl ClusterManager {
                             last_received: SystemTime::now(),
                             missed_count: 0,
                             rtt_ms: 10, // Simulated RTT
-                        });
+                        );
                 }
                 
                 // Update last heartbeat sent time
@@ -482,7 +489,7 @@ impl ClusterManager {
                     manager.last_heartbeat_sent = Some(SystemTime::now());
                 }
             }
-        });
+        );
         
         Ok(())
     }
@@ -549,7 +556,7 @@ impl ClusterManager {
                     }
                 }
             }
-        });
+        );
         
         Ok(())
     }
@@ -571,7 +578,7 @@ impl ClusterManager {
                     discovery.last_discovery = SystemTime::now();
                 }
             }
-        });
+        );
         
         Ok(())
     }
@@ -648,7 +655,7 @@ impl ClusterManager {
                     let _ = event_sender.send(ClusterEvent::ClusterHealthChanged(new_status));
                 }
             }
-        });
+        );
         
         Ok(())
     }
@@ -659,13 +666,13 @@ impl Default for ClusterConfig {
         Self {
             cluster_name: "nestgate-cluster".to_string(),
             node_id: Uuid::new_v4().to_string(),
-            bind_address: "0.0.0.0:8080".parse().unwrap(),
+            bind_endpoint: "0.0.0.0:8080".parse().unwrap(),
             nodes: vec![],
             election_timeout_ms: 5000,
             heartbeat_interval_ms: 1000,
             max_missed_heartbeats: 3,
             discovery_enabled: true,
-            discovery_multicast_address: "224.0.0.1".to_string(),
+            discovery_multicast_endpoint: "224.0.0.1".to_string(),
             discovery_port: 8081,
             encryption_enabled: true,
             cluster_secret: None,

@@ -1,12 +1,11 @@
-//! Core Configuration Types
-//!
-//! This module contains only the data structures for configuration.
-//! No validation, loading, or business logic - just pure data types.
+// Core Configuration Types
+//! Type definitions and data structures.
+// This module contains only the data structures for configuration.
+// No validation, loading, or business logic - just pure data types.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::IpAddr;
-use std::path::PathBuf;
 use std::time::Duration;
 
 /// The canonical NestGate configuration
@@ -28,9 +27,7 @@ pub struct CanonicalConfig {
     /// Integration with external systems
     pub integrations: IntegrationsConfig,
     /// Environment-specific overrides
-    pub environment: EnvironmentConfig,
 }
-
 // ==================== SECTION ====================
 
 /// System-level configuration
@@ -41,7 +38,6 @@ pub struct SystemConfig {
     /// Human-readable name for this instance
     pub instance_name: String,
     /// Environment (dev, staging, prod)
-    pub environment: Environment,
     /// Log level (trace, debug, info, warn, error)
     pub log_level: String,
     /// Data directory for persistent storage
@@ -51,7 +47,6 @@ pub struct SystemConfig {
     /// Enable development mode features
     pub dev_mode: bool,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Environment {
     Development,
@@ -74,7 +69,6 @@ pub struct NetworkConfig {
     /// Load balancing configuration
     pub load_balancer: Option<LoadBalancerConfig>,
 }
-
 /// API server configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiServerConfig {
@@ -91,7 +85,6 @@ pub struct ApiServerConfig {
     /// TLS configuration
     pub tls: Option<TlsConfig>,
 }
-
 /// Internal network configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InternalNetworkConfig {
@@ -102,12 +95,17 @@ pub struct InternalNetworkConfig {
     /// Health check settings
     pub health_check: HealthCheckConfig,
 }
-
 /// Service discovery configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceDiscoveryConfig {
     /// Enable automatic service discovery
     pub enabled: bool,
+// DEPRECATED: Consul service discovery - migrate to capability-based discovery
+// Capability-based discovery implemented
+// DEPRECATED: Kubernetes orchestration - migrate to capability-based orchestration
+// Capability-based discovery implemented
+// DEPRECATED: etcd key-value store - migrate to capability-based storage
+// Capability-based discovery implemented
     /// Discovery method (dns, consul, etcd, kubernetes)
     pub method: String,
     /// Discovery endpoint
@@ -115,7 +113,6 @@ pub struct ServiceDiscoveryConfig {
     /// Refresh interval
     pub refresh_interval: Duration,
 }
-
 /// Load balancer configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadBalancerConfig {
@@ -126,7 +123,6 @@ pub struct LoadBalancerConfig {
     /// Failover settings
     pub failover: FailoverConfig,
 }
-
 /// TLS configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TlsConfig {
@@ -139,7 +135,6 @@ pub struct TlsConfig {
     /// Require client certificates
     pub client_auth: bool,
 }
-
 /// Cluster configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClusterConfig {
@@ -150,7 +145,6 @@ pub struct ClusterConfig {
     /// Seed nodes
     pub seed_nodes: Vec<String>,
 }
-
 /// Health check configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheckConfig {
@@ -161,7 +155,6 @@ pub struct HealthCheckConfig {
     /// Number of retries before marking unhealthy
     pub retries: u32,
 }
-
 /// Failover configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FailoverConfig {
@@ -170,7 +163,6 @@ pub struct FailoverConfig {
     /// Failover timeout
     pub timeout: Duration,
 }
-
 // ==================== SECTION ====================
 
 /// Storage configuration
@@ -183,7 +175,6 @@ pub struct StorageConfig {
     /// Backup and replication settings
     pub backup: BackupConfig,
 }
-
 /// ZFS-specific configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsConfig {
@@ -191,7 +182,6 @@ pub struct ZfsConfig {
     pub compression: String,
     pub deduplication: bool,
 }
-
 /// Storage performance configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StoragePerformanceConfig {
@@ -202,7 +192,6 @@ pub struct StoragePerformanceConfig {
     /// Write buffer size
     pub write_buffer_size: u64,
 }
-
 /// Backup configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackupConfig {
@@ -213,7 +202,6 @@ pub struct BackupConfig {
     /// Backup retention policy
     pub retention: RetentionPolicy,
 }
-
 /// Retention policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RetentionPolicy {
@@ -224,7 +212,6 @@ pub struct RetentionPolicy {
     /// Number of monthly backups to keep
     pub monthly: u32,
 }
-
 // ==================== SECTION ====================
 
 /// Security configuration
@@ -239,7 +226,6 @@ pub struct SecurityConfig {
     /// Rate limiting settings
     pub rate_limiting: RateLimitConfig,
 }
-
 /// Authentication configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthConfig {
@@ -247,14 +233,12 @@ pub struct AuthConfig {
     pub method: String,
     pub providers: Vec<String>,
 }
-
 /// Authorization configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AuthzConfig {
     pub enabled: bool,
     pub policy_file: Option<PathBuf>,
 }
-
 /// Encryption configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptionConfig {
@@ -262,7 +246,6 @@ pub struct EncryptionConfig {
     pub algorithm: String,
     pub key_file: Option<PathBuf>,
 }
-
 /// Rate limiting configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RateLimitConfig {
@@ -273,7 +256,6 @@ pub struct RateLimitConfig {
     /// Burst allowance
     pub burst_size: u32,
 }
-
 // ==================== SECTION ====================
 
 /// Performance configuration
@@ -286,7 +268,6 @@ pub struct PerformanceConfig {
     /// I/O settings
     pub io: IoConfig,
 }
-
 /// Thread configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreadConfig {
@@ -295,7 +276,6 @@ pub struct ThreadConfig {
     /// Thread stack size
     pub stack_size: Option<usize>,
 }
-
 /// Memory configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryConfig {
@@ -304,7 +284,6 @@ pub struct MemoryConfig {
     /// Memory pool size
     pub pool_size: u64,
 }
-
 /// I/O configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IoConfig {
@@ -313,7 +292,6 @@ pub struct IoConfig {
     /// Maximum concurrent I/O operations
     pub max_concurrent_ops: u32,
 }
-
 // ==================== SECTION ====================
 
 /// Monitoring configuration
@@ -326,7 +304,6 @@ pub struct MonitoringConfig {
     /// Alerting settings
     pub alerting: AlertConfig,
 }
-
 /// Metrics configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricsConfig {
@@ -337,7 +314,6 @@ pub struct MetricsConfig {
     /// Collection interval
     pub interval: Duration,
 }
-
 /// Logging configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoggingConfig {
@@ -348,9 +324,7 @@ pub struct LoggingConfig {
     /// Log output (stdout, file)
     pub output: String,
     /// Log file path (if output is file)
-    pub file_path: Option<PathBuf>,
 }
-
 /// Alert configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AlertConfig {
@@ -358,7 +332,6 @@ pub struct AlertConfig {
     pub webhook_url: Option<String>,
     pub email_config: Option<HashMap<String, String>>,
 }
-
 // ==================== SECTION ====================
 
 /// Integration configuration
@@ -369,7 +342,6 @@ pub struct IntegrationsConfig {
     /// Webhook configurations
     pub webhooks: Vec<WebhookConfig>,
 }
-
 /// External service configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExternalServiceConfig {
@@ -382,7 +354,6 @@ pub struct ExternalServiceConfig {
     /// Retry configuration
     pub retry: RetryConfig,
 }
-
 /// Webhook configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WebhookConfig {
@@ -393,7 +364,6 @@ pub struct WebhookConfig {
     /// Events to trigger on
     pub events: Vec<String>,
 }
-
 /// Retry configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RetryConfig {
@@ -404,7 +374,6 @@ pub struct RetryConfig {
     /// Maximum delay between retries
     pub max_delay: Duration,
 }
-
 // ==================== SECTION ====================
 
 /// Environment-specific configuration

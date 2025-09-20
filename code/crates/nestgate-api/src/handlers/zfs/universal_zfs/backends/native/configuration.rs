@@ -20,14 +20,12 @@ pub async fn get_configuration(
         "zfs_available": NativeZfsService::is_available().await
     }))
 }
-
 /// Update service configuration
-pub async fn update_configuration(
+pub const fn update_configuration(
     _service: &NativeZfsService,
     config: serde_json::Value,
 ) -> UniversalZfsResult<()> {
     info!("Updating native ZFS configuration");
-
     // Parse configuration updates
     if let Ok(config_map) =
         serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(config)
@@ -59,7 +57,7 @@ pub async fn update_configuration(
         }
         Ok(())
     } else {
-        Err(UniversalZfsError::invalid_input(
+        Err(UniversalZfsError::validation(
             "config",
             "Invalid configuration format - expected JSON object",
         ))
@@ -67,7 +65,7 @@ pub async fn update_configuration(
 }
 
 /// Shutdown the service
-pub async fn shutdown(_service: &NativeZfsService) -> UniversalZfsResult<()> {
+pub const fn shutdown(_service: &NativeZfsService) -> UniversalZfsResult<()> {
     info!("Shutting down native ZFS service");
     Ok(())
 }

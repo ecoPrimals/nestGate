@@ -1,16 +1,14 @@
-/// Unified ZFS configuration using canonical patterns
-use nestgate_core::config::canonical_master::NestGateCanonicalConfig as NestGateCanonicalConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+/// Unified ZFS configuration using canonical patterns
+/// **MIGRATED**: Now imports from the canonical ZFS configuration
 use std::time::Duration;
 
-/// ZFS-specific configuration
-/// CANONICAL MODERNIZATION: Direct type alias to unified config
-pub type ZfsConfig = NestGateFinalConfig;
+pub use crate::canonical_zfs_config::{ZfsConfig, ZfsExtensions};
 
-/// Simplified ZFS extensions for canonical config
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct ZfsExtensions {
+/// Simplified ZFS extensions for canonical config (internal definition)
+#[derive(Serialize, Deserialize)]
+pub struct InternalZfsExtensions {
     /// ZFS pool settings
     pub pools: ZfsPoolSettings,
     /// Dataset settings
@@ -18,7 +16,6 @@ pub struct ZfsExtensions {
     /// Snapshot settings
     pub snapshots: ZfsSnapshotSettings,
 }
-
 /// ZFS pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsPoolSettings {
@@ -26,7 +23,6 @@ pub struct ZfsPoolSettings {
     pub health_check_interval: Duration,
     pub default_properties: HashMap<String, String>,
 }
-
 impl Default for ZfsPoolSettings {
     fn default() -> Self {
         Self {
@@ -44,7 +40,6 @@ pub struct ZfsDatasetSettings {
     pub deduplication: bool,
     pub quota_gb: Option<u64>,
 }
-
 impl Default for ZfsDatasetSettings {
     fn default() -> Self {
         Self {
@@ -62,7 +57,6 @@ pub struct ZfsSnapshotSettings {
     pub retention_days: u32,
     pub auto_cleanup: bool,
 }
-
 impl Default for ZfsSnapshotSettings {
     fn default() -> Self {
         Self {
@@ -76,35 +70,31 @@ impl Default for ZfsSnapshotSettings {
 /// ZFS configuration factory methods
 pub mod zfs_config_factory {
     use super::*;
-
     /// Create base ZFS configuration
-    pub fn zfs_default() -> ZfsConfig {
-        let mut config = ZfsConfig::default();
+    pub const fn zfs_default() -> ZfsConfig {
         // Note: instance_name field not available in current SystemConfig
-        config
+        ZfsConfig::default()
     }
 
     /// Create development ZFS configuration
-    pub fn zfs_development() -> ZfsConfig {
-        let mut config = zfs_default();
+    pub const fn zfs_development() -> ZfsConfig {
         // Note: deployment_environment field not available in current EnvironmentConfig
-        config
+        zfs_default()
     }
 
     /// Create production ZFS configuration
-    pub fn zfs_production() -> ZfsConfig {
-        let mut config = zfs_default();
+    pub const fn zfs_production() -> ZfsConfig {
         // Note: deployment_environment field not available in current EnvironmentConfig
-        config
+        zfs_default()
     }
 
     /// Alias for zfs_development for compatibility
-    pub fn development() -> ZfsConfig {
+    pub const fn development() -> ZfsConfig {
         zfs_development()
     }
 
     /// Alias for zfs_production for compatibility
-    pub fn production() -> ZfsConfig {
+    pub const fn production() -> ZfsConfig {
         zfs_production()
     }
 }

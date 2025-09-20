@@ -1,7 +1,7 @@
 use axum::Router;
 use axum_test::TestServer;
 /// Unified Test Error Handling Framework
-/// Eliminates crash-prone .unwrap() and .expect() patterns in test code
+/// Eliminates crash-prone ? and .expect() patterns in test code
 /// Provides rich error context and safe test utilities
 use nestgate_core::error::{NestGateError, RecoveryStrategy, Result, SystemResource};
 use std::collections::HashMap;
@@ -33,6 +33,7 @@ use tokio::time::Duration;
 /// });
 /// ```
 /// Safe test server creation with proper error context
+
 pub fn create_test_server(app: Router, context: &str) -> Result<TestServer> {
     TestServer::new(app).map_err(|e| NestGateError::System {
         message: format!("Creating test server for {} failed: {}", context, e),
@@ -123,13 +124,10 @@ pub fn assert_test_condition<T: std::fmt::Debug + PartialEq>(
     context: &str,
 ) -> Result<()> {
     if actual != expected {
-        return Err(NestGateError::Validation {
-            field: "test_assertion".to_string(),
-            message: format!("Test assertion failed in {}", context),
-            current_value: Some(format!("{:?}", actual)),
-            expected: Some(format!("{:?}", expected)),
-            user_error: false,
-        });
+        return Err(NestGateError::validation_error(
+            "assertion_failed",
+            &format!("Expected {:?}, got {:?} - {}", expected, actual, context),
+        ));
     }
     Ok(())
 }
@@ -139,13 +137,10 @@ pub fn assert_true(condition: bool, context: &str) -> Result<()> {
     if condition {
         Ok(())
     } else {
-        Err(NestGateError::Validation {
-            field: "test_assertion".to_string(),
-            message: format!("Test assertion failed in {}", context),
-            current_value: Some("false".to_string()),
-            expected: Some("true".to_string()),
-            user_error: false,
-        })
+        Err(NestGateError::validation_error(&format!(
+            "Assertion failed: {}",
+            context
+        )))
     }
 }
 

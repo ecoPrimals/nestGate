@@ -20,7 +20,6 @@ use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::Duration;
 // Removed unused tracing import
-
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
 use tracing::debug;
@@ -43,7 +42,6 @@ where
     /// Statistics for pool performance tracking
     statistics: Arc<RwLock<PoolStatistics>>,
 }
-
 impl<T> MemoryPool<T>
 where
     T: Default + Clone + Send + 'static,
@@ -134,7 +132,7 @@ where
 
     /// Get current pool statistics (returns a copy for thread safety)
     /// Zero-copy optimization: PoolStatistics implements Copy
-    pub fn statistics(&self) -> PoolStatistics {
+    pub const fn statistics(&self) -> PoolStatistics {
         self.statistics
             .read()
             .map(|stats| *stats) // Zero-copy access - PoolStatistics is Copy
@@ -145,7 +143,7 @@ where
     }
 
     /// Get current pool size
-    pub fn size(&self) -> usize {
+    pub const fn size(&self) -> usize {
         self.pool.lock().map(|pool| pool.len()).unwrap_or_else(|e| {
             tracing::error!("Failed to get pool size: {}", e);
             0 // Return 0 on error
@@ -221,7 +219,6 @@ where
     statistics: Arc<RwLock<PoolStatistics>>,
     acquired_at: Instant,
 }
-
 impl<T> PoolGuard<T>
 where
     T: Send + 'static,
@@ -230,7 +227,7 @@ where
     ///
     /// # Panics
     /// Panics if the buffer has already been taken with `take()`. This indicates a logic error.
-    pub fn get(&self) -> &T {
+    pub const fn get(&self) -> &T {
         self.buffer
             .as_ref()
             .expect("Buffer has been taken - this indicates a logic error in buffer usage")
@@ -257,7 +254,7 @@ where
     }
 
     /// Check if the buffer is still available (not taken)
-    pub fn is_available(&self) -> bool {
+    pub const fn is_available(&self) -> bool {
         self.buffer.is_some()
     }
 }
@@ -346,7 +343,6 @@ pub struct PoolStatistics {
     /// Total time buffers were in use
     pub total_usage_time: Duration,
 }
-
 impl PoolStatistics {
     fn new() -> Self {
         Self {
@@ -363,16 +359,16 @@ impl PoolStatistics {
     }
 
     /// Calculate hit ratio (0.0 to 1.0)
-    pub fn hit_ratio(&self) -> f64 {
+    pub const fn hit_ratio(&self) -> f64 {
         if self.total_acquisitions > 0 {
-            self.hits as f64 / self.total_acquisitions as f64
+            self.f64::from(hits) / self.f64::from(total_acquisitions)
         } else {
             0.0
         }
     }
 
     /// Calculate average acquisition time
-    pub fn avg_acquisition_time(&self) -> Duration {
+    pub const fn avg_acquisition_time(&self) -> Duration {
         if self.total_acquisitions > 0 {
             self.total_acquisition_time / self.total_acquisitions as u32
         } else {
@@ -381,7 +377,7 @@ impl PoolStatistics {
     }
 
     /// Calculate average usage time
-    pub fn avg_usage_time(&self) -> Duration {
+    pub const fn avg_usage_time(&self) -> Duration {
         if self.total_returned > 0 {
             self.total_usage_time / self.total_returned as u32
         } else {
@@ -390,12 +386,12 @@ impl PoolStatistics {
     }
 
     /// Check if pool is performing well (>80% hit ratio is good)
-    pub fn is_efficient(&self) -> bool {
+    pub const fn is_efficient(&self) -> bool {
         self.hit_ratio() > 0.8
     }
 
     /// Get performance assessment
-    pub fn performance_assessment(&self) -> &'static str {
+    pub const fn performance_assessment(&self) -> &'static str {
         match self.hit_ratio() {
             r if r > 0.9 => "Excellent",
             r if r > 0.8 => "Good",
@@ -408,7 +404,6 @@ impl PoolStatistics {
 /// Specialized buffer pool for common data types
 pub type BufferPool = MemoryPool<Vec<u8>>;
 pub type StringPool = MemoryPool<String>;
-
 // Global buffer pools for common usage patterns
 lazy_static::lazy_static! {
     // Global 4KB buffer pool for file I/O operations
@@ -462,37 +457,35 @@ lazy_static::lazy_static! {
 }
 
 /// Convenience functions for global buffer pools
-pub fn get_4kb_buffer() -> PoolGuard<Vec<u8>> {
+pub const fn get_4kb_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_4KB_BUFFER_POOL.get()
 }
-
-pub fn get_64kb_buffer() -> PoolGuard<Vec<u8>> {
+pub const fn get_64kb_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_64KB_BUFFER_POOL.get()
 }
 
-pub fn get_1mb_buffer() -> PoolGuard<Vec<u8>> {
+pub const fn get_1mb_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_1MB_BUFFER_POOL.get()
 }
 
-pub fn get_string_buffer() -> PoolGuard<String> {
+pub const fn get_string_buffer() -> PoolGuard<String> {
     GLOBAL_STRING_POOL.get()
 }
 
 /// Convenience functions for specialized buffer pools
-pub fn get_command_buffer() -> PoolGuard<Vec<u8>> {
+pub const fn get_command_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_CMD_BUFFER_POOL.get()
 }
-
-pub fn get_network_buffer() -> PoolGuard<Vec<u8>> {
+pub const fn get_network_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_NETWORK_BUFFER_POOL.get()
 }
 
-pub fn get_json_buffer() -> PoolGuard<String> {
+pub const fn get_json_buffer() -> PoolGuard<String> {
     GLOBAL_JSON_BUFFER_POOL.get()
 }
 
 /// Get global buffer pool statistics
-pub fn global_buffer_pool_stats() -> (
+pub const fn global_buffer_pool_stats() -> (
     PoolStatistics,
     PoolStatistics,
     PoolStatistics,
@@ -511,12 +504,10 @@ pub fn global_buffer_pool_stats() -> (
         GLOBAL_JSON_BUFFER_POOL.statistics(),
     )
 }
-
 /// Memory pool manager for coordinating multiple pools
 pub struct MemoryPoolManager {
     pools: Vec<Arc<dyn PoolInterface>>,
 }
-
 trait PoolInterface: Send + Sync {
     fn size(&self) -> usize;
     fn clear(&self);
@@ -537,6 +528,7 @@ where
 
 impl MemoryPoolManager {
     /// Create a new memory pool manager
+    #[must_use]
     pub fn new() -> Self {
         Self { pools: Vec::new() }
     }
@@ -558,7 +550,7 @@ impl MemoryPoolManager {
     }
 
     /// Get total number of buffers across all pools
-    pub fn total_buffers(&self) -> usize {
+    pub const fn total_buffers(&self) -> usize {
         self.pools.iter().map(|p| p.size()).sum()
     }
 }
@@ -625,7 +617,7 @@ mod tests {
     }
 
     #[test]
-    fn test_concurrent_access() {
+    fn test_concurrent_access() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let pool = Arc::new(MemoryPool::new(Vec::<u8>::new, 1, 10));
         let mut handles = vec![];
 
@@ -637,24 +629,21 @@ mod tests {
                 buffer.push(i as u8);
                 thread::sleep(Duration::from_millis(10));
                 buffer[0]
-            });
+            );
             handles.push(handle);
         }
 
         // Wait for all threads
         for handle in handles {
-            let result = handle.join().unwrap_or_else(|e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    return Err(std::io::Error::new(
-    std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
-).into())
-});
+            let result = handle.join().map_err(|e| {
+                format!("Thread join failed: {e:?}")
+            })?;
             assert!(result < 5);
         }
 
         let stats = pool.statistics();
         assert_eq!(stats.total_acquisitions, 5);
+        Ok(())
     }
 
     #[test]

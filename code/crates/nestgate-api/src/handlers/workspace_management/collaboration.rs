@@ -1,40 +1,32 @@
 //
 // Sharing and collaboration functionality for workspaces.
-// These are stub implementations that can be extended when
-// user management and UI components are available.
+// These features require external dependencies for user management and authentication.
 
 use axum::{extract::Json, extract::Path, http::StatusCode};
-use serde_json::{json, Value};
+use serde_json::Value;
 use tracing::info;
-// Removed unused tracing import
 
-/// Share workspace (COLLABORATION FEATURE)
-/// Note: This is beyond core storage scope - implement if needed
-pub async fn share_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
-    info!("🤝 Sharing workspace: {}", workspace_id);
+/// Share workspace (REQUIRES AUTHENTICATION & USER MANAGEMENT)
+/// This feature requires Security security module and Management UI components
+pub fn share_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
+    info!("🤝 Workspace sharing requested for: {}", workspace_id);
+    // Workspace sharing requires external dependencies:
+    // - Authentication and authorization (Security security module)
+    // - User management system
+    // - Permission management
+    // - UI components for sharing interface (Management)
 
-    // STUB: Sharing is a collaboration feature that may be implemented later
-    // This involves user management (security module's domain) and UI (biomeOS's domain)
-
-    Ok(Json(json!({
-        "status": "stub",
-        "message": "Workspace sharing feature not yet implemented",
-        "workspace_id": workspace_id,
-        "note": "This feature requires integration with security module (auth) and biomeOS (UI)"
-    })))
+    Err(StatusCode::NOT_IMPLEMENTED)
 }
 
-/// Unshare workspace (COLLABORATION FEATURE)
-pub async fn unshare_workspace(
-    Path(workspace_id): Path<String>,
-) -> Result<Json<Value>, StatusCode> {
-    info!("🔒 Unsharing workspace: {}", workspace_id);
+/// Unshare workspace (REQUIRES AUTHENTICATION & USER MANAGEMENT)
+/// This feature requires Security security module and Management UI components
+pub fn unshare_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
+    info!("🔒 Workspace unsharing requested for: {}", workspace_id);
+    // Workspace unsharing requires external dependencies:
+    // - Authentication and authorization (Security security module)
+    // - User management system
+    // - Permission revocation system
 
-    // STUB: Unsharing is a collaboration feature that may be implemented later
-
-    Ok(Json(json!({
-        "status": "stub",
-        "message": "Workspace unsharing feature not yet implemented",
-        "workspace_id": workspace_id
-    })))
+    Err(StatusCode::NOT_IMPLEMENTED)
 }

@@ -14,17 +14,16 @@ pub struct BenchmarkResults {
     pub memory_reduction_percentage: f64,
     pub iterations: usize,
 }
-
 impl BenchmarkResults {
     /// Create new benchmark results
-    pub fn new(
+    pub const fn new(
         pattern_name: String,
         zero_cost_time_ns: u64,
         traditional_time_ns: u64,
         iterations: usize,
     ) -> Self {
         let improvement_percentage = if traditional_time_ns > 0 {
-            ((traditional_time_ns as f64 - zero_cost_time_ns as f64) / traditional_time_ns as f64)
+            ((f64::from(traditional_time_ns) - f64::from(zero_cost_time_ns)) / f64::from(traditional_time_ns))
                 * 100.0
         } else {
             0.0
@@ -41,18 +40,18 @@ impl BenchmarkResults {
     }
 
     /// Check if the performance improvement meets the target threshold
-    pub fn meets_target(&self, target_percentage: f64) -> bool {
+    pub const fn meets_target(&self, target_percentage: f64) -> bool {
         self.improvement_percentage >= target_percentage
     }
 
     /// Get human-readable performance summary
-    pub fn summary(&self) -> String {
+    pub const fn summary(&self) -> String {
         format!(
             "{}: {:.2}% improvement ({:.2}ms -> {:.2}ms) over {} iterations",
             self.pattern_name,
             self.improvement_percentage,
-            self.traditional_time_ns as f64 / 1_000_000.0,
-            self.zero_cost_time_ns as f64 / 1_000_000.0,
+            self.f64::from(traditional_time_ns) / 1_000_000.0,
+            self.f64::from(zero_cost_time_ns) / 1_000_000.0,
             self.iterations
         )
     }
@@ -63,7 +62,6 @@ pub struct PerformanceValidator {
     iterations: usize,
     warmup_iterations: usize,
 }
-
 impl PerformanceValidator {
     /// Create new performance validator
     pub const fn new(iterations: usize, warmup_iterations: usize) -> Self {
@@ -158,7 +156,15 @@ impl PerformanceValidator {
     }
 
     /// Validate that all benchmarks meet performance targets
-    pub fn validate_performance_targets(&self, results: &[BenchmarkResults]) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn validate_performance_targets(&self, results: &[BenchmarkResults]) -> Result<()>  {
         const TARGET_IMPROVEMENT: f64 = 20.0; // 20% minimum improvement
 
         let mut failures = Vec::new();
@@ -175,7 +181,7 @@ impl PerformanceValidator {
         if !failures.is_empty() {
             return Err(NestGateError::validation_error(
                 "performance_targets",
-                &format!("Performance targets not met: {}", failures.join(", ")),
+                &format!("Performance targets not met: {}", failures.join(", "),
                 Some(failures.join(", ")),
             ));
         }

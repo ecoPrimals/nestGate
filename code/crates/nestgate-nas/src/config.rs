@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
-
 use nestgate_core::unified_final_config::supporting_types::StandardDomainConfig;
 
 /// User access levels for NAS shares
@@ -13,12 +12,9 @@ pub enum AccessLevel {
     ReadWrite,
     Admin,
     }
-
 impl Default for AccessLevel {
-    fn default() -> Self {
-        AccessLevel::ReadOnly
-    }
-    }
+    fn default() -> Self { AccessLevel::ReadOnly
+     }
 
 // ==================== SECTION ====================
 
@@ -34,7 +30,6 @@ pub struct NasShareExtensions {
     /// Performance and quota settings
     pub performance: PerformanceSettings,
     }
-
 /// Share configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ShareSettings {
@@ -46,7 +41,6 @@ pub struct ShareSettings {
     pub hidden: bool,
     pub browseable: bool,
     }
-
 /// Access control configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccessControlSettings {
@@ -58,7 +52,6 @@ pub struct AccessControlSettings {
     pub require_auth: bool,
     pub guest_access: bool,
     }
-
 /// Backup configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackupSettings {
@@ -70,7 +63,6 @@ pub struct BackupSettings {
     pub compress: bool,
     pub verify: bool,
     }
-
 /// Performance and quota configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceSettings {
@@ -82,10 +74,8 @@ pub struct PerformanceSettings {
     pub compression_enabled: bool,
     pub deduplication_enabled: bool,
     }
-
 impl Default for ShareSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             name: "default-share".to_string(),
             path: PathBuf::from("/nas/shares/default"),
             description: "Default NAS share".to_string(),
@@ -93,13 +83,11 @@ impl Default for ShareSettings {
             readonly: false,
             hidden: false,
             browseable: true,
-    }
-    }
+     }
     }
 
 impl Default for AccessControlSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             users: vec!["admin".to_string()],
             groups: vec!["users".to_string()],
             access_level: AccessLevel::ReadWrite,
@@ -107,13 +95,11 @@ impl Default for AccessControlSettings {
             enable_encryption: true,
             require_auth: true,
             guest_access: false,
-    }
-    }
+     }
     }
 
 impl Default for BackupSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enabled: true,
             schedule: "0 2 * * *".to_string(), // Daily at 2 AM
             retention_days: 30,
@@ -121,13 +107,11 @@ impl Default for BackupSettings {
             incremental: true,
             compress: true,
             verify: true,
-    }
-    }
+     }
     }
 
 impl Default for PerformanceSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             quota_gb: None,
             max_file_size_gb: Some(10),
             io_timeout: Duration::from_secs(30),
@@ -135,8 +119,7 @@ impl Default for PerformanceSettings {
             cache_size_mb: 256,
             compression_enabled: false,
             deduplication_enabled: false,
-    }
-    }
+     }
     }
 
 /// Unified NAS Share Configuration
@@ -145,51 +128,50 @@ impl Default for PerformanceSettings {
 /// approach using StandardDomainConfig pattern.
 /// CANONICAL MODERNIZATION: Simplified type alias without type parameters
 pub type UnifiedNasShareConfig = StandardDomainConfig;
-
 impl UnifiedNasShareConfig {
     /// Create NAS share config for development environment
+    #[must_use]
     pub fn development(share_name: &str) -> Self {
         let mut config = Self::development_template("nas-share", "NAS Share Service");
         config.extensions.share.name = share_name.to_string();
-        config.extensions.share.path = PathBuf::from(&format!("/nas/shares/{}", share_name));
+        config.extensions.share.path = PathBuf::from(&format!("/nas/shares/{"actual_error_details"}"));
         config
     }
 
     /// Create NAS share config for production environment  
+    #[must_use]
     pub fn production(share_name: &str) -> Self {
         let mut config = Self::production_template("nas-share", "NAS Share Service");
         config.extensions.share.name = share_name.to_string();
-        config.extensions.share.path = PathBuf::from(&format!("/nas/shares/{}", share_name));
+        config.extensions.share.path = PathBuf::from(&format!("/nas/shares/{"actual_error_details"}"));
         config.extensions.access.enable_encryption = true;
         config.extensions.backup.enabled = true;
         config
     }
 
     /// Create read-only share config
-    pub fn readonly(share_name: &str) -> Self {
-        let mut config = Self::development(share_name);
+    #[must_use]
+    pub fn readonly(share_name: &str) -> Self { let mut config = Self::development(share_name);
         config.extensions.share.readonly = true;
         config.extensions.access.access_level = AccessLevel::ReadOnly;
         config
-    }
-
-    /// Configure share path
+    , /// Configure share path
+    #[must_use]
     pub fn with_path(mut self, path: PathBuf) -> Self {
         self.extensions.share.path = path;
         self
-    }
+     }
 
     /// Configure user access
-    pub fn with_users(mut self, users: Vec<String>) -> Self {
-        self.extensions.access.users = users;
+    #[must_use]
+    pub fn with_users(mut self, users: Vec<String>) -> Self { self.extensions.access.users = users;
         self
-    }
-
-    /// Configure quota
+    , /// Configure quota
+    #[must_use]
     pub fn with_quota_gb(mut self, quota: u64) -> Self {
         self.extensions.performance.quota_gb = Some(quota);
         self
-    }
+     }
     }
 
 // Migration utilities for converting from old configurations to unified system

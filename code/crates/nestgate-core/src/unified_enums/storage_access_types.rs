@@ -3,11 +3,10 @@
 /// and data tier management.
 use serde::{Deserialize, Serialize};
 use std::fmt;
-
 // ==================== SECTION ====================
 
-/// **THE** StorageType - unified across all modules
-/// Replaces StorageType definitions in service discovery and storage modules
+/// **THE** `StorageType` - unified across all modules
+/// Replaces `StorageType` definitions in service discovery and storage modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedStorageType {
     /// Local file system storage
@@ -35,7 +34,6 @@ pub enum UnifiedStorageType {
     /// Custom storage type
     Custom(String),
 }
-
 impl Default for UnifiedStorageType {
     fn default() -> Self {
         Self::Local
@@ -63,8 +61,8 @@ impl fmt::Display for UnifiedStorageType {
 
 // ==================== SECTION ====================
 
-/// **THE** AccessType - unified across all modules
-/// Replaces AccessType definitions in automation and other modules
+/// **THE** `AccessType` - unified across all modules
+/// Replaces `AccessType` definitions in automation and other modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedAccessType {
     /// Read access only
@@ -82,7 +80,6 @@ pub enum UnifiedAccessType {
     /// Custom access type
     Custom(String),
 }
-
 impl Default for UnifiedAccessType {
     fn default() -> Self {
         Self::Read
@@ -105,8 +102,8 @@ impl fmt::Display for UnifiedAccessType {
 
 // ==================== SECTION ====================
 
-/// **THE** TierType - unified across all modules
-/// Replaces TierType definitions in automation and storage modules
+/// **THE** `TierType` - unified across all modules
+/// Replaces `TierType` definitions in automation and storage modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedTierType {
     /// Hot tier - frequently accessed data
@@ -122,7 +119,6 @@ pub enum UnifiedTierType {
     /// Custom tier type
     Custom(String),
 }
-
 impl Default for UnifiedTierType {
     fn default() -> Self {
         Self::Hot
