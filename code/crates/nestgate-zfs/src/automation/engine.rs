@@ -27,7 +27,9 @@ use super::{
 use crate::config::DatasetAutomationConfig;
 use crate::error::ZfsResult as Result;
 use crate::types::StorageTier;
-use crate::{dataset::ZfsDatasetManager, migration::MigrationEngine, pool::ZfsPoolManager};
+use crate::{dataset::ZfsDatasetManager, pool::ZfsPoolManager};
+// Migration engine placeholder - not yet implemented
+// use crate::migration::MigrationEngine;
 
 /// Intelligent dataset automation engine
 #[derive(Debug)]
@@ -36,8 +38,8 @@ pub struct DatasetAutomation {
     pool_manager: Arc<ZfsPoolManager>,
     /// Dataset management
     dataset_manager: Arc<ZfsDatasetManager>,
-    /// Migration engine for tier movement
-    migration_engine: Arc<RwLock<MigrationEngine>>,
+    /// Migration engine for tier movement (placeholder - not yet implemented)
+    // migration_engine: Arc<RwLock<MigrationEngine>>,
     /// Active automation policies
     policies: PolicyMap,
     /// Lifecycle tracking
@@ -45,15 +47,21 @@ pub struct DatasetAutomation {
     /// Configuration
     config: DatasetAutomationConfig,
 }
-
 impl DatasetAutomation {
     /// Create new dataset automation engine
-    pub async fn new(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn new(
         pool_manager: Arc<ZfsPoolManager>,
         dataset_manager: Arc<ZfsDatasetManager>,
-        migration_engine: Arc<RwLock<MigrationEngine>>,
+        // migration_engine: Arc<RwLock<MigrationEngine>>, // MigrationEngine not yet implemented
         config: DatasetAutomationConfig,
-    ) -> Result<Self> {
+    ) -> Result<Self>  {
         info!("Initializing Dataset Automation Engine");
 
         let policies = Arc::new(RwLock::new(HashMap::new()));
@@ -62,7 +70,7 @@ impl DatasetAutomation {
         let automation = Self {
             pool_manager,
             dataset_manager,
-            migration_engine,
+            // migration_engine, // Commented out - not yet implemented
             policies,
             lifecycle_tracker,
             config,
@@ -76,7 +84,14 @@ impl DatasetAutomation {
     }
 
     /// Start the automation engine
-    pub async fn start(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn start(&self) -> Result<()>  {
         info!("Starting dataset automation engine");
 
         // Create default policies if none exist
@@ -153,7 +168,7 @@ impl DatasetAutomation {
         };
 
         // Update lifecycle stage based on policy
-        lifecycle::update_lifecycle_stage(&mut lifecycle, policy).await?;
+        lifecycle::update_lifecycle_stage(&mut lifecycle, policy)?;
 
         // Apply lifecycle rules
         self.apply_lifecycle_rules(dataset_name, &lifecycle, policy)
@@ -211,7 +226,7 @@ impl DatasetAutomation {
 
                     // Check for stage transition
                     if let Some(next_stage) = &lifecycle_rule.next_stage {
-                        if lifecycle::should_transition_to_stage(dataset_name, lifecycle).await {
+                        if lifecycle::should_transition_to_stage(dataset_name, lifecycle) {
                             info!(
                                 "🔄 Transitioning dataset {} from {:?} to {:?}",
                                 dataset_name, lifecycle.lifecycle_stage, next_stage
@@ -221,8 +236,7 @@ impl DatasetAutomation {
                                 dataset_name,
                                 next_stage.clone(),
                                 &mut lifecycle_tracker,
-                            )
-                            .await?;
+                            )?;
                         }
                     }
                 }
@@ -241,17 +255,13 @@ impl DatasetAutomation {
 
         // Default balanced policy
         let default_policy = AutomationPolicy {
-            policy_id: "default_balanced".to_string(),
-            name: "Default Balanced Policy".to_string(),
-            description: "Balanced performance and storage efficiency".to_string(),
+            policy_id: "default".to_string(),
+            name: "Default Automation Policy".to_string(),
+            description: "Default policy for new datasets".to_string(),
             priority: PolicyPriority::Normal,
             enabled: true,
             conditions: PolicyConditions {
-                tier_rules: vec![TierRule {
-                    condition: "*".to_string(),
-                    target_tier: StorageTier::Warm,
-                    priority: 1,
-                }],
+                tier_rules: vec![],
                 migration_rules: vec![],
                 lifecycle_rules: vec![],
             },
@@ -303,21 +313,35 @@ impl DatasetAutomation {
     }
 
     /// Validate a policy before adding it
-    pub async fn validate_policy(&self, _policy: &AutomationPolicy) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate_policy(&self, _policy: &AutomationPolicy) -> Result<()>  {
         // Basic validation - could be enhanced
         Ok(())
     }
 
     /// Evaluate the best tier for a dataset based on current policies
-    pub async fn evaluate_tier_for_dataset(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn evaluate_tier_for_dataset(
         &self,
         dataset_name: &str,
         metadata: &DatasetMetadata,
-    ) -> Result<StorageTier> {
+    ) -> Result<StorageTier>  {
         debug!("Evaluating optimal tier for dataset: {}", dataset_name);
 
         let policies = self.policies.read().await;
-        tier_evaluation::evaluate_tier_by_intelligent_rules(dataset_name, metadata, &policies).await
+        tier_evaluation::evaluate_tier_by_intelligent_rules(dataset_name, metadata, &policies)
     }
 }
 
@@ -327,10 +351,9 @@ impl Clone for DatasetAutomation {
         Self {
             pool_manager: Arc::clone(&self.pool_manager),
             dataset_manager: Arc::clone(&self.dataset_manager),
-            migration_engine: Arc::clone(&self.migration_engine),
-            policies: Arc::clone(&self.policies),
-            lifecycle_tracker: Arc::clone(&self.lifecycle_tracker),
-            config: self.config.clone(), // Keep config clone as it's lightweight
+            policies: self.policies.clone(),
+            lifecycle_tracker: self.lifecycle_tracker.clone(),
+            config: self.config.clone(),
         }
     }
 }

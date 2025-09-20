@@ -9,7 +9,7 @@ use tracing::info;
 
 /// Simple chaos resilience test
 #[tokio::test]
-async fn test_basic_chaos_resilience() {
+async fn test_basic_chaos_resilience() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔥 Starting basic chaos resilience test");
 
     // Test 1: Progressive delays
@@ -20,14 +20,16 @@ async fn test_basic_chaos_resilience() {
 
         // Verify system remains responsive
         assert!(delay_ms < 500, "Delay should be reasonable for testing");
+        Ok(())
     }
 
     info!("✅ Basic chaos resilience test completed");
+    Ok(())
 }
 
 /// Test network simulation
 #[tokio::test]
-async fn test_network_chaos_simulation() {
+async fn test_network_chaos_simulation() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌐 Testing network chaos resilience");
 
     // Simulate network delays
@@ -37,14 +39,16 @@ async fn test_network_chaos_simulation() {
 
         // Verify delay is within bounds
         assert!(delay <= 100, "Network delay simulation within bounds");
+        Ok(())
     }
 
     info!("✅ Network chaos simulation completed");
+    Ok(())
 }
 
 /// Test resource constraint handling
 #[tokio::test]
-async fn test_resource_constraint_chaos() {
+async fn test_resource_constraint_chaos() -> Result<(), Box<dyn std::error::Error>> {
     info!("💾 Testing resource constraint handling");
 
     // Simulate memory pressure with small allocations
@@ -54,7 +58,9 @@ async fn test_resource_constraint_chaos() {
 
         if i % 3 == 0 {
             sleep(Duration::from_millis(5)).await;
+            Ok(())
         }
+        Ok(())
     }
 
     // Verify system handles resource constraints gracefully
@@ -64,11 +70,12 @@ async fn test_resource_constraint_chaos() {
     drop(test_data);
 
     info!("✅ Resource constraint chaos test completed");
+    Ok(())
 }
 
 /// Test error recovery patterns
 #[tokio::test]
-async fn test_error_recovery() {
+async fn test_error_recovery() -> Result<(), Box<dyn std::error::Error>> {
     info!("💥 Testing error recovery patterns");
 
     // Simulate error conditions
@@ -86,14 +93,16 @@ async fn test_error_recovery() {
         assert!(!error_type.is_empty(), "Error type should be specified");
 
         sleep(Duration::from_millis(10)).await;
+        Ok(())
     }
 
     info!("✅ Error recovery test completed");
+    Ok(())
 }
 
 /// Test system monitoring during chaos
 #[tokio::test]
-async fn test_chaos_monitoring() {
+async fn test_chaos_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing system monitoring during chaos");
 
     // Track metrics during chaos
@@ -111,7 +120,9 @@ async fn test_chaos_monitoring() {
             elapsed.as_millis() > (i as u128 * 20),
             "Time tracking works"
         );
+        Ok(())
     }
 
     info!("✅ Chaos monitoring test completed");
+    Ok(())
 }

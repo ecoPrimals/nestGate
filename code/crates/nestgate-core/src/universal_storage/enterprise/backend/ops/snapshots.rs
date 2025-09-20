@@ -49,7 +49,7 @@ impl EnterpriseStorageCapabilities for EnterpriseStorageBackend {
                     "create_snapshot",
                     Some(&snapshot.id),
                 )
-            })?;
+            )?;
 
         // Note: copy_directory_tree would need to be implemented
         // For now, just create the snapshot metadata
@@ -100,7 +100,7 @@ impl EnterpriseStorageCapabilities for EnterpriseStorageBackend {
             .join(format!("pre-restore-{timestamp}"));
         tokio::fs::create_dir_all(&backup_path).await.map_err(|e| {
             NestGateError::storage_error(&format!("Failed to create backup directory: {e}"), "create_backup_directory", None)
-        })?;
+        )?;
 
         // Backup current state (excluding snapshots and backups directories)
         self.copy_directory_tree_selective(
@@ -123,7 +123,7 @@ impl EnterpriseStorageCapabilities for EnterpriseStorageBackend {
                     "restore_snapshot",
                     Some(&snapshot.id),
                 )
-            })?;
+            )?;
 
         Ok(())
     }

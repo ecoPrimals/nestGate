@@ -2,7 +2,6 @@
 use nestgate_core::error::NestGateError;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-
 /// Automation-specific error types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AutomationError {
@@ -17,7 +16,6 @@ pub enum AutomationError {
     /// Core system error
     CoreError(NestGateError),
 }
-
 impl fmt::Display for AutomationError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -49,11 +47,10 @@ impl From<std::io::Error> for AutomationError {
 pub use nestgate_core::Result;
 
 /// Helper function to create automation errors with canonical config source
-pub fn automation_error(message: String) -> AutomationError {
-    AutomationError::CoreError(NestGateError::Configuration {
+pub const fn automation_error(message: String) -> AutomationError {
+    AutomationError::CoreError(NestGateError::configuration(
         message,
         
-        field: None,
         
-    })
+    ))
 }

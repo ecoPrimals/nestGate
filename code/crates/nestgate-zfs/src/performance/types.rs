@@ -1,4 +1,3 @@
-
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
@@ -16,7 +15,7 @@ pub type SnapshotPolicyMap = Arc<RwLock<HashMap<String, SnapshotPolicy>>>;
 pub type TierStatsMap = Arc<RwLock<HashMap<StorageTier, TierStats>>>;
 
 use crate::types::StorageTier;
-use crate::{ZfsDatasetManager, ZfsPoolManager};
+use crate::{dataset::ZfsDatasetManager, pool::ZfsPoolManager};
 // Removed unused import: StorageTier as CoreStorageTier
 use std::time::Duration;
 
@@ -29,7 +28,6 @@ pub struct SystemPerformanceMetrics {
     pub network_throughput_mbs: f64,
     pub system_load_average: f64,
 }
-
 /// Memory information structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryInfo {
@@ -38,7 +36,6 @@ pub struct MemoryInfo {
     pub available_mb: u64,
     pub used_mb: u64,
 }
-
 impl Default for SystemPerformanceMetrics {
     fn default() -> Self {
         Self {
@@ -70,7 +67,6 @@ pub struct DiskIoStats {
     pub read_iops: u64,
     pub write_iops: u64,
 }
-
 impl Default for DiskIoStats {
     fn default() -> Self {
         Self {
@@ -89,7 +85,6 @@ pub struct ZfsPerformanceMonitor {
     // config removed - using shared ZfsConfig instead
     pub pool_manager: Arc<ZfsPoolManager>,
     pub dataset_manager: Arc<ZfsDatasetManager>,
-
     /// Real-time metrics
     pub current_metrics: Arc<RwLock<CurrentPerformanceMetrics>>,
     /// Historical metrics
@@ -130,7 +125,6 @@ pub struct _RemovedPerformanceConfig {
     /// Prometheus metrics endpoint
     pub prometheus_endpoint: Option<String>,
 }
-
 /// Current performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CurrentPerformanceMetrics {
@@ -147,7 +141,6 @@ pub struct CurrentPerformanceMetrics {
     /// Performance trends
     pub trends: PerformanceTrends,
 }
-
 /// Pool performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolPerformanceMetrics {
@@ -166,7 +159,6 @@ pub struct PoolPerformanceMetrics {
     /// Deduplication ratio
     pub dedup_ratio: f64,
 }
-
 /// Tier-specific performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierMetrics {
@@ -195,7 +187,6 @@ pub struct TierMetrics {
     /// SLA compliance
     pub sla_compliance: SlaCompliance,
 }
-
 /// System resource metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemResourceMetrics {
@@ -212,7 +203,6 @@ pub struct SystemResourceMetrics {
     /// 1-minute load average
     pub load_average_1m: f64,
 }
-
 /// I/O statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IoStatistics {
@@ -229,7 +219,6 @@ pub struct IoStatistics {
     /// Read/write ratio
     pub read_write_ratio: f64,
 }
-
 /// Performance snapshot for historical analysis
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceSnapshot {
@@ -240,7 +229,6 @@ pub struct PerformanceSnapshot {
     /// Performance score (0-100)
     pub performance_score: f64,
 }
-
 /// Performance trends analysis
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceTrends {
@@ -255,7 +243,6 @@ pub struct PerformanceTrends {
     /// Prediction confidence (0-1)
     pub prediction_confidence: f64,
 }
-
 /// Tier performance data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierPerformanceData {
@@ -268,7 +255,6 @@ pub struct TierPerformanceData {
     /// Trend analysis
     pub trends: PerformanceTrends,
 }
-
 /// Performance targets for a tier
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierPerformanceTargets {
@@ -283,7 +269,6 @@ pub struct TierPerformanceTargets {
     /// Target availability percentage
     pub target_availability_percent: f64,
 }
-
 /// SLA compliance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SlaCompliance {
@@ -296,7 +281,6 @@ pub struct SlaCompliance {
     /// Error rate compliance percentage
     pub error_rate_compliance: f64,
 }
-
 /// Alert condition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertCondition {
@@ -319,7 +303,6 @@ pub struct AlertCondition {
     /// Whether the alert is enabled
     pub enabled: bool,
 }
-
 /// Alert metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AlertMetric {
@@ -344,7 +327,6 @@ pub enum AlertMetric {
     /// Cache hit ratio
     CacheHitRatio,
 }
-
 /// Alert operators
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AlertOperator {
@@ -361,7 +343,6 @@ pub enum AlertOperator {
     /// Not equal to
     NotEqualTo,
 }
-
 /// Alert severity levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AlertSeverity {
@@ -372,7 +353,6 @@ pub enum AlertSeverity {
     /// Information alert
     Info,
 }
-
 /// Active alert
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ActiveAlert {
@@ -383,7 +363,7 @@ pub struct ActiveAlert {
     /// Alert description
     pub description: String,
     /// Current value
-    pub current_value: f64,
+    pub currentvalue: f64,
     /// Threshold value
     pub threshold: f64,
     /// Severity
@@ -399,7 +379,6 @@ pub struct ActiveAlert {
     /// Acknowledgment user
     pub ack_user: Option<String>,
 }
-
 /// Alert notification
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Alert {
@@ -408,7 +387,6 @@ pub struct Alert {
     /// Alert data
     pub data: ActiveAlert,
 }
-
 /// Alert types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AlertType {
@@ -419,7 +397,6 @@ pub enum AlertType {
     /// Alert acknowledged
     Acknowledged,
 }
-
 /// I/O statistics summary
 #[derive(Debug, Clone)]
 pub(crate) struct IoStatsSummary {
@@ -430,7 +407,6 @@ pub(crate) struct IoStatsSummary {
     pub read_latency_ms: f64,
     pub write_latency_ms: f64,
 }
-
 /// Pool properties
 #[derive(Debug, Clone)]
 pub(crate) struct PoolProperties {
@@ -438,35 +414,32 @@ pub(crate) struct PoolProperties {
     pub compression_ratio: f64,
     pub dedup_ratio: f64,
 }
-
 #[allow(dead_code)] // Development/testing structure - intentionally unused
 pub(crate) struct LocalMemoryInfo {
     available_mb: u64,
     used_mb: u64,
 }
-
 #[allow(dead_code)] // Performance analysis methods
 impl LocalMemoryInfo {
     /// Create new memory info
     #[allow(dead_code)] // Development/testing method
-    pub fn new(available_mb: u64, used_mb: u64) -> Self {
+    pub const fn new(available_mb: u64, used_mb: u64) -> Self {
         Self {
             available_mb,
             used_mb,
         }
     }
-
     /// Get total memory
-    pub fn total_mb(&self) -> u64 {
+    pub const fn total_mb(&self) -> u64 {
         self.available_mb + self.used_mb
     }
 
     /// Get memory usage percentage
-    pub fn usage_percentage(&self) -> f64 {
+    pub const fn usage_percentage(&self) -> f64 {
         if self.total_mb() == 0 {
             0.0
         } else {
-            (self.used_mb as f64 / self.total_mb() as f64) * 100.0
+            (self.f64::from(used_mb) / self.total_mb() as f64) * 100.0
         }
     }
 }
@@ -479,7 +452,6 @@ pub(crate) struct PoolIoStats {
     pub bytes_read: u64,
     pub bytes_written: u64,
 }
-
 /// Dataset performance statistics
 #[derive(Debug, Clone)]
 pub(crate) struct DatasetPerformanceStats {

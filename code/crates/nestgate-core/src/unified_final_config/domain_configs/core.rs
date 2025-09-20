@@ -14,7 +14,6 @@ pub struct HealthMonitoringConfig {
     pub alert_thresholds: AlertThresholds,
     pub notification_channels: Vec<String>,
 }
-
 /// Alert thresholds configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertThresholds {
@@ -23,7 +22,6 @@ pub struct AlertThresholds {
     pub disk_usage_percent: f64,
     pub temperature_celsius: f64,
 }
-
 /// AI automation configuration for ZFS
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AiAutomationConfig {
@@ -32,7 +30,6 @@ pub struct AiAutomationConfig {
     pub auto_optimization: bool,
     pub learning_mode: bool,
 }
-
 /// Pool management configuration for ZFS
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolManagementConfig {
@@ -41,7 +38,6 @@ pub struct PoolManagementConfig {
     pub auto_trim: bool,
     pub trim_interval: Duration,
 }
-
 /// Performance configuration for ZFS
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceDomainConfig {
@@ -51,7 +47,6 @@ pub struct PerformanceDomainConfig {
     pub zil_enabled: bool,
     pub tuning_parameters: HashMap<String, String>,
 }
-
 /// Storage tiers configuration for ZFS
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageTiersConfig {
@@ -60,7 +55,6 @@ pub struct StorageTiersConfig {
     pub cold_tier: TierConfig,
     pub archive_tier: TierConfig,
 }
-
 /// Individual tier configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierConfig {
@@ -70,7 +64,6 @@ pub struct TierConfig {
     pub deduplication: bool,
     pub encryption: bool,
 }
-
 impl Default for HealthMonitoringConfig {
     fn default() -> Self {
         Self {

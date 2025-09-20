@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
-
 /// Storage and persistence settings
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct FsMonitorStorageSettings {
@@ -21,7 +20,6 @@ pub struct FsMonitorStorageSettings {
     /// Backup and recovery settings
     pub backup: BackupSettings,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageBackendConfig {
     /// Backend type (file, database, memory, etc.)
@@ -35,7 +33,6 @@ pub struct StorageBackendConfig {
     /// Encryption key identifier
     pub encryption_key_id: Option<String>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionPoolSettings {
     /// Minimum connections
@@ -47,7 +44,6 @@ pub struct ConnectionPoolSettings {
     /// Idle timeout
     pub idle_timeout: Duration,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventRetentionSettings {
     /// Enable retention policies
@@ -57,7 +53,6 @@ pub struct EventRetentionSettings {
     /// Retention policies by event type
     pub policies: HashMap<String, Duration>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompressionSettings {
     /// Enable compression
@@ -69,7 +64,6 @@ pub struct CompressionSettings {
     /// Minimum size for compression
     pub min_size: u64,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IndexingSettings {
     /// Enable indexing
@@ -81,7 +75,6 @@ pub struct IndexingSettings {
     /// Enable full-text search
     pub full_text_search: bool,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackupSettings {
     /// Enable backups
@@ -95,7 +88,6 @@ pub struct BackupSettings {
     /// Enable compression for backups
     pub compress: bool,
 }
-
 impl Default for StorageBackendConfig {
     fn default() -> Self {
         Self {

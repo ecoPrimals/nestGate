@@ -22,9 +22,9 @@ pub struct TierScoring {
     pub warm_reasons: Vec<String>,
     pub cold_reasons: Vec<String>,
 }
-
 impl TierScoring {
     /// Create a new tier scoring instance
+    #[must_use]
     pub fn new() -> Self {
         Self {
             hot_score: 0.0,
@@ -55,7 +55,7 @@ impl TierScoring {
     }
 
     /// Get the recommended tier based on scoring
-    pub fn get_recommendation(&self) -> StorageTier {
+    pub const fn get_recommendation(&self) -> StorageTier {
         if self.hot_score >= self.warm_score && self.hot_score >= self.cold_score {
             StorageTier::Hot
         } else if self.warm_score >= self.cold_score {
@@ -73,13 +73,12 @@ impl Default for TierScoring {
 }
 
 /// Evaluate the best tier for a dataset based on intelligent rules
-pub async fn evaluate_tier_by_intelligent_rules(
+pub fn evaluate_tier_by_intelligent_rules(
     dataset_name: &str,
     metadata: &DatasetMetadata,
     policies: &std::collections::HashMap<String, AutomationPolicy>,
 ) -> Result<StorageTier> {
     let mut tier_score = TierScoring::new();
-
     // 1. Size-based scoring (larger files tend toward cold storage)
     if metadata.size_bytes > 10 * 1024 * 1024 * 1024 {
         // >10GB
@@ -151,19 +150,19 @@ pub async fn evaluate_tier_by_intelligent_rules(
             for tier_rule in &policy.conditions.tier_rules {
                 match tier_rule.target_tier {
                     StorageTier::Hot => {
-                        tier_score.add_hot_weight(0.2, &format!("Policy {policy_id}"))
+                        tier_score.add_hot_weight(0.2, "fixed");
                     }
                     StorageTier::Warm => {
-                        tier_score.add_warm_weight(0.2, &format!("Policy {policy_id}"))
+                        tier_score.add_warm_weight(0.2, "fixed");
                     }
                     StorageTier::Cold => {
-                        tier_score.add_cold_weight(0.2, &format!("Policy {policy_id}"))
+                        tier_score.add_cold_weight(0.2, "fixed");
                     }
                     StorageTier::Cache => {
-                        tier_score.add_hot_weight(0.3, &format!("Cache Policy {policy_id}"))
+                        tier_score.add_hot_weight(0.3, "fixed");
                     }
                     StorageTier::Archive => {
-                        tier_score.add_cold_weight(0.1, &format!("Archive Policy {policy_id}"))
+                        tier_score.add_cold_weight(0.1, "fixed");
                     }
                 }
             }

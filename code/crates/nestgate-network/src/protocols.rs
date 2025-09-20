@@ -12,7 +12,6 @@ pub enum Protocol {
     Websocket,
     Grpc,
 }
-
 impl std::fmt::Display for Protocol {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -34,19 +33,16 @@ pub struct ProtocolConfig {
     pub enabled: bool,
     pub options: HashMap<String, String>,
 }
-
 /// Protocol manager
 pub struct ProtocolManager {
     protocols: HashMap<Protocol, ProtocolConfig>,
 }
-
 impl ProtocolManager {
     /// Create a new protocol manager
-    pub fn new() -> Self {
-        Self {
+    #[must_use]
+    pub fn new() -> Self { Self {
             protocols: HashMap::new(),
-        }
-    }
+         }
 
     /// Add protocol configuration
     pub fn add_protocol(&mut self, config: ProtocolConfig) {
@@ -54,7 +50,7 @@ impl ProtocolManager {
     }
 
     /// Get protocol configuration
-    pub fn get_protocol(&self, protocol: &Protocol) -> Option<&ProtocolConfig> {
+    pub const fn get_protocol(&self, protocol: &Protocol) -> Option<&ProtocolConfig> {
         self.protocols.get(protocol)
     }
 
@@ -79,12 +75,12 @@ impl ProtocolManager {
     }
 
     /// Get all protocols
-    pub fn get_all_protocols(&self) -> Vec<&ProtocolConfig> {
+    pub const fn get_all_protocols(&self) -> Vec<&ProtocolConfig> {
         self.protocols.values().collect()
     }
 
     /// Get enabled protocols
-    pub fn get_enabled_protocols(&self) -> Vec<&ProtocolConfig> {
+    pub const fn get_enabled_protocols(&self) -> Vec<&ProtocolConfig> {
         self.protocols
             .values()
             .filter(|config| config.enabled)

@@ -2,7 +2,6 @@
 // ZFS-related configuration including pools, datasets, snapshots, and performance.
 
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 use std::time::Duration;
 
 /// ZFS configuration (consolidates 10+ ZFS configs)
@@ -22,7 +21,6 @@ pub struct ZfsConfig {
     /// Tiering configuration
     pub tiering: TieringConfig,
 }
-
 /// Pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolConfig {
@@ -41,7 +39,6 @@ pub struct PoolConfig {
     /// Enable encryption
     pub encryption: bool,
 }
-
 /// Dataset configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatasetConfig {
@@ -60,7 +57,6 @@ pub struct DatasetConfig {
     /// Record size
     pub record_size: String,
 }
-
 /// Snapshot configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SnapshotConfig {
@@ -71,7 +67,6 @@ pub struct SnapshotConfig {
     /// Retention policy
     pub retention_days: u32,
 }
-
 /// ZFS performance configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsPerformanceConfig {
@@ -82,18 +77,15 @@ pub struct ZfsPerformanceConfig {
     /// Compression algorithm
     pub compression: String,
 }
-
 /// Fail-safe configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FailSafeConfig {
     /// Enable fail-safe mode
     pub enabled: bool,
     /// Fallback storage path
-    pub fallback_path: PathBuf,
     /// Health check interval
     pub health_check_interval: Duration,
 }
-
 /// Tiering configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TieringConfig {
@@ -104,7 +96,6 @@ pub struct TieringConfig {
     /// Cold tier threshold
     pub cold_threshold: Duration,
 }
-
 
 impl Default for SnapshotConfig {
     fn default() -> Self {
@@ -130,7 +121,6 @@ impl Default for FailSafeConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            fallback_path: PathBuf::from("/tmp/nestgate-fallback"),
             health_check_interval: Duration::from_secs(30),
         }
     }

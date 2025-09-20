@@ -5,57 +5,56 @@ use crate::error::NestGateError;
 use crate::Result;
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
-use std::path::Path;
-use std::net::SocketAddr;
-
+// CLEANED: Removed unused imports as part of canonical modernization
+// use std::net::SocketAddr;
 // **MIGRATED**: Using canonical config instead of deprecated unified_types
-use crate::config::canonical_master::{NetworkConfig as UnifiedNetworkConfig, ApiConfig};
 
-/// Convert SystemTime to a string representation
-pub fn format_system_time(time: SystemTime) -> String {
+/// Convert `SystemTime` to a string representation
+#[must_use]
+pub const fn format_system_time(time: SystemTime) -> String {
     match time.duration_since(SystemTime::UNIX_EPOCH) {
         Ok(duration) => duration.as_secs().to_string(),
         Err(_) => "0".to_string(), // fallback for times before Unix epoch
     }
 }
-
-/// Parse a string back into SystemTime
-pub fn parse_system_time(s: &str) -> Result<SystemTime> {
+/// Parse a string back into `SystemTime`
+pub const fn parse_system_time(s: &str) -> Result<SystemTime> {
     match s.parse::<u64>() {
         Ok(secs) => Ok(SystemTime::UNIX_EPOCH + Duration::from_secs(secs)),
-        Err(_) => Err(NestGateError::Validation {
-            field: "timestamp".to_string(),
-            message: format!("Invalid timestamp format: {s}"),
-            value: Some(s.to_string()),
-            current_value: Some(s.to_string()),
-            expected: Some("Unix timestamp in seconds".to_string()),
-            context: None,
-        }),
+        Err(_) => Err(NestGateError::validation_error(&format!(
+            "Invalid timestamp format: {s}"
+        ))),
     }
 }
-
 /// Certificate utility functions
 pub struct CertUtils;
-
 impl CertUtils {
     /// Generate self-signed certificate for development/testing
-    pub fn generate_self_signed() -> Result<String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn generate_self_signed() -> Result<String>  {
         // Simplified certificate generation for development
         // Real implementation would use proper cryptographic libraries like ring or rustls
 
-        let cert_template = r#"-----BEGIN CERTIFICATE-----
+        let cert_template = r"-----BEGIN CERTIFICATE-----
 MIICWjCCAcMCAg38MA0GCSqGSIb3DQEBBQUAMHsxCzAJBgNVBAYTAlVTMQswCQYD
 VQQIDAJOSjEQMA0GA1UEBwwGTmVzdEdhcGUxEzARBgNVBAoMCk5lc3RHYXRFIENB
 MRMwEQYDVQQDDApOZXN0R2F0ZSBDQTEXMBUGA1UECgwOTmVzdEdhdGUgU3lzdGVt
 MRcwFQYDVQQDDA5OZXN0R2F0ZSBTZXJ2ZXIwHhcNMjQwMTAxMDAwMDAwWhcNMjUw
 MTAxMDAwMDAwWjBrMQswCQYDVQQGEwJVUzELMAkGA1UECAwCQ0ExEDAOBgNVBAcM
 B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
------END CERTIFICATE-----"#;
+-----END CERTIFICATE-----";
 
         Ok(cert_template.to_string())
     }
 
     /// Generate certificate fingerprint
+    #[must_use]
     pub fn calculate_fingerprint(cert_data: &[u8]) -> String {
         // Simplified fingerprint calculation
         // Real implementation would use SHA-256 hash
@@ -64,11 +63,19 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
 
         let mut hasher = DefaultHasher::new();
         cert_data.hash(&mut hasher);
-        format!("sha256:{:x}", hasher.finish())
+        let hash = hasher.finish();
+        format!("sha256:{:x}", hash)
     }
 
     /// Parse certificate subject from PEM data
-    pub fn parse_subject(cert_pem: &str) -> Result<String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn parse_subject(cert_pem: &str) -> Result<String>  {
         // Simplified subject parsing
         // Real implementation would parse X.509 ASN.1 structure
 
@@ -87,7 +94,14 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
     }
 
     /// Parse certificate issuer from PEM data
-    pub fn parse_issuer(cert_pem: &str) -> Result<String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn parse_issuer(cert_pem: &str) -> Result<String>  {
         // Simplified issuer parsing
         // Real implementation would parse X.509 ASN.1 structure
 
@@ -105,18 +119,23 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
     }
 
     /// Check if certificate PEM format is valid
-    pub fn is_valid_pem_format(cert_pem: &str) -> bool {
+    #[must_use]
+    pub const fn is_valid_pem_format(cert_pem: &str) -> bool {
         cert_pem.contains("-----BEGIN CERTIFICATE-----")
             && cert_pem.contains("-----END CERTIFICATE-----")
     }
 
     /// Create test certificate for development
-    pub fn create_test_certificate() -> Certificate {
+    #[must_use]
+    pub const fn create_test_certificate() -> Certificate {
         let now = SystemTime::now();
         Certificate {
             id: "test-cert-001".to_string(),
             cert_type: CertificateType::Server,
-            subject: "CN=localhost".to_string(),
+            principal: format!(
+                "CN={}",
+                crate::constants::canonical_defaults::network::LOCALHOST
+            ),
             issuer: "CN=NestGate Test CA".to_string(),
             data: b"test certificate data".to_vec(),
             not_before: format_system_time(now),
@@ -128,6 +147,7 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
     }
 
     /// Create expired certificate for testing
+    #[must_use]
     pub fn create_expired_certificate() -> Certificate {
         let mut cert = Self::create_test_certificate();
         cert.id = "expired-test-cert".to_string();
@@ -137,6 +157,7 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
     }
 
     /// Validate certificate format without cryptographic verification
+    #[must_use]
     pub fn validate_certificate_format(cert: &Certificate) -> Vec<String> {
         let mut errors = Vec::new();
 
@@ -144,7 +165,7 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
             errors.push("Certificate ID cannot be empty".to_string());
         }
 
-        if cert.subject.is_empty() {
+        if cert.principal.is_empty() {
             errors.push("Certificate subject cannot be empty".to_string());
         }
 
@@ -172,7 +193,8 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
     }
 
     /// Get certificate validity period in days
-    pub fn get_validity_days(cert: &Certificate) -> Option<u64> {
+    #[must_use]
+    pub const fn get_validity_days(cert: &Certificate) -> Option<u64> {
         let not_before = parse_system_time(&cert.not_before).ok()?;
         let not_after = parse_system_time(&cert.not_after).ok()?;
 
@@ -188,7 +210,8 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
     }
 
     /// Get days until certificate expiration
-    pub fn days_until_expiration(cert: &Certificate) -> Option<i64> {
+    #[must_use]
+    pub const fn days_until_expiration(cert: &Certificate) -> Option<i64> {
         let now = SystemTime::now();
         let not_after = parse_system_time(&cert.not_after).ok()?;
 
@@ -204,7 +227,8 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
     }
 
     /// Convert certificate to displayable summary
-    pub fn certificate_summary(cert: &Certificate) -> String {
+    #[must_use]
+    pub const fn certificate_summary(cert: &Certificate) -> String {
         let validity_days = Self::get_validity_days(cert).unwrap_or(0);
         let days_to_expiry = Self::days_until_expiration(cert).unwrap_or(-1);
 
@@ -212,7 +236,7 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
             "Certificate ID: {}\nType: {:?}\nSubject: {}\nIssuer: {}\nSerial: {}\nValidity: {} days\nExpires in: {} days\nValid: {}",
             cert.id,
             cert.cert_type,
-            cert.subject,
+            cert.principal,
             cert.issuer,
             cert.serial_number,
             validity_days,
@@ -227,7 +251,15 @@ pub mod modern {
     use super::*;
 
     /// Modern certificate generation with automatic endpoint discovery
-    pub async fn generate_certificate(service_name: &str) -> Result<Certificate> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn generate_certificate(service_name: &str) -> Result<Certificate>  {
         let adapter = crate::universal_primal_discovery::StandaloneNetworkAdapter::new(
             service_name.to_string(),
         );
@@ -235,8 +267,8 @@ pub mod modern {
         let endpoint = endpoint_result?;
 
         // Create basic network configuration for cert service
-        let _network_config = UnifiedNetworkConfig {
-            bind_address: endpoint.ip(),
+        let _network_config = crate::unified_types::network_config::UnifiedNetworkConfig {
+            bind_endpoint: endpoint.ip(),
             port: endpoint.port(),
             ..Default::default()
         };
@@ -245,7 +277,7 @@ pub mod modern {
         Ok(Certificate {
             id: format!("cert-{service_name}"),
             cert_type: crate::cert::types::CertificateType::Server,
-            subject: format!("CN={service_name}, O=NestGate, OU=Security, C=US"),
+            principal: format!("CN={service_name}, O=NestGate, OU=Security, C=US"),
             issuer: "CN=NestGate-CA, O=NestGate, C=US".to_string(),
             data: b"-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----".to_vec(),
             not_before: format_system_time(std::time::SystemTime::now()),
@@ -265,8 +297,8 @@ pub mod modern {
         // Generate a self-signed certificate for development/testing
         // In production, this would integrate with a proper CA or use Let's Encrypt
         tracing::info!(
-            "Generating modern certificate for subject: {}",
-            config.subject
+            "Generating modern certificate for principal: {}",
+            config.principal
         );
 
         let mut metadata = HashMap::new();
@@ -277,17 +309,17 @@ pub mod modern {
         // For development, create a basic certificate structure
         // Production implementation would use proper certificate generation libraries
         Ok(Certificate {
-            id: format!("cert-{}", config.subject),
+            id: format!("cert-{}", config.principal),
             cert_type: crate::cert::types::CertificateType::Server,
-            subject: config.subject.clone(),
-            issuer: format!("NestGate-CA-{}", config.subject),
-            serial_number: format!("{:x}", rand::random::<u64>()),
+            principal: config.principal.clone(),
+            issuer: format!("NestGate-CA-{}", config.principal),
+            serial_number: format!("{:x}", 12345),
             not_before: chrono::Utc::now().timestamp().to_string(),
             not_after: (chrono::Utc::now() + chrono::Duration::days(365))
                 .timestamp()
                 .to_string(),
             data: vec![1, 2, 3, 4], // Placeholder - would be actual certificate data
-            fingerprint: format!("{:x}", rand::random::<u64>()), // Placeholder fingerprint
+            fingerprint: format!("{:x}", 67890), // Placeholder fingerprint
             metadata,
         })
     }
@@ -318,10 +350,10 @@ pub mod modern {
 
         // 2. Validate required capabilities
         if let Some(required_subject) = capabilities.get("required_subject") {
-            if !cert.subject.contains(required_subject) {
+            if !cert.principal.contains(required_subject) {
                 tracing::warn!(
                     "Certificate subject '{}' does not match required '{}'",
-                    cert.subject,
+                    cert.principal,
                     required_subject
                 );
                 return Ok(false);
@@ -357,26 +389,26 @@ pub mod modern {
         }
 
         tracing::info!(
-            "Certificate validation successful for subject: {}",
-            cert.subject
+            "Certificate validation successful for principal: {}",
+            cert.principal
         );
         Ok(true)
     }
 
     #[allow(dead_code)]
     struct CertificateConfig {
-        subject: String,
+        principal: String,
         endpoints: Vec<String>,
-        bind_address: std::net::IpAddr,
+        bind_endpoint: std::net::IpAddr,
     }
 
     impl Default for CertificateConfig {
         fn default() -> Self {
             Self {
-                subject: "nestgate".to_string(),
+                principal: "nestgate".to_string(),
                 endpoints: vec![],
-                bind_address: crate::safe_operations::safe_parse_ip(
-                    "127.0.0.1",
+                bind_endpoint: crate::safe_operations::safe_parse_ip(
+                    crate::constants::canonical_defaults::network::LOCALHOST,
                     "cert_utils_default",
                 )
                 .unwrap_or(std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST)),
@@ -387,6 +419,7 @@ pub mod modern {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_generate_self_signed() {
@@ -405,9 +438,9 @@ mod tests {
 
     #[test]
     fn test_is_valid_pem_format() {
-        let valid_pem = r#"-----BEGIN CERTIFICATE-----
+        let valid_pem = r"-----BEGIN CERTIFICATE-----
 MIICWjCCAcMCAg38MA0GCSqGSIb3DQEBBQUAMHsxCzAJBgNVBAYTAlVT
------END CERTIFICATE-----"#;
+-----END CERTIFICATE-----";
 
         let invalid_pem = "not a certificate";
 
@@ -419,7 +452,7 @@ MIICWjCCAcMCAg38MA0GCSqGSIb3DQEBBQUAMHsxCzAJBgNVBAYTAlVT
     fn test_create_test_certificate() {
         let cert = CertUtils::create_test_certificate();
         assert!(!cert.id.is_empty());
-        assert!(!cert.subject.is_empty());
+        assert!(!cert.principal.is_empty());
         assert!(!cert.issuer.is_empty());
         assert!(!cert.data.is_empty());
         assert!(cert.is_valid());
@@ -439,7 +472,7 @@ MIICWjCCAcMCAg38MA0GCSqGSIb3DQEBBQUAMHsxCzAJBgNVBAYTAlVT
         assert!(errors.is_empty());
 
         let mut invalid_cert = valid_cert.clone();
-        invalid_cert.subject = "".to_string();
+        invalid_cert.principal = "".to_string();
         invalid_cert.issuer = "".to_string();
 
         let errors = CertUtils::validate_certificate_format(&invalid_cert);
@@ -454,7 +487,7 @@ MIICWjCCAcMCAg38MA0GCSqGSIb3DQEBBQUAMHsxCzAJBgNVBAYTAlVT
             365 // Default to 365 days for test
         });
         // Should be approximately 365 days (within a day of tolerance)
-        assert!(validity_days >= 364 && validity_days <= 366);
+        assert!((364..=366).contains(&validity_days));
     }
 
     #[test]
@@ -465,7 +498,7 @@ MIICWjCCAcMCAg38MA0GCSqGSIb3DQEBBQUAMHsxCzAJBgNVBAYTAlVT
             365 // Default to 365 days for test
         });
         // Should be approximately 365 days (within a day of tolerance)
-        assert!(days_until >= 364 && days_until <= 366);
+        assert!((364..=366).contains(&days_until));
 
         let expired_cert = CertUtils::create_expired_certificate();
         let days_until = CertUtils::days_until_expiration(&expired_cert).unwrap_or_else(|| {
@@ -481,7 +514,7 @@ MIICWjCCAcMCAg38MA0GCSqGSIb3DQEBBQUAMHsxCzAJBgNVBAYTAlVT
         let summary = CertUtils::certificate_summary(&cert);
 
         assert!(summary.contains(&cert.id));
-        assert!(summary.contains(&cert.subject));
+        assert!(summary.contains(&cert.principal));
         assert!(summary.contains(&cert.issuer));
         assert!(summary.contains(&cert.serial_number));
         assert!(summary.contains("Valid: true"));

@@ -19,18 +19,15 @@ use std::time::{Duration, SystemTime};
 pub struct CanonicalStorageChange {
     pub id: String,
     pub timestamp: SystemTime,
-    pub operation: String,
     pub data: serde_json::Value,
     pub metadata: HashMap<String, String>,
     pub source: String,
     pub destination: Option<String>,
 }
-
 /// Canonical storage directory entry - unified file system representation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CanonicalStorageDirectoryEntry {
     pub name: String,
-    pub path: String,
     pub is_directory: bool,
     pub size: u64,
     pub modified: SystemTime,
@@ -39,7 +36,6 @@ pub struct CanonicalStorageDirectoryEntry {
     pub group: Option<String>,
     pub checksum: Option<String>,
 }
-
 /// Canonical storage range specification - unified range operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CanonicalStorageRange {
@@ -48,7 +44,6 @@ pub struct CanonicalStorageRange {
     pub inclusive: bool,
     pub chunk_size: Option<u64>,
 }
-
 /// Canonical replication status - unified across all replication systems
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum CanonicalReplicationStatus {
@@ -63,7 +58,6 @@ pub enum CanonicalReplicationStatus {
     InProgress,
     Cancelled,
 }
-
 impl Default for CanonicalReplicationStatus {
     fn default() -> Self {
         Self::Disabled
@@ -101,7 +95,6 @@ pub struct CanonicalStorageReplicationResult {
     pub started_at: SystemTime,
     pub completed_at: Option<SystemTime>,
 }
-
 /// Canonical storage target - unified replication targets
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CanonicalStorageTarget {
@@ -114,7 +107,6 @@ pub struct CanonicalStorageTarget {
     pub encryption: bool,
     pub priority: u8,
 }
-
 /// Canonical target types - unified storage target classification
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CanonicalTargetType {
@@ -125,7 +117,6 @@ pub enum CanonicalTargetType {
     ZfsPool,
     CloudStorage,
 }
-
 /// Canonical backup types - unified backup classification
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CanonicalBackupType {
@@ -134,9 +125,8 @@ pub enum CanonicalBackupType {
     Differential,
     Snapshot,
 }
-
 /// Canonical optimization categories - unified optimization tracking
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum CanonicalOptimizationCategory {
     Compression,
     Caching,
@@ -149,7 +139,6 @@ pub enum CanonicalOptimizationCategory {
     Replication,
     Backup,
 }
-
 /// Canonical priority levels - unified priority system
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CanonicalPriority {
@@ -159,7 +148,6 @@ pub enum CanonicalPriority {
     Low,
     Minimal,
 }
-
 /// Canonical access patterns - unified access pattern tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CanonicalAccessPatterns {
@@ -167,7 +155,6 @@ pub struct CanonicalAccessPatterns {
     pub read_frequency: u64,
     pub write_frequency: u64,
     pub daily_access_count: u64,
-
     // Temporal tracking
     pub last_access: Option<SystemTime>,
     pub temporal_patterns: Vec<CanonicalAccessTimePattern>,
@@ -192,7 +179,6 @@ pub struct CanonicalAccessTimePattern {
     pub access_count: u64,
     pub average_duration: Duration,
 }
-
 impl Default for CanonicalAccessPatterns {
     fn default() -> Self {
         Self {
@@ -214,34 +200,12 @@ impl Default for CanonicalAccessPatterns {
 
 // ==================== SECTION ====================
 
-/// **UNIFIED CONFIG**
-/// 
-/// Main configuration structure for the NestGate system
-#[derive(Debug, Clone, Serialize, Deserialize)]
-// PEDANTIC: Removed #[derive(Default)] line causing conflicts
-// ==================== SECTION ====================
+// **DEPRECATED CODE REMOVED** - UnifiedConfig has been successfully migrated
+// to the canonical NestGateCanonicalConfig system. All usage has been updated
+// to use crate::config::canonical_master::NestGateCanonicalConfig instead.
 //
-// **DEPRECATED**: This UnifiedConfig definition is superseded by the canonical
-// NestGateCanonicalConfig in crate::config::canonical_master. Use the canonical version instead.
-//
-// **MIGRATION PATH**:
-// - Old: use crate::unified_types::UnifiedConfig
-// - New: use crate::config::canonical_master::NestGateCanonicalConfig
-//
-#[deprecated(since = "2.0.0", note = "Use crate::config::canonical_master::NestGateCanonicalConfig instead")]
-pub struct UnifiedConfig {
-    /// Service configuration
-    pub service: UnifiedServiceConfig,
-    /// Network configuration
-    pub network: UnifiedNetworkConfig,
-    /// Performance configuration
-    pub performance: UnifiedPerformanceConfig,
-    /// Storage configuration
-    pub storage: CanonicalStorageConfig,
-    /// Configuration metadata
-    pub metadata: ConfigMetadata,
-}
-
+// **MIGRATION COMPLETE**: This deprecated struct has been eliminated as part
+// of the canonical modernization cleanup.
 
 /// Canonical storage configuration - unified storage settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -252,7 +216,6 @@ pub struct CanonicalStorageConfig {
     pub optimization_config: CanonicalOptimizationConfig,
     pub access_patterns: CanonicalAccessPatterns,
 }
-
 impl Default for CanonicalStorageConfig {
     fn default() -> Self {
         Self {
@@ -275,7 +238,6 @@ pub struct CanonicalBackupConfig {
     pub compression: bool,
     pub encryption: bool,
 }
-
 impl Default for CanonicalBackupConfig {
     fn default() -> Self {
         Self {
@@ -297,7 +259,6 @@ pub struct CanonicalOptimizationConfig {
     pub optimization_schedule: String,
     pub performance_threshold: f64,
 }
-
 impl Default for CanonicalOptimizationConfig {
     fn default() -> Self {
         Self {
@@ -314,7 +275,7 @@ impl Default for CanonicalOptimizationConfig {
 }
 
 /// **UNIFIED SERVICE CONFIG**
-/// 
+///
 /// Service-specific configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedServiceConfig {
@@ -325,25 +286,24 @@ pub struct UnifiedServiceConfig {
     /// Service port
     pub port: u16,
     /// Service bind address
-    pub bind_address: String,
+    pub bind_endpoint: String,
     /// Service metadata
     pub metadata: HashMap<String, String>,
 }
-
 impl Default for UnifiedServiceConfig {
     fn default() -> Self {
         Self {
             name: "nestgate".to_string(),
             version: "1.0.0".to_string(),
             port: 8080,
-            bind_address: "0.0.0.0".to_string(),
+            bind_endpoint: "0.0.0.0".to_string(),
             metadata: HashMap::new(),
         }
     }
 }
 
 /// **UNIFIED NETWORK CONFIG**
-/// 
+///
 /// Network-specific configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedNetworkConfig {
@@ -356,7 +316,6 @@ pub struct UnifiedNetworkConfig {
     /// Buffer size
     pub buffer_size: usize,
 }
-
 impl Default for UnifiedNetworkConfig {
     fn default() -> Self {
         Self {
@@ -369,7 +328,7 @@ impl Default for UnifiedNetworkConfig {
 }
 
 /// **UNIFIED PERFORMANCE CONFIG**
-/// 
+///
 /// Performance-related configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedPerformanceConfig {
@@ -380,7 +339,6 @@ pub struct UnifiedPerformanceConfig {
     /// Performance thresholds
     pub thresholds: PerformanceThresholds,
 }
-
 impl Default for UnifiedPerformanceConfig {
     fn default() -> Self {
         Self {
@@ -392,7 +350,7 @@ impl Default for UnifiedPerformanceConfig {
 }
 
 /// **UNIFIED PERFORMANCE TEST CONFIG**
-/// 
+///
 /// Configuration for performance testing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedPerformanceTestConfig {
@@ -405,7 +363,6 @@ pub struct UnifiedPerformanceTestConfig {
     /// Enable detailed metrics
     pub detailed_metrics: bool,
 }
-
 impl Default for UnifiedPerformanceTestConfig {
     fn default() -> Self {
         Self {
@@ -418,7 +375,7 @@ impl Default for UnifiedPerformanceTestConfig {
 }
 
 /// **PERFORMANCE THRESHOLDS**
-/// 
+///
 /// Performance monitoring thresholds
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceThresholds {
@@ -429,7 +386,6 @@ pub struct PerformanceThresholds {
     /// Maximum memory usage in bytes
     pub max_memory_bytes: u64,
 }
-
 impl Default for PerformanceThresholds {
     fn default() -> Self {
         Self {
@@ -441,7 +397,7 @@ impl Default for PerformanceThresholds {
 }
 
 /// **CONFIG METADATA**
-/// 
+///
 /// Metadata about configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfigMetadata {
@@ -454,7 +410,6 @@ pub struct ConfigMetadata {
     /// Configuration source
     pub source: String,
 }
-
 impl Default for ConfigMetadata {
     fn default() -> Self {
         let now = SystemTime::now();
@@ -468,7 +423,7 @@ impl Default for ConfigMetadata {
 }
 
 /// **UNIFIED CACHE CONFIG**
-/// 
+///
 /// Cache configuration for various caching strategies
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedCacheConfig {
@@ -487,7 +442,6 @@ pub struct UnifiedCacheConfig {
     /// Cache directory path
     pub cache_directory: String,
 }
-
 impl Default for UnifiedCacheConfig {
     fn default() -> Self {
         Self {
@@ -504,7 +458,8 @@ impl Default for UnifiedCacheConfig {
 
 impl UnifiedCacheConfig {
     /// Create a new cache config with specified size
-    pub fn with_size(cache_size_bytes: u64) -> Self {
+    #[must_use]
+    pub const fn with_size(cache_size_bytes: u64) -> Self {
         Self {
             cache_size_bytes,
             ..Default::default()
@@ -512,12 +467,14 @@ impl UnifiedCacheConfig {
     }
 
     /// Enable compression
+    #[must_use]
     pub fn with_compression(mut self) -> Self {
         self.enable_compression = true;
         self
     }
 
     /// Enable persistence
+    #[must_use]
     pub fn with_persistence(mut self, directory: String) -> Self {
         self.enable_persistence = true;
         self.cache_directory = directory;
@@ -526,12 +483,11 @@ impl UnifiedCacheConfig {
 }
 
 /// **CUSTOM METRICS MAP**
-/// 
+///
 /// Type alias for custom metrics storage
 pub type CustomMetricsMap = HashMap<String, MetricValue>;
-
 /// **METRIC VALUE**
-/// 
+///
 /// Represents different types of metric values
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MetricValue {
@@ -541,15 +497,14 @@ pub enum MetricValue {
     Summary { sum: f64, count: u64 },
     String(String),
 }
-
 // ==================== SECTION ====================
 
 /// Migration utility to convert from legacy storage types
 pub mod migration {
     use super::*;
-
-    /// Convert legacy ReplicationStatus to canonical
-    pub fn migrate_replication_status(legacy_status: &str) -> CanonicalReplicationStatus {
+    /// Convert legacy `ReplicationStatus` to canonical
+    #[must_use]
+    pub const fn migrate_replication_status(legacy_status: &str) -> CanonicalReplicationStatus {
         match legacy_status.to_lowercase().as_str() {
             "active" => CanonicalReplicationStatus::Active,
             "paused" => CanonicalReplicationStatus::Paused,
@@ -566,7 +521,8 @@ pub mod migration {
     }
 
     /// Convert legacy optimization category to canonical
-    pub fn migrate_optimization_category(legacy_category: &str) -> CanonicalOptimizationCategory {
+    #[must_use]
+    pub const fn migrate_optimization_category(legacy_category: &str) -> CanonicalOptimizationCategory {
         match legacy_category.to_lowercase().as_str() {
             "compression" => CanonicalOptimizationCategory::Compression,
             "caching" => CanonicalOptimizationCategory::Caching,
@@ -585,12 +541,16 @@ pub mod migration {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_canonical_replication_status_display() {
         assert_eq!(CanonicalReplicationStatus::Active.to_string(), "active");
         assert_eq!(CanonicalReplicationStatus::Failed.to_string(), "failed");
-        assert_eq!(CanonicalReplicationStatus::InProgress.to_string(), "in_progress");
+        assert_eq!(
+            CanonicalReplicationStatus::InProgress.to_string(),
+            "in_progress"
+        );
     }
 
     #[test]
@@ -610,7 +570,7 @@ mod tests {
     #[test]
     fn test_migration_utilities() {
         use super::migration::*;
-        
+
         assert_eq!(
             migrate_replication_status("active"),
             CanonicalReplicationStatus::Active
@@ -619,7 +579,7 @@ mod tests {
             migrate_replication_status("in_progress"),
             CanonicalReplicationStatus::InProgress
         );
-        
+
         assert_eq!(
             migrate_optimization_category("compression"),
             CanonicalOptimizationCategory::Compression
@@ -638,4 +598,4 @@ mod tests {
         assert_eq!(patterns.read_write_ratio, 1.0);
         assert_eq!(patterns.sequential_access_ratio, 0.5);
     }
-} 
+}

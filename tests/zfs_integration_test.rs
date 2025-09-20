@@ -7,6 +7,8 @@ use nestgate_zfs::ZfsManager;
 
 use tokio::time::Duration;
 
+use nestgate_core::canonical_types::StorageTier;
+
 #[tokio::test]
 async fn test_zfs_integration() -> Result<()> {
     println!("🚀 Starting ZFS integration test");
@@ -20,12 +22,10 @@ async fn test_zfs_integration() -> Result<()> {
             return Ok(());
         }
         Err(e) => {
-            return Err(NestGateError::Internal {
-                message: e.to_string(),
-                location: Some(file!().to_string()),
-                debug_info: None,
-                is_bug: false,
-            })
+            return Err(NestGateError::internal_error(
+                e.to_string(),
+                "test_component",
+            ));
         }
     };
 
@@ -76,7 +76,7 @@ async fn test_zfs_dataset_operations() -> Result<()> {
         .dataset_manager
         .create_dataset(
             dataset_name,
-            "nestpool",
+            "zfspool",
             nestgate_core::types::StorageTier::Warm,
         )
         .await;
@@ -84,6 +84,7 @@ async fn test_zfs_dataset_operations() -> Result<()> {
     match result {
         Ok(_) => println!("✅ Dataset created successfully"),
         Err(e) => println!("⚠️ Dataset creation failed (expected in test): {e}"),
+    Ok(())
     }
 
     Ok(())
@@ -134,16 +135,15 @@ async fn test_zfs_concurrent_operations() -> Result<()> {
             Ok::<(), NestGateError>(())
         });
         handles.push(handle);
+        Ok(())
     }
 
     // Wait for all operations
     for handle in handles {
-        handle.await.map_err(|e| NestGateError::Internal {
-            message: e.to_string(),
-            location: Some(file!().to_string()),
-            debug_info: None,
-            is_bug: false,
-        })??;
+        handle
+            .await
+            .map_err(|e| NestGateError::internal_error(e.to_string(), "test_component"))??;
+        Ok(())
     }
 
     println!("✅ All concurrent operations completed");
@@ -166,12 +166,10 @@ async fn test_zfs_error_handling() -> Result<()> {
             return Ok(());
         }
         Err(e) => {
-            return Err(NestGateError::Internal {
-                message: e.to_string(),
-                location: Some(file!().to_string()),
-                debug_info: None,
-                is_bug: false,
-            })
+            return Err(NestGateError::internal_error(
+                e.to_string(),
+                "test_component",
+            ));
         }
     };
 
@@ -205,10 +203,13 @@ async fn test_zfs_timeout_handling() -> Result<()> {
                 "✅ Operation completed within timeout: {:?}",
                 status.is_ok()
             );
+    Ok(())
         }
         Err(_) => {
             println!("⚠️ Operation timed out (expected in some environments)");
+    Ok(())
         }
+    Ok(())
     }
 
     Ok(())

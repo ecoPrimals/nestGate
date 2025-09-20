@@ -2,12 +2,12 @@
 //!
 //! This test validates that the canonical modernization is working correctly
 
-use nestgate_core::config::unified::NestGateUnifiedConfig;
 use nestgate_core::config::defaults::Environment;
+use nestgate_core::config::unified::NestGateUnifiedConfig;
 
 /// Test that canonical configuration works
 #[tokio::test]
-async fn test_canonical_config_creation() {
+async fn test_canonical_config_creation() -> Result<(), Box<dyn std::error::Error>> {
     // Test default configuration creation
     let config = NestGateCanonicalUnifiedConfig::default();
 
@@ -22,11 +22,12 @@ async fn test_canonical_config_creation() {
     );
 
     println!("✅ Canonical configuration creation works");
+    Ok(())
 }
 
 /// Test environment-specific configuration
 #[tokio::test]
-async fn test_environment_driven_config() {
+async fn test_environment_driven_config() -> Result<(), Box<dyn std::error::Error>> {
     // Test development environment
     let dev_config =
         nestgate_core::config::unified::create_config_for_environment(Environment::Development);
@@ -38,15 +39,16 @@ async fn test_environment_driven_config() {
     assert!(matches!(prod_config.environment, Environment::Production));
 
     println!("✅ Environment-driven configuration works");
+    Ok(())
 }
 
 /// Test that deprecated fields are not present
 #[tokio::test]
-async fn test_no_deprecated_fields() {
+async fn test_no_deprecated_fields() -> Result<(), Box<dyn std::error::Error>> {
     let config = NestGateCanonicalUnifiedConfig::default();
 
     // Test that config can be serialized (validates structure)
-    let serialized = serde_json::to_string(&config).expect("Config should serialize");
+    let serialized = serde_json::to_string(&config)?;
 
     // Test that serialized config doesn't contain deprecated field names
     assert!(
@@ -59,11 +61,12 @@ async fn test_no_deprecated_fields() {
     );
 
     println!("✅ No deprecated fields present");
+    Ok(())
 }
 
 /// Test basic configuration validation
 #[tokio::test]
-async fn test_config_validation() {
+async fn test_config_validation() -> Result<(), Box<dyn std::error::Error>> {
     let config = NestGateCanonicalUnifiedConfig::default();
 
     // Test system configuration with correct field names
@@ -73,4 +76,5 @@ async fn test_config_validation() {
     assert!(!config.system.config_dir.as_os_str().is_empty());
 
     println!("✅ Configuration validation passes");
+    Ok(())
 }

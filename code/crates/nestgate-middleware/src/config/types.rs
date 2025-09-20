@@ -1,7 +1,6 @@
 /// Basic enums and supporting types split from the main config file
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 /// Middleware types supported by NestGate
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum MiddlewareType {
@@ -30,8 +29,7 @@ pub enum MiddlewareType {
     /// Custom middleware
     Custom(String),
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MiddlewareConfiguration {
     /// Middleware-specific settings
     pub settings: HashMap<String, serde_json::Value>,
@@ -42,8 +40,7 @@ pub struct MiddlewareConfiguration {
     /// Conditional execution rules
     pub conditions: Vec<MiddlewareCondition>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MiddlewareCondition {
     /// Condition type
     pub condition_type: ConditionType,
@@ -52,8 +49,7 @@ pub struct MiddlewareCondition {
     /// Negation flag
     pub negate: bool,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ConditionType {
     /// Path pattern matching
     Path,
@@ -70,8 +66,7 @@ pub enum ConditionType {
     /// Custom condition
     Custom(String),
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum HttpResponseFormat {
     /// JSON error response
     Json,
@@ -82,15 +77,12 @@ pub enum HttpResponseFormat {
     /// Custom format
     Custom(String),
 }
-
 // Default implementations
 impl Default for MiddlewareConfiguration {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             settings: HashMap::new(),
             enabled: true,
             priority: 50,
             conditions: Vec::new(),
-        }
-    }
+         }
 }

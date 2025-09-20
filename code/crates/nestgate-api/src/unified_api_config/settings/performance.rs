@@ -24,7 +24,6 @@ pub struct ApiPerformanceSettings {
     /// Connection pool timeout
     pub connection_pool_timeout: Duration,
 }
-
 /// Circuit breaker configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiCircuitBreakerSettings {
@@ -45,7 +44,6 @@ pub struct ApiCircuitBreakerSettings {
     /// Maximum backoff duration
     pub max_backoff: Duration,
 }
-
 /// Retry policy configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiRetryPolicySettings {
@@ -64,7 +62,6 @@ pub struct ApiRetryPolicySettings {
     /// Jitter range (0.0 to 1.0)
     pub jitter_range: f64,
 }
-
 /// Connection pool configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiConnectionPoolSettings {
@@ -83,25 +80,21 @@ pub struct ApiConnectionPoolSettings {
     /// Enable connection validation
     pub enable_connection_validation: bool,
 }
-
 impl Default for ApiPerformanceSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enable_request_caching: true,
             cache_ttl: Duration::from_secs(300), // 5 minutes
-            max_cache_size: 10000,
+            max_cache_size: 10_000,
             enable_response_compression: true,
             compression_threshold: 1024, // 1KB
             enable_connection_pooling: true,
             connection_pool_size: 100,
             connection_pool_timeout: Duration::from_secs(30),
-        }
-    }
+         }
 }
 
 impl Default for ApiCircuitBreakerSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enable_circuit_breaker: true,
             failure_threshold: 5,
             timeout_duration: Duration::from_secs(60),
@@ -110,13 +103,11 @@ impl Default for ApiCircuitBreakerSettings {
             enable_exponential_backoff: true,
             initial_backoff: Duration::from_millis(100),
             max_backoff: Duration::from_secs(30),
-        }
-    }
+         }
 }
 
 impl Default for ApiRetryPolicySettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enable_retries: true,
             max_retry_attempts: 3,
             initial_retry_delay: Duration::from_millis(100),
@@ -124,13 +115,11 @@ impl Default for ApiRetryPolicySettings {
             retry_multiplier: 2.0,
             enable_jitter: true,
             jitter_range: 0.1,
-        }
-    }
+         }
 }
 
 impl Default for ApiConnectionPoolSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             min_pool_size: 5,
             max_pool_size: 100,
             connection_timeout: Duration::from_secs(30),
@@ -138,6 +127,5 @@ impl Default for ApiConnectionPoolSettings {
             max_connection_lifetime: Duration::from_secs(3600), // 1 hour
             health_check_interval: Duration::from_secs(60),
             enable_connection_validation: true,
-        }
-    }
+         }
 } 

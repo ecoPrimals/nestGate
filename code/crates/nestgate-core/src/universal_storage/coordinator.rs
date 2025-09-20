@@ -5,7 +5,6 @@ use super::types::*;
 // Removed unused error imports
 use crate::Result;
 use std::sync::Arc;
-
 /// Storage Coordinator - Routes requests to appropriate handlers
 pub struct StorageCoordinator {
     /// Registry of storage backends
@@ -17,10 +16,22 @@ pub struct StorageCoordinator {
     /// Transaction manager for atomic operations
     _transaction_manager: Arc<TransactionManager>,
 }
-
 impl StorageCoordinator {
     /// Create a new storage coordinator
-    pub async fn new() -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub const fn new() -> Result<Self>   {
         Ok(Self {
             _backend_registry: Arc::new(BackendRegistry::new()?),
             _load_balancer: Arc::new(StorageLoadBalancer::new()),
@@ -30,12 +41,37 @@ impl StorageCoordinator {
     }
 
     /// Register a storage backend
-    pub async fn register_backend(&self, backend: StorageBackend) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub const fn register_backend(&self, backend: StorageBackend) -> Result<()>   {
         self._backend_registry.register(backend)
     }
 
     /// Route a storage request to appropriate backend
-    pub async fn route_request(&self, request: StorageRequest) -> Result<StorageResponse> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn route_request(&self, request: StorageRequest) -> Result<StorageResponse>   {
         // Select appropriate backend
         let backend = self._load_balancer.select_backend(&request).await?;
 
@@ -44,23 +80,59 @@ impl StorageCoordinator {
     }
 
     /// Coordinate multi-backend operations
-    pub async fn coordinate_multi_backend(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub const fn coordinate_multi_backend(
         &self,
-        operation: MultiBackendOperation,
-    ) -> Result<OperationResult> {
+    ) -> Result<OperationResult>   {
         self._transaction_manager.execute_multi_backend(operation)
     }
 
     /// Ensure consistency across distributed operations
-    pub async fn ensure_consistency(&self, data_id: &str) -> Result<ConsistencyStatus> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub const fn ensure_consistency(&self, data_id: &str) -> Result<ConsistencyStatus>   {
         self._consistency_manager.check_consistency(data_id)
     }
 
     /// Manage distributed transactions
-    pub async fn manage_transaction(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub const fn manage_transaction(
         &self,
         transaction: StorageTransaction,
-    ) -> Result<TransactionResult> {
+    ) -> Result<TransactionResult>   {
         self._transaction_manager.execute_transaction(transaction)
     }
 }

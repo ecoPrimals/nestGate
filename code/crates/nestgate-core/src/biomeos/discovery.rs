@@ -1,107 +1,125 @@
-//! **BIOMEOS DISCOVERY AND TEMPLATE RETRIEVAL**
-//!
-//! Capability discovery and template retrieval functionality for BiomeOS integration.
-//! Extracted from biomeos.rs for file size compliance.
+// Management manifest discovery and parsing
+// Handles biome.yaml manifest files for ecosystem integration
 
-use crate::Result;
+use crate::error::{Result, NestGateError};
+// CLEANED: Removed unused serde imports as part of canonical modernization
+// use serde::{Deserialize, Serialize};
 use super::types::{BiomeManifest, TemplateSpec, VolumeSpec};
 
 impl BiomeManifest {
-    /// Parse biome.yaml from string
-    pub fn from_yaml(yaml_content: &str) -> Result<Self> {
-        serde_yaml::from_str(yaml_content).map_err(|e| crate::NestGateError::Internal {
-            message: format!("Failed to parse biome.yaml: {e}"),
-            component: "biomeos_discovery".to_string(),
-            location: Some(format!("{}:{}", file!(), line!())),
-            is_bug: false,
-            context: Some(crate::error::context::ErrorContext {
-                    error_id: "error".to_string(),
-                    stack_trace: None,
-                    related_errors: vec![],
-                operation: "parse_biome_yaml".to_string(),
-                component: "biomeos".to_string(),
-                metadata: {
-                    let mut map = std::collections::HashMap::new();
-                    map.insert("yaml_parsing_error".to_string(), format!("{:?}", e));
-                    map.insert("content_length".to_string(), yaml_content.len().to_string());
-                    map
-                },
-                timestamp: std::time::SystemTime::now(),
-                retry_info: None,
-                recovery_suggestions: vec!["Check YAML syntax and format".to_string()],
-                    performance_metrics: None,
-                    environment: None,
-            }),
-        })
+    /// Parse Management manifest from YAML content
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn from_yaml(yaml_content: &str) -> Result<Self>  {
+        serde_yaml::from_str(yaml_content).map_err(|e| NestGateError::internal_error(&format!("Failed to parse biome.yaml: {e}"), "component"management_discovery"))
     }
 
-    /// Parse biome.yaml from file
-    pub async fn from_file(file_path: &str) -> Result<Self> {
+    /// Load Management manifest from file
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn from_file(file_path: &str) -> Result<Self>  {
         let content = tokio::fs::read_to_string(file_path).await.map_err(|e| {
-            crate::NestGateError::Internal {
+            NestGateError::Internal(Box::new(crate::error::variants::core_errors::InternalErrorDetails {
                 message: format!("Failed to read biome.yaml: {e}"),
-                component: "biomeos_discovery".to_string(),
-                location: Some(file!().to_string()),
-                context: None,
+                component: "management_discovery".to_string(),
+                location: Some(format!("{file!(}:{file!(}"), line!())),
                 is_bug: false,
-            }
+                context: None,
+            }))
         })?;
 
         Self::from_yaml(&content)
     }
 
     /// Get storage volumes for NestGate provisioning
-    pub fn get_nestgate_volumes(&self) -> Vec<&VolumeSpec> {
+    pub const fn get_nestgate_volumes(&self) -> Vec<&VolumeSpec> {
         self.storage
             .volumes
             .iter()
             .collect()
     }
 
-    /// Get capability-based storage templates (replaces primal-specific templates)
-    pub async fn get_templates_by_capability(&self, capability_type: &str) -> Vec<TemplateSpec> {
-        if let Some(_templates) = &self.templates {
-            match capability_type {
-                // AI and Intelligence Capabilities
-                "ai-runtime" => {
-                    eprintln!("INFO: Using capability-based AI runtime discovery");
-                    self.templates
-                        .as_ref()
-                        .and_then(|t| t.ai_runtime.as_ref())
-                        .cloned()
-                        .unwrap_or_else(|| {
-                            vec![TemplateSpec {
-                                name: "ai-runtime-template".to_string(),
-                                resources: "cpu:2,memory:4Gi".to_string(),
-                                config: std::collections::HashMap::new(),
-                            }]
-                        })
-                }
-                "agent-processing" => {
-                    eprintln!("INFO: Using capability-based agent processing discovery");
-                    self.templates
-                        .as_ref()
-                        .and_then(|t| t.agent_processing.as_ref())
-                        .cloned()
-                        .unwrap_or_else(|| {
-                            vec![TemplateSpec {
-                                name: "agent-processing-template".to_string(),
-                                resources: "cpu:1,memory:2Gi".to_string(),
-                                config: std::collections::HashMap::new(),
-                            }]
-                        })
-                }
-                // Route through universal adapter for capability discovery
-                capability => {
-                    // Use universal adapter to discover and route capability requests
-                    super::adapters::route_capability_through_adapter(capability)
-                        .await
-                        .unwrap_or_default()
+    /// Get network configuration from manifest
+    pub const fn get_network_config(&self) -> Option<&super::types::BiomeNetworking> {
+        Some(&self.networking)
+    }
+
+    /// Get service definitions from manifest
+    pub const fn get_services(&self) -> &std::collections::HashMap<String, super::types::ServiceConfig> {
+        &self.services
+    }
+
+    /// Check if manifest is valid for NestGate integration
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate_for_nestgate(&self) -> Result<()>  {
+        if self.metadata.name.is_empty() {
+            return Err(NestGateError::validation_error("Biome name cannot be empty"));
+        }
+
+        if self.metadata.version.is_empty() {
+            return Err(NestGateError::validation_error("Biome version cannot be empty"));
+        }
+
+        Ok(())
+    }
+
+    /// Get templates filtered by capability
+    pub fn get_templates_by_capability(&self, capability: &str) -> Vec<&TemplateSpec> {
+        let mut result = Vec::new();
+        if let Some(templates) = &self.templates {
+            // Check AI runtime templates
+            if let Some(ai_templates) = &templates.ai_runtime {
+                result.extend(ai_templates.iter().filter(|template| {
+                    template.config
+                        .get("capabilities")
+                        .and_then(|caps| caps.as_array())
+                        .map(|caps| caps.iter().any(|cap| cap.as_str() == Some(capability)))
+                        .unwrap_or(false)
+                }));
+            }
+            // Check other template types similarly if needed
+        }
+        result
+    }
+
+    /// Get all available capabilities from templates
+    pub fn get_available_capabilities(&self) -> Vec<String> {
+        let mut capabilities = Vec::new();
+        if let Some(templates) = &self.templates {
+            if let Some(ai_templates) = &templates.ai_runtime {
+                for template in ai_templates {
+                    if let Some(caps) = template.config
+                        .get("capabilities")
+                        .and_then(|c| c.as_array())
+                    {
+                        for cap in caps {
+                            if let Some(cap_str) = cap.as_str() {
+                                if !capabilities.contains(&cap_str.to_string()) {
+                                    capabilities.push(cap_str.to_string());
+                                }
+                            }
+                        }
+                    }
                 }
             }
-        } else {
-            vec![]
         }
+        capabilities
     }
 
     /// Get capability-based templates through universal adapter routing

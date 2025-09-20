@@ -1,4 +1,4 @@
-//! Alert Rules and Suppression Logic
+// Alert Rules and Suppression Logic
 
 use super::types::{AlertCondition, AlertSeverity};
 use serde::{Deserialize, Serialize};
@@ -26,7 +26,6 @@ pub struct AlertRule {
     /// Tags for categorization
     pub tags: Vec<String>,
 }
-
 /// Alert suppression rule
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SuppressionRule {
@@ -37,7 +36,6 @@ pub struct SuppressionRule {
     /// Time window when suppression is active
     pub window: TimeWindow,
 }
-
 /// Time window specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeWindow {

@@ -7,7 +7,6 @@ use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
 /// **CANONICAL SECURITY CONFIGURATION**
 /// Replaces: SecurityConfig, AuthConfig, TlsConfig, KeyManagementConfig,
 /// AccessControlConfig, and 6+ other security config structures
@@ -28,7 +27,6 @@ pub struct CanonicalSecurityConfig {
     /// Environment-specific overrides
     pub environment_overrides: HashMap<String, serde_json::Value>,
 }
-
 impl CanonicalDomainConfig for CanonicalSecurityConfig {
     fn domain() -> &'static str {
         "security"

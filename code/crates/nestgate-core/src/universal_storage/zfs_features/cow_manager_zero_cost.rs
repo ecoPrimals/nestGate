@@ -19,11 +19,9 @@ use tracing::info;
 #[derive(Debug, Clone)]
 pub struct ZeroCostCowOperation {
     pub operation_id: String,
-    pub path: String,
     pub snapshot_id: String,
     pub timestamp: u64,
 }
-
 /// Zero-cost COW manager with compile-time backend specialization
 pub struct ZeroCostCowManager<Backend, const MAX_OPERATIONS: usize = 1000>
 where
@@ -42,7 +40,6 @@ where
     /// Phantom data for const generics
     _phantom: PhantomData<()>,
 }
-
 impl<Backend, const MAX_OPERATIONS: usize> ZeroCostCowManager<Backend, MAX_OPERATIONS>
 where
     Backend: ZeroCostStorageBackend,
@@ -60,18 +57,16 @@ where
     }
 
     /// Perform COW write with direct dispatch - no virtual method calls
-    pub async fn write_with_cow(&self, path: &str, data: &[u8]) -> Result<String> {
-        info!("Performing zero-cost COW write to path: {}", path);
         
         // Create snapshot ID with zero allocation
-        let snapshot_id = format!("cow_snapshot_{}_{}", path.replace('/', "_"), self.operation_counter);
+        let snapshot_id = format!("cow_snapshot_{}_{}", path.replace('/', "_"), self.b_operation_counter);
         
         // Direct backend call - no Arc<dyn> overhead
         self.backend.write(path, data).await
-            .map_err(|_| NestGateError::Storage("Zero-cost COW write failed".to_string()))?;
+            .map_err(|_| NestGateError::Storage("Zero-cost COW write failed"))?;
         
         // Track operation with compile-time bounds checking
-        if self.operation_counter < MAX_OPERATIONS {
+        if self.b_operation_counter < MAX_OPERATIONS {
             // In a real implementation, this would use unsafe for zero-cost mutation
             // or use atomic operations for thread safety
         }
@@ -80,8 +75,6 @@ where
     }
 
     /// Read with COW snapshot support - direct dispatch
-    pub async fn read_with_cow(&self, path: &str, snapshot_id: Option<&str>) -> Result<Vec<u8>> {
-        info!("Performing zero-cost COW read from path: {}", path);
         
         let read_path = if let Some(snapshot) = snapshot_id {
             format!("{}@{}", path, snapshot)
@@ -91,12 +84,11 @@ where
         
         // Direct backend call - no virtual method overhead
         self.backend.read(&read_path).await
-            .map_err(|_| NestGateError::Storage("Zero-cost COW read failed".to_string()))
+            .map_err(|_| NestGateError::Storage("Zero-cost COW read failed"))
     }
 
     /// Create COW snapshot with zero overhead
-    pub async fn create_snapshot(&self, path: &str) -> Result<String> {
-        let snapshot_id = format!("{}@snapshot_{}", path, self.operation_counter);
+        let snapshot_id = format!("{}@snapshot_{}", path, self.b_operation_counter);
         
         info!("Creating zero-cost COW snapshot: {}", snapshot_id);
         
@@ -107,12 +99,10 @@ where
     }
 
     /// List COW snapshots with compile-time optimization
-    pub async fn list_snapshots(&self, path: &str) -> Result<Vec<String>> {
-        info!("Listing zero-cost COW snapshots for path: {}", path);
         
         // Direct backend listing - no virtual dispatch
         let all_files = self.backend.list(path).await
-            .map_err(|_| NestGateError::Storage("Failed to list snapshots".to_string()))?;
+            .map_err(|_| NestGateError::Storage("Failed to list snapshots"))?;
         
         // Filter snapshots with zero allocation where possible
         let snapshots: Vec<String> = all_files
@@ -124,19 +114,32 @@ where
     }
 
     /// Delete COW snapshot with direct dispatch
-    pub async fn delete_snapshot(&self, snapshot_id: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub const fn delete_snapshot(&self, snapshot_id: &str) -> Result<()>   {
         info!("Deleting zero-cost COW snapshot: {}", snapshot_id);
         
         // Direct backend deletion - no Arc<dyn> overhead
         self.backend.delete(snapshot_id).await
-            .map_err(|_| NestGateError::Storage("Failed to delete COW snapshot".to_string()))
+            .map_err(|_| NestGateError::Storage("Failed to delete COW snapshot"))
     }
 
     /// Get COW statistics with compile-time data
     pub const fn get_statistics(&self) -> ZeroCostCowStatistics {
         ZeroCostCowStatistics {
             max_operations: MAX_OPERATIONS,
-            current_operations: self.operation_counter,
+            current_operations: self.b_operation_counter,
             pool_handle: &self.pool_handle,
         }
     }
@@ -158,7 +161,6 @@ pub struct ZeroCostCowStatistics {
     pub current_operations: usize,
     pub pool_handle: &'static str,
 }
-
 // ==================== SECTION ====================
 
 /// Zero-cost COW manager builder with compile-time configuration
@@ -171,7 +173,6 @@ where
     pool_handle: String,
     _phantom: PhantomData<()>,
 }
-
 impl<Backend, const MAX_OPERATIONS: usize> ZeroCostCowManagerBuilder<Backend, MAX_OPERATIONS>
 where
     Backend: ZeroCostStorageBackend,
@@ -191,28 +192,38 @@ where
     }
 
     /// Set storage backend with zero overhead
+    #[must_use]
     pub fn with_backend(mut self, backend: Backend) -> Self {
         self.backend = Some(backend);
         self
     }
 
     /// Set pool handle
+    #[must_use]
     pub fn with_pool_handle(mut self, pool_handle: String) -> Self {
         self.pool_handle = pool_handle;
         self
     }
 
     /// Set COW configuration
+    #[must_use]
     pub fn with_config(mut self, config: ZeroCostCowConfig) -> Self {
         self.config = config;
         self
     }
 
     /// Build the COW manager with compile-time optimization
-    pub fn build(self) -> Result<ZeroCostCowManager<Backend, MAX_OPERATIONS>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn build(self) -> Result<ZeroCostCowManager<Backend, MAX_OPERATIONS>>  {
         let backend = self.backend.ok_or_else(|| {
             NestGateError::Configuration("Backend is required for COW manager".to_string())
-        })?;
+        )?;
 
         Ok(ZeroCostCowManager::new(backend, self.config, self.pool_handle))
     }
@@ -224,9 +235,8 @@ where
 pub mod performance {
     use super::*;
     use std::time::Instant;
-
     /// Benchmark zero-cost COW manager vs traditional Arc<dyn> version
-    pub async fn benchmark_cow_operations<Backend>(
+    pub fn benchmark_cow_operations<Backend>(
         zero_cost_manager: &ZeroCostCowManager<Backend, 1000>,
     ) -> (u64, u64, f64)
     where
@@ -237,15 +247,15 @@ pub mod performance {
         // Benchmark zero-cost operations
         let start = Instant::now();
         for i in 0..1000 {
-            let path = format!("test_file_{}", i);
+            let path = format!("test_file_{i}");
             let _ = zero_cost_manager.write_with_cow(&path, test_data).await;
         }
         let zero_cost_time = start.elapsed().as_nanos() as u64;
         
         // Traditional Arc<dyn> would be ~45% slower based on our analysis
-        let traditional_time = (zero_cost_time as f64 * 1.45) as u64;
+        let traditional_time = (f64::from(zero_cost_time) * 1.45) as u64;
         
-        let improvement = ((traditional_time - zero_cost_time) as f64 / traditional_time as f64) * 100.0;
+        let improvement = ((traditional_time - zero_cost_time) as f64 / f64::from(traditional_time)) * 100.0;
         
         (zero_cost_time, traditional_time, improvement)
     }
@@ -253,9 +263,9 @@ pub mod performance {
     /// Display performance comparison results
     pub fn display_performance_results(zero_cost_ns: u64, traditional_ns: u64, improvement: f64) {
         println!("🚀 Zero-Cost COW Manager Performance Results:");
-        println!("   Zero-cost time: {} ns", zero_cost_ns);
-        println!("   Traditional time: {} ns", traditional_ns);
-        println!("   Performance improvement: {:.1}%", improvement);
+        println!("   Zero-cost time: {zero_cost_ns} ns");
+        println!("   Traditional time: {traditional_ns} ns");
+        println!("   Performance improvement: {:.1}%");
         println!("   Memory overhead eliminated: ~70%");
         println!("   Virtual dispatch calls eliminated: 100%");
     }
@@ -264,9 +274,8 @@ pub mod performance {
 // ==================== SECTION ====================
 
 /// Migration guide from Arc<dyn> COW manager to zero-cost version
-pub const MIGRATION_GUIDE: &str = r#"
+pub const MIGRATION_GUIDE: &str = r"
 🔄 COW MANAGER ZERO-COST MIGRATION GUIDE
-
 ## Before (Arc<dyn> Runtime Dispatch)
 ```rust
 use std::sync::Arc;
@@ -277,11 +286,11 @@ pub struct CowManager {
 }
 
 impl CowManager {
-    pub async fn new(backend: Arc<dyn CanonicalStorageBackend>) -> Self {
+    #[must_use]
+    pub const fn new(backend: Arc<dyn CanonicalStorageBackend>) -> Self {
         Self { _backend: backend }
     }
     
-    pub async fn write_with_cow(&self, path: &str, data: &[u8]) -> Result<String> {
         // Virtual method call overhead
         self._backend.write(path, data).await?;
         // ...
@@ -309,7 +318,6 @@ where
         Self { backend }
     }
     
-    pub async fn write_with_cow(&self, path: &str, data: &[u8]) -> Result<String> {
         // Direct method call - zero overhead
         self.backend.write(path, data).await?;
         // ...
@@ -329,7 +337,7 @@ where
 - ✅ 70% memory overhead reduction  
 - ✅ 100% elimination of virtual dispatch
 - ✅ Compile-time optimization and safety
-"#;
+";
 
 // ==================== SECTION ====================
 

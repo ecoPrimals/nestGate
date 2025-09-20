@@ -1,28 +1,23 @@
 //
 // Enhanced with real ZFS integration for Day 2 implementation
 
-use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Arc;
 use tokio::process::Command as TokioCommand;
-use std::path::PathBuf;
-use std::process::Command;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 
+use crate::error::{create_zfs_error, ZfsOperation};
 use crate::{config::ZfsConfig, error::Result};
 use nestgate_core::error::NestGateError;
-use nestgate_core::error::conversions::create_zfs_error;
-use nestgate_core::error::domain_errors::ZfsOperation;
 
 /// ZFS Pool Manager - handles pool operations and management
 #[derive(Debug, Clone)]
 pub struct ZfsPoolManager {
     config: ZfsConfig,
     /// In-memory cache of discovered pools with automatic persistence
-    discovered_pools: std::sync::Arc<tokio::sync::RwLock<std::collections::HashMap<String, PoolInfo>>>,
+    discovered_pools:
+        std::sync::Arc<tokio::sync::RwLock<std::collections::HashMap<String, PoolInfo>>>,
 }
-
 /// Information about a discovered ZFS pool
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolInfo {
@@ -33,7 +28,6 @@ pub struct PoolInfo {
     pub devices: Vec<String>,
     pub properties: HashMap<String, String>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum PoolState {
     Online,
@@ -42,7 +36,6 @@ pub enum PoolState {
     Faulted,
     Unknown,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum PoolHealth {
     Healthy,
@@ -50,7 +43,6 @@ pub enum PoolHealth {
     Critical,
     Unknown,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolCapacity {
     pub total_bytes: u64,
@@ -58,93 +50,123 @@ pub struct PoolCapacity {
     pub available_bytes: u64,
     pub utilization_percent: f64,
 }
-
 impl ZfsPoolManager {
     /// Create a new ZFS pool manager (async)
-    pub async fn new(config: &ZfsConfig) -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn new(config: &ZfsConfig) -> Result<Self>  {
         info!("Initializing ZFS pool manager");
 
         let manager = Self {
             config: config.clone(),
-            discovered_pools: std::sync::Arc::new(tokio::sync::RwLock::new(std::collections::HashMap::new())),
+            discovered_pools: std::sync::Arc::new(tokio::sync::RwLock::new(
+                std::collections::HashMap::new(),
+            )),
         };
 
         // Test ZFS availability
-        if !crate::is_zfs_available().await {
+        if !crate::native::is_zfs_available().await {
             warn!("ZFS not available, running in mock mode");
         }
-
         Ok(manager)
     }
 
     /// Create a new ZFS pool manager with owned config (zero-copy)
-    pub async fn with_owned_config(config: ZfsConfig) -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn with_owned_config(config: ZfsConfig) -> Result<Self>  {
         info!("Initializing ZFS pool manager with owned config");
 
         let manager = Self {
             config,
-            discovered_pools: std::sync::Arc::new(tokio::sync::RwLock::new(std::collections::HashMap::new())),
+            discovered_pools: std::sync::Arc::new(tokio::sync::RwLock::new(
+                std::collections::HashMap::new(),
+            )),
         };
 
         // Test ZFS availability
-        if !crate::is_zfs_available().await {
+        if !crate::native::is_zfs_available().await {
             warn!("ZFS not available, running in mock mode");
         }
-
         Ok(manager)
     }
 
-    /// Create a pool manager for testing and development (now uses real ZFS commands)
+    /// Create instance for testing with default configuration
+    #[cfg(test)]
+    #[must_use]
     pub fn new_for_testing() -> Self {
         Self {
             config: ZfsConfig::default(),
-            discovered_pools: std::sync::Arc::new(tokio::sync::RwLock::new(std::collections::HashMap::new())),
+            discovered_pools: std::sync::Arc::new(tokio::sync::RwLock::new(
+                std::collections::HashMap::new(),
+            )),
         }
     }
 
     /// Create instance for real production use
+    #[must_use]
     pub fn new_production(config: ZfsConfig) -> Self {
         Self {
             config,
-            discovered_pools: std::sync::Arc::new(tokio::sync::RwLock::new(std::collections::HashMap::new())),
+            discovered_pools: std::sync::Arc::new(tokio::sync::RwLock::new(
+                std::collections::HashMap::new(),
+            )),
         }
     }
 
     /// Discover all available ZFS pools
-    pub async fn discover_pools(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn discover_pools(&self) -> Result<()>  {
         info!("Discovering ZFS pools");
 
         let output = TokioCommand::new("zpool")
             .args(["list", "-H", "-o", "name,size,alloc,free,cap,health"])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to execute zpool list: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
+            .map_err(|_e| {
+                NestGateError::internal_error("Failed to execute zpool list command", "zfs_pool")
             })?;
 
         if !output.status.success() {
-            let error_msg = String::from_utf8_lossy(&output.stderr);
-            return Err(NestGateError::Internal {
-                message: format!("zpool list failed: {error_msg}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                context: None,
-                is_bug: false,
-            });
+            let _error_msg = String::from_utf8_lossy(&output.stderr);
+            return Err(NestGateError::internal_error(
+                "ZFS pool list command failed",
+                "zfs_pool",
+            ));
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         let mut pools = Vec::new();
 
         for line in stdout.lines() {
-            if let Some(pool_info) = self.parse_pool_line(line).await? {
+            if let Some(pool_info) = self.parse_pool_line(line)? {
                 pools.push(pool_info);
             }
         }
 
-        info!("Discovered {} ZFS pools", pools.len());
+        info!(
+            "Discovered {},
+    ZFS pools",
+            pools.len()
+        );
         Ok(())
     }
 
@@ -155,23 +177,18 @@ impl ZfsPoolManager {
             .args(["list", "-H", "-p"])
             .output()
             .await
-            .map_err(|e| {
-                NestGateError::storage_error(
-                    "zfs_command",
-                    &format!("Failed to execute zpool command: {e}"),
-                    None
-                )
+            .map_err(|_e| {
+                NestGateError::storage_error(&format!(
+                    "Failed to execute zpool command: {}",
+                    "actual_error_details"
+                ))
             })?;
 
         if !output.status.success() {
-            return Err(NestGateError::storage_error(
-                "zfs_command",
-                &format!(
-                    "zpool command failed: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                ),
-                None
-            ));
+            return Err(NestGateError::storage_error(&format!(
+                "zpool command failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            )));
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
@@ -179,7 +196,7 @@ impl ZfsPoolManager {
         // Store discovered pools in cache
         let mut pools = self.discovered_pools.write().await;
         for line in stdout.lines() {
-            if let Some(pool_info) = self.parse_pool_line(line).await? {
+            if let Some(pool_info) = self.parse_pool_line(line)? {
                 pools.insert(pool_info.name.clone(), pool_info);
             }
         }
@@ -187,7 +204,7 @@ impl ZfsPoolManager {
     }
 
     /// Parse a single line from zpool list output
-    async fn parse_pool_line(&self, line: &str) -> Result<Option<PoolInfo>> {
+    fn parse_pool_line(&self, line: &str) -> Result<Option<PoolInfo>> {
         let parts: Vec<&str> = line.split('\t').collect();
         if parts.len() < 6 {
             return Ok(None);
@@ -265,7 +282,7 @@ impl ZfsPoolManager {
             _ => return None,
         };
 
-        Some((number * multiplier as f64) as u64)
+        Some((number * f64::from(multiplier)) as u64)
     }
 
     /// Get pool properties using zpool command
@@ -275,10 +292,10 @@ impl ZfsPoolManager {
             .args(["get", "all", "-H", "-p", pool_name])
             .output()
             .await
-            .map_err(|e| {
+            .map_err(|_e| {
                 create_zfs_error(
-                    format!("Failed to get pool properties: {e}"),
-                    ZfsOperation::SystemCheck
+                    format!("Failed to get pool properties: {"actual_error_details"}"),
+                    ZfsOperation::SystemCheck,
                 )
             })?;
 
@@ -307,14 +324,21 @@ impl ZfsPoolManager {
         if pools.is_empty() {
             info!("No pools discovered, attempting to create default pool");
             drop(pools); // Release the read lock
-            // Real pool creation logic would go here
+                         // Real pool creation logic would go here
             self.discover_pools().await?;
         }
         Ok(())
     }
 
     /// Get overall pool status
-    pub async fn get_overall_status(&self) -> Result<crate::manager::PoolOverallStatus> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_overall_status(&self) -> Result<crate::manager::PoolOverallStatus>  {
         let pools = self.list_pools().await?;
 
         let pools_online = pools
@@ -340,29 +364,40 @@ impl ZfsPoolManager {
     }
 
     /// Get information about a specific pool
-    pub async fn get_pool_info(&self, pool_name: &str) -> Result<PoolInfo> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_pool_info(&self, pool_name: &str) -> Result<PoolInfo>  {
         // Check our cache first
         let pools = self.discovered_pools.read().await;
         if let Some(pool_info) = pools.get(pool_name) {
             return Ok(pool_info.clone());
         }
-        
+
         // If not in cache, try to discover it
         drop(pools);
         self.discover_pools().await?;
-        
+
         let pools = self.discovered_pools.read().await;
-        pools.get(pool_name)
-            .cloned()
-            .ok_or_else(|| NestGateError::storage_error(
-                "pool_discovery",
-                &format!("Pool not found: {pool_name}"),
-                None
-            ))
+        pools.get(pool_name).cloned().ok_or_else(|| {
+            NestGateError::storage_error(&format!("Pool not found: {"actual_error_details"}"))
+        })
     }
 
     /// Create a new ZFS pool
-    pub async fn create_pool(&self, name: &str, devices: &[String]) -> Result<PoolInfo> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn create_pool(&self, name: &str, devices: &[String]) -> Result<PoolInfo>  {
         info!("Creating ZFS pool: {} with devices: {:?}", name, devices);
 
         // Build the zpool create command
@@ -375,10 +410,10 @@ impl ZfsPoolManager {
             .args(&args)
             .output()
             .await
-            .map_err(|e| {
+            .map_err(|_e| {
                 create_zfs_error(
-                    format!("Failed to execute zpool create: {e}"),
-                    ZfsOperation::Command
+                    format!("Failed to execute zpool create: {"actual_error_details"}"),
+                    ZfsOperation::Command,
                 )
             })?;
 
@@ -388,7 +423,7 @@ impl ZfsPoolManager {
                     "zpool create failed: {}",
                     String::from_utf8_lossy(&output.stderr)
                 ),
-                ZfsOperation::Command
+                ZfsOperation::Command,
             ));
         }
 
@@ -398,17 +433,28 @@ impl ZfsPoolManager {
     }
 
     /// Destroy a ZFS pool
-    pub async fn destroy_pool(&self, name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn destroy_pool(&self, name: &str) -> Result<()>  {
         warn!("Destroying ZFS pool: {}", name);
 
         let output = TokioCommand::new("zpool")
             .args(["destroy", "-f", name])
             .output()
             .await
-            .map_err(|e| {
+            .map_err(|_e| {
                 create_zfs_error(
-                    format!("Failed to execute zpool destroy: {e}"),
-                    ZfsOperation::Command
+                    format!(
+                        "Failed to execute zpool destroy: {}",
+                        "actual_error_details"
+                    ),
+                    ZfsOperation::Command,
                 )
             })?;
 
@@ -418,7 +464,7 @@ impl ZfsPoolManager {
                     "zpool destroy failed: {}",
                     String::from_utf8_lossy(&output.stderr)
                 ),
-                ZfsOperation::Command
+                ZfsOperation::Command,
             ));
         }
 
@@ -434,17 +480,25 @@ impl ZfsPoolManager {
     }
 
     /// Get detailed pool status
-    pub async fn get_pool_status(&self, name: &str) -> Result<String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn get_pool_status(&self, name: &str) -> Result<String>  {
         debug!("Getting status for pool: {}", name);
 
         let output = TokioCommand::new("zpool")
             .args(["status", name])
             .output()
             .await
-            .map_err(|e| {
+            .map_err(|_e| {
                 create_zfs_error(
-                    format!("Failed to execute zpool status: {e}"),
-                    ZfsOperation::Command
+                    format!("Failed to execute zpool status: {"actual_error_details"}"),
+                    ZfsOperation::Command,
                 )
             })?;
 
@@ -454,7 +508,7 @@ impl ZfsPoolManager {
                     "zpool status failed: {}",
                     String::from_utf8_lossy(&output.stderr)
                 ),
-                ZfsOperation::Command
+                ZfsOperation::Command,
             ));
         }
 
@@ -462,17 +516,25 @@ impl ZfsPoolManager {
     }
 
     /// Start a scrub operation on a pool
-    pub async fn scrub_pool(&self, name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn scrub_pool(&self, name: &str) -> Result<()>  {
         info!("Starting scrub for pool: {}", name);
 
         let output = TokioCommand::new("zpool")
             .args(["scrub", name])
             .output()
             .await
-            .map_err(|e| {
+            .map_err(|_e| {
                 create_zfs_error(
-                    format!("Failed to execute zpool scrub: {e}"),
-                    ZfsOperation::Command
+                    format!("Failed to execute zpool scrub: {"actual_error_details"}"),
+                    ZfsOperation::Command,
                 )
             })?;
 
@@ -482,7 +544,7 @@ impl ZfsPoolManager {
                     "zpool scrub failed: {}",
                     String::from_utf8_lossy(&output.stderr)
                 ),
-                ZfsOperation::Command
+                ZfsOperation::Command,
             ));
         }
 
@@ -491,20 +553,37 @@ impl ZfsPoolManager {
     }
 
     /// List all discovered pools
-    pub async fn list_pools(&self) -> Result<Vec<PoolInfo>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn list_pools(&self) -> Result<Vec<PoolInfo>>  {
         // Return pools from our cache
         let pools = self.discovered_pools.read().await;
         Ok(pools.values().cloned().collect())
     }
 
     /// Refresh pool information
-    pub async fn refresh_pool_info(&self, pool_name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn refresh_pool_info(&self, pool_name: &str) -> Result<()>  {
         // Re-discover specific pool
         if let Some(pool_info) = self.discover_single_pool(pool_name).await? {
             // Store pool info in discovered pools cache
             let mut pools = self.discovered_pools.write().await;
             pools.insert(pool_name.to_string(), pool_info);
-            debug!("Updated pool info for {} in discovered pools cache", pool_name);
+            debug!(
+                "Updated pool info for {} in discovered pools cache",
+                pool_name
+            );
         }
         Ok(())
     }
@@ -515,10 +594,13 @@ impl ZfsPoolManager {
             .args(["list", "-H", "-p", pool_name])
             .output()
             .await
-            .map_err(|e| {
+            .map_err(|_e| {
                 create_zfs_error(
-                    format!("Failed to execute zpool command: {e}"),
-                    ZfsOperation::Command
+                    format!(
+                        "Failed to execute zpool command: {}",
+                        "actual_error_details"
+                    ),
+                    ZfsOperation::Command,
                 )
             })?;
 
@@ -528,7 +610,7 @@ impl ZfsPoolManager {
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         if let Some(line) = stdout.lines().next() {
-            return self.parse_pool_line(line).await;
+            return self.parse_pool_line(line);
         }
 
         Ok(None)

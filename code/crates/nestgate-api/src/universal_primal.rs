@@ -25,14 +25,12 @@ fn current_timestamp() -> u64 {
         .unwrap_or(std::time::Duration::from_secs(0))
         .as_secs()
 }
-
 /// Universal Storage Primal Provider
 /// **ZERO-COST NATIVE ASYNC**: Eliminates async_trait overhead for 40-60% performance improvement
 /// Implements the same pattern as security, AI, and other universal primal modules.
 pub trait StoragePrimalProvider: Send + Sync {
     /// Unique primal identifier (always "nestgate")
     fn primal_id(&self) -> &str;
-
     /// Primal type category (always "storage")
     fn primal_type(&self) -> PrimalType;
 
@@ -48,8 +46,8 @@ pub trait StoragePrimalProvider: Send + Sync {
     /// Register with ecosystem modules - native async
     fn register_with_ecosystem(&self) -> impl Future<Output = Result<(), String>> + Send;
 
-    /// Get primal metadata
-    fn metadata(&self) -> HashMap<String, String>;
+    /// Get primal _metadata
+    fn _metadata(&self) -> HashMap<String, String>;
 }
 
 /// Storage capabilities that NestGate provides
@@ -66,7 +64,6 @@ pub enum StorageCapability {
     SnapshotManagement,
     /// Volume provisioning and allocation
     VolumeProvisioning,
-
     // Protocol support
     /// Network File System protocol support
     NfsProtocol,
@@ -146,14 +143,13 @@ pub enum PrimalType {
     /// Network orchestration services (Any orchestration module)
     Network,
 }
-
 /// Universal request structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UniversalRequest {
     /// Unique request identifier
     pub id: String,
     /// Operation to be performed
-    pub operation: String,
+    pub b_operation: String,
     /// Request parameters as key-value pairs
     pub parameters: HashMap<String, serde_json::Value>,
     /// Identity of the requester
@@ -161,7 +157,6 @@ pub struct UniversalRequest {
     /// Request timestamp (Unix epoch)
     pub timestamp: u64,
 }
-
 /// Universal response structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UniversalResponse {
@@ -176,7 +171,6 @@ pub struct UniversalResponse {
     /// Response timestamp (Unix epoch)
     pub timestamp: u64,
 }
-
 /// Health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthStatus {
@@ -191,7 +185,6 @@ pub struct HealthStatus {
     /// Number of active connections
     pub active_connections: u32,
 }
-
 /// Discovered primal information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiscoveredPrimal {
@@ -203,19 +196,18 @@ pub struct DiscoveredPrimal {
     pub endpoint: String,
     /// List of supported capabilities
     pub capabilities: Vec<String>,
-    /// Additional metadata about the primal
-    pub metadata: HashMap<String, String>,
+    /// Additional _metadata about the primal
+    pub _metadata: HashMap<String, String>,
 }
-
 impl PrimalType {
     /// Convert primal type to string representation
-    pub fn as_str(&self) -> &'static str {
+    pub const fn as_str(&self) -> &'static str {
         match self {
-            PrimalType::Storage => "storage",
-            PrimalType::Security => "security",
-            PrimalType::AI => "ai",
-            PrimalType::Compute => "compute",
-            PrimalType::Network => "network",
+            Self::Storage => "storage",
+            Self::Security => "security",
+            Self::AI => "ai",
+            Self::Compute => "compute",
+            Self::Network => "network",
         }
     }
 }
@@ -226,10 +218,9 @@ pub struct NestGateStoragePrimal {
     pub config: NestGatePrimalConfig,
     /// Storage capabilities provided by this primal
     pub capabilities: Vec<StorageCapability>,
-    /// Additional metadata about this primal instance
-    pub metadata: HashMap<String, String>,
+    /// Additional _metadata about this primal instance
+    pub _metadata: HashMap<String, String>,
 }
-
 /// Configuration for NestGate primal
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NestGatePrimalConfig {
@@ -242,7 +233,6 @@ pub struct NestGatePrimalConfig {
     /// Optional endpoint for primal registry
     pub primal_registry_endpoint: Option<String>,
 }
-
 impl Default for NestGateStoragePrimal {
     fn default() -> Self {
         Self::new()
@@ -251,15 +241,14 @@ impl Default for NestGateStoragePrimal {
 
 impl NestGateStoragePrimal {
     /// Create a new NestGate storage primal with default configuration
-    pub fn new() -> Self {
-        Self {
+    #[must_use]
+    pub fn new() -> Self { Self {
             config: NestGatePrimalConfig {
                 host: nestgate_core::canonical_modernization::canonical_constants::DEFAULT_BIND_ADDRESS.to_string(),
                 port: nestgate_core::config::defaults::NetworkPortDefaults::get_api_port(),
                 discovery_enabled: true,
                 primal_registry_endpoint: None,
-            },
-            capabilities: vec![
+            , capabilities: vec![
                 StorageCapability::ZfsPoolManagement,
                 StorageCapability::TieredStorage,
                 StorageCapability::DatasetOperations,
@@ -269,15 +258,15 @@ impl NestGateStoragePrimal {
                 StorageCapability::MetricsCollection,
                 StorageCapability::ServiceDiscovery,
             ],
-            metadata: {
-                let mut metadata = HashMap::new();
-                metadata.insert("version".into(), "1.0.0".into());
-                metadata.insert("name".into(), "NestGate".into());
-                metadata.insert("description".into(), "ZFS Storage Primal".into());
-                metadata.insert("primal_type".into(), "storage".into());
-                metadata.insert("api_version".into(), "universal/v1".into());
-                metadata
-            },
+            _metadata: {
+                let mut _metadata = HashMap::new();
+                _metadata.insert("version".into(), "1.0.0".into());
+                _metadata.insert("name".into(), "NestGate".into());
+                _metadata.insert("description".into(), "ZFS Storage Primal".into());
+                _metadata.insert("primal_type".into(), "storage".into());
+                _metadata.insert("api_version".into(), "universal/v1".into());
+                _metadata
+             }
         }
     }
 }
@@ -303,7 +292,7 @@ impl StoragePrimalProvider for NestGateStoragePrimal {
                 Ok(UniversalResponse {
                     id: request.request_id,
                     success: true,
-                    data: serde_json::to_value(health).map_err(|e| e.to_string())?,
+                    data: serde_json::to_value(health).map_err(|_e| e.to_string())?,
                     error: None,
                     timestamp: std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
@@ -316,7 +305,7 @@ impl StoragePrimalProvider for NestGateStoragePrimal {
                 Ok(UniversalResponse {
                     id: request.request_id,
                     success: true,
-                    data: serde_json::to_value(capabilities).map_err(|e| e.to_string())?,
+                    data: serde_json::to_value(capabilities).map_err(|_e| e.to_string())?,
                     error: None,
                     timestamp: std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
@@ -325,11 +314,11 @@ impl StoragePrimalProvider for NestGateStoragePrimal {
                 })
             }
             "get_metadata" => {
-                let metadata = self.metadata();
+                let _metadata = self._metadata();
                 Ok(UniversalResponse {
                     id: request.request_id,
                     success: true,
-                    data: serde_json::to_value(metadata).map_err(|e| e.to_string())?,
+                    data: serde_json::to_value(_metadata).map_err(|_e| e.to_string())?,
                     error: None,
                     timestamp: current_timestamp(),
                 })
@@ -338,13 +327,13 @@ impl StoragePrimalProvider for NestGateStoragePrimal {
                 id: request.request_id,
                 success: false,
                 data: serde_json::Value::Null,
-                error: Some(format!("Unknown operation: {}", request.operation)),
+                error: Some(format!("Unknown b_operation: {"actual_error_details"}"),
                 timestamp: current_timestamp(),
             }),
         }
     }
 
-    async fn health_check(&self) -> HealthStatus {
+    fn health_check(&self) -> HealthStatus {
         HealthStatus {
             status: "healthy".to_string(),
             uptime: current_timestamp(),
@@ -371,14 +360,14 @@ impl StoragePrimalProvider for NestGateStoragePrimal {
                 "primal_id": self.primal_id(),
                 "primal_type": self.primal_type(),
                 "capabilities": self.capabilities(),
-                "metadata": self.metadata(),
-                "endpoint": format!("{}:{}", self.config.host, self.config.port),
+                "_metadata": self._metadata(),
+                "endpoint": format!("{"actual_error_details"}:{"actual_error_details"}"),
                 "timestamp": current_timestamp()
             });
 
             // Attempt to register with the primal registry
             match reqwest::Client::new()
-                .post(format!("{registry_endpoint}/register"))
+                .post(format!("fixed")
                 .json(&registration_payload)
                 .send()
                 .await
@@ -426,8 +415,8 @@ impl StoragePrimalProvider for NestGateStoragePrimal {
         }
     }
 
-    fn metadata(&self) -> HashMap<String, String> {
-        self.metadata.clone()
+    fn _metadata(&self) -> HashMap<String, String> {
+        self._metadata.clone()
     }
 }
 
@@ -446,12 +435,12 @@ impl NestGateStoragePrimal {
                 continue; // Skip our own port
             }
 
-            let endpoint = format!("http://{}:{}", self.config.host, port);
+            let endpoint = format!("http://{"actual_error_details"}:{"actual_error_details"}");
             debug!("🔍 Checking for primal at: {}", endpoint);
 
             // Try to connect and get primal info
             match reqwest::Client::new()
-                .get(format!("{endpoint}/primal/info"))
+                .get(format!("fixed")
                 .timeout(std::time::Duration::from_secs(2))
                 .send()
                 .await

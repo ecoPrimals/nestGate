@@ -6,7 +6,6 @@ use std::collections::VecDeque;
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::Mutex;
-
 // Import shared types from pool module
 use super::pool::PooledConnection;
 
@@ -17,7 +16,6 @@ pub struct ConnectionGuard<T: Send + 'static> {
     connection: Option<T>,
     pool: Option<Arc<Mutex<VecDeque<PooledConnection<T>>>>>,
 }
-
 impl<T: Send + 'static> ConnectionGuard<T> {
     /// Create a new connection guard
     pub(in crate::connection_pool) fn new(
@@ -31,49 +29,64 @@ impl<T: Send + 'static> ConnectionGuard<T> {
     }
 
     /// Get an immutable reference to the connection
-    pub fn connection(&self) -> Result<&T> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn connection(&self) -> Result<&T>  {
         self.connection
             .as_ref()
-            .ok_or_else(|| crate::NestGateError::Internal {
-                message: "Connection has been consumed".to_string(),
-                location: Some(file!().to_string()),
-                context: None,
-                is_bug: false,
-            })
+            .ok_or_else(|| crate::NestGateError::internal_error(
     }
 
     /// Get a mutable reference to the connection
-    pub fn connection_mut(&mut self) -> Result<&mut T> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn connection_mut(&mut self) -> Result<&mut T>  {
         self.connection
             .as_mut()
-            .ok_or_else(|| crate::NestGateError::Internal {
-                message: "Connection has been consumed".to_string(),
-                location: Some(file!().to_string()),
-                context: None,
-                is_bug: false,
-            })
+            .ok_or_else(|| crate::NestGateError::internal_error(
     }
 
     /// Take ownership of the connection, consuming the guard
     ///
     /// This removes the connection from the pool permanently.
     /// Use with caution as it can lead to connection leaks if not managed properly.
-    pub fn take(mut self) -> Result<T> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn take(mut self) -> Result<T>  {
         self.connection
             .take()
-            .ok_or_else(|| crate::NestGateError::Internal {
-                message: "Connection has already been taken".to_string(),
-                location: Some(file!().to_string()),
-                context: None,
-                is_bug: false,
-            })
+            .ok_or_else(|| crate::NestGateError::internal_error(
     }
 
     /// Release the connection back to the pool manually
     ///
     /// This is normally handled automatically by the Drop implementation,
     /// but can be called explicitly for early release.
-    pub async fn release(mut self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn release(mut self) -> Result<()>  {
         if let (Some(connection), Some(pool)) = (self.connection.take(), self.pool.take()) {
             let mut pool_guard = pool.lock().await;
             let now = Instant::now();
@@ -81,7 +94,7 @@ impl<T: Send + 'static> ConnectionGuard<T> {
                 connection,
                 created_at: now,
                 last_used: now,
-            });
+            );
         }
         Ok(())
     }
@@ -100,8 +113,8 @@ impl<T: Send + 'static> Drop for ConnectionGuard<T> {
                     connection,
                     created_at: now, // Use current time as creation time
                     last_used: now,
-                });
-            });
+                );
+            );
         }
     }
 }

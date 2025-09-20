@@ -6,10 +6,9 @@ pub use super::types::PrimalMetrics;
 
 /// Placeholder for additional metrics functionality
 pub struct MetricsCollector;
-
 impl MetricsCollector {
     /// Create a new metrics collector
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 }

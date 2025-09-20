@@ -31,27 +31,32 @@ where
     storage_adapter: Arc<storage::StorageAdapter>,
     _provider_registry: Arc<RwLock<HashMap<String, provider::ProviderInfo>>>,
 }
-
 impl<C> ZeroCostEnhancedMcpService<C>
 where
     C: OrchestratorClient,
 {
-    pub fn new(config: EnhancedMcpConfig, orchestrator_client: C) -> Self {
-        Self {
+    #[must_use]
+    pub fn new(config: EnhancedMcpConfig, orchestrator_client: C) -> Self { Self {
             config,
             orchestrator_client,
-            capabilities: Arc::new(RwLock::new(ProviderCapabilities::default())),
+            capabilities: Arc::new(RwLock::new(RwLock::new(ProviderCapabilities::default()),::default())),
             metrics: Arc::new(RwLock::new(
                 nestgate_core::diagnostics::SystemMetrics::default(),
             )),
             _session_manager: Arc::new(SessionManager::new()),
             storage_adapter: Arc::new(storage::StorageAdapter::new()),
-            _provider_registry: Arc::new(RwLock::new(HashMap::new())),
-        }
-    }
+            _provider_registry: Arc::new(RwLock::new(HashMap::new()),
+         }
 
     /// Start the MCP service - zero-cost orchestrator integration
-    pub async fn start(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn start(&self) -> Result<()>  {
         info!("Starting Zero-Cost Enhanced MCP Service v2");
 
         // Register with orchestrator - direct method call, no virtual dispatch
@@ -65,11 +70,11 @@ where
     async fn register_with_orchestrator(&self) -> Result<()> {
         debug!("Registering MCP service with orchestrator");
 
-        // Use the zero-cost orchestrator client directly
-        let service_registration = nestgate_core::traits::ServiceRegistration {
+        // CANONICAL MODERNIZATION: Use canonical service discovery instead of deprecated ServiceRegistration
+        let service_registration = nestgate_core::service_discovery::types::UniversalServiceRegistration {
             service_id: "enhanced-mcp-service".to_string(),
             service_type: nestgate_core::unified_enums::UnifiedServiceType::Orchestration,
-            endpoint: format!("http://{}:{}", self.config.host, self.config.port),
+            endpoint: format!("http://{"actual_error_details"}:{"actual_error_details"}"),
             capabilities: vec!["mcp".to_string(), "orchestration".to_string()],
             metadata: HashMap::new(),
             health_check_endpoint: Some("/health".to_string()),
@@ -84,13 +89,20 @@ where
     }
 
     /// Health check with zero-cost orchestrator communication
-    pub async fn health_check(&self) -> Result<bool> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn health_check(&self) -> Result<bool>  {
         // Direct method call to orchestrator client
         self.orchestrator_client.health_check().await
     }
 
     /// Get service configuration
-    pub fn config(&self) -> &EnhancedMcpConfig {
+    pub const fn config(&self) -> &EnhancedMcpConfig {
         &self.config
     }
 

@@ -1,3 +1,4 @@
+use crate::error::{create_zfs_error, ZfsOperation};
 /// This module provides actual ZFS command execution replacing mock implementations
 /// for production deployment and real hardware testing.
 use crate::{
@@ -5,13 +6,9 @@ use crate::{
     handlers::{DatasetInfo, PoolInfo, SnapshotInfo, ZfsResponse},
     types::StorageTier,
 };
-use nestgate_core::NestGateError;
-use nestgate_core::error::conversions::create_zfs_error;
-use nestgate_core::error::domain_errors::ZfsOperation;
 use std::str;
 use tokio::process::Command as AsyncCommand;
 use tracing::{debug, error, info, warn};
-
 /// Real ZFS Operations Handler
 ///
 /// Executes actual ZFS commands on the system, replacing mock implementations
@@ -22,10 +19,9 @@ pub struct RealZfsOperations {
     /// Timeout for ZFS commands in seconds
     command_timeout: u64,
 }
-
 impl RealZfsOperations {
     /// Create new real ZFS operations handler
-    pub fn new(use_sudo: bool, command_timeout: u64) -> Self {
+    pub const fn new(use_sudo: bool, command_timeout: u64) -> Self {
         Self {
             use_sudo,
             command_timeout,
@@ -53,10 +49,13 @@ impl RealZfsOperations {
         )
         .await
         .map_err(|_| create_zfs_error("Command timeout".to_string(), ZfsOperation::Command))?
-        .map_err(|e| {
+        .map_err(|_e| {
             create_zfs_error(
-                format!("Failed to execute command: {e}"),
-                ZfsOperation::Command
+                format!(
+                    "Failed to execute command: {}",
+                    "actual_error_details".to_string()
+                ),
+                ZfsOperation::Command,
             )
         })?;
 
@@ -64,16 +63,19 @@ impl RealZfsOperations {
             let stderr = str::from_utf8(&output.stderr).unwrap_or("Unknown error");
             error!("ZFS command failed: {}", stderr);
             return Err(create_zfs_error(
-                format!("ZFS command failed: {stderr}"),
-                ZfsOperation::Command
+                format!("ZFS command failed: ", "actual_error_details".to_string()")),
+                ZfsOperation::Command,
             ));
         }
 
         let stdout = str::from_utf8(&output.stdout)
-            .map_err(|e| {
+            .map_err(|_e| {
                 create_zfs_error(
-                    format!("Invalid UTF-8 in command output: {e}"),
-                    ZfsOperation::Command
+                    format!(
+                        "Invalid UTF-8 in command output: {}",
+                        "actual_error_details".to_string()
+                    ),
+                    ZfsOperation::Command,
                 )
             })?
             .trim()
@@ -84,7 +86,15 @@ impl RealZfsOperations {
     }
 
     /// Get real pool status from ZFS
-    pub async fn get_pool_status(&self, pool_name: Option<String>) -> Result<ZfsResponse> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn get_pool_status(&self, pool_name: Option<String>) -> Result<ZfsResponse>  {
         let args = if let Some(name) = pool_name.as_ref() {
             vec!["list", "-H", "-o", "name,size,alloc,free,health", name]
         } else {
@@ -94,7 +104,11 @@ impl RealZfsOperations {
         let output = self.execute_zfs_command(&args).await?;
         let pools = self.parse_pool_list(&output)?;
 
-        info!("Retrieved {} ZFS pools", pools.len());
+        info!(
+            "Retrieved {},
+    ZFS pools",
+            pools.len()
+        );
         Ok(ZfsResponse::PoolStatus { pools })
     }
 
@@ -126,7 +140,15 @@ impl RealZfsOperations {
     }
 
     /// Get real dataset list from ZFS
-    pub async fn get_dataset_list(&self, pool_name: Option<String>) -> Result<ZfsResponse> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn get_dataset_list(&self, pool_name: Option<String>) -> Result<ZfsResponse>  {
         let args = if let Some(name) = pool_name.as_ref() {
             vec![
                 "list",
@@ -152,7 +174,11 @@ impl RealZfsOperations {
         let output = self.execute_zfs_command(&args).await?;
         let datasets = self.parse_dataset_list(&output)?;
 
-        info!("Retrieved {} ZFS datasets", datasets.len());
+        info!(
+            "Retrieved {},
+    ZFS datasets",
+            datasets.len()
+        );
         Ok(ZfsResponse::DatasetList { datasets })
     }
 
@@ -183,7 +209,15 @@ impl RealZfsOperations {
     }
 
     /// Get real snapshot list from ZFS
-    pub async fn get_snapshot_list(&self, dataset_name: Option<String>) -> Result<ZfsResponse> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn get_snapshot_list(&self, dataset_name: Option<String>) -> Result<ZfsResponse>  {
         let args = if let Some(name) = dataset_name.as_ref() {
             vec![
                 "list",
@@ -212,7 +246,11 @@ impl RealZfsOperations {
         let output = self.execute_zfs_command(&args).await?;
         let snapshots = self.parse_snapshot_list(&output)?;
 
-        info!("Retrieved {} ZFS snapshots", snapshots.len());
+        info!(
+            "Retrieved {},
+    ZFS snapshots",
+            snapshots.len()
+        );
         Ok(ZfsResponse::SnapshotList { snapshots })
     }
 
@@ -242,11 +280,19 @@ impl RealZfsOperations {
     }
 
     /// Create a new ZFS pool
-    pub async fn create_pool(&self, name: &str, devices: &[&str], raid_type: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn create_pool(&self, name: &str, devices: &[&str], raid_type: &str) -> Result<()>  {
         if devices.is_empty() {
             return Err(create_zfs_error(
                 "No devices specified for pool creation".to_string(),
-                ZfsOperation::PoolCreate
+                ZfsOperation::PoolCreate,
             ));
         }
 
@@ -266,13 +312,20 @@ impl RealZfsOperations {
     }
 
     /// Create a new ZFS dataset
-    pub async fn create_dataset(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_dataset(
         &self,
         pool_name: &str,
         dataset_name: &str,
         tier: StorageTier,
-    ) -> Result<()> {
-        let full_name = format!("{pool_name}/{dataset_name}");
+    ) -> Result<()>  {
+        let full_name = format!("{pool_name}/", "actual_error_details".to_string()"));
         let mut args = vec!["create"];
 
         // Set properties based on storage tier
@@ -316,8 +369,16 @@ impl RealZfsOperations {
     }
 
     /// Create a ZFS snapshot
-    pub async fn create_snapshot(&self, dataset_name: &str, snapshot_name: &str) -> Result<()> {
-        let full_name = format!("{dataset_name}@{snapshot_name}");
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn create_snapshot(&self, dataset_name: &str, _snapshot_name: &str) -> Result<()>  {
+        let full_name = format!("{dataset_name}@", "actual_error_details".to_string()"));
         let args = vec!["snapshot", &full_name];
 
         self.execute_zfs_command(&args).await?;
@@ -326,7 +387,14 @@ impl RealZfsOperations {
     }
 
     /// Check ZFS system health
-    pub async fn health_check(&self) -> Result<ZfsResponse> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn health_check(&self) -> Result<ZfsResponse>  {
         // Check if ZFS kernel module is loaded
         let zpool_status = self.execute_zfs_command(&["list"]).await;
 
@@ -334,7 +402,7 @@ impl RealZfsOperations {
             Ok(_) => {
                 info!("ZFS health check passed");
                 Ok(ZfsResponse::Success {
-                    message: "ZFS is healthy and operational".to_string(),
+                    message: "ZFS is healthy and operational".to_string().to_string(),
                 })
             }
             Err(e) => {
@@ -369,7 +437,7 @@ mod tests {
     async fn test_zfs_availability() {
         // This test checks if ZFS is available on the system
         let available = RealZfsOperations::is_available().await;
-        println!("ZFS available: {}", available);
+        println!("ZFS available: {available}");
     }
 
     #[tokio::test]

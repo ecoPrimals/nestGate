@@ -3,7 +3,6 @@ use std::collections::HashMap;
 // System-level configuration structures for the canonical unified configuration system.
 
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 use std::time::Duration;
 
 use crate::canonical_modernization::canonical_constants::{
@@ -19,7 +18,6 @@ pub struct SystemConfig {
     /// Service version
     pub version: String,
     /// Environment (development, staging, production)
-    pub environment: DeploymentEnvironment,
     /// Log level
     pub log_level: String,
     /// Working directory
@@ -83,7 +81,6 @@ impl Default for SystemConfig {
         Self {
             service_name: DEFAULT_SERVICE_NAME.to_string(),
             version: "2.0.0".to_string(),
-            environment: DeploymentEnvironment::Development,
             log_level: DEFAULT_LOG_LEVEL.to_string(),
             working_directory: PathBuf::from("./"),
             pid_file: None,

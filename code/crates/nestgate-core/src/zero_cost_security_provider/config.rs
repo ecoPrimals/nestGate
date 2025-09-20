@@ -4,7 +4,6 @@
 ///
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
 /// **Zero-cost security provider configuration**
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostSecurityConfig {
@@ -33,7 +32,6 @@ pub struct ZeroCostSecurityConfig {
     /// Account lockout duration in seconds
     pub lockout_duration_seconds: u64,
 }
-
 impl Default for ZeroCostSecurityConfig {
     fn default() -> Self {
         Self {
@@ -55,7 +53,8 @@ impl Default for ZeroCostSecurityConfig {
 
 impl ZeroCostSecurityConfig {
     /// Create a new security configuration
-    pub fn new(provider_id: String) -> Self {
+    #[must_use]
+    pub const fn new(provider_id: String) -> Self {
         Self {
             provider_id,
             ..Default::default()
@@ -63,27 +62,38 @@ impl ZeroCostSecurityConfig {
     }
 
     /// Get token expiry duration
-    pub fn token_expiry_duration(&self) -> Duration {
+    #[must_use]
+    pub const fn token_expiry_duration(&self) -> Duration {
         Duration::from_secs(self.token_expiry_seconds)
     }
 
     /// Get authentication timeout duration
-    pub fn auth_timeout_duration(&self) -> Duration {
+    #[must_use]
+    pub const fn auth_timeout_duration(&self) -> Duration {
         Duration::from_secs(self.auth_timeout_seconds)
     }
 
     /// Get lockout duration
-    pub fn lockout_duration(&self) -> Duration {
+    #[must_use]
+    pub const fn lockout_duration(&self) -> Duration {
         Duration::from_secs(self.lockout_duration_seconds)
     }
 
     /// Get key rotation interval
-    pub fn key_rotation_interval(&self) -> Duration {
+    #[must_use]
+    pub const fn key_rotation_interval(&self) -> Duration {
         Duration::from_secs(self.key_rotation_days as u64 * 24 * 3600)
     }
 
     /// Validate configuration
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<(), String>  {
         if self.provider_id.is_empty() {
             return Err("Provider ID cannot be empty".to_string());
         }
@@ -116,7 +126,8 @@ impl ZeroCostSecurityConfig {
     }
 
     /// Create a high-security configuration
-    pub fn high_security() -> Self {
+    #[must_use]
+    pub const fn high_security() -> Self {
         Self {
             token_expiry_seconds: 1800, // 30 minutes
             max_concurrent_auth: 500,
@@ -132,7 +143,8 @@ impl ZeroCostSecurityConfig {
     }
 
     /// Create a development configuration
-    pub fn development() -> Self {
+    #[must_use]
+    pub const fn development() -> Self {
         Self {
             token_expiry_seconds: 7200, // 2 hours
             max_concurrent_auth: 10000,
@@ -168,7 +180,6 @@ pub struct AuthenticationConfig {
     /// Password history size
     pub password_history_size: usize,
 }
-
 impl Default for AuthenticationConfig {
     fn default() -> Self {
         Self {
@@ -200,7 +211,6 @@ pub struct EncryptionConfig {
     /// Key rotation interval in days
     pub key_rotation_interval_days: u32,
 }
-
 impl Default for EncryptionConfig {
     fn default() -> Self {
         Self {
@@ -232,7 +242,6 @@ pub struct SigningConfig {
     /// Signature validity duration in seconds
     pub signature_validity_seconds: u64,
 }
-
 impl Default for SigningConfig {
     fn default() -> Self {
         Self {

@@ -11,7 +11,7 @@ use tracing::info;
 
 /// Test NAS setup E2E workflow configuration
 #[tokio::test]
-async fn test_nas_setup_workflow_config() {
+async fn test_nas_setup_workflow_config() -> Result<(), Box<dyn std::error::Error>> {
     info!("🖥️ Starting NAS setup E2E workflow configuration test");
     
     // Test NAS setup E2E workflow configuration creation
@@ -23,11 +23,12 @@ async fn test_nas_setup_workflow_config() {
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ NAS setup E2E workflow configuration test completed");
+    Ok(())
 }
 
 /// Test NAS initialization workflow
 #[tokio::test]
-async fn test_nas_initialization_workflow() {
+async fn test_nas_initialization_workflow() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔧 Testing NAS initialization workflow");
     
     // Test NAS initialization workflow simulations
@@ -47,14 +48,16 @@ async fn test_nas_initialization_workflow() {
         // Verify initialization operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ NAS initialization workflow completed");
+    Ok(())
 }
 
 /// Test NAS storage configuration workflow
 #[tokio::test]
-async fn test_nas_storage_configuration_workflow() {
+async fn test_nas_storage_configuration_workflow() -> Result<(), Box<dyn std::error::Error>> {
     info!("💾 Testing NAS storage configuration workflow");
     
     // Test NAS storage configuration workflow simulations
@@ -74,14 +77,16 @@ async fn test_nas_storage_configuration_workflow() {
         // Verify storage operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ NAS storage configuration workflow completed");
+    Ok(())
 }
 
 /// Test NAS setup workflow monitoring
 #[tokio::test]
-async fn test_nas_setup_workflow_monitoring() {
+async fn test_nas_setup_workflow_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing NAS setup workflow monitoring");
     
     let start_time = std::time::Instant::now();
@@ -96,14 +101,16 @@ async fn test_nas_setup_workflow_monitoring() {
         
         // Verify monitoring timing is accurate
         assert!(elapsed.as_millis() >= cycle_time as u128, "NAS setup monitoring timing should be accurate");
+    Ok(())
     }
     
     info!("✅ NAS setup workflow monitoring completed");
+    Ok(())
 }
 
 /// Test NAS setup network configuration
 #[tokio::test]
-async fn test_nas_setup_network_configuration() {
+async fn test_nas_setup_network_configuration() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌐 Testing NAS setup network configuration");
     
     // Test NAS setup network configuration scenarios
@@ -123,14 +130,16 @@ async fn test_nas_setup_network_configuration() {
         // Verify network configuration scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
         assert!(configuration_time > 0, "Configuration time should be positive");
+    Ok(())
     }
     
     info!("✅ NAS setup network configuration completed");
+    Ok(())
 }
 
 /// Test NAS setup workflow validation
 #[tokio::test]
-async fn test_nas_setup_workflow_validation() {
+async fn test_nas_setup_workflow_validation() -> Result<(), Box<dyn std::error::Error>> {
     info!("✅ Testing NAS setup workflow validation");
     
     // Test NAS setup workflow validation features
@@ -150,14 +159,16 @@ async fn test_nas_setup_workflow_validation() {
         // Verify validation feature is valid
         assert!(!feature.is_empty(), "Feature should be specified");
         assert!(processing_time > 0, "Processing time should be positive");
+    Ok(())
     }
     
     info!("✅ NAS setup workflow validation completed");
+    Ok(())
 }
 
 /// Test NAS setup workflow environments
 #[tokio::test]
-async fn test_nas_setup_workflow_environments() {
+async fn test_nas_setup_workflow_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing NAS setup E2E workflow across environments");
     
     // Test development environment NAS setup E2E workflow
@@ -173,4 +184,5 @@ async fn test_nas_setup_workflow_environments() {
     info!("Production NAS setup E2E workflow configuration validated");
     
     info!("✅ NAS setup E2E workflow environment test completed");
+    Ok(())
 }

@@ -7,15 +7,13 @@ pub struct PortManager {
     allocated_ports: HashMap<u16, String>,
     next_port: u16,
 }
-
 impl PortManager {
     /// Create a new port manager
-    pub fn new() -> Self {
-        Self {
+    #[must_use]
+    pub fn new() -> Self { Self {
             allocated_ports: HashMap::new(),
             next_port: 8080,
-        }
-    }
+         }
 
     /// Allocate a port for a service
     pub fn allocate_port(&mut self, service_name: &str) -> u16 {
@@ -31,17 +29,17 @@ impl PortManager {
     }
 
     /// Check if a port is allocated
-    pub fn is_allocated(&self, port: u16) -> bool {
+    pub const fn is_allocated(&self, port: u16) -> bool {
         self.allocated_ports.contains_key(&port)
     }
 
     /// Get service name for a port
-    pub fn get_service(&self, port: u16) -> Option<&String> {
+    pub const fn get_service(&self, port: u16) -> Option<&String> {
         self.allocated_ports.get(&port)
     }
 
     /// Get all allocated ports
-    pub fn get_allocated_ports(&self) -> &HashMap<u16, String> {
+    pub const fn get_allocated_ports(&self) -> &HashMap<u16, String> {
         &self.allocated_ports
     }
 }

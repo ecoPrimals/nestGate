@@ -15,7 +15,6 @@ use nestgate_core::unified_final_config::supporting_types::StandardDomainConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
 /// **UNIFIED MCP EXTENSIONS**
 /// Consolidates all MCP-specific configuration patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -33,7 +32,6 @@ pub struct UnifiedMcpExtensions {
     /// Quality of Service settings
     pub qos: McpQosSettings,
     }
-
 /// MCP protocol configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpProtocolSettings {
@@ -50,7 +48,6 @@ pub struct McpProtocolSettings {
     /// Enable protocol debugging
     pub enable_debug: bool,
     }
-
 /// MCP session configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpSessionSettings {
@@ -67,7 +64,6 @@ pub struct McpSessionSettings {
     /// Session encryption settings
     pub encryption: McpSessionEncryption,
     }
-
 /// MCP storage configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpStorageSettings {
@@ -88,7 +84,6 @@ pub struct McpStorageSettings {
     /// Snapshot retention policy
     pub snapshot_retention: McpSnapshotRetention,
     }
-
 /// MCP adapter configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpAdapterSettings {
@@ -103,7 +98,6 @@ pub struct McpAdapterSettings {
     /// Failover settings
     pub failover: McpFailoverSettings,
     }
-
 /// MCP performance configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpPerformanceSettings {
@@ -118,7 +112,6 @@ pub struct McpPerformanceSettings {
     /// Batch processing settings
     pub batch_processing: McpBatchSettings,
     }
-
 /// MCP Quality of Service settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpQosSettings {
@@ -131,7 +124,6 @@ pub struct McpQosSettings {
     /// Load balancing strategy
     pub load_balancing_strategy: String,
     }
-
 /// MCP session encryption settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpSessionEncryption {
@@ -142,7 +134,6 @@ pub struct McpSessionEncryption {
     /// Enable forward secrecy
     pub enable_forward_secrecy: bool,
     }
-
 /// MCP snapshot retention policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpSnapshotRetention {
@@ -153,7 +144,6 @@ pub struct McpSnapshotRetention {
     /// Enable automatic cleanup
     pub enable_auto_cleanup: bool,
     }
-
 /// MCP connection pool settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpConnectionPool {
@@ -166,7 +156,6 @@ pub struct McpConnectionPool {
     /// Idle timeout
     pub idle_timeout: Duration,
     }
-
 /// MCP failover settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpFailoverSettings {
@@ -179,7 +168,6 @@ pub struct McpFailoverSettings {
     /// Retry delay
     pub retry_delay: Duration,
     }
-
 /// MCP batch processing settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpBatchSettings {
@@ -192,7 +180,6 @@ pub struct McpBatchSettings {
     /// Maximum batch delay
     pub max_batch_delay: Duration,
     }
-
 /// MCP rate limiting settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpRateLimitSettings {
@@ -205,7 +192,6 @@ pub struct McpRateLimitSettings {
     /// Rate limiting algorithm
     pub algorithm: String,
     }
-
 /// MCP circuit breaker settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpCircuitBreakerSettings {
@@ -218,10 +204,8 @@ pub struct McpCircuitBreakerSettings {
     /// Half-open timeout
     pub half_open_timeout: Duration,
     }
-
 impl Default for UnifiedMcpExtensions {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             protocol: McpProtocolSettings {
                 protocol_version: "1.0".to_string(),
                 enable_compression: true,
@@ -229,8 +213,7 @@ impl Default for UnifiedMcpExtensions {
                 message_format: "json".to_string(),
                 custom_headers: HashMap::new(),
                 enable_debug: false,
-            },
-            session: McpSessionSettings {
+            , session: McpSessionSettings {
                 session_timeout: Duration::from_secs(3600), // 1 hour
                 max_concurrent_sessions: 1000,
                 enable_persistence: true,
@@ -239,9 +222,8 @@ impl Default for UnifiedMcpExtensions {
                 encryption: McpSessionEncryption {
                     algorithm: "AES-256-GCM".to_string(),
                     key_rotation_interval: Duration::from_secs(86400), // 24 hours
-                    enable_forward_secrecy: true,
-                },
-            },
+                    enable_forward_secrecy: true }
+            }
             storage: McpStorageSettings {
                 default_volume_size_mb: 1024, // 1GB
                 max_volume_size_mb: 10240,    // 10GB
@@ -254,8 +236,8 @@ impl Default for UnifiedMcpExtensions {
                     max_snapshots: 30,
                     retention_days: 7,
                     enable_auto_cleanup: true,
-                },
-            },
+                }
+            }
             adapter: McpAdapterSettings {
                 enable_bridging: true,
                 supported_versions: vec!["1.0".to_string(), "0.9".to_string()],
@@ -265,17 +247,17 @@ impl Default for UnifiedMcpExtensions {
                     max_connections: 100,
                     connection_timeout: Duration::from_secs(10),
                     idle_timeout: Duration::from_secs(300),
-                },
+                }
                 failover: McpFailoverSettings {
                     enable_failover: true,
                     failover_timeout: Duration::from_secs(30),
                     retry_attempts: 3,
                     retry_delay: Duration::from_secs(5),
-                },
-            },
+                }
+            }
             performance: McpPerformanceSettings {
                 worker_threads: num_cpus::get(),
-                message_queue_size: 10000,
+                message_queue_size: 10_000,
                 enable_monitoring: true,
                 metrics_interval: Duration::from_secs(60),
                 batch_processing: McpBatchSettings {
@@ -283,8 +265,8 @@ impl Default for UnifiedMcpExtensions {
                     batch_size: 100,
                     batch_timeout: Duration::from_millis(100),
                     max_batch_delay: Duration::from_millis(500),
-                },
-            },
+                }
+            }
             qos: McpQosSettings {
                 enable_prioritization: true,
                 rate_limiting: McpRateLimitSettings {
@@ -292,31 +274,30 @@ impl Default for UnifiedMcpExtensions {
                     requests_per_second: 1000,
                     burst_capacity: 2000,
                     algorithm: "token_bucket".to_string(),
-                },
+                }
                 circuit_breaker: McpCircuitBreakerSettings {
                     enable_circuit_breaker: true,
                     failure_threshold: 5,
                     reset_timeout: Duration::from_secs(60),
                     half_open_timeout: Duration::from_secs(30),
-                },
+                }
                 load_balancing_strategy: "round_robin".to_string(),
-            },
+            }
     }
     }
     }
 
 impl UnifiedMcpExtensions {
     /// Create production-optimized MCP extensions
-    pub fn production() -> Self {
-        let mut config = Self::default();
+    #[must_use]
+    pub fn production() -> Self { let mut config = Self::default();
         // Override specific settings for production
         config.performance.max_concurrent_requests = 1000;
         config.security.authentication_required = true;
         config.logging.log_level = "info".to_string();
         config
-    }
-
-    /// Create high-performance MCP extensions
+    , /// Create high-performance MCP extensions
+    #[must_use]
     pub fn high_performance() -> Self {
         let mut config = Self::default();
         // Override specific settings for high performance
@@ -325,18 +306,17 @@ impl UnifiedMcpExtensions {
         config.security.authentication_required = true;
         config.logging.log_level = "warn".to_string();
         config
-    }
+     }
     }
 
 /// **UNIFIED MCP CONFIGURATION**
 /// Single configuration type that replaces all MCP config structs
 /// CANONICAL MODERNIZATION: Simplified type alias without type parameters
 pub type UnifiedMcpConfig = StandardDomainConfig;
-
 impl UnifiedMcpConfig {
     /// Create development-focused MCP configuration
-    pub fn development() -> Self {
-        let mut config = StandardDomainConfig::new(UnifiedMcpExtensions::default());
+    #[must_use]
+    pub fn development() -> Self { let mut config = StandardDomainConfig::new(UnifiedMcpExtensions::default());
 
         // Configure service settings for MCP development
         config.service.name = "nestgate-mcp".to_string();
@@ -361,9 +341,8 @@ impl UnifiedMcpConfig {
         // Session and protocol settings are now handled by the unified config system
 
         config
-    }
-
-    /// Create production-ready MCP configuration
+    , /// Create production-ready MCP configuration
+    #[must_use]
     pub fn production() -> Self {
         let mut config = StandardDomainConfig::new(UnifiedMcpExtensions::default());
 
@@ -390,11 +369,11 @@ impl UnifiedMcpConfig {
         // Security, performance, and QoS settings are now handled by the unified config system
 
         config
-    }
+     }
 
     /// Create high-performance MCP configuration
-    pub fn high_performance() -> Self {
-        let mut config = Self::production();
+    #[must_use]
+    pub fn high_performance() -> Self { let mut config = Self::production();
 
         // High-performance optimizations
         // config.extensions.performance.worker_threads = num_cpus::get() * 2;
@@ -411,20 +390,17 @@ impl UnifiedMcpConfig {
         // config.extensions.adapter.connection_pool.max_connections = 1000;
 
         // Optimize rate limiting
-        // config.extensions.qos.rate_limiting.requests_per_second = 10000;
+        // config.extensions.qos.rate_limiting.requests_per_second = 10_000;
         // config.extensions.qos.rate_limiting.burst_capacity = 20000;
 
         config
-    }
-    }
+     }
 
 /// **MIGRATION HELPERS**
 /// Functions to migrate from legacy MCP configs to unified system
-
 /// Migrate legacy McpAdapterConfig to unified system
 pub fn migrate_adapter_config(legacy_config: crate::adapter::McpAdapterConfig) -> UnifiedMcpConfig {
     let mut unified = UnifiedMcpConfig::development();
-
     // Migrate base configuration
     unified.service = legacy_config.base.service;
     unified.network = legacy_config.base.network;
@@ -445,7 +421,6 @@ pub fn migrate_session_config(
     legacy_session: crate::security::McpSessionConfig,
 ) -> UnifiedMcpConfig {
     let mut unified = UnifiedMcpConfig::development();
-
     // Extract session settings from legacy config and apply to unified extensions
     // This would involve mapping the legacy fields to the new structure
     // Implementation depends on the exact structure of McpSessionConfig
@@ -456,7 +431,6 @@ pub fn migrate_session_config(
 /// Migrate legacy VolumeConfig to unified system  
 pub fn migrate_volume_config(legacy_volume: crate::storage::VolumeConfig) -> UnifiedMcpConfig {
     let mut unified = UnifiedMcpConfig::development();
-
     // Extract storage settings from legacy config and apply to unified extensions
     // This would involve mapping the legacy fields to the new structure
     // Implementation depends on the exact structure of VolumeConfig

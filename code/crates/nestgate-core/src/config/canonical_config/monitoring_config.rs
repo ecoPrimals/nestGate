@@ -21,7 +21,6 @@ pub struct MonitoringConfig {
     /// Tracing configuration
     pub tracing: TracingConfig,
 }
-
 /// Monitoring metrics configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonitoringMetricsConfig {
@@ -34,7 +33,6 @@ pub struct MonitoringMetricsConfig {
     /// Metrics format
     pub format: String,
 }
-
 /// Alerting configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
@@ -46,7 +44,6 @@ pub struct AlertingConfig {
     /// Notification channels
     pub channels: Vec<NotificationChannel>,
 }
-
 /// Alert rule
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertRule {
@@ -59,7 +56,6 @@ pub struct AlertRule {
     /// Comparison operator
     pub operator: String,
 }
-
 /// Notification channel
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NotificationChannel {
@@ -68,7 +64,6 @@ pub struct NotificationChannel {
     /// Channel configuration
     pub config: std::collections::HashMap<String, String>,
 }
-
 /// Logging configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoggingConfig {
@@ -81,7 +76,6 @@ pub struct LoggingConfig {
     /// Log rotation
     pub rotation: LogRotationConfig,
 }
-
 /// Log rotation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogRotationConfig {
@@ -92,7 +86,6 @@ pub struct LogRotationConfig {
     /// Rotation interval
     pub interval: Duration,
 }
-
 /// Monitoring health configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonitoringHealthConfig {
@@ -103,7 +96,6 @@ pub struct MonitoringHealthConfig {
     /// Health check endpoints
     pub endpoints: Vec<String>,
 }
-
 /// Tracing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TracingConfig {
@@ -114,7 +106,6 @@ pub struct TracingConfig {
     /// Sample rate
     pub sample_rate: f64,
 }
-
 
 impl Default for MonitoringMetricsConfig {
     fn default() -> Self {

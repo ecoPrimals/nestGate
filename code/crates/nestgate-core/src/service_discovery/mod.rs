@@ -1,16 +1,17 @@
-use std::collections::HashMap;
-/// Universal Service Discovery Module - Split for File Size Compliance
-/// This module was split from universal_service_discovery.rs to maintain the 2000-line limit
-/// while preserving all functionality and maintaining backward compatibility.
-/// **ARCHITECTURAL PRINCIPLE**: "Systems should discover and integrate based on what they can do, not what they're called"
-
+// Removed unused import: std::collections::HashMap
+// Universal Service Discovery Module - Split for File Size Compliance
+// This module was split from universal_service_discovery.rs to maintain the 2000-line limit
+//! while preserving all functionality and maintaining backward compatibility.
+// **ARCHITECTURAL PRINCIPLE**: "Systems should discover and integrate based on what they can do, not what they're called"
 
 // Sub-module declarations
+pub mod dynamic_endpoints;
 pub mod registry;
-pub mod types;
+pub mod types; // ✅ NEW: Dynamic endpoint resolution system
 
 // Re-export all public types for backward compatibility
-pub use types::*;
+pub use dynamic_endpoints::{resolve_service_endpoint, DynamicEndpointResolver};
+pub use types::*; // ✅ NEW: Export dynamic endpoint functionality
 
 // Convenience re-exports for common usage patterns
 pub use crate::service_discovery::registry::{InMemoryServiceRegistry, UniversalServiceRegistry};
@@ -19,37 +20,39 @@ pub use crate::service_discovery::registry::{InMemoryServiceRegistry, UniversalS
 pub type ServiceDiscovery = dyn UniversalServiceRegistry;
 pub type ServiceRegistry = InMemoryServiceRegistry;
 
-/// Convenience function to create a new service registry
-pub fn create_service_registry() -> InMemoryServiceRegistry {
+// Convenience function to create a new service registry
+#[must_use]
+pub const fn create_service_registry() -> InMemoryServiceRegistry {
     InMemoryServiceRegistry::new()
 }
-
-/// Convenience function to create a universal service registration
-pub fn create_service_registration(
-    _name: String,
+// Convenience function to create a universal service registration
+#[must_use]
+pub const fn create_service_registration(
+    name: String,
     _category: ServiceCategory,
-    _capabilities: Vec<ServiceCapability>,
+    capabilities: Vec<ServiceCapability>,
 ) -> UniversalServiceRegistration {
+    let metadata = crate::service_discovery::types::ServiceMetadata {
+        name,
+        ..Default::default()
+    };
+
     UniversalServiceRegistration {
         service_id: uuid::Uuid::new_v4(),
-        metadata: Default::default(), // Use default for simplified integration
-        capabilities: Vec::new(), // No capabilities for simplified registration
+        metadata,
+        capabilities,          // Use the provided capabilities
         endpoints: Vec::new(), // Endpoints will be discovered dynamically
         resources: ResourceSpec::default(),
         integration: IntegrationPreferences::default(),
         extensions: std::collections::HashMap::new(),
     }
 }
-
-/// Create a service role for common patterns
-pub fn create_storage_role() -> ServiceRole {
+// Create a service role for common patterns
+#[must_use]
+pub const fn create_storage_role() -> ServiceRole {
     ServiceRole {
         name: "Storage Provider".to_string(),
-        required_capabilities: vec![ServiceCapability::Custom {
-            namespace: "storage-provider".to_string(),
-            capability: "Storage Provider".to_string(),
-            version: "1.0.0".to_string(),
-        }],
+        required_capabilities: vec![ServiceCapability::Storage(StorageType::Object)],
         optional_capabilities: vec![ServiceCapability::Custom {
             namespace: "cache-provider".to_string(),
             capability: "Cache Provider".to_string(),
@@ -59,9 +62,9 @@ pub fn create_storage_role() -> ServiceRole {
         performance_requirements: PerformanceRequirements::default(),
     }
 }
-
-/// Create a service role for AI services
-pub fn create_ai_role() -> ServiceRole {
+// Create a service role for AI services
+#[must_use]
+pub const fn create_ai_role() -> ServiceRole {
     ServiceRole {
         name: "AI Provider".to_string(),
         required_capabilities: vec![ServiceCapability::Custom {
@@ -95,9 +98,9 @@ pub fn create_ai_role() -> ServiceRole {
         },
     }
 }
-
-/// Create a service role for security services  
-pub fn create_security_role() -> ServiceRole {
+// Create a service role for security services
+#[must_use]
+pub const fn create_security_role() -> ServiceRole {
     ServiceRole {
         name: "Security Provider".to_string(),
         required_capabilities: vec![ServiceCapability::Custom {
@@ -125,7 +128,6 @@ pub fn create_security_role() -> ServiceRole {
         },
     }
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -202,27 +204,17 @@ mod tests {
         // Register multiple services
         for i in 0..3 {
             let registration = create_service_registration(
-                format!("service-{}", i),
+                format!("service-{i}"),
                 ServiceCategory::Storage,
-                vec![crate::canonical_modernization::service_metadata::ServiceCapability {
-                    name: "storage".to_string(),
-                    version: "1.0.0".to_string(),
-                    description: "Object storage capability".to_string(),
-                    metadata: std::collections::HashMap::new(),
-                    enabled: true,
-                }],
+                vec![crate::service_discovery::types::ServiceCapability::Storage(
+                    crate::service_discovery::types::StorageType::Object,
+                )],
             );
             registry.register_service(registration).await?;
         }
 
         let requirements = ServiceRequirements {
-            capabilities: vec![crate::canonical_modernization::service_metadata::ServiceCapability {
-                name: "storage".to_string(),
-                version: "1.0.0".to_string(),
-                description: "Object storage capability".to_string(),
-                metadata: std::collections::HashMap::new(),
-                enabled: true,
-            }],
+            capabilities: vec![ServiceCapability::Storage(StorageType::Object)],
             resource_constraints: None,
             performance_requirements: None,
         };

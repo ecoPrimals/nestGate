@@ -1,9 +1,10 @@
-//! Environment Configuration
-//!
+// Environment Configuration
+//! Configuration types and utilities.
 //! ✅ **MODERNIZED**: Capability-based environment variable naming
 //! ❌ **DEPRECATED**: Legacy primal-specific environment variables
 
 use serde::{Deserialize, Serialize};
+use crate::constants::LOCALHOST;
 
 /// Environment configuration with capability-based variables
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -19,7 +20,6 @@ pub struct EnvironmentConfig {
     /// Security configuration
     pub security: SecurityEnvironment,
 }
-
 /// Service environment configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceEnvironment {
@@ -28,22 +28,21 @@ pub struct ServiceEnvironment {
     /// Service port
     pub port: u16,
     /// Bind address
-    pub bind_address: String,
+    pub bind_endpoint: String,
     /// Log level
     pub log_level: String,
 }
-
 impl Default for ServiceEnvironment {
     fn default() -> Self {
         Self {
             service_id: std::env::var("NESTGATE_SERVICE_ID")
-                .unwrap_or_else(|_| format!("nestgate-{}", uuid::Uuid::new_v4().simple())),
+                .unwrap_or_else(|_| format!("nestgate-{uuid::Uuid::new_v4(}").simple())),
             port: std::env::var("NESTGATE_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(8080),
-            bind_address: std::env::var("NESTGATE_BIND_ADDRESS")
-                .unwrap_or_else(|_| "127.0.0.1".to_string()),
+            bind_endpoint: std::env::var("NESTGATE_BIND_ADDRESS")
+                .unwrap_or_else(|_| LOCALHOST.to_string()),
             log_level: std::env::var("NESTGATE_LOG_LEVEL").unwrap_or_else(|_| "info".to_string()),
         }
     }
@@ -65,7 +64,6 @@ pub struct DiscoveryEnvironment {
     /// Discovery timeout
     pub discovery_timeout: u64,
 }
-
 impl Default for DiscoveryEnvironment {
     fn default() -> Self {
         Self {
@@ -94,7 +92,6 @@ pub struct StorageEnvironment {
     /// Snapshot configuration
     pub snapshot_interval: u64,
 }
-
 impl Default for StorageEnvironment {
     fn default() -> Self {
         Self {
@@ -123,24 +120,19 @@ pub struct NetworkEnvironment {
     /// Enable TLS
     pub tls_enabled: bool,
     /// Certificate path
-    pub cert_path: Option<String>,
     /// Key path
-    pub key_path: Option<String>,
 }
-
 impl Default for NetworkEnvironment {
     fn default() -> Self {
         Self {
             api_url: std::env::var("NESTGATE_API_URL")
-                .unwrap_or_else(|_| "http://localhost:8080".to_string()),
+                .unwrap_or_else(|_| "http://localhost:".to_string() + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()).to_string()),
             websocket_url: std::env::var("NESTGATE_WEBSOCKET_URL")
                 .unwrap_or_else(|_| "ws://localhost:8080/ws".to_string()),
             tls_enabled: std::env::var("NESTGATE_TLS_ENABLED")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(false),
-            cert_path: std::env::var("NESTGATE_CERT_PATH").ok(),
-            key_path: std::env::var("NESTGATE_KEY_PATH").ok(),
         }
     }
 }
@@ -157,7 +149,6 @@ pub struct SecurityEnvironment {
     /// API key for external security services
     pub security_api_key: Option<String>,
 }
-
 impl Default for SecurityEnvironment {
     fn default() -> Self {
         Self {

@@ -1,7 +1,6 @@
 /// **API CONFIGURATION**
 ///
 /// API and handler configuration types.
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -15,7 +14,6 @@ pub struct ApiConfig {
     /// API settings
     pub api_settings: HashMap<String, serde_json::Value>,
 }
-
 impl Default for ApiConfig {
     fn default() -> Self {
         Self {
@@ -24,4 +22,4 @@ impl Default for ApiConfig {
             api_settings: HashMap::new(),
         }
     }
-} 
+}

@@ -6,7 +6,6 @@
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use uuid::Uuid;
-
 // Import unified enums
 use crate::canonical_modernization::{UnifiedHealthStatus, UnifiedStorageTier, UnifiedStorageType};
 
@@ -22,7 +21,6 @@ use super::metrics::StorageMetrics;
 pub struct UnifiedStorageResource {
     /// Unique resource identifier
     pub resource_id: String,
-
     /// Human-readable name
     pub name: String,
 
@@ -33,7 +31,6 @@ pub struct UnifiedStorageResource {
     pub tier: UnifiedStorageTier,
 
     /// Storage path or location
-    pub path: String,
 
     /// Resource capacity information
     pub capacity: StorageCapacity,
@@ -62,7 +59,6 @@ pub struct UnifiedStorageResource {
 pub struct StorageCapacity {
     /// Total capacity in bytes
     pub total_bytes: u64,
-
     /// Currently used capacity in bytes
     pub used_bytes: u64,
 
@@ -81,16 +77,16 @@ pub struct StorageCapacity {
 
 impl StorageCapacity {
     /// Calculate usage percentage
-    pub fn usage_percentage(&self) -> f64 {
+    pub const fn usage_percentage(&self) -> f64 {
         if self.total_bytes == 0 {
             0.0
         } else {
-            (self.used_bytes as f64 / self.total_bytes as f64) * 100.0
+            (self.f64::from(used_bytes) / self.f64::from(total_bytes)) * 100.0
         }
     }
 
     /// Check if storage is near capacity
-    pub fn is_near_capacity(&self, threshold_percent: f64) -> bool {
+    pub const fn is_near_capacity(&self, threshold_percent: f64) -> bool {
         self.usage_percentage() >= threshold_percent
     }
 
@@ -99,11 +95,11 @@ impl StorageCapacity {
         let mut effective = self.total_bytes;
 
         if let Some(compression) = self.compression_ratio {
-            effective = (effective as f64 * compression) as u64;
+            effective = (f64::from(effective) * compression) as u64;
         }
 
         if let Some(dedup) = self.deduplication_ratio {
-            effective = (effective as f64 * dedup) as u64;
+            effective = (f64::from(effective) * dedup) as u64;
         }
 
         effective
@@ -115,7 +111,6 @@ impl StorageCapacity {
 pub struct StorageHealthInfo {
     /// Overall health status
     pub status: UnifiedHealthStatus,
-
     /// Detailed health state
     pub state: StorageHealthState,
 
@@ -158,7 +153,6 @@ pub enum StorageHealthState {
     /// Storage is being initialized
     Initializing,
 }
-
 // ==================== SECTION ====================
 
 impl Default for UnifiedStorageResource {
@@ -168,7 +162,6 @@ impl Default for UnifiedStorageResource {
             name: "default-storage".to_string(),
             storage_type: UnifiedStorageType::Local,
             tier: UnifiedStorageTier::Hot,
-            path: "/default".to_string(),
             capacity: StorageCapacity::default(),
             health: StorageHealthInfo::default(),
             metrics: StorageMetrics::default(),
@@ -199,7 +192,7 @@ impl Default for StorageHealthInfo {
 
 impl UnifiedStorageResource {
     /// Create a new storage resource with default values
-    pub fn new(name: String, storage_type: UnifiedStorageType) -> Self {
+    pub const fn new(name: String, storage_type: UnifiedStorageType) -> Self {
         Self {
             name: name.clone(),
             storage_type: storage_type.clone(),
@@ -213,18 +206,18 @@ impl UnifiedStorageResource {
     }
 
     /// Check if the resource is healthy
-    pub fn is_healthy(&self) -> bool {
+    pub const fn is_healthy(&self) -> bool {
         matches!(self.health.status, UnifiedHealthStatus::Healthy)
             && matches!(self.health.state, StorageHealthState::Online)
     }
 
     /// Get usage percentage
-    pub fn usage_percentage(&self) -> f64 {
+    pub const fn usage_percentage(&self) -> f64 {
         self.capacity.usage_percentage()
     }
 
     /// Check if resource needs attention
-    pub fn needs_attention(&self) -> bool {
+    pub const fn needs_attention(&self) -> bool {
         self.health.error_count > 0
             || self.health.warning_count > 5
             || self.health.health_score < 0.8
@@ -241,11 +234,11 @@ impl StorageHealthInfo {
         let mut score = 1.0;
 
         if self.error_count > 0 {
-            score -= (self.error_count as f64 * 0.1).min(0.5);
+            score -= (self.f64::from(error_count) * 0.1).min(0.5);
         }
 
         if self.warning_count > 0 {
-            score -= (self.warning_count as f64 * 0.05).min(0.3);
+            score -= (self.f64::from(warning_count) * 0.05).min(0.3);
         }
 
         self.health_score = score.max(0.0);

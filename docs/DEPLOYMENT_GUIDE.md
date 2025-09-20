@@ -1,313 +1,550 @@
-# 🚀 NestGate Canonical Modernization - Production Deployment Guide
+# 🚀 NestGate Production Deployment Guide
 
-## 📋 **DEPLOYMENT OVERVIEW**
+> **Status**: Production Ready | **Version**: 2.0.0 | **Date**: September 10, 2025
 
-NestGate v2.0.0 represents the **complete canonical modernization** of the sovereign NAS ecosystem. This guide provides comprehensive deployment instructions for the production-ready system.
+This guide provides comprehensive instructions for deploying NestGate v2.0.0 in production environments.
 
-### **✅ SYSTEM STATUS**
-- **Production Ready**: ✅ All systems operational
-- **Memory Safe**: ✅ 100% safe Rust code (0 unsafe blocks)
-- **Build Status**: ✅ 1,355 library artifacts compiled
-- **Code Quality**: ✅ Clippy clean, canonical patterns throughout
-- **Architecture**: ✅ 821 files, 220K+ lines unified
+## 📋 Table of Contents
 
-## 🏗️ **DEPLOYMENT ARTIFACTS**
+- [🎯 Overview](#-overview)
+- [⚙️ Prerequisites](#️-prerequisites)
+- [🚀 Quick Deployment](#-quick-deployment)
+- [🔧 Configuration](#-configuration)
+- [🐳 Docker Deployment](#-docker-deployment)
+- [🏗️ Manual Deployment](#️-manual-deployment)
+- [📊 Monitoring Setup](#-monitoring-setup)
+- [🔒 Security Configuration](#-security-configuration)
+- [🌍 Ecosystem Integration](#-ecosystem-integration)
+- [🧪 Validation](#-validation)
+- [🚨 Troubleshooting](#-troubleshooting)
 
-### **Core Binaries** (Ready for Production)
-```
-target/release/nestgate              (5.5MB) - Main NAS system
-target/release/nestgate-api-server   (2.3MB) - API server
-target/release/nestgate-client       (3.6MB) - Client interface
-```
+## 🎯 Overview
 
-### **System Requirements**
-- **OS**: Linux (Ubuntu 20.04+, RHEL 8+, or compatible)
-- **Memory**: Minimum 4GB RAM (8GB+ recommended)
-- **Storage**: ZFS-compatible storage devices
-- **Network**: IPv4/IPv6 networking stack
-- **Dependencies**: None (statically linked Rust binaries)
+NestGate v2.0.0 features a completely modernized architecture designed for production deployment:
 
-## 🔧 **DEPLOYMENT METHODS**
+### ✨ Deployment Features
 
-### **Method 1: Standalone Deployment**
+- **🏆 Zero-Downtime Deployment**: Rolling updates with health checks
+- **📊 Built-in Monitoring**: Prometheus metrics and Grafana dashboards
+- **🔒 Production Security**: TLS, RBAC, and sovereignty compliance
+- **⚡ High Performance**: Zero-cost abstractions and native async
+- **🌍 Ecosystem Ready**: Seamless integration with ecoPrimals services
+- **🛡️ Fault Tolerance**: Automatic recovery and circuit breakers
+
+## ⚙️ Prerequisites
+
+### System Requirements
+
+| Component | Minimum | Recommended |
+|-----------|---------|-------------|
+| **CPU** | 2 cores | 4+ cores |
+| **Memory** | 2GB RAM | 4GB+ RAM |
+| **Storage** | 20GB | 50GB+ SSD |
+| **Network** | 100 Mbps | 1 Gbps |
+
+### Software Dependencies
+
 ```bash
-# 1. Copy binaries to target system
-scp target/release/nestgate* user@target-server:/opt/nestgate/bin/
+# Required tools
+docker --version          # 20.10+
+docker-compose --version  # 1.29+
+curl --version           # 7.68+
+jq --version             # 1.6+
 
-# 2. Make executable
-chmod +x /opt/nestgate/bin/nestgate*
-
-# 3. Create configuration directory
-mkdir -p /opt/nestgate/config
-
-# 4. Start main service
-/opt/nestgate/bin/nestgate --config /opt/nestgate/config/production.toml
+# Optional (for development)
+cargo --version          # 1.70+
+rust --version          # 1.70+
 ```
 
-### **Method 2: Systemd Service Deployment**
-```bash
-# 1. Install binaries
-sudo cp target/release/nestgate* /usr/local/bin/
+### ZFS Support (Optional)
 
-# 2. Create service configuration
-sudo tee /etc/systemd/system/nestgate.service << EOF
+For advanced storage features:
+
+```bash
+# Ubuntu/Debian
+sudo apt install zfsutils-linux
+
+# CentOS/RHEL
+sudo dnf install zfs
+
+# Verify ZFS
+sudo zpool status
+```
+
+## 🚀 Quick Deployment
+
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/ecoprimals/nestgate.git
+cd nestgate
+```
+
+### 2. Configure Environment
+
+```bash
+# Copy production configuration
+cp deploy/production.env .env
+
+# Edit configuration (see Configuration section)
+nano .env
+```
+
+### 3. Deploy Services
+
+```bash
+# Run deployment script
+./deploy/deploy.sh
+
+# Verify deployment
+curl http://localhost:8080/health
+```
+
+### 4. Access Services
+
+- **NestGate API**: http://localhost:8080
+- **Health Check**: http://localhost:8080/health
+- **Metrics**: http://localhost:9090/metrics
+- **Grafana Dashboard**: http://localhost:3000
+
+## 🔧 Configuration
+
+### Core Configuration
+
+Edit `.env` or `deploy/production.env`:
+
+```bash
+# Core Service Configuration
+NESTGATE_API_PORT=8080
+NESTGATE_BIND_ADDRESS=0.0.0.0
+NESTGATE_WORKERS=auto
+NESTGATE_REQUEST_TIMEOUT_SECS=30
+
+# Storage Configuration
+NESTGATE_STORAGE_BACKEND=zfs
+NESTGATE_STORAGE_ZFS_POOL=tank
+NESTGATE_STORAGE_DATA_DIR=/var/lib/nestgate
+
+# Performance Configuration
+NESTGATE_ZERO_COPY=true
+NESTGATE_BUFFER_SIZE=65536
+NESTGATE_THREAD_POOL_SIZE=auto
+NESTGATE_ASYNC_RUNTIME=tokio
+
+# Security Configuration
+NESTGATE_TLS_ENABLED=true
+NESTGATE_AUTH_MODE=primal
+NESTGATE_RBAC_ENABLED=true
+```
+
+### Environment-Specific Configurations
+
+#### Development
+```bash
+NESTGATE_LOG_LEVEL=debug
+NESTGATE_DEV_MODE=true
+NESTGATE_MOCK_SERVICES=true
+```
+
+#### Staging
+```bash
+NESTGATE_LOG_LEVEL=info
+NESTGATE_METRICS_ENABLED=true
+NESTGATE_TRACING_ENABLED=true
+```
+
+#### Production
+```bash
+NESTGATE_LOG_LEVEL=warn
+NESTGATE_METRICS_ENABLED=true
+NESTGATE_BACKUP_ENABLED=true
+NESTGATE_TLS_ENABLED=true
+```
+
+## 🐳 Docker Deployment
+
+### Using Docker Compose (Recommended)
+
+```bash
+# Deploy full stack
+docker-compose -f deploy/production.yml up -d
+
+# View logs
+docker-compose -f deploy/production.yml logs -f
+
+# Scale services
+docker-compose -f deploy/production.yml up -d --scale nestgate=3
+
+# Stop services
+docker-compose -f deploy/production.yml down
+```
+
+### Manual Docker Deployment
+
+```bash
+# Build image
+docker build -t nestgate:2.0.0 .
+
+# Run container
+docker run -d \
+  --name nestgate-production \
+  --restart unless-stopped \
+  -p 8080:8080 \
+  -p 8090:8090 \
+  -v nestgate-data:/var/lib/nestgate \
+  -v nestgate-config:/etc/nestgate \
+  --env-file deploy/production.env \
+  nestgate:2.0.0
+
+# Check status
+docker logs nestgate-production
+```
+
+### Container Health Checks
+
+```bash
+# Check container health
+docker inspect --format='{{.State.Health.Status}}' nestgate-production
+
+# View health check logs
+docker inspect --format='{{range .State.Health.Log}}{{.Output}}{{end}}' nestgate-production
+```
+
+## 🏗️ Manual Deployment
+
+### 1. Build from Source
+
+```bash
+# Clone repository
+git clone https://github.com/ecoprimals/nestgate.git
+cd nestgate
+
+# Build release
+cargo build --release --workspace
+
+# Install binary
+sudo cp target/release/nestgate-bin /usr/local/bin/nestgate
+sudo chmod +x /usr/local/bin/nestgate
+```
+
+### 2. System Service Setup
+
+Create systemd service file:
+
+```bash
+sudo tee /etc/systemd/system/nestgate.service << 'EOF'
 [Unit]
-Description=NestGate Sovereign NAS System
+Description=NestGate Storage Service
 After=network.target
+Wants=network.target
 
 [Service]
-Type=simple
+Type=exec
 User=nestgate
 Group=nestgate
 ExecStart=/usr/local/bin/nestgate
 Restart=always
 RestartSec=10
+EnvironmentFile=/etc/nestgate/production.env
+WorkingDirectory=/var/lib/nestgate
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/nestgate /var/log/nestgate
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-# 3. Enable and start service
+# Enable and start service
 sudo systemctl enable nestgate
 sudo systemctl start nestgate
+sudo systemctl status nestgate
 ```
 
-### **Method 3: Container Deployment**
-```dockerfile
-FROM scratch
-COPY target/release/nestgate /nestgate
-COPY target/release/nestgate-api-server /nestgate-api-server
-EXPOSE 8080 8443
-ENTRYPOINT ["/nestgate"]
-```
+### 3. User and Directory Setup
 
-## ⚙️ **CONFIGURATION**
-
-### **Canonical Configuration Structure**
-The system uses unified `NestGateFinalConfig` throughout:
-
-```toml
-# /opt/nestgate/config/production.toml
-[system]
-instance_name = "production-nas"
-environment = "Production"
-log_level = "info"
-dev_mode = false
-
-[monitoring]
-metrics_interval = 30
-log_level = "info"
-log_retention_days = 30
-
-[security]
-auth_method = "jwt"
-key_rotation_days = 90
-max_failed_attempts = 5
-
-[storage]
-cache_size = 1073741824  # 1GB
-max_file_size = 10737418240  # 10GB
-
-[[storage.tiers]]
-name = "hot"
-tier_type = "hot"
-path = "/zfs/hot"
-capacity = 1099511627776  # 1TB
-```
-
-### **Environment Variables**
 ```bash
-export NESTGATE_CONFIG_PATH="/opt/nestgate/config/production.toml"
-export NESTGATE_LOG_LEVEL="info"
-export NESTGATE_DATA_DIR="/opt/nestgate/data"
-export RUST_LOG="info"
+# Create nestgate user
+sudo useradd -r -s /bin/false nestgate
+
+# Create directories
+sudo mkdir -p /var/lib/nestgate /var/log/nestgate /etc/nestgate
+sudo chown -R nestgate:nestgate /var/lib/nestgate /var/log/nestgate
+sudo chmod 755 /var/lib/nestgate /var/log/nestgate
+
+# Copy configuration
+sudo cp deploy/production.env /etc/nestgate/
+sudo chown nestgate:nestgate /etc/nestgate/production.env
+sudo chmod 600 /etc/nestgate/production.env
 ```
 
-## 🔐 **SECURITY CONFIGURATION**
+## 📊 Monitoring Setup
 
-### **Production Security Settings**
-```toml
-[security]
-auth_method = "jwt"
-key_rotation_days = 90
-max_failed_attempts = 5
-session_timeout_minutes = 60
+### Prometheus Configuration
 
-# Enable TLS for production
-[network]
-enable_tls = true
-cert_path = "/opt/nestgate/certs/server.crt"
-key_path = "/opt/nestgate/certs/server.key"
+Create `monitoring/prometheus.yml`:
+
+```yaml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'nestgate'
+    static_configs:
+      - targets: ['nestgate:9090']
+    scrape_interval: 10s
+    metrics_path: /metrics
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
 ```
 
-### **Firewall Configuration**
+### Grafana Dashboards
+
+Import pre-configured dashboards:
+
 ```bash
-# Open required ports
-sudo ufw allow 8080/tcp   # API server
-sudo ufw allow 8443/tcp   # HTTPS API
-sudo ufw allow 2049/tcp   # NFS (if enabled)
-sudo ufw allow 445/tcp    # SMB (if enabled)
+# Copy dashboard configurations
+cp -r monitoring/grafana/dashboards /var/lib/grafana/dashboards/
+cp -r monitoring/grafana/datasources /var/lib/grafana/datasources/
+
+# Restart Grafana
+docker-compose restart grafana
 ```
 
-## 📊 **MONITORING & OBSERVABILITY**
+### Key Metrics to Monitor
 
-### **Health Checks**
+| Metric | Description | Alert Threshold |
+|--------|-------------|-----------------|
+| `nestgate_requests_total` | Total requests | N/A |
+| `nestgate_request_duration_seconds` | Request latency | >1s |
+| `nestgate_memory_usage_bytes` | Memory usage | >80% of limit |
+| `nestgate_active_connections` | Active connections | >1000 |
+| `nestgate_storage_usage_bytes` | Storage usage | >90% of capacity |
+
+## 🔒 Security Configuration
+
+### TLS Certificate Setup
+
 ```bash
-# Check system health
-curl http://localhost:8080/health
+# Generate self-signed certificates (development only)
+openssl req -x509 -newkey rsa:4096 -keyout server.key -out server.crt -days 365 -nodes
 
-# Check detailed health
-curl http://localhost:8080/health/detailed
+# Or use Let's Encrypt (production)
+certbot certonly --standalone -d your-domain.com
 
-# Check ZFS health
-curl http://localhost:8080/health/zfs
+# Copy certificates
+sudo cp server.crt /etc/nestgate/certs/
+sudo cp server.key /etc/nestgate/certs/
+sudo chown -R nestgate:nestgate /etc/nestgate/certs/
+sudo chmod 600 /etc/nestgate/certs/*
 ```
 
-### **Metrics Endpoints**
-```bash
-# Prometheus metrics
-curl http://localhost:8080/metrics
+### RBAC Configuration
 
-# System metrics
-curl http://localhost:8080/api/v1/metrics/system
+Create `rbac.yml`:
 
-# Storage metrics
-curl http://localhost:8080/api/v1/metrics/storage
+```yaml
+roles:
+  - name: admin
+    permissions:
+      - "*"
+  
+  - name: operator
+    permissions:
+      - "storage:read"
+      - "storage:write"
+      - "metrics:read"
+  
+  - name: readonly
+    permissions:
+      - "storage:read"
+      - "metrics:read"
+
+users:
+  - name: admin
+    roles: ["admin"]
+  
+  - name: operator
+    roles: ["operator"]
 ```
 
-### **Log Management**
+### Firewall Configuration
+
 ```bash
-# View service logs
+# UFW (Ubuntu)
+sudo ufw allow 8080/tcp  # NestGate API
+sudo ufw allow 8090/tcp  # Health checks
+sudo ufw allow 9090/tcp  # Metrics
+sudo ufw enable
+
+# iptables
+sudo iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 8090 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 9090 -j ACCEPT
+```
+
+## 🌍 Ecosystem Integration
+
+### Service Discovery Configuration
+
+```bash
+# Enable ecosystem discovery
+NESTGATE_ECOSYSTEM_DISCOVERY=true
+NESTGATE_DISCOVERY_INTERVAL=60
+
+# Configure service endpoints
+ORCHESTRATION_DISCOVERY_ENDPOINT=http://songbird:8081
+SECURITY_DISCOVERY_ENDPOINT=http://beardog:8082
+MANAGEMENT_DISCOVERY_ENDPOINT=http://biomeos:8083
+```
+
+### Integration Validation
+
+```bash
+# Test ecosystem connectivity
+curl http://localhost:8080/ecosystem/status
+
+# Check service discovery
+curl http://localhost:8080/discovery/services
+```
+
+## 🧪 Validation
+
+### Deployment Validation Script
+
+```bash
+#!/bin/bash
+# validate-deployment.sh
+
+echo "🔍 Validating NestGate deployment..."
+
+# Health check
+if curl -f -s http://localhost:8080/health > /dev/null; then
+    echo "✅ Health check passed"
+else
+    echo "❌ Health check failed"
+    exit 1
+fi
+
+# Metrics check
+if curl -f -s http://localhost:9090/metrics > /dev/null; then
+    echo "✅ Metrics endpoint accessible"
+else
+    echo "❌ Metrics endpoint failed"
+fi
+
+# Performance test
+echo "⚡ Running performance test..."
+ab -n 1000 -c 10 http://localhost:8080/health
+
+echo "🎉 Validation completed"
+```
+
+### Load Testing
+
+```bash
+# Install Apache Bench
+sudo apt install apache2-utils
+
+# Basic load test
+ab -n 10000 -c 100 http://localhost:8080/health
+
+# Extended load test with wrk
+wrk -t12 -c400 -d30s --latency http://localhost:8080/health
+```
+
+## 🚨 Troubleshooting
+
+### Common Issues
+
+#### 1. Service Won't Start
+
+```bash
+# Check logs
+docker logs nestgate-production
 journalctl -u nestgate -f
 
-# View application logs
-tail -f /opt/nestgate/logs/nestgate.log
+# Check configuration
+./deploy/deploy.sh validate
+
+# Check port conflicts
+netstat -tulpn | grep :8080
 ```
 
-## 🔄 **OPERATIONAL PROCEDURES**
+#### 2. High Memory Usage
 
-### **Starting Services**
 ```bash
-# Start main NAS system
-./nestgate --config production.toml
+# Check memory metrics
+curl http://localhost:9090/metrics | grep memory
 
-# Start API server separately (if needed)
-./nestgate-api-server --port 8080
-
-# Start with specific log level
-RUST_LOG=debug ./nestgate
+# Adjust configuration
+NESTGATE_MAX_MEMORY_MB=2048
+NESTGATE_CACHE_MAX_MEMORY_MB=512
 ```
 
-### **Graceful Shutdown**
+#### 3. Performance Issues
+
 ```bash
-# Send SIGTERM for graceful shutdown
-kill -TERM $(pidof nestgate)
+# Check CPU usage
+top -p $(pgrep nestgate)
 
-# Or use systemctl for service
-sudo systemctl stop nestgate
+# Adjust worker configuration
+NESTGATE_WORKERS=8
+NESTGATE_THREAD_POOL_SIZE=16
 ```
 
-### **Backup Procedures**
+#### 4. Storage Issues
+
 ```bash
-# Backup configuration
-cp -r /opt/nestgate/config /backup/nestgate-config-$(date +%Y%m%d)
+# Check ZFS status
+sudo zpool status
 
-# ZFS snapshot backup
-zfs snapshot tank@backup-$(date +%Y%m%d)
+# Check disk space
+df -h /var/lib/nestgate
+
+# Check storage metrics
+curl http://localhost:9090/metrics | grep storage
 ```
 
-## 🚨 **TROUBLESHOOTING**
+### Debug Mode
 
-### **Common Issues**
+Enable debug logging:
 
-1. **Permission Denied on ZFS Operations**
-   ```bash
-   # Add user to zfs group
-   sudo usermod -a -G zfs nestgate
-   ```
-
-2. **Port Already in Use**
-   ```bash
-   # Check what's using the port
-   sudo netstat -tlnp | grep :8080
-   ```
-
-3. **Configuration Validation Errors**
-   ```bash
-   # Validate configuration
-   ./nestgate --config production.toml --validate-config
-   ```
-
-### **Log Analysis**
 ```bash
-# Check for errors
-grep ERROR /opt/nestgate/logs/nestgate.log
+# Temporary debug
+NESTGATE_LOG_LEVEL=debug docker-compose restart nestgate
 
-# Monitor real-time logs
-tail -f /opt/nestgate/logs/nestgate.log | grep -E "(ERROR|WARN)"
+# Persistent debug
+echo "NESTGATE_LOG_LEVEL=debug" >> .env
 ```
 
-## 📈 **PERFORMANCE TUNING**
+### Health Check Commands
 
-### **Production Optimizations**
-```toml
-[storage]
-cache_size = 4294967296  # 4GB for high-performance systems
-
-[performance]
-worker_threads = 8       # Match CPU core count
-max_connections = 1000   # Adjust based on load
-
-[monitoring]
-metrics_interval = 10    # More frequent metrics in production
-```
-
-### **ZFS Tuning**
 ```bash
-# Optimize for production workload
-echo 8192 > /sys/module/zfs/parameters/zfs_arc_max
-echo 1 > /sys/module/zfs/parameters/zfs_prefetch_disable
+# Comprehensive health check
+curl -s http://localhost:8080/health | jq .
+
+# Service-specific checks
+curl -s http://localhost:8080/health/storage
+curl -s http://localhost:8080/health/network
+curl -s http://localhost:8080/health/ecosystem
 ```
-
-## ✅ **DEPLOYMENT VALIDATION**
-
-### **Post-Deployment Checklist**
-- [ ] All binaries executable and functional
-- [ ] Configuration files in place and valid
-- [ ] Services start without errors
-- [ ] Health endpoints respond correctly
-- [ ] ZFS operations functional
-- [ ] Network services accessible
-- [ ] Logs rotating properly
-- [ ] Monitoring data flowing
-- [ ] Security settings applied
-- [ ] Backup procedures tested
-
-### **Smoke Tests**
-```bash
-# Test API responsiveness
-curl -f http://localhost:8080/health || echo "FAIL: Health check failed"
-
-# Test ZFS functionality
-curl -f http://localhost:8080/api/v1/zfs/pools || echo "FAIL: ZFS API failed"
-
-# Test authentication
-curl -X POST http://localhost:8080/api/v1/auth/login -d '{"username":"admin","password":"test"}'
-```
-
-## 🎯 **PRODUCTION READINESS CONFIRMATION**
-
-**✅ DEPLOYMENT READY**: The NestGate system has achieved complete canonical modernization and is ready for production deployment with:
-
-- **Memory Safety**: 100% safe Rust code
-- **Performance**: Optimized release builds
-- **Reliability**: Comprehensive error handling
-- **Security**: Production-grade authentication
-- **Observability**: Full monitoring integration
-- **Maintainability**: Canonical configuration patterns
-
-**🚀 DEPLOY WITH CONFIDENCE!**
 
 ---
 
-*This deployment guide covers the canonically modernized NestGate v2.0.0 system. For additional support, consult the API documentation and operational runbooks.* 
+## 📞 Support
+
+- **Documentation**: [docs.ecoprimals.com/nestgate](https://docs.ecoprimals.com/nestgate)
+- **Issues**: [GitHub Issues](https://github.com/ecoprimals/nestgate/issues)
+- **Email**: admin@ecoprimals.com
+
+---
+
+**🏆 NestGate v2.0.0 - Production Ready** | **Built with ❤️ by the ecoPrimals team** 

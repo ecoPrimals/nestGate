@@ -1,0 +1,42 @@
+# 🎯 PEDANTIC CLIPPY CONFIGURATION - MAXIMUM QUALITY
+# Streamlined configuration with no duplicates
+
+# Enable major lint groups
+pedantic = "warn"
+nursery = "warn" 
+cargo = "warn"
+
+# Critical safety lints
+unwrap_used = "forbid"
+panic = "forbid"
+unimplemented = "forbid"
+expect_used = "warn"
+todo = "warn"
+dbg_macro = "forbid"
+mem_forget = "forbid"
+
+# Performance lints
+redundant_clone = "warn"
+unnecessary_unwrap = "warn"
+useless_conversion = "warn"
+clone_on_ref_ptr = "warn"
+
+# Documentation lints
+missing_docs_in_private_items = "warn"
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+
+# Style lints
+similar_names = "warn"
+too_many_arguments = "warn"
+type_complexity = "warn"
+cognitive_complexity = "warn"
+
+# String handling
+string_add = "warn"
+string_add_assign = "warn"
+
+# Thresholds
+too-many-arguments-threshold = 5
+type-complexity-threshold = 50
+cognitive-complexity-threshold = 15

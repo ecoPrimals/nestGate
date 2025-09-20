@@ -14,17 +14,14 @@ use tokio::time::sleep;
 /// Type alias for batch processor function with idiomatic error handling
 type BatchProcessorFn<T, R, E> =
     Box<dyn Fn(Vec<T>) -> Pin<Box<dyn Future<Output = Result<Vec<R>, E>> + Send>> + Send + Sync>;
-
 /// Type alias for async operation function with idiomatic error handling
 type AsyncOperationFn<T, E> =
     Box<dyn Fn() -> Pin<Box<dyn Future<Output = Result<T, E>> + Send>> + Send + Sync>;
-
 /// Async batch processor for high-throughput operations
 pub struct AsyncBatchProcessor<T, R, E = NestGateError> {
     batch_size: usize,
     processor: BatchProcessorFn<T, R, E>,
 }
-
 impl<T, R, E> AsyncBatchProcessor<T, R, E>
 where
     T: Clone + Send + 'static,
@@ -43,7 +40,14 @@ where
     }
 
     /// Process a batch of items with optimized error handling
-    pub async fn process_batch(&self, items: Vec<T>) -> Result<Vec<R>, E> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn process_batch(&self, items: Vec<T>) -> Result<Vec<R>, E>  {
         if items.len() <= self.batch_size {
             (self.processor)(items).await
         } else {
@@ -64,10 +68,9 @@ pub struct AsyncStreamProcessor<T> {
     current_index: usize,
     delay: Duration,
 }
-
 impl<T> AsyncStreamProcessor<T> {
     /// Create new stream processor
-    pub fn new(items: Vec<T>, delay: Duration) -> Self {
+    pub const fn new(items: Vec<T>, delay: Duration) -> Self {
         Self {
             items,
             current_index: 0,
@@ -76,7 +79,8 @@ impl<T> AsyncStreamProcessor<T> {
     }
 
     /// Get next item asynchronously without allocation
-    pub async fn next(&mut self) -> Option<&T> {
+    #[must_use]
+    pub fn next(&mut self) -> Option<&T> {
         if self.current_index >= self.items.len() {
             return None;
         }
@@ -109,7 +113,6 @@ pub struct TimeoutFuture<F, E = NestGateError> {
     timeout: Duration,
     _error_type: std::marker::PhantomData<E>,
 }
-
 impl<F, E> Future for TimeoutFuture<F, E>
 where
     F: Future,
@@ -130,24 +133,20 @@ where
 
 /// Async operation executor with intelligent caching and idiomatic errors
 pub struct AsyncOperationExecutor<T, E = NestGateError> {
-    operation: AsyncOperationFn<T, E>,
     cache: Arc<RwLock<Option<T>>>,
     cache_duration: Duration,
     last_update: Arc<RwLock<Option<std::time::Instant>>>,
 }
-
 impl<T, E> AsyncOperationExecutor<T, E>
 where
     T: Clone + Send + Sync + 'static,
     E: std::fmt::Debug + Send + Sync + 'static,
 {
     /// Create new executor with caching
-    pub fn new<F>(operation: F, cache_duration: Duration) -> Self
     where
         F: Fn() -> Pin<Box<dyn Future<Output = Result<T, E>> + Send>> + Send + Sync + 'static,
     {
         Self {
-            operation: Box::new(operation),
             cache: Arc::new(RwLock::new(None)),
             cache_duration,
             last_update: Arc::new(RwLock::new(None)),
@@ -155,7 +154,14 @@ where
     }
 
     /// Execute with intelligent caching
-    pub async fn execute(&self) -> Result<T, E> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn execute(&self) -> Result<T, E>  {
         // Check cache validity
         let last_update = *self.last_update.read().await;
         let cache_valid = last_update
@@ -169,7 +175,7 @@ where
         }
 
         // Execute operation
-        let result = (self.operation)().await?;
+        let result = (self.b_operation)().await?;
 
         // Update cache
         *self.cache.write().await = Some(result.clone());
@@ -181,22 +187,19 @@ where
 
 /// Optimized async retry mechanism with exponential backoff
 pub struct OptimizedAsyncRetry<F, T, E> {
-    operation: F,
     max_retries: usize,
     initial_delay: Duration,
     max_delay: Duration,
     backoff_multiplier: f64,
     _phantom: std::marker::PhantomData<(T, E)>,
 }
-
 impl<F, T, E> OptimizedAsyncRetry<F, T, E>
 where
     F: Fn() -> Pin<Box<dyn Future<Output = Result<T, E>> + Send>>,
     E: std::fmt::Debug,
 {
     /// Create new optimized retry mechanism
-    pub fn new(
-        operation: F,
+    pub const fn new(
         max_retries: usize,
         initial_delay: Duration,
         max_delay: Duration,
@@ -212,11 +215,18 @@ where
     }
 
     /// Execute operation with optimized retry logic
-    pub async fn execute(&self) -> Result<T, E> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn execute(&self) -> Result<T, E>  {
         let mut current_delay = self.initial_delay;
 
         for attempt in 0..=self.max_retries {
-            match (self.operation)().await {
+            match (self.b_operation)().await {
                 Ok(result) => return Ok(result),
                 Err(error) => {
                     if attempt == self.max_retries {
@@ -252,10 +262,9 @@ pub struct OptimizedAsyncSemaphore {
     semaphore: tokio::sync::Semaphore,
     max_permits: usize,
 }
-
 impl OptimizedAsyncSemaphore {
     /// Create new optimized semaphore
-    pub fn new(max_permits: usize) -> Self {
+    pub const fn new(max_permits: usize) -> Self {
         Self {
             semaphore: tokio::sync::Semaphore::new(max_permits),
             max_permits,
@@ -271,19 +280,19 @@ impl OptimizedAsyncSemaphore {
     }
 
     /// Try to acquire permit without waiting
-    pub fn try_acquire(&self) -> Option<tokio::sync::SemaphorePermit<'_>> {
+    pub const fn try_acquire(&self) -> Option<tokio::sync::SemaphorePermit<'_>> {
         self.semaphore.try_acquire().ok()
     }
 
     /// Get available permits
-    pub fn available_permits(&self) -> usize {
+    pub const fn available_permits(&self) -> usize {
         self.semaphore.available_permits()
     }
 
     /// Get utilization percentage
-    pub fn utilization_percent(&self) -> f64 {
+    pub const fn utilization_percent(&self) -> f64 {
         let used = self.max_permits - self.semaphore.available_permits();
-        (used as f64 / self.max_permits as f64) * 100.0
+        (f64::from(used) / self.f64::from(max_permits)) * 100.0
     }
 }
 
@@ -297,7 +306,7 @@ mod tests {
         let processor =
             AsyncBatchProcessor::new(10, Duration::from_secs(1), |items: Vec<i32>| async move {
                 Ok::<Vec<i32>, NestGateError>(items.into_iter().map(|x| x * 2).collect())
-            });
+            );
 
         let items: Vec<i32> = (1..=25).collect();
         let results = processor.process_batch(items).await;

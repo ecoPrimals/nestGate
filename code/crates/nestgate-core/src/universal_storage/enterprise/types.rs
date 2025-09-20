@@ -26,7 +26,6 @@ pub struct StorageTarget {
     /// Whether target is active
     pub active: bool,
 }
-
 impl Default for StorageTarget {
     fn default() -> Self {
         Self {
@@ -61,7 +60,6 @@ pub enum StorageTargetType {
     /// Custom storage type
     Custom(String),
 }
-
 impl Default for StorageTargetType {
     fn default() -> Self {
         Self::Local
@@ -86,7 +84,6 @@ pub struct StorageTargetMetadata {
     /// Additional metadata
     pub extra: HashMap<String, String>,
 }
-
 impl Default for StorageTargetMetadata {
     fn default() -> Self {
         let now = SystemTime::now();
@@ -127,7 +124,6 @@ pub struct ReplicationJob {
     /// Last update timestamp
     pub updated_at: SystemTime,
 }
-
 impl Default for ReplicationJob {
     fn default() -> Self {
         let now = SystemTime::now();
@@ -164,7 +160,6 @@ pub enum ReplicationStatus {
     /// Job is paused
     Paused,
 }
-
 impl Default for ReplicationStatus {
     fn default() -> Self {
         Self::Pending
@@ -189,7 +184,6 @@ pub struct ReplicationConfig {
     /// Retry delay
     pub retry_delay: Duration,
 }
-
 impl Default for ReplicationConfig {
     fn default() -> Self {
         Self {
@@ -217,7 +211,6 @@ pub enum ReplicationMode {
     /// Snapshot-based replication
     Snapshot,
 }
-
 impl Default for ReplicationMode {
     fn default() -> Self {
         Self::Incremental
@@ -242,9 +235,7 @@ pub struct ReplicationProgress {
     /// Estimated completion time
     pub estimated_completion: Option<SystemTime>,
     /// Current operation
-    pub current_operation: String,
 }
-
 impl Default for ReplicationProgress {
     fn default() -> Self {
         Self {
@@ -254,7 +245,6 @@ impl Default for ReplicationProgress {
             replicated_files: 0,
             started_at: None,
             estimated_completion: None,
-            current_operation: "Initializing".to_string(),
         }
     }
 }
@@ -281,7 +271,6 @@ pub struct BackupJob {
     /// Job metadata
     pub metadata: HashMap<String, String>,
 }
-
 impl Default for BackupJob {
     fn default() -> Self {
         Self {
@@ -309,7 +298,6 @@ pub struct BackupManifest {
     /// Backup job ID
     pub backup_job_id: String,
     /// Source path
-    pub source_path: String,
     /// Backup timestamp
     pub backup_timestamp: SystemTime,
     /// File entries
@@ -319,14 +307,12 @@ pub struct BackupManifest {
     /// Checksum
     pub checksum: String,
 }
-
 impl Default for BackupManifest {
     fn default() -> Self {
         Self {
             id: "default-manifest".to_string(),
             version: "1.0.0".to_string(),
             backup_job_id: "default-backup-job".to_string(),
-            source_path: "/data".to_string(),
             backup_timestamp: SystemTime::now(),
             file_entries: Vec::new(),
             metadata: HashMap::new(),
@@ -341,7 +327,6 @@ impl Default for BackupManifest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackupFileEntry {
     /// File path
-    pub path: String,
     /// File size in bytes
     pub size: u64,
     /// File modification time
@@ -351,11 +336,9 @@ pub struct BackupFileEntry {
     /// File permissions
     pub permissions: String,
 }
-
 impl Default for BackupFileEntry {
     fn default() -> Self {
         Self {
-            path: "".to_string(),
             size: 0,
             modified_time: SystemTime::now(),
             checksum: "".to_string(),
@@ -388,7 +371,6 @@ pub struct DetailedMetrics {
     /// Additional metrics
     pub metrics: HashMap<String, String>,
 }
-
 impl Default for DetailedMetrics {
     fn default() -> Self {
         Self {
@@ -419,13 +401,11 @@ pub struct OptimizationReport {
     /// Optimization recommendations
     pub recommendations: Vec<String>,
     /// Performance metrics
-    pub performance_metrics: HashMap<String, f64>,
     /// Cost savings estimate
     pub cost_savings_estimate: Option<f64>,
     /// Implementation complexity
     pub complexity_score: u8,
 }
-
 impl Default for OptimizationReport {
     fn default() -> Self {
         Self {
@@ -433,7 +413,6 @@ impl Default for OptimizationReport {
             report_type: "general".to_string(),
             timestamp: SystemTime::now(),
             recommendations: Vec::new(),
-            performance_metrics: HashMap::new(),
             cost_savings_estimate: None,
             complexity_score: 1,
         }
@@ -462,7 +441,6 @@ pub struct DeduplicationReport {
     /// Processing time in milliseconds
     pub processing_time_ms: u64,
 }
-
 impl Default for DeduplicationReport {
     fn default() -> Self {
         Self {
@@ -496,7 +474,6 @@ pub struct TieringReport {
     /// Performance impact assessment
     pub performance_impact: String,
 }
-
 impl Default for TieringReport {
     fn default() -> Self {
         Self {
@@ -516,7 +493,6 @@ impl Default for TieringReport {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TieringRecommendation {
     /// File path or pattern
-    pub path: String,
     /// Current tier
     pub current_tier: String,
     /// Recommended tier
@@ -526,11 +502,9 @@ pub struct TieringRecommendation {
     /// Confidence score (0-100)
     pub confidence: u8,
 }
-
 impl Default for TieringRecommendation {
     fn default() -> Self {
         Self {
-            path: "".to_string(),
             current_tier: "hot".to_string(),
             recommended_tier: "warm".to_string(),
             reason: "low access frequency".to_string(),

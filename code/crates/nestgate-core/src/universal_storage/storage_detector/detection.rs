@@ -1,27 +1,38 @@
-use crate::error::NestGateError;
+// Removed unused import: NestGateError
 //
 // Core detection logic for different storage types.
 
-use crate::{Result};
-use crate::universal_storage::{UnifiedStorageCapability, UnifiedStorageType};
-use super::types::*;
 use super::config::DetectionConfig;
-use std::path::Path;
+use super::types::*;
+use crate::unified_enums::storage_types::{UnifiedStorageCapability, UnifiedStorageType};
+use crate::Result;
 use tokio::fs;
 
 /// Detection engine for various storage types
 pub struct DetectionEngine<'a> {
     config: &'a DetectionConfig,
 }
-
 impl<'a> DetectionEngine<'a> {
     /// Create new detection engine with configuration
-    pub fn new(config: &'a DetectionConfig) -> Self {
+    #[must_use]
+    pub const fn new(config: &'a DetectionConfig) -> Self {
         Self { config }
     }
 
     /// Detect local filesystem mounts
-    pub async fn detect_local_filesystems(&self) -> Result<Vec<DetectedStorage>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn detect_local_filesystems(&self) -> Result<Vec<DetectedStorage>>   {
         let mut filesystems = Vec::new();
 
         #[cfg(target_os = "linux")]
@@ -53,7 +64,21 @@ impl<'a> DetectionEngine<'a> {
     }
 
     /// Detect cloud storage services
-    pub async fn detect_cloud_storage(&self) -> Result<Vec<DetectedStorage>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        #[must_use]
+        pub fn detect_cloud_storage(&self) -> Result<Vec<DetectedStorage>>   {
         if !self.config.enable_cloud_detection {
             return Ok(Vec::new());
         }
@@ -73,7 +98,21 @@ impl<'a> DetectionEngine<'a> {
     }
 
     /// Detect network shares
-    pub async fn detect_network_shares(&self) -> Result<Vec<DetectedStorage>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        #[must_use]
+        pub fn detect_network_shares(&self) -> Result<Vec<DetectedStorage>>   {
         if !self.config.enable_network_detection {
             return Ok(Vec::new());
         }
@@ -93,7 +132,19 @@ impl<'a> DetectionEngine<'a> {
     }
 
     /// Detect block devices
-    pub async fn detect_block_devices(&self) -> Result<Vec<DetectedStorage>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn detect_block_devices(&self) -> Result<Vec<DetectedStorage>>   {
         let mut block_devices = Vec::new();
 
         #[cfg(target_os = "linux")]
@@ -101,7 +152,10 @@ impl<'a> DetectionEngine<'a> {
             if let Ok(devices) = fs::read_dir("/sys/block").await {
                 let mut device_stream = devices;
                 while let Some(entry) = device_stream.next_entry().await? {
-                    if let Some(storage) = self.analyze_block_device(&entry.path()).await? {
+                    if let Some(storage) = self
+                        .analyze_block_device(entry.path().to_str().unwrap_or(""))
+                        .await?
+                    {
                         if storage.available_space >= self.config.minimum_storage_size {
                             block_devices.push(storage);
                         }
@@ -114,7 +168,19 @@ impl<'a> DetectionEngine<'a> {
     }
 
     /// Detect memory-based storage
-    pub async fn detect_memory_storage(&self) -> Result<Vec<DetectedStorage>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn detect_memory_storage(&self) -> Result<Vec<DetectedStorage>>   {
         let mut memory_storage = Vec::new();
 
         // Detect tmpfs mounts
@@ -149,8 +215,10 @@ impl<'a> DetectionEngine<'a> {
             }
         }
 
-        let stats = self.get_filesystem_stats(mount_point).await.unwrap_or_else(|_| {
-            FilesystemStats {
+        let stats = self
+            .get_filesystem_stats(mount_point)
+            .await
+            .unwrap_or_else(|_| FilesystemStats {
                 total_bytes: 0,
                 free_bytes: 0,
                 used_bytes: 0,
@@ -160,13 +228,11 @@ impl<'a> DetectionEngine<'a> {
                 filesystem_type: fs_type.to_string(),
                 mount_point: mount_point.to_string(),
                 device: device.to_string(),
-            }
-        });
+            });
 
         let mut storage = DetectedStorage::new(
             format!("fs_{}", mount_point.replace('/', "_")),
             UnifiedStorageType::Local,
-            mount_point.to_string(),
             format!("{} ({})", mount_point, fs_type),
         );
 
@@ -227,7 +293,7 @@ impl<'a> DetectionEngine<'a> {
         Ok(Vec::new())
     }
 
-    async fn analyze_block_device(&self, _device_path: &Path) -> Result<Option<DetectedStorage>> {
+    async fn analyze_block_device(&self, _device: &str) -> Result<Option<DetectedStorage>> {
         // Placeholder for block device analysis
         Ok(None)
     }
@@ -258,15 +324,15 @@ impl<'a> DetectionEngine<'a> {
     async fn get_filesystem_stats(&self, _mount_point: &str) -> Result<FilesystemStats> {
         // Placeholder implementation - would use system calls in real implementation
         Ok(FilesystemStats {
-            total_bytes: 1000000000, // 1GB
-            free_bytes: 500000000,   // 500MB
-            used_bytes: 500000000,   // 500MB
+            total_bytes: 1_000_000_000, // 1GB
+            free_bytes: 500_000_000,   // 500MB
+            used_bytes: 500_000_000,   // 500MB
             usage_percent: 50.0,
-            inode_total: 100000,
+            inode_total: 100_000,
             inode_free: 50000,
             filesystem_type: "ext4".to_string(),
             mount_point: "/".to_string(),
             device: "/dev/sda1".to_string(),
         })
     }
-} 
+}

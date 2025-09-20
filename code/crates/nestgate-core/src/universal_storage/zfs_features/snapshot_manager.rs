@@ -18,8 +18,8 @@ pub struct SnapshotManager {
     config: SnapshotConfig,
     snapshots: SnapshotMetadataMap,
 }
-
 impl SnapshotManager {
+    #[must_use]
     pub fn new(config: SnapshotConfig) -> Self {
         Self {
             config,
@@ -28,7 +28,7 @@ impl SnapshotManager {
     }
 
     /// Get the current configuration
-    pub fn config(&self) -> &SnapshotConfig {
+    pub const fn config(&self) -> &SnapshotConfig {
         &self.config
     }
 
@@ -43,11 +43,23 @@ impl SnapshotManager {
     }
 
     /// Create a new snapshot
-    pub async fn create_snapshot(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub const fn create_snapshot(
         &self,
         dataset: &str,
-        snapshot_name: &str,
-    ) -> Result<SnapshotId, crate::NestGateError> {
+        _snapshot_name: &str,
+    ) -> Result<SnapshotId, crate::NestGateError>   {
         let snapshot_id = SnapshotId(format!("{dataset}@{snapshot_name}"));
         let metadata = SnapshotMetadata {
             id: snapshot_id.clone(),
@@ -62,10 +74,22 @@ impl SnapshotManager {
     }
 
     /// List snapshots for a dataset
-    pub async fn list_snapshots_for_dataset(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn list_snapshots_for_dataset(
         &self,
         dataset: &str,
-    ) -> Result<Vec<SnapshotMetadata>, crate::NestGateError> {
+    ) -> Result<Vec<SnapshotMetadata>, crate::NestGateError>   {
         let snapshots = self.snapshots.read().await;
         let dataset_pattern = format!("{dataset}@");
         let dataset_snapshots: Vec<SnapshotMetadata> = snapshots
@@ -77,20 +101,44 @@ impl SnapshotManager {
     }
 
     /// Delete a snapshot
-    pub async fn delete_snapshot(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn delete_snapshot(
         &self,
         snapshot_id: &SnapshotId,
-    ) -> Result<(), crate::NestGateError> {
+    ) -> Result<(), crate::NestGateError>   {
         self.snapshots.write().await.remove(&snapshot_id.0);
         Ok(())
     }
 
     /// Create a clone from a snapshot
-    pub async fn create_clone(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub const fn create_clone(
         &self,
         snapshot_id: &SnapshotId,
         clone_name: &str,
-    ) -> Result<(), crate::NestGateError> {
+    ) -> Result<(), crate::NestGateError>   {
         // Placeholder implementation - would create actual ZFS clone
         tracing::info!(
             "Creating clone '{}' from snapshot '{}'",

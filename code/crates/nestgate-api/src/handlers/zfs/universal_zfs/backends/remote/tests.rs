@@ -1,3 +1,18 @@
+// **LOCALHOST HARDCODING DEPRECATION NOTICE**
+//!
+//! ⚠️  DEPRECATION WARNING: This file contains hardcoded localhost patterns
+//! that are being migrated to dynamic endpoint resolution.
+//!
+//! **MIGRATION STATUS**: 🔄 FINAL CLEANUP PHASE
+//! **TARGET**: Replace with environment-driven endpoint resolution
+//! **TIMELINE**: Immediate migration recommended
+//!
+//! **MIGRATION PATTERN**:
+//! ```rust
+//! // OLD: "http://localhost:8080"
+//! // NEW: resolve_service_endpoint("api").await.unwrap_or_else(|_| build_api_url())
+//! ```
+
 //
 // This module provides comprehensive tests for the remote ZFS service implementation,
 // including connection management, error handling, and service discovery.
@@ -10,10 +25,10 @@ use tokio::test;
 
 /// Test RemoteZfsService creation and connection
 #[test]
-async fn test_remote_service_creation() {
+fn test_remote_service_creation() -> Result<(), Box<dyn std::error::Error>> {
     // Test successful connection
-    let endpoint = "http://localhost:8080";
-
+    let endpoint = "http://localhost:".to_string()
+        + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string());
     // Note: This would require a mock server in a real test environment
     // For now, we test the error handling path
     let config = RemoteConfig {
@@ -25,27 +40,31 @@ async fn test_remote_service_creation() {
 
     // Should handle connection errors gracefully
     assert!(!service.service_name().is_empty());
+    Ok(())
 }
 
 /// Test connection management
 #[test]
-async fn test_connection_management() {
+fn test_connection_management() -> Result<(), Box<dyn std::error::Error>> {
     // Note: ConnectionManager is a placeholder for future implementation
     // Testing basic configuration structure for now
-
     let config = RemoteConfig {
-        endpoint: "http://localhost:8080".to_string(),
+        endpoint: "http://localhost:".to_string()
+            + &env::var("NESTGATE_API_PORT")
+                .unwrap_or_else(|_| "8080".to_string())
+                .to_string(),
         timeout: Duration::from_secs(30),
         max_retries: 3,
     };
 
     let service = RemoteZfsService::new(config);
     assert!(!service.service_name().is_empty());
+    Ok(())
 }
 
 /// Test connection statistics
 #[test]
-async fn test_connection_statistics() {
+fn test_connection_statistics() -> Result<(), Box<dyn std::error::Error>> {
     let stats = ConnectionStats {
         total_requests: 100,
         successful_requests: 95,
@@ -54,19 +73,18 @@ async fn test_connection_statistics() {
         last_error: None,
         consecutive_failures: 0,
     };
-
     assert_eq!(stats.total_requests, 100);
     assert_eq!(stats.successful_requests, 95);
     assert!(stats.average_response_time < Duration::from_millis(200));
+    Ok(())
 }
 
 /// Test connection error handling
 #[test]
-async fn test_connection_errors() {
+fn test_connection_errors() -> Result<(), Box<dyn std::error::Error>> {
     // Test timeout error
     let timeout_error = ConnectionError::Timeout("Request timed out".to_string());
     assert!(matches!(timeout_error, ConnectionError::Timeout(_)));
-
     // Test network error
     let network_error = ConnectionError::Network("Connection refused".to_string());
     assert!(matches!(network_error, ConnectionError::Network(_)));
@@ -74,82 +92,84 @@ async fn test_connection_errors() {
     // Test authentication error
     let auth_error = ConnectionError::Auth("Invalid credentials".to_string());
     assert!(matches!(auth_error, ConnectionError::Auth(_)));
+    Ok(())
 }
 
 /// Test circuit breaker functionality
 #[test]
-async fn test_circuit_breaker() {
+fn test_circuit_breaker() -> Result<(), Box<dyn std::error::Error>> {
     let config = ConnectionConfig {
         max_connections: 10,
         connection_timeout: Duration::from_secs(30),
         retry_attempts: 3,
         health_check_interval: Duration::from_secs(60),
     };
-
     let manager = ConnectionManager::new(config);
 
     // Test that circuit breaker prevents excessive failures
     for _ in 0..5 {
         // Simulate failed connection attempts
         // In a real implementation, this would trigger circuit breaker
+    Ok(())
     }
 
     // Circuit breaker should be open after multiple failures
     // This is a placeholder for actual circuit breaker logic
     assert!(true); // Placeholder assertion
+    Ok(())
 }
 
 /// Test health checking
 #[test]
-async fn test_health_checking() {
+fn test_health_checking() -> Result<(), Box<dyn std::error::Error>> {
     let config = ConnectionConfig {
         max_connections: 10,
         connection_timeout: Duration::from_secs(30),
         retry_attempts: 3,
         health_check_interval: Duration::from_secs(5), // Short interval for testing
     };
-
     let manager = ConnectionManager::new(config);
 
     // Test health check configuration
     assert_eq!(manager.health_check_interval(), Duration::from_secs(5));
+    Ok(())
 }
 
 /// Test retry logic
 #[test]
-async fn test_retry_logic() {
+fn test_retry_logic() -> Result<(), Box<dyn std::error::Error>> {
     let config = ConnectionConfig {
         max_connections: 10,
         connection_timeout: Duration::from_secs(30),
         retry_attempts: 3,
         health_check_interval: Duration::from_secs(60),
     };
-
     // Test that retry attempts are configured correctly
     assert_eq!(config.retry_attempts, 3);
     assert!(config.connection_timeout > Duration::from_secs(0));
+    Ok(())
 }
 
 /// Test connection pooling
 #[test]
-async fn test_connection_pooling() {
+fn test_connection_pooling() -> Result<(), Box<dyn std::error::Error>> {
     let config = ConnectionConfig {
         max_connections: 5,
         connection_timeout: Duration::from_secs(30),
         retry_attempts: 3,
         health_check_interval: Duration::from_secs(60),
     };
-
     let manager = ConnectionManager::new(config);
 
     // Test connection pool limits
     assert_eq!(manager.max_connections(), 5);
     assert_eq!(manager.active_connections(), 0);
+    Ok(())
 }
 
 /// Test error recovery
 #[test]
-async fn test_error_recovery() {
+fn test_error_recovery() -> Result<(), Box<dyn std::error::Error>> {
     let mut stats = ConnectionStatistics {
         total_requests: 10,
         successful_requests: 5,
@@ -158,7 +178,6 @@ async fn test_error_recovery() {
         last_error: Some("Network error".to_string()),
         consecutive_failures: 3,
     };
-
     // Test that statistics track failures correctly
     assert_eq!(stats.consecutive_failures, 3);
     assert!(stats.last_error.is_some());
@@ -171,28 +190,30 @@ async fn test_error_recovery() {
 
     assert_eq!(stats.consecutive_failures, 0);
     assert!(stats.last_error.is_none());
+    Ok(())
 }
 
 /// Integration test for remote service operations
 #[test]
-async fn test_remote_service_operations() {
+fn test_remote_service_operations() -> Result<(), Box<dyn std::error::Error>> {
     // This would be a comprehensive integration test
     // Testing actual ZFS operations through the remote service
-
     // For now, we test the interface compliance
     // In a real environment, this would connect to a test ZFS service
 
-    let endpoint = "http://test-zfs-service:8080";
+    let endpoint =
+        get_service_endpoint("api").unwrap_or_else(|_| "http://localhost:8080".to_string());
 
     // Test that the service interface is properly defined
     // This ensures our remote service implements the required traits
     assert!(endpoint.starts_with("http"));
     assert!(endpoint.contains("test-zfs-service"));
+    Ok(())
 }
 
 /// Test configuration validation
 #[test]
-async fn test_configuration_validation() {
+fn test_configuration_validation() -> Result<(), Box<dyn std::error::Error>> {
     // Test valid configuration
     let valid_config = ConnectionConfig {
         max_connections: 10,
@@ -200,23 +221,22 @@ async fn test_configuration_validation() {
         retry_attempts: 3,
         health_check_interval: Duration::from_secs(60),
     };
-
     assert!(valid_config.max_connections > 0);
     assert!(valid_config.connection_timeout > Duration::from_secs(0));
     assert!(valid_config.retry_attempts > 0);
     assert!(valid_config.health_check_interval > Duration::from_secs(0));
+    Ok(())
 }
 
 /// Test concurrent connections
 #[test]
-async fn test_concurrent_connections() {
+fn test_concurrent_connections() -> Result<(), Box<dyn std::error::Error>> {
     let config = ConnectionConfig {
         max_connections: 3,
         connection_timeout: Duration::from_secs(30),
         retry_attempts: 3,
         health_check_interval: Duration::from_secs(60),
     };
-
     let manager = ConnectionManager::new(config);
 
     // Test that connection manager handles concurrency properly
@@ -225,6 +245,7 @@ async fn test_concurrent_connections() {
     // In a real test, we would spawn multiple tasks to test concurrent access
     // This is a placeholder for that functionality
     assert!(manager.active_connections() <= manager.max_connections());
+    Ok(())
 }
 
 #[cfg(test)]
@@ -232,11 +253,12 @@ mod integration_tests {
 
     /// Test full remote service lifecycle
     #[tokio::test]
-    async fn test_service_lifecycle() {
+    async fn test_service_lifecycle() -> Result<(), Box<dyn std::error::Error>> {
         // Test service creation, operation, and cleanup
         // This would be implemented with a mock ZFS service
 
-        let endpoint = "http://mock-service:8080";
+        let endpoint =
+            get_service_endpoint("api").unwrap_or_else(|_| "http://localhost:8080".to_string());
 
         // Verify endpoint format
         assert!(endpoint.starts_with("http"));
@@ -244,13 +266,14 @@ mod integration_tests {
         // Test connection configuration
         let config = ConnectionConfig::default();
         assert!(config.max_connections > 0);
+    Ok(())
     }
 
     /// Test error scenarios
     #[tokio::test]
-    async fn test_error_scenarios() {
+    async fn test_error_scenarios() -> Result<(), Box<dyn std::error::Error>> {
         // Test various error conditions
-        let errors = vec![
+        let _errors = vec![
             ConnectionError::Timeout("Test timeout".to_string()),
             ConnectionError::Network("Test network error".to_string()),
             ConnectionError::Auth("Test auth error".to_string()),
@@ -263,7 +286,11 @@ mod integration_tests {
                 ConnectionError::Network(_) => assert!(true),
                 ConnectionError::Auth(_) => assert!(true),
                 _ => assert!(false, "Unexpected error type"),
+    Ok(())
             }
+    Ok(())
         }
+    Ok(())
     }
+    Ok(())
 }

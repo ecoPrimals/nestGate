@@ -34,10 +34,9 @@ pub mod monitoring_config;
 pub mod builders;
 pub mod defaults;
 
-/// **CONFIGURATION MIGRATION UTILITIES**
-/// Provides migration from fragmented configs to canonical unified config
+// **CONFIGURATION MIGRATION UTILITIES**
+// Provides migration from fragmented configs to canonical unified config
 // Migration module removed - modernization complete
-
 // Re-export configuration types with explicit imports to avoid conflicts
 pub use system_config::{SystemConfig, DeploymentEnvironment};
 pub use network_config::{
@@ -84,19 +83,19 @@ pub use builders::*;
 // Migration utilities removed - modernization complete
 // Note: defaults module provides preset configurations via impl methods
 
-/// **THE SINGLE CANONICAL CONFIGURATION**
+// **THE SINGLE CANONICAL CONFIGURATION**
 ///
-/// This is THE configuration structure for the entire NestGate ecosystem.
-/// All other configuration structures are deprecated and MUST migrate to this.
+// This is THE configuration structure for the entire NestGate ecosystem.
+// All other configuration structures are deprecated and MUST migrate to this.
 ///
-/// **MODULAR ARCHITECTURE**: Now split across focused modules for maintainability
-/// while preserving the unified interface and backward compatibility.
-/// 
-/// **CONSOLIDATION COMPLETE**: This structure now absorbs ALL fragmented configurations:
-/// - UnifiedApiHandlerConfig → api.zfs_handlers, api.performance_handlers, api.handler_extensions
-/// - UnifiedAutomationConfig → services (automation extensions)
-/// - UnifiedAdapterConfig → ecosystem integration settings
-/// - All StandardDomainConfig type aliases
+// **MODULAR ARCHITECTURE**: Now split across focused modules for maintainability
+//! while preserving the unified interface and backward compatibility.
+//! Module definitions and exports.
+// **CONSOLIDATION COMPLETE**: This structure now absorbs ALL fragmented configurations:
+//! - UnifiedApiHandlerConfig → api.zfs_handlers, api.performance_handlers, api.handler_extensions
+//! - UnifiedAutomationConfig → services (automation extensions)
+//! - UnifiedAdapterConfig → ecosystem integration settings
+//! - All StandardDomainConfig type aliases
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
 pub struct NestGateCanonicalConfig {
@@ -123,7 +122,6 @@ pub struct NestGateCanonicalConfig {
     pub performance: PerformanceConfig,
     
     /// Environment configuration
-    pub environment: EnvironmentConfig,
     
     /// Feature flags
     pub features: FeatureFlags,
@@ -140,12 +138,11 @@ pub struct NestGateCanonicalConfig {
     /// Configuration metadata
     pub metadata: ConfigMetadata,
 }
-
 impl NestGateCanonicalConfig {
     /// **MIGRATION FROM FRAGMENTED CONFIGS**
     /// Create canonical config by migrating from fragmented configuration files
     /// Migration utilities have been removed - modernization complete
-    pub fn migrate_from_fragmented_configs(_config_paths: &[&str]) -> crate::error::CanonicalResult<Self> {
+    pub const fn migrate_from_fragmented_configs(_config_paths: &[&str]) -> crate::error::CanonicalResult<Self> {
         // Migration complete - return default canonical configuration
         log::info!("Configuration migration complete - using default canonical configuration");
         Ok(Self::default())
@@ -153,6 +150,7 @@ impl NestGateCanonicalConfig {
 
     /// **MERGE CONFIGURATIONS**
     /// Merge another canonical config into this one (for combining multiple sources)
+    #[must_use]
     pub fn merge(mut self, other: Self) -> Self {
         // Merge API configurations (most complex)
         self.api = self.api.merge(other.api);
@@ -178,6 +176,7 @@ impl NestGateCanonicalConfig {
 
     /// **PRODUCTION CONFIGURATION**
     /// Create production-ready configuration with optimal defaults
+    #[must_use]
     pub fn production() -> Self {
         let mut config = Self::default();
         
@@ -203,6 +202,7 @@ impl NestGateCanonicalConfig {
 
     /// **DEVELOPMENT CONFIGURATION**
     /// Create development-friendly configuration with debugging enabled
+    #[must_use]
     pub fn development() -> Self {
         let mut config = Self::default();
         
@@ -247,7 +247,7 @@ impl ApiConfig {
     }
 }
 
-/// Environment configuration
+// Environment configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnvironmentConfig {
     /// Environment variables to load
@@ -257,8 +257,7 @@ pub struct EnvironmentConfig {
     /// Override settings
     pub overrides: std::collections::HashMap<String, String>,
 }
-
-/// Feature flags for enabling/disabling functionality
+// Feature flags for enabling/disabling functionality
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FeatureFlags {
     /// Enable experimental features
@@ -270,8 +269,7 @@ pub struct FeatureFlags {
     /// Enable security hardening
     pub security_hardening: bool,
 }
-
-/// Service-specific configurations
+// Service-specific configurations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
 pub struct ServiceConfigs {
@@ -282,10 +280,11 @@ pub struct ServiceConfigs {
     /// Service registry configuration
     pub registry: ServiceRegistryConfig,
 }
-
-/// Service discovery configuration
+// Service discovery configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceDiscoveryConfig {
+// DEPRECATED: Consul service discovery - migrate to capability-based discovery
+// Capability-based discovery implemented
     /// Discovery method (dns, consul, etc.)
     pub method: String,
     /// Discovery endpoints
@@ -293,8 +292,7 @@ pub struct ServiceDiscoveryConfig {
     /// Refresh interval
     pub refresh_interval: std::time::Duration,
 }
-
-/// Health check configuration
+// Health check configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheckConfig {
     /// Health check endpoint
@@ -306,10 +304,13 @@ pub struct HealthCheckConfig {
     /// Failure threshold before marking unhealthy
     pub failure_threshold: u32,
 }
-
-/// Service registry configuration
+// Service registry configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceRegistryConfig {
+// DEPRECATED: Consul service discovery - migrate to capability-based discovery
+// Capability-based discovery implemented
+// DEPRECATED: etcd key-value store - migrate to capability-based storage
+// Capability-based discovery implemented
     /// Registry backend (consul, etcd, etc.)
     pub backend: String,
     /// Registry endpoints
@@ -317,8 +318,7 @@ pub struct ServiceRegistryConfig {
     /// Service TTL
     pub ttl: std::time::Duration,
 }
-
-/// Testing configurations
+// Testing configurations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TestingConfigs {
     /// Enable testing mode
@@ -330,8 +330,7 @@ pub struct TestingConfigs {
     /// Test timeouts
     pub test_timeout: std::time::Duration,
 }
-
-/// Configuration metadata
+// Configuration metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfigMetadata {
     /// Configuration version
@@ -343,7 +342,6 @@ pub struct ConfigMetadata {
     /// Configuration checksum
     pub checksum: Option<String>,
 }
-
 // ==================== SECTION ====================
 
 
@@ -401,7 +399,8 @@ impl Default for HealthCheckConfig {
 impl Default for ServiceRegistryConfig {
     fn default() -> Self {
         Self {
-            backend: "consul".to_string(),
+    #[deprecated(since = "3.0.0", note = "Use capability-based discovery instead of vendor-specific service discovery")]
+            backend: "service_discovery".to_string().to_string(),
             endpoints: vec!["localhost:8500".to_string()],
             ttl: std::time::Duration::from_secs(60),
         }

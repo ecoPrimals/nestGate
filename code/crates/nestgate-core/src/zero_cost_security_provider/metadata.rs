@@ -4,7 +4,6 @@
 ///
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
-
 /// **Zero-cost security provider metadata**
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostSecurityMetadata {
@@ -27,7 +26,6 @@ pub struct ZeroCostSecurityMetadata {
     /// Security certifications
     pub certifications: Vec<String>,
 }
-
 impl Default for ZeroCostSecurityMetadata {
     fn default() -> Self {
         Self {
@@ -82,7 +80,6 @@ pub struct SecurityCapabilities {
     /// Supports zero-knowledge proofs
     pub zero_knowledge_proofs: bool,
 }
-
 impl Default for SecurityCapabilities {
     fn default() -> Self {
         Self {
@@ -118,7 +115,6 @@ pub struct PerformanceCharacteristics {
     /// CPU usage percentage
     pub cpu_usage_percent: f64,
 }
-
 impl Default for PerformanceCharacteristics {
     fn default() -> Self {
         Self {
@@ -138,7 +134,7 @@ impl Default for PerformanceCharacteristics {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityProviderHealth {
     /// Overall health status
-    pub status: HealthStatus,
+    pub status: String,
     /// Health check timestamp
     pub timestamp: SystemTime,
     /// Active sessions count
@@ -156,13 +152,11 @@ pub struct SecurityProviderHealth {
     /// Security events count
     pub security_events: u64,
     /// Key rotation status
-    pub key_rotation_status: KeyRotationStatus,
+    pub key_rotation_count: u64,
 }
-
 impl Default for SecurityProviderHealth {
     fn default() -> Self {
         Self {
-            status: HealthStatus::Healthy,
             timestamp: SystemTime::now(),
             active_sessions: 0,
             total_authentications: 0,
@@ -171,7 +165,8 @@ impl Default for SecurityProviderHealth {
             avg_response_time_ms: 10.0,
             last_authentication: None,
             security_events: 0,
-            key_rotation_status: KeyRotationStatus::Current,
+            key_rotation_count: 0,
+            status: "healthy".to_string(),
         }
     }
 }
@@ -190,15 +185,16 @@ pub enum HealthStatus {
     /// Provider status is unknown
     Unknown,
 }
-
 impl HealthStatus {
     /// Check if the status indicates a healthy provider
-    pub fn is_healthy(&self) -> bool {
-        matches!(self, HealthStatus::Healthy)
+    #[must_use]
+    pub const fn is_healthy(&self) -> bool {
+        matches!(self, Self::Healthy)
     }
 
     /// Check if the status indicates an operational provider
-    pub fn is_operational(&self) -> bool {
+    #[must_use]
+    pub const fn is_operational(&self) -> bool {
         matches!(
             self,
             HealthStatus::Healthy | HealthStatus::Warning | HealthStatus::Degraded
@@ -206,7 +202,8 @@ impl HealthStatus {
     }
 
     /// Get status as string
-    pub fn as_str(&self) -> &'static str {
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
         match self {
             HealthStatus::Healthy => "healthy",
             HealthStatus::Warning => "warning",
@@ -231,18 +228,19 @@ pub enum KeyRotationStatus {
     /// Key rotation failed
     Failed,
 }
-
 impl KeyRotationStatus {
     /// Check if keys are valid for use
-    pub fn is_valid(&self) -> bool {
+    #[must_use]
+    pub const fn is_valid(&self) -> bool {
         matches!(
             self,
-            KeyRotationStatus::Current | KeyRotationStatus::Expiring | KeyRotationStatus::Rotating
+            Self::Current | Self::Expiring | Self::Rotating
         )
     }
 
     /// Check if immediate action is required
-    pub fn requires_action(&self) -> bool {
+    #[must_use]
+    pub const fn requires_action(&self) -> bool {
         matches!(self, KeyRotationStatus::Expired | KeyRotationStatus::Failed)
     }
 }
@@ -263,7 +261,6 @@ pub struct SecurityProviderMetrics {
     /// Security metrics
     pub security: SecurityMetrics,
 }
-
 impl Default for SecurityProviderMetrics {
     fn default() -> Self {
         Self {
@@ -293,7 +290,6 @@ pub struct AuthenticationMetrics {
     /// Peak authentication rate (per second)
     pub peak_auth_rate: f64,
 }
-
 impl Default for AuthenticationMetrics {
     fn default() -> Self {
         Self {
@@ -327,7 +323,6 @@ pub struct EncryptionMetrics {
     /// Total bytes decrypted
     pub total_bytes_decrypted: u64,
 }
-
 impl Default for EncryptionMetrics {
     fn default() -> Self {
         Self {
@@ -359,7 +354,6 @@ pub struct SigningMetrics {
     /// Average verification time (ms)
     pub avg_verification_time_ms: f64,
 }
-
 impl Default for SigningMetrics {
     fn default() -> Self {
         Self {
@@ -389,7 +383,6 @@ pub struct PerformanceMetrics {
     /// Average response time (ms)
     pub avg_response_time_ms: f64,
 }
-
 impl Default for PerformanceMetrics {
     fn default() -> Self {
         Self {
@@ -419,34 +412,47 @@ pub struct SecurityMetrics {
     /// Compliance violations
     pub compliance_violations: u64,
 }
-
 impl ZeroCostSecurityMetadata {
     /// Check if authentication method is supported
-    pub fn supports_auth_method(&self, method: &str) -> bool {
+    #[must_use]
+    pub const fn supports_auth_method(&self, method: &str) -> bool {
         self.supported_auth_methods.contains(&method.to_string())
     }
 
     /// Check if encryption algorithm is supported
-    pub fn supports_encryption(&self, algorithm: &str) -> bool {
+    #[must_use]
+    pub const fn supports_encryption(&self, algorithm: &str) -> bool {
         self.supported_encryption.contains(&algorithm.to_string())
     }
 
     /// Check if signing algorithm is supported
-    pub fn supports_signing(&self, algorithm: &str) -> bool {
+    #[must_use]
+    pub const fn supports_signing(&self, algorithm: &str) -> bool {
         self.supported_signing.contains(&algorithm.to_string())
     }
 
     /// Get compliance level
-    pub fn compliance_level(&self) -> &str {
+    #[must_use]
+    pub const fn compliance_level(&self) -> &str {
         &self.compliance_level
     }
 
     /// Check if provider meets compliance requirements
-    pub fn meets_compliance(&self, required_level: &str) -> bool {
-        matches!(
-            (self.compliance_level.as_str(), required_level),
-            ("enterprise", _) | ("professional", "basic" | "professional") | ("basic", "basic")
-        )
+    #[must_use]
+    pub const fn meets_compliance(&self, required_level: &str) -> bool {
+        match (self.compliance_level.as_str(), required_level) {
+            // Government compliance requires explicit government level
+            (level, "government") => level == "government",
+            // Enterprise can satisfy enterprise, professional, and basic
+            ("enterprise", "enterprise" | "professional" | "basic") => true,
+            // Professional can satisfy professional and basic
+            ("professional", "professional" | "basic") => true,
+            // Basic can only satisfy basic
+            ("basic", "basic") => true,
+            // Government can satisfy any level including government
+            ("government", _) => true,
+            _ => false,
+        }
     }
 }
 

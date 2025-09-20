@@ -7,7 +7,6 @@ use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
 /// **CANONICAL PERFORMANCE CONFIGURATION**
 /// Replaces: PerformanceConfig, MetricsConfig, MonitoringConfig, AlertsConfig,
 /// BenchmarkConfig, and 8+ other performance config structures
@@ -28,7 +27,6 @@ pub struct CanonicalPerformanceConfig {
     /// Environment-specific overrides
     pub environment_overrides: HashMap<String, serde_json::Value>,
 }
-
 impl CanonicalDomainConfig for CanonicalPerformanceConfig {
     fn domain() -> &'static str {
         "performance"

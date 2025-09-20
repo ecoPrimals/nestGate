@@ -1,5 +1,6 @@
 // use crate::universal_storage::ConflictResolution; // Module doesn't exist
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ConflictResolution {
@@ -8,85 +9,63 @@ pub enum ConflictResolution {
     Skip,
     PreferNewest,
 } // Stub for compilation
+use crate::unified_enums::{UnifiedFileType, UnifiedTierType};
 /// Synchronization Service Implementation
 /// Provides robust file and data synchronization with delta compression,
 /// deduplication, and configurable conflict resolution strategies.
-use std::path::PathBuf;
 use std::time::{Duration, SystemTime};
-
-use crate::unified_enums::{UnifiedFileType, UnifiedTierType};
 
 // This eliminates error type fragmentation in favor of the unified approach
 use crate::error::NestGateError;
 
 /// **UNIFIED** Sync Error creation utilities
-/// Replaces the local SyncError enum with NestGateError-based functions
+/// Replaces the local `SyncError` enum with NestGateError-based functions
 pub struct SyncErrors;
-
 impl SyncErrors {
     /// Create IO error with sync context
-    pub fn io_error(error: std::io::Error) -> NestGateError {
-        NestGateError::System {
-            message: format!("Sync IO error: {error}"),
-            operation: "sync_io".to_string(),
-            resource: Some("FileSystem".to_string()),
-            utilization: None,
-            retryable: true,
-            context: None,
-        }
+    #[must_use]
+    pub const fn io_error(error: std::io::Error) -> NestGateError {
+        NestGateError::internal_error(format!("Sync IO error: {error}"), "sync_service")
     }
 
     /// Create configuration error
-    pub fn config_error(message: impl Into<String>) -> NestGateError {
-        NestGateError::configuration_error(message.into())
+    pub const fn config_error(message: impl Into<String>) -> NestGateError {
+        NestGateError::configuration_error("sync_config", &message.into())
     }
 
     /// Create conflict error with resolution guidance
-    pub fn conflict_error(message: impl Into<String>) -> NestGateError {
-        NestGateError::invalid_input(
-            format!("Sync conflict: {}", message.into()),
-        )
+    pub const fn conflict_error(message: impl Into<String>) -> NestGateError {
+        NestGateError::validation_error(&format!("Sync conflict: ", message.into()))
     }
 
     /// Create timeout error
-    pub fn timeout_error() -> NestGateError {
-        NestGateError::timeout_error(
-            "Sync operation timed out",
-            std::time::Duration::from_millis(30000),
-        )
+    #[must_use]
+    pub const fn timeout_error() -> NestGateError {
+        NestGateError::timeout_error("sync_operation", std::time::Duration::from_millis(30000))
     }
 
     /// Create checksum mismatch error
-    pub fn checksum_mismatch() -> NestGateError {
-        NestGateError::invalid_input(
-            "checksum".to_string(),
-            "File checksum verification failed".to_string(),
-        )
+    #[must_use]
+    pub const fn checksum_mismatch() -> NestGateError {
+        NestGateError::validation_error("File checksum verification failed ")
     }
 
     /// Create invalid path error
-    pub fn invalid_path(path: impl Into<String>) -> NestGateError {
+    pub fn invalid_path<P: Into<String>>(path: P) -> NestGateError {
         let path_str = path.into();
-        NestGateError::invalid_input(format!("Invalid sync path: {path_str}"))
+        NestGateError::validation_error(&format!("Invalid sync path: {path_str}"))
     }
 
     /// Create service unavailable error
-    pub fn service_unavailable() -> NestGateError {
-        NestGateError::System {
-            message: "Sync service is not available".to_string(),
-            operation: "service_availability_check".to_string(),
-            resource: Some("Network".to_string()),
-            utilization: None,
-            retryable: true,
-            context: None,
-        }
+    #[must_use]
+    pub const fn service_unavailable() -> NestGateError {
+        NestGateError::internal_error("Sync service is not available", "sync_service")
     }
 }
 
 /// File metadata for synchronization
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SyncFileInfo {
-    pub path: PathBuf,
     pub size: u64,
     pub modified: SystemTime,
     pub checksum: String,
@@ -94,7 +73,6 @@ pub struct SyncFileInfo {
     pub permissions: u32,
     pub tier: UnifiedTierType,
 }
-
 /// Sync operation types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SyncOperation {
@@ -103,7 +81,6 @@ pub enum SyncOperation {
     Delete(PathBuf),
     Move { from: PathBuf, to: PathBuf },
 }
-
 /// Conflict resolution strategies
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ConflictResolutionStrategy {
@@ -114,18 +91,15 @@ pub enum ConflictResolutionStrategy {
     Manual,
     BackupBoth,
 }
-
 /// Sync conflict information
 #[derive(Debug, Clone)]
 pub struct SyncConflict {
-    pub path: PathBuf,
     pub local_info: SyncFileInfo,
     pub remote_info: SyncFileInfo,
     pub strategy: ConflictResolutionStrategy,
     pub resolved: bool,
     pub created_at: SystemTime,
 }
-
 /// File change type for change detection
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum FileChangeType {
@@ -134,20 +108,16 @@ pub enum FileChangeType {
     Deleted,
     Moved(PathBuf),
 }
-
 /// Change detection event
 #[derive(Debug, Clone)]
 pub struct FileChangeEvent {
-    pub path: PathBuf,
     pub change_type: FileChangeType,
     pub timestamp: SystemTime,
     pub enabled: bool,
 }
-
 /// **UNIFIED** Sync Configuration using canonical config pattern
-/// Consolidates DeltaSyncConfig, SyncSessionConfig, and SyncServiceConfig into unified approach
+/// Consolidates `DeltaSyncConfig`, `SyncSessionConfig`, and `SyncServiceConfig` into unified approach
 pub type UnifiedSyncConfig = crate::config::canonical_master::NestGateCanonicalConfig;
-
 /// Sync-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -159,7 +129,6 @@ pub struct SyncExtensions {
     /// Service-level settings
     pub service: SyncServiceSettings,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeltaSyncSettings {
     pub enable_compression: bool,
@@ -225,7 +194,6 @@ pub enum ChecksumAlgorithm {
     #[default]
     Blake3,
 }
-
 /// Sync service statistics
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SyncServiceStats {

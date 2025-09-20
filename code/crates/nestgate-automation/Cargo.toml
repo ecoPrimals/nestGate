@@ -3,34 +3,47 @@ name = "nestgate-automation"
 version = "0.1.0"
 edition = "2021"
 description = "Intelligent automation and ecosystem integration for NestGate storage management"
-license = "AGPL-3.0-or-later"
+license = "AGPL-3.0-only"
 repository = "https://github.com/strandgeek/nestgate"
-keywords = ["zfs", "automation", "ai", "storage", "tier-management"]
+keywords = [ "zfs", "automation", "ai", "storage", "tier-management",]
+readme = "README.md"
+categories = [ "development-tools", "automation",]
 
 [features]
-default = ["network-integration"]
-network-integration = ["reqwest", "uuid"]
+default = [ "network-integration",]
+network-integration = [ "reqwest", "uuid",]
 
 [dependencies]
-# Core dependencies
-nestgate-core = { path = "../nestgate-core" }
-serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-tokio = { version = "1.0", features = ["full"] }
 tracing = "0.1"
-chrono = { version = "0.4", features = ["serde"] }
-uuid = { version = "1.0", optional = true }
-
-# Network integration
-reqwest = { version = "0.11", features = ["json"], optional = true }
-
-# Async utilities
 futures = "0.3"
-
-# Error handling
 thiserror = "1.0"
 anyhow = "1.0"
 
 [dev-dependencies]
 tokio-test = "0.4"
-tempfile = "3.0" 
+tempfile = "3.0"
+
+[dependencies.nestgate-core]
+path = "../nestgate-core"
+
+[dependencies.serde]
+version = "1.0"
+features = [ "derive",]
+
+[dependencies.tokio]
+version = "1.0"
+features = [ "full",]
+
+[dependencies.chrono]
+version = "0.4"
+features = [ "serde",]
+
+[dependencies.uuid]
+version = "1.0"
+optional = true
+
+[dependencies.reqwest]
+version = "0.11"
+features = [ "json",]
+optional = true

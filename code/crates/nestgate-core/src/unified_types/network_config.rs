@@ -1,3 +1,5 @@
+use super::retry_config::UnifiedRetryConfig;
+use super::timeout_config::UnifiedTimeoutConfig;
 /// Unified Network Configuration Module
 /// Consolidates all network-related configuration patterns
 /// **PROBLEM SOLVED**: Eliminates duplicate network configuration structures
@@ -6,15 +8,12 @@ use std::collections::HashMap;
 use std::net::IpAddr;
 use std::time::Duration;
 
-use super::retry_config::UnifiedRetryConfig;
-use super::timeout_config::UnifiedTimeoutConfig;
-
 /// Unified Network Configuration - consolidates all network settings
 /// Replaces 25+ duplicate network configuration structures
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedNetworkConfig {
     /// Primary network bind address
-    pub bind_address: IpAddr,
+    pub bind_endpoint: IpAddr,
     /// Primary service port
     pub port: u16,
     /// API service port (legacy compatibility)
@@ -70,11 +69,10 @@ pub struct UnifiedNetworkConfig {
     /// Rate limiting configuration
     pub rate_limit_config: Option<NetworkRateLimitConfig>,
 }
-
 impl Default for UnifiedNetworkConfig {
     fn default() -> Self {
         Self {
-            bind_address: crate::safe_operations::safe_parse_ip_with_fallback(
+            bind_endpoint: crate::safe_operations::safe_parse_ip_with_fallback(
                 "127.0.0.1",
                 std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST),
                 "default_network_config",
@@ -132,7 +130,6 @@ pub struct NetworkTlsConfig {
     /// Certificate validation mode
     pub validation_mode: String,
 }
-
 impl Default for NetworkTlsConfig {
     fn default() -> Self {
         Self {
@@ -169,7 +166,6 @@ pub struct NetworkProxyConfig {
     /// Bypass proxy for these hosts
     pub bypass_hosts: Vec<String>,
 }
-
 /// Load balancing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkLoadBalanceConfig {
@@ -184,7 +180,6 @@ pub struct NetworkLoadBalanceConfig {
     /// Session timeout
     pub session_timeout: Duration,
 }
-
 /// Health check configuration for load balancing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadBalanceHealthCheck {
@@ -199,11 +194,10 @@ pub struct LoadBalanceHealthCheck {
     /// Expected status code
     pub expected_status: u16,
 }
-
 /// Quality of Service configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkQosConfig {
-    /// Enable QoS
+    /// Enable `QoS`
     pub enabled: bool,
     /// Traffic shaping
     pub traffic_shaping: bool,
@@ -214,7 +208,6 @@ pub struct NetworkQosConfig {
     /// Queue management
     pub queue_management: String,
 }
-
 /// Rate limiting configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkRateLimitConfig {
@@ -231,12 +224,12 @@ pub struct NetworkRateLimitConfig {
     /// Exclude these IPs from rate limiting
     pub exclude_ips: Vec<String>,
 }
-
 impl UnifiedNetworkConfig {
     /// Create a production-optimized network configuration
-    pub fn production() -> Self {
+    #[must_use]
+    pub const fn production() -> Self {
         Self {
-            bind_address: crate::safe_operations::safe_parse_ip_with_fallback(
+            bind_endpoint: crate::safe_operations::safe_parse_ip_with_fallback(
                 "0.0.0.0",
                 std::net::IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED),
                 "production_config",
@@ -269,9 +262,10 @@ impl UnifiedNetworkConfig {
     }
 
     /// Create a development-optimized network configuration
-    pub fn development() -> Self {
+    #[must_use]
+    pub const fn development() -> Self {
         Self {
-            bind_address: crate::safe_operations::safe_parse_ip_with_fallback(
+            bind_endpoint: crate::safe_operations::safe_parse_ip_with_fallback(
                 "127.0.0.1",
                 std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST),
                 "development_network_config",
@@ -288,35 +282,29 @@ impl UnifiedNetworkConfig {
     }
 
     /// Validate network configuration
-    pub fn validate(&self) -> crate::Result<()> {
+    pub const fn validate(&self) -> crate::Result<()> {
         if self.port == 0 {
-            return Err(crate::NestGateError::Configuration {
-                field: "port".to_string(),
-                message: "Network port cannot be zero".to_string(),
-                current_value: Some("0".to_string()),
-                expected: Some("positive port number (1-65535)".to_string()),
-                user_error: true,
-            });
+            return Err(crate::NestGateError::configuration_error_detailed(
+                "port".to_string(),
+                "Network port cannot be zero".to_string(),
+                Some("0".to_string()),
+                Some("positive port number (1-65535)".to_string()),
+                true,
+            ));
         }
 
         if self.max_connections == 0 {
-            return Err(crate::NestGateError::Configuration {
-                field: "max_connections".to_string(),
-                message: "Max connections cannot be zero".to_string(),
-                current_value: Some("0".to_string()),
-                expected: Some("positive integer (e.g., 1000)".to_string()),
-                user_error: true,
-            });
+            return Err(crate::NestGateError::configuration_error(
+                "max_connections",
+                "Max connections cannot be zero",
+            ));
         }
 
         if self.worker_threads == 0 {
-            return Err(crate::NestGateError::Configuration {
-                field: "worker_threads".to_string(),
-                message: "Worker threads cannot be zero".to_string(),
-                current_value: Some("0".to_string()),
-                expected: Some("positive integer (e.g., 4)".to_string()),
-                user_error: true,
-            });
+            return Err(crate::NestGateError::configuration_error(
+                "worker_threads",
+                "Worker threads cannot be zero",
+            ));
         }
         Ok(())
     }

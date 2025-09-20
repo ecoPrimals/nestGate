@@ -2,12 +2,12 @@ use std::collections::HashMap;
 use std::future::Future;
 // use crate::error::idiomatic_evolution // DEPRECATED::{NetworkError, NetworkResult};
 use crate::error::CanonicalResult as Result;
-use crate::traits::{
-    ServiceRegistration,
-};
+// CANONICAL MODERNIZATION: Migrated from deprecated ServiceRegistration
 use crate::canonical_modernization::unified_enums::{UnifiedHealthStatus, UnifiedServiceState};
+use crate::service_discovery::types::UniversalServiceRegistration as ServiceRegistration;
 use serde::{Deserialize, Serialize};
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
+// CLEANED: Removed unused Duration import as part of canonical modernization
 // Removed unused Uuid import
 
 /// Native async network service implementation
@@ -17,9 +17,9 @@ pub struct NativeAsyncNetworkService {
     pub config: NetworkServiceConfig,
     pub connections: HashMap<String, String>,
     service_id: String,
+    #[allow(dead_code)] // Framework field - intentionally unused
     state: UnifiedServiceState,
 }
-
 /// Configuration for native async network service
 /// Configuration for native async network service
 /// Defines host, port, and operational parameters
@@ -29,7 +29,6 @@ pub struct NetworkServiceConfig {
     pub port: u16,
     pub max_connections: usize,
 }
-
 /// Health information for network service
 /// Health status information for network service
 /// Provides detailed health metrics and status information
@@ -39,7 +38,6 @@ pub struct NetworkServiceHealth {
     pub active_connections: usize,
     pub max_connections: usize,
 }
-
 impl Default for NetworkServiceConfig {
     fn default() -> Self {
         Self {
@@ -51,6 +49,7 @@ impl Default for NetworkServiceConfig {
 }
 
 impl NativeAsyncNetworkService {
+    #[must_use]
     pub fn new(config: NetworkServiceConfig) -> Self {
         Self {
             config,
@@ -61,7 +60,7 @@ impl NativeAsyncNetworkService {
     }
 }
 
-/// **CANONICAL SERVICE IMPLEMENTATION**: NativeAsyncNetworkService
+/// **CANONICAL SERVICE IMPLEMENTATION**: `NativeAsyncNetworkService`
 ///
 /// **PERFORMANCE**: Zero-cost native async implementation
 /// **MEMORY**: No runtime overhead, compile-time dispatch
@@ -70,7 +69,6 @@ impl crate::traits::canonical_unified_traits::CanonicalService for NativeAsyncNe
     type Health = crate::traits::canonical_unified_traits::ProviderHealth; // PEDANTIC: Use existing ProviderHealth
     type Metrics = crate::traits::canonical_unified_traits::ServiceCapabilities;
     type Error = crate::error::NestGateError;
-
     fn service_id(&self) -> &str {
         &self.service_id
     }
@@ -79,85 +77,81 @@ impl crate::traits::canonical_unified_traits::CanonicalService for NativeAsyncNe
         crate::unified_enums::service_types::UnifiedServiceType::Network
     }
 
-    fn initialize(&self, _config: Self::Config) -> impl std::future::Future<Output = std::result::Result<(), Self::Error>> + Send { // PEDANTIC: Fixed unused parameter
-        async move {
-            // Initialize with config
-            Ok(())
-        }
+    async fn initialize(&self, _config: Self::Config) -> crate::Result<()> {
+        // Initialize with config
+        Ok(())
     }
 
-    fn health_check(&self) -> impl std::future::Future<Output = std::result::Result<Self::Health, Self::Error>> + Send {
-        async move {
-            Ok(crate::traits::canonical_unified_traits::ProviderHealth {
-                status: crate::traits::canonical_unified_traits::HealthStatus::Healthy,
-                uptime: Duration::from_secs(0),
-                last_check: SystemTime::now(),
-                details: std::collections::HashMap::new(),
-            })
-        }
+    async fn health_check(&self) -> crate::Result<Self::Health> {
+        Ok(crate::traits::canonical_unified_traits::ProviderHealth {
+            is_healthy: true,
+            last_check: SystemTime::now(),
+            health: "Network service operational".to_string(),
+        })
     }
 
-    fn get_metrics(&self) -> impl std::future::Future<Output = std::result::Result<Self::Metrics, Self::Error>> + Send {
-        async move {
-            Ok(crate::traits::canonical_unified_traits::ServiceCapabilities {
-                supported_operations: vec!["connect".to_string(), "disconnect".to_string(), "status".to_string()],
-                max_concurrent_requests: Some(1000),
-                supports_streaming: false,
-                supports_batching: false,
-                version: "1.0.0".to_string(),
-            })
-        }
+    async fn get_metrics(&self) -> std::result::Result<Self::Metrics, Self::Error> {
+        Ok(
+            crate::traits::canonical_unified_traits::ServiceCapabilities {
+                can_scale: true,
+                can_migrate: true,
+                can_backup: false,
+                supported_protocols: vec![
+                    "tcp".to_string(),
+                    "http".to_string(),
+                    "websocket".to_string(),
+                ],
+            },
+        )
     }
 
-    fn shutdown(&self) -> impl std::future::Future<Output = std::result::Result<(), Self::Error>> + Send {
-        async move { Ok(()) }
+    async fn shutdown(&self) -> crate::Result<()> {
+        Ok(())
     }
 
-    fn start(&self) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send {
-        async move { Ok(()) }
+    async fn start(&self) -> crate::Result<()> {
+        Ok(())
     }
 
-    fn stop(&self) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send {
-        async move { Ok(()) }
+    async fn stop(&self) -> crate::Result<()> {
+        Ok(())
     }
 
-    fn restart(&self) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send {
-        async move { Ok(()) }
+    async fn restart(&self) -> crate::Result<()> {
+        Ok(())
     }
 
-    fn update_config(&self, _config: Self::Config) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send {
-        async move { Ok(()) }
+    async fn update_config(&self, _config: Self::Config) -> crate::Result<()> {
+        Ok(())
     }
 
-    fn capabilities(&self) -> impl std::future::Future<Output = Result<crate::traits::canonical_unified_traits::ServiceCapabilities, Self::Error>> + Send {
-        async move {
-            Ok(crate::traits::canonical_unified_traits::ServiceCapabilities {
-                supported_operations: vec!["connect".to_string(), "disconnect".to_string(), "status".to_string()],
-                max_concurrent_requests: Some(1000),
-                supports_streaming: false,
-                supports_batching: false,
-                version: "1.0.0".to_string(),
-            })
-        }
+    async fn capabilities(
+        &self,
+    ) -> crate::Result<crate::traits::canonical_unified_traits::ServiceCapabilities> {
+        Ok(
+            crate::traits::canonical_unified_traits::ServiceCapabilities {
+                can_scale: true,
+                can_migrate: true,
+                can_backup: false,
+                supported_protocols: vec![
+                    "tcp".to_string(),
+                    "http".to_string(),
+                    "websocket".to_string(),
+                ],
+            },
+        )
     }
 
-    fn validate_config(&self, _config: &Self::Config) -> impl std::future::Future<Output = Result<Vec<String>, Self::Error>> + Send {
-        async move { Ok(vec![]) }
+    async fn validate_config(&self, _config: &Self::Config) -> crate::Result<Vec<String>> {
+        Ok(vec![])
     }
 
-    fn is_healthy(&self) -> impl std::future::Future<Output = Result<Self::Health, Self::Error>> + Send {
-        async move {
-            Ok(crate::traits::canonical_unified_traits::ProviderHealth {
-                is_healthy: true,
-                last_check: std::time::SystemTime::now(),
-                health_details: {
-                    let mut details = std::collections::HashMap::new();
-                    details.insert("status".to_string(), "operational".to_string());
-                    details.insert("service".to_string(), "network".to_string());
-                    details
-                },
-            })
-        }
+    async fn is_healthy(&self) -> crate::Result<Self::Health> {
+        Ok(crate::traits::canonical_unified_traits::ProviderHealth {
+            is_healthy: true,
+            last_check: std::time::SystemTime::now(),
+            health: "Network service operational".to_string(),
+        })
     }
 }
 
@@ -166,7 +160,7 @@ impl crate::traits::canonical_unified_traits::CanonicalService for NativeAsyncNe
 // The following methods have been removed as they conflict with the canonical trait:
 // - handle_request: Not part of CanonicalService interface
 // - Duplicate health_check: Already implemented in CanonicalService
-// - Duplicate get_metrics: Already implemented in CanonicalService  
+// - Duplicate get_metrics: Already implemented in CanonicalService
 // - Duplicate shutdown: Already implemented in CanonicalService
 // - Duplicate update_config: Already implemented in CanonicalService
 //
@@ -176,17 +170,34 @@ impl NativeAsyncNetworkService {
     /// Register service for discovery (utility method)
     pub fn register(&self) -> impl Future<Output = Result<ServiceRegistration>> + Send {
         let service_id = self.service_id.clone();
-        let host = self.config.host.clone();
-        let port = self.config.port;
+        let _host = self.config.host.clone();
+        let _port = self.config.port;
 
         async move {
+            // CANONICAL MODERNIZATION: Use canonical service registration structure
+            use crate::service_discovery::types::{
+                IntegrationPreferences, ResourceSpec, ServiceCapability, ServiceCategory,
+                ServiceMetadata,
+            };
+
             Ok(ServiceRegistration {
-                service_id,
-                service_type: crate::unified_enums::service_types::UnifiedServiceType::Network,
-                endpoint: format!("{host}:{port}"),
-                health_check_endpoint: "/health".to_string(),
-                metadata: HashMap::new(),
-                registered_at: SystemTime::now(),
+                service_id: uuid::Uuid::parse_str(&service_id)
+                    .unwrap_or_else(|_| uuid::Uuid::new_v4()),
+                metadata: ServiceMetadata {
+                    name: format!("network-service-{service_id}"),
+                    category: ServiceCategory::Network,
+                    version: "1.0.0".to_string(),
+                    description: "Native async network service".to_string(),
+                    health_endpoint: Some("/health".to_string()),
+                    metrics_endpoint: None,
+                },
+                capabilities: vec![ServiceCapability::Network(
+                    crate::service_discovery::types::CommunicationProtocol::Http,
+                )],
+                resources: ResourceSpec::default(),
+                endpoints: vec![],
+                integration: IntegrationPreferences::default(),
+                extensions: HashMap::new(),
             })
         }
     }

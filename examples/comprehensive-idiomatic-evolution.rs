@@ -1,4 +1,3 @@
-use std::future::Future;
 //! # Comprehensive Idiomatic Evolution Guide
 //!
 //! This example demonstrates how to evolve our entire system to be more
@@ -14,6 +13,7 @@ use nestgate_core::{
     SmartDefault,
 };
 use std::error::Error;
+use std::future::Future;
 use std::time::Duration;
 
 // ==================== EVOLUTION PATTERN 1: DEFAULT IMPLEMENTATIONS ====================

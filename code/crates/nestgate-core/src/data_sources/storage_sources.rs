@@ -1,9 +1,7 @@
 /// **Storage-Focused Data Sources**
 /// Data source implementations that focus on storage operations only.
 /// External data access is delegated to appropriate primals via universal adapter.
-
 use crate::{NestGateError, Result};
-use std::path::PathBuf;
 
 /// Storage-specific data source operations
 /// **ZERO-COST MODERNIZATION**: Migrated from async_trait to native async patterns
@@ -11,7 +9,6 @@ use std::path::PathBuf;
 pub trait StorageDataSource: Send + Sync {
     /// Get data size for storage planning
     fn get_data_size(&self, identifier: &str) -> impl std::future::Future<Output = Result<u64>> + Send;
-
     /// Get storage requirements for data
     fn get_storage_requirements(&self, identifier: &str) -> impl std::future::Future<Output = Result<StorageRequirements>> + Send;
 
@@ -27,7 +24,6 @@ pub struct StorageRequirements {
     pub access_pattern: AccessPattern,
     pub retention_policy: Option<RetentionPolicy>,
     }
-
 /// Storage tiers for data classification
 #[derive(Debug, Clone)]
 pub enum StorageTier {
@@ -36,7 +32,6 @@ pub enum StorageTier {
     Cold,   // Infrequent access - HDD
     Archive, // Long-term storage - Tape/Cloud
     }
-
 /// Data access patterns for storage optimization
 #[derive(Debug, Clone)]
 pub enum AccessPattern {
@@ -46,7 +41,6 @@ pub enum AccessPattern {
     Read_Heavy,
     Append_Only,
     }
-
 /// Data retention policies
 #[derive(Debug, Clone)]
 pub struct RetentionPolicy {
@@ -54,44 +48,33 @@ pub struct RetentionPolicy {
     pub auto_delete: bool,
     pub archive_before_delete: bool,
     }
-
 /// External data adapter - delegates to universal adapter
 pub struct ExternalDataAdapter {
     // NestGate doesn't know about specific external services
     // It only knows how to request data through universal adapter
     }
-
 impl ExternalDataAdapter {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {}
     }
 
     /// Request external data via universal adapter
     /// NestGate doesn't know which primal will fulfill this
-    pub async fn request_external_data(&self, query: &str) -> Result<ExternalDataResponse> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn request_external_data(&self, query: &str) -> Result<ExternalDataResponse>  {
         // IMPLEMENTATION NOTE: Routes through universal adapter to appropriate primal
         // This leverages the capability-based discovery system for dynamic service routing
 
         // For now, return placeholder that indicates delegation needed
-        Err(NestGateError::Internal {
-            message: format!("External data request '{}' needs universal adapter routing", query),
-            location: Some("storage_sources.rs".to_string()),
-            is_bug: false,
-            context: Some(ErrorContext {
-                operation: "external_data_delegation".to_string(),
-                component: "storage_sources".to_string(),
-                metadata: {
-                    let mut map = std::collections::HashMap::new();
-                    map.insert("info".to_string(), "NestGate only knows storage - external data delegated".to_string());
-                    map
-                },
-                timestamp: std::time::SystemTime::now(),
-                    retry_info: None,
-                    recovery_suggestions: vec![],
-                    performance_metrics: None,
-                    environment: None,
-            }),
-        })
+        Err(NestGateError::internal_error(
+            location: Some("storage_sources.rs".to_string())})
     }
     }
 
@@ -102,7 +85,6 @@ pub struct ExternalDataResponse {
     pub storage_requirements: StorageRequirements,
     pub source_info: String, // Which primal fulfilled the request
     }
-
 impl Default for ExternalDataAdapter {
     fn default() -> Self {
         Self::new()

@@ -4,7 +4,6 @@
 use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 /// AI capability types that can be discovered
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum AiCapabilityType {
@@ -17,7 +16,6 @@ pub enum AiCapabilityType {
     ComputerVision,
     RecommendationEngine,
 }
-
 /// AI capability metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AiCapabilityInfo {
@@ -27,15 +25,14 @@ pub struct AiCapabilityInfo {
     pub supported_operations: Vec<String>,
     pub metadata: HashMap<String, String>,
 }
-
 /// AI capability discovery manager
 #[derive(Debug)]
 pub struct AiCapabilityDiscovery {
     discovered_capabilities: tokio::sync::RwLock<HashMap<AiCapabilityType, AiCapabilityInfo>>,
 }
-
 impl AiCapabilityDiscovery {
     /// Create new AI capability discovery manager
+    #[must_use]
     pub fn new() -> Self {
         Self {
             discovered_capabilities: tokio::sync::RwLock::new(HashMap::new()),
@@ -43,7 +40,14 @@ impl AiCapabilityDiscovery {
     }
 
     /// Discover available AI capabilities
-    pub async fn discover_capabilities(&self) -> Result<Vec<AiCapabilityInfo>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn discover_capabilities(&self) -> Result<Vec<AiCapabilityInfo>>  {
         // Dynamic discovery logic - replaces hardcoded AI endpoints
         let mut capabilities = Vec::new();
 
@@ -72,10 +76,17 @@ impl AiCapabilityDiscovery {
     }
 
     /// Get specific AI capability by type
-    pub async fn get_capability(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_capability(
         &self,
         capability_type: &AiCapabilityType,
-    ) -> Result<Option<AiCapabilityInfo>> {
+    ) -> Result<Option<AiCapabilityInfo>>  {
         let cache = self.discovered_capabilities.read().await;
         Ok(cache.get(capability_type).cloned())
     }
@@ -140,11 +151,10 @@ impl Default for AiCapabilityDiscovery {
 
 /// Get AI endpoint for routing compatibility (replaces hardcoded AI constants)
 pub async fn get_ai_endpoint(
-    _adapter: &crate::ecosystem_integration::universal_adapter::UniversalAdapter,
+    _adapter: &crate::universal_adapter::PrimalAgnosticAdapter,
 ) -> Result<String> {
     let discovery = AiCapabilityDiscovery::new();
     let capabilities = discovery.discover_capabilities().await?;
-
     // Find model inference capability (primary AI endpoint)
     for capability in capabilities {
         if matches!(capability.capability_type, AiCapabilityType::ModelInference) {

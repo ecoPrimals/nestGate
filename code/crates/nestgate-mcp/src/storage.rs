@@ -5,7 +5,7 @@ use crate::{
     types::{MountInfo, MountRequest, MountStatus, NfsVersion, StorageProtocol, StorageTier},
     Result,
 };
-use nestgate_core::biomeos::{BiomeContext, VolumeSpec};
+use nestgate_core::management::{BiomeContext, VolumeSpec};
 use nestgate_core::error::NestGateError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -25,7 +25,6 @@ pub struct VolumeConfig {
     pub filesystem: String,
     pub options: HashMap<String, String>,
 }
-
 /// Storage volume information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VolumeInfo {
@@ -39,8 +38,7 @@ pub struct VolumeInfo {
     pub mounted: bool,
     pub health: String,
 }
-
-/// biomeOS storage statistics
+/// management storage statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BiomeStorageStats {
     pub biome_id: String,
@@ -50,13 +48,11 @@ pub struct BiomeStorageStats {
     pub total_available_bytes: u64,
     pub volumes: Vec<VolumeInfo>,
 }
-
 /// MCP Storage Manager
 #[derive(Debug, Clone)]
 pub struct McpStorageManager {
     volumes: Arc<RwLock<HashMap<String, VolumeInfo>>>,
 }
-
 impl Default for McpStorageManager {
     fn default() -> Self {
         Self::new()
@@ -65,16 +61,22 @@ impl Default for McpStorageManager {
 
 impl McpStorageManager {
     /// Create a new storage manager
-    pub fn new() -> Self {
-        info!("Initializing MCP storage manager");
+    #[must_use]
+    pub fn new() -> Self { info!("Initializing MCP storage manager");
 
         Self {
-            volumes: Arc::new(RwLock::new(HashMap::new())),
-        }
-    }
+            volumes: Arc::new(RwLock::new(HashMap::new()),
+         }
 
     /// Initialize storage subsystem
-    pub async fn initialize(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn initialize(&self) -> Result<()>  {
         info!("Initializing MCP storage subsystem");
 
         // Discover existing volumes
@@ -85,38 +87,36 @@ impl McpStorageManager {
     }
 
     /// Create a new storage volume
-    pub async fn create_volume(&self, config: VolumeConfig) -> Result<VolumeInfo> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn create_volume(&self, config: VolumeConfig) -> Result<VolumeInfo>  {
         info!("Creating storage volume: {}", config.name);
 
         // Validate configuration
         if config.name.is_empty() {
-            return Err(NestGateError::Validation {
-                field: Some("volume_name".to_string()),
-                message: "Volume name cannot be empty".to_string(),
-                current_value: Some("".to_string()),
-                expected: Some("non-empty string".to_string()),
+            return Err(NestGateError::validation(
                 user_error: true,
-                context: None,
-            });
+            ));
         }
 
         if config.size_bytes == 0 {
-            return Err(NestGateError::Validation {
-                field: Some("volume_size".to_string()),
-                message: "Volume size must be greater than zero".to_string(),
-                current_value: Some("0".to_string()),
-                expected: Some("> 0".to_string()),
+            return Err(NestGateError::validation(
                 user_error: true,
-                context: None,
-            });
+            ));
         }
 
         // Check if volume already exists
         let volumes = self.volumes.read().await;
         if volumes.contains_key(&config.name) {
             return Err(nestgate_core::NestGateError::Storage {
-                operation: "create_volume".to_string(),
-                details: format!("Volume {} already exists", config.name),
+                b_operation: Some("operation".to_string()),
+                details: format!("Volume {"actual_error_details"} already exists"),
             });
         }
         drop(volumes);
@@ -143,7 +143,14 @@ impl McpStorageManager {
     }
 
     /// List all storage volumes
-    pub async fn list_volumes(&self) -> Result<Vec<VolumeInfo>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn list_volumes(&self) -> Result<Vec<VolumeInfo>>  {
         debug!("Listing storage volumes");
 
         let volumes = self.volumes.read().await;
@@ -153,7 +160,15 @@ impl McpStorageManager {
     }
 
     /// Get volume information
-    pub async fn get_volume(&self, name: &str) -> Result<VolumeInfo> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn get_volume(&self, name: &str) -> Result<VolumeInfo>  {
         debug!("Getting volume info: {}", name);
 
         let volumes = self.volumes.read().await;
@@ -161,13 +176,21 @@ impl McpStorageManager {
             .get(name)
             .cloned()
             .ok_or_else(|| nestgate_core::NestGateError::Storage {
-                operation: "storage_operation".to_string(),
+                b_operation: Some("operation".to_string()),
                 details: "Storage operation failed".to_string(),
             })
     }
 
     /// Mount a storage volume
-    pub async fn mount_volume(&self, name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn mount_volume(&self, name: &str) -> Result<()>  {
         info!("Mounting storage volume: {}", name);
 
         let mut volumes = self.volumes.write().await;
@@ -175,13 +198,13 @@ impl McpStorageManager {
             volumes
                 .get_mut(name)
                 .ok_or_else(|| nestgate_core::NestGateError::Storage {
-                    operation: "mount_volume".to_string(),
-                    details: format!("Volume not found: {name}"),
+                    b_operation: Some("operation".to_string()),
+                    details: format!("Volume not found: {"actual_error_details"}"),
                 })?;
 
         if volume.mounted {
             return Err(nestgate_core::NestGateError::Storage {
-                operation: "storage_operation".to_string(),
+                b_operation: Some("operation".to_string()),
                 details: "Storage operation failed".to_string(),
             });
         }
@@ -194,7 +217,15 @@ impl McpStorageManager {
     }
 
     /// Unmount a storage volume
-    pub async fn unmount_volume(&self, name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn unmount_volume(&self, name: &str) -> Result<()>  {
         info!("Unmounting storage volume: {}", name);
 
         let mut volumes = self.volumes.write().await;
@@ -202,14 +233,14 @@ impl McpStorageManager {
             volumes
                 .get_mut(name)
                 .ok_or_else(|| nestgate_core::NestGateError::Storage {
-                    operation: "unmount_volume".to_string(),
-                    details: format!("Volume not found: {name}"),
+                    b_operation: Some("operation".to_string()),
+                    details: format!("Volume not found: {"actual_error_details"}"),
                 })?;
 
         if !volume.mounted {
             return Err(nestgate_core::NestGateError::Storage {
-                operation: "unmount_volume".to_string(),
-                details: format!("Volume {name} is not mounted"),
+                b_operation: Some("operation".to_string()),
+                details: format!("Volume {"actual_error_details"} is not mounted"),
             });
         }
 
@@ -221,23 +252,30 @@ impl McpStorageManager {
     }
 
     /// Delete a storage volume
-    pub async fn delete_volume(&self, name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn delete_volume(&self, name: &str) -> Result<()>  {
         info!("Deleting storage volume: {}", name);
 
         let mut volumes = self.volumes.write().await;
         let volume = volumes
             .get(name)
             .ok_or_else(|| nestgate_core::NestGateError::Storage {
-                operation: "delete_volume".to_string(),
-                details: format!("Volume not found: {name}"),
+                b_operation: Some("operation".to_string()),
+                details: format!("Volume not found: {"actual_error_details"}"),
             })?;
 
         if volume.mounted {
-            return Err(NestGateError::Io {
-                operation: "volume deletion".to_string(),
-                error_message: format!("Cannot delete mounted volume: {name}"),
-                resource: Some(name.to_string()),
-                retryable: false,
+            return Err(NestGateError::storage_error(
+                b_operation: Some("operation".to_string()),
+                error_message: format!("Cannot delete mounted volume: {"actual_error_details"}"),
+                path: Some(name.to_string())
                 context: None,
             });
         }
@@ -249,7 +287,7 @@ impl McpStorageManager {
     }
 
     /// Discover existing volumes
-    async fn discover_volumes(&self) -> Result<()> {
+    fn discover_volumes(&self) -> Result<()> {
         info!("Discovering existing storage volumes");
 
         // In a real implementation, this would scan for existing volumes
@@ -257,13 +295,20 @@ impl McpStorageManager {
         Ok(())
     }
 
-    /// Provision volume from biomeOS manifest
-    /// This is the MCP-level implementation of biomeOS volume provisioning
-    pub async fn provision_from_biomeos_manifest(
+    /// Provision volume from management manifest
+    /// This is the MCP-level implementation of management volume provisioning
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn provision_from_management_manifest(
         &self,
         volume_spec: &VolumeSpec,
         biome_context: &BiomeContext,
-    ) -> Result<VolumeInfo> {
+    ) -> Result<VolumeInfo>  {
         info!(
             "Provisioning volume from biome manifest: {} for biome {}",
             volume_spec.name, biome_context.biome_id
@@ -273,26 +318,22 @@ impl McpStorageManager {
         let size_bytes =
             volume_spec
                 .size_bytes()
-                .map_err(|e| nestgate_core::NestGateError::Validation {
-                    field: Some("volume_size".to_string()),
-                    message: format!("Invalid volume size: {e}"),
-                    current_value: None,
+                .map_err(|_e| nestgate_core::NestGateError::validation(
+                    currentvalue: None,
                     expected: Some("Valid size format (e.g., 100GB, 1TB)".to_string()),
                     user_error: true,
                 context: None,
                 })?;
 
-        // Convert biomeOS tier to MCP tier
+        // Convert management tier to MCP tier
         let mcp_tier = match volume_spec.tier.to_lowercase().as_str() {
             "hot" => StorageTier::Hot,
             "warm" => StorageTier::Warm,
             "cold" => StorageTier::Cold,
             "cache" => StorageTier::Hot, // Map cache to hot tier
             _ => {
-                return Err(NestGateError::Validation {
-                    field: Some("storage_tier".to_string()),
-                    message: format!("Unknown storage tier: {}", volume_spec.tier),
-                    current_value: Some(volume_spec.tier.clone()),
+                return Err(NestGateError::validation(
+                    actual: Some(volume_spec.tier.clone()),
                     expected: Some("hot, warm, cold, or cache".to_string()),
                     user_error: true,
                 context: None,
@@ -304,11 +345,11 @@ impl McpStorageManager {
         let mount_point = volume_spec
             .mount_path
             .clone()
-            .unwrap_or_else(|| format!("/biomeos/{}/{}", biome_context.biome_id, volume_spec.name));
+            .unwrap_or_else(|| format!("/management/{"actual_error_details"}/{"actual_error_details"}"));
 
         // Create volume configuration
         let config = VolumeConfig {
-            name: format!("biomeos-{}-{}", biome_context.biome_id, volume_spec.name),
+            name: format!("management-{"actual_error_details"}-{"actual_error_details"}"),
             size_bytes,
             tier: mcp_tier,
             mount_point,
@@ -328,51 +369,79 @@ impl McpStorageManager {
                 }
 
                 options
-            },
+            }
         };
 
         // Create the volume using existing infrastructure
         self.create_volume(config).await
     }
 
-    /// List biomeOS volumes only
-    pub async fn list_biomeos_volumes(&self) -> Result<Vec<VolumeInfo>> {
-        debug!("Listing biomeOS volumes");
+    /// List management volumes only
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn list_management_volumes(&self) -> Result<Vec<VolumeInfo>>  {
+        debug!("Listing management volumes");
 
         let volumes = self.volumes.read().await;
-        let biomeos_volumes: Vec<VolumeInfo> = volumes
+        let management_volumes: Vec<VolumeInfo> = volumes
             .values()
-            .filter(|v| v.name.starts_with("biomeos-"))
+            .filter(|v| v.name.starts_with("management-"))
             .cloned()
             .collect();
 
-        Ok(biomeos_volumes)
+        Ok(management_volumes)
     }
 
-    /// Get biomeOS volume by biome ID and volume name
-    pub async fn get_biomeos_volume(
+    /// Get management volume by biome ID and volume name
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn get_management_volume(
         &self,
         biome_id: &str,
         volume_name: &str,
-    ) -> Result<VolumeInfo> {
-        let volume_key = format!("biomeos-{biome_id}-{volume_name}");
+    ) -> Result<VolumeInfo>  {
+        let volume_key = format!("management-{biome_id}-{"actual_error_details"}");
         self.get_volume(&volume_key).await
     }
 
-    /// Delete biomeOS volume by biome ID and volume name
-    pub async fn delete_biomeos_volume(&self, biome_id: &str, volume_name: &str) -> Result<()> {
-        let volume_key = format!("biomeos-{biome_id}-{volume_name}");
+    /// Delete management volume by biome ID and volume name
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn delete_management_volume(&self, biome_id: &str, volume_name: &str) -> Result<()>  {
+        let volume_key = format!("management-{biome_id}-{"actual_error_details"}");
         self.delete_volume(&volume_key).await
     }
 
     /// Get volume usage statistics for biome
-    pub async fn get_biome_storage_stats(&self, biome_id: &str) -> Result<BiomeStorageStats> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn get_biome_storage_stats(&self, biome_id: &str) -> Result<BiomeStorageStats>  {
         debug!("Getting storage stats for biome: {}", biome_id);
 
         let volumes = self.volumes.read().await;
         let biome_volumes: Vec<&VolumeInfo> = volumes
             .values()
-            .filter(|v| v.name.starts_with(&format!("biomeos-{biome_id}-")))
+            .filter(|v| v.name.starts_with(&format!("management-{"actual_error_details"}-")))
             .collect();
 
         let total_size = biome_volumes.iter().map(|v| v.size_bytes).sum();
@@ -389,38 +458,44 @@ impl McpStorageManager {
         })
     }
 
-    /// Resize volume for biomeOS
-    pub async fn resize_biomeos_volume(
+    /// Resize volume for management
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn resize_management_volume(
         &self,
         biome_id: &str,
         volume_name: &str,
         new_size_bytes: u64,
-    ) -> Result<VolumeInfo> {
+    ) -> Result<VolumeInfo>  {
         info!(
-            "Resizing biomeOS volume {}/{} to {} bytes",
+            "Resizing management volume {}/{} to {} bytes",
             biome_id, volume_name, new_size_bytes
         );
 
-        let volume_key = format!("biomeos-{biome_id}-{volume_name}");
+        let volume_key = format!("management-{biome_id}-{"actual_error_details"}");
         let mut volumes = self.volumes.write().await;
 
         let volume =
             volumes
                 .get_mut(&volume_key)
                 .ok_or_else(|| nestgate_core::NestGateError::Storage {
-                    operation: "storage_operation".to_string(),
+                    b_operation: Some("operation".to_string()),
                     details: "Storage operation failed".to_string(),
                 })?;
 
         if new_size_bytes < volume.used_bytes {
-            return Err(NestGateError::Io {
-                operation: "volume resize".to_string(),
+            return Err(NestGateError::storage_error(
+                b_operation: Some("operation".to_string()),
                 error_message: format!(
                     "Cannot shrink volume below used space: {} < {}",
                     new_size_bytes, volume.used_bytes
                 ),
-                resource: Some("volume".to_string()),
-                retryable: false,
+                path: Some("volume".to_string())
                 context: None,
             });
         }
@@ -438,7 +513,6 @@ impl McpStorageManager {
 pub struct StorageAdapter {
     _manager: McpStorageManager,
 }
-
 impl Default for StorageAdapter {
     fn default() -> Self {
         Self::new()
@@ -447,14 +521,19 @@ impl Default for StorageAdapter {
 
 impl StorageAdapter {
     /// Create a new storage adapter
-    pub fn new() -> Self {
-        Self {
+    pub const fn new() -> Self { Self {
             _manager: McpStorageManager::new(),
-        }
-    }
+         }
 
     /// Mount a volume
-    pub async fn mount_volume(&self, request: &MountRequest) -> Result<MountInfo> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn mount_volume(&self, request: &MountRequest) -> Result<MountInfo>  {
         // Implement volume mounting for MCP storage adapter
         tracing::info!(
             "Mounting volume: {} to {}",

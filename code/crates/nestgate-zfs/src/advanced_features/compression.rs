@@ -1,7 +1,7 @@
 //
 // ZFS compression analysis and optimization recommendations
 
-use crate::error::CanonicalResult as Result;
+use nestgate_core::error::CanonicalResult as Result;
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 
@@ -15,10 +15,16 @@ pub struct CompressionAnalytics {
     /// Compression algorithm used
     pub algorithm: String,
 }
-
 impl CompressionAnalytics {
     /// Analyze compression performance for a dataset
-    pub async fn analyze_compression(dataset: &str, data_sample: &[u8]) -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn analyze_compression(dataset: &str, data_sample: &[u8]) -> Result<Self>  {
         debug!("Analyzing compression for dataset: {}", dataset);
 
         // Basic compression analysis
@@ -34,7 +40,7 @@ impl CompressionAnalytics {
 
     fn calculate_compression_ratio(data: &[u8]) -> f64 {
         // Simple compression ratio calculation
-        let original_size = data.len() as f64;
+        let original_size = (data.len() as f64);
         let compressed_size = original_size * 0.7; // Mock compression
         original_size / compressed_size
     }

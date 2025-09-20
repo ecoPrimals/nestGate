@@ -1,77 +1,87 @@
-use nestgate_core::{NestGateError, Result, IdioResult};
+// ==================== SECTION: CANONICAL ERROR TYPES ====================
 
-/// **UNIFIED ERROR SYSTEM MIGRATION**
-/// 
-/// The installer now uses the unified NestGateError system for all operations,
-/// eliminating the fragmented InstallerError type and providing better integration
-/// with the rest of the NestGate ecosystem.
+// CANONICAL MODERNIZATION: Consolidate installer error types
+// REMOVED DUPLICATES:
+// - pub type InstallerResult<T> = Result<T>;
+// - pub type InstallResult<T> = IdioResult<T, NestGateError>;
 
-/// **CANONICAL RESULT TYPE** - Use unified error system
+// USE CANONICAL TYPES:
+pub use nestgate_core::error::{NestGateError, Result};
+
+// Convenience aliases for installer operations
 pub type InstallerResult<T> = Result<T>;
 
-/// **DOMAIN-SPECIFIC RESULT TYPE** - For explicit installer context
-pub type InstallResult<T> = IdioResult<T, NestGateError>;
-
 // ==================== SECTION ====================
+use nestgate_core::error::{ConfigurationErrorDetails, InternalErrorDetails, SystemErrorDetails};
 
-/// Helper functions for creating installer-specific errors using unified system
-pub struct InstallerErrorHelper;
+/// Installer-specific error type
+pub struct InstallerError;
 
-impl InstallerErrorHelper {
+/// Installer-specific result type
+pub type InstallResult<T> = std::result::Result<T, NestGateError>;
+
+/// Installer-specific error utilities
+impl InstallerError {
     /// Create configuration error using unified system
-    pub fn configuration_error(message: impl Into<String>) -> NestGateError {
-        NestGateError::Configuration {
-            field: "installer_config".to_string(),
+    pub const fn configuration(message: impl Into<String>) -> NestGateError {
+        NestGateError::Configuration(Box::new(ConfigurationErrorDetails {
+            field: "field".to_string(),
             message: message.into(),
-            current_value: None,
+            currentvalue: None,
             expected: None,
             user_error: true,
-        }
+        }))
     }
 
     /// Create installation failure error using unified system
-    pub fn installation_error(message: impl Into<String>) -> NestGateError {
-        NestGateError::Installation {
+    pub const fn installation_error(message: impl Into<String>) -> NestGateError {
+        NestGateError::Internal(Box::new(InternalErrorDetails {
             message: message.into(),
             component: "nestgate-installer".to_string(),
-            step: Some("installation".to_string()),
-            retryable: true,
-            installer_data: None,
+            location: Some("installation".to_string()),
+            is_bug: false,
             context: None,
-        }
+        }))
     }
 
-    /// Create validation error using unified system
-    pub fn validation_error(message: impl Into<String>) -> NestGateError {
-        NestGateError::Validation {
+    /// Create system requirement error using unified system
+    pub const fn system_requirement(message: impl Into<String>) -> NestGateError {
+        NestGateError::System(Box::new(SystemErrorDetails {
             message: message.into(),
-            field: "installer_input".to_string(),
-            value: None,
-            current_value: None,
-            expected: None,
+            component: "system-requirements".to_string(),
+            operation: Some("validation".to_string()),
             context: None,
-        }
+        }))
     }
 
-    /// Create system error using unified system
-    pub fn system_error(message: impl Into<String>) -> NestGateError {
-        NestGateError::Internal {
+    /// Create permission error using unified system
+    pub const fn permission_error(message: impl Into<String>) -> NestGateError {
+        NestGateError::System(Box::new(SystemErrorDetails {
             message: message.into(),
-            component: "installer_system".to_string(),
-            location: None,
-            bug_report: false,
+            component: "permissions".to_string(),
+            operation: Some("access".to_string()),
             context: None,
-        }
+        }))
     }
+}
 
-    /// Convert I/O errors to unified system
-    pub fn from_io_error(error: std::io::Error, operation: impl Into<String>) -> NestGateError {
-        NestGateError::Io {
-            message: error.to_string(),
-            operation: operation.into(),
-            path: None,
-            retryable: false,
-            context: None,
-        }
-    }
+// CANONICAL MODERNIZATION: Removed orphan trait implementations
+// These From implementations violate Rust's orphan rules since NestGateError
+// is defined in nestgate_core and std::io::Error/serde_json::Error are external.
+// Use helper functions instead for error conversion.
+
+/// Create an installation error
+pub const fn installation_error(message: impl Into<String>) -> NestGateError {
+    NestGateError::internal_error(
+                    format!("Installation error: {}", message.into(),
+        "installer",
+    )
+}
+/// Create an installation error from an IO error
+pub const fn from_io_error(error: std::io::Error, _b_operation: impl Into<String>) -> NestGateError {
+    NestGateError::internal_error(format!("IO error: {error}"), "installer")
+}
+/// Create a validation error
+pub const fn validation(_message: impl Into<String>) -> NestGateError {
+    NestGateError::validation("Validation error occurred during installation")
 }

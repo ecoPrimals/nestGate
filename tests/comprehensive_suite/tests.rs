@@ -3,15 +3,15 @@
 //! This test validates comprehensive system functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::unified::NestGateUnifiedConfig as NestGateUnifiedConfig;
 use nestgate_core::config::defaults::Environment;
+use nestgate_core::config::unified::NestGateUnifiedConfig;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
 
 /// Test comprehensive suite configuration
 #[tokio::test]
-async fn test_comprehensive_suite_config() {
+async fn test_comprehensive_suite_config() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔬 Starting comprehensive suite configuration test");
 
     // Test comprehensive configuration creation
@@ -24,11 +24,12 @@ async fn test_comprehensive_suite_config() {
     assert!(!dev_config.system.instance_name.is_empty());
 
     info!("✅ Comprehensive suite configuration test completed");
+    Ok(())
 }
 
 /// Test comprehensive system validation
 #[tokio::test]
-async fn test_comprehensive_system_validation() {
+async fn test_comprehensive_system_validation() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔍 Testing comprehensive system validation");
 
     // Test comprehensive system components
@@ -48,14 +49,16 @@ async fn test_comprehensive_system_validation() {
         // Verify component is valid
         assert!(!component.is_empty(), "Component should be specified");
         assert!(validation_time > 0, "Validation time should be positive");
+        Ok(())
     }
 
     info!("✅ Comprehensive system validation completed");
+    Ok(())
 }
 
 /// Test comprehensive performance validation
 #[tokio::test]
-async fn test_comprehensive_performance() {
+async fn test_comprehensive_performance() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing comprehensive performance validation");
 
     let start_time = std::time::Instant::now();
@@ -78,14 +81,16 @@ async fn test_comprehensive_performance() {
             elapsed.as_millis() >= operation_time as u128,
             "Performance timing should be accurate"
         );
+        Ok(())
     }
 
     info!("✅ Comprehensive performance validation completed");
+    Ok(())
 }
 
 /// Test comprehensive integration scenarios
 #[tokio::test]
-async fn test_comprehensive_integration() {
+async fn test_comprehensive_integration() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔗 Testing comprehensive integration scenarios");
 
     // Test comprehensive integration workflows
@@ -105,14 +110,16 @@ async fn test_comprehensive_integration() {
         // Verify workflow is valid
         assert!(!workflow.is_empty(), "Workflow should be specified");
         assert!(execution_time > 0, "Execution time should be positive");
+        Ok(())
     }
 
     info!("✅ Comprehensive integration scenarios completed");
+    Ok(())
 }
 
 /// Test comprehensive security validation
 #[tokio::test]
-async fn test_comprehensive_security() {
+async fn test_comprehensive_security() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔐 Testing comprehensive security validation");
 
     // Test comprehensive security checks
@@ -135,14 +142,16 @@ async fn test_comprehensive_security() {
         // Verify security check is valid
         assert!(!check_type.is_empty(), "Check type should be specified");
         assert!(check_time > 0, "Check time should be positive");
+        Ok(())
     }
 
     info!("✅ Comprehensive security validation completed");
+    Ok(())
 }
 
 /// Test comprehensive resilience validation
 #[tokio::test]
-async fn test_comprehensive_resilience() {
+async fn test_comprehensive_resilience() -> Result<(), Box<dyn std::error::Error>> {
     info!("🛡️ Testing comprehensive resilience validation");
 
     // Test comprehensive resilience scenarios
@@ -165,14 +174,16 @@ async fn test_comprehensive_resilience() {
         // Verify scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
         assert!(response_time > 0, "Response time should be positive");
+        Ok(())
     }
 
     info!("✅ Comprehensive resilience validation completed");
+    Ok(())
 }
 
 /// Test comprehensive environments
 #[tokio::test]
-async fn test_comprehensive_environments() {
+async fn test_comprehensive_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing comprehensive functionality across environments");
 
     // Test development environment comprehensive functionality
@@ -190,4 +201,5 @@ async fn test_comprehensive_environments() {
     info!("Production comprehensive configuration validated");
 
     info!("✅ Comprehensive environment test completed");
+    Ok(())
 }

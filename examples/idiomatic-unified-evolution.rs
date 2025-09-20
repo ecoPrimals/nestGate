@@ -31,12 +31,10 @@ use std::collections::HashMap;
 
 /// ❌ CURRENT: Verbose error construction
 fn current_verbose_pattern() -> nestgate_core::error::Result<String> {
-    Err(nestgate_core::error::NestGateError::Configuration {
-        message: "Database connection string missing".to_string(),
-        config_source: nestgate_core::error::UnifiedConfigSource::File("config.toml".to_string()),
-        field: Some("database.url".to_string()),
-        suggested_fix: Some("Add database.url = \"postgresql://...\" to config".to_string()),
-    })
+    Err(nestgate_core::error::NestGateError::configuration_error(
+        "test_field",
+        "Database connection string missing".to_string(),
+    ))
 }
 
 /// ❌ CURRENT: Complex error chaining

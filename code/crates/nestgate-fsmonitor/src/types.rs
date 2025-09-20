@@ -3,11 +3,12 @@
 
 // TEMPORARY: SmartDefault disabled pending native async compatibility fixes
 // use nestgate_core::smart_abstractions::smart_default::SmartDefault;
+// SmartDefault temporarily disabled for compilation
+// use nestgate_core::error::idiomatic_evolution::SmartDefault;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::{Duration, SystemTime};
-use nestgate_core::canonical_modernization::idiomatic_evolution::SmartDefault;
 
 /// File system event types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -29,9 +30,8 @@ pub enum FsEventType {
     /// Metadata changed
     MetadataChanged,
 }
-
-impl SmartDefault for FsEventType {
-    fn smart_default() -> Self {
+impl Default for FsEventType {
+    fn default() -> Self {
         Self::Modified
     }
 }
@@ -54,11 +54,10 @@ pub struct FsEvent {
     /// Additional metadata
     pub metadata: HashMap<String, serde_json::Value>,
 }
-
-impl SmartDefault for FsEvent {
-    fn smart_default() -> Self {
+impl Default for FsEvent {
+    fn default() -> Self {
         Self {
-            event_type: FsEventType::smart_default(),
+            event_type: FsEventType::default(),
             path: PathBuf::new(),
             dest_path: None,
             timestamp: SystemTime::now(),
@@ -91,9 +90,8 @@ pub struct FsMonitorStats {
     /// Performance metrics
     pub performance_metrics: HashMap<String, f64>,
 }
-
-impl SmartDefault for FsMonitorStats {
-    fn smart_default() -> Self {
+impl Default for FsMonitorStats {
+    fn default() -> Self {
         Self {
             total_events: 0,
             events_by_type: HashMap::default(),
@@ -124,9 +122,8 @@ pub struct EventFilter {
     /// Maximum file size threshold
     pub max_file_size: Option<u64>,
 }
-
-impl SmartDefault for EventFilter {
-    fn smart_default() -> Self {
+impl Default for EventFilter {
+    fn default() -> Self {
         Self {
             include_types: vec![
                 FsEventType::Created,
@@ -161,12 +158,11 @@ pub struct PerformanceSettings {
     /// Enable high-performance mode
     pub high_performance_mode: bool,
 }
-
-impl SmartDefault for PerformanceSettings {
-    fn smart_default() -> Self {
+impl Default for PerformanceSettings {
+    fn default() -> Self {
         Self {
             debounce_duration: Duration::from_millis(100),
-            max_buffer_size: 10000,
+            max_buffer_size: 10_000,
             batch_size: 100,
             worker_threads: num_cpus::get().min(8),
             high_performance_mode: false,
@@ -186,9 +182,8 @@ pub struct NotificationChannel {
     /// Whether channel is enabled
     pub enabled: bool,
 }
-
-impl SmartDefault for NotificationChannel {
-    fn smart_default() -> Self {
+impl Default for NotificationChannel {
+    fn default() -> Self {
         Self {
             name: "default".to_string(),
             channel_type: "log".to_string(),
@@ -212,14 +207,13 @@ pub struct WatchConfig {
     /// Whether this watch is enabled
     pub enabled: bool,
 }
-
-impl SmartDefault for WatchConfig {
-    fn smart_default() -> Self {
+impl Default for WatchConfig {
+    fn default() -> Self {
         Self {
             path: PathBuf::from("/mnt/storage"),
             recursive: true,
-            filter: EventFilter::smart_default(),
-            performance: PerformanceSettings::smart_default(),
+            filter: EventFilter::default(),
+            performance: PerformanceSettings::default(),
             enabled: true,
         }
     }

@@ -14,7 +14,7 @@ use nestgate_core::{
 
 /// Test comprehensive ServiceConfig functionality
 #[test]
-fn test_service_config_comprehensive() {
+fn test_service_config_comprehensive() -> Result<(), Box<dyn std::error::Error>> {
     // Test minimal service config
     let minimal_config = ServiceConfig {
         service_type: "storage".to_string(),
@@ -65,15 +65,15 @@ fn test_service_config_comprehensive() {
     assert_eq!(full_config.endpoints.len(), 3);
     assert_eq!(full_config.capabilities.len(), 4);
     assert_eq!(full_config.metadata.len(), 2);
-    assert_eq!(full_config.health_checks.as_ref().unwrap().len(), 2);
-    assert_eq!(full_config.dependencies.as_ref().unwrap().len(), 3);
+    assert_eq!(full_config.health_checks.as_ref()?.len(), 2);
+    assert_eq!(full_config.dependencies.as_ref()?.len(), 3);
     
     // Test specific values
     assert!(full_config.endpoints.contains(&"http://primary:8080".to_string()));
     assert!(full_config.capabilities.contains(&"routing".to_string()));
-    assert_eq!(full_config.metadata.get("environment").unwrap(), "production");
-    assert!(full_config.health_checks.as_ref().unwrap().contains(&"/health".to_string()));
-    assert!(full_config.dependencies.as_ref().unwrap().contains(&"storage".to_string()));
+    assert_eq!(full_config.metadata.get("environment")?, "production");
+    assert!(full_config.health_checks.as_ref()?.contains(&"/health".to_string()));
+    assert!(full_config.dependencies.as_ref()?.contains(&"storage".to_string()));
     
     // Test clone functionality
     let cloned = full_config.clone();
@@ -84,7 +84,7 @@ fn test_service_config_comprehensive() {
 
 /// Test comprehensive CapabilityConfig functionality
 #[test]
-fn test_capability_config_comprehensive() {
+fn test_capability_config_comprehensive() -> Result<(), Box<dyn std::error::Error>> {
     // Test minimal capability config
     let minimal_config = CapabilityConfig {
         capability_type: "basic_storage".to_string(),
@@ -138,48 +138,48 @@ fn test_capability_config_comprehensive() {
     // Test config values
     assert_eq!(full_config.config.len(), 4);
     assert_eq!(
-        full_config.config.get("provider_type").unwrap().as_str().unwrap(),
+        full_config.config.get("provider_type")?.as_str()?,
         "universal"
     );
     assert_eq!(
-        full_config.config.get("max_connections").unwrap().as_u64().unwrap(),
+        full_config.config.get("max_connections")?.as_u64()?,
         100
     );
     assert_eq!(
-        full_config.config.get("enable_caching").unwrap().as_bool().unwrap(),
+        full_config.config.get("enable_caching")?.as_bool()?,
         true
     );
     assert_eq!(
-        full_config.config.get("cache_ttl").unwrap().as_u64().unwrap(),
+        full_config.config.get("cache_ttl")?.as_u64()?,
         3600
     );
     
     // Test resource requirements
-    let resources = full_config.resources.as_ref().unwrap();
-    assert_eq!(resources.cpu.as_ref().unwrap(), "4");
-    assert_eq!(resources.memory.as_ref().unwrap(), "8Gi");
-    assert_eq!(resources.storage.as_ref().unwrap(), "500Gi");
+    let resources = full_config.resources.as_ref()?;
+    assert_eq!(resources.cpu.as_ref()?, "4");
+    assert_eq!(resources.memory.as_ref()?, "8Gi");
+    assert_eq!(resources.storage.as_ref()?, "500Gi");
     
-    let custom = resources.custom.as_ref().unwrap();
-    assert_eq!(custom.get("gpu").unwrap(), "1");
-    assert_eq!(custom.get("network_bandwidth").unwrap(), "10Gbps");
+    let custom = resources.custom.as_ref()?;
+    assert_eq!(custom.get("gpu")?, "1");
+    assert_eq!(custom.get("network_bandwidth")?, "10Gbps");
     
     // Test discovery preferences
-    let discovery = full_config.discovery.as_ref().unwrap();
-    assert_eq!(discovery.preferred_regions.as_ref().unwrap().len(), 2);
-    assert_eq!(discovery.required_capabilities.as_ref().unwrap().len(), 2);
-    assert_eq!(discovery.excluded_providers.as_ref().unwrap().len(), 1);
-    assert_eq!(discovery.priority_scoring.as_ref().unwrap().len(), 2);
+    let discovery = full_config.discovery.as_ref()?;
+    assert_eq!(discovery.preferred_regions.as_ref()?.len(), 2);
+    assert_eq!(discovery.required_capabilities.as_ref()?.len(), 2);
+    assert_eq!(discovery.excluded_providers.as_ref()?.len(), 1);
+    assert_eq!(discovery.priority_scoring.as_ref()?.len(), 2);
     
-    assert!(discovery.preferred_regions.as_ref().unwrap().contains(&"us-west-2".to_string()));
-    assert!(discovery.required_capabilities.as_ref().unwrap().contains(&"encryption".to_string()));
-    assert!(discovery.excluded_providers.as_ref().unwrap().contains(&"legacy_provider".to_string()));
-    assert_eq!(*discovery.priority_scoring.as_ref().unwrap().get("latency").unwrap(), 0.4);
+    assert!(discovery.preferred_regions.as_ref()?.contains(&"us-west-2".to_string()));
+    assert!(discovery.required_capabilities.as_ref()?.contains(&"encryption".to_string()));
+    assert!(discovery.excluded_providers.as_ref()?.contains(&"legacy_provider".to_string()));
+    assert_eq!(*discovery.priority_scoring.as_ref()?.get("latency")?, 0.4);
 }
 
 /// Test comprehensive ResourceRequirements functionality
 #[test]
-fn test_resource_requirements_comprehensive() {
+fn test_resource_requirements_comprehensive() -> Result<(), Box<dyn std::error::Error>> {
     // Test minimal resource requirements
     let minimal = ResourceRequirements {
         cpu: None,
@@ -201,9 +201,9 @@ fn test_resource_requirements_comprehensive() {
         custom: None,
     };
     
-    assert_eq!(standard.cpu.as_ref().unwrap(), "2");
-    assert_eq!(standard.memory.as_ref().unwrap(), "4Gi");
-    assert_eq!(standard.storage.as_ref().unwrap(), "100Gi");
+    assert_eq!(standard.cpu.as_ref()?, "2");
+    assert_eq!(standard.memory.as_ref()?, "4Gi");
+    assert_eq!(standard.storage.as_ref()?, "100Gi");
     assert!(standard.custom.is_none());
     
     // Test custom resource requirements
@@ -220,16 +220,16 @@ fn test_resource_requirements_comprehensive() {
         custom: Some(custom_resources.clone()),
     };
     
-    assert_eq!(custom.cpu.as_ref().unwrap(), "16");
-    assert_eq!(custom.memory.as_ref().unwrap(), "64Gi");
-    assert_eq!(custom.storage.as_ref().unwrap(), "2Ti");
+    assert_eq!(custom.cpu.as_ref()?, "16");
+    assert_eq!(custom.memory.as_ref()?, "64Gi");
+    assert_eq!(custom.storage.as_ref()?, "2Ti");
     
-    let custom_map = custom.custom.as_ref().unwrap();
+    let custom_map = custom.custom.as_ref()?;
     assert_eq!(custom_map.len(), 4);
-    assert_eq!(custom_map.get("gpu").unwrap(), "2");
-    assert_eq!(custom_map.get("fpga").unwrap(), "1");
-    assert_eq!(custom_map.get("network_bandwidth").unwrap(), "40Gbps");
-    assert_eq!(custom_map.get("iops").unwrap(), "10000");
+    assert_eq!(custom_map.get("gpu")?, "2");
+    assert_eq!(custom_map.get("fpga")?, "1");
+    assert_eq!(custom_map.get("network_bandwidth")?, "40Gbps");
+    assert_eq!(custom_map.get("iops")?, "10000");
     
     // Test clone functionality
     let cloned = custom.clone();
@@ -241,7 +241,7 @@ fn test_resource_requirements_comprehensive() {
 
 /// Test comprehensive DiscoveryPreferences functionality
 #[test]
-fn test_discovery_preferences_comprehensive() {
+fn test_discovery_preferences_comprehensive() -> Result<(), Box<dyn std::error::Error>> {
     // Test minimal discovery preferences
     let minimal = DiscoveryPreferences {
         preferred_regions: None,
@@ -282,29 +282,29 @@ fn test_discovery_preferences_comprehensive() {
     };
     
     // Test preferred regions
-    let regions = full.preferred_regions.as_ref().unwrap();
+    let regions = full.preferred_regions.as_ref()?;
     assert_eq!(regions.len(), 4);
     assert!(regions.contains(&"us-west-1".to_string()));
     assert!(regions.contains(&"eu-west-1".to_string()));
     
     // Test required capabilities
-    let capabilities = full.required_capabilities.as_ref().unwrap();
+    let capabilities = full.required_capabilities.as_ref()?;
     assert_eq!(capabilities.len(), 4);
     assert!(capabilities.contains(&"encryption_at_rest".to_string()));
     assert!(capabilities.contains(&"monitoring".to_string()));
     
     // Test excluded providers
-    let excluded = full.excluded_providers.as_ref().unwrap();
+    let excluded = full.excluded_providers.as_ref()?;
     assert_eq!(excluded.len(), 2);
     assert!(excluded.contains(&"unreliable_provider".to_string()));
     assert!(excluded.contains(&"deprecated_service".to_string()));
     
     // Test priority scoring
-    let priority = full.priority_scoring.as_ref().unwrap();
+    let priority = full.priority_scoring.as_ref()?;
     assert_eq!(priority.len(), 3);
-    assert_eq!(*priority.get("performance").unwrap(), 0.3);
-    assert_eq!(*priority.get("cost").unwrap(), 0.2);
-    assert_eq!(*priority.get("reliability").unwrap(), 0.5);
+    assert_eq!(*priority.get("performance")?, 0.3);
+    assert_eq!(*priority.get("cost")?, 0.2);
+    assert_eq!(*priority.get("reliability")?, 0.5);
     
     // Test that scores sum to 1.0
     let total_score: f64 = priority.values().sum();
@@ -320,7 +320,7 @@ fn test_discovery_preferences_comprehensive() {
 
 /// Test comprehensive BiomeMetadata functionality
 #[test]
-fn test_biome_metadata_comprehensive() {
+fn test_biome_metadata_comprehensive() -> Result<(), Box<dyn std::error::Error>> {
     // Test minimal metadata
     let minimal = BiomeMetadata {
         name: "test_biome".to_string(),
@@ -332,7 +332,7 @@ fn test_biome_metadata_comprehensive() {
     
     assert_eq!(minimal.name, "test_biome");
     assert_eq!(minimal.version, "1.0.0");
-    assert_eq!(minimal.description.as_ref().unwrap(), "Test biome description");
+    assert_eq!(minimal.description.as_ref()?, "Test biome description");
     assert!(minimal.labels.is_none());
     assert!(minimal.annotations.is_none());
     
@@ -359,21 +359,21 @@ fn test_biome_metadata_comprehensive() {
     // Test basic fields
     assert_eq!(full.name, "production_biome");
     assert_eq!(full.version, "2.1.0");
-    assert_eq!(full.description.as_ref().unwrap(), "Production biome with full capabilities");
+    assert_eq!(full.description.as_ref()?, "Production biome with full capabilities");
     
     // Test labels
-    let metadata_labels = full.labels.as_ref().unwrap();
+    let metadata_labels = full.labels.as_ref()?;
     assert_eq!(metadata_labels.len(), 3);
-    assert_eq!(metadata_labels.get("environment").unwrap(), "production");
-    assert_eq!(metadata_labels.get("team").unwrap(), "platform");
-    assert_eq!(metadata_labels.get("service_tier").unwrap(), "critical");
+    assert_eq!(metadata_labels.get("environment")?, "production");
+    assert_eq!(metadata_labels.get("team")?, "platform");
+    assert_eq!(metadata_labels.get("service_tier")?, "critical");
     
     // Test annotations
-    let metadata_annotations = full.annotations.as_ref().unwrap();
+    let metadata_annotations = full.annotations.as_ref()?;
     assert_eq!(metadata_annotations.len(), 4);
-    assert_eq!(metadata_annotations.get("deployment.timestamp").unwrap(), "2025-01-30T10:00:00Z");
-    assert_eq!(metadata_annotations.get("contact.team").unwrap(), "platform@company.com");
-    assert!(metadata_annotations.get("documentation.url").unwrap().contains("docs.company.com"));
+    assert_eq!(metadata_annotations.get("deployment.timestamp")?, "2025-01-30T10:00:00Z");
+    assert_eq!(metadata_annotations.get("contact.team")?, "platform@company.com");
+    assert!(metadata_annotations.get("documentation.url")?.contains("docs.company.com"));
     
     // Test clone functionality
     let cloned = full.clone();
@@ -385,7 +385,7 @@ fn test_biome_metadata_comprehensive() {
 
 /// Test comprehensive BiomeManifest functionality
 #[test]
-fn test_biome_manifest_comprehensive() {
+fn test_biome_manifest_comprehensive() -> Result<(), Box<dyn std::error::Error>> {
     // Create test metadata
     let mut labels = HashMap::new();
     labels.insert("env".to_string(), "test".to_string());
@@ -499,7 +499,7 @@ fn test_biome_manifest_comprehensive() {
     for (i, capability) in complex_manifest.capabilities.iter().enumerate() {
         assert_eq!(capability.capability_type, format!("capability_{}", i));
         assert_eq!(
-            capability.config.get(&format!("key_{}", i)).unwrap().as_str().unwrap(),
+            capability.config.get(&format!("key_{}", i))?.as_str()?,
             format!("value_{}", i)
         );
     }

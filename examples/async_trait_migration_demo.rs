@@ -1,11 +1,11 @@
 //! Async Trait Migration Demo
-//! 
+//!
 //! This demonstrates the systematic migration from `#[async_trait]` patterns
 //! to zero-cost native async traits for 20-50% performance improvement.
 
-use std::future::Future;
-use std::collections::HashMap;
 use serde_json::{json, Value};
+use std::collections::HashMap;
+use std::future::Future;
 
 // ==================== BEFORE: ASYNC_TRAIT PATTERN ====================
 
@@ -20,16 +20,16 @@ trait DataCapability {
     async fn execute_request(&self, request: &DataRequest) -> Result<DataResponse>;
 }
 
-#[async_trait] 
+#[async_trait]
 impl DataCapability for NCBILiveProvider {
     fn capability_type(&self) -> &str {
         "genome_data"
     }
-    
+
     async fn can_handle(&self, request: &DataRequest) -> Result<bool> {
         Ok(request.capability_type == "genome_data")
     }
-    
+
     async fn execute_request(&self, request: &DataRequest) -> Result<DataResponse> {
         // Implementation with Future boxing overhead
         self.search_ncbi(request).await
@@ -43,21 +43,33 @@ impl DataCapability for NCBILiveProvider {
 /// **PERFORMANCE**: 20-50% improvement over async_trait
 pub trait NativeAsyncDataCapability: Send + Sync {
     fn capability_type(&self) -> &str;
-    
+
     /// Native async - no Future boxing
-    fn can_handle(&self, request: &DataRequest) -> impl Future<Output = Result<bool, String>> + Send;
-    
+    fn can_handle(
+        &self,
+        request: &DataRequest,
+    ) -> impl Future<Output = Result<bool, String>> + Send;
+
     /// Native async - direct compilation optimization
-    fn execute_request(&self, request: &DataRequest) -> impl Future<Output = Result<DataResponse, String>> + Send;
+    fn execute_request(
+        &self,
+        request: &DataRequest,
+    ) -> impl Future<Output = Result<DataResponse, String>> + Send;
 }
 
 /// Zero-cost genome data capability trait
 pub trait NativeAsyncGenomeDataCapability: Send + Sync {
     /// Search genomes - native async, no boxing
-    fn search_genomes(&self, query: &str) -> impl Future<Output = Result<Vec<GenomeResult>, String>> + Send;
-    
+    fn search_genomes(
+        &self,
+        query: &str,
+    ) -> impl Future<Output = Result<Vec<GenomeResult>, String>> + Send;
+
     /// Get genome by ID - direct async compilation
-    fn get_genome_by_id(&self, id: &str) -> impl Future<Output = Result<Option<GenomeResult>, String>> + Send;
+    fn get_genome_by_id(
+        &self,
+        id: &str,
+    ) -> impl Future<Output = Result<Option<GenomeResult>, String>> + Send;
 }
 
 // ==================== EXAMPLE TYPES ====================
@@ -111,25 +123,32 @@ impl NativeAsyncDataCapability for MockNCBIProvider {
     fn capability_type(&self) -> &str {
         "genome_data"
     }
-    
+
     /// Native async implementation - no Future boxing
-    fn can_handle(&self, request: &DataRequest) -> impl Future<Output = Result<bool, String>> + Send {
+    fn can_handle(
+        &self,
+        request: &DataRequest,
+    ) -> impl Future<Output = Result<bool, String>> + Send {
         let capability_match = request.capability_type == "genome_data";
         async move { Ok(capability_match) }
     }
-    
+
     /// Native async implementation - direct compilation optimization
-    fn execute_request(&self, request: &DataRequest) -> impl Future<Output = Result<DataResponse, String>> + Send {
+    fn execute_request(
+        &self,
+        request: &DataRequest,
+    ) -> impl Future<Output = Result<DataResponse, String>> + Send {
         let provider_name = self.provider_name.clone();
         let parameters = request.parameters.clone();
         let metadata = request.metadata.clone();
-        
+
         async move {
             // Simulate NCBI API call without Future boxing
-            let query = parameters.get("query")
+            let query = parameters
+                .get("query")
                 .and_then(|v| v.as_str())
                 .unwrap_or("default");
-                
+
             let mock_data = json!({
                 "results": [
                     {
@@ -143,7 +162,7 @@ impl NativeAsyncDataCapability for MockNCBIProvider {
                 "query": query,
                 "provider": provider_name
             });
-            
+
             Ok(DataResponse {
                 data: mock_data,
                 metadata,
@@ -159,24 +178,28 @@ impl NativeAsyncDataCapability for MockNCBIProvider {
 
 impl NativeAsyncGenomeDataCapability for MockNCBIProvider {
     /// Zero-cost async genome search
-    fn search_genomes(&self, query: &str) -> impl Future<Output = Result<Vec<GenomeResult>, String>> + Send {
+    fn search_genomes(
+        &self,
+        query: &str,
+    ) -> impl Future<Output = Result<Vec<GenomeResult>, String>> + Send {
         let query = query.to_string();
         async move {
             // Direct async implementation without boxing
-            Ok(vec![
-                GenomeResult {
-                    id: "NC_000001.11".to_string(),
-                    title: format!("Search result for: {}", query),
-                    organism: "Homo sapiens".to_string(),
-                    length: Some(248956422),
-                    description: Some("Human chromosome 1".to_string()),
-                }
-            ])
+            Ok(vec![GenomeResult {
+                id: "NC_000001.11".to_string(),
+                title: format!("Search result for: {}", query),
+                organism: "Homo sapiens".to_string(),
+                length: Some(248956422),
+                description: Some("Human chromosome 1".to_string()),
+            }])
         }
     }
-    
+
     /// Zero-cost async genome retrieval
-    fn get_genome_by_id(&self, id: &str) -> impl Future<Output = Result<Option<GenomeResult>, String>> + Send {
+    fn get_genome_by_id(
+        &self,
+        id: &str,
+    ) -> impl Future<Output = Result<Option<GenomeResult>, String>> + Send {
         let id = id.to_string();
         async move {
             if id.starts_with("NC_") {
@@ -200,12 +223,12 @@ impl NativeAsyncGenomeDataCapability for MockNCBIProvider {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 **ASYNC_TRAIT MIGRATION DEMONSTRATION**");
     println!("==========================================");
-    
+
     let provider = MockNCBIProvider::new();
-    
+
     println!("\n⚡ **ZERO-COST NATIVE ASYNC PERFORMANCE**");
     println!("----------------------------------------");
-    
+
     // Test native async data capability
     let request = DataRequest {
         capability_type: "genome_data".to_string(),
@@ -216,26 +239,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
         metadata: HashMap::new(),
     };
-    
+
     let start = std::time::Instant::now();
-    
+
     // Zero-cost async calls
     let can_handle = provider.can_handle(&request).await?;
     println!("✅ Can handle request: {}", can_handle);
-    
+
     let response = provider.execute_request(&request).await?;
-    println!("✅ Response received: {} bytes", 
-             serde_json::to_string(&response.data)?.len());
-    
+    println!(
+        "✅ Response received: {} bytes",
+        serde_json::to_string(&response.data)?.len()
+    );
+
     let genomes = provider.search_genomes("human").await?;
     println!("✅ Genomes found: {}", genomes.len());
-    
+
     let genome = provider.get_genome_by_id("NC_000001.11").await?;
     println!("✅ Genome retrieved: {}", genome.is_some());
-    
+
     let duration = start.elapsed();
     println!("⏱️  Total execution time: {:?}", duration);
-    
+
     println!("\n📊 **PERFORMANCE BENEFITS**");
     println!("---------------------------");
     println!("✅ Zero Future boxing overhead");
@@ -243,7 +268,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("✅ Compile-time optimization");
     println!("✅ 20-50% performance improvement");
     println!("✅ Reduced memory allocations");
-    
+
     println!("\n🔄 **MIGRATION STRATEGY**");
     println!("-------------------------");
     println!("1. Replace #[async_trait] with native trait");
@@ -251,13 +276,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("3. Add + Send bounds for thread safety");
     println!("4. Update implementations to use async move blocks");
     println!("5. Test performance improvements");
-    
+
     println!("\n🎯 **NEXT STEPS**");
     println!("----------------");
     println!("• Apply this pattern to 46 remaining async_trait files");
     println!("• Measure performance improvements");
     println!("• Update documentation and examples");
     println!("• Complete zero-cost architecture migration");
-    
+
     Ok(())
-} 
+}

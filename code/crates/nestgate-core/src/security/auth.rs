@@ -11,26 +11,22 @@ use tokio::sync::RwLock;
 use crate::security::{Permission, Role};
 // AuthContext will be replaced with StorageAuthContext where needed
 use std::fmt;
-
 // Legacy AuthError and AuthErrorKind removed - use canonical SecurityError from crate::error
 
 // Using imports from above
 
 /// Permission for read access
-pub fn read_permission() -> Permission {
+pub const fn read_permission() -> Permission {
     Permission::new("system.read")
 }
-
 /// Permission for write access
-pub fn write_permission() -> Permission {
+pub const fn write_permission() -> Permission {
     Permission::new("system.write")
 }
-
 /// Permission for admin access
-pub fn admin_permission() -> Permission {
+pub const fn admin_permission() -> Permission {
     Permission::new("system.admin")
 }
-
 // Using the AuthContext from the parent module
 
 // Remove the duplicate AuthContext implementation since it conflicts with auth_types.rs
@@ -41,7 +37,6 @@ pub fn admin_permission() -> Permission {
 pub enum AuthMethod {
     /// Password authentication
     Password,
-
     /// API key authentication
     ApiKey,
 
@@ -63,7 +58,6 @@ pub enum AuthMethod {
 pub struct AuthManager {
     /// Users
     users: Arc<RwLock<HashMap<String, AuthContext>>>,
-
     /// API keys
     api_keys: Arc<RwLock<HashMap<String, String>>>,
 }
@@ -80,6 +74,7 @@ impl Clone for AuthManager {
 
 impl AuthManager {
     /// Create a new authentication manager
+    #[must_use]
     pub fn new() -> Self {
         Self {
             users: Arc::new(RwLock::new(HashMap::new())),
@@ -178,7 +173,6 @@ impl Default for AuthManager {
 pub struct ApiKeyConfig {
     /// Default expiration time in seconds
     pub default_expiration: u64,
-
     /// Maximum expiration time in seconds
     pub max_expiration: u64,
 
@@ -197,32 +191,25 @@ impl Default for ApiKeyConfig {
 }
 
 /// Permission functions
-pub fn resource_read_permission(resource: &str) -> Permission {
-    Permission::new(&format!("{resource}.read"))
+    Permission::new(&format!("{path}.read"))
 }
-
 /// Write permission function
-pub fn resource_write_permission(resource: &str) -> Permission {
-    Permission::new(&format!("{resource}.write"))
+    Permission::new(&format!("{path}.write"))
 }
-
 /// Admin permission function
-pub fn resource_admin_permission(resource: &str) -> Permission {
-    Permission::new(&format!("{resource}.admin"))
+    Permission::new(&format!("{path}.admin"))
 }
-
 /// Auth middleware to enforce permissions
 pub struct AuthMiddleware {
     /// Required permissions for the endpoint
     required_permissions: Vec<String>,
-
     /// Required role for the endpoint
     required_role: Option<Role>,
 }
 
 impl AuthMiddleware {
     /// Create a new auth middleware that requires specific permissions
-    pub fn with_permissions(permissions: Vec<String>) -> Self {
+    pub const fn with_permissions(permissions: Vec<String>) -> Self {
         Self {
             required_permissions: permissions,
             required_role: None,
@@ -230,7 +217,7 @@ impl AuthMiddleware {
     }
 
     /// Create a new auth middleware that requires a specific role
-    pub fn with_role(role: Role) -> Self {
+    pub const fn with_role(role: Role) -> Self {
         Self {
             required_permissions: vec![],
             required_role: Some(role),
@@ -238,13 +225,20 @@ impl AuthMiddleware {
     }
 
     /// Check if the auth context satisfies the middleware requirements
-    pub fn check(&self, context: &AuthContext) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn check(&self, context: &AuthContext) -> Result<()>  {
         // Check role requirement if set
         if let Some(required_role) = &self.required_role {
             match *required_role {
                 Role::Admin => {
                     if !context.is_admin() {
-                        return Err(NestGateError::permission_denied(
+                        return Err(NestGateError::security(
                             "admin role required",
                             "access",
                             Some("admin-protected resource"),
@@ -254,7 +248,7 @@ impl AuthMiddleware {
                 }
                 Role::Operator => {
                     if !context.has_role(&Role::Operator) {
-                        return Err(NestGateError::permission_denied(
+                        return Err(NestGateError::security(
                             "operator role required",
                             "access",
                             Some("operator-protected resource"),
@@ -264,7 +258,7 @@ impl AuthMiddleware {
                 }
                 Role::ReadOnly => {
                     if !context.has_role(&Role::ReadOnly) {
-                        return Err(NestGateError::permission_denied(
+                        return Err(NestGateError::security(
                             "read-only role required",
                             "access",
                             Some("read-only resource"),
@@ -274,7 +268,7 @@ impl AuthMiddleware {
                 }
                 _ => {
                     if !context.has_role(required_role) && !context.is_admin() {
-                        return Err(NestGateError::permission_denied(
+                        return Err(NestGateError::security(
                             "specific role required",
                             "access",
                             Some("role-protected resource"),
@@ -289,7 +283,7 @@ impl AuthMiddleware {
         for perm_name in &self.required_permissions {
             let perm = Permission::new(perm_name);
             if !context.has_permission(&perm) {
-                return Err(NestGateError::permission_denied(
+                return Err(NestGateError::security(
                     &format!("{perm_name} permission required"),
                     "access",
                     Some("permission-protected resource"),
@@ -303,26 +297,22 @@ impl AuthMiddleware {
 }
 
 /// Helper function to create an auth middleware that requires admin role
-pub fn require_admin() -> AuthMiddleware {
+pub const fn require_admin() -> AuthMiddleware {
     AuthMiddleware::with_role(Role::Admin)
 }
-
 /// Helper function to create an auth middleware that requires operator role
-pub fn require_operator() -> AuthMiddleware {
+pub const fn require_operator() -> AuthMiddleware {
     AuthMiddleware::with_role(Role::Operator)
 }
-
 /// Helper function to create an auth middleware that requires read-only access
-pub fn require_read_only() -> AuthMiddleware {
+pub const fn require_read_only() -> AuthMiddleware {
     AuthMiddleware::with_role(Role::ReadOnly)
 }
-
 /// Authentication token
 #[derive(Debug, Clone)]
 pub struct AuthToken {
     /// Token type
     pub token_type: TokenType,
-
     /// Token value
     pub token: String,
 
@@ -335,7 +325,6 @@ pub struct AuthToken {
 pub enum TokenType {
     /// API key
     ApiKey,
-
     /// JWT token
     Jwt,
 

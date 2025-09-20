@@ -1,6 +1,6 @@
-//! Canonical Configuration System for NestGate
-//!
-//! This module provides a unified, hierarchical configuration system with proper separation of concerns:
+// Canonical Configuration System for NestGate
+//! Module definitions and exports.
+// This module provides a unified, hierarchical configuration system with proper separation of concerns:
 //! - **Core types**: Configuration data structures
 //! - **Validation**: Configuration validation logic
 //! - **Loading**: File I/O and parsing operations

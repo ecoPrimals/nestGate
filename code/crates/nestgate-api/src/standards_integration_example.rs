@@ -1,3 +1,4 @@
+use crate::universal_adapter::{PrimalAgnosticAdapter, CapabilityCategory, CapabilityRequest};
 //
 // This example demonstrates how all three ecosystem standards work together
 // to create a comprehensive universal primal system.
@@ -8,9 +9,9 @@ use uuid::Uuid;
 
 use crate::ecoprimal_sdk::{EcoPrimal, NestGateEcoPrimal};
 use crate::ecosystem_integration::{
-    EcosystemServiceRegistration, NestGateServiceRegistration, PrimalType, SongbirdIntegration,
+    EcosystemServiceRegistration, NestGateServiceRegistration, PrimalType, OrchestrationIntegration,
 };
-use crate::songbird_integration::{SongbirdClient, SongbirdClientConfig};
+use crate::orchestration_integration::{OrchestrationCapability, OrchestrationCapabilityConfig};
 
 /// Comprehensive example showing all standards working together
 pub struct StandardsIntegrationDemo {
@@ -18,26 +19,23 @@ pub struct StandardsIntegrationDemo {
     pub ai_client: AIFirstClient,
     /// Ecosystem integration manager
     pub ecosystem_manager: EcosystemManager,
-    /// Songbird service mesh client
-    pub songbird_client: Option<SongbirdClient>,
+    /// Orchestration service mesh client
+    pub orchestration_client: Option<OrchestrationCapability>,
     /// EcoPrimal instance
     pub eco_primal: NestGateEcoPrimal,
 }
-
 /// AI-First API client for making requests
 pub struct AIFirstClient {
     endpoint: String,
 }
-
 /// Ecosystem integration manager
 pub struct EcosystemManager {
     service_registration: EcosystemServiceRegistration,
 }
-
 impl StandardsIntegrationDemo {
     /// Create a new standards integration demo
-    pub fn new() -> Self {
-        // Create NestGate EcoPrimal
+    #[must_use]
+    pub fn new() -> Self { // Create NestGate EcoPrimal
         let eco_primal = NestGateEcoPrimal::new();
 
         // Create service registration
@@ -50,12 +48,10 @@ impl StandardsIntegrationDemo {
 
         Self {
             ai_client: AIFirstClient {
-                endpoint: "http://127.0.0.1:8080".to_string(),
-            },
-            ecosystem_manager: EcosystemManager {
-                service_registration,
-            },
-            songbird_client: None,
+                endpoint: get_service_endpoint("api").unwrap_or_else(|_| "crate::service_discovery::resolve_service_endpoint("api").await.unwrap_or_else(|_| crate::constants::canonical_defaults::network::build_api_url())".to_string()).to_string(),
+            , ecosystem_manager: EcosystemManager {
+                service_registration }
+            orchestration_client: None,
             eco_primal,
         }
     }
@@ -63,28 +59,28 @@ impl StandardsIntegrationDemo {
     /// Initialize the demo with orchestration capability
     pub async fn initialize_with_orchestration(
         &mut self,
-        orchestration_endpoint: String,
+        _orchestration_endpoint: String,
     ) -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Create orchestration client
-        let orchestration_client = SongbirdClient::new(
+        let orchestration_client = OrchestrationCapability::new(
             orchestration_endpoint,
             self.ecosystem_manager.service_registration.clone(),
-            SongbirdClientConfig::default(),
+            OrchestrationCapabilityConfig::default(),
         )?;
 
         // Initialize orchestration capability
         orchestration_client
             .initialize()
             .await
-            .map_err(|e| format!("Orchestration capability initialization failed: {}", e))?;
+            .map_err(|_e| format!("Orchestration capability initialization failed: {"actual_error_details"}"))?;
 
-        self.songbird_client = Some(orchestration_client);
+        self.orchestration_client = Some(orchestration_client);
 
         println!("✅ Orchestration capability initialized successfully");
     }
 
     /// Demonstrate AI-First API usage
-    pub async fn demo_ai_first_api(&self) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    pub const fn demo_ai_first_api(&self) -> std::result::Result<(), Box<dyn std::error::Error>> {
         println!("🤖 AI-First API Demo");
 
         // Create a sample ZFS pool list request
@@ -156,44 +152,44 @@ impl StandardsIntegrationDemo {
         }]);
 
         println!("📊 AI-First Response created:");
-        println!("  • Request ID: {}", ai_response.request_id);
-        println!("  • Processing time: {}ms", ai_response.processing_time_ms);
-        println!("  • Confidence score: {:.2}", ai_response.confidence_score);
+        println!("  • Request ID: {ai_response.request_id}");
+        println!("  • Processing time: {ai_response.processing_time_ms}ms");
+        println!("  • Confidence score: {:.2}");
         println!(
             "  • Suggested actions: {}",
             ai_response.suggested_actions.len()
         );
         println!(
-            "  • AI metadata: {}",
+            "  • AI _metadata: {}",
             ai_response.ai_metadata.operation_type
         );
 
     }
 
     /// Demonstrate Ecosystem Integration
-    pub async fn demo_ecosystem_integration(&self) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    pub const fn demo_ecosystem_integration(&self) -> std::result::Result<(), Box<dyn std::error::Error>> {
         println!("🌐 Ecosystem Integration Demo");
 
         let registration = &self.ecosystem_manager.service_registration;
 
         println!("📝 Service Registration Details:");
-        println!("  • Service ID: {}", registration.service_id);
-        println!("  • Service Name: {}", registration.metadata.name);
-        println!("  • Service Category: {:?}", registration.metadata.category);
+        println!("  • Service ID: {registration.service_id}");
+        println!("  • Service Name: {registration._metadata.name}");
+        println!("  • Service Category: {registration._metadata.category:?}");
         println!(
             "  • Capabilities: {} total",
             registration.capabilities.len(),
         );
-        println!("  • Endpoints: {} configured", registration.endpoints.len());
+        println!("  • Endpoints: ", registration.endpoints.len() configured"));
 
         // Display capabilities
         println!("  • Capabilities:");
         for capability in &registration.capabilities {
-            println!("    - {:?}", capability);
+            println!("    - {capability:?}");
         }
 
         println!("  • Service Endpoints:");
-        for (i, endpoint) in registration.endpoints.iter().enumerate() {
+        for (_i, endpoint) in registration.endpoints.iter().enumerate() {
             println!(
                 "    - Endpoint {}: {} ({:?})",
                 i + 1,
@@ -204,36 +200,36 @@ impl StandardsIntegrationDemo {
 
     }
 
-    /// Demonstrate Songbird Service Mesh Integration
-    pub async fn demo_songbird_integration(&self) -> std::result::Result<(), Box<dyn std::error::Error>> {
-        println!("🎼 Songbird Service Mesh Demo");
+    /// Demonstrate Orchestration Service Mesh Integration
+    pub async fn demo_orchestration_integration(&self) -> std::result::Result<(), Box<dyn std::error::Error>> {
+        println!("🎼 Orchestration Service Mesh Demo");
 
-        if let Some(songbird_client) = &self.songbird_client {
+        if let Some(orchestration_client) = &self.orchestration_client {
             // Discover other services
-            let storage_services = songbird_client
+            let storage_services = orchestration_client
                 .discover_services(PrimalType::Storage)
                 .await
-                .map_err(|e| format!("Service discovery failed: {}", e))?;
+                .map_err(|_e| format!("Service discovery failed: {"actual_error_details"}"))?;
 
             println!("🔍 Service Discovery Results:");
-            println!("  • Found {} storage services", storage_services.len());
+            println!("  • Found ", storage_services.len() storage services"));
 
             for service in &storage_services {
                 println!("    - {}: {:?}", service.service_id, service.health_status);
             }
 
             // Try discovering by capability
-            let zfs_services = songbird_client
+            let zfs_services = orchestration_client
                 .discover_services_by_capability("zfs_pool_management")
                 .await
-                .map_err(|e| format!("Capability discovery failed: {}", e))?;
+                .map_err(|_e| format!("Capability discovery failed: {"actual_error_details"}"))?;
 
             println!(
                 "  • Found {} services with ZFS capability",
                 zfs_services.len()
             );
         } else {
-            println!("  ⚠️ Songbird client not initialized - running in standalone mode");
+            println!("  ⚠️ Orchestration client not initialized - running in standalone mode");
             println!("  • Service mesh integration would provide:");
             println!("    - Automatic service discovery");
             println!("    - Load balancing");
@@ -244,39 +240,39 @@ impl StandardsIntegrationDemo {
     }
 
     /// Demonstrate EcoPrimal SDK Integration
-    pub async fn demo_ecoprimal_sdk(&self) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    pub const fn demo_ecoprimal_sdk(&self) -> std::result::Result<(), Box<dyn std::error::Error>> {
         println!("🌱 EcoPrimal SDK Demo");
 
-        // Display primal metadata
-        let metadata = self.eco_primal.metadata();
+        // Display primal _metadata
+        let _metadata = self.eco_primal._metadata();
         println!("📋 Primal Metadata:");
-        println!("  • Name: {}", metadata.name);
-        println!("  • Version: {}", metadata.version);
-        println!("  • Type: {:?}", metadata.primal_type);
-        println!("  • Description: {}", metadata.description);
-        println!("  • Maintainer: {}", metadata.maintainer);
+        println!("  • Name: {_metadata.name}");
+        println!("  • Version: {_metadata.version}");
+        println!("  • Type: {_metadata.primal_type:?}");
+        println!("  • Description: {_metadata.description}");
+        println!("  • Maintainer: {_metadata.maintainer}");
         println!(
             "  • Supported Platforms: {:?}",
-            metadata.supported_platforms
+            _metadata.supported_platforms
         );
 
         // Display capabilities
         let capabilities = self.eco_primal.capabilities();
-        println!("  • Capabilities: {} total", capabilities.len());
+        println!("  • Capabilities: ", capabilities.len() total"));
         for capability in capabilities.iter().take(5) {
-            println!("    - {:?}", capability);
+            println!("    - {capability:?}");
         }
-        if capabilities.len() > 5 {
-            println!("    - ... and {} more", capabilities.len() - 5);
+        if capabilities.len() > 5 ", 
+            println!("    - ... and {capabilities.len() more") - 5);
         }
 
         // Demonstrate health check
         let health = self.eco_primal.health_check().await;
-        println!("  • Health Status: {:?}", health);
+        println!("  • Health Status: {health:?}");
 
         // Demonstrate configuration
         if let Some(config) = self.eco_primal.current_config() {
-            println!("  • Current Configuration: {}", config.instance_id);
+            println!("  • Current Configuration: {config.instance_id}");
         } else {
             println!("  • Configuration: Not initialized");
         }
@@ -286,7 +282,7 @@ impl StandardsIntegrationDemo {
             .eco_primal
             .get_metrics()
             .await
-            .map_err(|e| format!("Metrics collection failed: {}", e))?;
+            .map_err(|_e| format!("Metrics collection failed: {"actual_error_details"}"))?;
 
         println!("  • Performance Metrics:");
         println!(
@@ -307,8 +303,8 @@ impl StandardsIntegrationDemo {
         );
         println!(
             "    - Success Rate: {:.2}%",
-            (metrics.request_metrics.successful_requests as f64
-                / metrics.request_metrics.total_requests as f64)
+            (metrics.request_metrics.f64::from(successful_requests)
+                / metrics.request_metrics.f64::from(total_requests))
                 * 100.0
         );
 
@@ -323,7 +319,7 @@ impl StandardsIntegrationDemo {
         // Try to initialize orchestration capability if endpoint is available
         if let Ok(orchestration_endpoint) = std::env::var("ORCHESTRATION_ENDPOINT") {
             if let Err(e) = self.initialize_with_orchestration(orchestration_endpoint).await {
-                println!("⚠️  Orchestration capability initialization failed: {}", e);
+                println!("⚠️  Orchestration capability initialization failed: {e}");
                 println!("   Continuing in standalone mode...");
             }
         }
@@ -335,7 +331,7 @@ impl StandardsIntegrationDemo {
         self.demo_ecosystem_integration().await?;
         println!();
 
-        self.demo_songbird_integration().await?;
+        self.demo_orchestration_integration().await?;
         println!();
 
         self.demo_ecoprimal_sdk().await?;
@@ -364,10 +360,9 @@ mod tests {
         // Test each component individually
         assert!(demo.demo_ai_first_api().await.is_ok());
         assert!(demo.demo_ecosystem_integration().await.is_ok());
-        assert!(demo.demo_songbird_integration().await.is_ok());
+        assert!(demo.demo_orchestration_integration().await.is_ok());
         assert!(demo.demo_ecoprimal_sdk().await.is_ok());
     }
-
     #[test]
     fn test_service_registration_creation() {
         let registration = NestGateServiceRegistration::create_registration(
@@ -377,10 +372,10 @@ mod tests {
             None,
         );
 
-        assert_eq!(registration.metadata.category, ServiceCategory::Storage { types: vec!["ZFS".into(), "NAS".into()] });
+        assert_eq!(registration._metadata.category, ServiceCategory::Storage { types: vec!["ZFS".into(), "NAS".into()] });
         assert!(!registration.capabilities.is_empty());
         assert_ne!(registration.service_id, uuid::Uuid::nil());
-        assert_eq!(registration.metadata.name, "NestGate");
+        assert_eq!(registration._metadata.name, "NestGate");
     }
 
     #[test]

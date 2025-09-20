@@ -1,20 +1,26 @@
-//! Configuration Merging
-//!
-//! This module handles merging multiple configurations.
-//! Single responsibility: Combine configurations with proper precedence.
+// Configuration Merging
+//! Merger functionality and utilities.
+// This module handles merging multiple configurations.
+// Single responsibility: Combine configurations with proper precedence.
 
 use super::types::*;
 use crate::Result;
 
 /// Configuration merger
 pub struct ConfigMerger;
-
 impl ConfigMerger {
     /// Merge two configurations with override precedence
-    pub fn merge(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn merge(
         base: CanonicalConfig,
         override_config: CanonicalConfig,
-    ) -> Result<CanonicalConfig> {
+    ) -> Result<CanonicalConfig>  {
         let mut merged = base;
 
         // Override system config

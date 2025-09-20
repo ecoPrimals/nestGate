@@ -22,12 +22,14 @@ async fn test_throughput_under_load() -> std::result::Result<(), Box<dyn std::er
             i
         });
         handles.push(handle);
+        Ok(())
     }
 
     // Wait for all operations
     for handle in handles {
         handle.await?;
         operations_completed += 1;
+        Ok(())
     }
 
     let elapsed = start_time.elapsed();
@@ -64,12 +66,14 @@ async fn test_latency_under_various_loads() -> Result<(), Box<dyn std::error::Er
                 op_start.elapsed()
             });
             handles.push(handle);
+            Ok(())
         }
 
         let mut latencies = Vec::new();
         for handle in handles {
             let latency = handle.await?;
             latencies.push(latency);
+            Ok(())
         }
 
         // Calculate statistics
@@ -84,6 +88,7 @@ async fn test_latency_under_various_loads() -> Result<(), Box<dyn std::error::Er
             p95 < Duration::from_millis(100),
             "P95 latency should be < 100ms"
         );
+        Ok(())
     }
 
     println!("  ✅ Latency test successful");
@@ -105,7 +110,9 @@ async fn test_memory_usage_under_load() -> Result<(), Box<dyn std::error::Error>
 
         if i % 20 == 0 {
             sleep(Duration::from_millis(10)).await;
+            Ok(())
         }
+        Ok(())
     }
 
     println!("  📊 Created {} data sets", data_sets.len());

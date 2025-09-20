@@ -3,7 +3,6 @@
 /// for the storage management system.
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
 /// ZFS configuration for command execution
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsConfig {
@@ -12,7 +11,6 @@ pub struct ZfsConfig {
     pub use_sudo: bool,
     pub command_timeout: Duration,
 }
-
 impl Default for ZfsConfig {
     fn default() -> Self {
         Self {
@@ -31,11 +29,10 @@ pub struct CachePolicies {
     pub compression: bool,
     pub deduplication: bool,
 }
-
 impl Default for CachePolicies {
     fn default() -> Self {
         Self {
-            eviction_strategy: EvictionPolicy::LRU,
+            eviction_strategy: EvictionPolicy::Lru,
             compression: false,
             deduplication: false,
         }
@@ -45,12 +42,11 @@ impl Default for CachePolicies {
 /// Cache eviction policies
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum EvictionPolicy {
-    LRU, // Least Recently Used
-    LFU, // Least Frequently Used
-    ARC, // ZFS Adaptive Replacement Cache
+    Lru, // Least Recently Used
+    Lfu, // Least Frequently Used
+    Arc, // ZFS Adaptive Replacement Cache
     Random,
 }
-
 /// Storage service configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageServiceConfig {
@@ -77,7 +73,6 @@ pub struct StorageServiceConfig {
     /// Monitoring interval in seconds
     pub monitoring_interval: u64,
 }
-
 impl Default for StorageServiceConfig {
     fn default() -> Self {
         Self {
@@ -98,12 +93,14 @@ impl Default for StorageServiceConfig {
 
 impl ZfsConfig {
     /// Create a new ZFS configuration
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self::default()
     }
 
     /// Create a configuration for development (no sudo)
-    pub fn development() -> Self {
+    #[must_use]
+    pub const fn development() -> Self {
         Self {
             use_sudo: false,
             command_timeout: Duration::from_secs(10),
@@ -112,7 +109,8 @@ impl ZfsConfig {
     }
 
     /// Create a configuration for production
-    pub fn production() -> Self {
+    #[must_use]
+    pub const fn production() -> Self {
         Self {
             use_sudo: true,
             command_timeout: Duration::from_secs(60),
@@ -121,7 +119,14 @@ impl ZfsConfig {
     }
 
     /// Validate the configuration
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<(), String>  {
         if self.zfs_binary.is_empty() {
             return Err("ZFS binary path cannot be empty".to_string());
         }
@@ -143,12 +148,14 @@ impl ZfsConfig {
 
 impl StorageServiceConfig {
     /// Create a new storage service configuration
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self::default()
     }
 
     /// Create a development configuration
-    pub fn development() -> Self {
+    #[must_use]
+    pub const fn development() -> Self {
         Self {
             zfs: ZfsConfig::development(),
             discovery_interval: 60,    // 1 minute for faster development
@@ -160,7 +167,8 @@ impl StorageServiceConfig {
     }
 
     /// Create a production configuration
-    pub fn production() -> Self {
+    #[must_use]
+    pub const fn production() -> Self {
         Self {
             zfs: ZfsConfig::production(),
             discovery_interval: 600,    // 10 minutes
@@ -173,7 +181,14 @@ impl StorageServiceConfig {
     }
 
     /// Validate the configuration
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<(), String>  {
         // Validate ZFS configuration
         self.zfs.validate()?;
 
@@ -201,22 +216,26 @@ impl StorageServiceConfig {
     }
 
     /// Get discovery interval as Duration
-    pub fn discovery_interval_duration(&self) -> Duration {
+    #[must_use]
+    pub const fn discovery_interval_duration(&self) -> Duration {
         Duration::from_secs(self.discovery_interval)
     }
 
     /// Get quota check interval as Duration
-    pub fn quota_check_interval_duration(&self) -> Duration {
+    #[must_use]
+    pub const fn quota_check_interval_duration(&self) -> Duration {
         Duration::from_secs(self.quota_check_interval)
     }
 
     /// Get monitoring interval as Duration
-    pub fn monitoring_interval_duration(&self) -> Duration {
+    #[must_use]
+    pub const fn monitoring_interval_duration(&self) -> Duration {
         Duration::from_secs(self.monitoring_interval)
     }
 
     /// Get operation timeout as Duration
-    pub fn operation_timeout_duration(&self) -> Duration {
+    #[must_use]
+    pub const fn operation_timeout_duration(&self) -> Duration {
         Duration::from_secs(self.operation_timeout)
     }
 }
@@ -243,10 +262,13 @@ mod tests {
 
     #[test]
     fn test_zfs_config_validation() {
-        let mut config = ZfsConfig::default();
+        let config = ZfsConfig::default();
         assert!(config.validate().is_ok());
 
-        config.zfs_binary = String::new();
+        let config = ZfsConfig {
+            zfs_binary: String::new(),
+            ..Default::default()
+        };
         assert!(config.validate().is_err());
     }
 

@@ -3,35 +3,60 @@ name = "nestgate-network"
 version = "0.1.0"
 edition = "2021"
 description = "Network protocols and communication for NestGate"
-license = "AGPL-3.0-or-later"
+license = "AGPL-3.0-only"
+repository = "https://github.com/eastgate/nestgate"
+readme = "README.md"
+keywords = [ "networking", "async", "rust", "nestgate",]
+categories = [ "network-programming", "asynchronous",]
 
 [dependencies]
 anyhow = "1.0"
 async-trait = "0.1"
-axum = { version = "0.7", features = ["json", "tokio"] }
-chrono = { version = "0.4", features = ["serde"] }
 futures-util = "0.3"
-nestgate-core = { path = "../nestgate-core" }
-reqwest = { version = "0.11", features = ["json"] }
-serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "1.0"
-tokio = { version = "1.0", features = ["full"] }
 tokio-tungstenite = "0.24"
 tracing = "0.1"
 tungstenite = "0.24"
-uuid = { version = "1.0", features = ["v4", "serde"] }
 warp = "0.3"
-
-# Additional dependencies for async streaming
 async-stream = "0.3"
+rand = "0.8"
 
-# Web Framework
-tower = { workspace = true }
-tower-http = { workspace = true }
+[dependencies.axum]
+version = "0.7"
+features = [ "json", "tokio",]
 
-# Network
-ipnetwork = { workspace = true }
+[dependencies.chrono]
+version = "0.4"
+features = [ "serde",]
 
-[dev-dependencies]
-tokio-test = { workspace = true } 
+[dependencies.nestgate-core]
+path = "../nestgate-core"
+
+[dependencies.reqwest]
+version = "0.11"
+features = [ "json",]
+
+[dependencies.serde]
+version = "1.0"
+features = [ "derive",]
+
+[dependencies.tokio]
+version = "1.0"
+features = [ "full",]
+
+[dependencies.uuid]
+version = "1.0"
+features = [ "v4", "serde",]
+
+[dependencies.tower]
+workspace = true
+
+[dependencies.tower-http]
+workspace = true
+
+[dependencies.ipnetwork]
+workspace = true
+
+[dev-dependencies.tokio-test]
+workspace = true

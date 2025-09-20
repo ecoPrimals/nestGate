@@ -1,3 +1,7 @@
+use super::{
+    cache::DiscoveryCache, introspection::SystemIntrospection, network::NetworkDiscovery,
+    performance::PerformanceDiscovery, registry::ServiceRegistryClient,
+};
 /// Core Universal Primal Discovery Orchestrator
 /// This module contains the main orchestration logic that coordinates
 /// between different discovery subsystems.
@@ -7,11 +11,6 @@ use std::net::IpAddr;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
-
-use super::{
-    cache::DiscoveryCache, introspection::SystemIntrospection, network::NetworkDiscovery,
-    performance::PerformanceDiscovery, registry::ServiceRegistryClient,
-};
 
 /// **UNIVERSAL PRIMAL PRINCIPLE**: No hardcoded values, everything discovered
 #[allow(dead_code)]
@@ -31,7 +30,6 @@ pub struct UniversalPrimalDiscovery {
     discovered_timeouts: Arc<RwLock<HashMap<String, Duration>>>,
     discovered_limits: Arc<RwLock<HashMap<String, usize>>>,
 }
-
 impl Default for UniversalPrimalDiscovery {
     fn default() -> Self {
         Self::new()
@@ -40,6 +38,7 @@ impl Default for UniversalPrimalDiscovery {
 
 impl UniversalPrimalDiscovery {
     /// Create new discovery system - no defaults, everything learned
+    #[must_use]
     pub fn new() -> Self {
         Self {
             network_discovery: NetworkDiscovery::new(),
@@ -55,7 +54,14 @@ impl UniversalPrimalDiscovery {
     }
 
     /// **PRIMAL DISCOVERY**: Find available bind address through network discovery
-    pub async fn discover_bind_address(&self, service_name: &str) -> Result<IpAddr> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn discover_bind_address(&self, service_name: &str) -> Result<IpAddr>  {
         // Delegate to network discovery subsystem
         self.network_discovery
             .discover_bind_address(service_name)
@@ -63,11 +69,18 @@ impl UniversalPrimalDiscovery {
     }
 
     /// **PRIMAL DISCOVERY**: Find available port through port scanning
-    pub async fn discover_available_port(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn discover_available_port(
         &self,
         service_name: &str,
         start_range: u16,
-    ) -> Result<u16> {
+    ) -> Result<u16>  {
         // Delegate to network discovery subsystem
         self.network_discovery
             .discover_available_port(service_name, start_range)
@@ -75,19 +88,35 @@ impl UniversalPrimalDiscovery {
     }
 
     /// **PRIMAL DISCOVERY**: Discover optimal timeout through performance testing
-    pub async fn discover_optimal_timeout(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn discover_optimal_timeout(
         &self,
         service_name: &str,
-        operation: &str,
-    ) -> Result<Duration> {
+        _operation: &str,
+    ) -> Result<Duration>  {
         // Delegate to performance discovery subsystem
-        self.performance_discovery
-            .discover_optimal_timeout(service_name, operation)
-            .await
+        let optimal_timeout = self
+            .performance_discovery
+            .discover_optimal_timeout(service_name)
+            .await?;
+        Ok(optimal_timeout)
     }
 
     /// **PRIMAL DISCOVERY**: Discover system limits through introspection
-    pub async fn discover_system_limits(&mut self, resource_type: &str) -> Result<usize> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn discover_system_limits(&mut self, resource_type: &str) -> Result<usize>  {
         // Delegate to system introspection
         self.system_introspection
             .discover_resource_limits(resource_type)
@@ -95,11 +124,18 @@ impl UniversalPrimalDiscovery {
     }
 
     /// **ECOSYSTEM INTEGRATION**: Query external service registry
-    pub async fn query_service_registry(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn query_service_registry(
         &self,
         service_name: &str,
         query_type: &str,
-    ) -> Result<String> {
+    ) -> Result<String>  {
         // Delegate to registry client
         self.registry_client
             .query_service(service_name, query_type)
@@ -135,7 +171,14 @@ impl UniversalPrimalDiscovery {
     }
 
     /// **SYSTEM HEALTH**: Get comprehensive discovery status
-    pub async fn get_discovery_status(&self) -> Result<HashMap<String, String>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_discovery_status(&self) -> Result<HashMap<String, String>>  {
         let mut status = HashMap::new();
 
         // Network discovery status

@@ -1,10 +1,12 @@
-/// **RETURN BUILDERS MODULE SYSTEM**
-/// Breaking down the large return_builders.rs (898 lines) into focused modules
-/// to achieve 2000-line file size compliance while maintaining functionality.
+// **RETURN BUILDERS MODULE SYSTEM**
+// Breaking down the large return_builders.rs (898 lines) into focused modules
+//! to achieve 2000-line file size compliance while maintaining functionality.
+
+/// Return builders module for constructing complex return values.
 ///
-/// Pure builder functions for complex return value constructions.
-/// Extracted from inline struct creation to enable precise testing
-/// and catch field assignment mutations.
+/// This module provides builder functions for complex return value constructions,
+/// extracted from inline struct creation to enable precise testing and catch
+/// field assignment mutations.
 // Response builder functions
 pub mod response_builders;
 // Mock data builders for testing
@@ -15,8 +17,7 @@ pub mod config_builders;
 pub mod json_builders;
 // Test modules
 pub mod tests;
-
 // Re-export all public builder functions for backward compatibility
-pub use response_builders::{
-    build_error_response, build_success_response,
-};
+pub use json_builders::build_json_response;
+pub use mock_builders::{build_access_grant, build_mock_resource_allocation};
+pub use response_builders::{build_error_response, build_success_response};

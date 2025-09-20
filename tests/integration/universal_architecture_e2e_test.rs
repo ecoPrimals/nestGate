@@ -11,7 +11,7 @@ use tracing::info;
 
 /// Test universal architecture E2E configuration
 #[tokio::test]
-async fn test_universal_architecture_e2e_config() {
+async fn test_universal_architecture_e2e_config() -> Result<(), Box<dyn std::error::Error>> {
     info!("🏗️ Starting universal architecture E2E configuration test");
     
     // Test universal architecture E2E configuration creation
@@ -23,11 +23,12 @@ async fn test_universal_architecture_e2e_config() {
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ Universal architecture E2E configuration test completed");
+    Ok(())
 }
 
 /// Test universal architecture system integration
 #[tokio::test]
-async fn test_universal_architecture_system_integration() {
+async fn test_universal_architecture_system_integration() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔗 Testing universal architecture system integration");
     
     // Test universal architecture integration operations
@@ -47,14 +48,16 @@ async fn test_universal_architecture_system_integration() {
         // Verify integration operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ Universal architecture system integration completed");
+    Ok(())
 }
 
 /// Test universal architecture workflow validation
 #[tokio::test]
-async fn test_universal_architecture_workflow() {
+async fn test_universal_architecture_workflow() -> Result<(), Box<dyn std::error::Error>> {
     info!("⚡ Testing universal architecture workflow validation");
     
     // Test universal architecture workflow steps
@@ -74,14 +77,16 @@ async fn test_universal_architecture_workflow() {
         // Verify workflow step is valid
         assert!(!step.is_empty(), "Step should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ Universal architecture workflow validation completed");
+    Ok(())
 }
 
 /// Test universal architecture performance monitoring
 #[tokio::test]
-async fn test_universal_architecture_performance() {
+async fn test_universal_architecture_performance() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing universal architecture performance monitoring");
     
     let start_time = std::time::Instant::now();
@@ -96,14 +101,16 @@ async fn test_universal_architecture_performance() {
         
         // Verify performance timing is accurate
         assert!(elapsed.as_millis() >= cycle_time as u128, "Architecture performance timing should be accurate");
+    Ok(())
     }
     
     info!("✅ Universal architecture performance monitoring completed");
+    Ok(())
 }
 
 /// Test universal architecture scalability
 #[tokio::test]
-async fn test_universal_architecture_scalability() {
+async fn test_universal_architecture_scalability() -> Result<(), Box<dyn std::error::Error>> {
     info!("📈 Testing universal architecture scalability");
     
     // Test universal architecture scalability scenarios
@@ -123,14 +130,16 @@ async fn test_universal_architecture_scalability() {
         // Verify scalability scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
         assert!(scaling_time > 0, "Scaling time should be positive");
+    Ok(())
     }
     
     info!("✅ Universal architecture scalability completed");
+    Ok(())
 }
 
 /// Test universal architecture resilience
 #[tokio::test]
-async fn test_universal_architecture_resilience() {
+async fn test_universal_architecture_resilience() -> Result<(), Box<dyn std::error::Error>> {
     info!("🛡️ Testing universal architecture resilience");
     
     // Test universal architecture resilience mechanisms
@@ -150,14 +159,16 @@ async fn test_universal_architecture_resilience() {
         // Verify resilience mechanism is valid
         assert!(!mechanism.is_empty(), "Mechanism should be specified");
         assert!(resilience_time > 0, "Resilience time should be positive");
+    Ok(())
     }
     
     info!("✅ Universal architecture resilience completed");
+    Ok(())
 }
 
 /// Test universal architecture environments
 #[tokio::test]
-async fn test_universal_architecture_environments() {
+async fn test_universal_architecture_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing universal architecture E2E across environments");
     
     // Test development environment universal architecture E2E
@@ -173,4 +184,5 @@ async fn test_universal_architecture_environments() {
     info!("Production universal architecture E2E configuration validated");
     
     info!("✅ Universal architecture E2E environment test completed");
+    Ok(())
 } 

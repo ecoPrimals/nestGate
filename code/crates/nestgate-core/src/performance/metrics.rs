@@ -16,7 +16,6 @@ pub struct PerformanceMetrics {
     pub worst_improvement: f64,
     pub benchmark_details: Vec<BenchmarkSummary>,
 }
-
 /// Summary of individual benchmark results
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkSummary {
@@ -27,7 +26,6 @@ pub struct BenchmarkSummary {
     pub iterations: usize,
     pub status: BenchmarkStatus,
 }
-
 /// Status of benchmark execution
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BenchmarkStatus {
@@ -35,7 +33,6 @@ pub enum BenchmarkStatus {
     Failed,
     Warning,
 }
-
 /// Validation summary for performance results
 #[derive(Debug, Clone)]
 pub struct ValidationSummary {
@@ -45,9 +42,9 @@ pub struct ValidationSummary {
     pub average_improvement_percentage: f64,
     pub recommendations: Vec<String>,
 }
-
 impl PerformanceMetrics {
     /// Create performance metrics from benchmark results
+    #[must_use]
     pub fn from_results(results: &[BenchmarkResults]) -> Self {
         let mut benchmark_details = Vec::new();
         let mut improvements = Vec::new();
@@ -70,15 +67,15 @@ impl PerformanceMetrics {
             benchmark_details.push(BenchmarkSummary {
                 name: result.pattern_name.clone(),
                 improvement_percentage: result.improvement_percentage,
-                zero_cost_time_ms: result.zero_cost_time_ns as f64 / 1_000_000.0,
-                traditional_time_ms: result.traditional_time_ns as f64 / 1_000_000.0,
+                zero_cost_time_ms: result.f64::from(zero_cost_time_ns) / 1_000_000.0,
+                traditional_time_ms: result.f64::from(traditional_time_ns) / 1_000_000.0,
                 iterations: result.iterations,
                 status,
-            });
+            );
         }
 
         let average_improvement = if !improvements.is_empty() {
-            improvements.iter().sum::<f64>() / improvements.len() as f64
+            improvements.iter().sum::<f64>() / (improvements.len() as f64)
         } else {
             0.0
         };
@@ -115,7 +112,7 @@ impl PerformanceMetrics {
     pub fn generate_report(&self) -> String {
         let mut report = String::new();
 
-        report.push_str("# Performance Validation Report\n\n");
+        report.push_str(" Performance Validation Report\n\n");
         report.push_str(&format!(
             "**Total Benchmarks**: {}\n",
             self.total_benchmarks
@@ -123,9 +120,9 @@ impl PerformanceMetrics {
         report.push_str(&format!(
             "**Passed**: {} ({:.1}%)\n",
             self.passed_benchmarks,
-            (self.passed_benchmarks as f64 / self.total_benchmarks as f64) * 100.0
+            (self.f64::from(passed_benchmarks) / self.f64::from(total_benchmarks)) * 100.0
         ));
-        report.push_str(&format!("**Failed**: {}\n", self.failed_benchmarks));
+        report.push_str(&format!("**Failed**: {self.failed_benchmarks}\n"));
         report.push_str(&format!(
             "**Average Improvement**: {:.2}%\n",
             self.average_improvement
@@ -139,7 +136,7 @@ impl PerformanceMetrics {
             self.worst_improvement
         ));
 
-        report.push_str("## Benchmark Details\n\n");
+        report.push_str("# Benchmark Details\n\n");
         for detail in &self.benchmark_details {
             let status_icon = match detail.status {
                 BenchmarkStatus::Passed => "✅",
@@ -161,14 +158,21 @@ impl PerformanceMetrics {
     }
 
     /// Export metrics to JSON
-    pub fn to_json(&self) -> Result<String, serde_json::Error> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn to_json(&self) -> Result<String, serde_json::Error>  {
         serde_json::to_string_pretty(self)
     }
 }
 
 impl ValidationSummary {
     /// Create validation summary from benchmark results
-    pub fn from_results(results: &[BenchmarkResults]) -> Self {
+    pub const fn from_results(results: &[BenchmarkResults]) -> Self {
         let total_patterns = results.len();
         let successful = results
             .iter()
@@ -184,7 +188,7 @@ impl ValidationSummary {
                 .iter()
                 .map(|r| r.improvement_percentage)
                 .sum::<f64>()
-                / results.len() as f64
+                / (results.len() as f64)
         } else {
             0.0
         };
@@ -214,7 +218,7 @@ impl ValidationSummary {
     }
 
     /// Generate summary report
-    pub fn summary_report(&self) -> String {
+    pub const fn summary_report(&self) -> String {
         format!(
             "Performance Validation Summary:\n\
              - Total patterns: {}\n\

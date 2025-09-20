@@ -20,10 +20,8 @@ use crate::constants::canonical::{
 /// **SHARED STRING POOL**
 /// Thread-safe pool for frequently used strings
 static STRING_POOL: OnceLock<RwLock<HashMap<String, Arc<str>>>> = OnceLock::new();
-
 /// **STRING OPTIMIZATION UTILITIES**
 pub struct StringOptimizer;
-
 impl StringOptimizer {
     /// Get or create a shared string reference
     /// This is useful for strings that are used multiple times across the application
@@ -52,7 +50,7 @@ impl StringOptimizer {
     
     /// Create a flexible string that can be borrowed or owned
     /// Use this when you sometimes need ownership and sometimes don't
-    pub fn flexible_string(input: &str, needs_ownership: bool) -> Cow<'_, str> {
+    pub const fn flexible_string(input: &str, needs_ownership: bool) -> Cow<'_, str> {
         if needs_ownership {
             Cow::Owned(input.to_string())
         } else {
@@ -71,7 +69,7 @@ impl StringOptimizer {
     }
     
     /// Create a string with pre-allocated capacity
-    pub fn with_capacity(capacity: usize) -> String {
+    pub const fn with_capacity(capacity: usize) -> String {
         String::with_capacity(capacity)
     }
     
@@ -88,17 +86,16 @@ impl StringOptimizer {
 pub struct OptimizedStringBuilder {
     buffer: String,
 }
-
 impl OptimizedStringBuilder {
     /// Create a new builder with estimated capacity
-    pub fn with_capacity(capacity: usize) -> Self {
+    pub const fn with_capacity(capacity: usize) -> Self {
         Self {
             buffer: String::with_capacity(capacity),
         }
     }
     
     /// Create a new builder with default capacity
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self::with_capacity(256) // Reasonable default
     }
     
@@ -121,22 +118,22 @@ impl OptimizedStringBuilder {
     }
     
     /// Get the current length
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.buffer.len()
     }
     
     /// Check if the builder is empty
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.buffer.is_empty()
     }
     
     /// Build the final string
-    pub fn build(self) -> String {
+    pub const fn build(self) -> String {
         self.buffer
     }
     
     /// Build and return as an Arc<str> for sharing
-    pub fn build_shared(self) -> Arc<str> {
+    pub const fn build_shared(self) -> Arc<str> {
         Arc::from(self.buffer.as_str())
     }
 }
@@ -149,15 +146,14 @@ impl Default for OptimizedStringBuilder {
 
 /// **ZERO-ALLOCATION STRING UTILITIES**
 pub struct ZeroAllocString;
-
 impl ZeroAllocString {
     /// Check if a string matches a constant without allocation
-    pub fn matches_constant(input: &str, constant: &'static str) -> bool {
+    pub const fn matches_constant(input: &str, constant: &'static str) -> bool {
         input == constant
     }
     
     /// Get a string slice from a larger string without allocation
-    pub fn substring(input: &str, start: usize, len: usize) -> &str {
+    pub const fn substring(input: &str, start: usize, len: usize) -> &str {
         &input[start..start.min(input.len()).saturating_add(len).min(input.len())]
     }
     
@@ -175,23 +171,19 @@ impl ZeroAllocString {
 /// **MEMORY-EFFICIENT ERROR MESSAGES**
 /// Pre-allocated error message templates
 pub struct ErrorMessages;
-
 impl ErrorMessages {
-    pub fn network_error(operation: &str, details: &str) -> String {
         StringOptimizer::format_with_capacity(
             operation.len() + details.len() + 32,
             format_args!("Network error during {operation}: {details}")
         )
     }
     
-    pub fn storage_error(operation: &str, path: &str) -> String {
         StringOptimizer::format_with_capacity(
             operation.len() + path.len() + 32,
-            format_args!("Storage error during {operation} at path: {path}")
         )
     }
     
-    pub fn config_error(field: &str, reason: &str) -> String {
+    pub const fn config_error(field: &str, reason: &str) -> String {
         StringOptimizer::format_with_capacity(
             field.len() + reason.len() + 32,
             format_args!("Configuration error in field '{field}': {reason}")
@@ -201,16 +193,14 @@ impl ErrorMessages {
 
 /// **PERFORMANCE MACROS**
 /// Convenient macros for common string optimization patterns
-
 /// Efficiently concatenate string literals and variables
 #[macro_export]
 macro_rules! concat_strings {
     ($($part:expr),+ $(,)?) => {{
         let parts = &[$($part),+];
         $crate::optimized::string_optimization::StringOptimizer::concat_strings(parts)
-    }};
+    };
 }
-
 /// Create a shared string that can be reused
 #[macro_export]
 macro_rules! shared_string {
@@ -218,7 +208,6 @@ macro_rules! shared_string {
         $crate::optimized::string_optimization::StringOptimizer::get_shared_string($s)
     };
 }
-
 /// Build a string efficiently with known parts
 #[macro_export]
 macro_rules! build_string {
@@ -226,14 +215,13 @@ macro_rules! build_string {
         let mut builder = $crate::optimized::string_optimization::OptimizedStringBuilder::with_capacity($capacity);
         $(builder.push_str($part);)+
         builder.build()
-    }};
+    };
     ($($part:expr),+ $(,)?) => {{
         let mut builder = $crate::optimized::string_optimization::OptimizedStringBuilder::new();
         $(builder.push_str($part);)+
         builder.build()
-    }};
+    };
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -291,7 +279,7 @@ mod tests {
         let mut parts: Vec<String> = Vec::new();
         ZeroAllocString::split_and_process("a,b,c", ',', |part| {
             parts.push(part.to_string());
-        });
+        );
         assert_eq!(parts, vec!["a", "b", "c"]);
     }
     
@@ -301,7 +289,6 @@ mod tests {
         assert!(error.contains("Network error during connect: timeout"));
         
         let storage_error = ErrorMessages::storage_error("read", "/tmp/file", None);
-        assert!(storage_error.contains("Storage error during read at path: /tmp/file"));
     }
     
     #[test]

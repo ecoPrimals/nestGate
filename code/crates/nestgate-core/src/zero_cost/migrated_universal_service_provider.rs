@@ -15,7 +15,6 @@ use std::future::Future;
 use crate::Result;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-
 // ==================== SECTION ====================
 
 /// **Zero-cost universal service provider trait**
@@ -25,7 +24,6 @@ use uuid::Uuid;
 pub trait ZeroCostUniversalServiceProvider: Send + Sync + 'static {
     /// Service registration type
     type Registration: Clone + Send + Sync + Serialize + for<'de> Deserialize<'de>;
-
     /// Service capability type
     type Capability: Clone + Send + Sync + Serialize + for<'de> Deserialize<'de>;
 
@@ -120,7 +118,6 @@ pub struct DefaultServiceRegistration {
     pub metadata: std::collections::HashMap<String, serde_json::Value>,
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
-
 impl Default for DefaultServiceRegistration {
     fn default() -> Self {
         Self {
@@ -142,8 +139,8 @@ pub struct DefaultServiceCapability {
     pub version: String,
     pub parameters: std::collections::HashMap<String, String>,
 }
-
 impl DefaultServiceCapability {
+    #[must_use]
     pub fn new(name: String) -> Self {
         Self {
             name,
@@ -152,11 +149,13 @@ impl DefaultServiceCapability {
         }
     }
 
+    #[must_use]
     pub fn with_version(mut self, version: String) -> Self {
         self.version = version;
         self
     }
 
+    #[must_use]
     pub fn with_parameter(mut self, key: String, value: String) -> Self {
         self.parameters.insert(key, value);
         self
@@ -173,7 +172,6 @@ pub struct DefaultCompatibleService {
     pub compatibility_score: f64,
     pub discovered_at: chrono::DateTime<chrono::Utc>,
 }
-
 /// Default health status implementation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DefaultHealthStatus {
@@ -183,7 +181,6 @@ pub struct DefaultHealthStatus {
     pub last_check: chrono::DateTime<chrono::Utc>,
     pub details: std::collections::HashMap<String, serde_json::Value>,
 }
-
 impl Default for DefaultHealthStatus {
     fn default() -> Self {
         Self {
@@ -208,7 +205,6 @@ pub struct DefaultMetrics {
     pub cpu_usage_percent: f64,
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
-
 impl Default for DefaultMetrics {
     fn default() -> Self {
         Self {
@@ -235,10 +231,9 @@ pub struct ExampleZeroCostProvider {
     metrics: DefaultMetrics,
     compatible_services: Vec<DefaultCompatibleService>,
 }
-
 impl ExampleZeroCostProvider {
     /// Create new example provider
-    pub fn new(service_id: String, service_name: String) -> Self {
+    pub const fn new(service_id: String, service_name: String) -> Self {
         Self {
             service_id,
             service_name,
@@ -287,13 +282,7 @@ impl ZeroCostUniversalServiceProvider for ExampleZeroCostProvider {
             name: self.name.clone(),
             version: env!("CARGO_PKG_VERSION").to_string(),
             capabilities: self.capabilities.iter().map(|c| c.name.clone()).collect(),
-            endpoints: vec![format!("http://localhost:8080/{}", self.service_id)],
-            metadata: {
-                let mut metadata = std::collections::HashMap::new();
-                metadata.insert("implementation".to_string(), serde_json::json!("zero-cost"));
-                metadata.insert("performance".to_string(), serde_json::json!("high"));
-                metadata
-            },
+            endpoints: vec![format!("http://localhost:8080/{self.service_id}")],
             timestamp: chrono::Utc::now(),
         })
     }
@@ -319,7 +308,7 @@ impl ZeroCostUniversalServiceProvider for ExampleZeroCostProvider {
             _ => Ok(serde_json::json!({
                 "error": "Unknown action",
                 "supported_actions": ["health", "metrics", "capabilities", "registration"]
-            })),
+            }),
         }
     }
 
@@ -358,15 +347,14 @@ impl ZeroCostUniversalServiceProvider for ExampleZeroCostProvider {
 pub struct UniversalServiceProviderAdapter<T> {
     inner: T,
 }
-
 impl<T> UniversalServiceProviderAdapter<T> {
     /// Create new adapter
-    pub fn new(provider: T) -> Self {
+    pub const fn new(provider: T) -> Self {
         Self { inner: provider }
     }
 
     /// Get reference to inner provider
-    pub fn inner(&self) -> &T {
+    pub const fn inner(&self) -> &T {
         &self.inner
     }
 
@@ -376,7 +364,7 @@ impl<T> UniversalServiceProviderAdapter<T> {
     }
 
     /// Consume adapter and return inner provider
-    pub fn into_inner(self) -> T {
+    pub const fn into_inner(self) -> T {
         self.inner
     }
 }

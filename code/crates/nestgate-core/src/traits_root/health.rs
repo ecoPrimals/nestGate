@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 use std::time::SystemTime;
-
 /// Health status levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum HealthStatus {
@@ -16,7 +15,6 @@ pub enum HealthStatus {
     Unhealthy,
     Unknown,
 }
-
 /// Detailed health state information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthState {
@@ -26,7 +24,6 @@ pub struct HealthState {
     pub details: HashMap<String, String>,
     pub metrics: HashMap<String, f64>,
 }
-
 impl Default for HealthState {
     fn default() -> Self {
         Self {
@@ -43,7 +40,6 @@ impl Default for HealthState {
 pub trait HealthCheck: Send + Sync {
     /// Perform a health check and return the current state
     fn check_health(&self) -> impl std::future::Future<Output = Result<HealthState>> + Send;
-
     /// Get the name of this health check
     fn check_name(&self) -> &str;
 
@@ -57,7 +53,6 @@ pub trait HealthCheck: Send + Sync {
 pub trait HealthMonitor: Send + Sync {
     /// Start health monitoring
     fn start_monitoring(&self) -> impl std::future::Future<Output = Result<()>> + Send;
-
     /// Stop health monitoring
     fn stop_monitoring(&self) -> impl std::future::Future<Output = Result<()>> + Send;
 
@@ -78,9 +73,8 @@ pub trait HealthMonitor: Send + Sync {
 pub struct HealthStateBuilder {
     state: HealthState,
 }
-
 impl HealthStateBuilder {
-    pub fn new(status: HealthStatus) -> Self {
+    pub const fn new(status: HealthStatus) -> Self {
         Self {
             state: HealthState {
                 status,
@@ -105,39 +99,39 @@ impl HealthStateBuilder {
         self
     }
 
-    pub fn build(self) -> HealthState {
+    pub const fn build(self) -> HealthState {
         self.state
     }
 }
 
 impl HealthState {
     /// Create a new healthy state
-    pub fn healthy() -> HealthStateBuilder {
+    pub const fn healthy() -> HealthStateBuilder {
         HealthStateBuilder::new(HealthStatus::Healthy)
     }
 
     /// Create a new degraded state
-    pub fn degraded() -> HealthStateBuilder {
+    pub const fn degraded() -> HealthStateBuilder {
         HealthStateBuilder::new(HealthStatus::Degraded)
     }
 
     /// Create a new unhealthy state
-    pub fn unhealthy() -> HealthStateBuilder {
+    pub const fn unhealthy() -> HealthStateBuilder {
         HealthStateBuilder::new(HealthStatus::Unhealthy)
     }
 
     /// Create a new unknown state
-    pub fn unknown() -> HealthStateBuilder {
+    pub const fn unknown() -> HealthStateBuilder {
         HealthStateBuilder::new(HealthStatus::Unknown)
     }
 
     /// Check if this state is considered healthy
-    pub fn is_healthy(&self) -> bool {
+    pub const fn is_healthy(&self) -> bool {
         matches!(self.status, HealthStatus::Healthy)
     }
 
     /// Check if this state indicates problems
-    pub fn has_issues(&self) -> bool {
+    pub const fn has_issues(&self) -> bool {
         matches!(
             self.status,
             HealthStatus::Degraded | HealthStatus::Unhealthy

@@ -3,11 +3,10 @@
 /// and networking infrastructure.
 use serde::{Deserialize, Serialize};
 use std::fmt;
-
 // ==================== SECTION ====================
 
-/// **THE** ProtocolType - unified across all modules
-/// Replaces ProtocolType definitions in network and API modules
+/// **THE** `ProtocolType` - unified across all modules
+/// Replaces `ProtocolType` definitions in network and API modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedProtocolType {
     /// HTTP protocol
@@ -31,7 +30,6 @@ pub enum UnifiedProtocolType {
     /// Custom protocol
     Custom(String),
 }
-
 impl Default for UnifiedProtocolType {
     fn default() -> Self {
         Self::Http
@@ -57,8 +55,8 @@ impl fmt::Display for UnifiedProtocolType {
 
 // ==================== SECTION ====================
 
-/// **THE** IntegrationType - unified across all modules
-/// Replaces IntegrationType definitions in ecosystem integration modules
+/// **THE** `IntegrationType` - unified across all modules
+/// Replaces `IntegrationType` definitions in ecosystem integration modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedIntegrationType {
     /// Direct API integration
@@ -80,7 +78,6 @@ pub enum UnifiedIntegrationType {
     /// Custom integration type
     Custom(String),
 }
-
 impl Default for UnifiedIntegrationType {
     fn default() -> Self {
         Self::DirectApi
@@ -105,8 +102,8 @@ impl fmt::Display for UnifiedIntegrationType {
 
 // ==================== SECTION ====================
 
-/// **THE** ProxyType - unified across all modules
-/// Replaces ProxyType definitions in ecosystem integration and network modules
+/// **THE** `ProxyType` - unified across all modules
+/// Replaces `ProxyType` definitions in ecosystem integration and network modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedProxyType {
     /// HTTP proxy
@@ -128,7 +125,6 @@ pub enum UnifiedProxyType {
     /// Custom proxy type
     Custom(String),
 }
-
 impl Default for UnifiedProxyType {
     fn default() -> Self {
         Self::None

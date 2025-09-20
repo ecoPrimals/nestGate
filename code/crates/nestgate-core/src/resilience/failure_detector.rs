@@ -10,13 +10,11 @@ use tokio::sync::RwLock;
 
 /// Type alias for complex service health storage
 type ServiceHealthMap = Arc<RwLock<HashMap<String, ServiceHealth>>>;
-
 /// Failure detector for monitoring service health
 pub struct FailureDetector {
     config: FailureDetectorConfig,
     services: ServiceHealthMap,
 }
-
 impl Default for FailureDetector {
     fn default() -> Self {
         Self::new()
@@ -56,12 +54,12 @@ pub struct ServiceHealth {
     consecutive_successes: u32,
     last_check: Instant,
 }
-
 impl FailureDetector {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self::with_config(FailureDetectorConfig::default())
     }
 
+    #[must_use]
     pub fn with_config(config: FailureDetectorConfig) -> Self {
         Self {
             services: Arc::new(RwLock::new(HashMap::new())),
@@ -70,7 +68,14 @@ impl FailureDetector {
     }
 
     /// Register a service for monitoring
-    pub async fn register_service(&self, service_name: String) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn register_service(&self, service_name: String) -> Result<()>  {
         let mut services = self.services.write().await;
         services.insert(
             service_name.clone(),
@@ -86,7 +91,14 @@ impl FailureDetector {
     }
 
     /// Record a successful operation for a service
-    pub async fn record_success(&self, service_name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn record_success(&self, service_name: &str) -> Result<()>  {
         let mut services = self.services.write().await;
         if let Some(health) = services.get_mut(service_name) {
             health.consecutive_failures = 0;
@@ -108,7 +120,14 @@ impl FailureDetector {
     }
 
     /// Record a failed operation for a service
-    pub async fn record_failure(&self, service_name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn record_failure(&self, service_name: &str) -> Result<()>  {
         let mut services = self.services.write().await;
         if let Some(health) = services.get_mut(service_name) {
             health.consecutive_successes = 0;
@@ -129,7 +148,14 @@ impl FailureDetector {
     }
 
     /// Check if a service is healthy
-    pub async fn is_healthy(&self, service_name: &str) -> Result<bool> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn is_healthy(&self, service_name: &str) -> Result<bool>  {
         let services = self.services.read().await;
         Ok(services
             .get(service_name)
@@ -137,7 +163,14 @@ impl FailureDetector {
     }
 
     /// Get health status for all services
-    pub async fn get_all_health_status(&self) -> Result<HashMap<String, bool>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_all_health_status(&self) -> Result<HashMap<String, bool>>  {
         let services = self.services.read().await;
         Ok(services
             .iter()
@@ -146,7 +179,14 @@ impl FailureDetector {
     }
 
     /// Get detailed health information for a service
-    pub async fn get_service_health(&self, service_name: &str) -> Result<Option<ServiceHealth>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_service_health(&self, service_name: &str) -> Result<Option<ServiceHealth>>  {
         let services = self.services.read().await;
         Ok(services.get(service_name).cloned())
     }

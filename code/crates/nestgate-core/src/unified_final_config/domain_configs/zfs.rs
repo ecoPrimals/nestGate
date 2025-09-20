@@ -15,7 +15,6 @@ pub struct ZfsDomainConfig {
     pub snapshot_interval: Duration,
     pub performance_tuning: ZfsPerformanceConfig,
 }
-
 /// ZFS performance configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsPerformanceConfig {
@@ -24,7 +23,6 @@ pub struct ZfsPerformanceConfig {
     pub sync: String,
     pub cache_mode: String,
 }
-
 impl Default for ZfsDomainConfig {
     fn default() -> Self {
         Self {

@@ -28,11 +28,14 @@ pub async fn test_system_administration_workflow(
         Ok(_) => {
             steps_completed += 1;
             println!("    ✅ Health monitoring completed");
+    Ok(())
         }
         Err(e) => {
             error_messages.push(format!("Health monitoring failed: {e}"));
             println!("    ❌ Health monitoring failed: {e}");
+    Ok(())
         }
+    Ok(())
     }
 
     // Step 2: Metrics collection
@@ -41,11 +44,14 @@ pub async fn test_system_administration_workflow(
         Ok(_) => {
             steps_completed += 1;
             println!("    ✅ Metrics collection completed");
+    Ok(())
         }
         Err(e) => {
             error_messages.push(format!("Metrics collection failed: {e}"));
             println!("    ❌ Metrics collection failed: {e}");
+    Ok(())
         }
+    Ok(())
     }
 
     // Step 3: Configuration update
@@ -54,11 +60,14 @@ pub async fn test_system_administration_workflow(
         Ok(_) => {
             steps_completed += 1;
             println!("    ✅ Configuration update completed");
+    Ok(())
         }
         Err(e) => {
             error_messages.push(format!("Configuration update failed: {e}"));
             println!("    ❌ Configuration update failed: {e}");
+    Ok(())
         }
+    Ok(())
     }
 
     let execution_time = start_time.elapsed();

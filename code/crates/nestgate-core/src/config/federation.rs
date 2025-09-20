@@ -7,7 +7,6 @@ use uuid;
 pub struct McpConfig {
     /// Enable MCP integration
     pub enabled: bool,
-
     /// Cluster endpoint
     pub cluster_endpoint: String,
 
@@ -26,7 +25,6 @@ pub struct McpConfig {
 pub struct McpCapabilitiesConfig {
     /// Supported storage protocols
     pub storage_protocols: Vec<String>,
-
     /// Supported storage tiers
     pub storage_tiers: Vec<String>,
 
@@ -42,7 +40,6 @@ pub struct McpCapabilitiesConfig {
 pub struct FederationConfig {
     /// Enable federation
     pub enabled: bool,
-
     /// Cluster name
     pub cluster_name: String,
 
@@ -69,7 +66,7 @@ impl Default for McpConfig {
             cluster_endpoint: std::env::var("NESTGATE_CLUSTER_ENDPOINT")
                 // SOVEREIGNTY FIX: Use environment-based cluster endpoint discovery
             .unwrap_or_else(|_| std::env::var("NESTGATE_CLUSTER_ENDPOINT")
-                .unwrap_or_else(|_| "dynamic://cluster-capability".to_string())),
+                .unwrap_or_else(|_| "dynamic://cluster-capability")),
             node_id,
             federation_enabled: false,
             capabilities: McpCapabilitiesConfig::default(),
@@ -102,27 +99,34 @@ impl Default for FederationConfig {
 
 impl McpConfig {
     /// Check if MCP is enabled
-    pub fn is_enabled(&self) -> bool {
+    pub const fn is_enabled(&self) -> bool {
         self.enabled
     }
 
     /// Check if federation is enabled
-    pub fn is_federation_enabled(&self) -> bool {
+    pub const fn is_federation_enabled(&self) -> bool {
         self.federation_enabled
     }
 
     /// Get cluster endpoint
-    pub fn cluster_endpoint(&self) -> &str {
+    pub const fn cluster_endpoint(&self) -> &str {
         &self.cluster_endpoint
     }
 
     /// Get node ID
-    pub fn node_id(&self) -> &str {
+    pub const fn node_id(&self) -> &str {
         &self.node_id
     }
 
     /// Validate MCP configuration
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<(), String>  {
         if self.enabled {
             if self.cluster_endpoint.is_empty() {
                 return Err("Cluster endpoint cannot be empty when MCP is enabled".to_string());
@@ -139,12 +143,12 @@ impl McpConfig {
 
 impl McpCapabilitiesConfig {
     /// Check if a storage protocol is supported
-    pub fn supports_protocol(&self, protocol: &str) -> bool {
+    pub const fn supports_protocol(&self, protocol: &str) -> bool {
         self.storage_protocols.contains(&protocol.to_string())
     }
 
     /// Check if a storage tier is supported
-    pub fn supports_tier(&self, tier: &str) -> bool {
+    pub const fn supports_tier(&self, tier: &str) -> bool {
         self.storage_tiers.contains(&tier.to_string())
     }
 
@@ -173,7 +177,14 @@ impl McpCapabilitiesConfig {
     }
 
     /// Validate capabilities configuration
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<(), String>  {
         if self.max_volume_size == 0 {
             return Err("Max volume size must be greater than 0".to_string());
         }
@@ -195,22 +206,22 @@ impl McpCapabilitiesConfig {
 
 impl FederationConfig {
     /// Check if federation is enabled
-    pub fn is_enabled(&self) -> bool {
+    pub const fn is_enabled(&self) -> bool {
         self.enabled
     }
 
     /// Get cluster name
-    pub fn cluster_name(&self) -> &str {
+    pub const fn cluster_name(&self) -> &str {
         &self.cluster_name
     }
 
     /// Get federation mode
-    pub fn mode(&self) -> &str {
+    pub const fn mode(&self) -> &str {
         &self.mode
     }
 
     /// Get peer nodes
-    pub fn peers(&self) -> &[String] {
+    pub const fn peers(&self) -> &[String] {
         &self.peers
     }
 
@@ -227,22 +238,29 @@ impl FederationConfig {
     }
 
     /// Check if running in standalone mode
-    pub fn is_standalone(&self) -> bool {
+    pub const fn is_standalone(&self) -> bool {
         self.mode == "standalone"
     }
 
     /// Check if running in leader mode
-    pub fn is_leader(&self) -> bool {
+    pub const fn is_leader(&self) -> bool {
         self.mode == "leader"
     }
 
     /// Check if running in follower mode
-    pub fn is_follower(&self) -> bool {
+    pub const fn is_follower(&self) -> bool {
         self.mode == "follower"
     }
 
     /// Validate federation configuration
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<(), String>  {
         if self.enabled {
             if self.cluster_name.is_empty() {
                 return Err("Cluster name cannot be empty when federation is enabled".to_string());
@@ -336,7 +354,7 @@ mod tests {
         // Test adding peer
         config.add_peer("node1.example.com".to_string());
         assert_eq!(config.peers().len(), 1);
-        assert!(config.peers().contains(&"node1.example.com".to_string()));
+        assert!(config.peers().contains(&"node1.example.com"));
 
         // Test removing peer
         config.remove_peer("node1.example.com");

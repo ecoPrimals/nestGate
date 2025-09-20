@@ -1,4 +1,4 @@
-//! Alert Notification Channels
+// Alert Notification Channels
 
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
@@ -38,7 +38,6 @@ pub enum AlertChannel {
         level: String,
     },
 }
-
 /// SMTP server configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SmtpConfig {
@@ -53,7 +52,6 @@ pub struct SmtpConfig {
     /// Use TLS encryption
     pub use_tls: bool,
 }
-
 /// Record of a notification sent
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NotificationRecord {

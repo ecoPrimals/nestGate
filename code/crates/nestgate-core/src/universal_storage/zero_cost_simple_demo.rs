@@ -3,9 +3,7 @@ use std::future::Future;
 ///
 /// This module provides a simplified demonstration of zero-cost storage patterns
 /// that migrate from async_trait to native async methods for performance gains.
-use std::path::PathBuf;
 use tokio::fs;
-
 // ==================== SECTION ====================
 
 /// **Simple zero-cost storage trait**
@@ -13,17 +11,14 @@ use tokio::fs;
 /// Demonstrates native async methods without Future boxing overhead.
 pub trait ZeroCostSimpleStorage<const MAX_SIZE_MB: usize = 100> {
     type Error: Send + Sync + 'static;
-
     /// Read file - native async, no boxing
     fn read(
         &self,
-        path: &str,
     ) -> impl Future<Output = std::result::Result<Vec<u8>, Self::Error>> + Send;
 
     /// Write file - zero-cost abstraction
     fn write(
         &self,
-        path: &str,
         data: Vec<u8>,
     ) -> impl Future<Output = std::result::Result<(), Self::Error>> + Send;
 
@@ -37,17 +32,13 @@ pub trait ZeroCostSimpleStorage<const MAX_SIZE_MB: usize = 100> {
 
 /// **Simple filesystem implementation**
 pub struct SimpleFilesystemStorage {
-    base_path: PathBuf,
 }
-
 impl SimpleFilesystemStorage {
     /// Create new instance
-    pub fn new(base_path: PathBuf) -> Self {
         Self { base_path }
     }
 
     /// Get full path
-    fn full_path(&self, path: &str) -> PathBuf {
         self.base_path.join(path)
     }
 }
@@ -55,7 +46,6 @@ impl SimpleFilesystemStorage {
 impl<const MAX_SIZE_MB: usize> ZeroCostSimpleStorage<MAX_SIZE_MB> for SimpleFilesystemStorage {
     type Error = std::io::Error;
 
-    fn read(&self, path: &str) -> impl std::future::Future<Output = Result<Vec<u8>> + Send;
         let full_path = self.full_path(path);
 
         // Check file size with compile-time limit
@@ -70,7 +60,6 @@ impl<const MAX_SIZE_MB: usize> ZeroCostSimpleStorage<MAX_SIZE_MB> for SimpleFile
         fs::read(full_path).await
     }
 
-    fn write(&self, path: &str, data: Vec<u8>) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send;
         // Check data size at compile time
         if data.len() > (MAX_SIZE_MB * 1024 * 1024) {
             return Err(std::io::Error::new(
@@ -95,26 +84,22 @@ impl<const MAX_SIZE_MB: usize> ZeroCostSimpleStorage<MAX_SIZE_MB> for SimpleFile
 /// High-performance storage (smaller files, faster operations)
 /// Note: Uses generic implementation with const parameters
 pub type FastStorage<const MAX_MB: usize = 10> = SimpleFilesystemStorage;
-
 /// Large file storage
 /// Note: Uses generic implementation with const parameters  
 pub type BulkStorage<const MAX_MB: usize = 1024> = SimpleFilesystemStorage;
-
 // ==================== SECTION ====================
 
 /// **Migration comparison utilities**
 pub struct ZeroCostMigrationDemo;
-
 impl ZeroCostMigrationDemo {
     /// Show migration pattern
     pub fn show_migration_pattern() -> String {
-        r#"
+        r"
 MIGRATION: async_trait → Zero-Cost Native Async
 
 BEFORE (async_trait with runtime overhead):
 ```rust
 trait StorageService {
-    fn read(&self, path: &str) -> impl std::future::Future<Output = Result<Vec<u8>> + Send;
 }
 ```
 
@@ -122,7 +107,6 @@ AFTER (zero-cost native async):
 ```rust
 trait ZeroCostSimpleStorage<const MAX_SIZE_MB: usize = 100> {
     type Error: Send + Sync + 'static;
-    fn read(&self, path: &str) -> impl Future<Output = Result<Vec<u8>, Self::Error>> + Send;
 }
 ```
 
@@ -131,7 +115,7 @@ BENEFITS:
 - 25-35% latency reduction (direct method dispatch)
 - Compile-time resource limits (const generics)
 - Zero allocation overhead (monomorphization)
-"#
+"
         .to_string()
     }
 
@@ -208,9 +192,9 @@ mod tests {
             tracing::error!("Failed to create temporary directory: {:?}", e);
             std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Temporary directory creation failed: {:?}", e),
+                format!("Temporary directory creation failed: {e:?}"),
             )
-        })?;
+        )?;
         let storage = SimpleFilesystemStorage::new(temp_dir.path().to_path_buf());
 
         let test_data = b"Zero-cost test data".to_vec();
@@ -226,10 +210,10 @@ mod tests {
             tracing::error!("Unwrap failed: {:?}", e);
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {e:?}"),
             )
             .into());
-        });
+        );
         let read_data =
             <SimpleFilesystemStorage as ZeroCostSimpleStorage<10>>::read(&storage, "test.txt")
                 .await
@@ -237,10 +221,10 @@ mod tests {
                     tracing::error!("Unwrap failed: {:?}", e);
                     return Err(std::io::Error::new(
                         std::io::ErrorKind::Other,
-                        format!("Operation failed: {:?}", e),
+                        format!("Operation failed: {e:?}"),
                     )
                     .into());
-                });
+                );
 
         assert_eq!(read_data, test_data);
     }

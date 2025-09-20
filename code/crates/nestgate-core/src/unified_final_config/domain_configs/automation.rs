@@ -13,7 +13,6 @@ pub struct AutomationDomainConfig {
     pub auto_scaling: bool,
     pub maintenance_windows: Vec<String>,
 }
-
 impl Default for AutomationDomainConfig {
     fn default() -> Self {
         Self {

@@ -1,8 +1,8 @@
 //! # Utilities Module
-//!
-//! **100% SAFE RUST** - System utilities using only safe code
-//!
-//! This module provides system operations, file handling, networking utilities,
+//! Module definitions and exports.
+// **100% SAFE RUST** - System utilities using only safe code
+//! Module definitions and exports.
+// This module provides system operations, file handling, networking utilities,
 //! and string processing without any unsafe code blocks.
 
 pub mod fs;

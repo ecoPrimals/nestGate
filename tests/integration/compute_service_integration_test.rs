@@ -11,10 +11,11 @@ use std::collections::HashMap;
 use serde_json::json;
 
 /// Test configuration for integration tests
+
 const TEST_COMPUTE_SERVICE_URL: &str = "http://test-compute-service:8080";
 
 /// Test platform detection functionality
-async fn test_platform_detection() {
+async fn test_platform_detection() -> Result<(), Box<dyn std::error::Error>> {
     let client = UniversalComputeClient::new(TEST_COMPUTE_SERVICE_URL.to_string());
 
     // This would fail in CI without actual compute service, so we'll test the structure
@@ -31,6 +32,7 @@ async fn test_platform_detection() {
                 capacity_gb: 1024,
                 available_gb: 512,
                 mount_point: "/".to_string(),
+    Ok(())
             }
         ],
     };
@@ -40,10 +42,11 @@ async fn test_platform_detection() {
     assert_eq!(platform_info.storage_devices.len(), 1);
     assert_eq!(platform_info.architecture, "x86_64");
     assert_eq!(platform_info.os, "Linux");
+    Ok(())
 }
 
 /// Test hardware discovery functionality
-async fn test_hardware_discovery() {
+async fn test_hardware_discovery() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔍 Testing hardware discovery functionality");
 
     // Test storage workload creation with correct fields
@@ -69,10 +72,11 @@ async fn test_hardware_discovery() {
     assert_eq!(workload.resource_requirements.network_bandwidth_gbps, 1.0);
 
     println!("✅ Hardware discovery test passed");
+    Ok(())
 }
 
 /// Test compute resource allocation workflow
-async fn test_compute_resource_allocation() {
+async fn test_compute_resource_allocation() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚙️ Testing compute resource allocation");
 
     // Create corrected storage resource request
@@ -90,10 +94,11 @@ async fn test_compute_resource_allocation() {
     assert_eq!(request.duration_minutes, 60);
 
     println!("✅ Compute resource allocation test passed");
+    Ok(())
 }
 
 /// Test storage process management functionality
-async fn test_storage_process_management() {
+async fn test_storage_process_management() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔄 Testing storage process management");
 
     // Create storage process request with correct structure
@@ -112,10 +117,11 @@ async fn test_storage_process_management() {
     assert!(process_request.parameters.is_object());
 
     println!("✅ Storage process management test passed");
+    Ok(())
 }
 
 /// Test storage optimization request functionality
-async fn test_storage_optimization_request() {
+async fn test_storage_optimization_request() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Testing storage optimization request");
 
     // Create optimization request with correct structure
@@ -137,10 +143,11 @@ async fn test_storage_optimization_request() {
     assert!(optimization_request.parameters.is_object());
 
     println!("✅ Storage optimization test passed");
+    Ok(())
 }
 
 /// Test tuning session management
-async fn test_tuning_session_management() {
+async fn test_tuning_session_management() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Testing tuning session management");
 
     let session = TuningSession {
@@ -158,10 +165,11 @@ async fn test_tuning_session_management() {
     assert_eq!(session.tuning_mode, TuningMode::Balanced);
 
     println!("✅ Tuning session management test passed");
+    Ok(())
 }
 
 /// Test error handling in resource allocation
-async fn test_resource_allocation_error_handling() {
+async fn test_resource_allocation_error_handling() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚠️ Testing resource allocation error handling");
 
     let _client = UniversalComputeClient::new("invalid-url".to_string());
@@ -169,10 +177,11 @@ async fn test_resource_allocation_error_handling() {
     // Test error handling would be done with actual client calls
     // For now, just test that the client can be created with invalid URL
     println!("⚠️ Error handling test completed (simulated)");
+    Ok(())
 }
 
 /// Test comprehensive system health monitoring
-async fn test_system_health_monitoring() {
+async fn test_system_health_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     println!("🏥 Testing system health monitoring");
 
     // Create system health with correct structure
@@ -189,6 +198,7 @@ async fn test_system_health_monitoring() {
                 message: "Memory usage above 80%".to_string(),
                 timestamp: chrono::Utc::now(),
                 component: "memory".to_string(),
+    Ok(())
             }
         ],
     };
@@ -199,10 +209,11 @@ async fn test_system_health_monitoring() {
     assert_eq!(health.alerts.len(), 1);
 
     println!("✅ System health monitoring test passed");
+    Ok(())
 }
 
 /// Test real-time metrics collection
-async fn test_realtime_metrics_collection() {
+async fn test_realtime_metrics_collection() -> Result<(), Box<dyn std::error::Error>> {
     println!("📈 Testing real-time metrics collection");
 
     // Create metrics with correct structure
@@ -242,10 +253,11 @@ async fn test_realtime_metrics_collection() {
     assert_eq!(metrics.system_load.load_1m, 1.2);
 
     println!("✅ Real-time metrics collection test passed");
+    Ok(())
 }
 
 /// Test comprehensive platform capabilities
-async fn test_platform_capabilities() {
+async fn test_platform_capabilities() -> Result<(), Box<dyn std::error::Error>> {
     println!("🖥️ Testing platform capabilities");
 
     // Create comprehensive resource request
@@ -289,6 +301,7 @@ async fn test_platform_capabilities() {
     assert_eq!(optimization_request.optimization_level, "aggressive");
 
     println!("✅ Platform capabilities test passed");
+    Ok(())
 }
 
 #[cfg(test)]
@@ -296,7 +309,7 @@ mod integration_tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_comprehensive_compute_service_integration() {
+    async fn test_comprehensive_compute_service_integration() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Running comprehensive compute service integration tests");
 
         // Run all test components
@@ -312,5 +325,6 @@ mod integration_tests {
         test_platform_capabilities().await;
 
         println!("🎉 All compute service integration tests completed successfully!");
-    }
+    Ok(())
+}
 }

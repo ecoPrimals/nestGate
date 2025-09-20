@@ -6,7 +6,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Primal metadata information
+/// Primal _metadata information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimalMetadata {
     /// Primal name (e.g., "NestGate")
@@ -27,8 +27,8 @@ pub struct PrimalMetadata {
     pub license: String,
     /// Supported platforms
     pub supported_platforms: Vec<String>,
-    /// Minimum biomeOS version required
-    pub min_biomeos_version: String,
+    /// Minimum management version required
+    pub min_management_version: String,
     /// Tags for categorization
     pub tags: Vec<String>,
     /// Creation timestamp
@@ -36,7 +36,6 @@ pub struct PrimalMetadata {
     /// Last updated timestamp
     pub updated_at: DateTime<Utc>,
 }
-
 /// Primal types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PrimalType {
@@ -53,7 +52,6 @@ pub enum PrimalType {
     /// Experimental/beta primals
     Experimental,
 }
-
 /// Primal capabilities
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PrimalCapability {
@@ -90,7 +88,6 @@ pub enum PrimalCapability {
     /// Custom capability (with string identifier)
     Custom(String),
 }
-
 /// Primal health status
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PrimalHealth {
@@ -103,7 +100,6 @@ pub enum PrimalHealth {
     /// Primal health is unknown
     Unknown,
 }
-
 /// Primal request structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimalRequest {
@@ -126,7 +122,6 @@ pub struct PrimalRequest {
     /// Client IP address
     pub client_ip: Option<String>,
 }
-
 /// Primal response structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimalResponse {
@@ -141,7 +136,6 @@ pub struct PrimalResponse {
     /// Processing duration in milliseconds
     pub duration_ms: u64,
 }
-
 /// Primal metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimalMetrics {
@@ -160,7 +154,6 @@ pub struct PrimalMetrics {
     /// Custom metrics
     pub custom_metrics: HashMap<String, f64>,
 }
-
 /// Logging configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoggingConfig {

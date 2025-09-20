@@ -11,7 +11,7 @@ use tracing::info;
 
 /// Test E2E performance optimization workflow configuration
 #[tokio::test]
-async fn test_performance_optimization_config() {
+async fn test_performance_optimization_config() -> Result<(), Box<dyn std::error::Error>> {
     info!("⚡ Starting E2E performance optimization configuration test");
     
     // Test performance optimization configuration creation
@@ -23,11 +23,12 @@ async fn test_performance_optimization_config() {
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ E2E performance optimization configuration test completed");
+    Ok(())
 }
 
 /// Test E2E performance optimization workflow execution
 #[tokio::test]
-async fn test_performance_optimization_workflow() {
+async fn test_performance_optimization_workflow() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔧 Testing E2E performance optimization workflow execution");
     
     // Test E2E performance optimization workflow phases
@@ -47,14 +48,16 @@ async fn test_performance_optimization_workflow() {
         // Verify phase is valid
         assert!(!phase.is_empty(), "Phase should be specified");
         assert!(execution_time > 0, "Execution time should be positive");
+    Ok(())
     }
     
     info!("✅ E2E performance optimization workflow execution completed");
+    Ok(())
 }
 
 /// Test E2E performance metrics collection
 #[tokio::test]
-async fn test_performance_metrics_collection() {
+async fn test_performance_metrics_collection() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing E2E performance metrics collection");
     
     let start_time = std::time::Instant::now();
@@ -69,14 +72,16 @@ async fn test_performance_metrics_collection() {
         
         // Verify metrics collection timing is accurate
         assert!(elapsed.as_millis() >= collection_time as u128, "Metrics collection timing should be accurate");
+    Ok(())
     }
     
     info!("✅ E2E performance metrics collection completed");
+    Ok(())
 }
 
 /// Test E2E performance optimization strategies
 #[tokio::test]
-async fn test_performance_optimization_strategies() {
+async fn test_performance_optimization_strategies() -> Result<(), Box<dyn std::error::Error>> {
     info!("🎯 Testing E2E performance optimization strategies");
     
     // Test different performance optimization strategies
@@ -96,14 +101,16 @@ async fn test_performance_optimization_strategies() {
         // Verify strategy is valid
         assert!(!strategy.is_empty(), "Strategy should be specified");
         assert!(optimization_time > 0, "Optimization time should be positive");
+    Ok(())
     }
     
     info!("✅ E2E performance optimization strategies completed");
+    Ok(())
 }
 
 /// Test E2E performance monitoring
 #[tokio::test]
-async fn test_performance_monitoring() {
+async fn test_performance_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     info!("📈 Testing E2E performance monitoring");
     
     // Test E2E performance monitoring scenarios
@@ -123,14 +130,16 @@ async fn test_performance_monitoring() {
         // Verify monitoring scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
         assert!(monitoring_time > 0, "Monitoring time should be positive");
+    Ok(())
     }
     
     info!("✅ E2E performance monitoring completed");
+    Ok(())
 }
 
 /// Test E2E performance optimization validation
 #[tokio::test]
-async fn test_performance_optimization_validation() {
+async fn test_performance_optimization_validation() -> Result<(), Box<dyn std::error::Error>> {
     info!("✅ Testing E2E performance optimization validation");
     
     // Test E2E performance optimization validation checks
@@ -150,14 +159,16 @@ async fn test_performance_optimization_validation() {
         // Verify validation check is valid
         assert!(!check_type.is_empty(), "Check type should be specified");
         assert!(validation_time > 0, "Validation time should be positive");
+    Ok(())
     }
     
     info!("✅ E2E performance optimization validation completed");
+    Ok(())
 }
 
 /// Test E2E performance optimization environments
 #[tokio::test]
-async fn test_performance_optimization_environments() {
+async fn test_performance_optimization_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing E2E performance optimization across environments");
     
     // Test development environment performance optimization
@@ -173,4 +184,5 @@ async fn test_performance_optimization_environments() {
     info!("Production performance optimization configuration validated");
     
     info!("✅ E2E performance optimization environment test completed");
+    Ok(())
 }

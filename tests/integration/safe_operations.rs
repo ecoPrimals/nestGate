@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 /// Test safe string operations
 #[test]
-fn test_safe_string_operations() {
+async fn test_safe_string_operations() -> Result<(), Box<dyn std::error::Error>> {
     // Test safe string parsing
     let valid_number = "42";
     let invalid_number = "not_a_number";
@@ -24,11 +24,12 @@ fn test_safe_string_operations() {
     // Test safe substring extraction
     assert_eq!(safe_substring(test_string, 0, 5), Some("Hello".to_string()));
     assert_eq!(safe_substring(test_string, 100, 105), None); // Out of bounds
+    Ok(())
 }
 
 /// Test safe collection operations
 #[test]
-fn test_safe_collection_operations() {
+async fn test_safe_collection_operations() -> Result<(), Box<dyn std::error::Error>> {
     let mut test_vec = vec![1, 2, 3, 4, 5];
     
     // Test safe vector access
@@ -46,11 +47,12 @@ fn test_safe_collection_operations() {
     safe_push(&mut test_vec, 6);
     assert_eq!(test_vec.len(), original_len + 1);
     assert_eq!(test_vec[test_vec.len() - 1], 6);
+    Ok(())
 }
 
 /// Test safe HashMap operations
 #[test]
-fn test_safe_hashmap_operations() {
+async fn test_safe_hashmap_operations() -> Result<(), Box<dyn std::error::Error>> {
     let mut map = HashMap::new();
     map.insert("key1".to_string(), "value1".to_string());
     map.insert("key2".to_string(), "value2".to_string());
@@ -67,11 +69,12 @@ fn test_safe_hashmap_operations() {
     assert_eq!(safe_remove(&mut map, "key1"), Some("value1".to_string()));
     assert_eq!(safe_remove(&mut map, "missing"), None);
     assert!(!map.contains_key("key1"));
+    Ok(())
 }
 
 /// Test safe file operations
 #[test]
-fn test_safe_file_operations() {
+async fn test_safe_file_operations() -> Result<(), Box<dyn std::error::Error>> {
     // Test safe path operations
     let valid_path = "/tmp/test_file.txt";
     let invalid_path = "/nonexistent/directory/file.txt";
@@ -88,11 +91,12 @@ fn test_safe_file_operations() {
     let temp_dir = "/tmp";
     let result = safe_is_directory(temp_dir);
     assert!(result.is_some());
+    Ok(())
 }
 
 /// Test safe numeric operations
 #[test]
-fn test_safe_numeric_operations() {
+async fn test_safe_numeric_operations() -> Result<(), Box<dyn std::error::Error>> {
     // Test safe division
     assert_eq!(safe_divide(10, 2), Some(5));
     assert_eq!(safe_divide(10, 0), None); // Division by zero
@@ -109,11 +113,12 @@ fn test_safe_numeric_operations() {
     let max_val = i32::MAX;
     assert_eq!(safe_add(max_val, 1), None); // Overflow
     assert_eq!(safe_add(5, 10), Some(15)); // Normal addition
+    Ok(())
 }
 
 /// Test safe conversion operations
 #[test]
-fn test_safe_conversion_operations() {
+async fn test_safe_conversion_operations() -> Result<(), Box<dyn std::error::Error>> {
     // Test safe usize to u32 conversion
     assert_eq!(safe_usize_to_u32(100), Some(100u32));
     assert_eq!(safe_usize_to_u32(usize::MAX), None); // Overflow on 64-bit systems
@@ -125,11 +130,12 @@ fn test_safe_conversion_operations() {
     assert_eq!(safe_parse_bool("true"), Some(true));
     assert_eq!(safe_parse_bool("false"), Some(false));
     assert_eq!(safe_parse_bool("maybe"), None);
+    Ok(())
 }
 
 /// Test safe memory operations
 #[test]
-fn test_safe_memory_operations() {
+async fn test_safe_memory_operations() -> Result<(), Box<dyn std::error::Error>> {
     let test_data = vec![1u8, 2, 3, 4, 5];
     
     // Test safe memory copy
@@ -147,11 +153,12 @@ fn test_safe_memory_operations() {
     
     assert!(safe_memory_equal(&test_data, &same_data));
     assert!(!safe_memory_equal(&test_data, &different_data));
+    Ok(())
 }
 
 /// Test safe async operations
 #[tokio::test]
-async fn test_safe_async_operations() {
+async fn test_safe_async_operations() -> Result<(), Box<dyn std::error::Error>> {
     init_test_logging();
     
     // Test safe async timeout
@@ -171,11 +178,12 @@ async fn test_safe_async_operations() {
     
     let timeout_result = safe_timeout(slow_operation, std::time::Duration::from_millis(50)).await;
     assert_eq!(timeout_result, None);
+    Ok(())
 }
 
 /// Test safe error handling
 #[test]
-fn test_safe_error_handling() {
+fn test_safe_error_handling() -> Result<(), Box<dyn std::error::Error>> {
     // Test safe result unwrapping
     let ok_result: Result<i32, &str> = Ok(42);
     let err_result: Result<i32, &str> = Err("error");
@@ -189,11 +197,12 @@ fn test_safe_error_handling() {
     
     assert_eq!(safe_unwrap_option_or(some_value, 0), 42);
     assert_eq!(safe_unwrap_option_or(none_value, 0), 0);
+    Ok(())
 }
 
 /// Test safe resource management
 #[test]
-fn test_safe_resource_management() {
+fn test_safe_resource_management() -> Result<(), Box<dyn std::error::Error>> {
     // Test safe resource allocation
     let resource = safe_allocate_buffer(1024);
     assert!(resource.is_some());
@@ -201,16 +210,18 @@ fn test_safe_resource_management() {
     if let Some(buffer) = resource {
         assert_eq!(buffer.len(), 1024);
         assert_eq!(buffer[0], 0); // Should be zero-initialized
+    Ok(())
     }
     
     // Test safe resource allocation with large size
     let large_resource = safe_allocate_buffer(usize::MAX);
     assert!(large_resource.is_none()); // Should fail safely
+    Ok(())
 }
 
 /// Comprehensive integration test
 #[test]
-fn test_safe_operations_integration() {
+fn test_safe_operations_integration() -> Result<(), Box<dyn std::error::Error>> {
     // Test chaining multiple safe operations
     let data = vec!["1", "2", "3", "invalid", "5"];
     let mut results = Vec::new();
@@ -219,8 +230,11 @@ fn test_safe_operations_integration() {
         if let Some(num) = safe_parse_int(item) {
             if let Some(doubled) = safe_multiply(num, 2) {
                 safe_push(&mut results, doubled);
+    Ok(())
             }
+    Ok(())
         }
+    Ok(())
     }
     
     // Should have successfully processed "1", "2", "3", "5" but skipped "invalid"
@@ -231,8 +245,10 @@ fn test_safe_operations_integration() {
         let _ = safe_divide(i, i % 10); // Some divisions by zero
         let _ = safe_get(&results, i); // Many out-of-bounds accesses
         let _ = safe_parse_int(&format!("invalid_{}", i)); // Many parse failures
+    Ok(())
     }
     
     // If we reach here, no panics occurred
     assert!(true);
+    Ok(())
 } 

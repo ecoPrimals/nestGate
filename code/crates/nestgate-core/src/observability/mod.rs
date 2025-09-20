@@ -13,18 +13,17 @@ pub use health_checks::{HealthChecker, HealthStatus, SystemHealth};
 pub use metrics::{MetricsCollector, MetricsRegistry, PerformanceMetrics};
 pub use tracing_config::{init_tracing, TracingConfig};
 
-use crate::{Result};
+use crate::Result;
 use std::sync::Arc;
 use std::time::Duration;
 
-/// Central observability coordinator
+// Central observability coordinator
 pub struct ObservabilityManager {
     metrics: Arc<MetricsRegistry>,
     health_checker: Arc<HealthChecker>,
     config: ObservabilityConfig,
 }
-
-/// Configuration for observability features
+// Configuration for observability features
 #[derive(Debug, Clone)]
 pub struct ObservabilityConfig {
     /// Enable metrics collection
@@ -40,7 +39,6 @@ pub struct ObservabilityConfig {
     /// Maximum metrics history to keep
     pub max_metrics_history: usize,
 }
-
 impl Default for ObservabilityConfig {
     fn default() -> Self {
         Self {
@@ -56,7 +54,8 @@ impl Default for ObservabilityConfig {
 
 impl ObservabilityManager {
     /// Create a new observability manager
-    pub fn new(config: ObservabilityConfig) -> Self {
+    #[must_use]
+    pub const fn new(config: ObservabilityConfig) -> Self {
         let metrics = Arc::new(MetricsRegistry::new());
         let health_checker = Arc::new(HealthChecker::new());
 
@@ -68,7 +67,15 @@ impl ObservabilityManager {
     }
 
     /// Initialize observability systems
-    pub async fn initialize(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn initialize(&self) -> Result<()>  {
         tracing::info!("🔍 Initializing observability systems");
 
         if self.config.tracing_enabled {
@@ -132,42 +139,66 @@ impl ObservabilityManager {
     }
 
     /// Get current system metrics
-    pub async fn get_metrics(&self) -> Result<PerformanceMetrics> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_metrics(&self) -> Result<PerformanceMetrics>  {
         self.metrics.get_current_metrics().await
     }
 
     /// Get system health status
-    pub async fn get_health(&self) -> Result<SystemHealth> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_health(&self) -> Result<SystemHealth>  {
         self.health_checker.get_system_health().await
     }
 
     /// Record a custom metric
-    pub async fn record_metric(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn record_metric(
         &self,
         name: &str,
         value: f64,
         _tags: HashMap<String, String>,
-    ) -> Result<()> {
+    ) -> Result<()>  {
         self.metrics.record_custom_metric(name, value).await
     }
 
     /// Get metrics history for analysis
-    pub async fn get_metrics_history(&self, duration: Duration) -> Result<Vec<PerformanceMetrics>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_metrics_history(&self, duration: Duration) -> Result<Vec<PerformanceMetrics>>  {
         self.metrics.get_metrics_history(duration).await
     }
 }
 
-/// Global observability instance
+// Global observability instance
 static OBSERVABILITY: std::sync::OnceLock<Arc<ObservabilityManager>> = std::sync::OnceLock::new();
-
-/// Initialize global observability
-pub fn init_observability(config: ObservabilityConfig) -> Result<()> {
+// Initialize global observability
+pub const fn init_observability(config: ObservabilityConfig) -> Result<()> {
     let manager = Arc::new(ObservabilityManager::new(config));
-
     OBSERVABILITY.set(manager.clone()).map_err(|_| {
-        NestGateError::configuration_error(
-            "Observability already initialized".to_string(),
-        )
+        NestGateError::configuration_error("observability", "Observability already initialized")
     })?;
 
     // Initialize in background
@@ -181,12 +212,11 @@ pub fn init_observability(config: ObservabilityConfig) -> Result<()> {
     Ok(())
 }
 
-/// Get global observability manager
-pub fn get_observability() -> Option<Arc<ObservabilityManager>> {
+// Get global observability manager
+pub const fn get_observability() -> Option<Arc<ObservabilityManager>> {
     OBSERVABILITY.get().cloned()
 }
-
-/// Record a metric using the global observability manager
+// Record a metric using the global observability manager
 pub async fn record_metric(name: &str, value: f64) -> Result<()> {
     if let Some(obs) = get_observability() {
         obs.record_metric(name, value, HashMap::new()).await
@@ -198,19 +228,17 @@ pub async fn record_metric(name: &str, value: f64) -> Result<()> {
         Ok(())
     }
 }
-
-/// Get current system health
+// Get current system health
 pub async fn get_system_health() -> Result<SystemHealth> {
     if let Some(obs) = get_observability() {
         obs.get_health().await
     } else {
-        Err(NestGateError::configuration_error_with_field(
-            "Observability not initialized".to_string(),
-            "health_check".to_string(),
+        Err(NestGateError::configuration_error(
+            "health_check",
+            "Observability not initialized",
         ))
     }
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;

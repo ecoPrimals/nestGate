@@ -1,17 +1,17 @@
-//! **BIOMEOS TYPES AND DATA STRUCTURES**
-//!
-//! Core BiomeOS types, structs, and enums for manifest definitions and configuration.
-//! Extracted from biomeos.rs for file size compliance.
+// **BIOMEOS TYPES AND DATA STRUCTURES**
+//! Type definitions and data structures.
+// Core Management types, structs, and enums for manifest definitions and configuration.
+// Extracted from management.rs for file size compliance.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::canonical_types::storage::StorageTier;
+// StorageTier import removed - unused
 
-/// BiomeOS manifest structure for universal capability routing
+/// Management manifest structure for universal capability routing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BiomeManifest {
-    /// API version for biomeOS compatibility
+    /// API version for management compatibility
     #[serde(rename = "apiVersion")]
     pub api_version: String,
     /// Resource kind
@@ -39,7 +39,6 @@ pub struct BiomeManifest {
     /// Coordination patterns (universal cross-capability)
     pub coordination: Option<CoordinationConfig>,
 }
-
 /// Biome metadata information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BiomeMetadata {
@@ -58,7 +57,6 @@ pub struct BiomeMetadata {
     /// Biome annotations for metadata
     pub annotations: Option<HashMap<String, String>>,
 }
-
 /// Capability configuration for universal adapter routing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityConfig {
@@ -71,7 +69,6 @@ pub struct CapabilityConfig {
     /// Discovery preferences
     pub discovery: Option<DiscoveryPreferences>,
 }
-
 /// Resource requirements for capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceRequirements {
@@ -84,7 +81,6 @@ pub struct ResourceRequirements {
     /// Custom resource requirements
     pub custom: Option<HashMap<String, String>>,
 }
-
 /// Discovery preferences for capability routing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiscoveryPreferences {
@@ -95,7 +91,6 @@ pub struct DiscoveryPreferences {
     /// Timeout for discovery
     pub discovery_timeout_seconds: Option<u64>,
 }
-
 /// Service category enumeration (extensible)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ServiceCategory {
@@ -106,7 +101,6 @@ pub enum ServiceCategory {
     Compute,
     Custom(String),
 }
-
 /// Agent specification for AI/compute integration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentSpec {
@@ -119,7 +113,6 @@ pub struct AgentSpec {
     /// Resource requirements
     pub resources: Option<ResourceRequirements>,
 }
-
 /// Service configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceConfig {
@@ -130,7 +123,6 @@ pub struct ServiceConfig {
     /// Service image
     pub image: Option<String>,
     /// Environment variables
-    pub environment: Option<HashMap<String, String>>,
     /// Port specifications
     pub ports: Option<Vec<PortSpec>>,
     /// Volume mounts
@@ -138,7 +130,6 @@ pub struct ServiceConfig {
     /// Resource requirements
     pub resources: Option<ResourceRequirements>,
 }
-
 /// Port specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PortSpec {
@@ -149,7 +140,6 @@ pub struct PortSpec {
     /// Expose externally
     pub expose_externally: bool,
 }
-
 /// Biome resource requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BiomeResources {
@@ -164,7 +154,6 @@ pub struct BiomeResources {
     /// Custom resource requirements
     pub custom: Option<HashMap<String, String>>,
 }
-
 /// Biome security configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BiomeSecurity {
@@ -177,7 +166,6 @@ pub struct BiomeSecurity {
     /// Audit requirements
     pub audit_requirements: Option<AuditRequirements>,
 }
-
 /// Security levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum SecurityLevel {
@@ -190,7 +178,6 @@ pub enum SecurityLevel {
     /// Enterprise security
     Enterprise,
 }
-
 /// Encryption policies for security provider integration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptionPolicies {
@@ -203,7 +190,6 @@ pub struct EncryptionPolicies {
     /// Encryption provider (security-service, software)
     pub provider: Option<String>,
 }
-
 /// Access control policies
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccessControls {
@@ -214,7 +200,6 @@ pub struct AccessControls {
     /// Group permissions
     pub group_permissions: HashMap<String, Vec<String>>,
 }
-
 /// Audit requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditRequirements {
@@ -225,7 +210,6 @@ pub struct AuditRequirements {
     /// Audit destinations
     pub destinations: Vec<String>,
 }
-
 /// Biome networking configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BiomeNetworking {
@@ -238,7 +222,6 @@ pub struct BiomeNetworking {
     /// Load balancing configuration
     pub load_balancing: Option<LoadBalancingConfig>,
 }
-
 /// Network specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkSpec {
@@ -249,7 +232,6 @@ pub struct NetworkSpec {
     /// Network options
     pub options: Option<HashMap<String, String>>,
 }
-
 /// DNS configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DnsConfig {
@@ -258,7 +240,6 @@ pub struct DnsConfig {
     /// Search domains
     pub search_domains: Option<Vec<String>>,
 }
-
 /// Load balancing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadBalancingConfig {
@@ -267,12 +248,10 @@ pub struct LoadBalancingConfig {
     /// Health check configuration
     pub health_check: Option<HealthCheckConfig>,
 }
-
 /// Health check configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheckConfig {
     /// Health check path
-    pub path: String,
     /// Health check interval
     pub interval_seconds: u32,
     /// Health check timeout
@@ -282,7 +261,6 @@ pub struct HealthCheckConfig {
     /// Unhealthy threshold
     pub unhealthy_threshold: u32,
 }
-
 /// Biome storage configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BiomeStorage {
@@ -293,7 +271,6 @@ pub struct BiomeStorage {
     /// Storage policies
     pub policies: Option<StoragePolicies>,
 }
-
 /// Volume specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VolumeSpec {
@@ -304,7 +281,6 @@ pub struct VolumeSpec {
     /// Storage tier
     pub tier: String,
     /// Mount path
-    pub mount_path: String,
     /// Volume options
     pub options: Option<HashMap<String, String>>,
     /// Replication factor
@@ -316,7 +292,6 @@ pub struct VolumeSpec {
     /// Replication status
     pub replication_status: String,
 }
-
 /// Storage policies
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StoragePolicies {
@@ -327,7 +302,6 @@ pub struct StoragePolicies {
     /// Replication policies
     pub replication: Option<ReplicationPolicy>,
 }
-
 /// Backup policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackupPolicy {
@@ -338,7 +312,6 @@ pub struct BackupPolicy {
     /// Backup destinations
     pub destinations: Vec<String>,
 }
-
 /// Retention policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RetentionPolicy {
@@ -347,7 +320,6 @@ pub struct RetentionPolicy {
     /// Archive after retention
     pub archive_after_retention: bool,
 }
-
 /// Replication policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReplicationPolicy {
@@ -356,7 +328,6 @@ pub struct ReplicationPolicy {
     /// Replication strategy
     pub strategy: String,
 }
-
 /// Volume status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum VolumeStatus {
@@ -375,7 +346,6 @@ pub enum VolumeStatus {
     /// Volume is being deleted
     Deleting,
 }
-
 /// Biome specialization settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BiomeSpecialization {
@@ -384,7 +354,6 @@ pub struct BiomeSpecialization {
     /// Specialization parameters
     pub parameters: HashMap<String, serde_json::Value>,
 }
-
 /// Biome templates for capability-based configurations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BiomeTemplates {
@@ -399,7 +368,6 @@ pub struct BiomeTemplates {
     /// Custom capability templates
     pub custom: Option<HashMap<String, Vec<TemplateSpec>>>,
 }
-
 /// Template specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TemplateSpec {
@@ -410,7 +378,6 @@ pub struct TemplateSpec {
     /// Configuration
     pub config: HashMap<String, serde_json::Value>,
 }
-
 /// Coordination configuration for cross-capability patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CoordinationConfig {
@@ -419,7 +386,6 @@ pub struct CoordinationConfig {
     /// Coordination policies
     pub policies: Option<CoordinationPolicies>,
 }
-
 /// Coordination pattern
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CoordinationPattern {
@@ -432,7 +398,6 @@ pub struct CoordinationPattern {
     /// Configuration
     pub config: HashMap<String, serde_json::Value>,
 }
-
 /// Coordination policies
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CoordinationPolicies {
@@ -443,7 +408,6 @@ pub struct CoordinationPolicies {
     /// Failure policies
     pub failure: Option<FailurePolicy>,
 }
-
 /// Timeout policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeoutPolicy {
@@ -452,7 +416,6 @@ pub struct TimeoutPolicy {
     /// Per-capability timeouts
     pub per_capability: Option<HashMap<String, u32>>,
 }
-
 /// Retry policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RetryPolicy {
@@ -463,7 +426,6 @@ pub struct RetryPolicy {
     /// Exponential backoff
     pub exponential_backoff: bool,
 }
-
 /// Failure policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FailurePolicy {
@@ -472,7 +434,6 @@ pub struct FailurePolicy {
     /// Fallback configurations
     pub fallbacks: Option<Vec<String>>,
 }
-
 /// Biome context for provisioning operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BiomeContext {
@@ -481,7 +442,6 @@ pub struct BiomeContext {
     /// Node ID within biome
     pub node_id: String,
     /// Environment (development, staging, production)
-    pub environment: String,
     /// Security context
     pub security_context: SecurityContext,
     /// Resource constraints
@@ -489,7 +449,6 @@ pub struct BiomeContext {
     /// Integration endpoints
     pub integration_endpoints: HashMap<String, String>,
 }
-
 /// Security context for operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityContext {
@@ -502,7 +461,6 @@ pub struct SecurityContext {
     /// Security token
     pub token: Option<String>,
 }
-
 /// Resource constraints for operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceConstraints {

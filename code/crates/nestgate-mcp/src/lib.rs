@@ -1,21 +1,18 @@
-//
-// This crate provides comprehensive MCP integration capabilities with canonical
-// error handling and modern patterns. All MCP operations now use the unified
-// NestGateError system for consistent error handling across the ecosystem.
+//! NestGate MCP (Model Context Protocol) Integration
+//!
+//! This crate provides MCP protocol support for the NestGate ecosystem.
+
+// Remove all the invalid imports and use the corrected ones
+use nestgate_core::Result;
+
+// Re-export the error handling functions
+pub use error::{
+    extract_mcp_context, extract_method, extract_session_id, mcp_connection_error, method_error,
+    protocol_error, serialization_error, session_error, transport_error, McpErrorExt,
+};
 
 pub mod config;
 pub mod error;
-
-// Re-export canonical types and functions
-pub use error::{
-    authentication_error, authorization_error, connection_error, create_contextual_error,
-    create_mcp_error, internal_error, invalid_request_error, network_error, not_found_error,
-    protocol_error, server_error, timeout_error, to_canonical_result, validation_error, ErrorType,
-    McpErrorBuilder,
-};
-
-// Re-export canonical Result type from nestgate-core
-pub use nestgate_core::error::Result as McpResult;
 
 // ==================== SECTION ====================
 
@@ -23,13 +20,12 @@ pub use nestgate_core::error::Result as McpResult;
 #[allow(async_fn_in_trait)]
 pub trait McpService {
     /// Initialize the MCP service
-    async fn initialize(&mut self) -> McpResult<()>;
-
+    fn initialize(&mut self) -> Result<()>;
     /// Get service health status
-    async fn health_check(&self) -> McpResult<McpHealthStatus>;
+    async fn health_check(&self) -> Result<McpHealthStatus>;
 
     /// Shutdown the service gracefully
-    async fn shutdown(&mut self) -> McpResult<()>;
+    async fn shutdown(&mut self) -> Result<()>;
 }
 
 /// MCP health status using canonical patterns
@@ -39,9 +35,9 @@ pub struct McpHealthStatus {
     pub message: String,
     pub details: Option<std::collections::HashMap<String, String>>,
 }
-
 impl McpHealthStatus {
-    pub fn healthy() -> Self {
+    #[must_use]
+    pub const fn healthy() -> Self {
         Self {
             is_healthy: true,
             message: "MCP service is healthy".to_string(),
@@ -49,7 +45,7 @@ impl McpHealthStatus {
         }
     }
 
-    pub fn unhealthy(message: impl Into<String>) -> Self {
+    pub const fn unhealthy(message: impl Into<String>) -> Self {
         Self {
             is_healthy: false,
             message: message.into(),
@@ -57,6 +53,7 @@ impl McpHealthStatus {
         }
     }
 
+    #[must_use]
     pub fn with_details(mut self, details: std::collections::HashMap<String, String>) -> Self {
         self.details = Some(details);
         self
@@ -71,7 +68,6 @@ pub mod constants {
         CONNECTION_TIMEOUT_SECS, REQUEST_TIMEOUT_SECS,
     };
     use std::time::Duration;
-
     /// Default connection timeout - **CANONICAL MODERNIZATION**
     pub const DEFAULT_CONNECT_TIMEOUT: Duration = Duration::from_secs(CONNECTION_TIMEOUT_SECS);
 
@@ -94,18 +90,19 @@ pub mod constants {
 // ==================== SECTION ====================
 
 /// Create a canonical MCP client configuration
-pub fn create_default_config() -> config::McpClientConfig {
-    config::McpClientConfig::default()
+/// **MODERNIZED**: Uses canonical configuration system
+#[must_use]
+pub const fn create_default_config() -> nestgate_core::config::canonical_master::McpConfig {
+    nestgate_core::config::canonical_master::McpConfig::default()
 }
-
 /// Validate MCP protocol version compatibility
-pub fn is_protocol_version_supported(version: &str) -> bool {
+#[must_use]
+pub const fn is_protocol_version_supported(version: &str) -> bool {
     matches!(version, "2024-11-05" | "2024-10-07" | "2024-09-25")
 }
-
 /// Create a standardized MCP error response
-pub fn create_error_response(
-    error_type: ErrorType,
+pub const fn create_error_response(
+    error_type: nestgate_core::NestGateError,
     message: impl Into<String>,
 ) -> serde_json::Value {
     serde_json::json!({

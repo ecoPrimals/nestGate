@@ -3,11 +3,11 @@
 // Direct ZFS commands have been replaced with API-based operations for better
 // consistency and capability.
 
-use crate::error::CanonicalResult as Result;
 use clap::Subcommand;
+use nestgate_core::error::CanonicalResult as Result;
 use std::path::PathBuf;
 
-use nestgate_core::constants::ConstantsMigrationHelper;
+use nestgate_core::constants::canonical_defaults::network::{DEFAULT_API_PORT, LOCALHOST};
 
 #[derive(Debug, Subcommand)]
 pub enum ZfsCommands {
@@ -65,18 +65,24 @@ pub enum ZfsCommands {
         target: String,
     },
 }
-
 /// ZFS command handler
 pub struct ZfsHandler {
     api_endpoint: String,
+}
+impl Default for ZfsHandler {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ZfsHandler {
     pub fn new() -> Self {
         let base_url = std::env::var("NESTGATE_API_URL")
-            .unwrap_or_else(|_| ConstantsMigrationHelper::http_api_endpoint());
+            .unwrap_or_else(|_| format!("http://{}:{}", LOCALHOST, DEFAULT_API_PORT);
 
-        Self { api_endpoint: base_url }
+        Self {
+            api_endpoint: base_url,
+        }
     }
 
     /// Execute ZFS command
@@ -92,22 +98,19 @@ impl ZfsHandler {
                 path: _,
                 compression,
                 checksum,
-            } => {
-                self.show_api_usage(
-                    "Create Dataset",
-                    &format!("POST {}/api/v1/zfs/datasets", self.api_endpoint),
-                    &format!(
-                        r#"{{
+            } => self.show_api_usage(
+                "Create Dataset",
+                &format!("POST {}/api/v1/zfs/datasets", "actual_error_details"),
+                &format!(
+                    r#"{{
   "name": "{}",
   "backend": "{}",
   "compression": {},
   "checksum": {}
-}}"#,
-                        dataset, backend, compression, checksum
-                    ),
-                )
-                .await
-            }
+}"#,
+                    dataset, backend, compression, checksum
+                ),
+            ),
             ZfsCommands::CreateSnapshot { snapshot } => {
                 if let Some((dataset, snapshot_name)) = snapshot.split_once('@') {
                     self.show_api_usage(
@@ -116,30 +119,23 @@ impl ZfsHandler {
                             "POST {}/api/v1/zfs/datasets/{}/snapshots",
                             self.api_endpoint, dataset
                         ),
-                        &format!(r#"{{"name": "{}"}}"#, snapshot_name),
+                        &format!(r#"{{"name": "{}"}"#, snapshot_name),
                     )
-                    .await
                 } else {
                     println!("❌ Invalid snapshot format. Use: dataset@snapshot_name");
                     Ok(())
                 }
             }
-            ZfsCommands::ListPools => {
-                self.show_api_usage(
-                    "List Pools",
-                    &format!("GET {}/api/v1/zfs/pools", self.api_endpoint),
-                    "",
-                )
-                .await
-            }
-            ZfsCommands::ListDatasets => {
-                self.show_api_usage(
-                    "List Datasets",
-                    &format!("GET {}/api/v1/zfs/datasets", self.api_endpoint),
-                    "",
-                )
-                .await
-            }
+            ZfsCommands::ListPools => self.show_api_usage(
+                "List Pools",
+                &format!("GET {}/api/v1/zfs/pools", "actual_error_details"),
+                "",
+            ),
+            ZfsCommands::ListDatasets => self.show_api_usage(
+                "List Datasets",
+                &format!("GET {}/api/v1/zfs/datasets", "actual_error_details"),
+                "",
+            ),
             ZfsCommands::Status { pool } => {
                 let endpoint = if let Some(pool_name) = pool {
                     format!(
@@ -147,12 +143,12 @@ impl ZfsHandler {
                         self.api_endpoint, pool_name
                     )
                 } else {
-                    format!("{}/api/v1/zfs/status", self.api_endpoint)
+                    format!("{}/api/v1/zfs/status", "actual_error_details")
                 };
-                self.show_api_usage("Pool Status", &endpoint, "").await
+                self.show_api_usage("Pool Status", &endpoint, "")
             }
             ZfsCommands::Destroy { target, force } => {
-                let endpoint = if target.contains('@') {
+                let _endpoint = if target.contains('@') {
                     // Snapshot
                     let parts: Vec<&str> = target.split('@').collect();
                     format!(
@@ -161,27 +157,26 @@ impl ZfsHandler {
                     )
                 } else {
                     // Dataset
-                    format!("{}/api/v1/zfs/datasets/{}", self.api_endpoint, target)
+                    format!("/api/v1/zfs/datasets/{}", target)
                 };
 
                 let params = if force { "?force=true" } else { "" };
-                self.show_api_usage("Destroy", &format!("DELETE {}{}", endpoint, params), "")
-                    .await
-            }
-            ZfsCommands::Get { property, target } => {
                 self.show_api_usage(
-                    "Get Property",
-                    &format!(
-                        "GET {}/api/v1/zfs/properties/{}?target={}",
-                        self.api_endpoint, property, target
-                    ),
+                    "Destroy",
+                    &format!("DELETE /api/v1/zfs/datasets/{}{}", target, params),
                     "",
                 )
-                .await
             }
+            ZfsCommands::Get { property, target } => self.show_api_usage(
+                "Get Property",
+                &format!(
+                    "GET {}/api/v1/zfs/properties/{}?target={}",
+                    self.api_endpoint, property, target
+                ),
+                "",
+            ),
             ZfsCommands::Set { property, target } => {
-                let (prop_name, prop_value) = if let Some((name, value)) = property.split_once('=')
-                {
+                let (prop_name, propvalue) = if let Some((name, value)) = property.split_once('=') {
                     (name, value)
                 } else {
                     println!("❌ Invalid property format. Use: property=value");
@@ -194,14 +189,13 @@ impl ZfsHandler {
                         "PUT {}/api/v1/zfs/properties/{}",
                         self.api_endpoint, prop_name
                     ),
-                    &format!(r#"{{"target": "{}", "value": "{}"}}"#, target, prop_value),
+                    &format!(r#"{{"target": "{}", "value": "{}"}"#, target, propvalue),
                 )
-                .await
             }
         }
     }
 
-    async fn show_api_usage(&self, operation: &str, endpoint: &str, body: &str) -> Result<()> {
+    fn show_api_usage(&self, operation: &str, endpoint: &str, body: &str) -> Result<()> {
         println!("📋 Operation: {}", operation);
         println!("🔗 API Call:");
 

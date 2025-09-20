@@ -1,10 +1,14 @@
-//
-// Pure data layer REST API with real-time bidirectional RPC capabilities.
-// Integrates tarpc (beardog), JSON RPC (songbird), and WebSocket streams.
+//! **REST API MODULE**
+//!
+//! This module contains the REST API implementation for NestGate, including
+//! handlers, models, and WebSocket support for real-time communication.
 
 pub mod handlers;
 pub mod models;
 pub mod rpc;
+/// **WEBSOCKET MODULE**
+///
+/// WebSocket support for real-time bidirectional communication with clients.
 pub mod websocket; // ✅ WebSocket module implemented
 
 use axum::{
@@ -17,35 +21,48 @@ use tokio::sync::{Mutex, RwLock};
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use uuid::Uuid;
 
-// Re-export commonly used types
-pub use handlers::*;
-pub use models::*;
+// Import handler functions
+use crate::rest::handlers::{
+    clone_snapshot, create_dataset, create_snapshot, delete_dataset, delete_snapshot,
+    events_websocket, get_alerts, get_dataset, get_dataset_properties, get_dataset_stats,
+    get_metrics, get_metrics_history, get_snapshot, health_check, list_datasets, list_snapshots,
+    logs_websocket, metrics_websocket, set_dataset_properties, system_status, update_dataset,
+    version_info,
+};
+
+// Re-export commonly used types (removed glob exports to avoid ambiguity)
+// pub use handlers::*;  // Commented out to avoid ambiguous re-exports
+// pub use models::*;    // Commented out to avoid ambiguous re-exports
 pub use rpc::{RpcError, RpcStreamEvent, UnifiedRpcManager, UnifiedRpcRequest, UnifiedRpcResponse};
 
 // Re-export API router function (remove duplicate export)
 
 use nestgate_core::error::Result;
-use nestgate_core::universal_storage::{
-    canonical_storage::FilesystemBackend, zfs_features::ModernZfsEngine, AutoConfigurator,
-    StorageDetector,
-};
+use nestgate_core::universal_storage::{AutoConfigurator, StorageDetector};
 
 /// API state with RPC capabilities
 #[derive(Clone)]
 pub struct ApiState {
-    /// ZFS engines for different datasets
-    pub zfs_engines: Arc<RwLock<HashMap<String, Arc<ModernZfsEngine<FilesystemBackend>>>>>,
+    /// ZFS engines for different datasets (placeholder)
+    pub zfs_engines: Arc<RwLock<HashMap<String, String>>>,
     /// Storage detector for discovering available storage
     pub storage_detector: Arc<Mutex<StorageDetector>>,
     /// Auto-configurator for optimal storage setup
     pub auto_configurator: Arc<Mutex<Option<AutoConfigurator>>>,
-    /// Unified RPC manager for beardog/songbird communication
+    /// Unified RPC manager for security/orchestration communication
     pub rpc_manager: Arc<Mutex<Option<UnifiedRpcManager>>>,
 }
-
 impl ApiState {
     /// Create new API state with RPC capabilities
-    pub async fn new() -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn new() -> Result<Self>  {
         let storage_detector = StorageDetector::new();
 
         Ok(Self {
@@ -57,28 +74,50 @@ impl ApiState {
     }
 
     /// Initialize RPC connections
-    pub async fn init_rpc_connections(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn init_rpc_connections(&self) -> Result<()>  {
         let mut rpc_manager_opt = self.rpc_manager.lock().await;
 
         if rpc_manager_opt.is_none() {
-            let mut rpc_manager = UnifiedRpcManager::new();
+            let rpc_manager = UnifiedRpcManager::new();
 
-            // Initialize beardog connection if available
-            if let Ok(beardog_addr) = std::env::var("NESTGATE_BEARDOG_ADDRESS") {
-                if let Err(e) = rpc_manager.init_tarpc_service(&beardog_addr).await {
-                    tracing::warn!("Failed to connect to beardog at {}: {}", beardog_addr, e);
+            // ✅ UNIVERSAL ADAPTER PATTERN - Pure capability-based discovery
+            // Zero primal knowledge - infant-like discovery of capabilities
+
+            // Initialize security capability discovery
+            if let Ok(security_endpoint) = std::env::var("SECURITY_DISCOVERY_ENDPOINT") {
+                if let Err(e) = rpc_manager
+                    .init_security_capability(&security_endpoint)
+                    .await
+                {
+                    tracing::warn!(
+                        "Failed to connect to security capability at {}: {}",
+                        security_endpoint,
+                        e
+                    );
                 }
             } else {
-                tracing::info!("NESTGATE_BEARDOG_ADDRESS not set, skipping beardog connection");
+                tracing::info!("Security capability discovery through universal adapter");
             }
 
-            // Initialize songbird connection if available
-            if let Ok(songbird_addr) = std::env::var("NESTGATE_SONGBIRD_ADDRESS") {
-                if let Err(e) = rpc_manager.init_json_rpc_service(&songbird_addr).await {
-                    tracing::warn!("Failed to connect to songbird at {}: {}", songbird_addr, e);
-                }
-            } else {
-                tracing::info!("NESTGATE_SONGBIRD_ADDRESS not set, skipping songbird connection");
+            // ✅ UNIVERSAL ADAPTER INTEGRATION - Modern capability-based RPC
+            if std::env::var("UNIVERSAL_ADAPTER_ENABLED")
+                .unwrap_or_else(|_| "true".to_string())
+                .parse()
+                .unwrap_or(true)
+            {
+                tracing::info!(
+                    "🔄 Universal adapter enabled - RPC routing will use capability discovery"
+                );
+                // Future: Initialize universal RPC router here
+                // let universal_router = UniversalRpcRouter::new(universal_adapter).await?;
+                // rpc_manager.set_universal_router(universal_router);
             }
 
             *rpc_manager_opt = Some(rpc_manager);
@@ -89,7 +128,7 @@ impl ApiState {
     }
 
     /// Get RPC manager
-    pub async fn get_rpc_manager(&self) -> Option<Arc<Mutex<Option<UnifiedRpcManager>>>> {
+    pub const fn get_rpc_manager(&self) -> Option<Arc<Mutex<Option<UnifiedRpcManager>>>> {
         Some(Arc::clone(&self.rpc_manager))
     }
 }
@@ -101,14 +140,13 @@ pub struct DataResponse<T> {
     pub data: T,
     /// Response timestamp
     pub timestamp: chrono::DateTime<chrono::Utc>,
-    /// Optional metadata
+    /// Optional _metadata
     #[serde(skip_serializing_if = "Option::is_none")]
     pub meta: Option<ResponseMeta>,
 }
-
 impl<T> DataResponse<T> {
     /// Create new data response
-    pub fn new(data: T) -> Self {
+    pub const fn new(data: T) -> Self {
         Self {
             data,
             timestamp: chrono::Utc::now(),
@@ -117,7 +155,7 @@ impl<T> DataResponse<T> {
     }
 
     /// Create paginated data response
-    pub fn paginated(data: T, total: u64, page: u64, per_page: u64) -> Self {
+    pub const fn paginated(data: T, total: u64, page: u64, per_page: u64) -> Self {
         Self {
             data,
             timestamp: chrono::Utc::now(),
@@ -131,7 +169,7 @@ impl<T> DataResponse<T> {
     }
 }
 
-/// Response metadata for pagination
+/// Response _metadata for pagination
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct ResponseMeta {
     /// Total number of items
@@ -143,7 +181,6 @@ pub struct ResponseMeta {
     /// Whether there are more pages
     pub has_more: bool,
 }
-
 /// Unified error response for both REST and RPC
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct DataError {
@@ -154,10 +191,9 @@ pub struct DataError {
     /// Error timestamp
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
-
 impl DataError {
     /// Create new data error
-    pub fn new(error: String, code: String) -> Self {
+    pub const fn new(error: String, code: String) -> Self {
         Self {
             error,
             code,
@@ -180,15 +216,13 @@ pub struct ListQuery {
     /// Filter string
     pub filter: Option<String>,
 }
-
 /// Create the main API router with RPC capabilities
-pub fn create_api_router(state: ApiState) -> Router {
+pub const fn create_api_router(state: ApiState) -> Router {
     // Health and system routes
     let health_routes = Router::new()
         .route("/health", get(health_check))
         .route("/version", get(version_info))
         .route("/system/status", get(system_status));
-
     // ZFS data routes
     let zfs_routes = Router::new()
         .route("/zfs/datasets", get(list_datasets).post(create_dataset))
@@ -229,7 +263,7 @@ pub fn create_api_router(state: ApiState) -> Router {
         .route("/ws/logs", get(logs_websocket))
         .route("/ws/events", get(events_websocket));
 
-    // RPC routes for beardog/songbird integration
+    // RPC routes for security/orchestration integration
     let rpc_routes = Router::new()
         .route("/rpc/call", post(handle_rpc_call))
         .route("/rpc/stream", post(handle_rpc_stream))
@@ -255,13 +289,12 @@ async fn handle_rpc_call(
     axum::Json(request): axum::Json<UnifiedRpcRequest>,
 ) -> std::result::Result<axum::Json<DataResponse<UnifiedRpcResponse>>, axum::Json<DataError>> {
     let rpc_manager_opt = state.rpc_manager.lock().await;
-
     if let Some(rpc_manager) = rpc_manager_opt.as_ref() {
         let target = request.target.clone();
         match rpc_manager.call(&target, request).await {
             Ok(response) => Ok(axum::Json(DataResponse::new(response))),
-            Err(e) => Err(axum::Json(DataError::new(
-                format!("RPC call failed: {}", e),
+            Err(_e) => Err(axum::Json(DataError::new(
+                format!("RPC call failed: {"actual_error_details"}"),
                 "RPC_CALL_FAILED".to_string(),
             ))),
         }
@@ -279,9 +312,8 @@ async fn handle_rpc_stream(
     axum::Json(request): axum::Json<UnifiedRpcRequest>,
 ) -> std::result::Result<axum::Json<DataResponse<serde_json::Value>>, axum::Json<DataError>> {
     let rpc_manager_opt = state.rpc_manager.lock().await;
-
     if let Some(rpc_manager) = rpc_manager_opt.as_ref() {
-        match rpc_manager.start_bidirectional_stream(request).await {
+        match rpc_manager.start_bidirectional_stream(request) {
             Ok((_tx, mut rx)) => {
                 let stream_id = Uuid::new_v4();
 
@@ -299,8 +331,8 @@ async fn handle_rpc_stream(
                     "message": "Bidirectional RPC stream initiated"
                 }))))
             }
-            Err(e) => Err(axum::Json(DataError::new(
-                format!("Failed to start RPC stream: {}", e),
+            Err(_e) => Err(axum::Json(DataError::new(
+                format!("Failed to start RPC stream: {"actual_error_details"}"),
                 "RPC_STREAM_FAILED".to_string(),
             ))),
         }
@@ -317,9 +349,8 @@ async fn handle_rpc_health(
     axum::extract::State(state): axum::extract::State<ApiState>,
 ) -> std::result::Result<axum::Json<DataResponse<serde_json::Value>>, axum::Json<DataError>> {
     let rpc_manager_opt = state.rpc_manager.lock().await;
-
     if let Some(rpc_manager) = rpc_manager_opt.as_ref() {
-        let health_status = rpc_manager.get_health_status().await;
+        let health_status = rpc_manager.get_health_status();
         Ok(axum::Json(DataResponse::new(serde_json::json!({
             "rpc_connections": health_status,
             "status": "available"

@@ -1,6 +1,6 @@
-//! Metrics Collection and Export
-//!
-//! Comprehensive metrics system for monitoring NestGate performance,
+// Metrics Collection and Export
+//! Monitoring and observability functionality.
+// Comprehensive metrics system for monitoring NestGate performance,
 //! provider health, storage operations, and system resources.
 
 use crate::{NestGateError, Result};
@@ -20,13 +20,11 @@ pub struct MetricsCollector {
     /// Storage backend metrics
     storage_metrics: Arc<RwLock<HashMap<String, StorageMetrics>>>,
     /// Performance metrics
-    performance_metrics: Arc<RwLock<PerformanceMetrics>>,
     /// Metrics collection start time
     start_time: Instant,
     /// Metrics configuration
     config: MetricsConfig,
 }
-
 /// Configuration for metrics collection
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricsConfig {
@@ -41,7 +39,6 @@ pub struct MetricsConfig {
     /// Custom metric labels
     pub labels: HashMap<String, String>,
 }
-
 impl Default for MetricsConfig {
     fn default() -> Self {
         Self {
@@ -78,7 +75,6 @@ pub struct SystemMetrics {
     /// Last updated timestamp
     pub timestamp: SystemTime,
 }
-
 impl Default for SystemMetrics {
     fn default() -> Self {
         Self {
@@ -122,8 +118,8 @@ pub struct ProviderMetrics {
     /// Error breakdown by type
     pub error_counts: HashMap<String, u64>,
 }
-
 impl ProviderMetrics {
+    #[must_use]
     pub fn new(provider_name: String, provider_type: String) -> Self {
         Self {
             provider_name,
@@ -150,7 +146,7 @@ impl ProviderMetrics {
         let response_time_ms = response_time.as_millis() as f64;
         self.avg_response_time_ms = (self.avg_response_time_ms * (self.total_requests - 1) as f64
             + response_time_ms)
-            / self.total_requests as f64;
+            / self.f64::from(total_requests);
     }
 
     /// Record a failed request
@@ -164,11 +160,11 @@ impl ProviderMetrics {
     }
 
     /// Get success rate as percentage
-    pub fn success_rate(&self) -> f64 {
+    pub const fn success_rate(&self) -> f64 {
         if self.total_requests == 0 {
             return 0.0;
         }
-        (self.successful_requests as f64 / self.total_requests as f64) * 100.0
+        (self.f64::from(successful_requests) / self.f64::from(total_requests)) * 100.0
     }
 }
 
@@ -200,9 +196,8 @@ pub struct StorageMetrics {
     /// Used storage space
     pub used_space: Option<u64>,
 }
-
 impl StorageMetrics {
-    pub fn new(backend_name: String, backend_type: String) -> Self {
+    pub const fn new(backend_name: String, backend_type: String) -> Self {
         Self {
             backend_name,
             backend_type,
@@ -227,7 +222,7 @@ impl StorageMetrics {
         let latency_ms = latency.as_millis() as f64;
         self.avg_read_latency_ms = (self.avg_read_latency_ms * (self.read_operations - 1) as f64
             + latency_ms)
-            / self.read_operations as f64;
+            / self.f64::from(read_operations);
     }
 
     /// Record a write operation
@@ -238,15 +233,15 @@ impl StorageMetrics {
         let latency_ms = latency.as_millis() as f64;
         self.avg_write_latency_ms =
             (self.avg_write_latency_ms * (self.write_operations - 1) as f64 + latency_ms)
-                / self.write_operations as f64;
+                / self.f64::from(write_operations);
     }
 
     /// Get throughput in MB/s for reads
-    pub fn read_throughput_mbps(&self) -> f64 {
+    pub const fn read_throughput_mbps(&self) -> f64 {
         if self.read_operations == 0 || self.avg_read_latency_ms == 0.0 {
             return 0.0;
         }
-        let avg_bytes_per_read = self.bytes_read as f64 / self.read_operations as f64;
+        let avg_bytes_per_read = self.f64::from(bytes_read) / self.f64::from(read_operations);
         let mb_per_read = avg_bytes_per_read / (1024.0 * 1024.0);
         let reads_per_second = 1000.0 / self.avg_read_latency_ms;
         mb_per_read * reads_per_second
@@ -273,7 +268,6 @@ pub struct PerformanceMetrics {
     /// Recent latency samples
     latency_samples: Vec<f64>,
 }
-
 impl Default for PerformanceMetrics {
     fn default() -> Self {
         Self {
@@ -322,6 +316,7 @@ impl PerformanceMetrics {
 
 impl MetricsCollector {
     /// Create a new metrics collector
+    #[must_use]
     pub fn new(config: MetricsConfig) -> Self {
         info!("📊 Initializing metrics collector");
 
@@ -329,7 +324,6 @@ impl MetricsCollector {
             system_metrics: Arc::new(RwLock::new(SystemMetrics::default())),
             provider_metrics: Arc::new(RwLock::new(HashMap::new())),
             storage_metrics: Arc::new(RwLock::new(HashMap::new())),
-            performance_metrics: Arc::new(RwLock::new(PerformanceMetrics::default())),
             start_time: Instant::now(),
             config,
         }
@@ -537,7 +531,6 @@ impl Clone for MetricsCollector {
             system_metrics: Arc::clone(&self.system_metrics),
             provider_metrics: Arc::clone(&self.provider_metrics),
             storage_metrics: Arc::clone(&self.storage_metrics),
-            performance_metrics: Arc::clone(&self.performance_metrics),
             start_time: self.start_time,
             config: self.config.clone(),
         }
@@ -549,7 +542,6 @@ pub struct MetricsExporter {
     collector: Arc<MetricsCollector>,
     export_format: ExportFormat,
 }
-
 /// Supported export formats
 #[derive(Debug, Clone)]
 pub enum ExportFormat {
@@ -557,9 +549,8 @@ pub enum ExportFormat {
     Json,
     InfluxDB,
 }
-
 impl MetricsExporter {
-    pub fn new(collector: Arc<MetricsCollector>, format: ExportFormat) -> Self {
+    pub const fn new(collector: Arc<MetricsCollector>, format: ExportFormat) -> Self {
         Self {
             collector,
             export_format: format,
@@ -567,7 +558,14 @@ impl MetricsExporter {
     }
 
     /// Export metrics in the specified format
-    pub async fn export(&self) -> Result<String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn export(&self) -> Result<String>  {
         match self.export_format {
             ExportFormat::Prometheus => self.export_prometheus().await,
             ExportFormat::Json => self.export_json().await,
@@ -583,25 +581,25 @@ impl MetricsExporter {
         let mut output = String::new();
 
         // System metrics
-        output.push_str("# HELP nestgate_cpu_usage CPU usage percentage\n");
-        output.push_str("# TYPE nestgate_cpu_usage gauge\n");
-        output.push_str(&format!("nestgate_cpu_usage {}\n", system.cpu_usage));
+        output.push_str(" HELP nestgate_cpu_usage CPU usage percentage\n");
+        output.push_str(" TYPE nestgate_cpu_usage gauge\n");
+        output.push_str(&format!("nestgate_cpu_usage {system.cpu_usage}\n"));
 
-        output.push_str("# HELP nestgate_memory_usage Memory usage in bytes\n");
-        output.push_str("# TYPE nestgate_memory_usage gauge\n");
-        output.push_str(&format!("nestgate_memory_usage {}\n", system.memory_usage));
+        output.push_str(" HELP nestgate_memory_usage Memory usage in bytes\n");
+        output.push_str(" TYPE nestgate_memory_usage gauge\n");
+        output.push_str(&format!("nestgate_memory_usage {system.memory_usage}\n"));
 
         // Provider metrics
         for (name, metrics) in providers {
-            output.push_str("# HELP nestgate_provider_requests_total Total requests to provider\n");
-            output.push_str("# TYPE nestgate_provider_requests_total counter\n");
+            output.push_str(" HELP nestgate_provider_requests_total Total requests to provider\n");
+            output.push_str(" TYPE nestgate_provider_requests_total counter\n");
             output.push_str(&format!(
-                "nestgate_provider_requests_total{{provider=\"{}\"}} {}\n",
+                "nestgate_provider_requests_total{{provider=\"{}\"} {}\n",
                 name, metrics.total_requests
             ));
 
             output.push_str(&format!(
-                "nestgate_provider_success_rate{{provider=\"{}\"}} {}\n",
+                "nestgate_provider_success_rate{{provider=\"{}\"} {}\n",
                 name,
                 metrics.success_rate()
             ));
@@ -630,14 +628,10 @@ impl MetricsExporter {
             "providers": providers,
             "performance": performance,
             "timestamp": SystemTime::now()
-        });
+        );
 
-        serde_json::to_string_pretty(&export_data).map_err(|e| NestGateError::Internal {
-            message: format!("Failed to serialize metrics to JSON: {e}"),
-            location: Some("MetricsExporter::export_json".to_string()),
-            context: None,
-            is_bug: false,
-        })
+        serde_json::to_string_pretty(&export_data).map_err(|e| NestGateError::internal_error(
+            location: Some("MetricsExporter::export_json".to_string())})
     }
 
     async fn export_influxdb(&self) -> Result<String> {

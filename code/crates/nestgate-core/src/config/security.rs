@@ -63,11 +63,13 @@ const INTERFACE_ALL_IPV6: &str = "::";
 // Removed unused constant (generic_constant_cleanup)
 
 // Replace hardcoded port with canonical constant
-use crate::constants::canonical::network::DEFAULT_API_PORT;
+use crate::constants::DEFAULT_API_PORT;
 
 // Default Port Value Constants
-const DEFAULT_HEALTH_PORT: &str = "8081";
-const DEFAULT_METRICS_PORT: &str = "9090";
+// CANONICAL MODERNIZATION: Use canonical port constants
+use crate::constants::canonical_defaults::network::{DEFAULT_INTERNAL_PORT, DEFAULT_METRICS_PORT};
+const DEFAULT_HEALTH_PORT: u16 = DEFAULT_INTERNAL_PORT;
+const DEFAULT_METRICS_PORT_CONST: u16 = DEFAULT_METRICS_PORT;
 
 // Validation Error Message Constants
 const ERROR_RBAC_DEFAULT_ROLE_EMPTY: &str = "Default role cannot be empty when RBAC is enabled";
@@ -81,7 +83,6 @@ const ERROR_TLS_CERT_KEY_REQUIRED: &str = "TLS certificate and key files must be
 pub mod security_defaults {
     /// Default bind interface for localhost-only security
     pub const DEFAULT_BIND_INTERFACE: &str = "127.0.0.1";
-
     /// Default link-local address range (APIPA)
     pub const LINK_LOCAL_RANGE: &str = "169.254.0.0/16";
 
@@ -108,7 +109,6 @@ pub mod security_defaults {
 pub struct SecurityConfig {
     /// Authentication method to use
     pub auth_method: String,
-
     /// Encryption algorithm preference (for external security providers)
     /// Note: NestGate itself does not perform encryption - this is a hint for external systems
     pub encryption_algorithm: String,
@@ -143,7 +143,6 @@ pub struct SecurityConfig {
 pub struct DecentralizedSecurityConfig {
     /// Required security capabilities for authentication
     pub required_capabilities: Vec<String>,
-
     /// Minimum consensus percentage required (0.5 to 1.0)
     pub min_consensus: f64,
 
@@ -162,7 +161,6 @@ pub struct DecentralizedSecurityConfig {
 pub struct ServiceDiscoveryConfig {
     /// Service registry endpoints to query
     pub registry_endpoints: Vec<String>,
-
     /// Discovery timeout in seconds
     pub discovery_timeout: u64,
 
@@ -178,7 +176,6 @@ pub struct ServiceDiscoveryConfig {
 pub struct TlsConfig {
     /// Certificate file path
     pub cert_file: String,
-
     /// Private key file path
     pub key_file: String,
 
@@ -194,7 +191,6 @@ pub struct TlsConfig {
 pub struct RbacConfig {
     /// Enable RBAC
     pub enabled: bool,
-
     /// Default role for new users
     pub default_role: String,
 
@@ -207,7 +203,6 @@ pub struct RbacConfig {
 pub struct RoleDefinition {
     /// Role name
     pub name: String,
-
     /// Role description
     pub description: String,
 
@@ -223,7 +218,6 @@ pub struct RoleDefinition {
 pub struct NetworkSecurityConfig {
     /// Default bind interface (never 0.0.0.0 in production)
     pub default_bind_interface: String,
-
     /// Whether to allow localhost-only binding
     pub localhost_only: bool,
 
@@ -239,7 +233,6 @@ pub struct NetworkSecurityConfig {
 pub struct EndpointConfig {
     /// Orchestration service endpoints (discovered via universal adapter)
     pub orchestration_endpoints: Vec<String>,
-
     /// Discovery service endpoints
     pub discovery_endpoints: Vec<String>,
 
@@ -255,7 +248,6 @@ pub struct EndpointConfig {
 pub struct AccessControlConfig {
     /// Allowed IP ranges for access
     pub allowed_ip_ranges: Vec<String>,
-
     /// Blocked IP ranges
     pub blocked_ip_ranges: Vec<String>,
 
@@ -352,6 +344,8 @@ impl Default for ServiceDiscoveryConfig {
         Self {
             registry_endpoints: vec![
                 DISCOVERY_CONSUL_DEFAULT.to_string(), // Consul default
+// DEPRECATED: etcd key-value store - migrate to capability-based storage
+// Capability-based discovery implemented
                 DISCOVERY_ETCD_DEFAULT.to_string(),   // etcd default
             ],
             discovery_timeout: 10,
@@ -406,14 +400,14 @@ impl Default for EndpointConfig {
                         .unwrap_or(8080),
                 );
                 ports.insert(
-                    "8081".to_string(),
+                    DEFAULT_HEALTH_PORT.to_string(),
                     std::env::var("NESTGATE_HEALTH_PORT")
                         .unwrap_or_else(|_| DEFAULT_HEALTH_PORT.to_string())
                         .parse()
                         .unwrap_or(8081),
                 );
                 ports.insert(
-                    "8082".to_string(),
+                    DEFAULT_METRICS_PORT_CONST.to_string(),
                     std::env::var("NESTGATE_METRICS_PORT")
                         .unwrap_or_else(|_| DEFAULT_METRICS_PORT.to_string())
                         .parse()
@@ -448,32 +442,39 @@ impl Default for AccessControlConfig {
 
 impl SecurityConfig {
     /// Check if decentralized security authentication is enabled
-    pub fn is_decentralized_security_enabled(&self) -> bool {
+    pub const fn is_decentralized_security_enabled(&self) -> bool {
         self.auth_method == "decentralized" && self.decentralized_security.is_some()
     }
 
     /// Check if TLS is enabled
-    pub fn is_tls_enabled(&self) -> bool {
+    pub const fn is_tls_enabled(&self) -> bool {
         self.tls.is_some()
     }
 
     /// Check if RBAC is enabled
-    pub fn is_rbac_enabled(&self) -> bool {
+    pub const fn is_rbac_enabled(&self) -> bool {
         self.rbac.enabled
     }
 
     /// Get decentralized security configuration if enabled
-    pub fn decentralized_security_config(&self) -> Option<&DecentralizedSecurityConfig> {
+    pub const fn decentralized_security_config(&self) -> Option<&DecentralizedSecurityConfig> {
         self.decentralized_security.as_ref()
     }
 
     /// Get TLS configuration if enabled
-    pub fn tls_config(&self) -> Option<&TlsConfig> {
+    pub const fn tls_config(&self) -> Option<&TlsConfig> {
         self.tls.as_ref()
     }
 
     /// Validate security configuration
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<(), String>  {
         // Validate decentralized security configuration if enabled
         if self.is_decentralized_security_enabled() {
             if let Some(decentralized) = &self.decentralized_security {
@@ -513,7 +514,7 @@ impl SecurityConfig {
 
 impl RbacConfig {
     /// Get a role definition by name
-    pub fn get_role(&self, name: &str) -> Option<&RoleDefinition> {
+    pub const fn get_role(&self, name: &str) -> Option<&RoleDefinition> {
         self.roles.get(name)
     }
 
@@ -523,17 +524,18 @@ impl RbacConfig {
     }
 
     /// Remove a role definition
+    #[must_use]
     pub fn remove_role(&mut self, name: &str) -> Option<RoleDefinition> {
         self.roles.remove(name)
     }
 
     /// Get all role names
-    pub fn role_names(&self) -> Vec<&str> {
+    pub const fn role_names(&self) -> Vec<&str> {
         self.roles.keys().map(|s| s.as_str()).collect()
     }
 
     /// Check if a role has a specific permission
-    pub fn has_permission(&self, role_name: &str, permission: &str) -> bool {
+    pub const fn has_permission(&self, role_name: &str, permission: &str) -> bool {
         if let Some(role) = self.get_role(role_name) {
             // Check direct permissions
             if role.permissions.contains(&permission.to_string()) {
@@ -574,7 +576,7 @@ impl RbacConfig {
 
 impl RoleDefinition {
     /// Create a new role definition
-    pub fn new(name: String, description: String, permissions: Vec<String>) -> Self {
+    pub const fn new(name: String, description: String, permissions: Vec<String>) -> Self {
         Self {
             name,
             description,
@@ -666,10 +668,10 @@ mod tests {
 
         // Test all permissions
         let all_perms = rbac.get_all_permissions(ROLE_POWER_USER);
-        assert!(all_perms.contains(&"read".to_string()));
-        assert!(all_perms.contains(&"write".to_string()));
-        assert!(all_perms.contains(&"delete".to_string()));
-        assert!(!all_perms.contains(&"admin".to_string()));
+        assert!(all_perms.contains(&"read"));
+        assert!(all_perms.contains(&"write"));
+        assert!(all_perms.contains(&"delete"));
+        assert!(!all_perms.contains(&"admin"));
     }
 
     #[test]

@@ -1,7 +1,6 @@
 /// **CONST GENERIC CONFIGURATION SYSTEM**
 /// This module replaces runtime configuration lookups with compile-time const generics
 /// for maximum performance by eliminating HashMap lookups and string parsing.
-
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::time::Duration;
@@ -10,7 +9,7 @@ use std::time::Duration;
 /// Provides compile-time configuration values without runtime overhead
 pub trait ZeroCostConfig {
     /// Get configuration value at compile-time
-    const fn get_value<T: ConfigValue>() -> T::Output;
+    const fn getvalue<T: ConfigValue>() -> T::Output;
     
     /// Validate configuration consistency at compile-time
     const fn validate() -> bool;
@@ -18,13 +17,11 @@ pub trait ZeroCostConfig {
     /// Get configuration name for debugging
     fn config_name() -> &'static str;
 }
-
 /// **CONFIGURATION VALUE TYPES**
 /// Marker traits for different configuration value types
 pub trait ConfigValue {
     type Output;
 }
-
 /// **SYSTEM CONFIGURATION**
 /// Compile-time system configuration with const generics
 pub struct ZeroCostSystemConfig<
@@ -36,7 +33,6 @@ pub struct ZeroCostSystemConfig<
 > {
     _phantom: PhantomData<()>,
 }
-
 impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize, const TIMEOUT_MS: u64, const WORKER_THREADS: usize, const LOG_LEVEL: u8>
     ZeroCostSystemConfig<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, WORKER_THREADS, LOG_LEVEL>
 {
@@ -80,7 +76,7 @@ impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize, const TIMEOUT_MS: u
     }
 
     /// Create buffer with compile-time size
-    pub fn create_buffer(&self) -> Vec<u8> {
+    pub const fn create_buffer(&self) -> Vec<u8> {
         Vec::with_capacity(BUFFER_SIZE)
     }
 
@@ -113,14 +109,13 @@ pub enum LogLevel {
     Debug,
     Trace,
 }
-
 /// **STORAGE CONFIGURATION**
 /// Compile-time storage configuration with const generics
 pub struct ZeroCostStorageConfig<
     const MAX_POOLS: usize = 100,
     const MAX_DATASETS: usize = 10000,
-    const MAX_SNAPSHOTS: usize = 100000,
-    const POOL_TIMEOUT_MS: u64 = 60000,
+    const MAX_SNAPSHOTS: usize = 100_000,
+    const POOL_TIMEOUT_MS: u64 = 60_000,
     const SNAPSHOT_RETENTION_DAYS: u32 = 30,
     const COMPRESSION_LEVEL: u8 = 6, // 1-9 for gzip
     const ENABLE_DEDUPLICATION: bool = false,
@@ -128,7 +123,6 @@ pub struct ZeroCostStorageConfig<
 > {
     _phantom: PhantomData<()>,
 }
-
 impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usize, 
      const POOL_TIMEOUT_MS: u64, const SNAPSHOT_RETENTION_DAYS: u32, const COMPRESSION_LEVEL: u8,
      const ENABLE_DEDUPLICATION: bool, const ENABLE_ENCRYPTION: bool>
@@ -226,14 +220,13 @@ pub enum CompressionAlgorithm {
     Gzip,
     Gzip9,
 }
-
 /// **NETWORK CONFIGURATION**
 /// Compile-time network configuration with const generics
 pub struct ZeroCostNetworkConfig<
     const API_PORT: u16 = 8080,
     const INTERNAL_PORT: u16 = 9090,
     const MAX_REQUEST_SIZE_MB: u32 = 100,
-    const KEEPALIVE_TIMEOUT_MS: u64 = 60000,
+    const KEEPALIVE_TIMEOUT_MS: u64 = 60_000,
     const RATE_LIMIT_REQUESTS_PER_MINUTE: u32 = 1000,
     const ENABLE_TLS: bool = true,
     const ENABLE_HTTP2: bool = true,
@@ -241,7 +234,6 @@ pub struct ZeroCostNetworkConfig<
 > {
     _phantom: PhantomData<()>,
 }
-
 impl<const API_PORT: u16, const INTERNAL_PORT: u16, const MAX_REQUEST_SIZE_MB: u32,
      const KEEPALIVE_TIMEOUT_MS: u64, const RATE_LIMIT_REQUESTS_PER_MINUTE: u32,
      const ENABLE_TLS: bool, const ENABLE_HTTP2: bool, const ENABLE_COMPRESSION: bool>
@@ -301,13 +293,13 @@ impl<const API_PORT: u16, const INTERNAL_PORT: u16, const MAX_REQUEST_SIZE_MB: u
     }
 
     /// Get bind address at compile-time
-    pub fn bind_address() -> String {
-        format!("0.0.0.0:{}", API_PORT)
+    pub const fn bind_address() -> String {
+        format!("0.0.0.0:{API_PORT}")
     }
 
     /// Get internal bind address at compile-time
-    pub fn internal_bind_address() -> String {
-        format!("127.0.0.1:{}", INTERNAL_PORT)
+    pub const fn internal_bind_address() -> String {
+        format!("127.0.0.1:{INTERNAL_PORT}")
     }
 
     /// Validate network configuration at compile-time
@@ -324,7 +316,7 @@ impl<const API_PORT: u16, const INTERNAL_PORT: u16, const MAX_REQUEST_SIZE_MB: u
 /// **CACHE CONFIGURATION**
 /// Compile-time cache configuration with const generics
 pub struct ZeroCostCacheConfig<
-    const MAX_ENTRIES: usize = 100000,
+    const MAX_ENTRIES: usize = 100_000,
     const MAX_MEMORY_MB: u32 = 1024,
     const TTL_SECONDS: u64 = 3600,
     const CLEANUP_INTERVAL_SECONDS: u64 = 300,
@@ -333,7 +325,6 @@ pub struct ZeroCostCacheConfig<
 > {
     _phantom: PhantomData<()>,
 }
-
 impl<const MAX_ENTRIES: usize, const MAX_MEMORY_MB: u32, const TTL_SECONDS: u64,
      const CLEANUP_INTERVAL_SECONDS: u64, const ENABLE_LRU: bool, const ENABLE_PERSISTENCE: bool>
     ZeroCostCacheConfig<MAX_ENTRIES, MAX_MEMORY_MB, TTL_SECONDS, CLEANUP_INTERVAL_SECONDS,
@@ -408,7 +399,6 @@ where
     network: Network,
     cache: Cache,
 }
-
 impl<System, Storage, Network, Cache> ZeroCostUnifiedConfig<System, Storage, Network, Cache>
 where
     System: ZeroCostConfig,
@@ -457,7 +447,6 @@ where
 
 /// **TYPE ALIASES FOR COMMON CONFIGURATIONS**
 /// Pre-configured systems for different deployment scenarios
-
 /// Development configuration: Small limits, fast timeouts, debug enabled
 pub type DevelopmentConfig = ZeroCostUnifiedConfig<
     ZeroCostSystemConfig<100, 8192, 10000, 2, 4>,      // Small, debug enabled
@@ -465,15 +454,13 @@ pub type DevelopmentConfig = ZeroCostUnifiedConfig<
     ZeroCostNetworkConfig<8080, 9090, 10, 30000, 100, false, false, false>, // Simple
     ZeroCostCacheConfig<1000, 64, 300, 60, true, false>, // Small cache
 >;
-
 /// Production configuration: Large limits, standard timeouts, optimized
 pub type ProductionConfig = ZeroCostUnifiedConfig<
     ZeroCostSystemConfig<10000, 65536, 30000, 16, 2>,  // Large, info level
-    ZeroCostStorageConfig<100, 10000, 100000, 60000, 30, 6, true, true>, // Enterprise
-    ZeroCostNetworkConfig<8080, 9090, 100, 60000, 1000, true, true, true>, // Full featured
-    ZeroCostCacheConfig<100000, 2048, 3600, 300, true, true>, // Large cache
+    ZeroCostStorageConfig<100, 10000, 100_000, 60_000, 30, 6, true, true>, // Enterprise
+    ZeroCostNetworkConfig<8080, 9090, 100, 60_000, 1000, true, true, true>, // Full featured
+    ZeroCostCacheConfig<100_000, 2048, 3600, 300, true, true>, // Large cache
 >;
-
 /// Testing configuration: Tiny limits, very fast timeouts, minimal features
 pub type TestingConfig = ZeroCostUnifiedConfig<
     ZeroCostSystemConfig<10, 1024, 5000, 1, 1>,        // Minimal, warnings only
@@ -481,23 +468,20 @@ pub type TestingConfig = ZeroCostUnifiedConfig<
     ZeroCostNetworkConfig<8081, 9091, 1, 10000, 10, false, false, false>, // Basic
     ZeroCostCacheConfig<100, 16, 60, 30, true, false>, // Tiny cache
 >;
-
 /// High-performance configuration: Very large limits, optimized for throughput
 pub type HighPerformanceConfig = ZeroCostUnifiedConfig<
-    ZeroCostSystemConfig<100000, 1048576, 60000, 32, 1>, // Massive, error only
-    ZeroCostStorageConfig<1000, 100000, 1000000, 120000, 90, 9, true, true>, // Enterprise++
+    ZeroCostSystemConfig<100_000, 1048576, 60_000, 32, 1>, // Massive, error only
+    ZeroCostStorageConfig<1000, 100_000, 1000000, 120000, 90, 9, true, true>, // Enterprise++
     ZeroCostNetworkConfig<8080, 9090, 1000, 120000, 10000, true, true, true>, // High throughput
     ZeroCostCacheConfig<1000000, 8192, 7200, 600, true, true>, // Massive cache
 >;
-
 /// **MIGRATION UTILITIES**
 /// Help migrate from runtime configuration to const generics
-
 pub struct ConfigMigrationGuide;
 
 impl ConfigMigrationGuide {
     /// Get migration steps
-    pub fn migration_steps() -> Vec<String> {
+    pub const fn migration_steps() -> Vec<String> {
         vec![
             "1. Identify frequently accessed configuration values".to_string(),
             "2. Convert configuration structs to use const generics".to_string(),
@@ -511,7 +495,7 @@ impl ConfigMigrationGuide {
     }
 
     /// Expected performance improvements
-    pub fn expected_improvements() -> (f64, f64, f64) {
+    pub const fn expected_improvements() -> (f64, f64, f64) {
         (
             90.0, // Performance gain % (very high due to eliminating HashMap lookups)
             95.0, // Memory reduction % (no HashMap storage needed)
@@ -522,12 +506,11 @@ impl ConfigMigrationGuide {
 
 /// **PERFORMANCE BENCHMARKING**
 /// Tools for measuring configuration access performance
-
 pub struct ConfigBenchmark;
 
 impl ConfigBenchmark {
     /// Benchmark configuration access operations
-    pub fn benchmark_config_access(operations: u32) -> Duration {
+    pub const fn benchmark_config_access(operations: u32) -> Duration {
         let start = std::time::Instant::now();
         
         // Simulate configuration access
@@ -543,7 +526,7 @@ impl ConfigBenchmark {
     }
 
     /// Compare old vs new configuration performance
-    pub fn performance_comparison() -> (Duration, Duration, f64) {
+    pub const fn performance_comparison() -> (Duration, Duration, f64) {
         // Simulate the performance difference
         let old_duration = Duration::from_nanos(10000); // HashMap lookup + parsing
         let new_duration = Duration::from_nanos(1);     // Compile-time constant

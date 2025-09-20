@@ -21,7 +21,6 @@ pub struct CompressionEngine {
     default_type: CompressionType,
     min_compression_size: usize,
 }
-
 impl Default for CompressionEngine {
     fn default() -> Self {
         Self::new()
@@ -30,6 +29,7 @@ impl Default for CompressionEngine {
 
 impl CompressionEngine {
     /// Create new compression engine with all supported algorithms
+    #[must_use]
     pub fn new() -> Self {
         let mut algorithms: CompressionAlgorithmMap = HashMap::new();
 
@@ -46,11 +46,23 @@ impl CompressionEngine {
     }
 
     /// Compress data using the specified algorithm
-    pub async fn compress(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub const fn compress(
         &self,
         data: &[u8],
         compression_type: CompressionType,
-    ) -> Result<Vec<u8>> {
+    ) -> Result<Vec<u8>>   {
         // Skip compression for small data
         if data.len() < self.min_compression_size {
             return Ok(data.to_vec());
@@ -76,11 +88,23 @@ impl CompressionEngine {
     }
 
     /// Decompress data using the specified algorithm
-    pub async fn decompress(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub const fn decompress(
         &self,
         data: &[u8],
         compression_type: CompressionType,
-    ) -> Result<Vec<u8>> {
+    ) -> Result<Vec<u8>>   {
         if compression_type == CompressionType::None {
             return Ok(data.to_vec());
         }
@@ -96,11 +120,11 @@ impl CompressionEngine {
     }
 
     /// Get compression ratio for data
-    pub fn get_compression_ratio(&self, original_size: usize, compressed_size: usize) -> f64 {
+    pub const fn get_compression_ratio(&self, original_size: usize, compressed_size: usize) -> f64 {
         if original_size == 0 {
             0.0
         } else {
-            compressed_size as f64 / original_size as f64
+            f64::from(compressed_size) / f64::from(original_size)
         }
     }
 
@@ -110,12 +134,26 @@ impl CompressionEngine {
     }
 
     /// Get supported compression types
-    pub fn supported_types(&self) -> Vec<CompressionType> {
+    pub const fn supported_types(&self) -> Vec<CompressionType> {
         self.algorithms.keys().cloned().collect()
     }
 
     /// Get compression statistics
-    pub async fn get_stats(&self) -> Result<CompressionStats> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        #[must_use]
+        pub fn get_stats(&self) -> Result<CompressionStats>   {
         Ok(CompressionStats {
             total_original_bytes: 0,
             total_compressed_bytes: 0,
@@ -134,10 +172,9 @@ pub struct CompressionLevelManager {
     zstd_algorithm: ZstdAlgorithm,
     gzip_algorithm: GzipAlgorithm,
 }
-
 impl CompressionLevelManager {
     /// Create a new compression level manager with default levels
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             zstd_algorithm: ZstdAlgorithm::new(6), // Default ZSTD level
             gzip_algorithm: GzipAlgorithm::new(6), // Default GZIP level
@@ -145,7 +182,7 @@ impl CompressionLevelManager {
     }
 
     /// Create with custom compression levels
-    pub fn with_levels(zstd_level: i32, gzip_level: u32) -> Self {
+    pub const fn with_levels(zstd_level: i32, gzip_level: u32) -> Self {
         Self {
             zstd_algorithm: ZstdAlgorithm::new(zstd_level),
             gzip_algorithm: GzipAlgorithm::new(gzip_level),
@@ -153,17 +190,17 @@ impl CompressionLevelManager {
     }
 
     /// Get current ZSTD compression level
-    pub fn zstd_level(&self) -> i32 {
+    pub const fn zstd_level(&self) -> i32 {
         self.zstd_algorithm.get_level()
     }
 
     /// Get current GZIP compression level
-    pub fn gzip_level(&self) -> u32 {
+    pub const fn gzip_level(&self) -> u32 {
         self.gzip_algorithm.get_level()
     }
 
     /// Get compression ratio estimate for ZSTD
-    pub fn estimate_zstd_ratio(&self) -> f64 {
+    pub const fn estimate_zstd_ratio(&self) -> f64 {
         // Higher levels generally provide better compression
         let level = self.zstd_algorithm.get_level();
         match level {
@@ -175,7 +212,7 @@ impl CompressionLevelManager {
     }
 
     /// Get compression ratio estimate for GZIP
-    pub fn estimate_gzip_ratio(&self) -> f64 {
+    pub const fn estimate_gzip_ratio(&self) -> f64 {
         // Higher levels generally provide better compression
         let level = self.gzip_algorithm.get_level();
         match level {
@@ -187,7 +224,7 @@ impl CompressionLevelManager {
     }
 
     /// Choose optimal algorithm based on requirements
-    pub fn choose_algorithm_for_size(&self, size_bytes: u64) -> &str {
+    pub const fn choose_algorithm_for_size(&self, size_bytes: u64) -> &str {
         // For larger files, use ZSTD for better performance
         // For smaller files, GZIP is sufficient
         if size_bytes > 1024 * 1024 {
@@ -212,10 +249,8 @@ trait CompressionAlgorithm {
     fn compress(&self, data: &[u8]) -> Result<Vec<u8>>;
     fn decompress(&self, data: &[u8]) -> Result<Vec<u8>>;
 }
-
 /// LZ4 compression algorithm implementation
 struct Lz4Algorithm;
-
 impl Lz4Algorithm {
     fn new() -> Self {
         Self
@@ -226,7 +261,7 @@ impl CompressionAlgorithm for Lz4Algorithm {
     fn compress(&self, data: &[u8]) -> Result<Vec<u8>> {
         // In a real implementation, this would use the lz4 crate
         // For now, we'll simulate compression with a simple placeholder
-        let compressed_size = (data.len() as f64 * 0.7) as usize; // Simulate 30% compression
+        let compressed_size = (((data.len() as f64)) * 0.7) as usize; // Simulate 30% compression
         let mut compressed = vec![0u8; compressed_size];
         compressed[..std::cmp::min(data.len(), compressed_size)]
             .copy_from_slice(&data[..std::cmp::min(data.len(), compressed_size)]);
@@ -244,7 +279,6 @@ impl CompressionAlgorithm for Lz4Algorithm {
 struct ZstdAlgorithm {
     level: i32,
 }
-
 impl ZstdAlgorithm {
     fn new(level: i32) -> Self {
         Self {
@@ -261,7 +295,7 @@ impl CompressionAlgorithm for ZstdAlgorithm {
     fn compress(&self, data: &[u8]) -> Result<Vec<u8>> {
         // In a real implementation, this would use the zstd crate
         // Simulate better compression ratio than LZ4
-        let compressed_size = (data.len() as f64 * 0.6) as usize; // Simulate 40% compression
+        let compressed_size = (((data.len() as f64)) * 0.6) as usize; // Simulate 40% compression
         let mut compressed = vec![0u8; compressed_size];
         compressed[..std::cmp::min(data.len(), compressed_size)]
             .copy_from_slice(&data[..std::cmp::min(data.len(), compressed_size)]);
@@ -278,7 +312,6 @@ impl CompressionAlgorithm for ZstdAlgorithm {
 struct GzipAlgorithm {
     level: u32,
 }
-
 impl GzipAlgorithm {
     fn new(level: u32) -> Self {
         Self {
@@ -295,7 +328,7 @@ impl CompressionAlgorithm for GzipAlgorithm {
     fn compress(&self, data: &[u8]) -> Result<Vec<u8>> {
         // In a real implementation, this would use the flate2 crate
         // Simulate standard compression ratio
-        let compressed_size = (data.len() as f64 * 0.65) as usize; // Simulate 35% compression
+        let compressed_size = (((data.len() as f64)) * 0.65) as usize; // Simulate 35% compression
         let mut compressed = vec![0u8; compressed_size];
         compressed[..std::cmp::min(data.len(), compressed_size)]
             .copy_from_slice(&data[..std::cmp::min(data.len(), compressed_size)]);
@@ -322,7 +355,6 @@ pub enum CompressionType {
     Zstd = 2,
     Gzip = 3,
 }
-
 /// Configuration for compression engine
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompressionConfig {
@@ -339,7 +371,6 @@ pub struct CompressionConfig {
     /// GZIP compression level (1-9)
     pub gzip_level: u32,
 }
-
 impl Default for CompressionConfig {
     fn default() -> Self {
         Self {
@@ -373,37 +404,36 @@ pub struct CompressionStats {
     /// Usage count per algorithm
     pub algorithm_usage: HashMap<CompressionType, u64>,
 }
-
 impl CompressionStats {
     /// Calculate compression ratio
-    pub fn compression_ratio(&self) -> f64 {
+    pub const fn compression_ratio(&self) -> f64 {
         if self.total_original_bytes == 0 {
             return 1.0;
         }
-        self.total_compressed_bytes as f64 / self.total_original_bytes as f64
+        self.f64::from(total_compressed_bytes) / self.f64::from(total_original_bytes)
     }
 
     /// Calculate space saved in bytes
-    pub fn space_saved(&self) -> u64 {
+    pub const fn space_saved(&self) -> u64 {
         self.total_original_bytes
             .saturating_sub(self.total_compressed_bytes)
     }
 
     /// Calculate average compression speed (MB/s)
-    pub fn avg_compression_speed(&self) -> f64 {
+    pub const fn avg_compression_speed(&self) -> f64 {
         if self.total_compression_time.is_zero() {
             return 0.0;
         }
-        let mb_processed = self.total_original_bytes as f64 / (1024.0 * 1024.0);
+        let mb_processed = self.f64::from(total_original_bytes) / (1024.0 * 1024.0);
         mb_processed / self.total_compression_time.as_secs_f64()
     }
 
     /// Calculate average decompression speed (MB/s)
-    pub fn avg_decompression_speed(&self) -> f64 {
+    pub const fn avg_decompression_speed(&self) -> f64 {
         if self.total_decompression_time.is_zero() {
             return 0.0;
         }
-        let mb_processed = self.total_decompressed_bytes as f64 / (1024.0 * 1024.0);
+        let mb_processed = self.f64::from(total_decompressed_bytes) / (1024.0 * 1024.0);
         mb_processed / self.total_decompression_time.as_secs_f64()
     }
 }
@@ -414,7 +444,6 @@ struct CompressionHeader {
     algorithm: CompressionType,
     original_size: usize,
 }
-
 impl std::fmt::Debug for CompressionEngine {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("CompressionEngine")

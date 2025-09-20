@@ -3,8 +3,8 @@
 //! Tests all configuration combinations, edge cases, and validation paths
 //! to achieve 95% test coverage for configuration modules.
 
-use nestgate_core::config::unified::{
-    ApiServerConfig, CanonicalConfig as Config, NetworkConfig, SecurityConfig, StorageConfig,
+use nestgate_core::config::canonical_master::{
+    ApiConfig, NestGateCanonicalConfig as Config, NetworkConfig, SecurityConfig, StorageConfig,
 };
 use nestgate_core::error::Result;
 use std::collections::HashMap;
@@ -15,25 +15,25 @@ use tempfile::tempdir;
 use tokio::fs;
 
 #[tokio::test]
-async fn test_all_config_combinations() {
+async fn test_all_config_combinations() -> Result<(), Box<dyn std::error::Error>> {
     // Test all valid combinations of configuration options
     let network_configs = vec![
         NetworkConfig {
-            api: ApiServerConfig {
-                port: 8080,
+            api: ApiConfig {
+                port: nestgate_core::constants::DEFAULT_API_PORT,
                 ..Default::default()
             },
             ..Default::default()
         },
         NetworkConfig {
-            api: ApiServerConfig {
-                port: 3000,
+            api: ApiConfig {
+                port: nestgate_core::constants::DEFAULT_GRAFANA_PORT,
                 ..Default::default()
             },
             ..Default::default()
         },
         NetworkConfig {
-            api: ApiServerConfig {
+            api: ApiConfig {
                 port: 9000,
                 ..Default::default()
             },
@@ -92,7 +92,7 @@ async fn test_all_config_combinations() {
 }
 
 #[tokio::test]
-async fn test_config_boundary_values() {
+async fn test_config_boundary_values() -> Result<(), Box<dyn std::error::Error>> {
     // Test boundary values for all configuration parameters
 
     // Port boundary tests
@@ -118,6 +118,7 @@ async fn test_config_boundary_values() {
             port,
             if should_be_valid { "valid" } else { "invalid" }
         );
+        Ok(())
     }
 
     // Storage size boundary tests
@@ -141,11 +142,13 @@ async fn test_config_boundary_values() {
             size,
             if should_be_valid { "valid" } else { "invalid" }
         );
+        Ok(())
     }
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_environment_variable_combinations() {
+async fn test_environment_variable_combinations() -> Result<(), Box<dyn std::error::Error>> {
     // Test all combinations of environment variable overrides
 
     let env_vars = vec![
@@ -169,14 +172,16 @@ async fn test_environment_variable_combinations() {
 
             // Configuration should always be valid (using defaults for invalid values)
             assert!(
-                config.unwrap().validate().is_ok(),
+                config?.validate().is_ok(),
                 "Config should be valid even with invalid env var {}={}",
                 env_var,
                 value
             );
 
             env::remove_var(env_var);
+            Ok(())
         }
+        Ok(())
     }
 
     // Test combinations of multiple environment variables
@@ -184,7 +189,7 @@ async fn test_environment_variable_combinations() {
     env::set_var("NESTGATE_STORAGE_BACKEND", "memory");
     env::set_var("NESTGATE_SECURITY_ENABLED", "true");
 
-    let config = Config::from_environment().unwrap();
+    let config = Config::from_environment()?;
     assert!(config.validate().is_ok());
     assert_eq!(config.network.api.port, 9000);
 
@@ -192,11 +197,12 @@ async fn test_environment_variable_combinations() {
     env::remove_var("NESTGATE_API_PORT");
     env::remove_var("NESTGATE_STORAGE_BACKEND");
     env::remove_var("NESTGATE_SECURITY_ENABLED");
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_config_file_format_variations() {
-    let temp_dir = tempdir().unwrap();
+async fn test_config_file_format_variations() -> Result<(), Box<dyn std::error::Error>> {
+    let temp_dir = tempdir()?;
 
     // Test different valid configuration file formats
     let config_formats = vec![
@@ -228,6 +234,7 @@ enabled = true
     },
     "security": {
         "enabled": true
+    Ok(())
     }
 }"#,
         ),
@@ -248,7 +255,7 @@ security:
 
     for (filename, content) in config_formats {
         let config_path = temp_dir.path().join(filename);
-        fs::write(&config_path, content).await.unwrap();
+        fs::write(&config_path, content).await?;
 
         let config_result = Config::from_file(&config_path);
         assert!(
@@ -260,7 +267,7 @@ security:
 }
 
 #[tokio::test]
-async fn test_config_validation_error_messages() {
+async fn test_config_validation_error_messages() -> Result<(), Box<dyn std::error::Error>> {
     // Test that validation errors provide helpful messages
 
     let mut config = Config::default();
@@ -274,16 +281,17 @@ async fn test_config_validation_error_messages() {
         error_message.contains("port") || error_message.contains("invalid"),
         "Error message should mention the validation issue"
     );
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_config_merge_precedence() {
+async fn test_config_merge_precedence() -> Result<(), Box<dyn std::error::Error>> {
     // Test configuration merge precedence rules
 
     let base_config = Config {
         network: NetworkConfig {
-            api: ApiServerConfig {
-                port: 8080,
+            api: ApiConfig {
+                port: nestgate_core::constants::DEFAULT_API_PORT,
                 ..Default::default()
             },
             ..Default::default()
@@ -293,7 +301,7 @@ async fn test_config_merge_precedence() {
 
     let override_config = Config {
         network: NetworkConfig {
-            api: ApiServerConfig {
+            api: ApiConfig {
                 port: 9000,
                 ..Default::default()
             },
@@ -302,21 +310,22 @@ async fn test_config_merge_precedence() {
         ..Default::default()
     };
 
-    let merged = base_config.merge(override_config).unwrap();
+    let merged = base_config.merge(override_config)?;
     assert_eq!(
         merged.network.api.port, 9000,
         "Override config should take precedence"
     );
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_config_serialization_roundtrip() {
+async fn test_config_serialization_roundtrip() -> Result<(), Box<dyn std::error::Error>> {
     // Test that configurations can be serialized and deserialized
 
     let original_config = Config {
         network: NetworkConfig {
-            api: ApiServerConfig {
-                port: 8080,
+            api: ApiConfig {
+                port: nestgate_core::constants::DEFAULT_API_PORT,
                 ..Default::default()
             },
             ..Default::default()
@@ -332,8 +341,8 @@ async fn test_config_serialization_roundtrip() {
     };
 
     // Test JSON serialization
-    let json_str = serde_json::to_string(&original_config).unwrap();
-    let deserialized_config: Config = serde_json::from_str(&json_str).unwrap();
+    let json_str = serde_json::to_string(&original_config)?;
+    let deserialized_config: Config = serde_json::from_str(&json_str)?;
 
     assert_eq!(
         original_config.network.api.port,
@@ -347,11 +356,12 @@ async fn test_config_serialization_roundtrip() {
         original_config.security.authentication.enabled,
         deserialized_config.security.authentication.enabled
     );
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_config_hot_reload() {
-    let temp_dir = tempdir().unwrap();
+async fn test_config_hot_reload() -> Result<(), Box<dyn std::error::Error>> {
+    let temp_dir = tempdir()?;
     let config_path = temp_dir.path().join("hot_reload.toml");
 
     // Initial configuration
@@ -359,9 +369,9 @@ async fn test_config_hot_reload() {
 [network]
 api_port = 8080
 "#;
-    fs::write(&config_path, initial_config).await.unwrap();
+    fs::write(&config_path, initial_config).await?;
 
-    let config1 = Config::from_file(&config_path).unwrap();
+    let config1 = Config::from_file(&config_path)?;
     assert_eq!(config1.network.api.port, 8080);
 
     // Modified configuration
@@ -369,14 +379,15 @@ api_port = 8080
 [network]
 api_port = 9000
 "#;
-    fs::write(&config_path, modified_config).await.unwrap();
+    fs::write(&config_path, modified_config).await?;
 
-    let config2 = Config::from_file(&config_path).unwrap();
+    let config2 = Config::from_file(&config_path)?;
     assert_eq!(config2.network.api.port, 9000);
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_config_default_value_coverage() {
+async fn test_config_default_value_coverage() -> Result<(), Box<dyn std::error::Error>> {
     // Test that all configuration fields have sensible defaults
 
     let default_config = Config::default();
@@ -394,10 +405,11 @@ async fn test_config_default_value_coverage() {
 
     // All defaults should pass validation
     assert!(default_config.validate().is_ok());
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_concurrent_config_access() {
+async fn test_concurrent_config_access() -> Result<(), Box<dyn std::error::Error>> {
     use tokio::task;
 
     let config = Arc::new(Config::default());
@@ -418,11 +430,14 @@ async fn test_concurrent_config_access() {
             i // Return something to verify completion
         });
         handles.push(handle);
+        Ok(())
     }
 
     // Wait for all tasks to complete
     for (i, handle) in handles.into_iter().enumerate() {
-        let result = handle.await.unwrap();
+        let result = handle.await?;
         assert_eq!(result, i);
+        Ok(())
     }
+    Ok(())
 }

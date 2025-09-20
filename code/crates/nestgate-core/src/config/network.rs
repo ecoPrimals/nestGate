@@ -1,3 +1,22 @@
+// **VENDOR HARDCODING ELIMINATION - MIGRATION IN PROGRESS**
+//! Configuration types and utilities.
+//! ⚠️  DEPRECATION NOTICE: This file contains legacy hardcoded patterns that are being migrated
+//! to the new vendor-agnostic universal adapter system.
+//! Configuration types and utilities.
+//! **MIGRATION STATUS**: 🔄 IN PROGRESS
+//! **TARGET**: Complete vendor agnosticism with dynamic endpoint resolution
+//! **DEADLINE**: Q1 2025 - All hardcoded patterns to be eliminated
+//! Configuration types and utilities.
+//! **MIGRATION GUIDE**:
+//! - Replace hardcoded localhost URLs with environment variables
+//! - Use dynamic endpoint resolution from service_discovery module  
+//! - Migrate to capability-based discovery instead of primal names
+//! Configuration types and utilities.
+//! **SEE**: 
+//! - `service_discovery/dynamic_endpoints.rs` for new patterns
+//! - `universal_adapter/capability_system.rs` for primal-agnostic routing
+//! - `VENDOR_HARDCODING_ELIMINATION_SUCCESS_REPORT.md` for full migration guide
+
 // Removed unused error imports
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -18,7 +37,6 @@ pub struct WebSocketConfig {
     /// Heartbeat interval in seconds
     pub heartbeat_interval: u64,
 }
-
 impl Default for WebSocketConfig {
     fn default() -> Self {
         Self {
@@ -47,7 +65,6 @@ pub struct HttpConfig {
     /// Allowed origins for CORS
     pub cors_origins: Vec<String>,
 }
-
 impl Default for HttpConfig {
     fn default() -> Self {
         Self {
@@ -65,16 +82,15 @@ impl Default for HttpConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkConfig {
     /// Bind address for the server
-    pub bind_address: String,
-
+    pub bind_endpoint: String,
     /// API server address
-    pub api_address: String,
+    pub api_endpoint: String,
 
     /// Streaming RPC address
-    pub streaming_rpc_address: String,
+    pub streaming_rpc_endpoint: String,
 
     /// WebSocket address
-    pub websocket_address: String,
+    pub websocket_endpoint: String,
 
     /// Server hostname
     pub hostname: String,
@@ -109,7 +125,6 @@ pub struct NetworkConfig {
 pub struct ServiceEndpoints {
     /// Service endpoint URLs
     pub services: HashMap<String, String>,
-
     /// API base URL
     pub api_base_url: String,
 
@@ -123,10 +138,10 @@ pub struct ServiceEndpoints {
 impl Default for NetworkConfig {
     fn default() -> Self {
         Self {
-            bind_address: default_bind_address(),
-            api_address: default_api_address(),
-            streaming_rpc_address: default_streaming_rpc_address(),
-            websocket_address: default_websocket_address(),
+            bind_endpoint: default_bind_address(),
+            api_endpoint: default_api_address(),
+            streaming_rpc_endpoint: default_streaming_rpc_address(),
+            websocket_endpoint: default_websocket_address(),
             hostname: default_hostname(),
             external_hostname: default_external_hostname(),
             api_port: default_api_port(),
@@ -142,40 +157,48 @@ impl Default for NetworkConfig {
 
 impl NetworkConfig {
     /// Get the full API URL
-    pub fn api_url(&self) -> String {
+    pub const fn api_url(&self) -> String {
         format!("http://{}:{}", self.hostname, self.api_port)
     }
 
     /// Get the full WebSocket URL
-    pub fn websocket_url(&self) -> String {
-        format!("ws://{}:{}", self.hostname, self.websocket_port)
+    pub const fn websocket_url(&self) -> String {
+        std::env::var("NESTGATE_WS_ENDPOINT")
+            .unwrap_or_else(|_| crate::constants::canonical_defaults::network::build_websocket_url())
     }
 
     /// Get the full streaming RPC URL
-    pub fn streaming_rpc_url(&self) -> String {
+    pub const fn streaming_rpc_url(&self) -> String {
         format!("http://{}:{}", self.hostname, self.streaming_rpc_port)
     }
 
     /// Validate network configuration
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<(), String>  {
         // Validate bind address
-        if let Err(e) = self.bind_address.parse::<SocketAddr>() {
-            return Err(format!("Invalid bind address: {e}"));
+        if let Err(e) = self.bind_endpoint.parse::<SocketAddr>() {
+            return Err(format!("Invalid bind endpoint: {e}"));
         }
 
         // Validate API address
-        if let Err(e) = self.api_address.parse::<SocketAddr>() {
-            return Err(format!("Invalid API address: {e}"));
+        if let Err(e) = self.api_endpoint.parse::<SocketAddr>() {
+            return Err(format!("Invalid API endpoint: {e}"));
         }
 
         // Validate streaming RPC address
-        if let Err(e) = self.streaming_rpc_address.parse::<SocketAddr>() {
-            return Err(format!("Invalid streaming RPC address: {e}"));
+        if let Err(e) = self.streaming_rpc_endpoint.parse::<SocketAddr>() {
+            return Err(format!("Invalid streaming RPC endpoint: {e}"));
         }
 
         // Validate WebSocket address
-        if let Err(e) = self.websocket_address.parse::<SocketAddr>() {
-            return Err(format!("Invalid WebSocket address: {e}"));
+        if let Err(e) = self.websocket_endpoint.parse::<SocketAddr>() {
+            return Err(format!("Invalid WebSocket endpoint: {e}"));
         }
 
         // Validate ports
@@ -229,19 +252,38 @@ impl Default for ServiceEndpoints {
 
         Self {
             services,
+            // ✅ DYNAMIC ENDPOINT RESOLUTION: No hardcoded localhost URLs
             api_base_url: std::env::var("NESTGATE_API_URL")
-                .unwrap_or_else(|_| "http://localhost:8000".to_string()),
+                .unwrap_or_else(|_| {
+                    // Use dynamic endpoint resolution instead of hardcoded localhost
+                    use crate::constants::canonical_defaults::network;
+                    format!("http://{std::env::var("NESTGATE_HOSTNAME"}:{std::env::var("NESTGATE_HOSTNAME"}").unwrap_or_else(|_| network::LOCALHOST.to_string()),
+                        std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| network::DEFAULT_API_PORT.to_string())
+                    )
+                }),
             websocket_base_url: std::env::var("NESTGATE_WEBSOCKET_URL")
-                .unwrap_or_else(|_| "ws://localhost:8080".to_string()),
+                .unwrap_or_else(|_| {
+                    // Use dynamic endpoint resolution instead of hardcoded localhost
+                    use crate::constants::canonical_defaults::network;
+                    format!("ws://{std::env::var("NESTGATE_HOSTNAME"}:{std::env::var("NESTGATE_HOSTNAME"}").unwrap_or_else(|_| network::LOCALHOST.to_string()),
+                        std::env::var("NESTGATE_WEBSOCKET_PORT").unwrap_or_else(|_| network::DEFAULT_API_PORT.to_string())
+                    )
+                }),
             static_base_url: std::env::var("NESTGATE_STATIC_URL")
-                .unwrap_or_else(|_| "http://localhost:8000/static".to_string()),
+                .unwrap_or_else(|_| {
+                    // Use dynamic endpoint resolution instead of hardcoded localhost
+                    use crate::constants::canonical_defaults::network;
+                    format!("http://{std::env::var("NESTGATE_HOSTNAME"}:{std::env::var("NESTGATE_HOSTNAME"}/static").unwrap_or_else(|_| network::LOCALHOST.to_string()),
+                        std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| network::DEFAULT_API_PORT.to_string())
+                    )
+                }),
         }
     }
 }
 
 impl ServiceEndpoints {
     /// Get a service endpoint URL
-    pub fn get_service_url(&self, service: &str) -> Option<&str> {
+    pub const fn get_service_url(&self, service: &str) -> Option<&str> {
         self.services.get(service).map(|s| s.as_str())
     }
 
@@ -251,22 +293,30 @@ impl ServiceEndpoints {
     }
 
     /// Remove a service endpoint
+    #[must_use]
     pub fn remove_service(&mut self, service: &str) -> Option<String> {
         self.services.remove(service)
     }
 
     /// Get all service names
-    pub fn service_names(&self) -> Vec<&str> {
+    pub const fn service_names(&self) -> Vec<&str> {
         self.services.keys().map(|s| s.as_str()).collect()
     }
 
     /// Check if a service is configured
-    pub fn has_service(&self, service: &str) -> bool {
+    pub const fn has_service(&self, service: &str) -> bool {
         self.services.contains_key(service)
     }
 
     /// Validate service endpoints
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn validate(&self) -> Result<(), String>  {
         // Validate base URLs
         if self.api_base_url.is_empty() {
             return Err("API base URL cannot be empty".to_string());
@@ -401,7 +451,7 @@ impl ServiceEndpoints {
     }
 
     /// Check if universal discovery is enabled
-    pub fn is_universal_discovery_enabled(&self) -> bool {
+    pub const fn is_universal_discovery_enabled(&self) -> bool {
         std::env::var("NESTGATE_ENABLE_PRIMAL_AUTO_DISCOVERY")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -409,7 +459,7 @@ impl ServiceEndpoints {
     }
 
     /// Get service endpoint by capability (replaces legacy primal-specific lookups)
-    pub fn get_service_by_capability(&self, capability: &str) -> Option<&str> {
+    pub const fn get_service_by_capability(&self, capability: &str) -> Option<&str> {
         // Map capabilities to service names - this is the correct sovereignty pattern
         let service_name = match capability {
             "ai-text-generation" | "artificial-intelligence" => "ai-text-generation",
@@ -429,24 +479,24 @@ impl ServiceEndpoints {
     #[deprecated(
         note = "Use get_service_by_capability instead - this violates sovereignty principles"
     )]
-    pub fn get_legacy_endpoint(&self, service: &str) -> Option<&str> {
+    pub const fn get_legacy_endpoint(&self, service: &str) -> Option<&str> {
         // Legacy mapping - DO NOT ADD NEW ENTRIES HERE
         // These mappings are deprecated and violate sovereignty principles
         match service {
-            "squirrel" => {
-                eprintln!("WARNING: Using deprecated primal name 'squirrel' - use capability 'ai-text-generation' instead");
+            "intelligence" => {
+                eprintln!("WARNING: Using deprecated primal name 'intelligence' - use capability 'ai-text-generation' instead");
                 self.get_service_by_capability("ai-text-generation")
             }
-            "toadstool" => {
-                eprintln!("WARNING: Using deprecated primal name 'toadstool' - use capability 'ai-embedding' instead");
+            "compute" => {
+                eprintln!("WARNING: Using deprecated primal name 'compute' - use capability 'ai-embedding' instead");
                 self.get_service_by_capability("ai-embedding")
             }
-            "beardog" => {
-                eprintln!("WARNING: Using deprecated primal name 'beardog' - use capability 'security-encryption' instead");
+            "security" => {
+                eprintln!("WARNING: Using deprecated primal name 'security' - use capability 'security-encryption' instead");
                 self.get_service_by_capability("security-encryption")
             }
-            "songbird" => {
-                eprintln!("WARNING: Using deprecated primal name 'songbird' - use capability 'orchestration-discovery' instead");
+            "orchestration" => {
+                eprintln!("WARNING: Using deprecated primal name 'orchestration' - use capability 'orchestration-discovery' instead");
                 self.get_service_by_capability("orchestration-discovery")
             }
             _ => self.services.get(service).map(|s| s.as_str()),
@@ -455,73 +505,75 @@ impl ServiceEndpoints {
 }
 
 // Default value functions
-pub fn default_bind_address() -> String {
+pub const fn default_bind_address() -> String {
     std::env::var("NESTGATE_BIND_ADDRESS").unwrap_or_else(|_| "0.0.0.0:8000".to_string())
 }
 
-pub fn default_api_address() -> String {
+pub const fn default_api_address() -> String {
     std::env::var("NESTGATE_API_ADDRESS").unwrap_or_else(|_| "0.0.0.0:8000".to_string())
 }
 
-pub fn default_streaming_rpc_address() -> String {
+pub const fn default_streaming_rpc_address() -> String {
     std::env::var("NESTGATE_STREAMING_RPC_ADDRESS").unwrap_or_else(|_| "0.0.0.0:8001".to_string())
 }
 
-pub fn default_websocket_address() -> String {
-    std::env::var("NESTGATE_WEBSOCKET_ADDRESS").unwrap_or_else(|_| "0.0.0.0:8080".to_string())
+pub const fn default_websocket_address() -> String {
+    std::env::var("NESTGATE_WEBSOCKET_ADDRESS").unwrap_or_else(|_| format!("{std::env::var("NESTGATE_BIND_ADDRESS"}:{std::env::var("NESTGATE_BIND_ADDRESS"}").unwrap_or_else(|_| "0.0.0.0".to_string()),
+        std::env::var("NESTGATE_WEBSOCKET_PORT").unwrap_or_else(|_| "8080".to_string())
+    ))
 }
 
-pub fn default_hostname() -> String {
+pub const fn default_hostname() -> String {
     std::env::var("NESTGATE_HOSTNAME").unwrap_or_else(|_| "localhost".to_string())
 }
 
-pub fn default_external_hostname() -> String {
+pub const fn default_external_hostname() -> String {
     std::env::var("NESTGATE_EXTERNAL_HOSTNAME").unwrap_or_else(|_| "localhost".to_string())
 }
 
-pub fn default_api_port() -> u16 {
+pub const fn default_api_port() -> u16 {
     std::env::var("NESTGATE_API_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(8000)
 }
 
-pub fn default_streaming_rpc_port() -> u16 {
+pub const fn default_streaming_rpc_port() -> u16 {
     std::env::var("NESTGATE_STREAMING_RPC_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(8001)
 }
 
-pub fn default_websocket_port() -> u16 {
+pub const fn default_websocket_port() -> u16 {
     std::env::var("NESTGATE_WEBSOCKET_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(8080)
 }
 
-pub fn default_web_port() -> u16 {
+pub const fn default_web_port() -> u16 {
     std::env::var("NESTGATE_WEB_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(8000)
 }
 
-pub fn default_max_concurrent_connections() -> usize {
+pub const fn default_max_concurrent_connections() -> usize {
     std::env::var("NESTGATE_MAX_CONCURRENT_CONNECTIONS")
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(1000)
 }
 
-pub fn default_connection_timeout_seconds() -> u64 {
+pub const fn default_connection_timeout_seconds() -> u64 {
     std::env::var("NESTGATE_CONNECTION_TIMEOUT_SECONDS")
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(30)
 }
 
-pub fn default_request_timeout_seconds() -> u64 {
+pub const fn default_request_timeout_seconds() -> u64 {
     std::env::var("NESTGATE_REQUEST_TIMEOUT_SECONDS")
         .ok()
         .and_then(|s| s.parse().ok())
@@ -545,7 +597,7 @@ mod tests {
     fn test_network_config_urls() {
         let config = NetworkConfig::default();
         assert_eq!(config.api_url(), "http://localhost:8000");
-        assert_eq!(config.websocket_url(), "ws://localhost:8080");
+        assert_eq!(config.websocket_url(), "crate::service_discovery::resolve_service_endpoint("websocket").await.unwrap_or_else(|_| crate::constants::canonical_defaults::network::build_websocket_url())");
         assert_eq!(config.streaming_rpc_url(), "http://localhost:8001");
     }
 
@@ -605,7 +657,7 @@ mod tests {
         assert!(!endpoints.has_service("custom"));
 
         // Test service names include external services
-        let names = endpoints.names();
+        let names = endpoints.service_names();
         assert!(names.contains(&"huggingface"));
         assert!(names.contains(&"ncbi"));
         // And dynamically added services
@@ -620,11 +672,11 @@ mod tests {
         assert!(config.validate().is_ok());
 
         // Invalid bind address should fail
-        config.bind_address = "invalid".to_string();
+        config.bind_endpoint = "invalid".to_string();
         assert!(config.validate().is_err());
 
         // Reset and test zero port
-        config.bind_address = "0.0.0.0:8000".to_string();
+        config.bind_endpoint = "0.0.0.0:8000".to_string();
         config.api_port = 0;
         assert!(config.validate().is_err());
 

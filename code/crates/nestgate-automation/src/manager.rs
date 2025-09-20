@@ -23,7 +23,6 @@ pub struct DatasetPerformance {
     pub compression_ratio: f64,
     pub last_optimized: std::time::SystemTime,
 }
-
 /// Intelligent dataset manager with canonical implementation
 #[derive(Debug)]
 pub struct IntelligentDatasetManager {
@@ -33,18 +32,16 @@ pub struct IntelligentDatasetManager {
     #[allow(dead_code)]
     performance_cache: PerformanceCache,
 }
-
 impl IntelligentDatasetManager {
-    pub fn new(config: AutomationConfig) -> Self {
-        Self {
+    #[must_use]
+    pub fn new(config: AutomationConfig) -> Self { Self {
             config,
             analyzer: Arc::new(DatasetAnalyzer::new()),
-            performance_cache: Arc::new(RwLock::new(HashMap::new())),
-        }
-    }
+            performance_cache: Arc::new(RwLock::new(HashMap::new()),
+         }
 
     /// Start the intelligent automation system
-    pub async fn start(&mut self) -> IdioResult<(), NestGateError> {
+    pub fn start(&mut self) -> IdioResult<(), NestGateError> {
         // Simplified canonical implementation
         Ok(())
     }

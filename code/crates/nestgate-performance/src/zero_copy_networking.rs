@@ -28,13 +28,12 @@ use crate::lock_free_structures::{LockFreeMpscQueue, LockFreeHashMap};
 /// 
 /// Memory pool for zero-copy networking operations
 /// Pre-allocated buffers eliminate allocation overhead during I/O
-pub struct ZeroCopyBufferPool<const BUFFER_SIZE: usize = 65536, const POOL_SIZE: usize = 1024> {
+pub struct ZeroCopyBufferPool<const BUFFER_SIZE: usize = 65_536, const POOL_SIZE: usize = 1024> {
     available_buffers: LockFreeMpscQueue<ZeroCopyBuffer<BUFFER_SIZE>>,
     total_buffers: std::sync::atomic::AtomicUsize,
     buffer_hits: std::sync::atomic::AtomicU64,
     buffer_misses: std::sync::atomic::AtomicU64,
 }
-
 /// **ZERO-COPY BUFFER**
 /// 
 /// Pre-allocated buffer for zero-copy operations
@@ -46,10 +45,9 @@ pub struct ZeroCopyBuffer<const SIZE: usize> {
     capacity: usize,
     reference_count: std::sync::atomic::AtomicUsize,
 }
-
 impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER_SIZE, POOL_SIZE> {
     /// Create new zero-copy buffer pool
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         let pool = Self {
             available_buffers: LockFreeMpscQueue::new(),
             total_buffers: std::sync::atomic::AtomicUsize::new(0),
@@ -68,7 +66,7 @@ impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER
     }
 
     /// Get buffer from pool (zero-copy acquisition)
-    pub fn acquire_buffer(&self) -> Option<ZeroCopyBuffer<BUFFER_SIZE>> {
+    pub const fn acquire_buffer(&self) -> Option<ZeroCopyBuffer<BUFFER_SIZE>> {
         if let Some(buffer) = self.available_buffers.dequeue() {
             self.buffer_hits.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             Some(buffer)
@@ -86,7 +84,7 @@ impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER
     }
 
     /// Get pool statistics
-    pub fn stats(&self) -> BufferPoolStats {
+    pub const fn stats(&self) -> BufferPoolStats {
         BufferPoolStats {
             total_buffers: self.total_buffers.load(std::sync::atomic::Ordering::Relaxed),
             available_buffers: self.available_buffers.len(),
@@ -98,17 +96,15 @@ impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER
 
 impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
     /// Create new zero-copy buffer
-    pub fn new() -> Self {
-        Self {
+    pub const fn new() -> Self { Self {
             data: [0u8; SIZE],
             length: 0,
             capacity: SIZE,
             reference_count: std::sync::atomic::AtomicUsize::new(1),
-        }
-    }
+         }
 
     /// Get buffer data as slice
-    pub fn as_slice(&self) -> &[u8] {
+    pub const fn as_slice(&self) -> &[u8] {
         &self.data[..self.length]
     }
 
@@ -118,7 +114,7 @@ impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
     }
 
     /// Get buffer for vectored I/O
-    pub fn as_io_slice(&self) -> IoSlice<'_> {
+    pub const fn as_io_slice(&self) -> IoSlice<'_> {
         IoSlice::new(&self.data[..self.length])
     }
 
@@ -139,12 +135,12 @@ impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
     }
 
     /// Get buffer capacity
-    pub fn capacity(&self) -> usize {
+    pub const fn capacity(&self) -> usize {
         self.capacity
     }
 
     /// Get current length
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.length
     }
 }
@@ -163,7 +159,7 @@ pub struct BufferPoolStats {
 /// 
 /// High-performance networking interface with zero-copy I/O
 /// Integrates with kernel bypass and hardware acceleration
-pub struct ZeroCopyNetworkInterface<const BUFFER_SIZE: usize = 65536> {
+pub struct ZeroCopyNetworkInterface<const BUFFER_SIZE: usize = 65_536> {
     buffer_pool: Arc<ZeroCopyBufferPool<BUFFER_SIZE, 1024>>,
     connection_registry: LockFreeHashMap<String, Arc<ZeroCopyConnection<BUFFER_SIZE>>>,
     /// SIMD processor for high-performance packet processing (feature-gated)
@@ -171,11 +167,10 @@ pub struct ZeroCopyNetworkInterface<const BUFFER_SIZE: usize = 65536> {
     simd_processor: Arc<crate::simd_optimizations_advanced::SimdBulkProcessor<BUFFER_SIZE>>,
     stats: NetworkStats,
 }
-
 /// **ZERO-COPY CONNECTION**
 /// 
 /// Individual network connection with zero-copy capabilities
-pub struct ZeroCopyConnection<const BUFFER_SIZE: usize = 65536> {
+pub struct ZeroCopyConnection<const BUFFER_SIZE: usize = 65_536> {
     connection_id: u64,
     remote_addr: SocketAddr,
     local_addr: SocketAddr,
@@ -183,7 +178,6 @@ pub struct ZeroCopyConnection<const BUFFER_SIZE: usize = 65536> {
     rx_queue: LockFreeMpscQueue<ZeroCopyBuffer<BUFFER_SIZE>>,
     connection_stats: ConnectionStats,
 }
-
 #[derive(Debug, Default)]
 pub struct NetworkStats {
     pub bytes_sent: std::sync::atomic::AtomicU64,
@@ -193,8 +187,7 @@ pub struct NetworkStats {
     pub zero_copy_operations: std::sync::atomic::AtomicU64,
     pub cpu_cycles_saved: std::sync::atomic::AtomicU64,
 }
-
-#[derive(Debug, Default)]
+    #[derive(Debug, Default)]
 pub struct ConnectionStats {
     pub bytes_transmitted: std::sync::atomic::AtomicU64,
     pub packets_transmitted: std::sync::atomic::AtomicU64,
@@ -204,26 +197,32 @@ pub struct ConnectionStats {
 
 impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
     /// Create new zero-copy network interface
-    pub fn new() -> Self {
-        Self {
+    pub const fn new() -> Self { Self {
             buffer_pool: Arc::new(ZeroCopyBufferPool::new()),
             connection_registry: LockFreeHashMap::with_capacity(1024),
             /// SIMD processor initialization (feature-gated for optimal performance)
             #[cfg(feature = "simd")]
             simd_processor: Arc::new(crate::simd_optimizations_advanced::SimdBulkProcessor::new()),
             stats: NetworkStats::default(),
-        }
-    }
+         }
 
     /// Establish zero-copy connection
-    pub async fn connect(&self, remote_addr: SocketAddr) -> Result<u64> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn connect(&self, remote_addr: SocketAddr) -> Result<u64>  {
         let connection_id = self.generate_connection_id(&remote_addr);
         
         // Create zero-copy connection
         let connection = Arc::new(ZeroCopyConnection {
             connection_id,
             remote_addr,
-            local_addr: "0.0.0.0:0".parse().unwrap(), // Would be set by actual socket
+            local_addr: "0.0.0.0:0".parse()
+                .map_err(|_e| NetworkError::InvalidAddress(format!("Failed to parse local endpoint: {"actual_error_details"}")))?,
             tx_queue: LockFreeMpscQueue::new(),
             rx_queue: LockFreeMpscQueue::new(),
             connection_stats: ConnectionStats::default(),
@@ -240,11 +239,18 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
 
     /// Send data with zero-copy optimization
     /// PERFORMANCE: 5-20x improvement over traditional send()
-    pub async fn zero_copy_send(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn zero_copy_send(
         &self,
         connection_id: u64,
         data: &[u8],
-    ) -> Result<usize> {
+    ) -> Result<usize>  {
         let connection = self.get_connection(connection_id)?;
         
         // Acquire buffer from pool (zero allocation)
@@ -276,10 +282,17 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
 
     /// Receive data with zero-copy optimization
     /// PERFORMANCE: Direct buffer access without intermediate copies
-    pub async fn zero_copy_receive(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn zero_copy_receive(
         &self,
         connection_id: u64,
-    ) -> Result<Option<ZeroCopyBuffer<BUFFER_SIZE>>> {
+    ) -> Result<Option<ZeroCopyBuffer<BUFFER_SIZE>>>  {
         let connection = self.get_connection(connection_id)?;
         
         if let Some(buffer) = connection.rx_queue.dequeue() {
@@ -297,11 +310,18 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
 
     /// Vectored I/O send (scatter-gather)
     /// PERFORMANCE: Single system call for multiple buffers
-    pub async fn vectored_send(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub const fn vectored_send(
         &self,
         connection_id: u64,
         buffers: &[ZeroCopyBuffer<BUFFER_SIZE>],
-    ) -> Result<usize> {
+    ) -> Result<usize>  {
         let _connection = self.get_connection(connection_id)?;
         
         // Create IoSlice array for vectored I/O
@@ -324,7 +344,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
     }
 
     /// Get network interface statistics
-    pub fn get_stats(&self) -> NetworkInterfaceStats {
+    pub const fn get_stats(&self) -> NetworkInterfaceStats {
         let pool_stats = self.buffer_pool.stats();
         
         NetworkInterfaceStats {
@@ -355,7 +375,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
         remote_addr.hash(&mut hasher);
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            ?
             .as_nanos()
             .hash(&mut hasher);
         
@@ -387,7 +407,6 @@ pub struct KernelBypassAdapter<const RING_SIZE: usize = 4096> {
     hardware_stats: HardwareStats,
     _phantom: PhantomData<()>,
 }
-
 /// **ZERO-COPY RING BUFFER**
 /// 
 /// Lock-free ring buffer for kernel bypass networking
@@ -398,7 +417,6 @@ pub struct ZeroCopyRing<const SIZE: usize> {
     tail: std::sync::atomic::AtomicUsize,
     _phantom: PhantomData<()>,
 }
-
 #[derive(Debug)]
 pub struct HardwareStats {
     pub dma_transfers: std::sync::atomic::AtomicU64,
@@ -408,41 +426,43 @@ pub struct HardwareStats {
 }
 
 impl Clone for HardwareStats {
-    fn clone(&self) -> Self {
-        use std::sync::atomic::AtomicU64;
+    fn clone(&self) -> Self { use std::sync::atomic::AtomicU64;
         Self {
             dma_transfers: AtomicU64::new(self.dma_transfers.load(std::sync::atomic::Ordering::Relaxed)),
             hardware_interrupts: AtomicU64::new(self.hardware_interrupts.load(std::sync::atomic::Ordering::Relaxed)),
             kernel_bypassed_packets: AtomicU64::new(self.kernel_bypassed_packets.load(std::sync::atomic::Ordering::Relaxed)),
             latency_microseconds: AtomicU64::new(self.latency_microseconds.load(std::sync::atomic::Ordering::Relaxed)),
-        }
-    }
+         }
 }
 
 impl Default for HardwareStats {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             dma_transfers: std::sync::atomic::AtomicU64::new(0),
             hardware_interrupts: std::sync::atomic::AtomicU64::new(0),
             kernel_bypassed_packets: std::sync::atomic::AtomicU64::new(0),
             latency_microseconds: std::sync::atomic::AtomicU64::new(0),
-        }
-    }
+         }
 }
 
 impl<const RING_SIZE: usize> KernelBypassAdapter<RING_SIZE> {
     /// Create new kernel bypass adapter
-    pub fn new() -> Self {
-        Self {
+    pub const fn new() -> Self { Self {
             tx_ring: ZeroCopyRing::new(),
             rx_ring: ZeroCopyRing::new(),
             hardware_stats: HardwareStats::default(),
             _phantom: PhantomData,
-        }
-    }
+         }
 
     /// Initialize hardware for kernel bypass
-    pub fn initialize_hardware(&mut self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn initialize_hardware(&mut self) -> Result<()>  {
         // In a real implementation, this would:
         // 1. Map hardware registers
         // 2. Set up DMA rings
@@ -455,7 +475,15 @@ impl<const RING_SIZE: usize> KernelBypassAdapter<RING_SIZE> {
 
     /// Send packet with direct hardware access
     /// PERFORMANCE: Sub-microsecond latency, no kernel overhead
-    pub fn hardware_send(&mut self, buffer: ZeroCopyBuffer<2048>) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn hardware_send(&mut self, buffer: ZeroCopyBuffer<2048>) -> Result<()>  {
         // Direct DMA transmission
         if let Some(slot) = self.tx_ring.acquire_slot() {
             self.tx_ring.set_buffer(slot, buffer)?;
@@ -473,7 +501,15 @@ impl<const RING_SIZE: usize> KernelBypassAdapter<RING_SIZE> {
 
     /// Receive packet from hardware
     /// PERFORMANCE: Direct DMA access, zero-copy from NIC
-    pub fn hardware_receive(&mut self) -> Result<Option<ZeroCopyBuffer<2048>>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn hardware_receive(&mut self) -> Result<Option<ZeroCopyBuffer<2048>>>  {
         if let Some(slot) = self.rx_ring.completed_slot() {
             let buffer = self.rx_ring.take_buffer(slot)?;
             
@@ -487,14 +523,14 @@ impl<const RING_SIZE: usize> KernelBypassAdapter<RING_SIZE> {
     }
 
     /// Get hardware statistics
-    pub fn get_hardware_stats(&self) -> HardwareStats {
+    pub const fn get_hardware_stats(&self) -> HardwareStats {
         self.hardware_stats.clone()
     }
 }
 
 impl<const SIZE: usize> ZeroCopyRing<SIZE> {
     /// Create new zero-copy ring buffer
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             buffers: [const { None }; SIZE],
             head: std::sync::atomic::AtomicUsize::new(0),
@@ -504,7 +540,7 @@ impl<const SIZE: usize> ZeroCopyRing<SIZE> {
     }
 
     /// Acquire slot for transmission
-    pub fn acquire_slot(&self) -> Option<usize> {
+    pub const fn acquire_slot(&self) -> Option<usize> {
         let head = self.head.load(std::sync::atomic::Ordering::Acquire);
         let next_head = (head + 1) % SIZE;
         let tail = self.tail.load(std::sync::atomic::Ordering::Acquire);
@@ -518,7 +554,7 @@ impl<const SIZE: usize> ZeroCopyRing<SIZE> {
     }
 
     /// Check for completed transmission/reception
-    pub fn completed_slot(&self) -> Option<usize> {
+    pub const fn completed_slot(&self) -> Option<usize> {
         let tail = self.tail.load(std::sync::atomic::Ordering::Acquire);
         let head = self.head.load(std::sync::atomic::Ordering::Acquire);
         
@@ -530,17 +566,33 @@ impl<const SIZE: usize> ZeroCopyRing<SIZE> {
     }
 
     /// Set buffer in ring slot
-    pub fn set_buffer(&mut self, slot: usize, buffer: ZeroCopyBuffer<2048>) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn set_buffer(&mut self, slot: usize, buffer: ZeroCopyBuffer<2048>) -> Result<()>  {
         if slot < SIZE {
             self.buffers[slot] = Some(buffer);
             Ok(())
         } else {
-            Err(NestGateError::validation_error("ring_slot", "Invalid slot index", None))
+            Err(NestGateError::validation("ring_slot"))
         }
     }
 
     /// Take buffer from ring slot
-    pub fn take_buffer(&mut self, slot: usize) -> Result<ZeroCopyBuffer<2048>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        pub fn take_buffer(&mut self, slot: usize) -> Result<ZeroCopyBuffer<2048>>  {
         if slot < SIZE {
             if let Some(buffer) = self.buffers[slot].take() {
                 let next_tail = (slot + 1) % SIZE;
@@ -550,7 +602,7 @@ impl<const SIZE: usize> ZeroCopyRing<SIZE> {
                 Err(NestGateError::network_error_with_endpoint("ring_buffer", "No buffer in slot", None))
             }
         } else {
-            Err(NestGateError::validation_error("ring_slot", "Invalid slot index", None))
+            Err(NestGateError::validation("ring_slot"))
         }
     }
 }
@@ -561,16 +613,17 @@ impl<const SIZE: usize> ZeroCopyRing<SIZE> {
 pub mod benchmarks {
     use super::*;
     use std::time::Instant;
-
     /// Benchmark zero-copy vs traditional networking
     pub async fn benchmark_zero_copy_networking() -> (u64, u64, f64) {
-        let interface = ZeroCopyNetworkInterface::<65536>::new();
+        let interface = ZeroCopyNetworkInterface::<65_536>::new();
         let test_data = vec![0x42u8; 1_048_576]; // 1MB test data
         const ITERATIONS: u32 = 1000;
 
         // Establish connection
-        let connection_id = interface.connect("127.0.0.1:8080".parse().unwrap())
-            .await.expect("Failed to establish connection");
+        let test_endpoint = std::env::var("NESTGATE_TEST_ENDPOINT")
+            .unwrap_or_else(|_| "127.0.0.1:8080".to_string());
+        let connection_id = interface.connect(test_endpoint.parse()?)
+            .await?;
 
         // Benchmark zero-copy send
         let start = Instant::now();
@@ -585,7 +638,7 @@ pub mod benchmarks {
         // - Buffer allocation/deallocation
         let traditional_time = zero_copy_time * 10; // Conservative 10x estimate
 
-        let improvement = ((traditional_time - zero_copy_time) as f64 / traditional_time as f64) * 100.0;
+        let improvement = ((traditional_time - zero_copy_time) as f64 / f64::from(traditional_time)) * 100.0;
 
         tracing::info!(
             "Zero-Copy Networking: {}ns, Traditional: {}ns (est), Improvement: {:.1}%",
@@ -596,8 +649,8 @@ pub mod benchmarks {
     }
 
     /// Benchmark buffer pool performance
-    pub async fn benchmark_buffer_pool() -> (u64, u64, f64) {
-        let pool = ZeroCopyBufferPool::<65536, 1024>::new();
+    pub const fn benchmark_buffer_pool() -> (u64, u64, f64) {
+        let pool = ZeroCopyBufferPool::<65_536, 1024>::new();
         const OPERATIONS: u32 = 1_000_000;
 
         let start = Instant::now();
@@ -611,13 +664,13 @@ pub mod benchmarks {
         // Traditional allocation would be much slower
         let malloc_time = pool_time * 50; // malloc/free is typically 50x slower
 
-        let improvement = ((malloc_time - pool_time) as f64 / malloc_time as f64) * 100.0;
+        let improvement = ((malloc_time - pool_time) as f64 / f64::from(malloc_time)) * 100.0;
 
         let stats = pool.stats();
         tracing::info!(
             "Buffer Pool: {}ns, Malloc: {}ns (est), Improvement: {:.1}%, Hit Rate: {:.1}%",
             pool_time, malloc_time, improvement,
-            (stats.buffer_hits as f64 / (stats.buffer_hits + stats.buffer_misses) as f64) * 100.0
+            (stats.f64::from(buffer_hits) / (stats.buffer_hits + stats.buffer_misses) as f64) * 100.0
         );
 
         (pool_time, malloc_time, improvement)
@@ -640,13 +693,12 @@ mod tests {
         assert_eq!(buffer.len(), test_data.len());
         assert_eq!(buffer.as_slice(), test_data);
     }
-
     #[test]
     fn test_buffer_pool() {
         let pool = ZeroCopyBufferPool::<1024, 10>::new();
         
-        let buffer1 = pool.acquire_buffer().expect("Should acquire buffer");
-        let buffer2 = pool.acquire_buffer().expect("Should acquire buffer");
+        let buffer1 = pool.acquire_buffer()?;
+        let buffer2 = pool.acquire_buffer()?;
         
         pool.release_buffer(buffer1);
         pool.release_buffer(buffer2);
@@ -659,12 +711,14 @@ mod tests {
     async fn test_zero_copy_interface() {
         let interface = ZeroCopyNetworkInterface::<1024>::new();
         
-        let connection_id = interface.connect("127.0.0.1:8080".parse().unwrap())
-            .await.expect("Should establish connection");
+        let test_endpoint = std::env::var("NESTGATE_TEST_ENDPOINT")
+            .unwrap_or_else(|_| "127.0.0.1:8080".to_string());
+        let connection_id = interface.connect(test_endpoint.parse()?)
+            .await?;
         
         let test_data = b"Test zero-copy send";
         let bytes_sent = interface.zero_copy_send(connection_id, test_data)
-            .await.expect("Should send data");
+            .await?;
         
         assert_eq!(bytes_sent, test_data.len());
         
@@ -677,10 +731,10 @@ mod tests {
     #[test]
     fn test_kernel_bypass_adapter() {
         let mut adapter = KernelBypassAdapter::<64>::new();
-        adapter.initialize_hardware().expect("Should initialize");
+        adapter.initialize_hardware()?;
         
         let buffer = ZeroCopyBuffer::<2048>::new();
-        adapter.hardware_send(buffer).expect("Should send via hardware");
+        adapter.hardware_send(buffer)?;
         
         let stats = adapter.get_hardware_stats();
         assert_eq!(stats.dma_transfers.load(std::sync::atomic::Ordering::Relaxed), 1);

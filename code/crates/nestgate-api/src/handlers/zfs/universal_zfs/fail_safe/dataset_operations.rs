@@ -3,6 +3,7 @@
 
 use std::collections::HashMap;
 
+use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
 use crate::handlers::zfs::universal_zfs::types::{
     DatasetConfig, DatasetInfo, UniversalZfsError, UniversalZfsResult,
 };
@@ -16,10 +17,7 @@ pub async fn list_datasets(service: &FailSafeZfsService) -> UniversalZfsResult<V
             fallback.list_datasets().await
         } else {
             // Try fallback operation
-            match service
-                .execute_fallback_operation("list_datasets", &service.primary)
-                .await
-            {
+            match service.execute_fallback_operation("list_datasets", &service.primary) {
                 Ok(_) => Ok(Vec::new()), // Return empty list as fallback
                 Err(_) => Err(UniversalZfsError::CircuitBreakerOpen {
                     service: service.service_name.clone(),

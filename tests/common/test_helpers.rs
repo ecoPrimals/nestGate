@@ -11,7 +11,7 @@
 ///
 /// **PROBLEM SOLVED**: Single source of truth for all test helper functions
 
-use async_trait::async_trait;
+// **CANONICAL MODERNIZATION**: Removed async_trait for zero-cost native async patterns
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -21,6 +21,7 @@ use uuid::Uuid;
 
 // Import canonical types and configurations
 use nestgate_core::{
+
     traits::{UniversalService, UniversalServiceRequest, UniversalServiceResponse},
     canonical_modernization::canonical_modernization::unified_enums::{UnifiedServiceType, UnifiedServiceState},
     canonical_types::{UnifiedConfig, UnifiedServiceConfig},
@@ -188,9 +189,18 @@ pub mod test_data {
     /// Generate test network endpoints for service discovery testing
     pub fn generate_test_endpoints() -> HashMap<String, String> {
         HashMap::from([
-            ("health".to_string(), "http://localhost:8080/health".to_string()),
-            ("metrics".to_string(), "http://localhost:8080/metrics".to_string()),
-            ("api".to_string(), "http://localhost:8080/api/v1".to_string()),
+            ("health".to_string(), format!("http://{}:{}/health", 
+                std::env::var("NESTGATE_HOSTNAME").unwrap_or_else(|_| nestgate_core::constants::TEST_HOSTNAME.to_string()),
+                std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string())
+            )),
+            ("metrics".to_string(), format!("http://{}:{}/metrics", 
+                std::env::var("NESTGATE_HOSTNAME").unwrap_or_else(|_| nestgate_core::constants::TEST_HOSTNAME.to_string()),
+                std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string())
+            )),
+            ("api".to_string(), format!("http://{}:{}/api/v1", 
+                std::env::var("NESTGATE_HOSTNAME").unwrap_or_else(|_| nestgate_core::constants::TEST_HOSTNAME.to_string()),
+                std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string())
+            )),
         ])
     }
     

@@ -1,10 +1,10 @@
-//! AI-First Response System - SMART REFACTORED VERSION
-//!
-//! This demonstrates the complexity reduction achieved through smart abstractions.
-//! 
-//! **BEFORE**: 1,086 lines with 36 types and massive boilerplate
-//! **AFTER**: ~400 lines with generic patterns and smart defaults
-//! **REDUCTION**: 63% complexity reduction through intelligent abstraction
+// AI-First Response System - SMART REFACTORED VERSION
+//! Ai First functionality and utilities.
+// This demonstrates the complexity reduction achieved through smart abstractions.
+//! Ai First functionality and utilities.
+// **BEFORE**: 1,086 lines with 36 types and massive boilerplate
+// **AFTER**: ~400 lines with generic patterns and smart defaults
+// **REDUCTION**: 63% complexity reduction through intelligent abstraction
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -42,7 +42,6 @@ pub struct AIFirstResponse<T, M: MetadataExtensions = ServiceCapabilityExtension
     /// AI-specific decision making context
     pub ai_context: AIDecisionContext,
 }
-
 /// **CONSOLIDATED**: AI decision context - combines multiple original structs
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIDecisionContext {
@@ -58,7 +57,6 @@ pub struct AIDecisionContext {
     /// Retry strategy with exponential backoff
     pub retry_strategy: RetryStrategy,
 }
-
 /// **SIMPLIFIED**: AI error structure with automation hints
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIFirstError {
@@ -83,7 +81,6 @@ pub struct AIFirstError {
     /// Related error context
     pub context: HashMap<String, serde_json::Value>,
 }
-
 /// AI error categorization - unchanged but now part of smaller system
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AIErrorCategory {
@@ -95,7 +92,6 @@ pub enum AIErrorCategory {
     ExternalService,
     Internal,
 }
-
 /// **CONSOLIDATED**: Retry strategy - simplified from original complex version
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RetryStrategy {
@@ -104,7 +100,6 @@ pub struct RetryStrategy {
     pub backoff_seconds: Vec<u64>,
     pub retry_conditions: Vec<String>,
 }
-
 /// **CONSOLIDATED**: Suggested actions - simplified from multiple action types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SuggestedAction {
@@ -114,7 +109,6 @@ pub struct SuggestedAction {
     pub confidence: f64,
     pub estimated_duration_ms: u64,
 }
-
 /// **SIMPLIFIED**: Human interaction context
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HumanInteractionContext {
@@ -122,7 +116,6 @@ pub struct HumanInteractionContext {
     pub user_preference_hints: Vec<String>,
     pub accessibility_requirements: Vec<String>,
 }
-
 // **SMART DEFAULTS**: Using our smart abstraction system
 impl SmartDefault for AIDecisionContext {
     fn smart_default() -> Self {
@@ -162,11 +155,11 @@ impl SmartDefault for AIFirstError {
 
 // **BUILDER PATTERNS**: Fluent API for complex response construction
 impl<T, M: MetadataExtensions + Default> AIFirstResponse<T, M> {
-    pub fn success(data: T) -> AIFirstResponseBuilder<T, M> {
+    pub const fn success(data: T) -> AIFirstResponseBuilder<T, M> {
         AIFirstResponseBuilder::new(true, data)
     }
     
-    pub fn error(error: AIFirstError) -> AIFirstResponseBuilder<T, M> 
+    pub const fn error(error: AIFirstError) -> AIFirstResponseBuilder<T, M> 
     where 
         T: Default 
     {
@@ -182,9 +175,8 @@ pub struct AIFirstResponseBuilder<T, M: MetadataExtensions> {
     metadata: Option<MetadataContainer<M>>,
     ai_context: Option<AIDecisionContext>,
 }
-
 impl<T, M: MetadataExtensions + Default> AIFirstResponseBuilder<T, M> {
-    pub fn new(success: bool, data: T) -> Self {
+    pub const fn new(success: bool, data: T) -> Self {
         Self {
             success,
             data,
@@ -194,17 +186,20 @@ impl<T, M: MetadataExtensions + Default> AIFirstResponseBuilder<T, M> {
         }
     }
     
+    #[must_use]
     pub fn error(mut self, error: AIFirstError) -> Self {
         self.error = Some(error);
         self.success = false;
         self
     }
     
+    #[must_use]
     pub fn metadata(mut self, metadata: MetadataContainer<M>) -> Self {
         self.metadata = Some(metadata);
         self
     }
     
+    #[must_use]
     pub fn confidence(mut self, score: f64) -> Self {
         let mut context = self.ai_context.unwrap_or_else(AIDecisionContext::smart_default);
         context.confidence_score = score;
@@ -212,6 +207,7 @@ impl<T, M: MetadataExtensions + Default> AIFirstResponseBuilder<T, M> {
         self
     }
     
+    #[must_use]
     pub fn suggest_action(mut self, action: SuggestedAction) -> Self {
         let mut context = self.ai_context.unwrap_or_else(AIDecisionContext::smart_default);
         context.suggested_actions.push(action);
@@ -219,7 +215,7 @@ impl<T, M: MetadataExtensions + Default> AIFirstResponseBuilder<T, M> {
         self
     }
     
-    pub fn build(self) -> AIFirstResponse<T, M> {
+    pub const fn build(self) -> AIFirstResponse<T, M> {
         AIFirstResponse {
             success: self.success,
             data: self.data,
@@ -260,13 +256,13 @@ impl From<crate::error::NestGateError> for AIFirstError {
             message: error.to_string(),
             category: match error {
                 crate::error::NestGateError::Network(_) => AIErrorCategory::ExternalService,
-                crate::error::NestGateError::Configuration {
+                crate::error::NestGateError::configuration(
                 ..
                 
-            } => AIErrorCategory::Configuration,
-                crate::error::NestGateError::Validation { .. } => AIErrorCategory::Validation,
+            ) => AIErrorCategory::Configuration,
+                crate::error::NestGateError::validation( .. ) => AIErrorCategory::Validation,
                 _ => AIErrorCategory::Internal,
-            },
+            ),
             ..AIFirstError::smart_default()
         }
     }

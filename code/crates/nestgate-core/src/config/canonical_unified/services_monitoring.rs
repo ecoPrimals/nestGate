@@ -2,7 +2,6 @@
 // Service-specific and monitoring configuration structures for the canonical unified configuration system.
 
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 use std::time::Duration;
 
 // ==================== SECTION ====================
@@ -70,7 +69,6 @@ pub struct MetricsConfig {
     /// Enable detailed metrics (for debugging/development)
     pub detailed_metrics: bool,
     /// Metrics storage path (optional, for file-based storage)
-    pub storage_path: Option<std::path::PathBuf>,
     /// Export format (prometheus, json, etc.)
     pub export_format: MetricsFormat,
     /// Maximum number of metrics to retain in memory
@@ -91,7 +89,6 @@ pub enum MetricsFormat {
     Grafana,
     Custom(String),
 }
-
 impl Default for MetricsConfig {
     fn default() -> Self {
         Self {
@@ -99,7 +96,6 @@ impl Default for MetricsConfig {
             collection_interval: Duration::from_secs(60),
             retention_period: Duration::from_secs(86400 * 7), // 7 days
             detailed_metrics: false,
-            storage_path: None,
             export_format: MetricsFormat::default(),
             max_memory_metrics: 10000,
             enable_streaming: false,
@@ -194,7 +190,6 @@ pub struct UnitTestConfig {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct IntegrationTestConfig {
     pub enabled: bool,
-    pub test_data_path: PathBuf,
     pub cleanup_after: bool,
     pub timeout: Duration,
 }

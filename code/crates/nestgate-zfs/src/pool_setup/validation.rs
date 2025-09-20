@@ -2,13 +2,11 @@
 // Validation logic and safety checks for ZFS pool setup operations
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 use super::{
-    config::PoolSetupConfiguration,
-    device_detection::{DeviceType, StorageDevice},
+    config::{PoolSetupConfig, PoolTopology},
+    device_detection::StorageDevice,
 };
-use crate::types::StorageTier;
 // Removed unused import: nestgate_core::types::StorageTier as CoreStorageTier
 
 /// Result of validation operations
@@ -18,8 +16,8 @@ pub struct ValidationResult {
     pub issues: Vec<String>,
     pub warnings: Vec<String>,
 }
-
 impl ValidationResult {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             is_valid: true,
@@ -46,40 +44,12 @@ impl ValidationResult {
     }
 }
 
-/// Pool setup configuration for creation
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PoolSetupConfig {
-    /// Pool name
-    pub pool_name: String,
-    /// Devices to use for the pool
-    pub devices: Vec<String>,
-    /// Pool topology (mirror, raidz, etc.)
-    pub topology: PoolTopology,
-    /// ZFS properties to set
-    pub properties: HashMap<String, String>,
-    /// Whether to create tier structure
-    pub create_tiers: bool,
-    /// Tier mappings to device types
-    pub tier_mappings: HashMap<StorageTier, Vec<DeviceType>>,
-}
-
-/// Pool topology options
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum PoolTopology {
-    Single,
-    Mirror,
-    RaidZ1,
-    RaidZ2,
-    RaidZ3,
-}
-
 /// Pool setup validator
 pub struct PoolSetupValidator {
-    config: PoolSetupConfiguration,
+    config: PoolSetupConfig,
 }
-
 impl PoolSetupValidator {
-    pub fn new(config: PoolSetupConfiguration) -> Self {
+    pub const fn new(config: PoolSetupConfig) -> Self {
         Self { config }
     }
 
@@ -97,7 +67,7 @@ impl PoolSetupValidator {
 
         // Path validation
         if !device.device_path.starts_with("/dev/") {
-            result.add_error(format!("Invalid device path: {}", device.device_path));
+            result.add_error(format!("Invalid device path: {"actual_error_details"}"));
         }
 
         // Usage validation

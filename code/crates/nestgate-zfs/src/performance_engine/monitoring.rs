@@ -41,7 +41,6 @@ pub struct RealTimePerformanceMonitor {
     alert_thresholds: AlertThresholdsArc,
     metrics_cache: MetricsCacheMap,
 }
-
 impl Default for RealTimePerformanceMonitor {
     fn default() -> Self {
         Self::new()
@@ -49,6 +48,7 @@ impl Default for RealTimePerformanceMonitor {
 }
 
 impl RealTimePerformanceMonitor {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             pool_metrics: Arc::new(RwLock::new(HashMap::new())),
@@ -63,7 +63,7 @@ impl RealTimePerformanceMonitor {
     }
 
     /// Get access to metrics cache for testing
-    pub fn get_metrics_cache(&self) -> MetricsCacheMap {
+    pub const fn get_metrics_cache(&self) -> MetricsCacheMap {
         self.metrics_cache.clone()
     }
 
@@ -73,21 +73,26 @@ impl RealTimePerformanceMonitor {
             return 0.0;
         }
 
-        let n = values.len() as f64;
-        let x_sum: f64 = (0..values.len()).map(|i| i as f64).sum();
+        let n = (values.len() as f64);
+        let x_sum: f64 = (0..values.len()).map(|i| f64::from(i)).sum();
         let y_sum: f64 = values.iter().sum();
-        let xy_sum: f64 = values.iter().enumerate().map(|(i, &y)| i as f64 * y).sum();
-        let x_squared_sum: f64 = (0..values.len()).map(|i| (i as f64).powi(2)).sum();
+        let xy_sum: f64 = values.iter().enumerate().map(|(i, &y)| f64::from(i) * y).sum();
+        let x_squared_sum: f64 = (0..values.len()).map(|i| (f64::from(i)).powi(2)).sum();
 
         // Calculate slope using least squares regression
         (n * xy_sum - x_sum * y_sum) / (n * x_squared_sum - x_sum.powi(2))
     }
 
-    pub async fn collect_metrics(
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn collect_metrics(
         &self,
         _pool_manager: &ZfsPoolManager,
         dataset_manager: &ZfsDatasetManager,
-    ) -> Result<()> {
+    ) -> Result<()>  {
         debug!("📊 Collecting real-time performance metrics");
 
         // Collect comprehensive ZFS performance metrics with real system integration
@@ -146,7 +151,7 @@ impl RealTimePerformanceMonitor {
                                 }
 
                                 if hits + misses > 0 {
-                                    hits as f64 / (hits + misses) as f64
+                                    f64::from(hits) / (hits + misses) as f64
                                 } else {
                                     0.85 // Default hit ratio
                                 }
@@ -230,7 +235,7 @@ impl RealTimePerformanceMonitor {
                                     }
                                     "recordsize" => {
                                         record_size =
-                                            Self::parse_size_value(fields[2]).unwrap_or(128 * 1024);
+                                            Self::parse_sizevalue(fields[2]).unwrap_or(128 * 1024);
                                     }
                                     "used" => {
                                         used_bytes = fields[2].parse().unwrap_or(0);
@@ -245,7 +250,7 @@ impl RealTimePerformanceMonitor {
 
                         // Calculate actual compression ratio from used vs logical used
                         if logical_used_bytes > 0 && used_bytes > 0 {
-                            _compression_ratio = logical_used_bytes as f64 / used_bytes as f64;
+                            _compression_ratio = f64::from(logical_used_bytes) / f64::from(used_bytes);
                         }
 
                         // Analyze access pattern based on dataset properties and usage
@@ -306,14 +311,14 @@ impl RealTimePerformanceMonitor {
 
             ArcStatistics {
                 hit_ratio: if hits + misses > 0 {
-                    hits as f64 / (hits + misses) as f64
+                    f64::from(hits) / (hits + misses) as f64
                 } else {
                     0.85
                 },
                 size,
                 target_size: c,
                 miss_ratio: if hits + misses > 0 {
-                    misses as f64 / (hits + misses) as f64
+                    f64::from(misses) / (hits + misses) as f64
                 } else {
                     0.15
                 },
@@ -416,7 +421,8 @@ impl RealTimePerformanceMonitor {
                 if iops_trend < -0.15 {
                     // 15% IOPS degradation
                     warn!(
-                        "📉 Pool {} IOPS degrading: {:.2}% trend",
+                        "📉 Pool {},
+    IOPS degrading: {:.2}% trend",
                         pool_name,
                         iops_trend * 100.0
                     );
@@ -436,7 +442,7 @@ impl RealTimePerformanceMonitor {
         // Memory pressure analysis
         let memory_usage_ratios: Vec<f64> = recent_metrics
             .iter()
-            .map(|m| m.system_memory.used as f64 / m.system_memory.total as f64)
+            .map(|m| m.system_memory.f64::from(used) / m.system_memory.f64::from(total))
             .collect();
 
         let memory_trend = Self::calculate_trend(&memory_usage_ratios);
@@ -454,7 +460,7 @@ impl RealTimePerformanceMonitor {
     }
 
     /// Parse ZFS size values (e.g., "128K", "1M", "2G")
-    fn parse_size_value(size_str: &str) -> Result<u64> {
+    fn parse_sizevalue(size_str: &str) -> Result<u64> {
         if let Some(num_str) = size_str.strip_suffix('K') {
             Ok(num_str.parse::<u64>().map_err(|e| {
                 crate::error::ZfsErrorBuilder::new(&format!(
@@ -495,7 +501,14 @@ impl RealTimePerformanceMonitor {
     }
 
     /// Get trending data for analysis
-    pub async fn get_trending_data(&self) -> Result<Vec<ZfsPerformanceMetrics>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_trending_data(&self) -> Result<Vec<ZfsPerformanceMetrics>>  {
         let cache = self.metrics_cache.read().await;
         Ok(cache.values().cloned().collect())
     }

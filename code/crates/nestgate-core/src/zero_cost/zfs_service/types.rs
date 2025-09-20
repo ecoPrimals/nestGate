@@ -14,7 +14,6 @@ pub struct DefaultPoolInfo {
     pub available: u64,
     pub health: String,
 }
-
 /// Default dataset information implementation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DefaultDatasetInfo {
@@ -25,7 +24,6 @@ pub struct DefaultDatasetInfo {
     pub compression: String,
     pub mountpoint: String,
 }
-
 /// Default snapshot information implementation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DefaultSnapshotInfo {
@@ -34,7 +32,6 @@ pub struct DefaultSnapshotInfo {
     pub created: SystemTime,
     pub used: u64,
 }
-
 /// Default health status implementation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DefaultHealthStatus {
@@ -46,7 +43,6 @@ pub struct DefaultHealthStatus {
     pub last_check: SystemTime,
     pub issues: Vec<String>,
 }
-
 /// Default service metrics implementation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DefaultServiceMetrics {
@@ -59,7 +55,6 @@ pub struct DefaultServiceMetrics {
     pub datasets_managed: u32,
     pub snapshots_managed: u32,
 }
-
 /// ZFS operation statistics
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ZfsOperationStats {
@@ -68,7 +63,6 @@ pub struct ZfsOperationStats {
     pub snapshot_operations: OperationTypeStats,
     pub cache_stats: ZfsCacheStats,
 }
-
 /// Statistics for specific operation types
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct OperationTypeStats {
@@ -77,7 +71,6 @@ pub struct OperationTypeStats {
     pub failed: u64,
     pub average_duration_ms: f64,
 }
-
 /// ZFS cache statistics
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ZfsCacheStats {
@@ -87,7 +80,6 @@ pub struct ZfsCacheStats {
     pub cache_size_bytes: u64,
     pub evictions: u64,
 }
-
 /// Default pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DefaultPoolConfig {
@@ -95,7 +87,6 @@ pub struct DefaultPoolConfig {
     pub devices: Vec<String>,
     pub raid_level: String,
 }
-
 /// Default dataset configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DefaultDatasetConfig {
@@ -103,7 +94,6 @@ pub struct DefaultDatasetConfig {
     pub pool: String,
     pub compression: String,
 }
-
 /// Default snapshot configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DefaultSnapshotConfig {

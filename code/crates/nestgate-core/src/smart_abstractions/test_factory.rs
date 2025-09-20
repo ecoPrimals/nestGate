@@ -9,7 +9,6 @@
 /// 
 /// **REPLACES**: Multiple helper modules across test files
 /// **PROBLEM SOLVED**: Helper function proliferation and duplication
-
 use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -27,6 +26,7 @@ use crate::service_discovery::config::UnifiedServiceConfig;
 // ==================== SECTION ====================
 
 /// Universal Test Factory trait for creating test objects
+use crate::error::NestGateError;
 pub trait TestFactory<T> {
     type Config;
     type Error: std::error::Error + Send + Sync + 'static;
@@ -43,7 +43,6 @@ pub trait TestFactory<T> {
     /// Create multiple test instances
     fn create_batch(count: usize) -> impl std::future::Future<Output = Result<Vec<T>> + Send;
 }
-
 /// Test scenarios for different testing contexts
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TestScenario {
@@ -60,31 +59,43 @@ pub enum TestScenario {
     /// Custom scenario with name
     Custom(String),
 }
-
 // ==================== SECTION ====================
 
 /// Factory for creating test services
 pub struct ServiceTestFactory;
-
 impl ServiceTestFactory {
     /// Create a mock service with specified behavior
-    pub async fn create_mock_service(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_mock_service(
         service_type: UnifiedServiceType,
         behavior: ServiceBehavior,
-    ) -> Result<Arc<dyn UniversalService<Config = UnifiedServiceConfig, Health = bool>>> {
+    ) -> Result<Arc<dyn UniversalService<Config = UnifiedServiceConfig, Health = bool>>>  {
         let service = MockTestService::new(service_type, behavior);
         Ok(Arc::new(service))
     }
     
     /// Create a service registry for testing
-    pub fn create_service_registry() -> TestServiceRegistry {
+    pub const fn create_service_registry() -> TestServiceRegistry {
         TestServiceRegistry::new()
     }
     
     /// Create a service with realistic delays and behaviors
-    pub async fn create_realistic_service(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_realistic_service(
         service_type: UnifiedServiceType,
-    ) -> Result<Arc<dyn UniversalService<Config = UnifiedServiceConfig, Health = bool>>> {
+    ) -> Result<Arc<dyn UniversalService<Config = UnifiedServiceConfig, Health = bool>>>  {
         let behavior = ServiceBehavior {
             response_delay: Duration::from_millis(50),
             success_rate: 0.95,
@@ -101,7 +112,6 @@ pub struct ServiceBehavior {
     pub success_rate: f64,
     pub enable_realistic_errors: bool,
 }
-
 impl Default for ServiceBehavior {
     fn default() -> Self {
         Self {
@@ -116,12 +126,18 @@ impl Default for ServiceBehavior {
 
 /// Factory for creating test storage objects
 pub struct StorageTestFactory;
-
 impl StorageTestFactory {
     /// Create a test storage backend
-    pub async fn create_storage_backend(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_storage_backend(
         storage_type: crate::universal_storage::UniversalStorageType,
-    ) -> Result<Arc<dyn crate::universal_storage::UniversalStorageBackend>> {
+    ) -> Result<Arc<dyn crate::universal_storage::UniversalStorageBackend>>  {
         match storage_type {
             crate::universal_storage::UniversalStorageType::Memory => {
                 Ok(Arc::new(MemoryStorageBackend::new()))
@@ -146,7 +162,6 @@ impl StorageTestFactory {
             name: name.to_string(),
             storage_type,
             resource_type: StorageResourceType::Dataset,
-            path: format!("/test/{}", name).into(),
             size_bytes: 1024 * 1024, // 1MB
             available_bytes: 1024 * 1024,
             used_bytes: 0,
@@ -168,10 +183,9 @@ impl StorageTestFactory {
 
 /// Factory for creating test configurations
 pub struct ConfigTestFactory;
-
 impl ConfigTestFactory {
     /// Create a test configuration for specific scenario
-    pub fn create_for_scenario(scenario: TestScenario) -> NestGateCanonicalConfig {
+    pub const fn create_for_scenario(scenario: TestScenario) -> NestGateCanonicalConfig {
         match scenario {
             TestScenario::Unit => Self::create_unit_test_config(),
             TestScenario::Integration => Self::create_integration_test_config(),
@@ -234,7 +248,7 @@ impl ConfigTestFactory {
     }
     
     /// Create default test configuration
-    pub fn create_default_config() -> NestGateCanonicalConfig {
+    pub const fn create_default_config() -> NestGateCanonicalConfig {
         Self::create_unit_test_config()
     }
 }
@@ -243,7 +257,6 @@ impl ConfigTestFactory {
 
 /// Factory for creating test data
 pub struct TestDataFactory;
-
 impl TestDataFactory {
     /// Generate test data for specific scenario
     pub fn generate_data<T>(scenario: TestScenario, count: usize) -> Vec<T>
@@ -262,12 +275,12 @@ impl TestDataFactory {
     }
     
     /// Generate test UUIDs
-    pub fn generate_uuids(count: usize) -> Vec<String> {
+    pub const fn generate_uuids(count: usize) -> Vec<String> {
         (0..count).map(|_| Uuid::new_v4().to_string()).collect()
     }
     
     /// Generate test timestamps
-    pub fn generate_timestamps(count: usize) -> Vec<SystemTime> {
+    pub const fn generate_timestamps(count: usize) -> Vec<SystemTime> {
         let base = SystemTime::now();
         (0..count)
             .map(|i| base + Duration::from_secs(i as u64))
@@ -279,7 +292,6 @@ impl TestDataFactory {
 pub trait TestDataGenerator {
     fn generate_for_scenario(scenario: &TestScenario, index: usize) -> Self;
 }
-
 // ==================== SECTION ====================
 
 /// Mock service for testing
@@ -288,9 +300,8 @@ pub struct MockTestService {
     behavior: ServiceBehavior,
     config: UnifiedServiceConfig,
 }
-
 impl MockTestService {
-    pub fn new(service_type: UnifiedServiceType, behavior: ServiceBehavior) -> Self {
+    pub const fn new(service_type: UnifiedServiceType, behavior: ServiceBehavior) -> Self {
         Self {
             service_type,
             behavior,
@@ -332,7 +343,7 @@ impl UniversalService for MockTestService {
         Ok(UniversalServiceResponse {
             request_id: Uuid::new_v4().to_string(),
             status: crate::traits::UniversalResponseStatus::Success,
-            data: Some(serde_json::json!({"message": "test response"})),
+            data: Some(serde_json::json!({"message": "test response"}),
             error: None,
             metadata: HashMap::new(),
         })
@@ -377,13 +388,12 @@ pub struct ServiceHealth {
     pub uptime: Duration,
     pub memory_usage: f64,
 }
-
 /// Test service registry
 pub struct TestServiceRegistry {
     services: HashMap<String, Arc<dyn UniversalService<Config = UnifiedServiceConfig, Health = ServiceHealth>>>,
 }
-
 impl TestServiceRegistry {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             services: HashMap::new(),
@@ -394,11 +404,11 @@ impl TestServiceRegistry {
         self.services.insert(name, service);
     }
     
-    pub fn get_service(&self, name: &str) -> Option<&Arc<dyn UniversalService<Config = UnifiedServiceConfig, Health = ServiceHealth>>> {
+    pub const fn get_service(&self, name: &str) -> Option<&Arc<dyn UniversalService<Config = UnifiedServiceConfig, Health = ServiceHealth>>> {
         self.services.get(name)
     }
     
-    pub fn list_services(&self) -> Vec<&String> {
+    pub const fn list_services(&self) -> Vec<&String> {
         self.services.keys().collect()
     }
 }
@@ -409,8 +419,8 @@ impl TestServiceRegistry {
 pub struct MemoryStorageBackend {
     data: Arc<tokio::sync::RwLock<HashMap<String, Vec<u8>>>>,
 }
-
 impl MemoryStorageBackend {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             data: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
@@ -490,13 +500,9 @@ impl crate::universal_storage::UniversalStorageBackend for MemoryStorageBackend 
 
 /// Mock local storage backend
 pub struct LocalStorageBackend {
-    base_path: std::path::PathBuf,
 }
-
 impl LocalStorageBackend {
-    pub fn new(base_path: &str) -> Self {
         Self {
-            base_path: std::path::PathBuf::from(base_path),
         }
     }
 }
@@ -551,9 +557,8 @@ impl UnifiedStorageBackend for LocalStorageBackend {
 pub struct MockStorageBackend {
     storage_type: crate::universal_storage::UniversalStorageType,
 }
-
 impl MockStorageBackend {
-    pub fn new(storage_type: crate::universal_storage::UniversalStorageType) -> Self {
+    pub const fn new(storage_type: crate::universal_storage::UniversalStorageType) -> Self {
         Self { storage_type }
     }
 }

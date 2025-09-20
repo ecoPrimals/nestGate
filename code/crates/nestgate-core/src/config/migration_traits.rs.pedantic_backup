@@ -1,0 +1,675 @@
+//! **CONFIG MIGRATION TRAITS**
+//!
+//! Systematic migration utilities for consolidating fragmented config structs
+//! into the canonical configuration system.
+
+use crate::config::canonical_master::{
+    NetworkConfig, PerformanceConfig, SecurityConfig, StorageConfig, SystemConfig,
+};
+use crate::error::Result;
+use crate::NestGateError;
+use std::path::PathBuf;
+
+// ==================== SECTION ====================
+
+/// Trait for migrating any config to canonical NetworkConfig
+pub trait IntoCanonicalNetworkConfig {
+    /// Convert this config into the canonical NetworkConfig
+    fn into_canonical(self) -> NetworkConfig;
+
+    /// Convert with custom const generics
+    fn into_canonical_with_params(self) -> NetworkConfig;
+}
+
+/// Trait for migrating any config to canonical StorageConfig
+pub trait IntoCanonicalStorageConfig {
+    /// Convert this config into the canonical StorageConfig
+    fn into_canonical(self) -> StorageConfig;
+}
+
+/// Trait for migrating any config to canonical SecurityConfig
+pub trait IntoCanonicalSecurityConfig {
+    /// Convert this config into the canonical SecurityConfig
+    fn into_canonical(self) -> SecurityConfig;
+}
+
+// ==================== SECTION ====================
+
+/// Generic config migration utility
+#[derive(Debug, Clone)]
+pub struct ConfigMigrationHelper {
+    pub system: SystemConfig,
+    pub storage: StorageConfig,
+    pub network: NetworkConfig,
+    pub security: SecurityConfig,
+    pub performance: PerformanceConfig,
+}
+
+impl Default for ConfigMigrationHelper {
+    fn default() -> Self { Self {
+            system: SystemConfig::default(),
+            storage: StorageConfig::default(),
+            network: NetworkConfig::default(),
+            security: SecurityConfig::default(),
+            performance: PerformanceConfig::default(),
+         }
+    }
+    }
+}
+
+impl ConfigMigrationHelper {
+    /// Validate that migration preserves all functionality
+    pub fn validate_migration<T, C>(_original: &T, _canonical: &C) -> Result<()>
+    // PEDANTIC: Fixed unused parameters
+    where
+        T: std::fmt::Debug,
+        C: std::fmt::Debug,
+    {
+        // TODO: Implement field-by-field validation
+        // For now, just ensure both configs are valid
+        Ok(())
+    }
+
+    /// Validate configuration fields against schema
+    /// Performs comprehensive field-by-field validation with detailed error reporting
+    fn validate_fields(&self) -> Result<ValidationReport> {
+        let mut report = ValidationReport::new();
+
+        // System configuration validation
+        self.validate_system_fields(&mut report)?;
+
+        // Storage configuration validation
+        self.validate_storage_fields(&mut report)?;
+
+        // Network configuration validation
+        self.validate_network_fields(&mut report)?;
+
+        // Security configuration validation
+        self.validate_security_fields(&mut report)?;
+
+        // Performance configuration validation
+        self.validate_performance_fields(&mut report)?;
+
+        if report.has_errors() {
+            tracing::error!(
+                "❌ Configuration validation failed with {} errors",
+                report.error_count()
+            );
+            Err(NestGateError::configuration_error(format!(
+                "Configuration validation failed: {}",
+                report.summary()
+            )))
+        } else {
+            tracing::info!(
+                "✅ Configuration validation passed with {} warnings",
+                report.warning_count()
+            );
+            Ok(report)
+        }
+    }
+
+    /// Validate system configuration fields
+    fn validate_system_fields(&self, report: &mut ValidationReport) -> Result<()> {
+        // Instance name validation
+        if self.system.instance_name.is_empty() {
+            report.add_error("system.instance_name", "Instance name cannot be empty");
+        } else if self.system.instance_name.len() > 64 {
+            report.add_error(
+                "system.instance_name",
+                "Instance name too long (max 64 characters)",
+            );
+        }
+
+        // Environment validation
+        let valid_environments = ["development", "staging", "production", "test"];
+        if !valid_environments.contains(&self.system.environment.as_str()) {
+            report.add_error(
+                "system.environment",
+                "Invalid environment (must be development, staging, production, or test)",
+            );
+        }
+
+        // Log level validation
+        let valid_log_levels = ["trace", "debug", "info", "warn", "error"];
+        if !valid_log_levels.contains(&self.system.log_level.as_str()) {
+            report.add_error("system.log_level", "Invalid log level");
+        }
+
+        // Connection limits validation
+        if self.system.max_connections == 0 {
+            report.add_error(
+                "system.max_connections",
+                "Max connections must be greater than 0",
+            );
+        } else if self.system.max_connections > 100000 {
+            report.add_warning(
+                "system.max_connections",
+                "Very high connection limit may impact performance",
+            );
+        }
+
+        // Worker threads validation
+        if self.system.worker_threads == 0 {
+            report.add_error(
+                "system.worker_threads",
+                "Worker threads must be greater than 0",
+            );
+        } else if self.system.worker_threads > 256 {
+            report.add_warning(
+                "system.worker_threads",
+                "Very high thread count may impact performance",
+            );
+        }
+    Ok(())
+    }
+
+    /// Validate storage configuration fields
+    fn validate_storage_fields(&self, report: &mut ValidationReport) -> Result<()> {
+        // Backend type validation
+        let valid_backends = ["zfs_native", "filesystem", "memory", "object_storage"];
+        if !valid_backends.contains(&self.storage.backend_type.as_str()) {
+            report.add_error("storage.backend_type", "Invalid storage backend type");
+        }
+
+        // Path validation
+        if !self.storage.data_path.exists() && self.system.environment == "production" {
+            report.add_warning("storage.data_path", "Data path does not exist");
+        }
+
+        // ZFS-specific validation
+        if self.storage.backend_type == "zfs_native" {
+            if self.storage.zfs.pool_name.is_empty() {
+                report.add_error("storage.zfs.pool_name", "ZFS pool name cannot be empty");
+            }
+
+            if self.storage.zfs.dataset_name.is_empty() {
+                report.add_error(
+                    "storage.zfs.dataset_name",
+                    "ZFS dataset name cannot be empty",
+                );
+            }
+
+            let valid_compression = ["off", "lz4", "gzip", "zstd"];
+            if !valid_compression.contains(&self.storage.zfs.compression.as_str()) {
+                report.add_error(
+                    "storage.zfs.compression",
+                    "Invalid ZFS compression algorithm",
+                );
+            }
+
+            if self.storage.zfs.command_timeout.as_secs() == 0 {
+                report.add_error(
+                    "storage.zfs.command_timeout",
+                    "ZFS command timeout must be greater than 0",
+                );
+            } else if self.storage.zfs.command_timeout.as_secs() > 300 {
+                report.add_warning(
+                    "storage.zfs.command_timeout",
+                    "Very long ZFS command timeout may cause delays",
+                );
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Validate network configuration fields
+    fn validate_network_fields(&self, report: &mut ValidationReport) -> Result<()> {
+        // API port validation
+        if self.network.api.port == 0 {
+            report.add_error("network.api.port", "API port cannot be 0");
+        } else if self.network.api.port < 1024 && self.system.environment == "production" {
+            report.add_warning(
+                "network.api.port",
+                "Using privileged port (<1024) in production",
+            );
+        }
+
+        // TLS validation
+        if self.network.api.enable_tls && self.system.environment == "production" {
+            if self.network.api.tls_cert_path.is_none() {
+                report.add_error(
+                    "network.api.tls_cert_path",
+                    "TLS certificate path required when TLS enabled",
+                );
+            }
+            if self.network.api.tls_key_path.is_none() {
+                report.add_error(
+                    "network.api.tls_key_path",
+                    "TLS key path required when TLS enabled",
+                );
+            }
+        }
+
+        // Timeout validation
+        if self.network.api.request_timeout.as_secs() == 0 {
+            report.add_error(
+                "network.api.request_timeout",
+                "Request timeout must be greater than 0",
+            );
+        } else if self.network.api.request_timeout.as_secs() > 300 {
+            report.add_warning(
+                "network.api.request_timeout",
+                "Very long request timeout may cause poor UX",
+            );
+        }
+    Ok(())
+    }
+
+    /// Validate security configuration fields
+    fn validate_security_fields(&self, report: &mut ValidationReport) -> Result<()> {
+        // Basic validation for security settings
+        if self.security.session_timeout.as_secs() == 0 {
+            report.add_error(
+                "security.session_timeout",
+                "Session timeout must be greater than 0",
+            );
+        } else if self.security.session_timeout.as_secs() > 86400 {
+            report.add_warning(
+                "security.session_timeout",
+                "Very long session timeout may be a security risk",
+            );
+        }
+
+        // Encryption validation
+        if self.security.encryption_at_rest && self.security.basic_encryption.algorithm.is_empty() {
+            report.add_error(
+                "security.basic_encryption.algorithm",
+                "Encryption algorithm required when encryption at rest enabled",
+            );
+        }
+
+        let valid_algorithms = ["aes-256-gcm", "aes-256-cbc", "chacha20-poly1305"];
+        if !self.security.basic_encryption.algorithm.is_empty()
+            && !valid_algorithms.contains(&self.security.basic_encryption.algorithm.as_str())
+        {
+            report.add_error(
+                "security.basic_encryption.algorithm",
+                "Invalid encryption algorithm",
+            );
+        }
+
+        Ok(())
+    }
+
+    /// Validate performance configuration fields
+    fn validate_performance_fields(&self, report: &mut ValidationReport) -> Result<()> {
+        // Cache validation
+        if self.performance.cache_enabled && self.performance.cache_size_mb == 0 {
+            report.add_error(
+                "performance.cache_size_mb",
+                "Cache size must be greater than 0 when cache enabled",
+            );
+        } else if self.performance.cache_size_mb > 16384 {
+            report.add_warning(
+                "performance.cache_size_mb",
+                "Very large cache size may impact memory usage",
+            );
+        }
+
+        // Connection pool validation
+        if self.performance.connection_pooling {
+            if self.performance.max_pool_size == 0 {
+                report.add_error(
+                    "performance.max_pool_size",
+                    "Max pool size must be greater than 0 when pooling enabled",
+                );
+            }
+            if self.performance.min_pool_size > self.performance.max_pool_size {
+                report.add_error(
+                    "performance.min_pool_size",
+                    "Min pool size cannot exceed max pool size",
+                );
+            }
+        }
+
+        Ok(())
+    }
+}
+
+/// Validation report for configuration validation
+#[derive(Debug, Default)]
+pub struct ValidationReport {
+    errors: Vec<ValidationError>,
+    warnings: Vec<ValidationWarning>,
+}
+    #[derive(Debug)]
+pub struct ValidationError {
+    pub field: String,
+    pub message: String,
+}
+    #[derive(Debug)]
+pub struct ValidationWarning {
+    pub field: String,
+    pub message: String,
+}
+
+impl ValidationReport {
+    pub fn new() -> Self { 
+        Self::default()
+    }
+
+    pub fn add_error(&mut self, field: &str, message: &str) {
+        self.errors.push(ValidationError {
+            field: field.to_string(),
+            message: message.to_string(),
+        });
+    }
+
+    pub fn add_warning(&mut self, field: &str, message: &str) {
+        self.warnings.push(ValidationWarning {
+            field: field.to_string(),
+            message: message.to_string(),
+        });
+    }
+
+    pub fn has_errors(&self) -> bool {
+        !self.errors.is_empty()
+    }
+
+    pub fn error_count(&self) -> usize {
+        self.errors.len()
+    }
+
+    pub fn warning_count(&self) -> usize {
+        self.warnings.len()
+    }
+
+    pub fn summary(&self) -> String {
+        format!(
+            "{} errors, {} warnings",
+            self.error_count(),
+            self.warning_count()
+        )
+    }
+}
+
+/// Batch migration report
+#[derive(Debug, Default)]
+pub struct BatchMigrationReport {
+    successes: Vec<(PathBuf, FileMigrationReport)>,
+    failures: Vec<(PathBuf, String)>,
+}
+
+impl BatchMigrationReport {
+    pub fn new() -> Self { 
+        Self::default()
+    }
+
+    pub fn add_success(&mut self, file: PathBuf, report: FileMigrationReport) {
+        self.successes.push((file, report));
+    }
+
+    pub fn add_failure(&mut self, file: PathBuf, error: String) {
+        self.failures.push((file, error));
+    }
+
+    pub fn success_count(&self) -> usize {
+        self.successes.len()
+    }
+
+    pub fn failure_count(&self) -> usize {
+        self.failures.len()
+    }
+}
+
+/// File migration report
+#[derive(Debug)]
+pub struct FileMigrationReport {
+    source_file: PathBuf,
+    migrated: bool,
+    backup_created: Option<PathBuf>,
+    dry_run: bool,
+    skipped: Option<String>,
+}
+
+impl FileMigrationReport {
+    pub fn new(source_file: PathBuf) -> Self { Self {
+            source_file,
+            migrated: false,
+            backup_created: None,
+            dry_run: false,
+            skipped: None,
+         }
+    }
+
+    pub fn set_migrated(&mut self) {
+        self.migrated = true;
+    }
+
+    pub fn set_backup_created(&mut self, backup_file: PathBuf) {
+        self.backup_created = Some(backup_file);
+    }
+
+    pub fn set_dry_run(&mut self) {
+        self.dry_run = true;
+    }
+
+    pub fn set_skipped(&mut self, reason: String) {
+        self.skipped = Some(reason);
+    }
+}
+
+/// Batch migration utilities for processing multiple configuration files
+pub struct BatchMigrator {
+    source_directory: PathBuf,
+    target_directory: PathBuf,
+    migration_strategy: MigrationStrategy,
+    dry_run: bool,
+}
+    #[derive(Debug, Clone)]
+pub enum MigrationStrategy {
+    /// Replace existing configurations
+    Replace,
+    /// Merge configurations (target takes precedence)
+    Merge,
+    /// Backup and replace
+    BackupAndReplace,
+}
+
+impl BatchMigrator {
+    /// Create a new batch migrator
+    pub fn new(source_dir: PathBuf, target_dir: PathBuf) -> Self { Self {
+            source_directory: source_dir,
+            target_directory: target_dir,
+            migration_strategy: MigrationStrategy::BackupAndReplace,
+            dry_run: false,
+         }
+    }
+
+    /// Set migration strategy
+    pub fn with_strategy(mut self, strategy: MigrationStrategy) -> Self { 
+        self.migration_strategy = strategy;
+        self
+    }
+
+    /// Enable dry run mode
+    pub fn dry_run(mut self) -> Self {
+        self.dry_run = true;
+        self
+    }
+
+    /// Scan directory for configuration files and perform batch migration
+    /// Processes all TOML files in the source directory and migrates them
+    pub fn scan_and_migrate(&self) -> Result<BatchMigrationReport> {
+        tracing::info!(
+            "🔍 Scanning directory for configuration files: {:?}",
+            self.source_directory
+        );
+
+        let mut report = BatchMigrationReport::new();
+
+        // Ensure source directory exists
+        if !self.source_directory.exists() {
+            return Err(NestGateError::configuration_error(format!(
+                "Source directory does not exist: {:?}",
+                self.source_directory
+            )));
+        }
+
+        // Create target directory if it doesn't exist
+        if !self.dry_run {
+            std::fs::create_dir_all(&self.target_directory)?;
+        }
+
+        // Scan for TOML files
+        let config_files = self.find_config_files()?;
+        tracing::info!(
+            "📋 Found {} configuration files to migrate",
+            config_files.len()
+        );
+
+        // Process each configuration file
+        for config_file in config_files {
+            match self.migrate_single_file(&config_file) {
+                Ok(file_report) => {
+                    tracing::info!("✅ Successfully migrated: {:?}", config_file);
+                    report.add_success(config_file, file_report);
+                }
+                Err(e) => {
+                    tracing::error!("❌ Failed to migrate: {:?} - {}", config_file, e);
+                    report.add_failure(config_file, e.to_string());
+                }
+            }
+        }
+
+        tracing::info!(
+            "🎉 Batch migration completed: {} successes, {} failures",
+            report.success_count(),
+            report.failure_count()
+        );
+
+        Ok(report)
+    }
+
+    /// Find all configuration files in the source directory
+    fn find_config_files(&self) -> Result<Vec<PathBuf>> {
+        let mut config_files = Vec::new();
+
+        for entry in std::fs::read_dir(&self.source_directory)? {
+            let entry = entry?;
+            let path = entry.path();
+
+            if path.is_file() {
+                if let Some(extension) = path.extension() {
+                    if extension == "toml" || extension == "yaml" || extension == "yml" {
+                        config_files.push(path);
+                    }
+                }
+            }
+        }
+
+        Ok(config_files)
+    }
+
+    /// Migrate a single configuration file
+    fn migrate_single_file(&self, source_file: &PathBuf) -> Result<FileMigrationReport> {
+        let mut report = FileMigrationReport::new(source_file.clone());
+
+        // Load source configuration
+        let source_content = std::fs::read_to_string(source_file)?;
+
+        // Determine target file path
+        let target_file = self
+            .target_directory
+            .join(source_file.file_name().ok_or_else(|| {
+                NestGateError::configuration_error("Invalid source file name".to_string())
+            })?);
+
+        if self.dry_run {
+            tracing::info!(
+                "🔍 [DRY RUN] Would migrate: {:?} -> {:?}",
+                source_file,
+                target_file
+            );
+            report.set_dry_run();
+            return Ok(report);
+        }
+
+        // Handle backup if needed
+        if matches!(self.migration_strategy, MigrationStrategy::BackupAndReplace)
+            && target_file.exists()
+        {
+            let backup_file = target_file.with_extension("toml.backup");
+            std::fs::copy(&target_file, &backup_file)?;
+            report.set_backup_created(backup_file);
+        }
+
+        // Perform migration based on strategy
+        match self.migration_strategy {
+            MigrationStrategy::Replace | MigrationStrategy::BackupAndReplace => {
+                std::fs::write(&target_file, source_content)?;
+                report.set_migrated();
+            }
+    MigrationStrategy::Merge => {
+                // For merge strategy, we would need to parse and merge configurations
+                // This is a simplified implementation
+                if !target_file.exists() {
+                    std::fs::write(&target_file, source_content)?;
+                    report.set_migrated();
+                } else {
+                    report.set_skipped("Target file exists and merge not implemented".to_string());
+                }
+            }
+        }
+
+        Ok(report)
+    }
+}
+
+// ==================== SECTION ====================
+
+/// Migration statistics tracking
+#[derive(Debug, Default)]
+pub struct MigrationStats {
+    pub files_processed: usize,
+    pub configs_migrated: usize,
+    pub errors_encountered: usize,
+    pub validation_passed: usize,
+}
+
+impl MigrationStats {
+    pub fn new() -> Self { 
+        Self::default()
+    }
+
+    pub fn record_success(&mut self) {
+        self.configs_migrated += 1;
+        self.validation_passed += 1;
+    }
+
+    pub fn record_error(&mut self) {
+        self.errors_encountered += 1;
+    }
+
+    pub fn success_rate(&self) -> f64 {
+        if self.files_processed == 0 {
+            0.0
+        } else {
+            self.validation_passed as f64 / self.files_processed as f64
+        }
+    }
+}
+
+// ==================== SECTION ====================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_migration_stats() {
+        let mut stats = MigrationStats::new();
+        assert_eq!(stats.success_rate(), 0.0);
+
+        stats.files_processed = 10;
+        stats.record_success();
+        stats.record_success();
+        stats.record_error();
+
+        assert_eq!(stats.configs_migrated, 2);
+        assert_eq!(stats.errors_encountered, 1);
+        assert_eq!(stats.validation_passed, 2);
+        assert_eq!(stats.success_rate(), 0.2); // 2/10
+    }
+}

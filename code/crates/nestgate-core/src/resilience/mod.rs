@@ -15,12 +15,11 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
 
-/// Type aliases for complex types
+// Type aliases for complex types
 type CircuitBreakerMap =
     Arc<RwLock<std::collections::HashMap<String, circuit_breaker::CircuitBreaker>>>;
 type BulkheadMap = Arc<RwLock<std::collections::HashMap<String, bulkhead::Bulkhead>>>;
-
-/// Central resilience coordinator
+// Central resilience coordinator
 pub struct ResilienceManager {
     circuit_breakers: CircuitBreakerMap,
     bulkheads: BulkheadMap,
@@ -30,8 +29,7 @@ pub struct ResilienceManager {
     timeout_failures: Arc<RwLock<u64>>,
     retry_attempts: Arc<RwLock<u64>>,
 }
-
-/// Configuration for resilience patterns
+// Configuration for resilience patterns
 #[derive(Debug, Clone)]
 pub struct ResilienceConfig {
     /// Default circuit breaker configuration
@@ -44,7 +42,6 @@ pub struct ResilienceConfig {
     /// Enable automatic failure detection
     pub enable_failure_detection: bool,
 }
-
 impl Default for ResilienceConfig {
     fn default() -> Self {
         Self {
@@ -58,6 +55,7 @@ impl Default for ResilienceConfig {
 
 impl ResilienceManager {
     /// Create a new resilience manager
+    #[must_use]
     pub fn new(config: ResilienceConfig) -> Self {
         Self {
             circuit_breakers: Arc::new(RwLock::new(std::collections::HashMap::new())),
@@ -70,7 +68,6 @@ impl ResilienceManager {
     }
 
     /// Execute operation with full resilience protection
-    pub async fn execute_with_resilience<F, T>(&self, service_name: &str, operation: F) -> Result<T>
     where
         F: std::future::Future<Output = Result<T>>,
     {
@@ -142,7 +139,14 @@ impl ResilienceManager {
     }
 
     /// Get system resilience status
-    pub async fn get_resilience_status(&self) -> Result<ResilienceStatus> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_resilience_status(&self) -> Result<ResilienceStatus>  {
         let circuit_breakers = self.circuit_breakers.read().await;
         let bulkheads = self.bulkheads.read().await;
 
@@ -164,15 +168,14 @@ impl ResilienceManager {
     }
 }
 
-/// System resilience status
+// System resilience status
 #[derive(Debug, Clone)]
 pub struct ResilienceStatus {
     pub circuit_breakers: std::collections::HashMap<String, circuit_breaker::CircuitBreakerState>,
     pub bulkheads: std::collections::HashMap<String, bulkhead::BulkheadStatus>,
     pub failure_detection_enabled: bool,
 }
-
-/// Resilience metrics for monitoring
+// Resilience metrics for monitoring
 #[derive(Debug, Clone)]
 pub struct ResilienceMetrics {
     pub circuit_breaker_trips: u64,
@@ -182,10 +185,16 @@ pub struct ResilienceMetrics {
     pub total_operations: u64,
     pub success_rate: f64,
 }
-
 impl ResilienceManager {
     /// Get resilience metrics
-    pub async fn get_metrics(&self) -> Result<ResilienceMetrics> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_metrics(&self) -> Result<ResilienceMetrics>  {
         let circuit_breakers = self.circuit_breakers.read().await;
         let bulkheads = self.bulkheads.read().await;
 
@@ -207,7 +216,7 @@ impl ResilienceManager {
         }
 
         let success_rate = if total_operations > 0 {
-            (total_successes as f64 / total_operations as f64) * 100.0
+            (f64::from(total_successes) / f64::from(total_operations)) * 100.0
         } else {
             100.0
         };

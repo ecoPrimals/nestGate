@@ -15,7 +15,6 @@ use tokio::sync::RwLock;
 // **CANONICAL MODERNIZATION**: Type aliases to fix clippy complexity errors
 /// Type alias for rate limit bucket storage
 type BucketRegistry = Arc<RwLock<HashMap<String, RateLimitBucket>>>;
-
 /// Rate limiting errors
 #[derive(Error, Debug, Clone, Serialize, Deserialize)]
 pub enum RateLimitError {
@@ -29,7 +28,6 @@ pub enum RateLimitError {
         window: Duration,
         retry_after: Duration,
     },
-
     #[error("Invalid rate limit configuration: {message}")]
     InvalidConfiguration { message: String },
 
@@ -49,7 +47,6 @@ pub struct RateLimitConfig {
     /// Cleanup interval for expired entries
     pub cleanup_interval: Duration,
 }
-
 impl Default for RateLimitConfig {
     fn default() -> Self {
         Self {
@@ -73,7 +70,6 @@ struct RateLimitBucket {
     /// Burst tokens available
     burst_tokens: u64,
 }
-
 impl RateLimitBucket {
     fn new(config: &RateLimitConfig) -> Self {
         let now = Instant::now();
@@ -86,7 +82,7 @@ impl RateLimitBucket {
     }
 
     /// Check if the bucket has expired
-    pub fn is_expired(&self, config: &RateLimitConfig) -> bool {
+    pub const fn is_expired(&self, config: &RateLimitConfig) -> bool {
         self.window_start.elapsed() >= config.window
     }
 
@@ -129,14 +125,14 @@ pub struct RateLimiter {
     /// Last cleanup time
     last_cleanup: Arc<RwLock<Instant>>,
 }
-
 impl RateLimiter {
     /// Create a new rate limiter with default configuration
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self::with_config(RateLimitConfig::default())
     }
 
     /// Create a new rate limiter with custom configuration
+    #[must_use]
     pub fn with_config(config: RateLimitConfig) -> Self {
         Self {
             config,
@@ -148,7 +144,14 @@ impl RateLimiter {
     }
 
     /// Check if a request should be rate limited
-    pub async fn check_rate_limit(&self, identifier: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn check_rate_limit(&self, identifier: &str) -> Result<()>  {
         let mut buckets = self.buckets.write().await;
 
         let bucket = buckets
@@ -168,11 +171,7 @@ impl RateLimiter {
                         "Rate limit exceeded for {}: {} requests in {:?} window",
                         identifier, bucket.count, self.config.window
                     ),
-                    operation: "rate_limit_check".to_string(),
-                    resource: Some(identifier.to_string()),
-                    principal: None,
-                    context: None,
-                },
+                    principal: None},
             )));
         }
 
@@ -182,7 +181,14 @@ impl RateLimiter {
     }
 
     /// Get the current status for a rate limit bucket
-    pub async fn get_status(&self, identifier: &str) -> Result<RateLimitStatus> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_status(&self, identifier: &str) -> Result<RateLimitStatus>  {
         let buckets = self.buckets.read().await;
 
         if let Some(bucket) = buckets.get(identifier) {
@@ -207,7 +213,14 @@ impl RateLimiter {
     }
 
     /// Reset rate limit for a specific identifier
-    pub async fn reset_rate_limit(&self, identifier: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn reset_rate_limit(&self, identifier: &str) -> Result<()>  {
         let mut buckets = self.buckets.write().await;
 
         if let Some(bucket) = buckets.get_mut(identifier) {
@@ -217,7 +230,14 @@ impl RateLimiter {
     }
 
     /// Get rate limiter statistics
-    pub async fn get_statistics(&self) -> Result<RateLimiterStatistics> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_statistics(&self) -> Result<RateLimiterStatistics>  {
         let buckets = self.buckets.read().await;
 
         Ok(RateLimiterStatistics {
@@ -229,7 +249,14 @@ impl RateLimiter {
     }
 
     /// Clean up expired rate limit buckets
-    pub async fn cleanup_expired(&self) -> Result<usize> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn cleanup_expired(&self) -> Result<usize>  {
         let mut buckets = self.buckets.write().await;
 
         let now = Instant::now();
@@ -282,7 +309,6 @@ pub struct RateLimitStatus {
     /// Remaining burst tokens
     pub burst_tokens_remaining: u64,
 }
-
 /// Rate limiter statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RateLimiterStatistics {
@@ -295,29 +321,27 @@ pub struct RateLimiterStatistics {
     /// Current configuration
     pub config: RateLimitConfig,
 }
-
 impl RateLimiterStatistics {
     /// Calculate block rate as percentage
-    pub fn block_rate(&self) -> f64 {
+    pub const fn block_rate(&self) -> f64 {
         if self.total_requests > 0 {
-            (self.blocked_requests as f64 / self.total_requests as f64) * 100.0
+            (self.f64::from(blocked_requests) / self.f64::from(total_requests)) * 100.0
         } else {
             0.0
         }
     }
 
     /// Calculate success rate as percentage
-    pub fn success_rate(&self) -> f64 {
+    pub const fn success_rate(&self) -> f64 {
         100.0 - self.block_rate()
     }
 }
 
 /// Pre-configured rate limiters for common use cases
 pub struct RateLimitPresets;
-
 impl RateLimitPresets {
     /// Strict rate limiter for sensitive operations
-    pub fn strict() -> RateLimiter {
+    pub const fn strict() -> RateLimiter {
         RateLimiter::with_config(RateLimitConfig {
             max_requests: 10,
             window: Duration::from_secs(60),
@@ -327,7 +351,7 @@ impl RateLimitPresets {
     }
 
     /// Moderate rate limiter for general API usage
-    pub fn moderate() -> RateLimiter {
+    pub const fn moderate() -> RateLimiter {
         RateLimiter::with_config(RateLimitConfig {
             max_requests: 100,
             window: Duration::from_secs(60),
@@ -337,7 +361,7 @@ impl RateLimitPresets {
     }
 
     /// Permissive rate limiter for high-throughput operations
-    pub fn permissive() -> RateLimiter {
+    pub const fn permissive() -> RateLimiter {
         RateLimiter::with_config(RateLimitConfig {
             max_requests: 1000,
             window: Duration::from_secs(60),
@@ -347,7 +371,7 @@ impl RateLimitPresets {
     }
 
     /// Rate limiter for authentication attempts
-    pub fn auth_attempts() -> RateLimiter {
+    pub const fn auth_attempts() -> RateLimiter {
         RateLimiter::with_config(RateLimitConfig {
             max_requests: 5,
             window: Duration::from_secs(300), // 5 minutes
@@ -371,9 +395,9 @@ pub async fn check_api_rate_limit(identifier: &str) -> Result<()> {
     let limiter = RateLimiter::with_config(RateLimitConfig::default());
     limiter.check_rate_limit(identifier).await
 }
-
 /// Check authentication rate limit (convenience function)  
-pub async fn check_auth_rate_limit(identifier: &str) -> Result<()> {
+#[must_use]
+pub fn check_auth_rate_limit(identifier: &str) -> Result<()> {
     let config = RateLimitConfig {
         max_requests: 5,
         window: Duration::from_secs(300), // 5 minutes
@@ -383,7 +407,6 @@ pub async fn check_auth_rate_limit(identifier: &str) -> Result<()> {
     let limiter = RateLimiter::with_config(config);
     limiter.check_rate_limit(identifier).await
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -395,7 +418,7 @@ mod tests {
             window: Duration::from_secs(60),
             burst_allowance: 1,
             cleanup_interval: Duration::from_secs(300),
-        });
+        );
 
         // First 3 requests should succeed
         assert!(limiter.check_rate_limit("user1").await.is_ok());
@@ -416,7 +439,7 @@ mod tests {
             window: Duration::from_secs(60),
             burst_allowance: 0,
             cleanup_interval: Duration::from_secs(300),
-        });
+        );
 
         // Different identifiers should have separate limits
         assert!(limiter.check_rate_limit("user1").await.is_ok());
@@ -436,7 +459,7 @@ mod tests {
             window: Duration::from_secs(60),
             burst_allowance: 2,
             cleanup_interval: Duration::from_secs(300),
-        });
+        );
 
         let status = limiter.get_status("user1").await?;
         assert!(status.allowed);
