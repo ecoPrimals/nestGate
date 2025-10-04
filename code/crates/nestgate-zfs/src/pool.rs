@@ -60,7 +60,7 @@ impl ZfsPoolManager {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     #[must_use]
-    pub fn new(config: &ZfsConfig) -> Result<Self> {
+    pub async fn new(config: &ZfsConfig) -> Result<Self> {
         info!("Initializing ZFS pool manager");
 
         let manager = Self {
@@ -86,7 +86,7 @@ impl ZfsPoolManager {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     #[must_use]
-    pub fn with_owned_config(config: ZfsConfig) -> Result<Self> {
+    pub async fn with_owned_config(config: ZfsConfig) -> Result<Self> {
         info!("Initializing ZFS pool manager with owned config");
 
         let manager = Self {
@@ -397,7 +397,7 @@ impl ZfsPoolManager {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     #[must_use]
-    pub fn create_pool(&self, name: &str, devices: &[String]) -> Result<PoolInfo> {
+    pub async fn create_pool(&self, name: &str, devices: &[String]) -> Result<PoolInfo> {
         info!("Creating ZFS pool: {} with devices: {:?}", name, devices);
 
         // Build the zpool create command
@@ -441,7 +441,7 @@ impl ZfsPoolManager {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     #[must_use]
-    pub fn destroy_pool(&self, name: &str) -> Result<()> {
+    pub async fn destroy_pool(&self, name: &str) -> Result<()> {
         warn!("Destroying ZFS pool: {}", name);
 
         let output = TokioCommand::new("zpool")
@@ -488,7 +488,7 @@ impl ZfsPoolManager {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     #[must_use]
-    pub fn get_pool_status(&self, name: &str) -> Result<String> {
+    pub async fn get_pool_status(&self, name: &str) -> Result<String> {
         debug!("Getting status for pool: {}", name);
 
         let output = TokioCommand::new("zpool")
@@ -524,7 +524,7 @@ impl ZfsPoolManager {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     #[must_use]
-    pub fn scrub_pool(&self, name: &str) -> Result<()> {
+    pub async fn scrub_pool(&self, name: &str) -> Result<()> {
         info!("Starting scrub for pool: {}", name);
 
         let output = TokioCommand::new("zpool")

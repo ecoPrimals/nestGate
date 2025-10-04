@@ -73,7 +73,7 @@ impl RealNetworkService {
     }
 
     /// Start the network service
-    pub fn start(&self) -> nestgate_core::Result<()> {
+    pub async fn start(&self) -> nestgate_core::Result<()> {
         info!(
             "Starting real network service on {}:{}",
             self.config.network.api.bind_address, self.config.network.api.port
