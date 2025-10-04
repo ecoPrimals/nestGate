@@ -9,9 +9,7 @@ use tracing::info;
 // Removed unused tracing import
 
 /// Optimize workspace storage (STORAGE FOCUSED)
-pub fn optimize_workspace(
-    Path(workspace_id): Path<String>,
-) -> Result<Json<Value>, StatusCode> {
+pub fn optimize_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
     info!("⚡ Optimizing workspace storage: {}", workspace_id);
     // Real ZFS optimization implementation
     let dataset_name = format!("nestpool/workspaces/{"actual_error_details"}");

@@ -51,12 +51,12 @@ pub struct ExponentialBackoff {
 
 impl ExponentialBackoff {
     /// Create a new exponential backoff strategy
-    pub const fn new(config: RetryConfig) -> Self {
+    pub fn new(config: RetryConfig) -> Self {
         Self { config }
     }
 
     /// Create with default configuration
-    pub const fn default_config() -> Self {
+    pub fn default_config() -> Self {
         Self::new(RetryConfig::default())
     }
 }
@@ -106,7 +106,7 @@ pub struct LinearBackoff {
 
 impl LinearBackoff {
     /// Create a new linear backoff strategy
-    pub const fn new(config: RetryConfig) -> Self {
+    pub fn new(config: RetryConfig) -> Self {
         Self { config }
     }
 }
@@ -147,7 +147,7 @@ pub struct RetryExecutor<S: RetryStrategy> {
 
 impl<S: RetryStrategy> RetryExecutor<S> {
     /// Create a new retry executor
-    pub const fn new(strategy: S, operation_name: String) -> Self {
+    pub fn new(strategy: S, operation_name: String) -> Self {
         Self {
             strategy,
             operation_name,
@@ -162,11 +162,11 @@ impl<S: RetryStrategy> RetryExecutor<S> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn execute<F, Fut, T>(&self, operation: F) -> Result<T, NestGateError>
+    pub async fn execute<F, Fut, T>(&self, operation: F) -> Result<T, NestGateError>
     where
         F: Fn() -> Fut,
         Fut: std::future::Future<Output = Result<T, NestGateError>>,
-     {
+    {
         let mut attempt = 0;
         let mut _last_error = None;
 

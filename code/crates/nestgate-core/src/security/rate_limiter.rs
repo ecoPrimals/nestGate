@@ -82,7 +82,7 @@ impl RateLimitBucket {
     }
 
     /// Check if the bucket has expired
-    pub const fn is_expired(&self, config: &RateLimitConfig) -> bool {
+    pub fn is_expired(&self, config: &RateLimitConfig) -> bool {
         self.window_start.elapsed() >= config.window
     }
 
@@ -127,7 +127,7 @@ pub struct RateLimiter {
 }
 impl RateLimiter {
     /// Create a new rate limiter with default configuration
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::with_config(RateLimitConfig::default())
     }
 
@@ -323,16 +323,16 @@ pub struct RateLimiterStatistics {
 }
 impl RateLimiterStatistics {
     /// Calculate block rate as percentage
-    pub const fn block_rate(&self) -> f64 {
+    pub fn block_rate(&self) -> f64 {
         if self.total_requests > 0 {
-            (self.f64::from(blocked_requests) / self.f64::from(total_requests)) * 100.0
+            (self.blocked_requests as f64 / self.total_requests as f64) * 100.0
         } else {
             0.0
         }
     }
 
     /// Calculate success rate as percentage
-    pub const fn success_rate(&self) -> f64 {
+    pub fn success_rate(&self) -> f64 {
         100.0 - self.block_rate()
     }
 }
@@ -341,7 +341,7 @@ impl RateLimiterStatistics {
 pub struct RateLimitPresets;
 impl RateLimitPresets {
     /// Strict rate limiter for sensitive operations
-    pub const fn strict() -> RateLimiter {
+    pub fn strict() -> RateLimiter {
         RateLimiter::with_config(RateLimitConfig {
             max_requests: 10,
             window: Duration::from_secs(60),
@@ -351,7 +351,7 @@ impl RateLimitPresets {
     }
 
     /// Moderate rate limiter for general API usage
-    pub const fn moderate() -> RateLimiter {
+    pub fn moderate() -> RateLimiter {
         RateLimiter::with_config(RateLimitConfig {
             max_requests: 100,
             window: Duration::from_secs(60),
@@ -361,7 +361,7 @@ impl RateLimitPresets {
     }
 
     /// Permissive rate limiter for high-throughput operations
-    pub const fn permissive() -> RateLimiter {
+    pub fn permissive() -> RateLimiter {
         RateLimiter::with_config(RateLimitConfig {
             max_requests: 1000,
             window: Duration::from_secs(60),
@@ -371,7 +371,7 @@ impl RateLimitPresets {
     }
 
     /// Rate limiter for authentication attempts
-    pub const fn auth_attempts() -> RateLimiter {
+    pub fn auth_attempts() -> RateLimiter {
         RateLimiter::with_config(RateLimitConfig {
             max_requests: 5,
             window: Duration::from_secs(300), // 5 minutes

@@ -111,7 +111,7 @@ pub mod config_validation {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn validate_installer_config(config: &InstallerConfig) -> Result<(), String>  {
+        pub fn validate_installer_config(config: &InstallerConfig) -> Result<(), String>  {
         // Note: Base validation removed as validate_domain_config doesn't exist in nestgate-core
         // Base configuration validation completed
 
@@ -138,7 +138,7 @@ pub mod config_validation {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn validate_system_requirements(requirements: &SystemRequirements) -> Result<(), String>  {
+        pub fn validate_system_requirements(requirements: &SystemRequirements) -> Result<(), String>  {
         // This would typically check actual system resources
         // For now, we'll do basic validation of the requirements structure
 
@@ -163,7 +163,7 @@ pub mod config_validation {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn validate_installation_paths(
+        pub fn validate_installation_paths(
         install_dir: &PathBuf,
         config_dir: &PathBuf,
         data_dir: &PathBuf,

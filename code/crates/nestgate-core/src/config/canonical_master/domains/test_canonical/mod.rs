@@ -97,13 +97,13 @@ pub struct CanonicalTestConfigs {
 impl CanonicalTestConfigs {
     /// Create a new canonical test configuration
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
     /// Create a configuration optimized for CI/CD environments
     #[must_use]
-    pub const fn ci_optimized() -> Self {
+    pub fn ci_optimized() -> Self {
         Self {
             unit: UnitTestConfig::ci_optimized(),
             integration: IntegrationTestConfig::ci_optimized(),
@@ -120,7 +120,7 @@ impl CanonicalTestConfigs {
 
     /// Create a configuration optimized for local development
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self {
             unit: UnitTestConfig::development_optimized(),
             integration: IntegrationTestConfig::development_optimized(),

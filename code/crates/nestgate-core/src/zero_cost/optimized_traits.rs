@@ -141,7 +141,7 @@ impl<
 {
     /// Create new configuration (zero-cost)
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             _phantom: PhantomData,
         }
@@ -149,37 +149,37 @@ impl<
 
     /// Get timeout (compile-time constant)
     #[must_use]
-    pub const fn timeout_ms() -> u64 {
+    pub fn timeout_ms() -> u64 {
         TIMEOUT_MS
     }
 
     /// Get retry attempts (compile-time constant)
     #[must_use]
-    pub const fn retry_attempts() -> u32 {
+    pub fn retry_attempts() -> u32 {
         RETRY_ATTEMPTS
     }
 
     /// Get buffer size (compile-time constant)
     #[must_use]
-    pub const fn buffer_size() -> usize {
+    pub fn buffer_size() -> usize {
         BUFFER_SIZE
     }
 
     /// Get max connections (compile-time constant)
     #[must_use]
-    pub const fn max_connections() -> usize {
+    pub fn max_connections() -> usize {
         MAX_CONNECTIONS
     }
 
     /// Check if debug mode is enabled (compile-time constant)
     #[must_use]
-    pub const fn is_debug_mode() -> bool {
+    pub fn is_debug_mode() -> bool {
         DEBUG_MODE
     }
 
     /// Validate configuration at compile-time
     #[must_use]
-    pub const fn validate() -> bool {
+    pub fn validate() -> bool {
         TIMEOUT_MS > 0 && RETRY_ATTEMPTS > 0 && BUFFER_SIZE > 0 && MAX_CONNECTIONS > 0
     }
 }
@@ -267,19 +267,19 @@ pub struct ConfigValidator;
 impl ConfigValidator {
     /// Validate high-performance configuration at compile-time
     #[must_use]
-    pub const fn validate_high_performance() -> bool {
+    pub fn validate_high_performance() -> bool {
         HighPerformanceStorageConfig::validate()
     }
 
     /// Validate development configuration at compile-time
     #[must_use]
-    pub const fn validate_development() -> bool {
+    pub fn validate_development() -> bool {
         DevelopmentServiceConfig::validate()
     }
 
     /// Validate memory-constrained configuration at compile-time
     #[must_use]
-    pub const fn validate_memory_constrained() -> bool {
+    pub fn validate_memory_constrained() -> bool {
         MemoryConstrainedConfig::validate()
     }
 }
@@ -361,19 +361,19 @@ pub struct HighPerformanceStorageService {
 impl HighPerformanceStorageService {
     /// Get maximum connections supported
     #[must_use]
-    pub const fn max_connections(&self) -> u32 {
+    pub fn max_connections(&self) -> u32 {
         10000
     }
 
     /// Get buffer size
     #[must_use]
-    pub const fn buffer_size(&self) -> usize {
+    pub fn buffer_size(&self) -> usize {
         65536
     }
 
     /// Check if service can handle the specified load
     #[must_use]
-    pub const fn can_handle_load(&self, connections: u32) -> bool {
+    pub fn can_handle_load(&self, connections: u32) -> bool {
         connections <= self.max_connections()
     }
 }

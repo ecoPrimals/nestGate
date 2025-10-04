@@ -85,7 +85,7 @@ pub struct ZeroCostUniversalAdapterImpl<Storage, Security, Network> {
     network: Network,
 }
 impl<Storage, Security, Network> ZeroCostUniversalAdapterImpl<Storage, Security, Network> {
-    pub const fn new(storage: Storage, security: Security, network: Network) -> Self {
+    pub fn new(storage: Storage, security: Security, network: Network) -> Self {
         Self {
             storage,
             security,
@@ -97,18 +97,18 @@ impl<Storage, Security, Network> ZeroCostUniversalAdapterImpl<Storage, Security,
 // Storage-focused adapter implementation
 impl<Storage, Security, Network> ZeroCostUniversalAdapterImpl<Storage, Security, Network> {
     /// Get storage provider reference
-    pub const fn storage(&self) -> &Storage {
+    pub fn storage(&self) -> &Storage {
         &self.storage
     }
 
     /// Get security capability provider reference (delegated to security capabilities)
     /// 🛡️ SOVEREIGNTY COMPLIANCE: Uses capability-based security delegation
-    pub const fn get_security_capability_provider(&self) -> Option<&Security> {
+    pub fn get_security_capability_provider(&self) -> Option<&Security> {
         Some(&self.security)
     }
 
     /// Get network provider reference
-    pub const fn network(&self) -> &Network {
+    pub fn network(&self) -> &Network {
         &self.network
     }
 }
@@ -144,7 +144,7 @@ where
     Cache: ZeroCostCache<String, Vec<u8>>,
 {
     /// Create new system with compile-time composition
-    pub const fn new(adapter: Adapter, cache: Cache) -> Self {
+    pub fn new(adapter: Adapter, cache: Cache) -> Self {
         Self {
             adapter,
             cache,
@@ -154,12 +154,12 @@ where
     }
 
     /// Get current connection count - zero overhead
-    pub const fn connection_count(&self) -> usize {
+    pub fn connection_count(&self) -> usize {
         self.connections.load(Ordering::Relaxed)
     }
 
     /// Check if can accept more connections - compile-time limit
-    pub const fn can_accept_connection(&self) -> bool {
+    pub fn can_accept_connection(&self) -> bool {
         self.connection_count() < MAX_CONNECTIONS
     }
 

@@ -66,7 +66,7 @@ impl EnterpriseStorageBackend {
     }
 
     /// Get the root path
-    pub const fn root_path(&self) -> &Path {
+    pub fn root_path(&self) -> &Path {
         &self.root_path
     }
 

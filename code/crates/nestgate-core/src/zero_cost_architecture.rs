@@ -36,7 +36,7 @@ pub use crate::zero_cost::{
 };
 
 // Legacy compatibility functions that were in the original file
-pub const fn benchmark_traditional_vs_zero_cost() -> ZeroCostBenchmarkResults {
+pub fn benchmark_traditional_vs_zero_cost() -> ZeroCostBenchmarkResults {
     let start = Instant::now();
     // Simulate traditional approach overhead
     std::thread::sleep(std::time::Duration::from_nanos(1000));
@@ -47,7 +47,7 @@ pub const fn benchmark_traditional_vs_zero_cost() -> ZeroCostBenchmarkResults {
     let zero_cost_latency = start.elapsed().as_nanos() as u64;
 
     let improvement = if traditional_latency > 0 {
-        ((traditional_latency - zero_cost_latency) as f64 / f64::from(traditional_latency)) * 100.0
+        ((traditional_latency - zero_cost_latency) as f64 / traditional_latency as f64) * 100.0
     } else {
         0.0
     };

@@ -87,8 +87,8 @@ impl FsMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn start(&self) -> Result<(), FsMonitorError>  {
+    #[must_use]
+    pub fn start(&self) -> Result<(), FsMonitorError> {
         // Implementation would go here
         Ok(())
     }
@@ -101,8 +101,8 @@ impl FsMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn stop(&self) -> Result<(), FsMonitorError>  {
+    #[must_use]
+    pub fn stop(&self) -> Result<(), FsMonitorError> {
         // Implementation would go here
         Ok(())
     }
@@ -134,16 +134,16 @@ impl FsMonitor {
 // ==================== CONVENIENCE FUNCTIONS ====================
 
 /// Create a new canonical FSMonitor configuration
-pub const fn new_fsmonitor_config() -> FsMonitorConfig {
+pub fn new_fsmonitor_config() -> FsMonitorConfig {
     FsMonitorConfig::default()
 }
 /// Create a development-optimized FSMonitor configuration
-pub const fn dev_fsmonitor_config() -> FsMonitorConfig {
+pub fn dev_fsmonitor_config() -> FsMonitorConfig {
     // Development-specific optimizations would go here
     FsMonitorConfig::default()
 }
 /// Create a production-optimized FSMonitor configuration
-pub const fn prod_fsmonitor_config() -> FsMonitorConfig {
+pub fn prod_fsmonitor_config() -> FsMonitorConfig {
     // Production-specific optimizations would go here
     FsMonitorConfig::default()
 }

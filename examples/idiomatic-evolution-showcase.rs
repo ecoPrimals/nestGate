@@ -1,3 +1,4 @@
+use crate::constants::magic_numbers_replacement;
 //! # Idiomatic Evolution Showcase
 //!
 //! This example demonstrates how our evolved error system provides both:

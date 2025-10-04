@@ -17,7 +17,7 @@ impl ZfsConfidenceCalculator {
     /// - Available resources
     /// - Operation complexity
     /// - System load
-    pub const fn pool_operation_confidence(operation: &str, pool_info: Option<&PoolInfo>) -> f64 {
+    pub fn pool_operation_confidence(operation: &str, pool_info: Option<&PoolInfo>) -> f64 {
         match operation {
             "create" => Self::pool_creation_confidence(pool_info),
             "destroy" => Self::pool_destruction_confidence(pool_info),
@@ -32,7 +32,7 @@ impl ZfsConfidenceCalculator {
     /// Calculate confidence for dataset operations
     ///
     /// Takes into account dataset properties, available space, and parent pool health
-    pub const fn dataset_operation_confidence(
+    pub fn dataset_operation_confidence(
         operation: &str,
         dataset_info: Option<&DatasetInfo>,
     ) -> f64 {
@@ -48,7 +48,7 @@ impl ZfsConfidenceCalculator {
     }
 
     /// Generate AI-optimized error suggestions for ZFS operations
-    pub const fn generate_error_suggestions(error_type: &str) -> Vec<String> {
+    pub fn generate_error_suggestions(error_type: &str) -> Vec<String> {
         match error_type {
             "INSUFFICIENT_SPACE" => vec![
                 "Consider enabling compression on datasets"
@@ -93,7 +93,7 @@ impl ZfsConfidenceCalculator {
     }
 
     /// Calculate performance impact score for an operation
-    pub const fn calculate_performance_impact(
+    pub fn calculate_performance_impact(
         operation: &str,
         pool_info: Option<&PoolInfo>,
         dataset_info: Option<&DatasetInfo>,
@@ -200,7 +200,7 @@ impl ZfsConfidenceCalculator {
         match dataset_info {
             Some(info) => {
                 let space_ratio =
-                    info.f64::from(used_space) / (info.used_space + info.available_space) as f64;
+                    info.used_space as f64 / (info.used_space + info.available_space) as f64;
                 if space_ratio < 0.1 {
                     0.9 // Low utilization - high confidence
                 } else if space_ratio < 0.5 {
@@ -218,7 +218,7 @@ impl ZfsConfidenceCalculator {
             Some(info) => {
                 // Base confidence on available space
                 let space_ratio =
-                    info.f64::from(available_space) / (info.used_space + info.available_space) as f64;
+                    info.available_space as f64 / (info.used_space + info.available_space) as f64;
                 if space_ratio > 0.2 {
                     0.95 // Plenty of space
                 } else if space_ratio > 0.1 {
@@ -235,7 +235,7 @@ impl ZfsConfidenceCalculator {
         match dataset_info {
             Some(info) => {
                 let space_factor =
-                    info.f64::from(available_space) / (info.used_space + info.available_space) as f64;
+                    info.available_space as f64 / (info.used_space + info.available_space) as f64;
                 0.7 + (space_factor * 0.25) // Scale confidence with available space
             }
     None => 0.3, // Source dataset doesn't exist
@@ -281,7 +281,7 @@ impl ZfsConfidenceCalculator {
     fn estimate_clone_duration(dataset_info: Option<&DatasetInfo>) -> u64 {
         match dataset_info {
             Some(info) => {
-                let size_gb = info.f64::from(used_space) / 1_000_000_000.0;
+                let size_gb = info.used_space as f64 / 1_000_000_000.0;
                 (size_gb * 0.1) as u64 // Very fast - mostly metadata
             }
     None => 5, // Default 5 minutes

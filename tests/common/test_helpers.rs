@@ -21,7 +21,7 @@ use uuid::Uuid;
 
 // Import canonical types and configurations
 use nestgate_core::{
-
+    constants::canonical::network::DEFAULT_API_PORT,
     traits::{UniversalService, UniversalServiceRequest, UniversalServiceResponse},
     canonical_modernization::canonical_modernization::unified_enums::{UnifiedServiceType, UnifiedServiceState},
     canonical_types::{UnifiedConfig, UnifiedServiceConfig},
@@ -191,15 +191,15 @@ pub mod test_data {
         HashMap::from([
             ("health".to_string(), format!("http://{}:{}/health", 
                 std::env::var("NESTGATE_HOSTNAME").unwrap_or_else(|_| nestgate_core::constants::TEST_HOSTNAME.to_string()),
-                std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string())
+                std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| DEFAULT_API_PORT.to_string())
             )),
             ("metrics".to_string(), format!("http://{}:{}/metrics", 
                 std::env::var("NESTGATE_HOSTNAME").unwrap_or_else(|_| nestgate_core::constants::TEST_HOSTNAME.to_string()),
-                std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string())
+                std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| DEFAULT_API_PORT.to_string())
             )),
             ("api".to_string(), format!("http://{}:{}/api/v1", 
                 std::env::var("NESTGATE_HOSTNAME").unwrap_or_else(|_| nestgate_core::constants::TEST_HOSTNAME.to_string()),
-                std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string())
+                std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| DEFAULT_API_PORT.to_string())
             )),
         ])
     }

@@ -21,7 +21,7 @@ impl<
 {
     /// Create a new builder with default values
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: NestGateCanonicalConfig::default(),
         }
@@ -29,7 +29,7 @@ impl<
 
     /// Build the configuration
     #[must_use]
-    pub const fn build(
+    pub fn build(
         self,
     ) -> NestGateCanonicalConfig<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT> {
         self.config

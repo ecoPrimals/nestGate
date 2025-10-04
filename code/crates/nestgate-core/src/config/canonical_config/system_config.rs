@@ -93,7 +93,7 @@ impl std::str::FromStr for DeploymentEnvironment {
 
 impl SystemConfig {
     /// Create a new system configuration with custom service name
-    pub const fn with_service_name(service_name: impl Into<String>) -> Self {
+    pub fn with_service_name(service_name: impl Into<String>) -> Self {
         Self {
             service_name: service_name.into(),
             ..Default::default()
@@ -121,17 +121,17 @@ impl SystemConfig {
     }
 
     /// Check if running in production environment
-    pub const fn is_production(&self) -> bool {
+    pub fn is_production(&self) -> bool {
         self.environment == DeploymentEnvironment::Production
     }
 
     /// Check if running in development environment
-    pub const fn is_development(&self) -> bool {
+    pub fn is_development(&self) -> bool {
         self.environment == DeploymentEnvironment::Development
     }
 
     /// Get effective memory limit in bytes
-    pub const fn effective_memory_limit_bytes(&self) -> Option<u64> {
+    pub fn effective_memory_limit_bytes(&self) -> Option<u64> {
         self.max_memory_mb.map(|mb| mb * 1024 * 1024)
     }
 } 

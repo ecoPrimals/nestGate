@@ -5,18 +5,21 @@
 
 use nestgate_api::hardware_tuning::{UniversalComputeClient, types::*};
 use nestgate_core::NestGateError;
+use nestgate_core::constants::canonical::network::DEFAULT_API_PORT;
 use tokio;
 use uuid::Uuid;
 use std::collections::HashMap;
 use serde_json::json;
 
 /// Test configuration for integration tests
-
-const TEST_COMPUTE_SERVICE_URL: &str = "http://test-compute-service:8080";
+// Note: Using lazy_static for runtime string formatting with constants
+lazy_static::lazy_static! {
+    static ref TEST_COMPUTE_SERVICE_URL: String = format!("http://test-compute-service:{}", DEFAULT_API_PORT);
+}
 
 /// Test platform detection functionality
 async fn test_platform_detection() -> Result<(), Box<dyn std::error::Error>> {
-    let client = UniversalComputeClient::new(TEST_COMPUTE_SERVICE_URL.to_string());
+    let client = UniversalComputeClient::new(TEST_COMPUTE_SERVICE_URL.clone());
 
     // This would fail in CI without actual compute service, so we'll test the structure
     let platform_info = PlatformInfo {

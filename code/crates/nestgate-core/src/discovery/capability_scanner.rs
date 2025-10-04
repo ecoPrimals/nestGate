@@ -39,7 +39,7 @@ pub struct EnvironmentDiscovery {
 
 impl EnvironmentDiscovery {
     /// Create a new environment discovery scanner
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             capability_patterns: vec![
                 "ORCHESTRATION_DISCOVERY_ENDPOINT".to_string(),
@@ -158,8 +158,8 @@ impl CapabilityScanner {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn scan_capabilities(&mut self) -> Result<Vec<CapabilityInfo>, NestGateError>  {
+    #[must_use]
+    pub async fn scan_capabilities(&mut self) -> Result<Vec<CapabilityInfo>, NestGateError> {
         let mut all_capabilities = Vec::new();
 
         info!(
@@ -201,12 +201,12 @@ impl CapabilityScanner {
     }
 
     /// Get a specific capability from cache
-    pub const fn get_capability(&self, capability_type: &str) -> Option<&CapabilityInfo> {
+    pub fn get_capability(&self, capability_type: &str) -> Option<&CapabilityInfo> {
         self.capability_cache.get(capability_type)
     }
 
     /// Get all cached capabilities
-    pub const fn get_all_capabilities(&self) -> Vec<&CapabilityInfo> {
+    pub fn get_all_capabilities(&self) -> Vec<&CapabilityInfo> {
         self.capability_cache.values().collect()
     }
 

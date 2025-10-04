@@ -18,7 +18,7 @@ pub struct UniversalZfsDemo {
 }
 impl UniversalZfsDemo {
     /// Create new demo instance
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         let config = DetectionConfig {
             enable_performance_profiling: true,
             include_virtual_devices: false,
@@ -60,7 +60,7 @@ impl UniversalZfsDemo {
                 i + 1,
                 storage.display_name,
                 storage.storage_type,
-                storage.f64::from(available_space) / 1_000_000_000.0,
+                storage.available_space as f64 / 1_000_000_000.0,
                 storage.performance_profile.read_throughput_mbps
             );
         }
@@ -348,7 +348,7 @@ impl UniversalZfsDemo {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn show_deployment_scenarios(&self) -> Result<()>   {
+        pub fn show_deployment_scenarios(&self) -> Result<()>   {
         println!("🌍 **REAL-WORLD DEPLOYMENT SCENARIOS**");
         println!("====================================");
         println!();

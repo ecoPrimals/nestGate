@@ -24,7 +24,7 @@ pub struct DnsServiceDiscovery {
 
 impl DnsServiceDiscovery {
     /// Create a new DNS service discovery
-    pub const fn new(domain: String) -> Self {
+    pub fn new(domain: String) -> Self {
         Self {
             domain,
             service_types: vec![
@@ -144,7 +144,7 @@ pub struct MulticastDiscovery {
 
 impl MulticastDiscovery {
     /// Create a new multicast discovery
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             multicast_groups: vec![
                 "224.0.0.251:5353".parse().unwrap(),     // mDNS

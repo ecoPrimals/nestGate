@@ -67,12 +67,12 @@ impl DynamicConfigManager {
     }
 
     /// Get the configuration file path
-    pub const fn get_config_path(&self) -> &Path {
+    pub fn get_config_path(&self) -> &Path {
         &self.config_path
     }
 
     /// Get the backup directory path
-    pub const fn get_backup_path(&self) -> &Path {
+    pub fn get_backup_path(&self) -> &Path {
         &self.backup_path
     }
 

@@ -122,23 +122,23 @@ pub struct ZfsRequestHandler {
 }
 impl ZfsRequestHandler {
     /// Create a new ZFS request handler
-    pub const fn new(config: ZfsConfig) -> Self {
+    pub fn new(config: ZfsConfig) -> Self {
         Self { config }
     }
 
     /// Get the configuration
-    pub const fn config(&self) -> &ZfsConfig {
+    pub fn config(&self) -> &ZfsConfig {
         &self.config
     }
 
     /// Get the configured default pool name
-    pub const fn get_default_pool_name(&self) -> String {
+    pub fn get_default_pool_name(&self) -> String {
         // Use environment variable or fallback to default
         std::env::var("NESTGATE_DEFAULT_POOL").unwrap_or_else(|_| "tank".to_string())
     }
 
     /// Check if performance monitoring is enabled
-    pub const fn is_performance_monitoring_enabled(&self) -> bool {
+    pub fn is_performance_monitoring_enabled(&self) -> bool {
         // Use environment variable or default to enabled
         std::env::var("NESTGATE_PERFORMANCE_MONITORING")
             .map(|v| v.parse().unwrap_or(true))
@@ -146,7 +146,7 @@ impl ZfsRequestHandler {
     }
 
     /// Get the configured health check interval
-    pub const fn get_health_check_interval(&self) -> Duration {
+    pub fn get_health_check_interval(&self) -> Duration {
         // Use environment variable or default to 5 minutes
         let seconds = std::env::var("NESTGATE_HEALTH_CHECK_INTERVAL")
             .map(|v| v.parse().unwrap_or(300))
@@ -162,8 +162,8 @@ impl ZfsRequestHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn handle_zfs_request(&self, request: ZfsRequest) -> Result<ZfsResponse>  {
+    #[must_use]
+    pub fn handle_zfs_request(&self, request: ZfsRequest) -> Result<ZfsResponse> {
         match request {
             ZfsRequest::PoolStatus { name } => self.handle_pool_status(name).await,
             ZfsRequest::DatasetList { pool } => self.handle_dataset_list(pool).await,

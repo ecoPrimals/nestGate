@@ -64,14 +64,14 @@ impl UniversalAdapterSystem {
     }
 
     /// Get the adapter
-    pub const fn adapter(
+    pub fn adapter(
         &self,
     ) -> &crate::universal_adapter::PrimalAgnosticAdapter {
         &self.adapter
     }
 
     /// Get the configuration
-    pub const fn config(&self) -> &NestGateCanonicalConfig {
+    pub fn config(&self) -> &NestGateCanonicalConfig {
         &self.config
     }
 }

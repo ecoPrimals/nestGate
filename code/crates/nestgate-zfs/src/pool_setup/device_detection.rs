@@ -53,7 +53,7 @@ pub struct DeviceScanner {
     config: DeviceDetectionConfig,
 }
 impl DeviceScanner {
-    pub const fn new(config: DeviceDetectionConfig) -> Self {
+    pub fn new(config: DeviceDetectionConfig) -> Self {
         Self { config }
     }
 
@@ -200,10 +200,7 @@ impl DeviceScanner {
         };
 
         let number: f64 = num_str.parse().map_err(|_| {
-            NestGateError::internal_error(
-                format!("Invalid number format: {num_str}"),
-                "parse_size",
-            )
+            NestGateError::internal_error(format!("Invalid number format: {num_str}"), "parse_size")
         })?;
 
         let multiplier: u64 = match unit.to_uppercase().as_str() {
@@ -221,7 +218,7 @@ impl DeviceScanner {
             }
         };
 
-        Ok((number * f64::from(multiplier)) as u64)
+        Ok((number * multiplier as f64) as u64)
     }
 
     /// Detect device type based on device path and model
@@ -308,7 +305,7 @@ impl DeviceScanner {
     }
 
     /// Check if device should be included based on configuration
-    pub const fn should_include_device(&self, device: &StorageDevice) -> bool {
+    pub fn should_include_device(&self, device: &StorageDevice) -> bool {
         // Skip loop devices if not included
         if !self.config.include_loop_devices && device.device_path.contains("loop") {
             return false;
@@ -319,7 +316,7 @@ impl DeviceScanner {
     }
 
     /// Get devices filtered by type
-    pub const fn filter_by_type(
+    pub fn filter_by_type(
         devices: &[StorageDevice],
         device_type: DeviceType,
     ) -> Vec<&StorageDevice> {
@@ -330,7 +327,7 @@ impl DeviceScanner {
     }
 
     /// Get devices filtered by speed class
-    pub const fn filter_by_speed(
+    pub fn filter_by_speed(
         devices: &[StorageDevice],
         speed_class: SpeedClass,
     ) -> Vec<&StorageDevice> {
@@ -341,7 +338,7 @@ impl DeviceScanner {
     }
 
     /// Get only available (not in use) devices
-    pub const fn filter_available(devices: &[StorageDevice]) -> Vec<&StorageDevice> {
+    pub fn filter_available(devices: &[StorageDevice]) -> Vec<&StorageDevice> {
         devices.iter().filter(|device| !device.in_use).collect()
     }
 }

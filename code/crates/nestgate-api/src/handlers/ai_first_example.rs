@@ -36,7 +36,7 @@ pub struct AIFirstResponse<T> {
 }
 
 /// Create a simple handler placeholder
-pub const fn create_handler() -> Router {
+pub fn create_handler() -> Router {
     Router::new().route("/example", get(example_handler))
 }
 
@@ -147,7 +147,7 @@ pub struct StorageRequest {
     pub parameters: Option<HashMap<String, serde_json::Value>>,
 }
 /// Create the AI-First example routes
-pub const fn create_routes() -> Router {
+pub fn create_routes() -> Router {
     Router::new()
         .route("/ai-first/storage/info", get(get_storage_info))
         .route("/ai-first/storage/info/:pool", get(get_pool_info))
@@ -245,9 +245,7 @@ pub struct PoolOperationRequest {
 ///
 /// This endpoint manually constructs an AI-First response to demonstrate
 /// full control over confidence scores and suggested actions.
-pub fn get_pool_info(
-    Path(pool_name): Path<String>,
-) -> Json<AIFirstResponse<Option<PoolInfo>>> {
+pub fn get_pool_info(Path(pool_name): Path<String>) -> Json<AIFirstResponse<Option<PoolInfo>>> {
     // Simulate pool lookup
     let pool_info = if pool_name == "main-pool" {
         Some(PoolInfo {

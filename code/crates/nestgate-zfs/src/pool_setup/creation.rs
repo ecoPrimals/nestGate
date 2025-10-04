@@ -14,12 +14,12 @@ pub struct PoolCreator {
 
 impl PoolCreator {
     /// Create a new pool creator
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self { dry_run: false }
     }
 
     /// Create a new pool creator in dry-run mode
-    pub const fn new_dry_run() -> Self {
+    pub fn new_dry_run() -> Self {
         Self { dry_run: true }
     }
 

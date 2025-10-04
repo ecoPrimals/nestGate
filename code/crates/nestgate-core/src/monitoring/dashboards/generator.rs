@@ -11,7 +11,7 @@ use std::collections::HashMap;
 pub struct DashboardGenerator;
 impl DashboardGenerator {
     /// Create new dashboard generator
-    pub const fn new() -> Self { Self
+    pub fn new() -> Self { Self
     , /// Generate Grafana-compatible dashboard JSON
     /// Function description
     ///
@@ -100,7 +100,7 @@ impl DashboardGenerator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn generate_monitoring_dashboard(&self, config: &DashboardConfig) -> Result<String>  {
+        pub fn generate_monitoring_dashboard(&self, config: &DashboardConfig) -> Result<String>  {
         let dashboard = self.build_monitoring_dashboard(config)?;
         serde_json::to_string_pretty(&dashboard).map_err(|e| {
             NestGateError::internal_error(&format!("Failed to serialize monitoring dashboard: {e}"), "dashboard_generator")

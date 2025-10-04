@@ -12,7 +12,7 @@ pub struct NetworkDiscoveryConfig {
 
 impl NetworkDiscoveryConfig {
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self {
             enabled: false,
             multicast_address: "224.0.0.1".to_string(),
@@ -21,7 +21,7 @@ impl NetworkDiscoveryConfig {
     }
 
     #[must_use]
-    pub const fn production_hardened() -> Self {
+    pub fn production_hardened() -> Self {
         Self {
             enabled: true,
             multicast_address: "224.0.0.100".to_string(),
@@ -34,7 +34,7 @@ impl NetworkDiscoveryConfig {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn validate(&self) -> Result<()>  {
+    pub fn validate(&self) -> Result<()> {
         Ok(())
     }
 

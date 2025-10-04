@@ -262,7 +262,7 @@ pub struct UIHints {
 
 impl<T> AIFirstResponse<T> {
     /// Create a successful AI-First response
-    pub const fn success(data: T, request_id: Uuid, processing_time_ms: u64) -> Self {
+    pub fn success(data: T, request_id: Uuid, processing_time_ms: u64) -> Self {
         Self {
             success: true,
             data,
@@ -277,7 +277,7 @@ impl<T> AIFirstResponse<T> {
     }
 
     /// Create an error AI-First response
-    pub const fn error(data: T, error: AIFirstError, request_id: Uuid, processing_time_ms: u64) -> Self {
+    pub fn error(data: T, error: AIFirstError, request_id: Uuid, processing_time_ms: u64) -> Self {
         Self {
             success: false,
             data,
@@ -323,7 +323,7 @@ impl<T> AIFirstResponse<T> {
 impl AIFirstError {
     /// Create a new AI-First error from `NestGateError`
     #[must_use]
-    pub const fn from_nestgate_error(error: &NestGateError) -> Self {
+    pub fn from_nestgate_error(error: &NestGateError) -> Self {
         let (category, retry_strategy, automation_hints) = match error {
             NestGateError::Configuration { .. } => (
                 AIErrorCategory::Configuration,
@@ -470,7 +470,7 @@ impl<T> IntoAIFirstResponse<T> for Result<T, NestGateError> {
 
 impl<T> AIFirstResponse<T> {
     /// Create an error response from `NestGateError` with default data
-    pub const fn error_from_nestgate(
+    pub fn error_from_nestgate(
         default_data: T,
         error: NestGateError,
         request_id: Uuid,

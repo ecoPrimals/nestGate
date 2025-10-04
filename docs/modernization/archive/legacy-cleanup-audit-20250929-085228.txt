@@ -1,0 +1,19 @@
+# NestGate Legacy Cleanup Audit Report
+# Generated: Mon Sep 29 08:52:28 AM EDT 2025
+
+## Deprecated Files Found:
+- code/crates/nestgate-api/src/rest/rpc/primal_agnostic_rpc.rs
+  - Contains hardcoded patterns
+- code/crates/nestgate-core/src/config/network.rs
+  - Contains hardcoded patterns
+- code/crates/nestgate-core/src/modernization_helpers.rs
+- code/crates/nestgate-core/src/config/core.rs
+- code/crates/nestgate-core/src/unified_config_master.rs
+- code/crates/nestgate-core/src/unified_canonical_config.rs
+  - Contains hardcoded patterns
+
+## Technical Debt Markers:
+- TODO/FIXME/XXX/HACK markers: 0 instances
+- Panic patterns: 0 instances
+
+## Vendor Hardcoding Patterns:

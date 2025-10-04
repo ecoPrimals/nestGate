@@ -304,7 +304,7 @@ impl<T> AIFirstResponseBuilder<T> {
         self
     }
 
-    pub const fn build(self) -> AIFirstResponse<T> {
+    pub fn build(self) -> AIFirstResponse<T> {
         AIFirstResponse {
             success: self.success,
             data: self.data,

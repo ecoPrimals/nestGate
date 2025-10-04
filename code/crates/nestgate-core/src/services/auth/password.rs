@@ -7,7 +7,7 @@ pub struct PasswordManager {
     policy: PasswordPolicy,
 }
 impl PasswordManager {
-    pub const fn new(policy: PasswordPolicy) -> Self {
+    pub fn new(policy: PasswordPolicy) -> Self {
         Self { policy }
     }
 } 

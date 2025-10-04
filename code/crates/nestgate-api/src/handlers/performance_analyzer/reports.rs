@@ -15,12 +15,12 @@ pub struct ReportGenerator {
 
 impl ReportGenerator {
     /// Create new report generator
-    pub const fn new(config: ReportConfig) -> Self {
+    pub fn new(config: ReportConfig) -> Self {
         Self { config }
     }
 
     /// Generate comprehensive performance report
-    pub const fn generate_report(&self, analysis: &AnalysisResult) -> PerformanceReport {
+    pub fn generate_report(&self, analysis: &AnalysisResult) -> PerformanceReport {
         PerformanceReport {
             overall_score: analysis.overall_score,
             status: self.determine_overall_status(analysis),
@@ -33,7 +33,7 @@ impl ReportGenerator {
     }
 
     /// Generate report in multiple formats
-    pub const fn generate_multi_format(&self, analysis: &AnalysisResult) -> MultiFormatReport {
+    pub fn generate_multi_format(&self, analysis: &AnalysisResult) -> MultiFormatReport {
         let base_report = self.generate_report(analysis);
 
         MultiFormatReport {

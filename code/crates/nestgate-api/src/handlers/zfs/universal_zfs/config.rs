@@ -24,18 +24,18 @@ pub struct RemoteConfig {
 /// Primary ZFS service configuration - uses canonical system
 pub type ZfsServiceConfig = ZfsHandlerConfig;
 /// Create default ZFS service configuration using canonical system
-pub const fn default_zfs_config() -> ZfsHandlerConfig {
+pub fn default_zfs_config() -> ZfsHandlerConfig {
     ZfsHandlerConfig::default()
 }
 /// Create ZFS configuration from environment using canonical system
-pub const fn zfs_config_from_env() -> ZfsHandlerConfig {
+pub fn zfs_config_from_env() -> ZfsHandlerConfig {
     use nestgate_core::config::canonical_master::handler_config::CanonicalHandlerConfigs;
     // Use specific default for handlers since the full config may be complex
     let handlers_config = CanonicalHandlerConfigs::default();
     handlers_config.zfs
 }
 /// Validate ZFS configuration using canonical system
-pub const fn validate_zfs_config(config: &ZfsHandlerConfig) -> Result<(), String> {
+pub fn validate_zfs_config(config: &ZfsHandlerConfig) -> Result<(), String> {
     if config.service_name.is_empty() {
         return Err("Service name cannot be empty".to_string());
     }

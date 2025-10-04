@@ -47,7 +47,7 @@ impl From<std::io::Error> for AutomationError {
 pub use nestgate_core::Result;
 
 /// Helper function to create automation errors with canonical config source
-pub const fn automation_error(message: String) -> AutomationError {
+pub fn automation_error(message: String) -> AutomationError {
     AutomationError::CoreError(NestGateError::configuration(
         message,
         

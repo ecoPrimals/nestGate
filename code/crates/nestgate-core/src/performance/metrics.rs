@@ -67,8 +67,8 @@ impl PerformanceMetrics {
             benchmark_details.push(BenchmarkSummary {
                 name: result.pattern_name.clone(),
                 improvement_percentage: result.improvement_percentage,
-                zero_cost_time_ms: result.f64::from(zero_cost_time_ns) / 1_000_000.0,
-                traditional_time_ms: result.f64::from(traditional_time_ns) / 1_000_000.0,
+                zero_cost_time_ms: result.zero_cost_time_ns as f64 / 1_000_000.0,
+                traditional_time_ms: result.traditional_time_ns as f64 / 1_000_000.0,
                 iterations: result.iterations,
                 status,
             );
@@ -120,7 +120,7 @@ impl PerformanceMetrics {
         report.push_str(&format!(
             "**Passed**: {} ({:.1}%)\n",
             self.passed_benchmarks,
-            (self.f64::from(passed_benchmarks) / self.f64::from(total_benchmarks)) * 100.0
+            (self.passed_benchmarks as f64 / self.total_benchmarks as f64) * 100.0
         ));
         report.push_str(&format!("**Failed**: {self.failed_benchmarks}\n"));
         report.push_str(&format!(
@@ -165,14 +165,14 @@ impl PerformanceMetrics {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn to_json(&self) -> Result<String, serde_json::Error>  {
+        pub fn to_json(&self) -> Result<String, serde_json::Error>  {
         serde_json::to_string_pretty(self)
     }
 }
 
 impl ValidationSummary {
     /// Create validation summary from benchmark results
-    pub const fn from_results(results: &[BenchmarkResults]) -> Self {
+    pub fn from_results(results: &[BenchmarkResults]) -> Self {
         let total_patterns = results.len();
         let successful = results
             .iter()
@@ -218,7 +218,7 @@ impl ValidationSummary {
     }
 
     /// Generate summary report
-    pub const fn summary_report(&self) -> String {
+    pub fn summary_report(&self) -> String {
         format!(
             "Performance Validation Summary:\n\
              - Total patterns: {}\n\

@@ -1,0 +1,80 @@
+# Extremely Pedantic Clippy Configuration for NestGate
+# This enforces the highest possible Rust code quality standards
+
+# Enable all pedantic lints
+pedantic = "warn"
+
+# Enable all clippy lints as warnings first, then upgrade critical ones to deny
+all = "warn"
+
+# DENY - These are critical for production code
+correctness = "deny"
+suspicious = "deny"
+complexity = "deny"
+perf = "deny"
+style = "warn"
+
+# Specific high-priority lints to DENY
+missing_docs_in_private_items = "deny"
+missing_safety_doc = "deny"
+undocumented_unsafe_blocks = "deny"
+multiple_unsafe_ops_per_block = "deny"
+
+# Memory and performance critical
+unnecessary_box = "deny"
+redundant_allocation = "deny"
+large_stack_arrays = "deny"
+large_const_arrays = "deny"
+large_enum_variant = "deny"
+trivially_copy_pass_by_ref = "deny"
+
+# Error handling excellence
+expect_used = "deny"
+unwrap_used = "deny"
+panic = "deny"
+unimplemented = "deny"
+todo = "deny"
+unreachable = "deny"
+
+# Code quality and maintainability
+cognitive_complexity = "deny"
+too_many_arguments = "deny"
+too_many_lines = "deny"
+fn_params_excessive_bools = "deny"
+struct_excessive_bools = "deny"
+
+# Naming and conventions
+module_name_repetitions = "warn"
+similar_names = "warn"
+same_name_method = "warn"
+
+# Documentation requirements
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+
+# Performance optimizations
+inefficient_to_string = "deny"
+string_add = "deny"
+string_add_assign = "deny"
+rc_buffer = "deny"
+
+# Security and safety
+float_cmp = "deny"
+float_cmp_const = "deny"
+lossy_float_literal = "deny"
+
+# Code organization
+wildcard_imports = "deny"
+enum_glob_use = "deny"
+pub_enum_variant_names = "warn"
+wrong_pub_self_convention = "warn"
+
+# Async/concurrency
+future_not_send = "warn"
+async_yields_async = "warn"
+
+# Allow some lints that might be too restrictive for our use case
+cast_precision_loss = "allow"
+cast_possible_truncation = "allow" 
+cast_sign_loss = "allow"
+module_inception = "allow" 

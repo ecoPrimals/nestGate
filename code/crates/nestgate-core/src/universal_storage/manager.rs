@@ -22,13 +22,13 @@ impl ReplicationManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn new() -> Result<Self>  {
+        pub fn new() -> Result<Self>  {
         Ok(Self)
     }
 }
 
 impl StorageEventBroadcaster {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self
     }
 }
@@ -39,7 +39,7 @@ impl SyncEngine {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn new() -> Result<Self>  {
+        pub fn new() -> Result<Self>  {
         Ok(Self)
     }
 }
@@ -56,7 +56,7 @@ impl MetadataStore {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn new() -> Result<Self>   {
+        pub fn new() -> Result<Self>   {
         Ok(Self)
     }
 }
@@ -159,7 +159,7 @@ impl UniversalStorageManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn register_storage_backend(&self, backend: StorageBackend) -> Result<()>   {
+        pub fn register_storage_backend(&self, backend: StorageBackend) -> Result<()>   {
         info!("Registering storage backend: {}", backend.name);
 
         // Validate backend configuration
@@ -213,7 +213,7 @@ impl UniversalStorageManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn coordinate_storage_request(
+        pub fn coordinate_storage_request(
         &self,
         request: StorageRequest,
     ) -> Result<StorageResponse>   {

@@ -24,8 +24,8 @@ impl CacheAnalytics {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn analyze_cache_performance(pool: &str) -> Result<Self>  {
+    #[must_use]
+    pub fn analyze_cache_performance(pool: &str) -> Result<Self> {
         debug!("Analyzing cache performance for pool: {}", pool);
 
         // Collect ARC statistics
@@ -64,7 +64,7 @@ impl ArcStats {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn collect() -> Result<Self>  {
+    pub fn collect() -> Result<Self> {
         // In a real implementation, this would collect from ZFS
         Ok(Self {
             size: 1024 * 1024 * 1024, // 1GB
@@ -93,7 +93,7 @@ impl L2arcStats {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn collect() -> Result<Self>  {
+    pub fn collect() -> Result<Self> {
         // In a real implementation, this would collect from ZFS
         Ok(Self {
             size: 2048 * 1024 * 1024, // 2GB
@@ -121,7 +121,7 @@ impl Default for CacheEfficiency {
 
 impl CacheEfficiency {
     /// Creates a new cache efficiency tracker
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             overall_efficiency: 0.0,
             arc_efficiency: 0.0,
@@ -130,7 +130,7 @@ impl CacheEfficiency {
     }
 
     /// Calculate cache efficiency
-    pub const fn calculate(arc_stats: &ArcStats, l2arc_stats: &L2arcStats) -> Self {
+    pub fn calculate(arc_stats: &ArcStats, l2arc_stats: &L2arcStats) -> Self {
         let arc_efficiency = arc_stats.hit_ratio * 100.0;
         let l2arc_efficiency = l2arc_stats.hit_ratio * 100.0;
         let overall_efficiency = (arc_efficiency + l2arc_efficiency) / 2.0;

@@ -45,7 +45,7 @@ where
     Backend: ZeroCostStorageBackend,
 {
     /// Create new COW manager with zero allocation
-    pub const fn new(backend: Backend, config: ZeroCostCowConfig, pool_handle: String) -> Self {
+    pub fn new(backend: Backend, config: ZeroCostCowConfig, pool_handle: String) -> Self {
         Self {
             backend,
             pool_handle,
@@ -127,7 +127,7 @@ where
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn delete_snapshot(&self, snapshot_id: &str) -> Result<()>   {
+        pub fn delete_snapshot(&self, snapshot_id: &str) -> Result<()>   {
         info!("Deleting zero-cost COW snapshot: {}", snapshot_id);
         
         // Direct backend deletion - no Arc<dyn> overhead
@@ -136,7 +136,7 @@ where
     }
 
     /// Get COW statistics with compile-time data
-    pub const fn get_statistics(&self) -> ZeroCostCowStatistics {
+    pub fn get_statistics(&self) -> ZeroCostCowStatistics {
         ZeroCostCowStatistics {
             max_operations: MAX_OPERATIONS,
             current_operations: self.b_operation_counter,
@@ -145,12 +145,12 @@ where
     }
 
     /// Get configuration at compile time
-    pub const fn get_config(&self) -> &ZeroCostCowConfig {
+    pub fn get_config(&self) -> &ZeroCostCowConfig {
         &self.config
     }
 
     /// Check if deduplication is enabled - compile-time constant
-    pub const fn is_deduplication_enabled(&self) -> bool {
+    pub fn is_deduplication_enabled(&self) -> bool {
         self.config.enable_deduplication
     }
 }
@@ -178,7 +178,7 @@ where
     Backend: ZeroCostStorageBackend,
 {
     /// Create new builder with default configuration
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             backend: None,
             config: ZeroCostCowConfig {
@@ -220,7 +220,7 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn build(self) -> Result<ZeroCostCowManager<Backend, MAX_OPERATIONS>>  {
+        pub fn build(self) -> Result<ZeroCostCowManager<Backend, MAX_OPERATIONS>>  {
         let backend = self.backend.ok_or_else(|| {
             NestGateError::Configuration("Backend is required for COW manager".to_string())
         )?;
@@ -253,9 +253,9 @@ pub mod performance {
         let zero_cost_time = start.elapsed().as_nanos() as u64;
         
         // Traditional Arc<dyn> would be ~45% slower based on our analysis
-        let traditional_time = (f64::from(zero_cost_time) * 1.45) as u64;
+        let traditional_time = (zero_cost_time as f64 * 1.45) as u64;
         
-        let improvement = ((traditional_time - zero_cost_time) as f64 / f64::from(traditional_time)) * 100.0;
+        let improvement = ((traditional_time - zero_cost_time) as f64 / traditional_time as f64) * 100.0;
         
         (zero_cost_time, traditional_time, improvement)
     }
@@ -287,7 +287,7 @@ pub struct CowManager {
 
 impl CowManager {
     #[must_use]
-    pub const fn new(backend: Arc<dyn CanonicalStorageBackend>) -> Self {
+    pub fn new(backend: Arc<dyn CanonicalStorageBackend>) -> Self {
         Self { _backend: backend }
     }
     
@@ -314,7 +314,7 @@ impl<Backend> ZeroCostCowManager<Backend>
 where
     Backend: ZeroCostStorageBackend,
 {
-    pub const fn new(backend: Backend) -> Self {
+    pub fn new(backend: Backend) -> Self {
         Self { backend }
     }
     

@@ -17,7 +17,7 @@ pub use crate::constants::LOCALHOST as DEFAULT_HOST;
 pub use crate::constants::DEFAULT_BIND_ADDRESS as ANY;
 
 /// Discovery endpoint - uses canonical endpoint building
-pub const fn get_discovery_endpoint() -> String {
+pub fn get_discovery_endpoint() -> String {
     use crate::constants::{LOCALHOST, DEFAULT_API_PORT};
     std::env::var("NESTGATE_DISCOVERY_ENDPOINT")
         .unwrap_or_else(|_| format!("http://{}:{}/discovery", LOCALHOST, DEFAULT_API_PORT)
@@ -32,7 +32,7 @@ pub mod ports {
 pub use crate::constants::MAX_CONCURRENT_REQUESTS;
 
 /// Maximum in-memory file size - uses canonical size constants
-pub const fn get_max_in_memory_file_size() -> u64 {
+pub fn get_max_in_memory_file_size() -> u64 {
     use crate::constants::canonical::storage::{MB};
     std::env::var("NESTGATE_MAX_IN_MEMORY_FILE_SIZE")
         .ok()

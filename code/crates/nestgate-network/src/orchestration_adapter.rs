@@ -48,7 +48,7 @@ pub struct OrchestrationAdapter {
 
 impl OrchestrationAdapter {
     /// Create new orchestration client with capability-based discovery
-    pub const fn new(config: OrchestrationConfig, universal_adapter: Arc<UniversalAdapter>) -> Self {
+    pub fn new(config: OrchestrationConfig, universal_adapter: Arc<UniversalAdapter>) -> Self {
         info!("🌐 Initializing lightweight orchestration client (sovereignty compliant)");
         Self {
             config,
@@ -111,7 +111,7 @@ impl OrchestrationAdapter {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
         pub async fn is_available(&self) -> Result<bool>  {
-        let capability_result = self.universal_adapter.get_capability("orchestration").await;
+        let capability_result = self.universal_adapter.get_capability("orchestration");
 
         Ok(capability_result.is_ok())
     }
@@ -131,8 +131,7 @@ impl OrchestrationAdapter {
     ) -> Result<serde_json::Value>  {
         let _capability_info = self
             .universal_adapter
-            .get_capability("orchestration")
-            .await?;
+            .get_capability("orchestration")?;
 
         // Create request using the correct API
         let request = CapabilityRequest::new("orchestration", command)
@@ -163,7 +162,7 @@ impl OrchestrationAdapter {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
         pub async fn get_orchestration_metadata(&self) -> Result<Option<serde_json::Value>>  {
-        match self.universal_adapter.get_capability("orchestration").await {
+        match self.universal_adapter.get_capability("orchestration") {
             Ok(capability) => {
                 let metadata = serde_json::json!({
                     "provider": capability.provider,
@@ -188,7 +187,6 @@ impl OrchestrationAdapter {
         let _capability_info = self
             .universal_adapter
             .get_capability("orchestration")
-            .await
             .map_err(|e| {
                 nestgate_core::error::NestGateError::network_error(&format!(
                     "No orchestration capability discovered: {e}"

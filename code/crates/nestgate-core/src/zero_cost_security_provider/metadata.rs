@@ -188,13 +188,13 @@ pub enum HealthStatus {
 impl HealthStatus {
     /// Check if the status indicates a healthy provider
     #[must_use]
-    pub const fn is_healthy(&self) -> bool {
+    pub fn is_healthy(&self) -> bool {
         matches!(self, Self::Healthy)
     }
 
     /// Check if the status indicates an operational provider
     #[must_use]
-    pub const fn is_operational(&self) -> bool {
+    pub fn is_operational(&self) -> bool {
         matches!(
             self,
             HealthStatus::Healthy | HealthStatus::Warning | HealthStatus::Degraded
@@ -203,7 +203,7 @@ impl HealthStatus {
 
     /// Get status as string
     #[must_use]
-    pub const fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             HealthStatus::Healthy => "healthy",
             HealthStatus::Warning => "warning",
@@ -231,16 +231,13 @@ pub enum KeyRotationStatus {
 impl KeyRotationStatus {
     /// Check if keys are valid for use
     #[must_use]
-    pub const fn is_valid(&self) -> bool {
-        matches!(
-            self,
-            Self::Current | Self::Expiring | Self::Rotating
-        )
+    pub fn is_valid(&self) -> bool {
+        matches!(self, Self::Current | Self::Expiring | Self::Rotating)
     }
 
     /// Check if immediate action is required
     #[must_use]
-    pub const fn requires_action(&self) -> bool {
+    pub fn requires_action(&self) -> bool {
         matches!(self, KeyRotationStatus::Expired | KeyRotationStatus::Failed)
     }
 }
@@ -415,31 +412,31 @@ pub struct SecurityMetrics {
 impl ZeroCostSecurityMetadata {
     /// Check if authentication method is supported
     #[must_use]
-    pub const fn supports_auth_method(&self, method: &str) -> bool {
+    pub fn supports_auth_method(&self, method: &str) -> bool {
         self.supported_auth_methods.contains(&method.to_string())
     }
 
     /// Check if encryption algorithm is supported
     #[must_use]
-    pub const fn supports_encryption(&self, algorithm: &str) -> bool {
+    pub fn supports_encryption(&self, algorithm: &str) -> bool {
         self.supported_encryption.contains(&algorithm.to_string())
     }
 
     /// Check if signing algorithm is supported
     #[must_use]
-    pub const fn supports_signing(&self, algorithm: &str) -> bool {
+    pub fn supports_signing(&self, algorithm: &str) -> bool {
         self.supported_signing.contains(&algorithm.to_string())
     }
 
     /// Get compliance level
     #[must_use]
-    pub const fn compliance_level(&self) -> &str {
+    pub fn compliance_level(&self) -> &str {
         &self.compliance_level
     }
 
     /// Check if provider meets compliance requirements
     #[must_use]
-    pub const fn meets_compliance(&self, required_level: &str) -> bool {
+    pub fn meets_compliance(&self, required_level: &str) -> bool {
         match (self.compliance_level.as_str(), required_level) {
             // Government compliance requires explicit government level
             (level, "government") => level == "government",

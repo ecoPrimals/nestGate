@@ -17,7 +17,7 @@ pub struct DataCollector {
 
 impl DataCollector {
     /// Create new data collector
-    pub const fn new(interval_seconds: u64) -> Self {
+    pub fn new(interval_seconds: u64) -> Self {
         Self {
             system_collector: Arc::new(SystemMetricsCollector::new(interval_seconds)),
             interval: Duration::from_secs(interval_seconds),
@@ -32,7 +32,7 @@ impl DataCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn start_collection(&self) -> Result<(), MetricsError>  {
+    pub async fn start_collection(&self) -> Result<(), MetricsError> {
         let mut interval_timer = interval(self.interval);
 
         loop {
@@ -58,7 +58,7 @@ impl DataCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn collect_all_metrics(&self) -> Result<SystemMetrics, MetricsError>  {
+    pub async fn collect_all_metrics(&self) -> Result<SystemMetrics, MetricsError> {
         self.system_collector.collect_metrics().await
     }
 
@@ -70,7 +70,7 @@ impl DataCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_latest_snapshot(&self) -> Result<MetricsSnapshot, MetricsError>  {
+    pub async fn get_latest_snapshot(&self) -> Result<MetricsSnapshot, MetricsError> {
         let metrics = self.collect_all_metrics().await?;
 
         Ok(MetricsSnapshot {
@@ -124,7 +124,7 @@ impl BatchCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn collect_batch(&self) -> Result<Vec<SystemMetrics>, MetricsError>  {
+    pub async fn collect_batch(&self) -> Result<Vec<SystemMetrics>, MetricsError> {
         let mut tasks = Vec::new();
 
         for collector in &self.collectors {

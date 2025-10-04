@@ -53,10 +53,7 @@ pub fn safe_adapter_init<T>(init_result: Result<T>, adapter_name: &str) -> Resul
 ///
 /// Wraps connection pool return operations with proper error handling
 /// to prevent panics and provide meaningful error messages.
-pub fn safe_connection_pool_return<T>(
-    result: Result<T>,
-    operation: &str,
-) -> Result<Result<T>> {
+pub fn safe_connection_pool_return<T>(result: Result<T>, operation: &str) -> Result<Result<T>> {
     match result {
         Ok(value) => Ok(Ok(value)),
         Err(e) => {

@@ -1,35 +1,33 @@
-//! **IDIOMATIC ERROR EVOLUTION DEMONSTRATION**
+//! **MODERN ERROR SYSTEM DEMONSTRATION**
 //!
 //! This example demonstrates the evolution from non-idiomatic Result<T> patterns
-//! to idiomatic Result<T, E> patterns while preserving our sophisticated unified
-//! error system.
+//! to modern idiomatic Result<T, E> patterns using NestGateUnifiedError.
+//!
+//! **UPDATED**: Now using NestGateUnifiedError for all modern patterns
 
 use nestgate_core::error::{
-    network_error,
-    storage_error,
-    // Convenience macros
-    validation_error,
-    // New idiomatic types
-    IdioResult,
-    // Migration utilities
-    MigrationHelper,
-    NestGateError,
-    NetworkError,
-    NetworkResult,
-    // Legacy type for comparison
-    Result as LegacyResult,
-    SecurityError,
-    SecurityResult,
-    StorageError,
-    StorageResult,
-    // Rich domain-specific errors
-    ValidationError,
+    // Modern unified error system
+    NestGateUnifiedError,
+    ValidationErrorDetails,
+    NetworkErrorDetails,
+    StorageErrorDetails,
+    SecurityErrorDetails,
+    // Result type aliases
     ValidationResult,
-    WithContext,
+    NetworkResult,
+    StorageResult,
+    SecurityResult,
+    // Legacy type for comparison in legacy_patterns module
+    Result as LegacyResult,
+    NestGateError,
+    // Ecosystem integration types
+    AnyhowResult,
+    BoxedResult,
 };
 
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, SystemTime};
+use std::collections::HashMap;
 
 // ==================== BEFORE: NON-IDIOMATIC PATTERNS ====================
 
@@ -100,34 +98,49 @@ mod legacy_patterns {
     }
 }
 
-// ==================== AFTER: IDIOMATIC PATTERNS ====================
+// ==================== AFTER: MODERN UNIFIED ERROR PATTERNS ====================
 
-/// **AFTER**: Idiomatic Result<T, E> patterns
-/// Benefits: Both T and E generic, rich context, ecosystem integration, ergonomic construction
+/// **AFTER**: Modern idiomatic patterns using NestGateUnifiedError
+/// Benefits: Unified error system, rich context, ecosystem integration, type safety
 mod idiomatic_patterns {
     use super::*;
 
-    /// ✅ IDIOMATIC: Both T and E are generic, rich error context
+    /// ✅ MODERN: Using NestGateUnifiedError with ValidationErrorDetails
     pub fn validate_user_input(input: &str) -> ValidationResult<ValidatedInput> {
         if input.is_empty() {
-            // Ergonomic error construction with rich context
-            return Err(validation_error!("input", "Cannot be empty", input));
+            return Err(NestGateUnifiedError::Validation(Box::new(ValidationErrorDetails {
+                message: "Input cannot be empty".to_string(),
+                field: Some("input".to_string()),
+                code: Some("EMPTY_INPUT".to_string()),
+                context: HashMap::new(),
+            })));
         }
 
         if input.len() < 3 {
-            return Err(ValidationError::FieldValidation {
-                field: "input".to_string(),
+            return Err(NestGateUnifiedError::Validation(Box::new(ValidationErrorDetails {
                 message: "Must be at least 3 characters".to_string(),
-                value: Some(input.to_string()),
-            });
+                field: Some("input".to_string()),
+                code: Some("TOO_SHORT".to_string()),
+                context: {
+                    let mut ctx = HashMap::new();
+                    ctx.insert("actual_length".to_string(), input.len().to_string());
+                    ctx.insert("min_length".to_string(), "3".to_string());
+                    ctx
+                },
+            })));
         }
 
         if input.contains("@") && !input.contains(".") {
-            return Err(ValidationError::BusinessRule {
-                rule: "email_format".to_string(),
+            return Err(NestGateUnifiedError::Validation(Box::new(ValidationErrorDetails {
                 message: "Invalid email format".to_string(),
-                context: Some(format!("Input: {}", input)),
-            });
+                field: Some("input".to_string()),
+                code: Some("INVALID_EMAIL".to_string()),
+                context: {
+                    let mut ctx = HashMap::new();
+                    ctx.insert("input".to_string(), input.to_string());
+                    ctx
+                },
+            })));
         }
 
         Ok(ValidatedInput {
@@ -135,24 +148,43 @@ mod idiomatic_patterns {
         })
     }
 
-    /// ✅ IDIOMATIC: Network operation with rich error context
+    /// ✅ MODERN: Network operation with NestGateUnifiedError
     pub fn connect_to_service(address: &str, port: u16) -> NetworkResult<Connection> {
         // Simulate different types of network failures
         match port {
-            80 => Err(network_error!(
-                connection,
-                address,
-                port,
-                "Connection refused"
-            )),
-            443 => Err(NetworkError::Timeout {
-                operation: "SSL handshake".to_string(),
-                duration: Duration::from_secs(30),
-            }),
-            8080 => Err(NetworkError::DnsResolution {
-                hostname: address.to_string(),
+            80 => Err(NestGateUnifiedError::Network(Box::new(NetworkErrorDetails {
+                message: "Connection refused".to_string(),
+                endpoint: Some(address.to_string()),
+                port: Some(port),
+                protocol: "HTTP".to_string(),
+                network_data: None,
+                context: None,
+            }))),
+            443 => Err(NestGateUnifiedError::Network(Box::new(NetworkErrorDetails {
+                message: "SSL handshake timeout".to_string(),
+                endpoint: Some(address.to_string()),
+                port: Some(port),
+                protocol: "HTTPS".to_string(),
+                network_data: None,
+                context: Some({
+                    let mut ctx = HashMap::new();
+                    ctx.insert("operation".to_string(), "SSL handshake".to_string());
+                    ctx.insert("duration".to_string(), "30s".to_string());
+                    ctx
+                }),
+            }))),
+            8080 => Err(NestGateUnifiedError::Network(Box::new(NetworkErrorDetails {
                 message: "DNS lookup failed".to_string(),
-            }),
+                endpoint: Some(address.to_string()),
+                port: Some(port),
+                protocol: "HTTP".to_string(),
+                network_data: None,
+                context: Some({
+                    let mut ctx = HashMap::new();
+                    ctx.insert("hostname".to_string(), address.to_string());
+                    ctx
+                }),
+            }))),
             _ => Ok(Connection {
                 address: address.to_string(),
                 port,
@@ -161,23 +193,46 @@ mod idiomatic_patterns {
         }
     }
 
-    /// ✅ IDIOMATIC: Storage operation with rich error context
+    /// ✅ MODERN: Storage operation with NestGateUnifiedError
     pub fn read_config_file(path: &str) -> StorageResult<Config> {
         if !std::path::Path::new(path).exists() {
-            return Err(storage_error!(not_found, path));
+            return Err(NestGateUnifiedError::Storage(Box::new(StorageErrorDetails {
+                message: format!("File not found: {}", path),
+                resource: Some(path.to_string()),
+                storage_data: None,
+                operation: Some("read".to_string()),
+                context: None,
+            })));
         }
 
         if path.starts_with("/root/") {
-            return Err(storage_error!(permission_denied, path, "read"));
+            return Err(NestGateUnifiedError::Storage(Box::new(StorageErrorDetails {
+                message: "Permission denied".to_string(),
+                resource: Some(path.to_string()),
+                storage_data: None,
+                operation: Some("read".to_string()),
+                context: Some({
+                    let mut ctx = HashMap::new();
+                    ctx.insert("reason".to_string(), "insufficient_permissions".to_string());
+                    ctx
+                }),
+            })));
         }
 
         // Simulate disk full error
         if path.contains("large") {
-            return Err(StorageError::DiskFull {
-                path: path.to_string(),
-                required: 1024 * 1024 * 100, // 100MB
-                available: 1024 * 1024 * 10, // 10MB
-            });
+            return Err(NestGateUnifiedError::Storage(Box::new(StorageErrorDetails {
+                message: "Disk full".to_string(),
+                resource: Some(path.to_string()),
+                storage_data: None,
+                operation: Some("write".to_string()),
+                context: Some({
+                    let mut ctx = HashMap::new();
+                    ctx.insert("required".to_string(), "104857600".to_string()); // 100MB
+                    ctx.insert("available".to_string(), "10485760".to_string()); // 10MB
+                    ctx
+                }),
+            })));
         }
 
         Ok(Config {
@@ -185,29 +240,50 @@ mod idiomatic_patterns {
         })
     }
 
-    /// ✅ IDIOMATIC: Security operation with authentication context
+    /// ✅ MODERN: Security operation with NestGateUnifiedError
     pub fn authenticate_user(token: &str) -> SecurityResult<User> {
         if token.is_empty() {
-            return Err(SecurityError::AuthenticationFailed {
-                user: "unknown".to_string(),
-                reason: "No token provided".to_string(),
-                attempt_count: Some(1),
-            });
+            return Err(NestGateUnifiedError::Security(Box::new(SecurityErrorDetails {
+                message: "Authentication failed: No token provided".to_string(),
+                operation: Some("authenticate".to_string()),
+                principal: Some("unknown".to_string()),
+                security_data: None,
+                context: Some({
+                    let mut ctx = HashMap::new();
+                    ctx.insert("attempt_count".to_string(), "1".to_string());
+                    ctx
+                }),
+            })));
         }
 
         if token == "expired_token" {
-            return Err(SecurityError::TokenExpired {
-                token_type: "JWT".to_string(),
-                expired_at: SystemTime::now() - Duration::from_secs(3600),
-            });
+            return Err(NestGateUnifiedError::Security(Box::new(SecurityErrorDetails {
+                message: "Token expired".to_string(),
+                operation: Some("authenticate".to_string()),
+                principal: Some("test_user".to_string()),
+                security_data: None,
+                context: Some({
+                    let mut ctx = HashMap::new();
+                    ctx.insert("token_type".to_string(), "JWT".to_string());
+                    ctx.insert("expired_at".to_string(), format!("{:?}", SystemTime::now() - Duration::from_secs(3600)));
+                    ctx
+                }),
+            })));
         }
 
         if token == "invalid_permissions" {
-            return Err(SecurityError::AuthorizationDenied {
-                user: "test_user".to_string(),
-                required_permission: "admin".to_string(),
-                user_permissions: vec!["user".to_string(), "read".to_string()],
-            });
+            return Err(NestGateUnifiedError::Security(Box::new(SecurityErrorDetails {
+                message: "Authorization denied".to_string(),
+                operation: Some("authorize".to_string()),
+                principal: Some("test_user".to_string()),
+                security_data: None,
+                context: Some({
+                    let mut ctx = HashMap::new();
+                    ctx.insert("required_permission".to_string(), "admin".to_string());
+                    ctx.insert("user_permissions".to_string(), "user,read".to_string());
+                    ctx
+                }),
+            })));
         }
 
         Ok(User {
@@ -222,7 +298,6 @@ mod idiomatic_patterns {
 /// **ECOSYSTEM INTEGRATION**: Working with external libraries
 mod ecosystem_integration {
     use super::*;
-    use nestgate_core::error::{AnyhowResult, BoxedResult};
 
     /// ✅ ECOSYSTEM: Integration with serde_json using AnyhowResult
     pub fn parse_json_config(json_str: &str) -> AnyhowResult<Config> {
@@ -265,28 +340,32 @@ mod ecosystem_integration {
 mod migration_examples {
     use super::*;
 
-    /// Demonstrate migration from legacy Result<T> to domain-specific Result<T, E>
+    /// Demonstrate migration from legacy Result<T> to modern unified Result<T, E>
     pub fn migrate_legacy_function() -> ValidationResult<ValidatedInput> {
-        // Call legacy function
-        let legacy_result = legacy_patterns::validate_user_input_legacy("test");
-
-        // Convert to idiomatic pattern
-        MigrationHelper::to_validation_result(legacy_result)
-    }
-
-    /// Demonstrate context enhancement
-    pub fn enhanced_operation() -> ValidationResult<ValidatedInput> {
-        idiomatic_patterns::validate_user_input("ab")
-            .with_operation("user_registration")
-            .with_component("auth_service")
+        // Call legacy function and convert to modern pattern
+        match legacy_patterns::validate_user_input_legacy("test") {
+            Ok(result) => Ok(result),
+            Err(e) => Err(NestGateUnifiedError::Validation(Box::new(ValidationErrorDetails {
+                message: e.to_string(),
+                field: Some("migrated".to_string()),
+                code: None,
+                context: HashMap::new(),
+            }))),
+        }
     }
 
     /// Demonstrate error chain preservation
     pub fn chained_operations() -> ValidationResult<ProcessedData> {
         let input = idiomatic_patterns::validate_user_input("test@example.com")?;
-        let config = MigrationHelper::to_validation_result(
-            legacy_patterns::read_config_file_legacy("/etc/config.toml"),
-        )?;
+        let config = match legacy_patterns::read_config_file_legacy("/etc/config.toml") {
+            Ok(cfg) => cfg,
+            Err(e) => return Err(NestGateUnifiedError::Validation(Box::new(ValidationErrorDetails {
+                message: format!("Config loading failed: {}", e),
+                field: Some("config".to_string()),
+                code: None,
+                context: HashMap::new(),
+            }))),
+        };
 
         Ok(ProcessedData {
             input: input.value,
@@ -297,10 +376,9 @@ mod migration_examples {
 
 // ==================== TESTING UTILITIES DEMONSTRATION ====================
 
-/// **TESTING**: Improved testing with domain-specific error assertions
+/// **TESTING**: Improved testing with unified error system
 mod testing_examples {
     use super::*;
-    use nestgate_core::error::idiomatic_evolution::test_utils::*;
 
     #[cfg(test)]
     mod tests {
@@ -310,18 +388,22 @@ mod testing_examples {
         fn test_validation_errors() -> Result<(), Box<dyn std::error::Error>> {
             // Test empty input
             let result = idiomatic_patterns::validate_user_input("");
-            assert_validation_error(result, "input");
+            assert!(result.is_err());
+            match result {
+                Err(NestGateUnifiedError::Validation(details)) => {
+                    assert!(details.message.contains("empty"));
+                }
+                _ => panic!("Expected validation error"),
+            }
 
             // Test short input
             let result = idiomatic_patterns::validate_user_input("ab");
             match result {
-                Err(ValidationError::FieldValidation { field, message, .. }) => {
-                    assert_eq!(field, "input");
-                    assert!(message.contains("at least 3 characters"));
-    Ok(())
+                Err(NestGateUnifiedError::Validation(details)) => {
+                    assert_eq!(details.field, Some("input".to_string()));
+                    assert!(details.message.contains("at least 3 characters"));
                 }
-                _ => panic!("Expected field validation error"),
-    Ok(())
+                _ => panic!("Expected validation error"),
             }
             Ok(())
         }
@@ -330,13 +412,11 @@ mod testing_examples {
         fn test_network_errors() -> Result<(), Box<dyn std::error::Error>> {
             let result = idiomatic_patterns::connect_to_service("localhost", 80);
             match result {
-                Err(NetworkError::ConnectionFailed { address, port, .. }) => {
-                    assert_eq!(address, "localhost");
-                    assert_eq!(port, 80);
-    Ok(())
+                Err(NestGateUnifiedError::Network(details)) => {
+                    assert_eq!(details.endpoint, Some("localhost".to_string()));
+                    assert_eq!(details.port, Some(80));
                 }
-                _ => panic!("Expected connection failed error"),
-    Ok(())
+                _ => panic!("Expected network error"),
             }
             Ok(())
         }
@@ -345,10 +425,11 @@ mod testing_examples {
         fn test_storage_errors() -> Result<(), Box<dyn std::error::Error>> {
             let result = idiomatic_patterns::read_config_file("/nonexistent/path");
             match result {
-                Err(StorageError::FileNotFound { path }) => {
-                    assert_eq!(path, "/nonexistent/path");
+                Err(NestGateUnifiedError::Storage(details)) => {
+                    assert_eq!(details.resource, Some("/nonexistent/path".to_string()));
+                    assert!(details.message.contains("not found"));
                 }
-                _ => panic!("Expected file not found error"),
+                _ => panic!("Expected storage error"),
             }
 
             Ok(())
@@ -369,10 +450,6 @@ mod testing_examples {
         fn test_migration_utilities() -> Result<(), Box<dyn std::error::Error>> {
             let result = migration_examples::migrate_legacy_function();
             assert!(result.is_ok());
-
-            let enhanced_result = migration_examples::enhanced_operation();
-            // This should fail due to short input, but with enhanced context
-            assert!(enhanced_result.is_err());
 
             Ok(())
         }
@@ -396,18 +473,18 @@ mod performance_comparison {
         }
         let legacy_duration = start.elapsed();
 
-        // Benchmark idiomatic error construction
+        // Benchmark modern error construction
         let start = Instant::now();
         for _ in 0..ITERATIONS {
             let _ = idiomatic_patterns::validate_user_input("");
         }
-        let idiomatic_duration = start.elapsed();
+        let modern_duration = start.elapsed();
 
         println!("Legacy error construction: {:?}", legacy_duration);
-        println!("Idiomatic error construction: {:?}", idiomatic_duration);
+        println!("Modern unified error construction: {:?}", modern_duration);
         println!(
-            "Performance improvement: {:.2}%",
-            (legacy_duration.as_nanos() as f64 - idiomatic_duration.as_nanos() as f64)
+            "Performance difference: {:.2}%",
+            (legacy_duration.as_nanos() as f64 - modern_duration.as_nanos() as f64)
                 / legacy_duration.as_nanos() as f64
                 * 100.0
         );
@@ -447,8 +524,8 @@ pub struct ProcessedData {
 
 // ==================== MAIN DEMONSTRATION ====================
 
-fn main() -> IdioResult<()> {
-    println!("🔄 **IDIOMATIC ERROR EVOLUTION DEMONSTRATION**\n");
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    println!("🔄 **MODERN ERROR SYSTEM DEMONSTRATION**\n");
 
     // Demonstrate validation errors
     println!("📋 **VALIDATION EXAMPLES**:");
@@ -512,12 +589,13 @@ fn main() -> IdioResult<()> {
     performance_comparison::benchmark_error_construction();
 
     println!("\n🎉 **DEMONSTRATION COMPLETE**");
-    println!("The idiomatic error system provides:");
+    println!("The modern unified error system provides:");
     println!("  ✅ Better Rust idioms (Result<T, E>)");
-    println!("  ✅ Rich error context");
-    println!("  ✅ Ecosystem integration");
+    println!("  ✅ Unified error types across codebase");
+    println!("  ✅ Rich error context with metadata");
+    println!("  ✅ Ecosystem integration (anyhow, Box<dyn Error>)");
     println!("  ✅ Zero-cost abstractions");
-    println!("  ✅ Ergonomic error construction");
+    println!("  ✅ Type-safe error handling");
     println!("  ✅ Better testing support");
 
     Ok(())

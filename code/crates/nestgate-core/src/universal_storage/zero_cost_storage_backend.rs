@@ -99,7 +99,7 @@ impl<const MAX_OPS: usize, const MAX_SIZE_MB: usize, const TIMEOUT_SECS: u64>
 {
     /// Create new filesystem backend
     #[must_use]
-    pub const fn new(base_path: PathBuf) -> Self {
+    pub fn new(base_path: PathBuf) -> Self {
         Self {
             config: FilesystemConfig {
                 base_path,
@@ -268,7 +268,8 @@ impl StorageBackendMigration {
 // - Compile-time operation limits prevent resource exhaustion
 // - Zero-allocation trait dispatch through monomorphization
 // - CPU-specific optimizations enabled by const generics
-".to_string()
+"
+        .to_string()
     }
 
     /// Get migration benefits
@@ -287,7 +288,8 @@ mod tests {
     #[tokio::test]
     async fn test_zero_cost_filesystem_backend() -> crate::Result<()> {
         let temp_dir = TempDir::new().unwrap();
-        let mut backend = ZeroCostFilesystemBackend::<100, 10, 5>::new(temp_dir.path().to_path_buf());
+        let mut backend =
+            ZeroCostFilesystemBackend::<100, 10, 5>::new(temp_dir.path().to_path_buf());
 
         let config = FilesystemConfig {
             base_path: temp_dir.path().to_path_buf(),
@@ -296,7 +298,7 @@ mod tests {
         };
 
         backend.initialize(config).await.unwrap();
-        
+
         let test_data = vec![72, 101, 108, 108, 111, 44, 32, 119, 111, 114, 108, 100, 33];
         backend.write(test_data.clone()).await.unwrap();
 

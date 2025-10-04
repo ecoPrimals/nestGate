@@ -22,12 +22,12 @@ pub type ServiceRegistry = InMemoryServiceRegistry;
 
 // Convenience function to create a new service registry
 #[must_use]
-pub const fn create_service_registry() -> InMemoryServiceRegistry {
+pub fn create_service_registry() -> InMemoryServiceRegistry {
     InMemoryServiceRegistry::new()
 }
 // Convenience function to create a universal service registration
 #[must_use]
-pub const fn create_service_registration(
+pub fn create_service_registration(
     name: String,
     _category: ServiceCategory,
     capabilities: Vec<ServiceCapability>,
@@ -49,7 +49,7 @@ pub const fn create_service_registration(
 }
 // Create a service role for common patterns
 #[must_use]
-pub const fn create_storage_role() -> ServiceRole {
+pub fn create_storage_role() -> ServiceRole {
     ServiceRole {
         name: "Storage Provider".to_string(),
         required_capabilities: vec![ServiceCapability::Storage(StorageType::Object)],
@@ -64,7 +64,7 @@ pub const fn create_storage_role() -> ServiceRole {
 }
 // Create a service role for AI services
 #[must_use]
-pub const fn create_ai_role() -> ServiceRole {
+pub fn create_ai_role() -> ServiceRole {
     ServiceRole {
         name: "AI Provider".to_string(),
         required_capabilities: vec![ServiceCapability::Custom {
@@ -100,7 +100,7 @@ pub const fn create_ai_role() -> ServiceRole {
 }
 // Create a service role for security services
 #[must_use]
-pub const fn create_security_role() -> ServiceRole {
+pub fn create_security_role() -> ServiceRole {
     ServiceRole {
         name: "Security Provider".to_string(),
         required_capabilities: vec![ServiceCapability::Custom {

@@ -143,7 +143,7 @@ impl ApiPathsConfig {
 }
 
 impl ZfsApiPaths {
-    pub const fn default_with_version(api_version: &str) -> Self {
+    pub fn default_with_version(api_version: &str) -> Self {
         let base = format!("/api/{api_version}/zfs");
 
         Self {
@@ -167,7 +167,7 @@ impl ZfsApiPaths {
 }
 
 impl StorageApiPaths {
-    pub const fn default_with_version(api_version: &str) -> Self {
+    pub fn default_with_version(api_version: &str) -> Self {
         let base = format!("/api/{api_version}/storage");
 
         Self {
@@ -185,7 +185,7 @@ impl StorageApiPaths {
 }
 
 impl SystemApiPaths {
-    pub const fn default_with_version(api_version: &str) -> Self {
+    pub fn default_with_version(api_version: &str) -> Self {
         let base = format!("/api/{api_version}/system");
 
         Self {
@@ -222,7 +222,7 @@ impl Default for HealthApiPaths {
 
 impl ApiPathsConfig {
     /// Get a custom endpoint or default path
-    pub const fn get_endpoint(&self, key: &str, default: &str) -> String {
+    pub fn get_endpoint(&self, key: &str, default: &str) -> String {
         self.custom_endpoints
             .get(key)
             .cloned()
@@ -234,7 +234,7 @@ impl ApiPathsConfig {
     }
 
     /// Get all ZFS endpoints as a vector
-    pub const fn all_zfs_endpoints(&self) -> Vec<String> {
+    pub fn all_zfs_endpoints(&self) -> Vec<String> {
         vec![
             self.zfs.pools.clone(),
             self.zfs.datasets.clone(),
@@ -243,7 +243,7 @@ impl ApiPathsConfig {
     }
 
     /// Get all storage endpoints as a vector
-    pub const fn all_storage_endpoints(&self) -> Vec<String> {
+    pub fn all_storage_endpoints(&self) -> Vec<String> {
         vec![
             self.storage.info.clone(),
             self.storage.capacity.clone(),
@@ -252,7 +252,7 @@ impl ApiPathsConfig {
     }
 
     /// Get all health endpoints as a vector
-    pub const fn all_health_endpoints(&self) -> Vec<String> {
+    pub fn all_health_endpoints(&self) -> Vec<String> {
         vec![self.health.health.clone(), self.health.metrics.clone()]
     }
 
@@ -264,7 +264,7 @@ impl ApiPathsConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<(), String>  {
+        pub fn validate(&self) -> Result<(), String>  {
         // Check that all paths start with /
         let endpoints = vec![
             ("health", &self.health.health),

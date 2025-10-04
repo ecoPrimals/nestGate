@@ -64,7 +64,7 @@ impl SecurityValidator {
     }
     
     /// Validate input against rules
-    pub const fn validate(&self, field_name: &str, value: &str) -> ValidationResult {
+    pub fn validate(&self, field_name: &str, value: &str) -> ValidationResult {
         self.stats.validations_performed.fetch_add(1, Ordering::Relaxed);
         
         if let Some(rule) = self.rules.get(field_name) {
@@ -168,11 +168,11 @@ impl SecurityValidator {
     }
     
     /// Get validation statistics
-    pub const fn stats(&self) -> (u64, u64, u64, f64) {
+    pub fn stats(&self) -> (u64, u64, u64, f64) {
         let performed = self.stats.validations_performed.load(Ordering::Relaxed);
         let failed = self.stats.validations_failed.load(Ordering::Relaxed);
         let sanitized = self.stats.sanitizations_performed.load(Ordering::Relaxed);
-        let success_rate = if performed > 0 { (performed - failed) as f64 / f64::from(performed) } else { 1.0 };
+        let success_rate = if performed > 0 { (performed - failed) as f64 / performed as f64 } else { 1.0 };
         (performed, failed, sanitized, success_rate)
     }
 }
@@ -249,7 +249,7 @@ impl RateLimiter {
     }
     
     /// Check if request is allowed
-    pub const fn is_allowed(&self, ip: &str, user_id: Option<&str>) -> RateLimitResult {
+    pub fn is_allowed(&self, ip: &str, user_id: Option<&str>) -> RateLimitResult {
         self.stats.requests_processed.fetch_add(1, Ordering::Relaxed);
         
         // Check global limit
@@ -287,10 +287,10 @@ impl RateLimiter {
         let bucket = buckets.entry(key.to_string()).or_insert_with(|| {
             self.stats.buckets_created.fetch_add(1, Ordering::Relaxed);
             TokenBucket {
-                tokens: limit.f64::from(requests_per_window),
+                tokens: limit.requests_per_window as f64,
                 last_refill: Instant::now(),
-                capacity: limit.f64::from(requests_per_window),
-                refill_rate: limit.f64::from(requests_per_window) / limit.window_duration.as_secs_f64(),
+                capacity: limit.requests_per_window as f64,
+                refill_rate: limit.requests_per_window as f64 / limit.window_duration.as_secs_f64(),
             }
         });
         
@@ -310,11 +310,11 @@ impl RateLimiter {
     }
     
     /// Get rate limiting statistics
-    pub const fn stats(&self) -> (u64, u64, u64, f64) {
+    pub fn stats(&self) -> (u64, u64, u64, f64) {
         let processed = self.stats.requests_processed.load(Ordering::Relaxed);
         let blocked = self.stats.requests_blocked.load(Ordering::Relaxed);
         let buckets = self.stats.buckets_created.load(Ordering::Relaxed);
-        let block_rate = if processed > 0 { f64::from(blocked) / f64::from(processed) } else { 0.0 };
+        let block_rate = if processed > 0 { blocked as f64 / processed as f64 } else { 0.0 };
         (processed, blocked, buckets, block_rate)
     }
 }
@@ -447,7 +447,7 @@ impl SecurityMonitor {
     }
     
     /// Analyze input for threats
-    pub const fn analyze_input(&self, input: &str, source_ip: &str) -> ThreatAnalysisResult {
+    pub fn analyze_input(&self, input: &str, source_ip: &str) -> ThreatAnalysisResult {
         for pattern in &self.threat_patterns {
             if let Ok(regex) = regex::Regex::new(&pattern.pattern) {
                 if regex.is_match(input) {
@@ -489,7 +489,7 @@ impl SecurityMonitor {
     }
     
     /// Get security events
-    pub const fn get_events(&self, severity_filter: Option<SecuritySeverity>) -> Vec<SecurityEvent> {
+    pub fn get_events(&self, severity_filter: Option<SecuritySeverity>) -> Vec<SecurityEvent> {
         let events = self.events.lock().unwrap();
         
         match severity_filter {
@@ -502,7 +502,7 @@ impl SecurityMonitor {
     }
     
     /// Get security statistics
-    pub const fn stats(&self) -> (u64, u64, u64) {
+    pub fn stats(&self) -> (u64, u64, u64) {
         (
             self.stats.events_recorded.load(Ordering::Relaxed),
             self.stats.threats_detected.load(Ordering::Relaxed),
@@ -638,7 +638,7 @@ impl EncryptionManager {
     }
     
     /// Get encryption statistics
-    pub const fn stats(&self) -> (u64, u64, u64) {
+    pub fn stats(&self) -> (u64, u64, u64) {
         (
             self.stats.encryptions_performed.load(Ordering::Relaxed),
             self.stats.decryptions_performed.load(Ordering::Relaxed),

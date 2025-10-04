@@ -78,7 +78,7 @@ pub struct MockComputeCapability {
     enabled: bool,
 }
 impl MockComputeCapability {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self { enabled: true }
     }
 }

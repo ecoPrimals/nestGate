@@ -156,7 +156,7 @@ impl UniversalCryptographicSpore {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn new_for_primal(primal_name: &str) -> Result<Self>  {
+        pub fn new_for_primal(primal_name: &str) -> Result<Self>  {
         let spore_id = format!("spore_{}_{}", primal_name, Uuid::new_v4();
         let now = SystemTime::now();
 

@@ -86,9 +86,7 @@ impl FallbackProviderWrapper {
         params: serde_json::Value,
     ) -> std::result::Result<serde_json::Value, CapabilityRoutingError> {
         match self {
-            Self::Security(provider) => {
-                provider.execute(operation, params).await
-            }
+            Self::Security(provider) => provider.execute(operation, params).await,
             FallbackProviderWrapper::Ai(provider) => provider.execute(operation, params).await,
             FallbackProviderWrapper::Orchestration(provider) => {
                 provider.execute(operation, params).await
@@ -101,7 +99,7 @@ impl FallbackProviderWrapper {
     }
 
     #[must_use]
-    pub const fn supported_operations(&self) -> Vec<String> {
+    pub fn supported_operations(&self) -> Vec<String> {
         match self {
             FallbackProviderWrapper::Security(provider) => provider.supported_operations(),
             FallbackProviderWrapper::Ai(provider) => provider.supported_operations(),
@@ -111,7 +109,7 @@ impl FallbackProviderWrapper {
     }
 
     #[must_use]
-    pub const fn metadata(&self) -> HashMap<String, String> {
+    pub fn metadata(&self) -> HashMap<String, String> {
         match self {
             FallbackProviderWrapper::Security(provider) => provider.metadata(),
             FallbackProviderWrapper::Ai(provider) => provider.metadata(),
@@ -147,7 +145,7 @@ pub struct RoutingMetrics {
 impl UniversalCapabilityRouter {
     /// Create a new universal capability router
     #[must_use]
-    pub const fn new(adapter: Arc<PrimalAgnosticAdapter>) -> Self {
+    pub fn new(adapter: Arc<PrimalAgnosticAdapter>) -> Self {
         Self::with_config(adapter, CapabilityRoutingConfig::default())
     }
 
@@ -219,7 +217,7 @@ impl UniversalCapabilityRouter {
                     metrics.average_response_time_ms = (metrics.average_response_time_ms
                         * (metrics.total_requests - 1) as f64
                         + elapsed)
-                        / total_requests as f64;
+                        / metrics.total_requests as f64;
                 }
 
                 return serde_json::from_value(result)
@@ -249,7 +247,7 @@ impl UniversalCapabilityRouter {
             let elapsed = start_time.elapsed().as_millis() as f64;
             metrics.average_response_time_ms =
                 (metrics.average_response_time_ms * (metrics.total_requests - 1) as f64 + elapsed)
-                    / total_requests as f64;
+                    / metrics.total_requests as f64;
         }
 
         serde_json::from_value(fallback_result)
@@ -282,7 +280,6 @@ impl UniversalCapabilityRouter {
                 .query_capability(&crate::universal_adapter::types::CapabilityQuery::new(
                     capability,
                 ))
-                .await
                 .map_err(|e| CapabilityRoutingError::AdapterError(e.to_string()))?;
 
             if providers.is_empty() {
@@ -376,7 +373,7 @@ impl UniversalCapabilityRouter {
 
         // Calculate success rate
         let success_rate = if metrics.total_requests > 0 {
-            (adapter_successes as f64 / total_requests as f64) * 100.0
+            (metrics.adapter_successes as f64 / metrics.total_requests as f64) * 100.0
         } else {
             100.0
         };

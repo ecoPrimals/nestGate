@@ -61,7 +61,7 @@ pub struct WebSocketManager {
 }
 impl WebSocketManager {
     /// Create a new WebSocket manager
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         let (event_sender, _) = broadcast::channel(1000);
 
         Self {
@@ -78,10 +78,10 @@ impl WebSocketManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn broadcast_event(
+    pub fn broadcast_event(
         &self,
         event: WebSocketEvent,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>  {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         match self.event_sender.send(event) {
             Ok(_) => Ok(()),
             Err(e) => {
@@ -97,7 +97,7 @@ impl WebSocketManager {
     }
 
     /// Handle WebSocket upgrade request
-    pub const fn handle_upgrade(&self, ws: WebSocketUpgrade) -> impl IntoResponse {
+    pub fn handle_upgrade(&self, ws: WebSocketUpgrade) -> impl IntoResponse {
         let event_receiver = self.event_sender.subscribe();
         let client_counter = Arc::clone(&self.connected_clients);
 
@@ -211,7 +211,7 @@ async fn handle_websocket_connection(
 /// Helper function to create common WebSocket events
 impl WebSocketEvent {
     /// Create a storage update event
-    pub const fn storage_update(operation: &str, status: &str, progress: Option<u8>) -> Self {
+    pub fn storage_update(operation: &str, status: &str, progress: Option<u8>) -> Self {
         Self::StorageUpdate {
             b_operation: operation.to_string(),
             status: status.to_string(),
@@ -219,7 +219,7 @@ impl WebSocketEvent {
         }
     }
     /// Create a health update event
-    pub const fn health_update(service: &str, status: &str) -> Self {
+    pub fn health_update(service: &str, status: &str) -> Self {
         Self::HealthUpdate {
             service: service.to_string(),
             status: status.to_string(),
@@ -228,7 +228,7 @@ impl WebSocketEvent {
     }
 
     /// Create a metrics update event
-    pub const fn metrics_update(metrics: HashMap<String, f64>) -> Self {
+    pub fn metrics_update(metrics: HashMap<String, f64>) -> Self {
         Self::MetricsUpdate {
             metrics,
             timestamp: chrono::Utc::now().to_rfc3339(),
@@ -236,7 +236,7 @@ impl WebSocketEvent {
     }
 
     /// Create a simple message event
-    pub const fn message(content: &str) -> Self {
+    pub fn message(content: &str) -> Self {
         Self::Message {
             content: content.to_string(),
             timestamp: chrono::Utc::now().to_rfc3339(),

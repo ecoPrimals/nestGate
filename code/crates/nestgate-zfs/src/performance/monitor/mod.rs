@@ -20,7 +20,7 @@ pub mod reporting;
 
 impl ZfsPerformanceMonitor {
     /// Create performance monitor for testing
-    pub const fn new_for_testing() -> Self {
+    pub fn new_for_testing() -> Self {
         Self {
             pool_manager: Arc::new(ZfsPoolManager::new_production(ZfsConfig::default())),
             dataset_manager: Arc::new({

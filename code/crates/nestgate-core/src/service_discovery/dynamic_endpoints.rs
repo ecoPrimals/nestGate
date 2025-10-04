@@ -40,7 +40,7 @@ impl DynamicEndpointResolver {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn resolve_endpoint(&self, service_type: &str) -> Result<String>  {
+    pub async fn resolve_endpoint(&self, service_type: &str) -> Result<String> {
         // 1. Check cache first
         if let Some(cached) = self.get_cached_endpoint(service_type).await {
             return Ok(cached);
@@ -157,7 +157,7 @@ static GLOBAL_RESOLVER: tokio::sync::OnceCell<DynamicEndpointResolver> =
     tokio::sync::OnceCell::const_new();
 
 /// Get global endpoint resolver
-pub fn global_resolver() -> &'static DynamicEndpointResolver {
+pub async fn global_resolver() -> &'static DynamicEndpointResolver {
     GLOBAL_RESOLVER
         .get_or_init(|| async { DynamicEndpointResolver::new() })
         .await

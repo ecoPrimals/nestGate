@@ -58,6 +58,8 @@ pub enum Environment {
 // ==================== SECTION ====================
 
 /// Network configuration
+/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
+#[deprecated(since = "0.9.0", note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead")]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NetworkConfig {
     /// Primary API server configuration
@@ -86,6 +88,8 @@ pub struct ApiServerConfig {
     pub tls: Option<TlsConfig>,
 }
 /// Internal network configuration
+/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
+#[deprecated(since = "0.9.0", note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead")]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InternalNetworkConfig {
     /// Internal communication port range

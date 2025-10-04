@@ -113,7 +113,7 @@ impl HttpConnection {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn new(capability_info: CapabilityInfo) -> Result<Self, NestGateError>  {
+    pub fn new(capability_info: CapabilityInfo) -> Result<Self, NestGateError> {
         let client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
             .build()
@@ -282,10 +282,10 @@ impl UniversalAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_capability(
+    pub async fn get_capability(
         &self,
         capability_type: &str,
-    ) -> Result<Arc<dyn Connection>, NestGateError>  {
+    ) -> Result<Arc<dyn Connection>, NestGateError> {
         // Check connection pool first (O(1))
         {
             let pool = self.connection_pool.lock().await;

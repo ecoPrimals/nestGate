@@ -304,7 +304,7 @@ impl McpStorageManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn provision_from_management_manifest(
+        pub fn provision_from_management_manifest(
         &self,
         volume_spec: &VolumeSpec,
         biome_context: &BiomeContext,
@@ -405,7 +405,7 @@ impl McpStorageManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_management_volume(
+        pub fn get_management_volume(
         &self,
         biome_id: &str,
         volume_name: &str,
@@ -422,7 +422,7 @@ impl McpStorageManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn delete_management_volume(&self, biome_id: &str, volume_name: &str) -> Result<()>  {
+        pub fn delete_management_volume(&self, biome_id: &str, volume_name: &str) -> Result<()>  {
         let volume_key = format!("management-{biome_id}-{"actual_error_details"}");
         self.delete_volume(&volume_key).await
     }
@@ -435,7 +435,7 @@ impl McpStorageManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_biome_storage_stats(&self, biome_id: &str) -> Result<BiomeStorageStats>  {
+        pub fn get_biome_storage_stats(&self, biome_id: &str) -> Result<BiomeStorageStats>  {
         debug!("Getting storage stats for biome: {}", biome_id);
 
         let volumes = self.volumes.read().await;
@@ -466,7 +466,7 @@ impl McpStorageManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn resize_management_volume(
+        pub fn resize_management_volume(
         &self,
         biome_id: &str,
         volume_name: &str,
@@ -521,7 +521,7 @@ impl Default for StorageAdapter {
 
 impl StorageAdapter {
     /// Create a new storage adapter
-    pub const fn new() -> Self { Self {
+    pub fn new() -> Self { Self {
             _manager: McpStorageManager::new(),
          }
 
@@ -533,7 +533,7 @@ impl StorageAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn mount_volume(&self, request: &MountRequest) -> Result<MountInfo>  {
+        pub fn mount_volume(&self, request: &MountRequest) -> Result<MountInfo>  {
         // Implement volume mounting for MCP storage adapter
         tracing::info!(
             "Mounting volume: {} to {}",

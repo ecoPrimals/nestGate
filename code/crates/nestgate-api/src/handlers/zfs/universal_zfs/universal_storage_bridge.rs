@@ -15,7 +15,7 @@ pub struct UniversalStorageBridge {
 }
 impl UniversalStorageBridge {
     /// Create a new universal storage bridge
-    pub const fn new() -> UniversalZfsResult<Self> {
+    pub fn new() -> UniversalZfsResult<Self> {
         Ok(Self {
             preferred_backend: None,
         })
@@ -101,7 +101,7 @@ impl UniversalStorageBridge {
                         used_bytes,
                         available_bytes,
                         utilization_percent: if total_bytes > 0 {
-                            (f64::from(used_bytes) / f64::from(total_bytes)) * 100.0
+                            (used_bytes as f64 / total_bytes as f64) * 100.0
                         } else {
                             0.0
                         },
@@ -176,7 +176,7 @@ impl UniversalStorageBridge {
                             used_bytes,
                             available_bytes,
                             utilization_percent: if total_bytes > 0 {
-                                (f64::from(used_bytes) / f64::from(total_bytes)) * 100.0
+                                (used_bytes as f64 / total_bytes as f64) * 100.0
                             } else {
                                 0.0
                             },
@@ -274,7 +274,7 @@ impl UniversalStorageBridge {
             }
         };
 
-        Ok((number * f64::from(multiplier)) as u64)
+        Ok((number * multiplier as f64) as u64)
     }
 
     /// Determine if we should include this filesystem as a "pool"

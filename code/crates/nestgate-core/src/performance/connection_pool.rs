@@ -50,7 +50,7 @@ pub struct PooledConnection<T> {
     pub created_at: Instant,
 }
 impl<T> PooledConnection<T> {
-    pub const fn new(connection: T) -> Self {
+    pub fn new(connection: T) -> Self {
         let now = Instant::now();
         Self {
             connection,
@@ -69,7 +69,7 @@ impl<T> PooledConnection<T> {
         self.in_use = false;
     }
 
-    pub const fn is_idle_too_long(&self, max_idle_time: Duration) -> bool {
+    pub fn is_idle_too_long(&self, max_idle_time: Duration) -> bool {
         !self.in_use && self.last_used.elapsed() > max_idle_time
     }
 }
@@ -314,7 +314,7 @@ impl<T> PooledConnectionGuard<T> {
     }
 
     /// Get a reference to the underlying connection
-    pub const fn connection(&self) -> &T {
+    pub fn connection(&self) -> &T {
         &self.connection
     }
 
@@ -378,7 +378,7 @@ impl Default for ConnectionPoolManager {
 pub type HttpConnectionPool = UniversalConnectionPool<reqwest::Client>;
 impl HttpConnectionPool {
     /// Create an HTTP client connection pool
-    pub const fn new_http_pool(config: ConnectionPoolConfig) -> Self {
+    pub fn new_http_pool(config: ConnectionPoolConfig) -> Self {
         Self::new(config, || {
             reqwest::Client::builder()
                 .timeout(Duration::from_secs(30))

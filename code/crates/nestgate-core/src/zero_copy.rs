@@ -30,21 +30,21 @@ impl<'a> IntoCow<'a> for Cow<'a, str> {
 /// Utility for efficient string operations
 pub struct StringUtils;
 /// Optimized string conversion for command output
-pub const fn optimize_command_output(output: &[u8]) -> Cow<str> {
+pub fn optimize_command_output(output: &[u8]) -> Cow<str> {
     String::from_utf8_lossy(output)
 }
 /// Optimized string trimming that preserves zero-copy when possible
-pub const fn trim_efficient(s: &str) -> &str {
+pub fn trim_efficient(s: &str) -> &str {
     s.trim()
 }
 impl StringUtils {
     /// Create a Cow&lt;str&gt; from static string literals (zero-copy)
-    pub const fn static_cow(s: &'static str) -> Cow<'static, str> {
+    pub fn static_cow(s: &'static str) -> Cow<'static, str> {
         Cow::Borrowed(s)
     }
 
     /// Create a Cow&lt;str&gt; from owned strings (takes ownership)
-    pub const fn owned_cow(s: String) -> Cow<'static, str> {
+    pub fn owned_cow(s: String) -> Cow<'static, str> {
         Cow::Owned(s)
     }
 
@@ -89,7 +89,7 @@ impl BufferManager {
     }
 
     /// Get the current pool size
-    pub const fn pool_size(&self) -> usize {
+    pub fn pool_size(&self) -> usize {
         self.buffers.len()
     }
 }
@@ -108,25 +108,25 @@ impl<T> Clone for SharedConfig<T> {
 
 impl<T> SharedConfig<T> {
     /// Create a new shared configuration
-    pub const fn new(data: T) -> Self {
+    pub fn new(data: T) -> Self {
         Self {
             data: Arc::new(data),
         }
     }
 
     /// Get a reference to the shared data
-    pub const fn get(&self) -> &T {
+    pub fn get(&self) -> &T {
         &self.data
     }
 
     /// Get the reference count
-    pub const fn ref_count(&self) -> usize {
+    pub fn ref_count(&self) -> usize {
         Arc::strong_count(&self.data)
     }
 }
 
 /// Zero-copy string slice operations
-pub const fn slice_cow(s: &str, start: usize, len: usize) -> Cow<str> {
+pub fn slice_cow(s: &str, start: usize, len: usize) -> Cow<str> {
     if start + len <= s.len() {
         Cow::Borrowed(&s[start..start + len])
     } else {
@@ -134,7 +134,7 @@ pub const fn slice_cow(s: &str, start: usize, len: usize) -> Cow<str> {
     }
 }
 /// Efficient line iteration without allocating
-pub const fn lines_zero_copy(s: &str) -> impl Iterator<Item = &str> {
+pub fn lines_zero_copy(s: &str) -> impl Iterator<Item = &str> {
     s.lines()
 }
 /// Zero-copy JSON value extraction (for simple cases)

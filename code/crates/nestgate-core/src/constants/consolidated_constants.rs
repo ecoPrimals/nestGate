@@ -224,7 +224,7 @@ pub struct BatchConstants;
 
 /// Get the global constants instance
 #[must_use]
-pub const fn constants() -> ConsolidatedDomainConstants {
+pub fn constants() -> ConsolidatedDomainConstants {
     ConsolidatedDomainConstants::default()
 }
 // Re-export domain-specific convenience modules

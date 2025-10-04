@@ -100,7 +100,7 @@ pub struct UniversalRange<T> {
 }
 impl<T> UniversalRange<T> {
     /// Create a new range
-    pub const fn new(start: T, end: T) -> Self {
+    pub fn new(start: T, end: T) -> Self {
         Self {
             start,
             end,
@@ -109,7 +109,7 @@ impl<T> UniversalRange<T> {
     }
 
     /// Create a range with known size
-    pub const fn with_size(start: T, end: T, size: u64) -> Self {
+    pub fn with_size(start: T, end: T, size: u64) -> Self {
         Self {
             start,
             end,
@@ -513,22 +513,22 @@ impl Default for UniversalReplicationResult {
 
 impl UniversalDirectoryEntry {
     /// Check if this entry is a file
-    pub const fn is_file(&self) -> bool {
+    pub fn is_file(&self) -> bool {
         self.entry_type == UnifiedEntryType::File
     }
 
     /// Check if this entry is a directory
-    pub const fn is_directory(&self) -> bool {
+    pub fn is_directory(&self) -> bool {
         self.entry_type == UnifiedEntryType::Directory
     }
 
     /// Check if this entry is a symbolic link
-    pub const fn is_symlink(&self) -> bool {
+    pub fn is_symlink(&self) -> bool {
         self.entry_type == UnifiedEntryType::SymbolicLink
     }
 
     /// Get file extension if available
-    pub const fn extension(&self) -> Option<&str> {
+    pub fn extension(&self) -> Option<&str> {
         if self.is_file() {
             std::path::Path::new(&self.path)
                 .extension()
@@ -539,14 +539,14 @@ impl UniversalDirectoryEntry {
     }
 
     /// Get human-readable size
-    pub const fn human_size(&self) -> String {
+    pub fn human_size(&self) -> String {
         human_readable_size(self.size)
     }
 }
 
 impl UniversalReplicationStatus {
     /// Check if replication is currently active
-    pub const fn is_active(&self) -> bool {
+    pub fn is_active(&self) -> bool {
         matches!(
             self.state,
             ReplicationState::Running | ReplicationState::Preparing | ReplicationState::Verifying
@@ -554,7 +554,7 @@ impl UniversalReplicationStatus {
     }
 
     /// Check if replication has completed (successfully or not)
-    pub const fn is_completed(&self) -> bool {
+    pub fn is_completed(&self) -> bool {
         matches!(
             self.state,
             ReplicationState::Completed | ReplicationState::Failed | ReplicationState::Cancelled
@@ -562,7 +562,7 @@ impl UniversalReplicationStatus {
     }
 
     /// Get estimated completion time
-    pub const fn estimated_completion(&self) -> Option<DateTime<Utc>> {
+    pub fn estimated_completion(&self) -> Option<DateTime<Utc>> {
         self.eta_seconds
             .map(|eta| Utc::now() + chrono::Duration::seconds(eta as i64))
     }
@@ -570,7 +570,7 @@ impl UniversalReplicationStatus {
 
 impl UniversalReplicationResult {
     /// Create a successful result
-    pub const fn success(bytes_transferred: u64, duration_ms: u64) -> Self {
+    pub fn success(bytes_transferred: u64, duration_ms: u64) -> Self {
         Self {
             success: true,
             message: "Replication completed successfully".to_string(),
@@ -578,7 +578,7 @@ impl UniversalReplicationResult {
             bytes_transferred,
             duration_ms,
             avg_transfer_rate: if duration_ms > 0 {
-                (f64::from(bytes_transferred) * 1000.0) / f64::from(duration_ms)
+                (bytes_transferred as f64 * 1000.0) / duration_ms as f64
             } else {
                 0.0
             },
@@ -587,7 +587,7 @@ impl UniversalReplicationResult {
     }
 
     /// Create a failed result
-    pub const fn failure(message: &str, result_code: ReplicationResultCode) -> Self {
+    pub fn failure(message: &str, result_code: ReplicationResultCode) -> Self {
         Self {
             success: false,
             message: message.to_string(),
@@ -602,7 +602,7 @@ impl UniversalReplicationResult {
 /// Convert bytes to human-readable format
 fn human_readable_size(bytes: u64) -> String {
     const UNITS: &[&str] = &["B", "KB", "MB", "GB", "TB", "PB"];
-    let mut size = f64::from(bytes);
+    let mut size = bytes as f64;
     let mut unit_index = 0;
     while size >= 1024.0 && unit_index < UNITS.len() - 1 {
         size /= 1024.0;
@@ -633,7 +633,7 @@ pub type ReplicationResult = UniversalReplicationResult;
 /// Migrate from legacy DirectoryEntry structures
 impl UniversalDirectoryEntry {
     /// Create from simple name, path, and size
-    pub const fn new(name: String, path: String, is_directory: bool, size: u64) -> Self {
+    pub fn new(name: String, path: String, is_directory: bool, size: u64) -> Self {
         Self {
             name,
             path,

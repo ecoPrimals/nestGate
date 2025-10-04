@@ -88,7 +88,7 @@ impl AdapterStats {
         } else {
             self.average_response_time_ms = 
                 (self.average_response_time_ms * (self.total_requests - 1) as f64 + response_ms) 
-                / self.f64::from(total_requests);
+                / self.total_requests as f64;
         }
         
         // Update peak response time
@@ -110,16 +110,16 @@ impl AdapterStats {
         } else {
             self.average_response_time_ms = 
                 (self.average_response_time_ms * (self.total_requests - 1) as f64 + response_ms) 
-                / self.f64::from(total_requests);
+                / self.total_requests as f64;
         }
     }
     
     /// Calculate success rate as percentage
-    pub const fn success_rate(&self) -> f64 {
+    pub fn success_rate(&self) -> f64 {
         if self.total_requests == 0 {
             100.0
         } else {
-            (self.f64::from(successful_requests) / self.f64::from(total_requests)) * 100.0
+            (self.successful_requests as f64 / self.total_requests as f64) * 100.0
         }
     }
     
@@ -131,7 +131,7 @@ impl AdapterStats {
 
 impl AdapterStats {
     /// Create new adapter statistics
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             active_providers: 0,
             total_requests: 0,
@@ -169,7 +169,7 @@ impl AdapterStats {
     }
     
     /// Get current statistics as a summary
-    pub const fn summary(&self) -> StatsSummary {
+    pub fn summary(&self) -> StatsSummary {
         StatsSummary {
             requests_total: self.total_requests,
             requests_successful: self.successful_requests,
@@ -181,7 +181,7 @@ impl AdapterStats {
     }
     
     /// Get uptime in seconds
-    pub const fn uptime_seconds(&self) -> u64 {
+    pub fn uptime_seconds(&self) -> u64 {
         self.last_reset.elapsed().as_secs()
     }
 }

@@ -25,7 +25,7 @@ impl ConfigLoader {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn load_from_string(content: &str) -> Result<CanonicalConfig>  {
+        pub fn load_from_string(content: &str) -> Result<CanonicalConfig>  {
         Self::parse_toml(content)
     }
 
@@ -37,7 +37,7 @@ impl ConfigLoader {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn load_from_env() -> Result<CanonicalConfig>  {
+        pub fn load_from_env() -> Result<CanonicalConfig>  {
         // This would implement environment variable loading
         // For now, return a default config
         super::defaults::CanonicalConfigBuilder::new().build()
@@ -77,7 +77,7 @@ impl ConfigLoader {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn load_with_fallback(
+        pub fn load_with_fallback(
         fallback_paths: &[PathBuf],
     ) -> Result<CanonicalConfig>  {
         // Try primary path first

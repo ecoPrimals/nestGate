@@ -146,7 +146,7 @@ impl Default for ValidationResult {
 impl Certificate {
     /// Check if certificate is expired
     #[must_use]
-    pub const fn is_expired(&self) -> bool {
+    pub fn is_expired(&self) -> bool {
         // For testing purposes, assume certificates with "expired" in subject are expired
         if self.principal.contains("expired") {
             return true;
@@ -165,13 +165,13 @@ impl Certificate {
 
     /// Check if certificate is currently valid (not expired)
     #[must_use]
-    pub const fn is_valid(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         !self.is_expired() && !self.not_after.is_empty()
     }
 
     /// Get certificate info summary
     #[must_use]
-    pub const fn to_info(&self) -> CertificateInfo {
+    pub fn to_info(&self) -> CertificateInfo {
         CertificateInfo {
             id: self.id.clone(),
             principal: self.principal.clone(),

@@ -42,7 +42,7 @@ pub fn build_access_grant(
 /// **PURE FUNCTION**: Diagnostic construction with ID generation
 /// **TESTABLE**: Can verify ID generation and timestamp consistency
 #[must_use]
-pub const fn build_diagnostic(
+pub fn build_diagnostic(
     level: crate::diagnostics::DiagnosticLevel,
     component: crate::diagnostics::ComponentType,
     message: String,

@@ -33,7 +33,7 @@ impl Default for ZfsCommand {
 }
 
 impl ZfsCommand {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
@@ -60,7 +60,7 @@ impl ZfsCommand {
     }
 
     /// Check if ZFS is available on the system
-    pub const fn check_zfs_available() -> ZfsCommandResult<bool> {
+    pub fn check_zfs_available() -> ZfsCommandResult<bool> {
         let result = Command::new("which").arg("zfs").output();
 
         match result {
@@ -87,7 +87,7 @@ impl ZfsCommand {
             info!("DRY RUN: {} {}", command, args.join(" "));
             return Ok(CommandResult {
                 success: true,
-                stdout: format!("DRY RUN: {} {}", command, args.join(" "),
+                stdout: format!("DRY RUN: {} {}", command, args.join(" ")),
                 stderr: String::new(),
                 exit_code: 0,
             });
@@ -152,17 +152,17 @@ pub struct CommandResult {
 }
 impl CommandResult {
     /// Check if the command was successful
-    pub const fn is_success(&self) -> bool {
+    pub fn is_success(&self) -> bool {
         self.success
     }
 
     /// Get the output as lines
-    pub const fn stdout_lines(&self) -> Vec<&str> {
+    pub fn stdout_lines(&self) -> Vec<&str> {
         self.stdout.lines().collect()
     }
 
     /// Get the error output as lines
-    pub const fn stderr_lines(&self) -> Vec<&str> {
+    pub fn stderr_lines(&self) -> Vec<&str> {
         self.stderr.lines().collect()
     }
 
@@ -187,7 +187,7 @@ impl CommandResult {
     }
 
     /// Parse tabular output (like zpool list, zfs list)
-    pub const fn parse_table(&self) -> ParsedTableResult {
+    pub fn parse_table(&self) -> ParsedTableResult {
         let lines = self.stdout_lines();
         if lines.is_empty() {
             return Ok(vec![]);
@@ -224,7 +224,7 @@ pub struct ZfsOperations {
     command: ZfsCommand,
 }
 impl ZfsOperations {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             command: ZfsCommand::new(),
         }
@@ -298,10 +298,7 @@ impl ZfsOperations {
     }
 
     /// List datasets in a pool
-    pub fn list_datasets(
-        &self,
-        pool_name: Option<&str>,
-    ) -> ZfsCommandResult<Vec<ZfsDataset>> {
+    pub fn list_datasets(&self, pool_name: Option<&str>) -> ZfsCommandResult<Vec<ZfsDataset>> {
         let mut args = vec!["list", "-H", "-o", "name,used,avail,refer,mountpoint"];
         if let Some(pool) = pool_name {
             args.push(pool);
@@ -344,8 +341,8 @@ impl ZfsOperations {
         // Add properties if provided
         let mut property_strings = Vec::new();
         if let Some(props) = properties {
-            for key in props.keys() {
-                property_strings.push(format!("{key}={"actual_error_details"}"));
+            for (key, value) in props {
+                property_strings.push(format!("{}={}", key, value));
             }
             for prop_string in &property_strings {
                 args.push("-o");
@@ -389,10 +386,7 @@ impl ZfsOperations {
     }
 
     /// List snapshots
-    pub fn list_snapshots(
-        &self,
-        dataset_name: Option<&str>,
-    ) -> ZfsCommandResult<Vec<ZfsSnapshot>> {
+    pub fn list_snapshots(&self, dataset_name: Option<&str>) -> ZfsCommandResult<Vec<ZfsSnapshot>> {
         let mut args = vec!["list", "-H", "-t", "snapshot", "-o", "name,used,creation"];
         if let Some(dataset) = dataset_name {
             args.push(dataset);

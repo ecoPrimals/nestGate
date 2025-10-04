@@ -234,7 +234,7 @@ impl Default for StorageMetadata {
 impl StorageStream {
     /// Create a new storage stream
     #[must_use]
-    pub const fn new(stream_id: String) -> Self {
+    pub fn new(stream_id: String) -> Self {
         Self {
             stream_id,
             total_size: None,
@@ -261,7 +261,7 @@ impl StorageStream {
 impl StorageTransaction {
     /// Create a new storage transaction
     #[must_use]
-    pub const fn new(transaction_id: String) -> Self {
+    pub fn new(transaction_id: String) -> Self {
         Self {
             transaction_id,
             created_at: SystemTime::now(),
@@ -306,7 +306,7 @@ pub mod migration {
 
     /// Generate migration suggestions for legacy storage implementations
     #[must_use]
-    pub const fn generate_migration_guide(trait_name: &str) -> Vec<String> {
+    pub fn generate_migration_guide(trait_name: &str) -> Vec<String> {
         vec![
             format!("Replace {trait_name} with UnifiedStorage"),
             "Update method signatures to use native async patterns".to_string(),

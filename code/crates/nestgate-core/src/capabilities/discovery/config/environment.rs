@@ -6,7 +6,7 @@ pub struct EnvironmentDiscoverySettings {
 }
 
 impl EnvironmentDiscoverySettings {
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }
 }

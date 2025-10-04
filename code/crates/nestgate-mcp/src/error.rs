@@ -9,7 +9,7 @@ use std::time::SystemTime;
 
 // Simple MCP error constructors using standard error types
 
-pub const fn mcp_connection_error(message: &str) -> NestGateError {
+pub fn mcp_connection_error(message: &str) -> NestGateError {
     NestGateError::Internal(Box::new(InternalErrorDetails {
         message: format!("MCP Connection Error: {message}"),
         component: "nestgate-mcp".to_string(),
@@ -19,7 +19,7 @@ pub const fn mcp_connection_error(message: &str) -> NestGateError {
     }))
 }
 
-pub const fn protocol_error(message: &str, method: Option<&str>) -> NestGateError {
+pub fn protocol_error(message: &str, method: Option<&str>) -> NestGateError {
     NestGateError::Internal(Box::new(InternalErrorDetails {
         message: format!("MCP Protocol Error: {message} (method: {method:?})"),
         component: "nestgate-mcp".to_string(),
@@ -29,7 +29,7 @@ pub const fn protocol_error(message: &str, method: Option<&str>) -> NestGateErro
     }))
 }
 
-pub const fn method_error(message: &str, method: &str) -> NestGateError {
+pub fn method_error(message: &str, method: &str) -> NestGateError {
     NestGateError::Internal(Box::new(InternalErrorDetails {
         message: format!("MCP Method Error: {message} (method: {method})"),
         component: "nestgate-mcp".to_string(),
@@ -39,7 +39,7 @@ pub const fn method_error(message: &str, method: &str) -> NestGateError {
     }))
 }
 
-pub const fn session_error(message: &str, session_id: &str) -> NestGateError {
+pub fn session_error(message: &str, session_id: &str) -> NestGateError {
     NestGateError::Internal(Box::new(InternalErrorDetails {
         message: format!("MCP Session Error: {message} (session: {session_id})"),
         component: "nestgate-mcp".to_string(),
@@ -49,7 +49,7 @@ pub const fn session_error(message: &str, session_id: &str) -> NestGateError {
     }))
 }
 
-pub const fn serialization_error(message: &str) -> NestGateError {
+pub fn serialization_error(message: &str) -> NestGateError {
     NestGateError::Internal(Box::new(InternalErrorDetails {
         message: format!("MCP Serialization Error: {message}"),
         component: "nestgate-mcp".to_string(),
@@ -59,7 +59,7 @@ pub const fn serialization_error(message: &str) -> NestGateError {
     }))
 }
 
-pub const fn transport_error(message: &str) -> NestGateError {
+pub fn transport_error(message: &str) -> NestGateError {
     NestGateError::External(Box::new(ExternalErrorDetails {
         message: format!("MCP Transport Error: {message}"),
         service: "mcp-transport".to_string(),
@@ -104,15 +104,15 @@ impl McpErrorExt for NestGateError {
 }
 
 // Helper functions
-pub const fn extract_mcp_context(error: &NestGateError) -> Option<String> {
+pub fn extract_mcp_context(error: &NestGateError) -> Option<String> {
     error.extract_mcp_context()
 }
 
-pub const fn extract_session_id(error: &NestGateError) -> Option<String> {
+pub fn extract_session_id(error: &NestGateError) -> Option<String> {
     error.extract_session_id()
 }
 
-pub const fn extract_method(error: &NestGateError) -> Option<String> {
+pub fn extract_method(error: &NestGateError) -> Option<String> {
     error.extract_method()
 }
 

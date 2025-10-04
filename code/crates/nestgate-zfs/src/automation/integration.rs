@@ -19,7 +19,7 @@ impl Default for AutomationConfig {
 }
 
 /// Initialize automation integration with canonical configuration
-pub const fn initialize_automation(
+pub fn initialize_automation(
     config: NestGateCanonicalConfig,
 ) -> IdioResult<IntelligentDatasetManager> {
     let _automation_config = AutomationConfig;
@@ -28,7 +28,7 @@ pub const fn initialize_automation(
     Ok(IntelligentDatasetManager)
 }
 /// Initialize automation with custom config
-pub const fn initialize_automation_with_config(
+pub fn initialize_automation_with_config(
     config: NestGateCanonicalConfig,
     automation_config: AutomationConfig,
 ) -> IdioResult<IntelligentDatasetManager> {
@@ -39,12 +39,12 @@ pub const fn initialize_automation_with_config(
 }
 /// Check if ecosystem services are available for ZFS automation
 #[cfg(feature = "network-integration")]
-pub const fn check_zfs_ecosystem_availability() -> bool {
+pub fn check_zfs_ecosystem_availability() -> bool {
     // Default implementation for development - ecosystem always available
     // Production implementation would check actual automation capabilities
     true
 }
 #[cfg(not(feature = "network-integration"))]
-pub const fn check_zfs_ecosystem_availability() -> bool {
+pub fn check_zfs_ecosystem_availability() -> bool {
     false
 }

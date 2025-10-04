@@ -61,7 +61,7 @@ pub struct NetworkFsBackend {
 }
 impl NetworkFsBackend {
     /// Create new network filesystem backend
-    pub const fn new(config: NetworkFsConfig) -> Self { Self {
+    pub fn new(config: NetworkFsConfig) -> Self { Self {
             config,
             is_mounted: false,
          }
@@ -271,7 +271,7 @@ impl StorageBackend for NetworkFsBackend {
             error_message: e.to_string()
         })? {
             let file_name = entry.file_name().to_string_lossy().to_string();
-            let full_path = format!("{"actual_error_details"}/{"actual_error_details"}"), file_name);
+            let full_path = format!("{}/{}", prefix.unwrap_or(""), file_name);
             files.push(full_path);
         }
 
@@ -319,7 +319,7 @@ impl Default for NetworkFsBuilder {
 }
 
 impl NetworkFsBuilder {
-    pub const fn new() -> Self { Self { config: None  }
+    pub fn new() -> Self { Self { config: None  }
 
     #[must_use]
     pub fn with_config(mut self, config: NetworkFsConfig) -> Self { self.config = Some(config);

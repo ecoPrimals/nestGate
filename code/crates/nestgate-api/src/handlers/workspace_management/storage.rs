@@ -81,9 +81,7 @@ pub fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>,
 }
 
 /// Get workspace storage status (CORE STORAGE FUNCTION)
-pub fn get_workspace_status(
-    Path(workspace_id): Path<String>,
-) -> Result<Json<Value>, StatusCode> {
+pub fn get_workspace_status(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
     info!("📊 Getting workspace storage status: {}", workspace_id);
     // Validate workspace ID
     if workspace_id.is_empty() || workspace_id.contains('/') || workspace_id.contains(' ') {
@@ -175,9 +173,7 @@ pub fn get_workspace_status(
 }
 
 /// Cleanup workspace storage (CORE STORAGE FUNCTION)
-pub fn cleanup_workspace(
-    Path(workspace_id): Path<String>,
-) -> Result<Json<Value>, StatusCode> {
+pub fn cleanup_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
     info!("🧹 Cleaning up workspace storage: {}", workspace_id);
     // Validate workspace ID
     if workspace_id.is_empty() || workspace_id.contains('/') || workspace_id.contains(' ') {
@@ -304,7 +300,7 @@ pub fn scale_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, 
                 let used_bytes: u64 = lines[0].parse().unwrap_or(0);
                 let available_bytes: u64 = lines[1].parse().unwrap_or(0);
                 let utilization = if (used_bytes + available_bytes) > 0 {
-                    (f64::from(used_bytes) / (used_bytes + available_bytes) as f64) * 100.0
+                    (used_bytes as f64 / (used_bytes + available_bytes) as f64) * 100.0
                 } else {
                     0.0
                 };

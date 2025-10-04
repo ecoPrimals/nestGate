@@ -84,7 +84,7 @@ impl PerformanceOptimizationEngine {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn start(&mut self) -> Result<()>  {
+    pub async fn start(&mut self) -> Result<()> {
         info!("🚀 Starting Real-time Performance Optimization Engine");
 
         // Start performance monitoring
@@ -108,7 +108,7 @@ impl PerformanceOptimizationEngine {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn optimize_performance(&self) -> Result<PerformanceOptimizationResult>  {
+    pub async fn optimize_performance(&self) -> Result<PerformanceOptimizationResult> {
         info!("⚡ Executing real-time performance optimization");
 
         // Detect bottlenecks first
@@ -175,7 +175,7 @@ impl PerformanceOptimizationEngine {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn tune_zfs_parameters(&self, dataset_name: &str) -> Result<ZfsTuningResult>  {
+    pub fn tune_zfs_parameters(&self, dataset_name: &str) -> Result<ZfsTuningResult> {
         info!("🔧 Tuning ZFS parameters for dataset: {}", dataset_name);
 
         // Basic ZFS tuning based on dataset characteristics
@@ -203,7 +203,7 @@ impl PerformanceOptimizationEngine {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn handle_performance_alert(&self, alert: PerformanceAlert) -> Result<AlertResponse>  {
+    pub fn handle_performance_alert(&self, alert: PerformanceAlert) -> Result<AlertResponse> {
         info!("🚨 Handling performance alert: {:?}", alert.alert_type);
 
         let response = AlertResponse {
@@ -223,7 +223,7 @@ impl PerformanceOptimizationEngine {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_trending_data(&self) -> Result<Vec<ZfsPerformanceMetrics>>  {
+    pub async fn get_trending_data(&self) -> Result<Vec<ZfsPerformanceMetrics>> {
         self.performance_monitor.get_trending_data().await
     }
 
@@ -423,8 +423,8 @@ impl PerformanceOptimizationEngine {
             }
 
             // Check for memory pressure
-            let memory_usage_percent = (latest_metrics.system_memory.f64::from(used)
-                / latest_metrics.system_memory.f64::from(total))
+            let memory_usage_percent = (f64::from(latest_metrics.system_memory.used)
+                / f64::from(latest_metrics.system_memory.total))
                 * 100.0;
             if memory_usage_percent > 90.0 {
                 bottlenecks.push(ZfsBottleneck {

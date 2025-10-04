@@ -53,7 +53,7 @@ impl Default for AppState {
 impl AppState {
     /// Create AppState with ZFS support
     #[cfg(feature = "streaming-rpc")]
-    pub const fn with_zfs_and_streaming() -> Self {
+    pub fn with_zfs_and_streaming() -> Self {
         Self {
             zfs_manager: Arc::new(ZfsManager::new(ZfsConfig::default())),
             _phantom: std::marker::PhantomData,
@@ -61,7 +61,7 @@ impl AppState {
     }
 
     /// Create AppState without streaming features
-    pub const fn without_streaming() -> Self {
+    pub fn without_streaming() -> Self {
         Self {
             zfs_manager: Arc::new(ZfsManager::new(ZfsConfig::default())),
             #[cfg(feature = "streaming-rpc")]
@@ -70,7 +70,7 @@ impl AppState {
     }
 
     /// Create AppState with optional streaming components based on feature flags
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             zfs_manager: Arc::new(ZfsManager::new(ZfsConfig::default())),
             #[cfg(feature = "streaming-rpc")]
@@ -79,12 +79,12 @@ impl AppState {
     }
 
     /// Get ZFS manager reference
-    pub const fn get_zfs_manager(&self) -> Option<Arc<ZfsManager>> {
+    pub fn get_zfs_manager(&self) -> Option<Arc<ZfsManager>> {
         Some(self.zfs_manager.clone())
     }
 
     /// Initialize storage systems - ZFS manager and Universal Storage Bridge
-    pub const fn with_zfs_manager(self) -> Self {
+    pub fn with_zfs_manager(self) -> Self {
         // ZFS manager already initialized in constructor
         self
     }

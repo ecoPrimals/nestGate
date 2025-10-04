@@ -16,7 +16,7 @@ pub struct ZeroCopyBufferPool<const CAPACITY: usize> {
 }
 impl<const CAPACITY: usize> ZeroCopyBufferPool<CAPACITY> {
     /// **PEDANTIC**: `const fn` for compile-time initialization
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             buffers: [const { None }; CAPACITY],
             next_available: 0,
@@ -61,7 +61,7 @@ pub enum ZeroCopyBuffer<'a> {
 }
 impl<'a> ZeroCopyBuffer<'a> {
     /// **PEDANTIC**: Convert to `Cow` for flexible usage
-    pub const fn as_cow(&'a self) -> Cow<'a, [u8]> {
+    pub fn as_cow(&'a self) -> Cow<'a, [u8]> {
         match self {
             Self::Borrowed(data) => Cow::Borrowed(data),
             Self::Owned(data) => Cow::Borrowed(data),
@@ -70,7 +70,7 @@ impl<'a> ZeroCopyBuffer<'a> {
     }
 
     /// **ZERO-COPY**: Get slice without cloning
-    pub const fn as_slice(&self) -> &[u8] {
+    pub fn as_slice(&self) -> &[u8] {
         match self {
             Self::Borrowed(data) => data,
             Self::Owned(data) => data,
@@ -79,7 +79,7 @@ impl<'a> ZeroCopyBuffer<'a> {
     }
 
     /// **PEDANTIC**: Length without allocation
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         match self {
             Self::Borrowed(data) => data.len(),
             Self::Owned(data) => data.len(),
@@ -88,7 +88,7 @@ impl<'a> ZeroCopyBuffer<'a> {
     }
 
     /// **PEDANTIC**: Check if empty
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 }
@@ -123,7 +123,7 @@ impl ZeroCopyStringOps {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn parse_keyvalue(input: &str) -> Result<(Cow<'_, str>, Cow<'_, str>)>  {
+        pub fn parse_keyvalue(input: &str) -> Result<(Cow<'_, str>, Cow<'_, str>)>  {
         match input.find('=') {
             Some(pos) => {
                 let key = input[..pos].trim();

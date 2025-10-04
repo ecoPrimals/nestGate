@@ -6,7 +6,7 @@ pub struct StorageDiscoverySettings {
 }
 
 impl StorageDiscoverySettings {
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }
 }

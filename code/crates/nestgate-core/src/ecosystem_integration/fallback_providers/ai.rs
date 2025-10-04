@@ -33,11 +33,11 @@ impl Default for AiFallbackProvider {
 }
 
 impl AiFallbackProvider {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::with_config(AiFallbackConfig::default())
     }
 
-    pub const fn with_config(config: AiFallbackConfig) -> Self {
+    pub fn with_config(config: AiFallbackConfig) -> Self {
         Self { config }
     }
 

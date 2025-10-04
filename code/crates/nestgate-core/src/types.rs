@@ -40,7 +40,7 @@ impl Display for StorageTier {
 
 impl StorageTier {
     /// Get all available storage tiers
-    pub const fn all() -> Vec<StorageTier> {
+    pub fn all() -> Vec<StorageTier> {
         vec![
             Self::Hot,
             Self::Warm,
@@ -51,7 +51,7 @@ impl StorageTier {
     }
 
     /// Get the priority order of tiers (Hot = highest priority)
-    pub const fn priority(&self) -> u8 {
+    pub fn priority(&self) -> u8 {
         match self {
             StorageTier::Hot => 0,
             StorageTier::Warm => 1,
@@ -62,7 +62,7 @@ impl StorageTier {
     }
 
     /// Get string representation
-    pub const fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             StorageTier::Hot => "hot",
             StorageTier::Warm => "warm",

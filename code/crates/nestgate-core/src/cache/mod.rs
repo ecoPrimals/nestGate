@@ -55,7 +55,7 @@ pub enum CacheSystem {
 }
 impl CacheSystem {
     /// Create a cache with a single tier for small deployments
-    pub const fn single_tier(
+    pub fn single_tier(
         cache_config: crate::config::canonical_master::CacheConfig,
     ) -> crate::Result<Self> {
         // Convert to UnifiedCacheConfig
@@ -101,7 +101,7 @@ impl CacheSystem {
     }
 
     /// Clear all cache data
-    pub fn clear(&mut self) -> crate::Result<()> {
+    pub async fn clear(&mut self) -> crate::Result<()> {
         match self {
             CacheSystem::SingleTier(cache) => {
                 cache.clear();
@@ -112,7 +112,7 @@ impl CacheSystem {
     }
 
     /// Check if cache contains a key
-    pub fn contains_key(&mut self, key: &str) -> bool {
+    pub async fn contains_key(&mut self, key: &str) -> bool {
         match self {
             CacheSystem::SingleTier(cache) => {
                 // Check if key exists by attempting to get it
@@ -167,7 +167,7 @@ pub enum CacheSystemStats {
 impl CacheSystemStats {
     /// Get total hits across all tiers
     #[must_use]
-    pub const fn total_hits(&self) -> u64 {
+    pub fn total_hits(&self) -> u64 {
         match self {
             Self::SingleTier(stats) => stats.hits,
             Self::MultiTier(stats) => stats.total_hits,
@@ -176,7 +176,7 @@ impl CacheSystemStats {
 
     /// Get total misses across all tiers
     #[must_use]
-    pub const fn total_misses(&self) -> u64 {
+    pub fn total_misses(&self) -> u64 {
         match self {
             CacheSystemStats::SingleTier(stats) => stats.misses,
             CacheSystemStats::MultiTier(stats) => stats.total_misses,
@@ -185,7 +185,7 @@ impl CacheSystemStats {
 
     /// Get total items across all tiers
     #[must_use]
-    pub const fn total_items(&self) -> usize {
+    pub fn total_items(&self) -> usize {
         match self {
             CacheSystemStats::SingleTier(stats) => stats.total_items(),
             CacheSystemStats::MultiTier(stats) => stats.total_items,
@@ -194,7 +194,7 @@ impl CacheSystemStats {
 
     /// Get total size across all tiers
     #[must_use]
-    pub const fn total_size_bytes(&self) -> u64 {
+    pub fn total_size_bytes(&self) -> u64 {
         match self {
             CacheSystemStats::SingleTier(stats) => stats.total_size_bytes(),
             CacheSystemStats::MultiTier(stats) => stats.total_size_bytes,
@@ -203,7 +203,7 @@ impl CacheSystemStats {
 
     /// Calculate overall hit ratio
     #[must_use]
-    pub const fn hit_ratio(&self) -> f64 {
+    pub fn hit_ratio(&self) -> f64 {
         match self {
             CacheSystemStats::SingleTier(stats) => stats.hit_ratio(),
             CacheSystemStats::MultiTier(stats) => stats.overall_hit_ratio(),
@@ -220,7 +220,7 @@ pub struct CacheBuilder {
 impl CacheBuilder {
     /// Create a new cache builder
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: crate::config::canonical_master::CacheConfig::default(),
             multi_tier: false,
@@ -296,7 +296,7 @@ impl CacheBuilder {
     pub async fn build(self) -> crate::Result<CacheSystem> {
         if self.multi_tier {
             let config = self.multi_tier_config.unwrap_or_default();
-            CacheSystem::multi_tier(config).await
+            CacheSystem::multi_tier(config)
         } else {
             CacheSystem::single_tier(self.config)
         }
@@ -431,10 +431,7 @@ mod tests {
             )
         })?;
         cache.flush().await.map_err(|e| {
-            crate::error::NestGateError::internal_error(
-                format!("Cache flush failed: {e}"),
-                "cache",
-            )
+            crate::error::NestGateError::internal_error(format!("Cache flush failed: {e}"), "cache")
         })?;
 
         // Test basic operations
@@ -470,10 +467,7 @@ mod tests {
         // Test that builder created a working cache
         cache.put("test", b"data".to_vec()).await?;
         let data = cache.get("test").await.map_err(|e| {
-            crate::safe_operations::internal(
-                &format!("Cache get failed: {e:?}"),
-                "cache_retrieval",
-            )
+            crate::safe_operations::internal(&format!("Cache get failed: {e:?}"), "cache_retrieval")
         })?;
         assert_eq!(data, Some(b"data".to_vec()));
         Ok(())

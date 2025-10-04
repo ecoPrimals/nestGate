@@ -74,7 +74,7 @@ pub struct HealthStateBuilder {
     state: HealthState,
 }
 impl HealthStateBuilder {
-    pub const fn new(status: HealthStatus) -> Self {
+    pub fn new(status: HealthStatus) -> Self {
         Self {
             state: HealthState {
                 status,
@@ -99,39 +99,39 @@ impl HealthStateBuilder {
         self
     }
 
-    pub const fn build(self) -> HealthState {
+    pub fn build(self) -> HealthState {
         self.state
     }
 }
 
 impl HealthState {
     /// Create a new healthy state
-    pub const fn healthy() -> HealthStateBuilder {
+    pub fn healthy() -> HealthStateBuilder {
         HealthStateBuilder::new(HealthStatus::Healthy)
     }
 
     /// Create a new degraded state
-    pub const fn degraded() -> HealthStateBuilder {
+    pub fn degraded() -> HealthStateBuilder {
         HealthStateBuilder::new(HealthStatus::Degraded)
     }
 
     /// Create a new unhealthy state
-    pub const fn unhealthy() -> HealthStateBuilder {
+    pub fn unhealthy() -> HealthStateBuilder {
         HealthStateBuilder::new(HealthStatus::Unhealthy)
     }
 
     /// Create a new unknown state
-    pub const fn unknown() -> HealthStateBuilder {
+    pub fn unknown() -> HealthStateBuilder {
         HealthStateBuilder::new(HealthStatus::Unknown)
     }
 
     /// Check if this state is considered healthy
-    pub const fn is_healthy(&self) -> bool {
+    pub fn is_healthy(&self) -> bool {
         matches!(self.status, HealthStatus::Healthy)
     }
 
     /// Check if this state indicates problems
-    pub const fn has_issues(&self) -> bool {
+    pub fn has_issues(&self) -> bool {
         matches!(
             self.status,
             HealthStatus::Degraded | HealthStatus::Unhealthy

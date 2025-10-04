@@ -54,7 +54,7 @@ pub struct StreamingRpcServer {
 }
 impl StreamingRpcServer {
     /// Create a new streaming RPC server
-    pub const fn new(config: StreamingRpcConfig) -> Self { let (event_tx, _) = broadcast::channel(1000);
+    pub fn new(config: StreamingRpcConfig) -> Self { let (event_tx, _) = broadcast::channel(1000);
 
         Self {
             config,
@@ -70,7 +70,7 @@ impl StreamingRpcServer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn start(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>>  {
+        pub fn start(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>>  {
         tracing::info!(
             "Starting streaming RPC server on {}",
             self.config.bind_address
@@ -85,7 +85,7 @@ impl StreamingRpcServer {
     }
 
     /// Subscribe to server events
-    pub const fn subscribe_events(&self) -> broadcast::Receiver<String> {
+    pub fn subscribe_events(&self) -> broadcast::Receiver<String> {
         self.event_tx.subscribe()
     }
 }
@@ -97,10 +97,10 @@ impl Default for StreamingRpcServer {
 }
 
 /// Create a new streaming RPC server with default configuration
-pub const fn create_streaming_rpc_server() -> StreamingRpcServer {
+pub fn create_streaming_rpc_server() -> StreamingRpcServer {
     StreamingRpcServer::default()
 }
 /// Create a new streaming RPC server with custom configuration
-pub const fn create_streaming_rpc_server_with_config(config: StreamingRpcConfig) -> StreamingRpcServer {
+pub fn create_streaming_rpc_server_with_config(config: StreamingRpcConfig) -> StreamingRpcServer {
     StreamingRpcServer::new(config)
 }

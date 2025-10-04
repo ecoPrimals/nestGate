@@ -87,14 +87,14 @@ pub mod network {
 
     /// Build discovery endpoint using canonical constants
     #[must_use]
-    pub const fn discovery_endpoint() -> String {
+    pub fn discovery_endpoint() -> String {
         env::var("DISCOVERY_ENDPOINT")
             .unwrap_or_else(|_| format!("http://{}:{}/discovery", "localhost", 8083)
     }
 
     /// Build API endpoint using canonical constants
     #[must_use]
-    pub const fn api_endpoint() -> String {
+    pub fn api_endpoint() -> String {
         format!("{LOCALHOST}:{DEFAULT_API_PORT}")
     }
 }
@@ -137,7 +137,7 @@ pub mod test {
 
 /// Get canonical API port (environment-aware)
 #[must_use]
-pub const fn get_api_port() -> u16 {
+pub fn get_api_port() -> u16 {
     std::env::var("NESTGATE_API_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
@@ -145,16 +145,16 @@ pub const fn get_api_port() -> u16 {
 }
 /// Get canonical bind address (environment-aware)
 #[must_use]
-pub const fn get_bind_address() -> String {
+pub fn get_bind_address() -> String {
     std::env::var("NESTGATE_BIND_ADDRESS").unwrap_or_else(|_| DEFAULT_BIND_ADDRESS.to_string())
 }
 /// Get canonical data directory (environment-aware)
 #[must_use]
-pub const fn get_data_dir() -> String {
+pub fn get_data_dir() -> String {
     std::env::var("NESTGATE_DATA_DIR").unwrap_or_else(|_| DEFAULT_DATA_DIR.to_string())
 }
 /// Build canonical discovery endpoint using environment-aware constants
 #[must_use]
-pub const fn build_discovery_endpoint() -> String {
+pub fn build_discovery_endpoint() -> String {
     format!("http://{get_bind_address(}:8083/discovery"))
 }

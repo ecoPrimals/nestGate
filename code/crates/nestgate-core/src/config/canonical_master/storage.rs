@@ -148,7 +148,7 @@ impl Default for CacheConfig {
 impl CacheConfig {
     /// Create a development-optimized cache configuration
     #[must_use]
-    pub const fn development() -> Self {
+    pub fn development() -> Self {
         Self {
             enabled: true,
             size_mb: 128,                           // Smaller cache for development
@@ -163,7 +163,7 @@ impl CacheConfig {
 
     /// Create a high-performance cache configuration
     #[must_use]
-    pub const fn high_performance() -> Self {
+    pub fn high_performance() -> Self {
         Self {
             enabled: true,
             size_mb: 2048,                           // 2GB cache

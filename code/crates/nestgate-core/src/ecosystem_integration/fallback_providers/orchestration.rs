@@ -33,11 +33,11 @@ pub struct OrchestrationFallbackProvider {
 }
 
 impl OrchestrationFallbackProvider {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::with_config(OrchestrationFallbackConfig::default())
     }
 
-    pub const fn with_config(config: OrchestrationFallbackConfig) -> Self {
+    pub fn with_config(config: OrchestrationFallbackConfig) -> Self {
         Self { _config: config }
     }
 

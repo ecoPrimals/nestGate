@@ -381,7 +381,7 @@ pub struct SmbMountResponse {
     pub message: String,
 }
 /// Handle SMB mount request
-pub const fn handle_smb_mount_request(
+pub fn handle_smb_mount_request(
     server: &SmbServer,
     request: SmbMountRequest,
 ) -> Result<SmbMountResponse> {

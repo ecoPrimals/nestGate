@@ -13,7 +13,7 @@ use std::net::IpAddr;
 #[must_use]
 /// # Errors
 /// Returns an error if the operation fails
-pub const fn pedantic_parse_ip(ip_str: &str, context: &str) -> Result<IpAddr, NestGateError> {
+pub fn pedantic_parse_ip(ip_str: &str, context: &str) -> Result<IpAddr, NestGateError> {
     ip_str.parse().map_err(|_e| {
         NestGateError::configuration(format!(
             "Invalid IP address format in {}: '{}' (expected format like 127.0.0.1 or ::1)",
@@ -24,7 +24,7 @@ pub const fn pedantic_parse_ip(ip_str: &str, context: &str) -> Result<IpAddr, Ne
 
 /// **PEDANTIC LAYOUT CREATION**
 /// Absolutely safe memory layout creation with alignment validation
-pub const fn pedantic_layout_from_size_align(size: usize, align: usize, context: &str) -> Result<Layout, NestGateError> {
+pub fn pedantic_layout_from_size_align(size: usize, align: usize, context: &str) -> Result<Layout, NestGateError> {
     Layout::from_size_align(size, align).map_err(|e| {
         NestGateError::internal_error_with_debug(
             format!("Invalid memory layout in {}: size={}, align={}, error={}", context, size, align, e)
@@ -73,7 +73,7 @@ pub const PEDANTIC_TIMEOUT_MS: u64 = 5000;
 pub const PEDANTIC_BUFFER_SIZE: usize = 4096;
 
 /// **PEDANTIC VALIDATION FUNCTIONS**
-pub const fn validate_non_empty_string(s: &str, field_name: &str) -> Result<(), NestGateError> {
+pub fn validate_non_empty_string(s: &str, field_name: &str) -> Result<(), NestGateError> {
     if s.is_empty() {
         Err(NestGateError::configuration(format!(
             "Field '{}' cannot be empty", field_name
@@ -83,7 +83,7 @@ pub const fn validate_non_empty_string(s: &str, field_name: &str) -> Result<(), 
     }
 }
 
-pub const fn validate_positive_number(n: i64, field_name: &str) -> Result<(), NestGateError> {
+pub fn validate_positive_number(n: i64, field_name: &str) -> Result<(), NestGateError> {
     if n <= 0 {
         Err(NestGateError::configuration(format!(
             "Field '{}' must be positive, got: {}", field_name, n
@@ -114,7 +114,7 @@ impl PedanticErrorContext {
         self
     }
 
-    pub const fn build_error(self, message: &str) -> NestGateError {
+    pub fn build_error(self, message: &str) -> NestGateError {
         NestGateError::internal_error_with_debug(
             format!("{} in {}: {:?}", message, self.context, self.details)
         )

@@ -94,13 +94,13 @@ impl Default for StorageServiceConfig {
 impl ZfsConfig {
     /// Create a new ZFS configuration
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
     /// Create a configuration for development (no sudo)
     #[must_use]
-    pub const fn development() -> Self {
+    pub fn development() -> Self {
         Self {
             use_sudo: false,
             command_timeout: Duration::from_secs(10),
@@ -110,7 +110,7 @@ impl ZfsConfig {
 
     /// Create a configuration for production
     #[must_use]
-    pub const fn production() -> Self {
+    pub fn production() -> Self {
         Self {
             use_sudo: true,
             command_timeout: Duration::from_secs(60),
@@ -126,7 +126,7 @@ impl ZfsConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<(), String>  {
+    pub fn validate(&self) -> Result<(), String> {
         if self.zfs_binary.is_empty() {
             return Err("ZFS binary path cannot be empty".to_string());
         }
@@ -149,13 +149,13 @@ impl ZfsConfig {
 impl StorageServiceConfig {
     /// Create a new storage service configuration
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
     /// Create a development configuration
     #[must_use]
-    pub const fn development() -> Self {
+    pub fn development() -> Self {
         Self {
             zfs: ZfsConfig::development(),
             discovery_interval: 60,    // 1 minute for faster development
@@ -168,7 +168,7 @@ impl StorageServiceConfig {
 
     /// Create a production configuration
     #[must_use]
-    pub const fn production() -> Self {
+    pub fn production() -> Self {
         Self {
             zfs: ZfsConfig::production(),
             discovery_interval: 600,    // 10 minutes
@@ -188,7 +188,7 @@ impl StorageServiceConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<(), String>  {
+    pub fn validate(&self) -> Result<(), String> {
         // Validate ZFS configuration
         self.zfs.validate()?;
 
@@ -217,25 +217,25 @@ impl StorageServiceConfig {
 
     /// Get discovery interval as Duration
     #[must_use]
-    pub const fn discovery_interval_duration(&self) -> Duration {
+    pub fn discovery_interval_duration(&self) -> Duration {
         Duration::from_secs(self.discovery_interval)
     }
 
     /// Get quota check interval as Duration
     #[must_use]
-    pub const fn quota_check_interval_duration(&self) -> Duration {
+    pub fn quota_check_interval_duration(&self) -> Duration {
         Duration::from_secs(self.quota_check_interval)
     }
 
     /// Get monitoring interval as Duration
     #[must_use]
-    pub const fn monitoring_interval_duration(&self) -> Duration {
+    pub fn monitoring_interval_duration(&self) -> Duration {
         Duration::from_secs(self.monitoring_interval)
     }
 
     /// Get operation timeout as Duration
     #[must_use]
-    pub const fn operation_timeout_duration(&self) -> Duration {
+    pub fn operation_timeout_duration(&self) -> Duration {
         Duration::from_secs(self.operation_timeout)
     }
 }

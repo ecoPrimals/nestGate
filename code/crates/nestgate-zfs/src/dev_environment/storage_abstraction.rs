@@ -87,7 +87,7 @@ struct SimulatedDataset {
 impl SimulatedDataset {
     /// Create a new simulated dataset
     #[allow(dead_code)]
-    pub const fn new(name: String, tier: StorageTier) -> Self {
+    pub fn new(name: String, tier: StorageTier) -> Self {
         let path = PathBuf::from(format!("/dev/datasets/{"actual_error_details"}"));
         let mount_point = PathBuf::from(format!("/mnt/{"actual_error_details"}"));
 
@@ -102,22 +102,22 @@ impl SimulatedDataset {
     }
 
     #[allow(dead_code)]
-    pub const fn size(&self) -> u64 {
+    pub fn size(&self) -> u64 {
         self.size_bytes
     }
     #[allow(dead_code)]
-    pub const fn tier(&self) -> &StorageTier {
+    pub fn tier(&self) -> &StorageTier {
         &self.tier
     }
     #[allow(dead_code)]
-    pub const fn properties(&self) -> &HashMap<String, String> {
+    pub fn properties(&self) -> &HashMap<String, String> {
         &self.properties
     }
 }
 
 impl DevEnvironmentStorageService {
     /// Create new development storage service
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         let config = StorageAbstractionConfig::default();
 
         info!("🗄️ Initializing Development Environment Storage Abstraction");
@@ -131,7 +131,7 @@ impl DevEnvironmentStorageService {
     }
 
     /// Create with custom configuration
-    pub const fn with_config(config: StorageAbstractionConfig) -> Self {
+    pub fn with_config(config: StorageAbstractionConfig) -> Self {
         info!("🗄️ Initializing Development Storage with custom config");
         info!("📁 Base directory: {:?}", config.base_directory);
 
@@ -150,7 +150,7 @@ impl DevEnvironmentStorageService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn initialize(&self) -> Result<()>  {
+    pub async fn initialize(&self) -> Result<()> {
         // Create base directory
         if let Err(e) = tokio::fs::create_dir_all(&self.base_path).await {
             warn!("Failed to create base storage directory: {}", e);
@@ -206,7 +206,7 @@ impl DevEnvironmentStorageService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn create_simulated_pool(&self, name: &str, size_bytes: u64) -> Result<()>  {
+    pub async fn create_simulated_pool(&self, name: &str, size_bytes: u64) -> Result<()> {
         let mut pools = self.pools.write().await;
 
         let pool_path = self.base_path.join("pools").join(name);
@@ -249,12 +249,12 @@ impl DevEnvironmentStorageService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn create_simulated_dataset(
+    pub async fn create_simulated_dataset(
         &self,
         pool_name: &str,
         dataset_name: &str,
         tier: StorageTier,
-    ) -> Result<()>  {
+    ) -> Result<()> {
         let mut pools = self.pools.write().await;
 
         let pool = pools.get_mut(pool_name).ok_or_else(|| {

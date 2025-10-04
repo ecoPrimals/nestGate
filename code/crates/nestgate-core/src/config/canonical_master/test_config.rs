@@ -12,6 +12,6 @@ pub use super::domains::test_canonical::{
 pub type TestConfiguration = CanonicalTestConfigs;
 /// Default test configuration
 #[must_use]
-pub const fn default_test_config() -> CanonicalTestConfigs {
+pub fn default_test_config() -> CanonicalTestConfigs {
     CanonicalTestConfigs::default()
 }

@@ -226,7 +226,7 @@ pub mod storage_defaults {
     use super::*;
     /// Get default storage domain constants
     #[must_use]
-    pub const fn constants() -> StorageDomainConstants {
+    pub fn constants() -> StorageDomainConstants {
         StorageDomainConstants::default()
     }
 

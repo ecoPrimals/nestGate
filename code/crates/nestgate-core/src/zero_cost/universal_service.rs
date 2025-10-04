@@ -215,7 +215,7 @@ pub struct ZeroCostServiceMetadata {
 // ==================== SECTION ====================
 
 /// **Create default health metrics**
-pub const fn default_health_metrics() -> HealthMetrics {
+pub fn default_health_metrics() -> HealthMetrics {
     HealthMetrics {
         cpu_usage: 0.0,
         memory_usage: 0,
@@ -226,14 +226,14 @@ pub const fn default_health_metrics() -> HealthMetrics {
     }
 }
 /// **Create healthy status with current timestamp**
-pub const fn healthy_status() -> ZeroCostServiceHealth {
+pub fn healthy_status() -> ZeroCostServiceHealth {
     ZeroCostServiceHealth::Healthy {
         last_check: SystemTime::now(),
         metrics: Some(default_health_metrics()),
     }
 }
 /// **Create degraded status with reason**
-pub const fn degraded_status(reason: String, severity: u8) -> ZeroCostServiceHealth {
+pub fn degraded_status(reason: String, severity: u8) -> ZeroCostServiceHealth {
     ZeroCostServiceHealth::Degraded {
         reason,
         severity: severity.min(10), // Cap at 10
@@ -241,7 +241,7 @@ pub const fn degraded_status(reason: String, severity: u8) -> ZeroCostServiceHea
     }
 }
 /// **Create unhealthy status with error**
-pub const fn unhealthy_status(error: String, recovery_hint: Option<String>) -> ZeroCostServiceHealth {
+pub fn unhealthy_status(error: String, recovery_hint: Option<String>) -> ZeroCostServiceHealth {
     ZeroCostServiceHealth::Unhealthy {
         error,
         last_check: SystemTime::now(),

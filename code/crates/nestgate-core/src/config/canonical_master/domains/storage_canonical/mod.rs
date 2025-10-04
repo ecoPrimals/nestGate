@@ -111,13 +111,13 @@ pub struct CanonicalStorageConfig {
 impl CanonicalStorageConfig {
     /// Create a new canonical storage configuration
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
     /// Create a configuration optimized for production environments
     #[must_use]
-    pub const fn production_optimized() -> Self {
+    pub fn production_optimized() -> Self {
         Self {
             backends: StorageBackendConfig::production_optimized(),
             zfs: ZfsStorageConfig::production_optimized(),
@@ -133,7 +133,7 @@ impl CanonicalStorageConfig {
 
     /// Create a configuration optimized for development environments
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self {
             backends: StorageBackendConfig::development_optimized(),
             zfs: ZfsStorageConfig::development_optimized(),
@@ -149,7 +149,7 @@ impl CanonicalStorageConfig {
 
     /// Create a configuration for high-performance environments
     #[must_use]
-    pub const fn high_performance() -> Self {
+    pub fn high_performance() -> Self {
         Self {
             backends: StorageBackendConfig::high_performance(),
             zfs: ZfsStorageConfig::high_performance(),
@@ -165,7 +165,7 @@ impl CanonicalStorageConfig {
 
     /// Create a configuration for cloud-native environments
     #[must_use]
-    pub const fn cloud_native() -> Self {
+    pub fn cloud_native() -> Self {
         Self {
             backends: StorageBackendConfig::cloud_native(),
             zfs: ZfsStorageConfig::cloud_native(),
@@ -195,7 +195,7 @@ impl CanonicalStorageConfig {
     }
 
     /// Validate the storage configuration for completeness and consistency
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         // Validate backend configurations
         self.backends.validate()?;
 
@@ -228,20 +228,20 @@ impl CanonicalStorageConfig {
 
     /// Get storage capacity information
     #[must_use]
-    pub const fn get_total_capacity(&self) -> u64 {
+    pub fn get_total_capacity(&self) -> u64 {
         // Implementation would calculate total capacity across all backends
         0
     }
 
     /// Get available storage backends
     #[must_use]
-    pub const fn get_available_backends(&self) -> Vec<StorageBackendType> {
+    pub fn get_available_backends(&self) -> Vec<StorageBackendType> {
         self.backends.get_available_backends()
     }
 
     /// Check if a specific backend is configured
     #[must_use]
-    pub const fn has_backend(&self, backend_type: &StorageBackendType) -> bool {
+    pub fn has_backend(&self, backend_type: &StorageBackendType) -> bool {
         self.backends.has_backend(backend_type)
     }
 }

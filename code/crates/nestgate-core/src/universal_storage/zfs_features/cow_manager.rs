@@ -91,7 +91,7 @@ where
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn new(backend: Backend, config: CowConfig) -> Result<Self>   {
+        pub fn new(backend: Backend, config: CowConfig) -> Result<Self>   {
         info!(
             "Initializing zero-cost COW manager with config: {:?}",
             config

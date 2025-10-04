@@ -76,7 +76,7 @@ pub struct BackupFileEntry {
 }
 
 impl StorageTarget {
-    pub const fn new(name: String, target_type: TargetType, endpoint: String) -> Self {
+    pub fn new(name: String, target_type: TargetType, endpoint: String) -> Self {
         Self {
             id: uuid::Uuid::new_v4().to_string(),
             name,
@@ -108,7 +108,7 @@ impl StorageTarget {
 }
 
 impl ReplicationJob {
-    pub const fn new(source_snapshot: String, target: StorageTarget) -> Self {
+    pub fn new(source_snapshot: String, target: StorageTarget) -> Self {
         Self {
             id: uuid::Uuid::new_v4().to_string(),
             source_snapshot,

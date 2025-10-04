@@ -17,7 +17,7 @@ impl StorageDetectorUtils {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn validate_storage_id(id: &str) -> Result<()> {
+    pub fn validate_storage_id(id: &str) -> Result<()> {
         if id.is_empty() {
             return Err(NestGateError::validation_error(
                 "Storage identifier cannot be empty",
@@ -35,7 +35,7 @@ impl StorageDetectorUtils {
 
     /// Normalize storage path for consistent identification
     #[must_use]
-    pub const fn normalize_path(path: &str) -> String {
+    pub fn normalize_path(path: &str) -> String {
         // Remove trailing slashes and normalize path separators
         let normalized = path.trim_end_matches('/').replace('\\', "/");
         if normalized.is_empty() {
@@ -77,11 +77,11 @@ impl StorageDetectorUtils {
 
     /// Calculate percentage with safe division
     #[must_use]
-    pub const fn safe_percentage(used: u64, total: u64) -> f64 {
+    pub fn safe_percentage(used: u64, total: u64) -> f64 {
         if total == 0 {
             0.0
         } else {
-            (f64::from(used) / f64::from(total)) * 100.0
+            (used as f64 / total as f64) * 100.0
         }
     }
 

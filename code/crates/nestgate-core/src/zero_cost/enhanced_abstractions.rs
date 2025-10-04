@@ -91,7 +91,7 @@ impl<const B: usize, const C: usize, const T: u64, const M: bool, const TC: usiz
 {
     /// Create new configuration builder
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             _phantom: PhantomData,
         }
@@ -99,7 +99,7 @@ impl<const B: usize, const C: usize, const T: u64, const M: bool, const TC: usiz
 
     /// Set buffer size (compile-time)
     #[must_use]
-    pub const fn with_buffer_size<const NEW_BUFFER: usize>(
+    pub fn with_buffer_size<const NEW_BUFFER: usize>(
         self,
     ) -> ZeroCostConfigBuilder<NEW_BUFFER, C, T, M, TC> {
         ZeroCostConfigBuilder {
@@ -109,7 +109,7 @@ impl<const B: usize, const C: usize, const T: u64, const M: bool, const TC: usiz
 
     /// Set max connections (compile-time)
     #[must_use]
-    pub const fn with_max_connections<const NEW_CONNECTIONS: usize>(
+    pub fn with_max_connections<const NEW_CONNECTIONS: usize>(
         self,
     ) -> ZeroCostConfigBuilder<B, NEW_CONNECTIONS, T, M, TC> {
         ZeroCostConfigBuilder {
@@ -119,7 +119,7 @@ impl<const B: usize, const C: usize, const T: u64, const M: bool, const TC: usiz
 
     /// Set timeout (compile-time)
     #[must_use]
-    pub const fn with_timeout<const NEW_TIMEOUT: u64>(
+    pub fn with_timeout<const NEW_TIMEOUT: u64>(
         self,
     ) -> ZeroCostConfigBuilder<B, C, NEW_TIMEOUT, M, TC> {
         ZeroCostConfigBuilder {
@@ -129,7 +129,7 @@ impl<const B: usize, const C: usize, const T: u64, const M: bool, const TC: usiz
 
     /// Enable metrics (compile-time)
     #[must_use]
-    pub const fn with_metrics<const ENABLE: bool>(
+    pub fn with_metrics<const ENABLE: bool>(
         self,
     ) -> ZeroCostConfigBuilder<B, C, T, ENABLE, TC> {
         ZeroCostConfigBuilder {
@@ -139,7 +139,7 @@ impl<const B: usize, const C: usize, const T: u64, const M: bool, const TC: usiz
 
     /// Set thread count (compile-time)
     #[must_use]
-    pub const fn with_threads<const NEW_THREADS: usize>(
+    pub fn with_threads<const NEW_THREADS: usize>(
         self,
     ) -> ZeroCostConfigBuilder<B, C, T, M, NEW_THREADS> {
         ZeroCostConfigBuilder {
@@ -170,7 +170,7 @@ impl<const POOL_SIZE: usize, const BLOCK_SIZE: usize, const ALIGNMENT: usize>
 {
     /// Create new memory pool with compile-time configuration
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             _phantom: PhantomData,
         }
@@ -178,31 +178,31 @@ impl<const POOL_SIZE: usize, const BLOCK_SIZE: usize, const ALIGNMENT: usize>
 
     /// Get pool size (compile-time constant)
     #[must_use]
-    pub const fn pool_size() -> usize {
+    pub fn pool_size() -> usize {
         POOL_SIZE
     }
 
     /// Get block size (compile-time constant)
     #[must_use]
-    pub const fn block_size() -> usize {
+    pub fn block_size() -> usize {
         BLOCK_SIZE
     }
 
     /// Get alignment (compile-time constant)
     #[must_use]
-    pub const fn alignment() -> usize {
+    pub fn alignment() -> usize {
         ALIGNMENT
     }
 
     /// Calculate total memory usage at compile-time
     #[must_use]
-    pub const fn total_memory() -> usize {
+    pub fn total_memory() -> usize {
         POOL_SIZE * BLOCK_SIZE
     }
 
     /// Check if size fits in a block (compile-time when possible)
     #[must_use]
-    pub const fn fits_in_block(size: usize) -> bool {
+    pub fn fits_in_block(size: usize) -> bool {
         size <= BLOCK_SIZE
     }
 }
@@ -219,25 +219,25 @@ pub struct PerformanceCalculator<
 impl<const OPS: u64, const LAT: u64, const MEM: u64> PerformanceCalculator<OPS, LAT, MEM> {
     /// Calculate throughput in operations per second
     #[must_use]
-    pub const fn throughput() -> u64 {
+    pub fn throughput() -> u64 {
         OPS
     }
 
     /// Calculate latency in microseconds
     #[must_use]
-    pub const fn latency() -> u64 {
+    pub fn latency() -> u64 {
         LAT
     }
 
     /// Calculate memory usage in KB
     #[must_use]
-    pub const fn memory_usage() -> u64 {
+    pub fn memory_usage() -> u64 {
         MEM
     }
 
     /// Calculate efficiency score (ops per KB)
     #[must_use]
-    pub const fn efficiency_score() -> u64 {
+    pub fn efficiency_score() -> u64 {
         if MEM > 0 {
             OPS / MEM
         } else {
@@ -247,7 +247,7 @@ impl<const OPS: u64, const LAT: u64, const MEM: u64> PerformanceCalculator<OPS, 
 
     /// Check if performance meets SLA requirements
     #[must_use]
-    pub const fn meets_sla(min_ops: u64, max_latency: u64, max_memory: u64) -> bool {
+    pub fn meets_sla(min_ops: u64, max_latency: u64, max_memory: u64) -> bool {
         OPS >= min_ops && LAT <= max_latency && MEM <= max_memory
     }
 }
@@ -267,25 +267,25 @@ impl<const SIZE: usize> Default for SimdOptimizedBuffer<SIZE> {
 impl<const SIZE: usize> SimdOptimizedBuffer<SIZE> {
     /// Create new SIMD-optimized buffer
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self { data: [0; SIZE] }
     }
 
     /// Get buffer size (compile-time constant)
     #[must_use]
-    pub const fn size() -> usize {
+    pub fn size() -> usize {
         SIZE
     }
 
     /// Check if buffer is SIMD-aligned
     #[must_use]
-    pub const fn is_simd_aligned() -> bool {
+    pub fn is_simd_aligned() -> bool {
         SIZE % 64 == 0
     }
 
     /// Get data as slice
     #[must_use]
-    pub const fn as_slice(&self) -> &[u8] {
+    pub fn as_slice(&self) -> &[u8] {
         &self.data
     }
 
@@ -301,19 +301,19 @@ pub struct TypeLevelMath<const A: usize, const B: usize>;
 impl<const A: usize, const B: usize> TypeLevelMath<A, B> {
     /// Add two values at compile-time
     #[must_use]
-    pub const fn add() -> usize {
+    pub fn add() -> usize {
         A + B
     }
 
     /// Multiply two values at compile-time
     #[must_use]
-    pub const fn mul() -> usize {
+    pub fn mul() -> usize {
         A * B
     }
 
     /// Find maximum of two values at compile-time
     #[must_use]
-    pub const fn max() -> usize {
+    pub fn max() -> usize {
         if A > B {
             A
         } else {
@@ -323,7 +323,7 @@ impl<const A: usize, const B: usize> TypeLevelMath<A, B> {
 
     /// Find minimum of two values at compile-time
     #[must_use]
-    pub const fn min() -> usize {
+    pub fn min() -> usize {
         if A < B {
             A
         } else {
@@ -333,7 +333,7 @@ impl<const A: usize, const B: usize> TypeLevelMath<A, B> {
 
     /// Calculate greatest common divisor at compile-time
     #[must_use]
-    pub const fn gcd() -> usize {
+    pub fn gcd() -> usize {
         const fn gcd_impl(a: usize, b: usize) -> usize {
             if b == 0 {
                 a

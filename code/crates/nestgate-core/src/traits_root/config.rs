@@ -3,7 +3,7 @@
 use futures_util::Stream;
 use serde::{Deserialize, Serialize};
 use crate::config::federation::FederationConfig;
-use crate::config::network::{HttpConfig, WebSocketConfig};
+use crate::config::canonical_master::domains::network::protocols::{HttpConfig, WebSocketConfig};
 use crate::Result;
 
 /// Configuration provider trait
@@ -43,6 +43,8 @@ pub struct ConfigMetadata {
     pub version: u64,
 }
 /// Network configuration
+/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
+#[deprecated(since = "0.9.0", note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead")]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkConfig {
     pub websocket: WebSocketConfig,

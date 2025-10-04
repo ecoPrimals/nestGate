@@ -187,12 +187,12 @@ pub struct HttpProtocolHandler {
 }
 impl HttpProtocolHandler {
     /// Create a new HTTP protocol handler
-    pub const fn new(config: NetworkConfig) -> Self {
+    pub fn new(config: NetworkConfig) -> Self {
         Self { _config: config }
     }
 
     /// Handle HTTP request
-    pub fn handle_request(
+    pub async fn handle_request(
         &self,
         request: HttpRequest,
     ) -> nestgate_core::Result<HttpResponse> {
@@ -274,7 +274,7 @@ pub struct TcpProtocolHandler {
 }
 impl TcpProtocolHandler {
     /// Create a new TCP protocol handler
-    pub const fn new(config: NetworkConfig) -> Self {
+    pub fn new(config: NetworkConfig) -> Self {
         Self { _config: config }
     }
 
@@ -289,7 +289,7 @@ impl TcpProtocolHandler {
     }
 
     /// Send data over TCP connection
-    pub const fn send_data(&self, connection_id: &str, data: &[u8]) -> nestgate_core::Result<usize> {
+    pub fn send_data(&self, connection_id: &str, data: &[u8]) -> nestgate_core::Result<usize> {
         debug!(
             "Sending {} bytes to connection {}",
             data.len(),

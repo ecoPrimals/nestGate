@@ -232,7 +232,7 @@ pub mod network_defaults {
     use super::*;
     /// Get default network domain constants
     #[must_use]
-    pub const fn constants() -> NetworkDomainConstants {
+    pub fn constants() -> NetworkDomainConstants {
         NetworkDomainConstants::default()
     }
 

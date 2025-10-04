@@ -31,7 +31,7 @@ impl Default for NCBIGenomeSource {
 
 impl NCBIGenomeSource {
     /// Create a new NCBI genome source
-    pub const fn new(api_key: Option<String>) -> Self {
+    pub fn new(api_key: Option<String>) -> Self {
         Self {
             api_key,
             base_url: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils".to_string(),

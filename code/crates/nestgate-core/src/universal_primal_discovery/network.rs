@@ -55,7 +55,7 @@ impl Default for NetworkDiscovery {
 impl NetworkDiscovery {
     /// Create new network discovery subsystem
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: NestGateCanonicalConfig::default(),
             discovery_config: NetworkDiscoveryConfig::default(),
@@ -64,7 +64,7 @@ impl NetworkDiscovery {
 
     /// Create with custom configuration
     #[must_use]
-    pub const fn with_config(config: NestGateCanonicalConfig) -> Self {
+    pub fn with_config(config: NestGateCanonicalConfig) -> Self {
         Self {
             config,
             discovery_config: NetworkDiscoveryConfig::default(),
@@ -79,8 +79,8 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn discover_bind_address(&self, service_name: &str) -> Result<IpAddr>  {
+    #[must_use]
+    pub async fn discover_bind_address(&self, service_name: &str) -> Result<IpAddr> {
         // Try environment first (external configuration)
         if let Ok(addr) = std::env::var(format!(
             "NESTGATE_{}_BIND_ADDRESS",
@@ -103,7 +103,7 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn discover_available_port(
+    pub async fn discover_available_port(
         &self,
         service_name: &str,
         start_range: u16,
@@ -144,9 +144,9 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn detect_optimal_bind_interface(&self) -> Result<IpAddr>  {
+    pub async fn detect_optimal_bind_interface(&self) -> Result<IpAddr> {
         // Get all available interfaces
-        let interfaces = self.get_available_interfaces().await?;
+        let interfaces = self.get_available_interfaces()?;
 
         if interfaces.is_empty() {
             return Ok(IpAddr::V4(std::net::Ipv4Addr::LOCALHOST));
@@ -179,8 +179,8 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn port_is_available(&self, port: u16) -> Result<bool>  {
+    #[must_use]
+    pub async fn port_is_available(&self, port: u16) -> Result<bool> {
         use tokio::net::TcpListener;
 
         // Try to bind to the port
@@ -198,8 +198,8 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn get_available_interfaces(&self) -> Result<Vec<InterfaceInfo>> {
+    #[must_use]
+    pub fn get_available_interfaces(&self) -> Result<Vec<InterfaceInfo>> {
         // Simplified implementation - in a real system this would use proper network interface APIs
         let mut interfaces = Vec::new();
 
@@ -239,8 +239,8 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub async fn discover_service_endpoint(&self, service_name: &str) -> Result<String> {
+    #[must_use]
+    pub async fn discover_service_endpoint(&self, service_name: &str) -> Result<String> {
         // Environment override
         if let Ok(endpoint) =
             std::env::var(&["NESTGATE_", &service_name.to_uppercase(), "_ENDPOINT"].concat())
@@ -260,7 +260,7 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn scan_network_for_service(&self, service_name: &str) -> Result<String>  {
+    pub async fn scan_network_for_service(&self, service_name: &str) -> Result<String> {
         // Simplified implementation - in a real system this would do actual network discovery
         let bind_address = self.detect_optimal_bind_interface().await?;
         // Use the port range from discovery config
@@ -281,8 +281,8 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub async fn discover_capability_endpoint(&self, capability: &str) -> Result<String> {
+    #[must_use]
+    pub async fn discover_capability_endpoint(&self, capability: &str) -> Result<String> {
         // Environment-based discovery
         if let Ok(endpoint) =
             std::env::var(&["NESTGATE_", &capability.to_uppercase(), "_ENDPOINT"].concat())
@@ -306,8 +306,8 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn get_network_config(&self) -> Result<HashMap<String, String>> {
+    #[must_use]
+    pub async fn get_network_config(&self) -> Result<HashMap<String, String>> {
         let mut config = HashMap::new();
 
         config.insert(

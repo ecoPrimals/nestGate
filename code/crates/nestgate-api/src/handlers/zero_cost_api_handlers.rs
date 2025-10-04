@@ -106,12 +106,12 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
     }
 
     /// Get maximum requests (compile-time constant)
-    pub const fn max_requests() -> usize {
+    pub fn max_requests() -> usize {
         MAX_REQUESTS
     }
 
     /// Get timeout (compile-time constant)
-    pub const fn timeout_ms() -> u64 {
+    pub fn timeout_ms() -> u64 {
         TIMEOUT_MS
     }
 
@@ -123,8 +123,8 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn handle_list_pools(&self) -> Result<Json<Vec<serde_json::Value>>, StatusCode>  {
+    #[must_use]
+    pub fn handle_list_pools(&self) -> Result<Json<Vec<serde_json::Value>>, StatusCode> {
         // Basic pool listing implementation
         let pools = vec![
             serde_json::json!({
@@ -155,10 +155,7 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn handle_get_pool(
-        &self,
-        name: String,
-    ) -> Result<Json<serde_json::Value>, StatusCode>  {
+    pub fn handle_get_pool(&self, name: String) -> Result<Json<serde_json::Value>, StatusCode> {
         // Basic pool retrieval implementation
         match name.as_str() {
             "tank" => Ok(Json(serde_json::json!({
@@ -195,10 +192,10 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn handle_create_pool(
+    pub fn handle_create_pool(
         &self,
         config: PoolConfig,
-    ) -> Result<Json<serde_json::Value>, StatusCode>  {
+    ) -> Result<Json<serde_json::Value>, StatusCode> {
         // Basic pool creation implementation with validation
         // Note: PoolConfig doesn't have name field, so we use a default name
         let pool_name = "new_pool".to_string();
@@ -224,10 +221,7 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn handle_delete_pool(
-        &self,
-        name: String,
-    ) -> Result<Json<serde_json::Value>, StatusCode>  {
+    pub fn handle_delete_pool(&self, name: String) -> Result<Json<serde_json::Value>, StatusCode> {
         // Basic pool deletion implementation with validation
         if name.is_empty() {
             return Err(StatusCode::BAD_REQUEST);
@@ -252,13 +246,13 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn process_request<T>(
+    pub async fn process_request<T>(
         &self,
         request: ZeroCostApiRequest<T>,
     ) -> Result<ZeroCostApiResponse<T>, ApiError>
     where
         T: Send + Sync + Clone + 'static,
-     {
+    {
         let start_time = std::time::Instant::now();
 
         // Compile-time timeout check
@@ -475,7 +469,7 @@ impl<const MAX_ROUTES: usize, const MAX_MIDDLEWARE: usize>
     ZeroCostRouterBuilder<MAX_ROUTES, MAX_MIDDLEWARE>
 {
     /// Create new router builder
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             routes: Vec::with_capacity(MAX_ROUTES),
             middleware_count: 0,
@@ -484,22 +478,22 @@ impl<const MAX_ROUTES: usize, const MAX_MIDDLEWARE: usize>
     }
 
     /// Check if we can add more routes
-    pub const fn can_add_route(&self) -> bool {
+    pub fn can_add_route(&self) -> bool {
         self.routes.len() < MAX_ROUTES
     }
 
     /// Check if we can add more middleware
-    pub const fn can_add_middleware(&self) -> bool {
+    pub fn can_add_middleware(&self) -> bool {
         self.middleware_count < MAX_MIDDLEWARE
     }
 
     /// Get max routes at compile-time
-    pub const fn max_routes() -> usize {
+    pub fn max_routes() -> usize {
         MAX_ROUTES
     }
 
     /// Get max middleware at compile-time
-    pub const fn max_middleware() -> usize {
+    pub fn max_middleware() -> usize {
         MAX_MIDDLEWARE
     }
 

@@ -40,7 +40,7 @@ impl Default for SecurityEnvironmentConfig {
 
 impl EnvironmentSecuritySettings {
     #[must_use]
-    pub const fn development() -> Self {
+    pub fn development() -> Self {
         Self {
             security_level: "low".to_string(),
             deployment: DeploymentSecurityConfig {
@@ -55,7 +55,7 @@ impl EnvironmentSecuritySettings {
     }
 
     #[must_use]
-    pub const fn staging() -> Self {
+    pub fn staging() -> Self {
         Self {
             security_level: "medium".to_string(),
             deployment: DeploymentSecurityConfig {
@@ -70,7 +70,7 @@ impl EnvironmentSecuritySettings {
     }
 
     #[must_use]
-    pub const fn production() -> Self {
+    pub fn production() -> Self {
         Self {
             security_level: "high".to_string(),
             deployment: DeploymentSecurityConfig {
@@ -87,22 +87,22 @@ impl EnvironmentSecuritySettings {
 
 impl SecurityEnvironmentConfig {
     #[must_use]
-    pub const fn production_hardened() -> Self {
+    pub fn production_hardened() -> Self {
         Self::default()
     }
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self::default()
     }
     #[must_use]
-    pub const fn compliance_focused() -> Self {
+    pub fn compliance_focused() -> Self {
         Self::default()
     }
     #[must_use]
-    pub const fn merge(self, _other: Self) -> Self {
+    pub fn merge(self, _other: Self) -> Self {
         self
     }
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }
 }

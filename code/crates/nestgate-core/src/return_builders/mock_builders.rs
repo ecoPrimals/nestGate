@@ -33,7 +33,7 @@ pub struct WorkloadResult {
 /// **PURE FUNCTION**: Mock resource allocation construction
 /// **TESTABLE**: Can verify mock data field assignments
 #[must_use]
-pub const fn build_mock_resource_allocation(
+pub fn build_mock_resource_allocation(
     cpu_cores: u32,
     memory_gb: u32,
     storage_gb: u32,
@@ -65,7 +65,7 @@ pub const fn build_mock_resource_allocation(
 /// **PURE FUNCTION**: Mock workload result construction
 /// **TESTABLE**: Can verify mock workload field assignments
 #[must_use]
-pub const fn build_mock_workload_result(
+pub fn build_mock_workload_result(
     workload_id: String,
     success: bool,
     processing_time_ms: u64,
@@ -74,7 +74,7 @@ pub const fn build_mock_workload_result(
         performance_metrics: PerformanceMetrics {
             cpu_usage: 0.75,
             memory_usage: 0.60,
-            disk_io: f64::from(processing_time_ms),
+            disk_io: processing_time_ms as f64,
             network_io: 0.50,
         },
         workload_id,
@@ -89,7 +89,7 @@ pub const fn build_mock_workload_result(
     }
 }
 /// Build mock performance metrics for testing
-pub const fn build_mock_performance_metrics() -> crate::Result<PerformanceMetrics> {
+pub fn build_mock_performance_metrics() -> crate::Result<PerformanceMetrics> {
     Ok(PerformanceMetrics {
         cpu_usage: 45.2,
         memory_usage: 67.8,
@@ -110,7 +110,7 @@ pub struct AccessGrant {
 
 /// Build mock access grant for testing
 #[must_use]
-pub const fn build_access_grant(
+pub fn build_access_grant(
     permissions: &[String],
     valid_until: u64,
     proof_data: &str,

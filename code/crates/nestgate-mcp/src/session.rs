@@ -57,7 +57,7 @@ pub struct Session {
 }
 impl Session {
     /// Create a new session
-    pub const fn new(client_id: String, client_endpoint: String) -> Self { let now = Utc::now();
+    pub fn new(client_id: String, client_endpoint: String) -> Self { let now = Utc::now();
 
         Self {
             id: Uuid::new_v4().to_string(),
@@ -75,7 +75,7 @@ impl Session {
     }
 
     /// Check if session is expired
-    pub const fn is_expired(&self, timeout: Duration) -> bool {
+    pub fn is_expired(&self, timeout: Duration) -> bool {
         let now = Utc::now();
         let last_activity = self.last_activity;
 
@@ -126,7 +126,7 @@ impl SessionManager {
     }
 
     /// Get a session by ID
-    pub const fn get_session(&self, id: &str) -> Option<Session> {
+    pub fn get_session(&self, id: &str) -> Option<Session> {
         self.sessions.get(id).cloned()
     }
 
@@ -217,7 +217,7 @@ impl SessionManager {
     }
 
     /// Get the number of active sessions
-    pub const fn active_count(&self) -> usize {
+    pub fn active_count(&self) -> usize {
         self.sessions
             .values()
             .filter(|s| s.state == SessionState::Active)
@@ -225,7 +225,7 @@ impl SessionManager {
     }
 
     /// Get all sessions
-    pub const fn all_sessions(&self) -> Vec<Session> {
+    pub fn all_sessions(&self) -> Vec<Session> {
         self.sessions.values().cloned().collect()
     }
 
@@ -235,7 +235,7 @@ impl SessionManager {
     }
 
     /// Get session timeout
-    pub const fn timeout(&self) -> Duration {
+    pub fn timeout(&self) -> Duration {
         self.timeout
     }
 }

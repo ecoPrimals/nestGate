@@ -34,7 +34,7 @@ impl<const N: usize> Default for CompletlySafeBuffer<N> {
 
 impl<const N: usize> CompletlySafeBuffer<N> {
     /// Create new buffer - **COMPLETELY SAFE**
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             data: Vec::with_capacity(N),
         }
@@ -68,7 +68,7 @@ impl<const N: usize> CompletlySafeBuffer<N> {
     }
 
     /// Get data as slice - **COMPLETELY SAFE**
-    pub const fn as_slice(&self) -> &[u8] {
+    pub fn as_slice(&self) -> &[u8] {
         // SAFE: Vec::as_slice is always safe
         &self.data
     }
@@ -80,22 +80,22 @@ impl<const N: usize> CompletlySafeBuffer<N> {
     }
 
     /// Get length - **COMPLETELY SAFE**
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.data.len()
     }
 
     /// Check if empty - **COMPLETELY SAFE**
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
 
     /// Get capacity - **COMPLETELY SAFE**
-    pub const fn capacity(&self) -> usize {
+    pub fn capacity(&self) -> usize {
         N
     }
 
     /// Get remaining capacity - **COMPLETELY SAFE**
-    pub const fn remaining_capacity(&self) -> usize {
+    pub fn remaining_capacity(&self) -> usize {
         N.saturating_sub(self.data.len())
     }
 
@@ -105,7 +105,7 @@ impl<const N: usize> CompletlySafeBuffer<N> {
     }
 
     /// Reserve space - **COMPLETELY SAFE**
-    pub const fn can_fit(&self, additional: usize) -> bool {
+    pub fn can_fit(&self, additional: usize) -> bool {
         self.data.len() + additional <= N
     }
 
@@ -117,7 +117,7 @@ impl<const N: usize> CompletlySafeBuffer<N> {
     }
 
     /// Get specific byte safely - **COMPLETELY SAFE**
-    pub const fn get_byte(&self, index: usize) -> Option<u8> {
+    pub fn get_byte(&self, index: usize) -> Option<u8> {
         self.data.get(index).copied()
     }
 
@@ -165,7 +165,7 @@ impl<const N: usize> Default for CompletlySafeStringBuilder<N> {
 
 impl<const N: usize> CompletlySafeStringBuilder<N> {
     /// Create new string builder - **COMPLETELY SAFE**
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             buffer: CompletlySafeBuffer::new(),
         }
@@ -209,7 +209,7 @@ impl<const N: usize> CompletlySafeStringBuilder<N> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn build(self) -> Result<String>  {
+        pub fn build(self) -> Result<String>  {
         // SAFE: String::from_utf8 validates UTF-8 safety
         match String::from_utf8(self.buffer.data) {
             Ok(s) => Ok(s),
@@ -226,7 +226,7 @@ impl<const N: usize> CompletlySafeStringBuilder<N> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn as_str(&self) -> Result<&str>  {
+        pub fn as_str(&self) -> Result<&str>  {
         // SAFE: std::str::from_utf8 validates UTF-8 safety
         match std::str::from_utf8(self.buffer.as_slice()) {
             Ok(s) => Ok(s),
@@ -236,17 +236,17 @@ impl<const N: usize> CompletlySafeStringBuilder<N> {
     }
 
     /// Get length - **COMPLETELY SAFE**
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.buffer.len()
     }
 
     /// Check if empty - **COMPLETELY SAFE**
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.buffer.is_empty()
     }
 
     /// Check capacity - **COMPLETELY SAFE**
-    pub const fn can_fit(&self, s: &str) -> bool {
+    pub fn can_fit(&self, s: &str) -> bool {
         self.buffer.can_fit(s.len(), location: Some(format!("{}) context: None}
     }
 
@@ -285,13 +285,13 @@ impl SafeMemoryUtils {
     }
 
     /// Safe memory compare - **COMPLETELY SAFE**
-    pub const fn compare_slices(a: &[u8], b: &[u8]) -> std::cmp::Ordering {
+    pub fn compare_slices(a: &[u8], b: &[u8]) -> std::cmp::Ordering {
         // SAFE: slice comparison is always safe
         a.cmp(b)
     }
 
     /// Safe memory search - **COMPLETELY SAFE**
-    pub const fn find_byte(haystack: &[u8], needle: u8) -> Option<usize> {
+    pub fn find_byte(haystack: &[u8], needle: u8) -> Option<usize> {
         // SAFE: iterator methods are always safe
         haystack.iter().position(|&b| b == needle)
     }
@@ -303,7 +303,7 @@ impl SafeMemoryUtils {
     }
 
     /// Safe byte counting - **COMPLETELY SAFE**
-    pub const fn count_byte(data: &[u8], target: u8) -> usize {
+    pub fn count_byte(data: &[u8], target: u8) -> usize {
         // SAFE: iterator methods are always safe
         data.iter().filter(|&&b| b == target).count()
     }
@@ -325,7 +325,7 @@ impl<const N: usize> Default for SafeCircularBuffer<N> {
 
 impl<const N: usize> SafeCircularBuffer<N> {
     /// Create new circular buffer - **COMPLETELY SAFE**
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             data: [None; N],
             head: 0,
@@ -368,22 +368,22 @@ impl<const N: usize> SafeCircularBuffer<N> {
     }
 
     /// Get length - **COMPLETELY SAFE**
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.size
     }
 
     /// Check if empty - **COMPLETELY SAFE**
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.size == 0
     }
 
     /// Check if full - **COMPLETELY SAFE**
-    pub const fn is_full(&self) -> bool {
+    pub fn is_full(&self) -> bool {
         self.size == N
     }
 
     /// Get capacity - **COMPLETELY SAFE**
-    pub const fn capacity(&self) -> usize {
+    pub fn capacity(&self) -> usize {
         N
     }
 

@@ -49,7 +49,7 @@ pub struct BlockStorageBackend {
 }
 impl BlockStorageBackend {
     /// Create new block storage backend
-    pub const fn new(config: BlockStorageConfig) -> Self { Self {
+    pub fn new(config: BlockStorageConfig) -> Self { Self {
             config,
             is_connected: false,
          }
@@ -287,7 +287,7 @@ impl Default for BlockStorageBuilder {
 }
 
 impl BlockStorageBuilder {
-    pub const fn new() -> Self { Self { config: None  }
+    pub fn new() -> Self { Self { config: None  }
 
     #[must_use]
     pub fn with_config(mut self, config: BlockStorageConfig) -> Self { self.config = Some(config);

@@ -48,7 +48,7 @@ impl StorageCapabilityDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn discover_capabilities(&self) -> Result<Vec<StorageCapabilityInfo>>  {
+    pub async fn discover_capabilities(&self) -> Result<Vec<StorageCapabilityInfo>> {
         // Dynamic discovery logic - replaces hardcoded storage endpoints
         let mut capabilities = Vec::new();
 
@@ -79,10 +79,10 @@ impl StorageCapabilityDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_capability(
+    pub async fn get_capability(
         &self,
         capability_type: &StorageCapabilityType,
-    ) -> Result<Option<StorageCapabilityInfo>>  {
+    ) -> Result<Option<StorageCapabilityInfo>> {
         let cache = self.discovered_capabilities.read().await;
         Ok(cache.get(capability_type).cloned())
     }

@@ -2,7 +2,7 @@
 /// This module provides fallback values when universal adapter discovery fails
 /// Get fallback port for a service when discovery fails
 #[must_use]
-pub const fn get_fallback_port(service_name: &str) -> u16 {
+pub fn get_fallback_port(service_name: &str) -> u16 {
     match service_name {
         "api" => 8080,
         "web" => 3000,

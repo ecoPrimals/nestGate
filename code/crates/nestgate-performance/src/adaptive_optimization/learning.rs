@@ -9,7 +9,7 @@ pub struct SimpleLearningModel {
 }
 
 impl SimpleLearningModel {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             // Initialize fields
         }
@@ -36,7 +36,7 @@ pub struct TrendAnalyzer {
 }
 
 impl TrendAnalyzer {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             // Initialize fields
         }

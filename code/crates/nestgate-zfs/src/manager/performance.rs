@@ -21,7 +21,7 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_performance_analytics(&self) -> Result<PerformanceAnalytics>  {
+    pub async fn get_performance_analytics(&self) -> Result<PerformanceAnalytics> {
         let current_metrics = self
             .performance_monitor
             .read()
@@ -71,7 +71,7 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn trigger_optimization(&self) -> Result<OptimizationResult>  {
+    pub async fn trigger_optimization(&self) -> Result<OptimizationResult> {
         info!("🚀 Triggering comprehensive ZFS optimization using heuristic analysis");
 
         let mut results: Vec<String> = Vec::new();
@@ -181,7 +181,7 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn shutdown(&self) -> Result<()>  {
+    pub fn shutdown(&self) -> Result<()> {
         info!("Shutting down Enhanced ZFS Manager");
 
         // The actual shutdown is handled by the stop method

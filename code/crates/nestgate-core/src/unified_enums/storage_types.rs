@@ -73,7 +73,7 @@ impl Default for StorageTier {
 impl StorageTier {
     /// Get the expected access frequency for this tier
     #[must_use]
-    pub const fn access_frequency(&self) -> &'static str {
+    pub fn access_frequency(&self) -> &'static str {
         match self {
             Self::Hot => "multiple times per day",
             Self::Warm => "weekly to monthly",
@@ -85,7 +85,7 @@ impl StorageTier {
 
     /// Get the relative cost factor for this tier (Hot = 1.0)
     #[must_use]
-    pub const fn cost_factor(&self) -> f32 {
+    pub fn cost_factor(&self) -> f32 {
         match self {
             Self::Hot => 1.0,
             Self::Warm => 0.7,
@@ -111,10 +111,10 @@ pub struct StorageCapacity {
 impl StorageCapacity {
     /// Create a new storage capacity report
     #[must_use]
-    pub const fn new(total_bytes: u64, used_bytes: u64) -> Self {
+    pub fn new(total_bytes: u64, used_bytes: u64) -> Self {
         let available_bytes = total_bytes.saturating_sub(used_bytes);
         let utilization_percent = if total_bytes > 0 {
-            (f64::from(used_bytes) / f64::from(total_bytes)) * 100.0
+            (used_bytes as f64 / total_bytes as f64) * 100.0
         } else {
             0.0
         };
@@ -129,13 +129,13 @@ impl StorageCapacity {
 
     /// Check if storage is nearly full (>90% utilization)
     #[must_use]
-    pub const fn is_nearly_full(&self) -> bool {
+    pub fn is_nearly_full(&self) -> bool {
         self.utilization_percent > 90.0
     }
 
     /// Check if storage is critically full (>95% utilization)
     #[must_use]
-    pub const fn is_critically_full(&self) -> bool {
+    pub fn is_critically_full(&self) -> bool {
         self.utilization_percent > 95.0
     }
 }

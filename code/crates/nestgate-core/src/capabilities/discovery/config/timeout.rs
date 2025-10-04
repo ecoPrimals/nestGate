@@ -47,7 +47,7 @@ impl Default for TimeoutDiscoverySettings {
 impl TimeoutDiscoverySettings {
     /// Create new timeout discovery settings with defaults
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
@@ -66,7 +66,7 @@ impl TimeoutDiscoverySettings {
     }
 
     /// Validate timeout settings
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         if self.min_timeout > self.max_timeout {
             return Err(crate::error::NestGateError::validation_error(
                 "Invalid argument",
@@ -84,7 +84,7 @@ impl TimeoutDiscoverySettings {
 
     /// Calculate adaptive timeout based on historical performance
     #[must_use]
-    pub const fn calculate_adaptive_timeout(
+    pub fn calculate_adaptive_timeout(
         &self,
         base_timeout: Duration,
         success_rate: f64,

@@ -16,15 +16,15 @@ use std::fmt;
 // Using imports from above
 
 /// Permission for read access
-pub const fn read_permission() -> Permission {
+pub fn read_permission() -> Permission {
     Permission::new("system.read")
 }
 /// Permission for write access
-pub const fn write_permission() -> Permission {
+pub fn write_permission() -> Permission {
     Permission::new("system.write")
 }
 /// Permission for admin access
-pub const fn admin_permission() -> Permission {
+pub fn admin_permission() -> Permission {
     Permission::new("system.admin")
 }
 // Using the AuthContext from the parent module
@@ -209,7 +209,7 @@ pub struct AuthMiddleware {
 
 impl AuthMiddleware {
     /// Create a new auth middleware that requires specific permissions
-    pub const fn with_permissions(permissions: Vec<String>) -> Self {
+    pub fn with_permissions(permissions: Vec<String>) -> Self {
         Self {
             required_permissions: permissions,
             required_role: None,
@@ -217,7 +217,7 @@ impl AuthMiddleware {
     }
 
     /// Create a new auth middleware that requires a specific role
-    pub const fn with_role(role: Role) -> Self {
+    pub fn with_role(role: Role) -> Self {
         Self {
             required_permissions: vec![],
             required_role: Some(role),
@@ -232,7 +232,7 @@ impl AuthMiddleware {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn check(&self, context: &AuthContext) -> Result<()>  {
+        pub fn check(&self, context: &AuthContext) -> Result<()>  {
         // Check role requirement if set
         if let Some(required_role) = &self.required_role {
             match *required_role {
@@ -297,15 +297,15 @@ impl AuthMiddleware {
 }
 
 /// Helper function to create an auth middleware that requires admin role
-pub const fn require_admin() -> AuthMiddleware {
+pub fn require_admin() -> AuthMiddleware {
     AuthMiddleware::with_role(Role::Admin)
 }
 /// Helper function to create an auth middleware that requires operator role
-pub const fn require_operator() -> AuthMiddleware {
+pub fn require_operator() -> AuthMiddleware {
     AuthMiddleware::with_role(Role::Operator)
 }
 /// Helper function to create an auth middleware that requires read-only access
-pub const fn require_read_only() -> AuthMiddleware {
+pub fn require_read_only() -> AuthMiddleware {
     AuthMiddleware::with_role(Role::ReadOnly)
 }
 /// Authentication token

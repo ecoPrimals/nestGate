@@ -19,7 +19,7 @@ pub struct SimpleMemoryPool {
 
 impl SimpleMemoryPool {
     /// Create a new memory pool
-    pub const fn new(buffer_size: usize, max_pool_size: usize) -> Self {
+    pub fn new(buffer_size: usize, max_pool_size: usize) -> Self {
         Self {
             pool: Arc::new(Mutex::new(VecDeque::new())),
             buffer_size,
@@ -55,7 +55,7 @@ impl SimpleMemoryPool {
     }
 
     /// Get pool statistics
-    pub const fn stats(&self) -> PoolStats {
+    pub fn stats(&self) -> PoolStats {
         let pool_size = self.pool.lock().map(|p| p.len()).unwrap_or(0);
         PoolStats {
             buffer_size: self.buffer_size,
@@ -82,7 +82,7 @@ pub struct PooledBuffer {
 
 impl PooledBuffer {
     /// Create a new pooled buffer
-    pub const fn new(buffer: Vec<u8>, pool: Arc<Mutex<VecDeque<Vec<u8>>>>, max_pool_size: usize) -> Self {
+    pub fn new(buffer: Vec<u8>, pool: Arc<Mutex<VecDeque<Vec<u8>>>>, max_pool_size: usize) -> Self {
         Self {
             buffer: Some(buffer),
             pool,
@@ -98,19 +98,19 @@ impl PooledBuffer {
     }
 
     /// Get a reference to the buffer
-    pub const fn buffer_ref(&self) -> &Vec<u8> {
+    pub fn buffer_ref(&self) -> &Vec<u8> {
         self.buffer
             .as_ref()
             .expect("Buffer should always be present")
     }
 
     /// Get the length of the buffer
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.buffer_ref().len()
     }
 
     /// Check if the buffer is empty
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.buffer_ref().is_empty()
     }
 }
@@ -149,20 +149,20 @@ pub struct EnhancedMemoryPool {
 
 impl EnhancedMemoryPool {
     /// Create a new enhanced memory pool
-    pub const fn new(buffer_size: usize, max_pool_size: usize) -> Self {
+    pub fn new(buffer_size: usize, max_pool_size: usize) -> Self {
         Self {
             inner: SimpleMemoryPool::new(buffer_size, max_pool_size),
         }
     }
 
     /// Get a managed buffer that automatically returns to pool
-    pub const fn get_managed_buffer(&self) -> PooledBuffer {
+    pub fn get_managed_buffer(&self) -> PooledBuffer {
         let buffer = self.inner.get_buffer();
         PooledBuffer::new(buffer, self.inner.pool.clone(), self.inner.max_pool_size)
     }
 
     /// Get pool statistics
-    pub const fn stats(&self) -> PoolStats {
+    pub fn stats(&self) -> PoolStats {
         self.inner.stats()
     }
 }

@@ -21,7 +21,7 @@ pub struct RealZfsOperations {
 }
 impl RealZfsOperations {
     /// Create new real ZFS operations handler
-    pub const fn new(use_sudo: bool, command_timeout: u64) -> Self {
+    pub fn new(use_sudo: bool, command_timeout: u64) -> Self {
         Self {
             use_sudo,
             command_timeout,

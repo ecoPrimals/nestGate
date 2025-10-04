@@ -14,7 +14,7 @@ pub struct LogRetentionManager {
 }
 impl LogRetentionManager {
     /// Create new retention manager
-    pub const fn new(config: LogRetentionConfig) -> Self {
+    pub fn new(config: LogRetentionConfig) -> Self {
         Self { config }
     }
 

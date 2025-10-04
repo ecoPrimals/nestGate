@@ -459,7 +459,7 @@ impl TelemetryCollector {
         stats: &crate::memory_pool::PoolStatistics,
     ) {
         let hit_ratio = if stats.hits + stats.misses > 0 {
-            stats.f64::from(hits) / (stats.hits + stats.misses) as f64
+            stats.hits as f64 / (stats.hits + stats.misses) as f64
         } else {
             0.0
         };
@@ -495,7 +495,7 @@ impl TelemetryCollector {
                 labels: labels.clone(),
                 last_updated: SystemTime::now(),
             });
-        counter.value = stats.f64::from(total_acquisitions);
+        counter.value = stats.total_acquisitions as f64;
         counter.last_updated = SystemTime::now();
     }
 
@@ -623,7 +623,7 @@ impl TelemetryCollector {
                     let active = total - idle - iowait;
 
                     if total > 0 {
-                        return Ok((f64::from(active) / f64::from(total)) * 100.0);
+                        return Ok((active as f64 / total as f64) * 100.0);
                     }
                 }
             }
@@ -651,7 +651,7 @@ impl TelemetryCollector {
 
             if total_mem > 0 {
                 let used_mem = total_mem - available_mem;
-                return Ok((f64::from(used_mem) / f64::from(total_mem)) * 100.0);
+                return Ok((used_mem as f64 / total_mem as f64) * 100.0);
             }
         }
         Ok(0.0)
@@ -660,7 +660,7 @@ impl TelemetryCollector {
 
 impl TimeSeries {
     /// Get recent data points within a time window
-    pub const fn get_recent_data(&self, window: Duration) -> Vec<&DataPoint> {
+    pub fn get_recent_data(&self, window: Duration) -> Vec<&DataPoint> {
         let cutoff_time = SystemTime::now() - window;
         self.data_points
             .iter()
@@ -669,7 +669,7 @@ impl TimeSeries {
     }
 
     /// Calculate average value over time window
-    pub const fn average_over_window(&self, window: Duration) -> Option<f64> {
+    pub fn average_over_window(&self, window: Duration) -> Option<f64> {
         let recent_data = self.get_recent_data(window);
         if recent_data.is_empty() {
             return None;
@@ -725,7 +725,7 @@ mod tests {
         for i in 0..10 {
             time_series.data_points.push(DataPoint {
                 timestamp: SystemTime::now(),
-                value: f64::from(i),
+                value: i as f64,
             });
         }
 

@@ -25,7 +25,7 @@ where
     Backend: CanonicalStorageBackend + Send + Sync + 'static,
 {
     /// Create new deduplication manager with zero-cost backend
-    pub const fn new(backend: Backend) -> Self {
+    pub fn new(backend: Backend) -> Self {
         Self { backend }
     }
 
@@ -43,7 +43,7 @@ where
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn deduplicate(&self, data: &[u8]) -> Result<String>   {
+        pub fn deduplicate(&self, data: &[u8]) -> Result<String>   {
         Ok(ContentHash("placeholder_hash"))
     }
 
@@ -58,7 +58,7 @@ where
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn resolve_reference(&self, _data: &[u8]) -> Result<Vec<u8>>   {
+        pub fn resolve_reference(&self, _data: &[u8]) -> Result<Vec<u8>>   {
         Ok(vec![])
     }
 
@@ -73,7 +73,7 @@ where
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn get_stats(&self) -> Result<DedupStats>   {
+        pub fn get_stats(&self) -> Result<DedupStats>   {
         Ok(DedupStats::default())
     }
 }

@@ -136,7 +136,7 @@ impl TracingContext {
     }
 
     /// Create a child span from this context
-    pub const fn create_child_span(&self, operation_name: &str) -> Self {
+    pub fn create_child_span(&self, operation_name: &str) -> Self {
         Self {
             trace_id: self.trace_id.clone(),
             span_id: uuid::Uuid::new_v4().to_string(),
@@ -171,7 +171,7 @@ pub struct TracingManager {
 }
 impl TracingManager {
     /// Create a new tracing manager
-    pub const fn new(config: TracingConfig) -> Self {
+    pub fn new(config: TracingConfig) -> Self {
         let distributed_config = DistributedTracingConfig {
             enabled: config.distributed_tracing,
             jaeger_endpoint: config.jaeger_endpoint.clone(),
@@ -416,7 +416,7 @@ pub struct TracingConfigBuilder {
 }
 impl TracingConfigBuilder {
     /// Create a new configuration builder
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: TracingConfig::default(),
         }
@@ -477,7 +477,7 @@ impl TracingConfigBuilder {
     }
 
     /// Build the configuration
-    pub const fn build(self) -> TracingConfig {
+    pub fn build(self) -> TracingConfig {
         self.config
     }
 }

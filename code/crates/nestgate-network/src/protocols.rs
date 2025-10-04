@@ -50,7 +50,7 @@ impl ProtocolManager {
     }
 
     /// Get protocol configuration
-    pub const fn get_protocol(&self, protocol: &Protocol) -> Option<&ProtocolConfig> {
+    pub fn get_protocol(&self, protocol: &Protocol) -> Option<&ProtocolConfig> {
         self.protocols.get(protocol)
     }
 
@@ -75,12 +75,12 @@ impl ProtocolManager {
     }
 
     /// Get all protocols
-    pub const fn get_all_protocols(&self) -> Vec<&ProtocolConfig> {
+    pub fn get_all_protocols(&self) -> Vec<&ProtocolConfig> {
         self.protocols.values().collect()
     }
 
     /// Get enabled protocols
-    pub const fn get_enabled_protocols(&self) -> Vec<&ProtocolConfig> {
+    pub fn get_enabled_protocols(&self) -> Vec<&ProtocolConfig> {
         self.protocols
             .values()
             .filter(|config| config.enabled)

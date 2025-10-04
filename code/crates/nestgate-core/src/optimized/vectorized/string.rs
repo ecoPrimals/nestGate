@@ -7,7 +7,7 @@ pub struct VectorizedStringOps;
 
 impl VectorizedStringOps {
     /// Find first occurrence of byte using auto-vectorization
-    pub const fn find_byte_vectorized(haystack: &[u8], needle: u8) -> Option<usize> {
+    pub fn find_byte_vectorized(haystack: &[u8], needle: u8) -> Option<usize> {
         let chunks = haystack.chunks_exact(16);
         let remainder = chunks.remainder();
 

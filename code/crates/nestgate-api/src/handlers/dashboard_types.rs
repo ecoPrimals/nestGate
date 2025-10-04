@@ -20,7 +20,7 @@ pub struct DashboardTimeRange {
 }
 impl DashboardTimeRange {
     /// Create a new time range
-    pub const fn new(start: SystemTime, end: SystemTime, granularity: Duration) -> Self {
+    pub fn new(start: SystemTime, end: SystemTime, granularity: Duration) -> Self {
         Self {
             start,
             end,
@@ -29,7 +29,7 @@ impl DashboardTimeRange {
     }
 
     /// Create a time range for the last N hours
-    pub const fn last_hours(hours: u64) -> Self {
+    pub fn last_hours(hours: u64) -> Self {
         let end = SystemTime::now();
         let start = end - Duration::from_secs(hours * 3600);
         Self {
@@ -40,7 +40,7 @@ impl DashboardTimeRange {
     }
 
     /// Create a time range for the last N days
-    pub const fn last_days(days: u64) -> Self {
+    pub fn last_days(days: u64) -> Self {
         let end = SystemTime::now();
         let start = end - Duration::from_secs(days * 24 * 3600);
         Self {
@@ -51,19 +51,19 @@ impl DashboardTimeRange {
     }
 
     /// Get duration of this time range
-    pub const fn duration(&self) -> Duration {
+    pub fn duration(&self) -> Duration {
         self.end
             .duration_since(self.start)
             .unwrap_or(Duration::ZERO)
     }
 
     /// Check if this time range is valid
-    pub const fn is_valid(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         self.start < self.end && !self.granularity.is_zero()
     }
 
     /// Get the number of data points in this range
-    pub const fn data_points(&self) -> usize {
+    pub fn data_points(&self) -> usize {
         if !self.is_valid() {
             return 0;
         }

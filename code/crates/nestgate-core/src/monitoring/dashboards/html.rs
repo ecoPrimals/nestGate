@@ -74,7 +74,7 @@ pub fn generate_html_dashboard(
         system_metrics.cpu_usage,
         if system_metrics.memory_usage > 0 && system_metrics.memory_available > 0 {
             let total = system_metrics.memory_usage + system_metrics.memory_available;
-            let percent = (system_metrics.f64::from(memory_usage) / f64::from(total)) * 100.0;
+            let percent = (system_metrics.memory_usage as f64 / total as f64) * 100.0;
             if percent > 80.0 {
                 "status-error"
             } else if percent > 60.0 {
@@ -87,7 +87,7 @@ pub fn generate_html_dashboard(
         },
         if system_metrics.memory_usage > 0 && system_metrics.memory_available > 0 {
             let total = system_metrics.memory_usage + system_metrics.memory_available;
-            (system_metrics.f64::from(memory_usage) / f64::from(total)) * 100.0
+            (system_metrics.memory_usage as f64 / total as f64) * 100.0
         } else {
             0.0
         },
@@ -99,7 +99,7 @@ pub fn generate_html_dashboard(
     // Provider metrics
     for (name, metrics) in provider_metrics {
         let success_rate = if metrics.total_requests > 0 {
-            (metrics.f64::from(successful_requests) / metrics.f64::from(total_requests)) * 100.0
+            (metrics.successful_requests as f64 / metrics.total_requests as f64) * 100.0
         } else {
             100.0
         };

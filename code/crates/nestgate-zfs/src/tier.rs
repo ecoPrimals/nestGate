@@ -68,11 +68,11 @@ impl TierManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn new(
+    pub fn new(
         config: &ZfsConfig,
         pool_manager: Arc<ZfsPoolManager>,
         dataset_manager: Arc<ZfsDatasetManager>,
-    ) -> Result<Self>  {
+    ) -> Result<Self> {
         info!("Initializing tier manager");
 
         let mut tier_stats = HashMap::new();
@@ -102,8 +102,8 @@ impl TierManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn initialize_tiers(&self) -> Result<()>  {
+    #[must_use]
+    pub fn initialize_tiers(&self) -> Result<()> {
         // Initialize all storage tiers
         for tier in [
             StorageTier::Hot,
@@ -131,12 +131,12 @@ impl TierManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_tier_status(&self, tier: StorageTier) -> Result<TierStatus>  {
+    pub async fn get_tier_status(&self, tier: StorageTier) -> Result<TierStatus> {
         let stats = self.tier_stats.read().await;
         let tier_stats = stats.get(&tier).cloned().unwrap_or_default();
 
         let utilization = if tier_stats.total_capacity > 0 {
-            (tier_stats.f64::from(used_capacity) / tier_stats.f64::from(total_capacity)) * 100.0
+            (f64::from(tier_stats.used_capacity) / f64::from(tier_stats.total_capacity)) * 100.0
         } else {
             0.0
         };
@@ -165,7 +165,7 @@ impl TierManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn shutdown(&self) -> Result<()>  {
+    pub async fn shutdown(&self) -> Result<()> {
         info!("Shutting down tier manager gracefully");
 
         // Cancel any active operations
@@ -189,7 +189,7 @@ impl TierManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub async fn get_all_tier_status(&self) -> Result<Vec<TierStatus>>  {
+    pub async fn get_all_tier_status(&self) -> Result<Vec<TierStatus>> {
         let mut statuses = Vec::new();
 
         for tier in [
@@ -209,7 +209,7 @@ impl TierManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub async fn refresh_tier_stats(&self) -> Result<()>  {
+    pub async fn refresh_tier_stats(&self) -> Result<()> {
         info!("Refreshing tier statistics");
 
         let datasets = self.dataset_manager.list_datasets().await?;

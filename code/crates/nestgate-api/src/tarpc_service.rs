@@ -169,7 +169,7 @@ impl TarpcServiceManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn start_server(
+        pub fn start_server(
         &self,
         service_name: &str,
         endpoint: &str,
@@ -494,7 +494,7 @@ impl TarpcServiceManager {
             health_info.total_requests += 1;
             health_info.response_time = response_time;
             health_info.success_rate =
-                health_info.f64::from(successful_requests) / health_info.f64::from(total_requests);
+                health_info.successful_requests as f64 / health_info.total_requests as f64;
 
             // Update circuit breaker
             let breaker = monitor
@@ -547,7 +547,7 @@ impl TarpcServiceManager {
             health_info.failed_requests += 1;
             health_info.total_requests += 1;
             health_info.success_rate =
-                health_info.f64::from(successful_requests) / health_info.f64::from(total_requests);
+                health_info.successful_requests as f64 / health_info.total_requests as f64;
 
             // Update circuit breaker
             let breaker = monitor
@@ -567,7 +567,7 @@ impl TarpcServiceManager {
             breaker.last_failure_time = Some(Instant::now());
 
             // Check if we should open the circuit breaker
-            let failure_rate = breaker.f64::from(failure_count)
+            let failure_rate = breaker.failure_count as f64
                 / (breaker.failure_count + breaker.success_count) as f64;
 
             if failure_rate >= breaker.threshold && breaker.state == CircuitBreakerState::Closed {
@@ -628,7 +628,7 @@ impl TarpcServiceManager {
                     "successful_requests": metrics.successful_requests,
                     "failed_requests": metrics.failed_requests,
                     "success_rate": if metrics.total_requests > 0 {
-                        metrics.f64::from(successful_requests) / metrics.f64::from(total_requests)
+                        metrics.successful_requests as f64 / metrics.total_requests as f64
                     } else { 0.0 }
                     "active_connections": metrics.active_connections,
                     "peak_connections": metrics.peak_connections,
@@ -669,7 +669,7 @@ impl TarpcServiceManager {
 }
 
 /// Create a production-ready tarpc service manager
-pub const fn create_production_service_manager() -> TarpcServiceManager {
+pub fn create_production_service_manager() -> TarpcServiceManager {
     let mesh_config = ServiceMeshConfig {
         enable_load_balancing: true,
         enable_circuit_breaker: true,

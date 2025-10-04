@@ -5,6 +5,6 @@ use crate::error::NestGateError;
 /// Provides safe alternatives to testing operations that might panic
 /// Create internal error (used by `safe_operations` functions)
 #[must_use]
-pub const fn internal(message: &str, context: &str) -> NestGateError {
+pub fn internal(message: &str, context: &str) -> NestGateError {
     NestGateError::internal_error(format!("{context}: {message}"), "safe_operations_testing")
 }

@@ -13,7 +13,7 @@ pub enum AlertSeverity {
 }
 impl AlertSeverity {
     /// Get numeric value for comparison
-    pub const fn level(&self) -> u8 {
+    pub fn level(&self) -> u8 {
         match self {
             Self::Info => 0,
             Self::Warning => 1,
@@ -23,7 +23,7 @@ impl AlertSeverity {
     }
 
     /// Get color for UI display
-    pub const fn color(&self) -> &'static str {
+    pub fn color(&self) -> &'static str {
         match self {
             AlertSeverity::Info => "blue",
             AlertSeverity::Warning => "yellow",

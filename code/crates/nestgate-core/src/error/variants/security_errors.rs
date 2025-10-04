@@ -6,7 +6,7 @@ use super::core_errors::*;
 
 impl SecurityErrorDetails {
     /// Create a security error with just a message
-    pub const fn new(message: impl Into<String>) -> Self {
+    pub fn new(message: impl Into<String>) -> Self {
         Self {
             message: message.into(),
             operation: None,
@@ -17,7 +17,7 @@ impl SecurityErrorDetails {
     }
 
     /// Create an authentication error
-    pub const fn authentication_error(message: impl Into<String>) -> Self {
+    pub fn authentication_error(message: impl Into<String>) -> Self {
         Self {
             message: message.into(),
             operation: Some("authentication".to_string()),
@@ -28,7 +28,7 @@ impl SecurityErrorDetails {
     }
 
     /// Create an authorization error
-    pub const fn authorization_error(message: impl Into<String>, principal: impl Into<String>) -> Self {
+    pub fn authorization_error(message: impl Into<String>, principal: impl Into<String>) -> Self {
         Self {
             message: message.into(),
             operation: Some("authorization".to_string()),

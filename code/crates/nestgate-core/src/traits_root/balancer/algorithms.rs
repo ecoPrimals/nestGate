@@ -18,7 +18,7 @@ pub struct RoundRobinLoadBalancer {
 }
 impl RoundRobinLoadBalancer {
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             counter: Arc::new(std::sync::atomic::AtomicUsize::new(0)),
             stats: Arc::new(parking_lot::RwLock::new(LoadBalancerStats {
@@ -95,7 +95,7 @@ pub struct LeastConnectionsLoadBalancer {
 }
 impl LeastConnectionsLoadBalancer {
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             connection_counts: Arc::new(dashmap::DashMap::new()),
             stats: Arc::new(parking_lot::RwLock::new(LoadBalancerStats {
@@ -192,7 +192,7 @@ pub struct RandomLoadBalancer {
 }
 impl RandomLoadBalancer {
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             rng: Arc::new(std::sync::Mutex::new(StdRng::from_entropy())),
             stats: Arc::new(parking_lot::RwLock::new(LoadBalancerStats {

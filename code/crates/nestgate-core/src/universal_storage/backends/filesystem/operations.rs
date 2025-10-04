@@ -63,7 +63,7 @@ use tokio::io::AsyncWriteExt;
 }
 
 /// Check file size limits
-pub const fn check_size_limit(size: usize, max_size: u64) -> Result<()> {
+pub fn check_size_limit(size: usize, max_size: u64) -> Result<()> {
     if max_size > 0 && size as u64 > max_size {
             current: size as u64,
             limit: max_size,

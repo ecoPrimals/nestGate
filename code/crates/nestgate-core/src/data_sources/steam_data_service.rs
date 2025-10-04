@@ -120,7 +120,7 @@ impl GameLibraryStorage {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn update_game_metadata(&self, metadata: GameMetadata) -> Result<(), NestGateError>  {
+    pub async fn update_game_metadata(&self, metadata: GameMetadata) -> Result<(), NestGateError> {
         let mut games = self.game_metadata.write().await;
         info!(
             "Updating metadata for game: {} ({})",
@@ -150,11 +150,11 @@ impl GameLibraryStorage {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn update_installation_path(
+    pub async fn update_installation_path(
         &self,
         app_id: SteamAppId,
         path: PathBuf,
-    ) -> Result<(), NestGateError>  {
+    ) -> Result<(), NestGateError> {
         let mut paths = self.installation_paths.write().await;
         debug!("Updating installation path for {}: {:?}", app_id, path);
         paths.insert(app_id, path);
@@ -175,11 +175,11 @@ impl GameLibraryStorage {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn update_play_stats(
+    pub async fn update_play_stats(
         &self,
         app_id: SteamAppId,
         stats: PlayStats,
-    ) -> Result<(), NestGateError>  {
+    ) -> Result<(), NestGateError> {
         let mut play_stats = self.play_statistics.write().await;
         debug!(
             "Updating play stats for {}: {} minutes total",
@@ -203,11 +203,11 @@ impl GameLibraryStorage {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn update_achievement_data(
+    pub async fn update_achievement_data(
         &self,
         app_id: SteamAppId,
         achievements: AchievementData,
-    ) -> Result<(), NestGateError>  {
+    ) -> Result<(), NestGateError> {
         let mut achievement_map = self.achievement_data.write().await;
         debug!(
             "Updating achievements for {}: {}/{} unlocked",
@@ -241,7 +241,7 @@ impl GameLibraryStorage {
             total_playtime_minutes: total_playtime,
             total_size_bytes: total_size,
             avg_playtime_per_game: if total_games > 0 {
-                f32::from(total_playtime) / f32::from(total_games)
+                total_playtime as f32 / total_games as f32
             } else {
                 0.0
             },
@@ -321,7 +321,7 @@ impl SaveDataFederation {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn add_federation_node(&self, node: FederationNode) -> Result<(), NestGateError>  {
+    pub async fn add_federation_node(&self, node: FederationNode) -> Result<(), NestGateError> {
         let mut nodes = self.sync_targets.write().await;
         info!("Adding federation node: {} at {}", node.id, node.endpoint);
         nodes.push(node);
@@ -336,11 +336,11 @@ impl SaveDataFederation {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn sync_save_data(
+    pub async fn sync_save_data(
         &self,
         app_id: SteamAppId,
         _save_data: &[u8],
-    ) -> Result<(), NestGateError>  {
+    ) -> Result<(), NestGateError> {
         let nodes = self.sync_targets.read().await;
 
         info!(
@@ -407,7 +407,7 @@ pub struct SteamDataService {
 
 impl SteamDataService {
     /// Create a new Steam data service
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             game_library_storage: GameLibraryStorage::new(),
             save_data_federation: SaveDataFederation::new(ConflictResolution::MostRecent),
@@ -424,10 +424,10 @@ impl SteamDataService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn initialize(
+    pub async fn initialize(
         &self,
         federation_nodes: Vec<FederationNode>,
-    ) -> Result<(), NestGateError>  {
+    ) -> Result<(), NestGateError> {
         info!(
             "Initializing Steam data service with {} federation nodes",
             federation_nodes.len()

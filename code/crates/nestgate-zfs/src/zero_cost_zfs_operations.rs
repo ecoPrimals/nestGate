@@ -165,10 +165,10 @@ mod serde_system_time {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub fn deserialize<'de, D>(deserializer: D) -> Result<SystemTime, D::Error>
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<SystemTime, D::Error>
     where
         D: Deserializer<'de>,
-     {
+    {
         let secs = u64::deserialize(deserializer)?;
         Ok(UNIX_EPOCH + std::time::Duration::from_secs(secs))
     }
@@ -207,7 +207,7 @@ impl<
     > ZeroCostZfsManager<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS, COMMAND_TIMEOUT_MS>
 {
     /// Create new ZFS manager with compile-time configuration
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             pools: Arc::new(RwLock::new(HashMap::with_capacity(MAX_POOLS))),
             datasets: Arc::new(RwLock::new(HashMap::with_capacity(MAX_DATASETS))),
@@ -217,7 +217,7 @@ impl<
     }
 
     /// Get command timeout at compile-time
-    pub const fn command_timeout() -> Duration {
+    pub fn command_timeout() -> Duration {
         Duration::from_millis(COMMAND_TIMEOUT_MS)
     }
 
@@ -229,11 +229,11 @@ impl<
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn set_dataset_properties(
+    pub fn set_dataset_properties(
         &self,
         dataset_name: &str,
         properties: &std::collections::HashMap<String, String>,
-    ) -> Result<()>  {
+    ) -> Result<()> {
         // Implementation using ZFS set command
         for (key, value) in properties {
             self.execute_zfs_command(&["set", &format!("{}={}", key, value), dataset_name])
@@ -250,7 +250,7 @@ impl<
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn destroy_snapshot(&self, snapshot_name: &str) -> Result<()>  {
+    pub async fn destroy_snapshot(&self, snapshot_name: &str) -> Result<()> {
         // Implementation using ZFS destroy command
         self.execute_zfs_command(&["destroy", snapshot_name])
             .await?;
@@ -754,7 +754,7 @@ impl ZfsMigrationGuide {
     }
 
     /// Expected performance improvements
-    pub const fn expected_improvements() -> (f64, f64, f64) {
+    pub fn expected_improvements() -> (f64, f64, f64) {
         (
             80.0, // Performance gain % (high due to storage I/O optimization)
             50.0, // Memory reduction % (eliminating Arc overhead)
@@ -782,7 +782,7 @@ impl ZfsBenchmark {
     }
 
     /// Compare old vs new ZFS performance
-    pub const fn performance_comparison() -> (Duration, Duration, f64) {
+    pub fn performance_comparison() -> (Duration, Duration, f64) {
         // Expected results based on eliminating Arc<dyn> overhead in storage operations
         let old_duration = Duration::from_millis(5000); // Old Arc<dyn> approach
         let new_duration = Duration::from_millis(1000); // New zero-cost approach

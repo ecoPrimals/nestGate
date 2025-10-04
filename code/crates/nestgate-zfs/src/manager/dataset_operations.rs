@@ -39,12 +39,12 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn create_dataset(
+    pub fn create_dataset(
         &self,
         name: &str,
         parent: &str,
         tier: StorageTier,
-    ) -> Result<crate::dataset::DatasetInfo>  {
+    ) -> Result<crate::dataset::DatasetInfo> {
         info!(
             "Creating dataset: {} in parent: {} on tier: {:?}",
             name, parent, tier
@@ -72,8 +72,8 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn destroy_dataset(&self, name: &str) -> Result<()>  {
+    #[must_use]
+    pub fn destroy_dataset(&self, name: &str) -> Result<()> {
         info!("Destroying dataset: {}", name);
 
         self.dataset_manager
@@ -97,10 +97,10 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn list_snapshots(
+    pub async fn list_snapshots(
         &self,
         dataset: &str,
-    ) -> Result<Vec<crate::snapshot::SnapshotInfo>>  {
+    ) -> Result<Vec<crate::snapshot::SnapshotInfo>> {
         self.snapshot_manager
             .list_snapshots(dataset)
             .await

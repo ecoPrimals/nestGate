@@ -14,7 +14,7 @@ pub struct EvolutionTracker {
 
 impl EvolutionTracker {
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
@@ -28,7 +28,7 @@ impl EvolutionTracker {
     }
 
     #[must_use]
-    pub const fn get_overall_score(&self) -> f64 {
+    pub fn get_overall_score(&self) -> f64 {
         if self.evolution_scores.is_empty() {
             return 0.0;
         }
@@ -51,17 +51,17 @@ pub struct MigrationManager {
 
 impl MigrationManager {
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
     #[must_use]
-    pub const fn production_optimized() -> Self {
+    pub fn production_optimized() -> Self {
         Self::default()
     }
 
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self::default()
     }
 
@@ -72,11 +72,11 @@ impl MigrationManager {
     }
 
     #[must_use]
-    pub const fn get_completed_count(&self) -> u32 {
+    pub fn get_completed_count(&self) -> u32 {
         self.completed_migrations.len() as u32
     }
 
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }
 }
@@ -100,17 +100,17 @@ impl Default for CompatibilityChecker {
 
 impl CompatibilityChecker {
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
     #[must_use]
-    pub const fn production_optimized() -> Self {
+    pub fn production_optimized() -> Self {
         Self::default()
     }
 
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self::default()
     }
 
@@ -120,7 +120,7 @@ impl CompatibilityChecker {
     }
 
     #[must_use]
-    pub const fn get_overall_score(&self) -> f64 {
+    pub fn get_overall_score(&self) -> f64 {
         if self.validation_errors.is_empty() {
             1.0
         } else {
@@ -149,17 +149,17 @@ impl Default for ModernizationEngine {
 
 impl ModernizationEngine {
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
     #[must_use]
-    pub const fn production_optimized() -> Self {
+    pub fn production_optimized() -> Self {
         Self::default()
     }
 
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self::default()
     }
 
@@ -168,7 +168,7 @@ impl ModernizationEngine {
         Ok(item)
     }
 
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }
 }
@@ -192,21 +192,21 @@ impl Default for CanonicalEvolutionSystem {
 
 impl CanonicalEvolutionSystem {
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
     #[must_use]
-    pub const fn production_optimized() -> Self {
+    pub fn production_optimized() -> Self {
         Self::default()
     }
 
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self::default()
     }
 
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         if self.system_version.is_empty() {
             return Err(crate::NestGateError::validation_error(
                 "System version cannot be empty",

@@ -59,8 +59,8 @@ impl ZfsPoolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn new(config: &ZfsConfig) -> Result<Self>  {
+    #[must_use]
+    pub fn new(config: &ZfsConfig) -> Result<Self> {
         info!("Initializing ZFS pool manager");
 
         let manager = Self {
@@ -85,8 +85,8 @@ impl ZfsPoolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn with_owned_config(config: ZfsConfig) -> Result<Self>  {
+    #[must_use]
+    pub fn with_owned_config(config: ZfsConfig) -> Result<Self> {
         info!("Initializing ZFS pool manager with owned config");
 
         let manager = Self {
@@ -134,7 +134,7 @@ impl ZfsPoolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn discover_pools(&self) -> Result<()>  {
+    pub async fn discover_pools(&self) -> Result<()> {
         info!("Discovering ZFS pools");
 
         let output = TokioCommand::new("zpool")
@@ -282,7 +282,7 @@ impl ZfsPoolManager {
             _ => return None,
         };
 
-        Some((number * f64::from(multiplier)) as u64)
+        Some((number * multiplier as f64) as u64)
     }
 
     /// Get pool properties using zpool command
@@ -338,7 +338,7 @@ impl ZfsPoolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_overall_status(&self) -> Result<crate::manager::PoolOverallStatus>  {
+    pub async fn get_overall_status(&self) -> Result<crate::manager::PoolOverallStatus> {
         let pools = self.list_pools().await?;
 
         let pools_online = pools
@@ -371,7 +371,7 @@ impl ZfsPoolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_pool_info(&self, pool_name: &str) -> Result<PoolInfo>  {
+    pub async fn get_pool_info(&self, pool_name: &str) -> Result<PoolInfo> {
         // Check our cache first
         let pools = self.discovered_pools.read().await;
         if let Some(pool_info) = pools.get(pool_name) {
@@ -396,8 +396,8 @@ impl ZfsPoolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn create_pool(&self, name: &str, devices: &[String]) -> Result<PoolInfo>  {
+    #[must_use]
+    pub fn create_pool(&self, name: &str, devices: &[String]) -> Result<PoolInfo> {
         info!("Creating ZFS pool: {} with devices: {:?}", name, devices);
 
         // Build the zpool create command
@@ -440,8 +440,8 @@ impl ZfsPoolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn destroy_pool(&self, name: &str) -> Result<()>  {
+    #[must_use]
+    pub fn destroy_pool(&self, name: &str) -> Result<()> {
         warn!("Destroying ZFS pool: {}", name);
 
         let output = TokioCommand::new("zpool")
@@ -487,8 +487,8 @@ impl ZfsPoolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn get_pool_status(&self, name: &str) -> Result<String>  {
+    #[must_use]
+    pub fn get_pool_status(&self, name: &str) -> Result<String> {
         debug!("Getting status for pool: {}", name);
 
         let output = TokioCommand::new("zpool")
@@ -523,8 +523,8 @@ impl ZfsPoolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn scrub_pool(&self, name: &str) -> Result<()>  {
+    #[must_use]
+    pub fn scrub_pool(&self, name: &str) -> Result<()> {
         info!("Starting scrub for pool: {}", name);
 
         let output = TokioCommand::new("zpool")
@@ -560,7 +560,7 @@ impl ZfsPoolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn list_pools(&self) -> Result<Vec<PoolInfo>>  {
+    pub async fn list_pools(&self) -> Result<Vec<PoolInfo>> {
         // Return pools from our cache
         let pools = self.discovered_pools.read().await;
         Ok(pools.values().cloned().collect())
@@ -574,7 +574,7 @@ impl ZfsPoolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn refresh_pool_info(&self, pool_name: &str) -> Result<()>  {
+    pub async fn refresh_pool_info(&self, pool_name: &str) -> Result<()> {
         // Re-discover specific pool
         if let Some(pool_info) = self.discover_single_pool(pool_name).await? {
             // Store pool info in discovered pools cache

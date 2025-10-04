@@ -86,7 +86,7 @@ impl MemoryPerformanceConfig {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn validate(&self) -> Result<()>  {
+    pub fn validate(&self) -> Result<()> {
         if self.pool.max_size < self.pool.initial_size {
             return Err(NestGateError::configuration_error(
                 "memory.pool.max_size",

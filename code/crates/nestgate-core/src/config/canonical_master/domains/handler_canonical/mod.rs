@@ -126,13 +126,13 @@ pub struct CanonicalHandlerConfigs {
 impl CanonicalHandlerConfigs {
     /// Create a new canonical handler configuration
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
     /// Create a configuration optimized for production environments
     #[must_use]
-    pub const fn production_optimized() -> Self {
+    pub fn production_optimized() -> Self {
         Self {
             api_handlers: ApiHandlerConfig::production_optimized(),
             zfs_handlers: ZfsHandlerConfig::production_optimized(),
@@ -150,7 +150,7 @@ impl CanonicalHandlerConfigs {
 
     /// Create a configuration optimized for development environments
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self {
             api_handlers: ApiHandlerConfig::development_optimized(),
             zfs_handlers: ZfsHandlerConfig::development_optimized(),
@@ -168,7 +168,7 @@ impl CanonicalHandlerConfigs {
 
     /// Create a configuration for high-performance environments
     #[must_use]
-    pub const fn high_performance() -> Self {
+    pub fn high_performance() -> Self {
         Self {
             api_handlers: ApiHandlerConfig::high_performance(),
             zfs_handlers: ZfsHandlerConfig::high_performance(),
@@ -202,7 +202,7 @@ impl CanonicalHandlerConfigs {
     }
 
     /// Validate the handler configuration for completeness and consistency
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         // Validate API handlers
         self.api_handlers.validate()?;
 

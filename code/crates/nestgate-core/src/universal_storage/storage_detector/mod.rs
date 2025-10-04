@@ -74,12 +74,12 @@ impl StorageDetector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        /// Function description
+    /// Function description
     ///
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub async fn scan_available_storage(&mut self) -> Result<Vec<DetectedStorage>>   {
+    pub async fn scan_available_storage(&mut self) -> Result<Vec<DetectedStorage>> {
         let mut detected_storage = Vec::new();
 
         // Use the detection module for parallel detection
@@ -120,7 +120,7 @@ impl StorageDetector {
 
     /// Get cached storage information
     #[must_use]
-    pub const fn get_cached_storage(&self, identifier: &str) -> Option<&DetectedStorage> {
+    pub fn get_cached_storage(&self, identifier: &str) -> Option<&DetectedStorage> {
         self.cache.get(identifier)
     }
 
@@ -136,7 +136,7 @@ impl StorageDetector {
 
     /// Get current configuration
     #[must_use]
-    pub const fn get_config(&self) -> &DetectionConfig {
+    pub fn get_config(&self) -> &DetectionConfig {
         &self.config
     }
 }

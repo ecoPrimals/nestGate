@@ -39,7 +39,7 @@ pub struct CacheEntry {
 }
 impl CacheEntry {
     #[must_use]
-    pub const fn new(data: Vec<u8>) -> Self {
+    pub fn new(data: Vec<u8>) -> Self {
         let now = SystemTime::now();
         Self {
             data,
@@ -50,7 +50,7 @@ impl CacheEntry {
     }
 
     #[must_use]
-    pub const fn is_expired(&self, ttl: Duration) -> bool {
+    pub fn is_expired(&self, ttl: Duration) -> bool {
         self.created_at.elapsed().unwrap_or(Duration::ZERO) > ttl
     }
 
@@ -70,11 +70,11 @@ pub struct CacheStats {
 }
 impl CacheStats {
     #[must_use]
-    pub const fn hit_rate(&self) -> f64 {
+    pub fn hit_rate(&self) -> f64 {
         if self.hits + self.misses == 0 {
             0.0
         } else {
-            hits as f64 / (self.hits + self.misses) as f64
+            self.hits as f64 / (self.hits + self.misses) as f64
         }
     }
 }
@@ -147,7 +147,7 @@ impl CacheManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn put(&mut self, key: String, data: Vec<u8>) -> Result<()>  {
+    pub async fn put(&mut self, key: String, data: Vec<u8>) -> Result<()> {
         let entry = CacheEntry::new(data);
 
         // Always insert into hot tier
@@ -186,7 +186,7 @@ impl CacheManager {
 
     /// Get cache statistics
     #[must_use]
-    pub const fn stats(&self) -> &CacheStats {
+    pub fn stats(&self) -> &CacheStats {
         &self.stats
     }
 
@@ -198,7 +198,7 @@ impl CacheManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn maintenance(&mut self) -> Result<()>  {
+    pub async fn maintenance(&mut self) -> Result<()> {
         self.expire_entries()?;
         self.evict_if_needed().await?;
         debug!("Cache maintenance completed");

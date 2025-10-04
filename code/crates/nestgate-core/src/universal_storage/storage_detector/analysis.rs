@@ -21,7 +21,7 @@ impl Default for StorageAnalyzer {
 impl StorageAnalyzer {
     /// Create new storage analyzer with default thresholds
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             low_space_threshold: 10.0,   // 10% free space warning
             performance_threshold: 50.0, // 50 MB/s minimum throughput
@@ -30,7 +30,7 @@ impl StorageAnalyzer {
 
     /// Create analyzer with custom thresholds
     #[must_use]
-    pub const fn with_thresholds(low_space_threshold: f64, performance_threshold: f64) -> Self {
+    pub fn with_thresholds(low_space_threshold: f64, performance_threshold: f64) -> Self {
         Self {
             low_space_threshold,
             performance_threshold,
@@ -52,7 +52,7 @@ impl StorageAnalyzer {
             total_space += storage.available_space;
 
             // Estimate used space (this would come from filesystem stats in real implementation)
-            let estimated_used = (available_space as f64 * 0.6) as u64; // Assume 60% used
+            let estimated_used = (storage.available_space as f64 * 0.6) as u64; // Assume 60% used
             total_used += estimated_used;
 
             // Generate recommendations for this storage
@@ -60,7 +60,7 @@ impl StorageAnalyzer {
         }
 
         let usage_percent = if total_space > 0 {
-            (f64::from(total_used) / f64::from(total_space)) * 100.0
+            (total_used as f64 / total_space as f64) * 100.0
         } else {
             0.0
         };
@@ -76,7 +76,7 @@ impl StorageAnalyzer {
         let memory_total = 16 * 1024 * 1024 * 1024u64; // 16GB
         let memory_free = 8 * 1024 * 1024 * 1024u64; // 8GB free
         let memory_usage_percent =
-            ((memory_total - memory_free) as f64 / f64::from(memory_total)) * 100.0;
+            ((memory_total - memory_free) as f64 / memory_total as f64) * 100.0;
 
         StorageAnalysisReport {
             filesystem_total: total_space,
@@ -178,7 +178,7 @@ impl StorageAnalyzer {
                 score += storage.performance_profile.read_throughput_mbps / 1000.0; // Max 1.0 point
                 score +=
                     (10000.0 - storage.performance_profile.read_latency_us.min(10000.0)) / 10000.0; // Max 1.0 point
-                score += iops as f64 / 50000.0; // Max 1.0 point for 50k IOPS
+                score += storage.performance_profile.iops as f64 / 50000.0; // Max 1.0 point for 50k IOPS
             }
             StorageUseCase::LowCost => {
                 // Prioritize low cost
@@ -192,7 +192,7 @@ impl StorageAnalyzer {
             StorageUseCase::HighCapacity => {
                 // Prioritize available space
                 score +=
-                    (available_space as f64 / (1024.0 * 1024.0 * 1024.0 * 1024.0)).min(1.0);
+                    (storage.available_space as f64 / (1024.0 * 1024.0 * 1024.0 * 1024.0)).min(1.0);
                 // Max 1.0 point for 1TB+
             }
             StorageUseCase::Backup => {
@@ -208,7 +208,7 @@ impl StorageAnalyzer {
             StorageUseCase::Archive => {
                 // Prioritize low cost and high capacity
                 score +=
-                    (available_space as f64 / (1024.0 * 1024.0 * 1024.0 * 1024.0)).min(0.5); // Max 0.5 for capacity
+                    (storage.available_space as f64 / (1024.0 * 1024.0 * 1024.0 * 1024.0)).min(0.5); // Max 0.5 for capacity
                 if matches!(storage.storage_type, UnifiedStorageType::Cloud) {
                     score += (0.05 - storage.cost_profile.storage_cost_per_gb_month.min(0.05))
                         / 0.05
@@ -310,7 +310,7 @@ pub enum StorageUseCase {
 impl StorageAnalysisReport {
     /// Generate human-readable summary
     #[must_use]
-    pub const fn generate_summary(&self) -> String {
+    pub fn generate_summary(&self) -> String {
         format!(
             "Storage Analysis Summary:\n\
              - Total Filesystem Space: {:.2} GB\n\
@@ -318,11 +318,11 @@ impl StorageAnalysisReport {
              - Memory: {:.2} GB total, {:.2} GB free ({:.1}% used)\n\
              - Recommendations: {}\n\n\
              Detailed Recommendations:\n{}",
-            self.f64::from(filesystem_total) / (1024.0 * 1024.0 * 1024.0),
-            self.f64::from(filesystem_used) / (1024.0 * 1024.0 * 1024.0),
+            self.filesystem_total as f64 / (1024.0 * 1024.0 * 1024.0),
+            self.filesystem_used as f64 / (1024.0 * 1024.0 * 1024.0),
             self.filesystem_usage_percent,
-            self.f64::from(memory_total) / (1024.0 * 1024.0 * 1024.0),
-            self.f64::from(memory_free) / (1024.0 * 1024.0 * 1024.0),
+            self.memory_total as f64 / (1024.0 * 1024.0 * 1024.0),
+            self.memory_free as f64 / (1024.0 * 1024.0 * 1024.0),
             self.memory_usage_percent,
             self.recommendations.len(),
             self.recommendations.join("\n- ")

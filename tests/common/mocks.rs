@@ -4,6 +4,8 @@
 //! Provides proper test isolation while using actual implementations.
 
 use crate::canonical_modernization::{Result, UnifiedServiceType};
+use crate::config::ConsolidatedCanonicalConfig;
+use nestgate_core::constants::canonical::network::DEFAULT_API_PORT;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -348,7 +350,7 @@ mod tests {
                     "http://{}:{}",
                     std::env::var("NESTGATE_HOSTNAME")
                         .unwrap_or_else(|_| nestgate_core::constants::TEST_HOSTNAME.to_string()),
-                    std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string())
+                    std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| DEFAULT_API_PORT.to_string())
                 )
             }),
             started_at: Utc::now(),

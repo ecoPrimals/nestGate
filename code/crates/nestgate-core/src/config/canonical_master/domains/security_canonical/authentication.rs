@@ -658,7 +658,7 @@ impl Default for AccountLockoutConfig {
 impl AuthenticationConfig {
     /// Create a configuration optimized for production environments
     #[must_use]
-    pub const fn production_hardened() -> Self {
+    pub fn production_hardened() -> Self {
         Self {
             primary_method: AuthenticationMethod::OAuth2,
             secondary_methods: vec![AuthenticationMethod::Certificate],
@@ -706,7 +706,7 @@ impl AuthenticationConfig {
 
     /// Create a configuration optimized for development environments
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self {
             primary_method: AuthenticationMethod::UsernamePassword,
             secondary_methods: vec![],
@@ -737,20 +737,20 @@ impl AuthenticationConfig {
 
     /// Create a configuration for compliance-focused environments
     #[must_use]
-    pub const fn compliance_focused() -> Self {
+    pub fn compliance_focused() -> Self {
         Self::production_hardened() // Start with production hardened
                                     // Add compliance-specific overrides here
     }
 
     /// Merge with another configuration
     #[must_use]
-    pub const fn merge(self, _other: Self) -> Self {
+    pub fn merge(self, _other: Self) -> Self {
         // Simple merge - in a real implementation, you'd want more sophisticated merging
         self
     }
 
     /// Validate the authentication configuration
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         // Validate password policy
         if self.password_policy.min_length > self.password_policy.max_length {
             return Err(crate::NestGateError::validation_error(

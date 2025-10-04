@@ -12,7 +12,7 @@ pub struct NetworkPerformanceConfig {
 
 impl NetworkPerformanceConfig {
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self {
             buffer_size: 8192,
             tcp_nodelay: false,
@@ -21,7 +21,7 @@ impl NetworkPerformanceConfig {
     }
 
     #[must_use]
-    pub const fn production_hardened() -> Self {
+    pub fn production_hardened() -> Self {
         Self {
             buffer_size: 65536,
             tcp_nodelay: true,
@@ -34,7 +34,7 @@ impl NetworkPerformanceConfig {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn validate(&self) -> Result<()>  {
+    pub fn validate(&self) -> Result<()> {
         Ok(())
     }
 

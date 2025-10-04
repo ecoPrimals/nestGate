@@ -32,7 +32,7 @@ pub struct PolicyScheduler {
 }
 impl PolicyScheduler {
     /// Create a new policy scheduler
-    pub const fn new(
+    pub fn new(
         dataset_manager: Arc<ZfsDatasetManager>,
         policies: SnapshotPolicyMap,
         operation_queue: Arc<RwLock<Vec<SnapshotOperation>>>,
@@ -373,7 +373,7 @@ impl PolicyScheduler {
     }
 
     /// Parse schedule frequency to duration for next execution
-    pub const fn parse_schedule(&self, schedule: &ScheduleFrequency) -> CoreResult<Duration> {
+    pub fn parse_schedule(&self, schedule: &ScheduleFrequency) -> CoreResult<Duration> {
         match schedule {
             ScheduleFrequency::Minutes(minutes) => Ok(Duration::from_secs(*minutes as u64 * 60)),
             ScheduleFrequency::Hours(hours) => Ok(Duration::from_secs(*hours as u64 * 3600)),

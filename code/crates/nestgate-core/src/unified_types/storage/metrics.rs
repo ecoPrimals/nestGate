@@ -265,17 +265,17 @@ impl StorageMetrics {
     }
 
     /// Calculate total IOPS
-    pub const fn total_iops(&self) -> f64 {
+    pub fn total_iops(&self) -> f64 {
         self.performance.read_iops + self.performance.write_iops
     }
 
     /// Calculate total throughput
-    pub const fn total_throughput(&self) -> u64 {
+    pub fn total_throughput(&self) -> u64 {
         self.performance.read_throughput + self.performance.write_throughput
     }
 
     /// Calculate average latency
-    pub const fn average_latency(&self) -> f64 {
+    pub fn average_latency(&self) -> f64 {
         (self.performance.read_latency_ms + self.performance.write_latency_ms) / 2.0
     }
 }
@@ -285,16 +285,16 @@ impl StorageCacheStats {
     pub fn calculate_hit_ratio(&mut self) {
         let total_requests = self.cache_hits + self.cache_misses;
         if total_requests > 0 {
-            self.hit_ratio = self.f64::from(cache_hits) / f64::from(total_requests);
+            self.hit_ratio = self.cache_hits as f64 / total_requests as f64;
         } else {
             self.hit_ratio = 0.0;
         }
     }
 
     /// Get cache utilization percentage
-    pub const fn cache_utilization(&self) -> f64 {
+    pub fn cache_utilization(&self) -> f64 {
         if self.cache_size > 0 {
-            (self.f64::from(used_cache_size) / self.f64::from(cache_size)) * 100.0
+            (self.used_cache_size as f64 / self.cache_size as f64) * 100.0
         } else {
             0.0
         }
@@ -303,20 +303,20 @@ impl StorageCacheStats {
 
 impl StorageIOStats {
     /// Calculate total operations
-    pub const fn total_operations(&self) -> u64 {
+    pub fn total_operations(&self) -> u64 {
         self.read_ops + self.write_ops
     }
 
     /// Calculate total bytes transferred
-    pub const fn total_bytes(&self) -> u64 {
+    pub fn total_bytes(&self) -> u64 {
         self.bytes_read + self.bytes_written
     }
 
     /// Calculate error rate
-    pub const fn error_rate(&self) -> f64 {
+    pub fn error_rate(&self) -> f64 {
         let total_ops = self.total_operations();
         if total_ops > 0 {
-            ((self.read_errors + self.write_errors) as f64 / f64::from(total_ops)) * 100.0
+            ((self.read_errors + self.write_errors) as f64 / total_ops as f64) * 100.0
         } else {
             0.0
         }

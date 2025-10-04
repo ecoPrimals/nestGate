@@ -7,7 +7,7 @@ use std::collections::HashMap;
 /// Placeholder for universal research provider
 pub struct UniversalResearchProvider;
 impl UniversalResearchProvider {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self
     }
 }

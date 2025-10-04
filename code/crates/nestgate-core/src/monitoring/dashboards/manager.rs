@@ -296,13 +296,13 @@ impl DashboardManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_template(&self, name: &str) -> Result<&DashboardConfig>  {
+        pub fn get_template(&self, name: &str) -> Result<&DashboardConfig>  {
         self.templates.get(name).ok_or_else(|| NestGateError::internal_error(
             location: Some(file!().to_string())})
     }
 
     /// List available templates
-    pub const fn list_templates(&self) -> Vec<String> {
+    pub fn list_templates(&self) -> Vec<String> {
         self.templates.keys().cloned().collect()
     }
 
@@ -384,7 +384,7 @@ impl DashboardManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn generate_from_template(&self, template_name: &str) -> Result<String>  {
+        pub fn generate_from_template(&self, template_name: &str) -> Result<String>  {
         let config = self.get_template(template_name)?;
         let dashboard = self.build_monitoring_dashboard(config)?;
         

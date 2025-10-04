@@ -61,8 +61,8 @@ impl ApiState {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn new() -> Result<Self>  {
+    #[must_use]
+    pub fn new() -> Result<Self> {
         let storage_detector = StorageDetector::new();
 
         Ok(Self {
@@ -81,7 +81,7 @@ impl ApiState {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn init_rpc_connections(&self) -> Result<()>  {
+    pub async fn init_rpc_connections(&self) -> Result<()> {
         let mut rpc_manager_opt = self.rpc_manager.lock().await;
 
         if rpc_manager_opt.is_none() {
@@ -128,7 +128,7 @@ impl ApiState {
     }
 
     /// Get RPC manager
-    pub const fn get_rpc_manager(&self) -> Option<Arc<Mutex<Option<UnifiedRpcManager>>>> {
+    pub fn get_rpc_manager(&self) -> Option<Arc<Mutex<Option<UnifiedRpcManager>>>> {
         Some(Arc::clone(&self.rpc_manager))
     }
 }
@@ -146,7 +146,7 @@ pub struct DataResponse<T> {
 }
 impl<T> DataResponse<T> {
     /// Create new data response
-    pub const fn new(data: T) -> Self {
+    pub fn new(data: T) -> Self {
         Self {
             data,
             timestamp: chrono::Utc::now(),
@@ -155,7 +155,7 @@ impl<T> DataResponse<T> {
     }
 
     /// Create paginated data response
-    pub const fn paginated(data: T, total: u64, page: u64, per_page: u64) -> Self {
+    pub fn paginated(data: T, total: u64, page: u64, per_page: u64) -> Self {
         Self {
             data,
             timestamp: chrono::Utc::now(),
@@ -193,7 +193,7 @@ pub struct DataError {
 }
 impl DataError {
     /// Create new data error
-    pub const fn new(error: String, code: String) -> Self {
+    pub fn new(error: String, code: String) -> Self {
         Self {
             error,
             code,
@@ -217,7 +217,7 @@ pub struct ListQuery {
     pub filter: Option<String>,
 }
 /// Create the main API router with RPC capabilities
-pub const fn create_api_router(state: ApiState) -> Router {
+pub fn create_api_router(state: ApiState) -> Router {
     // Health and system routes
     let health_routes = Router::new()
         .route("/health", get(health_check))

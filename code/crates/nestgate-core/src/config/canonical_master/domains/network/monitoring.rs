@@ -12,7 +12,7 @@ pub struct NetworkMonitoringConfig {
 
 impl NetworkMonitoringConfig {
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self {
             metrics_enabled: true,
             health_check_interval_secs: 60,
@@ -21,7 +21,7 @@ impl NetworkMonitoringConfig {
     }
 
     #[must_use]
-    pub const fn production_hardened() -> Self {
+    pub fn production_hardened() -> Self {
         Self {
             metrics_enabled: true,
             health_check_interval_secs: 30,
@@ -34,7 +34,7 @@ impl NetworkMonitoringConfig {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn validate(&self) -> Result<()>  {
+    pub fn validate(&self) -> Result<()> {
         Ok(())
     }
 

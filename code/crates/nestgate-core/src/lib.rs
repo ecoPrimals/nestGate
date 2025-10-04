@@ -118,11 +118,9 @@ pub mod unified_types;
 pub use config::canonical_master::NestGateCanonicalConfig;
 /// **CANONICAL CONSTANTS** - Single source for all constants
 pub use constants::*;
-/// **DOMAIN-SPECIFIC ERROR TYPES** - Rich error information
-pub use error::{
-    ApiError, McpError, NetworkError, SecurityError, StorageError, ValidationError, ZfsError,
-};
 /// **DOMAIN-SPECIFIC RESULT TYPES** - Rich error context
+/// Note: Error type aliases removed to avoid conflicts with legacy domain_errors.rs
+/// Use NestGateUnifiedError::network_connection_failed() and similar helper constructors
 pub use error::{
     ApiResult, ConfigResult, McpResult, NetworkResult, SecurityResult, StorageResult,
     ValidationResult, ZfsResult,

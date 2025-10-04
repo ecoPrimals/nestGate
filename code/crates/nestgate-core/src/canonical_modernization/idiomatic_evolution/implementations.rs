@@ -66,7 +66,7 @@ impl SmartDefault for f64 {
 pub struct StringEvolution;
 impl StringEvolution {
     #[must_use]
-    pub const fn modernize_string(s: &str) -> String {
+    pub fn modernize_string(s: &str) -> String {
         s.trim().to_string()
     }
 }
@@ -75,7 +75,7 @@ impl StringEvolution {
 pub struct NumericEvolution;
 impl NumericEvolution {
     #[must_use]
-    pub const fn modernize_port(port: u16) -> u16 {
+    pub fn modernize_port(port: u16) -> u16 {
         if port == 0 {
             8080
         } else {
@@ -88,7 +88,7 @@ impl NumericEvolution {
 pub struct BooleanEvolution;
 impl BooleanEvolution {
     #[must_use]
-    pub const fn modernize_flag(flag: bool) -> bool {
+    pub fn modernize_flag(flag: bool) -> bool {
         flag // No change needed for booleans
     }
 }

@@ -68,7 +68,7 @@ pub struct IntelligenceAdapter {
 }
 impl IntelligenceAdapter {
     /// Create new intelligence adapter
-    pub const fn new(adapter: Arc<UniversalAdapter>, service_name: String) -> Self {
+    pub fn new(adapter: Arc<UniversalAdapter>, service_name: String) -> Self {
         info!("🧠 Creating Intelligence Adapter via Universal Adapter");
         info!("🧠 Service: {}", service_name);
 

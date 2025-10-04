@@ -73,7 +73,7 @@ pub struct WorkspaceManager {
 
 impl WorkspaceManager {
     /// Create a new workspace manager instance
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             // Initialize with default configuration
         }

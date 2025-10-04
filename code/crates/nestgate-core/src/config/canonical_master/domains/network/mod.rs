@@ -81,7 +81,7 @@ pub struct CanonicalNetworkConfig {
 impl CanonicalNetworkConfig {
     /// Create a development-optimized configuration
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self {
             api: NetworkApiConfig::development_optimized(),
             orchestration: NetworkOrchestrationConfig::development_optimized(),
@@ -97,7 +97,7 @@ impl CanonicalNetworkConfig {
 
     /// Create a production-hardened configuration
     #[must_use]
-    pub const fn production_hardened() -> Self {
+    pub fn production_hardened() -> Self {
         Self {
             api: NetworkApiConfig::production_hardened(),
             orchestration: NetworkOrchestrationConfig::production_hardened(),
@@ -119,7 +119,7 @@ impl CanonicalNetworkConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<()>  {
+    pub fn validate(&self) -> Result<()> {
         self.api.validate()?;
         self.orchestration.validate()?;
         self.protocols.validate()?;
@@ -153,3 +153,15 @@ impl Default for CanonicalNetworkConfig {
         Self::development_optimized()
     }
 }
+
+// ==================== BACKWARD COMPATIBILITY ALIASES ====================
+
+/// Backward compatibility alias for existing NetworkConfig usage
+/// **MIGRATION PATH**: All NetworkConfig variants should migrate to CanonicalNetworkConfig
+pub type NetworkConfig = CanonicalNetworkConfig;
+
+/// Backward compatibility alias for UnifiedNetworkConfig
+pub type UnifiedNetworkConfig = CanonicalNetworkConfig;
+
+/// Backward compatibility alias for MinimalNetworkConfig
+pub type MinimalNetworkConfig = CanonicalNetworkConfig;

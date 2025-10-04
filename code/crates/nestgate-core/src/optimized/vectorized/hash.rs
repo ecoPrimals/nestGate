@@ -15,7 +15,7 @@ impl Default for VectorizedHasher {
 }
 
 impl VectorizedHasher {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             state: [
                 0x6a09e667f3bcc908,

@@ -13,7 +13,7 @@ use tracing::{debug, error, warn};
 // ==================== SECTION ====================
 
 /// Get ZFS pool statistics for a specific pool
-pub const fn get_zfs_pool_stats(pool_name: &str) -> Result<serde_json::Value, String> {
+pub fn get_zfs_pool_stats(pool_name: &str) -> Result<serde_json::Value, String> {
     debug!("🔍 Getting ZFS pool stats for: {}", pool_name);
     
     // Execute zpool status command
@@ -31,7 +31,7 @@ pub const fn get_zfs_pool_stats(pool_name: &str) -> Result<serde_json::Value, St
 }
 
 /// Calculate pool trends over time
-pub const fn calculate_pool_trends(
+pub fn calculate_pool_trends(
     pool_name: &str,
     time_range: &TimeRange,
 ) -> Result<Vec<PoolTrendPoint>, String> {
@@ -51,7 +51,7 @@ pub const fn calculate_pool_trends(
             used_bytes: 500_000_000_000 + (i * 10_000_000_000), // Increasing usage
             total_bytes: 1_000_000_000_000,
             io_operations: 1000 + (i * 50),
-            throughput_mbps: 50.0 + (f64::from(i) * 2.0),
+            throughput_mbps: 50.0 + (i as f64 * 2.0),
         });
     }
     
@@ -83,7 +83,7 @@ pub struct PoolTrendPoint {
 // ==================== SECTION ====================
 
 /// Get list of all ZFS pools
-pub const fn get_zfs_pool_list() -> Result<Vec<PoolInfo>, String> {
+pub fn get_zfs_pool_list() -> Result<Vec<PoolInfo>, String> {
     debug!("📋 Getting ZFS pool list");
     
     let output = Command::new("zpool")
@@ -113,7 +113,7 @@ pub const fn get_zfs_pool_list() -> Result<Vec<PoolInfo>, String> {
 }
 
 /// Get capacity information for a specific pool
-pub const fn get_pool_capacity(pool_name: &str) -> Result<PoolCapacity, String> {
+pub fn get_pool_capacity(pool_name: &str) -> Result<PoolCapacity, String> {
     debug!("💾 Getting capacity for pool: {}", pool_name);
     
     let output = Command::new("zfs")
@@ -144,7 +144,7 @@ pub const fn get_pool_capacity(pool_name: &str) -> Result<PoolCapacity, String> 
 }
 
 /// Calculate growth rate for pools
-pub const fn calculate_growth_rate(_pools: &[PoolInfo]) -> f64 {
+pub fn calculate_growth_rate(_pools: &[PoolInfo]) -> f64 {
     // This would typically analyze historical data
     // For now, return a mock growth rate
     10.5 // GB per day
@@ -167,7 +167,7 @@ pub struct ZfsIOStats {
 }
 
 /// Get ZFS I/O statistics for a pool
-pub const fn get_zfs_io_stats(pool_name: &str) -> Result<ZfsIOStats, String> {
+pub fn get_zfs_io_stats(pool_name: &str) -> Result<ZfsIOStats, String> {
     debug!("⚡ Getting ZFS I/O stats for: {}", pool_name);
     
     let output = Command::new("zpool")
@@ -258,7 +258,7 @@ pub async fn get_current_system_capacity() -> Result<SystemCapacity, String> {
     
     let available_capacity = total_capacity.saturating_sub(used_capacity);
     let utilization_percentage = if total_capacity > 0 {
-        (f64::from(used_capacity) / f64::from(total_capacity)) * 100.0
+        (used_capacity as f64 / total_capacity as f64) * 100.0
     } else {
         0.0
     };
@@ -272,7 +272,7 @@ pub async fn get_current_system_capacity() -> Result<SystemCapacity, String> {
     })
 }
 /// Generate capacity forecast based on current trends
-pub const fn generate_capacity_forecast(
+pub fn generate_capacity_forecast(
     horizon_days: u32,
     current_capacity: &SystemCapacity,
 ) -> Result<Vec<CapacityForecastPoint>, String> {
@@ -289,7 +289,7 @@ pub const fn generate_capacity_forecast(
     
     for day in 0..=horizon_days {
         let projected_used = current_capacity.used_capacity_bytes + (growth_rate_bytes_per_day * day as u64);
-        let projected_utilization = (f64::from(projected_used) / current_capacity.f64::from(total_capacity_bytes)) * 100.0;
+        let projected_utilization = (projected_used as f64 / current_capacity.total_capacity_bytes as f64) * 100.0;
         
         forecast.push(CapacityForecastPoint {
             timestamp: current_time + (day as u64 * 86400), // Add days in seconds
@@ -314,7 +314,7 @@ fn calculate_forecast_confidence(days_ahead: u32) -> f64 {
     // Confidence decreases over time
     let base_confidence = 0.95;
     let decay_rate = 0.02;
-    (base_confidence - (f64::from(days_ahead) * decay_rate)).max(0.3)
+    (base_confidence - (days_ahead as f64 * decay_rate)).max(0.3)
 }
 /// Generate performance predictions
 pub fn generate_performance_predictions(horizon_days: u32) -> Vec<String> {

@@ -173,7 +173,7 @@ impl DetectedStorage {
 
     /// Check if this storage has a specific capability
     #[must_use]
-    pub const fn has_capability(&self, capability: &UnifiedStorageCapability) -> bool {
+    pub fn has_capability(&self, capability: &UnifiedStorageCapability) -> bool {
         self.capabilities.contains(capability)
     }
 
@@ -184,7 +184,7 @@ impl DetectedStorage {
 
     /// Get metadata value
     #[must_use]
-    pub const fn get_metadata(&self, key: &str) -> Option<&String> {
+    pub fn get_metadata(&self, key: &str) -> Option<&String> {
         self.metadata.get(key)
     }
 }

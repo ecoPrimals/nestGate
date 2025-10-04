@@ -179,11 +179,11 @@ pub mod network {
         pub const ANY_ADDRESS_IPV6: &str = "::";
 
         /// Environment-driven address resolution
-        pub const fn bind_address() -> String {
+        pub fn bind_address() -> String {
             std::env::var("NESTGATE_BIND_ADDRESS").unwrap_or_else(|_| ANY_ADDRESS.to_string())
         }
 
-        pub const fn discovery_address() -> String {
+        pub fn discovery_address() -> String {
             std::env::var("NESTGATE_DISCOVERY_ADDRESS").unwrap_or_else(|_| LOCALHOST.to_string())
         }
     }
@@ -200,21 +200,21 @@ pub mod network {
         pub const ADMIN_PORT: u16 = 9091;
 
         /// Environment-driven port resolution
-        pub const fn api_port() -> u16 {
+        pub fn api_port() -> u16 {
             std::env::var("NESTGATE_API_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(API_PORT)
         }
 
-        pub const fn health_port() -> u16 {
+        pub fn health_port() -> u16 {
             std::env::var("NESTGATE_HEALTH_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(HEALTH_PORT)
         }
 
-        pub const fn metrics_port() -> u16 {
+        pub fn metrics_port() -> u16 {
             std::env::var("NESTGATE_METRICS_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
@@ -233,7 +233,7 @@ pub mod network {
         pub const SHUTDOWN_TIMEOUT_SECS: u64 = 30;
 
         /// Environment-driven timeout resolution
-        pub const fn connection_timeout() -> Duration {
+        pub fn connection_timeout() -> Duration {
             std::env::var("NESTGATE_CONNECTION_TIMEOUT_SECS")
                 .ok()
                 .and_then(|t| t.parse().ok())
@@ -241,7 +241,7 @@ pub mod network {
                 .unwrap_or_else(|| Duration::from_secs(CONNECTION_TIMEOUT_SECS))
         }
 
-        pub const fn request_timeout() -> Duration {
+        pub fn request_timeout() -> Duration {
             std::env::var("NESTGATE_REQUEST_TIMEOUT_SECS")
                 .ok()
                 .and_then(|t| t.parse().ok())
@@ -249,7 +249,7 @@ pub mod network {
                 .unwrap_or_else(|| Duration::from_secs(REQUEST_TIMEOUT_SECS))
         }
 
-        pub const fn health_check_timeout() -> Duration {
+        pub fn health_check_timeout() -> Duration {
             std::env::var("NESTGATE_HEALTH_CHECK_TIMEOUT_SECS")
                 .ok()
                 .and_then(|t| t.parse().ok())
@@ -283,7 +283,7 @@ pub mod storage {
             pub const WARM_TO_COLD_DAYS: u32 = 90;
             pub const COLD_TO_ARCHIVE_DAYS: u32 = 365;
 
-            pub const fn hot_to_warm_days() -> u32 {
+            pub fn hot_to_warm_days() -> u32 {
                 std::env::var("NESTGATE_HOT_TO_WARM_DAYS")
                     .ok()
                     .and_then(|d| d.parse().ok())
@@ -302,7 +302,7 @@ pub mod storage {
         pub const MAX_FILE_SIZE_GB: u64 = 16 * 1024; // 16TB
 
         /// Environment-driven limits
-        pub const fn default_pool_size_bytes() -> u64 {
+        pub fn default_pool_size_bytes() -> u64 {
             std::env::var("NESTGATE_DEFAULT_POOL_SIZE_GB")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -334,7 +334,7 @@ pub mod performance {
         pub const MAX_CACHE_SIZE_MB: u64 = 16 * 1024; // 16GB
         pub const DEFAULT_TTL_SECS: u64 = 300; // 5 minutes
         pub const CACHE_LINE_SIZE: usize = 64;
-        pub const fn cache_size_bytes() -> u64 {
+        pub fn cache_size_bytes() -> u64 {
             std::env::var("NESTGATE_CACHE_SIZE_MB")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -351,7 +351,7 @@ pub mod performance {
         pub const MAX_WORKER_THREADS: usize = 1024;
         pub const DEFAULT_BLOCKING_THREADS: usize = 512;
 
-        pub const fn worker_threads() -> usize {
+        pub fn worker_threads() -> usize {
             std::env::var("NESTGATE_WORKER_THREADS")
                 .ok()
                 .and_then(|t| t.parse().ok())
@@ -380,7 +380,7 @@ pub mod security {
         pub const LOCKOUT_DURATION_SECS: u64 = 300; // 5 minutes
         pub const TOKEN_REFRESH_THRESHOLD_SECS: u64 = 300; // 5 minutes before expiry
 
-        pub const fn session_timeout() -> std::time::Duration {
+        pub fn session_timeout() -> std::time::Duration {
             std::env::var("NESTGATE_SESSION_TIMEOUT_SECS")
                 .ok()
                 .and_then(|t| t.parse().ok())
@@ -420,7 +420,7 @@ pub mod monitoring {
         pub const BATCH_SIZE: usize = 1000;
         pub const FLUSH_INTERVAL_SECS: u64 = 60;
 
-        pub const fn collection_interval() -> std::time::Duration {
+        pub fn collection_interval() -> std::time::Duration {
             std::env::var("NESTGATE_METRICS_INTERVAL_SECS")
                 .ok()
                 .and_then(|i| i.parse().ok())
@@ -460,7 +460,7 @@ pub mod testing {
         pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
         pub const MAX_RETRY_ATTEMPTS: u32 = 10;
 
-        pub const fn test_timeout() -> std::time::Duration {
+        pub fn test_timeout() -> std::time::Duration {
             std::env::var("TEST_TIMEOUT_SECS")
                 .ok()
                 .and_then(|t| t.parse().ok())
@@ -628,7 +628,7 @@ pub mod compile_time {
 /// Convenience functions for working with unified constants
 impl UnifiedConstants {
     /// Get default port for a service type
-    pub const fn default_port_for_service(service_type: &str) -> u16 {
+    pub fn default_port_for_service(service_type: &str) -> u16 {
         match service_type {
             services::types::API => network::ports::API_PORT,
             services::types::STORAGE => 2049, // NFS default
@@ -638,7 +638,7 @@ impl UnifiedConstants {
         }
     }
     /// Get compression algorithm for storage tier
-    pub const fn compression_for_tier(tier: &str) -> &'static str {
+    pub fn compression_for_tier(tier: &str) -> &'static str {
         match tier {
             storage::tiers::HOT => "lz4",
             storage::tiers::WARM => "zstd",
@@ -648,7 +648,7 @@ impl UnifiedConstants {
     }
 
     /// Get buffer size for performance level
-    pub const fn buffer_size_for_performance(level: &str) -> usize {
+    pub fn buffer_size_for_performance(level: &str) -> usize {
         match level {
             "high" => 1048576, // 1MB buffer
             "medium" => 65536, // 64KB buffer

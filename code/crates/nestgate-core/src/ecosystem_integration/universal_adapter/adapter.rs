@@ -425,7 +425,7 @@ impl UniversalAdapter {
     }
 
     /// Get service ID
-    pub const fn service_id(&self) -> Uuid {
+    pub fn service_id(&self) -> Uuid {
         self.service_id
     }
 
@@ -517,7 +517,7 @@ impl UniversalAdapter {
     }
 
     /// Get adapter configuration (modern implementation)
-    pub const fn get_config(&self) -> serde_json::Value {
+    pub fn get_config(&self) -> serde_json::Value {
         serde_json::json!({
             "service_id": self.service_id,
             "discovery_endpoint": self.config.adapter.discovery_endpoint,

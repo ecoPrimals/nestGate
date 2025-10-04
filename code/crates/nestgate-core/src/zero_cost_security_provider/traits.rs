@@ -15,6 +15,8 @@ use crate::Result;
 /// - Compile-time specialization through const generics
 /// - Direct method dispatch (no vtable overhead)
 /// - Memory-efficient security operations
+/// **DEPRECATED**: Zero-cost patterns integrated into canonical security
+#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity - zero-cost patterns integrated")]
 pub trait ZeroCostSecurityProvider: Send + Sync + 'static {
     /// Security provider configuration type
     type Config: Clone + Send + Sync + 'static;
@@ -188,6 +190,8 @@ pub trait SigningProvider: Send + Sync {
 
 /// **Security health provider trait**
 /// Specialized trait for security health monitoring
+/// **DEPRECATED**: Health monitoring integrated into canonical security
+#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity health_check method")]
 pub trait SecurityHealthProvider: Send + Sync {
     /// Health information type
     type Health: Clone + Send + Sync + 'static;
@@ -200,6 +204,8 @@ pub trait SecurityHealthProvider: Send + Sync {
 
 /// **Security metrics provider trait**
 /// Specialized trait for security metrics collection
+/// **DEPRECATED**: Metrics integrated into canonical security
+#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity metrics methods")]
 pub trait SecurityMetricsProvider: Send + Sync {
     /// Metrics type
     type Metrics: Clone + Send + Sync + 'static;

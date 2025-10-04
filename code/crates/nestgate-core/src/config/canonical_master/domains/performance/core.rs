@@ -48,7 +48,7 @@ pub struct CanonicalPerformanceConfig {
 impl CanonicalPerformanceConfig {
     /// Create a new performance configuration with default values
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
@@ -60,7 +60,7 @@ impl CanonicalPerformanceConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<()>  {
+    pub fn validate(&self) -> Result<()> {
         // Validate CPU configuration
         self.cpu.validate()?;
 
@@ -98,7 +98,7 @@ impl CanonicalPerformanceConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn from_environment() -> Result<Self>  {
+    pub fn from_environment() -> Result<Self> {
         let config = Self::default();
         config.validate()?;
         Ok(config)
@@ -106,7 +106,7 @@ impl CanonicalPerformanceConfig {
 
     /// Merge with another configuration, with other taking precedence
     #[must_use]
-    pub const fn merge(self, other: Self) -> Self {
+    pub fn merge(self, other: Self) -> Self {
         // For now, other completely replaces self
         // In the future, we could implement field-level merging
         other

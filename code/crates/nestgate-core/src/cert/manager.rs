@@ -16,7 +16,7 @@ pub struct CertificateManager {
 }
 impl CertificateManager {
     /// Create a new certificate manager
-    pub const fn new(config: NestGateCanonicalConfig) -> crate::Result<Self> {
+    pub fn new(config: NestGateCanonicalConfig) -> crate::Result<Self> {
         let adapter = crate::universal_adapter::PrimalAgnosticAdapter::new(
             "http://localhost:8080/adapter".to_string(),
         );
@@ -31,8 +31,8 @@ impl CertificateManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn get_certificate_info(&self, cert_id: &str) -> Result<HashMap<String, String>>  {
+    #[must_use]
+    pub fn get_certificate_info(&self, cert_id: &str) -> Result<HashMap<String, String>> {
         // Use the universal adapter for certificate operations
         let mut info = HashMap::new();
         info.insert("id".to_string(), cert_id.to_string());
@@ -43,7 +43,7 @@ impl CertificateManager {
 
 /// Create a default certificate manager
 #[must_use]
-pub const fn create_default_certificate_manager() -> CertificateManager {
+pub fn create_default_certificate_manager() -> CertificateManager {
     CertificateManager::new(NestGateCanonicalConfig::default())
         .expect("Failed to create default certificate manager")
 }

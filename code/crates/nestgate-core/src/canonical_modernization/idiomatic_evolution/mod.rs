@@ -72,13 +72,13 @@ pub struct IdiomaticEvolutionSystem {
 impl IdiomaticEvolutionSystem {
     /// Create a new idiomatic evolution system
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
     /// Create a system optimized for production environments
     #[must_use]
-    pub const fn production_optimized() -> Self {
+    pub fn production_optimized() -> Self {
         Self {
             metadata: EvolutionMetadata::production_optimized(),
             migration_manager: MigrationManager::production_optimized(),
@@ -90,7 +90,7 @@ impl IdiomaticEvolutionSystem {
 
     /// Create a system optimized for development environments
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self {
             metadata: EvolutionMetadata::development_optimized(),
             migration_manager: MigrationManager::development_optimized(),
@@ -125,7 +125,7 @@ impl IdiomaticEvolutionSystem {
 
     /// Get evolution statistics
     #[must_use]
-    pub const fn get_evolution_stats(&self) -> EvolutionStats {
+    pub fn get_evolution_stats(&self) -> EvolutionStats {
         EvolutionStats {
             total_components: self.metadata.get_component_count(),
             modernized_components: self.migration_manager.get_completed_count(),
@@ -147,7 +147,7 @@ impl IdiomaticEvolutionSystem {
     }
 
     /// Validate the evolution system
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         // Validate metadata consistency
         self.metadata.validate()?;
 

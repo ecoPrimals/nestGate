@@ -8,7 +8,7 @@ pub struct NativeZfsSnapshotManager {
 }
 
 impl NativeZfsSnapshotManager {
-    pub const fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
+    pub fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
         Self { command_executor }
     }
 
@@ -17,7 +17,7 @@ impl NativeZfsSnapshotManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub async fn create_snapshot(&self, dataset: &str, snapshot_name: &str) -> Result<()>  {
+    pub async fn create_snapshot(&self, dataset: &str, snapshot_name: &str) -> Result<()> {
         self.command_executor
             .create_snapshot(dataset, snapshot_name)
             .await?;
@@ -29,7 +29,7 @@ impl NativeZfsSnapshotManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub async fn list_snapshots(&self, dataset: &str) -> Result<Vec<SnapshotInfo>>  {
+    pub async fn list_snapshots(&self, dataset: &str) -> Result<Vec<SnapshotInfo>> {
         let output = self
             .command_executor
             .execute_command_expect_success(&[

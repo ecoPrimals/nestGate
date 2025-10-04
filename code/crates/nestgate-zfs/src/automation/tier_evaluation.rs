@@ -55,7 +55,7 @@ impl TierScoring {
     }
 
     /// Get the recommended tier based on scoring
-    pub const fn get_recommendation(&self) -> StorageTier {
+    pub fn get_recommendation(&self) -> StorageTier {
         if self.hot_score >= self.warm_score && self.hot_score >= self.cold_score {
             StorageTier::Hot
         } else if self.warm_score >= self.cold_score {

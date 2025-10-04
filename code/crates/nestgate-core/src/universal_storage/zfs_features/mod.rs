@@ -219,7 +219,7 @@ where
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn health_check(&self) -> Result<EngineHealth>   {
+        pub fn health_check(&self) -> Result<EngineHealth>   {
         Ok(EngineHealth {
             storage_healthy: true,
             compression_healthy: true,

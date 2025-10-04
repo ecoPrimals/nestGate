@@ -77,16 +77,16 @@ pub struct StorageCapacity {
 
 impl StorageCapacity {
     /// Calculate usage percentage
-    pub const fn usage_percentage(&self) -> f64 {
+    pub fn usage_percentage(&self) -> f64 {
         if self.total_bytes == 0 {
             0.0
         } else {
-            (self.f64::from(used_bytes) / self.f64::from(total_bytes)) * 100.0
+            (self.used_bytes as f64 / self.total_bytes as f64) * 100.0
         }
     }
 
     /// Check if storage is near capacity
-    pub const fn is_near_capacity(&self, threshold_percent: f64) -> bool {
+    pub fn is_near_capacity(&self, threshold_percent: f64) -> bool {
         self.usage_percentage() >= threshold_percent
     }
 
@@ -95,11 +95,11 @@ impl StorageCapacity {
         let mut effective = self.total_bytes;
 
         if let Some(compression) = self.compression_ratio {
-            effective = (f64::from(effective) * compression) as u64;
+            effective = (effective as f64 * compression) as u64;
         }
 
         if let Some(dedup) = self.deduplication_ratio {
-            effective = (f64::from(effective) * dedup) as u64;
+            effective = (effective as f64 * dedup) as u64;
         }
 
         effective
@@ -192,7 +192,7 @@ impl Default for StorageHealthInfo {
 
 impl UnifiedStorageResource {
     /// Create a new storage resource with default values
-    pub const fn new(name: String, storage_type: UnifiedStorageType) -> Self {
+    pub fn new(name: String, storage_type: UnifiedStorageType) -> Self {
         Self {
             name: name.clone(),
             storage_type: storage_type.clone(),
@@ -206,18 +206,18 @@ impl UnifiedStorageResource {
     }
 
     /// Check if the resource is healthy
-    pub const fn is_healthy(&self) -> bool {
+    pub fn is_healthy(&self) -> bool {
         matches!(self.health.status, UnifiedHealthStatus::Healthy)
             && matches!(self.health.state, StorageHealthState::Online)
     }
 
     /// Get usage percentage
-    pub const fn usage_percentage(&self) -> f64 {
+    pub fn usage_percentage(&self) -> f64 {
         self.capacity.usage_percentage()
     }
 
     /// Check if resource needs attention
-    pub const fn needs_attention(&self) -> bool {
+    pub fn needs_attention(&self) -> bool {
         self.health.error_count > 0
             || self.health.warning_count > 5
             || self.health.health_score < 0.8
@@ -234,11 +234,11 @@ impl StorageHealthInfo {
         let mut score = 1.0;
 
         if self.error_count > 0 {
-            score -= (self.f64::from(error_count) * 0.1).min(0.5);
+            score -= (self.error_count as f64 * 0.1).min(0.5);
         }
 
         if self.warning_count > 0 {
-            score -= (self.f64::from(warning_count) * 0.05).min(0.3);
+            score -= (self.warning_count as f64 * 0.05).min(0.3);
         }
 
         self.health_score = score.max(0.0);

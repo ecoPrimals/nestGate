@@ -24,6 +24,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Instant;
 use tracing::debug;
 use tracing::info;
+use crate::constants::canonical::performance::{DEFAULT_BUFFER_SIZE, NETWORK_BUFFER_SIZE};
 
 /// High-performance memory pool with configurable buffer sizes
 #[derive(Debug)]
@@ -132,7 +133,7 @@ where
 
     /// Get current pool statistics (returns a copy for thread safety)
     /// Zero-copy optimization: PoolStatistics implements Copy
-    pub const fn statistics(&self) -> PoolStatistics {
+    pub fn statistics(&self) -> PoolStatistics {
         self.statistics
             .read()
             .map(|stats| *stats) // Zero-copy access - PoolStatistics is Copy
@@ -143,7 +144,7 @@ where
     }
 
     /// Get current pool size
-    pub const fn size(&self) -> usize {
+    pub fn size(&self) -> usize {
         self.pool.lock().map(|pool| pool.len()).unwrap_or_else(|e| {
             tracing::error!("Failed to get pool size: {}", e);
             0 // Return 0 on error
@@ -227,7 +228,7 @@ where
     ///
     /// # Panics
     /// Panics if the buffer has already been taken with `take()`. This indicates a logic error.
-    pub const fn get(&self) -> &T {
+    pub fn get(&self) -> &T {
         self.buffer
             .as_ref()
             .expect("Buffer has been taken - this indicates a logic error in buffer usage")
@@ -254,7 +255,7 @@ where
     }
 
     /// Check if the buffer is still available (not taken)
-    pub const fn is_available(&self) -> bool {
+    pub fn is_available(&self) -> bool {
         self.buffer.is_some()
     }
 }
@@ -359,16 +360,16 @@ impl PoolStatistics {
     }
 
     /// Calculate hit ratio (0.0 to 1.0)
-    pub const fn hit_ratio(&self) -> f64 {
+    pub fn hit_ratio(&self) -> f64 {
         if self.total_acquisitions > 0 {
-            self.f64::from(hits) / self.f64::from(total_acquisitions)
+            self.hits as f64 / self.total_acquisitions as f64
         } else {
             0.0
         }
     }
 
     /// Calculate average acquisition time
-    pub const fn avg_acquisition_time(&self) -> Duration {
+    pub fn avg_acquisition_time(&self) -> Duration {
         if self.total_acquisitions > 0 {
             self.total_acquisition_time / self.total_acquisitions as u32
         } else {
@@ -377,7 +378,7 @@ impl PoolStatistics {
     }
 
     /// Calculate average usage time
-    pub const fn avg_usage_time(&self) -> Duration {
+    pub fn avg_usage_time(&self) -> Duration {
         if self.total_returned > 0 {
             self.total_usage_time / self.total_returned as u32
         } else {
@@ -386,12 +387,12 @@ impl PoolStatistics {
     }
 
     /// Check if pool is performing well (>80% hit ratio is good)
-    pub const fn is_efficient(&self) -> bool {
+    pub fn is_efficient(&self) -> bool {
         self.hit_ratio() > 0.8
     }
 
     /// Get performance assessment
-    pub const fn performance_assessment(&self) -> &'static str {
+    pub fn performance_assessment(&self) -> &'static str {
         match self.hit_ratio() {
             r if r > 0.9 => "Excellent",
             r if r > 0.8 => "Good",
@@ -408,14 +409,14 @@ pub type StringPool = MemoryPool<String>;
 lazy_static::lazy_static! {
     // Global 4KB buffer pool for file I/O operations
     pub static ref GLOBAL_4KB_BUFFER_POOL: BufferPool = MemoryPool::new(
-        || Vec::with_capacity(4096),
+        || Vec::with_capacity(DEFAULT_BUFFER_SIZE),
         10,  // min_size
         100  // max_size
     );
 
     // Global 64KB buffer pool for large data operations
     pub static ref GLOBAL_64KB_BUFFER_POOL: BufferPool = MemoryPool::new(
-        || Vec::with_capacity(65536),
+        || Vec::with_capacity(NETWORK_BUFFER_SIZE),
         5,   // min_size
         50   // max_size
     );
@@ -457,35 +458,35 @@ lazy_static::lazy_static! {
 }
 
 /// Convenience functions for global buffer pools
-pub const fn get_4kb_buffer() -> PoolGuard<Vec<u8>> {
+pub fn get_4kb_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_4KB_BUFFER_POOL.get()
 }
-pub const fn get_64kb_buffer() -> PoolGuard<Vec<u8>> {
+pub fn get_64kb_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_64KB_BUFFER_POOL.get()
 }
 
-pub const fn get_1mb_buffer() -> PoolGuard<Vec<u8>> {
+pub fn get_1mb_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_1MB_BUFFER_POOL.get()
 }
 
-pub const fn get_string_buffer() -> PoolGuard<String> {
+pub fn get_string_buffer() -> PoolGuard<String> {
     GLOBAL_STRING_POOL.get()
 }
 
 /// Convenience functions for specialized buffer pools
-pub const fn get_command_buffer() -> PoolGuard<Vec<u8>> {
+pub fn get_command_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_CMD_BUFFER_POOL.get()
 }
-pub const fn get_network_buffer() -> PoolGuard<Vec<u8>> {
+pub fn get_network_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_NETWORK_BUFFER_POOL.get()
 }
 
-pub const fn get_json_buffer() -> PoolGuard<String> {
+pub fn get_json_buffer() -> PoolGuard<String> {
     GLOBAL_JSON_BUFFER_POOL.get()
 }
 
 /// Get global buffer pool statistics
-pub const fn global_buffer_pool_stats() -> (
+pub fn global_buffer_pool_stats() -> (
     PoolStatistics,
     PoolStatistics,
     PoolStatistics,
@@ -550,7 +551,7 @@ impl MemoryPoolManager {
     }
 
     /// Get total number of buffers across all pools
-    pub const fn total_buffers(&self) -> usize {
+    pub fn total_buffers(&self) -> usize {
         self.pools.iter().map(|p| p.size()).sum()
     }
 }

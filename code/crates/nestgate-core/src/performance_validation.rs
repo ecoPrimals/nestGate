@@ -31,7 +31,7 @@ pub async fn run_performance_validation() -> crate::error::CanonicalResult<Vec<B
     Ok(validator.run_full_validation().await)
 }
 /// Convenience function to validate performance targets
-pub const fn validate_targets(results: &[BenchmarkResults]) -> crate::error::CanonicalResult<()> {
+pub fn validate_targets(results: &[BenchmarkResults]) -> crate::error::CanonicalResult<()> {
     let validator = PerformanceValidator::default();
     validator.validate_performance_targets(results)
 }

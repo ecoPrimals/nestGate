@@ -291,43 +291,43 @@ pub struct CanonicalConstants;
 impl CanonicalConstants {
     /// Get performance constants module
     #[must_use]
-    pub const fn performance() -> PerformanceConstants {
+    pub fn performance() -> PerformanceConstants {
         PerformanceConstants
     }
 
     /// Get timeout constants module  
     #[must_use]
-    pub const fn timeouts() -> TimeoutConstants {
+    pub fn timeouts() -> TimeoutConstants {
         TimeoutConstants
     }
 
     /// Get network constants module
     #[must_use]
-    pub const fn network() -> NetworkConstants {
+    pub fn network() -> NetworkConstants {
         NetworkConstants
     }
 
     /// Get storage constants module
     #[must_use]
-    pub const fn storage() -> StorageConstants {
+    pub fn storage() -> StorageConstants {
         StorageConstants
     }
 
     /// Get security constants module
     #[must_use]
-    pub const fn security() -> SecurityConstants {
+    pub fn security() -> SecurityConstants {
         SecurityConstants
     }
 
     /// Get API constants module
     #[must_use]
-    pub const fn api() -> ApiConstants {
+    pub fn api() -> ApiConstants {
         ApiConstants
     }
 
     /// Get system constants module
     #[must_use]
-    pub const fn system() -> SystemConstants {
+    pub fn system() -> SystemConstants {
         SystemConstants
     }
 }
@@ -378,7 +378,7 @@ pub mod validation {
 
     /// Validate performance constants at compile time
     #[must_use]
-    pub const fn validate_performance_constants() -> bool {
+    pub fn validate_performance_constants() -> bool {
         performance::MAX_CONNECTIONS > 0
             && performance::DEFAULT_BUFFER_SIZE > 0
             && performance::OPTIMAL_BATCH_SIZE > 0
@@ -386,7 +386,7 @@ pub mod validation {
 
     /// Validate timeout constants at compile time
     #[must_use]
-    pub const fn validate_timeout_constants() -> bool {
+    pub fn validate_timeout_constants() -> bool {
         timeouts::DEFAULT_TIMEOUT_SECS > 0
             && timeouts::DEFAULT_TIMEOUT_MS > 0
             && timeouts::DEFAULT_RETRY_ATTEMPTS > 0
@@ -394,7 +394,7 @@ pub mod validation {
 
     /// Validate network constants at compile time
     #[must_use]
-    pub const fn validate_network_constants() -> bool {
+    pub fn validate_network_constants() -> bool {
         network::DEFAULT_API_PORT > 0
             && network::MAX_SERVICES > 0
             && network::MAX_CONCURRENT_REQUESTS > 0

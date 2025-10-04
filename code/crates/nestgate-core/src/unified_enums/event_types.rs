@@ -125,7 +125,7 @@ impl Default for UnifiedEventType {
 
 impl UnifiedEventType {
     /// Get the event category for grouping and filtering
-    pub const fn category(&self) -> EventCategory {
+    pub fn category(&self) -> EventCategory {
         match self {
             Self::ConnectionEstablished
             | Self::ConnectionClosed
@@ -179,7 +179,7 @@ impl UnifiedEventType {
     }
 
     /// Check if this event type requires authentication
-    pub const fn requires_auth(&self) -> bool {
+    pub fn requires_auth(&self) -> bool {
         matches!(
             self,
             Self::DataModification
@@ -192,7 +192,7 @@ impl UnifiedEventType {
     }
 
     /// Check if this event should be audited
-    pub const fn should_audit(&self) -> bool {
+    pub fn should_audit(&self) -> bool {
         matches!(
             self,
             Self::DataAccess
@@ -207,7 +207,7 @@ impl UnifiedEventType {
     }
 
     /// Get the priority level for this event type
-    pub const fn priority(&self) -> EventPriority {
+    pub fn priority(&self) -> EventPriority {
         match self {
             Self::SecurityViolation | Self::SystemError => EventPriority::Critical,
             Self::ConnectionError | Self::StreamError | Self::WorkflowFailed => EventPriority::High,

@@ -33,7 +33,7 @@ pub struct AuthService {
 }
 impl AuthService {
     /// Create new authentication service
-    pub const fn new(config: AuthConfig) -> Self {
+    pub fn new(config: AuthConfig) -> Self {
         let service_id = Uuid::new_v4();
         info!("🔐 Initializing Authentication Service {}", service_id);
 
@@ -168,7 +168,7 @@ impl AuthService {
     }
 
     /// Get service ID
-    pub const fn service_id(&self) -> Uuid {
+    pub fn service_id(&self) -> Uuid {
         self.service_id
     }
 

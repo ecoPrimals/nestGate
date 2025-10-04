@@ -100,7 +100,7 @@ impl Default for EvolutionMetadata {
 impl EvolutionMetadata {
     /// Create production-optimized metadata
     #[must_use]
-    pub const fn production_optimized() -> Self {
+    pub fn production_optimized() -> Self {
         Self {
             version: "1.0.0-prod".to_string(),
             migration_path: Some(MigrationPath {
@@ -138,12 +138,12 @@ impl EvolutionMetadata {
 
     /// Get component count
     #[must_use]
-    pub const fn get_component_count(&self) -> u32 {
+    pub fn get_component_count(&self) -> u32 {
         self.components.len() as u32
     }
 
     /// Validate metadata consistency
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         if self.version.is_empty() {
             return Err(crate::NestGateError::validation_error(
                 "Version cannot be empty",

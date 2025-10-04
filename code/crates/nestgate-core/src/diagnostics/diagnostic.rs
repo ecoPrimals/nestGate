@@ -29,7 +29,7 @@ pub struct Diagnostic {
 impl Diagnostic {
     /// Create a new diagnostic using standardized builder
     #[must_use]
-    pub const fn new(level: DiagnosticLevel, component: ComponentType, message: String) -> Self {
+    pub fn new(level: DiagnosticLevel, component: ComponentType, message: String) -> Self {
         Self {
             id: uuid::Uuid::new_v4().to_string(),
             level,
@@ -45,25 +45,25 @@ impl Diagnostic {
 
     /// Create a new info diagnostic
     #[must_use]
-    pub const fn info(component: ComponentType, message: String) -> Self {
+    pub fn info(component: ComponentType, message: String) -> Self {
         Self::new(DiagnosticLevel::Info, component, message)
     }
 
     /// Create a new warning diagnostic
     #[must_use]
-    pub const fn warning(component: ComponentType, message: String) -> Self {
+    pub fn warning(component: ComponentType, message: String) -> Self {
         Self::new(DiagnosticLevel::Warning, component, message)
     }
 
     /// Create a new error diagnostic
     #[must_use]
-    pub const fn error(component: ComponentType, message: String) -> Self {
+    pub fn error(component: ComponentType, message: String) -> Self {
         Self::new(DiagnosticLevel::Error, component, message)
     }
 
     /// Create a new critical diagnostic
     #[must_use]
-    pub const fn critical(component: ComponentType, message: String) -> Self {
+    pub fn critical(component: ComponentType, message: String) -> Self {
         Self::new(DiagnosticLevel::Critical, component, message)
     }
 
@@ -89,7 +89,7 @@ impl Diagnostic {
 
     /// Check if diagnostic is critical or error level
     #[must_use]
-    pub const fn is_severe(&self) -> bool {
+    pub fn is_severe(&self) -> bool {
         matches!(
             self.level,
             DiagnosticLevel::Critical | DiagnosticLevel::Error
@@ -98,13 +98,13 @@ impl Diagnostic {
 
     /// Check if diagnostic is unresolved
     #[must_use]
-    pub const fn is_unresolved(&self) -> bool {
+    pub fn is_unresolved(&self) -> bool {
         !self.resolved
     }
 
     /// Get age of diagnostic in seconds
     #[must_use]
-    pub const fn age_seconds(&self) -> u64 {
+    pub fn age_seconds(&self) -> u64 {
         SystemTime::now()
             .duration_since(self.timestamp)
             .unwrap_or_default()

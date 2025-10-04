@@ -153,7 +153,7 @@ impl From<NestGateError> for TestError {
     }
 
 /// Convert NestGateError to TestError with context
-pub const fn system_error(error: NestGateError, test_context: &str) -> TestError {
+pub fn system_error(error: NestGateError, test_context: &str) -> TestError {
     TestError {
         message: error.to_string(),
         context: Some(test_context.to_string()),
@@ -191,7 +191,7 @@ impl TestTimer {
     }
     }
 
-    pub const fn elapsed(&self) -> Duration {
+    pub fn elapsed(&self) -> Duration {
         self.start.elapsed()
     }
 
@@ -200,7 +200,7 @@ impl TestTimer {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn check_performance(&self, max_duration: Duration) -> Result<()>  {
+        pub fn check_performance(&self, max_duration: Duration) -> Result<()>  {
         let elapsed = self.elapsed();
         if elapsed > max_duration {
             Err(crate::error::NestGateError::System {

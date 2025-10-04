@@ -2,11 +2,12 @@
 /// Service discovery traits and types
 /// 
 /// **MIGRATION NOTE**: This module has been updated to use canonical trait types
+/// **FIXED**: ServiceRegistration import corrected to use ServiceInfo from service_discovery
 use futures_util::stream::Stream;
 use std::collections::HashMap;
 use crate::Result;
 use crate::unified_enums::service_types::UnifiedServiceState as HealthStatus;
-use crate::traits::ServiceRegistration as ServiceInfo;
+use crate::service_discovery::registry::ServiceInfo;
 
 /// Service query for filtering discovered services
 #[derive(Debug, Clone)]

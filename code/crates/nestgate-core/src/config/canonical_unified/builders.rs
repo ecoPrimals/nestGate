@@ -12,7 +12,7 @@ pub struct ConfigBuilder {
 }
 impl ConfigBuilder {
     /// Create a new configuration builder
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: NestGateCanonicalConfig::default(),
         }
@@ -117,7 +117,7 @@ impl ConfigBuilder {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn build(self) -> Result<NestGateCanonicalConfig, Vec<String>>  {
+        pub fn build(self) -> Result<NestGateCanonicalConfig, Vec<String>>  {
         self.config.validate()?;
         Ok(self.config)
     }
@@ -130,7 +130,7 @@ pub struct SystemConfigBuilder {
 }
 impl SystemConfigBuilder {
     /// Create a new system configuration builder
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: SystemConfig::default(),
         }
@@ -214,19 +214,21 @@ impl SystemConfigBuilder {
     }
 
     /// Build the system configuration
-    pub const fn build(self) -> SystemConfig {
+    pub fn build(self) -> SystemConfig {
         self.config
     }
 }
 
 /// Network configuration builder
+/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
+#[deprecated(since = "0.9.0", note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead")]
 #[derive(Debug, Default)]
 pub struct NetworkConfigBuilder {
     config: NetworkConfig,
 }
 impl NetworkConfigBuilder {
     /// Create a new network configuration builder
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: NetworkConfig::default(),
         }
@@ -289,7 +291,7 @@ impl NetworkConfigBuilder {
     }
 
     /// Build the network configuration
-    pub const fn build(self) -> NetworkConfig {
+    pub fn build(self) -> NetworkConfig {
         self.config
     }
 }
@@ -305,7 +307,7 @@ impl ConfigValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_port(port: u16) -> Result<(), String>  {
+        pub fn validate_port(port: u16) -> Result<(), String>  {
         if port == 0 {
             return Err("Port cannot be 0".to_string());
         }
@@ -323,7 +325,7 @@ impl ConfigValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_path(path: &std::path::Path) -> Result<(), String>  ", 
+        pub fn validate_path(path: &std::path::Path) -> Result<(), String>  ", 
         if !path.exists() {
             return Err(format!("Path does not exist: {path.display()")));
         }
@@ -338,7 +340,7 @@ impl ConfigValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_duration(duration: Duration, min: Duration) -> Result<(), String>  {
+        pub fn validate_duration(duration: Duration, min: Duration) -> Result<(), String>  {
         if duration < min {
             return Err(format!("Duration {duration:?} is less than minimum {min:?}"));
         }
@@ -353,7 +355,7 @@ impl ConfigValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_memory_size(size_mb: u64) -> Result<(), String>  {
+        pub fn validate_memory_size(size_mb: u64) -> Result<(), String>  {
         if size_mb < 128 {
             return Err("Memory size should be at least 128 MB".to_string());
         }

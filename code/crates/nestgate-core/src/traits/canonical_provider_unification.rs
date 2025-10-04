@@ -155,7 +155,17 @@ pub trait NetworkProvider: CanonicalUniversalProvider<Box<dyn NetworkService>> {
 }
 
 /// Service trait definitions
+/// **DEPRECATED**: Use canonical security trait instead
+#[deprecated(
+    since = "0.9.0",
+    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity instead"
+)]
 pub trait SecurityService: Send + Sync {}
+/// **DEPRECATED**: Duplicate trait - use canonical storage system
+#[deprecated(
+    since = "0.9.0",
+    note = "Use crate::traits::canonical_unified_traits::CanonicalStorage instead"
+)]
 pub trait StorageService: Send + Sync {}
 pub trait NetworkService: Send + Sync {}
 pub trait CacheService: Send + Sync {}

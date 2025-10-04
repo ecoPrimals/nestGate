@@ -34,7 +34,7 @@ impl Default for HealthMonitoringConfig {
 
 impl HealthMonitoringConfig {
     /// Create production-optimized health monitoring configuration
-    pub const fn production() -> Self {
+    pub fn production() -> Self {
         Self {
             enabled: true,
             check_interval_seconds: 60,

@@ -243,12 +243,12 @@ impl NativeAsyncProtocolHandler<1000, 30, 3, 8192> for ProductionProtocolHandler
 
     async fn handle_connection(&self, connection: Self::Connection) -> Result<()> {
         // Compile-time optimization for connection handling
-        println!("Handling connection: {connection.connection_id}");
+        println!("Handling connection: {}", connection.connection_id);
         Ok(())
     }
 
     async fn connection_status(&self, connection: &Self::Connection) -> Result<String> {
-        Ok(format!("{connection.status:?}"))
+        Ok(format!("{:?}", connection.status))
     }
 
     async fn ping(&self, _connection: &Self::Connection) -> Result<std::time::Duration> {

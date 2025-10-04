@@ -201,7 +201,7 @@ impl UnifiedErrorResponse {
 
     /// Create a statistics response from the error context
     #[must_use]
-    pub const fn to_statistics_response(&self) -> SimpleErrorResponse {
+    pub fn to_statistics_response(&self) -> SimpleErrorResponse {
         SimpleErrorResponse {
             error_code: self.error.error_code.clone(),
             message: self.error.message.clone(),
@@ -222,7 +222,7 @@ impl UnifiedErrorResponse {
 
     /// Create a detailed response from the error context
     #[must_use]
-    pub const fn to_detailed_response(&self) -> DetailedErrorResponse {
+    pub fn to_detailed_response(&self) -> DetailedErrorResponse {
         DetailedErrorResponse {
             error: self.error.clone(),
             request_context: self.request_context.clone(),
@@ -239,7 +239,7 @@ impl UnifiedErrorResponse {
 
     /// Convert to simple error response for API responses
     #[must_use]
-    pub const fn to_simple_response(&self) -> SimpleErrorResponse {
+    pub fn to_simple_response(&self) -> SimpleErrorResponse {
         SimpleErrorResponse {
             message: self.error.message.clone(),
             error_code: self.error.error_code.clone(),

@@ -11,12 +11,12 @@ use crate::error::Result;
 
 /// Create a new constant migrator for the most common use case
 #[must_use]
-pub const fn create_migrator() -> ConstantMigrator {
+pub fn create_migrator() -> ConstantMigrator {
     ConstantMigrator::new("default".to_string())
 }
 /// Create a migrator with dry-run enabled for testing
 #[must_use]
-pub const fn create_dry_run_migrator() -> ConstantMigrator {
+pub fn create_dry_run_migrator() -> ConstantMigrator {
     let options = ConstantMigrationOptions {
         dry_run: true,
         verbose: true,
@@ -31,7 +31,7 @@ pub fn quick_migrate() -> Result<ConstantMigrationReport> {
     migrator.migrate()
 }
 /// Run a safe migration with all validation enabled
-pub const fn safe_migrate() -> Result<ConstantMigrationReport> {
+pub fn safe_migrate() -> Result<ConstantMigrationReport> {
     let options = ConstantMigrationOptions {
         strict_mode: true,
         backup_original_files: true,

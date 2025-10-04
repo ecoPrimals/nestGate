@@ -41,7 +41,7 @@ impl std::error::Error for ValidationError {}
 pub mod utils {
     use super::{ValidationError, ValidationResult};
     /// Validate that a string is not empty
-    pub const fn validate_non_empty(field: &str, value: &str) -> ValidationResult<()> {
+    pub fn validate_non_empty(field: &str, value: &str) -> ValidationResult<()> {
         if value.trim().is_empty() {
             Err(ValidationError::MissingField {
                 field: field.to_string(),
@@ -52,7 +52,7 @@ pub mod utils {
     }
 
     /// Validate that a number is within range
-    pub const fn validate_range(
+    pub fn validate_range(
         field: &str,
         value: i64,
         min: Option<i64>,

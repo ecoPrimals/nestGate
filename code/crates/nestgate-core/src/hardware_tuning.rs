@@ -42,8 +42,8 @@ impl HardwareAgnosticTuner {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn apply_config(&mut self, config: HardwareConfiguration) -> Result<TuningResult>  {
+    #[must_use]
+    pub fn apply_config(&mut self, config: HardwareConfiguration) -> Result<TuningResult> {
         self.active_config = Some(config.clone());
 
         Ok(TuningResult {

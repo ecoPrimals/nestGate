@@ -4,6 +4,7 @@
 
 use crate::common::*;
 use nestgate_core::config::*;
+use nestgate_core::constants::canonical::network::DEFAULT_API_PORT;
 use std::collections::HashMap;
 
 /// Test basic configuration loading
@@ -174,10 +175,10 @@ async fn test_config_type_coercion() -> Result<(), Box<dyn std::error::Error>> {
     let mut config = Config::default();
     
     // Test setting string that looks like a number
-    config.set_string("port", "8080");
+    config.set_string("port", &DEFAULT_API_PORT.to_string());
     
     // Test type coercion
-    assert_eq!(config.get_number_from_string("port")?, 8080);
+    assert_eq!(config.get_number_from_string("port")?, DEFAULT_API_PORT.into());
     
     // Test setting string that looks like a boolean
     config.set_string("debug", "true");
@@ -234,7 +235,7 @@ fn test_config_defaults_and_overrides() -> Result<(), Box<dyn std::error::Error>
     let config = Config::with_defaults();
     
     // Should have reasonable defaults
-    assert!(config.get_number("server.port").unwrap_or(8080) > 0);
+    assert!(config.get_number("server.port").unwrap_or(DEFAULT_API_PORT.into()) > 0);
     assert!(config.get_string("server.host").unwrap_or(nestgate_core::constants::TEST_HOSTNAME.to_string()).len() > 0);
     
     // Test override behavior
@@ -242,7 +243,7 @@ fn test_config_defaults_and_overrides() -> Result<(), Box<dyn std::error::Error>
     config_with_overrides.set_number("server.port", 9000);
     
     assert_eq!(config_with_overrides.get_number("server.port")?, 9000);
-    assert_ne!(config.get_number("server.port").unwrap_or(8080), 9000);
+    assert_ne!(config.get_number("server.port").unwrap_or(DEFAULT_API_PORT.into()), 9000);
     Ok(())
 }
 

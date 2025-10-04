@@ -158,22 +158,25 @@ impl ZfsPoolSetup {
     }
 
     /// Get available (unused) devices
-    pub const fn get_available_devices(&self) -> Vec<&StorageDevice> {
+    pub fn get_available_devices(&self) -> Vec<&StorageDevice> {
         DeviceScanner::filter_available(&self.devices)
     }
 
     /// Get devices by type
-    pub const fn get_devices_by_type(&self, device_type: DetectionDeviceType) -> Vec<&StorageDevice> {
+    pub fn get_devices_by_type(
+        &self,
+        device_type: DetectionDeviceType,
+    ) -> Vec<&StorageDevice> {
         DeviceScanner::filter_by_type(&self.devices, device_type)
     }
 
     /// Get devices by speed class
-    pub const fn get_devices_by_speed(&self, speed_class: SpeedClass) -> Vec<&StorageDevice> {
+    pub fn get_devices_by_speed(&self, speed_class: SpeedClass) -> Vec<&StorageDevice> {
         DeviceScanner::filter_by_speed(&self.devices, speed_class)
     }
 
     /// Recommend pool configuration based on available devices
-    pub const fn recommend_pool_config(&self, pool_name: &str) -> CoreResult<PoolSetupConfig> {
+    pub fn recommend_pool_config(&self, pool_name: &str) -> CoreResult<PoolSetupConfig> {
         if pool_name.is_empty() {
             return Err(NestGateError::internal_error(
                 "Pool name cannot be empty".to_string(),
@@ -322,12 +325,12 @@ impl ZfsPoolSetup {
     }
 
     /// Validate device
-    pub const fn validate_device(&self, device: &StorageDevice) -> ValidationResult {
+    pub fn validate_device(&self, device: &StorageDevice) -> ValidationResult {
         self.validator.validate_device(device)
     }
 
     /// Validate pool configuration
-    pub const fn validate_pool_config(&self, config: &PoolSetupConfig) -> ValidationResult {
+    pub fn validate_pool_config(&self, config: &PoolSetupConfig) -> ValidationResult {
         self.validator.validate_pool_config(config)
     }
 
@@ -349,7 +352,7 @@ impl ZfsPoolSetup {
     }
 
     /// Get system report
-    pub const fn get_system_report(&self) -> SystemReport {
+    pub fn get_system_report(&self) -> SystemReport {
         SystemReport {
             total_devices: self.devices.len(),
             available_devices: self.get_available_devices().len(),

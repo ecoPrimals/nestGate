@@ -28,31 +28,31 @@ impl Default for PoolStats {
 
 impl PoolStats {
     /// Create new empty statistics
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
     /// Get total number of connections (active + idle)
-    pub const fn total_connections(&self) -> usize {
+    pub fn total_connections(&self) -> usize {
         self.active_connections + self.idle_connections
     }
 
     /// Get connection utilization as a percentage
-    pub const fn utilization_percentage(&self) -> f64 {
+    pub fn utilization_percentage(&self) -> f64 {
         if self.total_connections() == 0 {
             0.0
         } else {
-            (self.f64::from(active_connections) / self.total_connections() as f64) * 100.0
+            (self.active_connections as f64 / self.total_connections() as f64) * 100.0
         }
     }
 
     /// Get success rate for connection acquisitions
-    pub const fn success_rate(&self) -> f64 {
+    pub fn success_rate(&self) -> f64 {
         let total_attempts = self.total_created + self.failed_acquisitions;
         if total_attempts == 0 {
             100.0
         } else {
-            (self.f64::from(total_created) / f64::from(total_attempts)) * 100.0
+            (self.total_created as f64 / total_attempts as f64) * 100.0
         }
     }
 }

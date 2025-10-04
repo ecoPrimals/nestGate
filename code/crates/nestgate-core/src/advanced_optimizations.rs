@@ -23,7 +23,7 @@ impl Default for UltraPerformanceBatchProcessor {
 
 impl UltraPerformanceBatchProcessor {
     /// Create new ultra-performance processor optimized for target architecture
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             processed_count: AtomicU64::new(0),
             _cache_line_size: 64, // Most modern CPUs
@@ -64,7 +64,7 @@ impl UltraPerformanceBatchProcessor {
 
     /// Get total processed elements
     #[must_use]
-    pub const fn total_processed(&self) -> u64 {
+    pub fn total_processed(&self) -> u64 {
         self.processed_count.load(Ordering::Relaxed)
     }
 }
@@ -86,7 +86,7 @@ impl<const BUFFER_SIZE: usize> Default for ZeroAllocStringProcessor<BUFFER_SIZE>
 
 impl<const BUFFER_SIZE: usize> ZeroAllocStringProcessor<BUFFER_SIZE> {
     /// Create new zero-allocation processor
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             buffer: [0; BUFFER_SIZE],
             position: 0,
@@ -134,8 +134,8 @@ impl<const BUFFER_SIZE: usize> ZeroAllocStringProcessor<BUFFER_SIZE> {
 
     /// Get current buffer utilization
     #[must_use]
-    pub const fn utilization(&self) -> f32 {
-        f32::from(self.position) / f32::from(BUFFER_SIZE)
+    pub fn utilization(&self) -> f32 {
+        self.position as f32 / BUFFER_SIZE as f32
     }
 }
 
@@ -157,7 +157,7 @@ impl Default for LockFreeCounter {
 
 impl LockFreeCounter {
     /// Create new lock-free counter
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             value: AtomicU64::new(0),
             _padding: [0; 56],
@@ -166,26 +166,26 @@ impl LockFreeCounter {
 
     /// Increment counter with relaxed ordering (maximum performance)
     #[inline(always)]
-    pub const fn increment(&self) -> u64 {
+    pub fn increment(&self) -> u64 {
         self.value.fetch_add(1, Ordering::Relaxed)
     }
 
     /// Increment by specific amount
     #[inline(always)]
-    pub const fn add(&self, amount: u64) -> u64 {
+    pub fn add(&self, amount: u64) -> u64 {
         self.value.fetch_add(amount, Ordering::Relaxed)
     }
 
     /// Get current value with acquire ordering
     #[must_use]
     #[inline(always)]
-    pub const fn get(&self) -> u64 {
+    pub fn get(&self) -> u64 {
         self.value.load(Ordering::Acquire)
     }
 
     /// Reset counter to zero
     #[inline(always)]
-    pub const fn reset(&self) -> u64 {
+    pub fn reset(&self) -> u64 {
         self.value.swap(0, Ordering::AcqRel)
     }
 }
@@ -203,7 +203,7 @@ pub struct AdaptivePerformanceMonitor {
 
 impl AdaptivePerformanceMonitor {
     /// Create new adaptive monitor
-    pub const fn new(window_size: usize, threshold: f64) -> Self {
+    pub fn new(window_size: usize, threshold: f64) -> Self {
         Self {
             samples: Vec::with_capacity(window_size),
             window_size,
@@ -229,7 +229,7 @@ impl AdaptivePerformanceMonitor {
         let recent_avg = self.samples[self.samples.len() - recent_len..]
             .iter()
             .sum::<f64>()
-            / f64::from(recent_len);
+            / recent_len as f64;
 
         if recent_avg > avg * (1.0 + self.threshold) {
             AdaptationRecommendation::ReduceLoad
@@ -242,15 +242,15 @@ impl AdaptivePerformanceMonitor {
 
     /// Get current performance statistics
     #[must_use]
-    pub const fn statistics(&self) -> PerformanceStats {
+    pub fn statistics(&self) -> PerformanceStats {
         if self.samples.is_empty() {
             return PerformanceStats::default();
         }
 
         let sum = self.samples.iter().sum::<f64>();
         let avg = sum / (self.samples.len() as f64);
-        let variance =
-            self.samples.iter().map(|x| (x - avg).powi(2)).sum::<f64>() / (self.samples.len() as f64);
+        let variance = self.samples.iter().map(|x| (x - avg).powi(2)).sum::<f64>()
+            / (self.samples.len() as f64);
 
         PerformanceStats {
             average_latency: avg,

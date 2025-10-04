@@ -88,32 +88,32 @@ impl From<nestgate_core::error::NestGateError> for FsMonitorError {
 }
 
 /// Helper function to create watcher initialization errors
-pub const fn watcher_init_error(message: &str) -> FsMonitorError {
+pub fn watcher_init_error(message: &str) -> FsMonitorError {
     FsMonitorError::WatcherInit {
         message: message.to_string(),
     }
 }
 /// Helper function to create watch path errors
-pub const fn watch_path_error(path: PathBuf, message: &str) -> FsMonitorError {
+pub fn watch_path_error(path: PathBuf, message: &str) -> FsMonitorError {
     FsMonitorError::WatchPath {
         path,
         message: message.to_string(),
     }
 }
 /// Helper function to create event processing errors
-pub const fn event_processing_error(message: &str) -> FsMonitorError {
+pub fn event_processing_error(message: &str) -> FsMonitorError {
     FsMonitorError::EventProcessing {
         message: message.to_string(),
     }
 }
 /// Helper function to create configuration errors
-pub const fn configuration(message: &str) -> FsMonitorError {
+pub fn configuration(message: &str) -> FsMonitorError {
     FsMonitorError::Configuration {
         message: message.to_string(),
     }
 }
 /// Helper function to create handler errors
-pub const fn handler_error(message: &str) -> FsMonitorError {
+pub fn handler_error(message: &str) -> FsMonitorError {
     FsMonitorError::Handler {
         message: message.to_string(),
     }

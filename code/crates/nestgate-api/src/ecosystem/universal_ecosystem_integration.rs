@@ -246,7 +246,7 @@ pub struct CapabilityId {
     pub version: String,
 }
 impl CapabilityId {
-    pub const fn new(domain: &str, capability: &str, version: &str) -> Self { Self {
+    pub fn new(domain: &str, capability: &str, version: &str) -> Self { Self {
             domain: domain.to_string(),
             capability: capability.to_string(),
             version: version.to_string(),

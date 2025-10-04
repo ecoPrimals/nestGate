@@ -429,7 +429,7 @@ impl Default for ThreadPoolConfig {
 impl UnitTestConfig {
     /// Create a configuration optimized for CI/CD environments
     #[must_use]
-    pub const fn ci_optimized() -> Self {
+    pub fn ci_optimized() -> Self {
         Self {
             execution: TestExecutionConfig {
                 timeout: Duration::from_secs(60),
@@ -460,7 +460,7 @@ impl UnitTestConfig {
 
     /// Create a configuration optimized for local development
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self {
             execution: TestExecutionConfig {
                 timeout: Duration::from_secs(10),
@@ -487,7 +487,7 @@ impl UnitTestConfig {
 
     /// Merge with another configuration
     #[must_use]
-    pub const fn merge(self, other: Self) -> Self {
+    pub fn merge(self, other: Self) -> Self {
         // Simple merge - other takes precedence
         // In a real implementation, you might want more sophisticated merging
         other

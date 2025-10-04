@@ -14,7 +14,7 @@ pub struct ZeroCostZfsService {
 }
 impl ZeroCostZfsService {
     /// Create a new zero-cost ZFS service
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             service_name: "ZeroCostZfsService",
         }

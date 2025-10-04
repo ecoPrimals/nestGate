@@ -14,7 +14,7 @@ impl ZeroCostValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_arc_dyn_elimination() -> Result<()>  {
+        pub fn validate_arc_dyn_elimination() -> Result<()>  {
         // This would analyze the codebase for remaining Arc<dyn> patterns
         // For now, we'll assume validation passes
         Ok(())
@@ -43,7 +43,7 @@ impl ZeroCostValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_string_optimization() -> Result<()>  {
+        pub fn validate_string_optimization() -> Result<()>  {
         // This would analyze for unnecessary string allocations
         // For now, we'll assume validation passes
         Ok(())
@@ -57,7 +57,7 @@ impl ZeroCostValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_config_optimization() -> Result<()>  {
+        pub fn validate_config_optimization() -> Result<()>  {
         // This would validate const generics usage
         // For now, we'll assume validation passes
         Ok(())

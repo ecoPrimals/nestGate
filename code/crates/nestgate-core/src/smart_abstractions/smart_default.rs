@@ -91,11 +91,11 @@ impl SmartDefaults {
     pub const DEFAULT_BUFFER_SIZE: usize = 8192;
     pub const DEFAULT_MAX_CONNECTIONS: usize = 1000;
 
-    pub const fn default_host() -> String {
+    pub fn default_host() -> String {
         Self::DEFAULT_HOST.to_string()
     }
 
-    pub const fn default_timeout() -> Duration {
+    pub fn default_timeout() -> Duration {
         Duration::from_secs(Self::DEFAULT_TIMEOUT_SECS)
     }
 

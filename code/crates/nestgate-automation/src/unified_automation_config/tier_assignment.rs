@@ -69,7 +69,7 @@ impl TierAssignmentSettings {
         }
     }
 
-    pub const fn production() -> Self { Self {
+    pub fn production() -> Self { Self {
             enabled: true,
             min_confidence_threshold: 0.8,
             algorithms: vec![
@@ -112,7 +112,7 @@ impl TierAssignmentSettings {
         }
     }
 
-    pub const fn performance_focused() -> Self { Self {
+    pub fn performance_focused() -> Self { Self {
             enabled: true,
             min_confidence_threshold: 0.9, // Higher threshold for performance
             algorithms: vec![
@@ -155,7 +155,7 @@ impl TierAssignmentSettings {
         }
     }
 
-    pub const fn reliability_focused() -> Self { Self {
+    pub fn reliability_focused() -> Self { Self {
             enabled: true,
             min_confidence_threshold: 0.95, // Very conservative
             algorithms: vec![

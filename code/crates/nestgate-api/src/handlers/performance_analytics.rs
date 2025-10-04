@@ -112,8 +112,8 @@ pub fn get_performance_alerts() -> Result<Json<Vec<PerformanceAlert>>, StatusCod
 /// **GET PERFORMANCE RECOMMENDATIONS HANDLER**
 ///
 /// Retrieve performance optimization recommendations.
-pub fn get_performance_recommendations(
-) -> Result<Json<Vec<PerformanceRecommendation>>, StatusCode> {
+pub fn get_performance_recommendations() -> Result<Json<Vec<PerformanceRecommendation>>, StatusCode>
+{
     let recommendations = vec![
         PerformanceRecommendation {
             id: "rec_001".to_string(),

@@ -31,7 +31,7 @@ impl Default for TracingConfig {
 }
 
 /// Initialize tracing with the given configuration
-pub const fn init_tracing(config: TracingConfig) -> Result<()> {
+pub fn init_tracing(config: TracingConfig) -> Result<()> {
     use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
     let level = match config.level.as_str() {
         "trace" => tracing::Level::TRACE,

@@ -5,7 +5,7 @@
 /// Placeholder for Ensembl live provider
 pub struct EnsemblLiveProvider;
 impl EnsemblLiveProvider {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self
     }
 }

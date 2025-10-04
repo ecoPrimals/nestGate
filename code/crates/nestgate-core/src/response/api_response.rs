@@ -47,7 +47,7 @@ impl<T> ApiResponse<T> {
     }
 
     /// Create a successful response with data and metadata using standardized builder
-    pub const fn success_with_metadata(data: T, metadata: HashMap<String, serde_json::Value>) -> Self {
+    pub fn success_with_metadata(data: T, metadata: HashMap<String, serde_json::Value>) -> Self {
         Self {
             request_id: Uuid::new_v4().to_string(),
             status: crate::canonical_types::ResponseStatus::Success,
@@ -98,7 +98,7 @@ impl<T> ApiResponse<T> {
     }
 
     /// Create a new successful response directly
-    pub const fn new_success(data: T) -> Self {
+    pub fn new_success(data: T) -> Self {
         Self {
             request_id: Uuid::new_v4().to_string(),
             status: crate::canonical_types::ResponseStatus::Success,
@@ -114,7 +114,7 @@ impl<T> ApiResponse<T> {
 
     /// Create a new error response directly
     #[must_use]
-    pub const fn new_error(message: String) -> Self {
+    pub fn new_error(message: String) -> Self {
         Self {
             request_id: Uuid::new_v4().to_string(),
             status: crate::canonical_types::ResponseStatus::Error,
@@ -130,7 +130,7 @@ impl<T> ApiResponse<T> {
 
     /// Create a new error response with code directly
     #[must_use]
-    pub const fn new_error_with_code(message: String, code: String) -> Self {
+    pub fn new_error_with_code(message: String, code: String) -> Self {
         Self {
             request_id: Uuid::new_v4().to_string(),
             status: crate::canonical_types::ResponseStatus::Error,
@@ -161,27 +161,27 @@ impl<T> ApiResponse<T> {
     }
 
     /// Check if the response is successful
-    pub const fn is_success(&self) -> bool {
+    pub fn is_success(&self) -> bool {
         self.success
     }
 
     /// Check if the response is an error
-    pub const fn is_error(&self) -> bool {
+    pub fn is_error(&self) -> bool {
         !self.success
     }
 
     /// Get the error message if present
-    pub const fn error_message(&self) -> Option<&str> {
+    pub fn error_message(&self) -> Option<&str> {
         self.error.as_deref()
     }
 
     /// Get the error code if present
-    pub const fn error_code(&self) -> Option<&str> {
+    pub fn error_code(&self) -> Option<&str> {
         self.error_code.as_deref()
     }
 
     /// Convert to JSON for HTTP responses
-    pub const fn to_json(self) -> Json<Self> {
+    pub fn to_json(self) -> Json<Self> {
         Json(self)
     }
 }
@@ -227,7 +227,7 @@ pub struct EmptyResponse {
 impl EmptyResponse {
     /// Create a successful empty response
     #[must_use]
-    pub const fn success_empty() -> Self {
+    pub fn success_empty() -> Self {
         Self {
             success: true,
             message: None,
@@ -237,7 +237,7 @@ impl EmptyResponse {
 
     /// Create a successful empty response with message
     #[must_use]
-    pub const fn success_message(message: &str) -> Self {
+    pub fn success_message(message: &str) -> Self {
         Self {
             success: true,
             message: Some(message.to_string()),
@@ -247,7 +247,7 @@ impl EmptyResponse {
 
     /// Create an error empty response
     #[must_use]
-    pub const fn error(message: &str) -> Self {
+    pub fn error(message: &str) -> Self {
         Self {
             success: false,
             message: Some(message.to_string()),

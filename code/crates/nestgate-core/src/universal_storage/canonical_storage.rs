@@ -86,7 +86,7 @@ pub struct CanonicalStorageManager<B: CanonicalStorageBackend> {
     metrics: Arc<CanonicalStorageMetrics>,
 }
 impl<B: CanonicalStorageBackend> CanonicalStorageManager<B> {
-    pub const fn new(config: Arc<StorageConfig>, backend: B) -> Self {
+    pub fn new(config: Arc<StorageConfig>, backend: B) -> Self {
         Self {
             config,
             backend,
@@ -94,7 +94,7 @@ impl<B: CanonicalStorageBackend> CanonicalStorageManager<B> {
         }
     }
 
-    pub const fn config(&self) -> &StorageConfig {
+    pub fn config(&self) -> &StorageConfig {
         &self.config
     }
 
@@ -205,7 +205,7 @@ impl<B: CanonicalStorageBackend> CanonicalStorageManager<B> {
         self.backend.health_check().await
     }
 
-    pub const fn metrics(&self) -> &CanonicalStorageMetrics {
+    pub fn metrics(&self) -> &CanonicalStorageMetrics {
         &self.metrics
     }
 }
@@ -216,7 +216,7 @@ pub struct FilesystemBackend {
     root_path: PathBuf,
 }
 impl FilesystemBackend {
-    pub const fn new(root_path: PathBuf) -> Self {
+    pub fn new(root_path: PathBuf) -> Self {
         Self { root_path }
     }
 
@@ -294,7 +294,7 @@ impl CanonicalStorageBackend for FilesystemBackend {
 
 /// Convenience constructor for filesystem backend
 #[must_use]
-pub const fn create_canonical_storage_manager() -> Result<CanonicalStorageManager<FilesystemBackend>> {
+pub fn create_canonical_storage_manager() -> Result<CanonicalStorageManager<FilesystemBackend>> {
     let config = Arc::new(StorageConfig::default());
     let backend = FilesystemBackend::new(config.root_path.clone());
     Ok(CanonicalStorageManager::new(config, backend))

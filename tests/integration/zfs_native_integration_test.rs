@@ -6,14 +6,19 @@
 //! **CANONICAL MODERNIZATION COMPLETE**: Production-ready ZFS testing
 
 use nestgate_api::handlers::zfs::universal_zfs::{
+use crate::config::ConsolidatedCanonicalConfig;
     backends::{NativeZfsService, ZfsServiceFactory},
     traits::UniversalZfsService,
     types::{DatasetConfig, PoolConfig, SnapshotConfig},
 };
 use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
+use crate::config::ConsolidatedCanonicalConfig;
 use std::sync::Arc;
+use crate::config::ConsolidatedCanonicalConfig;
 use tokio;
+use crate::config::ConsolidatedCanonicalConfig;
 use tracing::{debug, info, warn};
+use crate::config::ConsolidatedCanonicalConfig;
 
 /// Test configuration for ZFS integration tests
 struct ZfsTestConfig {

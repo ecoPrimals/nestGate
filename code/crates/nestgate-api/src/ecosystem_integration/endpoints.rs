@@ -48,12 +48,12 @@ impl EndpointManager {
     }
 
     /// Get endpoint by name
-    pub const fn get_endpoint(&self, name: &str) -> Option<&ServiceEndpoint> {
+    pub fn get_endpoint(&self, name: &str) -> Option<&ServiceEndpoint> {
         self.endpoints.get(name)
     }
 
     /// List all endpoints
-    pub const fn list_endpoints(&self) -> Vec<&ServiceEndpoint> {
+    pub fn list_endpoints(&self) -> Vec<&ServiceEndpoint> {
         self.endpoints.values().collect()
     }
 

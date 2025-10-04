@@ -106,7 +106,7 @@ pub struct ZeroCostCoordinationService<const MAX_CONCURRENT: usize = 1000> {
 }
 impl<const MAX_CONCURRENT: usize> ZeroCostCoordinationService<MAX_CONCURRENT> {
     /// Create new zero-cost coordination service
-    pub const fn new(service_id: String) -> Self {
+    pub fn new(service_id: String) -> Self {
         Self {
             service_id,
             active_operations: std::sync::atomic::AtomicUsize::new(0),
@@ -114,7 +114,7 @@ impl<const MAX_CONCURRENT: usize> ZeroCostCoordinationService<MAX_CONCURRENT> {
     }
 
     /// Get current operation count
-    pub const fn active_operation_count(&self) -> usize {
+    pub fn active_operation_count(&self) -> usize {
         self.active_operations
             .load(std::sync::atomic::Ordering::Relaxed)
     }
@@ -218,7 +218,7 @@ impl<T> CoordinationCompatibilityBridge<T>
 where
     T: ZeroCostUniversalCoordination,
 {
-    pub const fn new(inner: T) -> Self {
+    pub fn new(inner: T) -> Self {
         Self { inner }
     }
 

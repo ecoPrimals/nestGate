@@ -61,7 +61,7 @@ impl UniversalPrimalDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn discover_bind_address(&self, service_name: &str) -> Result<IpAddr>  {
+    pub async fn discover_bind_address(&self, service_name: &str) -> Result<IpAddr> {
         // Delegate to network discovery subsystem
         self.network_discovery
             .discover_bind_address(service_name)
@@ -76,11 +76,11 @@ impl UniversalPrimalDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn discover_available_port(
+    pub async fn discover_available_port(
         &self,
         service_name: &str,
         start_range: u16,
-    ) -> Result<u16>  {
+    ) -> Result<u16> {
         // Delegate to network discovery subsystem
         self.network_discovery
             .discover_available_port(service_name, start_range)
@@ -95,11 +95,11 @@ impl UniversalPrimalDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn discover_optimal_timeout(
+    pub async fn discover_optimal_timeout(
         &self,
         service_name: &str,
         _operation: &str,
-    ) -> Result<Duration>  {
+    ) -> Result<Duration> {
         // Delegate to performance discovery subsystem
         let optimal_timeout = self
             .performance_discovery
@@ -116,7 +116,7 @@ impl UniversalPrimalDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn discover_system_limits(&mut self, resource_type: &str) -> Result<usize>  {
+    pub async fn discover_system_limits(&mut self, resource_type: &str) -> Result<usize> {
         // Delegate to system introspection
         self.system_introspection
             .discover_resource_limits(resource_type)
@@ -131,11 +131,11 @@ impl UniversalPrimalDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn query_service_registry(
+    pub async fn query_service_registry(
         &self,
         service_name: &str,
         query_type: &str,
-    ) -> Result<String>  {
+    ) -> Result<String> {
         // Delegate to registry client
         self.registry_client
             .query_service(service_name, query_type)
@@ -147,7 +147,7 @@ impl UniversalPrimalDiscovery {
         ports.insert(service_name.to_string(), port);
 
         // Also cache in new system
-        self.cache.store_port_discovery(service_name, port).await;
+        self.cache.store_port_discovery(service_name, port);
     }
 
     pub async fn cache_discovered_endpoint(&mut self, service_name: &str, endpoint: &str) {
@@ -155,9 +155,7 @@ impl UniversalPrimalDiscovery {
         endpoints.insert(service_name.to_string(), endpoint.to_string());
 
         // Also cache in new system
-        self.cache
-            .store_endpoint_discovery(service_name, endpoint)
-            .await;
+        self.cache.store_endpoint_discovery(service_name, endpoint);
     }
 
     pub async fn cache_discovered_timeout(&mut self, service_name: &str, timeout: Duration) {
@@ -165,9 +163,7 @@ impl UniversalPrimalDiscovery {
         timeouts.insert(service_name.to_string(), timeout);
 
         // Also cache in new system
-        self.cache
-            .store_timeout_discovery(service_name, timeout)
-            .await;
+        self.cache.store_timeout_discovery(service_name, timeout);
     }
 
     /// **SYSTEM HEALTH**: Get comprehensive discovery status
@@ -178,7 +174,7 @@ impl UniversalPrimalDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_discovery_status(&self) -> Result<HashMap<String, String>>  {
+    pub async fn get_discovery_status(&self) -> Result<HashMap<String, String>> {
         let mut status = HashMap::new();
 
         // Network discovery status
@@ -191,7 +187,7 @@ impl UniversalPrimalDiscovery {
         status.insert("registry_client".to_string(), "active".to_string());
 
         // Cache status
-        let cache_stats = self.cache.get_cache_stats().await;
+        let cache_stats = self.cache.get_cache_stats();
         status.insert("cache_entries".to_string(), cache_stats.to_string());
 
         Ok(status)

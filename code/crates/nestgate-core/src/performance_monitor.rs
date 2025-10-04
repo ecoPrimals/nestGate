@@ -28,7 +28,7 @@ pub struct PerformanceMonitor {
 impl PerformanceMonitor {
     /// **IDIOMATIC EVOLUTION**: Safe lock acquisition utilities
     /// Provides safe access to performance data with proper error handling
-    pub const fn safe_read_lock(&self) -> crate::Result<MetricsReadGuard> {
+    pub fn safe_read_lock(&self) -> crate::Result<MetricsReadGuard> {
         self.metrics
             .read()
             .map_err(|_| crate::error::NestGateError::System {
@@ -39,7 +39,7 @@ impl PerformanceMonitor {
     }
 
     /// Get all performance metrics safely
-    pub const fn get_all_metrics(&self) -> crate::Result<HashMap<String, String>> {
+    pub fn get_all_metrics(&self) -> crate::Result<HashMap<String, String>> {
         let metrics = self.safe_read_lock()?;
         Ok(metrics.clone())
     }
@@ -201,7 +201,7 @@ impl PerformanceMonitor {
             slowest_operation,
             fastest_operation,
             operations_per_second: if uptime.as_secs() > 0 {
-                f64::from(total_operations) / uptime.as_secs_f64()
+                total_operations as f64 / uptime.as_secs_f64()
             } else {
                 0.0
             },
@@ -217,7 +217,7 @@ impl PerformanceMonitor {
     }
 
     /// Get uptime
-    pub const fn uptime(&self) -> Duration {
+    pub fn uptime(&self) -> Duration {
         self.start_time.elapsed()
     }
 }
@@ -256,7 +256,7 @@ pub struct PerformanceMetric {
 }
 impl PerformanceMetric {
     /// Create a new performance metric
-    pub const fn new(name: &str) -> Self {
+    pub fn new(name: &str) -> Self {
         Self {
             name: name.to_string(),
             count: 0,
@@ -292,7 +292,7 @@ impl PerformanceMetric {
     }
 
     /// Calculate average duration
-    pub const fn average_duration(&self) -> Option<Duration> {
+    pub fn average_duration(&self) -> Option<Duration> {
         if self.count > 0 {
             Some(self.total_duration / self.count as u32)
         } else {
@@ -301,9 +301,9 @@ impl PerformanceMetric {
     }
 
     /// Get operations per second (if timing data available)
-    pub const fn operations_per_second(&self) -> Option<f64> {
+    pub fn operations_per_second(&self) -> Option<f64> {
         if self.total_duration.as_secs_f64() > 0.0 {
-            Some(self.f64::from(count) / self.total_duration.as_secs_f64())
+            Some(self.count as f64 / self.total_duration.as_secs_f64())
         } else {
             None
         }
@@ -328,7 +328,7 @@ pub struct PerformanceSummary {
 }
 impl PerformanceSummary {
     /// Get efficiency percentage (0-100)
-    pub const fn efficiency_percentage(&self) -> f64 {
+    pub fn efficiency_percentage(&self) -> f64 {
         if self.uptime.as_secs_f64() > 0.0 {
             let efficiency = self.total_time.as_secs_f64() / self.uptime.as_secs_f64();
             (efficiency * 100.0).min(100.0)
@@ -338,7 +338,7 @@ impl PerformanceSummary {
     }
 
     /// Get performance assessment
-    pub const fn performance_assessment(&self) -> &'static str {
+    pub fn performance_assessment(&self) -> &'static str {
         match self.b_operations_per_second {
             ops if ops > 10000.0 => "Excellent",
             ops if ops > 1000.0 => "Very Good",
@@ -376,7 +376,7 @@ where
     GLOBAL_PERFORMANCE_MONITOR.time_operation(name, operation)
 }
 /// Get global performance summary
-pub const fn global_performance_summary() -> PerformanceSummary {
+pub fn global_performance_summary() -> PerformanceSummary {
     tokio::task::block_in_place(|| {
         tokio::runtime::Handle::current().block_on(GLOBAL_PERFORMANCE_MONITOR.get_summary())
     })

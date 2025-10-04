@@ -157,9 +157,9 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn discover_capabilities(
+    pub async fn discover_capabilities(
         &mut self,
-    ) -> Result<Vec<CapabilityDescriptor>, ZeroCostError>  {
+    ) -> Result<Vec<CapabilityDescriptor>, ZeroCostError> {
         let start_time = std::time::Instant::now();
 
         // Use SIMD-accelerated discovery for performance
@@ -215,10 +215,10 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn establish_connection(
+    pub async fn establish_connection(
         &mut self,
         capability_id: &str,
-    ) -> Result<Connection, ZeroCostError>  {
+    ) -> Result<Connection, ZeroCostError> {
         let start_time = std::time::Instant::now();
 
         // Ensure O(1) connection complexity
@@ -242,7 +242,7 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
     }
 
     /// Verify sovereignty compliance
-    pub const fn verify_sovereignty_compliance(&self) -> bool {
+    pub fn verify_sovereignty_compliance(&self) -> bool {
         self.sovereignty_layer.compliance_status
     }
 
@@ -309,7 +309,7 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
         let len = recent_times.len();
         let recent_avg = recent_times[len.saturating_sub(10)..].iter().sum::<u64>() as f64
             / (recent_times.len().min(10)) as f64;
-        let overall_avg = recent_times.iter().sum::<u64>() as f64 / f64::from(len);
+        let overall_avg = recent_times.iter().sum::<u64>() as f64 / len as f64;
 
         let deviation = (recent_avg - overall_avg).abs() / overall_avg;
 
@@ -356,7 +356,7 @@ pub struct Connection {
 
 impl SovereigntyLayer {
     /// Validate capability against human dignity rules
-    pub const fn validate_capability(&self, capability: &CapabilityDescriptor) -> bool {
+    pub fn validate_capability(&self, capability: &CapabilityDescriptor) -> bool {
         if !self.compliance_status {
             return false;
         }

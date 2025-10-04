@@ -1,6 +1,8 @@
 //! **HIGH-IMPACT COVERAGE TESTS**
 //!
 //! Targeted tests for core modules with 0% coverage to maximize coverage improvement
+//!
+//! **MODERNIZED**: Using canonical constants system
 
 use nestgate_core::constants::canonical::{
 

@@ -18,12 +18,12 @@ pub type ZeroCopyString<'a> = Cow<'a, str>;
 /// Zero-copy byte buffer type
 pub type ZeroCopyBytes<'a> = Cow<'a, [u8]>;
 /// Create a zero-copy string from various sources
-pub const fn zero_copy_string(s: &str) -> ZeroCopyString<'_> {
+pub fn zero_copy_string(s: &str) -> ZeroCopyString<'_> {
     Cow::Borrowed(s)
 }
     Ok(())
 /// Create an owned zero-copy string when needed
-pub const fn owned_zero_copy_string(s: String) -> ZeroCopyString<'static> {
+pub fn owned_zero_copy_string(s: String) -> ZeroCopyString<'static> {
     Cow::Owned(s)
 }
     Ok(())
@@ -35,7 +35,7 @@ pub struct ZeroCopyConfig<'a> {
 }
     Ok(())
 impl<'a> ZeroCopyConfig<'a> {
-    pub const fn new(
+    pub fn new(
         instance_name: &'a str,
         metadata: &'a HashMap<String, String>,
     ) -> Self { Self {
@@ -46,13 +46,13 @@ impl<'a> ZeroCopyConfig<'a> {
     Ok(())
 
     /// Get instance name without cloning
-    pub const fn instance_name(&self) -> &str {
+    pub fn instance_name(&self) -> &str {
         &self.instance_name
     }
     Ok(())
 
     /// Get environment without cloning
-    pub const fn environment(&self) -> &str {
+    pub fn environment(&self) -> &str {
         &self.environment
     }
     Ok(())
@@ -73,7 +73,7 @@ pub struct ZeroCopyServiceMetadata<'a> {
 }
     Ok(())
 impl<'a> ZeroCopyServiceMetadata<'a> {
-    pub const fn new(
+    pub fn new(
         service_id: &'a str,
         name: &'a str,
         version: &'a str,
@@ -92,13 +92,13 @@ impl<'a> ZeroCopyServiceMetadata<'a> {
     Ok(())
 
     /// Get service name without allocation
-    pub const fn name(&self) -> &str {
+    pub fn name(&self) -> &str {
         &self.name
     }
     Ok(())
 
     /// Get version without allocation
-    pub const fn version(&self) -> &str {
+    pub fn version(&self) -> &str {
         &self.version
     }
     Ok(())
@@ -117,7 +117,7 @@ pub struct ZeroCopyResponse<'a> {
 }
     Ok(())
 impl<'a> ZeroCopyResponse<'a> {
-    pub const fn success(request_id: &'a str, data: &'a [u8]) -> Self { Self {
+    pub fn success(request_id: &'a str, data: &'a [u8]) -> Self { Self {
             request_id: Cow::Borrowed(request_id),
             success: true,
             data: Cow::Borrowed(data),
@@ -126,7 +126,7 @@ impl<'a> ZeroCopyResponse<'a> {
      }
     Ok(())
 
-    pub const fn error(request_id: &'a str, error_data: &'a [u8]) -> Self { Self {
+    pub fn error(request_id: &'a str, error_data: &'a [u8]) -> Self { Self {
             request_id: Cow::Borrowed(request_id),
             success: false,
             data: Cow::Borrowed(error_data),
@@ -136,7 +136,7 @@ impl<'a> ZeroCopyResponse<'a> {
     Ok(())
 
     /// Get response data without cloning
-    pub const fn data(&self) -> &[u8] {
+    pub fn data(&self) -> &[u8] {
         &self.data
     }
     Ok(())
@@ -214,7 +214,7 @@ pub struct ZeroCopyCacheEntry<'a> {
 }
     Ok(())
 impl<'a> ZeroCopyCacheEntry<'a> {
-    pub const fn borrowed(b_key: &'a str, bvalue: &'a [u8], metadata: &'a HashMap<String, String>) -> Self { Self {
+    pub fn borrowed(b_key: &'a str, bvalue: &'a [u8], metadata: &'a HashMap<String, String>) -> Self { Self {
             b_key: Cow::Borrowed(key),
             bvalue: Cow::Borrowed(value),
             metadata,
@@ -223,7 +223,7 @@ impl<'a> ZeroCopyCacheEntry<'a> {
      }
     Ok(())
 
-    pub const fn owned(b_key: String, bvalue: Vec<u8>, metadata: &'a HashMap<String, String>) -> Self { Self {
+    pub fn owned(b_key: String, bvalue: Vec<u8>, metadata: &'a HashMap<String, String>) -> Self { Self {
             b_key: Cow::Owned(key),
             bvalue: Cow::Owned(value),
             metadata,
@@ -233,13 +233,13 @@ impl<'a> ZeroCopyCacheEntry<'a> {
     Ok(())
 
     /// Get key without cloning
-    pub const fn key(&self) -> &str {
+    pub fn key(&self) -> &str {
         &self.key
     }
     Ok(())
 
     /// Get value without cloning
-    pub const fn value(&self) -> &[u8] {
+    pub fn value(&self) -> &[u8] {
         &self.value
     }
     Ok(())
@@ -260,7 +260,7 @@ pub mod json {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn parse_zero_copy(input: &str) -> Result<serde_json::Value, serde_json::Error>  {
+        pub fn parse_zero_copy(input: &str) -> Result<serde_json::Value, serde_json::Error>  {
         serde_json::from_str(input)
     }
     Ok(())
@@ -302,7 +302,7 @@ pub struct ZeroCopyNetworkMessage<'a> {
 }
     Ok(())
 impl<'a> ZeroCopyNetworkMessage<'a> {
-    pub const fn new(headers: &'a HashMap<String, String>, body: &'a [u8], endpoint: &'a str) -> Self { Self {
+    pub fn new(headers: &'a HashMap<String, String>, body: &'a [u8], endpoint: &'a str) -> Self { Self {
             headers,
             body: Cow::Borrowed(body),
             endpoint: Cow::Borrowed(endpoint),
@@ -311,13 +311,13 @@ impl<'a> ZeroCopyNetworkMessage<'a> {
     Ok(())
 
     /// Get body reference without cloning
-    pub const fn body(&self) -> &[u8] {
+    pub fn body(&self) -> &[u8] {
         &self.body
     }
     Ok(())
 
     /// Get endpoint without cloning
-    pub const fn endpoint(&self) -> &str {
+    pub fn endpoint(&self) -> &str {
         &self.endpoint
     }
     Ok(())
@@ -342,7 +342,7 @@ pub mod optimization {
     Ok(())
 
     impl StringBufferPool {
-        pub const fn new() -> Self { Self {
+        pub fn new() -> Self { Self {
                 buffers: Vec::with_capacity(10),
             , Ok(())
          }
@@ -381,7 +381,7 @@ pub mod optimization {
     Ok(())
 
     impl ByteBufferPool {
-        pub const fn new() -> Self { Self {
+        pub fn new() -> Self { Self {
                 buffers: Vec::with_capacity(10),
             , Ok(())
          }
@@ -415,7 +415,7 @@ pub mod optimization {
     Ok(())
 
     /// Optimize string operations to reduce cloning
-    pub const fn optimize_string_operations(input: &str) -> &str {
+    pub fn optimize_string_operations(input: &str) -> &str {
         // Return reference instead of cloning
         input.trim()
     }
@@ -522,7 +522,7 @@ mod benchmarks {
 pub mod migration {
     use super::*;
     /// Analyze a string for zero-copy optimization potential
-    pub const fn analyze_string_usage(s: &str) -> ZeroCopyAnalysis {
+    pub fn analyze_string_usage(s: &str) -> ZeroCopyAnalysis {
         ZeroCopyAnalysis {
             length: s.len(),
             can_borrow: true,
@@ -550,7 +550,7 @@ pub mod migration {
     Ok(())
 
     /// Convert cloned string usage to zero-copy where beneficial
-    pub const fn optimize_string_clone(s: &str) -> ZeroCopyString<'_> {
+    pub fn optimize_string_clone(s: &str) -> ZeroCopyString<'_> {
         if s.len() > 64 {
             // Large strings benefit from zero-copy
             Cow::Borrowed(s)
@@ -563,7 +563,7 @@ pub mod migration {
     Ok(())
 
     /// Convert cloned byte slice usage to zero-copy
-    pub const fn optimize_bytes_clone(bytes: &[u8]) -> ZeroCopyBytes<'_> {
+    pub fn optimize_bytes_clone(bytes: &[u8]) -> ZeroCopyBytes<'_> {
         if bytes.len() > 256 {
             // Large byte arrays benefit from zero-copy
             Cow::Borrowed(bytes)
@@ -597,7 +597,7 @@ pub mod smart_pointers {
 
     impl<T> SharedRef<T> {
         /// Create owned reference
-        pub const fn owned(bvalue: T) -> Self { Self::Owned(value)
+        pub fn owned(bvalue: T) -> Self { Self::Owned(value)
         , Ok(())
 
         /// Create shared reference for multi-threaded use
@@ -608,7 +608,7 @@ pub mod smart_pointers {
     Ok(())
 
         /// Create local shared reference for single-threaded use
-        pub const fn local_shared(bvalue: T) -> Self { Self::LocalShared(Rc::new(value))
+        pub fn local_shared(bvalue: T) -> Self { Self::LocalShared(Rc::new(value))
         , Ok(())
 
         /// Get reference to the value

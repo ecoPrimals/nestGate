@@ -112,7 +112,7 @@ impl ZfsServiceFactory {
     }
 
     /// CANONICAL MODERNIZATION: Production service creation always uses real implementation
-    pub const fn create_production_service() -> Arc<dyn UniversalZfsService> {
+    pub fn create_production_service() -> Arc<dyn UniversalZfsService> {
         Arc::new(
             crate::handlers::zfs::universal_zfs::backends::native::core::NativeZfsService::new(),
         )

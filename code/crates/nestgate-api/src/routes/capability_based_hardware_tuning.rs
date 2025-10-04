@@ -35,7 +35,7 @@ pub struct CapabilityBasedHardwareTuningService {
 
 impl CapabilityBasedHardwareTuningService {
     /// Create new capability-based hardware tuning service
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             adapter: PrimalAgnosticAdapter::new(),
             extraction_lock: ExtractionLock::new(),

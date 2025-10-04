@@ -47,7 +47,7 @@ impl AiCapabilityDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn discover_capabilities(&self) -> Result<Vec<AiCapabilityInfo>>  {
+    pub async fn discover_capabilities(&self) -> Result<Vec<AiCapabilityInfo>> {
         // Dynamic discovery logic - replaces hardcoded AI endpoints
         let mut capabilities = Vec::new();
 
@@ -83,10 +83,10 @@ impl AiCapabilityDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_capability(
+    pub async fn get_capability(
         &self,
         capability_type: &AiCapabilityType,
-    ) -> Result<Option<AiCapabilityInfo>>  {
+    ) -> Result<Option<AiCapabilityInfo>> {
         let cache = self.discovered_capabilities.read().await;
         Ok(cache.get(capability_type).cloned())
     }

@@ -307,7 +307,7 @@ impl ConsolidatedCanonicalAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn new(config: CanonicalAdapterConfig) -> Result<Self>  {
+        pub fn new(config: CanonicalAdapterConfig) -> Result<Self>  {
         let client = reqwest::Client::builder()
             .timeout(config.requests.timeout)
             .pool_max_idle_per_host(config.performance.connection_pool_size as usize)

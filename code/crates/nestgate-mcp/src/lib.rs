@@ -37,7 +37,7 @@ pub struct McpHealthStatus {
 }
 impl McpHealthStatus {
     #[must_use]
-    pub const fn healthy() -> Self {
+    pub fn healthy() -> Self {
         Self {
             is_healthy: true,
             message: "MCP service is healthy".to_string(),
@@ -45,7 +45,7 @@ impl McpHealthStatus {
         }
     }
 
-    pub const fn unhealthy(message: impl Into<String>) -> Self {
+    pub fn unhealthy(message: impl Into<String>) -> Self {
         Self {
             is_healthy: false,
             message: message.into(),
@@ -92,16 +92,16 @@ pub mod constants {
 /// Create a canonical MCP client configuration
 /// **MODERNIZED**: Uses canonical configuration system
 #[must_use]
-pub const fn create_default_config() -> nestgate_core::config::canonical_master::McpConfig {
+pub fn create_default_config() -> nestgate_core::config::canonical_master::McpConfig {
     nestgate_core::config::canonical_master::McpConfig::default()
 }
 /// Validate MCP protocol version compatibility
 #[must_use]
-pub const fn is_protocol_version_supported(version: &str) -> bool {
+pub fn is_protocol_version_supported(version: &str) -> bool {
     matches!(version, "2024-11-05" | "2024-10-07" | "2024-09-25")
 }
 /// Create a standardized MCP error response
-pub const fn create_error_response(
+pub fn create_error_response(
     error_type: nestgate_core::NestGateError,
     message: impl Into<String>,
 ) -> serde_json::Value {

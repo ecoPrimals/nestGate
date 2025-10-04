@@ -3,9 +3,13 @@
 //! Core types and data structures for end-to-end testing
 
 use serde::{Deserialize, Serialize};
+use crate::config::ConsolidatedCanonicalConfig;
 use std::collections::HashMap;
+use crate::config::ConsolidatedCanonicalConfig;
 use std::time::Duration;
+use crate::config::ConsolidatedCanonicalConfig;
 use uuid::Uuid;
+use crate::config::ConsolidatedCanonicalConfig;
 
 /// **E2E TEST SCENARIO**
 ///

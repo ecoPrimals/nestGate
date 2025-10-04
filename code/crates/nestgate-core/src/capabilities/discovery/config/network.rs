@@ -31,7 +31,7 @@ impl Default for NetworkDiscoverySettings {
 }
 
 impl NetworkDiscoverySettings {
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }
 }

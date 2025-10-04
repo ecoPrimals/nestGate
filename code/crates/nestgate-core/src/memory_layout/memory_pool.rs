@@ -27,7 +27,7 @@ impl<T, const POOL_SIZE: usize> Default for CacheOptimizedMemoryPool<T, POOL_SIZ
 
 impl<T, const POOL_SIZE: usize> CacheOptimizedMemoryPool<T, POOL_SIZE> {
     /// Create new memory pool
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             blocks: std::array::from_fn(|_| None),
             next_free: AtomicUsize::new(0),
@@ -41,7 +41,7 @@ impl<T, const POOL_SIZE: usize> CacheOptimizedMemoryPool<T, POOL_SIZE> {
     }
 
     /// Allocate object from pool
-    pub const fn allocate(&self, value: T) -> Option<PoolHandle<T>> {
+    pub fn allocate(&self, value: T) -> Option<PoolHandle<T>> {
         let current = self.next_free.load(Ordering::Acquire);
 
         if current >= POOL_SIZE {
@@ -114,16 +114,16 @@ impl<T, const POOL_SIZE: usize> CacheOptimizedMemoryPool<T, POOL_SIZE> {
     }
 
     /// Get pool statistics
-    pub const fn stats(&self) -> &PoolStats {
+    pub fn stats(&self) -> &PoolStats {
         self.stats.get()
     }
 
     /// Get pool utilization ratio (0.0 to 1.0)
-    pub const fn utilization(&self) -> f64 {
+    pub fn utilization(&self) -> f64 {
         let allocated = self.stats.get().allocated.load(Ordering::Relaxed);
         let deallocated = self.stats.get().deallocated.load(Ordering::Relaxed);
         let active = allocated.saturating_sub(deallocated);
-        f64::from(active) / f64::from(POOL_SIZE)
+        active as f64 / POOL_SIZE as f64
     }
 }
 

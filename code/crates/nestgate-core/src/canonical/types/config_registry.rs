@@ -50,11 +50,17 @@ pub struct CanonicalStorageConfig {
 }
 /// **THE CANONICAL NETWORK CONFIGURATION**
 ///
+/// **⚠️ DEPRECATED**: This is a duplicate. Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
 /// Consolidates ALL network configuration patterns:
 /// - `NetworkConfig` from `canonical_modernization/core_config.rs`
 /// - `CanonicalNetworkConfig` from `canonical_modernization/NestGateCanonicalConfig.rs`
 /// - Network settings from `unified_network_extensions.rs`
 /// - Network configs from various service modules
+/// **⚠️ DEPRECATED**: Duplicate. Use the one from `canonical_master::domains::network`
+#[deprecated(
+    since = "0.9.0",
+    note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CanonicalNetworkConfig {
     /// Interface bindings
@@ -636,31 +642,31 @@ pub struct CanonicalConfigTypeRegistry;
 impl CanonicalConfigTypeRegistry {
     /// Get the canonical storage configuration type
     #[must_use]
-    pub const fn storage_config() -> &'static str {
+    pub fn storage_config() -> &'static str {
         "CanonicalStorageConfig"
     }
 
     /// Get the canonical network configuration type
     #[must_use]
-    pub const fn network_config() -> &'static str {
+    pub fn network_config() -> &'static str {
         "CanonicalNetworkConfig"
     }
 
     /// Get the canonical security configuration type
     #[must_use]
-    pub const fn security_config() -> &'static str {
+    pub fn security_config() -> &'static str {
         "CanonicalSecurityConfig"
     }
 
     /// Get the canonical monitoring configuration type
     #[must_use]
-    pub const fn monitoring_config() -> &'static str {
+    pub fn monitoring_config() -> &'static str {
         "CanonicalMonitoringConfig"
     }
 
     /// List all legacy configuration types that should be migrated
     #[must_use]
-    pub const fn legacy_types() -> Vec<&'static str> {
+    pub fn legacy_types() -> Vec<&'static str> {
         vec![
             "StorageConfig", // From various modules
             "StorageResourceConfig",
@@ -676,7 +682,7 @@ impl CanonicalConfigTypeRegistry {
 
     /// Check if a type name is a legacy configuration type
     #[must_use]
-    pub const fn is_legacy_type(type_name: &str) -> bool {
+    pub fn is_legacy_type(type_name: &str) -> bool {
         Self::legacy_types().contains(&type_name)
     }
 }

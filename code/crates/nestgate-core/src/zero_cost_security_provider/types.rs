@@ -63,7 +63,7 @@ impl ZeroCostCredentials {
 
     /// Check if credentials are valid (non-empty)
     #[must_use]
-    pub const fn is_valid(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         !self.username.is_empty() && !self.password.is_empty()
     }
 }
@@ -89,13 +89,13 @@ pub enum AuthMethod {
 impl AuthMethod {
     /// Check if this is a multi-factor authentication method
     #[must_use]
-    pub const fn is_multi_factor(&self) -> bool {
+    pub fn is_multi_factor(&self) -> bool {
         matches!(self, Self::MultiFactor { .. })
     }
 
     /// Get the primary authentication method name
     #[must_use]
-    pub const fn name(&self) -> &'static str {
+    pub fn name(&self) -> &'static str {
         match self {
             AuthMethod::Password => "password",
             AuthMethod::Token => "token",
@@ -107,7 +107,7 @@ impl AuthMethod {
 
     /// Check if this method requires secure transport
     #[must_use]
-    pub const fn requires_secure_transport(&self) -> bool {
+    pub fn requires_secure_transport(&self) -> bool {
         matches!(self, AuthMethod::Password | AuthMethod::MultiFactor { .. })
     }
 }
@@ -159,19 +159,19 @@ impl ZeroCostAuthToken {
 
     /// Check if the token is expired
     #[must_use]
-    pub const fn is_expired(&self) -> bool {
+    pub fn is_expired(&self) -> bool {
         SystemTime::now() > self.expires_at
     }
 
     /// Check if the token has a specific permission
     #[must_use]
-    pub const fn has_permission(&self, permission: &str) -> bool {
+    pub fn has_permission(&self, permission: &str) -> bool {
         self.permissions.contains(&permission.to_string())
     }
 
     /// Get remaining validity duration
     #[must_use]
-    pub const fn remaining_validity(&self) -> Option<std::time::Duration> {
+    pub fn remaining_validity(&self) -> Option<std::time::Duration> {
         self.expires_at.duration_since(SystemTime::now()).ok()
     }
 
@@ -233,13 +233,13 @@ impl ZeroCostSignature {
 
     /// Check if the signature is valid (non-empty fields)
     #[must_use]
-    pub const fn is_valid(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         !self.algorithm.is_empty() && !self.signature.is_empty() && !self.key_id.is_empty()
     }
 
     /// Get signature age
     #[must_use]
-    pub const fn age(&self) -> std::time::Duration {
+    pub fn age(&self) -> std::time::Duration {
         SystemTime::now()
             .duration_since(self.timestamp)
             .unwrap_or_default()
@@ -262,7 +262,7 @@ pub struct SecurityOperationResult<T> {
 }
 impl<T> SecurityOperationResult<T> {
     /// Create a successful operation result
-    pub const fn success(data: T, duration: std::time::Duration) -> Self {
+    pub fn success(data: T, duration: std::time::Duration) -> Self {
         Self {
             success: true,
             data: Some(data),
@@ -274,7 +274,7 @@ impl<T> SecurityOperationResult<T> {
 
     /// Create a failed operation result
     #[must_use]
-    pub const fn failure(error: String, duration: std::time::Duration) -> Self {
+    pub fn failure(error: String, duration: std::time::Duration) -> Self {
         Self {
             success: false,
             data: None,
@@ -285,17 +285,17 @@ impl<T> SecurityOperationResult<T> {
     }
 
     /// Check if the operation was successful
-    pub const fn is_success(&self) -> bool {
+    pub fn is_success(&self) -> bool {
         self.success
     }
 
     /// Get the operation data if successful
-    pub const fn data(&self) -> Option<&T> {
+    pub fn data(&self) -> Option<&T> {
         self.data.as_ref()
     }
 
     /// Get the error message if failed
-    pub const fn error(&self) -> Option<&str> {
+    pub fn error(&self) -> Option<&str> {
         self.error.as_deref()
     }
 }

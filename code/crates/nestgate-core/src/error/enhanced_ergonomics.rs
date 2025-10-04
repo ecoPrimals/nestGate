@@ -171,7 +171,7 @@ pub fn format_error_chain(error: &NestGateError) -> String {
 }
 
 /// Create a development-friendly error report
-pub const fn debug_error_report(error: &NestGateError) -> String {
+pub fn debug_error_report(error: &NestGateError) -> String {
     format!(
         "🚨 ERROR REPORT 🚨\n\
          Erro,

@@ -10,7 +10,7 @@ pub struct InstallationWizard {
 }
 impl InstallationWizard {
     /// Create new installation wizard
-    pub const fn new(config: InstallerConfig) -> Self {
+    pub fn new(config: InstallerConfig) -> Self {
         Self { config }
     }
 

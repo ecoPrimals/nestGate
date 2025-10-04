@@ -24,7 +24,7 @@ impl StorageTier {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn from_str(tier: &str) -> Result<Self>  {
+        pub fn from_str(tier: &str) -> Result<Self>  {
         match tier.to_lowercase().as_str() {
             "hot" => Ok(Self::Hot),
             "warm" => Ok(Self::Warm),
@@ -36,7 +36,7 @@ impl StorageTier {
 }
 
 /// Parse size string to bytes
-pub const fn parse_size_to_bytes(size_str: &str) -> Result<u64> {
+pub fn parse_size_to_bytes(size_str: &str) -> Result<u64> {
     if size_str.ends_with("Ti") || size_str.ends_with("ti") {
         let num_str = &size_str[..size_str.len() - 2];
         let num: f64 = num_str.parse().map_err(|_| {

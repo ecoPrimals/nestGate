@@ -393,7 +393,7 @@ fn test_capability_creation_performance() {
         let capability = CapabilityDescriptor {
             id: format!("capability_{}", i),
             capability_type: CapabilityType::Storage,
-            endpoint: Some(format!("http://service-{}.local", i),
+            endpoint: Some(format!("http://service-{}.local", i)),
             metadata: HashMap::from([
                 ("index".to_string(), i.to_string()),
                 ("created_at".to_string(), "2025-01-01".to_string()),

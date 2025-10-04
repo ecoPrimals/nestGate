@@ -138,7 +138,7 @@ impl ConstantsConsolidationManager {
 
         self.stats.total_constants = self.constants_registry.len() as u32;
         self.stats.consolidation_progress =
-            (self.stats.f64::from(consolidated_count) / self.stats.f64::from(total_constants)) * 100.0;
+            (self.stats.consolidated_count as f64 / self.stats.total_constants as f64) * 100.0;
 
         self.warnings.extend(warnings.clone());
 
@@ -217,7 +217,7 @@ impl ConstantsConsolidationManager {
     }
 
     /// Get consolidation summary
-    pub const fn get_summary(&self) -> ConsolidationSummary {
+    pub fn get_summary(&self) -> ConsolidationSummary {
         ConsolidationSummary {
             stats: self.stats.clone(),
             warnings_count: self.warnings.len(),
@@ -230,7 +230,7 @@ impl ConstantsConsolidationManager {
     /// Calculate estimated maintenance reduction percentage
     fn calculate_maintenance_reduction(&self) -> f64 {
         // Estimate based on duplicates eliminated and consolidation ratio
-        let duplicate_reduction = self.stats.f64::from(duplicates_eliminated) * 0.1;
+        let duplicate_reduction = self.stats.duplicates_eliminated as f64 * 0.1;
         let consolidation_benefit = self.stats.consolidation_progress * 0.01;
         (duplicate_reduction + consolidation_benefit).min(95.0)
     }

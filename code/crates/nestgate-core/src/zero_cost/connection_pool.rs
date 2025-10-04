@@ -102,7 +102,7 @@ where
         PoolStats {
             active_connections: connections.len(),
             max_connections: POOL_SIZE,
-            utilization: (connections.len() as f64) / f64::from(POOL_SIZE),
+            utilization: (connections.len() as f64) / POOL_SIZE as f64,
         }
     }
 }

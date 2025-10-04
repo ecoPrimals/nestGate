@@ -6,7 +6,7 @@ use super::core_errors::NestGateUnifiedError;
 
 impl NestGateUnifiedError {
     /// Create a new API error
-    pub const fn api(message: impl Into<String>) -> Self {
+    pub fn api(message: impl Into<String>) -> Self {
         Self::Api(Box::new(
             crate::error::variants::core_errors::ApiErrorDetails {
                 message: message.into(),
@@ -19,7 +19,7 @@ impl NestGateUnifiedError {
     }
 
     /// Create an API error with status code
-    pub const fn api_with_status(message: impl Into<String>, status_code: u16) -> Self {
+    pub fn api_with_status(message: impl Into<String>, status_code: u16) -> Self {
         Self::Api(Box::new(
             crate::error::variants::core_errors::ApiErrorDetails {
                 message: message.into(),
@@ -32,7 +32,7 @@ impl NestGateUnifiedError {
     }
 
     /// Create an API error with full context
-    pub const fn api_with_context(
+    pub fn api_with_context(
         message: impl Into<String>,
         status_code: Option<u16>,
         request_id: Option<String>,
@@ -50,7 +50,7 @@ impl NestGateUnifiedError {
     }
 
     /// Create a service unavailable error
-    pub const fn service_unavailable(message: impl Into<String>) -> Self {
+    pub fn service_unavailable(message: impl Into<String>) -> Self {
         Self::Api(Box::new(
             crate::error::variants::core_errors::ApiErrorDetails {
                 message: format!("Service unavailable: {}", message.into()),
@@ -63,7 +63,7 @@ impl NestGateUnifiedError {
     }
 
     /// Create a not found error
-    pub const fn not_found(message: impl Into<String>) -> Self {
+    pub fn not_found(message: impl Into<String>) -> Self {
         Self::Api(Box::new(
             crate::error::variants::core_errors::ApiErrorDetails {
                 message: format!("Not found: {}", message.into()),
@@ -76,7 +76,7 @@ impl NestGateUnifiedError {
     }
 
     /// Create an invalid input error with field
-    pub const fn invalid_input_with_field(field: impl Into<String>, message: impl Into<String>) -> Self {
+    pub fn invalid_input_with_field(field: impl Into<String>, message: impl Into<String>) -> Self {
         Self::Validation(Box::new(
             crate::error::variants::core_errors::ValidationErrorDetails {
                 message: format!("Invalid input: {}", message.into()),

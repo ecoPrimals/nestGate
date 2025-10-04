@@ -47,7 +47,7 @@ pub struct ZeroCopyBuffer<const SIZE: usize> {
 }
 impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER_SIZE, POOL_SIZE> {
     /// Create new zero-copy buffer pool
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         let pool = Self {
             available_buffers: LockFreeMpscQueue::new(),
             total_buffers: std::sync::atomic::AtomicUsize::new(0),
@@ -66,7 +66,7 @@ impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER
     }
 
     /// Get buffer from pool (zero-copy acquisition)
-    pub const fn acquire_buffer(&self) -> Option<ZeroCopyBuffer<BUFFER_SIZE>> {
+    pub fn acquire_buffer(&self) -> Option<ZeroCopyBuffer<BUFFER_SIZE>> {
         if let Some(buffer) = self.available_buffers.dequeue() {
             self.buffer_hits.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             Some(buffer)
@@ -84,7 +84,7 @@ impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER
     }
 
     /// Get pool statistics
-    pub const fn stats(&self) -> BufferPoolStats {
+    pub fn stats(&self) -> BufferPoolStats {
         BufferPoolStats {
             total_buffers: self.total_buffers.load(std::sync::atomic::Ordering::Relaxed),
             available_buffers: self.available_buffers.len(),
@@ -96,7 +96,7 @@ impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER
 
 impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
     /// Create new zero-copy buffer
-    pub const fn new() -> Self { Self {
+    pub fn new() -> Self { Self {
             data: [0u8; SIZE],
             length: 0,
             capacity: SIZE,
@@ -104,7 +104,7 @@ impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
          }
 
     /// Get buffer data as slice
-    pub const fn as_slice(&self) -> &[u8] {
+    pub fn as_slice(&self) -> &[u8] {
         &self.data[..self.length]
     }
 
@@ -114,7 +114,7 @@ impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
     }
 
     /// Get buffer for vectored I/O
-    pub const fn as_io_slice(&self) -> IoSlice<'_> {
+    pub fn as_io_slice(&self) -> IoSlice<'_> {
         IoSlice::new(&self.data[..self.length])
     }
 
@@ -135,12 +135,12 @@ impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
     }
 
     /// Get buffer capacity
-    pub const fn capacity(&self) -> usize {
+    pub fn capacity(&self) -> usize {
         self.capacity
     }
 
     /// Get current length
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.length
     }
 }
@@ -197,7 +197,7 @@ pub struct ConnectionStats {
 
 impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
     /// Create new zero-copy network interface
-    pub const fn new() -> Self { Self {
+    pub fn new() -> Self { Self {
             buffer_pool: Arc::new(ZeroCopyBufferPool::new()),
             connection_registry: LockFreeHashMap::with_capacity(1024),
             /// SIMD processor initialization (feature-gated for optimal performance)
@@ -214,7 +214,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn connect(&self, remote_addr: SocketAddr) -> Result<u64>  {
+        pub fn connect(&self, remote_addr: SocketAddr) -> Result<u64>  {
         let connection_id = self.generate_connection_id(&remote_addr);
         
         // Create zero-copy connection
@@ -289,7 +289,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn zero_copy_receive(
+        pub fn zero_copy_receive(
         &self,
         connection_id: u64,
     ) -> Result<Option<ZeroCopyBuffer<BUFFER_SIZE>>>  {
@@ -317,7 +317,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn vectored_send(
+        pub fn vectored_send(
         &self,
         connection_id: u64,
         buffers: &[ZeroCopyBuffer<BUFFER_SIZE>],
@@ -344,7 +344,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
     }
 
     /// Get network interface statistics
-    pub const fn get_stats(&self) -> NetworkInterfaceStats {
+    pub fn get_stats(&self) -> NetworkInterfaceStats {
         let pool_stats = self.buffer_pool.stats();
         
         NetworkInterfaceStats {
@@ -446,7 +446,7 @@ impl Default for HardwareStats {
 
 impl<const RING_SIZE: usize> KernelBypassAdapter<RING_SIZE> {
     /// Create new kernel bypass adapter
-    pub const fn new() -> Self { Self {
+    pub fn new() -> Self { Self {
             tx_ring: ZeroCopyRing::new(),
             rx_ring: ZeroCopyRing::new(),
             hardware_stats: HardwareStats::default(),
@@ -523,14 +523,14 @@ impl<const RING_SIZE: usize> KernelBypassAdapter<RING_SIZE> {
     }
 
     /// Get hardware statistics
-    pub const fn get_hardware_stats(&self) -> HardwareStats {
+    pub fn get_hardware_stats(&self) -> HardwareStats {
         self.hardware_stats.clone()
     }
 }
 
 impl<const SIZE: usize> ZeroCopyRing<SIZE> {
     /// Create new zero-copy ring buffer
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             buffers: [const { None }; SIZE],
             head: std::sync::atomic::AtomicUsize::new(0),
@@ -540,7 +540,7 @@ impl<const SIZE: usize> ZeroCopyRing<SIZE> {
     }
 
     /// Acquire slot for transmission
-    pub const fn acquire_slot(&self) -> Option<usize> {
+    pub fn acquire_slot(&self) -> Option<usize> {
         let head = self.head.load(std::sync::atomic::Ordering::Acquire);
         let next_head = (head + 1) % SIZE;
         let tail = self.tail.load(std::sync::atomic::Ordering::Acquire);
@@ -554,7 +554,7 @@ impl<const SIZE: usize> ZeroCopyRing<SIZE> {
     }
 
     /// Check for completed transmission/reception
-    pub const fn completed_slot(&self) -> Option<usize> {
+    pub fn completed_slot(&self) -> Option<usize> {
         let tail = self.tail.load(std::sync::atomic::Ordering::Acquire);
         let head = self.head.load(std::sync::atomic::Ordering::Acquire);
         
@@ -638,7 +638,7 @@ pub mod benchmarks {
         // - Buffer allocation/deallocation
         let traditional_time = zero_copy_time * 10; // Conservative 10x estimate
 
-        let improvement = ((traditional_time - zero_copy_time) as f64 / f64::from(traditional_time)) * 100.0;
+        let improvement = ((traditional_time - zero_copy_time) as f64 / traditional_time as f64) * 100.0;
 
         tracing::info!(
             "Zero-Copy Networking: {}ns, Traditional: {}ns (est), Improvement: {:.1}%",
@@ -649,7 +649,7 @@ pub mod benchmarks {
     }
 
     /// Benchmark buffer pool performance
-    pub const fn benchmark_buffer_pool() -> (u64, u64, f64) {
+    pub fn benchmark_buffer_pool() -> (u64, u64, f64) {
         let pool = ZeroCopyBufferPool::<65_536, 1024>::new();
         const OPERATIONS: u32 = 1_000_000;
 
@@ -664,13 +664,13 @@ pub mod benchmarks {
         // Traditional allocation would be much slower
         let malloc_time = pool_time * 50; // malloc/free is typically 50x slower
 
-        let improvement = ((malloc_time - pool_time) as f64 / f64::from(malloc_time)) * 100.0;
+        let improvement = ((malloc_time - pool_time) as f64 / malloc_time as f64) * 100.0;
 
         let stats = pool.stats();
         tracing::info!(
             "Buffer Pool: {}ns, Malloc: {}ns (est), Improvement: {:.1}%, Hit Rate: {:.1}%",
             pool_time, malloc_time, improvement,
-            (stats.f64::from(buffer_hits) / (stats.buffer_hits + stats.buffer_misses) as f64) * 100.0
+            (stats.buffer_hits as f64 / (stats.buffer_hits + stats.buffer_misses) as f64) * 100.0
         );
 
         (pool_time, malloc_time, improvement)

@@ -133,7 +133,7 @@ fn parse_pool_list(output: &str) -> UniversalZfsResult<Vec<PoolInfo>> {
         let used_bytes = NativeZfsService::parse_size_string(alloc_str).unwrap_or(0);
         let available_bytes = NativeZfsService::parse_size_string(free_str).unwrap_or(0);
         let utilization_percent = if total_bytes > 0 {
-            (f64::from(used_bytes) / f64::from(total_bytes)) * 100.0
+            (used_bytes as f64 / total_bytes as f64) * 100.0
         } else {
             0.0
         };

@@ -37,82 +37,82 @@ impl ResponseBuilder {
 
     /// Create a no content response
     #[must_use]
-    pub const fn no_content() -> impl IntoResponse {
+    pub fn no_content() -> impl IntoResponse {
         StatusCode::NO_CONTENT
     }
 
     /// Create a not modified response
     #[must_use]
-    pub const fn not_modified() -> impl IntoResponse {
+    pub fn not_modified() -> impl IntoResponse {
         StatusCode::NOT_MODIFIED
     }
 
     /// Create a bad request response
     #[must_use]
-    pub const fn bad_request(message: &str) -> impl IntoResponse {
+    pub fn bad_request(message: &str) -> impl IntoResponse {
         let error = ErrorResponseFactory::bad_request(message);
         error.into_response()
     }
 
     /// Create an unauthorized response
     #[must_use]
-    pub const fn unauthorized(operation: &str) -> impl IntoResponse {
+    pub fn unauthorized(operation: &str) -> impl IntoResponse {
         let error = ErrorResponseFactory::unauthorized(operation);
         error.into_response()
     }
 
     /// Create a forbidden response
     #[must_use]
-    pub const fn forbidden(resource: &str) -> impl IntoResponse {
+    pub fn forbidden(resource: &str) -> impl IntoResponse {
         let error = ErrorResponseFactory::forbidden(resource);
         error.into_response()
     }
 
     /// Create a not found response
     #[must_use]
-    pub const fn not_found(path: &str) -> impl IntoResponse {
+    pub fn not_found(path: &str) -> impl IntoResponse {
         let error = ErrorResponseFactory::not_found(path);
         error.into_response()
     }
 
     /// Create a conflict response
     #[must_use]
-    pub const fn conflict(resource: &str) -> impl IntoResponse {
+    pub fn conflict(resource: &str) -> impl IntoResponse {
         let error = ErrorResponseFactory::conflict(resource);
         error.into_response()
     }
 
     /// Create a validation error response
     #[must_use]
-    pub const fn validation_error(field: &str, message: &str) -> impl IntoResponse {
+    pub fn validation_error(field: &str, message: &str) -> impl IntoResponse {
         let error = ErrorResponseFactory::validation_error(field, message);
         error.into_response()
     }
 
     /// Create a rate limited response
     #[must_use]
-    pub const fn rate_limited(retry_after: Option<u64>) -> impl IntoResponse {
+    pub fn rate_limited(retry_after: Option<u64>) -> impl IntoResponse {
         let error = ErrorResponseFactory::rate_limited(retry_after);
         error.into_response()
     }
 
     /// Create an internal server error response
     #[must_use]
-    pub const fn internal(message: &str) -> impl IntoResponse {
+    pub fn internal(message: &str) -> impl IntoResponse {
         let error = ErrorResponseFactory::internal(message);
         error.into_response()
     }
 
     /// Create a service unavailable response
     #[must_use]
-    pub const fn service_unavailable(service: &str) -> impl IntoResponse {
+    pub fn service_unavailable(service: &str) -> impl IntoResponse {
         let error = ErrorResponseFactory::service_unavailable(service);
         error.into_response()
     }
 
     /// Create a timeout response
     #[must_use]
-    pub const fn timeout(operation: &str) -> impl IntoResponse {
+    pub fn timeout(operation: &str) -> impl IntoResponse {
         let error = ErrorResponseFactory::timeout(operation);
         error.into_response()
     }
@@ -131,7 +131,7 @@ impl ResponseBuilder {
                 page,
                 per_page,
                 total,
-                total_pages: ((f64::from(total)) / (f64::from(per_page))).ceil() as u32,
+                total_pages: (total as f64 / per_page as f64).ceil() as u32,
             },
         };
         (StatusCode::OK, Json(response))
@@ -180,7 +180,7 @@ impl ResponseBuilder {
 
     /// Create a streaming response placeholder
     #[must_use]
-    pub const fn stream_placeholder() -> impl IntoResponse {
+    pub fn stream_placeholder() -> impl IntoResponse {
         (
             StatusCode::OK,
             "Streaming response would be implemented here",

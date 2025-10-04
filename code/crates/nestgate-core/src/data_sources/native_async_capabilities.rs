@@ -192,7 +192,7 @@ where
     T: Send + Sync,
 {
     /// Create new zero-cost wrapper
-    pub const fn new(inner: T) -> Self {
+    pub fn new(inner: T) -> Self {
         Self {
             inner,
             metrics: CapabilityMetrics::default(),
@@ -200,26 +200,26 @@ where
     }
     
     /// Get performance metrics
-    pub const fn metrics(&self) -> &CapabilityMetrics {
+    pub fn metrics(&self) -> &CapabilityMetrics {
         &self.metrics
     }
     
     /// Get average response time
-    pub const fn average_response_time_ms(&self) -> f64 {
+    pub fn average_response_time_ms(&self) -> f64 {
         if self.metrics.requests_handled == 0 {
             0.0
         } else {
-            self.metrics.f64::from(total_response_time_ms) / self.metrics.f64::from(requests_handled)
+            self.metrics.total_response_time_ms as f64 / self.metrics.requests_handled as f64
         }
     }
     
     /// Get cache hit rate
-    pub const fn cache_hit_rate(&self) -> f64 {
+    pub fn cache_hit_rate(&self) -> f64 {
         let total = self.metrics.cache_hits + self.metrics.cache_misses;
         if total == 0 {
             0.0
         } else {
-            self.metrics.f64::from(cache_hits) / f64::from(total)
+            self.metrics.cache_hits as f64 / total as f64
         }
     }
 }
@@ -265,7 +265,7 @@ pub mod validation {
     use super::*;
     
     /// Validate capability configurations at compile time
-    pub const fn validate_capability_config<
+    pub fn validate_capability_config<
         const MAX_CONCURRENT: usize,
         const TIMEOUT_MS: u64,
         const MAX_SIZE_MB: usize,
@@ -279,7 +279,7 @@ pub mod validation {
     }
     
     /// Validate genome capability configuration
-    pub const fn validate_genome_config<
+    pub fn validate_genome_config<
         const MAX_RESULTS: usize,
         const MAX_SIZE_MB: usize,
     >() -> bool {
@@ -325,7 +325,7 @@ pub mod benchmarking {
             successful_requests,
             total_duration_ms: duration.as_millis() as u64,
             average_request_time_ms: duration.as_millis() as u64 / iterations as u64,
-            success_rate: f64::from(successful_requests) / f64::from(iterations),
+            success_rate: successful_requests as f64 / iterations as f64,
         }
     }
     
@@ -341,11 +341,11 @@ pub mod benchmarking {
     
     impl BenchmarkResult {
         /// Get requests per second
-        pub const fn requests_per_second(&self) -> f64 {
+        pub fn requests_per_second(&self) -> f64 {
             if self.total_duration_ms == 0 {
                 0.0
             } else {
-                (self.f64::from(successful_requests) * 1000.0) / self.f64::from(total_duration_ms)
+                (self.successful_requests as f64 * 1000.0) / self.total_duration_ms as f64
             }
         }
     }

@@ -43,7 +43,7 @@ pub async fn safe_create_dir_all<P: AsRef<Path>>(path: P) -> Result<()> {
 }
 
 /// Safe temporary directory creation
-pub const fn safe_create_temp_dir(_context: &str) -> Result<tempfile::TempDir> {
+pub fn safe_create_temp_dir(_context: &str) -> Result<tempfile::TempDir> {
     tempfile::TempDir::new()
         .map_err(|e| NestGateError::io_error(format!("Failed to create temporary directory: {e}")))
 }

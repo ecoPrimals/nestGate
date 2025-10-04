@@ -23,7 +23,7 @@ pub const STORAGE_HEALTH_CHECK_INTERVAL_SECS: u64 = 300; // 5 minutes
 /// Default tier migration threshold in bytes
 pub const TIER_MIGRATION_THRESHOLD: u64 = 10 * 1024 * 1024 * 1024; // 10GB
 /// Storage constants registration helper
-pub const fn register_storage_constants() -> Vec<(String, ConstantValue, String)> {
+pub fn register_storage_constants() -> Vec<(String, ConstantValue, String)> {
     vec![
         (
             "DEFAULT_ZFS_CACHE_SIZE".to_string(),

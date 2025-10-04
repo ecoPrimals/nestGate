@@ -70,7 +70,7 @@ pub struct AsyncStreamProcessor<T> {
 }
 impl<T> AsyncStreamProcessor<T> {
     /// Create new stream processor
-    pub const fn new(items: Vec<T>, delay: Duration) -> Self {
+    pub fn new(items: Vec<T>, delay: Duration) -> Self {
         Self {
             items,
             current_index: 0,
@@ -199,7 +199,7 @@ where
     E: std::fmt::Debug,
 {
     /// Create new optimized retry mechanism
-    pub const fn new(
+    pub fn new(
         max_retries: usize,
         initial_delay: Duration,
         max_delay: Duration,
@@ -264,7 +264,7 @@ pub struct OptimizedAsyncSemaphore {
 }
 impl OptimizedAsyncSemaphore {
     /// Create new optimized semaphore
-    pub const fn new(max_permits: usize) -> Self {
+    pub fn new(max_permits: usize) -> Self {
         Self {
             semaphore: tokio::sync::Semaphore::new(max_permits),
             max_permits,
@@ -280,19 +280,19 @@ impl OptimizedAsyncSemaphore {
     }
 
     /// Try to acquire permit without waiting
-    pub const fn try_acquire(&self) -> Option<tokio::sync::SemaphorePermit<'_>> {
+    pub fn try_acquire(&self) -> Option<tokio::sync::SemaphorePermit<'_>> {
         self.semaphore.try_acquire().ok()
     }
 
     /// Get available permits
-    pub const fn available_permits(&self) -> usize {
+    pub fn available_permits(&self) -> usize {
         self.semaphore.available_permits()
     }
 
     /// Get utilization percentage
-    pub const fn utilization_percent(&self) -> f64 {
+    pub fn utilization_percent(&self) -> f64 {
         let used = self.max_permits - self.semaphore.available_permits();
-        (f64::from(used) / self.f64::from(max_permits)) * 100.0
+        (used as f64 / self.max_permits as f64) * 100.0
     }
 }
 

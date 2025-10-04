@@ -9,33 +9,33 @@
 /// Calculate required consensus count from node count and minimum threshold
 /// **PURE FUNCTION**: No side effects, deterministic output
 /// **TESTABLE**: Can verify exact arithmetic with edge cases
-pub const fn calculate_required_consensus(node_count: usize, min_consensus: f64) -> usize {
+pub fn calculate_required_consensus(node_count: usize, min_consensus: f64) -> usize {
     if node_count == 0 {
         return 0;
     }
-    ((f64::from(node_count)) * min_consensus).ceil() as usize
+    ((node_count as f64) * min_consensus).ceil() as usize
     }
 
 /// Calculate consensus percentage from successful and total counts
 /// **PURE FUNCTION**: No side effects, handles division by zero
 /// **TESTABLE**: Can verify exact division with floating point precision
-pub const fn calculate_consensus_percentage(successful: usize, total: usize) -> f64 {
+pub fn calculate_consensus_percentage(successful: usize, total: usize) -> f64 {
     if total == 0 {
         0.0
     } else {
-        f64::from(successful) / f64::from(total)
+        successful as f64 / total as f64
     }
     }
 /// Check if consensus threshold is achieved
 /// **PURE FUNCTION**: Simple comparison logic
 /// **TESTABLE**: Can verify boundary conditions precisely
-pub const fn is_consensus_achieved(percentage: f64, minimum: f64) -> bool {
+pub fn is_consensus_achieved(percentage: f64, minimum: f64) -> bool {
     percentage >= minimum
     }
 /// Calculate consensus expiry from verification results
 /// **PURE FUNCTION**: Minimum value calculation
 /// **TESTABLE**: Can verify min() logic with exact inputs
-pub const fn calculate_consensus_expiry(valid_until_times: &[i64], default_duration: i64) -> i64 {
+pub fn calculate_consensus_expiry(valid_until_times: &[i64], default_duration: i64) -> i64 {
     if valid_until_times.is_empty() {
         // Default expiry: current time + default duration
         std::time::SystemTime::now()

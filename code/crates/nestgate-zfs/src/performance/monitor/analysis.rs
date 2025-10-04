@@ -24,9 +24,9 @@ impl PerformanceAnalyzer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn analyze_trends(
+    pub async fn analyze_trends(
         metrics_history: &MetricsHistoryQueue,
-    ) -> Result<AnalysisReport, Box<dyn std::error::Error>>  {
+    ) -> Result<AnalysisReport, Box<dyn std::error::Error>> {
         // Analyze performance trends from metrics history
         let history = metrics_history.read().await;
         if history.len() >= 2 {

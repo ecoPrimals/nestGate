@@ -1,0 +1,33 @@
+# CONFIG CONSOLIDATION MAPPING
+# Format: OLD_PATTERN -> CANONICAL_REPLACEMENT
+
+# Test configurations
+TestConfig -> nestgate_core::config::ConsolidatedCanonicalConfig::test_config()
+TestEnvironmentConfig -> nestgate_core::config::ConsolidatedCanonicalConfig::test_environment()
+LiveTestConfig -> nestgate_core::config::ConsolidatedCanonicalConfig::integration_test()
+ChaosTestConfig -> nestgate_core::config::ConsolidatedCanonicalConfig::chaos_test()
+StressTestConfig -> nestgate_core::config::ConsolidatedCanonicalConfig::performance_test()
+
+# Network configurations  
+NetworkConfig -> nestgate_core::config::domains::NetworkConfig
+MockNetworkConfig -> nestgate_core::config::domains::NetworkConfig::mock()
+ServerConfig -> nestgate_core::config::domains::NetworkConfig::server()
+
+# Storage configurations
+StorageConfig -> nestgate_core::config::domains::StorageConfig
+TestStorageConfig -> nestgate_core::config::domains::StorageConfig::test()
+ZfsTestConfig -> nestgate_core::config::domains::StorageConfig::zfs_test()
+
+# Security configurations
+SecurityConfig -> nestgate_core::config::domains::SecurityConfig
+AuthConfig -> nestgate_core::config::domains::SecurityConfig::auth()
+TlsConfig -> nestgate_core::config::domains::SecurityConfig::tls()
+
+# Performance configurations
+PerformanceConfig -> nestgate_core::config::domains::PerformanceConfig
+AnalysisConfig -> nestgate_core::config::domains::PerformanceConfig::analysis()
+BenchmarkConfig -> nestgate_core::config::domains::PerformanceConfig::benchmark()
+
+# Tool configurations
+MigratorConfig -> nestgate_core::config::ConsolidatedCanonicalConfig::tool_config("migrator")
+CloneOptimizerConfig -> nestgate_core::config::ConsolidatedCanonicalConfig::tool_config("clone_optimizer")

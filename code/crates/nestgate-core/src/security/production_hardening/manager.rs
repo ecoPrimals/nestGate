@@ -32,7 +32,7 @@ pub struct SecurityHardeningManager {
 }
 impl SecurityHardeningManager {
     /// Create new security hardening manager
-    pub const fn new(config: SecurityHardeningConfig) -> Self {
+    pub fn new(config: SecurityHardeningConfig) -> Self {
         let rate_limiter = Arc::new(RwLock::new(RateLimiter::new(config.rate_limiting.clone())));
         let validator = Arc::new(RequestValidator::new(config.validation.clone()));
         let audit_logger = Arc::new(SecurityAuditLogger::new(config.audit_logging.clone()));

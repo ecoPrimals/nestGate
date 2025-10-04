@@ -12,7 +12,7 @@ pub struct NetworkSecurityConfig {
 
 impl NetworkSecurityConfig {
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self {
             firewall_enabled: false,
             allowed_ips: vec![],
@@ -21,7 +21,7 @@ impl NetworkSecurityConfig {
     }
 
     #[must_use]
-    pub const fn production_hardened() -> Self {
+    pub fn production_hardened() -> Self {
         Self {
             firewall_enabled: true,
             allowed_ips: vec!["10.0.0.0/8".to_string()],
@@ -34,7 +34,7 @@ impl NetworkSecurityConfig {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn validate(&self) -> Result<()>  {
+    pub fn validate(&self) -> Result<()> {
         Ok(())
     }
 

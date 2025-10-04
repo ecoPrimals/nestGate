@@ -21,7 +21,7 @@ pub struct HealthAwareLoadBalancerImpl {
 }
 impl HealthAwareLoadBalancerImpl {
     /// Create a new health-aware load balancer
-    pub const fn new(inner: LoadBalancerImpl) -> Self {
+    pub fn new(inner: LoadBalancerImpl) -> Self {
         Self {
             health_checker: Arc::new(RwLock::new(crate::observability::HealthChecker::new())),
             inner: Box::new(inner),

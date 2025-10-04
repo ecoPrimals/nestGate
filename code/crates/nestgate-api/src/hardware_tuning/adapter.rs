@@ -13,7 +13,7 @@ pub struct ComputeAdapter {
 
 impl ComputeAdapter {
     /// Create a new compute adapter
-    pub const fn new(service_name: String) -> Self {
+    pub fn new(service_name: String) -> Self {
         Self { service_name }
     }
 
@@ -25,7 +25,7 @@ impl ComputeAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn request_compute_resources(
+        pub fn request_compute_resources(
         &self,
         request: &ComputeResourceRequest,
     ) -> Result<ComputeAllocation>  {

@@ -56,12 +56,12 @@ impl DatasetAutomation {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn new(
+    pub fn new(
         pool_manager: Arc<ZfsPoolManager>,
         dataset_manager: Arc<ZfsDatasetManager>,
         // migration_engine: Arc<RwLock<MigrationEngine>>, // MigrationEngine not yet implemented
         config: DatasetAutomationConfig,
-    ) -> Result<Self>  {
+    ) -> Result<Self> {
         info!("Initializing Dataset Automation Engine");
 
         let policies = Arc::new(RwLock::new(HashMap::new()));
@@ -91,7 +91,7 @@ impl DatasetAutomation {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn start(&self) -> Result<()>  {
+    pub async fn start(&self) -> Result<()> {
         info!("Starting dataset automation engine");
 
         // Create default policies if none exist
@@ -320,7 +320,7 @@ impl DatasetAutomation {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_policy(&self, _policy: &AutomationPolicy) -> Result<()>  {
+    pub fn validate_policy(&self, _policy: &AutomationPolicy) -> Result<()> {
         // Basic validation - could be enhanced
         Ok(())
     }
@@ -333,11 +333,11 @@ impl DatasetAutomation {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn evaluate_tier_for_dataset(
+    pub fn evaluate_tier_for_dataset(
         &self,
         dataset_name: &str,
         metadata: &DatasetMetadata,
-    ) -> Result<StorageTier>  {
+    ) -> Result<StorageTier> {
         debug!("Evaluating optimal tier for dataset: {}", dataset_name);
 
         let policies = self.policies.read().await;

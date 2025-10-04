@@ -8,7 +8,7 @@ use super::*;
 
 impl NestGateCanonicalConfig {
     /// Create a testing configuration preset
-    pub const fn testing() -> Self {
+    pub fn testing() -> Self {
         Self {
             system: SystemConfig {
                 log_level: "debug".to_string(),
@@ -30,7 +30,7 @@ impl NestGateCanonicalConfig {
     }
 
     /// Create a minimal configuration preset
-    pub const fn minimal() -> Self {
+    pub fn minimal() -> Self {
         Self {
             system: SystemConfig {
                 log_level: "warn".to_string(),

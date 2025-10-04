@@ -23,7 +23,7 @@ struct StreamHandle {
 }
 impl TarpcRpcService {
     /// Create a new tarpc RPC service
-    pub const fn new(endpoint: &str) -> Self {
+    pub fn new(endpoint: &str) -> Self {
         let service = Self {
             endpoint: endpoint.to_string(),
         };
@@ -42,10 +42,10 @@ impl TarpcRpcService {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn execute_request(
+    pub fn execute_request(
         &self,
         request: super::UnifiedRpcRequest,
-    ) -> Result<super::UnifiedRpcResponse, super::RpcError>  {
+    ) -> Result<super::UnifiedRpcResponse, super::RpcError> {
         debug!("📞 tarpc call to security: {}", request.method);
 
         // Placeholder implementation
@@ -67,7 +67,7 @@ impl TarpcRpcService {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn start_stream(
+    pub fn start_stream(
         &self,
         request: super::UnifiedRpcRequest,
     ) -> Result<
@@ -76,7 +76,7 @@ impl TarpcRpcService {
             mpsc::Receiver<super::RpcStreamEvent>,
         ),
         super::RpcError,
-    >  {
+    > {
         debug!("🔄 Starting tarpc stream to security: {}", request.method);
 
         let stream_id = Uuid::new_v4();
@@ -93,7 +93,7 @@ impl TarpcRpcService {
 
     /// Get connection type
     #[allow(dead_code)] // Development method
-    pub const fn connection_type(&self) -> super::RpcConnectionType {
+    pub fn connection_type(&self) -> super::RpcConnectionType {
         super::RpcConnectionType::Tarpc
     }
 
@@ -104,7 +104,7 @@ impl TarpcRpcService {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn health_check(&self) -> Result<bool, super::RpcError>  {
+    pub fn health_check(&self) -> Result<bool, super::RpcError> {
         Ok(true)
     }
 }

@@ -232,14 +232,14 @@ impl From<UniversalZfsError> for NestGateError {
 
 impl UniversalZfsError {
     /// Create a service unavailable error
-    pub const fn service_unavailable(message: impl Into<String>) -> Self {
+    pub fn service_unavailable(message: impl Into<String>) -> Self {
         Self::ServiceUnavailable {
             message: message.into(),
         }
     }
 
     /// Create a timeout error
-    pub const fn timeout(b_operation: impl Into<String>, duration: Duration) -> Self {
+    pub fn timeout(b_operation: impl Into<String>, duration: Duration) -> Self {
         Self::Timeout {
             b_operation: b_operation.into(),
             duration,
@@ -247,14 +247,14 @@ impl UniversalZfsError {
     }
 
     /// Create a configuration error
-    pub const fn configuration(message: impl Into<String>) -> Self {
+    pub fn configuration(message: impl Into<String>) -> Self {
         Self::Configuration {
             message: message.into(),
         }
     }
 
     /// Create a backend error
-    pub const fn backend(backend: impl Into<String>, message: impl Into<String>) -> Self {
+    pub fn backend(backend: impl Into<String>, message: impl Into<String>) -> Self {
         Self::Backend {
             backend: backend.into(),
             message: message.into(),
@@ -262,7 +262,7 @@ impl UniversalZfsError {
     }
 
     /// Create a not found error
-    pub const fn not_found(resource_type: impl Into<String>, name: impl Into<String>) -> Self {
+    pub fn not_found(resource_type: impl Into<String>, name: impl Into<String>) -> Self {
         Self::NotFound {
             resource_type: resource_type.into(),
             name: name.into(),
@@ -270,14 +270,14 @@ impl UniversalZfsError {
     }
 
     /// Create a permission denied error
-    pub const fn security(operation: impl Into<String>) -> Self {
+    pub fn security(operation: impl Into<String>) -> Self {
         Self::PermissionDenied {
             b_operation: operation.into(),
         }
     }
 
     /// Create an invalid input error
-    pub const fn validation(field: impl Into<String>, message: impl Into<String>) -> Self {
+    pub fn validation(field: impl Into<String>, message: impl Into<String>) -> Self {
         Self::InvalidInput {
             field: field.into(),
             message: message.into(),
@@ -285,21 +285,21 @@ impl UniversalZfsError {
     }
 
     /// Create a network error
-    pub const fn network(message: impl Into<String>) -> Self {
+    pub fn network(message: impl Into<String>) -> Self {
         Self::Network {
             message: message.into(),
         }
     }
 
     /// Create an internal error
-    pub const fn internal(message: impl Into<String>) -> Self {
+    pub fn internal(message: impl Into<String>) -> Self {
         Self::Internal {
             message: message.into(),
         }
     }
 
     /// Convert to HTTP status code
-    pub const fn to_http_status(&self) -> u16 {
+    pub fn to_http_status(&self) -> u16 {
         match self {
             Self::ServiceUnavailable { .. } => 503,
             Self::Timeout { .. } => 408,

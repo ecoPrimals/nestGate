@@ -90,7 +90,7 @@ impl TraceContext {
 }
 
 /// Initialize tracing system with given configuration
-pub const fn init_tracing(config: TracingConfig) -> Result<LogAggregator> {
+pub fn init_tracing(config: TracingConfig) -> Result<LogAggregator> {
     info!("🚀 Initializing NestGate tracing system");
     debug!("Tracing configuration: {:?}", config);
     // Create environment filter
@@ -216,7 +216,7 @@ fn init_distributed_tracing(config: &TracingConfig) -> Result<()> {
 }
 }
 /// Create a new tracing span with optional context
-pub const fn create_span(name: &str, context: Option<&TraceContext>) -> tracing::Span {
+pub fn create_span(name: &str, context: Option<&TraceContext>) -> tracing::Span {
     let span = if let Some(ctx) = context {
         tracing::info_span!(
             name,

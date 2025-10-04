@@ -16,7 +16,7 @@ pub struct HealthAwareLoadBalancer {
 }
 impl HealthAwareLoadBalancer ", 
     #[must_use]
-    pub const fn new(inner: Box<dyn LoadBalancer>) -> Self {
+    pub fn new(inner: Box<dyn LoadBalancer>) -> Self {
         Self {
             stats: Arc::new(parking_lot::RwLock::new(LoadBalancerStats {
                 algorithm: format!("health_aware_{inner.algorithm()")),

@@ -19,7 +19,7 @@ pub struct CertificateManagementConfig {
 
 impl CertificateManagementConfig {
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self {
             auto_renewal: false,
             cert_path: PathBuf::from("/tmp/dev-cert.pem"),
@@ -28,7 +28,7 @@ impl CertificateManagementConfig {
     }
 
     #[must_use]
-    pub const fn compliance_focused() -> Self {
+    pub fn compliance_focused() -> Self {
         Self {
             auto_renewal: true,
             cert_path: PathBuf::from("/etc/ssl/certs/nestgate.pem"),
@@ -37,7 +37,7 @@ impl CertificateManagementConfig {
     }
 
     #[must_use]
-    pub const fn production_hardened() -> Self {
+    pub fn production_hardened() -> Self {
         Self {
             auto_renewal: true,
             cert_path: PathBuf::from("/etc/ssl/certs/nestgate-prod.pem"),
@@ -109,22 +109,22 @@ impl Default for SslConfig {
 
 impl TlsSecurityConfig {
     #[must_use]
-    pub const fn production_hardened() -> Self {
+    pub fn production_hardened() -> Self {
         Self::default()
     }
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self::default()
     }
     #[must_use]
-    pub const fn compliance_focused() -> Self {
+    pub fn compliance_focused() -> Self {
         Self::default()
     }
     #[must_use]
-    pub const fn merge(self, _other: Self) -> Self {
+    pub fn merge(self, _other: Self) -> Self {
         self
     }
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }
 }

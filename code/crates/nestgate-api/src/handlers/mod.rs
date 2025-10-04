@@ -176,7 +176,7 @@ pub struct HandlerCollection {
 }
 impl HandlerCollection {
     /// Create a new collection with default handlers
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             ai_first: AIFirstHandler::new(),
             compliance: ComplianceHandler::new(),
@@ -223,11 +223,11 @@ pub trait HandlerRegistry {
 // ==================== HANDLER UTILITIES ====================
 
 /// Initialize all handlers with default configuration
-pub const fn initialize_handlers() -> HandlerCollection {
+pub fn initialize_handlers() -> HandlerCollection {
     HandlerCollection::new()
 }
 /// Create a specific handler by name
-pub const fn create_handler_by_name(name: &str) -> Option<Box<dyn std::any::Any>> {
+pub fn create_handler_by_name(name: &str) -> Option<Box<dyn std::any::Any>> {
     match name {
         "ai_first" => Some(Box::new(ai_first_example::create_handler())),
         "compliance" => Some(Box::new(ComplianceHandler::new())),
@@ -243,7 +243,7 @@ pub const fn create_handler_by_name(name: &str) -> Option<Box<dyn std::any::Any>
     }
 }
 /// Get list of all available handler names
-pub const fn available_handlers() -> Vec<&'static str> {
+pub fn available_handlers() -> Vec<&'static str> {
     vec![
         "ai_first",
         "compliance",
@@ -269,7 +269,7 @@ pub struct AIFirstHandler {
 
 impl AIFirstHandler {
     /// Create a new AI-First handler with default router
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             router: ai_first_example::create_handler(),
         }
@@ -285,7 +285,7 @@ pub struct ComplianceHandler {
 
 impl ComplianceHandler {
     /// Create a new compliance handler with default manager
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             manager: std::sync::Arc::new(tokio::sync::RwLock::new(
                 compliance::ComplianceManager::default(),
@@ -303,7 +303,7 @@ pub struct HardwareTuningHandler {
 
 impl HardwareTuningHandler {
     /// Create a new hardware tuning handler with default configuration
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: HardwareTuningConfig::default(),
         }
@@ -316,7 +316,7 @@ pub struct HealthHandler;
 
 impl HealthHandler {
     /// Create a new health check handler
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self
     }
 }
@@ -330,7 +330,7 @@ pub struct LoadTestHandler {
 
 impl LoadTestHandler {
     /// Create a new load testing handler with default configuration
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: load_testing::config::LoadTestConfig::default(),
         }
@@ -346,7 +346,7 @@ pub struct MetricsCollector {
 
 impl MetricsCollector {
     /// Create a new metrics collector with default state
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             collector: metrics_collector::MetricsCollectorState::default(),
         }
@@ -362,7 +362,7 @@ pub struct PerformanceAnalyzer {
 
 impl PerformanceAnalyzer {
     /// Create a new performance analyzer with default state
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             analyzer: performance_analyzer::PerformanceAnalyzerState::default(),
         }
@@ -378,7 +378,7 @@ pub struct StorageHandler {
 
 impl StorageHandler {
     /// Create a new storage handler with default manager
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             manager: storage::StorageManager::new(),
         }
@@ -394,7 +394,7 @@ pub struct WorkspaceManager {
 
 impl WorkspaceManager {
     /// Create a new workspace manager with default configuration
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             manager: workspace_management::Self::new(),
         }
@@ -410,7 +410,7 @@ pub struct ZfsHandler {
 
 impl ZfsHandler {
     /// Create a new ZFS handler with default implementation
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             handler: ZfsHandlerImpl::new(),
         }
@@ -428,7 +428,7 @@ pub struct ComplianceManager {
 
 impl ComplianceManager {
     /// Create a new compliance manager instance
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             manager: compliance::ComplianceState::default(),
         }
@@ -446,7 +446,7 @@ pub struct HardwareTuningManager {
 
 impl HardwareTuningManager {
     /// Create a new hardware tuning manager instance
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: HardwareTuningConfig::default(),
         }
@@ -464,7 +464,7 @@ pub struct LoadTestManager {
 
 impl LoadTestManager {
     /// Create a new load test manager instance
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: load_testing::config::LoadTestConfig::default(),
         }
@@ -482,7 +482,7 @@ pub struct PerformanceAnalyzerManager {
 
 impl PerformanceAnalyzerManager {
     /// Create a new performance analyzer manager instance
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             analyzer: performance_analytics::PerformanceAnalyzerState::default(),
         }
@@ -500,7 +500,7 @@ pub struct WorkspaceManagerWrapper {
 
 impl WorkspaceManagerWrapper {
     /// Create a new workspace manager wrapper instance
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             manager: workspace_management::WorkspaceManager::new(),
         }
@@ -519,7 +519,7 @@ pub struct ZfsManager {
 
 impl ZfsManager {
     /// Create a new ZFS manager instance
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             handler: ZfsHandlerImpl::new(),
         }
@@ -537,7 +537,7 @@ pub struct ApiRouter {
 
 impl ApiRouter {
     /// Create a new API router instance
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             router: Router::new(),
         }

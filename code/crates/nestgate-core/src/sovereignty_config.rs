@@ -8,19 +8,19 @@ pub struct SovereigntyConfig;
 
 impl SovereigntyConfig {
     /// Get API endpoint respecting user sovereignty
-    pub const fn api_endpoint() -> String {
+    pub fn api_endpoint() -> String {
         env::var("NESTGATE_API_ENDPOINT")
             .unwrap_or_else(|_| crate::constants::canonical_defaults::network::build_api_url())
     }
 
     /// Get bind address respecting user sovereignty
-    pub const fn bind_address() -> String {
+    pub fn bind_address() -> String {
         env::var("NESTGATE_BIND_ADDRESS")
             .unwrap_or_else(|_| crate::constants::canonical_defaults::network::DEFAULT_BIND_ADDRESS.to_string())
     }
 
     /// Get API port respecting user sovereignty
-    pub const fn api_port() -> u16 {
+    pub fn api_port() -> u16 {
         env::var("NESTGATE_PORT")
             .unwrap_or_else(|_| crate::constants::canonical_defaults::network::DEFAULT_API_PORT.to_string())
             .parse()
@@ -28,13 +28,13 @@ impl SovereigntyConfig {
     }
 
     /// Get WebSocket endpoint respecting user sovereignty
-    pub const fn websocket_endpoint() -> String {
+    pub fn websocket_endpoint() -> String {
         env::var("NESTGATE_WS_ENDPOINT")
             .unwrap_or_else(|_| crate::constants::canonical_defaults::network::build_websocket_url())
     }
 
     /// Get database URL respecting user sovereignty
-    pub const fn database_url() -> String {
+    pub fn database_url() -> String {
         env::var("NESTGATE_DATABASE_URL")
             .unwrap_or_else(|_| {
                 // Use capability-based discovery for database connection
@@ -45,7 +45,7 @@ impl SovereigntyConfig {
     }
 
     /// Get service discovery endpoint respecting user sovereignty
-    pub const fn discovery_endpoint() -> String {
+    pub fn discovery_endpoint() -> String {
         env::var("NESTGATE_DISCOVERY_ENDPOINT")
             .unwrap_or_else(|_| {
                 format!("http://{}:{}/discovery",
@@ -63,7 +63,7 @@ impl SovereigntyConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_sovereignty() -> Result<(), String>  {
+        pub fn validate_sovereignty() -> Result<(), String>  {
         // Check that no hardcoded infrastructure assumptions are being made
         let api_endpoint = Self::api_endpoint();
         if api_endpoint.contains("localhost") && env::var("NESTGATE_API_ENDPOINT").is_err() {

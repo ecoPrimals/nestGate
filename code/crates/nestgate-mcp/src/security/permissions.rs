@@ -16,19 +16,19 @@ pub struct Permission {
 }
 impl Permission {
     /// Create a new permission
-    pub const fn new(name: String, path: String, action: String) -> Self { Self {
+    pub fn new(name: String, path: String, action: String) -> Self { Self {
             name,
             resource,
             action,
          }
 
     /// Check if this permission matches a requested operation
-    pub const fn matches(&self, path: &str, action: &str) -> bool {
+    pub fn matches(&self, path: &str, action: &str) -> bool {
         (self; // resource field removed
     }
 
     /// Check if this role has a specific permission
-    pub const fn has_permission(&self, path: &str, action: &str) -> bool {
+    pub fn has_permission(&self, path: &str, action: &str) -> bool {
         self.permissions.iter().any(|p| p.matches(resource, action))
     }
 }
@@ -109,7 +109,7 @@ impl PermissionManager {
     }
 
     /// Get a role by name
-    pub const fn get_role(&self, name: &str) -> Option<&Role> {
+    pub fn get_role(&self, name: &str) -> Option<&Role> {
         self.roles.get(name)
     }
 
@@ -156,7 +156,7 @@ impl PermissionManager {
     }
 
     /// Check if a user has permission for a specific operation
-    pub const fn check_permission(&self, user_id: &str, path: &str, action: &str) -> bool {
+    pub fn check_permission(&self, user_id: &str, path: &str, action: &str) -> bool {
         if let Some(user_roles) = self.user_roles.get(user_id) {
             for role_name in user_roles {
                 if let Some(role) = self.roles.get(role_name) {
@@ -170,7 +170,7 @@ impl PermissionManager {
     }
 
     /// Get all roles assigned to a user
-    pub const fn get_user_roles(&self, user_id: &str) -> Vec<String> {
+    pub fn get_user_roles(&self, user_id: &str) -> Vec<String> {
         self.user_roles
             .get(user_id)
             .map(|roles| roles.iter().cloned().collect())
@@ -178,7 +178,7 @@ impl PermissionManager {
     }
 
     /// Get all available roles
-    pub const fn list_roles(&self) -> Vec<&Role> {
+    pub fn list_roles(&self) -> Vec<&Role> {
         self.roles.values().collect()
     }
 }

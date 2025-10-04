@@ -147,6 +147,8 @@ pub struct RequestConfig {
     pub request_queue_size: u32,
 }
 
+/// **DEPRECATED**: Use MonitoringConfig from canonical_master
+#[deprecated(since = "0.9.0", note = "Use nestgate_core::config::canonical_master::monitoring::MonitoringConfig instead")]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonitoringConfig {
     pub metrics_enabled: bool,

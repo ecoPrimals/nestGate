@@ -1,0 +1,26 @@
+# DEPRECATED CODE CLEANUP MAPPING
+# Format: DEPRECATED_PATTERN -> ACTION
+
+# Deprecated attributes - safe to remove after migration
+#[deprecated] -> REMOVE (after confirming no active usage)
+Legacy.*Config -> REMOVE (replaced by ConsolidatedCanonicalConfig)
+Legacy.*Error -> REMOVE (replaced by NestGateUnifiedError)
+
+# Migration helpers - remove after consolidation complete
+migration_helper -> REMOVE (temporary migration aids)
+compatibility_shim -> REMOVE (legacy compatibility layers)
+*_migration.rs -> REVIEW_AND_REMOVE (migration utilities)
+
+# Technical debt markers - address and remove
+TODO -> RESOLVE_AND_REMOVE
+FIXME -> RESOLVE_AND_REMOVE  
+XXX -> RESOLVE_AND_REMOVE
+HACK -> REFACTOR_AND_REMOVE
+
+# Legacy async patterns - convert to native async
+#[async_trait] -> CONVERT_TO_NATIVE_ASYNC
+async_trait::async_trait -> CONVERT_TO_NATIVE_ASYNC
+
+# Old module patterns
+ModuleError -> REPLACE_WITH_NestGateUnifiedError
+pub mod legacy_ -> REMOVE_LEGACY_MODULE

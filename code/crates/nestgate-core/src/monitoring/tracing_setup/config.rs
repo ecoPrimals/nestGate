@@ -326,7 +326,7 @@ impl Default for SecurityConfig {
 
 impl TracingConfig {
     /// Create a new tracing configuration
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
@@ -387,7 +387,7 @@ impl TracingConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<(), String>  {
+        pub fn validate(&self) -> Result<(), String>  {
         // Validate log level
         if !["trace", "debug", "info", "warn", "error"].contains(&self.level.as_str()) {
             return Err(format!("Invalid log level: {self.level}"));

@@ -77,7 +77,7 @@ pub struct PerformanceTestRunner {
 impl PerformanceTestRunner {
     /// Create new performance test runner
     #[must_use]
-    pub const fn new(config: crate::config::canonical_master::PerformanceConfig) -> Self {
+    pub fn new(config: crate::config::canonical_master::PerformanceConfig) -> Self {
         Self { config }
     }
 
@@ -89,7 +89,7 @@ impl PerformanceTestRunner {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn discover_optimal_timeout(&self) -> Result<OptimalTimeout>  {
+    pub async fn discover_optimal_timeout(&self) -> Result<OptimalTimeout> {
         let mut latencies = Vec::new();
 
         // Run multiple test iterations to gather latency data
@@ -175,7 +175,7 @@ impl Default for PerformanceDiscovery {
 impl PerformanceDiscovery {
     /// Create new performance discovery service
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self
     }
 
@@ -187,7 +187,7 @@ impl PerformanceDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn discover_optimal_timeout(&self, _service_name: &str) -> Result<Duration>  {
+    pub async fn discover_optimal_timeout(&self, _service_name: &str) -> Result<Duration> {
         // Use default performance test config for discovery
         let config = crate::config::canonical_master::PerformanceConfig::default();
         let runner = PerformanceTestRunner::new(config);
@@ -204,8 +204,8 @@ impl PerformanceDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn discover_performance(&self) -> Result<HashMap<String, serde_json::Value>>  {
+    #[must_use]
+    pub fn discover_performance(&self) -> Result<HashMap<String, serde_json::Value>> {
         let mut characteristics = HashMap::new();
 
         characteristics.insert(

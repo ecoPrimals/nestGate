@@ -9,6 +9,7 @@ use nestgate_core::{
         BiomeManifest, ServiceConfig, CapabilityConfig, ResourceRequirements, 
         DiscoveryPreferences, BiomeMetadata
     },
+    constants::canonical::network::DEFAULT_API_PORT,
     Result,
 };
 
@@ -19,7 +20,7 @@ fn test_service_config_comprehensive() -> Result<(), Box<dyn std::error::Error>>
     let minimal_config = ServiceConfig {
         service_type: "storage".to_string(),
         version: "1.0.0".to_string(),
-        endpoints: vec!["http://storage:8080".to_string()],
+        endpoints: vec![format!("http://storage:{}", DEFAULT_API_PORT)],
         capabilities: vec!["file_system".to_string()],
         metadata: HashMap::new(),
         health_checks: None,
@@ -44,9 +45,9 @@ fn test_service_config_comprehensive() -> Result<(), Box<dyn std::error::Error>>
         service_type: "universal_adapter".to_string(),
         version: "2.1.0".to_string(),
         endpoints: vec![
-            "http://primary:8080".to_string(),
-            "http://secondary:8080".to_string(),
-            "http://tertiary:8080".to_string(),
+            format!("http://primary:{}", DEFAULT_API_PORT),
+            format!("http://secondary:{}", DEFAULT_API_PORT),
+            format!("http://tertiary:{}", DEFAULT_API_PORT),
         ],
         capabilities: vec![
             "routing".to_string(),
@@ -69,7 +70,7 @@ fn test_service_config_comprehensive() -> Result<(), Box<dyn std::error::Error>>
     assert_eq!(full_config.dependencies.as_ref()?.len(), 3);
     
     // Test specific values
-    assert!(full_config.endpoints.contains(&"http://primary:8080".to_string()));
+    assert!(full_config.endpoints.contains(&format!("http://primary:{}", DEFAULT_API_PORT)));
     assert!(full_config.capabilities.contains(&"routing".to_string()));
     assert_eq!(full_config.metadata.get("environment")?, "production");
     assert!(full_config.health_checks.as_ref()?.contains(&"/health".to_string()));
@@ -402,7 +403,7 @@ fn test_biome_manifest_comprehensive() -> Result<(), Box<dyn std::error::Error>>
     let service_config = ServiceConfig {
         service_type: "test_service".to_string(),
         version: "1.0.0".to_string(),
-        endpoints: vec!["http://test:8080".to_string()],
+        endpoints: vec![format!("http://test:{}", DEFAULT_API_PORT)],
         capabilities: vec!["testing".to_string()],
         metadata: HashMap::new(),
         health_checks: None,
@@ -456,7 +457,7 @@ fn test_biome_manifest_comprehensive() -> Result<(), Box<dyn std::error::Error>>
         let service = ServiceConfig {
             service_type: format!("service_{}", i),
             version: "1.0.0".to_string(),
-            endpoints: vec![format!("http://service{}:8080", i)],
+            endpoints: vec![format!("http://service{}:{}", i, DEFAULT_API_PORT)],
             capabilities: vec![format!("capability_{}", i)],
             metadata: HashMap::new(),
             health_checks: None,
@@ -492,7 +493,7 @@ fn test_biome_manifest_comprehensive() -> Result<(), Box<dyn std::error::Error>>
     // Test that each service has unique properties
     for (i, service) in complex_manifest.services.iter().enumerate() {
         assert_eq!(service.service_type, format!("service_{}", i));
-        assert_eq!(service.endpoints[0], format!("http://service{}:8080", i));
+        assert_eq!(service.endpoints[0], format!("http://service{}:{}", i, DEFAULT_API_PORT));
     }
     
     // Test that each capability has unique properties

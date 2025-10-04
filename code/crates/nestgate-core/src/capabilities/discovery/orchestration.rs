@@ -50,7 +50,7 @@ impl OrchestrationCapabilityDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn discover_capabilities(&self) -> Result<Vec<OrchestrationCapabilityInfo>>  {
+    pub async fn discover_capabilities(&self) -> Result<Vec<OrchestrationCapabilityInfo>> {
         // Dynamic discovery logic - replaces hardcoded orchestration endpoints
         let mut capabilities = Vec::new();
 
@@ -86,10 +86,10 @@ impl OrchestrationCapabilityDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_capability(
+    pub async fn get_capability(
         &self,
         capability_type: &OrchestrationCapabilityType,
-    ) -> Result<Option<OrchestrationCapabilityInfo>>  {
+    ) -> Result<Option<OrchestrationCapabilityInfo>> {
         let cache = self.discovered_capabilities.read().await;
         Ok(cache.get(capability_type).cloned())
     }

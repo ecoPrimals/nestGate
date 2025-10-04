@@ -52,7 +52,7 @@ impl Default for TraceContext {
 
 impl TraceContext {
     /// Create new trace context
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             trace_id: generate_trace_id(),
             span_id: generate_span_id(),
@@ -62,7 +62,7 @@ impl TraceContext {
     }
 
     /// Create child span context
-    pub const fn child(&self) -> Self {
+    pub fn child(&self) -> Self {
         Self {
             trace_id: self.trace_id.clone(),
             span_id: generate_span_id(),

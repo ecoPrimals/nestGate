@@ -91,7 +91,7 @@ pub struct SuccessResponseFactory;
 impl SuccessResponseFactory {
     /// Create a "created" success response
     #[must_use]
-    pub const fn created(path: &str, id: &str) -> SuccessResponse {
+    pub fn created(path: &str, id: &str) -> SuccessResponse {
         SuccessResponse::new(&format!("{path} created successfully"))
             .add_data("resource_type", serde_json::json!(path))
             .add_data("resource_id", serde_json::json!(id))
@@ -99,7 +99,7 @@ impl SuccessResponseFactory {
 
     /// Create an "updated" success response
     #[must_use]
-    pub const fn updated(resource: &str, id: &str) -> SuccessResponse {
+    pub fn updated(resource: &str, id: &str) -> SuccessResponse {
         SuccessResponse::new(&format!("{resource} updated successfully"))
             .add_data("resource_type", serde_json::json!(resource))
             .add_data("resource_id", serde_json::json!(id))
@@ -107,14 +107,14 @@ impl SuccessResponseFactory {
 
     /// Create a "deleted" success response
     #[must_use]
-    pub const fn deleted(resource: &str) -> SuccessResponse {
+    pub fn deleted(resource: &str) -> SuccessResponse {
         SuccessResponse::new(&format!("{resource} deleted successfully"))
             .add_data("resource_type", serde_json::json!(resource))
     }
 
     /// Create a "retrieved" success response
     #[must_use]
-    pub const fn retrieved(resource_type: &str, count: u64) -> SuccessResponse {
+    pub fn retrieved(resource_type: &str, count: u64) -> SuccessResponse {
         SuccessResponse::new(&format!("{resource_type} retrieved successfully"))
             .add_data("resource_type", serde_json::json!(resource_type))
             .add_data("count", serde_json::json!(count))
@@ -122,7 +122,7 @@ impl SuccessResponseFactory {
 
     /// Create a generic operation success response
     #[must_use]
-    pub const fn operation_success(operation: &str, resource: &str) -> SuccessResponse {
+    pub fn operation_success(operation: &str, resource: &str) -> SuccessResponse {
         SuccessResponse::new(&format!("{operation} completed successfully"))
             .add_data("operation", serde_json::json!(operation))
             .add_data("resource", serde_json::json!(resource))
@@ -130,13 +130,13 @@ impl SuccessResponseFactory {
 
     /// Create a validation success response
     #[must_use]
-    pub const fn validation_success(message: &str) -> SuccessResponse {
+    pub fn validation_success(message: &str) -> SuccessResponse {
         SuccessResponse::new(message).add_metadata("type", serde_json::json!("validation"))
     }
 
     /// Create a processing success response
     #[must_use]
-    pub const fn processing_started(job_id: &str, operation: &str) -> SuccessResponse {
+    pub fn processing_started(job_id: &str, operation: &str) -> SuccessResponse {
         SuccessResponse::new("Processing started successfully")
             .add_data("job_id", serde_json::json!(job_id))
             .add_data("operation", serde_json::json!(operation))
@@ -145,7 +145,7 @@ impl SuccessResponseFactory {
 
     /// Create a processing completed response
     #[must_use]
-    pub const fn processing_completed(job_id: &str, result: serde_json::Value) -> SuccessResponse {
+    pub fn processing_completed(job_id: &str, result: serde_json::Value) -> SuccessResponse {
         SuccessResponse::new("Processing completed successfully")
             .add_data("job_id", serde_json::json!(job_id))
             .add_data("result", result)
@@ -154,7 +154,7 @@ impl SuccessResponseFactory {
 
     /// Create a health check success response
     #[must_use]
-    pub const fn health_check(service: &str, status: &str) -> SuccessResponse {
+    pub fn health_check(service: &str, status: &str) -> SuccessResponse {
         SuccessResponse::new(&format!("{service} is healthy"))
             .add_data("service", serde_json::json!(service))
             .add_data("status", serde_json::json!(status))
@@ -163,7 +163,7 @@ impl SuccessResponseFactory {
 
     /// Create a configuration update success response
     #[must_use]
-    pub const fn config_updated(component: &str, changes: u32) -> SuccessResponse {
+    pub fn config_updated(component: &str, changes: u32) -> SuccessResponse {
         SuccessResponse::new(&format!("{component} configuration updated"))
             .add_data("component", serde_json::json!(component))
             .add_data("changes_applied", serde_json::json!(changes))

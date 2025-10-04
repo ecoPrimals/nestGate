@@ -18,7 +18,7 @@ pub struct MetricsCollector {
 }
 
 impl MetricsCollector {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             cpu_utilization: AtomicU64::new(0),
             memory_utilization: AtomicU64::new(0),

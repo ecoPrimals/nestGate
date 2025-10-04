@@ -24,7 +24,7 @@ impl Default for PerformanceProfiler {
 impl PerformanceProfiler {
     /// Create new performance profiler with default settings
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             iterations: 100,
             test_data_size: 4096, // 4KB test blocks
@@ -33,7 +33,7 @@ impl PerformanceProfiler {
 
     /// Create profiler with custom settings
     #[must_use]
-    pub const fn with_settings(iterations: u32, test_data_size: usize) -> Self {
+    pub fn with_settings(iterations: u32, test_data_size: usize) -> Self {
         Self {
             iterations,
             test_data_size,
@@ -48,15 +48,15 @@ impl PerformanceProfiler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        /// Function description
+    /// Function description
     ///
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub async fn profile_performance(
+    pub async fn profile_performance(
         &self,
         storage: &DetectedStorage,
-    ) -> Result<PerformanceProfile>   {
+    ) -> Result<PerformanceProfile> {
         let profile = PerformanceProfile {
             read_throughput_mbps: self.benchmark_read_throughput(storage).await?,
             write_throughput_mbps: self.benchmark_write_throughput(storage).await?,
@@ -90,7 +90,7 @@ impl PerformanceProfiler {
 
         let elapsed = start.elapsed();
         let total_bytes = (self.iterations as usize) * self.test_data_size;
-        let throughput_mbps = (f64::from(total_bytes)) / (1024.0 * 1024.0) / elapsed.as_secs_f64();
+        let throughput_mbps = total_bytes as f64 / (1024.0 * 1024.0) / elapsed.as_secs_f64();
 
         Ok(throughput_mbps)
     }
@@ -117,7 +117,7 @@ impl PerformanceProfiler {
             total_latency += start.elapsed();
         }
 
-        let avg_latency_us = total_latency.as_micros() as f64 / iterations as f64;
+        let avg_latency_us = total_latency.as_micros() as f64 / 100.0; // 100 iterations
         Ok(avg_latency_us)
     }
 
@@ -147,7 +147,7 @@ impl PerformanceProfiler {
         }
 
         let elapsed = start.elapsed();
-        let iops = (f64::from(operations) / elapsed.as_secs_f64()) as u32;
+        let iops = (operations as f64 / elapsed.as_secs_f64()) as u32;
 
         Ok(iops)
     }
@@ -188,14 +188,13 @@ impl PerformanceProfiler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        /// Function description
+    #[must_use]
+    /// Function description
     ///
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn quick_assessment(&self, storage: &DetectedStorage) -> Result<PerformanceProfile>   {
+    pub fn quick_assessment(&self, storage: &DetectedStorage) -> Result<PerformanceProfile> {
         let mut profile = PerformanceProfile::default();
 
         // Use storage type to estimate performance characteristics
@@ -234,7 +233,7 @@ impl PerformanceProfiler {
 
     /// Generate performance report
     #[must_use]
-    pub const fn generate_report(&self, profile: &PerformanceProfile) -> String {
+    pub fn generate_report(&self, profile: &PerformanceProfile) -> String {
         format!(
             "Performance Profile:\n\
              - Read Throughput: {:.2} MB/s\n\

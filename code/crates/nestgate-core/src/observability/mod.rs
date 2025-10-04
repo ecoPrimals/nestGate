@@ -55,7 +55,7 @@ impl Default for ObservabilityConfig {
 impl ObservabilityManager {
     /// Create a new observability manager
     #[must_use]
-    pub const fn new(config: ObservabilityConfig) -> Self {
+    pub fn new(config: ObservabilityConfig) -> Self {
         let metrics = Arc::new(MetricsRegistry::new());
         let health_checker = Arc::new(HealthChecker::new());
 
@@ -74,8 +74,8 @@ impl ObservabilityManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn initialize(&self) -> Result<()>  {
+    #[must_use]
+    pub async fn initialize(&self) -> Result<()> {
         tracing::info!("🔍 Initializing observability systems");
 
         if self.config.tracing_enabled {
@@ -146,7 +146,7 @@ impl ObservabilityManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_metrics(&self) -> Result<PerformanceMetrics>  {
+    pub async fn get_metrics(&self) -> Result<PerformanceMetrics> {
         self.metrics.get_current_metrics().await
     }
 
@@ -158,7 +158,7 @@ impl ObservabilityManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_health(&self) -> Result<SystemHealth>  {
+    pub async fn get_health(&self) -> Result<SystemHealth> {
         self.health_checker.get_system_health().await
     }
 
@@ -170,12 +170,12 @@ impl ObservabilityManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn record_metric(
+    pub async fn record_metric(
         &self,
         name: &str,
         value: f64,
         _tags: HashMap<String, String>,
-    ) -> Result<()>  {
+    ) -> Result<()> {
         self.metrics.record_custom_metric(name, value).await
     }
 
@@ -187,7 +187,7 @@ impl ObservabilityManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_metrics_history(&self, duration: Duration) -> Result<Vec<PerformanceMetrics>>  {
+    pub async fn get_metrics_history(&self, duration: Duration) -> Result<Vec<PerformanceMetrics>> {
         self.metrics.get_metrics_history(duration).await
     }
 }
@@ -195,7 +195,7 @@ impl ObservabilityManager {
 // Global observability instance
 static OBSERVABILITY: std::sync::OnceLock<Arc<ObservabilityManager>> = std::sync::OnceLock::new();
 // Initialize global observability
-pub const fn init_observability(config: ObservabilityConfig) -> Result<()> {
+pub fn init_observability(config: ObservabilityConfig) -> Result<()> {
     let manager = Arc::new(ObservabilityManager::new(config));
     OBSERVABILITY.set(manager.clone()).map_err(|_| {
         NestGateError::configuration_error("observability", "Observability already initialized")
@@ -213,7 +213,7 @@ pub const fn init_observability(config: ObservabilityConfig) -> Result<()> {
 }
 
 // Get global observability manager
-pub const fn get_observability() -> Option<Arc<ObservabilityManager>> {
+pub fn get_observability() -> Option<Arc<ObservabilityManager>> {
     OBSERVABILITY.get().cloned()
 }
 // Record a metric using the global observability manager

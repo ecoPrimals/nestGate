@@ -48,7 +48,7 @@ impl StorageManagerService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn new() -> Result<Self>  {
+    pub async fn new() -> Result<Self> {
         Self::with_config(StorageServiceConfig::default()).await
     }
 
@@ -60,8 +60,8 @@ impl StorageManagerService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn with_config(config: StorageServiceConfig) -> Result<Self>  {
+    #[must_use]
+    pub async fn with_config(config: StorageServiceConfig) -> Result<Self> {
         info!("Initializing Storage Manager Service with real ZFS integration");
 
         // Validate configuration
@@ -270,7 +270,7 @@ impl StorageManagerService {
                                 info!(
                                     "📊 Current ARC size: {} bytes ({:.2} MB)",
                                     arc_size,
-                                    f64::from(arc_size) / 1024.0 / 1024.0
+                                    arc_size as f64 / 1024.0 / 1024.0
                                 );
                             }
                         }
@@ -348,7 +348,7 @@ impl StorageManagerService {
                     }
 
                     if hits + misses > 0 {
-                        let hit_rate = f64::from(hits) / (hits + misses) as f64 * 100.0;
+                        let hit_rate = hits as f64 / (hits + misses) as f64 * 100.0;
                         debug!("📊 ZFS ARC hit rate: {:.2}%", hit_rate);
                     }
                 }
@@ -361,19 +361,19 @@ impl StorageManagerService {
 
     /// Get service ID
     #[must_use]
-    pub const fn service_id(&self) -> Uuid {
+    pub fn service_id(&self) -> Uuid {
         self.service_id
     }
 
     /// Get service start time
     #[must_use]
-    pub const fn start_time(&self) -> SystemTime {
+    pub fn start_time(&self) -> SystemTime {
         self.start_time
     }
 
     /// Get service configuration
     #[must_use]
-    pub const fn config(&self) -> &StorageServiceConfig {
+    pub fn config(&self) -> &StorageServiceConfig {
         &self.config
     }
 
@@ -400,13 +400,13 @@ impl StorageManagerService {
     /// Get storage manager reference
     /// Get ZFS configuration
     #[must_use]
-    pub const fn zfs_config(&self) -> &ZfsConfig {
+    pub fn zfs_config(&self) -> &ZfsConfig {
         &self.zfs_config
     }
 
     /// Check if ZFS is enabled
     #[must_use]
-    pub const fn is_zfs_enabled(&self) -> bool {
+    pub fn is_zfs_enabled(&self) -> bool {
         // Check if ZFS binary is configured (indicating ZFS is intended to be used)
         !self.zfs_config.zfs_binary.is_empty()
     }

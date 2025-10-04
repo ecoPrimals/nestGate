@@ -47,10 +47,10 @@ impl BidirectionalStreamManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn create_bidirectional_stream(
+    pub fn create_bidirectional_stream(
         &self,
         request: UnifiedRpcRequest,
-    ) -> Result<(mpsc::Sender<RpcStreamEvent>, mpsc::Receiver<RpcStreamEvent>), RpcError>  {
+    ) -> Result<(mpsc::Sender<RpcStreamEvent>, mpsc::Receiver<RpcStreamEvent>), RpcError> {
         let stream_id = Uuid::new_v4();
         let (tx, _rx) = mpsc::channel(100);
         let (response_tx, response_rx) = mpsc::channel(100);
@@ -116,7 +116,7 @@ impl BidirectionalStreamManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn close_stream(&self, stream_id: Uuid) -> Result<(), RpcError>  {
+    pub async fn close_stream(&self, stream_id: Uuid) -> Result<(), RpcError> {
         let mut streams = self.active_streams.lock().await;
         if let Some(stream) = streams.remove(&stream_id) {
             info!(
@@ -163,7 +163,7 @@ impl BidirectionalStreamManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn broadcast_to_all_streams(&self, event: RpcStreamEvent) -> Result<(), RpcError>  {
+    pub async fn broadcast_to_all_streams(&self, event: RpcStreamEvent) -> Result<(), RpcError> {
         let streams = self.active_streams.lock().await;
         let mut failed_streams = Vec::new();
 
@@ -205,15 +205,15 @@ impl BidirectionalStreamManager {
                     event_type: "realtime_metrics".to_string(),
                     data: serde_json::json!({
                         "timestamp": chrono::Utc::now(),
-                        "cpu_usage": 25.0 + (f64::from(counter) * 0.5) % 50.0,
-                        "memory_usage": 45.0 + (f64::from(counter) * 0.3) % 30.0,
+                        "cpu_usage": 25.0 + (counter as f64 * 0.5) % 50.0,
+                        "memory_usage": 45.0 + (counter as f64 * 0.3) % 30.0,
                         "disk_io": {
-                            "read_mbps": 100.0 + (f64::from(counter) * 2.0) % 200.0,
-                            "write_mbps": 80.0 + (f64::from(counter) * 1.5) % 150.0
+                            "read_mbps": 100.0 + (counter as f64 * 2.0) % 200.0,
+                            "write_mbps": 80.0 + (counter as f64 * 1.5) % 150.0
                         },
                         "network_io": {
-                            "rx_mbps": 50.0 + (f64::from(counter) * 1.0) % 100.0,
-                            "tx_mbps": 30.0 + (f64::from(counter) * 0.8) % 80.0
+                            "rx_mbps": 50.0 + (counter as f64 * 1.0) % 100.0,
+                            "tx_mbps": 30.0 + (counter as f64 * 0.8) % 80.0
                         }
                     }),
                     timestamp: chrono::Utc::now(),
@@ -311,9 +311,9 @@ impl BidirectionalStreamManager {
                         "event_type": event_type,
                         "timestamp": chrono::Utc::now(),
                         "performance": {
-                            "read_throughput": 200.0 + (f64::from(counter) * 5.0) % 300.0,
-                            "write_throughput": 150.0 + (f64::from(counter) * 3.0) % 200.0,
-                            "latency_ms": 1.0 + (f64::from(counter) * 0.1) % 5.0
+                            "read_throughput": 200.0 + (counter as f64 * 5.0) % 300.0,
+                            "write_throughput": 150.0 + (counter as f64 * 3.0) % 200.0,
+                            "latency_ms": 1.0 + (counter as f64 * 0.1) % 5.0
                         }
                     }),
                     timestamp: chrono::Utc::now(),
@@ -365,12 +365,12 @@ impl BidirectionalStreamManager {
                     stream_id,
                     event_type: "system_log".to_string(),
                     data: serde_json::json!({
-                        "log_id": format!("log_{"actual_error_details"}"),
+                        "log_id": format!("log_{}", counter),
                         "level": level,
                         "module": module,
                         "message": message,
                         "timestamp": chrono::Utc::now(),
-                        "thread": format!("worker-{(counter % 8}") + 1)
+                        "thread": format!("worker-{}", (counter % 8) + 1)
                     }),
                     timestamp: chrono::Utc::now(),
                 };
@@ -406,17 +406,17 @@ impl BidirectionalStreamManager {
                         "sample_id": format!("perf_{"actual_error_details"}"),
                         "timestamp": chrono::Utc::now(),
                         "response_times": {
-                            "api_avg_ms": 5.0 + (f64::from(counter) * 0.1) % 20.0,
-                            "api_p95_ms": 15.0 + (f64::from(counter) * 0.2) % 50.0,
-                            "api_p99_ms": 25.0 + (f64::from(counter) * 0.3) % 100.0
+                            "api_avg_ms": 5.0 + (counter as f64 * 0.1) % 20.0,
+                            "api_p95_ms": 15.0 + (counter as f64 * 0.2) % 50.0,
+                            "api_p99_ms": 25.0 + (counter as f64 * 0.3) % 100.0
                         },
                         "throughput": {
-                            "requests_per_second": 100.0 + (f64::from(counter) * 2.0) % 500.0,
-                            "data_throughput_mbps": 50.0 + (f64::from(counter) * 1.0) % 200.0
+                            "requests_per_second": 100.0 + (counter as f64 * 2.0) % 500.0,
+                            "data_throughput_mbps": 50.0 + (counter as f64 * 1.0) % 200.0
                         },
                         "resource_usage": {
-                            "cpu_cores_used": 2.5 + (f64::from(counter) * 0.05) % 2.0,
-                            "memory_mb_used": 512.0 + (f64::from(counter) * 10.0) % 1024.0,
+                            "cpu_cores_used": 2.5 + (counter as f64 * 0.05) % 2.0,
+                            "memory_mb_used": 512.0 + (counter as f64 * 10.0) % 1024.0,
                             "disk_io_ops": 1000 + (counter % 5000)
                         }
                     }),

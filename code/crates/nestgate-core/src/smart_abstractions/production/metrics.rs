@@ -19,7 +19,7 @@ pub struct ProductionMetrics {
 }
 impl ProductionMetrics {
     /// Create new metrics collector
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
@@ -58,7 +58,7 @@ impl ProductionMetrics {
                 .unwrap_or_default();
             
             if elapsed.as_secs() > 0 {
-                self.f64::from(total_requests) / elapsed.as_secs() as f64
+                self.total_requests as f64 / elapsed.as_secs() as f64
             } else {
                 0.0
             }
@@ -66,22 +66,22 @@ impl ProductionMetrics {
             0.0
         };
 
-        self.current_load = (recent_rate / f64::from(max_concurrent)).min(1.0) * 100.0;
+        self.current_load = (recent_rate / max_concurrent as f64).min(1.0) * 100.0;
     }
 
     /// Get success rate percentage
-    pub const fn success_rate(&self) -> f64 {
+    pub fn success_rate(&self) -> f64 {
         if self.total_requests > 0 {
-            (self.f64::from(successful_requests) / self.f64::from(total_requests)) * 100.0
+            (self.successful_requests as f64 / self.total_requests as f64) * 100.0
         } else {
             0.0
         }
     }
 
     /// Get error rate percentage
-    pub const fn error_rate(&self) -> f64 {
+    pub fn error_rate(&self) -> f64 {
         if self.total_requests > 0 {
-            (self.f64::from(failed_requests) / self.f64::from(total_requests)) * 100.0
+            (self.failed_requests as f64 / self.total_requests as f64) * 100.0
         } else {
             0.0
         }

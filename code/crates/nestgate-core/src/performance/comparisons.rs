@@ -39,7 +39,7 @@ impl PerformanceComparison {
     }
 
     /// Generate performance trend analysis
-    pub const fn analyze_trends(historical_results: &[Vec<BenchmarkResults>]) -> TrendAnalysis {
+    pub fn analyze_trends(historical_results: &[Vec<BenchmarkResults>]) -> TrendAnalysis {
         if historical_results.is_empty() {
             return TrendAnalysis::default();
         }
@@ -71,7 +71,7 @@ pub struct ComparisonReport {
 }
 impl ComparisonReport {
     /// Generate a summary of the comparison
-    pub const fn summary(&self) -> String {
+    pub fn summary(&self) -> String {
         format!(
             "Performance Comparison Summary:\n\
              - Patterns compared: {}\n\
@@ -94,7 +94,7 @@ pub struct TrendAnalysis {
 }
 impl TrendAnalysis {
     /// Calculate the trend direction for a specific pattern
-    pub const fn trend_direction(&self, pattern_name: &str) -> TrendDirection {
+    pub fn trend_direction(&self, pattern_name: &str) -> TrendDirection {
         if let Some(data) = self.trends.get(pattern_name) {
             if data.len() < 2 {
                 return TrendDirection::Stable;

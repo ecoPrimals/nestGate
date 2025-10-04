@@ -16,7 +16,7 @@ pub struct ZfsAnalyzer {
 }
 
 impl ZfsAnalyzer {
-    pub const fn new(zfs_manager: Arc<ZfsManager>) -> Self { Self { zfs_manager  }
+    pub fn new(zfs_manager: Arc<ZfsManager>) -> Self { Self { zfs_manager  }
 
     /// Create with default configuration - PRODUCTION READY
     /// Real ZFS integration for production use
@@ -149,7 +149,7 @@ impl ZfsAnalyzer {
                 }
                 
                 let overall_utilization = if total_capacity > 0 {
-                    (f64::from(total_used) / f64::from(total_capacity)) * 100.0
+                    (total_used as f64 / total_capacity as f64) * 100.0
                 } else {
                     0.0
                 };
@@ -211,19 +211,19 @@ impl ZfsAnalyzer {
                 let mut pool_count = 0.0;
                 
                 for pool in &analytics.pools {
-                    total_read_iops += pool.f64::from(read_ops);
-                    total_write_iops += pool.f64::from(write_ops);
+                    total_read_iops += pool.read_ops as f64;
+                    total_write_iops += pool.write_ops as f64;
                     total_read_throughput += pool.read_throughput_mbs;
                     total_write_throughput += pool.write_throughput_mbs;
                     
                     // Estimate latency from throughput and ops
                     let read_latency = if pool.read_ops > 0 {
-                        (pool.read_throughput_mbs / pool.f64::from(read_ops)) * 1000.0
+                        (pool.read_throughput_mbs / pool.read_ops as f64) * 1000.0
                     } else {
                         5.0
                     };
                     let write_latency = if pool.write_ops > 0 {
-                        (pool.write_throughput_mbs / pool.f64::from(write_ops)) * 1000.0
+                        (pool.write_throughput_mbs / pool.write_ops as f64) * 1000.0
                     } else {
                         10.0
                     };

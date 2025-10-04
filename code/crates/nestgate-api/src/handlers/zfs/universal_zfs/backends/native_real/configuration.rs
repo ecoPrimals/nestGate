@@ -5,7 +5,7 @@ use crate::handlers::zfs::universal_zfs::types::UniversalZfsResult;
 use std::collections::HashMap;
 
 /// Optimize ZFS configuration for better performance
-pub const fn optimize(
+pub fn optimize(
     _service: &NativeZfsService,
     _optimization_type: String,
 ) -> UniversalZfsResult<String> {
@@ -18,7 +18,7 @@ pub fn get_optimization_analytics(
     Ok(HashMap::new())
 }
 /// Predict optimal storage tier for a dataset
-pub const fn predict_tier(
+pub fn predict_tier(
     _service: &NativeZfsService,
     _dataset_name: &str,
 ) -> UniversalZfsResult<String> {
@@ -58,7 +58,7 @@ pub fn get_configuration(
 ///
 /// # Returns
 /// * `UniversalZfsResult<()>` - Success or error result
-pub const fn update_configuration(
+pub fn update_configuration(
     _service: &NativeZfsService,
     _config: HashMap<String, serde_json::Value>,
 ) -> UniversalZfsResult<()> {

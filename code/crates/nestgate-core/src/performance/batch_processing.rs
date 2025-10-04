@@ -77,7 +77,7 @@ pub struct BatchMetrics {
     pub queue_depth: std::sync::atomic::AtomicUsize,
 }
 impl<T: Send + Sync + 'static, R: Send + Sync + 'static> BatchProcessor<T, R> {
-    pub const fn new(processor_fn: ProcessorFunction<T, R>, config: BatchProcessingConfig) -> Self {
+    pub fn new(processor_fn: ProcessorFunction<T, R>, config: BatchProcessingConfig) -> Self {
         Self {
             pending_items: Arc::new(Mutex::new(VecDeque::new())),
             processing_queue: Arc::new(Mutex::new(VecDeque::new())),

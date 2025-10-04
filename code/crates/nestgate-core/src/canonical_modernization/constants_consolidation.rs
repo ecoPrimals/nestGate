@@ -350,7 +350,7 @@ impl ConstantsConsolidationManager {
 
         // Update consolidation progress
         self.stats.consolidation_progress = if self.stats.total_constants > 0 {
-            (self.stats.f64::from(consolidated_count) / self.stats.f64::from(total_constants)) * 100.0
+            (self.stats.consolidated_count as f64 / self.stats.total_constants as f64) * 100.0
         } else {
             100.0
         };
@@ -539,9 +539,9 @@ impl ConstantsConsolidationManager {
     }
 
     /// Get consolidation summary
-    pub const fn get_summary(&self) -> ConsolidationSummary {
+    pub fn get_summary(&self) -> ConsolidationSummary {
         let progress = if self.stats.total_constants > 0 {
-            (self.stats.f64::from(consolidated_count) / self.stats.f64::from(total_constants)) * 100.0
+            (self.stats.consolidated_count as f64 / self.stats.total_constants as f64) * 100.0
         } else {
             100.0
         };
@@ -561,8 +561,8 @@ impl ConstantsConsolidationManager {
     /// Calculate maintenance reduction estimate
     fn calculate_maintenance_reduction(&self) -> f64 {
         // Estimate based on duplicates eliminated and constants centralized
-        let duplicate_reduction = self.stats.f64::from(duplicates_eliminated) * 0.8; // 80% reduction per duplicate
-        let centralization_benefit = self.stats.f64::from(consolidated_count) * 0.3; // 30% benefit per centralized constant
+        let duplicate_reduction = self.stats.duplicates_eliminated as f64 * 0.8; // 80% reduction per duplicate
+        let centralization_benefit = self.stats.consolidated_count as f64 * 0.3; // 30% benefit per centralized constant
         (duplicate_reduction + centralization_benefit).min(95.0) // Cap at 95%
     }
 }

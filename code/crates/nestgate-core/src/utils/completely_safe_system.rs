@@ -29,7 +29,7 @@ pub struct PrivilegeInfo {
 pub struct SafeSystemOps;
 impl SafeSystemOps {
     /// **COMPLETELY SAFE** root detection - zero unsafe code
-    pub const fn is_running_as_root() -> bool {
+    pub fn is_running_as_root() -> bool {
         // Method 1: Check if /root exists and is accessible
         if Path::new("/root").exists() && fs::metadata("/root").map(|m| m.permissions()).is_ok() {
             // Try to create a test file in /root (only root can do this)
@@ -59,7 +59,7 @@ impl SafeSystemOps {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_current_uid() -> Result<u32>  {
+        pub fn get_current_uid() -> Result<u32>  {
         // Try reading from /proc/self/status first
         if let Ok(status_content) = fs::read_to_string("/proc/self/status") {
             for line in status_content.lines() {
@@ -125,7 +125,7 @@ impl SafeSystemOps {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_current_gid() -> Result<u32>  {
+        pub fn get_current_gid() -> Result<u32>  {
         // Try reading from /proc/self/status first
         if let Ok(status_content) = fs::read_to_string("/proc/self/status") {
             for line in status_content.lines() {
@@ -171,7 +171,7 @@ impl SafeSystemOps {
     }
 
     /// Get process ID - **COMPLETELY SAFE**
-    pub const fn get_process_id() -> u32 {
+    pub fn get_process_id() -> u32 {
         // SAFE: std::process::id() is always safe
         std::process::id()
     }
@@ -184,7 +184,7 @@ impl SafeSystemOps {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_parent_process_id() -> Result<u32>  {
+        pub fn get_parent_process_id() -> Result<u32>  {
         // Read from /proc/self/stat
         if let Ok(stat_content) = fs::read_to_string("/proc/self/stat") {
             let fields: Vec<&str> = stat_content.split_whitespace().collect();
@@ -211,7 +211,7 @@ impl SafeSystemOps {
     }
 
     /// **COMPLETELY SAFE** process existence check - zero unsafe code
-    pub const fn process_exists(pid: u32) -> bool {
+    pub fn process_exists(pid: u32) -> bool {
         Path::new(&format!("/proc/{pid}")).exists()
     }
 
@@ -223,7 +223,7 @@ impl SafeSystemOps {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_process_name(pid: u32) -> Result<String>  {
+        pub fn get_process_name(pid: u32) -> Result<String>  {
         let comm_path = format!("/proc/{pid}/comm");
         if let Ok(name) = fs::read_to_string(&comm_path) {
             return Ok(name.trim().to_string());
@@ -250,7 +250,7 @@ impl SafeSystemOps {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_uptime_seconds() -> Result<u64>  {
+        pub fn get_uptime_seconds() -> Result<u64>  {
         // Method 1: Read from /proc/uptime
         if let Ok(uptime_str) = fs::read_to_string("/proc/uptime") {
             if let Some(uptime_part) = uptime_str.split_whitespace().next() {
@@ -285,7 +285,7 @@ impl SafeSystemOps {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_hostname() -> Result<String>  {
+        pub fn get_hostname() -> Result<String>  {
         // Method 1: Read from /etc/hostname
         if let Ok(hostname) = fs::read_to_string("/etc/hostname") {
             let hostname = hostname.trim();
@@ -320,7 +320,7 @@ impl SafeSystemOps {
     }
 
     /// Check if running in container - **COMPLETELY SAFE**
-    pub const fn is_container() -> bool {
+    pub fn is_container() -> bool {
         // Method 1: Check for container-specific files
 // DEPRECATED: Docker containerization - migrate to capability-based container runtime
 // Capability-based discovery implemented
@@ -351,7 +351,7 @@ impl SafeSystemOps {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_available_memory_mb() -> Result<u64>  {
+        pub fn get_available_memory_mb() -> Result<u64>  {
         // Read from /proc/meminfo
         if let Ok(meminfo) = fs::read_to_string("/proc/meminfo") {
             for line in meminfo.lines() {
@@ -373,7 +373,7 @@ impl SafeSystemOps {
     }
 
     /// Get CPU count - **COMPLETELY SAFE**
-    pub const fn get_cpu_count() -> usize {
+    pub fn get_cpu_count() -> usize {
         // SAFE: std::thread::available_parallelism is safe
         std::thread::available_parallelism()
             .map(|n| n.get())
@@ -437,7 +437,7 @@ impl SafeSystemOps {
 pub struct SafePrivilegeChecker;
 impl SafePrivilegeChecker {
     /// Comprehensive privilege check - **COMPLETELY SAFE**
-    pub const fn check_privileges() -> PrivilegeInfo {
+    pub fn check_privileges() -> PrivilegeInfo {
         PrivilegeInfo {
             is_root: SafeSystemOps::is_running_as_root(),
             user_id: SafeSystemOps::get_current_uid().unwrap_or(1000),
@@ -449,7 +449,7 @@ impl SafePrivilegeChecker {
     }
 
     /// Check specific capability - **COMPLETELY SAFE**
-    pub const fn has_capability(capability: &str) -> bool {
+    pub fn has_capability(capability: &str) -> bool {
         match capability {
             "root" => SafeSystemOps::is_running_as_root(),
             "write_etc" => SafeSystemOps::is_writable("/etc"),

@@ -1,3 +1,4 @@
+use crate::constants::magic_numbers_replacement;
 //! Hardware Detection Demonstration
 //!
 //! This script demonstrates the new hardware abstraction system and shows

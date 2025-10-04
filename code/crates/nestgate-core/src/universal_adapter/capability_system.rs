@@ -73,7 +73,7 @@ impl ServiceCapability {
     }
 
     /// Create a storage capability (NestGate's domain)
-    pub const fn storage(operation: &str, description: &str) -> Self {
+    pub fn storage(operation: &str, description: &str) -> Self {
         Self::new(CapabilityCategory::Storage, operation, description)
     }
 }
@@ -227,7 +227,7 @@ impl DiscoveredService {
     }
 
     /// Check if this service provides a specific capability
-    pub const fn provides_capability(&self, category: &CapabilityCategory, operation: &str) -> bool {
+    pub fn provides_capability(&self, category: &CapabilityCategory, operation: &str) -> bool {
         self.capabilities.iter().any(|cap| {
             cap.category == *category && cap.operation == operation
         })
@@ -251,7 +251,7 @@ pub struct CapabilityRegistry {
 
 impl CapabilityRegistry {
     /// Create a new capability registry
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
@@ -301,12 +301,12 @@ impl CapabilityRegistry {
     }
 
     /// Get our own advertised capabilities
-    pub const fn our_capabilities(&self) -> &[ServiceCapability] {
+    pub fn our_capabilities(&self) -> &[ServiceCapability] {
         &self.our_capabilities
     }
 
     /// Get all discovered services
-    pub const fn all_services(&self) -> Vec<&DiscoveredService> {
+    pub fn all_services(&self) -> Vec<&DiscoveredService> {
         self.services.values().collect()
     }
 
@@ -350,7 +350,7 @@ pub struct CapabilityRouter {
 
 impl CapabilityRouter {
     /// Create a new capability router with self-knowledge only
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             registry: Arc::new(RwLock::new(CapabilityRegistry::new())),
             self_identity: NestGateSelfKnowledge::default(),
@@ -543,14 +543,14 @@ impl NestGateSelfKnowledge {
     }
 
     /// Check if we can handle a capability locally
-    pub const fn can_handle_capability(&self, category: &CapabilityCategory, operation: &str) -> bool {
+    pub fn can_handle_capability(&self, category: &CapabilityCategory, operation: &str) -> bool {
         self.our_capabilities.iter().any(|cap| {
             cap.category == *category && cap.operation == operation
         })
     }
 
     /// Get our advertised capabilities (for discovery by other primals)
-    pub const fn get_advertised_capabilities(&self) -> &[ServiceCapability] {
+    pub fn get_advertised_capabilities(&self) -> &[ServiceCapability] {
         &self.our_capabilities
     }
 }

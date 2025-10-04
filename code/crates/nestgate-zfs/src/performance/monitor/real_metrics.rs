@@ -72,7 +72,7 @@ impl RealMetricsCollector {
                         let active = total - idle;
 
                         if total > 0 {
-                            return Ok((f64::from(active) / f64::from(total)) * 100.0);
+                            return Ok((active as f64 / total as f64) * 100.0);
                         }
                     }
                 }
@@ -143,7 +143,7 @@ impl RealMetricsCollector {
                             .sum();
 
                         if total > 0 {
-                            return Ok((f64::from(iowait) / f64::from(total)) * 100.0);
+                            return Ok((iowait as f64 / total as f64) * 100.0);
                         }
                     }
                 }
@@ -171,7 +171,7 @@ impl RealMetricsCollector {
             }
 
             // Convert to MB/s (very rough approximation)
-            return Ok(f64::from(total_bytes) / (1024.0 * 1024.0 * 60.0)); // Assume 60 second average
+            return Ok(total_bytes as f64 / (1024.0 * 1024.0 * 60.0)); // Assume 60 second average
         }
 
         Ok(100.0) // Fallback value

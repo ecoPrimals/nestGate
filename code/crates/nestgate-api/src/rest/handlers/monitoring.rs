@@ -98,25 +98,25 @@ pub async fn get_metrics(
         load_average: 1.0,
         uptime_seconds: 86400,
         disk_io: DiskIoMetrics {
-            read_bytes_per_sec: f64::from(total_read_bytes),
-            write_bytes_per_sec: f64::from(total_written_bytes),
-            read_ops_per_sec: (f64::from(total_read_bytes) / 4096.0),
-            write_ops_per_sec: (f64::from(total_written_bytes) / 4096.0),
-            read_mbps: f64::from(total_read_bytes) / (1024.0 * 1024.0), // Convert to MB
-            write_mbps: f64::from(total_written_bytes) / (1024.0 * 1024.0), // Convert to MB
-            read_iops: (f64::from(total_read_bytes) / 4096.0), // Estimate IOPS assuming 4KB blocks
-            write_iops: (f64::from(total_written_bytes) / 4096.0), // Estimate IOPS assuming 4KB blocks
-            avg_queue_depth: 1.5,                          // Placeholder queue depth
+            read_bytes_per_sec: total_read_bytes as f64,
+            write_bytes_per_sec: total_written_bytes as f64,
+            read_ops_per_sec: (total_read_bytes as f64 / 4096.0),
+            write_ops_per_sec: (total_written_bytes as f64 / 4096.0),
+            read_mbps: total_read_bytes as f64 / (1024.0 * 1024.0), // Convert to MB
+            write_mbps: total_written_bytes as f64 / (1024.0 * 1024.0), // Convert to MB
+            read_iops: (total_read_bytes as f64 / 4096.0), // Estimate IOPS assuming 4KB blocks
+            write_iops: (total_written_bytes as f64 / 4096.0), // Estimate IOPS assuming 4KB blocks
+            avg_queue_depth: 1.5,                                  // Placeholder queue depth
         },
         network_io: NetworkIoMetrics {
             bytes_sent: total_tx_bytes as u64,
             bytes_received: total_rx_bytes as u64,
             packets_sent: total_tx_packets as u64,
             packets_received: total_rx_packets as u64,
-            rx_bytes_per_sec: f64::from(total_rx_bytes),
-            tx_bytes_per_sec: f64::from(total_tx_bytes),
-            rx_packets_per_sec: f64::from(total_rx_packets),
-            tx_packets_per_sec: f64::from(total_tx_packets),
+            rx_bytes_per_sec: total_rx_bytes as f64,
+            tx_bytes_per_sec: total_tx_bytes as f64,
+            rx_packets_per_sec: total_rx_packets as f64,
+            tx_packets_per_sec: total_tx_packets as f64,
         },
         zfs_metrics: ZfsMetrics {
             arc_hit_ratio: calculate_real_zfs_cache_hit_ratio().await.unwrap_or(85.0), // Real ZFS ARC hit ratio
@@ -265,7 +265,7 @@ pub async fn get_alerts(
                 operator: ComparisonOperator::GreaterThan,
                 threshold: 10.0,
                 duration_seconds: 300, // 5 minutes
-                currentvalue: f64::from(total_datasets),
+                currentvalue: total_datasets as f64,
             }],
             suggested_actions: vec![
                 "Review dataset organization".to_string(),
@@ -346,7 +346,7 @@ pub async fn get_alerts(
     let total_used = (total_datasets as u64) * 2 * 1024 * 1024 * 1024; // 2GB per dataset
     let total_available = (total_datasets as u64) * 10 * 1024 * 1024 * 1024; // 10GB per dataset
     let usage_percent = if total_available > 0 {
-        (f64::from(total_used) / f64::from(total_available)) * 100.0
+        (total_used as f64 / total_available as f64) * 100.0
     } else {
         0.0
     };
@@ -436,7 +436,7 @@ async fn calculate_real_zfs_cache_hit_ratio() -> Result<f64, Box<dyn std::error:
             }
 
             if hits + misses > 0 {
-                let hit_ratio = (f64::from(hits) / (hits + misses) as f64) * 100.0;
+                let hit_ratio = (hits as f64 / (hits + misses) as f64) * 100.0;
                 Ok(hit_ratio)
             } else {
                 Ok(85.0) // Default reasonable value

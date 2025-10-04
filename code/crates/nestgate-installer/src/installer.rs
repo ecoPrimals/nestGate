@@ -64,7 +64,7 @@ impl NestGateInstaller {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn new(install_dir: Option<PathBuf>) -> Result<Self>  {
+        pub fn new(install_dir: Option<PathBuf>) -> Result<Self>  {
         let platform = PlatformInfo::detect();
         let downloader = DownloadManager::new();
 
@@ -80,7 +80,7 @@ impl NestGateInstaller {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn install(&self, config: &InstallerConfig) -> Result<()>  {
+        pub fn install(&self, config: &InstallerConfig) -> Result<()>  {
         // Note: domains field doesn't exist in canonical config - using system config instead
         let system_config = &config.base_config.system;
 
@@ -102,7 +102,7 @@ impl NestGateInstaller {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn uninstall(&self, remove_config: bool, remove_data: bool, force: bool) -> Result<()>  {
+        pub fn uninstall(&self, remove_config: bool, remove_data: bool, force: bool) -> Result<()>  {
         let red = Style::new().red().bold();
         let yellow = Style::new().yellow().bold();
 

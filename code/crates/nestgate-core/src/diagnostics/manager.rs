@@ -36,7 +36,7 @@ impl DiagnosticsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn add_diagnostic(&self, _diagnostic: Diagnostic) -> Result<()>  {
+    pub fn add_diagnostic(&self, _diagnostic: Diagnostic) -> Result<()> {
         // Implementation would add diagnostic to storage
         // For now, this is a placeholder
         Ok(())
@@ -50,7 +50,7 @@ impl DiagnosticsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_diagnostics(&self) -> Result<Vec<Diagnostic>>  {
+    pub fn get_diagnostics(&self) -> Result<Vec<Diagnostic>> {
         let diagnostics = self.diagnostics.read().map_err(|_| {
             NestGateError::internal_error(
                 "Failed to acquire diagnostics read lock",
@@ -69,7 +69,7 @@ impl DiagnosticsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_unresolved_diagnostics(&self) -> Result<Vec<Diagnostic>>  {
+    pub fn get_unresolved_diagnostics(&self) -> Result<Vec<Diagnostic>> {
         let diagnostics = self.get_diagnostics()?;
         Ok(diagnostics
             .into_iter()
@@ -85,7 +85,7 @@ impl DiagnosticsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn calculate_health_status(&self) -> Result<HealthStatus>  {
+    pub fn calculate_health_status(&self) -> Result<HealthStatus> {
         let diagnostics = self.get_unresolved_diagnostics()?;
 
         if diagnostics.is_empty() {
@@ -119,7 +119,7 @@ impl DiagnosticsManager {
 
     /// Subscribe to diagnostic events
     #[must_use]
-    pub const fn subscribe(&self) -> broadcast::Receiver<Diagnostic> {
+    pub fn subscribe(&self) -> broadcast::Receiver<Diagnostic> {
         self.event_sender.subscribe()
     }
 
@@ -131,7 +131,7 @@ impl DiagnosticsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn update_metrics(&self, _metrics: SystemMetrics) -> Result<()>  {
+    pub fn update_metrics(&self, _metrics: SystemMetrics) -> Result<()> {
         // Implementation would update internal metrics storage
         // For now, this is a placeholder that accepts metrics
         Ok(())
@@ -145,7 +145,7 @@ impl DiagnosticsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_metrics(&self) -> Result<SystemMetrics>  {
+    pub fn get_metrics(&self) -> Result<SystemMetrics> {
         let metrics = self.metrics.read().map_err(|_| {
             NestGateError::internal_error(
                 "Failed to acquire metrics read lock",
@@ -164,8 +164,8 @@ impl DiagnosticsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn clear_resolved(&self) -> Result<usize>  {
+    #[must_use]
+    pub fn clear_resolved(&self) -> Result<usize> {
         let mut diagnostics = self.diagnostics.write().map_err(|_| {
             NestGateError::internal_error(
                 "Failed to acquire diagnostics write lock",

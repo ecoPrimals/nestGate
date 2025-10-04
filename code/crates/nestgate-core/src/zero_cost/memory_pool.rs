@@ -56,7 +56,7 @@ where
     ObjectPool: ZeroCostPoolInterface<String>,
 {
     /// Create new memory pool manager with compile-time pools
-    pub const fn new(buffer_pool: BufferPool, object_pool: ObjectPool) -> Self {
+    pub fn new(buffer_pool: BufferPool, object_pool: ObjectPool) -> Self {
         Self {
             buffer_pool,
             object_pool,
@@ -73,7 +73,7 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_buffer(&self) -> Result<Vec<u8>>  {
+        pub fn get_buffer(&self) -> Result<Vec<u8>>  {
         self.buffer_pool.get_item()
     }
 
@@ -85,7 +85,7 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn return_buffer(&self, buffer: Vec<u8>) -> Result<()>  {
+        pub fn return_buffer(&self, buffer: Vec<u8>) -> Result<()>  {
         self.buffer_pool.return_item(buffer)
     }
 
@@ -97,7 +97,7 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_object(&self) -> Result<String>  {
+        pub fn get_object(&self) -> Result<String>  {
         self.object_pool.get_item()
     }
 
@@ -109,12 +109,12 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn return_object(&self, object: String) -> Result<()>  {
+        pub fn return_object(&self, object: String) -> Result<()>  {
         self.object_pool.return_item(object)
     }
 
     /// Get comprehensive pool statistics
-    pub const fn get_comprehensive_stats(&self) -> MemoryPoolManagerStats {
+    pub fn get_comprehensive_stats(&self) -> MemoryPoolManagerStats {
         let buffer_stats = self.buffer_pool.get_stats();
         let object_stats = self.object_pool.get_stats();
 
@@ -129,12 +129,12 @@ where
 
     /// Max pools at compile-time
     #[must_use]
-    pub const fn max_pools() -> usize {
+    pub fn max_pools() -> usize {
         MAX_POOLS
     }
 
     /// Get basic pool statistics (alias for `get_comprehensive_stats`)
-    pub const fn stats(&self) -> MemoryPoolManagerStats {
+    pub fn stats(&self) -> MemoryPoolManagerStats {
         self.get_comprehensive_stats()
     }
 }
@@ -227,7 +227,7 @@ impl ZeroCostPoolInterface<Vec<u8>, 1000, 8192> for ProductionBufferPool {
 
                 // Update utilization stats
                 stats.utilization =
-                    1.0 - (stats.f64::from(available_items) / stats.f64::from(total_capacity));
+                    1.0 - (stats.available_items as f64 / stats.total_capacity as f64);
 
                 Ok(buffer)
             })
@@ -252,7 +252,7 @@ impl ZeroCostPoolInterface<Vec<u8>, 1000, 8192> for ProductionBufferPool {
                     buffers.push(item);
                     stats.available_items = buffers.len();
                     stats.utilization =
-                        1.0 - (stats.f64::from(available_items) / stats.f64::from(total_capacity));
+                        1.0 - (stats.available_items as f64 / stats.total_capacity as f64);
                 }
                 // Otherwise just drop the buffer (GC will handle it)
 

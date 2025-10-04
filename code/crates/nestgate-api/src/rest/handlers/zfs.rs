@@ -139,8 +139,7 @@ pub fn create_dataset(
     });
 
     // Create ZFS _engine placeholder
-    let _engine: Arc<dyn std::any::Any + Send + Sync> =
-        Arc::new(format!("engine_{request.name}"));
+    let _engine: Arc<dyn std::any::Any + Send + Sync> = Arc::new(format!("engine_{request.name}"));
 
     // Store _engine
     {

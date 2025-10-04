@@ -66,7 +66,7 @@ pub struct UniversalAuthAdapter {
 }
 impl UniversalAuthAdapter {
     /// Creates a new UniversalAuthAdapter with the provided universal adapter
-    pub const fn new(
+    pub fn new(
         adapter: Option<crate::universal_adapter::PrimalAgnosticAdapter>,
     ) -> Self {
         Self {

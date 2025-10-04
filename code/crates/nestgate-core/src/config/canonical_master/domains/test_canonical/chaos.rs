@@ -26,15 +26,15 @@ pub struct ResilienceTestConfig {
 
 impl ChaosTestConfig {
     #[must_use]
-    pub const fn ci_optimized() -> Self {
+    pub fn ci_optimized() -> Self {
         Self::default()
     }
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self::default()
     }
     #[must_use]
-    pub const fn merge(self, _other: Self) -> Self {
+    pub fn merge(self, _other: Self) -> Self {
         self
     }
 }

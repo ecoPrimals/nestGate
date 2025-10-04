@@ -21,7 +21,7 @@ pub struct HttpOrchestratorClient {
     client: reqwest::Client,
 }
 impl HttpOrchestratorClient {
-    pub const fn new(base_url: String) -> Self { Self {
+    pub fn new(base_url: String) -> Self { Self {
             base_url,
             client: reqwest::Client::new(),
          }
@@ -96,7 +96,7 @@ pub struct WebSocketOrchestratorClient {
     // Connection will be established on first use
 }
 impl WebSocketOrchestratorClient {
-    pub const fn new(url: String) -> Self { Self { url  }
+    pub fn new(url: String) -> Self { Self { url  }
 }
 
 impl OrchestratorClient for WebSocketOrchestratorClient {
@@ -172,18 +172,18 @@ impl OrchestratorClient for MockOrchestratorClient {
 pub struct OrchestratorClientFactory;
 impl OrchestratorClientFactory {
     /// Create HTTP client
-    pub const fn create_http_client(base_url: String) -> HttpOrchestratorClient {
+    pub fn create_http_client(base_url: String) -> HttpOrchestratorClient {
         HttpOrchestratorClient::new(base_url)
     }
 
     /// Create WebSocket client
-    pub const fn create_websocket_client(url: String) -> WebSocketOrchestratorClient {
+    pub fn create_websocket_client(url: String) -> WebSocketOrchestratorClient {
         WebSocketOrchestratorClient::new(url)
     }
 
     /// Create mock client for testing
     #[cfg(test)]
-    pub const fn create_mock_client() -> MockOrchestratorClient {
+    pub fn create_mock_client() -> MockOrchestratorClient {
         MockOrchestratorClient::new()
     }
 }

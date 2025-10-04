@@ -249,7 +249,7 @@ pub fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, St
             let used_bytes = parse_size(properties.get("used").unwrap_or(&"0".to_string()));
             let quota_bytes = parse_size(properties.get("quota").unwrap_or(&"0".to_string()));
             let utilization = if quota_bytes > 0 {
-                (f64::from(used_bytes) / f64::from(quota_bytes)) * 100.0
+                (used_bytes as f64 / quota_bytes as f64) * 100.0
             } else {
                 0.0
             };
@@ -620,7 +620,7 @@ fn parse_size(size_str: &str) -> u64 {
             _ => 1,
         };
 
-        (number * f64::from(multiplier)) as u64
+        (number * multiplier as f64) as u64
     } else {
         0
     }

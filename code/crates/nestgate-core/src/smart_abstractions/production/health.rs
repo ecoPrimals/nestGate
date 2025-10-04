@@ -158,7 +158,7 @@ impl HealthMonitor {
                 
                 if total > 0 && available <= total {
                     let used = total - available;
-                    return (f64::from(used) / f64::from(total)) * 100.0;
+                    return (used as f64 / total as f64) * 100.0;
                 }
                 
                 50.0 // Default fallback
@@ -237,12 +237,12 @@ pub struct SystemResourceHealth {
 }
 impl SystemResourceHealth {
     /// Check if system is under high load
-    pub const fn is_under_pressure(&self) -> bool {
+    pub fn is_under_pressure(&self) -> bool {
         self.cpu_usage > 70.0 || self.memory_usage > 80.0 || self.disk_usage > 85.0
     }
 
     /// Get resource utilization summary
-    pub const fn utilization_summary(&self) -> String {
+    pub fn utilization_summary(&self) -> String {
         format!(
             "CPU: {:.1}%, Memory: {:.1}%, Disk: {:.1}%",
             self.cpu_usage, self.memory_usage, self.disk_usage

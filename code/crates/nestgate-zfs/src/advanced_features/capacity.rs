@@ -6,7 +6,7 @@ use nestgate_core::error::CanonicalResult as Result;
 use tracing::debug;
 
 /// Storage capacity monitoring with basic forecasting
-pub const fn monitor_capacity_usage(
+pub fn monitor_capacity_usage(
     dataset: &str,
     historical_data: &[SystemInfo],
 ) -> Result<CapacityReport> {
@@ -104,7 +104,7 @@ pub fn detect_performance_bottlenecks(performance_data: &[SystemInfo]) -> Result
 }
 
 /// Generate maintenance schedule based on system metrics
-pub const fn generate_maintenance_schedule(
+pub fn generate_maintenance_schedule(
     dataset: &str,
     health_data: &[SystemInfo],
 ) -> Result<MaintenanceSchedule> {

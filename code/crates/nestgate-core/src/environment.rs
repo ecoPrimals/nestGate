@@ -30,6 +30,8 @@ pub struct Environment {
 /// **CANONICAL MODERNIZATION** - Use canonical service configuration
 pub use crate::canonical_types::service::ServiceConfig;
 /// Network configuration
+/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
+#[deprecated(since = "0.9.0", note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead")]
 #[derive(Debug, Clone)]
 pub struct NetworkConfig {
     /// Bind interface (127.0.0.1 for standalone, delegated for orchestration)
@@ -49,7 +51,7 @@ impl Default for Environment {
 
 impl Environment {
     /// Detect the current environment and configure accordingly
-    pub const fn detect() -> Self {
+    pub fn detect() -> Self {
         let mode = Self::detect_mode();
         let service = Self::detect_service_config();
         let network = Self::detect_network_config(&mode);

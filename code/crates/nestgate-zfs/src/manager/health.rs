@@ -22,7 +22,7 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_service_status(&self) -> Result<EnhancedServiceStatus>  {
+    pub async fn get_service_status(&self) -> Result<EnhancedServiceStatus> {
         debug!("Getting comprehensive service status");
 
         // Get health status from health monitor - using a simple default for now
@@ -121,7 +121,7 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_zfs_health(&self) -> Result<EnhancedServiceStatus>  {
+    pub async fn get_zfs_health(&self) -> Result<EnhancedServiceStatus> {
         self.get_service_status().await
     }
 
@@ -133,7 +133,7 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_real_health_state(&self) -> Result<HealthState>  {
+    pub async fn get_real_health_state(&self) -> Result<HealthState> {
         use crate::command::ZfsOperations;
 
         let ops = ZfsOperations::new();
@@ -207,7 +207,7 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn initialize_system(&self) -> Result<()>  {
+    pub async fn initialize_system(&self) -> Result<()> {
         // Removed unused tracing import
 
         info!("Initializing ZFS system");

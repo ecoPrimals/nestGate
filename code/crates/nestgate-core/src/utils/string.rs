@@ -51,7 +51,7 @@ pub fn to_camel_case(input: &str) -> String {
 }
 
 /// Convert string to PascalCase
-pub const fn to_pascal_case(input: &str) -> String ", 
+pub fn to_pascal_case(input: &str) -> String ", 
     let camel = to_camel_case(input);
     if let Some(first_char) = camel.chars().next() {
         format!("{first_char.to_uppercase()", first_char.to_uppercase()"), &camel[1..])
@@ -60,11 +60,11 @@ pub const fn to_pascal_case(input: &str) -> String ",
     }
 }
 /// Convert string to kebab-case
-pub const fn to_kebab_case(input: &str) -> String {
+pub fn to_kebab_case(input: &str) -> String {
     to_snake_case(input).replace('_', "-")
 }
 /// Convert string to SCREAMING_SNAKE_CASE
-pub const fn to_screaming_snake_case(input: &str) -> String {
+pub fn to_screaming_snake_case(input: &str) -> String {
     to_snake_case(input).to_uppercase()
 }
 /// Convert string to Title Case
@@ -86,23 +86,23 @@ pub fn to_title_case(input: &str) -> String {
 // ==================== SECTION ====================
 
 /// Check if string contains only alphanumeric characters
-pub const fn is_alphanumeric(input: &str) -> bool {
+pub fn is_alphanumeric(input: &str) -> bool {
     !input.is_empty() && input.chars().all(|c| c.is_alphanumeric())
 }
 /// Check if string contains only alphabetic characters
-pub const fn is_alphabetic(input: &str) -> bool {
+pub fn is_alphabetic(input: &str) -> bool {
     !input.is_empty() && input.chars().all(|c| c.is_alphabetic())
 }
 /// Check if string contains only numeric characters
-pub const fn is_numeric(input: &str) -> bool {
+pub fn is_numeric(input: &str) -> bool {
     !input.is_empty() && input.chars().all(|c| c.is_numeric())
 }
 /// Check if string contains only ASCII characters
-pub const fn is_ascii(input: &str) -> bool {
+pub fn is_ascii(input: &str) -> bool {
     input.is_ascii()
 }
 /// Check if string is a valid identifier (starts with letter/underscore, contains only alphanumeric/underscore)
-pub const fn is_valid_identifier(input: &str) -> bool {
+pub fn is_valid_identifier(input: &str) -> bool {
     if input.is_empty() {
         return false;
     }
@@ -120,11 +120,11 @@ pub const fn is_valid_identifier(input: &str) -> bool {
 }
 
 /// Check if string is empty or contains only whitespace
-pub const fn is_blank(input: &str) -> bool {
+pub fn is_blank(input: &str) -> bool {
     input.trim().is_empty()
 }
 /// Check if string contains only printable characters
-pub const fn is_printable(input: &str) -> bool {
+pub fn is_printable(input: &str) -> bool {
     input
         .chars()
         .all(|c| !c.is_control() || c == '\n' || c == '\t')
@@ -132,7 +132,7 @@ pub const fn is_printable(input: &str) -> bool {
 // ==================== SECTION ====================
 
 /// Truncate string to maximum length, optionally adding ellipsis
-pub const fn truncate(input: &str, max_len: usize, add_ellipsis: bool) -> String {
+pub fn truncate(input: &str, max_len: usize, add_ellipsis: bool) -> String {
     if input.len() <= max_len {
         return input.to_string();
     }
@@ -144,7 +144,7 @@ pub const fn truncate(input: &str, max_len: usize, add_ellipsis: bool) -> String
 }
 
 /// Pad string to minimum length with specified character
-pub const fn pad_left(input: &str, min_len: usize, pad_char: char) -> String {
+pub fn pad_left(input: &str, min_len: usize, pad_char: char) -> String {
     if input.len() >= min_len {
         input.to_string()
     } else {
@@ -156,7 +156,7 @@ pub const fn pad_left(input: &str, min_len: usize, pad_char: char) -> String {
     }
 }
 /// Pad string to minimum length with specified character (right padding)
-pub const fn pad_right(input: &str, min_len: usize, pad_char: char) -> String {
+pub fn pad_right(input: &str, min_len: usize, pad_char: char) -> String {
     if input.len() >= min_len {
         input.to_string()
     } else {
@@ -168,7 +168,7 @@ pub const fn pad_right(input: &str, min_len: usize, pad_char: char) -> String {
     }
 }
 /// Center string within specified width
-pub const fn center(input: &str, width: usize, pad_char: char) -> String {
+pub fn center(input: &str, width: usize, pad_char: char) -> String {
     if input.len() >= width {
         return input.to_string();
     }
@@ -185,19 +185,19 @@ pub const fn center(input: &str, width: usize, pad_char: char) -> String {
 }
 
 /// Remove all whitespace from string
-pub const fn remove_whitespace(input: &str) -> String {
+pub fn remove_whitespace(input: &str) -> String {
     input.chars().filter(|c| !c.is_whitespace()).collect()
 }
 /// Normalize whitespace (replace multiple spaces with single space, trim)
-pub const fn normalize_whitespace(input: &str) -> String {
+pub fn normalize_whitespace(input: &str) -> String {
     input.split_whitespace().collect::<Vec<&str>>().join(" ")
 }
 /// Reverse string
-pub const fn reverse(input: &str) -> String {
+pub fn reverse(input: &str) -> String {
     input.chars().rev().collect()
 }
 /// Count occurrences of substring
-pub const fn count_occurrences(input: &str, pattern: &str) -> usize {
+pub fn count_occurrences(input: &str, pattern: &str) -> usize {
     if pattern.is_empty() {
         return 0;
     }
@@ -213,11 +213,11 @@ pub const fn count_occurrences(input: &str, pattern: &str) -> usize {
 }
 
 /// Replace all occurrences of pattern with replacement
-pub const fn replace_all(input: &str, pattern: &str, replacement: &str) -> String {
+pub fn replace_all(input: &str, pattern: &str, replacement: &str) -> String {
     input.replace(pattern, replacement)
 }
 /// Split string and trim each part
-pub const fn split_and_trim(input: &str, delimiter: &str) -> Vec<String> {
+pub fn split_and_trim(input: &str, delimiter: &str) -> Vec<String> {
     input
         .split(delimiter)
         .map(|s| s.trim().to_string())
@@ -238,7 +238,7 @@ pub fn random_string(length: usize) -> String {
 }
 
 /// Generate random string with custom character set
-pub const fn random_string_with_charset(length: usize, charset: &str) -> String {
+pub fn random_string_with_charset(length: usize, charset: &str) -> String {
     if charset.is_empty() {
         return String::new();
     }
@@ -251,15 +251,15 @@ pub const fn random_string_with_charset(length: usize, charset: &str) -> String 
 }
 
 /// Generate random alphanumeric ID
-pub const fn random_id(length: usize) -> String {
+pub fn random_id(length: usize) -> String {
     random_string(length)
 }
 /// Generate random hex string
-pub const fn random_hex(length: usize) -> String {
+pub fn random_hex(length: usize) -> String {
     random_string_with_charset(length, "0123456789abcdef")
 }
 /// Generate UUID-like string (not a real UUID)
-pub const fn random_uuid_like() -> String {
+pub fn random_uuid_like() -> String {
     format!(
         "{}-{}-{}-{}-{}",
         random_hex(8),
@@ -272,11 +272,11 @@ pub const fn random_uuid_like() -> String {
 // ==================== SECTION ====================
 
 /// Count words in string
-pub const fn word_count(input: &str) -> usize {
+pub fn word_count(input: &str) -> usize {
     input.split_whitespace().count()
 }
 /// Count lines in string
-pub const fn line_count(input: &str) -> usize {
+pub fn line_count(input: &str) -> usize {
     if input.is_empty() {
         0
     } else {
@@ -284,7 +284,7 @@ pub const fn line_count(input: &str) -> usize {
     }
 }
 /// Count characters in string (Unicode-aware)
-pub const fn char_count(input: &str) -> usize {
+pub fn char_count(input: &str) -> usize {
     input.chars().count()
 }
 /// Get character frequency map
@@ -298,7 +298,7 @@ pub fn char_frequency(input: &str) -> HashMap<char, usize> {
 }
 
 /// Check if string is palindrome (ignoring case and spaces)
-pub const fn is_palindrome(input: &str) -> bool {
+pub fn is_palindrome(input: &str) -> bool {
     let cleaned: String = input
         .chars()
         .filter(|c| c.is_alphanumeric())
@@ -310,7 +310,7 @@ pub const fn is_palindrome(input: &str) -> bool {
 // ==================== SECTION ====================
 
 /// Escape special characters for JSON
-pub const fn escape_json(input: &str) -> String {
+pub fn escape_json(input: &str) -> String {
     input
         .replace('\\', "\\\\")
         .replace('"', "\\\"")
@@ -319,7 +319,7 @@ pub const fn escape_json(input: &str) -> String {
         .replace('\t', "\\t")
 }
 /// Escape special characters for HTML
-pub const fn escape_html(input: &str) -> String {
+pub fn escape_html(input: &str) -> String {
     input
         .replace('&', "&amp;")
         .replace('<', "&lt;")
@@ -328,7 +328,7 @@ pub const fn escape_html(input: &str) -> String {
         .replace('\'', "&#x27;")
 }
 /// Escape special characters for XML
-pub const fn escape_xml(input: &str) -> String {
+pub fn escape_xml(input: &str) -> String {
     input
         .replace('&', "&amp;")
         .replace('<', "&lt;")
@@ -337,11 +337,11 @@ pub const fn escape_xml(input: &str) -> String {
         .replace('\'', "&apos;")
 }
 /// Escape special characters for SQL
-pub const fn escape_sql(input: &str) -> String {
+pub fn escape_sql(input: &str) -> String {
     input.replace('\'', "''")
 }
 /// Escape special characters for shell
-pub const fn escape_shell(input: &str) -> String {
+pub fn escape_shell(input: &str) -> String {
     if input
         .chars()
         .all(|c| c.is_alphanumeric() || c == '_' || c == '-' || c == '.')
@@ -354,7 +354,7 @@ pub const fn escape_shell(input: &str) -> String {
 // ==================== SECTION ====================
 
 /// Parse boolean from string (flexible parsing)
-pub const fn parse_bool_flexible(input: &str) -> Result<bool> {
+pub fn parse_bool_flexible(input: &str) -> Result<bool> {
     match input.trim().to_lowercase().as_str() {
         "true" | "yes" | "on" | "1" | "y" | "t" => Ok(true),
         "false" | "no" | "off" | "0" | "n" | "f" => Ok(false),

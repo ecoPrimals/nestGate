@@ -58,7 +58,7 @@ impl CompressionEngine {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn compress(
+        pub fn compress(
         &self,
         data: &[u8],
         compression_type: CompressionType,
@@ -100,7 +100,7 @@ impl CompressionEngine {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn decompress(
+        pub fn decompress(
         &self,
         data: &[u8],
         compression_type: CompressionType,
@@ -120,11 +120,11 @@ impl CompressionEngine {
     }
 
     /// Get compression ratio for data
-    pub const fn get_compression_ratio(&self, original_size: usize, compressed_size: usize) -> f64 {
+    pub fn get_compression_ratio(&self, original_size: usize, compressed_size: usize) -> f64 {
         if original_size == 0 {
             0.0
         } else {
-            f64::from(compressed_size) / f64::from(original_size)
+            compressed_size as f64 / original_size as f64
         }
     }
 
@@ -134,7 +134,7 @@ impl CompressionEngine {
     }
 
     /// Get supported compression types
-    pub const fn supported_types(&self) -> Vec<CompressionType> {
+    pub fn supported_types(&self) -> Vec<CompressionType> {
         self.algorithms.keys().cloned().collect()
     }
 
@@ -174,7 +174,7 @@ pub struct CompressionLevelManager {
 }
 impl CompressionLevelManager {
     /// Create a new compression level manager with default levels
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             zstd_algorithm: ZstdAlgorithm::new(6), // Default ZSTD level
             gzip_algorithm: GzipAlgorithm::new(6), // Default GZIP level
@@ -182,7 +182,7 @@ impl CompressionLevelManager {
     }
 
     /// Create with custom compression levels
-    pub const fn with_levels(zstd_level: i32, gzip_level: u32) -> Self {
+    pub fn with_levels(zstd_level: i32, gzip_level: u32) -> Self {
         Self {
             zstd_algorithm: ZstdAlgorithm::new(zstd_level),
             gzip_algorithm: GzipAlgorithm::new(gzip_level),
@@ -190,17 +190,17 @@ impl CompressionLevelManager {
     }
 
     /// Get current ZSTD compression level
-    pub const fn zstd_level(&self) -> i32 {
+    pub fn zstd_level(&self) -> i32 {
         self.zstd_algorithm.get_level()
     }
 
     /// Get current GZIP compression level
-    pub const fn gzip_level(&self) -> u32 {
+    pub fn gzip_level(&self) -> u32 {
         self.gzip_algorithm.get_level()
     }
 
     /// Get compression ratio estimate for ZSTD
-    pub const fn estimate_zstd_ratio(&self) -> f64 {
+    pub fn estimate_zstd_ratio(&self) -> f64 {
         // Higher levels generally provide better compression
         let level = self.zstd_algorithm.get_level();
         match level {
@@ -212,7 +212,7 @@ impl CompressionLevelManager {
     }
 
     /// Get compression ratio estimate for GZIP
-    pub const fn estimate_gzip_ratio(&self) -> f64 {
+    pub fn estimate_gzip_ratio(&self) -> f64 {
         // Higher levels generally provide better compression
         let level = self.gzip_algorithm.get_level();
         match level {
@@ -224,7 +224,7 @@ impl CompressionLevelManager {
     }
 
     /// Choose optimal algorithm based on requirements
-    pub const fn choose_algorithm_for_size(&self, size_bytes: u64) -> &str {
+    pub fn choose_algorithm_for_size(&self, size_bytes: u64) -> &str {
         // For larger files, use ZSTD for better performance
         // For smaller files, GZIP is sufficient
         if size_bytes > 1024 * 1024 {
@@ -406,34 +406,34 @@ pub struct CompressionStats {
 }
 impl CompressionStats {
     /// Calculate compression ratio
-    pub const fn compression_ratio(&self) -> f64 {
+    pub fn compression_ratio(&self) -> f64 {
         if self.total_original_bytes == 0 {
             return 1.0;
         }
-        self.f64::from(total_compressed_bytes) / self.f64::from(total_original_bytes)
+        self.total_compressed_bytes as f64 / self.total_original_bytes as f64
     }
 
     /// Calculate space saved in bytes
-    pub const fn space_saved(&self) -> u64 {
+    pub fn space_saved(&self) -> u64 {
         self.total_original_bytes
             .saturating_sub(self.total_compressed_bytes)
     }
 
     /// Calculate average compression speed (MB/s)
-    pub const fn avg_compression_speed(&self) -> f64 {
+    pub fn avg_compression_speed(&self) -> f64 {
         if self.total_compression_time.is_zero() {
             return 0.0;
         }
-        let mb_processed = self.f64::from(total_original_bytes) / (1024.0 * 1024.0);
+        let mb_processed = self.total_original_bytes as f64 / (1024.0 * 1024.0);
         mb_processed / self.total_compression_time.as_secs_f64()
     }
 
     /// Calculate average decompression speed (MB/s)
-    pub const fn avg_decompression_speed(&self) -> f64 {
+    pub fn avg_decompression_speed(&self) -> f64 {
         if self.total_decompression_time.is_zero() {
             return 0.0;
         }
-        let mb_processed = self.f64::from(total_decompressed_bytes) / (1024.0 * 1024.0);
+        let mb_processed = self.total_decompressed_bytes as f64 / (1024.0 * 1024.0);
         mb_processed / self.total_decompression_time.as_secs_f64()
     }
 }

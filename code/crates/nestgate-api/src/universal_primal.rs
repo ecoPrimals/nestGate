@@ -201,7 +201,7 @@ pub struct DiscoveredPrimal {
 }
 impl PrimalType {
     /// Convert primal type to string representation
-    pub const fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             Self::Storage => "storage",
             Self::Security => "security",

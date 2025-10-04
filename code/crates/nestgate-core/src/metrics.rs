@@ -86,7 +86,7 @@ impl MetricsCollector {
     }
 
     /// Get a specific metric value
-    pub const fn get_metric(&self, name: &str) -> Option<Metric> {
+    pub fn get_metric(&self, name: &str) -> Option<Metric> {
         let metrics = match self.metrics.read() {
             Ok(metrics) => metrics,
             Err(e) => {
@@ -98,7 +98,7 @@ impl MetricsCollector {
     }
 
     /// Get all metrics
-    pub const fn get_all_metrics(&self) -> Vec<Metric> {
+    pub fn get_all_metrics(&self) -> Vec<Metric> {
         let metrics = match self.metrics.read() {
             Ok(metrics) => metrics,
             Err(e) => {

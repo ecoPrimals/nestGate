@@ -52,7 +52,7 @@ pub struct OrchestrationCapability {
 }
 impl OrchestrationCapability {
     /// Create a new Orchestration client
-    pub const fn new(base_url: String) -> Self {
+    pub fn new(base_url: String) -> Self {
         Self {
             base_url,
             client: reqwest::Client::new(),
@@ -60,7 +60,7 @@ impl OrchestrationCapability {
     }
 
     /// Register a service with Orchestration
-    pub fn register_service(&self, service: &ServiceInstance) -> NestGateResult<()> {
+    pub async fn register_service(&self, service: &ServiceInstance) -> NestGateResult<()> {
         let url = format!("{"actual_error_details"}/api/v1/services/register");
 
         let response = self
@@ -92,7 +92,7 @@ impl OrchestrationCapability {
     }
 
     /// Request port allocation from Orchestration
-    pub fn allocate_port(&self, service_name: &str, port_type: &str) -> NestGateResult<u16> {
+    pub async fn allocate_port(&self, service_name: &str, port_type: &str) -> NestGateResult<u16> {
         let url = format!("{"actual_error_details"}/api/v1/ports/allocate");
 
         let request = PortAllocationRequest {
@@ -175,7 +175,7 @@ impl OrchestrationCapability {
     }
 
     /// Send health status to Orchestration
-    pub fn send_health_status(
+    pub async fn send_health_status(
         &self,
         service_name: &str,
         status: ServiceStatus,
@@ -327,7 +327,7 @@ impl NetworkApi {
                 )
             })?;
 
-            orchestrator.release_port(service_name, port).await?;
+            orchestrator.release_port(service_name, port)?;
         }
         Ok(())
     }
@@ -353,7 +353,7 @@ impl NetworkApi {
     }
 
     /// Create a router for the Network API
-    pub const fn create_router(&self) -> Router {
+    pub fn create_router(&self) -> Router {
         Router::new()
             .route("/api/health", get(health_check))
             .route("/api/services", get(list_services_handler))

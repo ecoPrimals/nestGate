@@ -7,7 +7,7 @@ use crate::{NestGateError, Result};
 // ==================== SECTION ====================
 
 /// Get the operating system name
-pub const fn get_os_name() -> String {
+pub fn get_os_name() -> String {
     #[cfg(target_os = "linux")]
     return "Linux".to_string();
     #[cfg(target_os = "macos")]
@@ -21,11 +21,11 @@ pub const fn get_os_name() -> String {
 }
 
 /// Get the system architecture
-pub const fn get_architecture() -> String {
+pub fn get_architecture() -> String {
     std::env::consts::ARCH.to_string()
 }
 /// Get the operating system version
-pub const fn get_os_version() -> Result<String> {
+pub fn get_os_version() -> Result<String> {
     #[cfg(target_os = "linux")]
     {
         match std::fs::read_to_string("/etc/os-release") {
@@ -57,7 +57,7 @@ pub const fn get_os_version() -> Result<String> {
     }
 }
 /// Get detailed OS information
-pub const fn get_os_info() -> Result<OsInfo> {
+pub fn get_os_info() -> Result<OsInfo> {
     Ok(OsInfo {
         name: get_os_name(),
         version: get_os_version()?,
@@ -74,7 +74,7 @@ pub struct OsInfo {
     pub kernel_version: String,
 }
 /// Get kernel version
-pub const fn get_kernel_version() -> Result<String> {
+pub fn get_kernel_version() -> Result<String> {
     #[cfg(target_os = "linux")]
     {
         match std::fs::read_to_string("/proc/version") {
@@ -97,15 +97,15 @@ pub const fn get_kernel_version() -> Result<String> {
 // ==================== SECTION ====================
 
 /// Get the number of CPU cores
-pub const fn get_cpu_count() -> usize {
+pub fn get_cpu_count() -> usize {
     num_cpus::get()
 }
 /// Get the number of physical CPU cores
-pub const fn get_physical_cpu_count() -> usize {
+pub fn get_physical_cpu_count() -> usize {
     num_cpus::get_physical()
 }
 /// Get CPU information
-pub const fn get_cpu_info() -> CpuInfo {
+pub fn get_cpu_info() -> CpuInfo {
     CpuInfo {
         logical_cores: get_cpu_count(),
         physical_cores: get_physical_cpu_count(),
@@ -122,7 +122,7 @@ pub struct CpuInfo {
     pub frequency: Option<f64>, // in GHz
 }
 /// Get CPU model name
-pub const fn get_cpu_model() -> String {
+pub fn get_cpu_model() -> String {
     #[cfg(target_os = "linux")]
     {
         match std::fs::read_to_string("/proc/cpuinfo") {
@@ -145,7 +145,7 @@ pub const fn get_cpu_model() -> String {
     }
 }
 /// Get CPU frequency in GHz (if available)
-pub const fn get_cpu_frequency() -> Option<f64> {
+pub fn get_cpu_frequency() -> Option<f64> {
     #[cfg(target_os = "linux")]
     {
         if let Ok(content) = std::fs::read_to_string("/proc/cpuinfo") {
@@ -165,7 +165,7 @@ pub const fn get_cpu_frequency() -> Option<f64> {
 // ==================== SECTION ====================
 
 /// Get total system memory in bytes
-pub const fn get_total_memory() -> Result<u64> {
+pub fn get_total_memory() -> Result<u64> {
     #[cfg(target_os = "linux")]
     {
         match std::fs::read_to_string("/proc/meminfo") {
@@ -191,7 +191,7 @@ pub const fn get_total_memory() -> Result<u64> {
     }
 }
 /// Get free system memory in bytes
-pub const fn get_free_memory() -> Result<u64> {
+pub fn get_free_memory() -> Result<u64> {
     #[cfg(target_os = "linux")]
     {
         match std::fs::read_to_string("/proc/meminfo") {
@@ -217,13 +217,13 @@ pub const fn get_free_memory() -> Result<u64> {
     }
 }
 /// Get used system memory in bytes
-pub const fn get_used_memory() -> Result<u64> {
+pub fn get_used_memory() -> Result<u64> {
     let total = get_total_memory()?;
     let free = get_free_memory()?;
     Ok(total.saturating_sub(free))
 }
 /// Get memory information
-pub const fn get_memory_info() -> Result<MemoryInfo> {
+pub fn get_memory_info() -> Result<MemoryInfo> {
     Ok(MemoryInfo {
         total: get_total_memory()?,
         free: get_free_memory()?,
@@ -252,7 +252,7 @@ pub struct MemoryInfo {
 /// Get total disk space in bytes for the root filesystem
 ///
 /// **100% SAFE**: This function uses completely safe filesystem operations
-pub const fn get_total_disk() -> Result<u64> {
+pub fn get_total_disk() -> Result<u64> {
     // **SAFE**: Use standard library filesystem operations
     match std::fs::metadata("/") {
         Ok(_) => {
@@ -271,7 +271,7 @@ pub const fn get_total_disk() -> Result<u64> {
 /// Get free disk space in bytes for the root filesystem
 ///
 /// **100% SAFE**: This function uses completely safe filesystem operations
-pub const fn get_free_disk() -> Result<u64> {
+pub fn get_free_disk() -> Result<u64> {
     // **SAFE**: Use standard library filesystem operations
     match std::fs::metadata("/tmp") {
         Ok(_) => {
@@ -290,14 +290,14 @@ pub const fn get_free_disk() -> Result<u64> {
 // ==================== SECTION ====================
 
 /// Get system hostname
-pub const fn get_hostname() -> Result<String> {
+pub fn get_hostname() -> Result<String> {
     gethostname::gethostname()
         .to_str()
         .map(|s| s.to_string())
         .ok_or_else(|| NestGateError::internal_error(
 }
 /// Get system uptime in seconds
-pub const fn get_uptime() -> Result<u64> {
+pub fn get_uptime() -> Result<u64> {
     #[cfg(target_os = "linux")]
     {
         match std::fs::read_to_string("/proc/uptime") {
@@ -318,7 +318,7 @@ pub const fn get_uptime() -> Result<u64> {
     }
 }
 /// Get load average (Linux only)
-pub const fn get_load_average() -> Result<LoadAverage> {
+pub fn get_load_average() -> Result<LoadAverage> {
     #[cfg(target_os = "linux")]
     {
         if let Ok(content) = std::fs::read_to_string("/proc/loadavg") {
@@ -353,17 +353,17 @@ pub struct LoadAverage {
 // ==================== SECTION ====================
 
 /// Get current process ID
-pub const fn get_current_pid() -> u32 {
+pub fn get_current_pid() -> u32 {
     std::process::id()
 }
 /// Get parent process ID
 ///
 /// **100% SAFE**: Uses completely safe process information reading
-pub const fn get_parent_pid() -> Option<u32> {
+pub fn get_parent_pid() -> Option<u32> {
     crate::utils::completely_safe_system::SafeSystemOps::get_parent_process_id().ok()
 }
 /// Check if running as root (safe system operation)
-pub const fn is_root() -> bool {
+pub fn is_root() -> bool {
     crate::utils::completely_safe_system::SafeSystemOps::is_running_as_root()
 }
 #[cfg(test)]

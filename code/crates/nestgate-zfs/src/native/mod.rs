@@ -31,7 +31,7 @@ impl NativeZfsBackend {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn new(config: CanonicalZfsConfig) -> Result<Self>  {
+    pub async fn new(config: CanonicalZfsConfig) -> Result<Self> {
         // Check if ZFS is available
         if !is_zfs_available().await {
             return Err(NestGateError::storage_error("zfs_availability_check"));
@@ -45,7 +45,7 @@ impl NativeZfsBackend {
     }
 
     /// Get the configuration
-    pub const fn config(&self) -> &CanonicalZfsConfig {
+    pub fn config(&self) -> &CanonicalZfsConfig {
         &self.config
     }
 }

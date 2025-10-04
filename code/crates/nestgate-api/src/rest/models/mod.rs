@@ -84,7 +84,7 @@ pub struct ApiResponse<T> {
 
 impl<T> ApiResponse<T> {
     /// Create a successful API response with data
-    pub const fn success(data: T) -> Self {
+    pub fn success(data: T) -> Self {
         Self {
             success: true,
             data: Some(data),
@@ -94,7 +94,7 @@ impl<T> ApiResponse<T> {
     }
 
     /// Create an error API response with error message
-    pub const fn error(error: String) -> Self {
+    pub fn error(error: String) -> Self {
         Self {
             success: false,
             data: None,

@@ -273,7 +273,7 @@ impl Default for UniversalServiceMetadata {
 impl UniversalServiceMetadata {
     /// Create new service metadata with minimal required information
     #[must_use]
-    pub const fn new(name: &str, service_type: UnifiedServiceType) -> Self {
+    pub fn new(name: &str, service_type: UnifiedServiceType) -> Self {
         Self {
             name: name.to_string(),
             service_type,
@@ -283,7 +283,7 @@ impl UniversalServiceMetadata {
 
     /// Builder pattern for service metadata
     #[must_use]
-    pub const fn builder(
+    pub fn builder(
         name: &str,
         service_type: UnifiedServiceType,
     ) -> UniversalServiceMetadataBuilder {
@@ -313,13 +313,13 @@ impl UniversalServiceMetadata {
 
     /// Check if service has a specific capability
     #[must_use]
-    pub const fn has_capability(&self, capability: &ServiceCapability) -> bool {
+    pub fn has_capability(&self, capability: &ServiceCapability) -> bool {
         self.capabilities.contains(capability)
     }
 
     /// Get primary endpoint URL
     #[must_use]
-    pub const fn get_primary_endpoint(&self) -> Option<&str> {
+    pub fn get_primary_endpoint(&self) -> Option<&str> {
         // First check explicit primary endpoint
         if let Some(ref primary) = self.primary_endpoint {
             return Some(primary);
@@ -343,7 +343,7 @@ pub struct UniversalServiceMetadataBuilder {
 }
 impl UniversalServiceMetadataBuilder {
     #[must_use]
-    pub const fn new(name: &str, service_type: UnifiedServiceType) -> Self {
+    pub fn new(name: &str, service_type: UnifiedServiceType) -> Self {
         Self {
             metadata: UniversalServiceMetadata::new(name, service_type),
         }

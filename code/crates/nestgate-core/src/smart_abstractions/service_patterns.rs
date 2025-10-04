@@ -314,7 +314,7 @@ pub struct SmartServiceWrapper {
     start_time: Option<SystemTime>,
 }
 impl SmartServiceWrapper {
-    pub const fn new(metadata: ServiceMetadata, config: ServiceFactoryConfig) -> Self {
+    pub fn new(metadata: ServiceMetadata, config: ServiceFactoryConfig) -> Self {
         Self {
             metadata,
             config,
@@ -489,7 +489,7 @@ pub struct MockSmartService {
     start_time: Option<SystemTime>,
 }
 impl MockSmartService {
-    pub const fn new(metadata: ServiceMetadata, behavior: MockServiceBehavior) -> Self {
+    pub fn new(metadata: ServiceMetadata, behavior: MockServiceBehavior) -> Self {
         Self {
             metadata,
             behavior,
@@ -743,7 +743,7 @@ impl Default for SmartServiceDiscovery {
 // ==================== SECTION ====================
 
 /// Create a smart service factory with default configuration
-pub const fn create_service_factory() -> SmartServiceFactory {
+pub fn create_service_factory() -> SmartServiceFactory {
     SmartServiceFactory::new()
 }
 /// Create a mock service with default behavior
@@ -756,6 +756,6 @@ pub async fn create_mock_service(
         .await
 }
 /// Create a service discovery system
-pub const fn create_service_discovery() -> SmartServiceDiscovery {
+pub fn create_service_discovery() -> SmartServiceDiscovery {
     SmartServiceDiscovery::new()
 }

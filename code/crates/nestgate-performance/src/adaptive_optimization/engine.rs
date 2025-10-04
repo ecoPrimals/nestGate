@@ -9,7 +9,7 @@ pub struct OptimizationEngine {
 }
 
 impl OptimizationEngine {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             // Initialize fields
         }

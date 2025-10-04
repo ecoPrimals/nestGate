@@ -22,7 +22,7 @@ pub struct HandlerConfigBuilder<T> {
 }
 impl<T> HandlerConfigBuilder<T> {
     /// Create a new builder with default common configuration
-    pub const fn new() -> Self { Self {
+    pub fn new() -> Self { Self {
             common: CommonHandlerConfig::default(),
             specific: None,
          }
@@ -142,7 +142,7 @@ impl ConfigValidator for CommonHandlerConfig {
 pub struct HandlerConfigFactory;
 impl HandlerConfigFactory {
     /// Create a ZFS handler configuration with sensible defaults
-    pub const fn zfs_handler(name: String) -> HandlerConfigBuilder<ZfsHandlerSpecificConfig> {
+    pub fn zfs_handler(name: String) -> HandlerConfigBuilder<ZfsHandlerSpecificConfig> {
         HandlerConfigBuilder::new()
             .with_name(name)
             .with_timeout(std::time::Duration::from_secs(60)) // ZFS operations can be slow
@@ -150,7 +150,7 @@ impl HandlerConfigFactory {
     }
 
     /// Create a performance handler configuration
-    pub const fn performance_handler(name: String) -> HandlerConfigBuilder<PerformanceHandlerSpecificConfig> {
+    pub fn performance_handler(name: String) -> HandlerConfigBuilder<PerformanceHandlerSpecificConfig> {
         HandlerConfigBuilder::new()
             .with_name(name)
             .with_timeout(std::time::Duration::from_secs(30))
@@ -158,7 +158,7 @@ impl HandlerConfigFactory {
     }
 
     /// Create a dashboard handler configuration
-    pub const fn dashboard_handler(name: String) -> HandlerConfigBuilder<DashboardHandlerSpecificConfig> {
+    pub fn dashboard_handler(name: String) -> HandlerConfigBuilder<DashboardHandlerSpecificConfig> {
         HandlerConfigBuilder::new()
             .with_name(name)
             .with_timeout(std::time::Duration::from_secs(10)) // Fast UI responses
@@ -166,7 +166,7 @@ impl HandlerConfigFactory {
     }
 
     /// Create a load testing handler configuration
-    pub const fn load_testing_handler(name: String) -> HandlerConfigBuilder<LoadTestingHandlerSpecificConfig> {
+    pub fn load_testing_handler(name: String) -> HandlerConfigBuilder<LoadTestingHandlerSpecificConfig> {
         HandlerConfigBuilder::new()
             .with_name(name)
             .with_timeout(std::time::Duration::from_secs(300)) // Long-running tests
@@ -174,7 +174,7 @@ impl HandlerConfigFactory {
     }
 
     /// Create a workspace handler configuration
-    pub const fn workspace_handler(name: String) -> HandlerConfigBuilder<WorkspaceHandlerSpecificConfig> {
+    pub fn workspace_handler(name: String) -> HandlerConfigBuilder<WorkspaceHandlerSpecificConfig> {
         HandlerConfigBuilder::new()
             .with_name(name)
             .with_timeout(std::time::Duration::from_secs(45))
@@ -182,7 +182,7 @@ impl HandlerConfigFactory {
     }
 
     /// Create an auth handler configuration
-    pub const fn auth_handler(name: String) -> HandlerConfigBuilder<AuthHandlerSpecificConfig> {
+    pub fn auth_handler(name: String) -> HandlerConfigBuilder<AuthHandlerSpecificConfig> {
         HandlerConfigBuilder::new()
             .with_name(name)
             .with_timeout(std::time::Duration::from_secs(15)) // Fast auth responses
@@ -239,7 +239,7 @@ impl HandlerConfigRegistry {
     }
 
     /// List all registered handler names
-    pub const fn list_handlers(&self) -> Vec<String> {
+    pub fn list_handlers(&self) -> Vec<String> {
         self.configs.keys().cloned().collect()
     }
 
@@ -260,7 +260,7 @@ impl Default for HandlerConfigRegistry {
 // ==================== SECTION ====================
 
 /// Create a default configuration for a specific handler type
-pub const fn default_config_for_handler(handler_type: &str) -> Result<Box<dyn std::any::Any>, ConfigError> {
+pub fn default_config_for_handler(handler_type: &str) -> Result<Box<dyn std::any::Any>, ConfigError> {
     match handler_type {
         "zfs" => Ok(Box::new(
             HandlerConfigFactory::zfs_handler("default_zfs".to_string())
@@ -335,7 +335,7 @@ pub const fn default_config_for_handler(handler_type: &str) -> Result<Box<dyn st
     }
 }
 /// Get the list of supported handler types
-pub const fn supported_handler_types() -> Vec<&'static str> {
+pub fn supported_handler_types() -> Vec<&'static str> {
     vec![
         "zfs",
         "performance", 

@@ -13,7 +13,7 @@ pub struct LogRetentionManager {
     config: LogRetentionConfig,
 }
 impl LogRetentionManager {
-    pub const fn new(config: LogRetentionConfig) -> Self { Self { config  }
+    pub fn new(config: LogRetentionConfig) -> Self { Self { config  }
 
     /// Start background cleanup task
     ///
@@ -93,7 +93,7 @@ impl LogRetentionManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_log_directory_size(&self, log_dir: &Path) -> Result<u64>  {
+        pub fn get_log_directory_size(&self, log_dir: &Path) -> Result<u64>  {
         // Placeholder implementation
         // In reality, this would recursively scan the directory
         Ok(0)
@@ -107,7 +107,7 @@ impl LogRetentionManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_log_file_count(&self, log_dir: &Path) -> Result<usize>  {
+        pub fn get_log_file_count(&self, log_dir: &Path) -> Result<usize>  {
         // Placeholder implementation
         Ok(0)
     }

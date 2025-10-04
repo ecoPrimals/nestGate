@@ -8,7 +8,7 @@ pub use super::types::PrimalMetrics;
 pub struct MetricsCollector;
 impl MetricsCollector {
     /// Create a new metrics collector
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self
     }
 }

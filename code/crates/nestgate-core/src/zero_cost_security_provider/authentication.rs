@@ -92,10 +92,10 @@ impl HybridAuthenticationManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn authenticate(
+    pub async fn authenticate(
         &self,
         credentials: &ZeroCostCredentials,
-    ) -> Result<ZeroCostAuthToken>  {
+    ) -> Result<ZeroCostAuthToken> {
         debug!("Authenticating user: {}", credentials.username);
 
         // Check rate limiting
@@ -131,7 +131,7 @@ impl HybridAuthenticationManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn validate_token(&self, token_str: &str) -> Result<bool>  {
+    pub async fn validate_token(&self, token_str: &str) -> Result<bool> {
         debug!("Validating token");
 
         // Check local cache first
@@ -171,8 +171,8 @@ impl HybridAuthenticationManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn refresh_token(&self, token_str: &str) -> Result<ZeroCostAuthToken>  {
+    #[must_use]
+    pub async fn refresh_token(&self, token_str: &str) -> Result<ZeroCostAuthToken> {
         debug!("Refreshing token");
 
         if !self.config.local_token_settings.enable_refresh {
@@ -204,7 +204,7 @@ impl HybridAuthenticationManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn revoke_token(&self, token_str: &str) -> Result<()>  {
+    pub async fn revoke_token(&self, token_str: &str) -> Result<()> {
         debug!("Revoking token");
 
         // Remove from local cache
@@ -417,7 +417,7 @@ pub struct AuthTokenManager {
 }
 impl AuthTokenManager {
     #[must_use]
-    pub const fn new(signing_key: String) -> Self {
+    pub fn new(signing_key: String) -> Self {
         Self { signing_key }
     }
 
@@ -437,7 +437,7 @@ impl AuthTokenManager {
     }
 
     #[must_use]
-    pub const fn validate_token_signature(&self, _token: &str) -> bool {
+    pub fn validate_token_signature(&self, _token: &str) -> bool {
         // Simple signature validation
         // In a real implementation, this would use proper cryptographic verification
         true

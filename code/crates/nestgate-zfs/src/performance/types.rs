@@ -423,23 +423,23 @@ pub(crate) struct LocalMemoryInfo {
 impl LocalMemoryInfo {
     /// Create new memory info
     #[allow(dead_code)] // Development/testing method
-    pub const fn new(available_mb: u64, used_mb: u64) -> Self {
+    pub fn new(available_mb: u64, used_mb: u64) -> Self {
         Self {
             available_mb,
             used_mb,
         }
     }
     /// Get total memory
-    pub const fn total_mb(&self) -> u64 {
+    pub fn total_mb(&self) -> u64 {
         self.available_mb + self.used_mb
     }
 
     /// Get memory usage percentage
-    pub const fn usage_percentage(&self) -> f64 {
+    pub fn usage_percentage(&self) -> f64 {
         if self.total_mb() == 0 {
             0.0
         } else {
-            (self.f64::from(used_mb) / self.total_mb() as f64) * 100.0
+            (f64::from(self.used_mb) / self.total_mb() as f64) * 100.0
         }
     }
 }

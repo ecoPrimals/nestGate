@@ -125,7 +125,7 @@ pub struct ComputeAdapter {
 
 impl ComputeAdapter {
     /// Create a new compute adapter for the specified service
-    pub const fn new(service_name: String) -> Self {
+    pub fn new(service_name: String) -> Self {
         Self { service_name }
     }
 }
@@ -247,8 +247,8 @@ impl LiveHardwareTuningSession {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn new() -> Result<Self>  {
+    #[must_use]
+    pub fn new() -> Result<Self> {
         Ok(Self {
             session_id: format!("session_{}", Utc::now().timestamp()),
             started_at: Utc::now(),
@@ -280,8 +280,8 @@ impl LiveHardwareTuningSession {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn collect_current_metrics(&self) -> Result<LiveHardwareMetrics>  {
+    #[must_use]
+    pub fn collect_current_metrics(&self) -> Result<LiveHardwareMetrics> {
         Ok(LiveHardwareMetrics {
             cpu_usage: 30.0,
             memory_usage: 45.0,
@@ -417,8 +417,8 @@ impl SystemMetricsCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn new() -> Result<Self>  {
+    #[must_use]
+    pub fn new() -> Result<Self> {
         Ok(Self {
             cpu_monitor: CpuMonitor,
             memory_monitor: MemoryMonitor,
@@ -436,7 +436,7 @@ impl SystemMetricsCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn collect_current_metrics(&self) -> Result<LiveHardwareMetrics>  {
+    pub async fn collect_current_metrics(&self) -> Result<LiveHardwareMetrics> {
         // Collect real metrics from system
         let cpu_usage = self.get_cpu_usage()?;
         let memory_usage = self.get_memory_usage()?;
@@ -470,7 +470,7 @@ impl SystemMetricsCollector {
 
                         let total = user + nice + system + idle;
                         let usage = if total > 0 {
-                            ((total - idle) as f64 / f64::from(total)) * 100.0
+                            ((total - idle) as f64 / total as f64) * 100.0
                         } else {
                             0.0
                         };
@@ -504,7 +504,7 @@ impl SystemMetricsCollector {
 
                 if total_kb > 0 {
                     let used_kb = total_kb - available_kb;
-                    let usage_percent = (f64::from(used_kb) / f64::from(total_kb)) * 100.0;
+                    let usage_percent = (used_kb as f64 / total_kb as f64) * 100.0;
                     Ok(usage_percent)
                 } else {
                     Ok(0.0)

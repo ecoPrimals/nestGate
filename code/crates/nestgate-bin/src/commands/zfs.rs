@@ -78,7 +78,7 @@ impl Default for ZfsHandler {
 impl ZfsHandler {
     pub fn new() -> Self {
         let base_url = std::env::var("NESTGATE_API_URL")
-            .unwrap_or_else(|_| format!("http://{}:{}", LOCALHOST, DEFAULT_API_PORT);
+            .unwrap_or_else(|_| format!("http://{}:{}", LOCALHOST, DEFAULT_API_PORT));
 
         Self {
             api_endpoint: base_url,

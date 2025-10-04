@@ -24,7 +24,7 @@ pub fn initialize_uptime() {
     START_TIME.set(SystemTime::now()).ok();
 }
 /// Get system status handler
-pub const fn get_status() -> Json<SystemStatus> {
+pub fn get_status() -> Json<SystemStatus> {
     info!("Status endpoint called");
     let start_time = START_TIME.get().copied().unwrap_or_else(SystemTime::now);
     let uptime = SystemTime::now()

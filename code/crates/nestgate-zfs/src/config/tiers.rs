@@ -17,7 +17,7 @@ pub struct CapacityLimits {
 }
 
 impl CapacityLimits {
-    pub const fn hot_tier_defaults() -> Self {
+    pub fn hot_tier_defaults() -> Self {
         Self {
             max_size_gb: 1000,
             min_free_space_gb: 100,
@@ -25,7 +25,7 @@ impl CapacityLimits {
         }
     }
 
-    pub const fn warm_tier_defaults() -> Self {
+    pub fn warm_tier_defaults() -> Self {
         Self {
             max_size_gb: 10000,
             min_free_space_gb: 1000,
@@ -33,7 +33,7 @@ impl CapacityLimits {
         }
     }
 
-    pub const fn cold_tier_defaults() -> Self {
+    pub fn cold_tier_defaults() -> Self {
         Self {
             max_size_gb: 100000,
             min_free_space_gb: 10000,
@@ -124,7 +124,7 @@ impl Default for TierConfigurations {
 
 impl TierConfigurations {
     /// Create production-optimized tier configurations
-    pub const fn production_tiers() -> Self {
+    pub fn production_tiers() -> Self {
         Self {
             hot: TierConfig::hot_tier_production(),
             warm: TierConfig::warm_tier_production(),
@@ -133,7 +133,7 @@ impl TierConfigurations {
     }
 
     /// Auto-detect tier configurations for a given pool
-    pub const fn auto_detect_tiers(pool_name: &str) -> Self {
+    pub fn auto_detect_tiers(pool_name: &str) -> Self {
         Self {
             hot: TierConfig::auto_detect_hot(pool_name),
             warm: TierConfig::auto_detect_warm(pool_name),
@@ -365,7 +365,7 @@ impl TierConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<(), String>  {
+    pub fn validate(&self) -> Result<(), String> {
         if self.name.is_empty() {
             return Err(ERROR_TIER_NAME_EMPTY.to_string());
         }

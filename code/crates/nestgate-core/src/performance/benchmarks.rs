@@ -216,7 +216,7 @@ fn simulate_arc_dyn_overhead(iterations: usize) -> u64 {
 
     // Add 40-60% overhead to represent realistic Arc<dyn> costs
     let base_time = start.elapsed().as_nanos() as u64;
-    (f64::from(base_time) * 1.5) as u64 // 50% overhead simulation
+    (base_time as f64 * 1.5) as u64 // 50% overhead simulation
 }
 
 /// Simulate async_trait overhead for comparison
@@ -233,5 +233,5 @@ fn simulate_async_trait_overhead(iterations: usize) -> u64 {
 
     // Add 30-45% overhead for async_trait costs
     let base_time = start.elapsed().as_nanos() as u64;
-    (f64::from(base_time) * 1.35) as u64 // 35% overhead simulation
+    (base_time as f64 * 1.35) as u64 // 35% overhead simulation
 }

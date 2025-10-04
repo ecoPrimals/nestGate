@@ -115,7 +115,7 @@ impl Default for EventHandler {
 
 impl UnifiedEvent {
     /// Create a new event
-    pub const fn new(event_type: &str, source: &str) -> Self {
+    pub fn new(event_type: &str, source: &str) -> Self {
         Self {
             event_type: event_type.to_string(),
             source: source.to_string(),
@@ -152,21 +152,21 @@ impl UnifiedEvent {
     }
 
     /// Create a critical event
-    pub const fn critical(event_type: &str, source: &str, data: serde_json::Value) -> Self {
+    pub fn critical(event_type: &str, source: &str, data: serde_json::Value) -> Self {
         Self::new(event_type, source)
             .with_data(data)
             .with_priority(EventPriority::Critical)
     }
 
     /// Create a high priority event
-    pub const fn high_priority(event_type: &str, source: &str, data: serde_json::Value) -> Self {
+    pub fn high_priority(event_type: &str, source: &str, data: serde_json::Value) -> Self {
         Self::new(event_type, source)
             .with_data(data)
             .with_priority(EventPriority::High)
     }
 
     /// Check if event matches subscription criteria
-    pub const fn matches_subscription(&self, subscription: &EventSubscription) -> bool {
+    pub fn matches_subscription(&self, subscription: &EventSubscription) -> bool {
         // Check if event type matches
         if !subscription.event_types.contains(&self.event_type) {
             return false;

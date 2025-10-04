@@ -290,17 +290,17 @@ impl Default for WebhookConfig {
 
 impl MonitoringConfig {
     /// Check if Prometheus is enabled
-    pub const fn is_prometheus_enabled(&self) -> bool {
+    pub fn is_prometheus_enabled(&self) -> bool {
         self.prometheus.as_ref().is_some_and(|p| p.enabled)
     }
 
     /// Check if alerting is enabled
-    pub const fn is_alerting_enabled(&self) -> bool {
+    pub fn is_alerting_enabled(&self) -> bool {
         self.alerts.enabled
     }
 
     /// Get Prometheus port if enabled
-    pub const fn prometheus_port(&self) -> Option<u16> {
+    pub fn prometheus_port(&self) -> Option<u16> {
         self.prometheus.as_ref().and_then(|p| {
             if p.enabled && p.port > 0 {
                 Some(p.port)
@@ -311,7 +311,7 @@ impl MonitoringConfig {
     }
 
     /// Get Prometheus metrics path
-    pub const fn prometheus_path(&self) -> String {
+    pub fn prometheus_path(&self) -> String {
         self.prometheus
             .as_ref()
             .map(|p| p.path.clone())
@@ -326,7 +326,7 @@ impl MonitoringConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<(), String>  {
+        pub fn validate(&self) -> Result<(), String>  {
         // Validate metrics interval
         if self.metrics_interval == 0 {
             return Err(ERROR_METRICS_INTERVAL_ZERO.to_string());
@@ -364,7 +364,7 @@ impl MonitoringConfig {
 
 impl AlertConfig {
     /// Check if any notification method is configured
-    pub const fn has_notifications(&self) -> bool {
+    pub fn has_notifications(&self) -> bool {
         self.notifications.email.is_some()
             || self.notifications.slack.is_some()
             || self.notifications.webhook.is_some()
@@ -378,7 +378,7 @@ impl AlertConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<(), String>  {
+        pub fn validate(&self) -> Result<(), String>  {
         // Validate thresholds
         self.thresholds.validate()?;
 
@@ -394,7 +394,7 @@ impl AlertConfig {
 
 impl AlertThresholds {
     /// Check if a threshold is exceeded
-    pub const fn is_threshold_exceeded(&self, metric: &str, value: f64) -> bool {
+    pub fn is_threshold_exceeded(&self, metric: &str, value: f64) -> bool {
         match metric {
             "cpu" => value > self.cpu_threshold,
             "memory" => value > self.memory_threshold,
@@ -406,7 +406,7 @@ impl AlertThresholds {
     }
 
     /// Get threshold value for a metric
-    pub const fn get_threshold(&self, metric: &str) -> Option<f64> {
+    pub fn get_threshold(&self, metric: &str) -> Option<f64> {
         match metric {
             "cpu" => Some(self.cpu_threshold),
             "memory" => Some(self.memory_threshold),
@@ -470,7 +470,7 @@ impl AlertThresholds {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<(), String>  {
+        pub fn validate(&self) -> Result<(), String>  {
         if self.cpu_threshold < 0.0 || self.cpu_threshold > 100.0 {
             return Err(ERROR_CPU_THRESHOLD_RANGE.to_string());
         }
@@ -496,17 +496,17 @@ impl AlertThresholds {
 
 impl NotificationConfig {
     /// Check if email notifications are configured
-    pub const fn has_email(&self) -> bool {
+    pub fn has_email(&self) -> bool {
         self.email.is_some()
     }
 
     /// Check if Slack notifications are configured
-    pub const fn has_slack(&self) -> bool {
+    pub fn has_slack(&self) -> bool {
         self.slack.is_some()
     }
 
     /// Check if webhook notifications are configured
-    pub const fn has_webhook(&self) -> bool {
+    pub fn has_webhook(&self) -> bool {
         self.webhook.is_some()
     }
 
@@ -518,7 +518,7 @@ impl NotificationConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<(), String>  {
+        pub fn validate(&self) -> Result<(), String>  {
         // Validate email configuration
         if let Some(email) = &self.email {
             email.validate()?;
@@ -546,7 +546,7 @@ impl EmailConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<(), String>  {
+        pub fn validate(&self) -> Result<(), String>  {
         if self.smtp_server.is_empty() {
             return Err(ERROR_SMTP_SERVER_EMPTY.to_string());
         }
@@ -575,7 +575,7 @@ impl SlackConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<(), String>  {
+        pub fn validate(&self) -> Result<(), String>  {
         if self.webhook_url.is_empty() {
             return Err(ERROR_SLACK_WEBHOOK_EMPTY.to_string());
         }
@@ -600,7 +600,7 @@ impl WebhookConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<(), String>  {
+        pub fn validate(&self) -> Result<(), String>  {
         if self.url.is_empty() {
             return Err(ERROR_WEBHOOK_URL_EMPTY.to_string());
         }

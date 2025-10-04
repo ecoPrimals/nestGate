@@ -21,7 +21,7 @@ pub async fn get_configuration(
     }))
 }
 /// Update service configuration
-pub const fn update_configuration(
+pub fn update_configuration(
     _service: &NativeZfsService,
     config: serde_json::Value,
 ) -> UniversalZfsResult<()> {
@@ -65,7 +65,7 @@ pub const fn update_configuration(
 }
 
 /// Shutdown the service
-pub const fn shutdown(_service: &NativeZfsService) -> UniversalZfsResult<()> {
+pub fn shutdown(_service: &NativeZfsService) -> UniversalZfsResult<()> {
     info!("Shutting down native ZFS service");
     Ok(())
 }

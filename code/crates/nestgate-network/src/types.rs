@@ -94,7 +94,7 @@ pub struct ConnectionInfo {
 }
 impl ConnectionInfo {
     /// Create a new connection info
-    pub const fn new(id: String, endpoint: SocketAddr) -> Self {
+    pub fn new(id: String, endpoint: SocketAddr) -> Self {
         Self {
             id,
             endpoint,
@@ -106,27 +106,27 @@ impl ConnectionInfo {
     }
 
     /// Get connection ID
-    pub const fn id(&self) -> &str {
+    pub fn id(&self) -> &str {
         &self.id
     }
 
     /// Get connection address
-    pub const fn address(&self) -> SocketAddr {
+    pub fn address(&self) -> SocketAddr {
         self.endpoint
     }
 
     /// Get connection age
-    pub const fn age(&self) -> Duration {
+    pub fn age(&self) -> Duration {
         self.established_at.elapsed().unwrap_or_default()
     }
 
     /// Check if connection is active
-    pub const fn is_active(&self) -> bool {
+    pub fn is_active(&self) -> bool {
         matches!(self.status, ConnectionStatus::Active)
     }
 
     /// Get connection status
-    pub const fn status(&self) -> &ConnectionStatus {
+    pub fn status(&self) -> &ConnectionStatus {
         &self.status
     }
 
@@ -194,37 +194,37 @@ impl ServiceInfo {
     }
 
     /// Get service ID
-    pub const fn id(&self) -> &str {
+    pub fn id(&self) -> &str {
         &self.id
     }
 
     /// Get service name
-    pub const fn name(&self) -> &str {
+    pub fn name(&self) -> &str {
         &self.name
     }
 
     /// Get service address
-    pub const fn address(&self) -> SocketAddr {
+    pub fn address(&self) -> SocketAddr {
         self.endpoint
     }
 
     /// Get health status
-    pub const fn health_status(&self) -> &HealthStatus {
+    pub fn health_status(&self) -> &HealthStatus {
         &self.health_status
     }
 
     /// Get registration time
-    pub const fn registered_at(&self) -> SystemTime {
+    pub fn registered_at(&self) -> SystemTime {
         self.registered_at
     }
 
     /// Get metadata
-    pub const fn metadata(&self) -> &HashMap<String, String> {
+    pub fn metadata(&self) -> &HashMap<String, String> {
         &self.metadata
     }
 
     /// Check if service is healthy
-    pub const fn is_healthy(&self) -> bool {
+    pub fn is_healthy(&self) -> bool {
         matches!(self.health_status, HealthStatus::Healthy)
     }
 
@@ -239,7 +239,7 @@ impl ServiceInfo {
     }
 
     /// Get service age
-    pub const fn age(&self) -> Duration {
+    pub fn age(&self) -> Duration {
         self.registered_at.elapsed().unwrap_or_default()
     }
 }
@@ -310,7 +310,7 @@ pub struct NetworkConfigBuilder {
 }
 impl NetworkConfigBuilder {
     /// Create a new configuration builder
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: NetworkConfig::default(),
         }
@@ -319,7 +319,7 @@ impl NetworkConfigBuilder {
     /// Set host
     #[must_use]
     pub fn host(mut self, host: impl Into<String>) -> Self {
-        self.config.network.bind_endpoint = host.into().parse().unwrap_or(
+        self.config.network.api.bind_address = host.into().parse().unwrap_or(
             std::env::var("NESTGATE_BIND_ADDRESS")
                 .unwrap_or_else(|_| {
                     std::env::var("NESTGATE_HOSTNAME")
@@ -334,20 +334,20 @@ impl NetworkConfigBuilder {
     /// Set port
     #[must_use]
     pub fn port(mut self, port: u16) -> Self {
-        self.config.network.port = port;
+        self.config.network.api.port = port;
         self
     }
 
     /// Set max connections
     #[must_use]
     pub fn max_connections(mut self, max_connections: u32) -> Self {
-        self.config.network.max_connections = max_connections as usize;
+        self.config.network.api.max_connections = max_connections;
         self
     }
     /// Set connection timeout
     #[must_use]
     pub fn connection_timeout(mut self, timeout_seconds: u64) -> Self {
-        self.config.network.connection_timeout = Duration::from_secs(timeout_seconds);
+        self.config.network.api.connection_timeout = Duration::from_secs(timeout_seconds);
         self
     }
 
@@ -361,7 +361,9 @@ impl NetworkConfigBuilder {
     /// Enable/disable keep-alive
     #[must_use]
     pub fn keep_alive(mut self, enabled: bool) -> Self {
-        self.config.network.keep_alive = enabled;
+        // Note: keep_alive is not a direct field in NetworkApiConfig
+        // This may need to be stored elsewhere or removed
+        // self.config.network.api.keep_alive = enabled;
         self
     }
 
@@ -373,7 +375,7 @@ impl NetworkConfigBuilder {
     }
 
     /// Build the configuration
-    pub const fn build(self) -> NetworkConfig {
+    pub fn build(self) -> NetworkConfig {
         self.config
     }
 }

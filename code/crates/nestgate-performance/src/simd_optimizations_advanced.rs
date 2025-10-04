@@ -29,7 +29,7 @@ pub struct SimdBulkProcessor<const BUFFER_SIZE: usize = 8192> {
 }
 impl<const BUFFER_SIZE: usize> SimdBulkProcessor<BUFFER_SIZE> {
     /// Create new SIMD processor with compile-time buffer size
-    pub const fn new() -> Self { Self {
+    pub fn new() -> Self { Self {
             _phantom: PhantomData,
          }
 
@@ -68,7 +68,7 @@ pub struct SimdStorageBackend<const BUFFER_SIZE: usize = 8192> {
 }
 impl<const BUFFER_SIZE: usize> SimdStorageBackend<BUFFER_SIZE> {
     /// Create new SIMD storage backend
-    pub const fn new(base_path: String) -> Self { Self {
+    pub fn new(base_path: String) -> Self { Self {
             base_path,
             processor: SimdBulkProcessor::new(),
          }
@@ -194,7 +194,7 @@ pub struct SimdBatchProcessor<const BATCH_SIZE: usize = 1024> {
 }
 impl<const BATCH_SIZE: usize> SimdBatchProcessor<BATCH_SIZE> {
     /// Create new batch processor
-    pub const fn new() -> Self { Self {
+    pub fn new() -> Self { Self {
             _phantom: PhantomData,
          }
 

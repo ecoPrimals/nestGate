@@ -19,7 +19,7 @@ pub struct ProductionZfsService {
     max_snapshots: usize,
     }
 impl ProductionZfsService {
-    pub const fn new() -> Self { Self {
+    pub fn new() -> Self { Self {
             service_name: "ProductionZfsService".to_string(),
             service_version: "1.0.0".to_string(),
             max_pools: 1000,

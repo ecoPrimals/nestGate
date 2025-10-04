@@ -32,6 +32,8 @@ pub struct MinimalSystemConfig {
     pub dev_mode: bool,
 }
 
+/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
+#[deprecated(since = "0.9.0", note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead")]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MinimalNetworkConfig {
     /// API server host
@@ -137,6 +139,8 @@ pub trait MinimalService: Send + Sync {
     async fn shutdown(&self) -> MinimalResult<()>;
 }
 /// Minimal storage trait that compiles
+/// **DEPRECATED**: Minimal trait being replaced by comprehensive canonical storage
+#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalStorage or crate::traits::unified_storage::UnifiedStorage")]
 pub trait MinimalStorage: Send + Sync {
     /// Read data
     
@@ -148,7 +152,7 @@ pub trait MinimalStorage: Send + Sync {
 
 impl MinimalUnifiedConfig {
     /// Validate configuration
-    pub const fn validate(&self) -> MinimalResult<()> {
+    pub fn validate(&self) -> MinimalResult<()> {
         if self.system.instance_name.is_empty() {
             return Err(MinimalUnifiedError::Config {
                 message: "Instance name cannot be empty".to_string(),
@@ -178,7 +182,7 @@ pub struct MigrationBridge {
 }
 impl MigrationBridge {
     /// Create from legacy configuration
-    pub const fn from_legacy(legacy_config: &str) -> MinimalResult<Self> {
+    pub fn from_legacy(legacy_config: &str) -> MinimalResult<Self> {
         // Simple migration logic
         Ok(Self {
             minimal_config: MinimalUnifiedConfig::default(),
@@ -186,7 +190,7 @@ impl MigrationBridge {
     }
 
     /// Convert to full unified config when ready
-    pub const fn to_full_unified(&self) -> MinimalResult<String> {
+    pub fn to_full_unified(&self) -> MinimalResult<String> {
         // Placeholder for future full conversion
         Ok("Full unified config conversion pending".to_string())
     }

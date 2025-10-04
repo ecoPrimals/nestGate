@@ -35,7 +35,7 @@ pub struct MemoryStats {
 }
 
 impl MemoryStats {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
     
@@ -67,19 +67,19 @@ impl MemoryStats {
     }
     
     /// Get memory efficiency ratio (deallocations / allocations)
-    pub const fn efficiency_ratio(&self) -> f64 {
+    pub fn efficiency_ratio(&self) -> f64 {
         let allocs = self.total_allocations.load(Ordering::Relaxed) as f64;
         let deallocs = self.total_deallocations.load(Ordering::Relaxed) as f64;
         if allocs > 0.0 { deallocs / allocs } else { 0.0 }
     }
     
     /// Check if there are potential memory leaks
-    pub const fn has_potential_leaks(&self) -> bool {
+    pub fn has_potential_leaks(&self) -> bool {
         let active = self.active_allocations.load(Ordering::Relaxed);
         let total = self.total_allocations.load(Ordering::Relaxed);
         
         // If more than 10% of allocations are still active, potential leak
-        active > 0 && (f64::from(active) / f64::from(total)) > 0.1
+        active > 0 && (active as f64 / total as f64) > 0.1
     }
 }
 
@@ -141,11 +141,11 @@ impl<T> ObjectPool<T> {
     }
     
     /// Get pool statistics
-    pub const fn stats(&self) -> (u64, u64, f64) {
+    pub fn stats(&self) -> (u64, u64, f64) {
         let hits = self.stats.hits.load(Ordering::Relaxed);
         let misses = self.stats.misses.load(Ordering::Relaxed);
         let total = hits + misses;
-        let hit_rate = if total > 0 { f64::from(hits) / f64::from(total) } else { 0.0 };
+        let hit_rate = if total > 0 { hits as f64 / total as f64 } else { 0.0 };
         (hits, misses, hit_rate)
     }
 }
@@ -223,11 +223,11 @@ where
     }
     
     /// Get cache statistics
-    pub const fn stats(&self) -> (u64, u64, f64, usize) {
+    pub fn stats(&self) -> (u64, u64, f64, usize) {
         let hits = self.stats.hits.load(Ordering::Relaxed);
         let misses = self.stats.misses.load(Ordering::Relaxed);
         let total = hits + misses;
-        let hit_rate = if total > 0 { f64::from(hits) / f64::from(total) } else { 0.0 };
+        let hit_rate = if total > 0 { hits as f64 / total as f64 } else { 0.0 };
         let size = self.cache.lock().unwrap().len();
         (hits, misses, hit_rate, size)
     }
@@ -358,7 +358,7 @@ impl MemoryArena {
     }
     
     /// Get total allocations made
-    pub const fn allocation_count(&self) -> usize {
+    pub fn allocation_count(&self) -> usize {
         self.allocation_count.load(Ordering::Relaxed)
     }
 }
@@ -439,7 +439,7 @@ impl MemoryProfiler {
         
         info.count += 1;
         info.total_size += size as u64;
-        info.average_size = info.f64::from(total_size) / info.f64::from(count);
+        info.average_size = info.total_size as f64 / info.count as f64;
         info.last_allocation = Instant::now();
     }
     
@@ -530,7 +530,7 @@ impl MemoryReport {
                 i + 1,
                 category.category,
                 category.allocation_count,
-                category.f64::from(total_bytes) / 1024.0,
+                category.total_bytes as f64 / 1024.0,
                 category.average_bytes / 1024.0
             );
         }

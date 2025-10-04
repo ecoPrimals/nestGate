@@ -80,7 +80,7 @@ impl StandardsIntegrationDemo {
     }
 
     /// Demonstrate AI-First API usage
-    pub const fn demo_ai_first_api(&self) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    pub fn demo_ai_first_api(&self) -> std::result::Result<(), Box<dyn std::error::Error>> {
         println!("🤖 AI-First API Demo");
 
         // Create a sample ZFS pool list request
@@ -167,7 +167,7 @@ impl StandardsIntegrationDemo {
     }
 
     /// Demonstrate Ecosystem Integration
-    pub const fn demo_ecosystem_integration(&self) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    pub fn demo_ecosystem_integration(&self) -> std::result::Result<(), Box<dyn std::error::Error>> {
         println!("🌐 Ecosystem Integration Demo");
 
         let registration = &self.ecosystem_manager.service_registration;
@@ -240,7 +240,7 @@ impl StandardsIntegrationDemo {
     }
 
     /// Demonstrate EcoPrimal SDK Integration
-    pub const fn demo_ecoprimal_sdk(&self) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    pub fn demo_ecoprimal_sdk(&self) -> std::result::Result<(), Box<dyn std::error::Error>> {
         println!("🌱 EcoPrimal SDK Demo");
 
         // Display primal _metadata
@@ -303,8 +303,8 @@ impl StandardsIntegrationDemo {
         );
         println!(
             "    - Success Rate: {:.2}%",
-            (metrics.request_metrics.f64::from(successful_requests)
-                / metrics.request_metrics.f64::from(total_requests))
+            (metrics.request_metrics.successful_requests as f64
+                / metrics.request_metrics.total_requests as f64)
                 * 100.0
         );
 

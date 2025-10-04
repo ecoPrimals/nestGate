@@ -22,7 +22,7 @@ pub struct RequestValidator {
 }
 impl RequestValidator {
     /// Create new request validator
-    pub const fn new(config: ValidationConfig) -> Self {
+    pub fn new(config: ValidationConfig) -> Self {
         let sql_injection_patterns = vec![
             regex::Regex::new(r"(?i)(union\s+select|select\s+.*\s+from|drop\s+table|delete\s+from|insert\s+into)").unwrap(),
             regex::Regex::new(r"(?i)(\'\s*or\s+\'\s*1\s*=\s*1|--|\#|/\*|\*/)").unwrap(),

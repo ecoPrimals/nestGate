@@ -27,7 +27,7 @@ impl AuthService {
         }
     }
 
-    pub const fn authenticate(
+    pub fn authenticate(
         &self,
         _credentials: &nestgate_core::universal_traits::Credentials,
     ) -> bool {
@@ -35,7 +35,7 @@ impl AuthService {
         true
     }
 
-    pub const fn get_auth_status(&self) -> AuthStatus {
+    pub fn get_auth_status(&self) -> AuthStatus {
         AuthStatus {
             authenticated: true,
             user_id: Some("stub_user".to_string()),
@@ -43,12 +43,12 @@ impl AuthService {
         }
     }
 
-    pub const fn security_primal_available(&self) -> bool {
+    pub fn security_primal_available(&self) -> bool {
         // Stub - assume available
         true
     }
 
-    pub const fn get_mode(&self) -> AuthMode {
+    pub fn get_mode(&self) -> AuthMode {
         AuthMode::Development
     }
 }
@@ -105,7 +105,7 @@ pub struct AuthResponse {
     pub message: String,
 }
 /// Authentication router
-pub const fn auth_router() -> Router<crate::routes::AppState> {
+pub fn auth_router() -> Router<crate::routes::AppState> {
     Router::new()
         .route("/login", post(login))
         .route("/status", get(get_status))

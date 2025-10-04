@@ -1,7 +1,9 @@
 use crate::unified_types::{
-    UnifiedMemoryConfig, UnifiedMonitoringConfig, UnifiedNetworkConfig, UnifiedSecurityConfig,
-    UnifiedServiceConfig, UnifiedStorageConfig,
+    UnifiedMemoryConfig, UnifiedMonitoringConfig, UnifiedSecurityConfig, UnifiedServiceConfig,
+    UnifiedStorageConfig,
 };
+// Use canonical NetworkConfig
+use crate::config::canonical_master::domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig;
 /// Unified Configuration Consolidation Module
 /// This module provides standardized patterns and utilities for consolidating
 /// the 50+ fragmented Config structs across the codebase into unified patterns.
@@ -78,7 +80,7 @@ where
     }
 
     /// Get the domain-specific extensions
-    pub const fn extensions(&self) -> &T {
+    pub fn extensions(&self) -> &T {
         &self.extensions
     }
 
@@ -93,7 +95,7 @@ where
     }
 
     /// Get a service endpoint
-    pub const fn get_endpoint(&self, name: &str) -> Option<&String> {
+    pub fn get_endpoint(&self, name: &str) -> Option<&String> {
         self.service_endpoints.get(name)
     }
 
@@ -108,12 +110,12 @@ where
     }
 
     /// Check if a feature is enabled
-    pub const fn is_feature_enabled(&self, feature: &str) -> bool {
+    pub fn is_feature_enabled(&self, feature: &str) -> bool {
         self.feature_flags.get(feature).copied().unwrap_or(false)
     }
 
     /// Validate the configuration
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         // Validate base configurations
         // This would call validation methods on each unified config
         // For now, we'll do basic validation
@@ -319,7 +321,7 @@ pub mod migration {
     use super::*;
     /// Convert legacy ZFS configs to unified pattern
     #[must_use]
-    pub const fn migrate_zfs_config(
+    pub fn migrate_zfs_config(
         legacy_fields: HashMap<String, serde_json::Value>,
     ) -> UnifiedZfsConfig {
         let extensions = ZfsExtensions {
@@ -354,7 +356,7 @@ pub mod migration {
 
     /// Convert legacy NAS configs to unified pattern
     #[must_use]
-    pub const fn migrate_nas_config(
+    pub fn migrate_nas_config(
         legacy_fields: HashMap<String, serde_json::Value>,
     ) -> UnifiedNasConfig {
         let extensions = NasExtensions {
@@ -384,7 +386,7 @@ pub mod migration {
 
     /// Convert legacy MCP configs to unified pattern
     #[must_use]
-    pub const fn migrate_mcp_config(
+    pub fn migrate_mcp_config(
         legacy_fields: HashMap<String, serde_json::Value>,
     ) -> UnifiedMcpConfig {
         let extensions = McpExtensions {
@@ -429,10 +431,10 @@ pub mod validation {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn validate_config<T>(config: &StandardDomainConfig<T>) -> Result<(), Vec<String>>
+    pub fn validate_config<T>(config: &StandardDomainConfig<T>) -> Result<(), Vec<String>>
     where
         T: Clone + Serialize + serde::de::DeserializeOwned,
-     {
+    {
         let mut errors = Vec::new();
 
         // Validate service configuration
@@ -445,11 +447,11 @@ pub mod validation {
         }
 
         // Validate network configuration
-        if config.network.bind_endpoint.to_string().is_empty() {
+        if config.network.api.bind_address.to_string().is_empty() {
             errors.push("Network host cannot be empty".to_string());
         }
 
-        if config.network.port == 0 {
+        if config.network.api.port == 0 {
             errors.push("Network port must be greater than 0".to_string());
         }
 

@@ -21,7 +21,7 @@ impl Default for CanonicalConfigBuilder {
 
 impl CanonicalConfigBuilder {
     /// Create a new builder with sensible defaults
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: CanonicalConfig::default(),
         }
@@ -65,7 +65,7 @@ impl CanonicalConfigBuilder {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn build(self) -> Result<CanonicalConfig>  {
+        pub fn build(self) -> Result<CanonicalConfig>  {
         super::validation::ConfigValidator::validate(&self.config)?;
         Ok(self.config)
     }

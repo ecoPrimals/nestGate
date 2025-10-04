@@ -36,7 +36,7 @@ pub struct ProductionSmartService {
 }
 impl ProductionSmartService {
     /// Create a new production service
-    pub const fn new(metadata: ServiceMetadata) -> Self {
+    pub fn new(metadata: ServiceMetadata) -> Self {
         let config = ProductionServiceConfig::default();
         let health_monitor = Arc::new(HealthMonitor::new(config.clone()));
         
@@ -51,7 +51,7 @@ impl ProductionSmartService {
     }
 
     /// Create with custom configuration
-    pub const fn with_config(metadata: ServiceMetadata, config: ProductionServiceConfig) -> Self {
+    pub fn with_config(metadata: ServiceMetadata, config: ProductionServiceConfig) -> Self {
         let health_monitor = Arc::new(HealthMonitor::new(config.clone()));
         
         Self {

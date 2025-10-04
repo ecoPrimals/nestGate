@@ -21,22 +21,22 @@ pub enum ZeroCopyBuffer<'a> {
 
 impl<'a> ZeroCopyBuffer<'a> {
     /// Create a zero-copy buffer from borrowed data
-    pub const fn borrowed(data: &'a [u8]) -> Self {
+    pub fn borrowed(data: &'a [u8]) -> Self {
         Self::Borrowed(data)
     }
 
     /// Create a zero-copy buffer from owned data
-    pub const fn owned(data: Vec<u8>) -> Self {
+    pub fn owned(data: Vec<u8>) -> Self {
         Self::Owned(data)
     }
 
     /// Create a zero-copy buffer from shared data
-    pub const fn shared(data: Bytes) -> Self {
+    pub fn shared(data: Bytes) -> Self {
         Self::Shared(data)
     }
 
     /// Get the data as a slice
-    pub const fn as_slice(&self) -> &[u8] {
+    pub fn as_slice(&self) -> &[u8] {
         match self {
             Self::Borrowed(data) => data,
             Self::Owned(data) => data.as_slice(),
@@ -45,7 +45,7 @@ impl<'a> ZeroCopyBuffer<'a> {
     }
 
     /// Get the length of the buffer
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         match self {
             Self::Borrowed(data) => data.len(),
             Self::Owned(data) => data.len(),
@@ -54,12 +54,12 @@ impl<'a> ZeroCopyBuffer<'a> {
     }
 
     /// Check if the buffer is empty
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
     /// Convert to owned bytes
-    pub const fn to_bytes(self) -> Bytes {
+    pub fn to_bytes(self) -> Bytes {
         match self {
             Self::Borrowed(data) => Bytes::copy_from_slice(data),
             Self::Owned(data) => Bytes::from(data),
@@ -103,7 +103,7 @@ pub struct PooledBuffer {
 
 impl PooledBuffer {
     /// Create a new pooled buffer
-    pub const fn new(capacity: usize) -> Self {
+    pub fn new(capacity: usize) -> Self {
         Self {
             data: Vec::with_capacity(capacity),
             capacity,
@@ -112,7 +112,7 @@ impl PooledBuffer {
     }
 
     /// Get the data as a slice
-    pub const fn as_slice(&self) -> &[u8] {
+    pub fn as_slice(&self) -> &[u8] {
         &self.data
     }
 
@@ -132,17 +132,17 @@ impl PooledBuffer {
     }
 
     /// Get the capacity
-    pub const fn capacity(&self) -> usize {
+    pub fn capacity(&self) -> usize {
         self.capacity
     }
 
     /// Get the current length
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.data.len()
     }
 
     /// Check if empty
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
 }

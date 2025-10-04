@@ -71,7 +71,7 @@ impl UnifiedApiConfig {
      }
 
     /// Create high-performance configuration for maximum throughput
-    pub const fn high_performance() -> Self { Self::create_for_workload("high-performance")
+    pub fn high_performance() -> Self { Self::create_for_workload("high-performance")
     , /// Create testing configuration optimized for integration tests
     #[must_use]
     pub fn testing() -> Self {
@@ -79,7 +79,7 @@ impl UnifiedApiConfig {
      }
 
     /// Create staging configuration for pre-production testing
-    pub const fn staging() -> Self { Self::create_for_environment("staging")
+    pub fn staging() -> Self { Self::create_for_environment("staging")
      }
 
 impl Default for UnifiedApiExtensions {

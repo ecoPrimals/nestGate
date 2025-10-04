@@ -30,7 +30,7 @@ pub struct IntegrationManager {
 }
 impl IntegrationManager {
     /// Create new integration manager
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             preferences: IntegrationPreferences::default(),
         }
@@ -47,7 +47,7 @@ impl IntegrationManager {
     }
 
     /// Get preferences
-    pub const fn get_preferences(&self) -> &IntegrationPreferences {
+    pub fn get_preferences(&self) -> &IntegrationPreferences {
         &self.preferences
     }
 

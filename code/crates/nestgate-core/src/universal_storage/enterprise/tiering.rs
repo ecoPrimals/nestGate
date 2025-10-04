@@ -92,7 +92,7 @@ impl TieringReport {
             .sum();
     }
 
-    pub const fn get_high_confidence_migrations(&self, min_confidence: f32) -> Vec<&TierMigration> {
+    pub fn get_high_confidence_migrations(&self, min_confidence: f32) -> Vec<&TierMigration> {
         self.recommended_migrations
             .iter()
             .filter(|m| m.confidence_score >= min_confidence)
@@ -146,17 +146,17 @@ impl AccessPattern {
         }
     }
 
-    pub const fn is_frequently_accessed(&self) -> bool {
+    pub fn is_frequently_accessed(&self) -> bool {
         self.access_count_last_30_days > 10
             || self.average_access_interval < Duration::from_secs(86400) // Daily
     }
 
-    pub const fn is_archive_candidate(&self) -> bool {
+    pub fn is_archive_candidate(&self) -> bool {
         self.access_count_last_90_days == 0
             || self.average_access_interval > Duration::from_secs(86400 * 90) // 90 days
     }
 
-    pub const fn get_tier_recommendation(&self) -> String {
+    pub fn get_tier_recommendation(&self) -> String {
         if self.access_count_last_30_days > 50 {
             "hot".to_string()
         } else if self.access_count_last_30_days > 5 {

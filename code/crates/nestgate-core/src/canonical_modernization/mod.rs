@@ -102,7 +102,8 @@ pub mod service_metadata {
 pub use canonical_constants::*;
 
 // Re-export from unified_types - only types that actually exist
-pub use unified_types::{UnifiedNetworkConfig, UnifiedServiceConfig};
+// pub use unified_types::{UnifiedNetworkConfig, UnifiedServiceConfig}; // UnifiedNetworkConfig removed - use canonical_master instead
+pub use unified_types::UnifiedServiceConfig;
 // Re-export from unified_enums - only enums that actually exist
 pub use crate::unified_enums::service_types::{UnifiedServiceState, UnifiedServiceType};
 // pub use zero_cost_traits::*; // Unused import

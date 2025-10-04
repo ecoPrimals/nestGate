@@ -14,6 +14,11 @@ pub trait ZeroCostCacheProvider<K, V> {
 }
 
 /// Zero-cost security provider trait
+/// **DEPRECATED**: Zero-cost security consolidated into unified traits
+#[deprecated(
+    since = "0.9.0",
+    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity with const generics"
+)]
 pub trait ZeroCostSecurityProvider<Token, Credentials> {
     /// Authenticate - compile-time specialization
     fn authenticate(&self, credentials: &Credentials)
@@ -25,6 +30,11 @@ pub trait ZeroCostSecurityProvider<Token, Credentials> {
 }
 
 /// Zero-cost storage provider trait
+/// **DEPRECATED**: Zero-cost storage consolidated into unified traits
+#[deprecated(
+    since = "0.9.0",
+    note = "Use crate::traits::unified_storage::UnifiedStorage with const generics for zero-cost patterns"
+)]
 pub trait ZeroCostStorageProvider<Key, Value> {
     /// Store value - no runtime overhead
     fn store(&self, key: Key, value: Value) -> Result<(), super::types::ZeroCostError>;

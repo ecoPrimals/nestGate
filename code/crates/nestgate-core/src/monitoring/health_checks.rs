@@ -25,12 +25,12 @@ pub enum HealthStatus {
 }
 impl HealthStatus {
     /// Check if the status indicates the system is operational
-    pub const fn is_operational(&self) -> bool {
+    pub fn is_operational(&self) -> bool {
         matches!(self, Self::Healthy | Self::Degraded { .. })
     }
 
     /// Get severity level (0 = healthy, 1 = degraded, 2 = unhealthy, 3 = unknown)
-    pub const fn severity_level(&self) -> u8 {
+    pub fn severity_level(&self) -> u8 {
         match self {
             HealthStatus::Healthy => 0,
             HealthStatus::Degraded { .. } => 1,

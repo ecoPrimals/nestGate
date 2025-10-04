@@ -5,7 +5,7 @@
 /// Placeholder for HuggingFace live provider
 pub struct HuggingFaceLiveProvider;
 impl HuggingFaceLiveProvider {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self
     }
 }

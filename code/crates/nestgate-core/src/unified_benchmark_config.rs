@@ -569,7 +569,7 @@ impl UnifiedBenchmarkConfig {
     }
 
     /// Builder pattern for custom benchmark configurations
-    pub const fn builder() -> UnifiedBenchmarkConfigBuilder {
+    pub fn builder() -> UnifiedBenchmarkConfigBuilder {
         UnifiedBenchmarkConfigBuilder::new()
     }
     }
@@ -579,7 +579,7 @@ pub struct UnifiedBenchmarkConfigBuilder {
     config: UnifiedBenchmarkConfig,
     }
 impl UnifiedBenchmarkConfigBuilder {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: UnifiedBenchmarkConfig::comprehensive(),
     }
@@ -639,7 +639,7 @@ impl UnifiedBenchmarkConfigBuilder {
         self
     }
 
-    pub const fn build(self) -> UnifiedBenchmarkConfig {
+    pub fn build(self) -> UnifiedBenchmarkConfig {
         self.config
     }
     }

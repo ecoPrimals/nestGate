@@ -112,7 +112,7 @@ pub struct PerformanceThresholds {
 }
 impl MigrationRules {
     /// Hot tier defaults
-    pub const fn hot_tier_defaults() -> Self {
+    pub fn hot_tier_defaults() -> Self {
         Self {
             enable_auto_migration: true,
             migration_schedule: MigrationSchedule::default(),
@@ -125,7 +125,7 @@ impl MigrationRules {
     }
 
     /// Warm tier defaults
-    pub const fn warm_tier_defaults() -> Self {
+    pub fn warm_tier_defaults() -> Self {
         Self {
             enable_auto_migration: true,
             migration_schedule: MigrationSchedule::default(),
@@ -138,7 +138,7 @@ impl MigrationRules {
     }
 
     /// Cold tier defaults
-    pub const fn cold_tier_defaults() -> Self {
+    pub fn cold_tier_defaults() -> Self {
         Self {
             enable_auto_migration: true,
             migration_schedule: MigrationSchedule::default(),

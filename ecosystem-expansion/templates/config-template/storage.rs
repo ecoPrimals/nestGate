@@ -1,27 +1,25 @@
 //! Storage and ZFS configuration structures
+//!
+//! **TEMPLATE NOTE**: This template demonstrates the canonical pattern.
+//! Use CanonicalStorageConfig from canonical_master/domains/storage_canonical
+//! for all new code.
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-/// Storage and ZFS configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct StorageConfig {
-    /// ZFS-specific configuration
-    pub zfs: ZfsConfig,
-    /// NAS protocol configuration
-    pub nas: NasConfig,
-    /// Storage tier configuration
-    pub tiers: TierConfig,
-    /// Storage performance configuration
-    pub performance: StoragePerformanceConfig,
-    // COMPATIBILITY: Add missing fields for legacy code
-    pub cache: CacheConfig,
-    /// Legacy field for compatibility
-    pub backend_type: String,
-    /// Legacy field for compatibility
-}
+// ==================== CANONICAL PATTERN ====================
 
-/// ZFS-specific configuration
+// **RECOMMENDED**: Use canonical storage configuration
+pub use nestgate_core::config::canonical_master::domains::storage_canonical::CanonicalStorageConfig;
+
+// **TYPE ALIAS PATTERN**: For module-specific naming
+pub type StorageConfig = CanonicalStorageConfig;
+
+// ==================== HELPER TYPES ====================
+// If you need simplified types for specific use cases, define them separately
+// and provide conversion functions to/from CanonicalStorageConfig
+
+/// ZFS-specific configuration (helper struct for compatibility)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsConfig {
     /// Default ZFS pool name
@@ -146,7 +144,6 @@ impl Default for CacheConfig {
                 .and_then(|v| v.parse().ok()),
             eviction_policy: std::env::var("NESTGATE_CACHE_EVICTION_POLICY")
                 .unwrap_or_else(|_| "lru".to_string()), // Least Recently Used by default
-            cache_dir: std::env::var("NESTGATE_CACHE_DIR")
             policy: std::env::var("NESTGATE_CACHE_POLICY").unwrap_or_else(|_| "lru".to_string()), // Compatibility alias
         }
     }

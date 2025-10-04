@@ -71,7 +71,7 @@ where
     Fallback: ZeroCostDataCapability,
 {
     /// Create new zero-cost data adapter with compile-time dispatch
-    pub const fn new(primary: Primary, fallback: Fallback) -> Self {
+    pub fn new(primary: Primary, fallback: Fallback) -> Self {
         Self {
             primary,
             fallback,
@@ -132,7 +132,7 @@ where
     }
     
     /// Get available capabilities - compile-time constant
-    pub const fn get_available_capabilities() -> &'static [&'static str] {
+    pub fn get_available_capabilities() -> &'static [&'static str] {
         &[Primary::CAPABILITY_TYPE, Fallback::CAPABILITY_TYPE]
     }
     
@@ -175,7 +175,7 @@ where
     Provider: ZeroCostDataCapability,
 {
     /// Create single provider adapter - zero cost construction
-    pub const fn new(provider: Provider) -> Self {
+    pub fn new(provider: Provider) -> Self {
         Self { provider }
     }
     
@@ -203,7 +203,7 @@ where
     }
     
     /// Get capability type - compile-time constant
-    pub const fn capability_type() -> &'static str {
+    pub fn capability_type() -> &'static str {
         Provider::CAPABILITY_TYPE
     }
 }

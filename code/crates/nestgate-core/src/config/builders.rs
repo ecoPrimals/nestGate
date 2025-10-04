@@ -15,7 +15,7 @@ pub struct ConfigBuilder {
 }
 impl ConfigBuilder {
     /// Create a new configuration builder
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: NestGateCanonicalConfig::default(),
         }
@@ -104,7 +104,7 @@ impl ConfigBuilder {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn build(self) -> Result<NestGateCanonicalConfig>  {
+        pub fn build(self) -> Result<NestGateCanonicalConfig>  {
         let config = self.config;
         config.validate()?;
         Ok(config)
@@ -120,7 +120,7 @@ impl Default for ConfigBuilder {
 // ==================== SECTION ====================
 
 /// Create production configuration
-pub const fn create_production_config() -> Result<NestGateCanonicalConfig> {
+pub fn create_production_config() -> Result<NestGateCanonicalConfig> {
     ConfigBuilder::new()
         .environment("production")
         .log_level(LogLevel::Warn)
@@ -128,7 +128,7 @@ pub const fn create_production_config() -> Result<NestGateCanonicalConfig> {
         .build()
 }
 /// Create development configuration
-pub const fn create_development_config() -> Result<NestGateCanonicalConfig> {
+pub fn create_development_config() -> Result<NestGateCanonicalConfig> {
     ConfigBuilder::new()
         .environment("development")
         .log_level(LogLevel::Debug)
@@ -136,7 +136,7 @@ pub const fn create_development_config() -> Result<NestGateCanonicalConfig> {
         .build()
 }
 /// Create testing configuration
-pub const fn create_testing_config() -> Result<NestGateCanonicalConfig> {
+pub fn create_testing_config() -> Result<NestGateCanonicalConfig> {
     ConfigBuilder::new()
         .environment("testing")
         .log_level(LogLevel::Info)
@@ -195,7 +195,7 @@ pub const fn create_testing_config() -> Result<NestGateCanonicalConfig> {
     }
 
     /// Generate migration report
-    pub const fn generate_report(&self) -> String {
+    pub fn generate_report(&self) -> String {
         format!(
             "Migration Report:\n\
              - Configurations migrated: {}\n\
@@ -292,11 +292,11 @@ impl ConfigValidator {
 /// This maintains compatibility with existing code while providing upgrade path
 pub type StandardNestGateConfig = NestGateCanonicalConfig<1000, 65536, 30000, 8080>;
 /// Create standard configuration for backward compatibility
-pub const fn create_standard_config() -> StandardNestGateConfig {
+pub fn create_standard_config() -> StandardNestGateConfig {
     StandardNestGateConfig::default()
 }
 /// Create configuration for specific environment
-pub const fn create_config_for_environment(env: &str) -> Result<NestGateCanonicalConfig> {
+pub fn create_config_for_environment(env: &str) -> Result<NestGateCanonicalConfig> {
     match env.to_lowercase().as_str() {
         "production" | "prod" => create_production_config(),
         "development" | "dev" => create_development_config(),

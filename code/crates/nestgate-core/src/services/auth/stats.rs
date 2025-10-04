@@ -7,7 +7,7 @@ pub struct StatsManager {
     stats: AuthStats,
 }
 impl StatsManager {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             stats: AuthStats::default(),
         }

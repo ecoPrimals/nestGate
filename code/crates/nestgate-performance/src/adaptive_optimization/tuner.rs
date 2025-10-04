@@ -9,7 +9,7 @@ pub struct AutoTuner {
 }
 
 impl AutoTuner {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             // Initialize fields
         }

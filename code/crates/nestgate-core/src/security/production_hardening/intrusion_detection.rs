@@ -27,7 +27,7 @@ pub struct IntrusionDetectionSystem {
 }
 impl IntrusionDetectionSystem {
     /// Create new intrusion detection system
-    pub const fn new(config: IntrusionDetectionConfig) -> Self {
+    pub fn new(config: IntrusionDetectionConfig) -> Self {
         let suspicious_patterns = vec![
             SuspiciousPattern {
                 name: "Port Scanning".to_string(),

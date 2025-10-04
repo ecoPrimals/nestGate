@@ -7,7 +7,7 @@ pub struct SecurityDomain {
     // Domain-specific state
     }
 impl SecurityDomain {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {}
     }
 

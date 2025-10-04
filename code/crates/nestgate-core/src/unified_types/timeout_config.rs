@@ -42,7 +42,7 @@ impl Default for UnifiedTimeoutConfig {
 impl UnifiedTimeoutConfig {
     /// Create a production-optimized timeout configuration
     #[must_use]
-    pub const fn production() -> Self {
+    pub fn production() -> Self {
         Self {
             default_timeout: Duration::from_secs(60),
             connection_timeout: Duration::from_secs(15),
@@ -57,7 +57,7 @@ impl UnifiedTimeoutConfig {
 
     /// Create a development-optimized timeout configuration
     #[must_use]
-    pub const fn development() -> Self {
+    pub fn development() -> Self {
         Self {
             default_timeout: Duration::from_secs(10),
             connection_timeout: Duration::from_secs(5),

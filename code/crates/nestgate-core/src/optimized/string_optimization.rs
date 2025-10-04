@@ -50,7 +50,7 @@ impl StringOptimizer {
     
     /// Create a flexible string that can be borrowed or owned
     /// Use this when you sometimes need ownership and sometimes don't
-    pub const fn flexible_string(input: &str, needs_ownership: bool) -> Cow<'_, str> {
+    pub fn flexible_string(input: &str, needs_ownership: bool) -> Cow<'_, str> {
         if needs_ownership {
             Cow::Owned(input.to_string())
         } else {
@@ -69,7 +69,7 @@ impl StringOptimizer {
     }
     
     /// Create a string with pre-allocated capacity
-    pub const fn with_capacity(capacity: usize) -> String {
+    pub fn with_capacity(capacity: usize) -> String {
         String::with_capacity(capacity)
     }
     
@@ -88,14 +88,14 @@ pub struct OptimizedStringBuilder {
 }
 impl OptimizedStringBuilder {
     /// Create a new builder with estimated capacity
-    pub const fn with_capacity(capacity: usize) -> Self {
+    pub fn with_capacity(capacity: usize) -> Self {
         Self {
             buffer: String::with_capacity(capacity),
         }
     }
     
     /// Create a new builder with default capacity
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::with_capacity(256) // Reasonable default
     }
     
@@ -118,22 +118,22 @@ impl OptimizedStringBuilder {
     }
     
     /// Get the current length
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.buffer.len()
     }
     
     /// Check if the builder is empty
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.buffer.is_empty()
     }
     
     /// Build the final string
-    pub const fn build(self) -> String {
+    pub fn build(self) -> String {
         self.buffer
     }
     
     /// Build and return as an Arc<str> for sharing
-    pub const fn build_shared(self) -> Arc<str> {
+    pub fn build_shared(self) -> Arc<str> {
         Arc::from(self.buffer.as_str())
     }
 }
@@ -148,12 +148,12 @@ impl Default for OptimizedStringBuilder {
 pub struct ZeroAllocString;
 impl ZeroAllocString {
     /// Check if a string matches a constant without allocation
-    pub const fn matches_constant(input: &str, constant: &'static str) -> bool {
+    pub fn matches_constant(input: &str, constant: &'static str) -> bool {
         input == constant
     }
     
     /// Get a string slice from a larger string without allocation
-    pub const fn substring(input: &str, start: usize, len: usize) -> &str {
+    pub fn substring(input: &str, start: usize, len: usize) -> &str {
         &input[start..start.min(input.len()).saturating_add(len).min(input.len())]
     }
     
@@ -183,7 +183,7 @@ impl ErrorMessages {
         )
     }
     
-    pub const fn config_error(field: &str, reason: &str) -> String {
+    pub fn config_error(field: &str, reason: &str) -> String {
         StringOptimizer::format_with_capacity(
             field.len() + reason.len() + 32,
             format_args!("Configuration error in field '{field}': {reason}")

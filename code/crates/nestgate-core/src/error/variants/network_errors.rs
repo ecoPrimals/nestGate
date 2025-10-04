@@ -6,7 +6,7 @@ use super::core_errors::*;
 
 impl NetworkErrorDetails {
     /// Create a network error with just a message
-    pub const fn new(message: impl Into<String>) -> Self {
+    pub fn new(message: impl Into<String>) -> Self {
         Self {
             message: message.into(),
             operation: None,
@@ -17,7 +17,7 @@ impl NetworkErrorDetails {
     }
 
     /// Create a network error with operation context
-    pub const fn with_operation(message: impl Into<String>, operation: impl Into<String>) -> Self {
+    pub fn with_operation(message: impl Into<String>, operation: impl Into<String>) -> Self {
         Self {
             message: message.into(),
             operation: Some(operation.into()),
@@ -28,7 +28,7 @@ impl NetworkErrorDetails {
     }
 
     /// Create a timeout error
-    pub const fn timeout(endpoint: impl Into<String>) -> Self {
+    pub fn timeout(endpoint: impl Into<String>) -> Self {
         let endpoint_str = endpoint.into();
         Self {
             message: format!("Network timeout for endpoint: {endpoint_str}"),

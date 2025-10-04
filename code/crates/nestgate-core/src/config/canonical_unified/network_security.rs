@@ -11,6 +11,8 @@ use crate::canonical_modernization::canonical_constants::{
 
 // ==================== SECTION ====================
 
+/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
+#[deprecated(since = "0.9.0", note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead")]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
 pub struct NetworkConfig {

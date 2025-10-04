@@ -20,6 +20,8 @@ pub struct UniversalSecurityWrapper {
     client: Option<Arc<dyn SecurityPrimalProvider>>,
 }
 /// Trait for any security client (Security, Vault, etc.)
+/// **DEPRECATED**: Client pattern consolidated into canonical security
+#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity with client adapter")]
 pub trait SecurityClient: Send + Sync {
     fn authenticate(&self, credentials: &Credentials) -> impl std::future::Future<Output = Result<AuthToken>> + Send;
     fn encrypt(&self, data: &[u8], algorithm: &str) -> impl std::future::Future<Output = Result<Vec<u8>> + Send;
@@ -30,7 +32,7 @@ pub trait SecurityClient: Send + Sync {
 }
 impl UniversalSecurityWrapper {
     /// Create a new universal security wrapper
-    pub const fn new(provider_name: String, endpoint: String, capabilities: Vec<String>) -> Self {
+    pub fn new(provider_name: String, endpoint: String, capabilities: Vec<String>) -> Self {
         Self {
             provider_name,
             endpoint,
@@ -47,7 +49,7 @@ impl UniversalSecurityWrapper {
     }
 
     /// Auto-detect security provider type from endpoint (capability-based)
-    pub const fn auto_detect_provider_type(endpoint: &str) -> String {
+    pub fn auto_detect_provider_type(endpoint: &str) -> String {
         // Use standard security ports for generic detection
         if endpoint.contains("8443") || endpoint.contains("https") {
             "secure-provider".to_string()
@@ -258,7 +260,7 @@ pub trait OrchestrationClient: Send + Sync {
     fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send;
 }
 impl UniversalOrchestrationWrapper {
-    pub const fn new(provider_name: String, endpoint: String, capabilities: Vec<String>) -> Self {
+    pub fn new(provider_name: String, endpoint: String, capabilities: Vec<String>) -> Self {
         Self {
             provider_name,
             endpoint,
@@ -273,7 +275,7 @@ impl UniversalOrchestrationWrapper {
         self
     }
 
-    pub const fn auto_detect_provider_type(endpoint: &str) -> String {
+    pub fn auto_detect_provider_type(endpoint: &str) -> String {
         // Use standard orchestration patterns for generic detection
         if endpoint.contains("8000") || endpoint.contains("orchestration") {
             "orchestration-provider".to_string()
@@ -378,7 +380,7 @@ pub trait ComputeClient: Send + Sync {
     fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send;
 }
 impl UniversalComputeWrapper {
-    pub const fn new(provider_name: String, endpoint: String, capabilities: Vec<String>) -> Self {
+    pub fn new(provider_name: String, endpoint: String, capabilities: Vec<String>) -> Self {
         Self {
             provider_name,
             endpoint,
@@ -393,7 +395,7 @@ impl UniversalComputeWrapper {
         self
     }
 
-    pub const fn auto_detect_provider_type(endpoint: &str) -> String {
+    pub fn auto_detect_provider_type(endpoint: &str) -> String {
         // Use standard compute patterns for generic detection
         if endpoint.contains("9000") || endpoint.contains("compute") {
             "compute-provider".to_string()
@@ -554,7 +556,7 @@ impl ComputePrimalProvider for UniversalComputeWrapper {
 pub struct UniversalProviderFactory;
 impl UniversalProviderFactory {
     /// Create a security provider from discovered primal info
-    pub const fn create_security_provider(
+    pub fn create_security_provider(
         provider_info: &crate::universal_adapter::discovery::DiscoveredPrimal,
     ) -> Arc<dyn SecurityPrimalProvider> {
         Arc::new(UniversalSecurityWrapper::new(
@@ -565,7 +567,7 @@ impl UniversalProviderFactory {
     }
 
     /// Create an orchestration provider from discovered primal info
-    pub const fn create_orchestration_provider(
+    pub fn create_orchestration_provider(
         provider_info: &crate::universal_adapter::discovery::DiscoveredPrimal,
     ) -> Arc<dyn OrchestrationPrimalProvider> {
         Arc::new(UniversalOrchestrationWrapper::new(
@@ -576,7 +578,7 @@ impl UniversalProviderFactory {
     }
 
     /// Create a compute provider from discovered primal info
-    pub const fn create_compute_provider(
+    pub fn create_compute_provider(
         provider_info: &crate::universal_adapter::discovery::DiscoveredPrimal,
     ) -> Arc<dyn ComputePrimalProvider> {
         Arc::new(UniversalComputeWrapper::new(

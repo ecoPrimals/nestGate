@@ -546,9 +546,7 @@ pub fn get_performance_analytics(
 }
 
 /// Trigger optimization (placeholder for future implementation)
-pub fn trigger_optimization(
-    State(_state): State<AppState>,
-) -> Result<StatusCode, StatusCode> {
+pub fn trigger_optimization(State(_state): State<AppState>) -> Result<StatusCode, StatusCode> {
     info!("⚡ API: Triggering ZFS optimization");
 
     // Placeholder implementation - would trigger actual optimization
@@ -650,7 +648,7 @@ pub struct ZfsHandlerImpl;
 
 impl ZfsHandlerImpl {
     /// Create a new ZFS handler instance
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self
     }
 }

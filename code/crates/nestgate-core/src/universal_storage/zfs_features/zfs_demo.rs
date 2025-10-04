@@ -23,7 +23,7 @@ pub struct ZfsFeaturesDemo {
 }
 impl ZfsFeaturesDemo {
     /// Create new demo instance
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self { engine: None }
     }
 

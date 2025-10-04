@@ -188,7 +188,7 @@ pub mod api_defaults {
     use super::*;
     /// Get default API domain constants
     #[must_use]
-    pub const fn constants() -> ApiDomainConstants {
+    pub fn constants() -> ApiDomainConstants {
         ApiDomainConstants::default()
     }
 

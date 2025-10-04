@@ -68,7 +68,7 @@ struct DevPool {
 impl DevPool {
     /// Create a new development pool
     #[allow(dead_code)]
-    pub const fn new(name: String, size_bytes: u64) -> Self {
+    pub fn new(name: String, size_bytes: u64) -> Self {
         Self {
             name,
             health: "ONLINE".to_string(),
@@ -79,23 +79,23 @@ impl DevPool {
     }
 
     #[allow(dead_code)]
-    pub const fn name(&self) -> &str {
+    pub fn name(&self) -> &str {
         &self.name
     }
     #[allow(dead_code)]
-    pub const fn health(&self) -> &str {
+    pub fn health(&self) -> &str {
         &self.health
     }
     #[allow(dead_code)]
-    pub const fn size_bytes(&self) -> u64 {
+    pub fn size_bytes(&self) -> u64 {
         self.size_bytes
     }
     #[allow(dead_code)]
-    pub const fn used_bytes(&self) -> u64 {
+    pub fn used_bytes(&self) -> u64 {
         self.used_bytes
     }
     #[allow(dead_code)]
-    pub const fn created_at(&self) -> std::time::SystemTime {
+    pub fn created_at(&self) -> std::time::SystemTime {
         self.created_at
     }
 }
@@ -131,39 +131,39 @@ impl DevDataset {
         }
     }
     /// Get dataset name
-    pub const fn name(&self) -> &str {
+    pub fn name(&self) -> &str {
         &self.name
     }
 
     /// Get parent pool
-    pub const fn pool(&self) -> &str {
+    pub fn pool(&self) -> &str {
         &self.pool
     }
 
     /// Get mount point
-    pub const fn mount_point(&self) -> &std::path::PathBuf {
+    pub fn mount_point(&self) -> &std::path::PathBuf {
         &self.mount_point
     }
 
     /// Get dataset size
-    pub const fn size_bytes(&self) -> u64 {
+    pub fn size_bytes(&self) -> u64 {
         self.size_bytes
     }
 
     /// Get storage tier
-    pub const fn tier(&self) -> &StorageTier {
+    pub fn tier(&self) -> &StorageTier {
         &self.tier
     }
 
     /// Get properties
-    pub const fn properties(&self) -> &HashMap<String, String> {
+    pub fn properties(&self) -> &HashMap<String, String> {
         &self.properties
     }
 }
 
 impl DevEnvironmentZfsService {
     /// Create new development environment ZFS service
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         let config = DevEnvironmentConfig::default();
 
         info!("🔧 Initializing Development Environment ZFS Compatibility Layer");
@@ -177,7 +177,7 @@ impl DevEnvironmentZfsService {
     }
 
     /// Create with custom configuration
-    pub const fn with_config(config: DevEnvironmentConfig) -> Self {
+    pub fn with_config(config: DevEnvironmentConfig) -> Self {
         info!("🔧 Initializing Development Environment ZFS with custom config");
         info!("📁 Base directory: {:?}", config.base_directory);
 
@@ -196,7 +196,7 @@ impl DevEnvironmentZfsService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn initialize(&self) -> Result<()>  {
+    pub async fn initialize(&self) -> Result<()> {
         if let Err(e) = tokio::fs::create_dir_all(&self.config.base_directory).await {
             warn!("Failed to create base directory: {}", e);
             return Err(create_zfs_error(

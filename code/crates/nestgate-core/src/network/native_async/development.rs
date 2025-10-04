@@ -32,7 +32,7 @@ impl NativeAsyncServiceDiscovery<1000, 60, 100, 120> for DevelopmentServiceDisco
         // Development registration - always succeed
         self.service_count
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        println!("DEV: Registered service {service.name}");
+        println!("DEV: Registered service {}", service.name);
         Ok(())
     }
 

@@ -187,7 +187,7 @@ impl OptimizationReport {
 }
 
 impl DeduplicationReport {
-    pub const fn calculate_savings_ratio(&self) -> f32 {
+    pub fn calculate_savings_ratio(&self) -> f32 {
         if self.total_size_bytes > 0 {
             self.f32::from(potential_savings_bytes) / self.f32::from(total_size_bytes)
         } else {

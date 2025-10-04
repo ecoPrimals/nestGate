@@ -100,7 +100,7 @@ async fn test_config_boundary_values() -> Result<(), Box<dyn std::error::Error>>
         (1, true),      // Minimum valid port
         (1023, true),   // Below privileged range
         (1024, true),   // Start of unprivileged range
-        (8080, true),   // Common port
+        (nestgate_core::constants::canonical::network::DEFAULT_API_PORT, true),   // Common port
         (65535, true),  // Maximum valid port
         (0, false),     // Invalid port
         (65536, false), // Above maximum port

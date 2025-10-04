@@ -21,12 +21,12 @@ pub struct AuthToken {
 }
 impl AuthToken {
     /// Check if token is expired
-    pub const fn is_expired(&self) -> bool {
+    pub fn is_expired(&self) -> bool {
         SystemTime::now() > self.expires_at
     }
 
     /// Check if token has required scope
-    pub const fn has_scope(&self, scope: &str) -> bool {
+    pub fn has_scope(&self, scope: &str) -> bool {
         self.scopes.contains(&scope.to_string())
     }
 }
@@ -95,7 +95,7 @@ impl AuthManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_token(&self, token: &str) -> Result<&AuthToken>  {
+        pub fn validate_token(&self, token: &str) -> Result<&AuthToken>  {
         self.tokens
             .get(token)
             .filter(|t| !t.is_expired())

@@ -42,7 +42,7 @@ impl SessionManager {
     }
 
     /// Get session
-    pub const fn get_session(&self, session_id: &str) -> Option<&Session> {
+    pub fn get_session(&self, session_id: &str) -> Option<&Session> {
         self.sessions.get(session_id)
     }
 

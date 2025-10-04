@@ -12,11 +12,11 @@ pub use implementations::*;
 pub use implementations::{ProductionZfsService, DevelopmentZfsService};
 
 //! Convenience function to create a production ZFS service
-pub const fn create_production_zfs_service() -> ProductionZfsService {
+pub fn create_production_zfs_service() -> ProductionZfsService {
     ProductionZfsService::new()
     }
 //! Convenience function to create a development ZFS service
-pub const fn create_development_zfs_service() -> DevelopmentZfsService {
+pub fn create_development_zfs_service() -> DevelopmentZfsService {
     DevelopmentZfsService::default()
     }
     #[cfg(test)]

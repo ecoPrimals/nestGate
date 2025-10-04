@@ -272,7 +272,7 @@ impl McpStreamingManager {
     }
 
     /// Get stream statistics
-    pub const fn get_stats(&self) -> StreamStatsSnapshot {
+    pub fn get_stats(&self) -> StreamStatsSnapshot {
         // For now, return a basic snapshot
         StreamStatsSnapshot {
             total_streams: 0,

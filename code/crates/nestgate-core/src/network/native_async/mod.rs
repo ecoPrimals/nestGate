@@ -21,8 +21,8 @@ pub use types::{
     NetworkResponse,
 };
 
-// **MIGRATED**: Using canonical config system instead of deprecated unified_types
-pub use crate::config::canonical_master::NetworkConfig as UnifiedNetworkConfig;
+// **MIGRATED**: Using canonical config system from domains/network
+pub use crate::config::canonical_master::domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig;
 
 pub use production::{
     // ProductionNetworkManager, ProductionServiceDiscovery, // These will be implemented as needed
@@ -73,7 +73,9 @@ mod tests {
             }
 
             pub(super) fn discover(&self, service_name: &str) -> Result<Vec<String>> {
-                self.services.get(service_name).map_or_else(|| Ok(vec![]), |endpoint| Ok(vec![endpoint.clone()]))
+                self.services
+                    .get(service_name)
+                    .map_or_else(|| Ok(vec![]), |endpoint| Ok(vec![endpoint.clone()]))
             }
         }
 

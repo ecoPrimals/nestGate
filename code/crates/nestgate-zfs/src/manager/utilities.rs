@@ -20,7 +20,7 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn _calculate_system_utilization(&self) -> Result<f64>  {
+    pub async fn _calculate_system_utilization(&self) -> Result<f64> {
         let pools = self.pool_manager.list_pools().await.map_err(|_e| {
             create_zfs_error(
                 format!("Failed to list pools: {"actual_error_details"}"),
@@ -56,14 +56,14 @@ impl ZfsManager {
         }
 
         if total_available > 0 {
-            Ok(f64::from(total_used) / f64::from(total_available))
+            Ok(total_used as f64 / total_available as f64)
         } else {
             Ok(0.0)
         }
     }
 
     /// Parse capacity information from status string
-    pub const fn _parse_capacity_from_status(&self, status: &str) -> Option<CapacityInfo> {
+    pub fn _parse_capacity_from_status(&self, status: &str) -> Option<CapacityInfo> {
         // Parse ZFS status output to extract capacity information
         debug!("Parsing ZFS status for capacity info");
 
@@ -143,7 +143,7 @@ impl ZfsManager {
     }
 
     /// Parse size value from lines like "size: 1.23T"
-    pub const fn _parse_sizevalue(&self, line: &str) -> Option<u64> {
+    pub fn _parse_sizevalue(&self, line: &str) -> Option<u64> {
         let parts: Vec<&str> = line.split(':').collect();
         if parts.len() >= 2 {
             let size_str = parts[1].trim();
@@ -154,7 +154,7 @@ impl ZfsManager {
     }
 
     /// Parse size from segment like "1.23T allocated" or "456G"
-    pub const fn _parse_size_from_segment(&self, segment: &str) -> Option<u64> {
+    pub fn _parse_size_from_segment(&self, segment: &str) -> Option<u64> {
         // Extract the size part (e.g., "1.23T" from "1.23T allocated")
         let size_str = segment.split_whitespace().next()?;
 
@@ -187,6 +187,6 @@ impl ZfsManager {
             _ => 1, // Default to bytes for unknown units
         };
 
-        Some((number * f64::from(multiplier)) as u64)
+        Some((number * multiplier as f64) as u64)
     }
 }

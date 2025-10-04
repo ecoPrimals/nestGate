@@ -40,17 +40,17 @@ impl Default for UnifiedHealthStatus {
 
 impl UnifiedHealthStatus {
     /// Check if the status indicates the component is operational
-    pub const fn is_operational(&self) -> bool {
+    pub fn is_operational(&self) -> bool {
         matches!(self, Self::Healthy | Self::Warning | Self::Degraded)
     }
 
     /// Check if the status requires immediate attention
-    pub const fn requires_attention(&self) -> bool {
+    pub fn requires_attention(&self) -> bool {
         matches!(self, Self::Unhealthy | Self::Critical)
     }
 
     /// Get the severity level (0 = healthy, 11 = critical)
-    pub const fn severity(&self) -> u8 {
+    pub fn severity(&self) -> u8 {
         match self {
             Self::Healthy => 0,
             Self::Warning => 1,
@@ -68,7 +68,7 @@ impl UnifiedHealthStatus {
     }
 
     /// Get priority level for health status (lower = higher priority)
-    pub const fn priority(&self) -> u8 {
+    pub fn priority(&self) -> u8 {
         match self {
             Self::Healthy => 0,
             Self::Warning => 1,

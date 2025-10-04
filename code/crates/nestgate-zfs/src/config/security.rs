@@ -61,7 +61,7 @@ impl Default for KeyManagementConfig {
 
 impl KeyManagementConfig {
     /// Create production-optimized key management configuration
-    pub const fn production() -> Self {
+    pub fn production() -> Self {
         Self {
             key_storage_path: PathBuf::from("/etc/nestgate/zfs/keys/production"),
             rotation_interval_days: 30,
@@ -114,7 +114,7 @@ impl AccessControlConfig {
 
 impl SecurityConfig {
     /// Create production-optimized security configuration
-    pub const fn production() -> Self {
+    pub fn production() -> Self {
         Self {
             enable_encryption: true,
             encryption_algorithm: "aes-256-gcm".to_string(),
