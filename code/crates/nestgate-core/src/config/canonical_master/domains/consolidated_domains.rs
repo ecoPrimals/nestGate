@@ -432,9 +432,9 @@ pub mod migration {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn migrate_from_legacy(
+    pub fn migrate_from_legacy(
         legacy_configs: HashMap<String, serde_json::Value>,
-    ) -> Result<ConsolidatedDomainConfigs>  {
+    ) -> Result<ConsolidatedDomainConfigs> {
         let mut domains = ConsolidatedDomainConfigs::default();
 
         // Migrate ZFS configurations

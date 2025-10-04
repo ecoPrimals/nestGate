@@ -46,7 +46,7 @@ pub struct ZfsDatasetManager {
 }
 impl ZfsDatasetManager {
     /// Create a new ZFS dataset manager
-    pub const fn new(config: ZfsConfig, pool_manager: Arc<ZfsPoolManager>) -> Self {
+    pub fn new(config: ZfsConfig, pool_manager: Arc<ZfsPoolManager>) -> Self {
         Self {
             config: Arc::new(config),
             pool_manager,
@@ -54,7 +54,10 @@ impl ZfsDatasetManager {
     }
 
     /// Create a new ZFS dataset manager with shared config (zero-copy)
-    pub const fn with_shared_config(config: Arc<ZfsConfig>, pool_manager: Arc<ZfsPoolManager>) -> Self {
+    pub fn with_shared_config(
+        config: Arc<ZfsConfig>,
+        pool_manager: Arc<ZfsPoolManager>,
+    ) -> Self {
         Self {
             config,
             pool_manager,
@@ -63,7 +66,7 @@ impl ZfsDatasetManager {
 
     /// Create dataset manager for testing
     #[cfg(test)]
-    pub const fn new_for_testing() -> Self {
+    pub fn new_for_testing() -> Self {
         Self {
             config: Arc::new(ZfsConfig::default()),
             pool_manager: Arc::new(ZfsPoolManager::new_for_testing()),
@@ -78,12 +81,12 @@ impl ZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn create_dataset(
+    pub fn create_dataset(
         &self,
         name: &str,
         parent: &str,
         tier: CoreStorageTier,
-    ) -> Result<DatasetInfo>  {
+    ) -> Result<DatasetInfo> {
         info!("Creating dataset: {}/{} on tier: {:?}", parent, name, tier);
 
         let dataset_path = format!("{parent}/{"actual_error_details"}");
@@ -211,7 +214,7 @@ impl ZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_dataset_info(&self, name: &str) -> Result<DatasetInfo>  {
+    pub async fn get_dataset_info(&self, name: &str) -> Result<DatasetInfo> {
         self.get_dataset_info_with_fallback(name).await
     }
 
@@ -287,8 +290,8 @@ impl ZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn create_dataset_with_config(&self, name: &str, parent: &str) -> Result<()>  {
+    #[must_use]
+    pub fn create_dataset_with_config(&self, name: &str, parent: &str) -> Result<()> {
         tracing::info!("Creating dataset: {}/{}", parent, name);
 
         let full_name = format!("{parent}/{"actual_error_details"}");
@@ -348,8 +351,8 @@ impl ZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn get_dataset_properties(&self, name: &str) -> Result<HashMap<String, String>>  {
+    #[must_use]
+    pub fn get_dataset_properties(&self, name: &str) -> Result<HashMap<String, String>> {
         tracing::debug!("Getting properties for dataset: {}", name);
 
         let output = Command::new("zfs")
@@ -391,11 +394,11 @@ impl ZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn set_dataset_properties(
+    pub fn set_dataset_properties(
         &self,
         name: &str,
         properties: &HashMap<String, String>,
-    ) -> Result<()>  {
+    ) -> Result<()> {
         tracing::info!("Setting properties for dataset: {}", name);
 
         for (key, value) in properties {
@@ -437,7 +440,7 @@ impl ZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn list_datasets(&self) -> Result<Vec<DatasetInfo>>  {
+    pub async fn list_datasets(&self) -> Result<Vec<DatasetInfo>> {
         tracing::debug!("Listing all datasets");
 
         let output = Command::new("zfs")
@@ -488,7 +491,7 @@ impl ZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn delete_dataset(&self, name: &str) -> Result<()>  {
+    pub fn delete_dataset(&self, name: &str) -> Result<()> {
         info!("Deleting dataset: {}", name);
 
         // Mock mode - return success for development
@@ -507,8 +510,8 @@ impl ZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn destroy_dataset(&self, name: &str) -> Result<()>  {
+    #[must_use]
+    pub fn destroy_dataset(&self, name: &str) -> Result<()> {
         self.delete_dataset(name)
     }
 
@@ -520,10 +523,7 @@ impl ZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn list_snapshots(
-        &self,
-        dataset_name: &str,
-    ) -> Result<Vec<crate::snapshot::SnapshotInfo>>  {
+    pub fn list_snapshots(&self, dataset_name: &str) -> Result<Vec<crate::snapshot::SnapshotInfo>> {
         debug!("Listing snapshots for dataset: {}", dataset_name);
 
         let output = Command::new("zfs")

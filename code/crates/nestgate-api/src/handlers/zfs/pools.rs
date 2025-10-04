@@ -63,7 +63,7 @@ impl Default for PoolResponse {
 }
 
 /// Create ZFS pool routes
-pub const fn create_routes() -> Router<AppState> {
+pub fn create_routes() -> Router<AppState> {
     Router::new()
         .route("/pools", post(create_pool))
         .route("/pools", get(list_pools))

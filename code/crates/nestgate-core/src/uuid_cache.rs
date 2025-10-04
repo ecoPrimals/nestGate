@@ -42,7 +42,7 @@ impl UuidCache {
     /// This is the main performance-critical method that eliminates
     /// frequent UUID generation through intelligent caching.
     #[must_use]
-    pub const fn get_or_create(&self, key: &str) -> Arc<Uuid> {
+    pub fn get_or_create(&self, key: &str) -> Arc<Uuid> {
         if let Ok(cache) = self.cache.read() {
             if let Some(uuid) = cache.get(key) {
                 self.hit_counter.fetch_add(1, Ordering::Relaxed);
@@ -74,7 +74,7 @@ impl UuidCache {
     }
 
     /// Get a UUID from cache without creating if missing
-    pub const fn get(&self, key: &str) -> Option<Arc<Uuid>> {
+    pub fn get(&self, key: &str) -> Option<Arc<Uuid>> {
         self.cache.read().ok()?.get(key).map(Arc::clone)
     }
 
@@ -96,14 +96,14 @@ impl UuidCache {
 
     /// Get cache performance statistics
     #[must_use]
-    pub const fn statistics(&self) -> CacheStatistics {
+    pub fn statistics(&self) -> CacheStatistics {
         let generations = self.generation_counter.load(Ordering::Relaxed);
         let hits = self.hit_counter.load(Ordering::Relaxed);
         let misses = self.miss_counter.load(Ordering::Relaxed);
         let total_requests = hits + misses;
 
         let hit_ratio = if total_requests > 0 {
-            f64::from(hits) / f64::from(total_requests)
+            hits as f64 / total_requests as f64
         } else {
             0.0
         };
@@ -121,13 +121,13 @@ impl UuidCache {
 
     /// Get cache size (number of entries)
     #[must_use]
-    pub const fn size(&self) -> usize {
+    pub fn size(&self) -> usize {
         self.cache.read().map(|c| c.len()).unwrap_or(0)
     }
 
     /// Remove a specific entry from cache
     #[must_use]
-    pub const fn remove(&self, key: &str) -> Option<Arc<Uuid>> {
+    pub fn remove(&self, key: &str) -> Option<Arc<Uuid>> {
         self.cache.write().ok()?.remove(key)
     }
 }
@@ -167,13 +167,13 @@ pub struct CacheStatistics {
 impl CacheStatistics {
     /// Check if cache is performing well (>70% hit ratio is good)
     #[must_use]
-    pub const fn is_efficient(&self) -> bool {
+    pub fn is_efficient(&self) -> bool {
         self.hit_ratio > 0.7
     }
 
     /// Get performance assessment
     #[must_use]
-    pub const fn performance_assessment(&self) -> &'static str {
+    pub fn performance_assessment(&self) -> &'static str {
         match self.hit_ratio {
             r if r > 0.9 => "Excellent",
             r if r > 0.7 => "Good",
@@ -191,12 +191,12 @@ lazy_static::lazy_static! {
 
 /// Convenience function for global UUID caching
 #[must_use]
-pub const fn get_or_create_uuid(key: &str) -> Arc<Uuid> {
+pub fn get_or_create_uuid(key: &str) -> Arc<Uuid> {
     GLOBAL_UUID_CACHE.get_or_create(key)
 }
 /// Convenience function for getting UUID from global cache
 #[must_use]
-pub const fn get_uuid(key: &str) -> Option<Arc<Uuid>> {
+pub fn get_uuid(key: &str) -> Option<Arc<Uuid>> {
     GLOBAL_UUID_CACHE.get(key)
 }
 /// Preload commonly used UUIDs into global cache
@@ -205,7 +205,7 @@ pub fn preload_common_uuids(entries: Vec<(String, Uuid)>) {
 }
 /// Get global cache statistics
 #[must_use]
-pub const fn global_cache_statistics() -> CacheStatistics {
+pub fn global_cache_statistics() -> CacheStatistics {
     GLOBAL_UUID_CACHE.statistics()
 }
 /// High-level UUID manager with optimized patterns for common use cases
@@ -213,7 +213,7 @@ pub struct UuidManager;
 impl UuidManager {
     /// Create a new UUID manager
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self
     }
 
@@ -225,32 +225,32 @@ impl UuidManager {
 
     /// Generate optimized service ID  
     #[must_use]
-    pub const fn service_id(&self) -> String {
+    pub fn service_id(&self) -> String {
         uuid::Uuid::new_v4().to_string()
     }
 
     /// Generate optimized request ID for tracing
     #[must_use]
-    pub const fn request_id(&self) -> String {
+    pub fn request_id(&self) -> String {
         uuid::Uuid::new_v4().to_string()
     }
 
     /// Generate optimized event ID
     #[must_use]
-    pub const fn event_id(&self) -> String {
+    pub fn event_id(&self) -> String {
         uuid::Uuid::new_v4().to_string()
     }
 
     /// Generate optimized benchmark/test ID with format "bench-{short_uuid}"
     #[must_use]
-    pub const fn benchmark_id(&self) -> String {
+    pub fn benchmark_id(&self) -> String {
         let uuid_str = uuid::Uuid::new_v4().simple().to_string();
-        format!("bench-{&uuid_str[..8]}")
+        format!("bench-{}", &uuid_str[..8])
     }
 
     /// Generate prefixed UUID (optimized)
     #[must_use]
-    pub const fn generate_prefixed(&self, _key: &str, prefix: &str) -> String {
+    pub fn generate_prefixed(&self, _key: &str, prefix: &str) -> String {
         format!("{}-{}", prefix, uuid::Uuid::new_v4().simple())
     }
 }
@@ -309,7 +309,7 @@ mod tests {
         for i in 0..10 {
             let cache_clone = Arc::clone(&cache);
             let handle =
-                thread::spawn(move || cache_clone.get_or_create(&format!("service-{i % 3}")));
+                thread::spawn(move || cache_clone.get_or_create(&format!("service-{}", i % 3)));
             handles.push(handle);
         }
 

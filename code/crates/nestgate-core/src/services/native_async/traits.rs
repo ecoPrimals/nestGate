@@ -315,6 +315,11 @@ pub trait NativeAsyncUniversalServiceProvider<
 }
 
 /// Native async security service trait - replaces #[`async_trait`] `SecurityService`
+/// **DEPRECATED**: Service pattern consolidated into canonical security
+#[deprecated(
+    since = "0.9.0",
+    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity for security services"
+)]
 pub trait NativeAsyncSecurityService<
     const MAX_SESSIONS: usize = 1000,
     const SESSION_DURATION_SECS: u64 = 300,

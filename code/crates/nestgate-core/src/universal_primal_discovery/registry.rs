@@ -47,8 +47,8 @@ impl ServiceRegistryClient {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn query_service(&self, service_name: &str, query_type: &str) -> Result<String>  {
+    #[must_use]
+    pub async fn query_service(&self, service_name: &str, query_type: &str) -> Result<String> {
         // Check cache first
         let cache_key = format!("{service_name}:{query_type}");
         if let Some(cachedvalue) = self.registry_cache.get(&cache_key) {
@@ -66,7 +66,7 @@ impl ServiceRegistryClient {
         }
 
         // Fallback to service mesh discovery
-        self.query_service_mesh(service_name).await
+        self.query_service_mesh(service_name)
     }
 
     /// **SERVICE MESH INTEGRATION**: Query service mesh for service discovery
@@ -77,8 +77,8 @@ impl ServiceRegistryClient {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn query_service_mesh(&self, service_name: &str) -> Result<String>  {
+    #[must_use]
+    pub fn query_service_mesh(&self, service_name: &str) -> Result<String> {
         // Check for service mesh environment variables
         if let Ok(mesh_endpoint) = std::env::var("NESTGATE_SERVICE_MESH_ENDPOINT") {
             return Ok(format!("{mesh_endpoint}/{service_name}"));
@@ -128,11 +128,7 @@ impl ServiceRegistryClient {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn register_capability_endpoint(
-        &self,
-        capability: &str,
-        endpoint: &str,
-    ) -> Result<()>  {
+    pub fn register_capability_endpoint(&self, capability: &str, endpoint: &str) -> Result<()> {
         // In a real implementation, this would register with external registry
         tracing::info!(
             "Registering capability '{}' at endpoint '{}'",
@@ -158,11 +154,7 @@ impl ServiceRegistryClient {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn discover_port_via_adapter(
-        &self,
-        service_name: &str,
-        port_type: &str,
-    ) -> Result<u16>  {
+    pub fn discover_port_via_adapter(&self, service_name: &str, port_type: &str) -> Result<u16> {
         // Try adapter-based discovery through environment
         let adapter_env_key = format!(
             "NESTGATE_ADAPTER_{}_{}_PORT",
@@ -199,8 +191,8 @@ impl ServiceRegistryClient {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn health_check(&self) -> Result<HashMap<String, String>>  {
+    #[must_use]
+    pub fn health_check(&self) -> Result<HashMap<String, String>> {
         let mut health = HashMap::new();
 
         // Check if registry URL is configured
@@ -228,7 +220,7 @@ impl ServiceRegistryClient {
             "cache_size".to_string(),
             self.registry_cache.len().to_string(),
         );
-        health.insert("timeout".to_string(), format!("{self.timeout:?}"));
+        health.insert("timeout".to_string(), format!("{:?}", self.timeout));
 
         Ok(health)
     }
@@ -241,8 +233,8 @@ impl ServiceRegistryClient {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn validate_discovery_config(&self) -> Result<Vec<String>>  {
+    #[must_use]
+    pub fn validate_discovery_config(&self) -> Result<Vec<String>> {
         let mut warnings = Vec::new();
 
         // Check for basic configuration
@@ -277,8 +269,8 @@ impl ServiceRegistryClient {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn get_config_summary(&self) -> Result<HashMap<String, String>>  {
+    #[must_use]
+    pub fn get_config_summary(&self) -> Result<HashMap<String, String>> {
         let mut config = HashMap::new();
 
         config.insert(
@@ -288,7 +280,7 @@ impl ServiceRegistryClient {
                 .unwrap_or(&"not_configured".to_string())
                 .clone(),
         );
-        config.insert("timeout".to_string(), format!("{self.timeout:?}"));
+        config.insert("timeout".to_string(), format!("{:?}", self.timeout));
         config.insert(
             "cache_entries".to_string(),
             self.registry_cache.len().to_string(),

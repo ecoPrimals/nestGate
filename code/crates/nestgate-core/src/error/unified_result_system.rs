@@ -43,50 +43,49 @@ pub type CanonicalResult<T> = Result<T>;
 
 /// **VALIDATION OPERATIONS** - Configuration and input validation
 pub type ValidationResult<T> = Result<T>;
-// Define the error types as aliases for now
-pub type ValidationError = NestGateError;
+
 /// **NETWORK OPERATIONS** - HTTP, TCP, and network communication
 pub type NetworkResult<T> = Result<T>;
-pub type NetworkError = NestGateError;
+
 /// **STORAGE OPERATIONS** - File system, database, and persistence
 pub type StorageResult<T> = Result<T>;
-pub type StorageError = NestGateError;
+
 /// **SECURITY OPERATIONS** - Authentication, authorization, encryption
 pub type SecurityResult<T> = Result<T>;
-pub type SecurityError = NestGateError;
+
 /// **ZFS OPERATIONS** - ZFS pool, dataset, and snapshot management
 pub type ZfsResult<T> = Result<T>;
-pub type ZfsError = NestGateError;
+
 /// **API OPERATIONS** - REST API, GraphQL, and HTTP handlers
 pub type ApiResult<T> = Result<T>;
-pub type ApiError = NestGateError;
+
 /// **MCP PROTOCOL OPERATIONS** - Model Context Protocol operations
 pub type McpResult<T> = Result<T>;
-pub type McpError = NestGateError;
+
 /// **TESTING OPERATIONS** - Test framework and validation
 pub type TestingResult<T> = Result<T>;
-pub type TestingError = NestGateError;
+
 /// **PERFORMANCE OPERATIONS** - Benchmarking and optimization
 pub type PerformanceResult<T> = Result<T>;
-pub type PerformanceError = NestGateError;
+
 /// **HANDLER OPERATIONS** - Request/response handling
 pub type HandlerResult<T> = Result<T>;
-pub type HandlerError = NestGateError;
+
 /// **SERIALIZATION OPERATIONS** - JSON, TOML, and data format handling
 pub type SerializationResult<T> = Result<T>;
-pub type SerializationError = NestGateError;
+
 /// **DATABASE OPERATIONS** - SQL and database interactions
 pub type DatabaseResult<T> = Result<T>;
-pub type DatabaseError = NestGateError;
+
 /// **CACHE OPERATIONS** - Caching and memory management
 pub type CacheResult<T> = Result<T>;
-pub type CacheError = NestGateError;
+
 /// **WORKFLOW OPERATIONS** - Process orchestration and automation
 pub type WorkflowResult<T> = Result<T>;
-pub type WorkflowError = NestGateError;
+
 /// **MONITORING OPERATIONS** - Metrics, logging, and observability
 pub type MonitoringResult<T> = Result<T>;
-pub type MonitoringError = NestGateError;
+
 /// **CONFIGURATION OPERATIONS** - Alias for validation results
 pub type ConfigResult<T> = ValidationResult<T>;
 // ==================== UTILITY TYPES ====================
@@ -139,30 +138,41 @@ impl<T, E> ResultExt<T, E> for std::result::Result<T, E> {
 #[macro_export]
 macro_rules! validation_result {
     ($expr:expr) => {
-        $expr.map_err(|e| ValidationError::from(e))
+        $expr.map_err(|e| NestGateError::from(e))
     };
     ($expr:expr, $context:expr) => {
-        $expr.map_err(|e| ValidationError::with_context(e, $context))
+        $expr.map_err(|e| {
+            let error: NestGateError = e.into();
+            error
+        })
     };
 }
+
 /// Macro for creating network results with context
 #[macro_export]
 macro_rules! network_result {
     ($expr:expr) => {
-        $expr.map_err(|e| NetworkError::from(e))
+        $expr.map_err(|e| NestGateError::from(e))
     };
     ($expr:expr, $context:expr) => {
-        $expr.map_err(|e| NetworkError::with_context(e, $context))
+        $expr.map_err(|e| {
+            let error: NestGateError = e.into();
+            error
+        })
     };
 }
+
 /// Macro for creating storage results with context
 #[macro_export]
 macro_rules! storage_result {
     ($expr:expr) => {
-        $expr.map_err(|e| StorageError::from(e))
+        $expr.map_err(|e| NestGateError::from(e))
     };
     ($expr:expr, $context:expr) => {
-        $expr.map_err(|e| StorageError::with_context(e, $context))
+        $expr.map_err(|e| {
+            let error: NestGateError = e.into();
+            error
+        })
     };
 }
 // ==================== DOCUMENTATION EXAMPLES ====================
@@ -179,12 +189,12 @@ mod examples {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn standard_operation() -> Result<String>  {
+    pub fn standard_operation() -> Result<String> {
         Ok("success".to_string())
     }
 
     /// Example function showing domain-specific Result usage
-    pub const fn validate_config(config: &str) -> ValidationResult<()> {
+    pub fn validate_config(config: &str) -> ValidationResult<()> {
         if config.is_empty() {
             Err(NestGateError::validation_error("config cannot be empty"))
         } else {
@@ -200,7 +210,7 @@ mod examples {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn parse_json(input: &str) -> Result<serde_json::Value, serde_json::Error>  {
+    pub fn parse_json(input: &str) -> Result<serde_json::Value, serde_json::Error> {
         serde_json::from_str(input)
     }
 }

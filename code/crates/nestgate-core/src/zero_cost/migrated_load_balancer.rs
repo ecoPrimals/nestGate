@@ -166,7 +166,7 @@ pub enum ZeroCostLoadBalancingAlgorithm {
 }
 impl ZeroCostLoadBalancingAlgorithm {
     /// Get algorithm name
-    pub const fn name(&self) -> &str {
+    pub fn name(&self) -> &str {
         match self {
             Self::RoundRobin => "round-robin",
             Self::WeightedRoundRobin => "weighted-round-robin",
@@ -182,7 +182,7 @@ impl ZeroCostLoadBalancingAlgorithm {
     }
 
     /// Check if algorithm supports weights
-    pub const fn supports_weights(&self) -> bool {
+    pub fn supports_weights(&self) -> bool {
         matches!(
             self,
             Self::WeightedRoundRobin | Self::WeightedRandom | Self::Custom(_)
@@ -190,7 +190,7 @@ impl ZeroCostLoadBalancingAlgorithm {
     }
 
     /// Check if algorithm requires health monitoring
-    pub const fn requires_health_monitoring(&self) -> bool {
+    pub fn requires_health_monitoring(&self) -> bool {
         matches!(
             self,
             Self::HealthAware | Self::LatencyBased | Self::CpuBased | Self::MemoryBased
@@ -215,7 +215,7 @@ pub struct DefaultServiceInfo {
     pub last_seen: SystemTime,
 }
 impl DefaultServiceInfo {
-    pub const fn new(id: String, name: String, endpoint: String) -> Self {
+    pub fn new(id: String, name: String, endpoint: String) -> Self {
         Self {
             id,
             name,
@@ -230,7 +230,7 @@ impl DefaultServiceInfo {
         }
     }
 
-    pub const fn is_healthy(&self) -> bool {
+    pub fn is_healthy(&self) -> bool {
         self.health_score >= 0.5
     }
 
@@ -491,12 +491,12 @@ pub struct LoadBalancerAdapter<T> {
 }
 impl<T> LoadBalancerAdapter<T> {
     /// Create new adapter
-    pub const fn new(balancer: T) -> Self {
+    pub fn new(balancer: T) -> Self {
         Self { inner: balancer }
     }
 
     /// Get reference to inner load balancer
-    pub const fn inner(&self) -> &T {
+    pub fn inner(&self) -> &T {
         &self.inner
     }
 
@@ -506,7 +506,7 @@ impl<T> LoadBalancerAdapter<T> {
     }
 
     /// Consume adapter and return inner load balancer
-    pub const fn into_inner(self) -> T {
+    pub fn into_inner(self) -> T {
         self.inner
     }
 }

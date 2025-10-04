@@ -18,7 +18,7 @@ pub struct ZeroCopyFilesystemBackend {
 
 impl ZeroCopyFilesystemBackend {
     /// Create a new zero-copy filesystem backend
-    pub const fn new(base_path: impl Into<std::path::PathBuf>) -> Self {
+    pub fn new(base_path: impl Into<std::path::PathBuf>) -> Self {
         Self {
             base_path: base_path.into(),
             mmap_cache: Arc::new(tokio::sync::RwLock::new(

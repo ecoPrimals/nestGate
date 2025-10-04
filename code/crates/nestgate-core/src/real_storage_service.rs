@@ -334,5 +334,8 @@ impl RealStorageService {
 }
 
 /// Storage service trait - **ZERO-COST NATIVE ASYNC**
+/// **DEPRECATED**: Use `crate::traits::canonical_unified_traits::CanonicalStorage` instead.
+/// This trait is a fragment that should be consolidated into the canonical storage system.
+#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalStorage or crate::traits::unified_storage::UnifiedStorage")]
 pub trait StorageService: Send + Sync {
 }

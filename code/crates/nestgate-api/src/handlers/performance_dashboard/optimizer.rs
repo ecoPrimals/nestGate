@@ -11,7 +11,7 @@ pub struct OptimizationEngineInterface {
 }
 impl OptimizationEngineInterface {
     /// Create a new optimization _engine interface
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             // Initialize fields
         }
@@ -25,7 +25,7 @@ impl OptimizationEngineInterface {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_recommendations(&self) -> Result<Vec<OptimizationRecommendation>>  {
+    pub fn get_recommendations(&self) -> Result<Vec<OptimizationRecommendation>> {
         // Stub implementation - would generate real recommendations
         Ok(vec![])
     }

@@ -17,7 +17,7 @@ pub struct ZeroCostNativeZfsService<const MAX_POOLS: usize> {
 
 impl<const MAX_POOLS: usize> ZeroCostNativeZfsService<MAX_POOLS> {
     /// Create a new zero-cost native ZFS service instance
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             inner: ZeroCostZfsOperations::new(),
         }

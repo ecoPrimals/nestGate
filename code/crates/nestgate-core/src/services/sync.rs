@@ -24,29 +24,29 @@ pub struct SyncErrors;
 impl SyncErrors {
     /// Create IO error with sync context
     #[must_use]
-    pub const fn io_error(error: std::io::Error) -> NestGateError {
+    pub fn io_error(error: std::io::Error) -> NestGateError {
         NestGateError::internal_error(format!("Sync IO error: {error}"), "sync_service")
     }
 
     /// Create configuration error
-    pub const fn config_error(message: impl Into<String>) -> NestGateError {
+    pub fn config_error(message: impl Into<String>) -> NestGateError {
         NestGateError::configuration_error("sync_config", &message.into())
     }
 
     /// Create conflict error with resolution guidance
-    pub const fn conflict_error(message: impl Into<String>) -> NestGateError {
-        NestGateError::validation_error(&format!("Sync conflict: ", message.into()))
+    pub fn conflict_error(message: impl Into<String>) -> NestGateError {
+        NestGateError::validation_error(&format!("Sync conflict: {}", message.into()))
     }
 
     /// Create timeout error
     #[must_use]
-    pub const fn timeout_error() -> NestGateError {
+    pub fn timeout_error() -> NestGateError {
         NestGateError::timeout_error("sync_operation", std::time::Duration::from_millis(30000))
     }
 
     /// Create checksum mismatch error
     #[must_use]
-    pub const fn checksum_mismatch() -> NestGateError {
+    pub fn checksum_mismatch() -> NestGateError {
         NestGateError::validation_error("File checksum verification failed ")
     }
 
@@ -58,7 +58,7 @@ impl SyncErrors {
 
     /// Create service unavailable error
     #[must_use]
-    pub const fn service_unavailable() -> NestGateError {
+    pub fn service_unavailable() -> NestGateError {
         NestGateError::internal_error("Sync service is not available", "sync_service")
     }
 }

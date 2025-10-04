@@ -16,14 +16,14 @@ impl Default for ZeroCopyMemoryPool {
 
 impl ZeroCopyMemoryPool {
     /// Create a new memory pool
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             _marker: std::marker::PhantomData,
         }
     }
 
     /// Get a buffer from the pool
-    pub const fn get_buffer(&self, size: usize) -> PooledBuffer {
+    pub fn get_buffer(&self, size: usize) -> PooledBuffer {
         PooledBuffer::new(size)
     }
 
@@ -33,7 +33,7 @@ impl ZeroCopyMemoryPool {
     }
 
     /// Get pool statistics
-    pub const fn stats(&self) -> PoolStats {
+    pub fn stats(&self) -> PoolStats {
         PoolStats {
             total_buffers: 0,
             available_buffers: 0,

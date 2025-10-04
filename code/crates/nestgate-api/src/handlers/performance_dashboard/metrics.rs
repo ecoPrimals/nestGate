@@ -2,8 +2,8 @@
 // This module handles real-time metrics collection for the performance dashboard
 // using actual system and ZFS metrics instead of mock data.
 
-use crate::handlers::performance_dashboard::types::*;
 use crate::handlers::metrics_collector::{DiskIOMetrics, NetworkIOMetrics, PoolMetrics};
+use crate::handlers::performance_dashboard::types::*;
 use nestgate_core::Result;
 use serde_json;
 use std::collections::HashMap;
@@ -65,7 +65,7 @@ impl RealTimeMetricsCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_current_metrics(&self) -> Result<RealTimeMetrics>  {
+    pub async fn get_current_metrics(&self) -> Result<RealTimeMetrics> {
         debug!("📊 Getting current real-time metrics");
 
         // Try to get cached metrics first
@@ -118,11 +118,9 @@ impl RealTimeMetricsCollector {
         let current_metrics = RealTimeMetrics {
             timestamp: SystemTime::now(),
             cpu_usage: system_metrics.cpu_utilization,
-            memory_usage: f64::from(memory_usage_bytes)
-                / f64::from(total_memory_bytes)
-                * 100.0,
+            memory_usage: memory_usage_bytes as f64 / total_memory_bytes as f64 * 100.0,
             disk_io: system_metrics.disk_usage_percent,
-            network_throughput: f64::from(network_io_bps),
+            network_throughput: network_io_bps as f64,
             active_connections: 25,  // Default value
             response_time_ms: 150.0, // Default value
         };
@@ -148,7 +146,7 @@ impl RealTimeMetricsCollector {
 
         let system_metrics = SystemMetrics {
             cpu_utilization: cpu_usage,
-            memory_usage_bytes: (memory_usage * f64::from(memory_total) / 100.0) as u64,
+            memory_usage_bytes: (memory_usage * memory_total as f64 / 100.0) as u64,
             total_memory_bytes: memory_total as u64,
             disk_usage_percent: 45.0,
             network_io_bps: network_io.bytes_sent + network_io.bytes_received,
@@ -240,7 +238,7 @@ impl RealTimeMetricsCollector {
                             // Calculate latency from operations and throughput
                             let total_ops = read_ops + write_ops;
                             if total_ops > 0.0 {
-                                avg_latency_ms = (1000.0_f64 / f64::from(total_ops)).min(100.0);
+                                avg_latency_ms = (1000.0_f64 / total_ops as f64).min(100.0);
                                 // Cap at 100ms
                             }
                         }
@@ -266,7 +264,7 @@ impl RealTimeMetricsCollector {
             used_space: used_capacity,
             available_space: total_capacity - used_capacity,
             utilization_percentage: if total_capacity > 0 {
-                (f64::from(used_capacity) / f64::from(total_capacity)) * 100.0
+                (used_capacity as f64 / total_capacity as f64) * 100.0
             } else {
                 0.0
             },
@@ -292,7 +290,7 @@ impl RealTimeMetricsCollector {
 
                     if total > 0 {
                         let active = total - idle - iowait;
-                        return Ok((f64::from(active) / f64::from(total)) * 100.0);
+                        return Ok((active as f64 / total as f64) * 100.0);
                     }
                 }
             }
@@ -332,7 +330,7 @@ impl RealTimeMetricsCollector {
 
             if mem_total > 0 {
                 let memory_used = mem_total - mem_available;
-                let memory_usage_percent = (f64::from(memory_used) / f64::from(mem_total)) * 100.0;
+                let memory_usage_percent = (memory_used as f64 / mem_total as f64) * 100.0;
                 return Ok((memory_usage_percent, mem_total, mem_available));
             }
         }
@@ -452,12 +450,12 @@ impl RealTimeMetricsCollector {
 
             let arc_total = arc_hits + arc_misses;
             if arc_total > 0 {
-                arc_hit_ratio = (f64::from(arc_hits) / f64::from(arc_total)) * 100.0;
+                arc_hit_ratio = (arc_hits as f64 / arc_total as f64) * 100.0;
             }
 
             let l2arc_total = l2arc_hits + l2arc_misses;
             if l2arc_total > 0 {
-                l2arc_hit_ratio = (f64::from(l2arc_hits) / f64::from(l2arc_total)) * 100.0;
+                l2arc_hit_ratio = (l2arc_hits as f64 / l2arc_total as f64) * 100.0;
             }
         }
 
@@ -486,7 +484,7 @@ impl RealTimeMetricsCollector {
                 }
 
                 if count > 0 {
-                    return Ok(total_ratio / f64::from(count));
+                    return Ok(total_ratio / count as f64);
                 }
             }
         }
@@ -568,7 +566,7 @@ impl RealTimeMetricsCollector {
                 _ => return size_str.parse().ok(),
             };
 
-            Some((number * f64::from(multiplier)) as u64)
+            Some((number * multiplier as f64) as u64)
         } else {
             size_str.parse().ok()
         }

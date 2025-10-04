@@ -69,12 +69,12 @@ impl ServiceRegistry {
     }
 
     /// Get service registration
-    pub const fn get_service(&self, service_id: &Uuid) -> Option<&UniversalServiceRegistration> {
+    pub fn get_service(&self, service_id: &Uuid) -> Option<&UniversalServiceRegistration> {
         self.services.get(service_id)
     }
 
     /// List all registered services
-    pub const fn list_services(&self) -> Vec<&UniversalServiceRegistration> {
+    pub fn list_services(&self) -> Vec<&UniversalServiceRegistration> {
         self.services.values().collect()
     }
 } 

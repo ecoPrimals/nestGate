@@ -46,7 +46,7 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn new(
+        pub fn new(
         config: NestGateCanonicalConfig,
         factory: ConnectionFactory<T>,
         health_check: Option<HealthCheckFn<T>>,

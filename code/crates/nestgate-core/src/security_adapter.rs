@@ -47,7 +47,7 @@ pub struct SecurityAdapter {
 }
 impl SecurityAdapter {
     /// Create new security adapter
-    pub const fn new(adapter: Arc<UniversalAdapter>, service_name: String) -> Self {
+    pub fn new(adapter: Arc<UniversalAdapter>, service_name: String) -> Self {
         info!("🔐 Creating Security Adapter via Universal Adapter");
         info!("🔐 Service: {}", service_name);
 

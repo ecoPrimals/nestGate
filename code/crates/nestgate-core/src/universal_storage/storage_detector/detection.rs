@@ -15,7 +15,7 @@ pub struct DetectionEngine<'a> {
 impl<'a> DetectionEngine<'a> {
     /// Create new detection engine with configuration
     #[must_use]
-    pub const fn new(config: &'a DetectionConfig) -> Self {
+    pub fn new(config: &'a DetectionConfig) -> Self {
         Self { config }
     }
 
@@ -27,12 +27,12 @@ impl<'a> DetectionEngine<'a> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        /// Function description
+    /// Function description
     ///
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub async fn detect_local_filesystems(&self) -> Result<Vec<DetectedStorage>>   {
+    pub async fn detect_local_filesystems(&self) -> Result<Vec<DetectedStorage>> {
         let mut filesystems = Vec::new();
 
         #[cfg(target_os = "linux")]
@@ -71,14 +71,13 @@ impl<'a> DetectionEngine<'a> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        /// Function description
+    #[must_use]
+    /// Function description
     ///
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn detect_cloud_storage(&self) -> Result<Vec<DetectedStorage>>   {
+    pub async fn detect_cloud_storage(&self) -> Result<Vec<DetectedStorage>> {
         if !self.config.enable_cloud_detection {
             return Ok(Vec::new());
         }
@@ -105,14 +104,13 @@ impl<'a> DetectionEngine<'a> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        /// Function description
+    #[must_use]
+    /// Function description
     ///
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn detect_network_shares(&self) -> Result<Vec<DetectedStorage>>   {
+    pub async fn detect_network_shares(&self) -> Result<Vec<DetectedStorage>> {
         if !self.config.enable_network_detection {
             return Ok(Vec::new());
         }
@@ -139,12 +137,12 @@ impl<'a> DetectionEngine<'a> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        /// Function description
+    /// Function description
     ///
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub async fn detect_block_devices(&self) -> Result<Vec<DetectedStorage>>   {
+    pub async fn detect_block_devices(&self) -> Result<Vec<DetectedStorage>> {
         let mut block_devices = Vec::new();
 
         #[cfg(target_os = "linux")]
@@ -175,12 +173,12 @@ impl<'a> DetectionEngine<'a> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        /// Function description
+    /// Function description
     ///
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub async fn detect_memory_storage(&self) -> Result<Vec<DetectedStorage>>   {
+    pub async fn detect_memory_storage(&self) -> Result<Vec<DetectedStorage>> {
         let mut memory_storage = Vec::new();
 
         // Detect tmpfs mounts
@@ -325,8 +323,8 @@ impl<'a> DetectionEngine<'a> {
         // Placeholder implementation - would use system calls in real implementation
         Ok(FilesystemStats {
             total_bytes: 1_000_000_000, // 1GB
-            free_bytes: 500_000_000,   // 500MB
-            used_bytes: 500_000_000,   // 500MB
+            free_bytes: 500_000_000,    // 500MB
+            used_bytes: 500_000_000,    // 500MB
             usage_percent: 50.0,
             inode_total: 100_000,
             inode_free: 50000,

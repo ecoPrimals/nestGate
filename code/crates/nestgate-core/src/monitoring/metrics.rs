@@ -146,7 +146,7 @@ impl ProviderMetrics {
         let response_time_ms = response_time.as_millis() as f64;
         self.avg_response_time_ms = (self.avg_response_time_ms * (self.total_requests - 1) as f64
             + response_time_ms)
-            / self.f64::from(total_requests);
+            / self.total_requests as f64;
     }
 
     /// Record a failed request
@@ -160,11 +160,11 @@ impl ProviderMetrics {
     }
 
     /// Get success rate as percentage
-    pub const fn success_rate(&self) -> f64 {
+    pub fn success_rate(&self) -> f64 {
         if self.total_requests == 0 {
             return 0.0;
         }
-        (self.f64::from(successful_requests) / self.f64::from(total_requests)) * 100.0
+        (self.successful_requests as f64 / self.total_requests as f64) * 100.0
     }
 }
 
@@ -197,7 +197,7 @@ pub struct StorageMetrics {
     pub used_space: Option<u64>,
 }
 impl StorageMetrics {
-    pub const fn new(backend_name: String, backend_type: String) -> Self {
+    pub fn new(backend_name: String, backend_type: String) -> Self {
         Self {
             backend_name,
             backend_type,
@@ -222,7 +222,7 @@ impl StorageMetrics {
         let latency_ms = latency.as_millis() as f64;
         self.avg_read_latency_ms = (self.avg_read_latency_ms * (self.read_operations - 1) as f64
             + latency_ms)
-            / self.f64::from(read_operations);
+            / self.read_operations as f64;
     }
 
     /// Record a write operation
@@ -233,15 +233,15 @@ impl StorageMetrics {
         let latency_ms = latency.as_millis() as f64;
         self.avg_write_latency_ms =
             (self.avg_write_latency_ms * (self.write_operations - 1) as f64 + latency_ms)
-                / self.f64::from(write_operations);
+                / self.write_operations as f64;
     }
 
     /// Get throughput in MB/s for reads
-    pub const fn read_throughput_mbps(&self) -> f64 {
+    pub fn read_throughput_mbps(&self) -> f64 {
         if self.read_operations == 0 || self.avg_read_latency_ms == 0.0 {
             return 0.0;
         }
-        let avg_bytes_per_read = self.f64::from(bytes_read) / self.f64::from(read_operations);
+        let avg_bytes_per_read = self.bytes_read as f64 / self.read_operations as f64;
         let mb_per_read = avg_bytes_per_read / (1024.0 * 1024.0);
         let reads_per_second = 1000.0 / self.avg_read_latency_ms;
         mb_per_read * reads_per_second
@@ -550,7 +550,7 @@ pub enum ExportFormat {
     InfluxDB,
 }
 impl MetricsExporter {
-    pub const fn new(collector: Arc<MetricsCollector>, format: ExportFormat) -> Self {
+    pub fn new(collector: Arc<MetricsCollector>, format: ExportFormat) -> Self {
         Self {
             collector,
             export_format: format,

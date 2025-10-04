@@ -25,7 +25,7 @@ impl HardwareEnvironmentDetector {
     }
 
     /// Check if we're in a development environment
-    pub const fn is_development_environment() -> bool {
+    pub fn is_development_environment() -> bool {
         // Check explicit environment variable first
         if std::env::var("NESTGATE_DEV_ENVIRONMENT").unwrap_or_default() == "true" {
             debug!("Development environment explicitly enabled via NESTGATE_DEV_ENVIRONMENT");

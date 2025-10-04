@@ -596,7 +596,7 @@ impl NotificationChannelManager {
     }
 
     /// Get a channel by ID
-    pub const fn get_channel(&self, channel_id: &str) -> Option<&dyn NotificationChannel> {
+    pub fn get_channel(&self, channel_id: &str) -> Option<&dyn NotificationChannel> {
         self.channels.get(channel_id).map(|c| c.as_ref())
     }
 

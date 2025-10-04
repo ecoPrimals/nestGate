@@ -370,7 +370,7 @@ impl Default for StorageResourceTags {
 
 impl StorageAccessControl {
     /// Check if a user has specific permission
-    pub const fn user_has_permission(&self, user: &str, permission: &StoragePermission) -> bool {
+    pub fn user_has_permission(&self, user: &str, permission: &StoragePermission) -> bool {
         if !self.enabled {
             return true; // Access control disabled
         }
@@ -419,17 +419,17 @@ impl StorageResourceMetadata {
     }
 
     /// Calculate age since creation
-    pub const fn age_since_creation(&self) -> chrono::Duration {
+    pub fn age_since_creation(&self) -> chrono::Duration {
         Utc::now() - self.created_at
     }
 
     /// Calculate age since last modification
-    pub const fn age_since_modification(&self) -> chrono::Duration {
+    pub fn age_since_modification(&self) -> chrono::Duration {
         Utc::now() - self.modified_at
     }
 
     /// Calculate age since last access
-    pub const fn age_since_access(&self) -> Option<chrono::Duration> {
+    pub fn age_since_access(&self) -> Option<chrono::Duration> {
         self.accessed_at.map(|access_time| Utc::now() - access_time)
     }
 }
@@ -457,7 +457,7 @@ impl StorageResourceTags {
     }
 
     /// Check if tag exists
-    pub const fn has_tag(&self, key: &str) -> bool {
+    pub fn has_tag(&self, key: &str) -> bool {
         self.system_tags.contains_key(key)
             || self.user_tags.contains_key(key)
             || self.auto_tags.contains_key(key)
@@ -466,7 +466,7 @@ impl StorageResourceTags {
 
 impl LifecycleRule {
     /// Check if rule conditions are met for a resource
-    pub const fn matches_conditions(
+    pub fn matches_conditions(
         &self,
         metadata: &StorageResourceMetadata,
         tags: &StorageResourceTags,

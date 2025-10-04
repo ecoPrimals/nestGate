@@ -76,7 +76,7 @@ impl RealNetworkService {
     pub fn start(&self) -> nestgate_core::Result<()> {
         info!(
             "Starting real network service on {}:{}",
-            self.config.network.bind_endpoint, self.config.network.port
+            self.config.network.api.bind_address, self.config.network.api.port
         );
 
         let addr = format!(
@@ -210,7 +210,7 @@ impl RealNetworkService {
         let stats = self.get_network_statistics().await?;
 
         // Consider healthy if we have reasonable resource usage
-        let healthy = (stats.active_connections as usize) < self.config.network.max_connections
+        let healthy = (stats.active_connections as usize) < self.config.network.api.max_connections as usize
             && stats.allocated_ports
                 < (self.config.extensions.port_range_end - self.config.extensions.port_range_start)
                     as u32;

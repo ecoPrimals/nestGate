@@ -19,7 +19,7 @@ impl IntegrityManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn new(_config: IntegrityConfig) -> Result<Self>   {
+        pub fn new(_config: IntegrityConfig) -> Result<Self>   {
         Ok(Self)
     }
 
@@ -34,7 +34,7 @@ impl IntegrityManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn compute_checksum(&self, _data: &[u8]) -> Result<String>   {
+        pub fn compute_checksum(&self, _data: &[u8]) -> Result<String>   {
         Ok("placeholder_checksum".to_string())
     }
 
@@ -49,7 +49,7 @@ impl IntegrityManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn verify_checksum(&self, _data: &[u8], _checksum: String) -> Result<()>   {
+        pub fn verify_checksum(&self, _data: &[u8], _checksum: String) -> Result<()>   {
         Ok(())
     }
 
@@ -64,7 +64,7 @@ impl IntegrityManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn get_stats(&self) -> Result<IntegrityStats>   {
+        pub fn get_stats(&self) -> Result<IntegrityStats>   {
         Ok(IntegrityStats::default())
     }
 }

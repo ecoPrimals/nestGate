@@ -134,7 +134,7 @@ pub struct TrendAnalysis {
 }
 
 impl PerformanceHistory {
-    pub const fn new(max_size: usize, analysis_window: usize) -> Self {
+    pub fn new(max_size: usize, analysis_window: usize) -> Self {
         Self {
             snapshots: VecDeque::with_capacity(max_size),
             max_history_size: max_size,
@@ -149,7 +149,7 @@ impl PerformanceHistory {
         self.snapshots.push_back(snapshot);
     }
 
-    pub const fn get_recent_snapshots(&self, count: usize) -> Vec<&PerformanceSnapshot> {
+    pub fn get_recent_snapshots(&self, count: usize) -> Vec<&PerformanceSnapshot> {
         let start_idx = if self.snapshots.len() > count {
             self.snapshots.len() - count
         } else {
@@ -159,7 +159,7 @@ impl PerformanceHistory {
         self.snapshots.range(start_idx..).collect()
     }
 
-    pub const fn get_analysis_window(&self) -> Vec<&PerformanceSnapshot> {
+    pub fn get_analysis_window(&self) -> Vec<&PerformanceSnapshot> {
         self.get_recent_snapshots(self.analysis_window_size)
     }
 } 

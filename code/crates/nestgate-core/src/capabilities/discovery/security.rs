@@ -50,7 +50,7 @@ impl SecurityCapabilityDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn discover_capabilities(&self) -> Result<Vec<SecurityCapabilityInfo>>  {
+    pub async fn discover_capabilities(&self) -> Result<Vec<SecurityCapabilityInfo>> {
         // Dynamic discovery logic - replaces hardcoded security endpoints
         let mut capabilities = Vec::new();
 
@@ -86,10 +86,10 @@ impl SecurityCapabilityDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_capability(
+    pub async fn get_capability(
         &self,
         capability_type: &SecurityCapabilityType,
-    ) -> Result<Option<SecurityCapabilityInfo>>  {
+    ) -> Result<Option<SecurityCapabilityInfo>> {
         let cache = self.discovered_capabilities.read().await;
         Ok(cache.get(capability_type).cloned())
     }

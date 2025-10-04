@@ -39,7 +39,7 @@ pub struct ErrorMessageBuilder {
 }
 impl ErrorMessageBuilder {
     /// Create a new error message builder with a static base message
-    pub const fn new(base_message: &'static str) -> Self {
+    pub fn new(base_message: &'static str) -> Self {
         Self {
             base_message,
             details: None,
@@ -53,7 +53,7 @@ impl ErrorMessageBuilder {
     }
 
     /// Build the final error message, avoiding allocation if no details
-    pub const fn build(self) -> Cow<'static, str> {
+    pub fn build(self) -> Cow<'static, str> {
         match self.details {
             None => Cow::Borrowed(self.base_message),
             Some(details) => Cow::Owned(format!("{}: {}", self.base_message, details),
@@ -82,7 +82,7 @@ impl StringMapBuilder {
     }
 
     /// Build the final map
-    pub const fn build(self) -> HashMap<String, String> {
+    pub fn build(self) -> HashMap<String, String> {
         self.map
             .into_iter()
             .map(|(k, v)| (k.to_string(), v))
@@ -90,7 +90,7 @@ impl StringMapBuilder {
     }
 
     /// Build the final map with static keys (more efficient)
-    pub const fn build_static_keys(self) -> HashMap<&'static str, String> {
+    pub fn build_static_keys(self) -> HashMap<&'static str, String> {
         self.map
     }
 }
@@ -146,7 +146,7 @@ macro_rules! static_string_map {
 }
 
 /// Efficient content type detection using static strings
-pub const fn detect_content_type_efficient(extension: &str) -> &'static str {
+pub fn detect_content_type_efficient(extension: &str) -> &'static str {
     match extension {
         "txt" => "text/plain",
         "json" => "application/json",
@@ -174,7 +174,7 @@ pub struct StringBufferPool {
 }
 impl StringBufferPool {
     /// Create a new string buffer pool
-    pub const fn new(max_size: usize) -> Self {
+    pub fn new(max_size: usize) -> Self {
         Self {
             buffers: Vec::with_capacity(max_size),
             max_size,

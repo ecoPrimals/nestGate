@@ -16,7 +16,7 @@ pub struct HttpClient {
 }
 impl HttpClient {
     /// Create a new HTTP client
-    pub const fn new(config: &RemoteConfig) -> Self {
+    pub fn new(config: &RemoteConfig) -> Self {
         // Build HTTP client with optimized settings
         let client = reqwest::Client::builder()
             .timeout(config.timeout)

@@ -2,6 +2,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
+use nestgate_core::constants::canonical::network::SEND_BUFFER_SIZE;
 // ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -359,7 +360,7 @@ impl Default for MiddlewarePerformanceSettings {
 
 impl MiddlewarePerformanceSettings {
     /// Development performance settings
-    pub const fn development() -> Self { Self {
+    pub fn development() -> Self { Self {
             worker_threads: 2,
             queue_capacity: 100,
             caching: CachingSettings {
@@ -380,7 +381,7 @@ impl MiddlewarePerformanceSettings {
     }
 
     /// Production performance settings
-    pub const fn production() -> Self { Self {
+    pub fn production() -> Self { Self {
             worker_threads: num_cpus::get() * 2,
             queue_capacity: 10_000,
             caching: CachingSettings {
@@ -490,7 +491,7 @@ impl Default for ResponseCachingSettings {
 impl Default for StreamingSettings {
     fn default() -> Self { Self {
             enabled: false,
-            buffer_size: 8192,
+            buffer_size: SEND_BUFFER_SIZE,
             threshold: 1024 * 1024, // 1MB
          }
 }

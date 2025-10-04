@@ -17,7 +17,7 @@ pub struct CacheEntry {
 }
 impl CacheEntry {
     #[must_use]
-    pub const fn new(value: String, ttl: Duration) -> Self {
+    pub fn new(value: String, ttl: Duration) -> Self {
         let now = SystemTime::now();
         Self {
             value,
@@ -29,7 +29,7 @@ impl CacheEntry {
     }
 
     #[must_use]
-    pub const fn is_expired(&self) -> bool {
+    pub fn is_expired(&self) -> bool {
         self.created_at.elapsed().unwrap_or(Duration::ZERO) > self.ttl
     }
 
@@ -82,7 +82,7 @@ impl DiscoveryCache {
         let entry = CacheEntry::new(port.to_string(), self.default_ttl);
 
         self.port_cache.insert(key, entry);
-        self.enforce_cache_limits().await;
+        self.enforce_cache_limits();
 
         tracing::debug!("Cached port discovery: {} -> {}", service_name, port);
     }
@@ -109,7 +109,7 @@ impl DiscoveryCache {
         let entry = CacheEntry::new(endpoint.to_string(), self.default_ttl);
 
         self.endpoint_cache.insert(key, entry);
-        self.enforce_cache_limits().await;
+        self.enforce_cache_limits();
 
         tracing::debug!(
             "Cached endpoint discovery: {} -> {}",
@@ -139,7 +139,7 @@ impl DiscoveryCache {
         let entry = CacheEntry::new(format!("{timeout:?}"), self.default_ttl);
 
         self.timeout_cache.insert(key, entry);
-        self.enforce_cache_limits().await;
+        self.enforce_cache_limits();
 
         tracing::debug!(
             "Cached timeout discovery: {} -> {:?}",
@@ -176,7 +176,7 @@ impl DiscoveryCache {
         let entry = CacheEntry::new(value.to_string(), ttl.unwrap_or(self.default_ttl));
 
         self.general_cache.insert(key.to_string(), entry);
-        self.enforce_cache_limits().await;
+        self.enforce_cache_limits();
 
         tracing::debug!("Cached discovery: {} -> {}", key, value);
     }
@@ -227,7 +227,7 @@ impl DiscoveryCache {
     }
 
     /// **CACHE LIMITS**: Enforce cache size limits using LRU eviction
-    async fn enforce_cache_limits(&mut self) {
+    fn enforce_cache_limits(&mut self) {
         let total_entries = self.port_cache.len()
             + self.endpoint_cache.len()
             + self.timeout_cache.len()
@@ -296,7 +296,7 @@ impl DiscoveryCache {
         self.max_cache_size = max_size;
 
         // Enforce new limits immediately
-        self.enforce_cache_limits().await;
+        self.enforce_cache_limits();
 
         tracing::info!(
             "Updated cache configuration: TTL={:?}, MaxSize={}",

@@ -41,7 +41,7 @@ pub struct SimdCapabilities {
 
 impl SimdCapabilities {
     /// Detect SIMD capabilities of the current CPU
-    pub const fn detect() -> Self {
+    pub fn detect() -> Self {
         Self {
             has_sse2: is_x86_feature_detected!("sse2"),
             has_avx: is_x86_feature_detected!("avx"),
@@ -52,7 +52,7 @@ impl SimdCapabilities {
     }
 
     /// Get the best available SIMD instruction set
-    pub const fn best_instruction_set(&self) -> &'static str {
+    pub fn best_instruction_set(&self) -> &'static str {
         if self.has_avx512 {
             "AVX-512"
         } else if self.has_avx2 {
@@ -69,7 +69,7 @@ impl SimdCapabilities {
     }
 
     /// Get expected performance multiplier for the best instruction set
-    pub const fn performance_multiplier(&self) -> f64 {
+    pub fn performance_multiplier(&self) -> f64 {
         if self.has_avx512 {
             16.0 // AVX-512 can process 16 f32s or 8 f64s
         } else if self.has_avx2 || self.has_avx {
@@ -98,7 +98,7 @@ impl SimdStats {
         if self.total_elements == 0 {
             0.0
         } else {
-            f64::from(self.simd_elements) / f64::from(self.total_elements)
+            self.simd_elements as f64 / self.total_elements as f64
         }
     }
 
@@ -107,7 +107,7 @@ impl SimdStats {
         if self.processing_time_ns == 0 {
             0.0
         } else {
-            (f64::from(self.total_elements) * 1_000_000_000.0) / f64::from(self.processing_time_ns)
+            (self.total_elements as f64 * 1_000_000_000.0) / self.processing_time_ns as f64
         }
     }
 

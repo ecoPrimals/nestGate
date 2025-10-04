@@ -179,7 +179,7 @@ impl PerformanceOptimizationValidator {
         let optimized_memory = self.measure_optimized_memory_usage().await?;
         
         let memory_reduction = baseline_memory.saturating_sub(optimized_memory);
-        let improvement = (f64::from(memory_reduction) / f64::from(baseline_memory)) * 100.0;
+        let improvement = (memory_reduction as f64 / baseline_memory as f64) * 100.0;
         
         Ok(OptimizationResult {
             name: "Memory Efficiency".to_string(),
@@ -372,7 +372,7 @@ impl ValidationReport {
         for (name, result) in &self.results {
             let status = if result.target_met { "✅" } else { "❌" };
             println!("{} {}: {:.1}% improvement, {:.1} KB saved", 
-                status, name, result.improvement_percentage, result.f64::from(memory_saved_bytes) / 1024.0);
+                status, name, result.improvement_percentage, result.memory_saved_bytes as f64 / 1024.0);
         }
     }
 }

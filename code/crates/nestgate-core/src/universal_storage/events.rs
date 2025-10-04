@@ -51,7 +51,7 @@ impl StorageEventBroadcaster {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn subscribe(&self) -> Result<StorageEventStream>   {
+        pub fn subscribe(&self) -> Result<StorageEventStream>   {
         self.subscription_manager.create_subscription()
     }
 
@@ -125,7 +125,7 @@ pub enum StorageEvent {
 }
 impl StorageEvent {
     /// Create a storage event from a storage response
-    pub const fn from_response(response: &StorageResponse) -> Self {
+    pub fn from_response(response: &StorageResponse) -> Self {
         // Convert response to appropriate event
         match response {
             StorageResponse::Success {
@@ -163,7 +163,7 @@ impl SubscriptionManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn create_subscription(&self) -> Result<StorageEventStream>  {
+        pub fn create_subscription(&self) -> Result<StorageEventStream>  {
         // Create placeholder event stream
         Ok(StorageEventStream)
     }

@@ -51,7 +51,7 @@ fn benchmark_hashmap_key_strategies(c: &mut Criterion) {
     });
 
     group.bench_function("borrowed_str_keys", |b| {
-        let keys: Vec<String> = (0..100).map(|i| format!("key_{}", i).collect();
+        let keys: Vec<String> = (0..100).map(|i| format!("key_{}", i)).collect();
         b.iter(|| {
             let mut map: HashMap<&str, i32> = HashMap::new();
             for (i, key) in keys.iter().enumerate() {

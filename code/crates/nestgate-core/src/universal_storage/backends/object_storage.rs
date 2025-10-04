@@ -64,7 +64,7 @@ pub struct ObjectStorageBackend {
 }
 impl ObjectStorageBackend {
     /// Create a new object storage backend
-    pub const fn new(config: ObjectStorageConfig) -> Self {
+    pub fn new(config: ObjectStorageConfig) -> Self {
         info!(
             "🪣 Creating S3-compatible object storage backend for: {}",
             config.endpoint
@@ -82,14 +82,14 @@ impl ObjectStorageBackend {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn for_aws_s3(
+        pub fn for_aws_s3(
         region: String,
         access_key: String,
         secret_key: String,
         bucket: String,
     ) -> Result<Self>  {
         let config = ObjectStorageConfig {
-            endpoint: format!("https://s3.{"actual_error_details"}.amazonaws.com"),
+            endpoint: format!("https://s3.{}.amazonaws.com", region),
             region,
             access_key,
             secret_key,
@@ -108,7 +108,7 @@ impl ObjectStorageBackend {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn for_minio(
+        pub fn for_minio(
         endpoint: String,
         access_key: String,
         secret_key: String,
@@ -134,7 +134,7 @@ impl ObjectStorageBackend {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn from_env() -> Result<Self>  {
+        pub fn from_env() -> Result<Self>  {
         let _endpoint =
             std::env::var("S3_ENDPOINT").unwrap_or_else(|_| "https://s3.amazonaws.com".to_string());
         let region = std::env::var("S3_REGION").unwrap_or_else(|_| "us-east-1".to_string());
@@ -216,7 +216,7 @@ pub struct ObjectStorageConfigBuilder {
     timeout_seconds: u64,
 }
 impl ObjectStorageConfigBuilder {
-    pub const fn new() -> Self { Self {
+    pub fn new() -> Self { Self {
             endpoint: None,
             region: "us-east-1".to_string(),
             access_key: None,
@@ -259,11 +259,11 @@ impl ObjectStorageConfigBuilder {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn build(self) -> Result<ObjectStorageConfig>  {
+        pub fn build(self) -> Result<ObjectStorageConfig>  {
         Ok(ObjectStorageConfig {
             endpoint: self
                 .endpoint
-                .unwrap_or_else(|| format!("https://s3.{"actual_error_details"}.amazonaws.com")),
+                .unwrap_or_else(|| format!("https://s3.{}.amazonaws.com", self.region)),
             region: self.region,
             access_key: self.access_key.ok_or_else(|| NestGateError::internal_error(
                 debug_info: None,

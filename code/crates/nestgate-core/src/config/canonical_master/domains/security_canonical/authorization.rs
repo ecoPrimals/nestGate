@@ -17,7 +17,7 @@ pub struct AccessControlConfig {
 
 impl AccessControlConfig {
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self {
             enabled: false,
             default_policy: "allow_all".to_string(),
@@ -25,7 +25,7 @@ impl AccessControlConfig {
     }
 
     #[must_use]
-    pub const fn compliance_focused() -> Self {
+    pub fn compliance_focused() -> Self {
         Self {
             enabled: true,
             default_policy: "deny_all".to_string(),
@@ -33,7 +33,7 @@ impl AccessControlConfig {
     }
 
     #[must_use]
-    pub const fn production_hardened() -> Self {
+    pub fn production_hardened() -> Self {
         Self {
             enabled: true,
             default_policy: "strict_deny".to_string(),
@@ -83,22 +83,22 @@ impl Default for AccessControlConfig {
 
 impl AuthorizationConfig {
     #[must_use]
-    pub const fn production_hardened() -> Self {
+    pub fn production_hardened() -> Self {
         Self::default()
     }
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self::default()
     }
     #[must_use]
-    pub const fn compliance_focused() -> Self {
+    pub fn compliance_focused() -> Self {
         Self::default()
     }
     #[must_use]
-    pub const fn merge(self, _other: Self) -> Self {
+    pub fn merge(self, _other: Self) -> Self {
         self
     }
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }
 }

@@ -17,7 +17,7 @@ impl ConfigValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(config: &CanonicalConfig) -> Result<()>  {
+        pub fn validate(config: &CanonicalConfig) -> Result<()>  {
         Self::validate_system(&config.system)?;
         Self::validate_network(&config.network)?;
         Self::validate_storage(&config.storage)?;

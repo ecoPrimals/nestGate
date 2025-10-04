@@ -15,7 +15,7 @@ pub struct SecurityAuditLogger {
 }
 impl SecurityAuditLogger {
     /// Create new security audit logger
-    pub const fn new(config: AuditConfig) -> Self {
+    pub fn new(config: AuditConfig) -> Self {
         Self { config }
     }
 

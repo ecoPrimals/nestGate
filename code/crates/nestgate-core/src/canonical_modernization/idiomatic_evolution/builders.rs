@@ -14,7 +14,7 @@ pub struct IdiomaticConfigBuilder<T> {
 }
 impl<T> IdiomaticConfigBuilder<T> {
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             inner: None,
             metadata: EvolutionMetadata::default(),
@@ -44,7 +44,7 @@ pub struct SmartConfigBuilder<T> {
 }
 impl<T> SmartConfigBuilder<T> {
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: None,
             evolution_metadata: EvolutionMetadata::default(),
@@ -81,7 +81,7 @@ pub struct EvolutionAwareBuilder<T> {
 }
 impl<T> EvolutionAwareBuilder<T> {
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             target: None,
             compatibility_checked: false,
@@ -117,7 +117,7 @@ pub struct CanonicalBuilder<T> {
 }
 impl<T> CanonicalBuilder<T> {
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             item: None,
             canonical_patterns_applied: false,

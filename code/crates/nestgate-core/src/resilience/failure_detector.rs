@@ -55,7 +55,7 @@ pub struct ServiceHealth {
     last_check: Instant,
 }
 impl FailureDetector {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::with_config(FailureDetectorConfig::default())
     }
 

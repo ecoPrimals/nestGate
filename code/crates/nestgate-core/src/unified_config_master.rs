@@ -555,7 +555,7 @@ impl Default for ConfigMetadata {
 
 impl NestGateMasterConfig {
     /// Create a new master configuration with defaults
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
@@ -606,7 +606,7 @@ impl NestGateMasterConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<()>  {
+        pub fn validate(&self) -> Result<()>  {
         // Implementation would perform comprehensive validation
         // For now, basic validation
         if self.system.instance_name.is_empty() {
@@ -643,7 +643,7 @@ impl NestGateMasterConfig {
     }
 
     /// Get configuration schema for documentation
-    pub const fn schema() -> serde_json::Value {
+    pub fn schema() -> serde_json::Value {
         // Implementation would generate JSON schema
         serde_json::json!({
             "type": "object",

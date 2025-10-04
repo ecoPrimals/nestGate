@@ -181,12 +181,12 @@ impl PolicyManager {
     }
 
     /// Get a policy by name
-    pub const fn get_policy(&self, name: &str) -> Option<&SecurityPolicy> {
+    pub fn get_policy(&self, name: &str) -> Option<&SecurityPolicy> {
         self.policies.get(name)
     }
 
     /// Get the default policy
-    pub const fn get_default_policy(&self) -> &SecurityPolicy {
+    pub fn get_default_policy(&self) -> &SecurityPolicy {
         self.policies.get(&self.default_policy).unwrap_or_else(|| {
             tracing::error!("Expect failed: Default policy must exist");
             panic!(
@@ -238,7 +238,7 @@ impl PolicyManager {
     }
 
     /// List all policies
-    pub const fn list_policies(&self) -> Vec<&SecurityPolicy> {
+    pub fn list_policies(&self) -> Vec<&SecurityPolicy> {
         self.policies.values().collect()
     }
 
@@ -250,7 +250,7 @@ impl PolicyManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_access(
+        pub fn validate_access(
         &self,
         policy_name: &str,
         client_ip: &str,

@@ -57,7 +57,7 @@ impl LogAggregator {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn log(&self, entry: LogEntry) -> Result<()>  {
+        pub fn log(&self, entry: LogEntry) -> Result<()>  {
         self.sender.send(entry).map_err(|_e| {
             crate::error::NestGateError::internal_error(
                 &format!("Failed to send log entry: {"actual_error_details"}"),

@@ -409,7 +409,7 @@ pub struct XssSettings {
 
 impl MiddlewareSecuritySettings {
     /// Development security settings
-    pub const fn development() -> Self {
+    pub fn development() -> Self {
         Self {
             cors: CorsSettings {
                 enabled: true,
@@ -439,7 +439,7 @@ impl MiddlewareSecuritySettings {
     }
 
     /// Production security settings
-    pub const fn production() -> Self { Self {
+    pub fn production() -> Self { Self {
             authentication: AuthenticationMiddlewareSettings {
                 enabled: true,
                 ..Default::default()

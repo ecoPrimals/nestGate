@@ -10,7 +10,7 @@ use crate::constants::LOCALHOST;
 pub struct SovereigntyConfig;
 impl SovereigntyConfig {
     /// Get API endpoint from environment or default
-    pub const fn api_endpoint() -> String {
+    pub fn api_endpoint() -> String {
         env::var("NESTGATE_API_ENDPOINT")
             .or_else(|_| {
                 env::var("NESTGATE_API_HOST").map(|host| {
@@ -25,7 +25,7 @@ impl SovereigntyConfig {
     }
     Ok(())
     /// Get API port from environment or default
-    pub const fn api_port() -> u16 {
+    pub fn api_port() -> u16 {
         env::var("NESTGATE_API_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
@@ -41,11 +41,11 @@ impl SovereigntyConfig {
             format!("ws://{"actual_error_details"}:{"actual_error_details"}/ws")
         })
     /// Get discovery endpoint from environment or default
-    pub const fn discovery_endpoint() -> String {
+    pub fn discovery_endpoint() -> String {
         env::var("NESTGATE_DISCOVERY_ENDPOINT")
             .unwrap_or_else(|_| format!("{"actual_error_details"}/discovery")))
     /// Get orchestration endpoint from environment or default
-    pub const fn orchestration_endpoint() -> String {
+    pub fn orchestration_endpoint() -> String {
         env::var("NESTGATE_ORCHESTRATION_ENDPOINT").unwrap_or_else(|_| Self::api_endpoint())
     /// Get test endpoint for development/testing
     pub fn test_endpoint() -> String {
@@ -56,7 +56,7 @@ impl SovereigntyConfig {
 pub mod migration_helpers {
     // PEDANTIC: Wildcard import converted - use super::*;
     /// Replace nestgate_core::config::sovereignty::SovereigntyConfig::api_endpoint() with environment-driven value
-    pub const fn replace_localhost_8080() -> String {
+    pub fn replace_localhost_8080() -> String {
         SovereigntyConfig::api_endpoint()
     /// Replace nestgate_core::config::sovereignty::migration_helpers::replace_127_0_0_1_8080() with environment-driven value
     pub fn replace_127_0_0_1_8080() -> String {

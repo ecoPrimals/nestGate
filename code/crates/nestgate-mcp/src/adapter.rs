@@ -65,7 +65,7 @@ pub struct McpAdapter {
 }
 impl McpAdapter {
     /// Create a new MCP adapter
-    pub const fn new(config: AdapterConfig) -> Self {
+    pub fn new(config: AdapterConfig) -> Self {
         info!("Initializing MCP adapter: {}", config.name);
 
         Self { config,

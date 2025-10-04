@@ -54,7 +54,7 @@ impl Default for ZeroCostSecurityConfig {
 impl ZeroCostSecurityConfig {
     /// Create a new security configuration
     #[must_use]
-    pub const fn new(provider_id: String) -> Self {
+    pub fn new(provider_id: String) -> Self {
         Self {
             provider_id,
             ..Default::default()
@@ -63,25 +63,25 @@ impl ZeroCostSecurityConfig {
 
     /// Get token expiry duration
     #[must_use]
-    pub const fn token_expiry_duration(&self) -> Duration {
+    pub fn token_expiry_duration(&self) -> Duration {
         Duration::from_secs(self.token_expiry_seconds)
     }
 
     /// Get authentication timeout duration
     #[must_use]
-    pub const fn auth_timeout_duration(&self) -> Duration {
+    pub fn auth_timeout_duration(&self) -> Duration {
         Duration::from_secs(self.auth_timeout_seconds)
     }
 
     /// Get lockout duration
     #[must_use]
-    pub const fn lockout_duration(&self) -> Duration {
+    pub fn lockout_duration(&self) -> Duration {
         Duration::from_secs(self.lockout_duration_seconds)
     }
 
     /// Get key rotation interval
     #[must_use]
-    pub const fn key_rotation_interval(&self) -> Duration {
+    pub fn key_rotation_interval(&self) -> Duration {
         Duration::from_secs(self.key_rotation_days as u64 * 24 * 3600)
     }
 
@@ -93,7 +93,7 @@ impl ZeroCostSecurityConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<(), String>  {
+    pub fn validate(&self) -> Result<(), String> {
         if self.provider_id.is_empty() {
             return Err("Provider ID cannot be empty".to_string());
         }
@@ -127,7 +127,7 @@ impl ZeroCostSecurityConfig {
 
     /// Create a high-security configuration
     #[must_use]
-    pub const fn high_security() -> Self {
+    pub fn high_security() -> Self {
         Self {
             token_expiry_seconds: 1800, // 30 minutes
             max_concurrent_auth: 500,
@@ -144,7 +144,7 @@ impl ZeroCostSecurityConfig {
 
     /// Create a development configuration
     #[must_use]
-    pub const fn development() -> Self {
+    pub fn development() -> Self {
         Self {
             token_expiry_seconds: 7200, // 2 hours
             max_concurrent_auth: 10000,

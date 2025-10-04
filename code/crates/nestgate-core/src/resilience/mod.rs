@@ -216,7 +216,7 @@ impl ResilienceManager {
         }
 
         let success_rate = if total_operations > 0 {
-            (f64::from(total_successes) / f64::from(total_operations)) * 100.0
+            (total_successes as f64 / total_operations as f64) * 100.0
         } else {
             100.0
         };

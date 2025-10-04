@@ -39,7 +39,7 @@ pub struct TimeoutManager {
     config: TimeoutConfig,
 }
 impl TimeoutManager {
-    pub const fn new(config: TimeoutConfig) -> Self {
+    pub fn new(config: TimeoutConfig) -> Self {
         Self { config }
     }
 

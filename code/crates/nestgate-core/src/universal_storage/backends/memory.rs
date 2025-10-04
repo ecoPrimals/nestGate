@@ -18,7 +18,7 @@ pub struct MemoryStorageBackend {
 }
 impl MemoryStorageBackend {
     /// Create a new memory storage backend
-    pub const fn new(name: impl Into<String>) -> Self {
+    pub fn new(name: impl Into<String>) -> Self {
         let name = name.into();
         info!("🧠 Creating memory storage backend: {}", name);
         
@@ -28,7 +28,7 @@ impl MemoryStorageBackend {
          }
 
     /// Get the number of stored items
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.data.read().unwrap_or_else(|_| {
             error!("Failed to acquire read lock for data");
             std::process::abort();
@@ -36,7 +36,7 @@ impl MemoryStorageBackend {
     }
 
     /// Check if the storage is empty
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
@@ -89,7 +89,7 @@ impl StorageBackend for MemoryStorageBackend {
                     debug!("❌ Path not found in memory storage: {}", path);
                     Err(crate::error::NestGateError::storage_error(
                         "memory_not_found",
-                        &format!("Path not found: {"actual_error_details"}"),
+                        &format!("Path not found: {}", path),
                         None
                     ))
                 }
@@ -136,7 +136,7 @@ impl StorageBackend for MemoryStorageBackend {
                     created_at: now,
                     modified_at: now,
                     content_type: Some("application/octet-stream".to_string()),
-                    etag: Some(format!("{"actual_error_details"}")),
+                    etag: Some(format!("{:x}", hash)),
                     custom_metadata: HashMap::new(),
                 };
                 
@@ -193,7 +193,7 @@ impl StorageBackend for MemoryStorageBackend {
                 debug!("❌ Path not found in memory storage for deletion: {}", path);
                 Err(crate::error::NestGateError::storage_error(
                     "memory_not_found",
-                    &format!("Path not found for deletion: {"actual_error_details"}"),
+                    &format!("Path not found for deletion: {}", path),
                     None
                 ))
             }
@@ -272,7 +272,7 @@ impl StorageBackend for MemoryStorageBackend {
                     debug!("❌ Metadata not found in memory storage: {}", path);
                     Err(crate::error::NestGateError::storage_error(
                         "memory_metadata_not_found",
-                        &format!("Metadata not found: {"actual_error_details"}"),
+                        &format!("Metadata not found: {}", path),
                         None
                     ))
                 }

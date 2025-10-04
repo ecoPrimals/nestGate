@@ -177,7 +177,7 @@ pub fn assert_test_performance<T>(
     Ok(operation_result)
     }
 /// Memory usage assertion helper
-pub const fn assert_test_memory_usage(
+pub fn assert_test_memory_usage(
     current_memory: u64,
     max_memory: u64,
     test_context: &str,

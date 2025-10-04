@@ -186,7 +186,7 @@ impl CpuPerformanceConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<()>  {
+    pub fn validate(&self) -> Result<()> {
         // Validate thread pool configuration
         if self.thread_pools.core_size == 0 {
             return Err(NestGateError::configuration_error(

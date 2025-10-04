@@ -92,7 +92,7 @@ pub struct ZfsHealthStatus {
 
 impl ZfsService {
     /// Create a new ZFS service
-    pub const fn new(config: ZfsServiceConfig) -> Self {
+    pub fn new(config: ZfsServiceConfig) -> Self {
         Self {
             config,
             node_id: Uuid::new_v4().to_string(),
@@ -103,7 +103,7 @@ impl ZfsService {
     }
 
     /// Get service information for orchestration module registration
-    pub const fn get_service_info(&self) -> ServiceRegistration {
+    pub fn get_service_info(&self) -> ServiceRegistration {
         ServiceRegistration {
             service_id: self.node_id.clone(),
             service_type: "storage".to_string(),
@@ -124,7 +124,7 @@ impl ZfsService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_health_status(&mut self) -> Result<ZfsHealthStatus>  {
+    pub async fn get_health_status(&mut self) -> Result<ZfsHealthStatus> {
         // Perform real ZFS health checks
         let pool_health = self.check_pool_health().await?;
         let dataset_health = self.check_dataset_health().await?;
@@ -170,8 +170,8 @@ impl ZfsService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn register_with_orchestrator(&mut self, _orchestrator_url: &str) -> Result<()>  {
+    #[must_use]
+    pub fn register_with_orchestrator(&mut self, _orchestrator_url: &str) -> Result<()> {
         info!("🔗 Registering with orchestration module");
 
         // STUB: Registration logic would go here
@@ -297,7 +297,7 @@ impl ZfsService {
         }
 
         let memory_usage_percent =
-            ((total_memory - available_memory) as f64 / f64::from(total_memory)) * 100.0;
+            ((total_memory - available_memory) as f64 / total_memory as f64) * 100.0;
 
         if memory_usage_percent > 90.0 {
             warn!("⚠️ High memory usage: {:.1}%", memory_usage_percent);

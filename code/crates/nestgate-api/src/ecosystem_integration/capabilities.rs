@@ -9,7 +9,7 @@ use super::types::{ServiceCapability, ServiceCategory};
 pub struct CapabilityMatcher;
 impl CapabilityMatcher {
     /// Check if a service capability matches requirements
-    pub const fn matches_requirement(
+    pub fn matches_requirement(
         capability: &ServiceCapability,
         requirement: &ServiceCapability,
     ) -> bool {
@@ -31,7 +31,7 @@ impl CapabilityMatcher {
     }
 
     /// Score capability match quality (0.0 to 1.0)
-    pub const fn match_score(
+    pub fn match_score(
         capability: &ServiceCapability,
         requirement: &ServiceCapability,
     ) -> f64 {

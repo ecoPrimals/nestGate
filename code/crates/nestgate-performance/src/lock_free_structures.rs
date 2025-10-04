@@ -38,7 +38,7 @@ struct Node<T> {
 
 impl<T> LockFreeMpscQueue<T> {
     /// Create new lock-free MPSC queue
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         let dummy = Box::into_raw(Box::new(Node {
             data: None,
             next: AtomicPtr::new(std::ptr::null_mut()),
@@ -66,7 +66,7 @@ impl<T> LockFreeMpscQueue<T> {
 
     /// Dequeue item (single consumer only)
     /// PERFORMANCE: O(1) lock-free operation
-    pub const fn dequeue(&self) -> Option<T> {
+    pub fn dequeue(&self) -> Option<T> {
         let head = self.head.load(Ordering::Acquire);
         
         unsafe {
@@ -87,7 +87,7 @@ impl<T> LockFreeMpscQueue<T> {
     }
 
     /// Check if queue is empty (approximate)
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         let head = self.head.load(Ordering::Acquire);
         unsafe {
             (*head).next.load(Ordering::Acquire).is_null()
@@ -173,7 +173,7 @@ where
 
     /// Insert key-value pair
     /// PERFORMANCE: O(1) average case lock-free operation
-    pub const fn insert(&self, key: K, value: V) -> Option<V> {
+    pub fn insert(&self, key: K, value: V) -> Option<V> {
         let hash = self.hash_key(&key);
         let bucket_idx = (hash as usize) & (self.bucket_count - 1);
         let bucket = &self.buckets[bucket_idx];
@@ -218,7 +218,7 @@ where
 
     /// Get value by key
     /// PERFORMANCE: O(1) average case lock-free operation
-    pub const fn get(&self, key: &K) -> Option<V> {
+    pub fn get(&self, key: &K) -> Option<V> {
         let hash = self.hash_key(key);
         let bucket_idx = (hash as usize) & (self.bucket_count - 1);
         let bucket = &self.buckets[bucket_idx];
@@ -229,7 +229,7 @@ where
 
     /// Remove key-value pair
     /// PERFORMANCE: O(1) average case lock-free operation
-    pub const fn remove(&self, key: &K) -> Option<V> {
+    pub fn remove(&self, key: &K) -> Option<V> {
         let hash = self.hash_key(key);
         let bucket_idx = (hash as usize) & (self.bucket_count - 1);
         let bucket = &self.buckets[bucket_idx];
@@ -244,12 +244,12 @@ where
     }
 
     /// Get current size (approximate)
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.size.load(Ordering::Relaxed)
     }
 
     /// Check if map is empty
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
@@ -363,7 +363,7 @@ struct StackNode<T> {
 
 impl<T> LockFreeStack<T> {
     /// Create new lock-free stack
-    pub const fn new() -> Self { Self {
+    pub fn new() -> Self { Self {
             head: AtomicPtr::new(std::ptr::null_mut()),
             _phantom: PhantomData,
          }
@@ -396,7 +396,7 @@ impl<T> LockFreeStack<T> {
 
     /// Pop item from stack
     /// PERFORMANCE: O(1) lock-free operation
-    pub const fn pop(&self) -> Option<T> {
+    pub fn pop(&self) -> Option<T> {
         loop {
             let head = self.head.load(Ordering::Acquire);
             
@@ -421,7 +421,7 @@ impl<T> LockFreeStack<T> {
     }
 
     /// Check if stack is empty
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.head.load(Ordering::Acquire).is_null()
     }
 
@@ -466,7 +466,7 @@ where
     T: Send + Sync + Clone + 'static,
 {
     /// Create new zero-cost concurrent service registry
-    pub const fn new() -> Self { Self {
+    pub fn new() -> Self { Self {
             services: LockFreeHashMap::with_capacity(64),
             active_services: LockFreeStack::new(),
             service_count: AtomicUsize::new(0),
@@ -481,7 +481,7 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn register_service(&self, name: String, service: Arc<T>) -> Result<()>  {
+        pub fn register_service(&self, name: String, service: Arc<T>) -> Result<()>  {
         if self.services.insert(name.clone(), service).is_none() {
             self.active_services.push(name);
             self.service_count.fetch_add(1, Ordering::Relaxed);
@@ -490,12 +490,12 @@ where
     }
 
     /// Get a service by name
-    pub const fn get_service(&self, name: &str) -> Option<Arc<T>> {
+    pub fn get_service(&self, name: &str) -> Option<Arc<T>> {
         self.services.get(&name.to_string())
     }
 
     /// Remove a service by name
-    pub const fn remove_service(&self, name: &str) -> bool {
+    pub fn remove_service(&self, name: &str) -> bool {
         if let Some(service) = self.services.remove(&name.to_string()) {
             true
         } else {
@@ -504,7 +504,7 @@ where
     }
 
     /// Get service count
-    pub const fn service_count(&self) -> usize {
+    pub fn service_count(&self) -> usize {
         self.service_count.load(Ordering::Relaxed)
     }
 
@@ -576,7 +576,7 @@ pub mod benchmarks {
         // Traditional locked queue would be 10-50x slower in high contention
         let locked_time = lock_free_time * 25; // Conservative estimate
 
-        let improvement = ((locked_time - lock_free_time) as f64 / f64::from(locked_time)) * 100.0;
+        let improvement = ((locked_time - lock_free_time) as f64 / locked_time as f64) * 100.0;
 
         tracing::info!(
             "Lock-Free Queue: {}ns, Locked: {}ns (est), Improvement: {:.1}%",
@@ -620,7 +620,7 @@ pub mod benchmarks {
         let lock_free_time = start.elapsed().as_nanos() as u64;
         let locked_time = lock_free_time * 15; // Lock-free typically 10-20x faster
 
-        let improvement = ((locked_time - lock_free_time) as f64 / f64::from(locked_time)) * 100.0;
+        let improvement = ((locked_time - lock_free_time) as f64 / locked_time as f64) * 100.0;
 
         tracing::info!(
             "Lock-Free HashMap: {}ns, Locked: {}ns (est), Improvement: {:.1}%",

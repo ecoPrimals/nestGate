@@ -13,6 +13,6 @@ pub use crate::config::canonical_master::domains::{
 /// Backward compatibility type alias
 pub type UnifiedDynamicConfig = CanonicalNetworkConfig;
 /// Default unified dynamic configuration
-pub const fn default_unified_config() -> CanonicalNetworkConfig {
+pub fn default_unified_config() -> CanonicalNetworkConfig {
     CanonicalNetworkConfig::default()
 }

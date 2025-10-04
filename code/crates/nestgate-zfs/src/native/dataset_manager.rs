@@ -45,7 +45,7 @@ impl Default for DatasetCreateOptions {
 
 impl NativeZfsDatasetManager {
     /// Create a new dataset manager
-    pub const fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
+    pub fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
         Self { command_executor }
     }
 
@@ -57,7 +57,7 @@ impl NativeZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn list_datasets(&self) -> Result<Vec<String>>  {
+    pub async fn list_datasets(&self) -> Result<Vec<String>> {
         let output = self
             .command_executor
             .execute_command_expect_success(&["list", "-H", "-o", "name", "-t", "filesystem"])
@@ -78,7 +78,7 @@ impl NativeZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_dataset_info(&self, dataset_name: &str) -> Result<DatasetInfo>  {
+    pub async fn get_dataset_info(&self, dataset_name: &str) -> Result<DatasetInfo> {
         let properties = self.command_executor.get_dataset_info(dataset_name).await?;
 
         let used_bytes = properties
@@ -128,11 +128,7 @@ impl NativeZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn create_dataset(
-        &self,
-        dataset_name: &str,
-        options: &DatasetCreateOptions,
-    ) -> Result<()>  {
+    pub fn create_dataset(&self, dataset_name: &str, options: &DatasetCreateOptions) -> Result<()> {
         let mut properties = HashMap::new();
 
         // Set compression
@@ -194,8 +190,8 @@ impl NativeZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn destroy_dataset(&self, dataset_name: &str, force: bool) -> Result<()>  {
+    #[must_use]
+    pub fn destroy_dataset(&self, dataset_name: &str, force: bool) -> Result<()> {
         let mut args = vec!["destroy"];
         if force {
             args.push("-f");
@@ -218,12 +214,7 @@ impl NativeZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn set_property(
-        &self,
-        dataset_name: &str,
-        property: &str,
-        value: &str,
-    ) -> Result<()>  {
+    pub fn set_property(&self, dataset_name: &str, property: &str, value: &str) -> Result<()> {
         let propertyvalue = format!("{property}={"actual_error_details"}");
         self.command_executor
             .execute_command_expect_success(&["set", &propertyvalue, dataset_name])
@@ -244,7 +235,7 @@ impl NativeZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_property(&self, dataset_name: &str, property: &str) -> Result<String>  {
+    pub async fn get_property(&self, dataset_name: &str, property: &str) -> Result<String> {
         let output = self
             .command_executor
             .execute_command_expect_success(&["get", "-H", "-o", "value", property, dataset_name])
@@ -261,7 +252,7 @@ impl NativeZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn mount_dataset(&self, dataset_name: &str) -> Result<()>  {
+    pub async fn mount_dataset(&self, dataset_name: &str) -> Result<()> {
         self.command_executor
             .execute_command_expect_success(&["mount", dataset_name])
             .await?;
@@ -278,8 +269,8 @@ impl NativeZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn unmount_dataset(&self, dataset_name: &str, force: bool) -> Result<()>  {
+    #[must_use]
+    pub fn unmount_dataset(&self, dataset_name: &str, force: bool) -> Result<()> {
         let mut args = vec!["unmount"];
         if force {
             args.push("-f");
@@ -302,7 +293,7 @@ impl NativeZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_dataset_usage(&self, dataset_name: &str) -> Result<HashMap<String, u64>>  {
+    pub async fn get_dataset_usage(&self, dataset_name: &str) -> Result<HashMap<String, u64>> {
         let properties = self.command_executor.get_dataset_info(dataset_name).await?;
 
         let mut usage = HashMap::new();

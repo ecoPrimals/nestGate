@@ -25,25 +25,25 @@
 /// Validate that a threshold value is within valid percentage range
 /// **PURE FUNCTION**: Range validation with boundary conditions
 /// **TESTABLE**: Can verify boundary conditions (0.0, 100.0) precisely
-pub const fn is_valid_percentage_threshold(threshold: f64) -> bool {
+pub fn is_valid_percentage_threshold(threshold: f64) -> bool {
     (0.0..=100.0).contains(&threshold)
     }
 /// Check if a consensus threshold is valid for production use
 /// **PURE FUNCTION**: Range validation for consensus systems
 /// **TESTABLE**: Can verify security-critical boundary conditions
-pub const fn is_valid_consensus_threshold(threshold: f64) -> bool {
+pub fn is_valid_consensus_threshold(threshold: f64) -> bool {
     (0.5..=1.0).contains(&threshold)
     }
 /// Validate that a port number is in the valid range
 /// **PURE FUNCTION**: Port range validation
 /// **TESTABLE**: Can verify port boundary conditions
-pub const fn is_valid_port_number(port: u16) -> bool {
+pub fn is_valid_port_number(port: u16) -> bool {
     port > 0 // u16 max is 65535, so no need to check upper bound
     }
 /// Check if a string field is non-empty (common validation pattern)
 /// **PURE FUNCTION**: Simple string validation
 /// **TESTABLE**: Can verify empty string handling
-pub const fn is_non_empty_string(value: &str) -> bool {
+pub fn is_non_empty_string(value: &str) -> bool {
     !value.is_empty()
     }
 /// Check if a file path is valid and safe
@@ -73,19 +73,19 @@ pub const fn is_non_empty_string(value: &str) -> bool {
 /// Validate that a numeric value is positive (common validation pattern)
 /// **PURE FUNCTION**: Positivity check with zero exclusion
 /// **TESTABLE**: Can verify boundary condition at zero
-pub const fn is_positive_number(value: u64) -> bool {
+pub fn is_positive_number(value: u64) -> bool {
     value > 0
     }
 /// Check if TLS configuration has required certificate files
 /// **PURE FUNCTION**: File path validation predicate
 /// **TESTABLE**: Can verify both conditions must be true (&&)
-pub const fn has_required_tls_files(cert_file: &str, key_file: &str) -> bool {
+pub fn has_required_tls_files(cert_file: &str, key_file: &str) -> bool {
     is_non_empty_string(cert_file) && is_non_empty_string(key_file)
     }
 /// Check if monitoring configuration has any notification methods
 /// **PURE FUNCTION**: Optional field checking with OR logic
 /// **TESTABLE**: Can verify || mutation detection (any method present)
-pub const fn has_notification_methods(has_email: bool, has_slack: bool, has_webhook: bool) -> bool {
+pub fn has_notification_methods(has_email: bool, has_slack: bool, has_webhook: bool) -> bool {
     has_email || has_slack || has_webhook
     }
 /// Validate Prometheus configuration completeness
@@ -101,7 +101,7 @@ pub const fn has_notification_methods(has_email: bool, has_slack: bool, has_webh
 /// Check if certificate signature has valid format
 /// **PURE FUNCTION**: Signature format validation with multiple prefixes
 /// **TESTABLE**: Can verify OR logic for multiple valid prefixes
-pub const fn has_valid_signature_format(signature: &str) -> bool {
+pub fn has_valid_signature_format(signature: &str) -> bool {
     if signature.len() < 10 {
         return false;
     }
@@ -115,7 +115,7 @@ pub const fn has_valid_signature_format(signature: &str) -> bool {
 /// Check if communication is internal based on prefix matching
 /// **PURE FUNCTION**: Prefix validation with AND logic
 /// **TESTABLE**: Can verify both source and destination must match
-pub const fn is_internal_communication(source: &str, destination: &str) -> bool {
+pub fn is_internal_communication(source: &str, destination: &str) -> bool {
     let internal_prefixes = ["nestgate", "primal", "internal"];
     let source_internal = internal_prefixes
         .iter()
@@ -130,7 +130,7 @@ pub const fn is_internal_communication(source: &str, destination: &str) -> bool 
 /// Validate alert thresholds are all within valid ranges
 /// **PURE FUNCTION**: Multiple threshold validation with AND logic
 /// **TESTABLE**: Can verify all thresholds must be valid
-pub const fn are_alert_thresholds_valid(
+pub fn are_alert_thresholds_valid(
     cpu_threshold: f64,
     memory_threshold: f64,
     disk_threshold: f64,
@@ -146,7 +146,7 @@ pub const fn are_alert_thresholds_valid(
 /// Check if user has required role for operation
 /// **PURE FUNCTION**: Role-based access control predicate
 /// **TESTABLE**: Can verify role hierarchy logic
-pub const fn has_required_role(user_role: &str, required_role: &str) -> bool {
+pub fn has_required_role(user_role: &str, required_role: &str) -> bool {
     // Admin role can access everything
     if user_role == "admin" {
         return true;
@@ -158,7 +158,7 @@ pub const fn has_required_role(user_role: &str, required_role: &str) -> bool {
 /// Check if user has any of the required permissions
 /// **PURE FUNCTION**: Permission checking with OR logic
 /// **TESTABLE**: Can verify any permission grants access
-pub const fn has_any_required_permission(
+pub fn has_any_required_permission(
     user_permissions: &[String],
     required_permissions: &[String],
 ) -> bool {
@@ -175,7 +175,7 @@ pub const fn has_any_required_permission(
 /// Validate system resource configuration
 /// **PURE FUNCTION**: Resource limit validation with multiple conditions
 /// **TESTABLE**: Can verify all resource limits are valid
-pub const fn are_system_resources_valid(
+pub fn are_system_resources_valid(
     worker_threads: usize,
     request_timeout: u64,
     connection_timeout: u64,
@@ -191,7 +191,7 @@ pub const fn are_system_resources_valid(
 /// Check if security configuration requires capabilities in production
 /// **PURE FUNCTION**: Environment-based security validation
 /// **TESTABLE**: Can verify production security requirements
-pub const fn requires_security_capabilities_in_production(
+pub fn requires_security_capabilities_in_production(
     is_production: bool,
     capabilities_count: usize,
 ) -> bool {
@@ -204,7 +204,7 @@ pub const fn requires_security_capabilities_in_production(
 /// Validate that monitoring is properly configured if enabled
 /// **PURE FUNCTION**: Conditional validation based on enabled state
 /// **TESTABLE**: Can verify enabled implies valid configuration
-pub const fn is_monitoring_config_complete(
+pub fn is_monitoring_config_complete(
     alerts_enabled: bool,
     has_notifications: bool,
     prometheus_enabled: bool,

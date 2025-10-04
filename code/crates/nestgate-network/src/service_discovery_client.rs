@@ -24,7 +24,7 @@ pub struct LocalServiceRegistry {
 }
 
 impl LocalServiceRegistry {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
@@ -42,7 +42,7 @@ impl LocalServiceRegistry {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn discover_services(&self, _service_type: &str) -> Result<Vec<ServiceInstance>>  {
+        pub fn discover_services(&self, _service_type: &str) -> Result<Vec<ServiceInstance>>  {
         debug!("🔍 Local service discovery (all services - no type filtering in current implementation)");
 
         let services: Vec<ServiceInstance> = self.services.values().cloned().collect();
@@ -52,7 +52,7 @@ impl LocalServiceRegistry {
     }
 
     /// Get all registered services
-    pub const fn get_all_services(&self) -> Vec<ServiceInstance> {
+    pub fn get_all_services(&self) -> Vec<ServiceInstance> {
         self.services.values().cloned().collect()
     }
 }
@@ -71,7 +71,7 @@ pub struct ServiceDiscoveryClient {
 
 impl ServiceDiscoveryClient {
     /// Create new service discovery client with universal adapter
-    pub const fn new(universal_adapter: Arc<UniversalAdapter>) -> Self {
+    pub fn new(universal_adapter: Arc<UniversalAdapter>) -> Self {
         info!("🌐 Initializing sovereignty-compliant service discovery client");
         Self {
             universal_adapter,
@@ -89,7 +89,7 @@ impl ServiceDiscoveryClient {
     /// - Network or I/O errors occur
         pub async fn discover_services(&self, service_type: &str) -> Result<Vec<ServiceInstance>>  {
         // Try to get orchestration capability through universal adapter
-        match self.universal_adapter.get_capability("orchestration").await {
+        match self.universal_adapter.get_capability("orchestration") {
             Ok(_capability_info) => {
                 // Create request for service discovery
                 let request = CapabilityRequest::new("orchestration", "discover_services")
@@ -139,7 +139,7 @@ impl ServiceDiscoveryClient {
     /// - Network or I/O errors occur
         pub async fn register_service(&mut self, service: ServiceInstance) -> Result<()>  {
         // Try orchestration capability first
-        match self.universal_adapter.get_capability("orchestration").await {
+        match self.universal_adapter.get_capability("orchestration") {
             Ok(_capability_info) => {
                 let request = CapabilityRequest::new("orchestration", "register_service")
                     .with_parameters(serde_json::json!({
@@ -192,7 +192,7 @@ impl ServiceDiscoveryClient {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
         pub async fn list_all_services(&self) -> Result<Vec<ServiceInstance>>  {
-        match self.universal_adapter.get_capability("orchestration").await {
+        match self.universal_adapter.get_capability("orchestration") {
             Ok(_capability_info) => {
                 let request = CapabilityRequest::new("orchestration", "list_all_services")
                     .with_parameters(serde_json::json!({
@@ -234,7 +234,7 @@ impl ServiceDiscoveryClient {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
         pub async fn check_service_health(&self, service_name: &str) -> Result<ServiceStatus>  {
-        match self.universal_adapter.get_capability("orchestration").await {
+        match self.universal_adapter.get_capability("orchestration") {
             Ok(_capability_info) => {
                 let request = CapabilityRequest::new("orchestration", "check_service_health")
                     .with_parameters(serde_json::json!({

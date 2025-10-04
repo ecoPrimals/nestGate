@@ -51,10 +51,7 @@ pub fn execute_lifecycle_action(
 }
 
 /// Apply automatic stage rules based on current lifecycle stage
-pub fn apply_automatic_stage_rules(
-    dataset_name: &str,
-    lifecycle: &DatasetLifecycle,
-) -> Result<()> {
+pub fn apply_automatic_stage_rules(dataset_name: &str, lifecycle: &DatasetLifecycle) -> Result<()> {
     debug!(
         "Applying automatic stage rules for dataset '{}' in stage {:?}",
         dataset_name, lifecycle.lifecycle_stage

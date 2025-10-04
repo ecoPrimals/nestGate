@@ -228,7 +228,7 @@ impl EnterpriseBackupManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn restore_from_backup(&self, backup_id: &str, restore_path: &str) -> Result<()>   {
+        pub fn restore_from_backup(&self, backup_id: &str, restore_path: &str) -> Result<()>   {
         info!("Restoring backup {} to {}", backup_id, restore_path);
 
         // Validate backup exists
@@ -258,7 +258,7 @@ impl EnterpriseBackupManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn verify_backup(&self, backup_id: &str) -> Result<VerificationResult>   {
+        pub fn verify_backup(&self, backup_id: &str) -> Result<VerificationResult>   {
         info!("Verifying backup integrity for: {}", backup_id);
 
         let backup_path = self.config.destination.join(&backup_id);
@@ -299,12 +299,12 @@ impl EnterpriseBackupManager {
     }
 
     /// Get backup operation status
-    pub const fn get_backup_status(&self, backup_id: &str) -> Option<&BackupOperation> {
+    pub fn get_backup_status(&self, backup_id: &str) -> Option<&BackupOperation> {
         self.active_backups.get(backup_id)
     }
 
     /// List all active backup operations
-    pub const fn list_active_backups(&self) -> Vec<&BackupOperation> {
+    pub fn list_active_backups(&self) -> Vec<&BackupOperation> {
         self.active_backups.values().collect()
     }
 
@@ -322,7 +322,7 @@ impl EnterpriseBackupManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn cleanup_old_backups(&self) -> Result<u32>   {
+        pub fn cleanup_old_backups(&self) -> Result<u32>   {
         info!("Cleaning up backups older than {} days", self.config.retention_days);
         
         let cutoff_time = std::time::SystemTime::now()
@@ -475,7 +475,7 @@ impl EnterpriseBackupManager {
         };
         
         // Add some randomness to make it realistic
-        let variation = (f64::from(base_size) * 0.1) as u64;
+        let variation = (base_size as f64 * 0.1) as u64;
         let size = base_size + (variation / 2);
         
         // Simulate backup time

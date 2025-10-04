@@ -23,7 +23,7 @@ pub struct BenchmarkResults {
     pub memory_saved_bytes: u64,
 }
 impl BenchmarkResults {
-    pub const fn new(
+    pub fn new(
         traditional_time: Duration,
         zero_copy_time: Duration,
         memory_saved_bytes: u64,
@@ -65,7 +65,7 @@ impl PerformanceBenchmark {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn new() -> Result<Self>  {
+        pub fn new() -> Result<Self>  {
         Ok(Self {
             temp_dir: TempDir::new().map_err(|e| {
                 crate::error::NestGateError::storage_error(
@@ -446,7 +446,7 @@ impl PerformanceBenchmark {
         println!(
             "💾 Total Memory Saved: {} bytes ({:.1} MB)",
             total_memory_saved,
-            f64::from(total_memory_saved) / 1_048_576.0
+            total_memory_saved as f64 / 1_048_576.0
         );
         println!(
             "🚀 Concurrent Improvement: {:.1}%",
@@ -461,7 +461,7 @@ impl PerformanceBenchmark {
         let throughput_improvement_target = 50.0; // 50% improvement target
 
         let memory_efficiency = if total_memory_saved > 0 {
-            (f64::from(total_memory_saved) / (f64::from(total_memory_saved) + 1_000_000.0)) * 100.0
+            (total_memory_saved as f64 / (total_memory_saved as f64 + 1_000_000.0)) * 100.0
         } else {
             0.0
         };

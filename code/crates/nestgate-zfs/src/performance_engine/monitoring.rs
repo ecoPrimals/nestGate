@@ -63,7 +63,7 @@ impl RealTimePerformanceMonitor {
     }
 
     /// Get access to metrics cache for testing
-    pub const fn get_metrics_cache(&self) -> MetricsCacheMap {
+    pub fn get_metrics_cache(&self) -> MetricsCacheMap {
         self.metrics_cache.clone()
     }
 
@@ -74,10 +74,14 @@ impl RealTimePerformanceMonitor {
         }
 
         let n = (values.len() as f64);
-        let x_sum: f64 = (0..values.len()).map(|i| f64::from(i)).sum();
+        let x_sum: f64 = (0..values.len()).map(|i| i as f64).sum();
         let y_sum: f64 = values.iter().sum();
-        let xy_sum: f64 = values.iter().enumerate().map(|(i, &y)| f64::from(i) * y).sum();
-        let x_squared_sum: f64 = (0..values.len()).map(|i| (f64::from(i)).powi(2)).sum();
+        let xy_sum: f64 = values
+            .iter()
+            .enumerate()
+            .map(|(i, &y)| i as f64 * y)
+            .sum();
+        let x_squared_sum: f64 = (0..values.len()).map(|i| (i as f64).powi(2)).sum();
 
         // Calculate slope using least squares regression
         (n * xy_sum - x_sum * y_sum) / (n * x_squared_sum - x_sum.powi(2))
@@ -88,11 +92,11 @@ impl RealTimePerformanceMonitor {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub async fn collect_metrics(
+    pub async fn collect_metrics(
         &self,
         _pool_manager: &ZfsPoolManager,
         dataset_manager: &ZfsDatasetManager,
-    ) -> Result<()>  {
+    ) -> Result<()> {
         debug!("📊 Collecting real-time performance metrics");
 
         // Collect comprehensive ZFS performance metrics with real system integration
@@ -151,7 +155,7 @@ impl RealTimePerformanceMonitor {
                                 }
 
                                 if hits + misses > 0 {
-                                    f64::from(hits) / (hits + misses) as f64
+                                    hits as f64 / (hits + misses) as f64
                                 } else {
                                     0.85 // Default hit ratio
                                 }
@@ -250,7 +254,8 @@ impl RealTimePerformanceMonitor {
 
                         // Calculate actual compression ratio from used vs logical used
                         if logical_used_bytes > 0 && used_bytes > 0 {
-                            _compression_ratio = f64::from(logical_used_bytes) / f64::from(used_bytes);
+                            _compression_ratio =
+                                logical_used_bytes as f64 / used_bytes as f64;
                         }
 
                         // Analyze access pattern based on dataset properties and usage
@@ -311,14 +316,14 @@ impl RealTimePerformanceMonitor {
 
             ArcStatistics {
                 hit_ratio: if hits + misses > 0 {
-                    f64::from(hits) / (hits + misses) as f64
+                    hits as f64 / (hits + misses) as f64
                 } else {
                     0.85
                 },
                 size,
                 target_size: c,
                 miss_ratio: if hits + misses > 0 {
-                    f64::from(misses) / (hits + misses) as f64
+                    misses as f64 / (hits + misses) as f64
                 } else {
                     0.15
                 },
@@ -442,7 +447,7 @@ impl RealTimePerformanceMonitor {
         // Memory pressure analysis
         let memory_usage_ratios: Vec<f64> = recent_metrics
             .iter()
-            .map(|m| m.system_memory.f64::from(used) / m.system_memory.f64::from(total))
+            .map(|m| f64::from(m.system_memory.used) / f64::from(m.system_memory.total))
             .collect();
 
         let memory_trend = Self::calculate_trend(&memory_usage_ratios);
@@ -508,7 +513,7 @@ impl RealTimePerformanceMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_trending_data(&self) -> Result<Vec<ZfsPerformanceMetrics>>  {
+    pub async fn get_trending_data(&self) -> Result<Vec<ZfsPerformanceMetrics>> {
         let cache = self.metrics_cache.read().await;
         Ok(cache.values().cloned().collect())
     }

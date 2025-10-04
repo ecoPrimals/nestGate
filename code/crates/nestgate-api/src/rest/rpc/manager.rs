@@ -106,7 +106,7 @@ pub struct HealthCheckResult {
 }
 impl UnifiedRpcManager {
     /// Create a new RPC manager with default configuration
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::with_config(NestGateRpcConfig::default())
     }
 
@@ -136,10 +136,10 @@ impl UnifiedRpcManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn init_security_capability(
+    pub fn init_security_capability(
         &self,
         _endpoint: &str,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>  {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Stub implementation
         Ok(())
     }
@@ -152,11 +152,11 @@ impl UnifiedRpcManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn register_service(
+    pub async fn register_service(
         &self,
         name: String,
         service: DynRpcService,
-    ) -> Result<(), RpcError>  {
+    ) -> Result<(), RpcError> {
         let mut services = self.services.write().await;
         services.insert(name, service);
         Ok(())
@@ -170,11 +170,11 @@ impl UnifiedRpcManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn call(
+    pub async fn call(
         &self,
         service_name: &str,
         request: UnifiedRpcRequest,
-    ) -> Result<UnifiedRpcResponse, RpcError>  {
+    ) -> Result<UnifiedRpcResponse, RpcError> {
         let start_time = Instant::now();
 
         // Get service from registry
@@ -234,8 +234,8 @@ impl UnifiedRpcManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn start(&self) -> Result<(), RpcError>  {
+    #[must_use]
+    pub fn start(&self) -> Result<(), RpcError> {
         // Start health monitoring
         self.start_health_monitoring()?;
 
@@ -253,8 +253,8 @@ impl UnifiedRpcManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn shutdown(&mut self) -> Result<(), RpcError>  {
+    #[must_use]
+    pub fn shutdown(&mut self) -> Result<(), RpcError> {
         if let Some(shutdown_tx) = self.shutdown_tx.take() {
             let _ = shutdown_tx.send(());
         }
@@ -269,10 +269,10 @@ impl UnifiedRpcManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn start_bidirectional_stream(
+    pub fn start_bidirectional_stream(
         &self,
         _request: UnifiedRpcRequest,
-    ) -> Result<(mpsc::Sender<RpcStreamEvent>, mpsc::Receiver<RpcStreamEvent>), RpcError>  {
+    ) -> Result<(mpsc::Sender<RpcStreamEvent>, mpsc::Receiver<RpcStreamEvent>), RpcError> {
         // For now, return a simple channel pair
         let (tx, rx) = mpsc::channel(100);
         Ok((tx, rx))
@@ -286,7 +286,7 @@ impl UnifiedRpcManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_health_status(&self) -> Result<serde_json::Value, RpcError>  {
+    pub fn get_health_status(&self) -> Result<serde_json::Value, RpcError> {
         Ok(serde_json::json!({
             "status": "healthy",
             "services": {},
@@ -302,8 +302,8 @@ impl UnifiedRpcManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn init_tarpc_service(&mut self, endpoint: &str) -> Result<(), RpcError>  {
+    #[must_use]
+    pub fn init_tarpc_service(&mut self, endpoint: &str) -> Result<(), RpcError> {
         // CANONICAL MODERNIZATION: Real tarpc initialization
         info!("Initializing tarpc service connection to: {}", endpoint);
 
@@ -328,8 +328,8 @@ impl UnifiedRpcManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn init_json_rpc_service(&mut self, endpoint: &str) -> Result<(), RpcError>  {
+    #[must_use]
+    pub fn init_json_rpc_service(&mut self, endpoint: &str) -> Result<(), RpcError> {
         // CANONICAL MODERNIZATION: Real JSON-RPC initialization
         info!("Initializing JSON-RPC service connection to: {}", endpoint);
 
@@ -430,7 +430,7 @@ impl UniversalSecurityLayer {
     ///
     /// # Returns
     /// * New security layer instance
-    pub const fn new(_config: &RpcSecurityConfig) -> Self {
+    pub fn new(_config: &RpcSecurityConfig) -> Self {
         Self
     }
 
@@ -448,7 +448,7 @@ impl UniversalSecurityLayer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_request(&self, _request: &UnifiedRpcRequest) -> Result<(), RpcError>  {
+    pub fn validate_request(&self, _request: &UnifiedRpcRequest) -> Result<(), RpcError> {
         Ok(())
     }
 
@@ -466,7 +466,7 @@ impl UniversalSecurityLayer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn check_rate_limit(&self, _source: &str) -> Result<(), RpcError>  {
+    pub fn check_rate_limit(&self, _source: &str) -> Result<(), RpcError> {
         Ok(())
     }
 }
@@ -479,7 +479,7 @@ impl LoadBalancer {
     ///
     /// # Returns
     /// * New load balancer instance
-    pub const fn new(_config: &LoadBalancingConfig) -> Self {
+    pub fn new(_config: &LoadBalancingConfig) -> Self {
         Self
     }
 }
@@ -492,7 +492,7 @@ impl StreamRegistry {
     ///
     /// # Returns
     /// * New stream registry instance
-    pub const fn new(_config: &StreamConfig) -> Self {
+    pub fn new(_config: &StreamConfig) -> Self {
         Self
     }
 }
@@ -505,7 +505,7 @@ impl MetricsCollector {
     ///
     /// # Returns
     /// * New metrics collector instance
-    pub const fn new(
+    pub fn new(
         _config: &nestgate_core::config::canonical_master::domains::performance::MetricsConfig,
     ) -> Self {
         Self

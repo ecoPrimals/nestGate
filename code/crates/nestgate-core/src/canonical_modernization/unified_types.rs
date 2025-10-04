@@ -304,7 +304,12 @@ impl Default for UnifiedServiceConfig {
 
 /// **UNIFIED NETWORK CONFIG**
 ///
+/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
 /// Network-specific configuration
+#[deprecated(
+    since = "0.9.0",
+    note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedNetworkConfig {
     /// Maximum connections
@@ -459,7 +464,7 @@ impl Default for UnifiedCacheConfig {
 impl UnifiedCacheConfig {
     /// Create a new cache config with specified size
     #[must_use]
-    pub const fn with_size(cache_size_bytes: u64) -> Self {
+    pub fn with_size(cache_size_bytes: u64) -> Self {
         Self {
             cache_size_bytes,
             ..Default::default()
@@ -504,7 +509,7 @@ pub mod migration {
     use super::*;
     /// Convert legacy `ReplicationStatus` to canonical
     #[must_use]
-    pub const fn migrate_replication_status(legacy_status: &str) -> CanonicalReplicationStatus {
+    pub fn migrate_replication_status(legacy_status: &str) -> CanonicalReplicationStatus {
         match legacy_status.to_lowercase().as_str() {
             "active" => CanonicalReplicationStatus::Active,
             "paused" => CanonicalReplicationStatus::Paused,
@@ -522,7 +527,7 @@ pub mod migration {
 
     /// Convert legacy optimization category to canonical
     #[must_use]
-    pub const fn migrate_optimization_category(legacy_category: &str) -> CanonicalOptimizationCategory {
+    pub fn migrate_optimization_category(legacy_category: &str) -> CanonicalOptimizationCategory {
         match legacy_category.to_lowercase().as_str() {
             "compression" => CanonicalOptimizationCategory::Compression,
             "caching" => CanonicalOptimizationCategory::Caching,

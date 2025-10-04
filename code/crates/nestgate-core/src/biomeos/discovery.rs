@@ -15,7 +15,7 @@ impl BiomeManifest {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn from_yaml(yaml_content: &str) -> Result<Self>  {
+        pub fn from_yaml(yaml_content: &str) -> Result<Self>  {
         serde_yaml::from_str(yaml_content).map_err(|e| NestGateError::internal_error(&format!("Failed to parse biome.yaml: {e}"), "component"management_discovery"))
     }
 
@@ -42,7 +42,7 @@ impl BiomeManifest {
     }
 
     /// Get storage volumes for NestGate provisioning
-    pub const fn get_nestgate_volumes(&self) -> Vec<&VolumeSpec> {
+    pub fn get_nestgate_volumes(&self) -> Vec<&VolumeSpec> {
         self.storage
             .volumes
             .iter()
@@ -50,12 +50,12 @@ impl BiomeManifest {
     }
 
     /// Get network configuration from manifest
-    pub const fn get_network_config(&self) -> Option<&super::types::BiomeNetworking> {
+    pub fn get_network_config(&self) -> Option<&super::types::BiomeNetworking> {
         Some(&self.networking)
     }
 
     /// Get service definitions from manifest
-    pub const fn get_services(&self) -> &std::collections::HashMap<String, super::types::ServiceConfig> {
+    pub fn get_services(&self) -> &std::collections::HashMap<String, super::types::ServiceConfig> {
         &self.services
     }
 
@@ -67,7 +67,7 @@ impl BiomeManifest {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_for_nestgate(&self) -> Result<()>  {
+        pub fn validate_for_nestgate(&self) -> Result<()>  {
         if self.metadata.name.is_empty() {
             return Err(NestGateError::validation_error("Biome name cannot be empty"));
         }

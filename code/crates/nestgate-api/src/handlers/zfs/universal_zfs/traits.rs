@@ -131,7 +131,7 @@ pub enum DynZfsService {
 }
 impl DynZfsService {
     /// Service name
-    pub const fn service_name(&self) -> &str {
+    pub fn service_name(&self) -> &str {
         match self {
             Self::Native(service) => service.service_name(),
             Self::FailSafe(service) => service.service_name(),
@@ -139,7 +139,7 @@ impl DynZfsService {
     }
 
     /// Service version
-    pub const fn service_version(&self) -> &str {
+    pub fn service_version(&self) -> &str {
         match self {
             DynZfsService::Native(service) => service.service_version(),
             DynZfsService::FailSafe(service) => service.service_version(),
@@ -369,12 +369,12 @@ pub enum UniversalZfsServiceEnum {
 
 impl UniversalZfsServiceEnum {
     /// Create a new native ZFS service
-    pub const fn new_native() -> Self {
+    pub fn new_native() -> Self {
         Self::Native(NativeZfsService::new())
     }
 
     /// Create a new fail-safe ZFS service
-    pub const fn new_fail_safe(
+    pub fn new_fail_safe(
         primary: Arc<UniversalZfsServiceEnum>,
         config: crate::handlers::zfs::universal_zfs::config::FailSafeConfig,
     ) -> Self {

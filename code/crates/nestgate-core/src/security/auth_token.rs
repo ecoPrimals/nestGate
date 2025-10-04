@@ -60,12 +60,12 @@ impl AuthToken {
     }
 
     /// Check if the token is expired
-    pub const fn is_expired(&self) -> bool {
+    pub fn is_expired(&self) -> bool {
         SystemTime::now() > self.expires_at
     }
 
     /// Check if the token is valid (not expired)
-    pub const fn is_valid(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         !self.is_expired()
     }
 
@@ -77,7 +77,7 @@ impl AuthToken {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn time_until_expiration(&self) -> Result<Duration>  {
+        pub fn time_until_expiration(&self) -> Result<Duration>  {
         self.expires_at
             .duration_since(SystemTime::now())
             .map_err(|_| NestGateError::internal_error(

@@ -50,7 +50,7 @@ pub struct RateLimitingConfig {
 
 impl NetworkApiConfig {
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self {
             bind_address: "127.0.0.1".parse().unwrap(),
             port: 8080,
@@ -64,7 +64,7 @@ impl NetworkApiConfig {
     }
 
     #[must_use]
-    pub const fn production_hardened() -> Self {
+    pub fn production_hardened() -> Self {
         Self {
             bind_address: "0.0.0.0".parse().unwrap(),
             port: 443,
@@ -82,7 +82,7 @@ impl NetworkApiConfig {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn validate(&self) -> Result<()>  {
+    pub fn validate(&self) -> Result<()> {
         if self.port == 0 {
             return Err(NestGateError::validation_error("Port cannot be zero"));
         }
@@ -121,7 +121,7 @@ impl Default for TlsConfig {
 
 impl TlsConfig {
     #[must_use]
-    pub const fn production() -> Self {
+    pub fn production() -> Self {
         Self {
             cert_path: "/etc/ssl/certs/nestgate-prod.pem".to_string(),
             key_path: "/etc/ssl/private/nestgate-prod.key".to_string(),
@@ -139,7 +139,7 @@ impl Default for RateLimitingConfig {
 
 impl RateLimitingConfig {
     #[must_use]
-    pub const fn development() -> Self {
+    pub fn development() -> Self {
         Self {
             enabled: false,
             requests_per_second: 1000,
@@ -148,7 +148,7 @@ impl RateLimitingConfig {
     }
 
     #[must_use]
-    pub const fn production() -> Self {
+    pub fn production() -> Self {
         Self {
             enabled: true,
             requests_per_second: 100,

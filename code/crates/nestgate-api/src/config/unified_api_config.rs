@@ -80,17 +80,17 @@ impl ApiServerConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn socket_addr(&self) -> Result<SocketAddr, std::net::AddrParseError>  {
+        pub fn socket_addr(&self) -> Result<SocketAddr, std::net::AddrParseError>  {
         format!("{}:{}", self.host, self.port).parse()
     }
 
     /// Build API URL using canonical constants
-    pub const fn api_url(&self) -> String {
+    pub fn api_url(&self) -> String {
         format!("http://{}:{}", self.host, self.port)
     }
 
     /// Build API endpoint using canonical constants  
-    pub const fn api_endpoint(&self) -> String {
+    pub fn api_endpoint(&self) -> String {
         format!("{}:{}", self.host, self.port)
     }
 }
@@ -178,7 +178,7 @@ impl Default for ApiMonitoringConfig {
 // ==================== CONVENIENCE FUNCTIONS ====================
 
 /// Create a new unified API configuration
-pub const fn new_api_config() -> UnifiedApiConfig {
+pub fn new_api_config() -> UnifiedApiConfig {
     UnifiedApiConfig::default()
 }
 /// Create a development-optimized API configuration

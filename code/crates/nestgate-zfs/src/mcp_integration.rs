@@ -95,7 +95,7 @@ impl ZfsMcpConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<()>  {
+    pub fn validate(&self) -> Result<()> {
         if self.max_concurrent_operations == 0 {
             return Err(NestGateError::validation(
                 "max_concurrent_operations must be greater than 0",
@@ -111,7 +111,7 @@ impl ZfsMcpConfig {
     }
 
     /// Get tier configuration for a specific tier
-    pub const fn get_tier_config(&self, tier: &StorageTier) -> TierConfig {
+    pub fn get_tier_config(&self, tier: &StorageTier) -> TierConfig {
         match tier {
             StorageTier::Hot => TierConfig {
                 priority: 1,
@@ -182,8 +182,8 @@ impl ZfsMcpStorageProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn create_mount(&self, request: McpMountRequest) -> Result<ZfsMountInfo>  {
+    #[must_use]
+    pub fn create_mount(&self, request: McpMountRequest) -> Result<ZfsMountInfo> {
         info!("Creating ZFS mount for MCP: {}", request.mount_id);
 
         let tier = request.tier.clone();
@@ -246,8 +246,8 @@ impl ZfsMcpStorageProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn remove_mount(&self, mount_id: &str) -> Result<()>  {
+    #[must_use]
+    pub fn remove_mount(&self, mount_id: &str) -> Result<()> {
         info!("Removing ZFS mount: {}", mount_id);
 
         if let Some(mount_info) = self.active_mounts.write().await.remove(mount_id) {
@@ -289,8 +289,8 @@ impl ZfsMcpStorageProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn create_volume(&self, request: McpVolumeRequest) -> Result<ZfsVolumeInfo>  {
+    #[must_use]
+    pub fn create_volume(&self, request: McpVolumeRequest) -> Result<ZfsVolumeInfo> {
         info!("Creating ZFS volume for MCP: {}", request.volume_id);
 
         let tier = request.tier.clone();
@@ -351,8 +351,8 @@ impl ZfsMcpStorageProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn remove_volume(&self, volume_id: &str) -> Result<()>  {
+    #[must_use]
+    pub fn remove_volume(&self, volume_id: &str) -> Result<()> {
         info!("Removing ZFS volume: {}", volume_id);
 
         if let Some(volume_info) = self.active_volumes.write().await.remove(volume_id) {
@@ -394,7 +394,7 @@ impl ZfsMcpStorageProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn list_volumes(&self) -> Result<Vec<ZfsVolumeInfo>>  {
+    pub async fn list_volumes(&self) -> Result<Vec<ZfsVolumeInfo>> {
         let volumes = self.active_volumes.read().await;
         Ok(volumes.values().cloned().collect())
     }
@@ -407,7 +407,7 @@ impl ZfsMcpStorageProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn trigger_ai_optimization(&self) -> Result<()>  {
+    pub fn trigger_ai_optimization(&self) -> Result<()> {
         if !self.config.enable_ai_optimization {
             return Err(nestgate_core::NestGateError::internal_error(
                 "MCP integration - AI optimization is disabled".to_string(),

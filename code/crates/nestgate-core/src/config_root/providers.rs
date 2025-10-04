@@ -27,12 +27,12 @@ impl<T> FileConfigProvider<T> {
     }
 
     /// Get the file path
-    pub const fn path(&self) -> &PathBuf {
+    pub fn path(&self) -> &PathBuf {
         &self.path
     }
 
     /// Get the configuration format
-    pub const fn format(&self) -> &ConfigFormat {
+    pub fn format(&self) -> &ConfigFormat {
         &self.format
     }
 }

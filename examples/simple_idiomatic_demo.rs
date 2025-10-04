@@ -1,3 +1,4 @@
+use crate::constants::magic_numbers_replacement;
 //! **SIMPLE IDIOMATIC ERROR DEMONSTRATION**
 //!
 //! A minimal working example showing the evolution from non-idiomatic Result<T>

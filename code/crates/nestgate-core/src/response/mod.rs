@@ -260,7 +260,7 @@ pub mod validation {
     }
 
     /// Validate success response structure
-    pub const fn validate_success_response(
+    pub fn validate_success_response(
         response: &SuccessResponse,
     ) -> std::result::Result<(), String> {
         if response.message.is_empty() {
@@ -282,12 +282,12 @@ pub mod testing {
     }
 
     /// Create a test error response
-    pub const fn mock_error_response(message: &str) -> UnifiedErrorResponse {
+    pub fn mock_error_response(message: &str) -> UnifiedErrorResponse {
         UnifiedErrorResponse::simple(message, "TEST_ERROR", "test-service")
     }
 
     /// Create a test success response
-    pub const fn mock_success_response(message: &str) -> SuccessResponse {
+    pub fn mock_success_response(message: &str) -> SuccessResponse {
         SuccessResponse::new(message)
     }
 

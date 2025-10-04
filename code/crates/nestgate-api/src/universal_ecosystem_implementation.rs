@@ -39,7 +39,7 @@ impl Default for UniversalEcosystemService {
 }
 
 impl UniversalEcosystemService {
-    pub const fn new() -> Self { Self::default()
+    pub fn new() -> Self { Self::default()
     , pub fn get_health(&self) -> serde_json::Value {
         serde_json::json!({
             "status": "healthy",

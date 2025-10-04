@@ -244,7 +244,7 @@ impl Default for FeatureFlags {
 impl FeatureFlags {
     /// Check if a feature is enabled
     #[must_use]
-    pub const fn is_enabled(&self, feature: &str) -> bool {
+    pub fn is_enabled(&self, feature: &str) -> bool {
         match feature {
             "experimental_features" => self.experimental_features,
             "debug_logging" => self.debug_logging,
@@ -323,19 +323,19 @@ pub enum WarningSeverity {
 impl Environment {
     /// Check if this is a production-like environment
     #[must_use]
-    pub const fn is_production_like(&self) -> bool {
+    pub fn is_production_like(&self) -> bool {
         matches!(self, Self::Production | Self::Staging)
     }
 
     /// Check if this is a development-like environment
     #[must_use]
-    pub const fn is_development_like(&self) -> bool {
+    pub fn is_development_like(&self) -> bool {
         matches!(self, Environment::Development | Environment::Testing)
     }
 
     /// Get default port for this environment
     #[must_use]
-    pub const fn default_port(&self) -> u16 {
+    pub fn default_port(&self) -> u16 {
         match self {
             Environment::Production => 443,
             Environment::Staging => 8443,
@@ -346,7 +346,7 @@ impl Environment {
 
     /// Get default optimization level for this environment
     #[must_use]
-    pub const fn default_optimization(&self) -> OptimizationLevel {
+    pub fn default_optimization(&self) -> OptimizationLevel {
         match self {
             Environment::Production => OptimizationLevel::Performance,
             Environment::Staging => OptimizationLevel::Balanced,

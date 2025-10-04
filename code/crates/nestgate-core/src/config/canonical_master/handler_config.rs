@@ -136,7 +136,7 @@ impl ZfsHandlerConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<(), String>  {
+    pub fn validate(&self) -> Result<(), String> {
         if self.service_name.is_empty() {
             return Err("Service name cannot be empty".to_string());
         }

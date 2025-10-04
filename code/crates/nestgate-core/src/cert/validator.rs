@@ -12,7 +12,7 @@ pub struct CertificateValidator {
 }
 impl CertificateValidator {
     /// Create a new certificate validator
-    pub const fn new(config: NestGateCanonicalConfig) -> crate::Result<Self> {
+    pub fn new(config: NestGateCanonicalConfig) -> crate::Result<Self> {
         let adapter = crate::universal_adapter::PrimalAgnosticAdapter::new(
             "http://localhost:8080/adapter".to_string(),
         );
@@ -27,7 +27,7 @@ impl CertificateValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_certificate(&self, cert_data: &[u8]) -> Result<bool>  {
+    pub fn validate_certificate(&self, cert_data: &[u8]) -> Result<bool> {
         // Use the universal adapter for certificate validation
         // This is a simplified validation for the modernization
         Ok(!cert_data.is_empty())
@@ -41,7 +41,7 @@ impl CertificateValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn is_certificate_expired(&self, _cert_data: &[u8]) -> Result<bool>  {
+    pub fn is_certificate_expired(&self, _cert_data: &[u8]) -> Result<bool> {
         // Simplified expiration check
         Ok(false)
     }
@@ -49,7 +49,7 @@ impl CertificateValidator {
 
 /// Create a default certificate validator
 #[must_use]
-pub const fn create_default_certificate_validator() -> CertificateValidator {
+pub fn create_default_certificate_validator() -> CertificateValidator {
     CertificateValidator::new(NestGateCanonicalConfig::default())
         .expect("Failed to create default certificate validator")
 }

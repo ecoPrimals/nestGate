@@ -102,7 +102,7 @@ where
     }
 
     /// Get service configuration
-    pub const fn config(&self) -> &EnhancedMcpConfig {
+    pub fn config(&self) -> &EnhancedMcpConfig {
         &self.config
     }
 

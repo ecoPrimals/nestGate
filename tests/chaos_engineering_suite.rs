@@ -4,14 +4,19 @@
 //! under adverse conditions. This significantly improves test coverage for edge cases.
 
 use nestgate_core::{
+use crate::config::ConsolidatedCanonicalConfig;
     config::canonical_master::NestGateCanonicalConfig,
     error::{NestGateError, Result},
     service_discovery::types::{ServiceCapability, ServiceEndpoint, ServiceInfo, ServiceMetadata},
 };
 use std::collections::HashMap;
+use crate::config::ConsolidatedCanonicalConfig;
 use std::time::{Duration, SystemTime};
+use crate::config::ConsolidatedCanonicalConfig;
 use tokio::time::{sleep, timeout};
+use crate::config::ConsolidatedCanonicalConfig;
 use uuid::Uuid;
+use crate::config::ConsolidatedCanonicalConfig;
 
 // ==================== CHAOS TEST UTILITIES ====================
 

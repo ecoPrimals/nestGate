@@ -7,7 +7,7 @@ pub struct TokenManager {
     secret: String,
 }
 impl TokenManager {
-    pub const fn new(secret: String) -> Self {
+    pub fn new(secret: String) -> Self {
         Self { secret }
     }
 } 

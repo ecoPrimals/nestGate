@@ -43,7 +43,7 @@ impl Default for SystemIntrospection {
 impl SystemIntrospection {
     /// Create new system introspection subsystem
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             capabilities: None,
             hardware_profile: None,
@@ -58,7 +58,7 @@ impl SystemIntrospection {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn discover_resource_limits(&mut self, resource_type: &str) -> Result<usize>  {
+    pub async fn discover_resource_limits(&mut self, resource_type: &str) -> Result<usize> {
         // Ensure we have system capabilities
         if self.capabilities.is_none() {
             self.capabilities = Some(self.detect_system_capabilities().await?);
@@ -111,7 +111,7 @@ impl SystemIntrospection {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn detect_system_capabilities(&self) -> Result<SystemCapabilities>  {
+    pub async fn detect_system_capabilities(&self) -> Result<SystemCapabilities> {
         Ok(SystemCapabilities {
             cpu_cores: num_cpus::get_physical(),
             logical_cores: num_cpus::get(),
@@ -131,7 +131,7 @@ impl SystemIntrospection {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn create_hardware_profile(&mut self) -> Result<HardwareProfile>  {
+    pub async fn create_hardware_profile(&mut self) -> Result<HardwareProfile> {
         // Ensure we have capabilities
         if self.capabilities.is_none() {
             self.capabilities = Some(self.detect_system_capabilities().await?);
@@ -160,7 +160,7 @@ impl SystemIntrospection {
         );
         recommended_limits.insert(
             "worker_threads".to_string(),
-            ((cpu_score * logical_cores as f64 * 2.0) as usize).clamp(2, 32),
+            ((cpu_score * capabilities.logical_cores as f64 * 2.0) as usize).clamp(2, 32),
         );
         recommended_limits.insert(
             "buffer_size".to_string(),
@@ -186,7 +186,7 @@ impl SystemIntrospection {
                 if line.starts_with("MemTotal:") {
                     if let Some(kb_str) = line.split_whitespace().nth(1) {
                         if let Ok(kb) = kb_str.parse::<u64>() {
-                            return Ok((f64::from(kb)) / 1024.0 / 1024.0); // Convert KB to GB
+                            return Ok(kb as f64 / 1024.0 / 1024.0); // Convert KB to GB
                         }
                     }
                 }
@@ -340,8 +340,8 @@ impl SystemIntrospection {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn get_introspection_summary(&mut self) -> Result<HashMap<String, String>>  {
+    #[must_use]
+    pub async fn get_introspection_summary(&mut self) -> Result<HashMap<String, String>> {
         let capabilities = if let Some(caps) = &self.capabilities {
             caps.clone()
         } else {

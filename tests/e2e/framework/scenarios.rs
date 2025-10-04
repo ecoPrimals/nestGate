@@ -3,10 +3,14 @@
 //! Individual test scenario implementations
 
 use std::sync::Arc;
+use crate::config::ConsolidatedCanonicalConfig;
 use std::time::{Duration, Instant};
+use crate::config::ConsolidatedCanonicalConfig;
 use reqwest::Client;
+use crate::config::ConsolidatedCanonicalConfig;
 
 use super::types::{E2EConfig, E2ETestResult, TestStepResult, IntegrationDepth, AttackScenario, ConfigVariation};
+use crate::config::ConsolidatedCanonicalConfig;
 
 /// Base trait for all scenario runners
 pub trait ScenarioRunner {

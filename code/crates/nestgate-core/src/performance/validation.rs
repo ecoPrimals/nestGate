@@ -16,14 +16,14 @@ pub struct BenchmarkResults {
 }
 impl BenchmarkResults {
     /// Create new benchmark results
-    pub const fn new(
+    pub fn new(
         pattern_name: String,
         zero_cost_time_ns: u64,
         traditional_time_ns: u64,
         iterations: usize,
     ) -> Self {
         let improvement_percentage = if traditional_time_ns > 0 {
-            ((f64::from(traditional_time_ns) - f64::from(zero_cost_time_ns)) / f64::from(traditional_time_ns))
+            ((traditional_time_ns as f64 - zero_cost_time_ns as f64) / traditional_time_ns as f64)
                 * 100.0
         } else {
             0.0
@@ -40,18 +40,18 @@ impl BenchmarkResults {
     }
 
     /// Check if the performance improvement meets the target threshold
-    pub const fn meets_target(&self, target_percentage: f64) -> bool {
+    pub fn meets_target(&self, target_percentage: f64) -> bool {
         self.improvement_percentage >= target_percentage
     }
 
     /// Get human-readable performance summary
-    pub const fn summary(&self) -> String {
+    pub fn summary(&self) -> String {
         format!(
             "{}: {:.2}% improvement ({:.2}ms -> {:.2}ms) over {} iterations",
             self.pattern_name,
             self.improvement_percentage,
-            self.f64::from(traditional_time_ns) / 1_000_000.0,
-            self.f64::from(zero_cost_time_ns) / 1_000_000.0,
+            self.traditional_time_ns as f64 / 1_000_000.0,
+            self.zero_cost_time_ns as f64 / 1_000_000.0,
             self.iterations
         )
     }
@@ -64,7 +64,7 @@ pub struct PerformanceValidator {
 }
 impl PerformanceValidator {
     /// Create new performance validator
-    pub const fn new(iterations: usize, warmup_iterations: usize) -> Self {
+    pub fn new(iterations: usize, warmup_iterations: usize) -> Self {
         Self {
             iterations,
             warmup_iterations,

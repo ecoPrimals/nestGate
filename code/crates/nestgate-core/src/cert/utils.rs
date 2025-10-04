@@ -11,14 +11,14 @@ use std::time::{Duration, SystemTime};
 
 /// Convert `SystemTime` to a string representation
 #[must_use]
-pub const fn format_system_time(time: SystemTime) -> String {
+pub fn format_system_time(time: SystemTime) -> String {
     match time.duration_since(SystemTime::UNIX_EPOCH) {
         Ok(duration) => duration.as_secs().to_string(),
         Err(_) => "0".to_string(), // fallback for times before Unix epoch
     }
 }
 /// Parse a string back into `SystemTime`
-pub const fn parse_system_time(s: &str) -> Result<SystemTime> {
+pub fn parse_system_time(s: &str) -> Result<SystemTime> {
     match s.parse::<u64>() {
         Ok(secs) => Ok(SystemTime::UNIX_EPOCH + Duration::from_secs(secs)),
         Err(_) => Err(NestGateError::validation_error(&format!(
@@ -37,7 +37,7 @@ impl CertUtils {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn generate_self_signed() -> Result<String>  {
+    pub fn generate_self_signed() -> Result<String> {
         // Simplified certificate generation for development
         // Real implementation would use proper cryptographic libraries like ring or rustls
 
@@ -75,7 +75,7 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn parse_subject(cert_pem: &str) -> Result<String>  {
+    pub fn parse_subject(cert_pem: &str) -> Result<String> {
         // Simplified subject parsing
         // Real implementation would parse X.509 ASN.1 structure
 
@@ -101,7 +101,7 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn parse_issuer(cert_pem: &str) -> Result<String>  {
+    pub fn parse_issuer(cert_pem: &str) -> Result<String> {
         // Simplified issuer parsing
         // Real implementation would parse X.509 ASN.1 structure
 
@@ -120,14 +120,14 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
 
     /// Check if certificate PEM format is valid
     #[must_use]
-    pub const fn is_valid_pem_format(cert_pem: &str) -> bool {
+    pub fn is_valid_pem_format(cert_pem: &str) -> bool {
         cert_pem.contains("-----BEGIN CERTIFICATE-----")
             && cert_pem.contains("-----END CERTIFICATE-----")
     }
 
     /// Create test certificate for development
     #[must_use]
-    pub const fn create_test_certificate() -> Certificate {
+    pub fn create_test_certificate() -> Certificate {
         let now = SystemTime::now();
         Certificate {
             id: "test-cert-001".to_string(),
@@ -194,7 +194,7 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
 
     /// Get certificate validity period in days
     #[must_use]
-    pub const fn get_validity_days(cert: &Certificate) -> Option<u64> {
+    pub fn get_validity_days(cert: &Certificate) -> Option<u64> {
         let not_before = parse_system_time(&cert.not_before).ok()?;
         let not_after = parse_system_time(&cert.not_after).ok()?;
 
@@ -211,7 +211,7 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
 
     /// Get days until certificate expiration
     #[must_use]
-    pub const fn days_until_expiration(cert: &Certificate) -> Option<i64> {
+    pub fn days_until_expiration(cert: &Certificate) -> Option<i64> {
         let now = SystemTime::now();
         let not_after = parse_system_time(&cert.not_after).ok()?;
 
@@ -228,7 +228,7 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
 
     /// Convert certificate to displayable summary
     #[must_use]
-    pub const fn certificate_summary(cert: &Certificate) -> String {
+    pub fn certificate_summary(cert: &Certificate) -> String {
         let validity_days = Self::get_validity_days(cert).unwrap_or(0);
         let days_to_expiry = Self::days_until_expiration(cert).unwrap_or(-1);
 
@@ -258,20 +258,20 @@ pub mod modern {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn generate_certificate(service_name: &str) -> Result<Certificate>  {
+    #[must_use]
+    pub fn generate_certificate(service_name: &str) -> Result<Certificate> {
         let adapter = crate::universal_primal_discovery::StandaloneNetworkAdapter::new(
             service_name.to_string(),
         );
         let endpoint_result = adapter.discover_endpoint("cert-service");
-        let endpoint = endpoint_result?;
+        let _endpoint = endpoint_result?;
 
         // Create basic network configuration for cert service
-        let _network_config = crate::unified_types::network_config::UnifiedNetworkConfig {
-            bind_endpoint: endpoint.ip(),
-            port: endpoint.port(),
-            ..Default::default()
-        };
+        // let _network_config = crate::unified_types::network_config::UnifiedNetworkConfig {
+        //     bind_endpoint: _endpoint.ip(),
+        //     port: _endpoint.port(),
+        //     ..Default::default()
+        // }; // UnifiedNetworkConfig module removed - use canonical_master if needed
 
         // Create and return the certificate using actual Certificate struct fields
         Ok(Certificate {

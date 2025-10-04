@@ -80,7 +80,7 @@ where
     P: ComputePrimalProvider + Send + Sync + 'static,
 {
     /// Create new AI connections manager
-    pub const fn new() -> Self { Self {
+    pub fn new() -> Self { Self {
             provider: None,
             state: Arc::new(RwLock::new(ConnectionState::Disconnected)),
             _marker: PhantomData,
@@ -198,7 +198,7 @@ where
     }
 
     /// Get provider connection by ID
-    pub const fn get_connection(&self, provider_id: &str) -> Option<&UniversalAIConnections<P>> {
+    pub fn get_connection(&self, provider_id: &str) -> Option<&UniversalAIConnections<P>> {
         self.connections.get(provider_id)
     }
 

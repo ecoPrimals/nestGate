@@ -183,7 +183,7 @@ impl Default for EcosystemStatus {
 
 impl EcosystemAdoptionManager {
     /// Create a new ecosystem adoption manager
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             stats: AdoptionStat,
             s::default(),
@@ -425,7 +425,7 @@ impl EcosystemAdoptionManager {
         };
         
         // Update adoption percentage
-        self.stats.adoption_percentage = (f64::from(complete_count) / (crate_statuses.len() as f64)) * 100.0;
+        self.stats.adoption_percentage = (complete_count as f64 / (crate_statuses.len() as f64)) * 100.0;
     }
 
     /// Generate comprehensive adoption report

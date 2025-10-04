@@ -47,6 +47,8 @@ pub trait NativeAsyncUniversalProvider<
 }
 
 /// Native async security provider trait - replaces #[`async_trait`] `SecurityPrimalProvider`
+/// **DEPRECATED**: Native async security patterns integrated into canonical traits
+#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity - native async throughout")]
 pub trait NativeAsyncSecurityProvider<
     const MAX_TOKENS: usize = 10000,
     const TOKEN_EXPIRY_SECS: u64 = 3600,
@@ -90,6 +92,8 @@ pub trait NativeAsyncSecurityProvider<
 }
 
 /// Native async storage provider trait - replaces #[`async_trait`] `StoragePrimalProvider`
+/// **DEPRECATED**: Native async patterns integrated into canonical traits
+#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalStorage - native async throughout")]
 pub trait NativeAsyncStorageProvider<
     const MAX_OBJECTS: usize = 100_000,
     const MAX_OBJECT_SIZE: usize = { 1024 * 1024 * 10 },
@@ -432,12 +436,12 @@ where
 {
     /// Maximum concurrent operations supported
     #[must_use]
-    pub const fn max_concurrent_operations() -> usize {
+    pub fn max_concurrent_operations() -> usize {
         MAX_SERVICES
     }
 
     /// Create new orchestrator with native async providers
-    pub const fn new(
+    pub fn new(
         universal: UniversalProvider,
         security: SecurityProvider,
         storage: StorageProvider,
@@ -510,7 +514,7 @@ where
     }
 
     /// Get service statistics with compile-time limits
-    pub const fn get_service_stats(&self) -> OrchestratorStats {
+    pub fn get_service_stats(&self) -> OrchestratorStats {
         OrchestratorStats {
             active_services: self
                 .active_services

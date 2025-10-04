@@ -357,7 +357,7 @@ pub struct MountResponse {
     pub message: String,
 }
 /// Handle NFS mount request
-pub const fn handle_mount_request(
+pub fn handle_mount_request(
     server: &NfsServer,
     request: MountRequest,
 ) -> Result<MountResponse> {

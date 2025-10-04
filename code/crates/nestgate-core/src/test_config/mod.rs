@@ -33,14 +33,14 @@ pub use crate::config::canonical_master::domains::test_canonical::{
 // ==================== CONVENIENCE FUNCTIONS ====================
 
 // Create a new canonical test configuration
-pub const fn new_test_config() -> CanonicalTestConfigs {
+pub fn new_test_config() -> CanonicalTestConfigs {
     CanonicalTestConfigs::new()
 }
 // Create a CI-optimized test configuration
-pub const fn ci_test_config() -> CanonicalTestConfigs {
+pub fn ci_test_config() -> CanonicalTestConfigs {
     CanonicalTestConfigs::ci_optimized()
 }
 // Create a development-optimized test configuration
-pub const fn dev_test_config() -> CanonicalTestConfigs {
+pub fn dev_test_config() -> CanonicalTestConfigs {
     CanonicalTestConfigs::development_optimized()
 }

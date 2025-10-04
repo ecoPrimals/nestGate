@@ -56,7 +56,7 @@ impl DashboardTemplates {
     }
 
     /// Get available template names
-    pub const fn list_templates(&self) -> Vec<String> {
+    pub fn list_templates(&self) -> Vec<String> {
         self.templates.keys().cloned().collect()
     }
 
@@ -68,7 +68,7 @@ impl DashboardTemplates {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_template(&self, name: &str) -> Result<&DashboardConfig>  {
+        pub fn get_template(&self, name: &str) -> Result<&DashboardConfig>  {
         self.templates.get(name).ok_or_else(|| {
             NestGateError::validation("template_name"),
                 Some(name.to_string()),

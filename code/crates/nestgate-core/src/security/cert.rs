@@ -27,17 +27,17 @@ pub mod validator {
     }
 
     impl CertificateValidator {
-        pub const fn new(mode: CertMode) -> Self {
+        pub fn new(mode: CertMode) -> Self {
             Self { mode }
         }
 
-        pub const fn mode(&self) -> &CertMode {
+        pub fn mode(&self) -> &CertMode {
             &self.mode
         }
     }
 
     /// Create default certificate validator
-    pub const fn create_default_certificate_validator() -> CertificateValidator {
+    pub fn create_default_certificate_validator() -> CertificateValidator {
         CertificateValidator::new(CertMode::Development)
     }
 }

@@ -155,12 +155,12 @@ impl CanonicalStorageDetector {
     }
 
     /// Get cached detection results
-    pub const fn get_canonical_cached_storage(&self) -> Vec<&CanonicalDetectedStorage> {
+    pub fn get_canonical_cached_storage(&self) -> Vec<&CanonicalDetectedStorage> {
         self.cache.values().collect()
     }
 
     /// Get detection statistics
-    pub const fn get_canonical_stats(&self) -> &CanonicalDetectionStats {
+    pub fn get_canonical_stats(&self) -> &CanonicalDetectionStats {
         &self.stats
     }
 
@@ -583,7 +583,7 @@ pub struct CanonicalStorageDetectorBuilder {
     config: CanonicalDetectionConfig,
 }
 impl CanonicalStorageDetectorBuilder {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: CanonicalDetectionConfig::default(),
         }
@@ -619,7 +619,7 @@ impl CanonicalStorageDetectorBuilder {
         self
     }
 
-    pub const fn build(self) -> CanonicalStorageDetector {
+    pub fn build(self) -> CanonicalStorageDetector {
         CanonicalStorageDetector::with_canonical_config(self.config)
     }
 }

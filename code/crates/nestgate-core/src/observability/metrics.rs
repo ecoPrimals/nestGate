@@ -71,7 +71,7 @@ impl MetricsRegistry {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn collect_system_metrics(&self) -> Result<()>  {
+    pub async fn collect_system_metrics(&self) -> Result<()> {
         let metrics = self.gather_system_metrics().await?;
 
         let mut history = self.metrics_history.write().await;
@@ -93,7 +93,7 @@ impl MetricsRegistry {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_current_metrics(&self) -> Result<PerformanceMetrics>  {
+    pub async fn get_current_metrics(&self) -> Result<PerformanceMetrics> {
         self.gather_system_metrics().await
     }
 
@@ -105,7 +105,7 @@ impl MetricsRegistry {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn record_custom_metric(&self, name: &str, value: f64) -> Result<()>  {
+    pub async fn record_custom_metric(&self, name: &str, value: f64) -> Result<()> {
         let mut custom = self.custom_metrics.write().await;
         custom.insert(
             name.to_string(),
@@ -124,7 +124,7 @@ impl MetricsRegistry {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_metrics_history(&self, duration: Duration) -> Result<Vec<PerformanceMetrics>>  {
+    pub async fn get_metrics_history(&self, duration: Duration) -> Result<Vec<PerformanceMetrics>> {
         let history = self.metrics_history.read().await;
         let cutoff_time = SystemTime::now() - duration;
 
@@ -153,7 +153,7 @@ impl MetricsRegistry {
             custom_metrics: custom.iter().map(|(k, v)| {
                 (k.clone(), match v {
                     crate::canonical_modernization::unified_types::MetricValue::Gauge(val) => *val,
-                    crate::canonical_modernization::unified_types::MetricValue::Counter(val) => *f64::from(val),
+                    crate::canonical_modernization::unified_types::MetricValue::Counter(val) => *val as f64,
                     crate::canonical_modernization::unified_types::MetricValue::Histogram(val) => val.iter().sum::<f64>() / (val.len() as f64),
                     crate::canonical_modernization::unified_types::MetricValue::Summary { sum, count: _ } => *sum,
                     crate::canonical_modernization::unified_types::MetricValue::String(_) => 0.0,

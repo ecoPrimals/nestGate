@@ -98,7 +98,7 @@ where
     HealthChecker: ZeroCostHealthChecker<T>,
 {
     /// Create new zero-cost connection pool manager - compile-time optimized
-    pub const fn new(factory: Factory, health_checker: HealthChecker) -> Self {
+    pub fn new(factory: Factory, health_checker: HealthChecker) -> Self {
         Self {
             factory,
             health_checker,
@@ -109,17 +109,17 @@ where
     }
 
     /// Get maximum connections - compile-time constant
-    pub const fn max_connections() -> usize {
+    pub fn max_connections() -> usize {
         MAX_CONNECTIONS
     }
 
     /// Get minimum connections - compile-time constant
-    pub const fn min_connections() -> usize {
+    pub fn min_connections() -> usize {
         MIN_CONNECTIONS
     }
 
     /// Get health check interval - compile-time constant
-    pub const fn health_check_interval_ms() -> u64 {
+    pub fn health_check_interval_ms() -> u64 {
         HEALTH_CHECK_INTERVAL_MS
     }
 
@@ -218,7 +218,7 @@ where
     }
 
     /// Get pool statistics
-    pub const fn get_pool_stats(&self) -> PoolStatistics {
+    pub fn get_pool_stats(&self) -> PoolStatistics {
         PoolStatistics {
             total_connections: self.connections.len(),
             max_connections: MAX_CONNECTIONS,
@@ -245,7 +245,7 @@ pub struct ConnectionMetadata {
     pub use_count: u64,
 }
 impl ConnectionMetadata {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         let now = std::time::SystemTime::now();
         Self {
             created_at: now,
@@ -266,7 +266,7 @@ impl ConnectionMetadata {
         self.last_health_check = std::time::SystemTime::now();
     }
 
-    pub const fn is_healthy(&self) -> bool {
+    pub fn is_healthy(&self) -> bool {
         self.is_healthy
     }
 
@@ -284,7 +284,7 @@ pub struct HealthCheckResults {
     pub total_checked: usize,
 }
 impl HealthCheckResults {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             healthy_connections: 0,
             unhealthy_connections: 0,
@@ -292,11 +292,11 @@ impl HealthCheckResults {
         }
     }
 
-    pub const fn health_percentage(&self) -> f64 {
+    pub fn health_percentage(&self) -> f64 {
         if self.total_checked == 0 {
             return 100.0;
         }
-        (self.f64::from(healthy_connections) / self.f64::from(total_checked)) * 100.0
+        (self.healthy_connections as f64 / self.total_checked as f64) * 100.0
     }
 }
 
@@ -310,18 +310,18 @@ pub struct PoolStatistics {
     pub unhealthy_connections: usize,
 }
 impl PoolStatistics {
-    pub const fn utilization_percentage(&self) -> f64 {
+    pub fn utilization_percentage(&self) -> f64 {
         if self.max_connections == 0 {
             return 0.0;
         }
-        (self.f64::from(total_connections) / self.f64::from(max_connections)) * 100.0
+        (self.total_connections as f64 / self.max_connections as f64) * 100.0
     }
 
-    pub const fn health_percentage(&self) -> f64 {
+    pub fn health_percentage(&self) -> f64 {
         if self.total_connections == 0 {
             return 100.0;
         }
-        (self.f64::from(healthy_connections) / self.f64::from(total_connections)) * 100.0
+        (self.healthy_connections as f64 / self.total_connections as f64) * 100.0
     }
 }
 

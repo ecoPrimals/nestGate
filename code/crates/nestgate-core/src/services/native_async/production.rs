@@ -312,7 +312,7 @@ impl NativeAsyncCommunicationProvider<1000, 10000, 30, 3> for ProductionCommunic
 
     async fn connection_status(&self, connection: &Self::ConnectionInfo) -> Result<String> {
         // Compile-time optimization for status check
-        Ok(format!("{connection.status:?}"))
+        Ok(format!("{:?}", connection.status))
     }
 
     async fn broadcast(&self, message: Self::Message) -> Result<u32> {
@@ -334,7 +334,7 @@ impl NativeAsyncCommunicationProvider<1000, 10000, 30, 3> for ProductionCommunic
 
     async fn ping(&self, connection: &Self::ConnectionInfo) -> Result<Duration> {
         // No Future boxing ping
-        println!("Pinging connection {connection.connection_id}");
+        println!("Pinging connection {}", connection.connection_id);
         Ok(Duration::from_millis(5))
     }
 }
@@ -359,7 +359,6 @@ impl ProductionLoadBalancer {
                 Err(e) => {
                     // Log the error and try next endpoint
                     tracing::debug!("Endpoint {} failed: {}", endpoint.url, e);
-
                 }
             }
         }

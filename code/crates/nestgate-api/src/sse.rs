@@ -335,7 +335,7 @@ impl SseManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn broadcast_event(
+        pub fn broadcast_event(
         &self,
         event: SseEvent,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>  {
@@ -401,7 +401,7 @@ impl SseManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn create_storage_stream(
+        pub fn create_storage_stream(
         &self,
     ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, Infallible>  {
         let _params = SseParams {
@@ -423,7 +423,7 @@ impl SseManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn create_health_stream(
+        pub fn create_health_stream(
         &self,
     ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, Infallible>  {
         let _params = SseParams {
@@ -445,7 +445,7 @@ impl SseManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn create_metrics_stream(
+        pub fn create_metrics_stream(
         &self,
     ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, Infallible>  {
         let _params = SseParams {
@@ -516,7 +516,7 @@ pub async fn sse_metrics(
 }
 /// Utility functions for creating SSE events
 /// Create a storage operation SSE event
-pub const fn create_storage_event(operation: &str, path: &str, data: serde_json::Value) -> SseEvent {
+pub fn create_storage_event(operation: &str, path: &str, data: serde_json::Value) -> SseEvent {
     SseEvent {
         id: Uuid::new_v4(),
         event_type: SseEventType::StorageOperation,
@@ -531,7 +531,7 @@ pub const fn create_storage_event(operation: &str, path: &str, data: serde_json:
     }
 }
 /// Create a system health SSE event
-pub const fn create_health_event(component: &str, status: &str, metrics: serde_json::Value) -> SseEvent {
+pub fn create_health_event(component: &str, status: &str, metrics: serde_json::Value) -> SseEvent {
     SseEvent {
         id: Uuid::new_v4(),
         event_type: SseEventType::SystemHealth,
@@ -550,7 +550,7 @@ pub const fn create_health_event(component: &str, status: &str, metrics: serde_j
     }
 }
 /// Create a performance metrics SSE event
-pub const fn create_metrics_event(metrics: HashMap<String, f64>) -> SseEvent {
+pub fn create_metrics_event(metrics: HashMap<String, f64>) -> SseEvent {
     SseEvent {
         id: Uuid::new_v4(),
         event_type: SseEventType::PerformanceMetrics,

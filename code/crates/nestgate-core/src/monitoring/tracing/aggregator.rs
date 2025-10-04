@@ -25,7 +25,7 @@ pub struct LogAggregator {
 }
 impl LogAggregator {
     /// Create new log aggregator
-    pub const fn new(config: LogAggregationConfig) -> Self {
+    pub fn new(config: LogAggregationConfig) -> Self {
         info!(
             "📋 Initializing log aggregator with {} destinations",
             config.destinations.len()

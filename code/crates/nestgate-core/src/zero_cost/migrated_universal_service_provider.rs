@@ -233,7 +233,7 @@ pub struct ExampleZeroCostProvider {
 }
 impl ExampleZeroCostProvider {
     /// Create new example provider
-    pub const fn new(service_id: String, service_name: String) -> Self {
+    pub fn new(service_id: String, service_name: String) -> Self {
         Self {
             service_id,
             service_name,
@@ -349,12 +349,12 @@ pub struct UniversalServiceProviderAdapter<T> {
 }
 impl<T> UniversalServiceProviderAdapter<T> {
     /// Create new adapter
-    pub const fn new(provider: T) -> Self {
+    pub fn new(provider: T) -> Self {
         Self { inner: provider }
     }
 
     /// Get reference to inner provider
-    pub const fn inner(&self) -> &T {
+    pub fn inner(&self) -> &T {
         &self.inner
     }
 
@@ -364,7 +364,7 @@ impl<T> UniversalServiceProviderAdapter<T> {
     }
 
     /// Consume adapter and return inner provider
-    pub const fn into_inner(self) -> T {
+    pub fn into_inner(self) -> T {
         self.inner
     }
 }

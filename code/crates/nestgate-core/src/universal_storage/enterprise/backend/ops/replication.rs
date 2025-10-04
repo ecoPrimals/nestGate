@@ -403,7 +403,7 @@ impl EnterpriseReplicationManager {
     }
 
     /// Check health of a specific site
-    pub const fn check_site_health(&self, site_id: &str) -> SiteStatus {
+    pub fn check_site_health(&self, site_id: &str) -> SiteStatus {
         debug!("Checking health of site: {}", site_id);
         
         // Find the site
@@ -426,22 +426,22 @@ impl EnterpriseReplicationManager {
     }
 
     /// Get replication status for all sites
-    pub const fn get_replication_status(&self) -> HashMap<String, ReplicationStatus> {
+    pub fn get_replication_status(&self) -> HashMap<String, ReplicationStatus> {
         self.site_status.clone()
     }
 
     /// Get replication status for a specific site
-    pub const fn get_site_status(&self, site_id: &str) -> Option<&ReplicationStatus> {
+    pub fn get_site_status(&self, site_id: &str) -> Option<&ReplicationStatus> {
         self.site_status.get(site_id)
     }
 
     /// Get active replication operations
-    pub const fn get_active_operations(&self) -> Vec<&ReplicationOperation> {
+    pub fn get_active_operations(&self) -> Vec<&ReplicationOperation> {
         self.active_operations.values().collect()
     }
 
     /// Get replication history
-    pub const fn get_operation_history(&self) -> &Vec<ReplicationResult> {
+    pub fn get_operation_history(&self) -> &Vec<ReplicationResult> {
         &self.operation_history
     }
 
@@ -589,7 +589,7 @@ impl EnterpriseReplicationManager {
         for i in 1..=10 {
             // Update progress
             if let Some(op) = self.active_operations.get_mut(operation_id) {
-                op.progress = f64::from(i) / 10.0;
+                op.progress = i as f64 / 10.0;
             }
 
             // Simulate transfer time based on bandwidth limits

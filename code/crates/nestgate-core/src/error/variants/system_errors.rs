@@ -6,7 +6,7 @@ use super::core_errors::NestGateUnifiedError;
 
 impl NestGateUnifiedError {
     /// Create a new system error
-    pub const fn system(message: impl Into<String>, component: impl Into<String>) -> Self {
+    pub fn system(message: impl Into<String>, component: impl Into<String>) -> Self {
         Self::System(Box::new(
             crate::error::variants::core_errors::SystemErrorDetails {
                 message: message.into(),
@@ -18,7 +18,7 @@ impl NestGateUnifiedError {
     }
 
     /// Create an internal error
-    pub const fn internal(message: impl Into<String>) -> Self {
+    pub fn internal(message: impl Into<String>) -> Self {
         Self::Internal(Box::new(
             crate::error::variants::core_errors::InternalErrorDetails {
                 message: message.into(),
@@ -31,7 +31,7 @@ impl NestGateUnifiedError {
     }
 
     /// Create an internal error with component context
-    pub const fn internal_with_component(
+    pub fn internal_with_component(
         message: impl Into<String>,
         component: impl Into<String>,
     ) -> Self {
@@ -48,12 +48,12 @@ impl NestGateUnifiedError {
 
     /// Legacy compatibility method for internal_error calls
     /// This method provides backward compatibility for the old internal_error signature
-    pub const fn internal_error(message: impl Into<String>, component: impl Into<String>) -> Self {
+    pub fn internal_error(message: impl Into<String>, component: impl Into<String>) -> Self {
         Self::internal_with_component(message, component)
     }
 
     /// Create an external service error
-    pub const fn external_service_unavailable(
+    pub fn external_service_unavailable(
         service: impl Into<String>,
         message: impl Into<String>,
     ) -> Self {
@@ -68,7 +68,7 @@ impl NestGateUnifiedError {
     }
 
     /// Create a validation error
-    pub const fn validation(message: impl Into<String>) -> Self {
+    pub fn validation(message: impl Into<String>) -> Self {
         Self::Validation(Box::new(
             crate::error::variants::core_errors::ValidationErrorDetails {
                 message: message.into(),
@@ -81,7 +81,7 @@ impl NestGateUnifiedError {
     }
 
     /// Create an I/O error
-    pub const fn io_error(message: impl Into<String>) -> Self {
+    pub fn io_error(message: impl Into<String>) -> Self {
         Self::System(Box::new(
             crate::error::variants::core_errors::SystemErrorDetails {
                 message: message.into(),
@@ -93,7 +93,7 @@ impl NestGateUnifiedError {
     }
 
     /// Create an internal error with debug context
-    pub const fn internal_error_with_debug_context(
+    pub fn internal_error_with_debug_context(
         message: impl Into<String>,
         debug_info: impl Into<String>,
     ) -> Self {

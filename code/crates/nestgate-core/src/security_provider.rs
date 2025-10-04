@@ -28,20 +28,20 @@ pub struct SecurityProvider {
 impl SecurityProvider {
     /// Create a new security provider
     #[must_use]
-    pub const fn new(id: String, config: SecurityProviderConfig) -> Self {
+    pub fn new(id: String, config: SecurityProviderConfig) -> Self {
         Self { id, config }
     }
 
     /// Generate a secure token
     #[must_use]
-    pub const fn generate_token(&self) -> String {
+    pub fn generate_token(&self) -> String {
         use uuid::Uuid;
         Uuid::new_v4().to_string()
     }
 
     /// Validate a token
     #[must_use]
-    pub const fn validate_token(&self, _token: &str) -> bool {
+    pub fn validate_token(&self, _token: &str) -> bool {
         // Basic validation - in production this would be more sophisticated
         true
     }
@@ -167,7 +167,7 @@ pub fn create_default() -> SecurityProvider {
 }
 /// Create a custom security provider  
 #[must_use]
-pub const fn create_custom(
+pub fn create_custom(
     provider_type: String,
     config_map: std::collections::HashMap<String, String>,
 ) -> SecurityProvider {

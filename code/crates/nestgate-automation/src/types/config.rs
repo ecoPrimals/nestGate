@@ -44,7 +44,7 @@ impl Default for AutomationConfig {
 
 impl AutomationConfig {
     /// Create production configuration
-    pub const fn production() -> Self { Self {
+    pub fn production() -> Self { Self {
             analysis: AnalysisConfig::default(),
             prediction: PredictionConfig::default(),
             lifecycle: LifecycleConfig::default(),
@@ -57,7 +57,7 @@ impl AutomationConfig {
          }
 
     /// Create development configuration
-    pub const fn development() -> Self { Self {
+    pub fn development() -> Self { Self {
             analysis: AnalysisConfig::default(),
             prediction: PredictionConfig::default(),
             lifecycle: LifecycleConfig::default(),
@@ -142,7 +142,7 @@ pub struct DiscoveryConfig {
 }
     #[cfg(feature = "network-integration")]
 impl DiscoveryConfig {
-    pub const fn from_automation_config(config: &AutomationConfig) -> Self {
+    pub fn from_automation_config(config: &AutomationConfig) -> Self {
         Self {
             known_orchestration_endpoints: vec![
                 config

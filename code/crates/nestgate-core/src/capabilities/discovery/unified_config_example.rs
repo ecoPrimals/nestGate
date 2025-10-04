@@ -232,7 +232,7 @@ pub struct ConfigUnificationImpactReport {
     pub lines_of_code_simplified: usize,
     }
 impl ConfigUnificationImpactReport {
-    pub const fn generate_report() -> Self {
+    pub fn generate_report() -> Self {
         Self {
             structs_eliminated: 6, // DynamicStorageConfig, DynamicAuthConfig, etc.
             cache_systems_unified: 6, // Each had its own caching system

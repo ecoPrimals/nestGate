@@ -93,7 +93,7 @@ impl InputSanitizer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn sanitize_string(input: &str, max_length: usize) -> Result<String>  {
+        pub fn sanitize_string(input: &str, max_length: usize) -> Result<String>  {
         if input.len() > max_length {
             return Err(NestGateError::validation(
                 actual: Some(input[..50.min(input.len())].to_string())}"))context: None,
@@ -166,7 +166,7 @@ impl InputSanitizer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_network_address(endpoint: &str) -> Result<String>  {
+        pub fn validate_network_address(endpoint: &str) -> Result<String>  {
         // Parse as IP address
         if let Ok(ip) = address.parse::<IpAddr>() {
             // Block private and loopback addresses in production
@@ -379,7 +379,7 @@ pub struct SecurityMiddleware {
 }
 impl SecurityMiddleware {
     /// Create new security middleware with production settings
-    pub const fn new_production() -> Self {
+    pub fn new_production() -> Self {
         Self {
             rate_limiter: EnhancedRateLimiter::new(Duration::from_secs(60), 100),
             brute_force_protection: BruteForceProtection::new(5, Duration::from_secs(300)),
@@ -388,7 +388,7 @@ impl SecurityMiddleware {
     }
 
     /// Create new security middleware with development settings
-    pub const fn new_development() -> Self {
+    pub fn new_development() -> Self {
         Self {
             rate_limiter: EnhancedRateLimiter::new(Duration::from_secs(60), 1000),
             brute_force_protection: BruteForceProtection::new(10, Duration::from_secs(60)),

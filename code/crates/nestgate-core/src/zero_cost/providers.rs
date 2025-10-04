@@ -20,14 +20,14 @@ impl<const CAPACITY: usize> Default for ZeroCostMemoryCache<CAPACITY> {
 }
 
 impl<const CAPACITY: usize> ZeroCostMemoryCache<CAPACITY> {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             data: HashMap::with_capacity(CAPACITY),
             _marker: std::marker::PhantomData,
         }
     }
 
-    pub const fn capacity(&self) -> usize {
+    pub fn capacity(&self) -> usize {
         CAPACITY
     }
 }
@@ -58,17 +58,17 @@ pub struct ZeroCostJwtProvider {
 }
 
 impl ZeroCostJwtProvider {
-    pub const fn new(secret: [u8; 32]) -> Self {
+    pub fn new(secret: [u8; 32]) -> Self {
         Self { secret }
     }
 
     /// Get the secret key for JWT operations
-    pub const fn secret(&self) -> &[u8; 32] {
+    pub fn secret(&self) -> &[u8; 32] {
         &self.secret
     }
 
     /// Verify JWT signature (simplified implementation)
-    pub const fn verify_signature(&self, token: &str) -> bool {
+    pub fn verify_signature(&self, token: &str) -> bool {
         // Simplified JWT verification using the secret
         !token.is_empty() && self.secret[0] != 0
     }
@@ -102,17 +102,17 @@ pub struct ZeroCostFileStorage {
 }
 
 impl ZeroCostFileStorage {
-    pub const fn new(base_path: String) -> Self {
+    pub fn new(base_path: String) -> Self {
         Self { base_path }
     }
 
     /// Get the base path for file operations
-    pub const fn base_path(&self) -> &str {
+    pub fn base_path(&self) -> &str {
         &self.base_path
     }
 
     /// Check if a path is within the base path
-    pub const fn is_path_valid(&self, path: &str) -> bool {
+    pub fn is_path_valid(&self, path: &str) -> bool {
         path.starts_with(&self.base_path)
     }
 }

@@ -608,7 +608,7 @@ pub trait NativeAsyncProtocolHandler<
     /// Get migration summary
     pub fn get_summary(&self) -> MigrationSummary {
         let progress = if self.stats.total_async_traits > 0 {
-            (self.stats.f64::from(migrated_count) / self.stats.f64::from(total_async_traits)) * 100.0
+            (self.stats.migrated_count as f64 / self.stats.total_async_traits as f64) * 100.0
         } else {
             100.0
         };

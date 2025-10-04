@@ -1,3 +1,4 @@
+use crate::constants::magic_numbers_replacement;
 use std::process::Command;
 
 fn main() {

@@ -52,7 +52,7 @@ use std::io;
 }
 
 /// Copy files and directories recursively  
-pub const fn copy_recursive(src: &Path, dst: &Path) -> io::Result<()> {
+pub fn copy_recursive(src: &Path, dst: &Path) -> io::Result<()> {
     if src.is_dir() {
         stdfs::create_dir_all(dst)?;
         for entry in stdfs::read_dir(src)? {
@@ -229,11 +229,11 @@ fn find_files_recursive(dir: &Path, pattern: &str, results: &mut Vec<PathBuf>) -
 // ==================== SECTION ====================
 
 /// Get temporary directory path
-pub const fn temp_dir() -> PathBuf {
+pub fn temp_dir() -> PathBuf {
     std::env::temp_dir()
 }
 /// Create a temporary file with a unique name
-pub const fn create_temp_file(prefix: &str, suffix: &str) -> io::Result<PathBuf> {
+pub fn create_temp_file(prefix: &str, suffix: &str) -> io::Result<PathBuf> {
     let temp_dir = temp_dir();
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -249,7 +249,7 @@ pub const fn create_temp_file(prefix: &str, suffix: &str) -> io::Result<PathBuf>
 }
 
 /// Get home directory path
-pub const fn home_dir() -> Option<PathBuf> {
+pub fn home_dir() -> Option<PathBuf> {
     std::env::var("HOME")
         .or_else(|_| std::env::var("USERPROFILE"))
         .ok()

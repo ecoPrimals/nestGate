@@ -410,6 +410,11 @@ pub struct StorageMetadata {
 
 /// **THE** Universal Storage Backend trait
 /// Consolidates all storage backend interfaces
+/// **DEPRECATED**: Use canonical storage traits instead
+#[deprecated(
+    since = "0.9.0",
+    note = "Use crate::traits::canonical_unified_traits::CanonicalStorage or crate::traits::unified_storage::UnifiedStorage"
+)]
 pub trait UniversalStorageBackend: Send + Sync {
     /// Handle a storage request
     fn handle_request(
@@ -495,18 +500,22 @@ impl Default for StoragePerformanceMetrics {
 impl UniversalStorageType {
     /// Check if storage type supports a capability
     #[must_use]
-    pub const fn supports_capability(&self, capability: &StorageCapability) -> bool {
+    pub fn supports_capability(&self, capability: &StorageCapability) -> bool {
         matches!(
             (self, capability),
-            (Self::Zfs, StorageCapability::Snapshots | StorageCapability::Compression | StorageCapability::Deduplication)
-                | (Self::Object, StorageCapability::Versioning)
+            (
+                Self::Zfs,
+                StorageCapability::Snapshots
+                    | StorageCapability::Compression
+                    | StorageCapability::Deduplication
+            ) | (Self::Object, StorageCapability::Versioning)
                 | (Self::Memory | Self::Cache, StorageCapability::ReadWrite)
         )
     }
 
     /// Get default capabilities for storage type
     #[must_use]
-    pub const fn default_capabilities(&self) -> Vec<StorageCapability> {
+    pub fn default_capabilities(&self) -> Vec<StorageCapability> {
         match self {
             Self::Zfs => vec![
                 StorageCapability::ReadWrite,

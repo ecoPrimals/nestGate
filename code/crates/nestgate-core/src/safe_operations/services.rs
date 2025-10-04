@@ -18,7 +18,7 @@ where
 }
 /// Create a service error with context
 #[must_use]
-pub const fn create_service_error(operation_name: &str, message: &str) -> NestGateError {
+pub fn create_service_error(operation_name: &str, message: &str) -> NestGateError {
     NestGateError::internal_error(
         format!("Service operation '{operation_name}' failed: {message}"),
         "safe_operations",

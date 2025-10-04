@@ -15,7 +15,7 @@ use std::time::Duration;
 // Deprecated type alias removed - use UnifiedNetworkConfig directly
 
 /// Discover bind address for a service
-pub const fn discover_bind_address(service_name: &str) -> Result<IpAddr> {
+pub fn discover_bind_address(service_name: &str) -> Result<IpAddr> {
     match service_name {
         "api" | "web" | "http" => Ok(crate::safe_operations::safe_parse_ip_with_fallback(
             "0.0.0.0",
@@ -37,13 +37,13 @@ pub const fn discover_bind_address(service_name: &str) -> Result<IpAddr> {
     }
 }
 /// Discover endpoint for a service
-pub const fn discover_endpoint(service_name: &str) -> Result<SocketAddr> {
+pub fn discover_endpoint(service_name: &str) -> Result<SocketAddr> {
     let port = get_fallback_port(service_name);
     let addr = discover_bind_address(service_name)?;
     Ok(SocketAddr::new(addr, port))
 }
 /// Discover limit for a service
-pub const fn discover_limit(resource_type: &str) -> Result<usize> {
+pub fn discover_limit(resource_type: &str) -> Result<usize> {
     match resource_type {
         "connections" => Ok(1000),
         "requests_per_second" => Ok(100),
@@ -53,11 +53,11 @@ pub const fn discover_limit(resource_type: &str) -> Result<usize> {
     }
 }
 /// Discover port for a service
-pub const fn discover_port(service_name: &str) -> Result<u16> {
+pub fn discover_port(service_name: &str) -> Result<u16> {
     Ok(get_fallback_port(service_name))
 }
 /// Discover timeout for a service
-pub const fn discover_timeout(operation: &str) -> crate::Result<Duration> {
+pub fn discover_timeout(operation: &str) -> crate::Result<Duration> {
     match operation {
         "connect" => Ok(Duration::from_secs(10)),
         "request" => Ok(Duration::from_secs(30)),
@@ -68,7 +68,7 @@ pub const fn discover_timeout(operation: &str) -> crate::Result<Duration> {
 }
 /// Get fallback port for a service
 #[must_use]
-pub const fn get_fallback_port(service_name: &str) -> u16 {
+pub fn get_fallback_port(service_name: &str) -> u16 {
     match service_name {
         "api" => 8080,
         "web" => 8080,
@@ -85,6 +85,11 @@ pub const fn get_fallback_port(service_name: &str) -> u16 {
     }
 }
 /// Network configuration adapter for universal discovery
+/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
+#[deprecated(
+    since = "0.9.0",
+    note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct NetworkConfigAdapter {
     #[allow(dead_code)]
     service_name: String,
@@ -97,7 +102,7 @@ pub struct NetworkConfigAdapter {
 }
 impl NetworkConfigAdapter {
     #[must_use]
-    pub const fn new(service_name: String) -> Self {
+    pub fn new(service_name: String) -> Self {
         let network_config = UnifiedNetworkConfig {
             // Use default NetworkConfig structure - fields updated to match unified config
             ..Default::default()
@@ -117,7 +122,7 @@ impl NetworkConfigAdapter {
     }
 
     #[must_use]
-    pub const fn config(&self) -> &UnifiedNetworkConfig {
+    pub fn config(&self) -> &UnifiedNetworkConfig {
         &self.config.network
     }
 }
@@ -158,17 +163,17 @@ impl StandaloneNetworkAdapter {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn discover_endpoint(&self, service: &str) -> Result<SocketAddr>  {
+    pub fn discover_endpoint(&self, service: &str) -> Result<SocketAddr> {
         discover_endpoint(service)
     }
 
     #[must_use]
-    pub const fn all_endpoints(&self) -> HashMap<String, SocketAddr> {
+    pub fn all_endpoints(&self) -> HashMap<String, SocketAddr> {
         self.endpoints.clone()
     }
 
     #[must_use]
-    pub const fn is_standalone(&self) -> bool {
+    pub fn is_standalone(&self) -> bool {
         true
     }
 }
@@ -178,7 +183,7 @@ impl StandaloneNetworkAdapter {
 impl UnifiedNetworkConfig {
     /// Convert to unified config (identity function now)
     #[must_use]
-    pub const fn to_unified(&self) -> Self {
+    pub fn to_unified(&self) -> Self {
         self.clone()
     }
 }

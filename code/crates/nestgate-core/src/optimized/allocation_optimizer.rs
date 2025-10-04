@@ -114,7 +114,7 @@ impl GlobalPools {
 /// Global pools instance
 static GLOBAL_POOLS: OnceLock<GlobalPools> = OnceLock::new();
 /// Get global pools instance
-pub const fn global_pools() -> &'static GlobalPools {
+pub fn global_pools() -> &'static GlobalPools {
     GLOBAL_POOLS.get_or_init(GlobalPools::new)
 }
 // ==================== ALLOCATION OPTIMIZERS ====================
@@ -127,7 +127,7 @@ pub struct ZeroAllocStringBuilder {
 }
 impl ZeroAllocStringBuilder {
     /// Create new builder with capacity hint
-    pub const fn with_capacity(capacity: usize) -> Self { Self {
+    pub fn with_capacity(capacity: usize) -> Self { Self {
             buffer: String::with_capacity(capacity),
             segments: Vec::with_capacity(8),
          }
@@ -194,7 +194,7 @@ pub enum Either<L, R> {
 }
 impl<T> Either<T, Arc<T>> {
     /// Get reference to the contained value
-    pub const fn as_ref(&self) -> &T {
+    pub fn as_ref(&self) -> &T {
         match self {
             Either::Left(val) => val,
             Either::Right(arc) => arc.as_ref(),

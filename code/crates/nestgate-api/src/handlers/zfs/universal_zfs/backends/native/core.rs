@@ -25,7 +25,7 @@ pub struct NativeZfsService {
 }
 impl NativeZfsService {
     /// Create a new native ZFS service
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             service_name: "native-zfs",
             service_version: "1.0.0",
@@ -107,7 +107,7 @@ impl NativeZfsService {
         number_part
             .parse::<f64>()
             .ok()
-            .map(|n| (n * f64::from(multiplier)) as u64)
+            .map(|n| (n * multiplier as f64) as u64)
     }
 }
 

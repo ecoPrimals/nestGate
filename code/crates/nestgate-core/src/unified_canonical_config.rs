@@ -351,7 +351,7 @@ impl UnifiedCanonicalConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_cross_domain_consistency(&self) -> Result<(), String>  {
+        pub fn validate_cross_domain_consistency(&self) -> Result<(), String>  {
         // API domain requires network domain
         if self.extensions.domain_features.api_enabled && !self.extensions.domain_features.network_enabled {
             return Err("API domain requires network domain to be enabled".to_string());
@@ -398,7 +398,7 @@ impl Default for UnifiedCanonicalExtensions {
 
 impl DomainFeatureFlags {
     /// Development environment - all domains enabled
-    pub const fn development() -> Self {
+    pub fn development() -> Self {
         Self {
             api_enabled: true,
             primal_enabled: true,
@@ -414,7 +414,7 @@ impl DomainFeatureFlags {
     }
 
     /// Production environment - stable domains only
-    pub const fn production() -> Self {
+    pub fn production() -> Self {
         Self {
             api_enabled: true,
             primal_enabled: true,
@@ -430,7 +430,7 @@ impl DomainFeatureFlags {
     }
 
     /// Testing environment - core domains for testing
-    pub const fn testing() -> Self {
+    pub fn testing() -> Self {
         Self {
             api_enabled: true,
             primal_enabled: false, // Disabled for isolated testing
@@ -446,7 +446,7 @@ impl DomainFeatureFlags {
     }
 
     /// Staging environment - production-like with monitoring
-    pub const fn staging() -> Self {
+    pub fn staging() -> Self {
         Self {
             api_enabled: true,
             primal_enabled: true,
@@ -462,7 +462,7 @@ impl DomainFeatureFlags {
     }
 
     /// Minimal environment - essential domains only
-    pub const fn minimal() -> Self {
+    pub fn minimal() -> Self {
         Self {
             api_enabled: true,
             primal_enabled: false,
@@ -589,26 +589,26 @@ impl Default for SessionManagement {
 /// **CONVENIENCE BUILDER FUNCTIONS**
 impl UnifiedCanonicalConfig {
     /// Create a configuration for API-only deployment
-    pub const fn api_only() -> Self {
+    pub fn api_only() -> Self {
         Self::custom(&["api", "network", "middleware"])
     }
     /// Create a configuration for storage-only deployment
-    pub const fn storage_only() -> Self {
+    pub fn storage_only() -> Self {
         Self::custom(&["zfs", "nas", "network"])
     }
 
     /// Create a configuration for monitoring deployment
-    pub const fn monitoring_only() -> Self {
+    pub fn monitoring_only() -> Self {
         Self::custom(&["api", "network", "middleware", "fsmonitor"])
     }
 
     /// Create a configuration for automation deployment
-    pub const fn automation_only() -> Self {
+    pub fn automation_only() -> Self {
         Self::custom(&["automation", "network", "zfs"])
     }
 
     /// Create a configuration for primal integration deployment
-    pub const fn primal_integration() -> Self {
+    pub fn primal_integration() -> Self {
         Self::custom(&["primal", "api", "network", "middleware", "mcp"])
     }
 }

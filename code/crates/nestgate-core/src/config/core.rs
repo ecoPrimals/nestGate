@@ -100,7 +100,7 @@ impl NestGateCanonicalConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<()>  {
+        pub fn validate(&self) -> Result<()>  {
         // Validate system configuration
         if self.system.instance_name.is_empty() {
             return Err(NestGateError::configuration_error_detailed(Some("field".to_string()), "Service name cannot be empty".to_string(), Some(self.system.instance_name.clone()), Some("non-empty string".to_string()), true));
@@ -124,7 +124,7 @@ impl NestGateCanonicalConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn from_environment() -> Result<Self>  {
+        pub fn from_environment() -> Result<Self>  {
         // Implementation for environment variable loading
         // This would use the existing environment loading patterns
         Ok(Self::default())

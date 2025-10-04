@@ -45,7 +45,7 @@ impl StringPool {
     }
 
     /// Get existing string or intern new one
-    pub const fn get_or_intern(&self, value: &str) -> crate::Result<Arc<str>> {
+    pub fn get_or_intern(&self, value: &str) -> crate::Result<Arc<str>> {
         // ✅ IDIOMATIC EVOLUTION: Safe lock acquisition instead of unwrap()
         let pool = self.safe_read_lock()?;
 
@@ -73,7 +73,7 @@ impl StringPool {
     }
 
     /// Get existing string if pooled
-    pub const fn get(&self, value: &str) -> crate::Result<Option<Arc<str>>> {
+    pub fn get(&self, value: &str) -> crate::Result<Option<Arc<str>>> {
         let pool = self.safe_read_lock()?;
         Ok(pool.get(value).map(Arc::clone))
     }
@@ -110,7 +110,7 @@ impl StringPool {
         let misses = self.miss_counter.load(Ordering::Relaxed);
         let total_requests = hits + misses;
         let hit_ratio = if total_requests > 0 {
-            f64::from(hits) / f64::from(total_requests)
+            hits as f64 / total_requests as f64
         } else {
             0.0
         };
@@ -132,19 +132,19 @@ impl StringPool {
     }
 
     /// Get current pool size
-    pub const fn len(&self) -> crate::Result<usize> {
+    pub fn len(&self) -> crate::Result<usize> {
         let pool = self.safe_read_lock()?;
         Ok(pool.len())
     }
 
     /// Check if pool is empty
-    pub const fn is_empty(&self) -> crate::Result<bool> {
+    pub fn is_empty(&self) -> crate::Result<bool> {
         let pool = self.safe_read_lock()?;
         Ok(pool.is_empty())
     }
 
     /// Get pool capacity
-    pub const fn capacity(&self) -> crate::Result<usize> {
+    pub fn capacity(&self) -> crate::Result<usize> {
         let pool = self.safe_read_lock()?;
         Ok(pool.len()) // HashMap doesn't expose capacity directly
     }
@@ -203,12 +203,12 @@ pub struct StringPoolStatistics {
 }
 impl StringPoolStatistics {
     /// Check if pool is performing well (>80% hit ratio is excellent)
-    pub const fn is_efficient(&self) -> bool {
+    pub fn is_efficient(&self) -> bool {
         self.hit_ratio > 0.8
     }
 
     /// Get performance assessment
-    pub const fn performance_assessment(&self) -> &'static str {
+    pub fn performance_assessment(&self) -> &'static str {
         match self.hit_ratio {
             r if r > 0.95 => "Excellent",
             r if r > 0.8 => "Very Good",
@@ -258,7 +258,7 @@ lazy_static::lazy_static! {
 }
 
 /// Global string interning function - high performance API
-pub const fn intern_string(value: &str) -> Arc<str> {
+pub fn intern_string(value: &str) -> Arc<str> {
     // ✅ IDIOMATIC EVOLUTION: Safe error handling instead of blocking on non-future
     GLOBAL_STRING_POOL.get_or_intern(value).unwrap_or_else(|_| {
         // Fallback: create Arc<str> directly if pool fails
@@ -266,7 +266,7 @@ pub const fn intern_string(value: &str) -> Arc<str> {
     })
 }
 /// Global string retrieval function
-pub const fn get_string(value: &str) -> Option<Arc<str>> {
+pub fn get_string(value: &str) -> Option<Arc<str>> {
     GLOBAL_STRING_POOL
         .get(value)
         .unwrap_or_default_with_log("global_string_get")
@@ -276,7 +276,7 @@ pub fn preload_strings(strings: Vec<&str>) {
     GLOBAL_STRING_POOL.preload_sync(strings);
 }
 /// Get global string pool statistics
-pub const fn global_string_pool_statistics() -> StringPoolStatistics {
+pub fn global_string_pool_statistics() -> StringPoolStatistics {
     tokio::task::block_in_place(|| {
         tokio::runtime::Handle::current().block_on(GLOBAL_STRING_POOL.statistics())
     })

@@ -72,13 +72,13 @@ impl Default for UnifiedAccessPatterns {
 impl UnifiedAccessPatterns {
     /// Create a new access patterns instance with basic metrics
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
     #[allow(clippy::too_many_arguments)]
     #[must_use]
-    pub const fn from_analysis_patterns(
+    pub fn from_analysis_patterns(
         read_frequency: u64,
         write_frequency: u64,
         last_access: Option<SystemTime>,
@@ -129,19 +129,19 @@ impl UnifiedAccessPatterns {
 
     /// Calculate total access frequency
     #[must_use]
-    pub const fn total_frequency(&self) -> u64 {
+    pub fn total_frequency(&self) -> u64 {
         self.read_frequency + self.write_frequency
     }
 
     /// Check if this represents an active access pattern
     #[must_use]
-    pub const fn is_active(&self) -> bool {
+    pub fn is_active(&self) -> bool {
         self.total_frequency() > 0 || self.daily_access_count > 0
     }
 
     /// Get the dominant access type (read vs write)
     #[must_use]
-    pub const fn dominant_access_type(&self) -> &'static str {
+    pub fn dominant_access_type(&self) -> &'static str {
         if self.read_frequency > self.write_frequency {
             "read-heavy"
         } else if self.write_frequency > self.read_frequency {

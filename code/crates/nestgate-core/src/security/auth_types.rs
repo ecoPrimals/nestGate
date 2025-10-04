@@ -42,14 +42,14 @@ pub struct Permission {
     pub scope: Option<String>,
 }
 impl Permission {
-    pub const fn new(name: &str) -> Self {
+    pub fn new(name: &str) -> Self {
         Self {
             name: name.to_string(),
             scope: None,
         }
     }
 
-    pub const fn with_scope(name: &str, scope: &str) -> Self {
+    pub fn with_scope(name: &str, scope: &str) -> Self {
         Self {
             name: name.to_string(),
             scope: Some(scope.to_string()),
@@ -118,17 +118,17 @@ impl AuthContext {
     }
 
     /// Check if the context has a specific role
-    pub const fn has_role(&self, role: &Role) -> bool {
+    pub fn has_role(&self, role: &Role) -> bool {
         self.roles.contains(role)
     }
 
     /// Check if the context has a specific permission
-    pub const fn has_permission(&self, permission: &Permission) -> bool {
+    pub fn has_permission(&self, permission: &Permission) -> bool {
         self.permissions.contains(permission)
     }
 
     /// Check if the context has admin access
-    pub const fn is_admin(&self) -> bool {
+    pub fn is_admin(&self) -> bool {
         self.has_role(&Role::Admin)
     }
 
@@ -174,14 +174,14 @@ impl Default for AuthContext {
 }
 
 /// Common permission helpers
-pub const fn read_permission() -> Permission {
+pub fn read_permission() -> Permission {
     Permission::new("read")
 }
-pub const fn write_permission() -> Permission {
+pub fn write_permission() -> Permission {
     Permission::new("write")
 }
 
-pub const fn admin_permission() -> Permission {
+pub fn admin_permission() -> Permission {
     Permission::new("admin")
 }
 

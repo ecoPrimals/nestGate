@@ -317,7 +317,7 @@ pub type CompatibleConfigService<const SIZE: usize> =
     ZeroCostServiceAdapter<ZeroCostConfigService<SIZE>>;
 impl<const SIZE: usize> CompatibleConfigService<SIZE> {
     /// Create new compatible configuration service
-    pub const fn new_config_service() -> Self {
+    pub fn new_config_service() -> Self {
         ZeroCostServiceAdapter::new(ZeroCostConfigService::new())
     }
 

@@ -142,7 +142,7 @@ impl NestGateCanonicalConfig {
     /// **MIGRATION FROM FRAGMENTED CONFIGS**
     /// Create canonical config by migrating from fragmented configuration files
     /// Migration utilities have been removed - modernization complete
-    pub const fn migrate_from_fragmented_configs(_config_paths: &[&str]) -> crate::error::CanonicalResult<Self> {
+    pub fn migrate_from_fragmented_configs(_config_paths: &[&str]) -> crate::error::CanonicalResult<Self> {
         // Migration complete - return default canonical configuration
         log::info!("Configuration migration complete - using default canonical configuration");
         Ok(Self::default())

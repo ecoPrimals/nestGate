@@ -31,18 +31,12 @@ impl NestGateConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn from_file(path: impl AsRef<Path>) -> Result<Self> {
-        let content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
-            NestGateError::validation(
-                format!("Failed to read config file: {}", e)
-            )
-        })?;
+    pub fn from_file(path: impl AsRef<Path>) -> Result<Self> {
+        let content = std::fs::read_to_string(path.as_ref())
+            .map_err(|e| NestGateError::validation(format!("Failed to read config file: {}", e)))?;
 
-        let config: Self = toml::from_str(&content).map_err(|e| {
-            NestGateError::validation(
-                format!("Failed to parse config: {}", e)
-            )
-        })?;
+        let config: Self = toml::from_str(&content)
+            .map_err(|e| NestGateError::validation(format!("Failed to parse config: {}", e)))?;
 
         config.validate()?;
         Ok(config)
@@ -56,11 +50,9 @@ impl NestGateConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn validate(&self) -> Result<()> {
+    pub fn validate(&self) -> Result<()> {
         if self.service_name.is_empty() {
-            return Err(NestGateError::validation(
-                "Service name cannot be empty"
-            ));
+            return Err(NestGateError::validation("Service name cannot be empty"));
         }
 
         if self.network.port == 0 {
@@ -68,9 +60,7 @@ impl NestGateConfig {
         }
 
         if self.storage.data_directory.is_empty() {
-            return Err(NestGateError::validation(
-                "Data directory cannot be empty"
-            ));
+            return Err(NestGateError::validation("Data directory cannot be empty"));
         }
 
         Ok(())

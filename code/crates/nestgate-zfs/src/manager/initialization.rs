@@ -26,7 +26,7 @@ use super::ZfsManager;
 impl ZfsManager {
     /// Create mock instance for testing
     #[cfg(test)]
-    pub const fn mock() -> Self {
+    pub fn mock() -> Self {
         use crate::config::ZfsConfig;
         use crate::dataset::ZfsDatasetManager;
         use crate::metrics::ZfsMetrics;
@@ -60,7 +60,7 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn new(config: ZfsConfig) -> Result<Self>  {
+    pub async fn new(config: ZfsConfig) -> Result<Self> {
         info!("Initializing Enhanced ZFS Manager with AI integration");
 
         // Convert config to Arc for zero-copy sharing (9.4x performance improvement)
@@ -188,8 +188,8 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn start(&mut self) -> Result<()>  {
+    #[must_use]
+    pub fn start(&mut self) -> Result<()> {
         info!("Starting Enhanced ZFS Manager");
 
         // Pool manager is already initialized during construction
@@ -210,8 +210,8 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn stop(&mut self) -> Result<()>  {
+    #[must_use]
+    pub fn stop(&mut self) -> Result<()> {
         info!("Stopping Enhanced ZFS Manager");
 
         // Performance monitoring cleanup (simplified)
@@ -228,8 +228,8 @@ impl ZfsManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn register_with_orchestrator(&mut self, orchestrator_endpoint: String) -> Result<()>  {
+    #[must_use]
+    pub fn register_with_orchestrator(&mut self, orchestrator_endpoint: String) -> Result<()> {
         info!(
             "Registering Enhanced ZFS service with orchestrator at: {}",
             orchestrator_endpoint

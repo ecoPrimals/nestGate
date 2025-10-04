@@ -16,7 +16,7 @@ pub struct SimdBatchProcessor<const BATCH_SIZE: usize = 32> {
 
 impl<const BATCH_SIZE: usize> SimdBatchProcessor<BATCH_SIZE> {
     /// Create new SIMD batch processor - compile-time optimized
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             _phantom: std::marker::PhantomData,
         }
@@ -31,8 +31,8 @@ impl<const BATCH_SIZE: usize> SimdBatchProcessor<BATCH_SIZE> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn process_u64_batch(&self, input: &[u64], output: &mut [u64]) -> Result<usize, SimdError>  {
+    #[must_use]
+    pub fn process_u64_batch(&self, input: &[u64], output: &mut [u64]) -> Result<usize, SimdError> {
         if input.len() != output.len() {
             return Err(SimdError::LengthMismatch);
         }
@@ -57,8 +57,8 @@ impl<const BATCH_SIZE: usize> SimdBatchProcessor<BATCH_SIZE> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn process_f32_batch(&self, input: &[f32], output: &mut [f32]) -> Result<usize, SimdError>  {
+    #[must_use]
+    pub fn process_f32_batch(&self, input: &[f32], output: &mut [f32]) -> Result<usize, SimdError> {
         if input.len() != output.len() {
             return Err(SimdError::LengthMismatch);
         }
@@ -243,7 +243,7 @@ impl<const BATCH_SIZE: usize> SimdBatchProcessor<BATCH_SIZE> {
     }
 
     /// Get batch size constant
-    pub const fn batch_size(&self) -> usize {
+    pub fn batch_size(&self) -> usize {
         BATCH_SIZE
     }
 }

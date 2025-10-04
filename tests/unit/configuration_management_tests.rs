@@ -12,7 +12,8 @@ mod configuration_tests {
     use tempfile::TempDir;
     
     #[derive(Debug, Clone, PartialEq)]
-    pub struct NetworkConfig {
+    #[deprecated(since = "0.6.0", note = "Use ConsolidatedCanonicalConfig::network_config() instead")]
+pub struct LegacyNetworkConfig {
         pub bind_address: String,
         pub api_port: u16,
         pub api_base_url: String,
@@ -56,7 +57,8 @@ mod configuration_tests {
     }
     
     #[derive(Debug, Clone, PartialEq)]
-    pub struct SecurityConfig {
+    #[deprecated(since = "0.6.0", note = "Use ConsolidatedCanonicalConfig::security_config() instead")]
+pub struct LegacySecurityConfig {
         pub tls_enabled: bool,
         pub cert_path: Option<PathBuf>,
         pub key_path: Option<PathBuf>,

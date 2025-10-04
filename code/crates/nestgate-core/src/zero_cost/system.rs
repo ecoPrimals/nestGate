@@ -24,7 +24,7 @@ where
     Storage: ZeroCostStorageProvider<String, Vec<u8>>,
 {
     /// Create new zero-cost system - compile-time composition
-    pub const fn new(cache: Cache, security: Security, storage: Storage) -> Self {
+    pub fn new(cache: Cache, security: Security, storage: Storage) -> Self {
         Self {
             cache,
             security,
@@ -41,10 +41,10 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn process_request(
+    pub fn process_request(
         &self,
         request: ZeroCostRequest,
-    ) -> Result<ZeroCostResponse, ZeroCostError>  {
+    ) -> Result<ZeroCostResponse, ZeroCostError> {
         // Direct method dispatch - no virtual calls
         if let Some(cached) = self.cache.get(&request.id.to_string()) {
             return Ok(ZeroCostResponse {
@@ -67,7 +67,7 @@ where
     }
 
     /// Get system metrics
-    pub const fn metrics(&self) -> ZeroCostMetrics {
+    pub fn metrics(&self) -> ZeroCostMetrics {
         ZeroCostMetrics {
             requests_processed: 1000,   // Would be tracked in real implementation
             average_latency_ns: 50_000, // Would be measured in real implementation
@@ -75,26 +75,26 @@ where
     }
 
     /// Compile-time constants
-    pub const fn max_size(&self) -> usize {
+    pub fn max_size(&self) -> usize {
         MAX_SIZE
     }
 
-    pub const fn timeout_ms(&self) -> u64 {
+    pub fn timeout_ms(&self) -> u64 {
         TIMEOUT_MS
     }
 
     /// Get cache provider reference
-    pub const fn cache(&self) -> &Cache {
+    pub fn cache(&self) -> &Cache {
         &self.cache
     }
 
     /// Get security provider reference
-    pub const fn security(&self) -> &Security {
+    pub fn security(&self) -> &Security {
         &self.security
     }
 
     /// Get storage provider reference
-    pub const fn storage(&self) -> &Storage {
+    pub fn storage(&self) -> &Storage {
         &self.storage
     }
 }
@@ -114,14 +114,14 @@ impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> Default
 
 impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> ZeroCostSystemBuilder<MAX_SIZE, TIMEOUT_MS> {
     /// Create new builder
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             _phantom: PhantomData,
         }
     }
 
     /// Build system with memory cache
-    pub const fn with_memory_cache(
+    pub fn with_memory_cache(
         self,
     ) -> ZeroCostSystem<
         super::providers::ZeroCostMemoryCache<MAX_SIZE>,
@@ -138,11 +138,11 @@ impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> ZeroCostSystemBuilder<MAX_SIZ
     }
 
     /// Get compile-time configuration
-    pub const fn max_size() -> usize {
+    pub fn max_size() -> usize {
         MAX_SIZE
     }
 
-    pub const fn timeout_ms() -> u64 {
+    pub fn timeout_ms() -> u64 {
         TIMEOUT_MS
     }
 }

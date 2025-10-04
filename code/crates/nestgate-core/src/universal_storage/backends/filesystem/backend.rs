@@ -52,9 +52,11 @@ impl FilesystemBackend {
         let root_dir = config.root_dir.clone();
 
         // Ensure root directory exists
-        std::fs::create_dir_all(&root_dir).map_err(|_e| crate::error::NestGateError::storage_error(
-            error_message: format!("Failed to create root directory: {"actual_error_details"}"),
-        )?;
+        std::fs::create_dir_all(&root_dir).map_err(|e| crate::error::NestGateError::storage_error(
+            "filesystem_init",
+            &format!("Failed to create root directory: {}", e),
+            None
+        ))?;
 
         Ok(Self { config , root_dir )
      }
@@ -72,7 +74,7 @@ impl FilesystemBackend {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn check_size_limit(&self, size: usize) -> Result<()>  {
+        pub fn check_size_limit(&self, size: usize) -> Result<()>  {
         check_size_limit(size, self.config.max_file_size)
     }
 
@@ -92,9 +94,11 @@ impl FilesystemBackend {
         if let Some(parent) = full_path.parent() {
             fs::create_dir_all(parent)
                 .await
-                .map_err(|_e| crate::error::NestGateError::storage_error(
-                    error_message: format!("Failed to create parent directory: {"actual_error_details"}"),
-                )?;
+                .map_err(|e| crate::error::NestGateError::storage_error(
+                    "filesystem_create_dir",
+                    &format!("Failed to create parent directory: {}", e),
+                    None
+                ))?;
         }
 
         self.atomic_write(&full_path, content).await
@@ -136,18 +140,22 @@ impl FilesystemBackend {
         let mut entries =
             fs::read_dir(&full_path)
                 .await
-                .map_err(|_e| crate::error::NestGateError::storage_error(
-                    error_message: format!("Failed to read directory: {"actual_error_details"}"),
-                )?;
+                .map_err(|e| crate::error::NestGateError::storage_error(
+                    "filesystem_read_dir",
+                    &format!("Failed to read directory: {}", e),
+                    None
+                ))?;
 
         let mut files = Vec::new();
         while let Some(entry) =
             entries
                 .next_entry()
                 .await
-                .map_err(|_e| crate::error::NestGateError::storage_error(
-                    error_message: format!("Failed to read directory entry: {"actual_error_details"}"),
-                })?
+                .map_err(|e| crate::error::NestGateError::storage_error(
+                    "filesystem_read_entry",
+                    &format!("Failed to read directory entry: {}", e),
+                    None
+                ))?
         {
             if let Some(name) = entry.file_name().to_str() {
                 files.push(name.to_string());

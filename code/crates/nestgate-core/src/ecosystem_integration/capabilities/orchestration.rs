@@ -73,7 +73,7 @@ pub struct MockOrchestrationCapability {
     enabled: bool,
 }
 impl MockOrchestrationCapability {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self { enabled: true }
     }
 }

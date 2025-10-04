@@ -79,7 +79,7 @@ pub struct MockSecurityCapability {
     enabled: bool,
 }
 impl MockSecurityCapability {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self { enabled: true }
     }
 }

@@ -34,11 +34,11 @@ impl Default for SecurityFallbackProvider {
 }
 
 impl SecurityFallbackProvider {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::with_config(SecurityFallbackConfig::default())
     }
 
-    pub const fn with_config(config: SecurityFallbackConfig) -> Self {
+    pub fn with_config(config: SecurityFallbackConfig) -> Self {
         Self { config }
     }
 

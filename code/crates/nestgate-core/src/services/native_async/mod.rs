@@ -60,8 +60,7 @@ mod tests {
                 version: "1.0.0".to_string(),
                 endpoints: vec![
                     "http://localhost:".to_string()
-                                                    + &env::var("NESTGATE_API_PORT")
-                            .unwrap_or_else(|_| "8080".to_string()),
+                        + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()),
                 ],
             }
         }
@@ -211,11 +210,11 @@ mod tests {
         }
 
         fn get_config(&self) -> String {
-            format!("config_for_{self.name}")
+            format!("config_for_{}", self.name)
         }
 
         fn process(&self, _data: &str) -> String {
-            format!("processed_by_{self.name}")
+            format!("processed_by_{}", self.name)
         }
     }
 

@@ -2,12 +2,12 @@
 // This module contains the main PerformanceDashboard struct and HTTP handler functions.
 
 use crate::handlers::dashboard_types::{DashboardConfig, DashboardState};
+use crate::handlers::performance_analyzer::PerformanceAnalyzer;
 use crate::handlers::performance_dashboard::metrics::RealTimeMetricsCollector;
 use crate::handlers::performance_dashboard::optimizer::OptimizationEngineInterface;
 use crate::handlers::performance_dashboard::types::*;
 use crate::performance_dashboard::analysis::{TrendData, TrendDirection};
 use crate::rest::models::ApiResponse;
-use crate::handlers::performance_analyzer::PerformanceAnalyzer;
 use axum::{
     extract::{Path, Query},
     response::sse::{Event, KeepAlive},
@@ -37,7 +37,7 @@ pub struct PerformanceDashboard {
 
 impl PerformanceDashboard {
     /// Create new performance dashboard
-    pub const fn new(
+    pub fn new(
         config: DashboardConfig,
         metrics_collector: Arc<RealTimeMetricsCollector>,
         performance_analyzer: Arc<PerformanceAnalyzer>,
@@ -60,7 +60,7 @@ impl PerformanceDashboard {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_overview(&self) -> Result<DashboardOverview>  {
+    pub async fn get_overview(&self) -> Result<DashboardOverview> {
         // Get current metrics
         let current_metrics = self.metrics_collector.get_current_metrics().await?;
 
@@ -85,7 +85,7 @@ impl PerformanceDashboard {
                 end: SystemTime::now(),
                 granularity: Duration::from_secs(60), // 1 minute granularity
             },
-            health_score: f64::from(health_score),
+            health_score: health_score as f64,
             current_metrics: SystemPerformanceSnapshot {
                 timestamp: SystemTime::now(),
                 cpu_usage_percent: current_metrics.cpu_usage,

@@ -13,7 +13,7 @@ pub struct DownloadManager {
 impl DownloadManager {
     /// Create a new download manager
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             client: reqwest::Client::new(),
         }
@@ -91,7 +91,7 @@ impl DownloadManager {
             downloaded += chunk.len() as u64;
 
             if total_size > 0 {
-                let progress = (f64::from(downloaded) / f64::from(total_size) * 100.0) as u64;
+                let progress = (downloaded as f64 / total_size as f64 * 100.0) as u64;
                 pb.set_message(format!("Downloading... {progress}%"));
             }
         }
@@ -124,7 +124,7 @@ impl DownloadManager {
     /// - Archive file cannot be read
     /// - Extraction fails
     /// - Target directory cannot be created
-    pub const fn extract_archive(&self, _archive_path: &Path, target_dir: &Path) -> Result<()> ", 
+    pub fn extract_archive(&self, _archive_path: &Path, target_dir: &Path) -> Result<()> ", 
         println!("Extracting archive to {target_dir.display()"));
 
         // Create directory structure
@@ -170,7 +170,7 @@ impl DownloadManager {
     /// - Required files are missing
     /// - Binary is not executable
     /// - Configuration files are invalid
-    pub const fn verify_installation(&self, install_dir: &Path) -> Result<()> {
+    pub fn verify_installation(&self, install_dir: &Path) -> Result<()> {
         let binary_path = install_dir.join("bin").join("nestgate");
         let config_path = install_dir.join("etc").join("nestgate.toml");
 
@@ -214,7 +214,7 @@ impl DownloadManager {
     }
 
     /// Download components based on configuration
-    pub const fn download_components(
+    pub fn download_components(
         &self,
         _config: &crate::config::InstallerConfig,
     ) -> nestgate_core::error::Result<()> {

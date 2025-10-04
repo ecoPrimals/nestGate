@@ -402,12 +402,12 @@ impl ConfigMigrationManager {
     }
 
     /// Get migration summary
-    pub const fn get_summary(&self) -> MigrationSummary {
+    pub fn get_summary(&self) -> MigrationSummary {
         MigrationSummary {
             stats: self.stats.clone(),
             warnings_count: self.warnings.len(),
             success_rate: if self.stats.configs_migrated > 0 {
-                ((self.stats.configs_migrated - self.stats.validation_errors) as f64 / self.stats.f64::from(configs_migrated)) * 100.0
+                ((self.stats.configs_migrated - self.stats.validation_errors) as f64 / self.stats.configs_migrated as f64) * 100.0
             } else {
                 100.0
             }

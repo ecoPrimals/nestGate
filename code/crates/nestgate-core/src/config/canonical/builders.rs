@@ -51,7 +51,7 @@ pub struct CanonicalTestConfigBuilder {
 }
 impl CanonicalTestConfigBuilder {
     /// Create a new test configuration builder
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
@@ -114,7 +114,7 @@ impl CanonicalTestConfigBuilder {
     }
 
     /// Quick preset for unit testing
-    pub const fn unit_test_preset(self) -> Self {
+    pub fn unit_test_preset(self) -> Self {
         self.execution(|e| {
             e.max_duration(Duration::from_secs(30))
                 .parallel_execution(true)
@@ -125,7 +125,7 @@ impl CanonicalTestConfigBuilder {
     }
 
     /// Quick preset for integration testing
-    pub const fn integration_test_preset(self) -> Self {
+    pub fn integration_test_preset(self) -> Self {
         self.execution(|e| {
             e.max_duration(Duration::from_secs(300))
                 .parallel_execution(false)
@@ -136,7 +136,7 @@ impl CanonicalTestConfigBuilder {
     }
 
     /// Quick preset for performance testing
-    pub const fn performance_test_preset(self) -> Self {
+    pub fn performance_test_preset(self) -> Self {
         self.execution(|e| {
             e.max_duration(Duration::from_secs(600))
                 .parallel_execution(false)
@@ -146,7 +146,7 @@ impl CanonicalTestConfigBuilder {
     }
 
     /// Quick preset for chaos testing
-    pub const fn chaos_test_preset(self) -> Self {
+    pub fn chaos_test_preset(self) -> Self {
         self.execution(|e| {
             e.max_duration(Duration::from_secs(1800))
                 .retry_attempts(5)
@@ -752,23 +752,23 @@ impl_basic_builder!(ZfsTestSettingsBuilder, ZfsTestSettings);
 // ==================== SECTION ====================
 
 /// Create a quick unit test configuration
-pub const fn unit_test_config() -> Result<CanonicalTestConfig> {
+pub fn unit_test_config() -> Result<CanonicalTestConfig> {
     CanonicalTestConfigBuilder::new().unit_test_preset().build()
 }
 /// Create a quick integration test configuration
-pub const fn integration_test_config() -> Result<CanonicalTestConfig> {
+pub fn integration_test_config() -> Result<CanonicalTestConfig> {
     CanonicalTestConfigBuilder::new()
         .integration_test_preset()
         .build()
 }
 /// Create a quick performance test configuration
-pub const fn performance_test_config() -> Result<CanonicalTestConfig> {
+pub fn performance_test_config() -> Result<CanonicalTestConfig> {
     CanonicalTestConfigBuilder::new()
         .performance_test_preset()
         .build()
 }
 /// Create a quick chaos test configuration
-pub const fn chaos_test_config() -> Result<CanonicalTestConfig> {
+pub fn chaos_test_config() -> Result<CanonicalTestConfig> {
     CanonicalTestConfigBuilder::new()
         .chaos_test_preset()
         .build()

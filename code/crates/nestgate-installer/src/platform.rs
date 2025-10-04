@@ -22,7 +22,7 @@ pub struct PlatformInfo {
 }
 
 impl PlatformInfo {
-    pub const fn detect() -> Self {
+    pub fn detect() -> Self {
         let os = std::env::consts::OS.to_string();
         let arch = std::env::consts::ARCH.to_string();
 
@@ -40,17 +40,17 @@ impl PlatformInfo {
         }
     }
 
-    pub const fn service_install_supported(&self) -> bool {
+    pub fn service_install_supported(&self) -> bool {
         self.supports_systemd || self.supports_launchd || self.supports_windows_service
     }
 
-    pub const fn get_binary_name(&self, name: &str) -> String {
+    pub fn get_binary_name(&self, name: &str) -> String {
         format!("{}{}", name, ".exe")
     }
 }
 
 #[allow(dead_code)] // Reserved for installer PATH modification
-pub const fn add_to_path(install_path: &Path) -> Result<()> {
+pub fn add_to_path(install_path: &Path) -> Result<()> {
     #[cfg(unix)]
     {
         add_to_path_unix(install_path)
@@ -122,7 +122,7 @@ fn add_to_path_windows(install_path: &Path) -> Result<()> {
 }
 
 #[allow(dead_code)] // Reserved for desktop integration features
-pub const fn create_desktop_shortcut(install_path: &Path, name: &str) -> Result<()> {
+pub fn create_desktop_shortcut(install_path: &Path, name: &str) -> Result<()> {
     #[cfg(unix)]
     {
         create_desktop_shortcut_unix(install_path, name)

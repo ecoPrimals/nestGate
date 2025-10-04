@@ -117,7 +117,7 @@ impl HardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_profiles(&self) -> Result<Vec<String>>  {
+        pub fn get_profiles(&self) -> Result<Vec<String>>  {
         Ok(vec![
             "performance".to_string(),
             "balanced".to_string(),
@@ -133,7 +133,7 @@ impl HardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_config(&self) -> Result<serde_json::Value>  {
+        pub fn get_config(&self) -> Result<serde_json::Value>  {
         Ok(serde_json::json!({
             "service": "hardware_tuning",
             "version": "1.0.0",
@@ -179,7 +179,7 @@ impl HardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn generate_extraction_lock(
+        pub fn generate_extraction_lock(
         &self,
         _source: String,
         _destination: String,
@@ -219,7 +219,7 @@ impl HardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn verify_extraction_lock(&self, _lock_id: Uuid) -> Result<bool>  {
+        pub fn verify_extraction_lock(&self, _lock_id: Uuid) -> Result<bool>  {
         Ok(true)
     }
 }

@@ -84,7 +84,7 @@ impl<T, const N: usize> Default for ZeroCostArray<T, N> {
 impl<T, const N: usize> ZeroCostArray<T, N> {
     /// Create a new zero-cost array with compile-time capacity
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             data: Vec::new(),
             capacity: N,
@@ -98,8 +98,8 @@ impl<T, const N: usize> ZeroCostArray<T, N> {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn push(&mut self, value: T) -> Result<(), T>  {
+    #[must_use]
+    pub fn push(&mut self, value: T) -> Result<(), T> {
         if self.data.len() < N {
             self.data.push(value);
             Ok(())
@@ -110,20 +110,20 @@ impl<T, const N: usize> ZeroCostArray<T, N> {
 
     /// Get element with bounds checking (100% safe)
     #[must_use]
-    pub const fn get(&self, index: usize) -> Option<&T> {
+    pub fn get(&self, index: usize) -> Option<&T> {
         self.data.get(index)
     }
 
     /// Get the compile-time capacity
     #[inline(always)]
     #[must_use]
-    pub const fn capacity(&self) -> usize {
+    pub fn capacity(&self) -> usize {
         N // Use const generic directly for better optimization
     }
 
     /// Check if the array is at capacity
     #[must_use]
-    pub const fn is_full(&self) -> bool {
+    pub fn is_full(&self) -> bool {
         self.data.len() >= self.capacity
     }
 
@@ -136,20 +136,20 @@ impl<T, const N: usize> ZeroCostArray<T, N> {
     /// Get length
     #[inline(always)]
     #[must_use]
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.data.len()
     }
 
     /// Check if empty
     #[inline(always)]
     #[must_use]
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
 
     /// Get actual length of stored data
     #[must_use]
-    pub const fn actual_len(&self) -> usize {
+    pub fn actual_len(&self) -> usize {
         self.data.len()
     }
 }
@@ -174,7 +174,7 @@ impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> ZeroCostPool<T, POOL_SI
     /// Create new pool with all blocks free
     #[inline(always)]
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         assert!(POOL_SIZE <= 64, "Pool size cannot exceed 64 blocks");
 
         Self {
@@ -223,7 +223,7 @@ impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> ZeroCostPool<T, POOL_SI
 
     /// Get available blocks count
     #[inline(always)]
-    pub const fn available_blocks(&self) -> u32 {
+    pub fn available_blocks(&self) -> u32 {
         self.free_mask.count_ones()
     }
 }
@@ -238,21 +238,21 @@ impl ZeroCostOps {
     /// Branch-free minimum
     #[inline(always)]
     #[must_use]
-    pub const fn min_branchless(a: u32, b: u32) -> u32 {
+    pub fn min_branchless(a: u32, b: u32) -> u32 {
         a ^ ((a ^ b) & ((a > b) as u32).wrapping_neg())
     }
 
     /// Branch-free maximum
     #[inline(always)]
     #[must_use]
-    pub const fn max_branchless(a: u32, b: u32) -> u32 {
+    pub fn max_branchless(a: u32, b: u32) -> u32 {
         a ^ ((a ^ b) & ((a < b) as u32).wrapping_neg())
     }
 
     /// Branch-free absolute value
     #[inline(always)]
     #[must_use]
-    pub const fn abs_branchless(x: i32) -> i32 {
+    pub fn abs_branchless(x: i32) -> i32 {
         let mask = x >> 31;
         (x + mask) ^ mask
     }
@@ -260,7 +260,7 @@ impl ZeroCostOps {
     /// Branch-free conditional assignment
     #[inline(always)]
     #[must_use]
-    pub const fn conditional_assign(condition: bool, if_true: u32, if_false: u32) -> u32 {
+    pub fn conditional_assign(condition: bool, if_true: u32, if_false: u32) -> u32 {
         let mask = (condition as u32).wrapping_neg();
         (mask & if_true) | (!mask & if_false)
     }
@@ -276,13 +276,13 @@ pub struct CacheAligned<T> {
 impl<T> CacheAligned<T> {
     /// Create cache-aligned data
     #[inline(always)]
-    pub const fn new(data: T) -> Self {
+    pub fn new(data: T) -> Self {
         Self { data }
     }
 
     /// Get reference to data
     #[inline(always)]
-    pub const fn get(&self) -> &T {
+    pub fn get(&self) -> &T {
         &self.data
     }
 
@@ -310,7 +310,7 @@ impl<C: ZeroCostConfig> Default for ZeroCostService<C> {
 impl<C: ZeroCostConfig> ZeroCostService<C> {
     /// Create a new zero-cost service
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             _config: PhantomData,
         }
@@ -319,28 +319,28 @@ impl<C: ZeroCostConfig> ZeroCostService<C> {
     /// Get buffer size (compile-time constant)
     #[inline(always)]
     #[must_use]
-    pub const fn buffer_size() -> usize {
+    pub fn buffer_size() -> usize {
         C::BUFFER_SIZE
     }
 
     /// Get max connections (compile-time constant)
     #[inline(always)]
     #[must_use]
-    pub const fn max_connections() -> usize {
+    pub fn max_connections() -> usize {
         C::MAX_CONNECTIONS
     }
 
     /// Get timeout (compile-time constant)
     #[inline(always)]
     #[must_use]
-    pub const fn timeout_ms() -> u64 {
+    pub fn timeout_ms() -> u64 {
         C::TIMEOUT_MS
     }
 
     /// Check if debug mode (compile-time constant)
     #[inline(always)]
     #[must_use]
-    pub const fn is_debug() -> bool {
+    pub fn is_debug() -> bool {
         C::DEBUG
     }
 

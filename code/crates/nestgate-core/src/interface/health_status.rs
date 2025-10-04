@@ -23,17 +23,17 @@ impl Default for HealthStatus {
 
 impl HealthStatus {
     /// Check if the status represents a healthy state
-    pub const fn is_healthy(&self) -> bool {
+    pub fn is_healthy(&self) -> bool {
         matches!(self, Self::Healthy)
     }
 
     /// Check if the status represents an unhealthy state
-    pub const fn is_unhealthy(&self) -> bool {
+    pub fn is_unhealthy(&self) -> bool {
         matches!(self, HealthStatus::Unhealthy)
     }
 
     /// Get a human-readable description of the status
-    pub const fn description(&self) -> &'static str {
+    pub fn description(&self) -> &'static str {
         match self {
             HealthStatus::Healthy => "Service is operating normally",
             HealthStatus::Degraded => "Service has minor issues but is functional",

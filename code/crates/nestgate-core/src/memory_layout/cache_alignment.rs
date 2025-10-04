@@ -17,12 +17,12 @@ pub struct CacheAligned<T> {
 
 impl<T> CacheAligned<T> {
     /// Create new cache-aligned data
-    pub const fn new(data: T) -> Self {
+    pub fn new(data: T) -> Self {
         Self { data }
     }
 
     /// Get reference to aligned data
-    pub const fn get(&self) -> &T {
+    pub fn get(&self) -> &T {
         &self.data
     }
 
@@ -32,7 +32,7 @@ impl<T> CacheAligned<T> {
     }
 
     /// Consume and return inner data
-    pub const fn into_inner(self) -> T {
+    pub fn into_inner(self) -> T {
         self.data
     }
 }
@@ -50,7 +50,7 @@ pub struct CachePadded<T> {
 
 impl<T> CachePadded<T> {
     /// Create new cache-padded data
-    pub const fn new(data: T) -> Self {
+    pub fn new(data: T) -> Self {
         Self {
             data,
             _padding: [0; 64],
@@ -58,7 +58,7 @@ impl<T> CachePadded<T> {
     }
 
     /// Get reference to padded data
-    pub const fn get(&self) -> &T {
+    pub fn get(&self) -> &T {
         &self.data
     }
 
@@ -68,7 +68,7 @@ impl<T> CachePadded<T> {
     }
 
     /// Consume and return inner data
-    pub const fn into_inner(self) -> T {
+    pub fn into_inner(self) -> T {
         self.data
     }
 }
