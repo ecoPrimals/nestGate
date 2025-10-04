@@ -65,7 +65,7 @@ impl OrchestrationAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn request_capability(
+        pub async fn request_capability(
         &self,
         capability: &str,
         params: serde_json::Value,

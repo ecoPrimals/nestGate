@@ -137,7 +137,7 @@ impl OrchestrationCapability {
     }
 
     /// Release port allocation
-    pub fn release_port(&self, service_name: &str, port: u16) -> NestGateResult<()> {
+    pub async fn release_port(&self, service_name: &str, port: u16) -> NestGateResult<()> {
         let url = format!("{"actual_error_details"}/api/v1/ports/release");
 
         let request = PortReleaseRequest {
