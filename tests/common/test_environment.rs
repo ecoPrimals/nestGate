@@ -4,6 +4,8 @@
 //! hardcoded values and enables dynamic test configuration through environment variables.
 
 use std::collections::HashMap;
+use crate::config::ConsolidatedCanonicalConfig;
+use nestgate_core::constants::canonical::network::DEFAULT_API_PORT;
 use std::env;
 use std::time::Duration;
 
@@ -78,13 +80,13 @@ impl TestEnvironment {
     pub fn from_environment() -> Self {
         let host = env::var("NESTGATE_TEST_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
         let port = env::var("NESTGATE_TEST_PORT")
-            .unwrap_or_else(|_| "8080".to_string())
+            .unwrap_or_else(|_| DEFAULT_API_PORT.to_string())
             .parse()
-            .unwrap_or(8080);
+            .unwrap_or(DEFAULT_API_PORT);
         let websocket_port = env::var("NESTGATE_TEST_WS_PORT")
-            .unwrap_or_else(|_| "8081".to_string())
+            .unwrap_or_else(|_| (DEFAULT_API_PORT + 1).to_string())
             .parse()
-            .unwrap_or(8081);
+            .unwrap_or(DEFAULT_API_PORT + 1);
 
         Self {
             api_base_url: env::var("NESTGATE_TEST_API_URL")
@@ -391,11 +393,11 @@ mod tests {
     fn test_url_generation() -> Result<(), Box<dyn std::error::Error>> {
         let env = TestEnvironmentBuilder::new()
             .host("testhost")
-            .port(8080)
+            .port(DEFAULT_API_PORT)
             .build();
 
         let url = env.get_test_url("api/v1/test");
-        assert!(url.contains("testhost:8080"));
+        assert!(url.contains(&format!("testhost:{}", DEFAULT_API_PORT)));
         assert!(url.contains("api/v1/test"));
         Ok(())
     }

@@ -142,7 +142,7 @@ pub struct LegacyTierPrediction {
     pub valid_until: SystemTime,
 }
 impl LegacyTierPrediction {
-    pub const fn is_valid(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         SystemTime::now() < self.valid_until
     }
 }

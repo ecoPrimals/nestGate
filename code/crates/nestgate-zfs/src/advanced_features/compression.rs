@@ -24,7 +24,7 @@ impl CompressionAnalytics {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn analyze_compression(dataset: &str, data_sample: &[u8]) -> Result<Self>  {
+    pub fn analyze_compression(dataset: &str, data_sample: &[u8]) -> Result<Self> {
         debug!("Analyzing compression for dataset: {}", dataset);
 
         // Basic compression analysis

@@ -10,19 +10,19 @@ pub fn safe_to_string<T: std::fmt::Display>(value: T) -> String {
 }
 
 /// Safe environment variable access
-pub const fn safe_env_var(key: &str) -> Result<String, NestGateError> {
+pub fn safe_env_var(key: &str) -> Result<String, NestGateError> {
     std::env::var(key).map_err(|e| {
         NestGateError::configuration_error(key, &format!("Environment variable not found: {e}"))
     })
 }
 
 /// Safe environment variable access with default
-pub const fn safe_env_var_or_default(key: &str, default: &str) -> String {
+pub fn safe_env_var_or_default(key: &str, default: &str) -> String {
     std::env::var(key).unwrap_or_else(|_| default.to_string())
 }
 
 /// Safe file operations
-pub const fn safe_read_to_string(path: &std::path::Path) -> Result<String, NestGateError> {
+pub fn safe_read_to_string(path: &std::path::Path) -> Result<String, NestGateError> {
     std::fs::read_to_string(path).map_err(|e| {
         NestGateError::io_error(format!("Failed to read file {}: {}", path.display(), e))
     })
@@ -45,7 +45,7 @@ pub fn safe_lock<T>(
 
 /// Safe channel send
 pub fn safe_send<T>(sender: &std::sync::mpsc::Sender<T>, value: T) -> Result<(), NestGateError> {
-    sender.send(value).map_err(|e| {
-        NestGateError::internal_error(format!("Channel send failed: {e}"), "channel")
-    })
+    sender
+        .send(value)
+        .map_err(|e| NestGateError::internal_error(format!("Channel send failed: {e}"), "channel"))
 }

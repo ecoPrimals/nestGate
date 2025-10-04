@@ -80,7 +80,7 @@ impl Default for ZfsFallbackProvider {
 
 impl ZfsFallbackProvider {
     /// Create a new ZFS fallback provider
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::with_config(ZfsFallbackConfig::default())
     }
 
@@ -453,7 +453,7 @@ impl ZfsFallbackProvider {
     }
 
     /// Get list of supported operations
-    pub const fn supported_operations(&self) -> Vec<String> {
+    pub fn supported_operations(&self) -> Vec<String> {
         vec![
             "create_pool".to_string(),
             "list_pools".to_string(),

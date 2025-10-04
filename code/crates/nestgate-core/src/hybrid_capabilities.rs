@@ -56,7 +56,7 @@ pub struct HybridCapabilityResolver {
     capability_configs: Arc<RwLock<HashMap<String, CapabilityConfig>>>,
 }
 impl HybridCapabilityResolver {
-    pub const fn new(
+    pub fn new(
         universal_adapter: Arc<UniversalAdapter>,
         config: HashMap<String, CapabilityConfig>,
     ) -> Self {
@@ -194,7 +194,7 @@ impl Default for LocalStorageCapabilities {
 }
 
 impl LocalStorageCapabilities {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {}
     }
 
@@ -269,7 +269,7 @@ impl Default for FailsafeDefaults {
 }
 
 impl FailsafeDefaults {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             default_tier: StorageTier::Warm,           // Safe middle ground
             default_compression: CompressionType::LZ4, // Fast, reliable
@@ -277,7 +277,7 @@ impl FailsafeDefaults {
     }
 
     /// Get default tier recommendation
-    pub const fn default_tier_recommendation(&self, _file_metrics: &FileMetrics) -> TierRecommendation {
+    pub fn default_tier_recommendation(&self, _file_metrics: &FileMetrics) -> TierRecommendation {
         TierRecommendation {
             tier: self.default_tier.clone(),
             confidence: 0.5, // Conservative confidence for failsafe
@@ -287,7 +287,7 @@ impl FailsafeDefaults {
     }
 
     /// Get default compression recommendation
-    pub const fn default_compression_recommendation(&self) -> CompressionType {
+    pub fn default_compression_recommendation(&self) -> CompressionType {
         self.default_compression.clone()
     }
 }
@@ -350,7 +350,7 @@ struct StoragePattern {
 
 impl StoragePattern {
     /// Analyze storage pattern from file metrics
-    pub const fn from_metrics(file: &FileMetrics) -> Self {
+    pub fn from_metrics(file: &FileMetrics) -> Self {
         let access_pattern = if file.access_frequency > 10.0 {
             AccessPattern::Hot
         } else if file.access_frequency > 1.0 {
@@ -387,7 +387,7 @@ impl StoragePattern {
     }
 
     /// Get recommended tier based on pattern analysis
-    pub const fn recommended_tier(&self) -> StorageTier {
+    pub fn recommended_tier(&self) -> StorageTier {
         match (
             &self.access_pattern,
             &self.size_category,

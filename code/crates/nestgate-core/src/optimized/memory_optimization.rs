@@ -113,7 +113,7 @@ pub enum OptimizationStrategy {
 }
 impl MemoryOptimizationManager {
     /// Create new memory optimization manager
-    pub const fn new(config: MemoryConfig) -> Self {
+    pub fn new(config: MemoryConfig) -> Self {
         let cache_manager = Arc::new(CacheManager::new(config.clone()));
         let pool_manager = Arc::new(PoolManager::new(config.clone()));
         let metrics = Arc::new(RwLock::new(MemoryMetrics::default()));
@@ -583,7 +583,7 @@ pub enum OptimizedBuffer {
 }
 impl OptimizedBuffer {
     /// Get the underlying buffer
-    pub const fn as_slice(&self) -> &[u8] {
+    pub fn as_slice(&self) -> &[u8] {
         match self {
             Self::ZeroCopy(buf) => buf,
             Self::Pooled(buf) => buf,
@@ -601,12 +601,12 @@ impl OptimizedBuffer {
     }
 
     /// Get buffer size
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.as_slice().len()
     }
 
     /// Check if buffer is empty
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 }

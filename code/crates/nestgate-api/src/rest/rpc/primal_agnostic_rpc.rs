@@ -67,7 +67,7 @@ pub struct PrimalAgnosticRpcService {
 
 impl PrimalAgnosticRpcService {
     /// Create a new primal-agnostic RPC service
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             adapter: PrimalAgnosticAdapter::new(),
         }
@@ -260,7 +260,7 @@ pub struct RpcCompatibilityLayer {
 
 impl RpcCompatibilityLayer {
     /// Create a new compatibility layer
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             universal_service: PrimalAgnosticRpcService::new(),
         }

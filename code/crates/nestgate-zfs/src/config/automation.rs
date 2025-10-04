@@ -56,7 +56,7 @@ impl Default for AiAutomationSettings {
 
 impl AiAutomationSettings {
     /// Create production-optimized AI automation settings
-    pub const fn production() -> Self {
+    pub fn production() -> Self {
         Self {
             ai_enabled: true,
             model_config: "production-optimized".to_string(),

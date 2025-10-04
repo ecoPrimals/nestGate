@@ -339,7 +339,7 @@ impl NCBIProviderFactory {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn create_with_api_key(api_key: String, email: String) -> Result<Arc<NCBILiveProvider>>  {
+        pub fn create_with_api_key(api_key: String, email: String) -> Result<Arc<NCBILiveProvider>>  {
         Ok(Arc::new(NCBILiveProvider::new(Some(api_key), Some(email))?))
     }
 
@@ -351,7 +351,7 @@ impl NCBIProviderFactory {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn create_basic(email: String) -> Result<Arc<NCBILiveProvider>>  {
+        pub fn create_basic(email: String) -> Result<Arc<NCBILiveProvider>>  {
         Ok(Arc::new(NCBILiveProvider::new(None, Some(email))?))
     }
 
@@ -363,7 +363,7 @@ impl NCBIProviderFactory {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn create_from_env() -> Result<Arc<NCBILiveProvider>>  {
+        pub fn create_from_env() -> Result<Arc<NCBILiveProvider>>  {
         let api_key = std::env::var("NCBI_API_KEY").ok();
         let email = std::env::var("NCBI_EMAIL")
             .or_else(|_| std::env::var("USER_EMAIL"))

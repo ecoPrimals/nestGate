@@ -25,11 +25,11 @@ impl ReplicationAnalytics {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn analyze_replication(
+    pub fn analyze_replication(
         source: &str,
         targets: &[String],
         performance_data: &ReplicationPerformance,
-    ) -> Result<Self>  {
+    ) -> Result<Self> {
         debug!("Analyzing replication from {} to {:?}", source, targets);
 
         let mut recommendations = Vec::new();

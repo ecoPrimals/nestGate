@@ -14,7 +14,7 @@ pub struct PerformanceAnalyzer {
 
 impl PerformanceAnalyzer {
     /// Create new performance analyzer
-    pub const fn new(config: AnalyzerConfig) -> Self {
+    pub fn new(config: AnalyzerConfig) -> Self {
         Self { config }
     }
 
@@ -26,10 +26,7 @@ impl PerformanceAnalyzer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn analyze_metrics(
-        &self,
-        metrics: &SystemMetrics,
-    ) -> Result<AnalysisResult, MetricsError>  {
+    pub fn analyze_metrics(&self, metrics: &SystemMetrics) -> Result<AnalysisResult, MetricsError> {
         Ok(AnalysisResult {
             overall_score: self.calculate_overall_score(metrics),
             cpu_analysis: self.analyze_cpu(metrics.cpu_usage_percent),

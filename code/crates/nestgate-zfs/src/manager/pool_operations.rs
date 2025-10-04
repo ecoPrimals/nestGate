@@ -18,11 +18,7 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn create_pool(
-        &self,
-        name: &str,
-        devices: &[String],
-    ) -> Result<crate::pool::PoolInfo>  {
+    pub fn create_pool(&self, name: &str, devices: &[String]) -> Result<crate::pool::PoolInfo> {
         info!("Creating ZFS pool: {}", name);
 
         let result = self
@@ -47,8 +43,8 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn destroy_pool(&self, name: &str) -> Result<()>  {
+    #[must_use]
+    pub fn destroy_pool(&self, name: &str) -> Result<()> {
         info!("Destroying ZFS pool: {}", name);
 
         self.pool_manager.destroy_pool(name).await.map_err(|_e| {
@@ -69,7 +65,7 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_pool_status(&self, name: &str) -> Result<String>  {
+    pub async fn get_pool_status(&self, name: &str) -> Result<String> {
         self.pool_manager.get_pool_status(name).await.map_err(|_e| {
             create_zfs_error(
                 format!("Failed to get pool status: {"actual_error_details"}"),
@@ -86,8 +82,8 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn scrub_pool(&self, name: &str) -> Result<()>  {
+    #[must_use]
+    pub fn scrub_pool(&self, name: &str) -> Result<()> {
         info!("Starting scrub for pool: {}", name);
 
         self.pool_manager.scrub_pool(name).await.map_err(|_e| {

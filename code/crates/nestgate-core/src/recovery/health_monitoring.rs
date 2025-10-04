@@ -76,7 +76,7 @@ impl HealthMonitor {
     }
 
     /// Get the configured check interval
-    pub const fn get_check_interval(&self) -> Duration {
+    pub fn get_check_interval(&self) -> Duration {
         self.check_interval
     }
 
@@ -111,12 +111,12 @@ impl HealthMonitor {
     }
 
     /// Get health status for component
-    pub const fn get_health(&self, component: &str) -> Option<&ComponentHealth> {
+    pub fn get_health(&self, component: &str) -> Option<&ComponentHealth> {
         self.health_status.get(component)
     }
 
     /// Get overall health status
-    pub const fn overall_health(&self) -> HealthStatus {
+    pub fn overall_health(&self) -> HealthStatus {
         if self.health_status.is_empty() {
             return HealthStatus::Unknown;
         }

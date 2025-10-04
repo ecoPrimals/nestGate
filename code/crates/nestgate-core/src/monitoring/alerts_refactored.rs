@@ -38,7 +38,7 @@ impl SmartDefault for AlertSeverity {
 
 impl AlertSeverity {
     /// Get numeric value for comparison
-    pub const fn level(&self) -> u8 {
+    pub fn level(&self) -> u8 {
         match self {
             Self::Info => 0,
             Self::Warning => 1,
@@ -48,7 +48,7 @@ impl AlertSeverity {
     }
 
     /// Get color for UI display
-    pub const fn color(&self) -> &'static str {
+    pub fn color(&self) -> &'static str {
         match self {
             AlertSeverity::Info => "blue",
             AlertSeverity::Warning => "yellow",
@@ -271,7 +271,7 @@ pub struct AlertManager {
 }
 impl AlertManager {
     /// Create new alert manager with smart defaults
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         info!("🚨 Initializing smart refactored alert manager");
 
         Self {
@@ -726,7 +726,7 @@ impl AlertRuleBuilder ",
     }
 
     /// Build the final alert rule
-    pub const fn build(self) -> AlertRule {
+    pub fn build(self) -> AlertRule {
         self.rule
     }
 }

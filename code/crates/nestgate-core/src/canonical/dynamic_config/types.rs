@@ -22,7 +22,7 @@ pub struct ConfigVersion {
     pub rollback_available: bool,
 }
 impl ConfigVersion {
-    pub const fn new(config: CanonicalConfig, description: String, author: String) -> Self {
+    pub fn new(config: CanonicalConfig, description: String, author: String) -> Self {
         let timestamp = SystemTime::now();
         let version_number = timestamp
             .duration_since(UNIX_EPOCH)

@@ -48,7 +48,7 @@ impl ReplicationManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn start(&self) -> Result<()>  {
+        pub fn start(&self) -> Result<()>  {
         // Implementation would start replication service
         // For now, this is a placeholder
         Ok(())
@@ -112,7 +112,7 @@ impl ReplicationManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn resolve_conflicts(
+        pub fn resolve_conflicts(
         &self,
         conflict: ReplicationConflict,
     ) -> Result<ConflictResolution>   {
@@ -164,7 +164,7 @@ impl ReplicationManager {
 
 impl ReplicationTask {
     /// Create a new replication task from config
-    pub const fn new_from_config(_config: ReplicationConfig) -> Self {
+    pub fn new_from_config(_config: ReplicationConfig) -> Self {
         Self {
             id: format!("repl-{uuid::Uuid::new_v4(}")),
             status: ReplicationStatus::default(),
@@ -181,7 +181,7 @@ impl ConflictResolver {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn new() -> Result<Self>  {
+        pub fn new() -> Result<Self>  {
         Ok(Self)
     }
 
@@ -193,7 +193,7 @@ impl ConflictResolver {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn resolve(&self, _conflict: ReplicationConflict) -> Result<ConflictResolution>  {
+        pub fn resolve(&self, _conflict: ReplicationConflict) -> Result<ConflictResolution>  {
         // Placeholder implementation
         Ok(ConflictResolution::PreferNewest)
     }

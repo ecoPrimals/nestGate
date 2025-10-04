@@ -133,13 +133,13 @@ impl ZfsPerformanceMonitor {
         }
 
         let utilization_percent = if total_size > 0 {
-            ((total_size - total_free) as f64 / f64::from(total_size)) * 100.0
+            ((total_size - total_free) as f64 / total_size as f64) * 100.0
         } else {
             0.0
         };
 
         Ok(PoolPerformanceMetrics {
-            total_iops: parsed_metrics.f64::from(read_ops) + parsed_metrics.f64::from(write_ops),
+            total_iops: read_ops as f64 + write_ops as f64,
             total_throughput_mbs: parsed_metrics.read_throughput_mbs
                 + parsed_metrics.write_throughput_mbs,
             avg_latency_ms: (parsed_metrics.read_latency_ms + parsed_metrics.write_latency_ms)
@@ -193,8 +193,8 @@ impl ZfsPerformanceMonitor {
             read_ops,
             write_ops,
 
-            read_throughput_mbs: f64::from(read_bytes) / (1024.0 * 1024.0),
-            write_throughput_mbs: f64::from(write_bytes) / (1024.0 * 1024.0),
+            read_throughput_mbs: read_bytes as f64 / (1024.0 * 1024.0),
+            write_throughput_mbs: write_bytes as f64 / (1024.0 * 1024.0),
             read_latency_ms: 0.0,
             write_latency_ms: 0.0,
         })
@@ -284,7 +284,7 @@ impl ZfsPerformanceMonitor {
 
             let used = total.saturating_sub(available);
             let utilization_percent = if total > 0 {
-                (f64::from(used) / f64::from(total)) * 100.0
+                (used as f64 / total as f64) * 100.0
             } else {
                 0.0
             };
@@ -319,7 +319,7 @@ impl ZfsPerformanceMonitor {
                         let non_idle = user + nice + system + irq + softirq;
 
                         if total > 0 {
-                            return (f64::from(non_idle) / f64::from(total)) * 100.0;
+                            return (non_idle as f64 / total as f64) * 100.0;
                         }
                     }
                 }
@@ -447,7 +447,7 @@ impl ZfsPerformanceMonitor {
         };
 
         let number: f64 = number.parse()?;
-        Ok((number * f64::from(multiplier)) as u64)
+        Ok((number * multiplier as f64) as u64)
     }
 
     /// Collect tier-specific metrics
@@ -648,7 +648,7 @@ impl ZfsPerformanceMonitor {
 
             let total = hits + misses;
             if total > 0 {
-                return Ok((f64::from(hits) / f64::from(total)) * 100.0);
+                return Ok((hits as f64 / total as f64) * 100.0);
             }
         }
 

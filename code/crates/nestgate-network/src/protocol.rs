@@ -179,7 +179,7 @@ impl std::fmt::Debug for ProtocolManager {
 
 impl ProtocolManager {
     /// Create a new protocol manager
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             supported_protocols: std::collections::HashSet::new(),
         }
@@ -198,7 +198,7 @@ impl ProtocolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn mount(&self, request: MountRequest) -> Result<MountResponse>  {
+        pub fn mount(&self, request: MountRequest) -> Result<MountResponse>  {
         if !self.supported_protocols.contains(&request.protocol) {
             return Err(NestGateError::validation(format!(
                 "Protocol not supported: {}",
@@ -223,7 +223,7 @@ impl ProtocolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn unmount(&self, protocol: Protocol, _mount_id: &str) -> Result<bool>  {
+        pub fn unmount(&self, protocol: Protocol, _mount_id: &str) -> Result<bool>  {
         if !self.supported_protocols.contains(&protocol) {
             return Err(NestGateError::validation(format!(
                 "Protocol not supported: {protocol}"
@@ -242,7 +242,7 @@ impl ProtocolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_status(&self, protocol: Protocol, _mount_id: &str) -> Result<MountStatus>  {
+        pub fn get_status(&self, protocol: Protocol, _mount_id: &str) -> Result<MountStatus>  {
         if !self.supported_protocols.contains(&protocol) {
             return Err(NestGateError::validation(format!(
                 "Protocol not supported: {protocol}"
@@ -264,7 +264,7 @@ impl ProtocolManager {
     }
 
     /// List all supported protocols
-    pub const fn supported_protocols(&self) -> Vec<Protocol> {
+    pub fn supported_protocols(&self) -> Vec<Protocol> {
         self.supported_protocols.iter().copied().collect()
     }
 }

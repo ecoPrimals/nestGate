@@ -11,7 +11,7 @@ pub const DEFAULT_INSTANCE_NAME: &str = "nestgate-default";
 pub const DEFAULT_SERVICE_NAME: &str = "nestgate";
 
 /// Get timeout in milliseconds from environment or default
-pub const fn timeout_ms() -> u64 {
+pub fn timeout_ms() -> u64 {
     env::var("NESTGATE_TIMEOUT_MS")
         .ok()
         .and_then(|s| s.parse().ok())
@@ -19,7 +19,7 @@ pub const fn timeout_ms() -> u64 {
 }
 
 /// Get max connections from environment or default
-pub const fn max_connections() -> usize {
+pub fn max_connections() -> usize {
     env::var("NESTGATE_MAX_CONNECTIONS")
         .ok()
         .and_then(|s| s.parse().ok())
@@ -27,7 +27,7 @@ pub const fn max_connections() -> usize {
 }
 
 /// Get buffer size from environment or default
-pub const fn buffer_size() -> usize {
+pub fn buffer_size() -> usize {
     env::var("NESTGATE_BUFFER_SIZE")
         .ok()
         .and_then(|s| s.parse().ok())
@@ -35,7 +35,7 @@ pub const fn buffer_size() -> usize {
 }
 
 /// Get default retry attempts from environment or default
-pub const fn default_retry_attempts() -> u32 {
+pub fn default_retry_attempts() -> u32 {
     env::var("NESTGATE_RETRY_ATTEMPTS")
         .ok()
         .and_then(|s| s.parse().ok())
@@ -43,7 +43,7 @@ pub const fn default_retry_attempts() -> u32 {
 }
 
 /// Get health check interval from environment or default
-pub const fn health_check_interval() -> u64 {
+pub fn health_check_interval() -> u64 {
     env::var("NESTGATE_HEALTH_CHECK_INTERVAL")
         .ok()
         .and_then(|s| s.parse().ok())
@@ -51,7 +51,7 @@ pub const fn health_check_interval() -> u64 {
 }
 
 /// Get API port from environment or default
-pub const fn api_port() -> u16 {
+pub fn api_port() -> u16 {
     env::var("NESTGATE_API_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
@@ -59,12 +59,12 @@ pub const fn api_port() -> u16 {
 }
 
 /// Get bind host from environment or default
-pub const fn bind_host() -> String {
+pub fn bind_host() -> String {
     env::var("NESTGATE_BIND_HOST").unwrap_or_else(|_| "127.0.0.1".to_string())
 }
 
 /// Get API URL from environment or default
-pub const fn api_url() -> String {
+pub fn api_url() -> String {
     env::var("NESTGATE_API_URL")
         .unwrap_or_else(|_| format!("http://{}:{}", bind_host(), api_port()))
 }

@@ -69,10 +69,10 @@ impl RealZfsOperations {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub fn get_pool_status(
+    pub fn get_pool_status(
         &self,
         pool_name: Option<String>,
-    ) -> Result<crate::handlers::ZfsResponse>  {
+    ) -> Result<crate::handlers::ZfsResponse> {
         use nestgate_core::NestGateError;
         let mut cmd = tokio::process::Command::new("zpool");
         cmd.arg("status").arg("-j"); // JSON output
@@ -142,10 +142,10 @@ impl RealZfsOperations {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub fn get_dataset_list(
+    pub fn get_dataset_list(
         &self,
         pool_name: Option<String>,
-    ) -> Result<crate::handlers::ZfsResponse>  {
+    ) -> Result<crate::handlers::ZfsResponse> {
         use nestgate_core::NestGateError;
         let mut cmd = tokio::process::Command::new("zfs");
         cmd.arg("list")
@@ -195,10 +195,10 @@ impl RealZfsOperations {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub async fn get_snapshot_list(
+    pub async fn get_snapshot_list(
         &self,
         dataset: Option<String>,
-    ) -> Result<crate::handlers::ZfsResponse>  {
+    ) -> Result<crate::handlers::ZfsResponse> {
         use nestgate_core::NestGateError;
         let dataset_name = dataset.unwrap_or_default();
         let output = tokio::process::Command::new("zfs")
@@ -244,7 +244,7 @@ impl RealZfsOperations {
 impl ProductionReadinessValidator {
     /// Create new production readiness validator
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             real_ops: RealZfsOperations::default(),
         }
@@ -258,8 +258,8 @@ impl ProductionReadinessValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn assess_production_readiness(&self) -> Result<ProductionReadinessReport>  {
+    #[must_use]
+    pub fn assess_production_readiness(&self) -> Result<ProductionReadinessReport> {
         info!("🔍 Starting comprehensive production readiness assessment...");
         let mut report = ProductionReadinessReport {
             ready_for_production: false,

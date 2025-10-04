@@ -49,25 +49,25 @@ impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize>
 {
     /// Get effective max connections (compile-time optimized)
     #[must_use]
-    pub const fn max_connections() -> usize {
+    pub fn max_connections() -> usize {
         MAX_CONNECTIONS
     }
 
     /// Get effective buffer size (compile-time optimized)
     #[must_use]
-    pub const fn buffer_size() -> usize {
+    pub fn buffer_size() -> usize {
         BUFFER_SIZE
     }
 
     /// Get runtime max connections (with override support)
     #[must_use]
-    pub const fn effective_max_connections(&self) -> usize {
+    pub fn effective_max_connections(&self) -> usize {
         self.max_connections_override.unwrap_or(MAX_CONNECTIONS)
     }
 
     /// Get runtime buffer size (with override support)
     #[must_use]
-    pub const fn effective_buffer_size(&self) -> usize {
+    pub fn effective_buffer_size(&self) -> usize {
         self.buffer_size_override.unwrap_or(BUFFER_SIZE)
     }
 }

@@ -33,7 +33,7 @@ impl Default for HuggingFaceModelSource {
 
 impl HuggingFaceModelSource {
     /// Create a new HuggingFace model source
-    pub const fn new(api_token: Option<String>) -> Self {
+    pub fn new(api_token: Option<String>) -> Self {
         Self {
             api_token,
             cache_dir: "/tmp/nestgate_cache".to_string(),

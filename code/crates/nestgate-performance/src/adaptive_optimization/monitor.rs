@@ -20,7 +20,7 @@ pub struct AdaptivePerformanceMonitor {
 }
 
 impl AdaptivePerformanceMonitor {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             metrics_collector: Arc::new(MetricsCollector::new()),
             optimization_engine: Arc::new(OptimizationEngine::new()),

@@ -154,7 +154,7 @@ impl DynRpcService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn call(&self, request: UnifiedRpcRequest) -> Result<UnifiedRpcResponse, RpcError>  {
+    pub async fn call(&self, request: UnifiedRpcRequest) -> Result<UnifiedRpcResponse, RpcError> {
         match self {
             Self::JsonRpc(service) => service.call(request).await,
         }
@@ -171,10 +171,10 @@ impl DynRpcService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn start_stream(
+    pub async fn start_stream(
         &self,
         request: UnifiedRpcRequest,
-    ) -> Result<(mpsc::Sender<RpcStreamEvent>, mpsc::Receiver<RpcStreamEvent>), RpcError>  {
+    ) -> Result<(mpsc::Sender<RpcStreamEvent>, mpsc::Receiver<RpcStreamEvent>), RpcError> {
         match self {
             DynRpcService::JsonRpc(service) => service.start_stream(request).await,
         }
@@ -184,7 +184,7 @@ impl DynRpcService {
     ///
     /// Returns the type of RPC connection this service uses for
     /// routing and compatibility purposes.
-    pub const fn connection_type(&self) -> RpcConnectionType {
+    pub fn connection_type(&self) -> RpcConnectionType {
         match self {
             DynRpcService::JsonRpc(_) => RpcConnectionType::JsonRpc,
         }
@@ -201,7 +201,7 @@ impl DynRpcService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn health_check(&self) -> Result<bool, RpcError>  {
+    pub async fn health_check(&self) -> Result<bool, RpcError> {
         match self {
             DynRpcService::JsonRpc(service) => service.health_check().await,
         }

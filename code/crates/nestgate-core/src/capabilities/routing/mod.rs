@@ -30,7 +30,7 @@ impl UniversalRouter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn route_to_storage(&self, _request_type: &str) -> Result<String>  {
+    pub async fn route_to_storage(&self, _request_type: &str) -> Result<String> {
         // Check cache first
         if let Some(endpoint) = self.get_cached_endpoint("storage").await {
             return Ok(endpoint);
@@ -50,7 +50,7 @@ impl UniversalRouter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn route_to_orchestration(&self, _request_type: &str) -> Result<String>  {
+    pub async fn route_to_orchestration(&self, _request_type: &str) -> Result<String> {
         if let Some(endpoint) = self.get_cached_endpoint("orchestration").await {
             return Ok(endpoint);
         }
@@ -68,7 +68,7 @@ impl UniversalRouter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn route_to_security(&self, _request_type: &str) -> Result<String>  {
+    pub async fn route_to_security(&self, _request_type: &str) -> Result<String> {
         if let Some(endpoint) = self.get_cached_endpoint("security").await {
             return Ok(endpoint);
         }
@@ -86,7 +86,7 @@ impl UniversalRouter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn route_to_ai(&self, _request_type: &str) -> Result<String>  {
+    pub async fn route_to_ai(&self, _request_type: &str) -> Result<String> {
         if let Some(endpoint) = self.get_cached_endpoint("ai").await {
             return Ok(endpoint);
         }
@@ -104,7 +104,7 @@ impl UniversalRouter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn route_to_capability(&self, capability: &str) -> Result<String>  {
+    pub async fn route_to_capability(&self, capability: &str) -> Result<String> {
         match capability {
             "storage" | "zfs" | "nas" => self.route_to_storage(capability).await,
             "orchestration" | "workflow" | "service-mesh" => {
@@ -116,8 +116,7 @@ impl UniversalRouter {
                 // Generic capability discovery
                 let capabilities = self
                     .adapter
-                    .query_capability(&CapabilityQuery::search(capability.to_string()))
-                    .await;
+                    .query_capability(&CapabilityQuery::search(capability.to_string()));
 
                 let _capability_info = capabilities?.first().cloned().ok_or_else(|| {
                     NestGateError::configuration_error(

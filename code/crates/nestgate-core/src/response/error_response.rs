@@ -34,7 +34,7 @@ pub struct UnifiedErrorResponse {
 impl UnifiedErrorResponse {
     /// Create a simple error response
     #[must_use]
-    pub const fn simple(message: &str, code: &str, component: &str) -> Self {
+    pub fn simple(message: &str, code: &str, component: &str) -> Self {
         Self {
             message: message.to_string(),
             code: code.to_string(),
@@ -48,7 +48,7 @@ impl UnifiedErrorResponse {
 
     /// Create an error response with status code
     #[must_use]
-    pub const fn with_status(message: &str, code: &str, component: &str, status: u16) -> Self {
+    pub fn with_status(message: &str, code: &str, component: &str, status: u16) -> Self {
         Self {
             message: message.to_string(),
             code: code.to_string(),
@@ -95,7 +95,7 @@ impl UnifiedErrorResponse {
 
     /// Convert to HTTP status code
     #[must_use]
-    pub const fn to_status_code(&self) -> StatusCode {
+    pub fn to_status_code(&self) -> StatusCode {
         StatusCode::from_u16(self.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR)
     }
 }
@@ -112,19 +112,19 @@ pub struct ErrorResponseFactory;
 impl ErrorResponseFactory {
     /// Create a bad request error
     #[must_use]
-    pub const fn bad_request(message: &str) -> UnifiedErrorResponse {
+    pub fn bad_request(message: &str) -> UnifiedErrorResponse {
         UnifiedErrorResponse::with_status(message, "BAD_REQUEST", "nestgate-core", 400)
     }
 
     /// Create an internal server error
     #[must_use]
-    pub const fn internal(message: &str) -> UnifiedErrorResponse {
+    pub fn internal(message: &str) -> UnifiedErrorResponse {
         UnifiedErrorResponse::with_status(message, "INTERNAL_ERROR", "nestgate-core", 500)
     }
 
     /// Create a not found error
     #[must_use]
-    pub const fn not_found(path: &str) -> UnifiedErrorResponse {
+    pub fn not_found(path: &str) -> UnifiedErrorResponse {
         UnifiedErrorResponse::with_status(
             &format!("{path} not found"),
             "NOT_FOUND",
@@ -135,7 +135,7 @@ impl ErrorResponseFactory {
 
     /// Create an unauthorized error
     #[must_use]
-    pub const fn unauthorized(operation: &str) -> UnifiedErrorResponse {
+    pub fn unauthorized(operation: &str) -> UnifiedErrorResponse {
         UnifiedErrorResponse::with_status(
             &format!("Unauthorized to perform {operation}"),
             "UNAUTHORIZED",
@@ -146,7 +146,7 @@ impl ErrorResponseFactory {
 
     /// Create a forbidden error
     #[must_use]
-    pub const fn forbidden(resource: &str) -> UnifiedErrorResponse {
+    pub fn forbidden(resource: &str) -> UnifiedErrorResponse {
         UnifiedErrorResponse::with_status(
             &format!("Access forbidden to {resource}"),
             "FORBIDDEN",
@@ -172,7 +172,7 @@ impl ErrorResponseFactory {
 
     /// Create a conflict error
     #[must_use]
-    pub const fn conflict(resource: &str) -> UnifiedErrorResponse {
+    pub fn conflict(resource: &str) -> UnifiedErrorResponse {
         UnifiedErrorResponse::with_status(
             &format!("Conflict with existing {resource}"),
             "CONFLICT",
@@ -203,7 +203,7 @@ impl ErrorResponseFactory {
 
     /// Create a service unavailable error
     #[must_use]
-    pub const fn service_unavailable(service: &str) -> UnifiedErrorResponse {
+    pub fn service_unavailable(service: &str) -> UnifiedErrorResponse {
         UnifiedErrorResponse::with_status(
             &format!("Service {service} is currently unavailable"),
             "SERVICE_UNAVAILABLE",
@@ -214,7 +214,7 @@ impl ErrorResponseFactory {
 
     /// Create a timeout error
     #[must_use]
-    pub const fn timeout(operation: &str) -> UnifiedErrorResponse {
+    pub fn timeout(operation: &str) -> UnifiedErrorResponse {
         UnifiedErrorResponse::with_status(
             &format!("Operation {operation} timed out"),
             "TIMEOUT",

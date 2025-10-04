@@ -70,7 +70,7 @@ pub struct AdapterConfig {
 
 impl AdapterConfig {
     /// Create a new adapter configuration
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             discovery_timeout: Duration::from_secs(30),
             retry_attempts: 3,

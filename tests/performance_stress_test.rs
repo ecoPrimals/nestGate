@@ -4,14 +4,18 @@
 //! and verify zero-copy optimization claims.
 
 use nestgate_core::{
+use crate::config::ConsolidatedCanonicalConfig;
     error::{NestGateError, Result},
     simd::batch_processor::SimdBatchProcessor,
     simple_memory_pool::{SimpleMemoryPool, EnhancedMemoryPool},
     advanced_optimizations::{UltraPerformanceBatchProcessor, ZeroAllocStringProcessor},
 };
 use std::sync::Arc;
+use crate::config::ConsolidatedCanonicalConfig;
 use std::time::{Duration, Instant};
+use crate::config::ConsolidatedCanonicalConfig;
 use tokio::task::JoinSet;
+use crate::config::ConsolidatedCanonicalConfig;
 
 /// Performance benchmark configuration
 #[derive(Debug, Clone)]

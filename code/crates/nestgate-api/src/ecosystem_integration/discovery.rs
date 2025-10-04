@@ -15,7 +15,7 @@ pub struct ServiceDiscovery {
 }
 impl ServiceDiscovery {
     /// Create new service discovery
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             registry: ServiceRegistry::new(),
         }

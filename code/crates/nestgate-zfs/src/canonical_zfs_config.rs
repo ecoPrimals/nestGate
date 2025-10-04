@@ -246,7 +246,7 @@ impl ZfsExtensions {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<()>  {
+        pub fn validate(&self) -> Result<()>  {
         // Validate pool settings
         if self.pools.default_pool_name.is_empty() {
             return Err(NestGateError::validation("pool_name"));

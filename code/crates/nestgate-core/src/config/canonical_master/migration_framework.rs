@@ -244,10 +244,10 @@ impl ConfigMigrator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn from_master_config(
+    pub fn from_master_config(
         config: serde_json::Value,
         options: MigrationOptions,
-    ) -> Result<Self>  {
+    ) -> Result<Self> {
         let mut migrator = Self::new("NestGateMasterConfig".to_string(), options);
         migrator.migrate_from_master_config(config)?;
         Ok(migrator)
@@ -261,10 +261,10 @@ impl ConfigMigrator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn from_unified_config(
+    pub fn from_unified_config(
         config: serde_json::Value,
         options: MigrationOptions,
-    ) -> Result<Self>  {
+    ) -> Result<Self> {
         let mut migrator = Self::new("UnifiedCanonicalExtensions".to_string(), options);
         migrator.migrate_from_unified_config(config)?;
         Ok(migrator)
@@ -278,8 +278,8 @@ impl ConfigMigrator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn from_final_config(config: serde_json::Value, options: MigrationOptions) -> Result<Self>  {
+    #[must_use]
+    pub fn from_final_config(config: serde_json::Value, options: MigrationOptions) -> Result<Self> {
         let mut migrator = Self::new("NestGateFinalConfig".to_string(), options);
         migrator.migrate_from_final_config(config)?;
         Ok(migrator)
@@ -293,8 +293,8 @@ impl ConfigMigrator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn migrate(mut self) -> Result<NestGateCanonicalConfig>  {
+    #[must_use]
+    pub fn migrate(mut self) -> Result<NestGateCanonicalConfig> {
         if self.options.dry_run {
             return self.dry_run_migration();
         }
@@ -343,7 +343,7 @@ impl ConfigMigrator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn rollback(&self) -> Result<()>  {
+    pub fn rollback(&self) -> Result<()> {
         if let Some(backup) = &self.backup {
             // Restore from backup
             self.restore_from_backup(backup)?;
@@ -361,7 +361,7 @@ impl ConfigMigrator {
 
     /// Get migration report
     #[must_use]
-    pub const fn get_migration_report(&self) -> MigrationReport {
+    pub fn get_migration_report(&self) -> MigrationReport {
         MigrationReport {
             source_type: self.source_type.clone(),
             started_at: self.progress.started_at,
@@ -625,7 +625,7 @@ pub struct MigrationReport {
 impl MigrationReport {
     /// Check if migration was successful
     #[must_use]
-    pub const fn is_successful(&self) -> bool {
+    pub fn is_successful(&self) -> bool {
         matches!(self.current_phase, MigrationPhase::Completed)
             && self
                 .failed_steps
@@ -635,7 +635,7 @@ impl MigrationReport {
 
     /// Get summary of migration
     #[must_use]
-    pub const fn get_summary(&self) -> String {
+    pub fn get_summary(&self) -> String {
         format!(
             "Migration from {} - Phase: {:?}, Progress: {}%, Steps: {}, Warnings: {}, Errors: {}",
             self.source_type,
@@ -661,7 +661,7 @@ pub struct SafeConfigMigration {
 impl SafeConfigMigration {
     /// Create new safe migration instance
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             backup: None,
             validation_rules: vec![
@@ -687,11 +687,11 @@ impl SafeConfigMigration {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn migrate_with_backup<T, U>(&mut self, from: T, to: U) -> Result<U>
+    pub fn migrate_with_backup<T, U>(&mut self, from: T, to: U) -> Result<U>
     where
         T: Serialize,
         U: for<'de> Deserialize<'de> + Clone,
-     {
+    {
         // Create backup
         self.backup = Some(serde_json::to_string(&from)?);
 
@@ -707,7 +707,7 @@ impl SafeConfigMigration {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn rollback(&self) -> Result<()>  {
+    pub fn rollback(&self) -> Result<()> {
         if self.backup.is_some() {
             // Rollback logic
             Ok(())
@@ -730,8 +730,8 @@ impl SafeConfigMigration {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn validate_migration(&self, config: &NestGateCanonicalConfig) -> Result<MigrationReport>  {
+    #[must_use]
+    pub fn validate_migration(&self, config: &NestGateCanonicalConfig) -> Result<MigrationReport> {
         let warnings = Vec::new();
         let mut errors = Vec::new();
 

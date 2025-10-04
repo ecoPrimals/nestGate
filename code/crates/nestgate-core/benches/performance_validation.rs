@@ -62,7 +62,7 @@ fn benchmark_uuid_caching_optimized(c: &mut Criterion) {
     group.bench_function("uuid_caching_optimized", |b| {
         b.iter(|| {
             for i in 0..100 {
-                get_or_create_uuid(&format!("service-{}", "actual_error_details");
+                get_or_create_uuid(&format!("service-{}", i));
             }
         });
     });
@@ -110,7 +110,7 @@ fn benchmark_combined_system_performance(c: &mut Criterion) {
         b.iter(|| {
             for i in 0..50 {
                 // UUID operations
-                get_or_create_uuid(&format!("new-service-{}", "actual_error_details");
+                get_or_create_uuid(&format!("new-service-{}", i));
 
                 // Memory operations
                 let buffer = get_4kb_buffer();
@@ -133,7 +133,7 @@ fn benchmark_real_world_validation(c: &mut Criterion) {
             // Simulate service discovery with mixed patterns
             for i in 0..20 {
                 // Common services (high hit ratio)
-                cache.get_or_create(&format!("common-service-{}", "actual_error_details");
+                cache.get_or_create(&format!("common-service-{}", i));
 
                 // Dynamic services (some cache misses)
                 if i % 5 == 0 {
@@ -214,7 +214,7 @@ fn benchmark_performance_regression_detection(c: &mut Criterion) {
         b.iter(|| {
             // High-intensity UUID caching test
             for i in 0..1000 {
-                get_or_create_uuid(&format!("validation-{}", "actual_error_details");
+                get_or_create_uuid(&format!("validation-{}", i));
             }
 
             // Memory pressure test
@@ -245,7 +245,7 @@ pub fn validate_performance_claims() -> Result<(), String> {
     // Validate UUID caching performance
     let start = Instant::now();
     for i in 0..10_000 {
-        get_or_create_uuid(&format!("validation-test-{}", "actual_error_details");
+        get_or_create_uuid(&format!("validation-test-{}", i));
     }
     let uuid_cache_duration = start.elapsed();
 

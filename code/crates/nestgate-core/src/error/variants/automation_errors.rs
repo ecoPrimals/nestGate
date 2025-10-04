@@ -6,7 +6,7 @@ use super::core_errors::NestGateUnifiedError;
 
 impl NestGateUnifiedError {
     /// Create a new automation error
-    pub const fn automation(message: impl Into<String>) -> Self {
+    pub fn automation(message: impl Into<String>) -> Self {
         Self::Automation(Box::new(
             crate::error::variants::core_errors::AutomationErrorDetails {
                 message: message.into(),
@@ -19,7 +19,7 @@ impl NestGateUnifiedError {
     }
 
     /// Create an automation operation error
-    pub const fn automation_operation(message: impl Into<String>, target: Option<String>) -> Self {
+    pub fn automation_operation(message: impl Into<String>, target: Option<String>) -> Self {
         Self::Automation(Box::new(
             crate::error::variants::core_errors::AutomationErrorDetails {
                 message: message.into(),

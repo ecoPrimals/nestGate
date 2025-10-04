@@ -444,7 +444,7 @@ impl ClusterManager {
     }
     
     /// Subscribe to cluster events
-    pub const fn subscribe_events(&self) -> broadcast::Receiver<ClusterEvent> {
+    pub fn subscribe_events(&self) -> broadcast::Receiver<ClusterEvent> {
         self.event_sender.subscribe()
     }
     

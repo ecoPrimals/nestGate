@@ -215,7 +215,7 @@ pub struct RealTimeMetricsCollector {
 }
 impl RealTimeMetricsCollector {
     /// Create a new metrics collector
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {}
     }
 
@@ -234,7 +234,7 @@ impl RealTimeMetricsCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_current_metrics(&self) -> Result<RealTimeMetrics>  {
+    pub async fn get_current_metrics(&self) -> Result<RealTimeMetrics> {
         info!("📊 Collecting real-time system and storage metrics");
 
         // Collect real system metrics
@@ -265,7 +265,7 @@ impl RealTimeMetricsCollector {
         let average_read_latency = if pool_metrics.is_empty() {
             // Estimate from system I/O (simplified calculation)
             let read_ops = system_metrics.disk_io.read_operations.max(1);
-            (f64::from(system_metrics.disk_io.read_bytes) / f64::from(read_ops)) / 1000.0
+            (f64::from(system_metrics.disk_io.read_bytes) / read_ops as f64) / 1000.0
         // Rough latency estimate
         } else {
             pool_metrics.iter().map(|p| p.read_throughput).sum::<f64>()
@@ -274,7 +274,7 @@ impl RealTimeMetricsCollector {
 
         let average_write_latency = if pool_metrics.is_empty() {
             let write_ops = system_metrics.disk_io.write_operations.max(1);
-            (f64::from(system_metrics.disk_io.write_bytes) / f64::from(write_ops)) / 1000.0
+            (f64::from(system_metrics.disk_io.write_bytes) / write_ops as f64) / 1000.0
         // Rough latency estimate
         } else {
             pool_metrics.iter().map(|p| p.write_throughput).sum::<f64>()
@@ -339,7 +339,7 @@ impl RealTimeMetricsCollector {
                         let total = total_active + idle;
 
                         if total > 0 {
-                            let usage = (f64::from(total_active) / f64::from(total)) * 100.0;
+                            let usage = (total_active as f64 / total as f64) * 100.0;
                             debug!("📈 Real CPU usage: {:.2}%", usage);
                             return Ok(usage);
                         }
@@ -389,7 +389,8 @@ impl RealTimeMetricsCollector {
 
                 if mem_total > 0 {
                     let memory_used = mem_total.saturating_sub(mem_available);
-                    let memory_usage_percent = (f64::from(memory_used) / f64::from(mem_total)) * 100.0;
+                    let memory_usage_percent =
+                        (memory_used as f64 / mem_total as f64) * 100.0;
 
                     debug!(
                         "🧠 Real memory usage: {:.2}% ({} GB / {} GB)",
@@ -547,7 +548,7 @@ impl RealTimeMetricsCollector {
                         let used_space: u64 = parts[2].parse().unwrap_or(0);
                         let available_space: u64 = parts[3].parse().unwrap_or(0);
                         let utilization_percentage = if total_capacity > 0 {
-                            (f64::from(used_space) / f64::from(total_capacity)) * 100.0
+                            (used_space as f64 / total_capacity as f64) * 100.0
                         } else {
                             0.0
                         };
@@ -609,14 +610,14 @@ impl RealTimeMetricsCollector {
 
                 let arc_total = arc_hits + arc_misses;
                 let arc_hit_ratio = if arc_total > 0 {
-                    (f64::from(arc_hits) / f64::from(arc_total)) * 100.0
+                    (arc_hits as f64 / arc_total as f64) * 100.0
                 } else {
                     90.0 // Default good ratio
                 };
 
                 let l2arc_total = l2arc_hits + l2arc_misses;
                 let l2arc_hit_ratio = if l2arc_total > 0 {
-                    (f64::from(l2arc_hits) / f64::from(l2arc_total)) * 100.0
+                    (l2arc_hits as f64 / l2arc_total as f64) * 100.0
                 } else {
                     70.0 // Default reasonable L2ARC ratio
                 };
@@ -644,11 +645,11 @@ impl RealTimeMetricsCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_historical_data(
+    pub fn get_historical_data(
         &self,
         _pool_name: &str,
         _time_range: &DashboardTimeRange,
-    ) -> Result<Vec<PoolMetrics>>  {
+    ) -> Result<Vec<PoolMetrics>> {
         // Implementation for getting historical data
         debug!("Getting historical data for pool: {}", _pool_name);
         Ok(vec![])
@@ -662,7 +663,7 @@ impl RealTimeMetricsCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_system_resources(&self) -> Result<SystemSnapshot>  {
+    pub fn get_system_resources(&self) -> Result<SystemSnapshot> {
         // Stub implementation
         Ok(SystemSnapshot {
             timestamp: SystemTime::now(),
@@ -684,8 +685,8 @@ impl RealTimeMetricsCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn get_all_pool_metrics(&self) -> Result<HashMap<String, PoolMetrics>>  {
+    #[must_use]
+    pub fn get_all_pool_metrics(&self) -> Result<HashMap<String, PoolMetrics>> {
         // Implementation for getting all pool metrics
         debug!("Getting all pool metrics");
         Ok(HashMap::new())
@@ -699,10 +700,10 @@ impl RealTimeMetricsCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_io_historical_data(
+    pub fn get_io_historical_data(
         &self,
         _time_range: &DashboardTimeRange,
-    ) -> Result<Vec<IOMetricsPoint>>  {
+    ) -> Result<Vec<IOMetricsPoint>> {
         // Implementation for I/O historical data
         debug!("Getting I/O historical data");
         Ok(vec![])
@@ -716,7 +717,7 @@ impl RealTimeMetricsCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_cache_metrics(&self) -> Result<Vec<CacheMetricsPoint>>  {
+    pub fn get_cache_metrics(&self) -> Result<Vec<CacheMetricsPoint>> {
         // Implementation for cache metrics
         debug!("Getting cache metrics");
         Ok(vec![])
@@ -730,7 +731,9 @@ impl RealTimeMetricsCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_comprehensive_historical_data(&self) -> Result<Vec<ComprehensiveMetricsPoint>>  {
+    pub fn get_comprehensive_historical_data(
+        &self,
+    ) -> Result<Vec<ComprehensiveMetricsPoint>> {
         // Implementation for comprehensive historical data
         debug!("Getting comprehensive historical data");
         Ok(vec![])
@@ -744,10 +747,10 @@ impl RealTimeMetricsCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn get_capacity_historical_data(
+    pub fn get_capacity_historical_data(
         &self,
         _time_range: &DashboardTimeRange,
-    ) -> Result<Vec<CapacityMetricsPoint>>  {
+    ) -> Result<Vec<CapacityMetricsPoint>> {
         // Implementation for capacity historical data
         debug!("Getting capacity historical data");
         Ok(vec![])

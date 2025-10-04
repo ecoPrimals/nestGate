@@ -55,7 +55,7 @@ pub struct NativeZfsService {
 }
 impl NativeZfsService {
     /// Create a new native ZFS service
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         let zfs_available = Self::check_zfs_availability();
         info!(
             "🔧 Native ZFS service initialized (available: {})",
@@ -138,7 +138,7 @@ impl NativeZfsService {
     }
 
     /// Get service metrics for monitoring
-    pub const fn get_service_metrics(&self) -> ServiceMetrics {
+    pub fn get_service_metrics(&self) -> ServiceMetrics {
         let requests = self.request_counter.load(Ordering::Relaxed);
         let successes = self.success_counter.load(Ordering::Relaxed);
         let total_time = self.total_response_time.load(Ordering::Relaxed);
@@ -156,7 +156,7 @@ impl NativeZfsService {
                 Duration::from_millis(0)
             },
             error_rate: if requests > 0 {
-                ((requests - successes) as f64) / (f64::from(requests))
+                ((requests - successes) as f64) / (requests as f64)
             } else {
                 0.0
             },

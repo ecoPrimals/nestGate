@@ -46,7 +46,7 @@ pub struct CacheEntry<V> {
     pub size_bytes: usize,
 }
 impl<V> CacheEntry<V> {
-    pub const fn new(value: V, ttl: Duration, size_bytes: usize) -> Self {
+    pub fn new(value: V, ttl: Duration, size_bytes: usize) -> Self {
         let now = SystemTime::now();
         Self {
             value,
@@ -58,7 +58,7 @@ impl<V> CacheEntry<V> {
         }
     }
 
-    pub const fn is_expired(&self) -> bool {
+    pub fn is_expired(&self) -> bool {
         self.created_at.elapsed().unwrap_or(Duration::MAX) > self.ttl
     }
 
@@ -78,14 +78,14 @@ pub struct CacheMetrics {
     pub entry_count: std::sync::atomic::AtomicUsize,
 }
 impl CacheMetrics {
-    pub const fn hit_ratio(&self) -> f64 {
+    pub fn hit_ratio(&self) -> f64 {
         let hits = self.cache_hits.load(std::sync::atomic::Ordering::Relaxed);
         let misses = self.cache_misses.load(std::sync::atomic::Ordering::Relaxed);
 
         if hits + misses == 0 {
             0.0
         } else {
-            f64::from(hits) / (hits + misses) as f64
+            hits as f64 / (hits + misses) as f64
         }
     }
 }

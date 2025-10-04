@@ -126,8 +126,8 @@ impl PoolTakeoverManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn attempt_pool_takeover(&self, failed_node_id: &str) -> Result<Vec<String>>  {
+    #[must_use]
+    pub fn attempt_pool_takeover(&self, failed_node_id: &str) -> Result<Vec<String>> {
         info!(
             "Attempting pool takeover from failed node: {}",
             failed_node_id
@@ -207,7 +207,7 @@ impl PoolTakeoverManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn verify_pool_import(&self, pool_name: &str) -> Result<bool>  {
+    pub async fn verify_pool_import(&self, pool_name: &str) -> Result<bool> {
         let output = TokioCommand::new("zpool")
             .args(["status", pool_name])
             .output()
@@ -339,8 +339,8 @@ impl PoolTakeoverManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn export_pool(&self, pool_name: &str) -> Result<()>  {
+    #[must_use]
+    pub fn export_pool(&self, pool_name: &str) -> Result<()> {
         info!("Exporting pool for handover: {}", pool_name);
 
         let output = TokioCommand::new("zpool")
@@ -402,7 +402,7 @@ impl NodeHealthMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn detect_failed_nodes(&self) -> Result<Vec<NodeHealth>>  {
+    pub async fn detect_failed_nodes(&self) -> Result<Vec<NodeHealth>> {
         let nodes = self.known_nodes.read().await;
         let now = SystemTime::now();
         let timeout = Duration::from_secs(self.config.node_failure_timeout_secs);

@@ -34,7 +34,7 @@ impl Default for PoolDiscoveryConfig {
 
 impl PoolDiscoveryConfig {
     /// Create production-optimized pool discovery configuration
-    pub const fn production() -> Self {
+    pub fn production() -> Self {
         Self {
             auto_discovery: true,
             default_pool: "zfspool".to_string(),

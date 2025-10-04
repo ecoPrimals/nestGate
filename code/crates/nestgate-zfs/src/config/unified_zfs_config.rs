@@ -71,30 +71,30 @@ impl Default for ZfsSnapshotSettings {
 pub mod zfs_config_factory {
     use super::*;
     /// Create base ZFS configuration
-    pub const fn zfs_default() -> ZfsConfig {
+    pub fn zfs_default() -> ZfsConfig {
         // Note: instance_name field not available in current SystemConfig
         ZfsConfig::default()
     }
 
     /// Create development ZFS configuration
-    pub const fn zfs_development() -> ZfsConfig {
+    pub fn zfs_development() -> ZfsConfig {
         // Note: deployment_environment field not available in current EnvironmentConfig
         zfs_default()
     }
 
     /// Create production ZFS configuration
-    pub const fn zfs_production() -> ZfsConfig {
+    pub fn zfs_production() -> ZfsConfig {
         // Note: deployment_environment field not available in current EnvironmentConfig
         zfs_default()
     }
 
     /// Alias for zfs_development for compatibility
-    pub const fn development() -> ZfsConfig {
+    pub fn development() -> ZfsConfig {
         zfs_development()
     }
 
     /// Alias for zfs_production for compatibility
-    pub const fn production() -> ZfsConfig {
+    pub fn production() -> ZfsConfig {
         zfs_production()
     }
 }

@@ -171,7 +171,7 @@ impl FileAnalyzer {
     }
 
     /// **CANONICAL PATTERN**: Builder-style configuration
-    pub const fn with_cache_size(self, _size: usize) -> Self { // This would configure cache size in a real implementation
+    pub fn with_cache_size(self, _size: usize) -> Self { // This would configure cache size in a real implementation
         self
     , /// **CANONICAL PATTERN**: Fluent interface for analysis options
     #[must_use]
@@ -402,7 +402,7 @@ impl PatternAnalyzer {
     }
 
     /// Analyze patterns to determine storage tier recommendation
-    pub const fn recommend_tier(&self, file_path: &str) -> StorageTier {
+    pub fn recommend_tier(&self, file_path: &str) -> StorageTier {
         // Simplified tier recommendation based on file extension
         let extension = std::path::Path::new(file_path)
             .extension()
@@ -432,7 +432,7 @@ pub struct DatasetAnalyzer {
     pattern_analyzer: PatternAnalyzer,
 }
 impl DatasetAnalyzer {
-    pub const fn new() -> Self { Self {
+    pub fn new() -> Self { Self {
             file_analyzer: FileAnalyzer::new(),
             pattern_analyzer: PatternAnalyzer::new(),
          }
@@ -457,7 +457,7 @@ impl DatasetAnalyzer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn analyze_dataset(&self, dataset_path: &str) -> Result<DatasetAnalysis>  {
+        pub fn analyze_dataset(&self, dataset_path: &str) -> Result<DatasetAnalysis>  {
         let path = std::path::Path::new(dataset_path);
 
         if !path.exists() {
@@ -503,7 +503,7 @@ impl DatasetAnalyzer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn predict_optimal_tier(&self, dataset_path: &str) -> Result<StorageTier>  {
+        pub fn predict_optimal_tier(&self, dataset_path: &str) -> Result<StorageTier>  {
         // Simplified prediction based on dataset path
         if dataset_path.contains("archive") || dataset_path.contains("backup") {
             Ok(StorageTier::Cold)
@@ -563,7 +563,7 @@ impl DatasetAnalyzer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn aggregate_patterns(
+        pub fn aggregate_patterns(
         &self,
         file_analyses: &[&FileAnalysis],
         _patterns: &AccessPattern, // Use singular AccessPattern from prediction module

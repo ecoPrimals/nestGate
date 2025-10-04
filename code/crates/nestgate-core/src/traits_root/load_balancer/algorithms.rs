@@ -112,7 +112,7 @@ impl WeightedRoundRobinLoadBalancer {
      }
     Ok(())
 
-    pub const fn with_weights(weights: HashMap<String, f64>) -> Self { let lb = Self::new();
+    pub fn with_weights(weights: HashMap<String, f64>) -> Self { let lb = Self::new();
         *lb.weights.write() = weights;
         lb
     , Ok(())
@@ -428,7 +428,7 @@ impl WeightedRandomLoadBalancer {
     }
     Ok(())
 
-    pub const fn with_weights(weights: HashMap<String, f64>) -> Self { let lb = Self::new();
+    pub fn with_weights(weights: HashMap<String, f64>) -> Self { let lb = Self::new();
         *lb.weights.write() = weights;
         lb
     , Ok(())

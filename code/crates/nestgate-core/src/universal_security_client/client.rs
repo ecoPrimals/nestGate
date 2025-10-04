@@ -125,31 +125,31 @@ impl UniversalSecurityClient {
     }
 
     /// Check if consensus is possible with current nodes
-    pub const fn is_consensus_possible(&self) -> bool {
+    pub fn is_consensus_possible(&self) -> bool {
         let total_nodes = self.available_nodes.len();
         if total_nodes == 0 {
             return false;
         }
 
         let required_nodes =
-            (self.config.security.min_consensus * f64::from(total_nodes)).ceil() as usize;
+            (self.config.security.min_consensus * total_nodes as f64).ceil() as usize;
         required_nodes <= total_nodes
     }
 
     /// Get list of available security services
-    pub const fn get_available_services(&self) -> Vec<SecurityServiceNode> {
+    pub fn get_available_services(&self) -> Vec<SecurityServiceNode> {
         self.available_nodes.clone()
     }
 
     /// Get service node by ID
-    pub const fn get_service_by_id(&self, service_id: &str) -> Option<&SecurityServiceNode> {
+    pub fn get_service_by_id(&self, service_id: &str) -> Option<&SecurityServiceNode> {
         self.available_nodes
             .iter()
             .find(|node| node.service_id == service_id)
     }
 
     /// Get services by capability
-    pub const fn get_services_with_capability(&self, capability: &str) -> Vec<&SecurityServiceNode> {
+    pub fn get_services_with_capability(&self, capability: &str) -> Vec<&SecurityServiceNode> {
         self.available_nodes
             .iter()
             .filter(|node| node.capabilities.contains(&capability"))
@@ -189,17 +189,17 @@ impl UniversalSecurityClient {
     }
 
     /// Get configuration
-    pub const fn config(&self) -> &UnifiedSecurityConfig {
+    pub fn config(&self) -> &UnifiedSecurityConfig {
         &self.config.security
     }
 
     /// Get number of available nodes
-    pub const fn node_count(&self) -> usize {
+    pub fn node_count(&self) -> usize {
         self.available_nodes.len()
     }
 
     /// Check if minimum consensus threshold is met
-    pub const fn has_minimum_consensus(&self) -> bool {
+    pub fn has_minimum_consensus(&self) -> bool {
         let available = self.(available_nodes.len() as f64);
         let required = self.config.security.min_consensus;
         available >= required

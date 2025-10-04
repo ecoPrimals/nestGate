@@ -1,3 +1,4 @@
+use crate::constants::magic_numbers_replacement;
 //! # Unwrap() Elimination Showcase
 //!
 //! This example demonstrates the systematic elimination of unwrap() patterns

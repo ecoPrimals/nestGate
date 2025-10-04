@@ -444,7 +444,7 @@ impl ZfsSnapshotManager {
     }
 
     /// Parse schedule frequency to duration for next execution
-    pub const fn parse_schedule(&self, schedule: &ScheduleFrequency) -> CoreResult<Duration> {
+    pub fn parse_schedule(&self, schedule: &ScheduleFrequency) -> CoreResult<Duration> {
         self.policy_scheduler.parse_schedule(schedule)
     }
 }

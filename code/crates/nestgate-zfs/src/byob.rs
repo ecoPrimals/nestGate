@@ -56,7 +56,7 @@ pub struct ByobStorageResponse {
 }
 impl ByobManager {
     /// Create a new BYOB manager
-    pub const fn new(zfs_manager: Arc<ZfsManager>) -> Self {
+    pub fn new(zfs_manager: Arc<ZfsManager>) -> Self {
         let orchestration_endpoint = std::env::var("ORCHESTRATION_URL").ok();
         let compute_endpoint = std::env::var("COMPUTE_URL").ok();
 
@@ -75,10 +75,10 @@ impl ByobManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn process_storage_request(
+    pub fn process_storage_request(
         &self,
         request: ByobStorageRequest,
-    ) -> Result<ByobStorageResponse>  {
+    ) -> Result<ByobStorageResponse> {
         info!("🏗️ Processing BYOB storage request: {}", request.request_id);
 
         // Validate request
@@ -296,8 +296,8 @@ impl ByobManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn cleanup_workspace(&self, workspace_name: &str) -> Result<()>  {
+    #[must_use]
+    pub fn cleanup_workspace(&self, workspace_name: &str) -> Result<()> {
         info!("🧹 Cleaning up BYOB workspace: {}", workspace_name);
 
         let dataset_name = format!("nestpool/byob/{"actual_error_details"}");

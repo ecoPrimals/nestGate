@@ -33,7 +33,7 @@ struct PoolToken {
     }
 impl<T: Send + 'static> PoolRef<T> {
     /// Always safe deref - no panics possible
-    pub const fn get_ref(&self) -> &T {
+    pub fn get_ref(&self) -> &T {
         &self.buffer
     }
     }
@@ -56,12 +56,12 @@ impl<T: Send + 'static> PoolRefMut<T> {
     }
 
     /// Get the time when this buffer was acquired (useful for debugging/metrics)
-    pub const fn acquired_at(&self) -> Instant {
+    pub fn acquired_at(&self) -> Instant {
         self.acquired_at
     }
 
     /// How long has this buffer been held?
-    pub const fn held_duration(&self) -> Duration {
+    pub fn held_duration(&self) -> Duration {
         self.acquired_at.elapsed()
     }
 
@@ -93,7 +93,7 @@ pub struct PoolAccessBuilder<T: Send + 'static> {
     }
 impl<T: Send + 'static> PoolAccessBuilder<T> {
     /// Get reference access (buffer returns to pool on drop)
-    pub const fn as_ref(self) -> PoolRefMut<T> {
+    pub fn as_ref(self) -> PoolRefMut<T> {
         PoolRefMut {
             buffer: Some(self.buffer),
             pool: self.pool,
@@ -103,7 +103,7 @@ impl<T: Send + 'static> PoolAccessBuilder<T> {
     }
 
     /// Take ownership (buffer never returns to pool)
-    pub const fn into_owned(self) -> PoolOwned<T> {
+    pub fn into_owned(self) -> PoolOwned<T> {
         PoolOwned(self.buffer)
     }
     }
@@ -135,7 +135,7 @@ impl PoolString {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn as_str(&self) -> Result<&str>  {
+        pub fn as_str(&self) -> Result<&str>  {
         self.inner
             .buffer
             .as_ref()
@@ -151,7 +151,7 @@ impl PoolString {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn into_string(self) -> Result<String>  {
+        pub fn into_string(self) -> Result<String>  {
         // Move out of the Box to avoid extra allocation
         Ok(*self.inner.into_owned()?.0)
     }
@@ -176,7 +176,7 @@ impl<T: Send + 'static> SafeMemoryPool<T> {
     }
 
     /// Get the maximum size of this pool
-    pub const fn max_size(&self) -> usize {
+    pub fn max_size(&self) -> usize {
         self.max_size
     }
 
@@ -268,7 +268,7 @@ pub struct PoolBuffer {
     }
 impl PoolBuffer {
     /// Zero-copy slice access
-    pub const fn as_slice(&self) -> &[u8] {
+    pub fn as_slice(&self) -> &[u8] {
         &self.data
     }
 
@@ -294,7 +294,7 @@ impl PoolBuffer {
     }
 
     /// Get buffer capacity
-    pub const fn capacity(&self) -> usize {
+    pub fn capacity(&self) -> usize {
         self.data.capacity()
     }
     }
@@ -328,7 +328,7 @@ static BUFFER_1MB_POOL: OnceLock<SafeMemoryPool<Vec<u8>>> = OnceLock::new();
 /// Get a 4KB buffer pool for high-performance operations
 /// **USAGE**: `let mut buffer = get_4kb_pool().acquire_mut().await?;`
 /// **PERFORMANCE**: Zero-copy, safe, no panics possible
-pub const fn get_4kb_pool() -> &'static SafeMemoryPool<Vec<u8>> {
+pub fn get_4kb_pool() -> &'static SafeMemoryPool<Vec<u8>> {
     BUFFER_4KB_POOL.get_or_init(|| {
         SafeMemoryPool::new(|| vec![0u8; 4 * 1024], 20) // 4KB buffers, 20 max pooled
     })
@@ -336,7 +336,7 @@ pub const fn get_4kb_pool() -> &'static SafeMemoryPool<Vec<u8>> {
 /// Get a 1MB buffer pool for high-performance operations
 /// **USAGE**: `let mut buffer = get_1mb_pool().acquire_mut().await?;`
 /// **PERFORMANCE**: Zero-copy, safe, no panics possible
-pub const fn get_1mb_pool() -> &'static SafeMemoryPool<Vec<u8>> {
+pub fn get_1mb_pool() -> &'static SafeMemoryPool<Vec<u8>> {
     BUFFER_1MB_POOL.get_or_init(|| {
         SafeMemoryPool::new(|| vec![0u8; 1024 * 1024], 10) // 1MB buffers, 10 max pooled
     })

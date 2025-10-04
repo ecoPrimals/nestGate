@@ -9,7 +9,6 @@ pub mod context;
 pub mod conversions;
 pub mod data;
 pub mod unified_result_system;
-pub mod unwrap_migration_guide;
 pub mod variants;
 
 // ==================== EXPORTS ====================
@@ -27,16 +26,11 @@ pub type NestGateError = NestGateUnifiedError;
 pub type Result<T> = std::result::Result<T, NestGateError>;
 
 // Re-export result types from unified_result_system
+// Note: Error type aliases removed to avoid conflicts with domain_errors.rs
+// Use NestGateUnifiedError helper constructors instead
 pub use self::unified_result_system::{
-    ApiError, ApiResult, CanonicalResult, ConfigResult, McpError, McpResult, NetworkError,
-    NetworkResult, SecurityError, SecurityResult, StorageError, StorageResult, ValidationError,
-    ValidationResult, ZfsError, ZfsResult,
-};
-
-// Re-export unwrap migration utilities
-pub use self::unwrap_migration_guide::{
-    ProductionErrorHandling, UnwrapMigrationPatterns, UnwrapMigrationValidator,
-    UNWRAP_MIGRATION_GUIDE,
+    ApiResult, CanonicalResult, ConfigResult, McpResult, NetworkResult, SecurityResult,
+    StorageResult, ValidationResult, ZfsResult,
 };
 
 // Re-export error detail structs from variants
@@ -110,7 +104,7 @@ where
 
 /// Suggest recovery strategies based on error type
 #[must_use]
-pub const fn suggest_recovery_strategy(error: &NestGateError) -> Vec<String> {
+pub fn suggest_recovery_strategy(error: &NestGateError) -> Vec<String> {
     match error {
         NestGateError::Configuration(details) => {
             vec![
@@ -170,7 +164,7 @@ pub fn format_user_error(error: &NestGateError) -> String {
 
 /// Format error for technical logs
 #[must_use]
-pub const fn format_technical_error(error: &NestGateError) -> String {
+pub fn format_technical_error(error: &NestGateError) -> String {
     format!("{error:#?}")
 }
 
@@ -212,17 +206,17 @@ pub mod test_utils {
     use super::*;
 
     /// Create a test configuration error
-    pub const fn test_config_error() -> NestGateError {
+    pub fn test_config_error() -> NestGateError {
         config_error!("Test configuration error", "test_field")
     }
 
     /// Create a test validation error
-    pub const fn test_validation_error() -> NestGateError {
+    pub fn test_validation_error() -> NestGateError {
         validation_error!("test_field", "Test validation failed")
     }
 
     /// Create a test internal error
-    pub const fn test_internal() -> NestGateError {
+    pub fn test_internal() -> NestGateError {
         internal_error!("Test internal error")
     }
 }

@@ -28,7 +28,7 @@ pub mod routes;
 // Re-export commonly used types
 // Specific handler re-exports to avoid namespace pollution
 pub use handlers::{
-    hardware_tuning, performance_dashboard, storage, zfs,
-    compliance, load_testing, performance_analyzer
+    compliance, hardware_tuning, load_testing, performance_analyzer, performance_dashboard,
+    storage, zfs,
 };
 pub use routes::{create_router, AppState};

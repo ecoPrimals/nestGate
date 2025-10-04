@@ -63,7 +63,7 @@ pub struct SmartEnvLoader {
 }
 impl SmartEnvLoader {
     /// Create a new environment loader with prefix
-    pub const fn new(prefix: &str) -> Self {
+    pub fn new(prefix: &str) -> Self {
         Self {
             prefix: prefix.to_uppercase(),
             separator: "_".to_string(),
@@ -86,7 +86,7 @@ impl SmartEnvLoader {
     }
 
     /// Load a string value with default
-    pub const fn load_string(&self, key: &str, default: Option<&str>) -> String {
+    pub fn load_string(&self, key: &str, default: Option<&str>) -> String {
         let env_key = self.make_env_key(key);
         env::var(&env_key).unwrap_or_else(|_| default.unwrap_or("").to_string())
     }
@@ -104,7 +104,7 @@ impl SmartEnvLoader {
     }
 
     /// Load a boolean value with default
-    pub const fn load_bool(&self, key: &str, default: bool) -> bool {
+    pub fn load_bool(&self, key: &str, default: bool) -> bool {
         let env_key = self.make_env_key(key);
         env::var(&env_key)
             .ok()
@@ -117,7 +117,7 @@ impl SmartEnvLoader {
     }
 
     /// Load a duration value with default
-    pub const fn load_duration(&self, key: &str, default: Duration) -> Duration {
+    pub fn load_duration(&self, key: &str, default: Duration) -> Duration {
         let env_key = self.make_env_key(key);
         env::var(&env_key)
             .ok()
@@ -146,7 +146,7 @@ impl SmartEnvLoader {
     }
 
     /// Load a list of strings
-    pub const fn load_string_list(&self, key: &str, default: Vec<String>) -> Vec<String> {
+    pub fn load_string_list(&self, key: &str, default: Vec<String>) -> Vec<String> {
         let env_key = self.make_env_key(key);
         env::var(&env_key)
             .ok()
@@ -155,7 +155,7 @@ impl SmartEnvLoader {
     }
 
     /// Load all environment variables with the prefix
-    pub const fn load_all(&self) -> HashMap<String, String> {
+    pub fn load_all(&self) -> HashMap<String, String> {
         let prefix_with_sep = format!("{}{}", self.prefix, self.separator);
 
         env::vars()
@@ -240,7 +240,7 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(self) -> Result<T>  {
+        pub fn validate(self) -> Result<T>  {
         for validator in &self.validators {
             validator(&self.value)?;
         }
@@ -251,7 +251,7 @@ where
 // Common validation rules
 impl SmartValidator<String> {
     /// Validate string is not empty
-    pub const fn not_empty(self) -> Self {
+    pub fn not_empty(self) -> Self {
         self.rule(|value| {
             if value.is_empty() {
                 Err(NestGateError::configuration(
@@ -267,7 +267,7 @@ impl SmartValidator<String> {
     }
 
     /// Validate string length
-    pub const fn length_between(self, min: usize, max: usize) -> Self {
+    pub fn length_between(self, min: usize, max: usize) -> Self {
         self.rule(move |value| {
             let len = value.len();
             if len < min || len > max {
@@ -287,7 +287,7 @@ impl SmartValidator<String> {
     }
 
     /// Validate string matches pattern
-    pub const fn matches_pattern(self, pattern: &str) -> Self {
+    pub fn matches_pattern(self, pattern: &str) -> Self {
         let pattern = pattern.to_string();
         self.rule(move |value| {
             if value.contains(&pattern) {
@@ -309,7 +309,7 @@ impl SmartValidator<String> {
 
 impl SmartValidator<u16> {
     /// Validate port number is in valid range
-    pub const fn valid_port(self) -> Self {
+    pub fn valid_port(self) -> Self {
         self.rule(|value| {
             if *value > 0 {
                 Ok(())
@@ -326,7 +326,7 @@ impl SmartValidator<u16> {
     }
 
     /// Validate port is not in reserved range
-    pub const fn not_reserved(self) -> Self {
+    pub fn not_reserved(self) -> Self {
         self.rule(|value| {
             if *value < 1024 {
                 Err(NestGateError::configuration(
@@ -345,7 +345,7 @@ impl SmartValidator<u16> {
 
 impl SmartValidator<u64> {
     /// Validate value is within range
-    pub const fn range(self, min: u64, max: u64) -> Self {
+    pub fn range(self, min: u64, max: u64) -> Self {
         self.rule(move |value| {
             if *value >= min && *value <= max {
                 Ok(())
@@ -362,7 +362,7 @@ impl SmartValidator<u64> {
     }
 
     /// Validate value is positive
-    pub const fn positive(self) -> Self {
+    pub fn positive(self) -> Self {
         self.rule(|value| {
             if *value > 0 {
                 Ok(())
@@ -380,7 +380,7 @@ impl SmartValidator<u64> {
 
 impl SmartValidator<Duration> {
     /// Validate duration is within range
-    pub const fn duration_range(self, min: Duration, max: Duration) -> Self {
+    pub fn duration_range(self, min: Duration, max: Duration) -> Self {
         self.rule(move |value| {
             if *value >= min && *value <= max {
                 Ok(())
@@ -397,7 +397,7 @@ impl SmartValidator<Duration> {
     }
 
     /// Validate duration is not zero
-    pub const fn not_zero(self) -> Self {
+    pub fn not_zero(self) -> Self {
         self.rule(|value| {
             if !value.is_zero() {
                 Ok(())
@@ -439,7 +439,7 @@ where
     T: Clone + Serialize + for<'de> Deserialize<'de>,
 {
     /// Create a new merger with base configuration
-    pub const fn new(base_config: T) -> Self {
+    pub fn new(base_config: T) -> Self {
         Self {
             base_config,
             merge_strategy: MergeStrategy::Smart,
@@ -462,7 +462,7 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn merge(self, other: T) -> Result<T>  {
+        pub fn merge(self, other: T) -> Result<T>  {
         let base_json = serde_json::to_value(&self.base_config)?;
         let other_json = serde_json::to_value(&other)?;
 
@@ -626,7 +626,7 @@ impl SmartConfigPresets {
 // ==================== SECTION ====================
 
 /// Create a smart environment loader
-pub const fn env_loader(prefix: &str) -> SmartEnvLoader {
+pub fn env_loader(prefix: &str) -> SmartEnvLoader {
     SmartEnvLoader::new(prefix)
 }
 /// Create a smart validator for a value

@@ -112,7 +112,7 @@ impl InterfaceBuilder {
     }
 
     /// Build the interface metadata
-    pub const fn build(self) -> InterfaceMetadata {
+    pub fn build(self) -> InterfaceMetadata {
         self.metadata
     }
 }
@@ -148,12 +148,12 @@ impl InterfaceRegistry {
     }
 
     /// Get interface metadata
-    pub const fn get_interface(&self, interface_id: &str) -> Option<&InterfaceMetadata> {
+    pub fn get_interface(&self, interface_id: &str) -> Option<&InterfaceMetadata> {
         self.interfaces.get(interface_id)
     }
 
     /// List all registered interfaces
-    pub const fn list_interfaces(&self) -> Vec<&InterfaceMetadata> {
+    pub fn list_interfaces(&self) -> Vec<&InterfaceMetadata> {
         self.interfaces.values().collect()
     }
 }

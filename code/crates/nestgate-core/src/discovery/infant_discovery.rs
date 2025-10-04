@@ -146,12 +146,12 @@ impl InfantDiscoverySystem {
     }
     
     /// Get discovered capability by type
-    pub const fn get_capability(&self, capability_type: &str) -> Option<&CapabilityInfo> {
+    pub fn get_capability(&self, capability_type: &str) -> Option<&CapabilityInfo> {
         self.discovered_capabilities.get(capability_type)
     }
     
     /// List all discovered capabilities
-    pub const fn list_capabilities(&self) -> Vec<&CapabilityInfo> {
+    pub fn list_capabilities(&self) -> Vec<&CapabilityInfo> {
         self.discovered_capabilities.values().collect()
     }
 }

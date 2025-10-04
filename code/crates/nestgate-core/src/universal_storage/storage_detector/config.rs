@@ -41,7 +41,7 @@ impl Default for DetectionConfig {
 impl DetectionConfig {
     /// Create a fast detection configuration (minimal profiling)
     #[must_use]
-    pub const fn fast() -> Self {
+    pub fn fast() -> Self {
         Self {
             enable_performance_profiling: false,
             enable_deep_analysis: false,
@@ -52,7 +52,7 @@ impl DetectionConfig {
 
     /// Create a comprehensive detection configuration (full profiling)
     #[must_use]
-    pub const fn comprehensive() -> Self {
+    pub fn comprehensive() -> Self {
         Self {
             include_virtual_devices: true,
             enable_performance_profiling: true,
@@ -65,7 +65,7 @@ impl DetectionConfig {
 
     /// Create a cloud-only detection configuration
     #[must_use]
-    pub const fn cloud_only() -> Self {
+    pub fn cloud_only() -> Self {
         Self {
             enable_cloud_detection: true,
             enable_network_detection: false,
@@ -76,7 +76,7 @@ impl DetectionConfig {
 
     /// Create a local-only detection configuration
     #[must_use]
-    pub const fn local_only() -> Self {
+    pub fn local_only() -> Self {
         Self {
             enable_cloud_detection: false,
             enable_network_detection: false,
@@ -92,7 +92,7 @@ impl DetectionConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate(&self) -> Result<(), String>  {
+    pub fn validate(&self) -> Result<(), String> {
         if self.minimum_storage_size == 0 {
             return Err("minimum_storage_size must be greater than 0".to_string());
         }

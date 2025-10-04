@@ -58,12 +58,12 @@ pub struct PerformanceInsight {
 pub struct PerformanceAnalyzer;
 impl PerformanceAnalyzer {
     /// Create new analyzer
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self
     }
 
     /// Analyze storage performance and capacity
-    pub const fn analyze_storage(&self) -> ApiResult<PerformanceInsight> {
+    pub fn analyze_storage(&self) -> ApiResult<PerformanceInsight> {
         Ok(PerformanceInsight {
             impact: ImpactLevel::HIGH.to_string(),
             title: OptimizationTitle::EXPAND_STORAGE.to_string(),
@@ -77,7 +77,7 @@ impl PerformanceAnalyzer {
     }
 
     /// Analyze system fragmentation levels
-    pub const fn analyze_fragmentation(&self) -> ApiResult<PerformanceInsight> {
+    pub fn analyze_fragmentation(&self) -> ApiResult<PerformanceInsight> {
         Ok(PerformanceInsight {
             impact: ImpactLevel::HIGH.to_string(),
             title: OptimizationTitle::SCHEDULE_DEFRAG.to_string(),

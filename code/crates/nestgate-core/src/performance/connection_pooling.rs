@@ -65,7 +65,7 @@ pub struct PooledConnection<T> {
     pub is_healthy: bool,
 }
 impl<T> PooledConnection<T> {
-    pub const fn new(connection: T) -> Self {
+    pub fn new(connection: T) -> Self {
         let now = Instant::now();
         Self {
             connection,
@@ -81,13 +81,13 @@ impl<T> PooledConnection<T> {
         self.use_count += 1;
     }
 
-    pub const fn is_idle(&self, idle_timeout: Duration) -> bool {
+    pub fn is_idle(&self, idle_timeout: Duration) -> bool {
         self.last_used.elapsed() > idle_timeout
     }
 }
 
 impl<T: Send + Sync + 'static> IntelligentConnectionPool<T> {
-    pub const fn new(config: ConnectionPoolConfig) -> Self {
+    pub fn new(config: ConnectionPoolConfig) -> Self {
         Self {
             connections: Arc::new(RwLock::new(VecDeque::new())),
             semaphore: Arc::new(Semaphore::new(config.max_connections)),

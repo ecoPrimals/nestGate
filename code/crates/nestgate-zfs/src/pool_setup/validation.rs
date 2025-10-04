@@ -49,7 +49,7 @@ pub struct PoolSetupValidator {
     config: PoolSetupConfig,
 }
 impl PoolSetupValidator {
-    pub const fn new(config: PoolSetupConfig) -> Self {
+    pub fn new(config: PoolSetupConfig) -> Self {
         Self { config }
     }
 

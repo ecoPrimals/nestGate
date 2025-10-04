@@ -102,12 +102,12 @@ impl UniversalDataAdapter {
     }
     
     /// Get available capabilities
-    pub const fn get_available_capabilities(&self) -> Vec<String> {
+    pub fn get_available_capabilities(&self) -> Vec<String> {
         self.providers.keys().cloned().collect()
     }
     
     /// Get provider metadata for a capability
-    pub const fn get_provider_metadata(&self, capability_type: &str) -> Option<HashMap<String, String>> {
+    pub fn get_provider_metadata(&self, capability_type: &str) -> Option<HashMap<String, String>> {
         self.providers.get(capability_type).map(|p| p.get_metadata())
     }
 }
@@ -123,7 +123,7 @@ pub struct UniversalDataAdapterBuilder {
     adapter: UniversalDataAdapter,
 }
 impl UniversalDataAdapterBuilder {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             adapter: UniversalDataAdapter::new(),
         }
@@ -144,7 +144,7 @@ impl UniversalDataAdapterBuilder {
     }
     
     /// Build the configured adapter
-    pub const fn build(self) -> UniversalDataAdapter {
+    pub fn build(self) -> UniversalDataAdapter {
         self.adapter
     }
 }

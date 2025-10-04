@@ -155,11 +155,11 @@ impl SmartDefault for AIFirstError {
 
 // **BUILDER PATTERNS**: Fluent API for complex response construction
 impl<T, M: MetadataExtensions + Default> AIFirstResponse<T, M> {
-    pub const fn success(data: T) -> AIFirstResponseBuilder<T, M> {
+    pub fn success(data: T) -> AIFirstResponseBuilder<T, M> {
         AIFirstResponseBuilder::new(true, data)
     }
     
-    pub const fn error(error: AIFirstError) -> AIFirstResponseBuilder<T, M> 
+    pub fn error(error: AIFirstError) -> AIFirstResponseBuilder<T, M> 
     where 
         T: Default 
     {
@@ -176,7 +176,7 @@ pub struct AIFirstResponseBuilder<T, M: MetadataExtensions> {
     ai_context: Option<AIDecisionContext>,
 }
 impl<T, M: MetadataExtensions + Default> AIFirstResponseBuilder<T, M> {
-    pub const fn new(success: bool, data: T) -> Self {
+    pub fn new(success: bool, data: T) -> Self {
         Self {
             success,
             data,
@@ -215,7 +215,7 @@ impl<T, M: MetadataExtensions + Default> AIFirstResponseBuilder<T, M> {
         self
     }
     
-    pub const fn build(self) -> AIFirstResponse<T, M> {
+    pub fn build(self) -> AIFirstResponse<T, M> {
         AIFirstResponse {
             success: self.success,
             data: self.data,

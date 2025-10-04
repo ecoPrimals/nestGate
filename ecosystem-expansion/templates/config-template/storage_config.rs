@@ -1,32 +1,26 @@
-/// **STORAGE CONFIGURATION**
+/// **STORAGE CONFIGURATION TEMPLATE**
+///
+//! **TEMPLATE**: This shows the recommended canonical pattern for storage configuration.
+//! All new code should use CanonicalStorageConfig from canonical_master.
 ///
 /// Storage and ZFS configuration types.
 /// This module contains all storage-related settings including ZFS pools,
 /// caching, replication, and backend configurations.
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// ==================== SECTION ====================
+// ==================== CANONICAL PATTERN (RECOMMENDED) ====================
 
-/// Storage configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct StorageConfig {
-    /// Enable storage
-    pub enabled: bool,
-    /// Default storage backend
-    pub default_backend: String,
-    /// Storage backends
-    pub backends: HashMap<String, StorageBackend>,
-    /// ZFS configuration
-    pub zfs: ZfsConfig,
-    /// Cache configuration
-    pub cache: CacheConfig,
-    /// Storage-specific settings
-    pub storage_settings: HashMap<String, serde_json::Value>,
-}
+// Re-export the canonical storage configuration
+pub use nestgate_core::config::canonical_master::domains::storage_canonical::CanonicalStorageConfig;
 
-/// Storage backend configuration
+/// **TYPE ALIAS**: Use this pattern for module-specific naming
+pub type StorageConfig = CanonicalStorageConfig;
+
+// ==================== HELPER TYPES FOR SPECIFIC USE CASES ====================
+// Define these only if you need simplified interfaces for specific contexts
+
+/// Storage backend configuration (helper type)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageBackend {
     /// Backend type

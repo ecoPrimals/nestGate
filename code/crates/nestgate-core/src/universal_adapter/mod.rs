@@ -46,7 +46,7 @@ pub mod types {
         }
 
         /// Create a search query for a specific capability
-        pub const fn search(capability_type: impl Into<String>) -> Self {
+        pub fn search(capability_type: impl Into<String>) -> Self {
             Self::new(capability_type)
         }
 
@@ -82,7 +82,7 @@ pub mod stats {
 
     impl AdapterStats {
         #[must_use]
-        pub const fn new() -> Self {
+        pub fn new() -> Self {
             Self {
                 requests_total: 0,
                 requests_successful: 0,
@@ -205,7 +205,7 @@ impl CapabilityRequest {
 // Compatibility alias for CapabilityQuery
 impl CapabilityRequest {
     /// Create a search query for a specific capability (compatibility method)
-    pub const fn search(capability_type: impl Into<String>) -> Self {
+    pub fn search(capability_type: impl Into<String>) -> Self {
         Self::new(capability_type, "search")
     }
 }
@@ -246,7 +246,7 @@ impl UniversalAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn discover_capabilities(&mut self) -> Result<Vec<CapabilityInfo>, String>  {
+    pub async fn discover_capabilities(&mut self) -> Result<Vec<CapabilityInfo>, String> {
         // Clear existing capabilities for fresh discovery
         self.capabilities.clear();
 
@@ -270,8 +270,8 @@ impl UniversalAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn get_capability(&self, category: &str) -> Result<CapabilityInfo, String>  {
+    #[must_use]
+    pub fn get_capability(&self, category: &str) -> Result<CapabilityInfo, String> {
         // Check cache first
         if let Some(cached) = self.discovery_cache.get(category) {
             if SystemTime::now() < cached.expires_at {
@@ -295,12 +295,12 @@ impl UniversalAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn request_capability(
+    pub async fn request_capability(
         &self,
         capability: &str,
         request: CapabilityRequest,
-    ) -> Result<CapabilityResponse, String>  {
-        let capability_info = self.get_capability(capability).await?;
+    ) -> Result<CapabilityResponse, String> {
+        let capability_info = self.get_capability(capability)?;
 
         // Make HTTP request to capability endpoint (not hardcoded primal)
         let start_time = SystemTime::now();
@@ -427,10 +427,7 @@ impl UniversalAdapter {
 
     /// Query capability using the universal adapter pattern
     /// COMPATIBILITY: For modules expecting `PrimalAgnosticAdapter` interface
-    pub fn query_capability(
-        &self,
-        query: &types::CapabilityQuery,
-    ) -> crate::Result<Vec<String>> {
+    pub fn query_capability(&self, query: &types::CapabilityQuery) -> crate::Result<Vec<String>> {
         // Convert CapabilityQuery to our internal format and find matching capabilities
         let matching_capabilities: Vec<String> = self
             .capabilities
@@ -479,7 +476,7 @@ impl Default for UniversalAdapterConfig {
 
 /// Primal sovereignty validation
 /// Ensures no hardcoded primal-to-primal connections exist
-pub const fn validate_primal_sovereignty() -> Result<(), String> {
+pub fn validate_primal_sovereignty() -> Result<(), String> {
     // This function would scan the codebase to ensure no hardcoded primal names
     // are used for direct connections - all must go through the universal adapter
     Ok(())

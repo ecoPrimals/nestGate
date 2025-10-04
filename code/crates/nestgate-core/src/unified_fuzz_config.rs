@@ -678,7 +678,7 @@ impl UnifiedFuzzConfig {
     }
 
     /// Builder pattern for custom fuzz configurations
-    pub const fn builder() -> UnifiedFuzzConfigBuilder {
+    pub fn builder() -> UnifiedFuzzConfigBuilder {
         UnifiedFuzzConfigBuilder::new()
     }
     }
@@ -688,7 +688,7 @@ pub struct UnifiedFuzzConfigBuilder {
     config: UnifiedFuzzConfig,
     }
 impl UnifiedFuzzConfigBuilder {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: UnifiedFuzzConfig::comprehensive(),
     }
@@ -735,7 +735,7 @@ impl UnifiedFuzzConfigBuilder {
         self
     }
 
-    pub const fn build(self) -> UnifiedFuzzConfig {
+    pub fn build(self) -> UnifiedFuzzConfig {
         self.config
     }
     }

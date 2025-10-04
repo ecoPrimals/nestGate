@@ -42,7 +42,7 @@ impl NetworkEnvironmentConfig {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn validate(&self) -> Result<()>  {
+    pub fn validate(&self) -> Result<()> {
         Ok(())
     }
 

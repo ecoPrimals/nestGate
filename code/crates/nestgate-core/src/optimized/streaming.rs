@@ -108,7 +108,7 @@ pub struct StreamingMetrics {
 }
 impl AdvancedStreamReader {
     /// Create new advanced stream reader
-    pub const fn new(
+    pub fn new(
         source: Box<dyn AsyncRead + Send + Unpin>,
         config: StreamingConfig,
     ) -> Self {
@@ -164,7 +164,7 @@ impl AdvancedStreamReader {
             
             let elapsed = start_time.elapsed().as_secs_f64();
             if elapsed > 0.0 {
-                metrics.read_throughput = metrics.f64::from(bytes_read) / elapsed;
+                metrics.read_throughput = metrics.bytes_read as f64 / elapsed;
             }
         }
         
@@ -176,7 +176,7 @@ impl AdvancedStreamReader {
     }
     
     /// Create chunked stream for large data processing
-    pub const fn into_chunked_stream(self) -> ChunkedStream {
+    pub fn into_chunked_stream(self) -> ChunkedStream {
         ChunkedStream::new(self)
     }
     
@@ -223,7 +223,7 @@ impl AdvancedStreamReader {
 
 impl AdvancedStreamWriter {
     /// Create new advanced stream writer
-    pub const fn new(
+    pub fn new(
         sink: Box<dyn AsyncWrite + Send + Unpin>,
         config: StreamingConfig,
     ) -> Self {
@@ -272,7 +272,7 @@ impl AdvancedStreamWriter {
             
             let elapsed = start_time.elapsed().as_secs_f64();
             if elapsed > 0.0 {
-                metrics.write_throughput = metrics.f64::from(bytes_written) / elapsed;
+                metrics.write_throughput = metrics.bytes_written as f64 / elapsed;
             }
         }
         
@@ -305,7 +305,7 @@ impl AdvancedStreamWriter {
     /// Check if backpressure should be applied
     async fn should_apply_backpressure(&self) -> bool {
         let metrics = self.metrics.read().await;
-        let buffer_usage = self.(buffer.len() as f64) / self.config.f64::from(max_buffer_size);
+        let buffer_usage = self.(buffer.len() as f64) / self.config.max_buffer_size as f64;
         buffer_usage > self.config.backpressure_threshold
     }
     
@@ -344,7 +344,7 @@ pub struct ChunkedStream {
 }
 impl ChunkedStream {
     /// Create new chunked stream
-    pub const fn new(reader: AdvancedStreamReader) -> Self {
+    pub fn new(reader: AdvancedStreamReader) -> Self {
         Self { reader }
     }
 }
@@ -429,7 +429,7 @@ impl StreamingCompression {
 pub struct StreamingUtils;
 impl StreamingUtils {
     /// Create buffered reader with optimal settings
-    pub const fn create_buffered_reader(
+    pub fn create_buffered_reader(
         source: Box<dyn AsyncRead + Send + Unpin>,
         config: Option<StreamingConfig>,
     ) -> AdvancedStreamReader {
@@ -437,7 +437,7 @@ impl StreamingUtils {
     }
     
     /// Create buffered writer with optimal settings
-    pub const fn create_buffered_writer(
+    pub fn create_buffered_writer(
         sink: Box<dyn AsyncWrite + Send + Unpin>,
         config: Option<StreamingConfig>,
     ) -> AdvancedStreamWriter {

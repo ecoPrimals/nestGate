@@ -51,7 +51,7 @@ pub fn parse_zpool_list(output: &str) -> UniversalZfsResult<Vec<PoolInfo>> {
                     used_bytes: used_size,
                     available_bytes: available_size,
                     utilization_percent: if total_size > 0 {
-                        (f64::from(used_size) / f64::from(total_size)) * 100.0
+                        (used_size as f64 / total_size as f64) * 100.0
                     } else {
                         0.0
                     },
@@ -72,7 +72,7 @@ pub fn parse_zpool_list(output: &str) -> UniversalZfsResult<Vec<PoolInfo>> {
 /// Parse size strings with universal scale support
 /// Handles everything from molecular storage (sub-byte) to cosmic-scale data (10+ generations)
 /// Future-proofs for DNA storage, quantum bits, and federated petabyte systems
-pub const fn parse_size_string(size_str: &str) -> UniversalZfsResult<u64> {
+pub fn parse_size_string(size_str: &str) -> UniversalZfsResult<u64> {
     if size_str == "-" || size_str.is_empty() {
         return Ok(0);
     }

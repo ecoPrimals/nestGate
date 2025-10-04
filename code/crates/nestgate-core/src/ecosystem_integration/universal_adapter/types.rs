@@ -257,7 +257,7 @@ impl Default for ResourceRequirements {
 
 impl CapabilityCategory {
     /// Get all available capability categories
-    pub const fn all_categories() -> Vec<Self> {
+    pub fn all_categories() -> Vec<Self> {
         vec![
             Self::ArtificialIntelligence,
             Self::Security,
@@ -274,7 +274,7 @@ impl CapabilityCategory {
     }
 
     /// Get category name as string
-    pub const fn as_str(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         match self {
             Self::ArtificialIntelligence => "ai",
             Self::Security => "security",
@@ -294,7 +294,7 @@ impl CapabilityCategory {
 
 impl DataType {
     /// Check if this data type is compatible with another
-    pub const fn is_compatible_with(&self, other: &Self) -> bool {
+    pub fn is_compatible_with(&self, other: &Self) -> bool {
         match (self, other) {
             // Exact matches
             (a, b) if a == b => true,
@@ -317,7 +317,7 @@ impl DataType {
     }
 
     /// Get MIME type for this data type
-    pub const fn mime_type(&self) -> &str {
+    pub fn mime_type(&self) -> &str {
         match self {
             DataType::Text => "text/plain",
             DataType::Binary => "application/octet-stream",
@@ -345,7 +345,7 @@ impl DataType {
 
 impl ScalabilityRating {
     /// Get numeric score for scalability (0-10)
-    pub const fn score(&self) -> u8 {
+    pub fn score(&self) -> u8 {
         match self {
             Self::Limited => 3,
             Self::Moderate => 6,
@@ -357,7 +357,7 @@ impl ScalabilityRating {
 
 impl PerformanceRequirements {
     /// Check if performance metrics meet these requirements
-    pub const fn is_satisfied_by(&self, metrics: &PerformanceMetrics) -> bool {
+    pub fn is_satisfied_by(&self, metrics: &PerformanceMetrics) -> bool {
         if let Some(max_response_time) = self.max_response_time_ms {
             if metrics.avg_response_time_ms > max_response_time {
                 return false;

@@ -108,13 +108,13 @@ pub struct CanonicalSecurityConfig {
 impl CanonicalSecurityConfig {
     /// Create a new canonical security configuration
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
     /// Create a configuration optimized for production environments
     #[must_use]
-    pub const fn production_hardened() -> Self {
+    pub fn production_hardened() -> Self {
         Self {
             authentication: AuthenticationConfig::production_hardened(),
             authorization: AuthorizationConfig::production_hardened(),
@@ -132,7 +132,7 @@ impl CanonicalSecurityConfig {
 
     /// Create a configuration optimized for development environments
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self {
             authentication: AuthenticationConfig::development_optimized(),
             authorization: AuthorizationConfig::development_optimized(),
@@ -150,7 +150,7 @@ impl CanonicalSecurityConfig {
 
     /// Create a configuration for compliance-focused environments (SOC2, GDPR, etc.)
     #[must_use]
-    pub const fn compliance_focused() -> Self {
+    pub fn compliance_focused() -> Self {
         Self {
             authentication: AuthenticationConfig::compliance_focused(),
             authorization: AuthorizationConfig::compliance_focused(),
@@ -184,7 +184,7 @@ impl CanonicalSecurityConfig {
     }
 
     /// Validate the security configuration for completeness and security best practices
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         // Validate authentication configuration
         self.authentication.validate()?;
 

@@ -29,7 +29,7 @@ use types::{
 };
 
 //! Health check endpoint
-pub const fn health() -> axum::response::Json<serde_json::Value> {
+pub fn health() -> axum::response::Json<serde_json::Value> {
     axum::Json(serde_json::json!({
         "status": "healthy",
         "service": "byob-api",
@@ -476,7 +476,7 @@ impl Default for ZfsStorageProvider {
 }
 
 //! Create BYOB router with all endpoints
-pub const fn create_byob_router() -> Router<AppState> {
+pub fn create_byob_router() -> Router<AppState> {
     Router::new().route("/health", get(health))
     // Note: Teams and snapshots handlers need to be implemented
     // .route("/teams", get(teams::get_teams))
@@ -485,7 +485,7 @@ pub const fn create_byob_router() -> Router<AppState> {
     // .route("/snapshots", post(snapshots::create_snapshot))
 }
 //! Create BYOB service with ZFS storage provider
-pub const fn create_byob_service() -> Router<AppState> {
+pub fn create_byob_service() -> Router<AppState> {
     create_byob_router()
 }
 // Re-export types for convenience

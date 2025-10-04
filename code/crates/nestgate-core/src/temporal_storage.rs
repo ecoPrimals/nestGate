@@ -400,8 +400,8 @@ impl TemporalDevice {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn auto_detect_any_storage() -> Result<Vec<TemporalDevice>>  {
+    #[must_use]
+    pub fn auto_detect_any_storage() -> Result<Vec<TemporalDevice>> {
         let mut devices = Vec::new();
 
         // Detect legacy devices

@@ -25,7 +25,7 @@ pub struct RealHardwareTuningHandler {
 
 impl RealHardwareTuningHandler {
     /// Create a new real hardware tuning handler
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: HardwareTuningConfig::default(),
             metrics_collector: SystemMetricsCollector {
@@ -221,10 +221,7 @@ impl RealHardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn register_tuning_service(
-        &self,
-        registration: &TuningServiceRegistration,
-    ) -> Result<()>  {
+    pub fn register_tuning_service(&self, registration: &TuningServiceRegistration) -> Result<()> {
         info!(
             "Registering real hardware tuning service: {}",
             registration.service_name
@@ -249,10 +246,10 @@ impl RealHardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn request_compute_resources(
+    pub fn request_compute_resources(
         &self,
         request: &ComputeResourceRequest,
-    ) -> Result<ComputeAllocation>  {
+    ) -> Result<ComputeAllocation> {
         info!(
             "Requesting real compute resources: {} cores, {} GB RAM",
             request.cpu_cores, request.memory_gb
@@ -293,7 +290,7 @@ impl RealHardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_live_hardware_metrics(&self) -> Result<LiveHardwareMetrics>  {
+    pub async fn get_live_hardware_metrics(&self) -> Result<LiveHardwareMetrics> {
         let metrics = self.metrics_collector.collect_current_metrics().await?;
         info!(
             "Collected live hardware metrics: CPU {}%, Memory {}%",
@@ -310,7 +307,7 @@ impl RealHardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn auto_tune(&self) -> Result<TuningResult>  {
+    pub async fn auto_tune(&self) -> Result<TuningResult> {
         info!("Starting real hardware auto-tuning");
 
         // Collect baseline metrics
@@ -337,8 +334,8 @@ impl RealHardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn benchmark(&self, benchmark_name: &str) -> Result<BenchmarkResult>  {
+    #[must_use]
+    pub fn benchmark(&self, benchmark_name: &str) -> Result<BenchmarkResult> {
         info!("Running real benchmark: {}", benchmark_name);
 
         let start_time = Utc::now();
@@ -372,8 +369,8 @@ impl RealHardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn release_allocation(&self, allocation_id: &str) -> Result<()>  {
+    #[must_use]
+    pub fn release_allocation(&self, allocation_id: &str) -> Result<()> {
         info!("Releasing resource allocation: {}", allocation_id);
 
         // Release actual system resources
@@ -395,7 +392,7 @@ impl RealHardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn detect_system_capabilities(&self) -> Result<SystemCapabilities>  {
+    pub async fn detect_system_capabilities(&self) -> Result<SystemCapabilities> {
         // Detect real system capabilities
         let cpu_info = self.detect_cpu_info()?;
         let memory_info = self.detect_memory_info()?;
@@ -483,8 +480,7 @@ impl RealHardwareTuningHandler {
 /// **GET HARDWARE CAPABILITIES HANDLER**
 ///
 /// Retrieve system hardware capabilities and specifications.
-pub fn get_hardware_capabilities() -> std::result::Result<Json<SystemCapabilities>, StatusCode>
-{
+pub fn get_hardware_capabilities() -> std::result::Result<Json<SystemCapabilities>, StatusCode> {
     let capabilities = SystemCapabilities {
         cpu_cores: 16,
         cpu_model: "Intel Xeon E5-2680 v4".to_string(),
@@ -516,8 +512,7 @@ pub fn get_system_profile() -> std::result::Result<Json<SystemProfile>, StatusCo
 /// **OPTIMIZE HARDWARE PERFORMANCE HANDLER**
 ///
 /// Apply hardware performance optimizations based on current workload.
-pub fn optimize_hardware_performance() -> std::result::Result<Json<TuningResult>, StatusCode>
-{
+pub fn optimize_hardware_performance() -> std::result::Result<Json<TuningResult>, StatusCode> {
     let before_metrics = LiveHardwareMetrics {
         cpu_usage: 45.0,
         memory_usage: 60.0,

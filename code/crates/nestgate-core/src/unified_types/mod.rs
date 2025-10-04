@@ -1,7 +1,7 @@
 pub mod access_patterns;
 pub mod cache_config;
 pub mod error_types;
-pub mod network_config;
+// pub mod network_config; // Module file removed - NetworkConfig defined inline below
 pub mod retry_config;
 pub mod service_config;
 pub mod service_metadata;
@@ -19,10 +19,10 @@ pub use error_types::{
     UnifiedErrorSeverity, UnifiedErrorStatistics, UnifiedErrorType, UnifiedRequestContext,
     UnifiedSystemContext, UnifiedUserContext,
 };
-pub use network_config::{
-    LoadBalanceHealthCheck, NetworkLoadBalanceConfig, NetworkProxyConfig, NetworkQosConfig,
-    NetworkRateLimitConfig, NetworkTlsConfig, UnifiedNetworkConfig,
-};
+// pub use network_config::{
+//     LoadBalanceHealthCheck, NetworkLoadBalanceConfig, NetworkProxyConfig, NetworkQosConfig,
+//     NetworkRateLimitConfig, NetworkTlsConfig, UnifiedNetworkConfig,
+// }; // Module removed - use canonical_master network config instead
 pub use retry_config::UnifiedRetryConfig;
 pub use service_metadata::{
     CommunicationProtocol, ContactInfo, EndpointType, HealthState, ResourceRequirements,
@@ -59,6 +59,11 @@ pub enum UnifiedConfigSource {
 }
 
 // Network configuration for backward compatibility
+/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
+#[deprecated(
+    since = "0.9.0",
+    note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkConfig {
     pub host: String,
@@ -68,7 +73,7 @@ pub struct NetworkConfig {
     pub max_connections: usize,
 }
 // Helper function for response verification
-pub const fn verify_response(response: &serde_json::Value) -> Result<bool, crate::NestGateError> {
+pub fn verify_response(response: &serde_json::Value) -> Result<bool, crate::NestGateError> {
     match response.get("success") {
         Some(serde_json::Value::Bool(success)) => Ok(*success),
         _ => Ok(false),
@@ -433,7 +438,7 @@ impl Default for UnifiedCacheConfig {
 impl UnifiedCacheConfig {
     /// Development cache configuration with debugging enabled
     #[must_use]
-    pub const fn development() -> Self {
+    pub fn development() -> Self {
         Self {
             enabled: true,
             max_size: 100,
@@ -461,7 +466,7 @@ impl UnifiedCacheConfig {
 
     /// High performance cache configuration for production
     #[must_use]
-    pub const fn high_performance() -> Self {
+    pub fn high_performance() -> Self {
         Self {
             enabled: true,
             max_size: 10000,
@@ -651,7 +656,7 @@ impl Default for UnifiedInstallerConfig {
 impl UnifiedConfig {
     // PEDANTIC: Implementation methods
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 }

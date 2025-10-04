@@ -25,11 +25,11 @@ impl SnapshotAnalytics {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn analyze_snapshots(
+    pub fn analyze_snapshots(
         dataset: &str,
         snapshots: &[String],
         retention_policy: &RetentionPolicy,
-    ) -> Result<Self>  {
+    ) -> Result<Self> {
         debug!("Analyzing snapshots for dataset: {}", dataset);
 
         let snapshot_count = snapshots.len() as u64;

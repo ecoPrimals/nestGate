@@ -37,7 +37,7 @@ pub struct PerformanceDashboard {
 }
 impl PerformanceDashboard {
     /// Create a new performance dashboard
-    pub const fn new(config: DashboardConfig) -> Self { let (tx, _rx) = broadcast::channel(1000);
+    pub fn new(config: DashboardConfig) -> Self { let (tx, _rx) = broadcast::channel(1000);
 
         Self {
             metrics_collector: Arc::new(RealTimeMetricsCollector::new()),

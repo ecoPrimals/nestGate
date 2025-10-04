@@ -166,7 +166,7 @@ impl StoragePool {
 
     /// Check if pool is healthy
     #[must_use]
-    pub const fn is_healthy(&self) -> bool {
+    pub fn is_healthy(&self) -> bool {
         matches!(self.health, PoolHealth::Online)
     }
 
@@ -176,7 +176,7 @@ impl StoragePool {
         if self.total_size == 0 {
             0.0
         } else {
-            (f64::from(self.used_size) / f64::from(self.total_size)) * 100.0
+            (self.used_size as f64 / self.total_size as f64) * 100.0
         }
     }
 
@@ -192,7 +192,7 @@ impl StoragePool {
 impl StorageQuota {
     /// Create a new storage quota
     #[must_use]
-    pub const fn new(_path: String) -> Self {
+    pub fn new(_path: String) -> Self {
         Self {
             id: Uuid::new_v4().to_string(),
             soft_limit: None,
@@ -205,7 +205,7 @@ impl StorageQuota {
 
     /// Check if quota is exceeded
     #[must_use]
-    pub const fn is_exceeded(&self) -> bool {
+    pub fn is_exceeded(&self) -> bool {
         if let Some(hard_limit) = self.hard_limit {
             self.current_usage >= hard_limit
         } else {
@@ -215,7 +215,7 @@ impl StorageQuota {
 
     /// Check if soft limit is exceeded
     #[must_use]
-    pub const fn is_soft_limit_exceeded(&self) -> bool {
+    pub fn is_soft_limit_exceeded(&self) -> bool {
         if let Some(soft_limit) = self.soft_limit {
             self.current_usage >= soft_limit
         } else {
@@ -225,12 +225,12 @@ impl StorageQuota {
 
     /// Get usage percentage
     #[must_use]
-    pub const fn usage_percentage(&self) -> Option<f64> {
+    pub fn usage_percentage(&self) -> Option<f64> {
         self.hard_limit.map(|limit| {
             if limit == 0 {
                 0.0
             } else {
-                (f64::from(current_usage) / f64::from(limit)) * 100.0
+                (self.current_usage as f64 / limit as f64) * 100.0
             }
         })
     }
@@ -241,7 +241,7 @@ impl StorageQuota {
 impl StorageOperationResult {
     /// Create a successful operation result
     #[must_use]
-    pub const fn success(operation_type: StorageOperationType, bytes_processed: Option<u64>) -> Self {
+    pub fn success(operation_type: StorageOperationType, bytes_processed: Option<u64>) -> Self {
         Self {
             operation_id: Uuid::new_v4(),
             operation_type,
@@ -254,7 +254,7 @@ impl StorageOperationResult {
 
     /// Create a failed operation result
     #[must_use]
-    pub const fn failure(operation_type: StorageOperationType, error: String) -> Self {
+    pub fn failure(operation_type: StorageOperationType, error: String) -> Self {
         Self {
             operation_id: Uuid::new_v4(),
             operation_type,

@@ -33,7 +33,7 @@ impl RateLimiter {
     }
 
     /// Check if IP is whitelisted
-    pub const fn is_whitelisted(&self, ip: IpAddr) -> bool {
+    pub fn is_whitelisted(&self, ip: IpAddr) -> bool {
         self.config.whitelist.contains(&ip)
     }
 

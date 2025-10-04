@@ -83,7 +83,7 @@ where
     V: Clone + Send + Sync + 'static,
 {
     /// Create new cache with compile-time configuration
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             data: Arc::new(RwLock::new(HashMap::with_capacity(MAX_SIZE))),
             _phantom: PhantomData,
@@ -91,12 +91,12 @@ where
     }
 
     /// Get max size at compile-time
-    pub const fn max_size() -> usize {
+    pub fn max_size() -> usize {
         MAX_SIZE
     }
 
     /// Get TTL at compile-time
-    pub const fn ttl() -> Duration {
+    pub fn ttl() -> Duration {
         Duration::from_secs(TTL_SECONDS)
     }
 
@@ -227,12 +227,12 @@ where
     }
 
     /// Get max files at compile-time
-    pub const fn max_files() -> usize {
+    pub fn max_files() -> usize {
         MAX_FILES
     }
 
     /// Get TTL at compile-time
-    pub const fn ttl() -> Duration {
+    pub fn ttl() -> Duration {
         Duration::from_secs(TTL_SECONDS)
     }
 }
@@ -333,7 +333,7 @@ where
     Cold: ZeroCostCacheProvider<String, Vec<u8>>,
 {
     /// Create new multi-tier cache with zero runtime cost
-    pub const fn new(hot_tier: Hot, warm_tier: Warm, cold_tier: Cold) -> Self {
+    pub fn new(hot_tier: Hot, warm_tier: Warm, cold_tier: Cold) -> Self {
         Self {
             hot_tier,
             warm_tier,
@@ -447,7 +447,7 @@ impl CacheMigrationGuide {
     }
 
     /// Expected performance improvements
-    pub const fn expected_improvements() -> (f64, f64, f64) {
+    pub fn expected_improvements() -> (f64, f64, f64) {
         (
             60.0, // Performance gain %
             40.0, // Memory reduction %

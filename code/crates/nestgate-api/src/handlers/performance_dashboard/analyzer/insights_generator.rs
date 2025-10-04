@@ -78,7 +78,7 @@ impl InsightsGenerator {
         }
         
         // Memory insights
-        let memory_usage_percent = (system_resources.f64::from(memory_used_gb) / system_resources.f64::from(memory_total_gb)) * 100.0;
+        let memory_usage_percent = (system_resources.memory_used_gb as f64 / system_resources.memory_total_gb as f64) * 100.0;
         if memory_usage_percent > 85.0 {
             insights.push(PerformanceInsight {
                 title: "High Memory Utilization".to_string(),
@@ -92,7 +92,7 @@ impl InsightsGenerator {
         }
         
         // Load average insights
-        let load_per_core = system_resources.load_average[0] / system_resources.f64::from(cpu_cores);
+        let load_per_core = system_resources.load_average[0] / system_resources.cpu_cores as f64;
         if load_per_core > 1.5 {
             insights.push(PerformanceInsight {
                 title: "High System Load".to_string(),
@@ -384,7 +384,7 @@ impl InsightsGenerator {
         }
         
         // Memory pressure + Cache performance correlation
-        let memory_usage_percent = (system_resources.f64::from(memory_used_gb) / system_resources.f64::from(memory_total_gb)) * 100.0;
+        let memory_usage_percent = (system_resources.memory_used_gb as f64 / system_resources.memory_total_gb as f64) * 100.0;
         if memory_usage_percent > 85.0 && system_resources.arc_stats.hit_ratio < 80.0 {
             insights.push(PerformanceInsight {
                 title: "Memory Pressure Affecting Cache".to_string(),

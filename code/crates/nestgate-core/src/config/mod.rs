@@ -45,7 +45,7 @@ pub use canonical_master::{
 
 // Create a canonical configuration with default settings
 #[must_use]
-pub const fn create_default_config() -> canonical_master::NestGateCanonicalConfig {
+pub fn create_default_config() -> canonical_master::NestGateCanonicalConfig {
     canonical_master::NestGateCanonicalConfig::default()
 }
 // Create a production-ready canonical configuration

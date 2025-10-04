@@ -26,12 +26,12 @@ pub struct Session {
 }
 impl Session {
     /// Check if session is expired
-    pub const fn is_expired(&self) -> bool {
+    pub fn is_expired(&self) -> bool {
         SystemTime::now() > self.expires_at
     }
 
     /// Check if session is idle (based on last activity)
-    pub const fn is_idle(&self, idle_timeout: Duration) -> bool {
+    pub fn is_idle(&self, idle_timeout: Duration) -> bool {
         SystemTime::now() > self.last_activity + idle_timeout
     }
 
@@ -109,7 +109,7 @@ impl TokenManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_token(&self, tokenvalue: &str) -> Result<&AuthToken>  {
+        pub fn validate_token(&self, tokenvalue: &str) -> Result<&AuthToken>  {
         let token = self
             .tokens
             .get(tokenvalue)
@@ -183,7 +183,7 @@ impl TokenManager {
     }
 
     /// List active tokens for a user
-    pub const fn list_user_tokens(&self, user_id: &str) -> Vec<&AuthToken> {
+    pub fn list_user_tokens(&self, user_id: &str) -> Vec<&AuthToken> {
         self.tokens
             .values()
             .filter(|token| token.principal == user_id && !token.is_expired())
@@ -279,7 +279,7 @@ impl SessionManager {
     }
 
     /// Get a session by ID
-    pub const fn get_session(&self, session_id: &str) -> Option<&Session> {
+    pub fn get_session(&self, session_id: &str) -> Option<&Session> {
         self.sessions.get(session_id)
     }
 
@@ -354,7 +354,7 @@ impl SessionManager {
     }
 
     /// Get all sessions for a user
-    pub const fn get_user_sessions(&self, user_id: &str) -> Vec<&Session> {
+    pub fn get_user_sessions(&self, user_id: &str) -> Vec<&Session> {
         self.user_sessions
             .get(user_id)
             .map(|session_ids| {
@@ -423,7 +423,7 @@ impl Default for TokenValidationRules {
 
 impl TokenValidator {
     /// Create new token validator
-    pub const fn new(rules: TokenValidationRules) -> Self { Self {
+    pub fn new(rules: TokenValidationRules) -> Self { Self {
             validation_rules: rules,
          }
 
@@ -435,7 +435,7 @@ impl TokenValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_format(&self, token: &str) -> Result<()>  {
+        pub fn validate_format(&self, token: &str) -> Result<()>  {
         if token.len() < self.validation_rules.min_token_length {
             return Err(NestGateError::mcp_error(
                 "Token too short",

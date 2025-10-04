@@ -27,7 +27,7 @@ where
     Backend: CanonicalStorageBackend + Send + Sync + 'static + Clone,
 {
     /// Create new RAID-Z manager with zero-cost backends
-    pub const fn new(backends: [Backend; MAX_BACKENDS]) -> Self {
+    pub fn new(backends: [Backend; MAX_BACKENDS]) -> Self {
         Self {
             backends,
             active_backends: MAX_BACKENDS,
@@ -75,7 +75,7 @@ where
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn read_with_reconstruction(&self, _block_id: &str) -> Result<Vec<u8>>   {
+        pub fn read_with_reconstruction(&self, _block_id: &str) -> Result<Vec<u8>>   {
         Ok(vec![])
     }
 }

@@ -64,7 +64,7 @@ pub struct CircuitBreaker {
 
 impl CircuitBreaker {
     /// Create a new circuit breaker
-    pub const fn new(service_name: String, config: CircuitBreakerConfig) -> Self {
+    pub fn new(service_name: String, config: CircuitBreakerConfig) -> Self {
         Self {
             config,
             state: Arc::new(RwLock::new(CircuitState::Closed)),
@@ -84,11 +84,11 @@ impl CircuitBreaker {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn execute<F, Fut, T>(&self, operation: F) -> Result<T, NestGateError>
+    pub async fn execute<F, Fut, T>(&self, operation: F) -> Result<T, NestGateError>
     where
         F: FnOnce() -> Fut,
         Fut: std::future::Future<Output = Result<T, NestGateError>>,
-     {
+    {
         // Check if circuit allows request
         if !self.can_execute().await {
             return Err(NestGateError::Internal(Box::new(

@@ -125,7 +125,7 @@ impl Default for DatasetPerformanceStats {
 
 impl TierMetrics {
     /// Create default tier metrics for a specific tier
-    pub const fn default_for_tier(tier: StorageTier) -> Self {
+    pub fn default_for_tier(tier: StorageTier) -> Self {
         match tier {
             StorageTier::Hot => Self {
                 tier,
@@ -233,7 +233,7 @@ impl TierMetrics {
 
 impl CurrentPerformanceMetrics {
     /// Get tier metrics for a specific tier
-    pub const fn get_tier_metrics(&self, tier: StorageTier) -> Option<&TierMetrics> {
+    pub fn get_tier_metrics(&self, tier: StorageTier) -> Option<&TierMetrics> {
         self.tier_metrics.get(&tier)
     }
 }

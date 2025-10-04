@@ -23,7 +23,7 @@ pub type InstallResult<T> = std::result::Result<T, NestGateError>;
 /// Installer-specific error utilities
 impl InstallerError {
     /// Create configuration error using unified system
-    pub const fn configuration(message: impl Into<String>) -> NestGateError {
+    pub fn configuration(message: impl Into<String>) -> NestGateError {
         NestGateError::Configuration(Box::new(ConfigurationErrorDetails {
             field: "field".to_string(),
             message: message.into(),
@@ -34,7 +34,7 @@ impl InstallerError {
     }
 
     /// Create installation failure error using unified system
-    pub const fn installation_error(message: impl Into<String>) -> NestGateError {
+    pub fn installation_error(message: impl Into<String>) -> NestGateError {
         NestGateError::Internal(Box::new(InternalErrorDetails {
             message: message.into(),
             component: "nestgate-installer".to_string(),
@@ -45,7 +45,7 @@ impl InstallerError {
     }
 
     /// Create system requirement error using unified system
-    pub const fn system_requirement(message: impl Into<String>) -> NestGateError {
+    pub fn system_requirement(message: impl Into<String>) -> NestGateError {
         NestGateError::System(Box::new(SystemErrorDetails {
             message: message.into(),
             component: "system-requirements".to_string(),
@@ -55,7 +55,7 @@ impl InstallerError {
     }
 
     /// Create permission error using unified system
-    pub const fn permission_error(message: impl Into<String>) -> NestGateError {
+    pub fn permission_error(message: impl Into<String>) -> NestGateError {
         NestGateError::System(Box::new(SystemErrorDetails {
             message: message.into(),
             component: "permissions".to_string(),
@@ -71,17 +71,17 @@ impl InstallerError {
 // Use helper functions instead for error conversion.
 
 /// Create an installation error
-pub const fn installation_error(message: impl Into<String>) -> NestGateError {
+pub fn installation_error(message: impl Into<String>) -> NestGateError {
     NestGateError::internal_error(
                     format!("Installation error: {}", message.into(),
         "installer",
     )
 }
 /// Create an installation error from an IO error
-pub const fn from_io_error(error: std::io::Error, _b_operation: impl Into<String>) -> NestGateError {
+pub fn from_io_error(error: std::io::Error, _b_operation: impl Into<String>) -> NestGateError {
     NestGateError::internal_error(format!("IO error: {error}"), "installer")
 }
 /// Create a validation error
-pub const fn validation(_message: impl Into<String>) -> NestGateError {
+pub fn validation(_message: impl Into<String>) -> NestGateError {
     NestGateError::validation("Validation error occurred during installation")
 }

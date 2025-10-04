@@ -81,7 +81,7 @@ impl ServiceTestFactory {
     }
     
     /// Create a service registry for testing
-    pub const fn create_service_registry() -> TestServiceRegistry {
+    pub fn create_service_registry() -> TestServiceRegistry {
         TestServiceRegistry::new()
     }
     
@@ -185,7 +185,7 @@ impl StorageTestFactory {
 pub struct ConfigTestFactory;
 impl ConfigTestFactory {
     /// Create a test configuration for specific scenario
-    pub const fn create_for_scenario(scenario: TestScenario) -> NestGateCanonicalConfig {
+    pub fn create_for_scenario(scenario: TestScenario) -> NestGateCanonicalConfig {
         match scenario {
             TestScenario::Unit => Self::create_unit_test_config(),
             TestScenario::Integration => Self::create_integration_test_config(),
@@ -248,7 +248,7 @@ impl ConfigTestFactory {
     }
     
     /// Create default test configuration
-    pub const fn create_default_config() -> NestGateCanonicalConfig {
+    pub fn create_default_config() -> NestGateCanonicalConfig {
         Self::create_unit_test_config()
     }
 }
@@ -275,12 +275,12 @@ impl TestDataFactory {
     }
     
     /// Generate test UUIDs
-    pub const fn generate_uuids(count: usize) -> Vec<String> {
+    pub fn generate_uuids(count: usize) -> Vec<String> {
         (0..count).map(|_| Uuid::new_v4().to_string()).collect()
     }
     
     /// Generate test timestamps
-    pub const fn generate_timestamps(count: usize) -> Vec<SystemTime> {
+    pub fn generate_timestamps(count: usize) -> Vec<SystemTime> {
         let base = SystemTime::now();
         (0..count)
             .map(|i| base + Duration::from_secs(i as u64))
@@ -301,7 +301,7 @@ pub struct MockTestService {
     config: UnifiedServiceConfig,
 }
 impl MockTestService {
-    pub const fn new(service_type: UnifiedServiceType, behavior: ServiceBehavior) -> Self {
+    pub fn new(service_type: UnifiedServiceType, behavior: ServiceBehavior) -> Self {
         Self {
             service_type,
             behavior,
@@ -404,11 +404,11 @@ impl TestServiceRegistry {
         self.services.insert(name, service);
     }
     
-    pub const fn get_service(&self, name: &str) -> Option<&Arc<dyn UniversalService<Config = UnifiedServiceConfig, Health = ServiceHealth>>> {
+    pub fn get_service(&self, name: &str) -> Option<&Arc<dyn UniversalService<Config = UnifiedServiceConfig, Health = ServiceHealth>>> {
         self.services.get(name)
     }
     
-    pub const fn list_services(&self) -> Vec<&String> {
+    pub fn list_services(&self) -> Vec<&String> {
         self.services.keys().collect()
     }
 }
@@ -558,7 +558,7 @@ pub struct MockStorageBackend {
     storage_type: crate::universal_storage::UniversalStorageType,
 }
 impl MockStorageBackend {
-    pub const fn new(storage_type: crate::universal_storage::UniversalStorageType) -> Self {
+    pub fn new(storage_type: crate::universal_storage::UniversalStorageType) -> Self {
         Self { storage_type }
     }
 }

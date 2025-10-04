@@ -70,7 +70,7 @@ pub struct SecurityRuntimeConfig {
 }
 impl RuntimeConfig {
     /// Create configuration from environment with intelligent defaults
-    pub const fn from_environment() -> Self {
+    pub fn from_environment() -> Self {
         let network = NetworkSelf::from_environment();
         let service = ServiceSelf::from_environment();
         let storage = StorageSelf::from_environment();
@@ -85,7 +85,7 @@ impl RuntimeConfig {
     }
 
     /// Get the primary API socket address
-    pub const fn api_socket_addr(&self) -> SocketAddr {
+    pub fn api_socket_addr(&self) -> SocketAddr {
         let addr = if self.security.localhost_only {
             format!("127.0.0.1:{self.network.api_port}")
         } else {
@@ -99,7 +99,7 @@ impl RuntimeConfig {
     }
 
     /// Get service endpoint URL
-    pub const fn service_endpoint(&self, service_type: &str) -> String {
+    pub fn service_endpoint(&self, service_type: &str) -> String {
         if let Some(endpoint) = self.network.service_endpoints.get(service_type) {
             endpoint.clone()
         } else {
@@ -134,12 +134,12 @@ impl RuntimeConfig {
     }
 
     /// Check if running in production mode
-    pub const fn is_production(&self) -> bool {
+    pub fn is_production(&self) -> bool {
         matches!(self.service.environment.as_str(), "production" | "prod")
     }
 
     /// Check if running in development mode
-    pub const fn is_development(&self) -> bool {
+    pub fn is_development(&self) -> bool {
         matches!(self.service.environment.as_str(), "development" | "dev")
     }
 }
@@ -291,15 +291,15 @@ pub fn init_runtime_config() {
     RUNTIME_CONFIG.get_or_init(RuntimeConfig::from_environment);
 }
 /// Get the global runtime configuration
-pub const fn get_runtime_config() -> &'static RuntimeConfig {
+pub fn get_runtime_config() -> &'static RuntimeConfig {
     RUNTIME_CONFIG.get_or_init(RuntimeConfig::from_environment)
 }
 /// Get a dynamic port for a service (eliminates hardcoding)
-pub const fn get_service_port(service_type: &str) -> u16 {
+pub fn get_service_port(service_type: &str) -> u16 {
     get_runtime_config().dynamic_port_for_service(service_type)
 }
 /// Get a service endpoint URL (eliminates hardcoded URLs)
-pub const fn get_service_endpoint(service_type: &str) -> String {
+pub fn get_service_endpoint(service_type: &str) -> String {
     get_runtime_config().service_endpoint(service_type)
 }
 #[cfg(test)]

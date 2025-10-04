@@ -27,7 +27,7 @@ pub struct AutoConfigurator {
 impl AutoConfigurator {
     /// Create new auto-configurator with detected storage
     #[must_use]
-    pub const fn new(available_storage: Vec<DetectedStorage>) -> Self {
+    pub fn new(available_storage: Vec<DetectedStorage>) -> Self {
         Self {
             config: ConfiguratorSettings::default(),
             available_storage,
@@ -36,7 +36,7 @@ impl AutoConfigurator {
 
     /// Create configurator with custom settings
     #[must_use]
-    pub const fn with_settings(
+    pub fn with_settings(
         available_storage: Vec<DetectedStorage>,
         config: ConfiguratorSettings,
     ) -> Self {
@@ -48,7 +48,7 @@ impl AutoConfigurator {
 
     /// Get configuration settings
     #[must_use]
-    pub const fn config(&self) -> &ConfiguratorSettings {
+    pub fn config(&self) -> &ConfiguratorSettings {
         &self.config
     }
 
@@ -59,7 +59,7 @@ impl AutoConfigurator {
 
     /// Check if auto-tuning is enabled
     #[must_use]
-    pub const fn is_auto_tuning_enabled(&self) -> bool {
+    pub fn is_auto_tuning_enabled(&self) -> bool {
         self.config.enable_auto_tuning
     }
 
@@ -72,15 +72,15 @@ impl AutoConfigurator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        /// Function description
+    /// Function description
     ///
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub async fn create_optimal_config(
+    pub async fn create_optimal_config(
         &self,
         requirements: StorageRequirements,
-    ) -> Result<OptimalStorageConfig>   {
+    ) -> Result<OptimalStorageConfig> {
         // 1. Analyze available storage capabilities
         let storage_analysis = self.analyze_storage_landscape().await?;
 
@@ -146,7 +146,7 @@ impl AutoConfigurator {
             .iter()
             .map(|s| {
                 s.cost_profile.storage_cost_per_gb_month
-                    * (available_space as f64 / 1_000_000_000.0)
+                    * (s.available_space as f64 / 1_000_000_000.0)
             })
             .sum();
 
@@ -210,7 +210,7 @@ impl AutoConfigurator {
                 .iter()
                 .filter(|s| {
                     let monthly_cost = s.cost_profile.storage_cost_per_gb_month
-                        * (available_space as f64 / 1_000_000_000.0);
+                        * (s.available_space as f64 / 1_000_000_000.0);
                     monthly_cost <= max_cost
                 })
                 .cloned()

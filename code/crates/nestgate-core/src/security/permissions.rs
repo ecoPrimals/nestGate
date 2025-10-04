@@ -116,7 +116,7 @@ impl PermissionManager {
     }
 
     /// Check if a role has a permission
-    pub const fn role_has_permission(&self, role: Role, permission: &str) -> bool {
+    pub fn role_has_permission(&self, role: Role, permission: &str) -> bool {
         // Admin role has all permissions
         if role == Role::Admin {
             return true;
@@ -131,7 +131,7 @@ impl PermissionManager {
     }
 
     /// Check if a user has a permission
-    pub const fn user_has_permission(&self, user_id: &str, role: Role, permission: &str) -> bool {
+    pub fn user_has_permission(&self, user_id: &str, role: Role, permission: &str) -> bool {
         // First check role permissions
         if self.role_has_permission(role, permission) {
             return true;

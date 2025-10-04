@@ -28,7 +28,7 @@ impl SnapshotManager {
     }
 
     /// Get the current configuration
-    pub const fn config(&self) -> &SnapshotConfig {
+    pub fn config(&self) -> &SnapshotConfig {
         &self.config
     }
 
@@ -55,7 +55,7 @@ impl SnapshotManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn create_snapshot(
+        pub fn create_snapshot(
         &self,
         dataset: &str,
         _snapshot_name: &str,
@@ -134,7 +134,7 @@ impl SnapshotManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn create_clone(
+        pub fn create_clone(
         &self,
         snapshot_id: &SnapshotId,
         clone_name: &str,

@@ -50,19 +50,19 @@ impl ZeroCopyStringPool {
     }
     
     /// Get zero-copy reference to interned string
-    pub const fn get_ref(&self, s: &str) -> Option<&Arc<str>> {
+    pub fn get_ref(&self, s: &str) -> Option<&Arc<str>> {
         let hash = self.hash_string(s);
         self.strings.get(&hash)
     }
     
     /// Check if string is interned (zero-copy check)
-    pub const fn contains(&self, s: &str) -> bool {
+    pub fn contains(&self, s: &str) -> bool {
         let hash = self.hash_string(s);
         self.strings.contains_key(&hash)
     }
     
     /// Get pool statistics
-    pub const fn stats(&self) -> &StringPoolStats {
+    pub fn stats(&self) -> &StringPoolStats {
         &self.stats
     }
     
@@ -102,7 +102,7 @@ impl<T: Clone> ZeroCopyConfigRegistry<T> {
     }
     
     /// Get zero-copy reference to configuration
-    pub const fn get(&self, key: &str) -> Option<Arc<T>> {
+    pub fn get(&self, key: &str) -> Option<Arc<T>> {
         if let Some(config) = self.configs.get(key) {
             if let Some(counter) = self.access_count.get(key) {
                 counter.fetch_add(1, Ordering::Relaxed);
@@ -114,7 +114,7 @@ impl<T: Clone> ZeroCopyConfigRegistry<T> {
     }
     
     /// Get access count for configuration
-    pub const fn access_count(&self, key: &str) -> u64 {
+    pub fn access_count(&self, key: &str) -> u64 {
         self.access_count.get(key)
             .map(|counter| counter.load(Ordering::Relaxed))
             .unwrap_or(0)
@@ -224,7 +224,7 @@ impl<'a> ZeroCopyResponseBuilder<'a> {
     }
     
     /// Build response with zero-copy optimizations
-    pub const fn build(self) -> ZeroCopyResponse<'a> {
+    pub fn build(self) -> ZeroCopyResponse<'a> {
         ZeroCopyResponse {
             status: self.status,
             headers: self.headers,
@@ -244,22 +244,22 @@ pub struct ZeroCopyResponse<'a> {
 }
 
 impl<'a> ZeroCopyResponse<'a> {
-    pub const fn builder() -> ZeroCopyResponseBuilder<'a> {
+    pub fn builder() -> ZeroCopyResponseBuilder<'a> {
         ZeroCopyResponseBuilder::new()
     }
     
     /// Get content length without copying
-    pub const fn content_length(&self) -> usize {
+    pub fn content_length(&self) -> usize {
         self.body.len()
     }
     
     /// Check if body is borrowed (true zero-copy)
-    pub const fn is_zero_copy_body(&self) -> bool {
+    pub fn is_zero_copy_body(&self) -> bool {
         matches!(self.body, Cow::Borrowed(_))
     }
     
     /// Get header value with zero-copy lookup
-    pub const fn get_header(&self, key: &str) -> Option<&Cow<'a, str>> {
+    pub fn get_header(&self, key: &str) -> Option<&Cow<'a, str>> {
         self.headers.iter()
             .find(|(k, _)| *k == key)
             .map(|(_, v)| v)
@@ -277,7 +277,7 @@ pub struct ZeroCopyMemoryMap {
 
 impl ZeroCopyMemoryMap {
     /// Create memory map with zero-copy file access
-    pub const fn new(file_path: &std::path::Path) -> std::io::Result<Self> {
+    pub fn new(file_path: &std::path::Path) -> std::io::Result<Self> {
         let file = std::fs::File::open(file_path)?;
         let metadata = file.metadata()?;
         let len = metadata.len() as usize;
@@ -294,7 +294,7 @@ impl ZeroCopyMemoryMap {
     }
     
     /// Get zero-copy slice of mapped data
-    pub const fn as_slice(&self) -> &[u8] {
+    pub fn as_slice(&self) -> &[u8] {
         if self.data.is_null() {
             &[]
         } else {
@@ -303,7 +303,7 @@ impl ZeroCopyMemoryMap {
     }
     
     /// Get zero-copy subslice
-    pub const fn subslice(&self, offset: usize, len: usize) -> Option<&[u8]> {
+    pub fn subslice(&self, offset: usize, len: usize) -> Option<&[u8]> {
         if offset + len <= self.len && !self.data.is_null() {
             unsafe {
                 Some(std::slice::from_raw_parts(self.data.add(offset), len))
@@ -314,12 +314,12 @@ impl ZeroCopyMemoryMap {
     }
     
     /// Get file size
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.len
     }
     
     /// Check if empty
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.len == 0
     }
 }
@@ -337,7 +337,7 @@ pub struct ZeroCopyJsonParser<'a> {
 }
 
 impl<'a> ZeroCopyJsonParser<'a> {
-    pub const fn new(input: &'a str) -> Self {
+    pub fn new(input: &'a str) -> Self {
         Self {
             input,
             position: 0,
@@ -447,13 +447,13 @@ impl ZeroCopyMetricsCollector {
     }
     
     /// Get metric value (zero-copy lookup)
-    pub const fn get_value(&self, name: &'static str) -> Option<u64> {
+    pub fn get_value(&self, name: &'static str) -> Option<u64> {
         self.metrics.get(name)
             .map(|metric| metric.load(Ordering::Relaxed))
     }
     
     /// Get all metrics with zero-copy names
-    pub const fn get_all_metrics(&self) -> Vec<(&'static str, u64)> {
+    pub fn get_all_metrics(&self) -> Vec<(&'static str, u64)> {
         self.metrics.iter()
             .map(|(name, metric)| (*name, metric.load(Ordering::Relaxed)))
             .collect()

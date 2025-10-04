@@ -25,7 +25,7 @@ pub struct CacheAlignedCounter {
 }
 impl CacheAlignedCounter {
     /// Create new cache-aligned counter
-    pub const fn new(initial: u64) -> Self {
+    pub fn new(initial: u64) -> Self {
         Self {
             value: AtomicU64::new(initial),
             _padding: [0; 64 - size_of::<AtomicU64>()],
@@ -34,19 +34,19 @@ impl CacheAlignedCounter {
     
     /// Increment counter with relaxed ordering for maximum performance
     #[inline(always)]
-    pub const fn increment(&self) -> u64 {
+    pub fn increment(&self) -> u64 {
         self.value.fetch_add(1, Ordering::Relaxed)
     }
     
     /// Get current value with acquire ordering
     #[inline(always)]
-    pub const fn get(&self) -> u64 {
+    pub fn get(&self) -> u64 {
         self.value.load(Ordering::Acquire)
     }
     
     /// Add value with specified ordering
     #[inline(always)]
-    pub const fn add(&self, val: u64, ordering: Ordering) -> u64 {
+    pub fn add(&self, val: u64, ordering: Ordering) -> u64 {
         self.value.fetch_add(val, ordering)
     }
     
@@ -57,7 +57,7 @@ impl CacheAlignedCounter {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn compare_exchange(&self, current: u64, new: u64) -> Result<u64, u64>  {
+        pub fn compare_exchange(&self, current: u64, new: u64) -> Result<u64, u64>  {
         self.value.compare_exchange(current, new, Ordering::AcqRel, Ordering::Acquire)
     }
 }
@@ -77,7 +77,7 @@ where
     [(); SIZE.is_power_of_two() as usize]: ,
 {
     /// Create new lock-free ring buffer
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             buffer: unsafe { std::mem::MaybeUninit::uninit().assume_init() },
             head: AtomicUsize::new(0),
@@ -87,7 +87,7 @@ where
     
     /// Push item to buffer (returns false if full)
     #[inline(always)]
-    pub const fn push(&self, item: T) -> bool {
+    pub fn push(&self, item: T) -> bool {
         let current_head = self.head.load(Ordering::Relaxed);
         let next_head = (current_head + 1) & (SIZE - 1); // Fast modulo for power of 2
         
@@ -105,7 +105,7 @@ where
     
     /// Pop item from buffer (returns None if empty)
     #[inline(always)]
-    pub const fn pop(&self) -> Option<T> {
+    pub fn pop(&self) -> Option<T> {
         let current_tail = self.tail.load(Ordering::Relaxed);
         
         if current_tail == self.head.load(Ordering::Acquire) {
@@ -121,7 +121,7 @@ where
     
     /// Get current buffer utilization
     #[inline(always)]
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         let head = self.head.load(Ordering::Relaxed);
         let tail = self.tail.load(Ordering::Relaxed);
         (head.wrapping_sub(tail)) & (SIZE - 1)
@@ -129,13 +129,13 @@ where
     
     /// Check if buffer is empty
     #[inline(always)]
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.head.load(Ordering::Relaxed) == self.tail.load(Ordering::Relaxed)
     }
     
     /// Check if buffer is full
     #[inline(always)]
-    pub const fn is_full(&self) -> bool {
+    pub fn is_full(&self) -> bool {
         let head = self.head.load(Ordering::Relaxed);
         let tail = self.tail.load(Ordering::Relaxed);
         ((head + 1) & (SIZE - 1)) == tail
@@ -148,7 +148,7 @@ pub struct SimdOperations;
 impl SimdOperations {
     /// Sum array of u32 values using SIMD when available
     #[inline(always)]
-    pub const fn sum_u32_slice(data: &[u32]) -> u64 {
+    pub fn sum_u32_slice(data: &[u32]) -> u64 {
         // Fallback to scalar implementation
         // In a real implementation, this would use SIMD intrinsics
         data.iter().map(|&x| x as u64).sum()
@@ -156,7 +156,7 @@ impl SimdOperations {
     
     /// Find maximum value in slice using SIMD
     #[inline(always)]
-    pub const fn max_u32_slice(data: &[u32]) -> Option<u32> {
+    pub fn max_u32_slice(data: &[u32]) -> Option<u32> {
         if data.is_empty() {
             return None;
         }
@@ -204,7 +204,7 @@ pub struct BranchOptimized;
 impl BranchOptimized {
     /// Likely branch hint for hot path optimization
     #[inline(always)]
-    pub const fn likely(condition: bool) -> bool {
+    pub fn likely(condition: bool) -> bool {
         #[cold]
         fn cold() {}
         
@@ -216,7 +216,7 @@ impl BranchOptimized {
     
     /// Unlikely branch hint for error path optimization
     #[inline(always)]
-    pub const fn unlikely(condition: bool) -> bool {
+    pub fn unlikely(condition: bool) -> bool {
         #[cold]
         fn cold() {}
         
@@ -286,7 +286,7 @@ where
     
     /// Allocate block from pool
     #[inline(always)]
-    pub const fn allocate(&self) -> Option<NonNull<u8>> {
+    pub fn allocate(&self) -> Option<NonNull<u8>> {
         loop {
             let current_free = self.free_list.load(Ordering::Acquire);
             
@@ -353,9 +353,9 @@ where
     }
     
     /// Get pool utilization statistics
-    pub const fn stats(&self) -> PoolStats {
+    pub fn stats(&self) -> PoolStats {
         let allocated = self.allocated_count.load(Ordering::Relaxed);
-        let utilization = (f64::from(allocated) / f64::from(POOL_SIZE)) * 100.0;
+        let utilization = (allocated as f64 / POOL_SIZE as f64) * 100.0;
         
         PoolStats {
             total_blocks: POOL_SIZE,
@@ -383,7 +383,7 @@ pub struct PerformanceProfiler {
 }
 impl PerformanceProfiler {
     /// Create new performance profiler
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         const INIT: CacheAlignedCounter = CacheAlignedCounter::new(0);
         Self {
             counters: [INIT; 16],
@@ -400,7 +400,7 @@ impl PerformanceProfiler {
     
     /// Get metric value
     #[inline(always)]
-    pub const fn get_metric(&self, metric_id: usize) -> Option<u64> {
+    pub fn get_metric(&self, metric_id: usize) -> Option<u64> {
         self.counters.get(metric_id).map(|c| c.get())
     }
     

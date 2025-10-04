@@ -14,18 +14,18 @@ pub struct CanonicalConfigBuilder {
 impl CanonicalConfigBuilder {
     /// Create a new builder with default configuration
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             config: NestGateCanonicalConfig::default(),
         }
     }
 
     /// Build the final configuration
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Returns an error if the configuration is invalid or missing required fields.
-    pub const fn build(self) -> Result<NestGateCanonicalConfig> {
+    pub fn build(self) -> Result<NestGateCanonicalConfig> {
         // Simple validation - just return the config
         // More complex validation can be added later
         Ok(self.config)
@@ -40,14 +40,14 @@ impl CanonicalConfigBuilder {
 
     /// Set the environment
     #[must_use]
-    pub const fn environment(mut self, env: DeploymentEnvironment) -> Self {
+    pub fn environment(mut self, env: DeploymentEnvironment) -> Self {
         self.config.system.environment = env;
         self
     }
 
     /// Set the API port
     #[must_use]
-    pub const fn api_port(self, _port: u16) -> Self {
+    pub fn api_port(self, _port: u16) -> Self {
         // Removed mut and prefixed parameter with underscore
         // Note: NetworkConfig structure needs to be updated for http_server field access
         // self.config.network.http_server.port = port; // Field not available in current structure
@@ -56,7 +56,7 @@ impl CanonicalConfigBuilder {
 
     /// Enable TLS
     #[must_use]
-    pub const fn enable_tls(self, _enabled: bool) -> Self {
+    pub fn enable_tls(self, _enabled: bool) -> Self {
         // Removed mut and prefixed parameter with underscore
         // Note: NetworkConfig structure needs to be updated for tls field access
         // self.config.network.tls // Field not available in current structure.enabled = enabled;
@@ -74,7 +74,7 @@ impl Default for CanonicalConfigBuilder {
 impl NestGateCanonicalConfig {
     /// Create a default configuration
     #[must_use]
-    pub const fn default_config() -> Self {
+    pub fn default_config() -> Self {
         Self::default()
     }
 }

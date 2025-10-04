@@ -43,18 +43,18 @@ pub struct UnifiedDynamicDiscoveryExtensions {
 impl UnifiedDynamicDiscoveryExtensions {
     /// Create a new unified discovery configuration with default settings
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
     /// Create a new unified discovery configuration with custom settings
     #[must_use]
-    pub const fn with_custom_settings() -> UnifiedDynamicDiscoveryExtensionsBuilder {
+    pub fn with_custom_settings() -> UnifiedDynamicDiscoveryExtensionsBuilder {
         UnifiedDynamicDiscoveryExtensionsBuilder::new()
     }
 
     /// Validate all discovery settings
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         // Validate each discovery type
         self.timeout.validate()?;
         self.network.validate()?;
@@ -81,7 +81,7 @@ pub struct UnifiedDynamicDiscoveryExtensionsBuilder {
 impl UnifiedDynamicDiscoveryExtensionsBuilder {
     /// Create a new builder
     #[must_use]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             timeout: None,
             network: None,
@@ -136,7 +136,7 @@ impl UnifiedDynamicDiscoveryExtensionsBuilder {
 
     /// Build the unified discovery configuration
     #[must_use]
-    pub const fn build(self) -> UnifiedDynamicDiscoveryExtensions {
+    pub fn build(self) -> UnifiedDynamicDiscoveryExtensions {
         UnifiedDynamicDiscoveryExtensions {
             timeout: self.timeout.unwrap_or_default(),
             network: self.network.unwrap_or_default(),

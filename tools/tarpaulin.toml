@@ -1,0 +1,29 @@
+[tool.tarpaulin.coverage]
+# Exclude patterns for files that shouldn't be included in coverage
+exclude = [
+    "*/tests/*",
+    "*/examples/*", 
+    "*/benches/*",
+    "*/target/*",
+    "*/build.rs",
+    "ecosystem-expansion/*",
+    "tools/*",
+    "templates/*",
+    "scripts/*",
+    "fuzz/*"
+]
+
+# Include only source code
+include = [
+    "code/crates/*/src/**/*.rs"
+]
+
+# Output format
+out = ["Html", "Lcov"]
+
+# Coverage thresholds
+fail-under = 70.0
+
+# Run options
+timeout = 300
+verbose = true 

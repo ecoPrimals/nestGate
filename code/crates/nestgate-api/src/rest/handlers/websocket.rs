@@ -294,7 +294,7 @@ fn generate_sample_log_entry(level_filter: &str) -> LogEntry {
         level: level.to_string(),
         message: _messages[(seed % _messages.len() as u64) as usize].to_string(),
         module: modules[((seed >> 8) % modules.len() as u64) as usize].to_string(),
-        thread: format!("worker-{((seed >> 16}") % 8) + 1),
+        thread: format!("worker-{}", ((seed >> 16) % 8) + 1),
     }
 }
 
@@ -338,7 +338,7 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
         "dataset_created" => (
             "New ZFS dataset created".to_string(),
             serde_json::json!({
-                "dataset_name": format!("tank/data_{((seed >> 8}") % 100)),
+                "dataset_name": format!("tank/data_{}", ((seed >> 8) % 100)),
                 "backend": "filesystem",
                 "compression": true
             }),
@@ -347,7 +347,7 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
             "Automatic snapshot created".to_string(),
             serde_json::json!({
                 "dataset": "tank/data",
-                "snapshot_name": format!("auto-{chrono::Utc::now(}").format("%Y%m%d-%H%M%S")),
+                "snapshot_name": format!("auto-{}", chrono::Utc::now().format("%Y%m%d-%H%M%S")),
                 "size_bytes": (seed % 1_000_000) + 1_000_000
             }),
         ),

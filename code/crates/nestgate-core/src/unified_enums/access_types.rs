@@ -26,22 +26,22 @@ impl Default for UnifiedAccessType {
 
 impl UnifiedAccessType {
     /// Check if this access type includes read permissions
-    pub const fn can_read(&self) -> bool {
+    pub fn can_read(&self) -> bool {
         matches!(self, Self::Read | Self::Write | Self::Admin | Self::Full)
     }
 
     /// Check if this access type includes write permissions
-    pub const fn can_write(&self) -> bool {
+    pub fn can_write(&self) -> bool {
         matches!(self, Self::Write | Self::Admin | Self::Full)
     }
 
     /// Check if this access type includes execute permissions
-    pub const fn can_execute(&self) -> bool {
+    pub fn can_execute(&self) -> bool {
         matches!(self, Self::Execute | Self::Admin | Self::Full)
     }
 
     /// Check if this access type includes admin permissions
-    pub const fn is_admin(&self) -> bool {
+    pub fn is_admin(&self) -> bool {
         matches!(self, Self::Admin | Self::Full)
     }
 }

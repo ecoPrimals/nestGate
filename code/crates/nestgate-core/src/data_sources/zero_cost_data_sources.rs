@@ -109,7 +109,7 @@ impl From<HttpDataError> for NestGateError {
 }
 
 impl HttpDataProvider {
-    pub const fn new(base_url: String) -> Self {
+    pub fn new(base_url: String) -> Self {
         Self {
             client: reqwest::Client::new(),
             base_url,
@@ -375,7 +375,7 @@ impl<T: ZeroCostDataCapability> ZeroCostDataManager<T> {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn new(provider: T, config: T::Config) -> Result<Self>  {
+        pub fn new(provider: T, config: T::Config) -> Result<Self>  {
         T::validate_config(&config).map_err(|e| e.into())?;
         Ok(Self { provider, config })
     }
@@ -392,11 +392,11 @@ impl<T: ZeroCostDataCapability> ZeroCostDataManager<T> {
             .map_err(|e| e.into())
     }
 
-    pub const fn capability_name() -> &'static str {
+    pub fn capability_name() -> &'static str {
         T::CAPABILITY_NAME
     }
 
-    pub const fn supported_formats() -> &'static [&'static str] {
+    pub fn supported_formats() -> &'static [&'static str] {
         T::supported_formats()
     }
 }
@@ -414,7 +414,7 @@ impl ZeroCostDataFactory {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn create_http_manager(
+        pub fn create_http_manager(
         base_url: String,
         config: DataConfig,
     ) -> Result<ZeroCostDataManager<HttpDataProvider>>  {

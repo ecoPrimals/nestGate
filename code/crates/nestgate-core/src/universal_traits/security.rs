@@ -8,6 +8,11 @@ use serde::{Deserialize, Serialize};
 
 /// Universal security primal provider trait
 /// **CANONICAL MODERNIZATION**: Native async trait without `async_trait` overhead
+/// **DEPRECATED**: Primal provider pattern consolidated
+#[deprecated(
+    since = "0.9.0",
+    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity with primal adapter"
+)]
 pub trait SecurityPrimalProvider: Send + Sync {
     /// Authenticate with provided credentials
     fn authenticate(

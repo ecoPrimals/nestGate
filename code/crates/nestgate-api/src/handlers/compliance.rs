@@ -411,7 +411,7 @@ impl ComplianceManager {
     }
 
     /// Check data retention compliance
-    pub const fn check_data_retention(&self, data_type: &str, data_age_days: u32) -> bool {
+    pub fn check_data_retention(&self, data_type: &str, data_age_days: u32) -> bool {
         for policy in self.retention_policies.values() {
             if policy.data_types.contains(&data_type.to_string()) {
                 if policy.legal_hold {
@@ -424,7 +424,7 @@ impl ComplianceManager {
     }
 
     /// Check access compliance
-    pub const fn check_access_compliance(
+    pub fn check_access_compliance(
         &self,
         user_permissions: &[String],
         clearance_level: u8,
@@ -444,7 +444,7 @@ impl ComplianceManager {
     }
 
     /// Generate compliance report
-    pub const fn generate_compliance_report(&self) -> ComplianceReport {
+    pub fn generate_compliance_report(&self) -> ComplianceReport {
         let total_policies = self.retention_policies.len() + self.access_policies.len();
         let total_violations = self.violations.len();
         let critical_violations = self
@@ -624,7 +624,7 @@ pub async fn get_violations(
 }
 
 /// Create compliance routes
-pub const fn create_compliance_routes() -> Router<ComplianceState> {
+pub fn create_compliance_routes() -> Router<ComplianceState> {
     Router::new()
         .route("/dashboard", get(get_compliance_dashboard))
         .route("/policies/retention", get(get_retention_policies))

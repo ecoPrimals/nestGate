@@ -27,7 +27,7 @@ use std::sync::Arc;
 pub struct ZfsServiceFactory;
 impl ZfsServiceFactory {
     /// Create a ZFS service instance based on configuration
-    pub const fn create_service(
+    pub fn create_service(
         _config: NestGateCanonicalConfig,
     ) -> Arc<dyn UniversalZfsService + Send + Sync> {
         // ✅ PRODUCTION: Always use native service - no more mocks in production
@@ -35,7 +35,7 @@ impl ZfsServiceFactory {
     }
 
     /// Create a ZFS service with sudo privileges (for systems requiring elevated permissions)
-    pub const fn create_service_with_sudo(
+    pub fn create_service_with_sudo(
         _config: NestGateCanonicalConfig,
     ) -> Arc<dyn UniversalZfsService + Send + Sync> {
         // ✅ PRODUCTION: Always use native service with sudo - no more mocks

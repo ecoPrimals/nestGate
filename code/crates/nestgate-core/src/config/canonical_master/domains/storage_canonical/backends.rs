@@ -589,13 +589,13 @@ impl StorageBackendConfig {
 
     /// Merge with another configuration
     #[must_use]
-    pub const fn merge(self, _other: Self) -> Self {
+    pub fn merge(self, _other: Self) -> Self {
         // Simple merge - in a real implementation, you'd want more sophisticated merging
         self
     }
 
     /// Validate the backend configuration
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         // Validate that default backend exists in backends map
         if !self.backends.is_empty()
             && !self
@@ -622,7 +622,7 @@ impl StorageBackendConfig {
 
     /// Get available storage backends
     #[must_use]
-    pub const fn get_available_backends(&self) -> Vec<StorageBackendType> {
+    pub fn get_available_backends(&self) -> Vec<StorageBackendType> {
         self.backends
             .values()
             .map(|b| b.backend_type.clone())
@@ -631,7 +631,7 @@ impl StorageBackendConfig {
 
     /// Check if a specific backend is configured
     #[must_use]
-    pub const fn has_backend(&self, backend_type: &StorageBackendType) -> bool {
+    pub fn has_backend(&self, backend_type: &StorageBackendType) -> bool {
         self.backends
             .values()
             .any(|b| &b.backend_type == backend_type)

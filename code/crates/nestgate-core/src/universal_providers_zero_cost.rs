@@ -69,6 +69,11 @@ where
     _phantom: PhantomData<()>,
 }
 /// Zero-cost security provider trait - replaces Arc<dyn SecurityPrimalProvider>
+/// **DEPRECATED**: Zero-cost security patterns consolidated
+#[deprecated(
+    since = "0.9.0",
+    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity - zero-cost patterns integrated"
+)]
 pub trait ZeroCostSecurityProvider: Send + Sync + 'static {
     type Error: Send + Sync + 'static;
     /// Authenticate with native async - no Future boxing
@@ -114,7 +119,7 @@ where
     Provider: ZeroCostSecurityProvider,
 {
     /// Create new zero-cost security wrapper - compile-time optimized
-    pub const fn new(
+    pub fn new(
         provider_name: String,
         endpoint: String,
         capabilities: Vec<String>,
@@ -130,17 +135,17 @@ where
     }
 
     /// Get provider name
-    pub const fn provider_name(&self) -> &str {
+    pub fn provider_name(&self) -> &str {
         &self.provider_name
     }
 
     /// Get endpoint
-    pub const fn endpoint(&self) -> &str {
+    pub fn endpoint(&self) -> &str {
         &self.endpoint
     }
 
     /// Get capabilities
-    pub const fn capabilities(&self) -> &[String] {
+    pub fn capabilities(&self) -> &[String] {
         &self.capabilities
     }
 
@@ -152,7 +157,7 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken>  {
+    pub async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken> {
         self.provider
             .authenticate(credentials)
             .await
@@ -167,7 +172,7 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>>  {
+    pub async fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
         self.provider
             .encrypt(data, algorithm)
             .await
@@ -182,7 +187,7 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn decrypt(&self, encrypted: &[u8], algorithm: &str) -> Result<Vec<u8>>  {
+    pub async fn decrypt(&self, encrypted: &[u8], algorithm: &str) -> Result<Vec<u8>> {
         self.provider
             .decrypt(encrypted, algorithm)
             .await
@@ -197,10 +202,10 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn batch_authenticate(
+    pub async fn batch_authenticate(
         &self,
         credentials_list: &[Credentials],
-    ) -> Result<Vec<AuthToken>>  {
+    ) -> Result<Vec<AuthToken>> {
         let mut tokens = Vec::with_capacity(credentials_list.len());
 
         for credentials in credentials_list {
@@ -364,7 +369,7 @@ impl<Provider> ZeroCostUniversalSecurityWrapper<Provider>
 where
     Provider: ZeroCostSecurityProvider,
 {
-    pub const fn new(provider: Provider) -> Self {
+    pub fn new(provider: Provider) -> Self {
         Self { provider }
     }
 }

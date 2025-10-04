@@ -12,7 +12,7 @@ pub struct NetworkVlanConfig {
 
 impl NetworkVlanConfig {
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self {
             enabled: false,
             vlan_id: 100,
@@ -21,7 +21,7 @@ impl NetworkVlanConfig {
     }
 
     #[must_use]
-    pub const fn production_hardened() -> Self {
+    pub fn production_hardened() -> Self {
         Self {
             enabled: true,
             vlan_id: 200,
@@ -34,7 +34,7 @@ impl NetworkVlanConfig {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn validate(&self) -> Result<()>  {
+    pub fn validate(&self) -> Result<()> {
         Ok(())
     }
 

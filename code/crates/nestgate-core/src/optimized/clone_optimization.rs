@@ -65,19 +65,19 @@ impl<T> Clone for SharedConfiguration<T> {
 
 impl<T> SharedConfiguration<T> {
     /// Create new shared configuration
-    pub const fn new(config: T) -> Self {
+    pub fn new(config: T) -> Self {
         Self {
             data: Arc::new(config),
         }
     }
 
     /// Get reference to configuration (zero-copy)
-    pub const fn get(&self) -> &T {
+    pub fn get(&self) -> &T {
         &self.data
     }
 
     /// Check if this is the only reference
-    pub const fn is_unique(&self) -> bool {
+    pub fn is_unique(&self) -> bool {
         Arc::strong_count(&self.data) == 1
     }
 
@@ -125,12 +125,12 @@ impl StringOptimizer {
     }
 
     /// Trim string without cloning when possible
-    pub const fn trim_efficient(s: &str) -> &str {
+    pub fn trim_efficient(s: &str) -> &str {
         s.trim()
     }
 
     /// Split string into parts without cloning
-    pub const fn split_efficient(s: &str, delimiter: char) -> Vec<&str> {
+    pub fn split_efficient(s: &str, delimiter: char) -> Vec<&str> {
         s.split(delimiter).collect()
     }
 }
@@ -229,7 +229,7 @@ impl Default for CloneMetrics {
 }
 
 impl CloneMetrics {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             clones_avoided: 0,
             memory_saved_bytes: 0,
@@ -245,7 +245,7 @@ impl CloneMetrics {
     pub fn calculate_improvement(&mut self, baseline_ns: u64, optimized_ns: u64) {
         if baseline_ns > 0 {
             self.performance_improvement_percent =
-                ((baseline_ns - optimized_ns) as f64 / f64::from(baseline_ns)) * 100.0;
+                ((baseline_ns - optimized_ns) as f64 / baseline_ns as f64) * 100.0;
         }
     }
 }
@@ -285,7 +285,7 @@ pub enum OptimizedReference<'a, T> {
 }
 impl<'a, T> OptimizedReference<'a, T> {
     /// Get reference regardless of storage type
-    pub const fn get_ref(&self) -> &T {
+    pub fn get_ref(&self) -> &T {
         match self {
             Self::Borrowed(r) => r,
             Self::Shared(arc) => arc,

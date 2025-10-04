@@ -19,7 +19,7 @@ pub struct ExternalModelDataProvider {
     pub capabilities: Vec<String>,
 }
 impl ExternalModelDataProvider {
-    pub const fn new(provider_name: String, endpoint: String) -> Self {
+    pub fn new(provider_name: String, endpoint: String) -> Self {
         Self {
             provider_name,
             endpoint,

@@ -6,31 +6,31 @@ use crate::{NestGateError, Result};
 // ==================== SECTION ====================
 
 /// Check if a string is a valid IP address (IPv4 or IPv6)
-pub const fn is_valid_ip(ip: &str) -> bool {
+pub fn is_valid_ip(ip: &str) -> bool {
     ip.parse::<IpAddr>().is_ok()
 }
 /// Check if a string is a valid IPv4 address
-pub const fn is_valid_ipv4(ip: &str) -> bool {
+pub fn is_valid_ipv4(ip: &str) -> bool {
     ip.parse::<Ipv4Addr>().is_ok()
 }
 /// Check if a string is a valid IPv6 address
-pub const fn is_valid_ipv6(ip: &str) -> bool {
+pub fn is_valid_ipv6(ip: &str) -> bool {
     ip.parse::<Ipv6Addr>().is_ok()
 }
 /// Parse an IP address string to IpAddr
-pub const fn parse_ip(ip: &str) -> Result<IpAddr> {
+pub fn parse_ip(ip: &str) -> Result<IpAddr> {
     ip.parse::<IpAddr>().map_err(|_| NestGateError::validation(
         actual: Some(ip.to_string())})
 }
 /// Parse an IPv4 address string
-pub const fn parse_ipv4(ip: &str) -> Result<Ipv4Addr> {
+pub fn parse_ipv4(ip: &str) -> Result<Ipv4Addr> {
     ip.parse::<Ipv4Addr>()
         .map_err(|_| NestGateError::validation(
             actual: Some(ip.to_string())192.168.1.1)".to_string())context: None,
         })
 }
 /// Parse an IPv6 address string
-pub const fn parse_ipv6(ip: &str) -> Result<Ipv6Addr> {
+pub fn parse_ipv6(ip: &str) -> Result<Ipv6Addr> {
     ip.parse::<Ipv6Addr>()
         .map_err(|_| NestGateError::validation(
             actual: Some(ip.to_string())::1)".to_string())context: None,
@@ -39,11 +39,11 @@ pub const fn parse_ipv6(ip: &str) -> Result<Ipv6Addr> {
 // ==================== SECTION ====================
 
 /// Check if a string is a valid CIDR notation
-pub const fn is_valid_cidr(cidr: &str) -> bool {
+pub fn is_valid_cidr(cidr: &str) -> bool {
     parse_cidr(cidr).is_ok()
 }
 /// Parse CIDR notation (e.g., "192.168.1.0/24")
-pub const fn parse_cidr(input: &str) -> Result<(IpAddr, u8)> {
+pub fn parse_cidr(input: &str) -> Result<(IpAddr, u8)> {
     let parts: Vec<&str> = input.split('/').collect();
     if parts.len() != 2 {
         return Err(NestGateError::validation(
@@ -79,7 +79,7 @@ pub const fn parse_cidr(input: &str) -> Result<(IpAddr, u8)> {
 // ==================== SECTION ====================
 
 /// Check if a hostname is valid
-pub const fn is_valid_hostname(hostname: &str) -> bool {
+pub fn is_valid_hostname(hostname: &str) -> bool {
     if hostname.is_empty() || hostname.len() > 253 {
         return false;
     }
@@ -108,7 +108,7 @@ fn is_valid_hostname_label(label: &str) -> bool {
 }
 
 /// Check if a domain name is valid
-pub const fn is_valid_domain(domain: &str) -> bool {
+pub fn is_valid_domain(domain: &str) -> bool {
     if domain.is_empty() || domain.len() > 253 {
         return false;
     }
@@ -123,23 +123,23 @@ pub const fn is_valid_domain(domain: &str) -> bool {
 // ==================== SECTION ====================
 
 /// Check if a port number is valid (1-65535)
-pub const fn is_valid_port(port: u16) -> bool {
+pub fn is_valid_port(port: u16) -> bool {
     port > 0
 }
 /// Check if a port is in the well-known range (1-1023)
-pub const fn is_well_known_port(port: u16) -> bool {
+pub fn is_well_known_port(port: u16) -> bool {
     port > 0 && port <= 1023
 }
 /// Check if a port is in the registered range (1024-49151)
-pub const fn is_registered_port(port: u16) -> bool {
+pub fn is_registered_port(port: u16) -> bool {
     (1024..=49151).contains(&port)
 }
 /// Check if a port is in the dynamic/private range (49152-65535)
-pub const fn is_dynamic_port(port: u16) -> bool {
+pub fn is_dynamic_port(port: u16) -> bool {
     (49152..=65535).contains(&port)
 }
 /// Check if a port is available by attempting to bind to it
-pub const fn is_port_available(port: u16) -> bool {
+pub fn is_port_available(port: u16) -> bool {
     let addr = format!("127.0.0.1:{port}");
     tokio::net::TcpListener::bind(&addr).await.is_ok()
 }
@@ -155,11 +155,11 @@ pub async fn find_available_port(start_port: u16) -> Option<u16> {
 // ==================== SECTION ====================
 
 /// Check if a string is a valid URL
-pub const fn is_valid_url(url: &str) -> bool {
+pub fn is_valid_url(url: &str) -> bool {
     url::Url::parse(url).is_ok()
 }
 /// Check if a string is a valid HTTP/HTTPS URL
-pub const fn is_valid_http_url(url: &str) -> bool {
+pub fn is_valid_http_url(url: &str) -> bool {
     if let Ok(parsed) = url::Url::parse(url) {
         matches!(parsed.scheme(), "http" | "https")
     } else {
@@ -167,14 +167,14 @@ pub const fn is_valid_http_url(url: &str) -> bool {
     }
 }
 /// Parse a URL and return its components
-pub const fn parse_url(url: &str) -> Result<url::Url> {
+pub fn parse_url(url: &str) -> Result<url::Url> {
     url::Url::parse(url).map_err(|e| NestGateError::validation(
         actual: Some(url.to_string())})
 }
 // ==================== SECTION ====================
 
 /// Check if a string is a valid MAC address
-pub const fn is_valid_mac_address(mac: &str) -> bool {
+pub fn is_valid_mac_address(mac: &str) -> bool {
     let parts: Vec<&str> = mac.split(':').collect();
     if parts.len() != 6 {
         return false;
@@ -185,7 +185,7 @@ pub const fn is_valid_mac_address(mac: &str) -> bool {
 }
 
 /// Normalize MAC address format (convert to lowercase with colons)
-pub const fn normalize_mac_address(mac: &str) -> Option<String> {
+pub fn normalize_mac_address(mac: &str) -> Option<String> {
     let cleaned: String = mac.chars().filter(|c| c.is_ascii_hexdigit()).collect();
     if cleaned.len() != 12 {
         return None;
@@ -209,7 +209,7 @@ pub const fn normalize_mac_address(mac: &str) -> Option<String> {
 // ==================== SECTION ====================
 
 /// Check if an IP address is in a private range
-pub const fn is_private_ip(ip: &IpAddr) -> bool {
+pub fn is_private_ip(ip: &IpAddr) -> bool {
     match ip {
         IpAddr::V4(ipv4) => {
             let octets = ipv4.octets();
@@ -228,25 +228,25 @@ pub const fn is_private_ip(ip: &IpAddr) -> bool {
     }
 }
 /// Check if an IP address is a loopback address
-pub const fn is_loopback_ip(ip: &IpAddr) -> bool {
+pub fn is_loopback_ip(ip: &IpAddr) -> bool {
     match ip {
         IpAddr::V4(ipv4) => ipv4.is_loopback(),
         IpAddr::V6(ipv6) => ipv6.is_loopback(),
     }
 }
 /// Check if an IP address is a multicast address
-pub const fn is_multicast_ip(ip: &IpAddr) -> bool {
+pub fn is_multicast_ip(ip: &IpAddr) -> bool {
     match ip {
         IpAddr::V4(ipv4) => ipv4.is_multicast(),
         IpAddr::V6(ipv6) => ipv6.is_multicast(),
     }
 }
 /// Get the localhost IP address as a string
-pub const fn localhost() -> &'static str {
+pub fn localhost() -> &'static str {
     "127.0.0.1"
 }
 /// Get the IPv6 localhost address as a string
-pub const fn localhost_ipv6() -> &'static str {
+pub fn localhost_ipv6() -> &'static str {
     "::1"
 }
 #[cfg(test)]

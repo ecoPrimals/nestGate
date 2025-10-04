@@ -31,7 +31,7 @@ impl StorageCoordinator {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn new() -> Result<Self>   {
+        pub fn new() -> Result<Self>   {
         Ok(Self {
             _backend_registry: Arc::new(BackendRegistry::new()?),
             _load_balancer: Arc::new(StorageLoadBalancer::new()),
@@ -54,7 +54,7 @@ impl StorageCoordinator {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn register_backend(&self, backend: StorageBackend) -> Result<()>   {
+        pub fn register_backend(&self, backend: StorageBackend) -> Result<()>   {
         self._backend_registry.register(backend)
     }
 
@@ -92,7 +92,7 @@ impl StorageCoordinator {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn coordinate_multi_backend(
+        pub fn coordinate_multi_backend(
         &self,
     ) -> Result<OperationResult>   {
         self._transaction_manager.execute_multi_backend(operation)
@@ -112,7 +112,7 @@ impl StorageCoordinator {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn ensure_consistency(&self, data_id: &str) -> Result<ConsistencyStatus>   {
+        pub fn ensure_consistency(&self, data_id: &str) -> Result<ConsistencyStatus>   {
         self._consistency_manager.check_consistency(data_id)
     }
 
@@ -129,7 +129,7 @@ impl StorageCoordinator {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn manage_transaction(
+        pub fn manage_transaction(
         &self,
         transaction: StorageTransaction,
     ) -> Result<TransactionResult>   {

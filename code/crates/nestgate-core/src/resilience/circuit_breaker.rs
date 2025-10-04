@@ -326,7 +326,7 @@ impl CircuitBreaker {
                 .filter(|record| !record.success)
                 .count();
 
-            let failure_rate = f64::from(failures) / data.(request_history.len() as f64);
+            let failure_rate = failures as f64 / data.(request_history.len() as f64);
 
             if failure_rate >= self.config.failure_rate_threshold {
                 return true;
@@ -398,7 +398,7 @@ impl CircuitBreaker {
             .count();
 
         let failure_rate = if !data.request_history.is_empty() {
-            f64::from(recent_failures) / data.(request_history.len() as f64)
+            recent_failures as f64 / data.(request_history.len() as f64)
         } else {
             0.0
         };

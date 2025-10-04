@@ -18,7 +18,7 @@ pub struct NasService {
 }
 impl NasService {
     /// Create a new NAS service with canonical configuration
-    pub const fn new(config: NasConfig) -> Self {
+    pub fn new(config: NasConfig) -> Self {
         Self { config }
     }
 
@@ -30,8 +30,8 @@ impl NasService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn start(&self) -> Result<(), NasError>  {
+    #[must_use]
+    pub fn start(&self) -> Result<(), NasError> {
         // Implementation would go here
         Ok(())
     }
@@ -44,8 +44,8 @@ impl NasService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn stop(&self) -> Result<(), NasError>  {
+    #[must_use]
+    pub fn stop(&self) -> Result<(), NasError> {
         // Implementation would go here
         Ok(())
     }
@@ -58,8 +58,8 @@ impl NasService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn status(&self) -> Result<NasStatus, NasError>  {
+    #[must_use]
+    pub fn status(&self) -> Result<NasStatus, NasError> {
         // Implementation would go here
         Ok(NasStatus::Running)
     }
@@ -99,28 +99,28 @@ pub enum NasError {
 // ==================== CONVENIENCE FUNCTIONS ====================
 
 /// Create a new canonical NAS configuration
-pub const fn new_nas_config() -> NasConfig {
+pub fn new_nas_config() -> NasConfig {
     NasConfig::default()
 }
 /// Create a development-optimized NAS configuration
-pub const fn dev_nas_config() -> NasConfig {
+pub fn dev_nas_config() -> NasConfig {
     // Development-specific optimizations would go here
     NasConfig::default()
 }
 /// Create a production-optimized NAS configuration
-pub const fn prod_nas_config() -> NasConfig {
+pub fn prod_nas_config() -> NasConfig {
     // Production-specific optimizations would go here
     NasConfig::default()
 }
 /// Create a new NAS service with default configuration
-pub const fn create_nas_service() -> NasService {
+pub fn create_nas_service() -> NasService {
     NasService::new(NasConfig::default())
 }
 /// Create a new NAS service with development configuration
-pub const fn create_dev_nas_service() -> NasService {
+pub fn create_dev_nas_service() -> NasService {
     NasService::new(dev_nas_config())
 }
 /// Create a new NAS service with production configuration
-pub const fn create_prod_nas_service() -> NasService {
+pub fn create_prod_nas_service() -> NasService {
     NasService::new(prod_nas_config())
 }

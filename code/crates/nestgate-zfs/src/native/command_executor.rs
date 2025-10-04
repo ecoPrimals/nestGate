@@ -28,7 +28,7 @@ pub struct ZfsCommandResult {
 }
 impl NativeZfsCommandExecutor {
     /// Create a new command executor
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             timeout_seconds: 300, // 5 minutes default timeout
             verbose_logging: std::env::var("ZFS_VERBOSE_LOGGING").is_ok(),
@@ -36,7 +36,7 @@ impl NativeZfsCommandExecutor {
     }
 
     /// Create with custom timeout
-    pub const fn with_timeout(timeout_seconds: u64) -> Self {
+    pub fn with_timeout(timeout_seconds: u64) -> Self {
         Self {
             timeout_seconds,
             verbose_logging: std::env::var("ZFS_VERBOSE_LOGGING").is_ok(),
@@ -51,8 +51,8 @@ impl NativeZfsCommandExecutor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn execute_command(&self, args: &[&str]) -> Result<ZfsCommandResult>  {
+    #[must_use]
+    pub fn execute_command(&self, args: &[&str]) -> Result<ZfsCommandResult> {
         if self.verbose_logging {
             debug!("🔧 Executing ZFS command: zfs {}", args.join(" "));
         }
@@ -110,7 +110,7 @@ impl NativeZfsCommandExecutor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn execute_command_expect_success(&self, args: &[&str]) -> Result<String>  {
+    pub async fn execute_command_expect_success(&self, args: &[&str]) -> Result<String> {
         let result = self.execute_command(args).await?;
 
         if !result.success {
@@ -128,7 +128,7 @@ impl NativeZfsCommandExecutor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn list_pools(&self) -> Result<Vec<String>>  {
+    pub async fn list_pools(&self) -> Result<Vec<String>> {
         let output = self
             .execute_command_expect_success(&["list", "-H", "-o", "name", "-t", "filesystem"])
             .await?;
@@ -148,7 +148,7 @@ impl NativeZfsCommandExecutor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_dataset_info(&self, dataset: &str) -> Result<HashMap<String, String>>  {
+    pub async fn get_dataset_info(&self, dataset: &str) -> Result<HashMap<String, String>> {
         let output = self
             .execute_command_expect_success(&["get", "-H", "-p", "all", dataset])
             .await?;
@@ -175,11 +175,11 @@ impl NativeZfsCommandExecutor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn create_dataset(
+    pub fn create_dataset(
         &self,
         dataset: &str,
         properties: &HashMap<String, String>,
-    ) -> Result<()>  {
+    ) -> Result<()> {
         let mut args = vec!["create"];
 
         // Collect property strings to avoid borrowing issues
@@ -210,8 +210,8 @@ impl NativeZfsCommandExecutor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn create_snapshot(&self, dataset: &str, _snapshot_name: &str) -> Result<()>  {
+    #[must_use]
+    pub fn create_snapshot(&self, dataset: &str, _snapshot_name: &str) -> Result<()> {
         let snapshot_full = format!("{dataset}@{"actual_error_details"}");
         self.execute_command_expect_success(&["snapshot", &snapshot_full])
             .await?;

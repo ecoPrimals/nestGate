@@ -25,7 +25,7 @@ pub const MAX_REQUEST_SIZE: u64 = 10 * 1024 * 1024; // 10MB
 /// Default retry attempts for network operations
 pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
 /// Network constants registration helper
-pub const fn register_network_constants() -> Vec<(String, ConstantValue, String)> {
+pub fn register_network_constants() -> Vec<(String, ConstantValue, String)> {
     vec![
         (
             "DEFAULT_TIMEOUT_SECS".to_string(),

@@ -13,7 +13,7 @@ pub use crate::canonical_types::StorageTier;
 impl StorageTier {
     /// Get tier priority (lower number = higher priority)
     #[must_use]
-    pub const fn priority(&self) -> u8 {
+    pub fn priority(&self) -> u8 {
         match self {
             Self::Cache => 0, // Ultra-fast cache has highest priority
             Self::Hot => 1,
@@ -25,7 +25,7 @@ impl StorageTier {
 
     /// Get typical access time for this tier
     #[must_use]
-    pub const fn typical_access_time(&self) -> Duration {
+    pub fn typical_access_time(&self) -> Duration {
         match self {
             StorageTier::Cache => Duration::from_micros(100), // Ultra-fast cache
             StorageTier::Hot => Duration::from_millis(1),
@@ -119,30 +119,30 @@ impl Default for CacheStats {
 impl CacheStats {
     /// Calculate hit ratio (0.0 to 1.0)
     #[must_use]
-    pub const fn hit_ratio(&self) -> f64 {
+    pub fn hit_ratio(&self) -> f64 {
         let total = self.hits + self.misses;
         if total == 0 {
             0.0
         } else {
-            hits as f64 / total as f64
+            self.hits as f64 / total as f64
         }
     }
 
     /// Get total number of items across all tiers
     #[must_use]
-    pub const fn total_items(&self) -> usize {
+    pub fn total_items(&self) -> usize {
         self.hot_tier_items + self.warm_tier_items + self.cold_tier_items
     }
 
     /// Get total size across all tiers
     #[must_use]
-    pub const fn total_size_bytes(&self) -> u64 {
+    pub fn total_size_bytes(&self) -> u64 {
         self.hot_tier_size_bytes + self.warm_tier_size_bytes + self.cold_tier_size_bytes
     }
 
     /// Get total evictions across all tiers
     #[must_use]
-    pub const fn total_evictions(&self) -> u64 {
+    pub fn total_evictions(&self) -> u64 {
         self.hot_tier_evictions + self.warm_tier_evictions + self.cold_tier_evictions
     }
 
@@ -270,7 +270,7 @@ impl EfficiencyMetrics {
             let window_end = (window_start + window_size).min(self.last_operations.len());
             let window = &self.last_operations[window_start..window_end];
             let hits = window.iter().filter(|&&h| h).count();
-            let hit_ratio = f64::from(hits) / (window.len() as f64);
+            let hit_ratio = hits as f64 / window.len() as f64;
             window_hit_ratios.push(hit_ratio);
         }
 
@@ -312,7 +312,7 @@ pub struct CacheEntry {
 impl CacheEntry {
     /// Create a new cache entry
     #[must_use]
-    pub const fn new(key: String, data: Vec<u8>, tier: StorageTier) -> Self {
+    pub fn new(key: String, data: Vec<u8>, tier: StorageTier) -> Self {
         let now = chrono::Utc::now();
         let size = data.len() as u64;
         Self {
@@ -329,7 +329,7 @@ impl CacheEntry {
 
     /// Check if entry has expired
     #[must_use]
-    pub const fn is_expired(&self) -> bool {
+    pub fn is_expired(&self) -> bool {
         if let Some(ttl) = self.ttl {
             let expiry_time = self.created_at + chrono::Duration::from_std(ttl).unwrap_or_default();
             chrono::Utc::now() > expiry_time
@@ -346,7 +346,7 @@ impl CacheEntry {
 
     /// Get age of entry
     #[must_use]
-    pub const fn age(&self) -> chrono::Duration {
+    pub fn age(&self) -> chrono::Duration {
         chrono::Utc::now() - self.created_at
     }
 }

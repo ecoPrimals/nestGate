@@ -7,6 +7,7 @@
 //! - Complete vendor independence
 
 use std::collections::HashMap;
+use crate::config::ConsolidatedCanonicalConfig;
 
 /// Test the core infant discovery principle: zero hardcoded knowledge
 #[tokio::test]

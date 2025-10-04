@@ -232,7 +232,7 @@ impl<
     }
 
     /// **PHASE 2C**: Validate for specific environment
-    pub const fn validate_for_environment(&self, env: Environment) -> crate::error::Result<()> {
+    pub fn validate_for_environment(&self, env: Environment) -> crate::error::Result<()> {
         if env == Environment::Production && self.network.port == 8080 {
             return Err(crate::error::NestGateError::configuration_error_detailed(
                 "network.port".to_string(),

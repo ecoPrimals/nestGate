@@ -75,11 +75,11 @@ pub struct ZfsHealthMonitor {
     background_tasks: BackgroundTasks,
 }
 impl HealthStatus {
-    pub const fn is_critical(&self) -> bool {
+    pub fn is_critical(&self) -> bool {
         matches!(self, Self::Critical)
     }
 
-    pub const fn is_healthy(&self) -> bool {
+    pub fn is_healthy(&self) -> bool {
         matches!(self, HealthStatus::Healthy)
     }
 }
@@ -104,10 +104,10 @@ impl ZfsHealthMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn new(
+    pub fn new(
         pool_manager: Arc<ZfsPoolManager>,
         dataset_manager: Arc<ZfsDatasetManager>,
-    ) -> Result<Self>  {
+    ) -> Result<Self> {
         Ok(Self {
             config: Default::default(),
             pool_manager,
@@ -129,7 +129,7 @@ impl ZfsHealthMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn start(&mut self) -> Result<()>  {
+    pub async fn start(&mut self) -> Result<()> {
         info!("🏥 Starting ZFS health monitoring...");
 
         // Initialize monitoring tasks
@@ -226,7 +226,7 @@ impl ZfsHealthMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn stop(&mut self) -> Result<()>  {
+    pub async fn stop(&mut self) -> Result<()> {
         info!("🛑 Stopping ZFS health monitoring...");
 
         // Cancel monitoring tasks
@@ -256,7 +256,7 @@ impl ZfsHealthMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_current_status(&self) -> Result<crate::manager::EnhancedServiceStatus>  {
+    pub async fn get_current_status(&self) -> Result<crate::manager::EnhancedServiceStatus> {
         let pool_status = match self.pool_manager.get_overall_status().await {
             Ok(status) => status,
             Err(_) => crate::manager::PoolOverallStatus {
@@ -372,8 +372,8 @@ impl ZfsHealthMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn start_monitoring(&mut self) -> Result<()>  {
+    #[must_use]
+    pub fn start_monitoring(&mut self) -> Result<()> {
         if self.monitoring_active.load(Ordering::Relaxed) {
             return Ok(());
         }
@@ -391,8 +391,8 @@ impl ZfsHealthMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn stop_monitoring(&mut self) -> Result<()>  {
+    #[must_use]
+    pub fn stop_monitoring(&mut self) -> Result<()> {
         if !self.monitoring_active.load(Ordering::Relaxed) {
             return Ok(());
         }

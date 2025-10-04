@@ -13,7 +13,7 @@ pub struct SystemMetricsCollector {
 
 impl SystemMetricsCollector {
     /// Create new metrics collector
-    pub const fn new(interval_seconds: u64) -> Self {
+    pub fn new(interval_seconds: u64) -> Self {
         Self { interval_seconds }
     }
 
@@ -25,7 +25,7 @@ impl SystemMetricsCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn collect_metrics(&self) -> Result<SystemMetrics, MetricsError>  {
+    pub async fn collect_metrics(&self) -> Result<SystemMetrics, MetricsError> {
         Ok(SystemMetrics {
             cpu_usage_percent: self.get_cpu_usage().await?,
             memory_usage_bytes: self.get_memory_usage().await?,

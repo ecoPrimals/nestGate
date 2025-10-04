@@ -67,7 +67,7 @@ pub mod env_helpers {
 
     /// Get API port from environment or default
     #[must_use]
-    pub const fn api_port() -> u16 {
+    pub fn api_port() -> u16 {
         // ✅ KEPT CONST: Returns primitive, no allocation
         env::var("NESTGATE_API_PORT")
             .ok()
@@ -93,7 +93,7 @@ pub mod env_helpers {
 
     /// Get database port from environment or default
     #[must_use]
-    pub const fn db_port() -> u16 {
+    pub fn db_port() -> u16 {
         // ✅ KEPT CONST: Returns primitive, no allocation
         env::var("NESTGATE_DB_PORT")
             .ok()
@@ -103,7 +103,7 @@ pub mod env_helpers {
 
     /// Get metrics port from environment or default
     #[must_use]
-    pub const fn metrics_port() -> u16 {
+    pub fn metrics_port() -> u16 {
         // ✅ KEPT CONST: Returns primitive, no allocation
         env::var("NESTGATE_METRICS_PORT")
             .ok()

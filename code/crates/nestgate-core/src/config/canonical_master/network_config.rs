@@ -1,6 +1,22 @@
-/// **NETWORK CONFIGURATION**
+/// **⚠️ DEPRECATED - DO NOT USE**
 ///
-/// Network and connectivity configuration with const generics for performance.
+/// This file is deprecated in favor of `domains/network/mod.rs`.
+/// All NetworkConfig usage should migrate to `CanonicalNetworkConfig` from:
+/// `use nestgate_core::config::canonical_master::domains::network::CanonicalNetworkConfig;`
+///
+/// **MIGRATION GUIDE**:
+/// ```rust
+/// // OLD:
+/// use nestgate_core::config::canonical_master::network_config::NetworkConfig;
+///
+/// // NEW:
+/// use nestgate_core::config::canonical_master::domains::network::CanonicalNetworkConfig;
+/// ```
+#[deprecated(
+    since = "0.9.0",
+    note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead"
+)]
+/// **DEPRECATED**: Network and connectivity configuration with const generics for performance.
 /// This module contains all network-related settings including API ports,
 /// timeouts, load balancing, and service discovery.
 use serde::{Deserialize, Serialize};
@@ -11,6 +27,10 @@ use std::time::Duration;
 // ==================== SECTION ====================
 
 /// Network configuration with const generics for performance
+#[deprecated(
+    since = "0.9.0",
+    note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkConfig<const API_PORT: u16 = 8080, const TIMEOUT_MS: u64 = 30000> {
     /// API server bind address
@@ -41,19 +61,19 @@ pub struct NetworkConfig<const API_PORT: u16 = 8080, const TIMEOUT_MS: u64 = 300
 impl<const API_PORT: u16, const TIMEOUT_MS: u64> NetworkConfig<API_PORT, TIMEOUT_MS> {
     /// Get effective API port (compile-time optimized)
     #[must_use]
-    pub const fn api_port() -> u16 {
+    pub fn api_port() -> u16 {
         API_PORT
     }
 
     /// Get effective timeout (compile-time optimized)
     #[must_use]
-    pub const fn timeout_ms() -> u64 {
+    pub fn timeout_ms() -> u64 {
         TIMEOUT_MS
     }
 
     /// Get timeout as Duration
     #[must_use]
-    pub const fn timeout_duration() -> Duration {
+    pub fn timeout_duration() -> Duration {
         Duration::from_millis(TIMEOUT_MS)
     }
 }

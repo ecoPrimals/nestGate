@@ -210,7 +210,7 @@ fn parse_size(size_str: &str) -> Option<u64> {
     };
 
     let number: f64 = number_part.parse().ok()?;
-    Some((number * f64::from(multiplier)) as u64)
+    Some((number * multiplier as f64) as u64)
 }
 
 /// Extract file size from stat output (zero-copy optimized)

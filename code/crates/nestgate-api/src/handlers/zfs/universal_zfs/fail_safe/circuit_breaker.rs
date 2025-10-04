@@ -37,7 +37,7 @@ impl CircuitBreaker {
     ///
     /// # Returns
     /// * New circuit breaker instance in the closed state
-    pub const fn new(config: CircuitBreakerConfig) -> Self {
+    pub fn new(config: CircuitBreakerConfig) -> Self {
         Self {
             config,
             state: Arc::new(RwLock::new(CircuitBreakerState::Closed)),

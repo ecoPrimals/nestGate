@@ -314,7 +314,7 @@ pub struct MetricConfig {
 pub type UnifiedPrimalConfig = StandardDomainConfig;
 impl UnifiedPrimalConfig {
     /// Create development configuration optimized for local development
-    pub const fn development() -> Self { Self::create_for_environment("development")
+    pub fn development() -> Self { Self::create_for_environment("development")
     , /// Create production configuration optimized for high-load production
     #[must_use]
     pub fn production() -> Self {
@@ -322,7 +322,7 @@ impl UnifiedPrimalConfig {
      }
 
     /// Create configuration for specific primal ecosystem
-    pub const fn for_ecosystem(ecosystem: &str) -> Self {
+    pub fn for_ecosystem(ecosystem: &str) -> Self {
         Self::create_for_workload(ecosystem)
     }
 }

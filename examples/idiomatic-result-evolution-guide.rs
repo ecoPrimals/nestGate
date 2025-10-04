@@ -1,3 +1,4 @@
+use crate::constants::magic_numbers_replacement;
 //! # Idiomatic Result<T, E> Evolution Guide
 //!
 //! This example demonstrates how to evolve from our current Result<T> patterns

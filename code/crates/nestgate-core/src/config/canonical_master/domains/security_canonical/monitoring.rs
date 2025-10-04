@@ -19,7 +19,7 @@ pub struct AuditSecurityConfig {
 
 impl AuditSecurityConfig {
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self {
             enabled: false,
             log_level: "info".to_string(),
@@ -28,7 +28,7 @@ impl AuditSecurityConfig {
     }
 
     #[must_use]
-    pub const fn compliance_focused() -> Self {
+    pub fn compliance_focused() -> Self {
         Self {
             enabled: true,
             log_level: "debug".to_string(),
@@ -37,7 +37,7 @@ impl AuditSecurityConfig {
     }
 
     #[must_use]
-    pub const fn production_hardened() -> Self {
+    pub fn production_hardened() -> Self {
         Self {
             enabled: true,
             log_level: "trace".to_string(),
@@ -115,22 +115,22 @@ impl Default for AlertingConfig {
 
 impl SecurityMonitoringConfig {
     #[must_use]
-    pub const fn production_hardened() -> Self {
+    pub fn production_hardened() -> Self {
         Self::default()
     }
     #[must_use]
-    pub const fn development_optimized() -> Self {
+    pub fn development_optimized() -> Self {
         Self::default()
     }
     #[must_use]
-    pub const fn compliance_focused() -> Self {
+    pub fn compliance_focused() -> Self {
         Self::default()
     }
     #[must_use]
-    pub const fn merge(self, _other: Self) -> Self {
+    pub fn merge(self, _other: Self) -> Self {
         self
     }
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }
 }

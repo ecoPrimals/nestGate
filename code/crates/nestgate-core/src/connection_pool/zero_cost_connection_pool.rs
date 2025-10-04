@@ -44,7 +44,7 @@ where
     Connection: Clone + Send + Sync + 'static,
 {
     /// Create new connection pool with zero allocation
-    pub const fn new(factory: Factory) -> Self {
+    pub fn new(factory: Factory) -> Self {
         Self {
             factory,
             connections: [const { None }; POOL_SIZE],
@@ -127,18 +127,18 @@ where
     }
 
     /// Get pool statistics at compile time
-    pub const fn get_statistics(&self) -> &ZeroCostPoolStats {
+    pub fn get_statistics(&self) -> &ZeroCostPoolStats {
         &self.stats
     }
 
     /// Get pool capacity at compile time
-    pub const fn capacity() -> usize {
+    pub fn capacity() -> usize {
         POOL_SIZE
     }
 
     /// Check current pool utilization
-    pub const fn utilization_percentage(&self) -> f64 {
-        (self.stats.f64::from(current_pool_size) / f64::from(POOL_SIZE)) * 100.0
+    pub fn utilization_percentage(&self) -> f64 {
+        (self.stats.current_pool_size as f64 / POOL_SIZE as f64) * 100.0
     }
 
     /// Validate all connections in pool
@@ -217,7 +217,7 @@ where
     Connection: Clone + Send + Sync + 'static,
 {
     /// Create new builder
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             factory: None,
             _phantom: PhantomData,
@@ -239,7 +239,7 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn build(self) -> Result<ZeroCostConnectionPool<Factory, Connection, POOL_SIZE>>  {
+        pub fn build(self) -> Result<ZeroCostConnectionPool<Factory, Connection, POOL_SIZE>>  {
         let factory = self.factory.ok_or_else(|| {
             NestGateError::Configuration("Factory is required for connection pool".to_string())
         )?;
@@ -258,7 +258,7 @@ pub struct ZeroCostTcpConnectionFactory {
 }
 impl ZeroCostTcpConnectionFactory {
     /// Create new TCP connection factory
-    pub const fn new(endpoint: String, port: u16, connection_timeout: Duration) -> Self {
+    pub fn new(endpoint: String, port: u16, connection_timeout: Duration) -> Self {
         Self {
             address,
             port,
@@ -342,7 +342,7 @@ pub mod performance {
         }
         let traditional_time = start.elapsed().as_nanos() as u64;
 
-        let improvement = ((traditional_time - zero_cost_time) as f64 / f64::from(traditional_time)) * 100.0;
+        let improvement = ((traditional_time - zero_cost_time) as f64 / traditional_time as f64) * 100.0;
 
         (zero_cost_time, traditional_time, improvement)
     }
@@ -414,7 +414,7 @@ impl<Factory, Connection, const POOL_SIZE: usize>
 where
     Factory: ZeroCostConnectionFactory<Connection>,
 {
-    pub const fn new(factory: Factory) -> Self {
+    pub fn new(factory: Factory) -> Self {
         Self {
             factory,
             connections: [const { None }; POOL_SIZE],

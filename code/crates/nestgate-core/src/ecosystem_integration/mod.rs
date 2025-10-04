@@ -47,19 +47,19 @@ pub mod fallback_providers {
 
         impl SecurityFallbackProvider {
             #[must_use]
-            pub const fn new(mode: SecurityFallbackMode) -> Self {
+            pub fn new(mode: SecurityFallbackMode) -> Self {
                 Self {
                     fallback_mode: mode,
                 }
             }
 
             /// Function description
-    ///
-    /// # Errors
-    ///
-    /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn authenticate(&self, _credentials: &str) -> Result<bool, NestGateError>  {
+            ///
+            /// # Errors
+            ///
+            /// This function will return an error if the operation fails.
+            #[must_use]
+            pub fn authenticate(&self, _credentials: &str) -> Result<bool, NestGateError> {
                 match self.fallback_mode {
                     SecurityFallbackMode::BasicAuth => Ok(true), // Simplified fallback
                     SecurityFallbackMode::NoAuth => Ok(true),
@@ -120,19 +120,19 @@ pub mod fallback_providers {
 
         impl AiFallbackProvider {
             #[must_use]
-            pub const fn new(mode: AiFallbackMode) -> Self {
+            pub fn new(mode: AiFallbackMode) -> Self {
                 Self {
                     fallback_mode: mode,
                 }
             }
 
             /// Function description
-    ///
-    /// # Errors
-    ///
-    /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn process(&self, input: &str) -> Result<String, NestGateError>  {
+            ///
+            /// # Errors
+            ///
+            /// This function will return an error if the operation fails.
+            #[must_use]
+            pub fn process(&self, input: &str) -> Result<String, NestGateError> {
                 match self.fallback_mode {
                     AiFallbackMode::MockResponses => Ok("Mock AI response".to_string()),
                     AiFallbackMode::SimpleRules => Ok(format!("Processed: {input}")),
@@ -201,17 +201,17 @@ pub mod fallback_providers {
 
         impl OrchestrationFallbackProvider {
             #[must_use]
-            pub const fn new() -> Self {
+            pub fn new() -> Self {
                 Self
             }
 
             /// Function description
-    ///
-    /// # Errors
-    ///
-    /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn orchestrate(&self, _workflow: &str) -> Result<String, NestGateError>  {
+            ///
+            /// # Errors
+            ///
+            /// This function will return an error if the operation fails.
+            #[must_use]
+            pub fn orchestrate(&self, _workflow: &str) -> Result<String, NestGateError> {
                 Ok("Local orchestration fallback".to_string())
             }
         }
@@ -279,17 +279,17 @@ pub mod fallback_providers {
 
         impl ComputeFallbackProvider {
             #[must_use]
-            pub const fn new() -> Self {
+            pub fn new() -> Self {
                 Self
             }
 
             /// Function description
-    ///
-    /// # Errors
-    ///
-    /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn compute(&self, _task: &str) -> Result<String, NestGateError>  {
+            ///
+            /// # Errors
+            ///
+            /// This function will return an error if the operation fails.
+            #[must_use]
+            pub fn compute(&self, _task: &str) -> Result<String, NestGateError> {
                 Ok("Local compute fallback".to_string())
             }
         }
@@ -310,17 +310,17 @@ pub mod fallback_providers {
 
         impl ZfsFallbackProvider {
             #[must_use]
-            pub const fn new() -> Self {
+            pub fn new() -> Self {
                 Self
             }
 
             /// Function description
-    ///
-    /// # Errors
-    ///
-    /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn manage_storage(&self, _operation: &str) -> Result<String, NestGateError>  {
+            ///
+            /// # Errors
+            ///
+            /// This function will return an error if the operation fails.
+            #[must_use]
+            pub fn manage_storage(&self, _operation: &str) -> Result<String, NestGateError> {
                 Ok("Local ZFS fallback".to_string())
             }
         }
@@ -422,7 +422,7 @@ impl CapabilityBasedEcosystem {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn discover_capabilities(&mut self) -> Result<Vec<CapabilityInfo>>  {
+    pub async fn discover_capabilities(&mut self) -> Result<Vec<CapabilityInfo>> {
         self.capabilities.clear();
 
         // Clone discovery methods to avoid borrowing issues
@@ -561,7 +561,7 @@ pub struct EcosystemIntegrationService {
 
 impl EcosystemIntegrationService {
     /// Create new ecosystem integration service
-    pub const fn new(config: EcosystemConfig) -> crate::Result<Self> {
+    pub fn new(config: EcosystemConfig) -> crate::Result<Self> {
         Ok(Self {
             adapter: PrimalAgnosticAdapter::new(
                 crate::constants::canonical_defaults::network::build_api_url() + "/adapter",
@@ -575,18 +575,15 @@ impl EcosystemIntegrationService {
         info!("🔍 Discovering ecosystem capabilities...");
 
         // Use universal adapter for discovery (no hardcoding)
-        let discovered = self
-            .adapter
-            .query_capability(&crate::universal_adapter::types::CapabilityQuery::new(
-                "management",
-            ))
-            .await?;
+        let discovered = self.adapter.query_capability(
+            &crate::universal_adapter::types::CapabilityQuery::new("management"),
+        )?;
 
         Ok(discovered)
     }
 
     /// Request capability from ecosystem (replaces hardcoded calls)
-    pub fn request_capability(
+    pub async fn request_capability(
         &self,
         request: &crate::universal_adapter::canonical::CanonicalCapabilityRequest,
     ) -> crate::Result<serde_json::Value> {
@@ -595,7 +592,7 @@ impl EcosystemIntegrationService {
             request.capability, request.method
         );
 
-        self.adapter.route_capability_request(request).await
+        self.adapter.route_capability_request(request)
     }
 }
 

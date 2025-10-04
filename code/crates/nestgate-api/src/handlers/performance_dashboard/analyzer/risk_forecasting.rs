@@ -17,7 +17,7 @@ pub struct RiskForecaster {
 }
 
 impl RiskForecaster {
-    pub const fn new(zfs_manager: Arc<ZfsManager>) -> Self { Self { zfs_manager  }
+    pub fn new(zfs_manager: Arc<ZfsManager>) -> Self { Self { zfs_manager  }
 
     /// Create with default configuration - PRODUCTION READY
     /// Replaces mock() with real ZFS integration
@@ -42,7 +42,7 @@ impl RiskForecaster {
 
     /// Create mock instance for testing only
     #[cfg(test)]
-    pub const fn mock() -> Self { Self {
+    pub fn mock() -> Self { Self {
             zfs_manager: Arc::new(nestgate_zfs::ZfsManager::mock()),
          }
 
@@ -230,11 +230,11 @@ impl RiskForecaster {
                 let medium_risks = risks.iter().filter(|r| r.severity == "Medium").count();
                 
                 let overall_risk_score = if critical_risks > 0 {
-                    90.0 + (f64::from(critical_risks) * 2.0)
+                    90.0 + (critical_risks as f64 * 2.0)
                 } else if high_risks > 0 {
-                    70.0 + (f64::from(high_risks) * 5.0)
+                    70.0 + (high_risks as f64 * 5.0)
                 } else if medium_risks > 0 {
-                    40.0 + (f64::from(medium_risks) * 3.0)
+                    40.0 + (medium_risks as f64 * 3.0)
                 } else {
                     20.0 // Low baseline risk
                 }.min(100.0);
@@ -295,7 +295,7 @@ impl RiskForecaster {
                 let total_used: u64 = analytics.pools.iter().map(|p| p.used_capacity).sum();
                 
                 let current_utilization = if total_capacity > 0 {
-                    (f64::from(total_used) / f64::from(total_capacity)) * 100.0
+                    (total_used as f64 / total_capacity as f64) * 100.0
                 } else {
                     0.0
                 };

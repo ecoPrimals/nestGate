@@ -6,7 +6,7 @@ pub struct CacheDiscoverySettings {
 }
 
 impl CacheDiscoverySettings {
-    pub const fn validate(&self) -> crate::Result<()> {
+    pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }
 }

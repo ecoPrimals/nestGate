@@ -21,7 +21,7 @@ impl RetryExecutor {
     ///
     /// # Returns
     /// * New retry executor instance
-    pub const fn new(config: RetryPolicy) -> Self {
+    pub fn new(config: RetryPolicy) -> Self {
         Self { config }
     }
 

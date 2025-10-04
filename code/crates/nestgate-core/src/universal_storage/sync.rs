@@ -48,7 +48,7 @@ impl SyncEngine {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn start(&self) -> Result<()>  {
+        pub fn start(&self) -> Result<()>  {
         // Implementation would start sync service
         // For now, this is a placeholder
         Ok(())

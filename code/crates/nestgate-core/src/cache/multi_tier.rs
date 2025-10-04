@@ -78,7 +78,7 @@ impl MultiTierCache {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn new(_config: MultiTierCacheConfig) -> Result<Self>  {
+    pub fn new(_config: MultiTierCacheConfig) -> Result<Self> {
         // This is a placeholder implementation
         // In a real implementation, we would initialize actual cache providers
         // for each tier based on the configuration
@@ -105,7 +105,7 @@ impl MultiTierCache {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn set(&self, key: String, value: Vec<u8>) -> Result<()>  {
+    pub async fn set(&self, key: String, value: Vec<u8>) -> Result<()> {
         self.hot_tier.set(key, value).await
     }
 
@@ -117,7 +117,7 @@ impl MultiTierCache {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn put(&mut self, key: &str, data: Vec<u8>) -> Result<()>  {
+    pub async fn put(&mut self, key: &str, data: Vec<u8>) -> Result<()> {
         self.set(key.to_string(), data).await
     }
 
@@ -129,7 +129,7 @@ impl MultiTierCache {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get(&self, key: &str) -> Result<Option<Vec<u8>>>  {
+    pub async fn get(&self, key: &str) -> Result<Option<Vec<u8>>> {
         // Try tiers in order of performance: hot -> warm -> cold
 
         // Try hot tier first
@@ -162,7 +162,7 @@ impl MultiTierCache {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn remove(&self, key: &str) -> Result<bool>  {
+    pub async fn remove(&self, key: &str) -> Result<bool> {
         let mut removed = false;
 
         // Remove from all tiers
@@ -187,7 +187,7 @@ impl MultiTierCache {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn clear(&self) -> Result<()>  {
+    pub async fn clear(&self) -> Result<()> {
         self.hot_tier.clear().await?;
         self.warm_tier.clear().await?;
         self.cold_tier.clear().await?;
@@ -202,8 +202,8 @@ impl MultiTierCache {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn maintenance(&mut self) -> Result<()>  {
+    #[must_use]
+    pub fn maintenance(&mut self) -> Result<()> {
         // Implementation would perform maintenance tasks
         // For now, this is a placeholder
         Ok(())
@@ -217,8 +217,8 @@ impl MultiTierCache {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn flush(&mut self) -> Result<()>  {
+    #[must_use]
+    pub fn flush(&mut self) -> Result<()> {
         // Implementation would flush pending writes
         // For now, this is a placeholder
         Ok(())
@@ -247,7 +247,7 @@ impl MultiTierCache {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn stats(&self) -> Result<MultiTierCacheStats>  {
+    pub fn stats(&self) -> Result<MultiTierCacheStats> {
         // In a real implementation, we would collect stats from each tier
         Ok(MultiTierCacheStats {
             hot_tier_hits: 0,
@@ -288,12 +288,12 @@ pub struct MultiTierCacheStats {
 impl MultiTierCacheStats {
     /// Calculate overall hit ratio
     #[must_use]
-    pub const fn overall_hit_ratio(&self) -> f64 {
+    pub fn overall_hit_ratio(&self) -> f64 {
         let total_operations = self.total_hits + self.total_misses;
         if total_operations == 0 {
             0.0
         } else {
-            total_hits as f64 / total_operations as f64
+            self.total_hits as f64 / total_operations as f64
         }
     }
 }

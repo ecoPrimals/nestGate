@@ -95,7 +95,7 @@ impl Drop for BulkheadPermit<'_> {
 
 impl Bulkhead {
     /// Create a new bulkhead
-    pub const fn new(name: String, config: BulkheadConfig) -> Self {
+    pub fn new(name: String, config: BulkheadConfig) -> Self {
         let semaphore = Arc::new(Semaphore::new(config.max_concurrent));
         let metrics = Arc::new(RwLock::new(BulkheadMetrics {
             total_requests: 0,
@@ -250,7 +250,7 @@ impl Bulkhead {
         pub fn get_status(&self) -> Result<BulkheadStatus>  {
         let available_permits = self.semaphore.available_permits();
         let current_concurrent = self.config.max_concurrent - available_permits;
-        let utilization = (f64::from(current_concurrent) / self.config.f64::from(max_concurrent)) * 100.0;
+        let utilization = (current_concurrent as f64 / self.config.max_concurrent as f64) * 100.0;
 
         Ok(BulkheadStatus {
             name: self.name.clone(),
@@ -285,19 +285,19 @@ impl Bulkhead {
     }
 
     /// Get utilization percentage
-    pub const fn get_utilization(&self) -> f64 {
+    pub fn get_utilization(&self) -> f64 {
         let available = self.semaphore.available_permits();
         let used = self.config.max_concurrent - available;
-        (f64::from(used) / self.config.f64::from(max_concurrent)) * 100.0
+        (used as f64 / self.config.max_concurrent as f64) * 100.0
     }
 
     /// Check if bulkhead is at capacity
-    pub const fn is_at_capacity(&self) -> bool {
+    pub fn is_at_capacity(&self) -> bool {
         self.semaphore.available_permits() == 0
     }
 
     /// Get available permits count
-    pub const fn available_permits(&self) -> usize {
+    pub fn available_permits(&self) -> usize {
         self.semaphore.available_permits()
     }
 

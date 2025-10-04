@@ -145,7 +145,7 @@ pub struct RoutingMetrics {
 impl UniversalAdapterRouter {
     /// Create a new router with default configuration
     #[must_use]
-    pub const fn new(adapter: Arc<UniversalAdapter>) -> Self {
+    pub fn new(adapter: Arc<UniversalAdapter>) -> Self {
         Self::with_config(
             adapter,
             AdapterRoutingConfig::default(),
@@ -178,7 +178,7 @@ impl UniversalAdapterRouter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn route_request(&self, request: ServiceRequest) -> Result<ServiceResponse>  {
+    pub async fn route_request(&self, request: ServiceRequest) -> Result<ServiceResponse> {
         let start_time = std::time::Instant::now();
 
         // Update metrics
@@ -228,9 +228,8 @@ impl UniversalAdapterRouter {
     async fn route_through_adapter(&self, request: &ServiceRequest) -> Result<ServiceResponse> {
         let timeout = request.timeout.unwrap_or(self.config.operation_timeout);
 
-        // Use tokio::time::timeout for operation timeout
-        match tokio::time::timeout(
-            timeout,
+        // Wrap the sync call in an async block to make it compatible with timeout
+        match tokio::time::timeout(timeout, async {
             self.adapter.route_capability_request(
                 &crate::universal_adapter::canonical::CanonicalCapabilityRequest::new(
                     request.capability.clone(),
@@ -247,8 +246,8 @@ impl UniversalAdapterRouter {
                 })
                 .with_metadata("request_id", uuid::Uuid::new_v4().to_string())
                 .with_metadata("timeout", timeout.as_secs().to_string()),
-            ),
-        )
+            )
+        })
         .await
         {
             Ok(Ok(response_data)) => {
@@ -503,7 +502,7 @@ impl UniversalAdapterRouter {
     pub async fn health_check(&self) -> RouterHealthStatus {
         let metrics = self.metrics.read().await;
         let success_rate = if metrics.total_requests > 0 {
-            (successful_requests as f64 / total_requests as f64) * 100.0
+            (metrics.successful_requests as f64 / metrics.total_requests as f64) * 100.0
         } else {
             100.0
         };

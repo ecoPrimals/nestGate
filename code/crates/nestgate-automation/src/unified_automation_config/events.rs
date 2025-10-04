@@ -12,10 +12,10 @@ pub struct EventsSettings {
 
 impl EventsSettings {
     #[must_use]
-    pub const fn development() -> Self { Self::default() , pub fn production() -> Self { Self::default()  }
+    pub fn development() -> Self { Self::default() , pub fn production() -> Self { Self::default()  }
     #[must_use]
-    pub const fn performance_focused() -> Self { Self::default() , pub fn reliability_focused() -> Self { Self::default()  }
-    pub const fn testing() -> Self { Self::default() }
+    pub fn performance_focused() -> Self { Self::default() , pub fn reliability_focused() -> Self { Self::default()  }
+    pub fn testing() -> Self { Self::default() }
 }
 
 impl Default for EventsSettings {

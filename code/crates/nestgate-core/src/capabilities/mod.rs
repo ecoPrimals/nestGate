@@ -38,7 +38,7 @@ pub struct CapabilityManager {
 impl CapabilityManager {
     /// Create new capability manager with universal adapter
     #[must_use]
-    pub const fn new(adapter: Arc<PrimalAgnosticAdapter>) -> Self {
+    pub fn new(adapter: Arc<PrimalAgnosticAdapter>) -> Self {
         Self { adapter }
     }
 
@@ -50,15 +50,12 @@ impl CapabilityManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn discover_capability(&self, domain: &str) -> Result<String>  {
+    pub async fn discover_capability(&self, domain: &str) -> Result<String> {
         // use crate::universal_adapter::CapabilityRequest; // Commented out until available
 
-        let capabilities = self
-            .adapter
-            .query_capability(&crate::universal_adapter::types::CapabilityQuery::search(
-                domain.to_string(),
-            ))
-            .await?;
+        let capabilities = self.adapter.query_capability(
+            &crate::universal_adapter::types::CapabilityQuery::search(domain.to_string()),
+        )?;
 
         capabilities
             .first()
@@ -79,7 +76,7 @@ impl CapabilityManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_endpoint(&self, capability: &str) -> Result<String>  {
+    pub async fn get_endpoint(&self, capability: &str) -> Result<String> {
         // Implementation will route through universal adapter
         // This replaces all the hardcoded DEFAULT_*_SERVICE constants
         self.discover_capability(capability).await

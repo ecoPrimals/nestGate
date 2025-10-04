@@ -10,17 +10,20 @@ use nestgate_core::error::{InternalErrorDetails, NestGateError};
 pub struct ZfsErrorBuilder;
 impl ZfsErrorBuilder {
     /// Create a generic ZFS error (for backward compatibility)
-    pub const fn new(message: &str) -> NestGateError {
+    pub fn new(message: &str) -> NestGateError {
         NestGateError::internal_error(message, "zfs-generic")
     }
 
     /// Create a ZFS error with operation context (for backward compatibility)
-    pub const fn new_with_operation(message: &str, _operation: impl std::fmt::Debug) -> NestGateError {
+    pub fn new_with_operation(
+        message: &str,
+        _operation: impl std::fmt::Debug,
+    ) -> NestGateError {
         NestGateError::internal_error(message, "zfs-operation")
     }
 
     /// Create a canonical ZFS pool error
-    pub const fn pool_error(message: &str, pool: &str) -> NestGateError {
+    pub fn pool_error(message: &str, pool: &str) -> NestGateError {
         NestGateError::Internal(Box::new(InternalErrorDetails {
             message: format!("Pool error: {message}"),
             component: "zfs-pool".to_string(),
@@ -31,7 +34,7 @@ impl ZfsErrorBuilder {
     }
 
     /// Create a canonical ZFS dataset error
-    pub const fn dataset_error(message: &str, dataset: &str) -> NestGateError {
+    pub fn dataset_error(message: &str, dataset: &str) -> NestGateError {
         NestGateError::Internal(Box::new(InternalErrorDetails {
             message: format!("Dataset error: {message}"),
             component: "zfs-dataset".to_string(),
@@ -42,7 +45,7 @@ impl ZfsErrorBuilder {
     }
 
     /// Create a canonical ZFS snapshot error
-    pub const fn snapshot_error(message: &str, snapshot: &str) -> NestGateError {
+    pub fn snapshot_error(message: &str, snapshot: &str) -> NestGateError {
         NestGateError::Internal(Box::new(InternalErrorDetails {
             message: format!("Snapshot error: {message}"),
             component: "zfs-snapshot".to_string(),
@@ -53,7 +56,7 @@ impl ZfsErrorBuilder {
     }
 
     /// Create a canonical ZFS command error
-    pub const fn command_error(command: &str, details: &str) -> NestGateError {
+    pub fn command_error(command: &str, details: &str) -> NestGateError {
         NestGateError::Internal(Box::new(InternalErrorDetails {
             message: format!("Command '{}' failed: {}", command, details),
             component: "zfs-command".to_string(),
@@ -64,17 +67,21 @@ impl ZfsErrorBuilder {
     }
 
     /// Create a simple ZFS error
-    pub const fn zfs_error(message: &str) -> NestGateError {
+    pub fn zfs_error(message: &str) -> NestGateError {
         NestGateError::internal_error(message, "zfs-core")
     }
 
     /// Create a ZFS error with operation context
-    pub const fn zfs_operation_error(message: &str) -> NestGateError {
+    pub fn zfs_operation_error(message: &str) -> NestGateError {
         NestGateError::internal_error(message, "zfs-operation")
     }
 
     /// Create a generic internal error with component and location (migration helper)
-    pub const fn internal(message: String, component: String, location: Option<String>) -> NestGateError {
+    pub fn internal(
+        message: String,
+        component: String,
+        location: Option<String>,
+    ) -> NestGateError {
         NestGateError::Internal(Box::new(InternalErrorDetails {
             message,
             component,
@@ -102,12 +109,12 @@ pub fn zfs_internal(
 // ==================== SECTION ====================
 
 /// Convert ZFS command output to appropriate error
-pub const fn zfs_command_error(command: &str, output: &str) -> NestGateError {
+pub fn zfs_command_error(command: &str, output: &str) -> NestGateError {
     ZfsErrorBuilder::command_error(command, output)
 }
 
 /// Convert ZFS operation context to error  
-pub const fn zfs_operation_error(operation: &str, details: &str) -> NestGateError {
+pub fn zfs_operation_error(operation: &str, details: &str) -> NestGateError {
     NestGateError::Internal(Box::new(InternalErrorDetails {
         message: format!("ZFS operation failed: {} - {}", operation, details),
         component: "zfs-operation".to_string(),
@@ -118,7 +125,7 @@ pub const fn zfs_operation_error(operation: &str, details: &str) -> NestGateErro
 }
 
 /// Create ZFS error with operation context - helper function
-pub const fn create_zfs_error(message: String, operation: ZfsOperation) -> NestGateError {
+pub fn create_zfs_error(message: String, operation: ZfsOperation) -> NestGateError {
     NestGateError::Internal(Box::new(InternalErrorDetails {
         message,
         component: "zfs-core".to_string(),

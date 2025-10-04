@@ -68,7 +68,7 @@ impl SystemMetricsCollector {
                         let total = total_active + idle;
                         
                         if total > 0 {
-                            let usage = (f64::from(total_active) / f64::from(total)) * 100.0;
+                            let usage = (total_active as f64 / total as f64) * 100.0;
                             debug!("📊 Real CPU usage: {:.2}%", usage);
                             return Ok(usage);
                         }
@@ -118,7 +118,7 @@ impl SystemMetricsCollector {
                 
                 if mem_total > 0 {
                     let memory_used = mem_total.saturating_sub(mem_available);
-                    let memory_usage_percent = (f64::from(memory_used) / f64::from(mem_total)) * 100.0;
+                    let memory_usage_percent = (memory_used as f64 / mem_total as f64) * 100.0;
                     
                     debug!("🧠 Real memory: {:.2}% ({} GB / {} GB)", 
                            memory_usage_percent, 
@@ -245,7 +245,7 @@ impl SystemMetricsCollector {
                 
                 let total = hits + misses;
                 let hit_ratio = if total > 0 {
-                    (f64::from(hits) / f64::from(total)) * 100.0
+                    (hits as f64 / total as f64) * 100.0
                 } else {
                     90.0 // Default good ratio
                 };
@@ -292,7 +292,7 @@ impl SystemMetricsCollector {
                 
                 let total = l2_hits + l2_misses;
                 let hit_ratio = if total > 0 {
-                    (f64::from(l2_hits) / f64::from(total)) * 100.0
+                    (l2_hits as f64 / total as f64) * 100.0
                 } else {
                     70.0 // Default reasonable L2ARC ratio
                 };

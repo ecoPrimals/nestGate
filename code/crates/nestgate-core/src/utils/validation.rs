@@ -6,7 +6,7 @@ use crate::{NestGateError, Result};
 // ==================== SECTION ====================
 
 /// Validate that a string value is not empty
-pub const fn validate_not_empty(value: &str, field_name: &str) -> Result<()> {
+pub fn validate_not_empty(value: &str, field_name: &str) -> Result<()> {
     if value.trim().is_empty() {
         return Err(NestGateError::validation(
             actual: Some("empty string"));
@@ -14,7 +14,7 @@ pub const fn validate_not_empty(value: &str, field_name: &str) -> Result<()> {
     Ok(())
 }
 /// Validate string length is within range
-pub const fn validate_length(
+pub fn validate_length(
     value: &str,
     field_name: &str,
     min_len: Option<usize>,
@@ -79,7 +79,7 @@ where
 }
 
 /// Validate regex pattern match
-pub const fn validate_pattern(
+pub fn validate_pattern(
     value: &str,
     field_name: &str,
     pattern: &str,
@@ -97,7 +97,7 @@ pub const fn validate_pattern(
 // ==================== SECTION ====================
 
 /// Validate email address format
-pub const fn validate_email(email: &str) -> Result<()> {
+pub fn validate_email(email: &str) -> Result<()> {
     if email.is_empty() {
         return Err(NestGateError::validation(
     )
@@ -113,7 +113,7 @@ pub const fn validate_email(email: &str) -> Result<()> {
 }
 
 /// Validate email domain exists (basic check)
-pub const fn validate_email_domain_format(email: &str) -> Result<()> {
+pub fn validate_email_domain_format(email: &str) -> Result<()> {
     let parts: Vec<&str> = email.split('@').collect();
     if parts.len() != 2 {
         return Err(NestGateError::validation(
@@ -158,7 +158,7 @@ impl Default for PasswordRequirements {
 }
 
 /// Validate password against requirements
-pub const fn validate_password(password: &str, requirements: &PasswordRequirements) -> Result<()> {
+pub fn validate_password(password: &str, requirements: &PasswordRequirements) -> Result<()> {
     // Length validation
     validate_length(
         password,
@@ -240,7 +240,7 @@ pub fn calculate_password_strength(password: &str) -> u8 {
         .chars()
         .collect::<std::collections::HashSet<_>>()
         .len();
-    if f64::from(unique_chars) / f64::from(len) > 0.7 {
+    if unique_chars as f64 / len as f64 > 0.7 {
         score += 15;
     }
 
@@ -260,7 +260,7 @@ pub fn calculate_password_strength(password: &str) -> u8 {
 }
 
 /// Validate file extension
-pub const fn validate_file_extension(filename: &str, allowed_extensions: &[&str]) -> Result<()> {
+pub fn validate_file_extension(filename: &str, allowed_extensions: &[&str]) -> Result<()> {
     let path = Path::new(filename);
     let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
     if !allowed_extensions.contains(&extension) {
@@ -272,7 +272,7 @@ pub const fn validate_file_extension(filename: &str, allowed_extensions: &[&str]
 }
 
 /// Validate filename is safe
-pub const fn validate_safe_filename(filename: &str) -> Result<()> {
+pub fn validate_safe_filename(filename: &str) -> Result<()> {
     if filename.is_empty() {
         return Err(NestGateError::validation(
     )
@@ -306,13 +306,13 @@ pub const fn validate_safe_filename(filename: &str) -> Result<()> {
 // ==================== SECTION ====================
 
 /// Validate JSON string
-pub const fn validate_json(json_str: &str) -> Result<()> {
+pub fn validate_json(json_str: &str) -> Result<()> {
     serde_json::from_str::<serde_json::Value>(json_str).map_err(|e| NestGateError::validation(
         actual: Some(json_str"))?;
     Ok(())
 }
 /// Validate that all required fields are present in a map
-pub const fn validate_required_fields(
+pub fn validate_required_fields(
     data: &HashMap<String, String>,
     required_fields: &[&str],
 ) -> Result<()> {
@@ -385,7 +385,7 @@ impl<T> MultiValidator<T> {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn validate(&self, value: &T, field_name: &str) -> Result<()>  {
+        pub fn validate(&self, value: &T, field_name: &str) -> Result<()>  {
         for rule in &self.rules {
             rule.validate(value, field_name)?;
         }

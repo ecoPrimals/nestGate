@@ -8,6 +8,9 @@ use std::time::Duration;
 use std::collections::HashMap;
 
 /// Canonical monitoring configuration
+///
+/// **DEPRECATED**: This is a template. Use the real canonical from nestgate-core
+#[deprecated(since = "0.9.0", note = "Use nestgate_core::config::canonical_master::monitoring::MonitoringConfig instead - this is only a template")]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonitoringConfig {
     /// Enable monitoring

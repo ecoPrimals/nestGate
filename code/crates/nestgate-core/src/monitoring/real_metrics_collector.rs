@@ -111,8 +111,8 @@ impl RealMetricsCollector {
                 }
 
                 Ok(NetworkMetrics {
-                    rx_bytes_per_sec: f64::from(total_rx_bytes), // Would need time-based calculation for per-second
-                    tx_bytes_per_sec: f64::from(total_tx_bytes),
+                    rx_bytes_per_sec: total_rx_bytes as f64, // Would need time-based calculation for per-second
+                    tx_bytes_per_sec: total_tx_bytes as f64,
                     total_bytes_per_sec: (total_rx_bytes + total_tx_bytes) as f64,
                     interface_count,
                     timestamp: SystemTime::now(),
@@ -236,7 +236,7 @@ impl RealMetricsCollector {
         // Calculate hit ratio
         let total_requests = stats.hits + stats.misses;
         if total_requests > 0 {
-            stats.hit_ratio = stats.f64::from(hits) / f64::from(total_requests);
+            stats.hit_ratio = stats.hits as f64 / total_requests as f64;
         }
 
         stats

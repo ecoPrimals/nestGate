@@ -112,7 +112,7 @@ impl Default for StorageMetrics {
 
 impl StorageMetrics {
     /// Calculate available space percentage
-    pub const fn available_percent(&self) -> f32 {
+    pub fn available_percent(&self) -> f32 {
         if self.total_capacity_bytes == 0 {
             0.0
         } else {
@@ -121,12 +121,12 @@ impl StorageMetrics {
     }
 
     /// Check if storage is nearly full (>90% used)
-    pub const fn is_nearly_full(&self) -> bool {
+    pub fn is_nearly_full(&self) -> bool {
         self.utilization_percent > 90.0
     }
 
     /// Get total operations per second
-    pub const fn total_ops_per_sec(&self) -> f32 {
+    pub fn total_ops_per_sec(&self) -> f32 {
         self.read_ops_per_sec + self.write_ops_per_sec
     }
 
@@ -174,7 +174,7 @@ impl StorageResource {
     }
 
     /// Check if user has permission
-    pub const fn has_permission(&self, permission: &str) -> bool {
+    pub fn has_permission(&self, permission: &str) -> bool {
         self.permissions.contains(&permission.to_string())
     }
 }

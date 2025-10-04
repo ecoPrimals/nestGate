@@ -63,7 +63,7 @@ impl IoPerformanceConfig {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn validate(&self) -> Result<()>  {
+    pub fn validate(&self) -> Result<()> {
         if self.buffering.buffer_size == 0 {
             return Err(NestGateError::configuration_error_detailed(
                 "io.buffering.buffer_size".to_string(),

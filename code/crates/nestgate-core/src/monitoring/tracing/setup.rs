@@ -13,7 +13,7 @@ use super::config::TracingConfig;
 use super::types::TraceContext;
 
 /// Initialize tracing system
-pub const fn initialize_tracing(config: TracingConfig) -> Result<LogAggregator> {
+pub fn initialize_tracing(config: TracingConfig) -> Result<LogAggregator> {
     let env_filter_str = format!("nestgate={config.level}");
     
     let mut layers: Vec<Box<dyn Layer<_> + Send + Sync>> = Vec::new();
@@ -90,7 +90,7 @@ pub const fn initialize_tracing(config: TracingConfig) -> Result<LogAggregator> 
 }
 
 /// Create a new span with trace context
-pub const fn create_span(name: &str, context: Option<&TraceContext>) -> tracing::Span {
+pub fn create_span(name: &str, context: Option<&TraceContext>) -> tracing::Span {
     let span = tracing::info_span!(
         "operation",
         operation = name,

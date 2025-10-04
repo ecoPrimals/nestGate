@@ -11,7 +11,7 @@ impl Default for SIMDHasher {
 }
 
 impl SIMDHasher {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             state: [
                 0x6a09e667f3bcc908,
@@ -178,7 +178,7 @@ impl SIMDArrayOps {
 pub struct SIMDStringOps;
 impl SIMDStringOps {
     /// Find first occurrence of byte using SIMD
-    pub const fn find_byte_simd(haystack: &[u8], needle: u8) -> Option<usize> {
+    pub fn find_byte_simd(haystack: &[u8], needle: u8) -> Option<usize> {
         let chunks = haystack.chunks_exact(16);
         let remainder = chunks.remainder();
 

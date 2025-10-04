@@ -101,7 +101,7 @@ pub mod installer_config_factory {
     // Use the correct Environment enum from unified_types
 
     /// Development configuration
-    pub const fn development() -> InstallerConfig {
+    pub fn development() -> InstallerConfig {
         InstallerConfig {
             base_config: NestGateCanonicalConfig::default(),
             installation_path: "/opt/nestgate".to_string(),
@@ -110,7 +110,7 @@ pub mod installer_config_factory {
     }
 
     /// Production configuration
-    pub const fn production() -> InstallerConfig {
+    pub fn production() -> InstallerConfig {
         InstallerConfig {
             base_config: NestGateCanonicalConfig::default(),
             installation_path: "/opt/nestgate".to_string(),
@@ -131,7 +131,7 @@ impl InstallerConfigUtils {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub const fn validate(config: &InstallerConfig) -> Result<(), String>  {
+        pub fn validate(config: &InstallerConfig) -> Result<(), String>  {
         // Use canonical config structure - working_directory instead of services.installation
         // Skip directory existence check in debug mode (for tests)
         if !config.base_config.system.debug_mode
@@ -149,7 +149,7 @@ impl InstallerConfigUtils {
     }
 
     /// Get components selection
-    pub const fn get_selected_components(_config: &InstallerConfig) -> Vec<String> {
+    pub fn get_selected_components(_config: &InstallerConfig) -> Vec<String> {
         // For now, return default components since canonical config doesn't have components field yet
         vec![
             "core".to_string(),
@@ -160,7 +160,7 @@ impl InstallerConfigUtils {
     }
 
     /// Check if component is selected
-    pub const fn is_component_selected(_config: &InstallerConfig, component: &str) -> bool {
+    pub fn is_component_selected(_config: &InstallerConfig, component: &str) -> bool {
         // For now, return true for core components
         matches!(component, "core" | "api" | "storage" | "network")
     }

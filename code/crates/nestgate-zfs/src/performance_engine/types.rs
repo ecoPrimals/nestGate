@@ -313,10 +313,10 @@ pub mod system_time_serde {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub fn serialize<S>(time: &SystemTime, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(time: &SystemTime, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
-     {
+    {
         let duration = time
             .duration_since(UNIX_EPOCH)
             .unwrap_or_else(|_| Duration::from_secs(0));

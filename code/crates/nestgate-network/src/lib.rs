@@ -62,21 +62,21 @@ pub use types::{NetworkConfig, NetworkConfigBuilder};
 // ==================== CONFIGURATION FUNCTIONS ====================
 
 /// Default network configuration
-pub const fn default_network_config() -> NetworkConfig {
+pub fn default_network_config() -> NetworkConfig {
     NetworkConfig::default()
 }
 /// Create production network configuration
 pub fn production_network_config() -> NetworkConfig {
     let mut config = NetworkConfig::default();
-    config.network.max_connections = 2000;
-    config.network.connection_timeout = Duration::from_secs(10);
+    config.network.api.max_connections = 2000;
+    config.network.api.connection_timeout = Duration::from_secs(10);
     config
 }
 /// Create development network configuration  
 pub fn development_network_config() -> NetworkConfig {
     let mut config = NetworkConfig::default();
-    config.network.max_connections = 100;
-    config.network.connection_timeout = Duration::from_secs(30);
+    config.network.api.max_connections = 100;
+    config.network.api.connection_timeout = Duration::from_secs(30);
     config
 }
 // ==================== SECTION ====================

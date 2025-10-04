@@ -208,7 +208,7 @@ fn bench_memory_allocation(c: &mut Criterion) {
         b.iter(|| {
             let mut vec = Vec::new();
             for i in 0..100 {
-                vec.push(format!("item_{}", "actual_error_details");
+                vec.push(format!("item_{}", i));
             }
             black_box(vec)
         })

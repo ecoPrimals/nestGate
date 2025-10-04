@@ -87,7 +87,7 @@ use tracing::warn;
 /// Universal connection manager for network services
 pub struct ConnectionManager;
 impl ConnectionManager {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self
     }
 }
@@ -174,7 +174,7 @@ pub struct OrchestrationConnectionManager {
 }
 impl OrchestrationConnectionManager {
     /// Create new connection manager (Orchestration capability is MANDATORY)
-    pub const fn new(_orchestration_endpoint: String, service_name: String) -> Self {
+    pub fn new(_orchestration_endpoint: String, service_name: String) -> Self {
         info!(
             "🌐 Creating Orchestration Connection Manager for service: {}",
             service_name

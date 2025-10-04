@@ -536,23 +536,23 @@ impl From<McpProtocolError> for NestGateError {
 // ==================== SECTION ====================
 
 impl McpProtocolError {
-    pub const fn protocol_error(message: impl Into<String>) -> Self { Self::ProtocolError {
+    pub fn protocol_error(message: impl Into<String>) -> Self { Self::ProtocolError {
             message: message.into(),
          }
     
-    pub const fn connection_error(message: impl Into<String>) -> Self { Self::ConnectionError {
+    pub fn connection_error(message: impl Into<String>) -> Self { Self::ConnectionError {
             message: message.into(),
          }
     
-    pub const fn message_parsing_error(message: impl Into<String>) -> Self { Self::MessageParsingError {
+    pub fn message_parsing_error(message: impl Into<String>) -> Self { Self::MessageParsingError {
             message: message.into(),
          }
     
-    pub const fn authentication_error(message: impl Into<String>) -> Self { Self::AuthenticationError {
+    pub fn authentication_error(message: impl Into<String>) -> Self { Self::AuthenticationError {
             message: message.into(),
          }
     
-    pub const fn session_error(message: impl Into<String>) -> Self { Self::SessionError {
+    pub fn session_error(message: impl Into<String>) -> Self { Self::SessionError {
             message: message.into(),
          }
 }
@@ -564,7 +564,7 @@ pub struct ProtocolHandler {
     orchestrator_endpoint: Option<String>,
 }
 impl ProtocolHandler {
-    pub const fn new(node_id: String, capabilities: ProviderCapabilities) -> Self { Self {
+    pub fn new(node_id: String, capabilities: ProviderCapabilities) -> Self { Self {
             _node_id: node_id,
             capabilities,
             orchestrator_endpoint: None,

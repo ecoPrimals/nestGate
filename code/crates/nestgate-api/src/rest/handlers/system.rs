@@ -266,12 +266,12 @@ fn get_resource_usage() -> ResourceUsage {
     // In a real implementation, would read from system APIs
     // For demo, generate realistic values
     let memory_total = 8 * 1024 * 1024 * 1024; // 8GB
-    let memory_used = (f64::from(memory_total) * 0.45) as u64; // 45% usage
-    let memory_usage_percent = (f64::from(memory_used) / f64::from(memory_total)) * 100.0;
+    let memory_used = (memory_total as f64 * 0.45) as u64; // 45% usage
+    let memory_usage_percent = (memory_used as f64 / memory_total as f64) * 100.0;
 
     let disk_total = 100 * 1024 * 1024 * 1024; // 100GB
-    let disk_used = (f64::from(disk_total) * 0.25) as u64; // 25% usage
-    let disk_usage_percent = (f64::from(disk_used) / f64::from(disk_total)) * 100.0;
+    let disk_used = (disk_total as f64 * 0.25) as u64; // 25% usage
+    let disk_usage_percent = (disk_used as f64 / disk_total as f64) * 100.0;
 
     // Generate CPU usage based on current time for some variation
     let cpu_usage_percent = {

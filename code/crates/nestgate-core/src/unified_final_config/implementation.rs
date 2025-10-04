@@ -3,7 +3,7 @@ use crate::error::CanonicalResult as Result;
 
 impl NestGateFinalConfig {
     /// Create a new configuration with default values
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
@@ -82,7 +82,7 @@ impl NestGateFinalConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_impl(&self) -> Result<()>  {
+        pub fn validate_impl(&self) -> Result<()>  {
         // Comprehensive validation logic would go here
         // For now, basic validation
         if self

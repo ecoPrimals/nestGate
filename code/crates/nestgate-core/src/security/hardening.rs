@@ -113,7 +113,7 @@ impl InputValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_safe_string(input: &str, max_length: usize) -> Result<()>  {
+        pub fn validate_safe_string(input: &str, max_length: usize) -> Result<()>  {
         if input.len() > max_length {
             return Err(NestGateError::security(
                 "Input exceeds maximum length",
@@ -185,7 +185,7 @@ impl InputValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn validate_command_args(args: &[String]) -> Result<()>  {
+        pub fn validate_command_args(args: &[String]) -> Result<()>  {
         for arg in args {
             // Check for command injection patterns
             let dangerous_chars = ['|', '&', ';', '>', '<', '`', '$', '(', ')'];

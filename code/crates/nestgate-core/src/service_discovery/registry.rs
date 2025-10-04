@@ -213,7 +213,7 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
 
                 // Capability match quality - 10% weight
                 // IMPLEMENTATION: Enhanced capability matching with preference-based selection
-                let capability_match_score = capabilities.len() as f64; // Simple count for now
+                let capability_match_score = requirements.capabilities.len() as f64; // Simple count for now
                 score += (capability_match_score / 5.0).min(10.0); // Cap at 10.0
 
                 (service, score)
@@ -338,10 +338,10 @@ impl InMemoryServiceRegistry {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_services_by_category(
+    pub async fn get_services_by_category(
         &self,
         category: ServiceCategory,
-    ) -> Result<Vec<ServiceInfo>>  {
+    ) -> Result<Vec<ServiceInfo>> {
         let services = self.services.read().await;
         let matching_services: Vec<ServiceInfo> = services
             .values()

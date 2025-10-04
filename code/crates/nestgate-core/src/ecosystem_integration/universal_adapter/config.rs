@@ -55,7 +55,7 @@ pub struct UnifiedRetryConfig {
 }
 
 impl UnifiedRetryConfig {
-    pub const fn critical_operations() -> Self {
+    pub fn critical_operations() -> Self {
         Self {
             max_attempts: 5,
             initial_delay: Duration::from_millis(100),
@@ -64,7 +64,7 @@ impl UnifiedRetryConfig {
         }
     }
 
-    pub const fn high_frequency() -> Self {
+    pub fn high_frequency() -> Self {
         Self {
             max_attempts: 3,
             initial_delay: Duration::from_millis(50),
@@ -237,7 +237,7 @@ pub type AdapterConfig = UnifiedAdapterConfig;
 
 impl AdapterConfig {
     /// Create adapter config from environment variables
-    pub const fn from_environment() -> Self {
+    pub fn from_environment() -> Self {
         // Return default for now - environment integration can be enhanced later
         Self::default()
     }

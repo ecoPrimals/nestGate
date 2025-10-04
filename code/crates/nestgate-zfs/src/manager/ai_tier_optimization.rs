@@ -84,8 +84,8 @@ impl AiTierOptimizer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn analyze_and_optimize(&self) -> Result<Vec<TierOptimizationRecommendation>>  {
+    #[must_use]
+    pub fn analyze_and_optimize(&self) -> Result<Vec<TierOptimizationRecommendation>> {
         if !self.config.enabled {
             debug!("AI tier optimization is disabled");
             return Ok(vec![]);
@@ -117,7 +117,8 @@ impl AiTierOptimizer {
         dataset: &str,
         metrics: &[PerformanceMetric],
     ) -> Result<Option<TierOptimizationRecommendation>> {
-        let avg_latency = metrics.iter().map(|m| m.avg_latency).sum::<f64>() / (metrics.len() as f64);
+        let avg_latency =
+            metrics.iter().map(|m| m.avg_latency).sum::<f64>() / (metrics.len() as f64);
         let total_ops = metrics
             .iter()
             .map(|m| m.read_ops + m.write_ops)

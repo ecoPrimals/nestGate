@@ -36,7 +36,7 @@ impl<T: Send + 'static> ConnectionGuard<T> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn connection(&self) -> Result<&T>  {
+        pub fn connection(&self) -> Result<&T>  {
         self.connection
             .as_ref()
             .ok_or_else(|| crate::NestGateError::internal_error(

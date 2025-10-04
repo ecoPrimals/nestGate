@@ -9,7 +9,7 @@ pub struct StorageDomain {
     }
 impl StorageDomain {
     /// Create new storage domain handler
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {}
     }
 

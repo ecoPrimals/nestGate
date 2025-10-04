@@ -108,7 +108,7 @@ impl ErrorContext {
     }
     
     /// Get elapsed time since error occurred
-    pub const fn elapsed(&self) -> Duration {
+    pub fn elapsed(&self) -> Duration {
         self.timestamp.elapsed()
     }
 }
@@ -149,7 +149,7 @@ impl EnhancedError {
     }
     
     /// Create configuration error
-    pub const fn configuration_error(message: String, component: String) -> Self {
+    pub fn configuration_error(message: String, component: String) -> Self {
         let context = ErrorContext::new(component, "configuration".to_string())
             .with_severity(ErrorSeverity::Critical)
             .with_user_message("Configuration error - please check your settings".to_string());
@@ -161,7 +161,7 @@ impl EnhancedError {
     }
     
     /// Create network error
-    pub const fn network_error(message: String, component: String) -> Self {
+    pub fn network_error(message: String, component: String) -> Self {
         let context = ErrorContext::new(component, "network_operation".to_string())
             .with_severity(ErrorSeverity::Warning)
             .with_user_message("Network connectivity issue - retrying automatically".to_string());
@@ -176,7 +176,7 @@ impl EnhancedError {
     }
     
     /// Create storage error
-    pub const fn storage_error(message: String, component: String) -> Self {
+    pub fn storage_error(message: String, component: String) -> Self {
         let context = ErrorContext::new(component, "storage_operation".to_string())
             .with_severity(ErrorSeverity::Error)
             .with_user_message("Storage operation failed - data may be temporarily unavailable".to_string());
@@ -190,7 +190,7 @@ impl EnhancedError {
     }
     
     /// Create system error
-    pub const fn system_error(message: String, component: String) -> Self {
+    pub fn system_error(message: String, component: String) -> Self {
         let context = ErrorContext::new(component, "system_operation".to_string())
             .with_severity(ErrorSeverity::Critical)
             .with_user_message("System error occurred - please contact support if issue persists".to_string());
@@ -237,12 +237,12 @@ impl EnhancedError {
     }
     
     /// Check if error should be retried
-    pub const fn should_retry(&self, attempt: u32) -> bool {
+    pub fn should_retry(&self, attempt: u32) -> bool {
         self.retryable && self.max_retries.map_or(true, |max| attempt < max)
     }
     
     /// Get user-friendly message
-    pub const fn user_message(&self) -> &str {
+    pub fn user_message(&self) -> &str {
         self.context.user_message.as_deref().unwrap_or(&self.message)
     }
 }
@@ -279,7 +279,7 @@ enum CircuitState {
 }
 
 impl CircuitBreaker {
-    pub const fn new(failure_threshold: u32, recovery_timeout: Duration) -> Self {
+    pub fn new(failure_threshold: u32, recovery_timeout: Duration) -> Self {
         Self {
             failure_threshold,
             recovery_timeout,
@@ -364,12 +364,12 @@ impl CircuitBreaker {
     }
     
     /// Get current circuit breaker state
-    pub const fn state(&self) -> CircuitState {
+    pub fn state(&self) -> CircuitState {
         *self.state.lock().unwrap()
     }
     
     /// Get current failure count
-    pub const fn failure_count(&self) -> u64 {
+    pub fn failure_count(&self) -> u64 {
         self.failure_count.load(Ordering::Relaxed)
     }
 }
@@ -386,7 +386,7 @@ pub struct RetryStrategy {
 }
 
 impl RetryStrategy {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             max_attempts: 3,
             base_delay: Duration::from_millis(100),
@@ -565,12 +565,12 @@ impl ErrorAggregator {
     }
     
     /// Get all errors
-    pub const fn get_errors(&self) -> Vec<EnhancedError> {
+    pub fn get_errors(&self) -> Vec<EnhancedError> {
         self.errors.lock().unwrap().clone()
     }
     
     /// Get errors by severity
-    pub const fn get_errors_by_severity(&self, severity: ErrorSeverity) -> Vec<EnhancedError> {
+    pub fn get_errors_by_severity(&self, severity: ErrorSeverity) -> Vec<EnhancedError> {
         self.errors.lock().unwrap()
             .iter()
             .filter(|e| e.context.severity == severity)
@@ -579,7 +579,7 @@ impl ErrorAggregator {
     }
     
     /// Get error statistics
-    pub const fn get_stats(&self) -> &ErrorStats {
+    pub fn get_stats(&self) -> &ErrorStats {
         &self.stats
     }
     

@@ -27,7 +27,7 @@ impl UniversalGenomeProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn new(base_url: String, provider_name: String, api_key: Option<String>) -> Result<Self>  {
+        pub fn new(base_url: String, provider_name: String, api_key: Option<String>) -> Result<Self>  {
         let config = HttpProviderConfigBuilder::new(base_url, "genome_data".to_string())
             .with_timeout(60) // Genome queries can be slow
             .with_metadata("name".to_string(), provider_name.clone())
@@ -58,7 +58,7 @@ impl UniversalGenomeProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn for_ncbi_compatible(base_url: String, api_key: Option<String>) -> Result<Self>  {
+        pub fn for_ncbi_compatible(base_url: String, api_key: Option<String>) -> Result<Self>  {
         Self::new(base_url, "NCBI-Compatible Genome Database".to_string(), api_key)
     }
 
@@ -70,7 +70,7 @@ impl UniversalGenomeProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn for_ensembl_compatible(base_url: String, api_key: Option<String>) -> Result<Self>  {
+        pub fn for_ensembl_compatible(base_url: String, api_key: Option<String>) -> Result<Self>  {
         Self::new(base_url, "Ensembl-Compatible Genome Database".to_string(), api_key)
     }
 
@@ -82,7 +82,7 @@ impl UniversalGenomeProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn for_custom_database(base_url: String, provider_name: String, api_key: Option<String>) -> Result<Self>  {
+        pub fn for_custom_database(base_url: String, provider_name: String, api_key: Option<String>) -> Result<Self>  {
         Self::new(base_url, provider_name, api_key)
     }
 
@@ -259,7 +259,7 @@ impl GenomeProviderFactory {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn create_ncbi_compatible(base_url: Option<String>, api_key: Option<String>) -> Result<Arc<UniversalGenomeProvider>>  {
+        pub fn create_ncbi_compatible(base_url: Option<String>, api_key: Option<String>) -> Result<Arc<UniversalGenomeProvider>>  {
         let base_url = base_url.unwrap_or_else(|| "https://api.ncbi.nlm.nih.gov".to_string());
         Ok(Arc::new(UniversalGenomeProvider::for_ncbi_compatible(base_url, api_key)?))
     }
@@ -272,7 +272,7 @@ impl GenomeProviderFactory {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn create_ensembl_compatible(base_url: Option<String>) -> Result<Arc<UniversalGenomeProvider>>  {
+        pub fn create_ensembl_compatible(base_url: Option<String>) -> Result<Arc<UniversalGenomeProvider>>  {
         let base_url = base_url.unwrap_or_else(|| "https://rest.ensembl.org".to_string());
         Ok(Arc::new(UniversalGenomeProvider::for_ensembl_compatible(base_url, None)?))
     }
@@ -285,6 +285,6 @@ impl GenomeProviderFactory {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn create_custom(base_url: String, provider_name: String, api_key: Option<String>) -> Result<Arc<UniversalGenomeProvider>>  {
+        pub fn create_custom(base_url: String, provider_name: String, api_key: Option<String>) -> Result<Arc<UniversalGenomeProvider>>  {
         Ok(Arc::new(UniversalGenomeProvider::for_custom_database(base_url, provider_name, api_key)?))
     }

@@ -27,7 +27,7 @@ impl Default for ProviderManager {
 
 impl ProviderManager {
     /// Create a new provider manager
-    pub const fn new() -> Self { Self {
+    pub fn new() -> Self { Self {
             // Initialize provider state
          }
 
@@ -147,7 +147,7 @@ impl ProviderManager {
             crate::types::StorageTier::Cache => (1_073_741_824_000_u64, 0.98), // 1TB, 98% available
         };
 
-        let available = (f64::from(base_capacity) * availability_factor) as u64;
+        let available = (base_capacity as f64 * availability_factor) as u64;
         Ok((base_capacity, available))
     }
 }

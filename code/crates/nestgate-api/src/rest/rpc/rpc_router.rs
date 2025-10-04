@@ -145,10 +145,10 @@ impl UnifiedRpcRouter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn route_request(
+    pub fn route_request(
         &self,
         request: &UnifiedRpcRequest,
-    ) -> Result<RpcConnectionType, RpcError>  {
+    ) -> Result<RpcConnectionType, RpcError> {
         debug!(
             "🔀 Routing RPC request: {} -> {}",
             request.method, request.target
@@ -260,7 +260,7 @@ impl UnifiedRpcRouter {
     }
 
     /// Get routing statistics
-    pub const fn get_routing_stats(&self) -> RoutingStats {
+    pub fn get_routing_stats(&self) -> RoutingStats {
         RoutingStats {
             method_rules_count: self.method_rules.len(),
             target_rules_count: self.target_rules.len(),

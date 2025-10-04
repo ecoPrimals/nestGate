@@ -12,7 +12,7 @@ pub struct StorageHandler;
 
 impl StorageHandler {
     /// Create a new storage handler instance
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self
     }
 }
@@ -365,7 +365,7 @@ fn parse_size_string(size_str: &str) -> Option<u64> {
             "P" | "PB" => 1024_u64.pow(5),
             _ => 1,
         };
-        Some((number * f64::from(multiplier)) as u64)
+        Some((number * multiplier as f64) as u64)
     } else {
         None
     }
@@ -605,7 +605,7 @@ pub struct StorageManager {
 
 impl StorageManager {
     /// Create a new storage manager instance
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {}
     }
 }

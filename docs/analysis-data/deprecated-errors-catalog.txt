@@ -1,0 +1,22 @@
+# DEPRECATED ERROR PATTERNS TO REMOVE
+# These patterns should be removed after migration is complete
+
+# Generic placeholder errors (most common)
+enum ModuleError {
+    Unknown(String),
+}
+
+# Tool-specific errors that should use NestGateUnifiedError::Tool
+enum MigratorError { ... }
+enum CloneOptimizerError { ... }
+enum ScannerError { ... }
+
+# Test-specific errors that should use NestGateUnifiedError::Test  
+enum TestError { ... }
+enum MockError { ... }
+enum HardwareTestError { ... }
+
+# Domain errors that have canonical equivalents
+enum NetworkError { ... }  // -> NestGateUnifiedError::Network
+enum StorageError { ... }  // -> NestGateUnifiedError::Storage
+enum SecurityError { ... } // -> NestGateUnifiedError::Security

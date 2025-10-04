@@ -130,7 +130,7 @@ impl InputValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn new() -> Result<Self>  {
+        pub fn new() -> Result<Self>  {
         let patterns = ValidationPatterns::new()?;
         let config = ValidationConfig::default();
         Ok(Self { patterns, config })
@@ -144,13 +144,13 @@ impl InputValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub const fn with_config(config: ValidationConfig) -> Result<Self>  {
+        pub fn with_config(config: ValidationConfig) -> Result<Self>  {
         let patterns = ValidationPatterns::new()?;
         Ok(Self { patterns, config })
     }
 
     /// Validate a string input with security checks
-    pub const fn validate_string(
+    pub fn validate_string(
         &self,
         field: &str,
         value: &str,
@@ -188,7 +188,7 @@ impl InputValidator {
     }
 
     /// Validate an email address
-    pub const fn validate_email(&self, field: &str, email: &str) -> ValidationResult<String> {
+    pub fn validate_email(&self, field: &str, email: &str) -> ValidationResult<String> {
         if !self.patterns.email.is_match(email) {
             return Err(ValidationError::InvalidField {
                 field: field.to_string(),
@@ -204,7 +204,7 @@ impl InputValidator {
     }
 
     /// Validate a UUID
-    pub const fn validate_uuid(&self, field: &str, uuid: &str) -> ValidationResult<String> {
+    pub fn validate_uuid(&self, field: &str, uuid: &str) -> ValidationResult<String> {
         if !self.patterns.uuid.is_match(uuid) {
             return Err(ValidationError::InvalidField {
                 field: field.to_string(),
@@ -216,7 +216,7 @@ impl InputValidator {
     }
 
     /// Validate a password with security requirements
-    pub const fn validate_password(&self, _field: &str, password: &str) -> SecurityResult<String> {
+    pub fn validate_password(&self, _field: &str, password: &str) -> SecurityResult<String> {
         if password.len() < self.config.min_password_length {
             return Err(SecurityError::WeakCredentials {
                 requirement: format!("minimum {self.config.min_password_length} characters"),
@@ -236,7 +236,7 @@ impl InputValidator {
     }
 
     /// Validate a filename for safe filesystem operations
-    pub const fn validate_filename(&self, field: &str, filename: &str) -> ValidationResult<String> {
+    pub fn validate_filename(&self, field: &str, filename: &str) -> ValidationResult<String> {
         if !self.patterns.safe_filename.is_match(filename) {
             return Err(ValidationError::InvalidField {
                 field: field.to_string(),
@@ -262,7 +262,7 @@ impl InputValidator {
     }
 
     /// Validate a network address (IP or domain)
-    pub const fn validate_network_address(&self, field: &str, endpoint: &str) -> ValidationResult<String> {
+    pub fn validate_network_address(&self, field: &str, endpoint: &str) -> ValidationResult<String> {
         // Try IPv4 first
         if self.patterns.ipv4.is_match(address) {
             return Ok(address.to_string());
@@ -285,7 +285,7 @@ impl InputValidator {
     }
 
     /// Validate a port number
-    pub const fn validate_port(&self, field: &str, port: &str) -> ValidationResult<u16> {
+    pub fn validate_port(&self, field: &str, port: &str) -> ValidationResult<u16> {
         if !self.patterns.port.is_match(port) {
             return Err(ValidationError::InvalidField {
                 field: field.to_string(),
@@ -378,7 +378,7 @@ impl InputValidator {
     }
 
     /// Validate a map of key-value pairs
-    pub const fn validate_map(&self, field: &str, map: &HashMap<String, String>) -> ValidationResult<()> {
+    pub fn validate_map(&self, field: &str, map: &HashMap<String, String>) -> ValidationResult<()> {
         // Validate collection size
         self.validate_collection_size(field, &map.iter().collect::<Vec<_>>())
             .map_err(|_| ValidationError::InvalidField {
@@ -405,7 +405,7 @@ impl InputValidator {
 }
 
 /// Validate a service name for universal service registration
-pub const fn validate_service_name(name: &str) -> ValidationResult<String> {
+pub fn validate_service_name(name: &str) -> ValidationResult<String> {
     let validator = InputValidator::new().map_err(|_| ValidationError::InvalidField {
         field: Some("field".to_string()),
         reason: "failed to create validator".to_string(),
@@ -432,7 +432,7 @@ pub const fn validate_service_name(name: &str) -> ValidationResult<String> {
 }
 
 /// Validate an API key
-pub const fn validate_api_key(key: &str) -> ValidationResult<String> {
+pub fn validate_api_key(key: &str) -> ValidationResult<String> {
     let validator = InputValidator::new().map_err(|_| ValidationError::InvalidField {
         field: Some("field".to_string()),
         reason: "failed to create validator".to_string(),
@@ -440,7 +440,7 @@ pub const fn validate_api_key(key: &str) -> ValidationResult<String> {
     validator.validate_string("api_key", key, Some(32), Some(128))
 }
 /// Validate a username for authentication
-pub const fn validate_username(username: &str) -> ValidationResult<String> {
+pub fn validate_username(username: &str) -> ValidationResult<String> {
     let validator = InputValidator::new().map_err(|_| ValidationError::InvalidField {
         field: Some("field".to_string()),
         reason: "failed to create validator".to_string(),

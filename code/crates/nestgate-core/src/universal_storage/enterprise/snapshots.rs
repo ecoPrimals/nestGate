@@ -40,7 +40,7 @@ impl SnapshotInfo {
         }
     }
 
-    pub const fn age(&self) -> Duration {
+    pub fn age(&self) -> Duration {
         SystemTime::now()
             .duration_since(self.created_at)
             .unwrap_or_default()
@@ -50,7 +50,7 @@ impl SnapshotInfo {
         self.tags.insert(key, value);
     }
 
-    pub const fn get_tag(&self, key: &str) -> Option<&String> {
+    pub fn get_tag(&self, key: &str) -> Option<&String> {
         self.tags.get(key)
     }
 

@@ -152,7 +152,7 @@ where
         self
     }
 
-    pub const fn build(self) -> MetadataContainer<T> {
+    pub fn build(self) -> MetadataContainer<T> {
         MetadataContainer {
             service_type: self.service_type,
             service_version: self.service_version,
@@ -224,11 +224,11 @@ pub type SecurityContext = MetadataContainer<SecurityExtensions>;
 
 // Implementation shortcuts for common patterns
 impl<T: MetadataExtensions + Default> MetadataContainer<T> {
-    pub const fn for_service(service_type: impl Into<String>) -> MetadataContainerBuilder<T> {
+    pub fn for_service(service_type: impl Into<String>) -> MetadataContainerBuilder<T> {
         MetadataContainerBuilder::new(service_type, T::default())
     }
 
-    pub const fn quick_build(service_type: impl Into<String>, extensions: T) -> Self {
+    pub fn quick_build(service_type: impl Into<String>, extensions: T) -> Self {
         MetadataContainerBuilder::new(service_type, extensions).build()
     }
 }

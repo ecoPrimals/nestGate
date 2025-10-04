@@ -86,7 +86,7 @@ impl HealthChecker {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn run_health_checks(&self) -> Result<SystemHealth>  {
+    pub async fn run_health_checks(&self) -> Result<SystemHealth> {
         let mut component_health = HashMap::new();
         let mut healthy_count = 0;
         let mut total_count = 0;
@@ -119,7 +119,7 @@ impl HealthChecker {
 
         // Calculate overall health
         let health_score = if total_count > 0 {
-            f64::from(healthy_count) / f64::from(total_count)
+            healthy_count as f64 / total_count as f64
         } else {
             1.0 // No components registered, assume healthy
         };
@@ -148,7 +148,7 @@ impl HealthChecker {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_system_health(&self) -> Result<SystemHealth>  {
+    pub async fn get_system_health(&self) -> Result<SystemHealth> {
         self.run_health_checks().await
     }
 }
