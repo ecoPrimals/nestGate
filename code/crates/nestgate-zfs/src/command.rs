@@ -298,7 +298,7 @@ impl ZfsOperations {
     }
 
     /// List datasets in a pool
-    pub fn list_datasets(&self, pool_name: Option<&str>) -> ZfsCommandResult<Vec<ZfsDataset>> {
+    pub async fn list_datasets(&self, pool_name: Option<&str>) -> ZfsCommandResult<Vec<ZfsDataset>> {
         let mut args = vec!["list", "-H", "-o", "name,used,avail,refer,mountpoint"];
         if let Some(pool) = pool_name {
             args.push(pool);
