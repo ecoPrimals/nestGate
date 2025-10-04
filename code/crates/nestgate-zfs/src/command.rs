@@ -331,7 +331,7 @@ impl ZfsOperations {
     }
 
     /// Create a dataset
-    pub fn create_dataset(
+    pub async fn create_dataset(
         &self,
         dataset_name: &str,
         properties: Option<&HashMap<String, String>>,
@@ -366,7 +366,7 @@ impl ZfsOperations {
     }
 
     /// Create a snapshot
-    pub fn create_snapshot(
+    pub async fn create_snapshot(
         &self,
         dataset_name: &str,
         _snapshot_name: &str,
@@ -386,7 +386,7 @@ impl ZfsOperations {
     }
 
     /// List snapshots
-    pub fn list_snapshots(&self, dataset_name: Option<&str>) -> ZfsCommandResult<Vec<ZfsSnapshot>> {
+    pub async fn list_snapshots(&self, dataset_name: Option<&str>) -> ZfsCommandResult<Vec<ZfsSnapshot>> {
         let mut args = vec!["list", "-H", "-t", "snapshot", "-o", "name,used,creation"];
         if let Some(dataset) = dataset_name {
             args.push(dataset);

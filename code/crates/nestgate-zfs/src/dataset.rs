@@ -81,7 +81,7 @@ impl ZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn create_dataset(
+    pub async fn create_dataset(
         &self,
         name: &str,
         parent: &str,
@@ -291,7 +291,7 @@ impl ZfsDatasetManager {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     #[must_use]
-    pub fn create_dataset_with_config(&self, name: &str, parent: &str) -> Result<()> {
+    pub async fn create_dataset_with_config(&self, name: &str, parent: &str) -> Result<()> {
         tracing::info!("Creating dataset: {}/{}", parent, name);
 
         let full_name = format!("{parent}/{"actual_error_details"}");
@@ -352,7 +352,7 @@ impl ZfsDatasetManager {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     #[must_use]
-    pub fn get_dataset_properties(&self, name: &str) -> Result<HashMap<String, String>> {
+    pub async fn get_dataset_properties(&self, name: &str) -> Result<HashMap<String, String>> {
         tracing::debug!("Getting properties for dataset: {}", name);
 
         let output = Command::new("zfs")
@@ -394,7 +394,7 @@ impl ZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn set_dataset_properties(
+    pub async fn set_dataset_properties(
         &self,
         name: &str,
         properties: &HashMap<String, String>,
@@ -523,7 +523,7 @@ impl ZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn list_snapshots(&self, dataset_name: &str) -> Result<Vec<crate::snapshot::SnapshotInfo>> {
+    pub async fn list_snapshots(&self, dataset_name: &str) -> Result<Vec<crate::snapshot::SnapshotInfo>> {
         debug!("Listing snapshots for dataset: {}", dataset_name);
 
         let output = Command::new("zfs")
