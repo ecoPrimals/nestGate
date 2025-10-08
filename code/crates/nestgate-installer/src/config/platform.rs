@@ -57,7 +57,7 @@ pub struct ComponentSelection {
     pub install_ui: bool,
     /// Install NAS component
     pub install_nas: bool,
-    /// Install FSMonitor component
+    /// Install `FSMonitor` component
     pub install_fsmonitor: bool,
     /// Install MCP component
     pub install_mcp: bool,
@@ -140,13 +140,13 @@ pub enum DeploymentMode {
 /// Supported platform types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PlatformType {
-    /// Linux x86_64
+    /// Linux `x86_64`
     LinuxX64,
     /// Linux ARM64
     LinuxArm64,
-    /// Windows x86_64
+    /// Windows `x86_64`
     WindowsX64,
-    /// macOS x86_64
+    /// macOS `x86_64`
     MacOsX64,
     /// macOS ARM64 (Apple Silicon)
     MacOsArm64,

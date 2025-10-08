@@ -32,8 +32,7 @@ impl SyncEngine {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn new() -> Result<Self>   {
+                pub fn new() -> Result<Self>   {
         Ok(Self {
             sync_policies: Arc::new(RwLock::new(HashMap::new())),
             active_syncs: Arc::new(RwLock::new(HashMap::new())),

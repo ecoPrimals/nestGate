@@ -57,7 +57,6 @@ pub fn monitor_capacity_usage(
 }
 
 /// Performance bottleneck detection using metrics analysis
-#[must_use]
 pub fn detect_performance_bottlenecks(performance_data: &[SystemInfo]) -> Result<BottleneckReport> {
     debug!("Detecting performance bottlenecks from metrics");
     let mut bottlenecks = Vec::new();
@@ -137,9 +136,11 @@ pub fn generate_maintenance_schedule(
         // Defragmentation scheduling (simplified check based on disk usage)
         if latest.disk_usage > 85.0 {
             scheduled_tasks.push("Defragment pool".to_string());
-            if priority == "low" {
-                priority = "medium";
-            }
+            let _priority = if priority == "low" {
+                "medium"
+            } else {
+                priority
+            };
         }
     }
 

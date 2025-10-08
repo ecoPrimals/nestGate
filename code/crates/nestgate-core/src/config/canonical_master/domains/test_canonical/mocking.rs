@@ -1,4 +1,8 @@
+#![cfg(feature = "dev-stubs")]
+
 // **MOCKING TEST CONFIGURATION**
+//
+// **⚠️ TEST ONLY**: This module is only available with `dev-stubs` feature
 
 use serde::{Deserialize, Serialize};
 

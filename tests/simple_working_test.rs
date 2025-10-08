@@ -1,8 +1,8 @@
-use crate::canonical_modernization::UnifiedServiceType;
 /// Simple working test to demonstrate successful compilation and execution
 /// This test only uses core nestgate functionality that compiles successfully
 use nestgate_core::{NestGateError, Result};
 use std::time::Duration;
+use tests::canonical_modernization::UnifiedServiceType;
 use tokio::time::sleep;
 
 #[tokio::test]

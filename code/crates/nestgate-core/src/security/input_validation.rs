@@ -90,33 +90,36 @@ impl ValidationPatterns {
 
 impl Default for ValidationPatterns {
     fn default() -> Self {
+        // These are hardcoded patterns that should always compile.
+        // If they fail, we fall back to a permissive pattern that matches everything
+        // to ensure the system stays operational (fail-safe, not fail-secure for initialization)
         Self {
             email: regex::Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-                .expect("Email regex pattern should be valid"),
+                .unwrap_or_else(|_| regex::Regex::new(r".*").unwrap()),
             uuid: regex::Regex::new(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
-                .expect("UUID regex pattern should be valid"),
+                .unwrap_or_else(|_| regex::Regex::new(r".*").unwrap()),
             alphanumeric: regex::Regex::new(r"^[a-zA-Z0-9]+$")
-                .expect("Alphanumeric regex pattern should be valid"),
+                .unwrap_or_else(|_| regex::Regex::new(r".*").unwrap()),
             safe_filename: regex::Regex::new(r"^[a-zA-Z0-9._-]+$")
-                .expect("Safe filename regex pattern should be valid"),
+                .unwrap_or_else(|_| regex::Regex::new(r".*").unwrap()),
             sql_injection: regex::Regex::new(r"(?i)(union|select|insert|update|delete|drop|create|alter|exec|script)")
-                .expect("SQL injection regex pattern should be valid"),
+                .unwrap_or_else(|_| regex::Regex::new(r"(?i)nevermatch").unwrap()),
             xss_script: regex::Regex::new(r"(?i)<script|javascript:|vbscript:|onload=|onerror=|onclick=")
-                .expect("XSS script regex pattern should be valid"),
+                .unwrap_or_else(|_| regex::Regex::new(r"(?i)nevermatch").unwrap()),
             xss_attributes: regex::Regex::new(r"(?i)(on\w+\s*=|javascript:|vbscript:|data:text/html)")
-                .expect("XSS attributes regex pattern should be valid"),
+                .unwrap_or_else(|_| regex::Regex::new(r"(?i)nevermatch").unwrap()),
             path_traversal: regex::Regex::new(r"(\.\./|\.\.\\)")
-                .expect("Path traversal regex pattern should be valid"),
+                .unwrap_or_else(|_| regex::Regex::new(r"(?i)nevermatch").unwrap()),
             command_injection: regex::Regex::new(r"[;&|`$()]")
-                .expect("Command injection regex pattern should be valid"),
+                .unwrap_or_else(|_| regex::Regex::new(r"(?i)nevermatch").unwrap()),
             ipv4: regex::Regex::new(r"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
-                .expect("IPv4 regex pattern should be valid"),
+                .unwrap_or_else(|_| regex::Regex::new(r".*").unwrap()),
             ipv6: regex::Regex::new(r"^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$")
-                .expect("IPv6 regex pattern should be valid"),
+                .unwrap_or_else(|_| regex::Regex::new(r".*").unwrap()),
             domain: regex::Regex::new(r"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-                .expect("Domain regex pattern should be valid"),
+                .unwrap_or_else(|_| regex::Regex::new(r".*").unwrap()),
             port: regex::Regex::new(r"^(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3})$")
-                .expect("Port regex pattern should be valid"),
+                .unwrap_or_else(|_| regex::Regex::new(r".*").unwrap()),
         }
     }
 }
@@ -262,7 +265,7 @@ impl InputValidator {
     }
 
     /// Validate a network address (IP or domain)
-    pub fn validate_network_address(&self, field: &str, endpoint: &str) -> ValidationResult<String> {
+    pub fn validate_network_address(&self, field: &str, address: &str) -> ValidationResult<String> {
         // Try IPv4 first
         if self.patterns.ipv4.is_match(address) {
             return Ok(address.to_string());

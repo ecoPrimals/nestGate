@@ -19,8 +19,10 @@ impl DiscoverySettings {
 }
 
 impl Default for DiscoverySettings {
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             enabled: false,
             config: std::collections::HashMap::new(),
-         }
+        }
+    }
 }

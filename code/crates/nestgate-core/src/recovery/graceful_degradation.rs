@@ -62,6 +62,7 @@ impl GracefulDegradation {
     }
 
     /// Get current degradation level
+    #[must_use]
     pub fn level(&self) -> DegradationLevel {
         self.level
     }
@@ -79,7 +80,6 @@ impl GracefulDegradation {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn handle_failure(&mut self, capability: &str) -> Result<(), NestGateError> {
         warn!("Handling failure for capability: {}", capability);
 

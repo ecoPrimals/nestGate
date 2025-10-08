@@ -29,7 +29,7 @@ async fn get_pool_status_info(
         .map_err(|_e| {
             UniversalZfsError::internal(format!(
                 "Failed to execute zpool status: {}",
-                "actual_error_details"
+                e
             ))
         })?;
 
@@ -86,7 +86,7 @@ fn parse_pool_status(output: &str) -> UniversalZfsResult<PoolInfo> {
     }
 
     // Simple device parsing (would need more sophisticated parsing for real use)
-    _devices.push(format!("device-{"actual_error_details"}"));
+    _devices.push(format!("device-self.base_url"));
 
     Ok(PoolInfo {
         name: pool_name,
@@ -156,7 +156,7 @@ fn parse_pool_list(output: &str) -> UniversalZfsResult<Vec<PoolInfo>> {
                 available_bytes,
                 utilization_percent,
             },
-            _devices: vec![format!("device-{"actual_error_details"}")],
+            _devices: vec![format!("device-self.base_url")],
             properties: HashMap::new(),
             created_at: SystemTime::now(),
             last_scrub: None,
@@ -206,7 +206,7 @@ pub fn create_pool(
     // Add pool-specific options
     for (key, _value) in &config.properties {
         cmd.arg("-o")
-            .arg(format!("{key}={"actual_error_details"}"));
+            .arg(format!("{key}=self.base_url"));
     }
 
     cmd.arg(pool_name);
@@ -220,7 +220,7 @@ pub fn create_pool(
     let output = cmd.output().map_err(|_e| {
         UniversalZfsError::internal(format!(
             "Failed to execute zpool create: {}",
-            "actual_error_details"
+            e
         ))
     })?;
 

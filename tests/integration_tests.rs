@@ -7,7 +7,7 @@ use tokio;
 #[tokio::test]
 async fn test_basic_configuration_loading() -> Result<(), Box<dyn std::error::Error>> {
     // Test that we can load and validate basic configuration
-    let config = config::canonical_master::NestGateCanonicalConfig::default();
+    let config = config::canonical_master::NestGateNestGateCanonicalConfig::default();
 
     // Verify essential configuration fields exist
     assert!(config.network.port > 0);
@@ -168,7 +168,7 @@ async fn test_full_system_integration() -> Result<(), Box<dyn std::error::Error>
     println!("🚀 Starting full system integration test...");
 
     // Initialize configuration
-    let config = config::canonical_master::NestGateCanonicalConfig::default();
+    let config = config::canonical_master::NestGateNestGateCanonicalConfig::default();
 
     // Initialize core services
     let service_registry = service_discovery::InMemoryServiceRegistry::new();

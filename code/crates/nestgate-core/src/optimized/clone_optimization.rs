@@ -89,8 +89,7 @@ impl<T> SharedConfiguration<T> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn get_mut(&mut self) -> Result<&mut T, NestGateError>  {
+                pub fn get_mut(&mut self) -> Result<&mut T, NestGateError>  {
         Arc::get_mut(&mut self.data).ok_or_else(|| NestGateError::internal_error(
     }
 }

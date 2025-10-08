@@ -24,6 +24,7 @@ pub struct DnsServiceDiscovery {
 
 impl DnsServiceDiscovery {
     /// Create a new DNS service discovery
+    #[must_use]
     pub fn new(domain: String) -> Self {
         Self {
             domain,
@@ -144,6 +145,7 @@ pub struct MulticastDiscovery {
 
 impl MulticastDiscovery {
     /// Create a new multicast discovery
+    #[must_use]
     pub fn new() -> Self {
         Self {
             multicast_groups: vec![

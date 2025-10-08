@@ -1,8 +1,13 @@
+#![cfg(feature = "dev-stubs")]
+
 /// Unified Benchmark Configuration System for NestGate
 /// This module provides standardized benchmark configuration that replaces the
 /// fragmented benchmark config structs scattered across the benchmark test suite.
 /// **PROBLEM SOLVED**: Eliminates duplicate benchmark config structs with
 /// inconsistent fields and approaches.
+///
+/// **⚠️ BENCHMARKING ONLY**: This module is only available with `dev-stubs` feature
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;

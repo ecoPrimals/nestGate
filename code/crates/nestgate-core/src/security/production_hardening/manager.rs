@@ -139,8 +139,7 @@ impl SecurityHardeningManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn handle_auth_failure(&self, source_ip: IpAddr, user_id: Option<String>) -> Result<()>  {
+                pub fn handle_auth_failure(&self, source_ip: IpAddr, user_id: Option<String>) -> Result<()>  {
         let event = SecurityEvent {
             timestamp: std::time::SystemTime::now(),
             event_type: SecurityEventType::AuthenticationFailure,

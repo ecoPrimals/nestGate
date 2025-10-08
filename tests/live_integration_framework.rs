@@ -5,24 +5,15 @@
 //! real implementations.
 
 use chrono::{DateTime, Utc};
-use crate::config::ConsolidatedCanonicalConfig;
-use serde::{Deserialize, Serialize};
-use crate::config::ConsolidatedCanonicalConfig;
-use std::collections::HashMap;
-use crate::config::ConsolidatedCanonicalConfig;
-use std::sync::Arc;
-use crate::config::ConsolidatedCanonicalConfig;
-use std::time::Duration;
-use crate::config::ConsolidatedCanonicalConfig;
-use tokio::sync::{Mutex, RwLock};
-use crate::config::ConsolidatedCanonicalConfig;
-use tracing::{debug, error, info, warn};
-use crate::config::ConsolidatedCanonicalConfig;
-use uuid::Uuid;
-use crate::config::ConsolidatedCanonicalConfig;
-
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
 use nestgate_core::{NestGateError, Result};
-use crate::config::ConsolidatedCanonicalConfig;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::{Mutex, RwLock};
+use tracing::{debug, error, info, warn};
+use uuid::Uuid;
 
 /// Live testing environment manager
 

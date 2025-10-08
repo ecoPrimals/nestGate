@@ -48,8 +48,7 @@ impl<const N: usize> CompletlySafeBuffer<N> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn write_data(&mut self, new_data: &[u8]) -> Result<&[u8]>  {
+                pub fn write_data(&mut self, new_data: &[u8]) -> Result<&[u8]>  {
         // Safe bounds checking
         if new_data.len() > self.remaining_capacity() {
             return Err(NestGateError::validation(
@@ -129,8 +128,7 @@ impl<const N: usize> CompletlySafeBuffer<N> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn set_byte(&mut self, index: usize, value: u8) -> Result<()>  ", 
+                pub fn set_byte(&mut self, index: usize, value: u8) -> Result<()>  ", 
         match self.data.get_mut(index) {
             Some(byte) => {
                 *byte = value;
@@ -179,8 +177,7 @@ impl<const N: usize> CompletlySafeStringBuilder<N> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn push_str(&mut self, s: &str) -> Result<()>  {
+                pub fn push_str(&mut self, s: &str) -> Result<()>  {
         self.buffer.write_data(s.as_bytes())?;
         Ok((), location: Some(format!("{}) context: None}
     }
@@ -193,8 +190,7 @@ impl<const N: usize> CompletlySafeStringBuilder<N> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn push_char(&mut self, c: char) -> Result<()>  {
+                pub fn push_char(&mut self, c: char) -> Result<()>  {
         let mut utf8_buf = [0u8; 4];
         let utf8_str = c.encode_utf8(&mut utf8_buf);
         self.buffer.write_data(utf8_str.as_bytes())?;
@@ -267,8 +263,7 @@ impl SafeMemoryUtils {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn copy_slice(src: &[u8], dst: &mut [u8]) -> Result<usize>  {
+                pub fn copy_slice(src: &[u8], dst: &mut [u8]) -> Result<usize>  {
         if src.len() > dst.len() {
             return Err(NestGateError::validation(
         }
@@ -342,8 +337,7 @@ impl<const N: usize> SafeCircularBuffer<N> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn push(&mut self, value: u8) -> Result<()>  {
+                pub fn push(&mut self, value: u8) -> Result<()>  {
         if self.size >= N {
             return Err(NestGateError::validation(
         }

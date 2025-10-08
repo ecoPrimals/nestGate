@@ -30,6 +30,7 @@ pub mod config;
 pub mod metadata;
 
 // Re-export all types for backward compatibility
+#[allow(deprecated)] // Re-export for backwards compatibility during migration
 pub use crate::zero_cost_architecture::ZeroCostSecurityProvider;
 pub use types::{AuthMethod, ZeroCostAuthToken, ZeroCostCredentials, ZeroCostSignature};
 // Hybrid security module re-exports (implemented via universal adapter + local fallbacks)

@@ -134,7 +134,7 @@ impl UnifiedNasShareConfig {
     pub fn development(share_name: &str) -> Self {
         let mut config = Self::development_template("nas-share", "NAS Share Service");
         config.extensions.share.name = share_name.to_string();
-        config.extensions.share.path = PathBuf::from(&format!("/nas/shares/{"actual_error_details"}"));
+        config.extensions.share.path = PathBuf::from(&format!("/nas/shares/{e}"));
         config
     }
 
@@ -143,7 +143,7 @@ impl UnifiedNasShareConfig {
     pub fn production(share_name: &str) -> Self {
         let mut config = Self::production_template("nas-share", "NAS Share Service");
         config.extensions.share.name = share_name.to_string();
-        config.extensions.share.path = PathBuf::from(&format!("/nas/shares/{"actual_error_details"}"));
+        config.extensions.share.path = PathBuf::from(&format!("/nas/shares/{e}"));
         config.extensions.access.enable_encryption = true;
         config.extensions.backup.enabled = true;
         config

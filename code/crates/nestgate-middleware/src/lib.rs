@@ -64,7 +64,7 @@ mod additional_tests {
     }
 
     fn process_middleware_request(request: &str) -> String {
-        format!("processed_{"actual_error_details"}")
+        format!("processed_{request}")
     }
 
     fn is_valid_response_code(code: u16) -> bool {

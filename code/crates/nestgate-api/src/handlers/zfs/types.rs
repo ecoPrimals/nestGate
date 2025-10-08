@@ -6,7 +6,14 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 
+// Production: Use real ZFS manager
+#[cfg(not(feature = "dev-stubs"))]
+use nestgate_zfs::ProductionZfsManager;
+
+// Development: Use stub manager
+#[cfg(feature = "dev-stubs")]
 use crate::handlers::zfs_stub::ProductionZfsManager;
+
 use nestgate_core::canonical_types::StorageTier;
 
 /// ZFS API state container

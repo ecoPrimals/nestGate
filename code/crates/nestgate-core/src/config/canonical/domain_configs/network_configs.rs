@@ -11,6 +11,10 @@ use std::time::Duration;
 /// Replaces: NetworkConfig, ServerConfig, StreamConfig, ServiceMeshConfig,
 /// NetworkFsConfig, and 8+ other network config structures
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[deprecated(
+    since = "0.10.0",
+    note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct CanonicalNetworkConfig {
     /// Server settings
     pub server: NetworkServer,

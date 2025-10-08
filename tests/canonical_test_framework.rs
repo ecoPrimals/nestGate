@@ -28,7 +28,7 @@ async fn test_canonical_framework_initialization() -> Result<()> {
     let config = CanonicalTestConfig::unit_tests();
     assert_eq!(
         config.environment,
-        nestgate_core::config::defaults::Environment::Development
+        nestgate_core::constants::Environment::Development
     );
     println!("✅ Canonical test config created successfully");
 

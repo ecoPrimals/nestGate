@@ -62,8 +62,7 @@ impl ServiceRegistry {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn unregister_service(&mut self, service_id: Uuid) -> Result<()>  {
+                pub fn unregister_service(&mut self, service_id: Uuid) -> Result<()>  {
         self.services.remove(&service_id);
         Ok(())
     }

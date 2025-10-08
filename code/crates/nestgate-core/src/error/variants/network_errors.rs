@@ -2,7 +2,7 @@
 //! Network Errors functionality and utilities.
 //! This module provides network-specific error types and helper functions.
 
-use super::core_errors::*;
+use super::core_errors::NetworkErrorDetails;
 
 impl NetworkErrorDetails {
     /// Create a network error with just a message

@@ -80,21 +80,26 @@ where
     P: ComputePrimalProvider + Send + Sync + 'static,
 {
     /// Create new AI connections manager
-    pub fn new() -> Self { Self {
+    pub fn new() -> Self {
+        Self {
             provider: None,
             state: Arc::new(RwLock::new(ConnectionState::Disconnected)),
             _marker: PhantomData,
-         }
+        }
+    }
 
     /// Set provider with zero-cost generic dispatch
     #[must_use]
-    pub fn with_provider(mut self, provider: Arc<P>) -> Self { self.provider = Some(provider);
+    pub fn with_provider(mut self, provider: Arc<P>) -> Self {
+        self.provider = Some(provider);
         self
-    , /// Get provider with compile-time dispatch
+    }
+
+    /// Get provider with compile-time dispatch
     #[must_use]
     pub fn get_provider(&self) -> Option<Arc<P>> {
         self.provider.clone()
-     }
+    }
 
     /// Execute AI request with zero-cost dispatch
     ///
@@ -186,10 +191,12 @@ where
 {
     /// Create new AI connection pool
     #[must_use]
-    pub fn new(config: PoolConfig) -> Self { Self {
+    pub fn new(config: PoolConfig) -> Self {
+        Self {
             connections: std::collections::HashMap::new(),
             config,
-         }
+        }
+    }
 
     /// Add provider to pool with zero-cost dispatch
     pub fn add_provider(&mut self, provider_id: String, provider: Arc<P>) {

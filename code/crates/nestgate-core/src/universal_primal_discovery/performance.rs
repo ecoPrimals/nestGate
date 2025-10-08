@@ -204,7 +204,6 @@ impl PerformanceDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn discover_performance(&self) -> Result<HashMap<String, serde_json::Value>> {
         let mut characteristics = HashMap::new();
 

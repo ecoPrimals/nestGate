@@ -20,8 +20,14 @@ use crate::handlers::{
     },
 };
 
-// Optional ZFS imports - graceful degradation if not available
+// Production: Use real ZFS manager and config
+#[cfg(not(feature = "dev-stubs"))]
+use nestgate_zfs::ProductionZfsManager;
+
+// Development: Use stub manager and config
+#[cfg(feature = "dev-stubs")]
 use crate::handlers::zfs_stub::{ProductionZfsManager, ZfsConfig};
+
 /// Production ZFS manager type alias
 ///
 /// Defines the production ZFS manager implementation used throughout
@@ -51,40 +57,54 @@ impl Default for AppState {
 }
 
 impl AppState {
-    /// Create AppState with ZFS support
+    /// Create `AppState` with ZFS support
     #[cfg(feature = "streaming-rpc")]
+    #[must_use]
     pub fn with_zfs_and_streaming() -> Self {
         Self {
+            #[cfg(feature = "dev-stubs")]
             zfs_manager: Arc::new(ZfsManager::new(ZfsConfig::default())),
+            #[cfg(not(feature = "dev-stubs"))]
+            zfs_manager: Arc::new(ZfsManager::new()),
             _phantom: std::marker::PhantomData,
         }
     }
 
-    /// Create AppState without streaming features
+    /// Create `AppState` without streaming features
+    #[must_use]
     pub fn without_streaming() -> Self {
         Self {
+            #[cfg(feature = "dev-stubs")]
             zfs_manager: Arc::new(ZfsManager::new(ZfsConfig::default())),
+            #[cfg(not(feature = "dev-stubs"))]
+            zfs_manager: Arc::new(ZfsManager::new()),
             #[cfg(feature = "streaming-rpc")]
             _phantom: std::marker::PhantomData,
         }
     }
 
-    /// Create AppState with optional streaming components based on feature flags
+    /// Create `AppState` with optional streaming components based on feature flags
+    #[must_use]
     pub fn new() -> Self {
         Self {
+            #[cfg(feature = "dev-stubs")]
             zfs_manager: Arc::new(ZfsManager::new(ZfsConfig::default())),
+            #[cfg(not(feature = "dev-stubs"))]
+            zfs_manager: Arc::new(ZfsManager::new()),
             #[cfg(feature = "streaming-rpc")]
             _phantom: std::marker::PhantomData,
         }
     }
 
     /// Get ZFS manager reference
+    #[must_use]
     pub fn get_zfs_manager(&self) -> Option<Arc<ZfsManager>> {
         Some(self.zfs_manager.clone())
     }
 
     /// Initialize storage systems - ZFS manager and Universal Storage Bridge
-    pub fn with_zfs_manager(self) -> Self {
+    #[must_use]
+    pub const fn with_zfs_manager(self) -> Self {
         // ZFS manager already initialized in constructor
         self
     }
@@ -95,7 +115,11 @@ impl AppState {
         &self,
     ) -> Result<Option<ZfsManager>, Box<dyn std::error::Error + Send + Sync>> {
         // Check if ZFS is available first
-        Ok(Some(ProductionZfsManager::new(ZfsConfig::default())))
+        #[cfg(feature = "dev-stubs")]
+        let manager = ProductionZfsManager::new(ZfsConfig::default());
+        #[cfg(not(feature = "dev-stubs"))]
+        let manager = ProductionZfsManager::new();
+        Ok(Some(manager))
     }
 }
 

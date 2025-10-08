@@ -315,8 +315,7 @@ impl DashboardManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn build_monitoring_dashboard(&self, config: &DashboardConfig) -> Result<Value>  {
+                pub fn build_monitoring_dashboard(&self, config: &DashboardConfig) -> Result<Value>  {
         let mut panels = Vec::new();
 
         for panel in &config.panels {

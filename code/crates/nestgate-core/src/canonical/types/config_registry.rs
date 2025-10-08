@@ -56,12 +56,13 @@ pub struct CanonicalStorageConfig {
 /// - `CanonicalNetworkConfig` from `canonical_modernization/NestGateCanonicalConfig.rs`
 /// - Network settings from `unified_network_extensions.rs`
 /// - Network configs from various service modules
+///
 /// **⚠️ DEPRECATED**: Duplicate. Use the one from `canonical_master::domains::network`
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[deprecated(
-    since = "0.9.0",
+    since = "0.10.0",
     note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead"
 )]
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CanonicalNetworkConfig {
     /// Interface bindings
     pub interfaces: NetworkInterfaceConfig,

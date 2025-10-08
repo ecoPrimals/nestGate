@@ -140,7 +140,7 @@ impl UniversalStorageBridge {
             .map_err(|_e| {
                 UniversalZfsError::internal(format!(
                     "Failed to execute df: {}",
-                    "actual_error_details"
+                    e
                 ))
             })?;
 
@@ -268,7 +268,7 @@ impl UniversalStorageBridge {
             _ => {
                 return Err(UniversalZfsError::internal(format!(
                     "Unknown size unit: {}",
-                    "actual_error_details"
+                    e
                 ))
                 .into())
             }
@@ -338,7 +338,7 @@ impl UniversalStorageBridge {
             parent: None,
             children: vec![],
             created_at: SystemTime::now(), // Add missing field
-            mount_point: Some(format!("/{"actual_error_details"}")), // Add missing field
+            mount_point: Some(format!("/self.base_url")), // Add missing field
             properties: HashMap::new(),    // Add missing field
         })
     }

@@ -47,8 +47,7 @@ impl<T: Send + 'static> PoolRefMut<T> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn as_mut(&mut self) -> Result<&mut T>  {
+                pub fn as_mut(&mut self) -> Result<&mut T>  {
         match self.buffer.as_mut() {
             Some(buffer) => Ok(&mut **buffer),
             None => Err(NestGateError::internal_error(
@@ -74,8 +73,7 @@ impl<T: Send + 'static> PoolRefMut<T> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn into_owned(mut self) -> Result<PoolOwned<T>>  {
+                pub fn into_owned(mut self) -> Result<PoolOwned<T>>  {
         match self.buffer.take() {
             Some(buffer) => Ok(PoolOwned(buffer)),
             None => Err(NestGateError::internal_error(
@@ -122,8 +120,7 @@ impl PoolString {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn write_str(&mut self, s: &str) -> Result<()>  {
+                pub fn write_str(&mut self, s: &str) -> Result<()>  {
         self.inner.as_mut()?.push_str(s);
     }
 

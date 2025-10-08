@@ -9,7 +9,7 @@ use serde_json::{json, Value};
 use tracing::{info, warn};
 
 /// Create workspace secret (SECURITY FEATURE - DELEGATE TO SECURITY MODULE)
-pub fn create_workspace_secret(
+pub async fn create_workspace_secret(
     Path(workspace_id): Path<String>,
 ) -> Result<Json<Value>, StatusCode> {
     info!("🔐 Creating workspace secret: {}", workspace_id);
@@ -17,7 +17,7 @@ pub fn create_workspace_secret(
     let adapter = AuthTokenManager::new("default-signing-key".to_string());
 
     // Use security adapter for actual secret management
-    match adapter.create_workspace_secret(&workspace_id).await {
+    match adapter.create_workspace_secret(&workspace_id) {
         Ok(secret_id) => {
             info!("✅ Workspace secret created: {}", secret_id);
             Ok(Json(json!({

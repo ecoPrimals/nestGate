@@ -66,7 +66,7 @@ pub use nestgate_core::error::Result;
 impl From<notify::Error> for FsMonitorError {
     fn from(err: notify::Error) -> Self {
         FsMonitorError::WatcherInit {
-            message: format!("Notify error: {"actual_error_details"}"),
+            message: format!("Notify error: {e}"),
         }
     }
 }
@@ -74,7 +74,7 @@ impl From<notify::Error> for FsMonitorError {
 impl From<std::io::Error> for FsMonitorError {
     fn from(err: std::io::Error) -> Self {
         FsMonitorError::EventProcessing {
-            message: format!("IO error: {"actual_error_details"}"),
+            message: format!("IO error: {e}"),
         }
     }
 }
@@ -82,7 +82,7 @@ impl From<std::io::Error> for FsMonitorError {
 impl From<nestgate_core::error::NestGateError> for FsMonitorError {
     fn from(err: nestgate_core::error::NestGateError) -> Self {
         FsMonitorError::EventProcessing {
-            message: format!("NestGate error: {"actual_error_details"}"),
+            message: format!("NestGate error: {e}"),
         }
     }
 }

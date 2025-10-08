@@ -15,23 +15,21 @@
 //! - Predictive resource allocation
 //! - Self-healing performance degradation recovery
 
-pub mod monitor;
-pub mod metrics;
 pub mod engine;
-pub mod tuner;
 pub mod learning;
+pub mod metrics;
+pub mod monitor;
+pub mod tuner;
 pub mod types;
 
 // Re-export main types for convenience
-pub use monitor::AdaptivePerformanceMonitor;
-pub use metrics::MetricsCollector;
 pub use engine::OptimizationEngine;
-pub use tuner::AutoTuner;
 pub use learning::{SimpleLearningModel, TrendAnalyzer};
+pub use metrics::MetricsCollector;
+pub use monitor::AdaptivePerformanceMonitor;
+pub use tuner::AutoTuner;
 pub use types::{
-    PerformanceHistory, PerformanceSnapshot, OptimizationStrategy,
-    OptimizationDecision, TunableParameter, TuningAction,
-    CurrentMetrics, OptimizationPrediction, OptimizationResult,
-    AdaptivePerformanceStats, OptimizationEngineStats, AutoTunerStats,
-    TrendAnalysis
-}; 
+    AdaptivePerformanceStats, AutoTunerStats, CurrentMetrics, OptimizationDecision,
+    OptimizationEngineStats, OptimizationPrediction, OptimizationResult, OptimizationStrategy,
+    PerformanceHistory, PerformanceSnapshot, TrendAnalysis, TunableParameter, TuningAction,
+};

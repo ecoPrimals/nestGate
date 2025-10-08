@@ -7,8 +7,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use nestgate_core::error::{IdioResult, NestGateError};
 use nestgate_core::unified_enums::StorageTier;
+use nestgate_core::Result;
 
 // Type alias to reduce complexity
 type PerformanceCache = Arc<RwLock<HashMap<String, DatasetPerformance>>>;
@@ -34,20 +34,22 @@ pub struct IntelligentDatasetManager {
 }
 impl IntelligentDatasetManager {
     #[must_use]
-    pub fn new(config: AutomationConfig) -> Self { Self {
+    pub fn new(config: AutomationConfig) -> Self {
+        Self {
             config,
             analyzer: Arc::new(DatasetAnalyzer::new()),
-            performance_cache: Arc::new(RwLock::new(HashMap::new()),
-         }
+            performance_cache: Arc::new(RwLock::new(HashMap::new())),
+        }
+    }
 
     /// Start the intelligent automation system
-    pub fn start(&mut self) -> IdioResult<(), NestGateError> {
+    pub fn start(&mut self) -> Result<()> {
         // Simplified canonical implementation
         Ok(())
     }
 
     /// Predict optimal storage tier for a file
-    pub async fn predict_optimal_tier(&self, file_path: &str) -> IdioResult<TierPrediction, NestGateError> {
+    pub async fn predict_optimal_tier(&self, file_path: &str) -> Result<TierPrediction> {
         // Analyze file characteristics
         let analysis = self.analyzer.analyze_file(file_path).await?;
 

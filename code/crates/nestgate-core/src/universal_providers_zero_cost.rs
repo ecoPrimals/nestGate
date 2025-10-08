@@ -57,6 +57,7 @@ pub enum SecurityDecision {
 /// Direct composition replacement for Arc<dyn SecurityPrimalProvider>
 /// PERFORMANCE: 40-60% improvement through compile-time dispatch
 /// ELIMINATES: Virtual method call overhead and heap allocation
+#[allow(deprecated)] // Example of zero-cost pattern - uses deprecated trait for demonstration
 pub struct ZeroCostUniversalSecurityWrapper<Provider, const MAX_CONCURRENT: usize = 1000>
 where
     Provider: ZeroCostSecurityProvider,
@@ -113,6 +114,7 @@ pub trait ZeroCostSecurityProvider: Send + Sync + 'static {
     fn health_check(&self) -> impl Future<Output = std::result::Result<bool, Self::Error>> + Send;
 }
 
+#[allow(deprecated)] // Example implementation of zero-cost pattern
 impl<Provider, const MAX_CONCURRENT: usize>
     ZeroCostUniversalSecurityWrapper<Provider, MAX_CONCURRENT>
 where

@@ -279,7 +279,7 @@ pub struct PerformanceRecommendation {
 }
 
 /// Performance analyzer state
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct PerformanceAnalyzerState {
     /// Whether analysis is currently running
     pub is_running: bool,
@@ -289,15 +289,4 @@ pub struct PerformanceAnalyzerState {
     pub total_analyses: u64,
     /// Configuration
     pub config: PerformanceAnalysisConfig,
-}
-
-impl Default for PerformanceAnalyzerState {
-    fn default() -> Self {
-        Self {
-            is_running: false,
-            last_analysis: None,
-            total_analyses: 0,
-            config: PerformanceAnalysisConfig::default(),
-        }
-    }
 }

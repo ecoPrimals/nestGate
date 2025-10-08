@@ -1,7 +1,7 @@
 //! **UNIFIED RPC SYSTEM**
 //!
 //! Comprehensive Remote Procedure Call system providing unified communication
-//! across all NestGate services with support for multiple protocols, load balancing,
+//! across all `NestGate` services with support for multiple protocols, load balancing,
 //! health monitoring, and fail-safe mechanisms.
 
 /// Bidirectional streaming RPC communication support

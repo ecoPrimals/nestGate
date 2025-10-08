@@ -60,7 +60,6 @@ impl StorageManagerService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn with_config(config: StorageServiceConfig) -> Result<Self> {
         info!("Initializing Storage Manager Service with real ZFS integration");
 

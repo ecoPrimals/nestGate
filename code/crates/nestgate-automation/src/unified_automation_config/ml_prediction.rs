@@ -15,12 +15,14 @@ pub struct MlPredictionSettings {
     pub confidence_threshold: f64,
 }
 impl SmartDefault for MlPredictionSettings {
-    fn smart_default() -> Self { Self {
+    fn smart_default() -> Self {
+        Self {
             enabled: false,
             model_path: "/etc/nestgate/models/default.onnx".to_string(),
             prediction_interval: Duration::from_secs(300),
             confidence_threshold: 0.8,
-         }
+        }
+    }
 }
 
 impl Default for MlPredictionSettings {

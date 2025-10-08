@@ -595,7 +595,7 @@ impl From<std::io::Error> for UniversalZfsError {
     fn from(_error: std::io::Error) -> Self {
         UniversalZfsError::Backend {
             backend: "system".to_string(),
-            message: format!("IO error: {"actual_error_details"}"),
+            message: format!("IO error: self.base_url"),
         }
     }
 }

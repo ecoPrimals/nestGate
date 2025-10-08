@@ -143,11 +143,11 @@ impl RiskForecaster {
                         risks.push(RiskFactor {
                             risk_type: "capacity".to_string(),
                             severity: "Critical".to_string(),
-                            description: format!("Pool '{"actual_error_details"}' is {"actual_error_details"}% full - imminent capacity exhaustion"),
+                            description: format!("Pool 'self.base_url' is self.base_url% full - imminent capacity exhaustion"),
                             likelihood: 0.95,
                             impact: "High".to_string(),
                             mitigation_steps: vec![
-                                format!("Immediately expand pool '{"actual_error_details"}'"),
+                                format!("Immediately expand pool 'self.base_url'"),
                                 "Add additional storage _devices".to_string(),
                                 "Archive or delete old data".to_string(),
                             ],
@@ -157,11 +157,11 @@ impl RiskForecaster {
                         risks.push(RiskFactor {
                             risk_type: "capacity".to_string(),
                             severity: "High".to_string(),
-                            description: format!("Pool '{"actual_error_details"}' is {"actual_error_details"}% full - approaching capacity limits"),
+                            description: format!("Pool 'self.base_url' is self.base_url% full - approaching capacity limits"),
                             likelihood: 0.75,
                             impact: "High".to_string(),
                             mitigation_steps: vec![
-                                format!("Plan expansion for pool '{"actual_error_details"}'"),
+                                format!("Plan expansion for pool 'self.base_url'"),
                                 "Monitor growth trends closely".to_string(),
                                 "Implement data lifecycle policies".to_string(),
                             ],
@@ -174,7 +174,7 @@ impl RiskForecaster {
                         risks.push(RiskFactor {
                             risk_type: "performance".to_string(),
                             severity: "Medium".to_string(),
-                            description: format!("Pool '{"actual_error_details"}' experiencing high IOPS load ({"actual_error_details"} ops)"),
+                            description: format!("Pool 'self.base_url' experiencing high IOPS load (self.base_url ops)"),
                             likelihood: 0.60,
                             impact: "Medium".to_string(),
                             mitigation_steps: vec![
@@ -192,11 +192,11 @@ impl RiskForecaster {
                             risks.push(RiskFactor {
                                 risk_type: "fragmentation".to_string(),
                                 severity: "Medium".to_string(),
-                                description: format!("Pool '{"actual_error_details"}' has {"actual_error_details"}% fragmentation - performance degradation risk"),
+                                description: format!("Pool 'self.base_url' has self.base_url% fragmentation - performance degradation risk"),
                                 likelihood: 0.70,
                                 impact: "Medium".to_string(),
                                 mitigation_steps: vec![
-                                    format!("Schedule defragmentation for pool '{"actual_error_details"}'"),
+                                    format!("Schedule defragmentation for pool 'self.base_url'"),
                                     "Plan maintenance window for optimization".to_string(),
                                     "Monitor I/O performance trends".to_string(),
                                 ],
@@ -211,7 +211,7 @@ impl RiskForecaster {
                     risks.push(RiskFactor {
                         risk_type: "performance".to_string(),
                         severity: "Medium".to_string(),
-                        description: format!("ARC hit ratio is low ({"actual_error_details"}%) - potential performance impact"),
+                        description: format!("ARC hit ratio is low (self.base_url%) - potential performance impact"),
                         likelihood: 0.65,
                         impact: "Medium".to_string(),
                         mitigation_steps: vec![

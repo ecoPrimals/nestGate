@@ -1,6 +1,6 @@
 //! **NESTGATE NETWORK CRATE**
 //!
-//! This crate provides network functionality for the NestGate ecosystem,
+//! This crate provides network functionality for the `NestGate` ecosystem,
 //! including connection management, protocol handling, and service discovery.
 
 use std::time::Duration;
@@ -62,10 +62,12 @@ pub use types::{NetworkConfig, NetworkConfigBuilder};
 // ==================== CONFIGURATION FUNCTIONS ====================
 
 /// Default network configuration
+#[must_use]
 pub fn default_network_config() -> NetworkConfig {
     NetworkConfig::default()
 }
 /// Create production network configuration
+#[must_use]
 pub fn production_network_config() -> NetworkConfig {
     let mut config = NetworkConfig::default();
     config.network.api.max_connections = 2000;
@@ -73,6 +75,7 @@ pub fn production_network_config() -> NetworkConfig {
     config
 }
 /// Create development network configuration  
+#[must_use]
 pub fn development_network_config() -> NetworkConfig {
     let mut config = NetworkConfig::default();
     config.network.api.max_connections = 100;

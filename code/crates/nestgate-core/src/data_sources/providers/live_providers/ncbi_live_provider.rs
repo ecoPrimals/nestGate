@@ -27,8 +27,7 @@ impl NCBILiveProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn new(api_key: Option<String>, email: Option<String>) -> Result<Self>  {
+                pub fn new(api_key: Option<String>, email: Option<String>) -> Result<Self>  {
         let mut config_builder = HttpProviderConfigBuilder::new(
             "https://eutils.ncbi.nlm.nih.gov/entrez/eutils".to_string(),
             "genome_data".to_string()

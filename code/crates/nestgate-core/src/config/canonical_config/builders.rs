@@ -81,8 +81,7 @@ impl ConfigBuilder {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn from_env(mut self) -> Result<Self, String>  {
+                pub fn from_env(mut self) -> Result<Self, String>  {
         // Load environment-specific overrides
         if let Ok(log_level) = std::env::var("NESTGATE_LOG_LEVEL") {
             self.config.system.log_level = log_level;

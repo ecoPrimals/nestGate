@@ -375,7 +375,7 @@ impl ConfigMigrationManager {
             _ => {
                 self.add_warning(
                     MigrationWarningCategory::ConfigIgnored,
-                    format!("Unknown type alias: {"actual_error_details"}"),
+                    format!("Unknown type alias: {e}"),
                     Some(alias_name.to_string()),
                     "Add migration support for this config type".to_string(),
                 );
@@ -585,8 +585,7 @@ impl ConfigMigrationManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn migrate_from_jsonvalue(&mut self, jsonvalue: &serde_json::Value) -> Result<NestGateCanonicalConfig>  {
+                pub fn migrate_from_jsonvalue(&mut self, jsonvalue: &serde_json::Value) -> Result<NestGateCanonicalConfig>  {
         // Try to parse as fragmented API handler config first
         if let Ok(fragmented) = serde_json::from_value::<FragmentedApiHandlerConfig>(jsonvalue.clone()) {
             let mut canonical_config = NestGateCanonicalConfig::default();

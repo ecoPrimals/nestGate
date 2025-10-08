@@ -1,13 +1,17 @@
 use crate::constants::magic_numbers_replacement;
-//! Native Async Patterns Examples
-//! Demonstrates the performance benefits of native async over async_trait
+// Native Async Patterns Examples
+// Demonstrates the performance benefits of native async over async_trait
 
 use std::future::Future;
 
 // Native async trait - zero overhead
 trait NativeAsyncService {
-    fn process(&self, data: String) -> impl Future<Output = Result<String, Box<dyn std::error::Error>>> + Send;
-    fn health_check(&self) -> impl Future<Output = Result<bool, Box<dyn std::error::Error>>> + Send;
+    fn process(
+        &self,
+        data: String,
+    ) -> impl Future<Output = Result<String, Box<dyn std::error::Error>>> + Send;
+    fn health_check(&self)
+        -> impl Future<Output = Result<bool, Box<dyn std::error::Error>>> + Send;
 }
 
 // Example implementation
@@ -16,7 +20,10 @@ struct MyService {
 }
 
 impl NativeAsyncService for MyService {
-    fn process(&self, data: String) -> impl Future<Output = Result<String, Box<dyn std::error::Error>>> + Send {
+    fn process(
+        &self,
+        data: String,
+    ) -> impl Future<Output = Result<String, Box<dyn std::error::Error>>> + Send {
         let name = self.name.clone();
         async move {
             // Process data asynchronously
@@ -25,7 +32,9 @@ impl NativeAsyncService for MyService {
         }
     }
 
-    fn health_check(&self) -> impl Future<Output = Result<bool, Box<dyn std::error::Error>>> + Send {
+    fn health_check(
+        &self,
+    ) -> impl Future<Output = Result<bool, Box<dyn std::error::Error>>> + Send {
         async move {
             // Perform health check
             Ok(true)

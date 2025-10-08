@@ -567,8 +567,7 @@ impl NestGateMasterConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn from_environment() -> Result<Self>  {
+                pub fn from_environment() -> Result<Self>  {
         // Implementation would load from environment variables
         // For now, return default with environment source
         let mut config = Self::default();

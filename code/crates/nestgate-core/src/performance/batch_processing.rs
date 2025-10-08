@@ -92,8 +92,7 @@ impl<T: Send + Sync + 'static, R: Send + Sync + 'static> BatchProcessor<T, R> {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn add_item(&self, item: T, priority: BatchPriority) -> Result<()>  {
+                pub fn add_item(&self, item: T, priority: BatchPriority) -> Result<()>  {
         let batch_item = BatchItem {
             data: item,
             timestamp: Instant::now(),

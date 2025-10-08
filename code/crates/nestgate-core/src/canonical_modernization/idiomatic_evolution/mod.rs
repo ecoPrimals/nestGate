@@ -136,8 +136,8 @@ impl IdiomaticEvolutionSystem {
 
     /// Calculate overall evolution progress
     fn calculate_evolution_progress(&self) -> f64 {
-        let total = self.metadata.get_component_count() as f64;
-        let completed = self.migration_manager.get_completed_count() as f64;
+        let total = f64::from(self.metadata.get_component_count());
+        let completed = f64::from(self.migration_manager.get_completed_count());
 
         if total > 0.0 {
             (completed / total) * 100.0

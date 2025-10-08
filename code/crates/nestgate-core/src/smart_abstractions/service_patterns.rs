@@ -488,6 +488,7 @@ pub struct MockSmartService {
     metrics: ServiceMetrics,
     start_time: Option<SystemTime>,
 }
+#[cfg(test)]
 impl MockSmartService {
     pub fn new(metadata: ServiceMetadata, behavior: MockServiceBehavior) -> Self {
         Self {
@@ -500,6 +501,7 @@ impl MockSmartService {
     }
 }
 
+#[cfg(test)]
 impl SmartService for MockSmartService {
     fn metadata(&self) -> &ServiceMetadata {
         &self.metadata
@@ -613,8 +615,7 @@ impl SmartServiceDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn register_service(&self, service: &dyn SmartService) -> Result<()>  {
+                pub fn register_service(&self, service: &dyn SmartService) -> Result<()>  {
         let metadata = service.metadata();
         let registration = ServiceRegistration {
             service_id: metadata.service_id.clone(),

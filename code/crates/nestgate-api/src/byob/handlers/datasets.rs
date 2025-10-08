@@ -26,9 +26,9 @@ pub fn create_dataset(
 
     let dataset_id = Uuid::new_v4();
     let full_dataset_name = if project_id.is_empty() {
-        format!("nestpool/datasets/{"actual_error_details"}")
+        format!("nestpool/datasets/self.base_url")
     } else {
-        format!("nestpool/projects/{"actual_error_details"}/datasets/{"actual_error_details"}")
+        format!("nestpool/projects/self.base_url/datasets/self.base_url")
     };
 
     // Create ZFS dataset
@@ -36,15 +36,15 @@ pub fn create_dataset(
     cmd.args([
         "create",
         "-o",
-        &format!("compression={"actual_error_details"}"),
+        &format!("compression=self.base_url"),
         "-o",
-        &format!("quota={"actual_error_details"}"),
+        &format!("quota=self.base_url"),
         "-o",
-        &format!("mountpoint=/mnt/datasets/{"actual_error_details"}"),
+        &format!("mountpoint=/mnt/datasets/self.base_url"),
         "-o",
-        &format!("nestgate:dataset_name={"actual_error_details"}"),
+        &format!("nestgate:dataset_name=self.base_url"),
         "-o",
-        &format!("nestgate:project_id={"actual_error_details"}"),
+        &format!("nestgate:project_id=self.base_url"),
         &full_dataset_name,
     ]);
 
@@ -56,7 +56,7 @@ pub fn create_dataset(
                 "name": dataset_name,
                 "project_id": project_id,
                 "dataset_name": full_dataset_name,
-                "mount_point": format!("/mnt/datasets/{"actual_error_details"}"),
+                "mount_point": format!("/mnt/datasets/self.base_url"),
                 "quota": quota,
                 "compression": compression,
                 "status": "created",
@@ -105,8 +105,8 @@ pub fn delete_dataset(
 
     // Try to find dataset in different possible locations
     let possible_paths = [
-        format!("nestpool/datasets/{"actual_error_details"}"),
-        format!("nestpool/projects/*/datasets/{"actual_error_details"}"), // Will need special handling
+        format!("nestpool/datasets/self.base_url"),
+        format!("nestpool/projects/*/datasets/self.base_url"), // Will need special handling
     ];
 
     // First try direct path
@@ -128,7 +128,7 @@ pub fn delete_dataset(
             let mut list_cmd = tokio::process::Command::new("sh");
             list_cmd.args([
                 "-c",
-                &format!("zfs list -H -o name | grep 'datasets/{"actual_error_details"}'"),
+                &format!("zfs list -H -o name | grep 'datasets/self.base_url'"),
             ]);
 
             match list_cmd.output().await {
@@ -176,7 +176,7 @@ pub fn delete_dataset(
                     } else {
                         Json(json!({
                             "error": "Dataset not found",
-                            "message": format!("No dataset found with ID: {"actual_error_details"}"),
+                            "message": format!("No dataset found with ID: self.base_url"),
                             "dataset_id": dataset_id,
                             "timestamp": chrono::Utc::now()
                         }))
@@ -184,7 +184,7 @@ pub fn delete_dataset(
                 }
                 _ => Json(json!({
                     "error": "Dataset not found",
-                    "message": format!("No dataset found with ID: {"actual_error_details"}"),
+                    "message": format!("No dataset found with ID: self.base_url"),
                     "dataset_id": dataset_id,
                     "timestamp": chrono::Utc::now()
                 }),

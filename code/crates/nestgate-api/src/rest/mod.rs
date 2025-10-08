@@ -61,7 +61,6 @@ impl ApiState {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn new() -> Result<Self> {
         let storage_detector = StorageDetector::new();
 
@@ -92,10 +91,7 @@ impl ApiState {
 
             // Initialize security capability discovery
             if let Ok(security_endpoint) = std::env::var("SECURITY_DISCOVERY_ENDPOINT") {
-                if let Err(e) = rpc_manager
-                    .init_security_capability(&security_endpoint)
-                    .await
-                {
+                if let Err(e) = rpc_manager.init_security_capability(&security_endpoint) {
                     tracing::warn!(
                         "Failed to connect to security capability at {}: {}",
                         security_endpoint,
@@ -128,6 +124,7 @@ impl ApiState {
     }
 
     /// Get RPC manager
+    #[must_use]
     pub fn get_rpc_manager(&self) -> Option<Arc<Mutex<Option<UnifiedRpcManager>>>> {
         Some(Arc::clone(&self.rpc_manager))
     }
@@ -193,6 +190,7 @@ pub struct DataError {
 }
 impl DataError {
     /// Create new data error
+    #[must_use]
     pub fn new(error: String, code: String) -> Self {
         Self {
             error,
@@ -294,7 +292,7 @@ async fn handle_rpc_call(
         match rpc_manager.call(&target, request).await {
             Ok(response) => Ok(axum::Json(DataResponse::new(response))),
             Err(_e) => Err(axum::Json(DataError::new(
-                format!("RPC call failed: {"actual_error_details"}"),
+                "RPC call failed: self.base_url".to_string(),
                 "RPC_CALL_FAILED".to_string(),
             ))),
         }
@@ -332,7 +330,7 @@ async fn handle_rpc_stream(
                 }))))
             }
             Err(_e) => Err(axum::Json(DataError::new(
-                format!("Failed to start RPC stream: {"actual_error_details"}"),
+                "Failed to start RPC stream: self.base_url".to_string(),
                 "RPC_STREAM_FAILED".to_string(),
             ))),
         }

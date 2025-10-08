@@ -199,8 +199,7 @@ impl HealthMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn start_monitoring(&self) -> Result<()>  {
+                pub fn start_monitoring(&self) -> Result<()>  {
         info!("Starting health monitoring");
         // Start periodic health checks
         Ok(())
@@ -214,8 +213,7 @@ impl HealthMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn stop_monitoring(&self) -> Result<()>  {
+                pub fn stop_monitoring(&self) -> Result<()>  {
         info!("Stopping health monitoring");
         Ok(())
     }

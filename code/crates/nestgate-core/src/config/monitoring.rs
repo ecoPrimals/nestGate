@@ -425,8 +425,7 @@ impl AlertThresholds {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn set_threshold(&mut self, metric: &str, value: f64) -> Result<(), String>  {
+                pub fn set_threshold(&mut self, metric: &str, value: f64) -> Result<(), String>  {
         if value < 0.0 {
             return Err(ERROR_THRESHOLD_NEGATIVE.to_string());
         }

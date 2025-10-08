@@ -1,6 +1,6 @@
-//! NestGate MCP (Model Context Protocol) Integration
+//! `NestGate` MCP (Model Context Protocol) Integration
 //!
-//! This crate provides MCP protocol support for the NestGate ecosystem.
+//! This crate provides MCP protocol support for the `NestGate` ecosystem.
 
 // Remove all the invalid imports and use the corrected ones
 use nestgate_core::Result;

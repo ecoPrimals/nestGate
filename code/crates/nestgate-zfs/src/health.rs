@@ -75,10 +75,12 @@ pub struct ZfsHealthMonitor {
     background_tasks: BackgroundTasks,
 }
 impl HealthStatus {
+    #[must_use]
     pub fn is_critical(&self) -> bool {
         matches!(self, Self::Critical)
     }
 
+    #[must_use]
     pub fn is_healthy(&self) -> bool {
         matches!(self, HealthStatus::Healthy)
     }
@@ -155,7 +157,7 @@ impl ZfsHealthMonitor {
                         // Update health data
                         let mut health = health_data.write().await;
                         health.insert(
-                            format!("pool:{"actual_error_details"}"),
+                            "pool:error details".to_string(),
                             HealthReport {
                                 component_type: "pool".to_string(),
                                 component_name: pool.name.clone(),
@@ -195,7 +197,7 @@ impl ZfsHealthMonitor {
 
                         let mut health = dataset_health_data.write().await;
                         health.insert(
-                            format!("datasets:{"actual_error_details"}"),
+                            "datasets:error details".to_string(),
                             HealthReport {
                                 component_type: "datasets".to_string(),
                                 component_name: pool.name.clone(),
@@ -372,7 +374,6 @@ impl ZfsHealthMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn start_monitoring(&mut self) -> Result<()> {
         if self.monitoring_active.load(Ordering::Relaxed) {
             return Ok(());
@@ -391,8 +392,7 @@ impl ZfsHealthMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn stop_monitoring(&mut self) -> Result<()> {
+    pub async fn stop_monitoring(&mut self) -> Result<()> {
         if !self.monitoring_active.load(Ordering::Relaxed) {
             return Ok(());
         }

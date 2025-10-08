@@ -317,8 +317,7 @@ impl CacheManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn insert(&self, key: String, data: Vec<u8>) -> Result<()>  {
+                pub fn insert(&self, key: String, data: Vec<u8>) -> Result<()>  {
         let size = data.len() as u64;
         let now = Instant::now();
         

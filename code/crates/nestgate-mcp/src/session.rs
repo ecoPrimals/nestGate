@@ -138,12 +138,11 @@ impl SessionManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn update_session(&mut self, session: Session) -> Result<()>  {
+                pub fn update_session(&mut self, session: Session) -> Result<()>  {
         if !self.sessions.contains_key(&session.id) {
             return Err(nestgate_core::NestGateError::validation(
                 "session_id".to_string(),
-                format!("Session not found: {"actual_error_details"}"),
+                format!("Session not found: {e}"),
             ));
         }
 
@@ -159,8 +158,7 @@ impl SessionManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn close_session(&mut self, id: &str) -> Result<()>  {
+                pub fn close_session(&mut self, id: &str) -> Result<()>  {
         if let Some(mut session) = self.sessions.get(id).cloned() {
             session.set_state(SessionState::Closing);
             self.sessions.insert(id.to_string(), session);
@@ -171,7 +169,7 @@ impl SessionManager {
         } else {
             Err(nestgate_core::NestGateError::validation(
                 "session_id".to_string(),
-                format!("Session not found: {"actual_error_details"}"),
+                format!("Session not found: {e}"),
             ))
         }
     }
@@ -184,8 +182,7 @@ impl SessionManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn close_all(&mut self) -> Result<()>  {
+                pub fn close_all(&mut self) -> Result<()>  {
         let ids: Vec<String> = self.sessions.keys().cloned().collect();
 
         for id in ids {

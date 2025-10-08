@@ -1,8 +1,8 @@
 use crate::constants::magic_numbers_replacement;
-//! # Idiomatic Result<T, E> Evolution Guide
-//!
-//! This example demonstrates how to evolve from our current Result<T> patterns
-//! to more idiomatic Result<T, E> patterns, following Songbird's insights.
+// # Idiomatic Result<T, E> Evolution Guide
+//
+// This example demonstrates how to evolve from our current Result<T> patterns
+// to more idiomatic Result<T, E> patterns, following Songbird's insights.
 
 use nestgate_core::error::NestGateError;
 use nestgate_core::error::{IdioResult, NestGateError, NetworkError, StorageError};

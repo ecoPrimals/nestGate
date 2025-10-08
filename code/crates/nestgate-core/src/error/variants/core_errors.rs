@@ -7,7 +7,9 @@ use std::time::Duration;
 use thiserror::Error;
 
 use super::super::context::ErrorContext;
-use super::super::data::*;
+use super::super::data::{
+    AutomationErrorData, NetworkErrorData, SecurityErrorData, StorageErrorData,
+};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ErrorSeverity {
@@ -568,8 +570,8 @@ impl NestGateUnifiedError {
         let address = address.into();
         let reason = reason.into();
         Self::Network(Box::new(NetworkErrorDetails {
-            message: format!("Connection failed: {}:{} - {}", address, port, reason),
-            endpoint: Some(format!("{}:{}", address, port)),
+            message: format!("Connection failed: {address}:{port} - {reason}"),
+            endpoint: Some(format!("{address}:{port}")),
             operation: Some("connect".to_string()),
             network_data: None,
             context: None,
@@ -583,7 +585,7 @@ impl NestGateUnifiedError {
     pub fn network_timeout(url: impl Into<String>, duration: Duration) -> Self {
         let url = url.into();
         Self::Timeout(Box::new(TimeoutErrorDetails {
-            message: format!("Request timeout: {} after {:?}", url, duration),
+            message: format!("Request timeout: {url} after {duration:?}"),
             operation: Some("network_request".to_string()),
             timeout: duration,
             retryable: true,
@@ -598,7 +600,7 @@ impl NestGateUnifiedError {
     pub fn storage_not_found(path: impl Into<String>) -> Self {
         let path = path.into();
         Self::Storage(Box::new(StorageErrorDetails {
-            message: format!("File not found: {}", path),
+            message: format!("File not found: {path}"),
             resource: Some(path),
             operation: Some("read".to_string()),
             storage_data: None,
@@ -617,7 +619,7 @@ impl NestGateUnifiedError {
         let path = path.into();
         let operation = operation.into();
         Self::Storage(Box::new(StorageErrorDetails {
-            message: format!("Permission denied: {} for operation '{}'", path, operation),
+            message: format!("Permission denied: {path} for operation '{operation}'"),
             resource: Some(path),
             operation: Some(operation),
             storage_data: None,
@@ -637,8 +639,7 @@ impl NestGateUnifiedError {
         let path = path.into();
         Self::ResourceExhausted(Box::new(ResourceExhaustedErrorDetails {
             message: format!(
-                "Disk full: {} (required: {} bytes, available: {} bytes)",
-                path, required_bytes, available_bytes
+                "Disk full: {path} (required: {required_bytes} bytes, available: {available_bytes} bytes)"
             ),
             resource: "disk_space".to_string(),
             limit: Some(required_bytes),
@@ -655,7 +656,7 @@ impl NestGateUnifiedError {
         let field_str = field.into();
         let message_str = message.into();
         Self::Validation(Box::new(ValidationErrorDetails {
-            message: format!("Field '{}': {}", field_str, message_str),
+            message: format!("Field '{field_str}': {message_str}"),
             field: Some(field_str),
             expected: None,
             actual: None,
@@ -675,7 +676,7 @@ impl NestGateUnifiedError {
         let schema = schema.into();
         let message = message.into();
         Self::Validation(Box::new(ValidationErrorDetails {
-            message: format!("Schema validation failed ({}): {}", schema, message),
+            message: format!("Schema validation failed ({schema}): {message}"),
             field: path,
             expected: Some(schema),
             actual: None,
@@ -694,7 +695,7 @@ impl NestGateUnifiedError {
         let principal = principal.into();
         let reason = reason.into();
         Self::Security(Box::new(SecurityErrorDetails {
-            message: format!("Authentication failed for '{}': {}", principal, reason),
+            message: format!("Authentication failed for '{principal}': {reason}"),
             operation: Some("authenticate".to_string()),
             principal: Some(principal),
             security_data: None,
@@ -716,8 +717,7 @@ impl NestGateUnifiedError {
         let resource = resource.into();
         Self::Security(Box::new(SecurityErrorDetails {
             message: format!(
-                "Authorization failed: '{}' cannot '{}' on '{}'",
-                principal, action, resource
+                "Authorization failed: '{principal}' cannot '{action}' on '{resource}'"
             ),
             operation: Some(action),
             principal: Some(principal),
@@ -737,7 +737,7 @@ impl NestGateUnifiedError {
         let algorithm = algorithm.into();
         let reason = reason.into();
         Self::Security(Box::new(SecurityErrorDetails {
-            message: format!("Encryption failed ({}): {}", algorithm, reason),
+            message: format!("Encryption failed ({algorithm}): {reason}"),
             operation: Some("encrypt".to_string()),
             principal: None,
             security_data: None,
@@ -752,7 +752,7 @@ impl NestGateUnifiedError {
     pub fn api_not_found(endpoint: impl Into<String>) -> Self {
         let endpoint = endpoint.into();
         Self::Api(Box::new(ApiErrorDetails {
-            message: format!("Endpoint not found: {}", endpoint),
+            message: format!("Endpoint not found: {endpoint}"),
             status_code: Some(404),
             request_id: None,
             endpoint: Some(endpoint),
@@ -802,10 +802,7 @@ impl NestGateUnifiedError {
         let expected = expected.into();
         Self::Configuration(Box::new(ConfigurationErrorDetails {
             field: field.clone(),
-            message: format!(
-                "Invalid value for '{}': got '{}', expected '{}'",
-                field, value, expected
-            ),
+            message: format!("Invalid value for '{field}': got '{value}', expected '{expected}'"),
             currentvalue: Some(value),
             expected: Some(expected),
             user_error: true,
@@ -820,7 +817,7 @@ impl NestGateUnifiedError {
         let field = field.into();
         Self::Configuration(Box::new(ConfigurationErrorDetails {
             field: field.clone(),
-            message: format!("Missing required configuration field: '{}'", field),
+            message: format!("Missing required configuration field: '{field}'"),
             currentvalue: None,
             expected: Some("required value".to_string()),
             user_error: true,

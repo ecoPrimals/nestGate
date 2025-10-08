@@ -2,10 +2,10 @@
 /// Demonstrates the rebuilt test modules work properly
 mod common;
 
-use crate::canonical_modernization::UnifiedServiceType;
 use crate::common::MockUniversalService;
 use nestgate_core::Result;
 use std::time::Duration;
+use tests::canonical_modernization::UnifiedServiceType;
 use tests::common::test_doubles::UniversalService;
 use tests::common::{
     CleanTestConfig, CompleteTestConfig, MockServiceRegistry, MockStorageService,

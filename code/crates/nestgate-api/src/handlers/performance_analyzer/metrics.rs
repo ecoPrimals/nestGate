@@ -13,7 +13,8 @@ pub struct SystemMetricsCollector {
 
 impl SystemMetricsCollector {
     /// Create new metrics collector
-    pub fn new(interval_seconds: u64) -> Self {
+    #[must_use]
+    pub const fn new(interval_seconds: u64) -> Self {
         Self { interval_seconds }
     }
 

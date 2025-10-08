@@ -30,13 +30,13 @@ impl HttpOrchestratorClient {
 /// **ZERO-COST IMPLEMENTATION**: Native async implementation without macro overhead
 impl OrchestratorClient for HttpOrchestratorClient {
     async fn register_service(&self, service_info: protocol::ServiceInfo) -> Result<()> {
-        let url = format!("{"actual_error_details"}/register");
+        let url = format!("{e}/register");
         let response = self.client
             .post(&url)
             .json(&service_info)
             .send()
             .await
-            .map_err(|_e| NestGateError::network_error(format!("Failed to register service: {"actual_error_details"}")))?;
+            .map_err(|_e| NestGateError::network_error(format!("Failed to register service: {e}")))?;
         if response.status().is_success() {
             Ok(())
         } else {
@@ -48,13 +48,13 @@ impl OrchestratorClient for HttpOrchestratorClient {
     }
 
     async fn send_metrics(&self, metrics: &SystemMetrics) -> Result<()> {
-        let url = format!("{"actual_error_details"}/metrics");
+        let url = format!("{e}/metrics");
         let response = self.client
             .post(&url)
             .json(metrics)
             .send()
             .await
-            .map_err(|_e| NestGateError::network_error(format!("Failed to send metrics: {"actual_error_details"}")))?;
+            .map_err(|_e| NestGateError::network_error(format!("Failed to send metrics: {e}")))?;
 
         if response.status().is_success() {
             Ok(())
@@ -67,19 +67,19 @@ impl OrchestratorClient for HttpOrchestratorClient {
     }
 
     async fn route_message(&self, message: protocol::Message) -> Result<protocol::Response> {
-        let url = format!("{"actual_error_details"}/route");
+        let url = format!("{e}/route");
         let response = self.client
             .post(&url)
             .json(&message)
             .send()
             .await
-            .map_err(|_e| NestGateError::network_error(format!("Failed to route message: {"actual_error_details"}")))?;
+            .map_err(|_e| NestGateError::network_error(format!("Failed to route message: {e}")))?;
 
         if response.status().is_success() {
             let mcp_response: protocol::Response = response
                 .json()
                 .await
-                .map_err(|_e| NestGateError::network_error(format!("Failed to parse response: {"actual_error_details"}")))?;
+                .map_err(|_e| NestGateError::network_error(format!("Failed to parse response: {e}")))?;
             Ok(mcp_response)
         } else {
             Err(NestGateError::network_error(format!(

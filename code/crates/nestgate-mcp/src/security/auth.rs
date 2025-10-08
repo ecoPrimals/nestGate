@@ -55,8 +55,7 @@ impl AuthManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn authenticate(&mut self, credentials: AuthCredentials) -> Result<AuthToken>  {
+                pub fn authenticate(&mut self, credentials: AuthCredentials) -> Result<AuthToken>  {
         match self.config.method {
             AuthMethod::Token => {
                 if let Some(token) = credentials.api_key {
@@ -112,8 +111,7 @@ impl AuthManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn revoke_token(&mut self, token: &str) -> Result<()>  {
+                pub fn revoke_token(&mut self, token: &str) -> Result<()>  {
         self.tokens.remove(token);
         Ok(())
     }

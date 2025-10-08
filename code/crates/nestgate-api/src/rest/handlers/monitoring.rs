@@ -98,14 +98,14 @@ pub async fn get_metrics(
         load_average: 1.0,
         uptime_seconds: 86400,
         disk_io: DiskIoMetrics {
-            read_bytes_per_sec: total_read_bytes as f64,
-            write_bytes_per_sec: total_written_bytes as f64,
-            read_ops_per_sec: (total_read_bytes as f64 / 4096.0),
-            write_ops_per_sec: (total_written_bytes as f64 / 4096.0),
-            read_mbps: total_read_bytes as f64 / (1024.0 * 1024.0), // Convert to MB
-            write_mbps: total_written_bytes as f64 / (1024.0 * 1024.0), // Convert to MB
-            read_iops: (total_read_bytes as f64 / 4096.0), // Estimate IOPS assuming 4KB blocks
-            write_iops: (total_written_bytes as f64 / 4096.0), // Estimate IOPS assuming 4KB blocks
+            read_bytes_per_sec: f64::from(total_read_bytes),
+            write_bytes_per_sec: f64::from(total_written_bytes),
+            read_ops_per_sec: (f64::from(total_read_bytes) / 4096.0),
+            write_ops_per_sec: (f64::from(total_written_bytes) / 4096.0),
+            read_mbps: f64::from(total_read_bytes) / (1024.0 * 1024.0), // Convert to MB
+            write_mbps: f64::from(total_written_bytes) / (1024.0 * 1024.0), // Convert to MB
+            read_iops: (f64::from(total_read_bytes) / 4096.0), // Estimate IOPS assuming 4KB blocks
+            write_iops: (f64::from(total_written_bytes) / 4096.0), // Estimate IOPS assuming 4KB blocks
             avg_queue_depth: 1.5,                                  // Placeholder queue depth
         },
         network_io: NetworkIoMetrics {
@@ -113,10 +113,10 @@ pub async fn get_metrics(
             bytes_received: total_rx_bytes as u64,
             packets_sent: total_tx_packets as u64,
             packets_received: total_rx_packets as u64,
-            rx_bytes_per_sec: total_rx_bytes as f64,
-            tx_bytes_per_sec: total_tx_bytes as f64,
-            rx_packets_per_sec: total_rx_packets as f64,
-            tx_packets_per_sec: total_tx_packets as f64,
+            rx_bytes_per_sec: f64::from(total_rx_bytes),
+            tx_bytes_per_sec: f64::from(total_tx_bytes),
+            rx_packets_per_sec: f64::from(total_rx_packets),
+            tx_packets_per_sec: f64::from(total_tx_packets),
         },
         zfs_metrics: ZfsMetrics {
             arc_hit_ratio: calculate_real_zfs_cache_hit_ratio().await.unwrap_or(85.0), // Real ZFS ARC hit ratio
@@ -138,7 +138,7 @@ pub async fn get_metrics(
 
 /// Get historical metrics data
 /// GET /api/v1/monitoring/metrics/history
-pub fn get_metrics_history(
+pub async fn get_metrics_history(
     State(state): State<ApiState>,
     Query(query): Query<MetricsHistoryQuery>,
 ) -> Result<Json<DataResponse<Vec<SystemMetrics>>>, Json<DataError>> {
@@ -148,15 +148,16 @@ pub fn get_metrics_history(
         .start
         .as_deref()
         .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
-        .map(|dt| dt.with_timezone(&chrono::Utc))
-        .unwrap_or_else(|| chrono::Utc::now() - chrono::Duration::hours(1));
+        .map_or_else(
+            || chrono::Utc::now() - chrono::Duration::hours(1),
+            |dt| dt.with_timezone(&chrono::Utc),
+        );
 
     let end_time = query
         .end
         .as_deref()
         .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
-        .map(|dt| dt.with_timezone(&chrono::Utc))
-        .unwrap_or_else(chrono::Utc::now);
+        .map_or_else(chrono::Utc::now, |dt| dt.with_timezone(&chrono::Utc));
 
     // Parse interval
     let interval_minutes = match query.interval.as_deref() {
@@ -204,8 +205,8 @@ pub fn get_metrics_history(
                 bytes_received: (1024 * 1024 * 25) as u64,
                 packets_sent: 800,
                 packets_received: 1000,
-                rx_bytes_per_sec: (1024 * 1024 * 25) as f64,
-                tx_bytes_per_sec: (1024 * 1024 * 15) as f64,
+                rx_bytes_per_sec: f64::from(1024 * 1024 * 25),
+                tx_bytes_per_sec: f64::from(1024 * 1024 * 15),
                 rx_packets_per_sec: 1000.0,
                 tx_packets_per_sec: 800.0,
             },
@@ -219,7 +220,7 @@ pub fn get_metrics_history(
                 deduplication_ratio: 1.2,
                 total_datasets,
                 total_snapshots: total_datasets * 3, // Assume 3 snapshots per dataset
-                total_used_bytes: (total_datasets as u64) * 2 * 1024 * 1024 * 1024, // 2GB per dataset
+                total_used_bytes: u64::from(total_datasets) * 2 * 1024 * 1024 * 1024, // 2GB per dataset
             },
         };
 
@@ -251,10 +252,7 @@ pub async fn get_alerts(
         alerts.push(Alert {
             id: "alert_001".to_string(),
             name: "High Dataset Count".to_string(),
-            description: format!(
-                "System has {} datasets, consider consolidation",
-                total_datasets
-            ),
+            description: format!("System has {total_datasets} datasets, consider consolidation"),
             message: format!("High dataset count detected: {total_datasets}"),
             severity: AlertSeverity::Warning,
             status: AlertStatus::Active,
@@ -279,13 +277,13 @@ pub async fn get_alerts(
     // ✅ REAL METRICS: Get actual current CPU usage
     let mut sys = sysinfo::System::new();
     sys.refresh_cpu_all();
-    let current_cpu = sys.global_cpu_usage() as f64;
+    let current_cpu = f64::from(sys.global_cpu_usage());
     if current_cpu > 80.0 {
         alerts.push(Alert {
             id: "alert_002".to_string(),
             name: "High CPU Usage".to_string(),
-            description: format!("CPU usage is at {:.1}%"),
-            message: format!("High CPU usage alert: {:.1}%"),
+            description: format!("CPU usage is at {current_cpu:.1}%"),
+            message: format!("High CPU usage alert: {current_cpu:.1}%"),
             severity: if current_cpu > 95.0 {
                 AlertSeverity::Critical
             } else {
@@ -317,8 +315,8 @@ pub async fn get_alerts(
         alerts.push(Alert {
             id: "alert_003".to_string(),
             name: "High Memory Usage".to_string(),
-            description: format!("Memory usage is at {:.1}%"),
-            message: format!("High memory usage alert: {:.1}%"),
+            description: format!("Memory usage is at {current_memory:.1}%"),
+            message: format!("High memory usage alert: {current_memory:.1}%"),
             severity: if current_memory > 95.0 {
                 AlertSeverity::Critical
             } else {
@@ -355,8 +353,8 @@ pub async fn get_alerts(
         alerts.push(Alert {
             id: "alert_004".to_string(),
             name: "High Storage Usage".to_string(),
-            description: format!("Storage usage is at {:.1}%"),
-            message: format!("High storage usage alert: {:.1}%"),
+            description: format!("Storage usage is at {usage_percent:.1}%"),
+            message: format!("High storage usage alert: {usage_percent:.1}%"),
             severity: if usage_percent > 95.0 {
                 AlertSeverity::Critical
             } else {
@@ -445,7 +443,7 @@ async fn calculate_real_zfs_cache_hit_ratio() -> Result<f64, Box<dyn std::error:
         Err(_) => {
             // Fallback: try to get ZFS statistics via command
             match tokio::process::Command::new("zfs")
-                .args(&["get", "-H", "-p", "all"])
+                .args(["get", "-H", "-p", "all"])
                 .output()
                 .await
             {

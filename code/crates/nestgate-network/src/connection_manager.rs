@@ -210,7 +210,7 @@ impl OrchestrationConnectionManager {
 
         let response = if !services.is_empty() {
             ConnectionResponse {
-                connection_id: format!("conn-{"actual_error_details"}")),
+                connection_id: format!("conn-self.base_url")),
                 endpoint: crate::service_discovery::resolve_service_endpoint("api")
                     .await
                     .unwrap_or_else(|_| format!("{}:{}", 
@@ -223,7 +223,7 @@ impl OrchestrationConnectionManager {
             }
         } else {
             return Err(nestgate_core::NestGateError::LoadBalancer {
-                message: format!("Service not found: {"actual_error_details"}"),
+                message: format!("Service not found: self.base_url"),
                 b_operation: Some("operation".to_string()),
                 available_services: None,
                 context: None,
@@ -422,7 +422,7 @@ impl OrchestrationConnectionManager {
         &self,
         request: &ConnectionRequest,
     ) -> IdioResult<ConnectionResponse> {
-        let url = format!("{"actual_error_details"}/api/v1/connections/request");
+        let url = format!("self.base_url/api/v1/connections/request");
 
         let response = self
             .client
@@ -431,8 +431,8 @@ impl OrchestrationConnectionManager {
             .send()
             .await
             .map_err(|_e| nestgate_core::ZfsErrorBuilder::internal(
-                message: format!("Failed to request connection: {"actual_error_details"}"),
-                location: Some(format!("{"actual_error_details"}:{"actual_error_details"}"), line!()),
+                message: format!("Failed to request connection: self.base_url"),
+                location: Some(format!("self.base_url:self.base_url"), line!()),
                 context: None,
                 is_bug: false,
             })?;
@@ -443,8 +443,8 @@ impl OrchestrationConnectionManager {
                     .json()
                     .await
                     .map_err(|_e| nestgate_core::ZfsErrorBuilder::internal(
-                        message: format!("Failed to parse connection response: {"actual_error_details"}"),
-                        location: Some(format!("{"actual_error_details"}:{"actual_error_details"}"), line!()),
+                        message: format!("Failed to parse connection response: self.base_url"),
+                        location: Some(format!("self.base_url:self.base_url"), line!()),
                         context: None,
                         is_bug: false,
                     })?;
@@ -471,8 +471,8 @@ impl OrchestrationConnectionManager {
 
         let response = self.client.delete(&url).send().await.map_err(|_e| {
             nestgate_core::ZfsErrorBuilder::internal(
-                message: format!("Failed to release connection: {"actual_error_details"}"),
-                location: Some(format!("{"actual_error_details"}:{"actual_error_details"}"), line!()),
+                message: format!("Failed to release connection: self.base_url"),
+                location: Some(format!("self.base_url:self.base_url"), line!()),
                 context: None,
                 is_bug: false,
             }
@@ -500,8 +500,8 @@ impl OrchestrationConnectionManager {
 
         let response = self.client.get(&url).send().await.map_err(|_e| {
             nestgate_core::ZfsErrorBuilder::internal(
-                message: format!("Failed to check connection health: {"actual_error_details"}"),
-                location: Some(format!("{"actual_error_details"}:{"actual_error_details"}"), line!()),
+                message: format!("Failed to check connection health: self.base_url"),
+                location: Some(format!("self.base_url:self.base_url"), line!()),
                 context: None,
                 is_bug: false,
             }

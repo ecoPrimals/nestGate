@@ -59,8 +59,7 @@ impl<T> HandlerConfigBuilder<T> {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn build(self) -> Result<HandlerConfig<T>, ConfigError>
+                pub fn build(self) -> Result<HandlerConfig<T>, ConfigError>
     where
         T: Default,
      {
@@ -269,7 +268,7 @@ pub fn default_config_for_handler(handler_type: &str) -> Result<Box<dyn std::any
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 }),
         )),
@@ -280,7 +279,7 @@ pub fn default_config_for_handler(handler_type: &str) -> Result<Box<dyn std::any
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 }),
         )),
@@ -291,7 +290,7 @@ pub fn default_config_for_handler(handler_type: &str) -> Result<Box<dyn std::any
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 }),
         )),
@@ -302,7 +301,7 @@ pub fn default_config_for_handler(handler_type: &str) -> Result<Box<dyn std::any
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 }),
         )),
@@ -313,7 +312,7 @@ pub fn default_config_for_handler(handler_type: &str) -> Result<Box<dyn std::any
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 }),
         )),
@@ -324,13 +323,13 @@ pub fn default_config_for_handler(handler_type: &str) -> Result<Box<dyn std::any
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 }),
         )),
         _ => Err(ConfigError {
             field: Some("field".to_string()),
-            message: format!("Unknown handler type: {"actual_error_details"}"),
+            message: format!("Unknown handler type: self.base_url"),
         }),
     }
 }
@@ -361,7 +360,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 });
 
@@ -390,7 +389,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 });
 

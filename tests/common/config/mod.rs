@@ -13,4 +13,4 @@
 pub use nestgate_core::config::canonical_master::test_config::*;
 
 // Environment support
-pub use nestgate_core::config::defaults::Environment;
+pub use nestgate_core::constants::Environment;

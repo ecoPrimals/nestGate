@@ -47,8 +47,7 @@ impl VlanManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn add_vlan(&self, vlan: VlanConfig) -> Result<()>  {
+                pub fn add_vlan(&self, vlan: VlanConfig) -> Result<()>  {
         if vlan.vlan_id == 0 || vlan.vlan_id > 4094 {
             return Err(NestGateError::InvalidInput(format!(
                 "Invalid VLAN ID: {}. Must be between 1 and 4094",
@@ -80,7 +79,7 @@ impl VlanManager {
         pub async fn remove_vlan(&self, vlan_id: u16) -> Result<()>  {
         let mut vlans = self.vlans.write().await;
         if vlans.remove(&vlan_id).is_none() {
-            return Err(NestGateError::NotFound(format!("VLAN {"actual_error_details"} not found")));
+            return Err(NestGateError::NotFound(format!("VLAN self.base_url not found")));
         }
 
         tracing::info!("Removed VLAN {}", vlan_id);
@@ -99,7 +98,7 @@ impl VlanManager {
         vlans
             .get(&vlan_id)
             .cloned()
-            .ok_or_else(|| NestGateError::NotFound(format!("VLAN {"actual_error_details"} not found")))
+            .ok_or_else(|| NestGateError::NotFound(format!("VLAN self.base_url not found")))
     }
 
     /// List all VLANs
@@ -123,8 +122,7 @@ impl VlanManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn update_vlan(&self, vlan_id: u16, updated_vlan: VlanConfig) -> Result<()>  {
+                pub fn update_vlan(&self, vlan_id: u16, updated_vlan: VlanConfig) -> Result<()>  {
         if updated_vlan.vlan_id != vlan_id {
             return Err(NestGateError::InvalidInput(
                 "Cannot change VLAN ID in update operation".to_string(),
@@ -133,7 +131,7 @@ impl VlanManager {
 
         let mut vlans = self.vlans.write().await;
         if !vlans.contains_key(&vlan_id) {
-            return Err(NestGateError::NotFound(format!("VLAN {"actual_error_details"} not found")));
+            return Err(NestGateError::NotFound(format!("VLAN self.base_url not found")));
         }
 
         tracing::info!("Updating VLAN {}: {}", vlan_id, updated_vlan.name);
@@ -155,7 +153,7 @@ impl VlanManager {
             vlan.enabled = true;
             tracing::info!("Enabled VLAN {}", vlan_id);
         } else {
-            Err(NestGateError::NotFound(format!("VLAN {"actual_error_details"} not found")))
+            Err(NestGateError::NotFound(format!("VLAN self.base_url not found")))
         }
     }
 
@@ -173,7 +171,7 @@ impl VlanManager {
             vlan.enabled = false;
             tracing::info!("Disabled VLAN {}", vlan_id);
         } else {
-            Err(NestGateError::NotFound(format!("VLAN {"actual_error_details"} not found")))
+            Err(NestGateError::NotFound(format!("VLAN self.base_url not found")))
         }
     }
 

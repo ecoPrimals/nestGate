@@ -276,7 +276,7 @@ impl AdvancedNestGatePanicMigrator {
 
         for (line_number, line) in lines.iter().enumerate() {
             let context = self.analyze_context(file_path, line_number, &lines);
-            let mut modified_line = line.to_string();
+            let mut modified_line = (*line).to_string();
             let mut _line_modified = false;
 
             // Try each pattern in priority order
@@ -353,8 +353,10 @@ impl AdvancedNestGatePanicMigrator {
         // Analyze surrounding context
         let start = line_number.saturating_sub(5);
         let end = std::cmp::min(line_number + 5, lines.len());
-        let surrounding_lines: Vec<String> =
-            lines[start..end].iter().map(|s| s.to_string()).collect();
+        let surrounding_lines: Vec<String> = lines[start..end]
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect();
 
         // Detect function context
         let mut function_name = None;
@@ -376,7 +378,7 @@ impl AdvancedNestGatePanicMigrator {
         let has_error_handling = surrounding_lines.iter().any(|line| {
             line.contains("match")
                 || line.contains("if let")
-                || line.contains("?")
+                || line.contains('?')
                 || line.contains("map_err")
         });
 

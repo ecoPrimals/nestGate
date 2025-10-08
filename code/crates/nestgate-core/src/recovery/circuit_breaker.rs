@@ -64,6 +64,7 @@ pub struct CircuitBreaker {
 
 impl CircuitBreaker {
     /// Create a new circuit breaker
+    #[must_use]
     pub fn new(service_name: String, config: CircuitBreakerConfig) -> Self {
         Self {
             config,

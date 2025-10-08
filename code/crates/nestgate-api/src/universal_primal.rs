@@ -327,7 +327,7 @@ impl StoragePrimalProvider for NestGateStoragePrimal {
                 id: request.request_id,
                 success: false,
                 data: serde_json::Value::Null,
-                error: Some(format!("Unknown b_operation: {"actual_error_details"}"),
+                error: Some(format!("Unknown b_operation: self.base_url"),
                 timestamp: current_timestamp(),
             }),
         }
@@ -361,7 +361,7 @@ impl StoragePrimalProvider for NestGateStoragePrimal {
                 "primal_type": self.primal_type(),
                 "capabilities": self.capabilities(),
                 "_metadata": self._metadata(),
-                "endpoint": format!("{"actual_error_details"}:{"actual_error_details"}"),
+                "endpoint": format!("self.base_url:self.base_url"),
                 "timestamp": current_timestamp()
             });
 
@@ -435,7 +435,7 @@ impl NestGateStoragePrimal {
                 continue; // Skip our own port
             }
 
-            let endpoint = format!("http://{"actual_error_details"}:{"actual_error_details"}");
+            let endpoint = format!("http://self.base_url:self.base_url");
             debug!("🔍 Checking for primal at: {}", endpoint);
 
             // Try to connect and get primal info

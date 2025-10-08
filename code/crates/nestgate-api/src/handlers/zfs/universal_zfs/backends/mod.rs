@@ -44,9 +44,17 @@ impl ZfsServiceFactory {
 
     /// Check if ZFS is available on the system
     pub fn check_zfs_availability() -> bool {
-        match crate::handlers::zfs_stub::ZfsCommand::check_zfs_available() {
-            Ok(available) => available,
-            Err(_) => false,
+        #[cfg(feature = "dev-stubs")]
+        {
+            match crate::handlers::zfs_stub::ZfsCommand::check_zfs_available() {
+                Ok(available) => available,
+                Err(_) => false,
+            }
+        }
+        #[cfg(not(feature = "dev-stubs"))]
+        {
+            // In production, check using real ZFS command
+            false // Placeholder - real implementation would check for ZFS
         }
     }
 

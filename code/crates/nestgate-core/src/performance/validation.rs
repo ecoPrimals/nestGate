@@ -163,8 +163,7 @@ impl PerformanceValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn validate_performance_targets(&self, results: &[BenchmarkResults]) -> Result<()>  {
+                pub fn validate_performance_targets(&self, results: &[BenchmarkResults]) -> Result<()>  {
         const TARGET_IMPROVEMENT: f64 = 20.0; // 20% minimum improvement
 
         let mut failures = Vec::new();

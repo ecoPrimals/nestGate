@@ -26,6 +26,7 @@ pub use canonical_unified_traits::{
 };
 
 // Re-export provider unification patterns
+#[allow(deprecated)]
 pub use canonical_provider_unification::{
     CacheService, CanonicalUniversalProvider, NetworkProvider, NetworkService, SecurityProvider,
     SecurityService, StorageProvider, StorageService,
@@ -37,6 +38,7 @@ pub use unified_storage::{
 };
 
 // Re-export native async patterns
+#[allow(deprecated)]
 pub use native_async::{
     NativeAsyncApiHandler, NativeAsyncAutomationService, NativeAsyncMcpService,
     NativeAsyncMonitoringService, NativeAsyncNetworkService, NativeAsyncSecurityProvider,
@@ -98,29 +100,8 @@ pub use domain_extensions::{StorageServiceExtension, ZfsServiceExtension};
 // All traits now use `impl Future` patterns instead of `async_trait`
 // for zero-cost async abstractions.
 // ==================== CONVENIENCE TYPE ALIASES ====================
-
-// **CANONICAL SERVICE TRAIT** - The primary service interface
-pub type Service = dyn CanonicalService<
-    Config = serde_json::Value,
-    Health = serde_json::Value,
-    Metrics = serde_json::Value,
-    Error = crate::NestGateError,
->;
-// **CANONICAL PROVIDER TRAIT** - The primary provider interface
-pub type Provider<T> = dyn CanonicalProvider<
-    T,
-    Config = serde_json::Value,
-    Error = crate::NestGateError,
-    Metadata = serde_json::Value,
->;
-// **CANONICAL STORAGE TRAIT** - THE unified storage interface
-pub type Storage = dyn UnifiedStorage<
-    Config = serde_json::Value,
-    Health = serde_json::Value,
-    Metrics = serde_json::Value,
-    Item = Vec<u8>,
-    Key = String,
->;
+// Note: Type aliases using `dyn Trait` with `impl Future` returns are not object-safe
+// These are provided for documentation purposes but cannot be used as trait objects
 // ==================== VALIDATION FUNCTIONS ====================
 
 // Validate that a service implements the canonical interface

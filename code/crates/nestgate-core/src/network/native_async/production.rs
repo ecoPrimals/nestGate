@@ -13,7 +13,7 @@ use super::types::{
     ServiceEventType, ServiceQuery,
 };
 // **MIGRATED**: Using canonical config system instead of deprecated unified_types
-use crate::config::canonical_master::NetworkConfig as UnifiedNetworkConfig;
+use crate::config::canonical_master::domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig;
 
 use std::collections::HashMap;
 
@@ -203,7 +203,7 @@ impl NativeAsyncProtocolHandler<1000, 30, 3, 8192> for ProductionProtocolHandler
         let connection = NetworkConnection {
             connection_id: uuid::Uuid::new_v4().to_string(),
             protocol: "http".to_string(),
-            local_endpoint: format!("{}:{}", config.external.host, config.external.port),
+            local_endpoint: format!("{}:{}", config.api.bind_address, config.api.port),
             established_at: chrono::Utc::now(),
             status: ConnectionStatus::Connecting,
             metadata: std::collections::HashMap::new(),

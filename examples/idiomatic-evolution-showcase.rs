@@ -1,11 +1,11 @@
 use crate::constants::magic_numbers_replacement;
-//! # Idiomatic Evolution Showcase
-//!
-//! This example demonstrates how our evolved error system provides both:
-//! 1. **Idiomatic Rust patterns** for better ergonomics
-//! 2. **Unified error benefits** for operational intelligence
-//!
-//! **KEY INSIGHT**: This is evolutionary enhancement, not replacement!
+// # Idiomatic Evolution Showcase
+//
+// This example demonstrates how our evolved error system provides both:
+// 1. **Idiomatic Rust patterns** for better ergonomics
+// 2. **Unified error benefits** for operational intelligence
+//
+// **KEY INSIGHT**: This is evolutionary enhancement, not replacement!
 
 use std::collections::HashMap;
 use std::fs;

@@ -53,8 +53,7 @@ impl UniversalEcosystemAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn route_request(&self, service_id: Uuid, request: ServiceRequest) -> Result<ServiceResponse>  {
+                pub fn route_request(&self, service_id: Uuid, request: ServiceRequest) -> Result<ServiceResponse>  {
         // Simplified routing - would implement actual service communication
         Ok(ServiceResponse {
             id: Uuid::new_v4(),

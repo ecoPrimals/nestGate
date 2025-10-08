@@ -8,10 +8,10 @@ use std::collections::HashMap;
 use std::time::Instant;
 use tokio::time::{sleep, Duration};
 
-use nestgate_core::config::unified::PerformanceConfig;
+use nestgate_core::config::canonical_config::performance_config::PerformanceConfig;
 use nestgate_core::{
     canonical_modernization::unified_enums::{UnifiedServiceState, UnifiedServiceType},
-    config::unified::NestGateUnifiedConfig,
+    config::canonical_master::NestGateCanonicalConfig,
     error::{NestGateError, Result},
 };
 use std::sync::atomic::{AtomicU64, Ordering};

@@ -44,14 +44,14 @@ fn benchmark_hashmap_key_strategies(c: &mut Criterion) {
         b.iter(|| {
             let mut map: HashMap<String, i32> = HashMap::new();
             for i in 0..100 {
-                map.insert(format!("key_{}", i), i);
+                map.insert(format!("key_{i}"), i);
             }
             black_box(map);
         });
     });
 
     group.bench_function("borrowed_str_keys", |b| {
-        let keys: Vec<String> = (0..100).map(|i| format!("key_{}", i)).collect();
+        let keys: Vec<String> = (0..100).map(|i| format!("key_{i}")).collect();
         b.iter(|| {
             let mut map: HashMap<&str, i32> = HashMap::new();
             for (i, key) in keys.iter().enumerate() {
@@ -119,7 +119,7 @@ fn benchmark_string_operations(c: &mut Criterion) {
     group.bench_function("string_format", |b| {
         b.iter(|| {
             for i in 0..100 {
-                let s = format!("item_{}", i);
+                let s = format!("item_{i}");
                 black_box(s);
             }
         });
@@ -191,7 +191,7 @@ fn benchmark_concurrency_patterns(c: &mut Criterion) {
                 .map(|_| {
                     let data_clone = data.clone();
                     std::thread::spawn(move || {
-                        let sum: u32 = data_clone.iter().map(|&x| x as u32).sum();
+                        let sum: u32 = data_clone.iter().map(|&x| u32::from(x)).sum();
                         black_box(sum);
                     })
                 })
@@ -224,7 +224,7 @@ fn performance_reality_check(c: &mut Criterion) {
     group.bench_function("memory_bandwidth_test", |b| {
         let data = vec![1u8; 1024 * 1024]; // 1MB
         b.iter(|| {
-            let sum: u64 = data.iter().map(|&x| x as u64).sum();
+            let sum: u64 = data.iter().map(|&x| u64::from(x)).sum();
             black_box(sum);
         });
     });

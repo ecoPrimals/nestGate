@@ -137,6 +137,7 @@ mod tests {
         }
     }
 
+    #[allow(deprecated)] // Test mock using deprecated trait
     impl SecurityPrimalProvider for MockSecurityProvider {
         async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken> {
             if credentials.username == "test_user" && credentials.password == "test_pass" {
@@ -220,7 +221,7 @@ mod tests {
             salt: &[u8],
             iterations: u32,
         ) -> Result<Vec<u8>> {
-            let combined = format!("{}:{:?}:{}", password, salt, iterations);
+            let combined = format!("{password}:{salt:?}:{iterations}");
             Ok(combined.as_bytes().to_vec())
         }
 

@@ -19,6 +19,7 @@ pub struct SimpleMemoryPool {
 
 impl SimpleMemoryPool {
     /// Create a new memory pool
+    #[must_use]
     pub fn new(buffer_size: usize, max_pool_size: usize) -> Self {
         Self {
             pool: Arc::new(Mutex::new(VecDeque::new())),
@@ -28,6 +29,7 @@ impl SimpleMemoryPool {
     }
 
     /// Get a buffer from the pool, or allocate a new one
+    #[must_use]
     pub fn get_buffer(&self) -> Vec<u8> {
         if let Ok(mut pool) = self.pool.lock() {
             if let Some(mut buffer) = pool.pop_front() {
@@ -55,6 +57,7 @@ impl SimpleMemoryPool {
     }
 
     /// Get pool statistics
+    #[must_use]
     pub fn stats(&self) -> PoolStats {
         let pool_size = self.pool.lock().map(|p| p.len()).unwrap_or(0);
         PoolStats {
@@ -98,6 +101,7 @@ impl PooledBuffer {
     }
 
     /// Get a reference to the buffer
+    #[must_use]
     pub fn buffer_ref(&self) -> &Vec<u8> {
         self.buffer
             .as_ref()
@@ -105,11 +109,13 @@ impl PooledBuffer {
     }
 
     /// Get the length of the buffer
+    #[must_use]
     pub fn len(&self) -> usize {
         self.buffer_ref().len()
     }
 
     /// Check if the buffer is empty
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.buffer_ref().is_empty()
     }
@@ -149,6 +155,7 @@ pub struct EnhancedMemoryPool {
 
 impl EnhancedMemoryPool {
     /// Create a new enhanced memory pool
+    #[must_use]
     pub fn new(buffer_size: usize, max_pool_size: usize) -> Self {
         Self {
             inner: SimpleMemoryPool::new(buffer_size, max_pool_size),
@@ -156,12 +163,14 @@ impl EnhancedMemoryPool {
     }
 
     /// Get a managed buffer that automatically returns to pool
+    #[must_use]
     pub fn get_managed_buffer(&self) -> PooledBuffer {
         let buffer = self.inner.get_buffer();
         PooledBuffer::new(buffer, self.inner.pool.clone(), self.inner.max_pool_size)
     }
 
     /// Get pool statistics
+    #[must_use]
     pub fn stats(&self) -> PoolStats {
         self.inner.stats()
     }

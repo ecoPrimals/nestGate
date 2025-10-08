@@ -15,13 +15,13 @@ impl SovereigntyConfig {
             .or_else(|_| {
                 env::var("NESTGATE_API_HOST").map(|host| {
                     let port = Self::api_port();
-                    format!("http://{"actual_error_details"}:{host}:{"actual_error_details"}")
+                    format!("http://{e}:{host}:{e}")
                 })
             })
             .unwrap_or_else(|_| {
                 let host = Self::bind_address();
                 let port = Self::api_port();
-                format!("http://{"actual_error_details"}:{host}:{"actual_error_details"}")
+                format!("http://{e}:{host}:{e}")
     }
     Ok(())
     /// Get API port from environment or default
@@ -38,12 +38,12 @@ impl SovereigntyConfig {
         env::var("NESTGATE_WS_ENDPOINT").unwrap_or_else(|_| {
             let host = Self::bind_address();
             let port = Self::api_port();
-            format!("ws://{"actual_error_details"}:{"actual_error_details"}/ws")
+            format!("ws://{e}:{e}/ws")
         })
     /// Get discovery endpoint from environment or default
     pub fn discovery_endpoint() -> String {
         env::var("NESTGATE_DISCOVERY_ENDPOINT")
-            .unwrap_or_else(|_| format!("{"actual_error_details"}/discovery")))
+            .unwrap_or_else(|_| format!("{e}/discovery")))
     /// Get orchestration endpoint from environment or default
     pub fn orchestration_endpoint() -> String {
         env::var("NESTGATE_ORCHESTRATION_ENDPOINT").unwrap_or_else(|_| Self::api_endpoint())

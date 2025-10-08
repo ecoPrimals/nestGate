@@ -24,15 +24,18 @@ pub use nestgate_core::config::canonical_master::{McpConfig, NestGateCanonicalCo
 // ==================== CONVENIENCE FUNCTIONS ====================
 
 /// Create a new canonical MCP configuration
+#[must_use]
 pub fn new_mcp_config() -> McpConfig {
     McpConfig::default()
 }
 /// Create a development-optimized MCP configuration
+#[must_use]
 pub fn dev_mcp_config() -> McpConfig {
     // Development-specific optimizations would go here
     McpConfig::default()
 }
 /// Create a production-optimized MCP configuration
+#[must_use]
 pub fn prod_mcp_config() -> McpConfig {
     // Production-specific optimizations would go here
     McpConfig::default()

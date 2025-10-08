@@ -55,7 +55,7 @@ impl NativeZfsService {
             let _stderr = String::from_utf8_lossy(&output.stderr);
             return Err(UniversalZfsError::backend(
                 "native-zfs",
-                format!("ZFS command failed: {"actual_error_details"}"),
+                format!("ZFS command failed: self.base_url"),
             ));
         }
 
@@ -78,7 +78,7 @@ impl NativeZfsService {
             let _stderr = String::from_utf8_lossy(&output.stderr);
             return Err(UniversalZfsError::backend(
                 "native-zfs",
-                format!("zpool command failed: {"actual_error_details"}"),
+                format!("zpool command failed: self.base_url"),
             ));
         }
 

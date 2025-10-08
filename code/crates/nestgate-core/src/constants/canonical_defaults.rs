@@ -33,21 +33,25 @@ pub mod network {
     pub const DEFAULT_METRICS_PORT: u16 = 9090;
 
     /// Build API URL from environment or default
+    #[must_use]
     pub fn build_api_url() -> String {
         std::env::var("NESTGATE_API_URL").unwrap_or_else(|_| DEFAULT_API_BASE_URL.to_string())
     }
 
     /// Build WebSocket URL from environment or default
+    #[must_use]
     pub fn build_websocket_url() -> String {
         std::env::var("NESTGATE_WS_URL").unwrap_or_else(|_| DEFAULT_WEBSOCKET_URL.to_string())
     }
 
     /// Build metrics URL from environment or default
+    #[must_use]
     pub fn build_metrics_url() -> String {
         std::env::var("NESTGATE_METRICS_URL").unwrap_or_else(|_| DEFAULT_METRICS_URL.to_string())
     }
 
     /// Build generic endpoint from environment
+    #[must_use]
     pub fn build_endpoint() -> String {
         build_api_url()
     }

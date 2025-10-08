@@ -346,7 +346,7 @@ async fn run_report(
             info!("📁 Report saved to: {}", file);
         }
         None => {
-            println!("{}", report_content);
+            println!("{report_content}");
         }
     }
 

@@ -184,8 +184,7 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn get_connection_with_timeout(&mut self, timeout: Duration) -> Result<Connection>  {
+                pub fn get_connection_with_timeout(&mut self, timeout: Duration) -> Result<Connection>  {
         let start = Instant::now();
         
         // Try to get connection with timeout
@@ -390,8 +389,7 @@ impl<T> ConnectionPool<T> {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn get_connection(&mut self) -> Result<T>  {
+                pub fn get_connection(&mut self) -> Result<T>  {
         // Arc<dyn Fn> call overhead
         (self.factory)()
     }

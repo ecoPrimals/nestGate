@@ -1,7 +1,6 @@
 // Clean implementation of file characteristic analysis and access pattern tracking
 
 use std::collections::HashMap;
-use std::path::Path;
 use std::time::SystemTime;
 
 use nestgate_core::error::{NestGateError, Result};
@@ -43,9 +42,11 @@ pub struct FileAnalyzer {
 }
 impl FileAnalyzer {
     #[must_use]
-    pub fn new() -> Self { Self {
+    pub fn new() -> Self {
+        Self {
             analysis_cache: tokio::sync::RwLock::new(HashMap::new()),
-         }
+        }
+    }
 
     /// Analyze a file and return its characteristics
     ///
@@ -55,24 +56,20 @@ impl FileAnalyzer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn analyze_file(&self, file_path: &str) -> Result<FileAnalysis>  {
+    pub async fn analyze_file(&self, file_path: &str) -> Result<FileAnalysis> {
         // Check cache first
         if let Some(cached) = self.get_cached_analysis(file_path).await {
             return Ok(cached);
         }
 
         let path = std::path::Path::new(file_path);
-        let metadata = tokio::fs::metadata(path).await.map_err(|_e| {
-            NestGateError::storage_error(
-                &format!("Failed to get metadata for {file_path}: {"actual_error_details"}"),
-                "get_metadata",
-                Some(file_path.to_string()),
-            )
+        let metadata = tokio::fs::metadata(path).await.map_err(|e| {
+            NestGateError::storage_error(&format!("Failed to get metadata for {file_path}: {e}"))
         })?;
 
         let size = metadata.len();
         let file_type = self.determine_file_type(path);
-        let _characteristics = self.analyze_characteristics(path, size, &file_type).await?;
+        let _characteristics = self.analyze_characteristics(path, size, &file_type)?;
 
         let modified = metadata
             .modified()
@@ -91,7 +88,7 @@ impl FileAnalyzer {
                 .checked_add(std::time::Duration::from_secs(modified))
                 .unwrap_or(SystemTime::now()),
             accessed_at: SystemTime::now(),
-            file_type: format!("{"actual_error_details"}"),
+            file_type: "file".to_string(),
         };
 
         Ok(analysis)
@@ -106,7 +103,7 @@ impl FileAnalyzer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn analyze_file_idiomatic(&self, file_path: &str) -> Result<FileAnalysis>  {
+    pub async fn analyze_file_idiomatic(&self, file_path: &str) -> Result<FileAnalysis> {
         // Convert from unified to idiomatic
         self.analyze_file_safe(file_path).await
     }
@@ -119,14 +116,11 @@ impl FileAnalyzer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn analyze_file_flexible(
-        &self,
-        file_path: &str,
-    ) -> Result<FileAnalysis>  {
+    pub async fn analyze_file_flexible(&self, file_path: &str) -> Result<FileAnalysis> {
         self.analyze_file(file_path).await
     }
 
-    /// **IDIOMATIC EVOLUTION**: Safe error handling without unwrap()
+    /// **IDIOMATIC EVOLUTION**: Safe error handling without `unwrap()`
     /// This demonstrates evolved error handling patterns
     ///
     /// # Errors
@@ -135,15 +129,11 @@ impl FileAnalyzer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn analyze_file_safe(&self, file_path: &str) -> Result<FileAnalysis>  {
+    pub async fn analyze_file_safe(&self, file_path: &str) -> Result<FileAnalysis> {
         let _analysis_future = self.analyze_file(file_path);
 
-        let metadata = tokio::fs::metadata(file_path).await.map_err(|_e| {
-            NestGateError::storage_error(
-                &format!("Failed to read file metadata: {"actual_error_details"}"),
-                "read_metadata",
-                Some(file_path.to_string()),
-            )
+        let metadata = tokio::fs::metadata(file_path).await.map_err(|e| {
+            NestGateError::storage_error(&format!("Failed to read file metadata: {e}"))
         })?;
 
         let analysis = FileAnalysis {
@@ -152,7 +142,7 @@ impl FileAnalyzer {
             created_at: metadata.created().unwrap_or(SystemTime::now()),
             modified_at: metadata.modified().unwrap_or(SystemTime::now()),
             accessed_at: metadata.accessed().unwrap_or(SystemTime::now()),
-            file_type: format!("{"actual_error_details"}")),
+            file_type: "unknown".to_string(),
         };
 
         Ok(analysis)
@@ -166,19 +156,22 @@ impl FileAnalyzer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn analyze_file_comprehensive(&self, file_path: &str) -> Result<FileAnalysis>  {
+    pub async fn analyze_file_comprehensive(&self, file_path: &str) -> Result<FileAnalysis> {
         self.analyze_file(file_path).await
     }
 
     /// **CANONICAL PATTERN**: Builder-style configuration
-    pub fn with_cache_size(self, _size: usize) -> Self { // This would configure cache size in a real implementation
+    pub fn with_cache_size(self, _size: usize) -> Self {
+        // This would configure cache size in a real implementation
         self
-    , /// **CANONICAL PATTERN**: Fluent interface for analysis options
+    }
+
+    /// **CANONICAL PATTERN**: Fluent interface for analysis options
     #[must_use]
     pub fn with_timeout(self, _timeout: std::time::Duration) -> Self {
         // This would configure timeout in a real implementation
         self
-     }
+    }
 
     /// Get access patterns for a file
     ///
@@ -188,10 +181,10 @@ impl FileAnalyzer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_access_patterns(
+    pub async fn get_access_patterns(
         &self,
         file_path: &str,
-    ) -> Result<crate::types::prediction::AccessPattern>  {
+    ) -> Result<crate::types::prediction::AccessPattern> {
         // Simplified implementation for canonical modernization
         let file_analysis = self.analyze_file_safe(file_path).await?;
 
@@ -277,13 +270,11 @@ impl FileAnalyzer {
         };
 
         // Large files are good candidates for deduplication
-        let _is_dedupable = size
-            > {
-                // Removed unresolved storage constants - using local value
-const SMALL_FILE_BYTES: u64 = 1024 * 1024; // 1MB
-                SMALL_FILE_BYTES
-            }
-            && matches!(file_type, FileType::Database | FileType::Archive);
+        let _is_dedupable = size > {
+            // Removed unresolved storage constants - using local value
+            const SMALL_FILE_BYTES: u64 = 1024 * 1024; // 1MB
+            SMALL_FILE_BYTES
+        } && matches!(file_type, FileType::Database | FileType::Archive);
 
         let is_frequently_accessed = matches!(file_type, FileType::Database | FileType::Document);
         let is_sequential_access = matches!(
@@ -300,7 +291,7 @@ const SMALL_FILE_BYTES: u64 = 1024 * 1024; // 1MB
                 SizeCategory::Large
             } else {
                 SizeCategory::XLarge
-            }
+            },
             access_frequency: 0, // Will be updated by access pattern analysis
             is_frequently_accessed,
             is_sequential_access,
@@ -316,17 +307,13 @@ const SMALL_FILE_BYTES: u64 = 1024 * 1024; // 1MB
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn analyze_file_characteristics(
+    pub async fn analyze_file_characteristics(
         &self,
         file_path: &str,
-    ) -> Result<FileCharacteristics>  {
+    ) -> Result<FileCharacteristics> {
         // Analyze file for compression and deduplication potential
-        let metadata = tokio::fs::metadata(file_path).await.map_err(|_e| {
-            NestGateError::storage_error(
-                &format!("Failed to read file metadata: {"actual_error_details"}"),
-                "get_metadata", 
-                Some(file_path.to_string()),
-            )
+        let metadata = tokio::fs::metadata(file_path).await.map_err(|e| {
+            NestGateError::storage_error(&format!("Failed to read file metadata: {e}"))
         })?;
 
         // Simple heuristics for file characteristics
@@ -353,7 +340,7 @@ const SMALL_FILE_BYTES: u64 = 1024 * 1024; // 1MB
                 SizeCategory::Large
             } else {
                 SizeCategory::XLarge
-            }
+            },
             access_frequency: 0, // Will be updated by access pattern analysis
             is_frequently_accessed: false, // This will be updated by analyze_characteristics
             is_sequential_access: false, // This will be updated by analyze_characteristics
@@ -375,12 +362,14 @@ pub struct PatternAnalyzer {
 }
 impl PatternAnalyzer {
     #[must_use]
-    pub fn new() -> Self { Self {
+    pub fn new() -> Self {
+        Self {
             pattern_history: tokio::sync::RwLock::new(HashMap::new()),
-         }
+        }
+    }
 
     /// Record an access event
-    pub fn record_access(&self, file_path: &str, access_type: AccessType) {
+    pub async fn record_access(&self, file_path: &str, access_type: AccessType) {
         let access_event = AccessEvent {
             file_path: file_path.to_string(),
             access_type,
@@ -432,10 +421,13 @@ pub struct DatasetAnalyzer {
     pattern_analyzer: PatternAnalyzer,
 }
 impl DatasetAnalyzer {
-    pub fn new() -> Self { Self {
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
             file_analyzer: FileAnalyzer::new(),
             pattern_analyzer: PatternAnalyzer::new(),
-         }
+        }
+    }
 
     /// Analyze a single file
     ///
@@ -445,7 +437,7 @@ impl DatasetAnalyzer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn analyze_file(&self, file_path: &str) -> Result<FileAnalysis>  {
+    pub async fn analyze_file(&self, file_path: &str) -> Result<FileAnalysis> {
         self.file_analyzer.analyze_file(file_path).await
     }
 
@@ -457,18 +449,18 @@ impl DatasetAnalyzer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn analyze_dataset(&self, dataset_path: &str) -> Result<DatasetAnalysis>  {
+    pub async fn analyze_dataset(&self, dataset_path: &str) -> Result<DatasetAnalysis> {
         let path = std::path::Path::new(dataset_path);
 
         if !path.exists() {
-            return Err(NestGateError::validation("file_analysis")),
-                Some(dataset_path.to_string()),
-            ));
+            return Err(NestGateError::validation(format!(
+                "Dataset path does not exist: {dataset_path}"
+            )));
         }
 
         let (file_analyses, total_files, total_size) = self.scan_dataset_directory(path).await?;
 
-        let access_patterns = self
+        let _access_patterns = self
             .aggregate_patterns(
                 &file_analyses.iter().collect::<Vec<_>>(),
                 &AccessPattern::default(),
@@ -491,7 +483,7 @@ impl DatasetAnalyzer {
                 is_frequently_accessed: false, // This will be updated by analyze_characteristics
                 is_sequential_access: false, // This will be updated by analyze_characteristics
                 data_pattern: DataPattern::Unknown, // This will be updated by analyze_characteristics
-            }
+            },
         })
     }
 
@@ -503,7 +495,7 @@ impl DatasetAnalyzer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn predict_optimal_tier(&self, dataset_path: &str) -> Result<StorageTier>  {
+    pub fn predict_optimal_tier(&self, dataset_path: &str) -> Result<StorageTier> {
         // Simplified prediction based on dataset path
         if dataset_path.contains("archive") || dataset_path.contains("backup") {
             Ok(StorageTier::Cold)
@@ -539,7 +531,7 @@ impl DatasetAnalyzer {
                             file_analyses.push(analysis);
                             total_files += 1;
                         }
-    Err(e) => {
+                        Err(e) => {
                             warn!("Failed to analyze file {:?}: {}", entry_path, e);
                         }
                     }
@@ -563,11 +555,11 @@ impl DatasetAnalyzer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn aggregate_patterns(
+    pub async fn aggregate_patterns(
         &self,
         file_analyses: &[&FileAnalysis],
         _patterns: &AccessPattern, // Use singular AccessPattern from prediction module
-    ) -> Result<AccessPattern>  {
+    ) -> Result<AccessPattern> {
         if file_analyses.is_empty() {
             return Ok(AccessPattern::default());
         }
@@ -595,11 +587,12 @@ impl DatasetAnalyzer {
         })
     }
 
+    #[allow(dead_code)]
     fn generate_recommendations(
         &self,
         file_path: &str,
         size: u64,
-        file_type: &FileType,
+        _file_type: &FileType,
     ) -> Result<Vec<String>> {
         // Pre-allocate recommendations vector with estimated capacity
         let mut recommendations = Vec::with_capacity(10);
@@ -655,7 +648,7 @@ pub async fn analyze_datasets_with_patterns(
             Ok(analysis) => {
                 results.push(analysis);
             }
-    Err(e) => {
+            Err(e) => {
                 warn!("Failed to analyze dataset {}: {}", dataset_path, e);
             }
         }

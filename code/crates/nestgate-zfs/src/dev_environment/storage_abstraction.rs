@@ -15,7 +15,7 @@ use nestgate_core::error::CanonicalResult as Result;
 /// Development Environment Storage Service
 ///
 /// Provides storage operations using filesystem calls instead of ZFS commands.
-/// This allows full NestGate functionality on development machines without
+/// This allows full `NestGate` functionality on development machines without
 /// requiring dedicated ZFS pools.
 pub struct DevEnvironmentStorageService {
     /// Base directory for all storage operations
@@ -61,7 +61,6 @@ struct SimulatedPool {
 impl SimulatedPool {
     /// Create a new simulated pool
     #[allow(dead_code)] // Development environment simulation
-    #[must_use]
     pub fn new(name: String, path: PathBuf, tier: StorageTier) -> Self {
         Self {
             name,
@@ -88,8 +87,8 @@ impl SimulatedDataset {
     /// Create a new simulated dataset
     #[allow(dead_code)]
     pub fn new(name: String, tier: StorageTier) -> Self {
-        let path = PathBuf::from(format!("/dev/datasets/{"actual_error_details"}"));
-        let mount_point = PathBuf::from(format!("/mnt/{"actual_error_details"}"));
+        let path = PathBuf::from("/dev/datasets/error details".to_string());
+        let mount_point = PathBuf::from("/mnt/error details".to_string());
 
         Self {
             name,
@@ -268,7 +267,7 @@ impl DevEnvironmentStorageService {
         let mount_point = self
             .base_path
             .join("datasets")
-            .join(format!("{pool_name}_{"actual_error_details"}"));
+            .join(format!("{pool_name}_error details"));
 
         // Create physical directories
         if let Err(e) = tokio::fs::create_dir_all(&dataset_path).await {

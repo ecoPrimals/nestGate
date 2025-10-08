@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use tokio::process::Command;
 use tracing::{debug, warn};
 
-use crate::performance::types::*;
+use crate::performance::types::{PoolPerformanceMetrics, SystemResourceMetrics};
 use nestgate_core::Result as CoreResult;
 
 /// Real system metrics collector
@@ -178,7 +178,7 @@ impl RealMetricsCollector {
     }
 
     /// Collect real ZFS pool metrics
-    pub fn collect_pool_metrics(pool_name: &str) -> CoreResult<PoolPerformanceMetrics> {
+    pub async fn collect_pool_metrics(pool_name: &str) -> CoreResult<PoolPerformanceMetrics> {
         debug!("Collecting real ZFS pool metrics for: {}", pool_name);
 
         let mut metrics = PoolPerformanceMetrics::default();

@@ -1,9 +1,13 @@
+#![allow(deprecated)]
+
 //! Zero-cost provider implementations
 //!
 //! This module provides concrete implementations of the zero-cost provider traits,
 //! optimized for compile-time specialization and zero runtime overhead.
+//!
+//! Note: Uses deprecated traits for backward compatibility
 
-use super::traits::*;
+use super::traits::{ZeroCostCacheProvider, ZeroCostSecurityProvider, ZeroCostStorageProvider};
 use super::types::ZeroCostError;
 use std::collections::HashMap;
 
@@ -20,6 +24,7 @@ impl<const CAPACITY: usize> Default for ZeroCostMemoryCache<CAPACITY> {
 }
 
 impl<const CAPACITY: usize> ZeroCostMemoryCache<CAPACITY> {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             data: HashMap::with_capacity(CAPACITY),
@@ -27,6 +32,7 @@ impl<const CAPACITY: usize> ZeroCostMemoryCache<CAPACITY> {
         }
     }
 
+    #[must_use]
     pub fn capacity(&self) -> usize {
         CAPACITY
     }
@@ -58,22 +64,26 @@ pub struct ZeroCostJwtProvider {
 }
 
 impl ZeroCostJwtProvider {
+    #[must_use]
     pub fn new(secret: [u8; 32]) -> Self {
         Self { secret }
     }
 
     /// Get the secret key for JWT operations
+    #[must_use]
     pub fn secret(&self) -> &[u8; 32] {
         &self.secret
     }
 
     /// Verify JWT signature (simplified implementation)
+    #[must_use]
     pub fn verify_signature(&self, token: &str) -> bool {
         // Simplified JWT verification using the secret
         !token.is_empty() && self.secret[0] != 0
     }
 }
 
+#[allow(deprecated)] // Example provider for zero-cost patterns demonstration
 impl ZeroCostSecurityProvider<String, String> for ZeroCostJwtProvider {
     fn authenticate(&self, credentials: &String) -> Result<String, ZeroCostError> {
         if credentials.len() > 3 {
@@ -102,21 +112,25 @@ pub struct ZeroCostFileStorage {
 }
 
 impl ZeroCostFileStorage {
+    #[must_use]
     pub fn new(base_path: String) -> Self {
         Self { base_path }
     }
 
     /// Get the base path for file operations
+    #[must_use]
     pub fn base_path(&self) -> &str {
         &self.base_path
     }
 
     /// Check if a path is within the base path
+    #[must_use]
     pub fn is_path_valid(&self, path: &str) -> bool {
         path.starts_with(&self.base_path)
     }
 }
 
+#[allow(deprecated)] // Example provider for zero-cost patterns demonstration
 impl ZeroCostStorageProvider<String, Vec<u8>> for ZeroCostFileStorage {
     fn store(&self, _key: String, _value: Vec<u8>) -> Result<(), ZeroCostError> {
         // In a real implementation, this would write to filesystem

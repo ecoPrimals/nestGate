@@ -229,3 +229,185 @@ impl fmt::Display for TokenType {
         }
     }
 }
+
+// ==================== TESTS ====================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ==================== Role Tests ====================
+
+    #[test]
+    fn test_role_display() {
+        assert_eq!(Role::Admin.to_string(), "admin");
+        assert_eq!(Role::Operator.to_string(), "operator");
+        assert_eq!(Role::Service.to_string(), "service");
+        assert_eq!(Role::User.to_string(), "user");
+        assert_eq!(Role::ReadOnly.to_string(), "read-only");
+    }
+
+    #[test]
+    fn test_role_equality() {
+        assert_eq!(Role::Admin, Role::Admin);
+        assert_ne!(Role::Admin, Role::User);
+    }
+
+    // ==================== Permission Tests ====================
+
+    #[test]
+    fn test_permission_creation_without_scope() {
+        let perm = Permission::new("read");
+        assert_eq!(perm.name, "read");
+        assert_eq!(perm.scope, None);
+    }
+
+    #[test]
+    fn test_permission_creation_with_scope() {
+        let perm = Permission::with_scope("write", "users");
+        assert_eq!(perm.name, "write");
+        assert_eq!(perm.scope, Some("users".to_string()));
+    }
+
+    #[test]
+    fn test_permission_helpers() {
+        let read = read_permission();
+        assert_eq!(read.name, "read");
+        
+        let write = write_permission();
+        assert_eq!(write.name, "write");
+        
+        let admin = admin_permission();
+        assert_eq!(admin.name, "admin");
+    }
+
+    // ==================== AccessLevel Tests ====================
+
+    #[test]
+    fn test_access_level_equality() {
+        assert_eq!(AccessLevel::None, AccessLevel::None);
+        assert_eq!(AccessLevel::Read, AccessLevel::Read);
+        assert_eq!(AccessLevel::Write, AccessLevel::Write);
+        assert_eq!(AccessLevel::Admin, AccessLevel::Admin);
+        assert_ne!(AccessLevel::Read, AccessLevel::Write);
+    }
+
+    // ==================== AuthContext Tests ====================
+
+    #[test]
+    fn test_auth_context_creation() {
+        let ctx = AuthContext::new();
+        assert!(ctx.user_id.is_none());
+        assert!(ctx.roles.is_empty());
+        assert!(ctx.permissions.is_empty());
+        assert!(ctx.metadata.is_empty());
+    }
+
+    #[test]
+    fn test_auth_context_builder() {
+        let ctx = AuthContext::new()
+            .with_user_id("user123".to_string())
+            .with_role(Role::Admin)
+            .with_permission(Permission::new("read"));
+        
+        assert_eq!(ctx.user_id, Some("user123".to_string()));
+        assert_eq!(ctx.roles.len(), 1);
+        assert_eq!(ctx.permissions.len(), 1);
+        assert!(ctx.has_role(&Role::Admin));
+    }
+
+    #[test]
+    fn test_auth_context_role_checking() {
+        let ctx = AuthContext::new()
+            .with_role(Role::Admin)
+            .with_role(Role::Operator);
+        
+        assert!(ctx.has_role(&Role::Admin));
+        assert!(ctx.has_role(&Role::Operator));
+        assert!(!ctx.has_role(&Role::User));
+        assert!(ctx.is_admin());
+    }
+
+    #[test]
+    fn test_auth_context_permission_checking() {
+        let read_perm = Permission::new("read");
+        let write_perm = Permission::new("write");
+        
+        let ctx = AuthContext::new()
+            .with_permission(read_perm.clone());
+        
+        assert!(ctx.has_permission(&read_perm));
+        assert!(!ctx.has_permission(&write_perm));
+    }
+
+    #[test]
+    fn test_auth_context_access_level_admin() {
+        let ctx = AuthContext::new().with_role(Role::Admin);
+        let access = ctx.get_access_level("any_resource");
+        assert_eq!(access, AccessLevel::Admin);
+    }
+
+    #[test]
+    fn test_auth_context_access_level_scoped_permission() {
+        let ctx = AuthContext::new()
+            .with_permission(Permission::with_scope("write", "users"));
+        
+        let access = ctx.get_access_level("users");
+        assert_eq!(access, AccessLevel::Write);
+        
+        let other_access = ctx.get_access_level("posts");
+        assert_eq!(other_access, AccessLevel::None);
+    }
+
+    #[test]
+    fn test_auth_context_access_level_general_permission() {
+        let ctx = AuthContext::new()
+            .with_permission(Permission::new("read"));
+        
+        let access = ctx.get_access_level("any_resource");
+        assert_eq!(access, AccessLevel::Read);
+    }
+
+    #[test]
+    fn test_auth_context_default() {
+        let ctx = AuthContext::default();
+        assert!(ctx.user_id.is_none());
+        assert!(ctx.roles.is_empty());
+        assert!(ctx.permissions.is_empty());
+    }
+
+    // ==================== AuthMethod Tests ====================
+
+    #[test]
+    fn test_auth_method_variants() {
+        let none = AuthMethod::None;
+        assert_eq!(none, AuthMethod::None);
+
+        let api_key = AuthMethod::ApiKey("key123".to_string());
+        assert_eq!(api_key, AuthMethod::ApiKey("key123".to_string()));
+
+        let jwt = AuthMethod::JwtToken("token".to_string());
+        assert_eq!(jwt, AuthMethod::JwtToken("token".to_string()));
+
+        let basic = AuthMethod::Basic {
+            username: "user".to_string(),
+            password: "pass".to_string(),
+        };
+        assert!(matches!(basic, AuthMethod::Basic { .. }));
+    }
+
+    // ==================== TokenType Tests ====================
+
+    #[test]
+    fn test_token_type_display() {
+        assert_eq!(TokenType::Access.to_string(), "access");
+        assert_eq!(TokenType::Refresh.to_string(), "refresh");
+        assert_eq!(TokenType::ApiKey.to_string(), "api_key");
+    }
+
+    #[test]
+    fn test_token_type_equality() {
+        assert_eq!(TokenType::Access, TokenType::Access);
+        assert_ne!(TokenType::Access, TokenType::Refresh);
+    }
+}

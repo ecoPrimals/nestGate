@@ -1,5 +1,10 @@
 //! This module was split from native_async_zfs.rs to maintain the 2000-line limit
 //! while preserving all functionality and maintaining backward compatibility
+//!
+//! ⚠️ **DEVELOPMENT STUBS - ONLY WITH `dev-stubs` FEATURE** ⚠️
+
+#![cfg(feature = "dev-stubs")]
+
 // Sub-module declarations
 pub mod traits;
 pub mod implementations;
@@ -36,7 +41,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert!(matches!(health, HealthStatus::Healthy));
@@ -58,7 +63,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert_eq!(pools.len(), 1);
@@ -69,7 +74,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert!(pool.is_some());
@@ -77,7 +82,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 }).name, "production-pool");
     }
@@ -98,7 +103,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert_eq!(pools.len(), 1);
@@ -109,7 +114,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert!(pool.is_some());
@@ -117,7 +122,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 }).name, "dev-pool");
     }
@@ -131,7 +136,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert_eq!(datasets.len(), 1);
@@ -142,7 +147,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert!(dataset.is_some());
@@ -150,7 +155,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 }).name, "production-pool/data");
     }
@@ -164,7 +169,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert_eq!(snapshots.len(), 1);
@@ -182,7 +187,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert_eq!(snapshot.name, "production-pool/data@test-snapshot");
@@ -213,7 +218,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert_eq!(snapshots.len(), 2);

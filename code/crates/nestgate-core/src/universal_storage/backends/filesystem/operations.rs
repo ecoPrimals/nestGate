@@ -12,26 +12,26 @@ use tokio::io::AsyncWriteExt;
             fs::File::create(&temp_path)
                 .await
                 .map_err(|_e| crate::error::NestGateError::storage_error(
-                    error_message: format!("Failed to create temporary file: {"actual_error_details"}"),
+                    error_message: format!("Failed to create temporary file: {e}"),
                 )?;
 
         file.write_all(content)
             .await
             .map_err(|_e| crate::error::NestGateError::storage_error(
-                error_message: format!("Failed to write to temporary file: {"actual_error_details"}"),
+                error_message: format!("Failed to write to temporary file: {e}"),
             )?;
 
         file.sync_all()
             .await
             .map_err(|_e| crate::error::NestGateError::storage_error(
-                error_message: format!("Failed to sync temporary file: {"actual_error_details"}"),
+                error_message: format!("Failed to sync temporary file: {e}"),
             )?;
 
         // Atomically rename temporary file to target
         fs::rename(&temp_path, path)
             .await
             .map_err(|_e| crate::error::NestGateError::storage_error(
-                error_message: format!("Failed to rename temporary file: {"actual_error_details"}"),
+                error_message: format!("Failed to rename temporary file: {e}"),
             )?;
     } else {
         // Direct write
@@ -39,13 +39,13 @@ use tokio::io::AsyncWriteExt;
             fs::File::create(path)
                 .await
                 .map_err(|_e| crate::error::NestGateError::storage_error(
-                    error_message: format!("Failed to create file: {"actual_error_details"}"),
+                    error_message: format!("Failed to create file: {e}"),
                 )?;
 
         file.write_all(content)
             .await
             .map_err(|_e| crate::error::NestGateError::storage_error(
-                error_message: format!("Failed to write file: {"actual_error_details"}"),
+                error_message: format!("Failed to write file: {e}"),
             )?;
     }
 

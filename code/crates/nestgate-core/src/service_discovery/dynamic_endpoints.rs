@@ -112,7 +112,7 @@ impl DynamicEndpointResolver {
                 + (service_type
                     .as_bytes()
                     .iter()
-                    .map(|&b| b as u16)
+                    .map(|&b| u16::from(b))
                     .sum::<u16>()
                     % 1000);
         }
@@ -225,18 +225,15 @@ mod tests {
             // Should not contain hardcoded port numbers
             assert!(
                 !endpoint.contains(":8080"),
-                "Found hardcoded :8080 in {}",
-                endpoint
+                "Found hardcoded :8080 in {endpoint}"
             );
             assert!(
                 !endpoint.contains(":8081"),
-                "Found hardcoded :8081 in {}",
-                endpoint
+                "Found hardcoded :8081 in {endpoint}"
             );
             assert!(
                 !endpoint.contains(":8082"),
-                "Found hardcoded :8082 in {}",
-                endpoint
+                "Found hardcoded :8082 in {endpoint}"
             );
         }
     }

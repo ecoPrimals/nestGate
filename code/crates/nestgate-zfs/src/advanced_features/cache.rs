@@ -24,7 +24,6 @@ impl CacheAnalytics {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn analyze_cache_performance(pool: &str) -> Result<Self> {
         debug!("Analyzing cache performance for pool: {}", pool);
 
@@ -121,6 +120,7 @@ impl Default for CacheEfficiency {
 
 impl CacheEfficiency {
     /// Creates a new cache efficiency tracker
+    #[must_use]
     pub fn new() -> Self {
         Self {
             overall_efficiency: 0.0,
@@ -130,6 +130,7 @@ impl CacheEfficiency {
     }
 
     /// Calculate cache efficiency
+    #[must_use]
     pub fn calculate(arc_stats: &ArcStats, l2arc_stats: &L2arcStats) -> Self {
         let arc_efficiency = arc_stats.hit_ratio * 100.0;
         let l2arc_efficiency = l2arc_stats.hit_ratio * 100.0;

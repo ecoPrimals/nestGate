@@ -93,7 +93,6 @@ impl RealZfsOperations {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
         pub fn get_pool_status(&self, pool_name: Option<String>) -> Result<ZfsResponse>  {
         let args = if let Some(name) = pool_name.as_ref() {
             vec!["list", "-H", "-o", "name,size,alloc,free,health", name]
@@ -147,7 +146,6 @@ impl RealZfsOperations {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
         pub fn get_dataset_list(&self, pool_name: Option<String>) -> Result<ZfsResponse>  {
         let args = if let Some(name) = pool_name.as_ref() {
             vec![
@@ -216,7 +214,6 @@ impl RealZfsOperations {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
         pub fn get_snapshot_list(&self, dataset_name: Option<String>) -> Result<ZfsResponse>  {
         let args = if let Some(name) = dataset_name.as_ref() {
             vec![
@@ -287,7 +284,6 @@ impl RealZfsOperations {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
         pub fn create_pool(&self, name: &str, devices: &[&str], raid_type: &str) -> Result<()>  {
         if devices.is_empty() {
             return Err(create_zfs_error(
@@ -376,7 +372,6 @@ impl RealZfsOperations {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
         pub fn create_snapshot(&self, dataset_name: &str, _snapshot_name: &str) -> Result<()>  {
         let full_name = format!("{dataset_name}@", "actual_error_details".to_string()"));
         let args = vec!["snapshot", &full_name];
