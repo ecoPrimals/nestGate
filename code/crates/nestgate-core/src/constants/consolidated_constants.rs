@@ -224,8 +224,12 @@ pub struct BatchConstants;
 
 /// Get the global constants instance
 #[must_use]
-pub fn constants() -> ConsolidatedDomainConstants {
-    ConsolidatedDomainConstants::default()
+pub const fn constants() -> ConsolidatedDomainConstants {
+    ConsolidatedDomainConstants {
+        api: ApiDomainConstants,
+        network: NetworkDomainConstants,
+        storage: StorageDomainConstants,
+    }
 }
 // Re-export domain-specific convenience modules
 pub use super::domains::api_constants;

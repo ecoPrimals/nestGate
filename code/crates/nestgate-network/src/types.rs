@@ -13,8 +13,8 @@ use nestgate_core::unified_config_consolidation::StandardDomainConfig;
 
 // ==================== SECTION ====================
 
-/// **MIGRATED**: Network service configuration now uses StandardDomainConfig pattern
-/// This replaces the old fragmented NetworkConfig with unified configuration
+/// **MIGRATED**: Network service configuration now uses `StandardDomainConfig` pattern
+/// This replaces the old fragmented `NetworkConfig` with unified configuration
 pub type NetworkConfig = StandardDomainConfig<NetworkExtensions>;
 /// Network-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs
@@ -94,6 +94,7 @@ pub struct ConnectionInfo {
 }
 impl ConnectionInfo {
     /// Create a new connection info
+    #[must_use]
     pub fn new(id: String, endpoint: SocketAddr) -> Self {
         Self {
             id,
@@ -106,26 +107,31 @@ impl ConnectionInfo {
     }
 
     /// Get connection ID
+    #[must_use]
     pub fn id(&self) -> &str {
         &self.id
     }
 
     /// Get connection address
+    #[must_use]
     pub fn address(&self) -> SocketAddr {
         self.endpoint
     }
 
     /// Get connection age
+    #[must_use]
     pub fn age(&self) -> Duration {
         self.established_at.elapsed().unwrap_or_default()
     }
 
     /// Check if connection is active
+    #[must_use]
     pub fn is_active(&self) -> bool {
         matches!(self.status, ConnectionStatus::Active)
     }
 
     /// Get connection status
+    #[must_use]
     pub fn status(&self) -> &ConnectionStatus {
         &self.status
     }
@@ -194,36 +200,43 @@ impl ServiceInfo {
     }
 
     /// Get service ID
+    #[must_use]
     pub fn id(&self) -> &str {
         &self.id
     }
 
     /// Get service name
+    #[must_use]
     pub fn name(&self) -> &str {
         &self.name
     }
 
     /// Get service address
+    #[must_use]
     pub fn address(&self) -> SocketAddr {
         self.endpoint
     }
 
     /// Get health status
+    #[must_use]
     pub fn health_status(&self) -> &HealthStatus {
         &self.health_status
     }
 
     /// Get registration time
+    #[must_use]
     pub fn registered_at(&self) -> SystemTime {
         self.registered_at
     }
 
     /// Get metadata
+    #[must_use]
     pub fn metadata(&self) -> &HashMap<String, String> {
         &self.metadata
     }
 
     /// Check if service is healthy
+    #[must_use]
     pub fn is_healthy(&self) -> bool {
         matches!(self.health_status, HealthStatus::Healthy)
     }
@@ -239,6 +252,7 @@ impl ServiceInfo {
     }
 
     /// Get service age
+    #[must_use]
     pub fn age(&self) -> Duration {
         self.registered_at.elapsed().unwrap_or_default()
     }
@@ -310,6 +324,7 @@ pub struct NetworkConfigBuilder {
 }
 impl NetworkConfigBuilder {
     /// Create a new configuration builder
+    #[must_use]
     pub fn new() -> Self {
         Self {
             config: NetworkConfig::default(),
@@ -360,7 +375,7 @@ impl NetworkConfigBuilder {
     }
     /// Enable/disable keep-alive
     #[must_use]
-    pub fn keep_alive(mut self, enabled: bool) -> Self {
+    pub fn keep_alive(self, _enabled: bool) -> Self {
         // Note: keep_alive is not a direct field in NetworkApiConfig
         // This may need to be stored elsewhere or removed
         // self.config.network.api.keep_alive = enabled;
@@ -375,6 +390,7 @@ impl NetworkConfigBuilder {
     }
 
     /// Build the configuration
+    #[must_use]
     pub fn build(self) -> NetworkConfig {
         self.config
     }
@@ -383,5 +399,236 @@ impl NetworkConfigBuilder {
 impl Default for NetworkConfigBuilder {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::net::{IpAddr, Ipv4Addr};
+
+    // ==================== ConnectionInfo Tests (3 tests) ====================
+
+    #[test]
+    fn test_connection_info_creation() {
+        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
+        let conn = ConnectionInfo::new("conn-123".to_string(), addr);
+
+        assert_eq!(conn.id(), "conn-123");
+        assert_eq!(conn.address(), addr);
+        assert!(conn.is_active());
+        assert_eq!(conn.bytes_sent, 0);
+        assert_eq!(conn.bytes_received, 0);
+    }
+
+    #[test]
+    fn test_connection_info_byte_tracking() {
+        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
+        let mut conn = ConnectionInfo::new("conn-123".to_string(), addr);
+
+        conn.add_bytes_sent(1024);
+        conn.add_bytes_received(2048);
+
+        assert_eq!(conn.bytes_sent, 1024);
+        assert_eq!(conn.bytes_received, 2048);
+
+        // Add more bytes
+        conn.add_bytes_sent(512);
+        conn.add_bytes_received(1024);
+
+        assert_eq!(conn.bytes_sent, 1536);
+        assert_eq!(conn.bytes_received, 3072);
+    }
+
+    #[test]
+    fn test_connection_status_transitions() {
+        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
+        let mut conn = ConnectionInfo::new("conn-123".to_string(), addr);
+
+        assert!(conn.is_active());
+
+        conn.set_status(ConnectionStatus::Idle);
+        assert!(!conn.is_active());
+
+        conn.set_status(ConnectionStatus::Closing);
+        assert!(!conn.is_active());
+
+        conn.set_status(ConnectionStatus::Closed);
+        assert!(!conn.is_active());
+    }
+
+    // ==================== ServiceInfo Tests (3 tests) ====================
+
+    #[test]
+    fn test_service_info_creation() {
+        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 9000);
+        let service = ServiceInfo::new("svc-456".to_string(), "test-service".to_string(), addr);
+
+        assert_eq!(service.id(), "svc-456");
+        assert_eq!(service.name(), "test-service");
+        assert_eq!(service.address(), addr);
+        assert!(service.is_healthy());
+        assert_eq!(service.metadata().len(), 0);
+    }
+
+    #[test]
+    fn test_service_info_metadata() {
+        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 9000);
+        let mut service = ServiceInfo::new("svc-456".to_string(), "test-service".to_string(), addr);
+
+        service.add_metadata("version".to_string(), "1.0.0".to_string());
+        service.add_metadata("region".to_string(), "us-west".to_string());
+
+        assert_eq!(service.metadata().len(), 2);
+        assert_eq!(
+            service.metadata().get("version"),
+            Some(&"1.0.0".to_string())
+        );
+        assert_eq!(
+            service.metadata().get("region"),
+            Some(&"us-west".to_string())
+        );
+    }
+
+    #[test]
+    fn test_service_health_status() {
+        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 9000);
+        let mut service = ServiceInfo::new("svc-456".to_string(), "test-service".to_string(), addr);
+
+        assert!(service.is_healthy());
+
+        service.set_health_status(HealthStatus::Degraded);
+        assert!(!service.is_healthy());
+
+        service.set_health_status(HealthStatus::Unhealthy);
+        assert!(!service.is_healthy());
+
+        service.set_health_status(HealthStatus::Healthy);
+        assert!(service.is_healthy());
+    }
+
+    // ==================== NetworkConfig Builder Tests (3 tests) ====================
+
+    #[test]
+    fn test_network_config_builder_basic() {
+        let config = NetworkConfigBuilder::new()
+            .port(8888)
+            .max_connections(100)
+            .build();
+
+        assert_eq!(config.network.api.port, 8888);
+        assert_eq!(config.network.api.max_connections, 100);
+    }
+
+    #[test]
+    fn test_network_config_builder_port_range() {
+        let config = NetworkConfigBuilder::new().port_range(10000, 20000).build();
+
+        assert_eq!(config.extensions.port_range_start, 10000);
+        assert_eq!(config.extensions.port_range_end, 20000);
+    }
+
+    #[test]
+    fn test_network_config_builder_timeouts() {
+        let config = NetworkConfigBuilder::new()
+            .connection_timeout(120)
+            .keep_alive_timeout(300)
+            .build();
+
+        assert_eq!(
+            config.network.api.connection_timeout,
+            Duration::from_secs(120)
+        );
+        assert_eq!(config.extensions.keep_alive_timeout_seconds, 300);
+    }
+
+    // ==================== LoadBalancing & CircuitBreaker Tests (3 tests) ====================
+
+    #[test]
+    fn test_load_balancing_config_default() {
+        let config = LoadBalancingConfig::default();
+
+        assert_eq!(config.algorithm, "round_robin");
+        assert_eq!(config.health_check_interval, Duration::from_secs(30));
+        assert_eq!(config.max_failures, 3);
+    }
+
+    #[test]
+    fn test_circuit_breaker_config_default() {
+        let config = CircuitBreakerConfig::default();
+
+        assert_eq!(config.failure_threshold, 5);
+        assert_eq!(config.timeout_duration, Duration::from_secs(60));
+        assert_eq!(config.half_open_max_calls, 10);
+    }
+
+    #[test]
+    fn test_network_extensions_default() {
+        let extensions = NetworkExtensions::default();
+
+        assert_eq!(extensions.port_range_start, 9000);
+        assert_eq!(extensions.port_range_end, 9999);
+        assert_eq!(extensions.keep_alive_timeout_seconds, 60);
+        assert_eq!(extensions.protocol_settings.len(), 0);
+    }
+
+    // ==================== Network Statistics Tests (3 tests) ====================
+
+    #[test]
+    fn test_network_statistics_default() {
+        let stats = NetworkStatistics::default();
+
+        assert_eq!(stats.active_connections, 0);
+        assert_eq!(stats.registered_services, 0);
+        assert_eq!(stats.allocated_ports, 0);
+        assert_eq!(stats.total_bytes_sent, 0);
+        assert_eq!(stats.total_bytes_received, 0);
+    }
+
+    #[test]
+    fn test_network_statistics_serialization() {
+        let stats = NetworkStatistics {
+            active_connections: 10,
+            registered_services: 5,
+            allocated_ports: 20,
+            total_bytes_sent: 1024,
+            total_bytes_received: 2048,
+        };
+
+        let serialized = serde_json::to_string(&stats);
+        assert!(serialized.is_ok(), "Network statistics should serialize");
+
+        let json = serialized.unwrap();
+        let deserialized: std::result::Result<NetworkStatistics, _> = serde_json::from_str(&json);
+        assert!(
+            deserialized.is_ok(),
+            "Network statistics should deserialize"
+        );
+
+        let deserialized_stats = deserialized.unwrap();
+        assert_eq!(deserialized_stats.active_connections, 10);
+        assert_eq!(deserialized_stats.registered_services, 5);
+    }
+
+    #[test]
+    fn test_service_status_variants() {
+        let statuses = vec![
+            ServiceStatus::Running,
+            ServiceStatus::Stopped,
+            ServiceStatus::Error,
+            ServiceStatus::Unknown,
+            ServiceStatus::Healthy,
+            ServiceStatus::Unhealthy,
+            ServiceStatus::Starting,
+            ServiceStatus::Stopping,
+            ServiceStatus::Failed,
+        ];
+
+        assert_eq!(statuses.len(), 9);
+        assert_eq!(ServiceStatus::default(), ServiceStatus::Unknown);
+
+        // Test equality
+        assert_eq!(ServiceStatus::Running, ServiceStatus::Running);
+        assert_ne!(ServiceStatus::Running, ServiceStatus::Stopped);
     }
 }

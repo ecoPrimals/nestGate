@@ -1,7 +1,7 @@
 //! Machine learning and trend analysis components.
 
+use super::types::{CurrentMetrics, OptimizationPrediction, PerformanceHistory, TrendAnalysis};
 use nestgate_core::error::Result;
-use super::types::*;
 
 /// Simple learning model for optimization decisions
 pub struct SimpleLearningModel {
@@ -9,6 +9,7 @@ pub struct SimpleLearningModel {
 }
 
 impl SimpleLearningModel {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             // Initialize fields
@@ -20,8 +21,10 @@ impl SimpleLearningModel {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn predict_optimization(&self, _metrics: &CurrentMetrics) -> Result<OptimizationPrediction>  {
+    pub fn predict_optimization(
+        &self,
+        _metrics: &CurrentMetrics,
+    ) -> Result<OptimizationPrediction> {
         // Implementation would go here
         Ok(OptimizationPrediction {
             predicted_improvement: 0.05,
@@ -36,6 +39,7 @@ pub struct TrendAnalyzer {
 }
 
 impl TrendAnalyzer {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             // Initialize fields
@@ -47,8 +51,7 @@ impl TrendAnalyzer {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn analyze_trends(&self, _history: &PerformanceHistory) -> Result<TrendAnalysis>  {
+    pub fn analyze_trends(&self, _history: &PerformanceHistory) -> Result<TrendAnalysis> {
         // Implementation would go here
         Ok(TrendAnalysis {
             cpu_trend: 0.0,
@@ -70,4 +73,4 @@ impl Default for TrendAnalyzer {
     fn default() -> Self {
         Self::new()
     }
-} 
+}

@@ -1,4 +1,3 @@
-
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 
@@ -58,12 +57,14 @@ pub struct FileCharacteristics {
     pub size_category: SizeCategory,
 }
 impl Default for FileCharacteristics {
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             estimated_compression_ratio: 1.0,
             dedup_potential: 0.0,
             access_frequency: 0.0,
             size_category: SizeCategory::Small,
-         }
+        }
+    }
 }
 
 /// Size category enumeration
@@ -87,7 +88,8 @@ pub struct AccessPattern {
     pub read_write_ratio: f64,      // Read operations / Write operations
 }
 impl Default for AccessPattern {
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             accesses_last_24h: 0,
             accesses_last_week: 0,
             accesses_last_month: 0,
@@ -95,7 +97,8 @@ impl Default for AccessPattern {
             last_access: SystemTime::now(),
             peak_access_times: vec![9, 10, 11, 14, 15, 16], // Default business hours
             read_write_ratio: 3.0,                          // Default 3:1 read/write ratio
-         }
+        }
+    }
 }
 
 /// File analysis structure
@@ -142,30 +145,33 @@ pub struct LegacyTierPrediction {
     pub valid_until: SystemTime,
 }
 impl LegacyTierPrediction {
+    #[must_use]
     pub fn is_valid(&self) -> bool {
         SystemTime::now() < self.valid_until
     }
 }
 
-/// Convert TierType to legacy StorageTier
+/// Convert `TierType` to legacy `StorageTier`
 impl From<TierType> for StorageTier {
-    fn from(tier_type: TierType) -> Self { match tier_type {
+    fn from(tier_type: TierType) -> Self {
+        match tier_type {
             TierType::Hot => StorageTier::Hot,
             TierType::Warm => StorageTier::Warm,
             TierType::Cold => StorageTier::Cold,
-         }
+        }
+    }
 }
-/// Convert legacy StorageTier to TierType
+/// Convert legacy `StorageTier` to `TierType`
 impl From<StorageTier> for TierType {
-    fn from(tier: StorageTier) -> Self { match tier {
+    fn from(tier: StorageTier) -> Self {
+        match tier {
             StorageTier::Hot => TierType::Hot,
             StorageTier::Warm => TierType::Warm,
             StorageTier::Cold => TierType::Cold,
+            StorageTier::Cool => TierType::Cold, // Map cool to cold
             StorageTier::Frozen => TierType::Cold, // Map frozen to cold
-            nestgate_core::config::UnifiedTierType::Custom(name) => {
-                // Map custom tiers to cold as fallback
-                TierType::Cold
-             }
+            _ => TierType::Cold,                 // Default for any other variants
+        }
     }
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -176,14 +182,14 @@ pub enum TierClassification {
 }
 
 impl From<StorageTier> for TierClassification {
-    fn from(tier: StorageTier) -> Self { match tier {
+    fn from(tier: StorageTier) -> Self {
+        match tier {
             StorageTier::Hot => TierClassification::Performance,
             StorageTier::Warm => TierClassification::Balanced,
             StorageTier::Cold => TierClassification::Archive,
+            StorageTier::Cool => TierClassification::Archive, // Map cool to archive
             StorageTier::Frozen => TierClassification::Archive, // Map frozen to archive
-            nestgate_core::config::UnifiedTierType::Custom(_) => {
-                // Map custom tiers to balanced as fallback
-                TierClassification::Balanced
-             }
+            _ => TierClassification::Balanced,                // Default for any other variants
+        }
     }
 }

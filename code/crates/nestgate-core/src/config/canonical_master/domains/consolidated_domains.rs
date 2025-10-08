@@ -422,7 +422,7 @@ impl DomainConfigValidation for ConsolidatedDomainConfigs {
 
 /// Utilities for migrating from old configuration structures
 pub mod migration {
-    use super::*;
+    use super::{ApiDomainConfig, ConsolidatedDomainConfigs, HashMap, Result, ZfsDomainConfig};
 
     /// Migrate from legacy configuration structures
     ///

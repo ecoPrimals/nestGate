@@ -1,8 +1,8 @@
 //! Metrics collection for adaptive optimization.
 
-use std::sync::atomic::{AtomicU64, Ordering};
-use nestgate_core::error::Result;
 use super::types::{CurrentMetrics, PerformanceSnapshot};
+use nestgate_core::error::Result;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Instant;
 
 /// Metrics collector for comprehensive system performance monitoring
@@ -18,6 +18,7 @@ pub struct MetricsCollector {
 }
 
 impl MetricsCollector {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             cpu_utilization: AtomicU64::new(0),
@@ -39,8 +40,7 @@ impl MetricsCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn collect_current_metrics(&self) -> Result<CurrentMetrics>  {
+    pub fn collect_current_metrics(&self) -> Result<CurrentMetrics> {
         // In a real implementation, these would query actual system metrics
         // For now, we'll return the stored atomic values
         Ok(CurrentMetrics {
@@ -51,7 +51,8 @@ impl MetricsCollector {
             cache_hit_ratio: self.cache_hit_ratio.load(Ordering::Relaxed) as f64 / 100.0,
             lock_contention: self.lock_contention_ratio.load(Ordering::Relaxed) as f64 / 100.0,
             simd_utilization: self.simd_utilization.load(Ordering::Relaxed) as f64 / 100.0,
-            allocation_efficiency: self.allocation_efficiency.load(Ordering::Relaxed) as f64 / 100.0,
+            allocation_efficiency: self.allocation_efficiency.load(Ordering::Relaxed) as f64
+                / 100.0,
         })
     }
 
@@ -63,9 +64,9 @@ impl MetricsCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn create_snapshot(&self) -> Result<PerformanceSnapshot>  {
-        let metrics = self.collect_current_metrics().await?;
-        
+    pub async fn create_snapshot(&self) -> Result<PerformanceSnapshot> {
+        let metrics = self.collect_current_metrics()?;
+
         Ok(PerformanceSnapshot {
             timestamp: Instant::now(),
             cpu_utilization: metrics.cpu_usage,
@@ -81,17 +82,20 @@ impl MetricsCollector {
 
     /// Update CPU utilization metric
     pub fn update_cpu_utilization(&self, percentage: f64) {
-        self.cpu_utilization.store((percentage * 100.0) as u64, Ordering::Relaxed);
+        self.cpu_utilization
+            .store((percentage * 100.0) as u64, Ordering::Relaxed);
     }
 
     /// Update memory utilization metric
     pub fn update_memory_utilization(&self, percentage: f64) {
-        self.memory_utilization.store((percentage * 100.0) as u64, Ordering::Relaxed);
+        self.memory_utilization
+            .store((percentage * 100.0) as u64, Ordering::Relaxed);
     }
 
     /// Update network throughput metric
     pub fn update_network_throughput(&self, bytes_per_sec: u64) {
-        self.network_throughput.store(bytes_per_sec, Ordering::Relaxed);
+        self.network_throughput
+            .store(bytes_per_sec, Ordering::Relaxed);
     }
 
     /// Update disk IOPS metric
@@ -101,22 +105,26 @@ impl MetricsCollector {
 
     /// Update cache hit ratio metric
     pub fn update_cache_hit_ratio(&self, ratio: f64) {
-        self.cache_hit_ratio.store((ratio * 100.0) as u64, Ordering::Relaxed);
+        self.cache_hit_ratio
+            .store((ratio * 100.0) as u64, Ordering::Relaxed);
     }
 
     /// Update lock contention ratio metric
     pub fn update_lock_contention_ratio(&self, ratio: f64) {
-        self.lock_contention_ratio.store((ratio * 100.0) as u64, Ordering::Relaxed);
+        self.lock_contention_ratio
+            .store((ratio * 100.0) as u64, Ordering::Relaxed);
     }
 
     /// Update SIMD utilization metric
     pub fn update_simd_utilization(&self, percentage: f64) {
-        self.simd_utilization.store((percentage * 100.0) as u64, Ordering::Relaxed);
+        self.simd_utilization
+            .store((percentage * 100.0) as u64, Ordering::Relaxed);
     }
 
     /// Update allocation efficiency metric
     pub fn update_allocation_efficiency(&self, percentage: f64) {
-        self.allocation_efficiency.store((percentage * 100.0) as u64, Ordering::Relaxed);
+        self.allocation_efficiency
+            .store((percentage * 100.0) as u64, Ordering::Relaxed);
     }
 }
 
@@ -124,4 +132,4 @@ impl Default for MetricsCollector {
     fn default() -> Self {
         Self::new()
     }
-} 
+}

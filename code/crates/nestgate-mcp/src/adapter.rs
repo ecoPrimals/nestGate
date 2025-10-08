@@ -80,8 +80,7 @@ impl McpAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn initialize(&self) -> Result<()>  {
+                pub fn initialize(&self) -> Result<()>  {
         info!("Initializing MCP adapter: {}", self.config.name);
 
         // Validate configuration
@@ -116,8 +115,7 @@ impl McpAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn connect(&self) -> Result<()>  {
+                pub fn connect(&self) -> Result<()>  {
         info!("Connecting MCP adapter to: {}", self.config.endpoint);
 
         // Simulate connection attempt
@@ -184,8 +182,7 @@ impl McpAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn handle_error(&self, error: &str) -> Result<()>  {
+                pub fn handle_error(&self, error: &str) -> Result<()>  {
         warn!("MCP adapter error: {}", error);
 
         let mut state = self.state.write().await;

@@ -56,7 +56,8 @@ pub struct JsonRpcService {
 }
 impl JsonRpcService {
     /// Create a new JSON RPC service
-    pub fn new(base_url: String) -> Self {
+    #[must_use]
+    pub const fn new(base_url: String) -> Self {
         Self { base_url }
     }
 
@@ -68,7 +69,6 @@ impl JsonRpcService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn disconnect(&mut self) -> Result<(), RpcError> {
         info!("🔌 Disconnecting from orchestration");
         // Simplified - just log the disconnection
@@ -76,7 +76,8 @@ impl JsonRpcService {
     }
 
     /// Check connection status
-    pub fn check_connection_status(&self) -> bool {
+    #[must_use]
+    pub const fn check_connection_status(&self) -> bool {
         // Simplified - assume always connected
         true
     }
@@ -103,7 +104,7 @@ impl JsonRpcService {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     #[must_use]
-    pub fn subscribe(&self, _event_type: &str) -> Result<(), RpcError> {
+    pub const fn subscribe(&self, _event_type: &str) -> Result<(), RpcError> {
         // Simplified stub implementation
         Ok(())
     }

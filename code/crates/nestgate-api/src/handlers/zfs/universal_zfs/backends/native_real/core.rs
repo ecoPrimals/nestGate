@@ -129,8 +129,8 @@ impl NativeZfsService {
                     command, args, e
                 );
                 Err(UniversalZfsError::CommandFailed {
-                    command: "actual_error_details".to_string(),
-                    message: format!("Execution failed: {"actual_error_details"}"),
+                    command: e.to_string(),
+                    message: format!("Execution failed: self.base_url"),
                 }
                 .into())
             }
@@ -196,7 +196,7 @@ impl UniversalZfsService for NativeZfsService {
                     tracing::error!("Operation failed: {:?}", e);
                     std::io::Error::new(
                         std::io::ErrorKind::Other,
-                        format!("Operation failed: {"actual_error_details"}"),
+                        format!("Operation failed: self.base_url"),
                     )
                 })?
                 .status

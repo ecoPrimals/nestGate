@@ -1,10 +1,10 @@
 //! Simple Synchronous Modern NestGate Demo
-//! 
+//!
 //! Demonstrates our modern Rust patterns without async dependencies
 
-use std::time::{Duration, Instant};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 fn main() {
     println!("🚀 **MODERN NESTGATE PATTERNS DEMO**");
@@ -12,13 +12,13 @@ fn main() {
 
     // 1. Performance Monitoring Demo
     demo_performance_monitoring();
-    
+
     // 2. Configuration Demo
     demo_configuration();
-    
+
     // 3. Type Safety Demo
     demo_type_safety();
-    
+
     println!("\n✅ **DEMO COMPLETED SUCCESSFULLY!**");
     println!("Modern Rust patterns are working perfectly! 🎉");
 }
@@ -27,35 +27,35 @@ fn main() {
 fn demo_performance_monitoring() {
     println!("📊 **PERFORMANCE MONITORING DEMO**");
     println!("----------------------------------");
-    
+
     let collector = Arc::new(MetricsCollector::new());
-    
+
     println!("📊 **Performance Monitor Started**");
     println!("⚡ **Simulating Operations...**");
-    
+
     // Simulate successful operations
     for i in 1..=5 {
         let start = Instant::now();
-        
+
         // Simulate work with busy wait
         let work_duration = Duration::from_millis(10 + i * 5);
         let end_time = start + work_duration;
         while Instant::now() < end_time {
             // Busy wait to simulate work
         }
-        
+
         let duration = start.elapsed();
         collector.record_success(duration);
-        
+
         println!("   ✅ Operation {} completed in {:?}", i, duration);
     }
-    
+
     // Simulate some failures
     for i in 1..=2 {
         collector.record_failure();
         println!("   ❌ Operation {} failed (timeout)", i);
     }
-    
+
     // Get performance snapshot
     let stats = collector.get_stats();
     println!("\n📈 **Performance Summary:**");
@@ -63,14 +63,17 @@ fn demo_performance_monitoring() {
     println!("   • Successful requests: {}", stats.successful_requests);
     println!("   • Failed requests: {}", stats.failed_requests);
     println!("   • Success rate: {:.1}%", stats.success_rate);
-    println!("   • Average response time: {:?}", stats.average_response_time);
+    println!(
+        "   • Average response time: {:?}",
+        stats.average_response_time
+    );
 }
 
 /// Demonstrate configuration validation
 fn demo_configuration() {
     println!("\n📋 **CONFIGURATION VALIDATION DEMO**");
     println!("------------------------------------");
-    
+
     // Create a valid configuration
     let valid_config = NetworkConfig {
         port: Port::new(8080).unwrap(),
@@ -78,30 +81,44 @@ fn demo_configuration() {
         timeout: TimeoutMs::new(30000),
         enable_tls: false,
     };
-    
+
     println!("✅ **Valid Configuration:**");
     let result = valid_config.validate();
-    println!("   Status: {}", if result.is_valid { "VALID ✅" } else { "INVALID ❌" });
+    println!(
+        "   Status: {}",
+        if result.is_valid {
+            "VALID ✅"
+        } else {
+            "INVALID ❌"
+        }
+    );
     println!("   Port: {}", valid_config.port.get());
     println!("   Timeout: {:?}", valid_config.timeout.as_duration());
-    
+
     // Create an invalid configuration - this won't compile due to type safety!
     println!("\n🔒 **Type Safety Demo:**");
     println!("   • Port(0) would be caught at compile time with proper validation");
     println!("   • Invalid IP addresses are validated at runtime");
     println!("   • Timeout values are type-safe with TimeoutMs wrapper");
-    
+
     // Demonstrate validation with invalid data
     let invalid_config = NetworkConfig {
-        port: Port::new(8080).unwrap(), // Valid port for demo
+        port: Port::new(8080).unwrap(),         // Valid port for demo
         bind_address: "invalid_ip".to_string(), // Invalid IP
-        timeout: TimeoutMs::new(0), // Invalid timeout
+        timeout: TimeoutMs::new(0),             // Invalid timeout
         enable_tls: false,
     };
-    
+
     println!("\n❌ **Invalid Configuration:**");
     let result = invalid_config.validate();
-    println!("   Status: {}", if result.is_valid { "VALID ✅" } else { "INVALID ❌" });
+    println!(
+        "   Status: {}",
+        if result.is_valid {
+            "VALID ✅"
+        } else {
+            "INVALID ❌"
+        }
+    );
     println!("   Errors found: {}", result.errors.len());
     for error in &result.errors {
         println!("     • {}: {}", error.field, error.message);
@@ -112,38 +129,42 @@ fn demo_configuration() {
 fn demo_type_safety() {
     println!("\n🔒 **TYPE SAFETY DEMO**");
     println!("----------------------");
-    
+
     // Demonstrate newtype patterns
     println!("🎯 **Newtype Patterns:**");
-    
+
     // Valid port creation
     match Port::new(8080) {
         Ok(port) => println!("   ✅ Valid port created: {}", port.get()),
         Err(e) => println!("   ❌ Port creation failed: {}", e),
     }
-    
+
     // Invalid port creation
     match Port::new(0) {
         Ok(port) => println!("   ✅ Valid port created: {}", port.get()),
         Err(e) => println!("   ❌ Port creation failed: {}", e),
     }
-    
+
     // Timeout demonstration
     let timeout = TimeoutMs::new(5000);
-    println!("   ⏱️  Timeout: {} ms = {:?}", timeout.get(), timeout.as_duration());
-    
+    println!(
+        "   ⏱️  Timeout: {} ms = {:?}",
+        timeout.get(),
+        timeout.as_duration()
+    );
+
     // Endpoint demonstration
     if let Ok(port) = Port::new(443) {
         let endpoint = Endpoint::https("api.example.com".to_string(), port);
         println!("   🌐 HTTPS Endpoint: {}", endpoint.url());
     }
-    
+
     println!("\n🏗️ **Builder Pattern Demo:**");
     let error = ValidationErrorBuilder::new("demo_field", "This is a test error")
         .with_current_value("invalid_value")
         .with_expected_format("valid_format")
         .build();
-    
+
     println!("   📝 Validation Error:");
     println!("      Field: {}", error.field);
     println!("      Message: {}", error.message);
@@ -199,7 +220,11 @@ pub struct Endpoint {
 
 impl Endpoint {
     pub fn https(host: String, port: Port) -> Self {
-        Self { host, port, scheme: Scheme::Https }
+        Self {
+            host,
+            port,
+            scheme: Scheme::Https,
+        }
     }
 
     pub fn url(&self) -> String {
@@ -244,7 +269,8 @@ impl MetricsCollector {
     fn record_success(&self, duration: Duration) {
         self.total_requests.fetch_add(1, Ordering::Relaxed);
         self.successful_requests.fetch_add(1, Ordering::Relaxed);
-        self.total_response_time_ns.fetch_add(duration.as_nanos() as u64, Ordering::Relaxed);
+        self.total_response_time_ns
+            .fetch_add(duration.as_nanos() as u64, Ordering::Relaxed);
     }
 
     fn record_failure(&self) {
@@ -257,19 +283,19 @@ impl MetricsCollector {
         let successful_requests = self.successful_requests.load(Ordering::Relaxed);
         let failed_requests = self.failed_requests.load(Ordering::Relaxed);
         let total_response_time_ns = self.total_response_time_ns.load(Ordering::Relaxed);
-        
+
         let success_rate = if total_requests > 0 {
             (successful_requests as f64 / total_requests as f64) * 100.0
         } else {
             0.0
         };
-        
+
         let average_response_time = if successful_requests > 0 {
             Duration::from_nanos(total_response_time_ns / successful_requests)
         } else {
             Duration::ZERO
         };
-        
+
         PerformanceStats {
             total_requests,
             successful_requests,
@@ -302,7 +328,7 @@ struct NetworkConfig {
 impl NetworkConfig {
     fn validate(&self) -> ValidationResult {
         let mut errors = Vec::new();
-        
+
         // Validate IP address
         if self.bind_address.parse::<std::net::IpAddr>().is_err() {
             errors.push(ValidationError {
@@ -310,7 +336,7 @@ impl NetworkConfig {
                 message: "Invalid IP address format".to_string(),
             });
         }
-        
+
         // Validate timeout
         if self.timeout.get() == 0 {
             errors.push(ValidationError {
@@ -318,7 +344,7 @@ impl NetworkConfig {
                 message: "Timeout cannot be zero".to_string(),
             });
         }
-        
+
         ValidationResult {
             is_valid: errors.is_empty(),
             errors,
@@ -382,4 +408,4 @@ struct DetailedValidationError {
     message: String,
     current_value: Option<String>,
     expected_format: Option<String>,
-} 
+}

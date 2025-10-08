@@ -19,8 +19,10 @@ impl MonitoringSettings {
 }
 
 impl Default for MonitoringSettings {
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             enabled: false,
             config: std::collections::HashMap::new(),
-         }
+        }
+    }
 }

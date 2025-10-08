@@ -71,8 +71,7 @@ impl ServiceDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn health_check_all(&self) -> Result<HashMap<Uuid, bool>>  {
+                pub fn health_check_all(&self) -> Result<HashMap<Uuid, bool>>  {
         let mut health_status = HashMap::new();
         
         for service in self.registry.list_services() {

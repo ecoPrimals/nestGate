@@ -56,7 +56,7 @@ pub struct PerformanceBaseline {
 /// **START LOAD TEST HANDLER**
 ///
 /// Start a new load test execution with the specified configuration.
-pub fn start_load_test(
+pub async fn start_load_test(
     Json(config): Json<LoadTestConfig>,
 ) -> Result<Json<LoadTestExecution>, StatusCode> {
     let execution = LoadTestExecution {
@@ -78,7 +78,7 @@ pub fn start_load_test(
 ///
 /// Retrieve results from completed load tests.
 #[must_use]
-pub fn get_load_test_results() -> Result<Json<Vec<TestResult>>, StatusCode> {
+pub async fn get_load_test_results() -> Result<Json<Vec<TestResult>>, StatusCode> {
     let results = vec![
         TestResult {
             success: true,
@@ -105,7 +105,7 @@ pub fn get_load_test_results() -> Result<Json<Vec<TestResult>>, StatusCode> {
 ///
 /// Retrieve historical load test execution records.
 #[must_use]
-pub fn get_load_test_history() -> Result<Json<Vec<LoadTestHistoryEntry>>, StatusCode> {
+pub async fn get_load_test_history() -> Result<Json<Vec<LoadTestHistoryEntry>>, StatusCode> {
     let history = vec![LoadTestHistoryEntry {
         test_id: "test_001".to_string(),
         test_name: "API Stress Test".to_string(),
@@ -128,7 +128,7 @@ pub fn get_load_test_history() -> Result<Json<Vec<LoadTestHistoryEntry>>, Status
 ///
 /// Retrieve performance baselines for load test comparison.
 #[must_use]
-pub fn get_performance_baselines() -> Result<Json<Vec<PerformanceBaseline>>, StatusCode> {
+pub async fn get_performance_baselines() -> Result<Json<Vec<PerformanceBaseline>>, StatusCode> {
     let baselines = vec![
         PerformanceBaseline {
             baseline_id: "baseline_001".to_string(),

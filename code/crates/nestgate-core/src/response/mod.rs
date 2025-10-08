@@ -28,7 +28,7 @@ pub use traits::{
 
 // Response utility functions for common operations
 pub mod utils {
-    use super::*;
+    use super::{ApiResponse, UnifiedErrorResponse};
     use std::collections::HashMap;
     /// Create a paginated response wrapper
     #[must_use]
@@ -104,7 +104,7 @@ pub mod utils {
             ApiResponse::success(health_data)
         } else {
             ApiResponse::new_error_with_code(
-                format!("{} health check failed", service),
+                format!("{service} health check failed"),
                 "HEALTH_CHECK_FAILED".to_string(),
             )
             .with_meta("health_details", health_data)
@@ -114,7 +114,7 @@ pub mod utils {
     /// Create a validation response with field-specific errors
     #[must_use]
     pub fn validation_response(field_errors: HashMap<String, Vec<String>>) -> UnifiedErrorResponse {
-        let error_count = field_errors.values().map(|v| v.len()).sum::<usize>();
+        let error_count = field_errors.values().map(std::vec::Vec::len).sum::<usize>();
         let message = format!(
             "Validation failed with {} errors across {} items",
             error_count,

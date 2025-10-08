@@ -30,7 +30,7 @@ pub mod fallback_providers {
     // Removed unused async_trait import for pedantic perfection
 
     pub mod security {
-        use super::*;
+        use super::{FallbackProvider, NestGateError};
 
         /// Security fallback provider when no external security capability is available
         #[derive(Debug, Clone)]
@@ -58,7 +58,6 @@ pub mod fallback_providers {
             /// # Errors
             ///
             /// This function will return an error if the operation fails.
-            #[must_use]
             pub fn authenticate(&self, _credentials: &str) -> Result<bool, NestGateError> {
                 match self.fallback_mode {
                     SecurityFallbackMode::BasicAuth => Ok(true), // Simplified fallback
@@ -103,7 +102,7 @@ pub mod fallback_providers {
     }
 
     pub mod ai {
-        use super::*;
+        use super::{FallbackProvider, NestGateError};
 
         /// AI fallback provider when no external AI capability is available
         #[derive(Debug, Clone)]
@@ -131,7 +130,6 @@ pub mod fallback_providers {
             /// # Errors
             ///
             /// This function will return an error if the operation fails.
-            #[must_use]
             pub fn process(&self, input: &str) -> Result<String, NestGateError> {
                 match self.fallback_mode {
                     AiFallbackMode::MockResponses => Ok("Mock AI response".to_string()),
@@ -187,7 +185,7 @@ pub mod fallback_providers {
     }
 
     pub mod orchestration {
-        use super::*;
+        use super::{FallbackProvider, NestGateError};
 
         /// Orchestration fallback provider for local orchestration
         #[derive(Debug, Clone)]
@@ -210,7 +208,6 @@ pub mod fallback_providers {
             /// # Errors
             ///
             /// This function will return an error if the operation fails.
-            #[must_use]
             pub fn orchestrate(&self, _workflow: &str) -> Result<String, NestGateError> {
                 Ok("Local orchestration fallback".to_string())
             }
@@ -266,7 +263,7 @@ pub mod fallback_providers {
     }
 
     pub mod compute {
-        use super::*;
+        use super::NestGateError;
 
         /// Compute fallback provider for local compute operations
         pub struct ComputeFallbackProvider;
@@ -288,7 +285,6 @@ pub mod fallback_providers {
             /// # Errors
             ///
             /// This function will return an error if the operation fails.
-            #[must_use]
             pub fn compute(&self, _task: &str) -> Result<String, NestGateError> {
                 Ok("Local compute fallback".to_string())
             }
@@ -296,7 +292,7 @@ pub mod fallback_providers {
     }
 
     pub mod zfs {
-        use super::*;
+        use super::{FallbackProvider, NestGateError};
 
         /// ZFS fallback provider for local storage operations
         #[derive(Debug, Clone)]
@@ -319,7 +315,6 @@ pub mod fallback_providers {
             /// # Errors
             ///
             /// This function will return an error if the operation fails.
-            #[must_use]
             pub fn manage_storage(&self, _operation: &str) -> Result<String, NestGateError> {
                 Ok("Local ZFS fallback".to_string())
             }

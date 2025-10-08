@@ -11,7 +11,8 @@ pub struct ScenarioRunner {
 
 impl ScenarioRunner {
     /// Create a new load test scenario with the given configuration
-    pub fn new(config: LoadTestConfig) -> Self {
+    #[must_use]
+    pub const fn new(config: LoadTestConfig) -> Self {
         Self { config }
     }
 
@@ -24,7 +25,7 @@ impl ScenarioRunner {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     #[must_use]
-    pub fn run(&self) -> Result<TestResult> {
+    pub const fn run(&self) -> Result<TestResult> {
         // Implementation would go here
         Ok(TestResult {
             success: true,

@@ -1,7 +1,7 @@
 /// **⚠️ DEPRECATED - DO NOT USE**
 ///
 /// This file is deprecated in favor of `domains/network/mod.rs`.
-/// All NetworkConfig usage should migrate to `CanonicalNetworkConfig` from:
+/// All `NetworkConfig` usage should migrate to `CanonicalNetworkConfig` from:
 /// `use nestgate_core::config::canonical_master::domains::network::CanonicalNetworkConfig;`
 ///
 /// **MIGRATION GUIDE**:
@@ -58,6 +58,7 @@ pub struct NetworkConfig<const API_PORT: u16 = 8080, const TIMEOUT_MS: u64 = 300
     /// Network-specific settings
     pub network_settings: HashMap<String, serde_json::Value>,
 }
+#[allow(deprecated)]
 impl<const API_PORT: u16, const TIMEOUT_MS: u64> NetworkConfig<API_PORT, TIMEOUT_MS> {
     /// Get effective API port (compile-time optimized)
     #[must_use]
@@ -177,6 +178,7 @@ pub struct ServiceRegistrationConfig {
 }
 // ==================== SECTION ====================
 
+#[allow(deprecated)]
 impl<const API_PORT: u16, const TIMEOUT_MS: u64> Default for NetworkConfig<API_PORT, TIMEOUT_MS> {
     fn default() -> Self {
         Self {

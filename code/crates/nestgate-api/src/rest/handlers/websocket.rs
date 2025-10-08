@@ -31,7 +31,7 @@ pub struct WebSocketQuery {
 }
 /// Live metrics WebSocket stream
 /// GET /ws/metrics
-pub fn metrics_websocket(
+pub async fn metrics_websocket(
     ws: WebSocketUpgrade,
     State(state): State<ApiState>,
     Query(query): Query<WebSocketQuery>,
@@ -40,9 +40,9 @@ pub fn metrics_websocket(
     ws.on_upgrade(move |socket| handle_metrics_websocket(socket, state, query))
 }
 
-/// Live logs WebSocket stream  
+/// Live logs WebSocket stream\
 /// GET /ws/logs
-pub fn logs_websocket(
+pub async fn logs_websocket(
     ws: WebSocketUpgrade,
     State(state): State<ApiState>,
     Query(query): Query<WebSocketQuery>,
@@ -53,7 +53,7 @@ pub fn logs_websocket(
 
 /// System events WebSocket stream
 /// GET /ws/events
-pub fn events_websocket(
+pub async fn events_websocket(
     ws: WebSocketUpgrade,
     State(state): State<ApiState>,
     Query(query): Query<WebSocketQuery>,
@@ -214,8 +214,8 @@ async fn get_current_metrics(state: &ApiState) -> Result<SystemMetrics, String> 
         network_io: NetworkIoMetrics {
             bytes_sent: (generate_realtime_network_tx() as f64 * 1024.0 * 1024.0) as u64, // Convert MB to bytes
             bytes_received: (generate_realtime_network_rx() as f64 * 1024.0 * 1024.0) as u64,
-            packets_sent: generate_realtime_network_tx_packets() as u64,
-            packets_received: generate_realtime_network_rx_packets() as u64,
+            packets_sent: generate_realtime_network_tx_packets(),
+            packets_received: generate_realtime_network_rx_packets(),
             rx_bytes_per_sec: generate_realtime_network_rx() as f64,
             tx_bytes_per_sec: generate_realtime_network_tx() as f64,
             rx_packets_per_sec: generate_realtime_network_rx_packets() as f64,
@@ -268,7 +268,7 @@ fn generate_sample_log_entry(level_filter: &str) -> LogEntry {
 
     let level = levels[(seed % levels.len() as u64) as usize];
 
-    let _messages = vec![
+    let _messages = [
         "ZFS dataset operation completed successfully",
         "Storage backend health check passed",
         "Snapshot created for dataset tank/data",
@@ -281,7 +281,7 @@ fn generate_sample_log_entry(level_filter: &str) -> LogEntry {
         "Background cleanup task finished",
     ];
 
-    let modules = vec![
+    let modules = [
         "nestgate::zfs",
         "nestgate::storage",
         "nestgate::monitoring",
@@ -323,7 +323,7 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
     let engines = state.zfs_engines.read().await;
     let dataset_count = engines.len();
 
-    let event_types = vec![
+    let event_types = [
         ("dataset_created", "info"),
         ("snapshot_taken", "info"),
         ("storage_scanned", "info"),
@@ -381,12 +381,12 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
     };
 
     SystemEvent {
-        id: format!("event_{"actual_error_details"}"),
+        id: "event_self.base_url".to_string(),
         timestamp: chrono::Utc::now(),
-        event_type: event_type.to_string(),
+        event_type: (*event_type).to_string(),
         description,
         data,
-        severity: severity.to_string(),
+        severity: (*severity).to_string(),
     }
 }
 
@@ -455,7 +455,7 @@ fn generate_realtime_network_rx() -> u64 {
     let seed = hasher.finish();
 
     let base = 1024 * 1024; // 1MB/s base
-    let variation = (seed % (1024 * 1024)) as u64; // Up to 1MB variation
+    let variation = seed % (1024 * 1024); // Up to 1MB variation
     base + variation
 }
 

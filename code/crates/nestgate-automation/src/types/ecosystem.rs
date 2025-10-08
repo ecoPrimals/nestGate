@@ -37,12 +37,14 @@ pub enum ProviderStatus {
     Unknown,
 }
 impl Default for CapabilityProvider {
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             id: "default".to_string(),
             name: "Default Provider".to_string(),
             capabilities: vec!["storage".to_string()],
             endpoint: nestgate_core::constants::canonical_defaults::network::build_api_url(),
             status: ProviderStatus::Active,
             metadata: HashMap::new(),
-         }
+        }
+    }
 }

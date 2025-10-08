@@ -40,7 +40,7 @@ impl CompressionAnalytics {
 
     fn calculate_compression_ratio(data: &[u8]) -> f64 {
         // Simple compression ratio calculation
-        let original_size = (data.len() as f64);
+        let original_size = data.len() as f64;
         let compressed_size = original_size * 0.7; // Mock compression
         original_size / compressed_size
     }
@@ -51,6 +51,7 @@ impl CompressionAnalytics {
     }
 
     /// Get basic compression recommendations
+    #[must_use]
     pub fn get_compression_recommendations(&self) -> Vec<String> {
         let mut recommendations = Vec::new();
 

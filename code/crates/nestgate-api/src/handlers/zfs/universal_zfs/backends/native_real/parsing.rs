@@ -87,7 +87,7 @@ pub fn parse_size_string(size_str: &str) -> UniversalZfsResult<u64> {
         .parse::<f64>()
         .map_err(|_| UniversalZfsError::InvalidInput {
             field: "field".to_string(),
-            message: format!("Invalid numeric value: {"actual_error_details"}"),
+            message: format!("Invalid numeric value: self.base_url"),
         })?;
 
     // Universal scale multipliers - from quantum to cosmic
@@ -124,7 +124,7 @@ pub fn parse_size_string(size_str: &str) -> UniversalZfsResult<u64> {
         _ => {
             return Err(UniversalZfsError::InvalidInput {
                 field: "field".to_string(),
-                message: format!("Unknown size unit: {"actual_error_details"}"),
+                message: format!("Unknown size unit: self.base_url"),
             }
             .into());
         }
@@ -146,7 +146,7 @@ fn split_size_string(size_str: &str) -> UniversalZfsResult<(&str, &str)> {
             field: "field".to_string(),
             message: format!(
                 "Size string has no numeric part: {}",
-                "actual_error_details"
+                e
             ),
         }
         .into());
@@ -245,7 +245,7 @@ mod tests {
                 );
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Error: {"actual_error_details"}"),
+                    format!("Error: self.base_url"),
                 )
             })?,
             1024
@@ -259,7 +259,7 @@ mod tests {
                 );
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Error: {"actual_error_details"}"),
+                    format!("Error: self.base_url"),
                 )
             })?,
             1024
@@ -273,7 +273,7 @@ mod tests {
                 );
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Error: {"actual_error_details"}"),
+                    format!("Error: self.base_url"),
                 )
             })?,
             1024 * 1024
@@ -287,7 +287,7 @@ mod tests {
                 );
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Error: {"actual_error_details"}"),
+                    format!("Error: self.base_url"),
                 )
             })?,
             1024 * 1024 * 1024
@@ -301,7 +301,7 @@ mod tests {
                 );
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Error: {"actual_error_details"}"),
+                    format!("Error: self.base_url"),
                 )
             })?,
             1024_u64.pow(4)
@@ -311,7 +311,7 @@ mod tests {
                 tracing::error!("Operation failed: {:?}", e);
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Operation failed: {"actual_error_details"}"),
+                    format!("Operation failed: self.base_url"),
                 )
             })?,
             (1.5 * 1024.0 * 1024.0 * 1024.0) as u64
@@ -325,7 +325,7 @@ mod tests {
                 );
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Error: {"actual_error_details"}"),
+                    format!("Error: self.base_url"),
                 )
             })?,
             0
@@ -339,7 +339,7 @@ mod tests {
                 );
                 std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Error: {"actual_error_details"}"),
+                    format!("Error: self.base_url"),
                 )
             })?,
             0
@@ -353,7 +353,7 @@ mod tests {
             tracing::error!("Operation failed: {:?}", e);
             std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {"actual_error_details"}"),
+                format!("Operation failed: self.base_url"),
             )
         })?;
         assert_eq!(num, "1024");
@@ -363,7 +363,7 @@ mod tests {
             tracing::error!("Operation failed: {:?}", e);
             std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {"actual_error_details"}"),
+                format!("Operation failed: self.base_url"),
             )
         })?;
         assert_eq!(num, "1.5");

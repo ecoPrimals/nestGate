@@ -3,7 +3,7 @@
 // Advanced builder patterns for complex configurations
 
 // Removed unused import: super::traits::*
-use super::metadata::*;
+use super::metadata::EvolutionMetadata;
 
 /// Idiomatic configuration builder
 #[allow(dead_code)] // Framework infrastructure

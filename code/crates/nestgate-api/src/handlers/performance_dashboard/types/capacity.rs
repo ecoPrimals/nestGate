@@ -23,7 +23,7 @@ pub struct CapacityAnalysis {
     pub current_usage_percentage: f64,
     /// Daily growth rate in bytes
     pub daily_growth_rate: f64,
-    /// Growth rate per day (alias for daily_growth_rate)
+    /// Growth rate per day (alias for `daily_growth_rate`)
     pub growth_rate_per_day: f64,
     /// Weekly growth rate in bytes
     pub weekly_growth_rate: f64,

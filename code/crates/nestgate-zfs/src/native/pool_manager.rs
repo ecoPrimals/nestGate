@@ -30,6 +30,7 @@ pub struct PoolStats {
 }
 impl NativeZfsPoolManager {
     /// Create a new pool manager
+    #[must_use]
     pub fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
         Self { command_executor }
     }

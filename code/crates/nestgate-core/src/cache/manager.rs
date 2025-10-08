@@ -403,7 +403,7 @@ mod tests {
             .put("test".to_string(), b"data".to_vec())
             .await
             .unwrap();
-        let result = cache.get("test").await;
+        let result = cache.get("test");
         assert_eq!(result, Some(b"data".to_vec()));
 
         // Test stats
@@ -414,7 +414,7 @@ mod tests {
     #[tokio::test]
     async fn test_cache_miss() {
         let mut cache = CacheManager::default();
-        let result = cache.get("nonexistent").await;
+        let result = cache.get("nonexistent");
         assert_eq!(result, None);
         assert_eq!(cache.stats().misses, 1);
     }
@@ -469,6 +469,6 @@ mod tests {
             tracing::error!("Cache maintenance failed: {:?}", e);
         });
 
-        let _ = cache.get("test").await;
+        let _ = cache.get("test");
     }
 }

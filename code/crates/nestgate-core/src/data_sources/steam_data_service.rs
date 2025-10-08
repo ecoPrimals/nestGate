@@ -1,6 +1,6 @@
 //! **STEAM DATA SERVICE**
 //!
-//! Steam gaming data integration for NestGate data service.
+//! Steam gaming data integration for `NestGate` data service.
 //! Handles game library storage, save data federation, and asset caching.
 
 use crate::error::NestGateError;
@@ -407,6 +407,7 @@ pub struct SteamDataService {
 
 impl SteamDataService {
     /// Create a new Steam data service
+    #[must_use]
     pub fn new() -> Self {
         Self {
             game_library_storage: GameLibraryStorage::new(),

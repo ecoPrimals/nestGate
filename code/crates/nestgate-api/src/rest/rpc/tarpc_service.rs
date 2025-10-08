@@ -84,7 +84,7 @@ impl TarpcRpcService {
 
         let _handle = StreamHandle {
             stream_id,
-            sender: response_tx.clone(),
+            sender: response_tx,
         };
 
         let (tx, _rx) = mpsc::channel(100);
@@ -93,7 +93,8 @@ impl TarpcRpcService {
 
     /// Get connection type
     #[allow(dead_code)] // Development method
-    pub fn connection_type(&self) -> super::RpcConnectionType {
+    #[must_use]
+    pub const fn connection_type(&self) -> super::RpcConnectionType {
         super::RpcConnectionType::Tarpc
     }
 
@@ -104,7 +105,7 @@ impl TarpcRpcService {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub fn health_check(&self) -> Result<bool, super::RpcError> {
+    pub const fn health_check(&self) -> Result<bool, super::RpcError> {
         Ok(true)
     }
 }

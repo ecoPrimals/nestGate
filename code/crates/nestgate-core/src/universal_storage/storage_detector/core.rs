@@ -57,7 +57,7 @@ impl StorageDetectorUtils {
     fn simple_hash(input: &str) -> u32 {
         let mut hash = 0u32;
         for byte in input.bytes() {
-            hash = hash.wrapping_mul(31).wrapping_add(byte as u32);
+            hash = hash.wrapping_mul(31).wrapping_add(u32::from(byte));
         }
         hash
     }

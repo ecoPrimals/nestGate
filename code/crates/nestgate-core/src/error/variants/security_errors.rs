@@ -2,7 +2,7 @@
 //! Security Errors functionality and utilities.
 //! This module provides security-specific error types and helper functions.
 
-use super::core_errors::*;
+use super::core_errors::SecurityErrorDetails;
 
 impl SecurityErrorDetails {
     /// Create a security error with just a message

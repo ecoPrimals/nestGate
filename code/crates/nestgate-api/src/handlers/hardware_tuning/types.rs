@@ -125,7 +125,8 @@ pub struct ComputeAdapter {
 
 impl ComputeAdapter {
     /// Create a new compute adapter for the specified service
-    pub fn new(service_name: String) -> Self {
+    #[must_use]
+    pub const fn new(service_name: String) -> Self {
         Self { service_name }
     }
 }
@@ -247,7 +248,6 @@ impl LiveHardwareTuningSession {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn new() -> Result<Self> {
         Ok(Self {
             session_id: format!("session_{}", Utc::now().timestamp()),
@@ -280,7 +280,6 @@ impl LiveHardwareTuningSession {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn collect_current_metrics(&self) -> Result<LiveHardwareMetrics> {
         Ok(LiveHardwareMetrics {
             cpu_usage: 30.0,
@@ -418,7 +417,7 @@ impl SystemMetricsCollector {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     #[must_use]
-    pub fn new() -> Result<Self> {
+    pub const fn new() -> Result<Self> {
         Ok(Self {
             cpu_monitor: CpuMonitor,
             memory_monitor: MemoryMonitor,
@@ -518,7 +517,7 @@ impl SystemMetricsCollector {
         // Try to read GPU usage from nvidia-smi or other GPU tools
         // For now, return 0.0 if no GPU monitoring available
         if let Ok(output) = std::process::Command::new("nvidia-smi")
-            .args(&[
+            .args([
                 "--query-gpu=utilization.gpu",
                 "--format=csv,noheader,nounits",
             ])
@@ -540,7 +539,7 @@ impl SystemMetricsCollector {
             // This is a simplified approach - would need statvfs for accurate disk usage
             // For now, return a calculated estimate based on available system info
             match std::process::Command::new("df")
-                .args(&["/", "--output=pcent"])
+                .args(["/", "--output=pcent"])
                 .output()
             {
                 Ok(output) if output.status.success() => {

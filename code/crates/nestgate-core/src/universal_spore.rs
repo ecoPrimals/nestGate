@@ -299,8 +299,7 @@ impl UniversalCryptographicSpore {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn spawn_child(&mut self) -> Result<UniversalCryptographicSpore>  {
+                pub fn spawn_child(&mut self) -> Result<UniversalCryptographicSpore>  {
         // Check if evolution is needed
         if !self.should_evolve()? {
             return Err(NestGateError::internal_error(

@@ -157,14 +157,14 @@ pub enum AuditEventType {
 impl std::fmt::Display for AuditEventType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            AuditEventType::DataAccess => write!(f, "Data Access"),
-            AuditEventType::DataModification => write!(f, "Data Modification"),
-            AuditEventType::DataDeletion => write!(f, "Data Deletion"),
-            AuditEventType::PolicyChange => write!(f, "Policy Change"),
-            AuditEventType::Authentication => write!(f, "Authentication"),
-            AuditEventType::Authorization => write!(f, "Authorization"),
-            AuditEventType::SystemConfiguration => write!(f, "System Configuration"),
-            AuditEventType::ComplianceViolation => write!(f, "Compliance Violation"),
+            Self::DataAccess => write!(f, "Data Access"),
+            Self::DataModification => write!(f, "Data Modification"),
+            Self::DataDeletion => write!(f, "Data Deletion"),
+            Self::PolicyChange => write!(f, "Policy Change"),
+            Self::Authentication => write!(f, "Authentication"),
+            Self::Authorization => write!(f, "Authorization"),
+            Self::SystemConfiguration => write!(f, "System Configuration"),
+            Self::ComplianceViolation => write!(f, "Compliance Violation"),
         }
     }
 }
@@ -214,7 +214,7 @@ pub enum RegulatoryType {
     PCIDSS,
     /// ISO 27001
     ISO27001,
-    /// FedRAMP
+    /// `FedRAMP`
     FedRAMP,
     /// Custom framework
     Custom(String),
@@ -323,13 +323,13 @@ pub enum ViolationType {
 impl std::fmt::Display for ViolationType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ViolationType::DataRetention => write!(f, "Data Retention"),
-            ViolationType::AccessControl => write!(f, "Access Control"),
-            ViolationType::Encryption => write!(f, "Encryption"),
-            ViolationType::AuditLogging => write!(f, "Audit Logging"),
-            ViolationType::DataResidency => write!(f, "Data Residency"),
-            ViolationType::Backup => write!(f, "Backup"),
-            ViolationType::Documentation => write!(f, "Documentation"),
+            Self::DataRetention => write!(f, "Data Retention"),
+            Self::AccessControl => write!(f, "Access Control"),
+            Self::Encryption => write!(f, "Encryption"),
+            Self::AuditLogging => write!(f, "Audit Logging"),
+            Self::DataResidency => write!(f, "Data Residency"),
+            Self::Backup => write!(f, "Backup"),
+            Self::Documentation => write!(f, "Documentation"),
         }
     }
 }
@@ -411,6 +411,7 @@ impl ComplianceManager {
     }
 
     /// Check data retention compliance
+    #[must_use]
     pub fn check_data_retention(&self, data_type: &str, data_age_days: u32) -> bool {
         for policy in self.retention_policies.values() {
             if policy.data_types.contains(&data_type.to_string()) {
@@ -424,6 +425,7 @@ impl ComplianceManager {
     }
 
     /// Check access compliance
+    #[must_use]
     pub fn check_access_compliance(
         &self,
         user_permissions: &[String],
@@ -444,6 +446,7 @@ impl ComplianceManager {
     }
 
     /// Generate compliance report
+    #[must_use]
     pub fn generate_compliance_report(&self) -> ComplianceReport {
         let total_policies = self.retention_policies.len() + self.access_policies.len();
         let total_violations = self.violations.len();
@@ -491,7 +494,7 @@ impl ComplianceManager {
             })
             .sum::<f32>();
 
-        let score = 100.0 - (violation_weight / total_controls * 100.0);
+        let score = (violation_weight / total_controls).mul_add(-100.0, 100.0);
         score.max(0.0).min(100.0)
     }
 }

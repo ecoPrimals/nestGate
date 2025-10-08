@@ -69,31 +69,36 @@ impl Default for ZfsSnapshotSettings {
 
 /// ZFS configuration factory methods
 pub mod zfs_config_factory {
-    use super::*;
+    use super::ZfsConfig;
     /// Create base ZFS configuration
+    #[must_use]
     pub fn zfs_default() -> ZfsConfig {
         // Note: instance_name field not available in current SystemConfig
         ZfsConfig::default()
     }
 
     /// Create development ZFS configuration
+    #[must_use]
     pub fn zfs_development() -> ZfsConfig {
         // Note: deployment_environment field not available in current EnvironmentConfig
         zfs_default()
     }
 
     /// Create production ZFS configuration
+    #[must_use]
     pub fn zfs_production() -> ZfsConfig {
         // Note: deployment_environment field not available in current EnvironmentConfig
         zfs_default()
     }
 
-    /// Alias for zfs_development for compatibility
+    /// Alias for `zfs_development` for compatibility
+    #[must_use]
     pub fn development() -> ZfsConfig {
         zfs_development()
     }
 
-    /// Alias for zfs_production for compatibility
+    /// Alias for `zfs_production` for compatibility
+    #[must_use]
     pub fn production() -> ZfsConfig {
         zfs_production()
     }

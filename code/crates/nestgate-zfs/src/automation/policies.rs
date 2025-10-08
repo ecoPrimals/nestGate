@@ -75,7 +75,7 @@ pub struct MigrationRules {
     pub age_threshold_days: u32,
     /// Access frequency threshold (for compatibility with tiers.rs)
     pub access_frequency_threshold: f64,
-    /// Auto migration enabled flag (alias for enable_auto_migration)
+    /// Auto migration enabled flag (alias for `enable_auto_migration`)
     pub auto_migration_enabled: bool,
 }
 /// Migration scheduling configuration
@@ -112,6 +112,7 @@ pub struct PerformanceThresholds {
 }
 impl MigrationRules {
     /// Hot tier defaults
+    #[must_use]
     pub fn hot_tier_defaults() -> Self {
         Self {
             enable_auto_migration: true,
@@ -125,6 +126,7 @@ impl MigrationRules {
     }
 
     /// Warm tier defaults
+    #[must_use]
     pub fn warm_tier_defaults() -> Self {
         Self {
             enable_auto_migration: true,
@@ -138,6 +140,7 @@ impl MigrationRules {
     }
 
     /// Cold tier defaults
+    #[must_use]
     pub fn cold_tier_defaults() -> Self {
         Self {
             enable_auto_migration: true,

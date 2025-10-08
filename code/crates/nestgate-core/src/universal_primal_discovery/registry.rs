@@ -47,7 +47,6 @@ impl ServiceRegistryClient {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn query_service(&self, service_name: &str, query_type: &str) -> Result<String> {
         // Check cache first
         let cache_key = format!("{service_name}:{query_type}");
@@ -77,7 +76,6 @@ impl ServiceRegistryClient {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn query_service_mesh(&self, service_name: &str) -> Result<String> {
         // Check for service mesh environment variables
         if let Ok(mesh_endpoint) = std::env::var("NESTGATE_SERVICE_MESH_ENDPOINT") {
@@ -191,7 +189,6 @@ impl ServiceRegistryClient {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn health_check(&self) -> Result<HashMap<String, String>> {
         let mut health = HashMap::new();
 
@@ -233,7 +230,6 @@ impl ServiceRegistryClient {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn validate_discovery_config(&self) -> Result<Vec<String>> {
         let mut warnings = Vec::new();
 
@@ -269,7 +265,6 @@ impl ServiceRegistryClient {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn get_config_summary(&self) -> Result<HashMap<String, String>> {
         let mut config = HashMap::new();
 

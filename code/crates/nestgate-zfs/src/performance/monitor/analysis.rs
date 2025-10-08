@@ -7,7 +7,7 @@ use tokio::sync::RwLock;
 use tokio::time::interval;
 use tracing::{debug, error};
 
-use super::super::types::*;
+use super::super::types::{CurrentPerformanceMetrics, PerformanceSnapshot, ZfsPerformanceMonitor};
 
 // Type alias for complex metrics history type
 type MetricsHistoryQueue = Arc<RwLock<VecDeque<PerformanceSnapshot>>>;
@@ -16,7 +16,7 @@ type MetricsHistoryQueue = Arc<RwLock<VecDeque<PerformanceSnapshot>>>;
 pub struct PerformanceAnalyzer;
 impl PerformanceAnalyzer {
     /// Analyze performance trends
-    /// **CANONICAL MODERNIZATION**: Use metrics_history parameter
+    /// **CANONICAL MODERNIZATION**: Use `metrics_history` parameter
     ///
     /// # Errors
     ///

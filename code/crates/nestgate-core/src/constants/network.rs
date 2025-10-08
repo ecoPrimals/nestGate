@@ -2,7 +2,7 @@
 //!
 //! Network-related constants and default values.
 
-/// Default API port for NestGate services
+/// Default API port for `NestGate` services
 pub const DEFAULT_API_PORT: u16 = 8080;
 
 /// Default metrics port
@@ -14,7 +14,7 @@ pub const DEFAULT_GRAFANA_PORT: u16 = 3000;
 /// Default health check port
 pub const DEFAULT_HEALTH_PORT: u16 = 8082;
 
-/// Default database port (PostgreSQL)
+/// Default database port (`PostgreSQL`)
 pub const DEFAULT_DB_PORT: u16 = 5432;
 
 /// Default Redis port

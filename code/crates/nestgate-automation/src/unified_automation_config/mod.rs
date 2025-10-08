@@ -38,13 +38,15 @@ pub struct UnifiedAutomationExtensions {
 //! CANONICAL MODERNIZATION: Simplified type alias without type parameters
 pub type UnifiedAutomationConfig = StandardDomainConfig;
 impl SmartDefault for UnifiedAutomationExtensions {
-    fn smart_default() -> Self { Self {
+    fn smart_default() -> Self {
+        Self {
             lifecycle: LifecycleSettings::smart_default(),
             ml_prediction: MlPredictionSettings::smart_default(),
             workflows: WorkflowSettings::smart_default(),
             optimization: OptimizationSettings::smart_default(),
             scheduling: SchedulingSettings::smart_default(),
-         }
+        }
+    }
 }
 
 impl Default for UnifiedAutomationExtensions {

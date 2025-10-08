@@ -533,8 +533,17 @@ impl ComputePrimalProvider for UniversalComputeWrapper {
     fn detect_system_features(&self) -> Vec<String> {
         let mut features = Vec::new();
         
-        // Check for container runtime
-        if std::env::var("CONTAINER_RUNTIME").is_ok() || std::path::Path::new("/.dockerenv").exists() {
+        // Check for container runtime (generic detection across multiple platforms)
+        // Replaces vendor-specific checks with capability-based pattern
+        if std::env::var("CONTAINER_RUNTIME").is_ok() 
+            || std::path::Path::new("/.dockerenv").exists()        // Docker
+            || std::path::Path::new("/run/.containerenv").exists() // Podman
+            || std::env::var("KUBERNETES_SERVICE_HOST").is_ok()    // Kubernetes
+            || std::fs::read_to_string("/proc/1/cgroup")
+                .ok()
+                .and_then(|c| Some(c.contains("docker") || c.contains("kubepods") || c.contains("containerd")))
+                .unwrap_or(false)
+        {
             features.push("containers".to_string());
         }
         

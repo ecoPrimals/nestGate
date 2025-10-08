@@ -1,8 +1,14 @@
 //
 // Core management implementation for the unified RPC system.
 
-use super::config::*;
-use super::types::*;
+use super::config::{
+    ConnectionPoolConfig, HealthMonitoringConfig, LoadBalancingConfig, NestGateRpcConfig,
+    RpcSecurityConfig, StreamConfig,
+};
+use super::types::{
+    DynRpcService, ResponseMetrics, RpcError, RpcStreamEvent, UnifiedRpcRequest,
+    UnifiedRpcResponse, UnifiedRpcService,
+};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -60,7 +66,7 @@ pub struct ConnectionInfo {
     created_at: Instant,
 }
 /// Connection status
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ConnectionStatus {
     /// Connection is healthy and available
     Healthy,
@@ -104,8 +110,15 @@ pub struct HealthCheckResult {
     /// Error message if check failed
     error_message: Option<String>,
 }
+impl Default for UnifiedRpcManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl UnifiedRpcManager {
     /// Create a new RPC manager with default configuration
+    #[must_use]
     pub fn new() -> Self {
         Self::with_config(NestGateRpcConfig::default())
     }
@@ -191,10 +204,7 @@ impl UnifiedRpcManager {
                         request_id: request.id,
                         success: false,
                         data: None,
-                        error: Some(format!(
-                            "Service execution failed: {}",
-                            "actual_error_details"
-                        )),
+                        error: Some("Service execution failed".to_string()),
                         _metadata: HashMap::new(),
                         timestamp: chrono::Utc::now(),
                         metrics: ResponseMetrics {
@@ -213,7 +223,7 @@ impl UnifiedRpcManager {
                 data: None,
                 error: Some(format!(
                     "Service '{}' not found in registry",
-                    "actual_error_details"
+                    request.target
                 )),
                 _metadata: HashMap::new(),
                 timestamp: chrono::Utc::now(),
@@ -234,7 +244,6 @@ impl UnifiedRpcManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn start(&self) -> Result<(), RpcError> {
         // Start health monitoring
         self.start_health_monitoring()?;
@@ -253,7 +262,6 @@ impl UnifiedRpcManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn shutdown(&mut self) -> Result<(), RpcError> {
         if let Some(shutdown_tx) = self.shutdown_tx.take() {
             let _ = shutdown_tx.send(());
@@ -302,7 +310,6 @@ impl UnifiedRpcManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn init_tarpc_service(&mut self, endpoint: &str) -> Result<(), RpcError> {
         // CANONICAL MODERNIZATION: Real tarpc initialization
         info!("Initializing tarpc service connection to: {}", endpoint);
@@ -310,8 +317,7 @@ impl UnifiedRpcManager {
         // Validate address format
         if endpoint.is_empty() || !endpoint.contains(':') {
             return Err(RpcError::InvalidConfiguration(format!(
-                "Invalid tarpc endpoint: {}",
-                endpoint
+                "Invalid tarpc endpoint: {endpoint}"
             )));
         }
 
@@ -328,7 +334,6 @@ impl UnifiedRpcManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn init_json_rpc_service(&mut self, endpoint: &str) -> Result<(), RpcError> {
         // CANONICAL MODERNIZATION: Real JSON-RPC initialization
         info!("Initializing JSON-RPC service connection to: {}", endpoint);
@@ -346,8 +351,7 @@ impl UnifiedRpcManager {
                 Ok(_) => info!("JSON-RPC service configured for URL: {}", endpoint),
                 Err(e) => {
                     return Err(RpcError::InvalidConfiguration(format!(
-                        "Invalid JSON-RPC URL: {}",
-                        e
+                        "Invalid JSON-RPC URL: {e}"
                     )))
                 }
             }
@@ -358,12 +362,12 @@ impl UnifiedRpcManager {
         Ok(())
     }
 
-    fn start_health_monitoring(&self) -> Result<(), RpcError> {
+    const fn start_health_monitoring(&self) -> Result<(), RpcError> {
         // Implementation for health monitoring background task
         Ok(())
     }
 
-    fn start_metrics_collection(&self) -> Result<(), RpcError> {
+    const fn start_metrics_collection(&self) -> Result<(), RpcError> {
         // Implementation for metrics collection background task
         Ok(())
     }
@@ -430,7 +434,8 @@ impl UniversalSecurityLayer {
     ///
     /// # Returns
     /// * New security layer instance
-    pub fn new(_config: &RpcSecurityConfig) -> Self {
+    #[must_use]
+    pub const fn new(_config: &RpcSecurityConfig) -> Self {
         Self
     }
 
@@ -448,7 +453,7 @@ impl UniversalSecurityLayer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn validate_request(&self, _request: &UnifiedRpcRequest) -> Result<(), RpcError> {
+    pub const fn validate_request(&self, _request: &UnifiedRpcRequest) -> Result<(), RpcError> {
         Ok(())
     }
 
@@ -466,7 +471,7 @@ impl UniversalSecurityLayer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn check_rate_limit(&self, _source: &str) -> Result<(), RpcError> {
+    pub const fn check_rate_limit(&self, _source: &str) -> Result<(), RpcError> {
         Ok(())
     }
 }
@@ -479,7 +484,8 @@ impl LoadBalancer {
     ///
     /// # Returns
     /// * New load balancer instance
-    pub fn new(_config: &LoadBalancingConfig) -> Self {
+    #[must_use]
+    pub const fn new(_config: &LoadBalancingConfig) -> Self {
         Self
     }
 }
@@ -492,7 +498,8 @@ impl StreamRegistry {
     ///
     /// # Returns
     /// * New stream registry instance
-    pub fn new(_config: &StreamConfig) -> Self {
+    #[must_use]
+    pub const fn new(_config: &StreamConfig) -> Self {
         Self
     }
 }
@@ -505,7 +512,8 @@ impl MetricsCollector {
     ///
     /// # Returns
     /// * New metrics collector instance
-    pub fn new(
+    #[must_use]
+    pub const fn new(
         _config: &nestgate_core::config::canonical_master::domains::performance::MetricsConfig,
     ) -> Self {
         Self
@@ -516,7 +524,7 @@ impl MetricsCollector {
     /// # Arguments
     /// * `_service` - Name of the service that handled the request
     /// * `_duration` - Duration of the request processing
-    pub fn record_request(&self, _service: &str, _duration: Duration) {}
+    pub const fn record_request(&self, _service: &str, _duration: Duration) {}
 }
 
 /// RPC metrics collection configuration

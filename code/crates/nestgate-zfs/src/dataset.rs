@@ -46,6 +46,7 @@ pub struct ZfsDatasetManager {
 }
 impl ZfsDatasetManager {
     /// Create a new ZFS dataset manager
+    #[must_use]
     pub fn new(config: ZfsConfig, pool_manager: Arc<ZfsPoolManager>) -> Self {
         Self {
             config: Arc::new(config),
@@ -54,10 +55,8 @@ impl ZfsDatasetManager {
     }
 
     /// Create a new ZFS dataset manager with shared config (zero-copy)
-    pub fn with_shared_config(
-        config: Arc<ZfsConfig>,
-        pool_manager: Arc<ZfsPoolManager>,
-    ) -> Self {
+    #[must_use]
+    pub fn with_shared_config(config: Arc<ZfsConfig>, pool_manager: Arc<ZfsPoolManager>) -> Self {
         Self {
             config,
             pool_manager,
@@ -89,7 +88,7 @@ impl ZfsDatasetManager {
     ) -> Result<DatasetInfo> {
         info!("Creating dataset: {}/{} on tier: {:?}", parent, name, tier);
 
-        let dataset_path = format!("{parent}/{"actual_error_details"}");
+        let dataset_path = format!("{parent}/{name}");
 
         // Execute ZFS create command
         let mut cmd = tokio::process::Command::new("zfs");
@@ -161,7 +160,7 @@ impl ZfsDatasetManager {
         info!("Creating dataset: {}/{} on tier: {:?}", pool, name, tier);
 
         // First try real ZFS dataset creation
-        let dataset_path = format!("{pool}/{"actual_error_details"}");
+        let dataset_path = format!("{pool}/{name}");
         let output = tokio::process::Command::new("zfs")
             .args(["create", &dataset_path])
             .output()
@@ -276,7 +275,7 @@ impl ZfsDatasetManager {
             available_space: 512 * 1024 * 1024,
             file_count: None,
             compression_ratio: Some(1.5),
-            mount_point: format!("/{"actual_error_details"}"),
+            mount_point: format!("/{name}"),
             tier: CoreStorageTier::Warm,
             properties: HashMap::new(),
         })
@@ -290,11 +289,10 @@ impl ZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn create_dataset_with_config(&self, name: &str, parent: &str) -> Result<()> {
         tracing::info!("Creating dataset: {}/{}", parent, name);
 
-        let full_name = format!("{parent}/{"actual_error_details"}");
+        let full_name = format!("{parent}/{name}");
 
         // Build the zfs create command with properties from unified config
         let mut args = vec!["create"];
@@ -323,9 +321,9 @@ impl ZfsDatasetManager {
             .args(&args)
             .output()
             .await
-            .map_err(|_e| {
+            .map_err(|e| {
                 create_zfs_error(
-                    format!("Failed to execute zfs create: {"actual_error_details"}"),
+                    format!("Failed to execute zfs create: {e}"),
                     ZfsOperation::DatasetCreate,
                 )
             })?;
@@ -351,7 +349,6 @@ impl ZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn get_dataset_properties(&self, name: &str) -> Result<HashMap<String, String>> {
         tracing::debug!("Getting properties for dataset: {}", name);
 
@@ -403,7 +400,7 @@ impl ZfsDatasetManager {
 
         for (key, value) in properties {
             let output = Command::new("zfs")
-                .args(["set", &format!("{key}={"actual_error_details"}"), name])
+                .args(["set", &format!("{key}={value}"), name])
                 .output()
                 .await
                 .map_err(|_e| {
@@ -502,7 +499,7 @@ impl ZfsDatasetManager {
         Ok(())
     }
 
-    /// Destroy a dataset (alias for delete_dataset)
+    /// Destroy a dataset (alias for `delete_dataset`)
     ///
     /// # Errors
     ///
@@ -510,7 +507,6 @@ impl ZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn destroy_dataset(&self, name: &str) -> Result<()> {
         self.delete_dataset(name)
     }
@@ -523,7 +519,10 @@ impl ZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn list_snapshots(&self, dataset_name: &str) -> Result<Vec<crate::snapshot::SnapshotInfo>> {
+    pub async fn list_snapshots(
+        &self,
+        dataset_name: &str,
+    ) -> Result<Vec<crate::snapshot::SnapshotInfo>> {
         debug!("Listing snapshots for dataset: {}", dataset_name);
 
         let output = Command::new("zfs")

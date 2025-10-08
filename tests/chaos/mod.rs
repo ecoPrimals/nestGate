@@ -3,7 +3,7 @@
 //! Fault injection and resilience testing to validate system behavior under stress.
 
 use crate::common::*;
-use crate::config::*;
+use tests::config::*;
 use std::time::{Duration, Instant};
 use tokio::time::{sleep, timeout};
 use rand::Rng;

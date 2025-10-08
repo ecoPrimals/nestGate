@@ -215,7 +215,8 @@ pub struct RealTimeMetricsCollector {
 }
 impl RealTimeMetricsCollector {
     /// Create a new metrics collector
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {}
     }
 
@@ -250,22 +251,22 @@ impl RealTimeMetricsCollector {
             Self::collect_zfs_cache_stats().await?;
 
         // Calculate total throughput from pool metrics or system I/O
-        let total_throughput = if !pool_metrics.is_empty() {
+        let total_throughput = if pool_metrics.is_empty() {
+            // Fallback to system disk I/O throughput estimation
+            (system_metrics.disk_io.read_bytes + system_metrics.disk_io.write_bytes) as f64
+                / (1024.0 * 1024.0) // MB/s
+        } else {
             pool_metrics
                 .iter()
                 .map(|p| p.read_throughput + p.write_throughput)
                 .sum()
-        } else {
-            // Fallback to system disk I/O throughput estimation
-            (system_metrics.disk_io.read_bytes + system_metrics.disk_io.write_bytes) as f64
-                / (1024.0 * 1024.0) // MB/s
         };
 
         // Calculate average latencies from system disk metrics
         let average_read_latency = if pool_metrics.is_empty() {
             // Estimate from system I/O (simplified calculation)
-            let read_ops = system_metrics.disk_io.read_operations.max(1);
-            (f64::from(system_metrics.disk_io.read_bytes) / read_ops as f64) / 1000.0
+            let read_ops = system_metrics.disk_io.read_bytes.max(1);
+            (system_metrics.disk_io.read_bytes as f64 / read_ops as f64) / 1000.0
         // Rough latency estimate
         } else {
             pool_metrics.iter().map(|p| p.read_throughput).sum::<f64>()
@@ -273,8 +274,8 @@ impl RealTimeMetricsCollector {
         };
 
         let average_write_latency = if pool_metrics.is_empty() {
-            let write_ops = system_metrics.disk_io.write_operations.max(1);
-            (f64::from(system_metrics.disk_io.write_bytes) / write_ops as f64) / 1000.0
+            let write_ops = system_metrics.disk_io.write_bytes.max(1);
+            (system_metrics.disk_io.write_bytes as f64 / write_ops as f64) / 1000.0
         // Rough latency estimate
         } else {
             pool_metrics.iter().map(|p| p.write_throughput).sum::<f64>()
@@ -389,8 +390,7 @@ impl RealTimeMetricsCollector {
 
                 if mem_total > 0 {
                     let memory_used = mem_total.saturating_sub(mem_available);
-                    let memory_usage_percent =
-                        (memory_used as f64 / mem_total as f64) * 100.0;
+                    let memory_usage_percent = (memory_used as f64 / mem_total as f64) * 100.0;
 
                     debug!(
                         "🧠 Real memory usage: {:.2}% ({} GB / {} GB)",
@@ -532,7 +532,7 @@ impl RealTimeMetricsCollector {
     async fn collect_zfs_pool_metrics() -> Result<Vec<PoolMetrics>> {
         // Try to get ZFS pool statistics
         match tokio::process::Command::new("zpool")
-            .args(&["list", "-H", "-p"])
+            .args(["list", "-H", "-p"])
             .output()
             .await
         {
@@ -588,52 +588,49 @@ impl RealTimeMetricsCollector {
     /// Collect ZFS ARC cache statistics
     async fn collect_zfs_cache_stats() -> Result<(f64, f64, f64)> {
         // Try to read ZFS ARC stats from /proc/spl/kstat/zfs/arcstats (Linux ZFS)
-        match tokio::fs::read_to_string("/proc/spl/kstat/zfs/arcstats").await {
-            Ok(content) => {
-                let mut arc_hits = 0u64;
-                let mut arc_misses = 0u64;
-                let mut l2arc_hits = 0u64;
-                let mut l2arc_misses = 0u64;
+        if let Ok(content) = tokio::fs::read_to_string("/proc/spl/kstat/zfs/arcstats").await {
+            let mut arc_hits = 0u64;
+            let mut arc_misses = 0u64;
+            let mut l2arc_hits = 0u64;
+            let mut l2arc_misses = 0u64;
 
-                for line in content.lines() {
-                    let parts: Vec<&str> = line.split_whitespace().collect();
-                    if parts.len() >= 3 {
-                        match parts[0] {
-                            "hits" => arc_hits = parts[2].parse().unwrap_or(0),
-                            "misses" => arc_misses = parts[2].parse().unwrap_or(0),
-                            "l2_hits" => l2arc_hits = parts[2].parse().unwrap_or(0),
-                            "l2_misses" => l2arc_misses = parts[2].parse().unwrap_or(0),
-                            _ => {}
-                        }
+            for line in content.lines() {
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if parts.len() >= 3 {
+                    match parts[0] {
+                        "hits" => arc_hits = parts[2].parse().unwrap_or(0),
+                        "misses" => arc_misses = parts[2].parse().unwrap_or(0),
+                        "l2_hits" => l2arc_hits = parts[2].parse().unwrap_or(0),
+                        "l2_misses" => l2arc_misses = parts[2].parse().unwrap_or(0),
+                        _ => {}
                     }
                 }
-
-                let arc_total = arc_hits + arc_misses;
-                let arc_hit_ratio = if arc_total > 0 {
-                    (arc_hits as f64 / arc_total as f64) * 100.0
-                } else {
-                    90.0 // Default good ratio
-                };
-
-                let l2arc_total = l2arc_hits + l2arc_misses;
-                let l2arc_hit_ratio = if l2arc_total > 0 {
-                    (l2arc_hits as f64 / l2arc_total as f64) * 100.0
-                } else {
-                    70.0 // Default reasonable L2ARC ratio
-                };
-
-                debug!(
-                    "🎯 Real ZFS cache stats: ARC {:.1}%, L2ARC {:.1}%",
-                    arc_hit_ratio, l2arc_hit_ratio
-                );
-
-                // Compression ratio would come from pool-specific stats
-                Ok((arc_hit_ratio, l2arc_hit_ratio, 1.4)) // Default 1.4x compression
             }
-            Err(_) => {
-                debug!("⚠️ ZFS ARC stats not available, using defaults");
-                Ok((85.0, 65.0, 1.2)) // Reasonable defaults
-            }
+
+            let arc_total = arc_hits + arc_misses;
+            let arc_hit_ratio = if arc_total > 0 {
+                (arc_hits as f64 / arc_total as f64) * 100.0
+            } else {
+                90.0 // Default good ratio
+            };
+
+            let l2arc_total = l2arc_hits + l2arc_misses;
+            let l2arc_hit_ratio = if l2arc_total > 0 {
+                (l2arc_hits as f64 / l2arc_total as f64) * 100.0
+            } else {
+                70.0 // Default reasonable L2ARC ratio
+            };
+
+            debug!(
+                "🎯 Real ZFS cache stats: ARC {:.1}%, L2ARC {:.1}%",
+                arc_hit_ratio, l2arc_hit_ratio
+            );
+
+            // Compression ratio would come from pool-specific stats
+            Ok((arc_hit_ratio, l2arc_hit_ratio, 1.4)) // Default 1.4x compression
+        } else {
+            debug!("⚠️ ZFS ARC stats not available, using defaults");
+            Ok((85.0, 65.0, 1.2)) // Reasonable defaults
         }
     }
 
@@ -685,7 +682,6 @@ impl RealTimeMetricsCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn get_all_pool_metrics(&self) -> Result<HashMap<String, PoolMetrics>> {
         // Implementation for getting all pool metrics
         debug!("Getting all pool metrics");
@@ -731,9 +727,7 @@ impl RealTimeMetricsCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn get_comprehensive_historical_data(
-        &self,
-    ) -> Result<Vec<ComprehensiveMetricsPoint>> {
+    pub fn get_comprehensive_historical_data(&self) -> Result<Vec<ComprehensiveMetricsPoint>> {
         // Implementation for comprehensive historical data
         debug!("Getting comprehensive historical data");
         Ok(vec![])

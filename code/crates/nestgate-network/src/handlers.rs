@@ -16,8 +16,8 @@ use crate::types::{
 // ==================== SECTION ====================
 
 /// **ZERO-COST NETWORK SERVICE TRAIT**
-/// Native async trait without async_trait overhead for network operations.
-/// **PERFORMANCE**: 40-60% improvement over async_trait macro
+/// Native async trait without `async_trait` overhead for network operations.
+/// **PERFORMANCE**: 40-60% improvement over `async_trait` macro
 pub trait NetworkService: Send + Sync + 'static {
     fn start_service(&self) -> impl std::future::Future<Output = nestgate_core::Result<()>> + Send;
     fn stop_service(&self) -> impl std::future::Future<Output = nestgate_core::Result<()>> + Send;
@@ -187,6 +187,7 @@ pub struct HttpProtocolHandler {
 }
 impl HttpProtocolHandler {
     /// Create a new HTTP protocol handler
+    #[must_use]
     pub fn new(config: NetworkConfig) -> Self {
         Self { _config: config }
     }
@@ -274,6 +275,7 @@ pub struct TcpProtocolHandler {
 }
 impl TcpProtocolHandler {
     /// Create a new TCP protocol handler
+    #[must_use]
     pub fn new(config: NetworkConfig) -> Self {
         Self { _config: config }
     }

@@ -165,7 +165,7 @@ pub struct SnapshotInfo {
 // ==================== SECTION ====================
 
 /// Zero-cost pool information for compile-time optimization
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ZeroCostPoolInfo {
     pub name: String,
     pub size: u64,
@@ -176,7 +176,7 @@ pub struct ZeroCostPoolInfo {
     pub created_at: SystemTime,
 }
 /// Zero-cost dataset information
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ZeroCostDatasetInfo {
     pub name: String,
     pub full_name: String,
@@ -190,7 +190,7 @@ pub struct ZeroCostDatasetInfo {
     pub created_at: SystemTime,
 }
 /// Zero-cost snapshot information
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ZeroCostSnapshotInfo {
     pub name: String,
     pub dataset: String,

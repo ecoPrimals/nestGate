@@ -3,8 +3,8 @@
 //! This test validates storage functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::defaults::Environment;
-use nestgate_core::config::unified::NestGateUnifiedConfig;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
+use nestgate_core::config::DeploymentEnvironment;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
@@ -19,8 +19,9 @@ async fn test_storage_configuration() -> Result<(), Box<dyn std::error::Error>> 
     assert!(!config.system.instance_name.is_empty());
 
     // Test environment-specific storage configuration
-    let dev_config =
-        nestgate_core::config::unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(
+        Environment::Development,
+    );
     assert!(!dev_config.system.instance_name.is_empty());
 
     info!("✅ Storage configuration test completed");
@@ -169,15 +170,17 @@ async fn test_storage_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing storage configuration across environments");
 
     // Test development environment storage
-    let dev_config =
-        nestgate_core::config::unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(
+        Environment::Development,
+    );
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development storage configuration validated");
 
     // Test production environment storage
-    let prod_config =
-        nestgate_core::config::unified::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(
+        Environment::Production,
+    );
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production storage configuration validated");

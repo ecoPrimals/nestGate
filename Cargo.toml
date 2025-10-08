@@ -1,3 +1,44 @@
+[package]
+name = "nestgate"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-only"
+authors = ["ecoPrimals Collective"]
+repository = "https://github.com/ecoprimals/nestgate"
+homepage = "https://ecoprimals.org"
+description = "NestGate - Sovereign Infrastructure Platform"
+keywords = ["sovereignty", "zfs", "copyleft", "infrastructure"]
+categories = ["network-programming", "filesystem", "web-programming"]
+
+[dependencies]
+nestgate-core = { path = "code/crates/nestgate-core" }
+nestgate-canonical = { path = "code/crates/nestgate-canonical" }
+tokio = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+tokio-test = { workspace = true }
+rand = { workspace = true }
+uuid = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+# Additional test dependencies
+tempfile = { workspace = true }
+axum = { workspace = true }
+axum-test = { workspace = true }
+serde = { workspace = true }
+regex = { workspace = true }
+futures = { workspace = true }
+# Add workspace crates for integration tests
+nestgate-zfs = { path = "code/crates/nestgate-zfs" }
+nestgate-automation = { path = "code/crates/nestgate-automation" }
+nestgate-nas = { path = "code/crates/nestgate-nas" }
+
+[features]
+default = []
+# Development stubs - include mock/stub implementations for testing
+dev-stubs = ["nestgate-core/dev-stubs"]
+
 [workspace]
 resolver = "2"
 members = [

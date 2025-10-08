@@ -13,6 +13,7 @@ use nestgate_core::error::NestGateError;
 /// ZFS Pool Manager - handles pool operations and management
 #[derive(Debug, Clone)]
 pub struct ZfsPoolManager {
+    #[allow(dead_code)]
     config: ZfsConfig,
     /// In-memory cache of discovered pools with automatic persistence
     discovered_pools:
@@ -59,7 +60,6 @@ impl ZfsPoolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn new(config: &ZfsConfig) -> Result<Self> {
         info!("Initializing ZFS pool manager");
 
@@ -85,7 +85,6 @@ impl ZfsPoolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn with_owned_config(config: ZfsConfig) -> Result<Self> {
         info!("Initializing ZFS pool manager with owned config");
 
@@ -105,7 +104,6 @@ impl ZfsPoolManager {
 
     /// Create instance for testing with default configuration
     #[cfg(test)]
-    #[must_use]
     pub fn new_for_testing() -> Self {
         Self {
             config: ZfsConfig::default(),
@@ -294,7 +292,7 @@ impl ZfsPoolManager {
             .await
             .map_err(|_e| {
                 create_zfs_error(
-                    format!("Failed to get pool properties: {"actual_error_details"}"),
+                    "Failed to get pool properties: error details".to_string(),
                     ZfsOperation::SystemCheck,
                 )
             })?;
@@ -383,9 +381,10 @@ impl ZfsPoolManager {
         self.discover_pools().await?;
 
         let pools = self.discovered_pools.read().await;
-        pools.get(pool_name).cloned().ok_or_else(|| {
-            NestGateError::storage_error(&format!("Pool not found: {"actual_error_details"}"))
-        })
+        pools
+            .get(pool_name)
+            .cloned()
+            .ok_or_else(|| NestGateError::storage_error("Pool not found: error details"))
     }
 
     /// Create a new ZFS pool
@@ -396,7 +395,6 @@ impl ZfsPoolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn create_pool(&self, name: &str, devices: &[String]) -> Result<PoolInfo> {
         info!("Creating ZFS pool: {} with devices: {:?}", name, devices);
 
@@ -412,7 +410,7 @@ impl ZfsPoolManager {
             .await
             .map_err(|_e| {
                 create_zfs_error(
-                    format!("Failed to execute zpool create: {"actual_error_details"}"),
+                    "Failed to execute zpool create: error details".to_string(),
                     ZfsOperation::Command,
                 )
             })?;
@@ -440,7 +438,6 @@ impl ZfsPoolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn destroy_pool(&self, name: &str) -> Result<()> {
         warn!("Destroying ZFS pool: {}", name);
 
@@ -487,7 +484,6 @@ impl ZfsPoolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn get_pool_status(&self, name: &str) -> Result<String> {
         debug!("Getting status for pool: {}", name);
 
@@ -497,7 +493,7 @@ impl ZfsPoolManager {
             .await
             .map_err(|_e| {
                 create_zfs_error(
-                    format!("Failed to execute zpool status: {"actual_error_details"}"),
+                    "Failed to execute zpool status: error details".to_string(),
                     ZfsOperation::Command,
                 )
             })?;
@@ -523,7 +519,6 @@ impl ZfsPoolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn scrub_pool(&self, name: &str) -> Result<()> {
         info!("Starting scrub for pool: {}", name);
 
@@ -533,7 +528,7 @@ impl ZfsPoolManager {
             .await
             .map_err(|_e| {
                 create_zfs_error(
-                    format!("Failed to execute zpool scrub: {"actual_error_details"}"),
+                    "Failed to execute zpool scrub: error details".to_string(),
                     ZfsOperation::Command,
                 )
             })?;

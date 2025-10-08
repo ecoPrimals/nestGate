@@ -123,6 +123,12 @@ where
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         // Implementation would use timeout logic here
         // For now, just forward to the inner future
+        // SAFETY: Pin projection is safe because:
+        // 1. Structural pinning: `future` field doesn't move when `Self` is pinned
+        // 2. Field access: We're only accessing a structural field, not moving it
+        // 3. Lifetime: Returned Pin<&mut F> has same lifetime as self
+        // 4. Invariants: TimeoutFuture doesn't implement Unpin, preserving pin guarantees
+        // 5. No drop glue: We're not interfering with drop order or moving pinned data
         let future = unsafe { self.as_mut().map_unchecked_mut(|s| &mut s.future) };
         match future.poll(cx) {
             Poll::Ready(result) => Poll::Ready(Ok(result)),

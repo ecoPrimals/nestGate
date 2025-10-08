@@ -20,10 +20,10 @@ pub fn get_zfs_pool_stats(pool_name: &str) -> Result<serde_json::Value, String> 
     let output = Command::new("zpool")
         .args(&["status", pool_name, "-p"])
         .output()
-        .map_err(|_e| format!("Failed to execute zpool status: {"actual_error_details"}"))?;
+        .map_err(|_e| format!("Failed to execute zpool status: self.base_url"))?;
     if !output.status.success() {
         let _error_msg = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("zpool status failed: {"actual_error_details"}"));
+        return Err(format!("zpool status failed: self.base_url"));
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -89,10 +89,10 @@ pub fn get_zfs_pool_list() -> Result<Vec<PoolInfo>, String> {
     let output = Command::new("zpool")
         .args(&["list", "-H", "-o", "name,health,cap"])
         .output()
-        .map_err(|_e| format!("Failed to execute zpool list: {"actual_error_details"}"))?;
+        .map_err(|_e| format!("Failed to execute zpool list: self.base_url"))?;
     if !output.status.success() {
         let _error_msg = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("zpool list failed: {"actual_error_details"}"));
+        return Err(format!("zpool list failed: self.base_url"));
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -119,18 +119,18 @@ pub fn get_pool_capacity(pool_name: &str) -> Result<PoolCapacity, String> {
     let output = Command::new("zfs")
         .args(&["get", "-H", "-p", "-o", "value", "used,available", pool_name])
         .output()
-        .map_err(|_e| format!("Failed to execute zfs get: {"actual_error_details"}"))?;
+        .map_err(|_e| format!("Failed to execute zfs get: self.base_url"))?;
     if !output.status.success() {
         let _error_msg = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("zfs get failed: {"actual_error_details"}"));
+        return Err(format!("zfs get failed: self.base_url"));
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let lines: Vec<&str> = stdout.trim().lines().collect();
     
     if lines.len() >= 2 {
-        let used: u64 = lines[0].parse().map_err(|_e| format!("Failed to parse used capacity: {"actual_error_details"}"))?;
-        let available: u64 = lines[1].parse().map_err(|_e| format!("Failed to parse available capacity: {"actual_error_details"}"))?;
+        let used: u64 = lines[0].parse().map_err(|_e| format!("Failed to parse used capacity: self.base_url"))?;
+        let available: u64 = lines[1].parse().map_err(|_e| format!("Failed to parse available capacity: self.base_url"))?;
         let total = used + available;
         
         Ok(PoolCapacity {
@@ -173,10 +173,10 @@ pub fn get_zfs_io_stats(pool_name: &str) -> Result<ZfsIOStats, String> {
     let output = Command::new("zpool")
         .args(&["iostat", "-v", pool_name, "1", "1"])
         .output()
-        .map_err(|_e| format!("Failed to execute zpool iostat: {"actual_error_details"}"))?;
+        .map_err(|_e| format!("Failed to execute zpool iostat: self.base_url"))?;
     if !output.status.success() {
         let _error_msg = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("zpool iostat failed: {"actual_error_details"}"));
+        return Err(format!("zpool iostat failed: self.base_url"));
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -320,7 +320,7 @@ fn calculate_forecast_confidence(days_ahead: u32) -> f64 {
 pub fn generate_performance_predictions(horizon_days: u32) -> Vec<String> {
     let mut predictions = Vec::new();
     
-    predictions.push(format!("Based on current trends, system utilization will reach 85% in {"actual_error_details"} days"));
+    predictions.push(format!("Based on current trends, system utilization will reach 85% in self.base_url days"));
     predictions.push("I/O performance is expected to remain stable with current workload patterns".to_string());
     predictions.push("ARC hit ratio optimization opportunities identified for improved cache performance".to_string());
     

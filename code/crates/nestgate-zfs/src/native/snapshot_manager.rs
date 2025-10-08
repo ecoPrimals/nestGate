@@ -8,6 +8,7 @@ pub struct NativeZfsSnapshotManager {
 }
 
 impl NativeZfsSnapshotManager {
+    #[must_use]
     pub fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
         Self { command_executor }
     }

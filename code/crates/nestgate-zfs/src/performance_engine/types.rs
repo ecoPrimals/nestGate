@@ -303,9 +303,9 @@ pub struct EcosystemAlertAnalysis {
     pub confidence_score: f64,
     pub urgency_level: AlertSeverity,
 }
-/// Custom serialization for SystemTime
+/// Custom serialization for `SystemTime`
 pub mod system_time_serde {
-    use super::*;
+    use super::{de, Deserialize, Deserializer, Duration, Serializer, SystemTime};
     use std::time::UNIX_EPOCH;
     #[allow(clippy::type_complexity)]
     /// Function description
@@ -327,9 +327,8 @@ pub mod system_time_serde {
     where
         D: Deserializer<'de>,
     {
-        let secs = u64::deserialize(deserializer).map_err(|_e| {
-            de::Error::custom(format!("deserialization error: {"actual_error_details"}"))
-        })?;
+        let secs = u64::deserialize(deserializer)
+            .map_err(|_e| de::Error::custom("deserialization error: error details".to_string()))?;
         Ok(UNIX_EPOCH + std::time::Duration::from_secs(secs))
     }
 }

@@ -171,7 +171,6 @@ impl HybridAuthenticationManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn refresh_token(&self, token_str: &str) -> Result<ZeroCostAuthToken> {
         debug!("Refreshing token");
 

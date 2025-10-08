@@ -24,7 +24,7 @@ use std::collections::HashMap;
 use nestgate_core::{NestGateError, Result as CoreResult};
 use serde::{Deserialize, Serialize};
 
-/// Convert detection DeviceType to config DeviceType
+/// Convert detection `DeviceType` to config `DeviceType`
 fn convert_device_type(detection_type: &DetectionDeviceType) -> ConfigDeviceType {
     match detection_type {
         DetectionDeviceType::NvmeSsd => ConfigDeviceType::NvmeSsd,
@@ -92,7 +92,7 @@ pub struct ZfsPoolSetup {
 }
 impl ZfsPoolSetup {
     /// Create new pool setup with custom configuration
-    pub fn new_with_config(config: PoolSetupConfig) -> CoreResult<Self> {
+    pub async fn new_with_config(config: PoolSetupConfig) -> CoreResult<Self> {
         let scanner = DeviceScanner::new(config.device_detection.clone());
         let validator = PoolSetupValidator::new(config.clone());
         let creator = PoolCreator::new();
@@ -158,19 +158,19 @@ impl ZfsPoolSetup {
     }
 
     /// Get available (unused) devices
+    #[must_use]
     pub fn get_available_devices(&self) -> Vec<&StorageDevice> {
         DeviceScanner::filter_available(&self.devices)
     }
 
     /// Get devices by type
-    pub fn get_devices_by_type(
-        &self,
-        device_type: DetectionDeviceType,
-    ) -> Vec<&StorageDevice> {
+    #[must_use]
+    pub fn get_devices_by_type(&self, device_type: DetectionDeviceType) -> Vec<&StorageDevice> {
         DeviceScanner::filter_by_type(&self.devices, device_type)
     }
 
     /// Get devices by speed class
+    #[must_use]
     pub fn get_devices_by_speed(&self, speed_class: SpeedClass) -> Vec<&StorageDevice> {
         DeviceScanner::filter_by_speed(&self.devices, speed_class)
     }
@@ -325,17 +325,19 @@ impl ZfsPoolSetup {
     }
 
     /// Validate device
+    #[must_use]
     pub fn validate_device(&self, device: &StorageDevice) -> ValidationResult {
         self.validator.validate_device(device)
     }
 
     /// Validate pool configuration
+    #[must_use]
     pub fn validate_pool_config(&self, config: &PoolSetupConfig) -> ValidationResult {
         self.validator.validate_pool_config(config)
     }
 
     /// Create pool with safety checks
-    pub fn create_pool_safe(&self, config: &PoolSetupConfig) -> CoreResult<PoolSetupResult> {
+    pub async fn create_pool_safe(&self, config: &PoolSetupConfig) -> CoreResult<PoolSetupResult> {
         // Pre-flight validation
         let validation = self.validate_pool_config(config);
         if !validation.is_valid {
@@ -352,6 +354,7 @@ impl ZfsPoolSetup {
     }
 
     /// Get system report
+    #[must_use]
     pub fn get_system_report(&self) -> SystemReport {
         SystemReport {
             total_devices: self.devices.len(),

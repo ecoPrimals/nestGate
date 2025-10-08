@@ -291,43 +291,43 @@ pub struct CanonicalConstants;
 impl CanonicalConstants {
     /// Get performance constants module
     #[must_use]
-    pub fn performance() -> PerformanceConstants {
+    pub const fn performance() -> PerformanceConstants {
         PerformanceConstants
     }
 
     /// Get timeout constants module  
     #[must_use]
-    pub fn timeouts() -> TimeoutConstants {
+    pub const fn timeouts() -> TimeoutConstants {
         TimeoutConstants
     }
 
     /// Get network constants module
     #[must_use]
-    pub fn network() -> NetworkConstants {
+    pub const fn network() -> NetworkConstants {
         NetworkConstants
     }
 
     /// Get storage constants module
     #[must_use]
-    pub fn storage() -> StorageConstants {
+    pub const fn storage() -> StorageConstants {
         StorageConstants
     }
 
     /// Get security constants module
     #[must_use]
-    pub fn security() -> SecurityConstants {
+    pub const fn security() -> SecurityConstants {
         SecurityConstants
     }
 
     /// Get API constants module
     #[must_use]
-    pub fn api() -> ApiConstants {
+    pub const fn api() -> ApiConstants {
         ApiConstants
     }
 
     /// Get system constants module
     #[must_use]
-    pub fn system() -> SystemConstants {
+    pub const fn system() -> SystemConstants {
         SystemConstants
     }
 }

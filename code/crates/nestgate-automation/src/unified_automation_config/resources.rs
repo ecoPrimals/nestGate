@@ -19,8 +19,10 @@ impl ResourcesSettings {
 }
 
 impl Default for ResourcesSettings {
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             enabled: false,
             config: std::collections::HashMap::new(),
-         }
+        }
+    }
 }

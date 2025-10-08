@@ -8,7 +8,7 @@
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
-/// NestGate - Universal ZFS and Storage Management
+/// `NestGate` - Universal ZFS and Storage Management
 #[derive(Debug, Parser)]
 #[command(name = "nestgate")]
 #[command(about = "Universal ZFS and Storage Management System")]
@@ -114,21 +114,21 @@ pub enum Commands {
 
 #[derive(Debug, Subcommand)]
 pub enum ServiceAction {
-    /// Start NestGate service
+    /// Start `NestGate` service
     Start {
-        /// Port to bind to (can be overridden with NESTGATE_API_PORT)
+        /// Port to bind to (can be overridden with `NESTGATE_API_PORT`)
         #[arg(short, long, default_value_t = nestgate_core::defaults::network::DEFAULT_API_PORT)]
         port: u16,
-        /// Bind address (can be overridden with NESTGATE_BIND_ADDRESS)
+        /// Bind address (can be overridden with `NESTGATE_BIND_ADDRESS`)
         #[arg(long, default_value = nestgate_core::defaults::network::DEFAULT_BIND_ADDRESS)]
         bind: String,
         /// Run in background
         #[arg(short, long)]
         daemon: bool,
     },
-    /// Stop NestGate service
+    /// Stop `NestGate` service
     Stop,
-    /// Restart NestGate service
+    /// Restart `NestGate` service
     Restart,
     /// Show service status
     Status,
@@ -238,29 +238,25 @@ impl Cli {
                 })?;
             }
             Commands::Service { action } => {
-                println!("🚀 Service management not yet implemented: {:?}", action);
+                println!("🚀 Service management not yet implemented: {action:?}");
             }
             Commands::Doctor { comprehensive, fix } => {
                 println!(
-                    "🩺 System diagnostics not yet implemented - comprehensive: {}, fix: {}",
-                    comprehensive, fix
+                    "🩺 System diagnostics not yet implemented - comprehensive: {comprehensive}, fix: {fix}"
                 );
             }
             Commands::Storage { action } => {
-                println!("💾 Storage management not yet implemented: {:?}", action);
+                println!("💾 Storage management not yet implemented: {action:?}");
             }
             Commands::Config { action } => {
-                println!(
-                    "⚙️  Configuration management not yet implemented: {:?}",
-                    action
-                );
+                println!("⚙️  Configuration management not yet implemented: {action:?}");
             }
             Commands::Monitor {
                 interval,
                 output,
                 duration,
             } => {
-                println!("📊 Performance monitoring not yet implemented - interval: {:?}, output: {:?}, duration: {:?}", interval, output, duration);
+                println!("📊 Performance monitoring not yet implemented - interval: {interval:?}, output: {output:?}, duration: {duration:?}");
             }
         }
 
@@ -269,6 +265,7 @@ impl Cli {
 }
 
 /// Initialize CLI and parse arguments
+#[must_use]
 pub fn parse_args() -> Cli {
     Cli::parse()
 }
@@ -276,7 +273,7 @@ pub fn parse_args() -> Cli {
 pub fn setup_logging(verbose: bool) {
     let level = if verbose { "debug" } else { "info" };
     tracing_subscriber::fmt()
-        .with_env_filter(format!("nestgate={}", level))
+        .with_env_filter(format!("nestgate={level}"))
         .with_target(false)
         .with_thread_ids(false)
         .with_file(false)

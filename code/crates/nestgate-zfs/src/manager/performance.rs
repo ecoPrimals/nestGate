@@ -111,7 +111,7 @@ impl ZfsManager {
         // Get current pool status
         let pools = self.pool_manager.list_pools().await.map_err(|_e| {
             create_zfs_error(
-                format!("Failed to list pools: {"actual_error_details"}"),
+                "Failed to list pools: error details".to_string(),
                 ZfsOperation::SystemCheck,
             )
         })?;
@@ -123,7 +123,7 @@ impl ZfsManager {
                 .await
                 .map_err(|_e| {
                     create_zfs_error(
-                        format!("Failed to get pool status: {"actual_error_details"}"),
+                        "Failed to get pool status: error details".to_string(),
                         ZfsOperation::PoolCreate,
                     )
                 })?;

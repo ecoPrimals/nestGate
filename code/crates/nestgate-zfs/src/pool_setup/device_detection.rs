@@ -22,7 +22,7 @@ pub struct StorageDevice {
     pub model: String,
     /// Device size in bytes
     pub size_bytes: u64,
-    /// Device type (NVMe, SATA SSD, HDD, etc.)
+    /// Device type (`NVMe`, SATA SSD, HDD, etc.)
     pub device_type: DeviceType,
     /// Device speed characteristics
     pub speed_class: SpeedClass,
@@ -53,6 +53,7 @@ pub struct DeviceScanner {
     config: DeviceDetectionConfig,
 }
 impl DeviceScanner {
+    #[must_use]
     pub fn new(config: DeviceDetectionConfig) -> Self {
         Self { config }
     }
@@ -108,7 +109,7 @@ impl DeviceScanner {
         device: &serde_json::Value,
     ) -> CoreResult<Option<StorageDevice>> {
         let _device_name = device["name"].as_str().unwrap_or("");
-        let device_path = format!("/dev/{"actual_error_details"}");
+        let device_path = "/dev/error details".to_string();
 
         // Skip if not a disk device
         if device["type"].as_str() != Some("disk") {
@@ -254,7 +255,7 @@ impl DeviceScanner {
             .take_while(|c| !c.is_ascii_digit())
             .collect::<String>();
 
-        let rotational_path = format!("/sys/block/{"actual_error_details"}/queue/rotational");
+        let rotational_path = "/sys/block/error details/queue/rotational".to_string();
 
         match tokio::fs::read_to_string(&rotational_path).await {
             Ok(content) => {
@@ -305,6 +306,7 @@ impl DeviceScanner {
     }
 
     /// Check if device should be included based on configuration
+    #[must_use]
     pub fn should_include_device(&self, device: &StorageDevice) -> bool {
         // Skip loop devices if not included
         if !self.config.include_loop_devices && device.device_path.contains("loop") {
@@ -316,6 +318,7 @@ impl DeviceScanner {
     }
 
     /// Get devices filtered by type
+    #[must_use]
     pub fn filter_by_type(
         devices: &[StorageDevice],
         device_type: DeviceType,
@@ -327,6 +330,7 @@ impl DeviceScanner {
     }
 
     /// Get devices filtered by speed class
+    #[must_use]
     pub fn filter_by_speed(
         devices: &[StorageDevice],
         speed_class: SpeedClass,
@@ -338,6 +342,7 @@ impl DeviceScanner {
     }
 
     /// Get only available (not in use) devices
+    #[must_use]
     pub fn filter_available(devices: &[StorageDevice]) -> Vec<&StorageDevice> {
         devices.iter().filter(|device| !device.in_use).collect()
     }

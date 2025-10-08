@@ -36,8 +36,7 @@ impl LogAggregator {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn new(config: LogAggregationConfig) -> Result<Self>  {
+                pub fn new(config: LogAggregationConfig) -> Result<Self>  {
         let (sender, receiver) = mpsc::unbounded_channel();
         
         let config_clone = config.clone();
@@ -60,7 +59,7 @@ impl LogAggregator {
         pub fn log(&self, entry: LogEntry) -> Result<()>  {
         self.sender.send(entry).map_err(|_e| {
             crate::error::NestGateError::internal_error(
-                &format!("Failed to send log entry: {"actual_error_details"}"),
+                &format!("Failed to send log entry: {e}"),
                 "log_aggregator"
             )
         })

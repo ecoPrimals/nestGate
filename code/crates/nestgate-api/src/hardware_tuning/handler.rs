@@ -39,8 +39,7 @@ impl HardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn start_tuning_session(&self, request: HardwareTuningRequest) -> Result<Uuid>  {
+                pub fn start_tuning_session(&self, request: HardwareTuningRequest) -> Result<Uuid>  {
         let session_id = Uuid::new_v4();
         let session = TuningSession {
             session_id,
@@ -72,7 +71,7 @@ impl HardwareTuningHandler {
             .get(&session_id)
             .cloned()
             .ok_or_else(|| NestGateError::internal_error(
-                location: Some(format!("{"actual_error_details"}:{"actual_error_details"}"), line!()),
+                location: Some(format!("self.base_url:self.base_url"), line!()),
                 context: None,
                 is_bug: false,
             })

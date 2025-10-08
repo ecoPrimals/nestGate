@@ -12,8 +12,12 @@
 //! - **Vendor Independence**: No vendor-specific implementations
 //! - **Sovereignty Layer**: Human dignity and sovereignty compliance
 
-use crate::simd::*;
-use crate::zero_cost::*;
+use crate::simd::StandardBatchProcessor;
+use crate::zero_cost::{
+    RequestPriority, ZeroCostCacheProvider, ZeroCostError, ZeroCostFileStorage,
+    ZeroCostJwtProvider, ZeroCostMemoryCache, ZeroCostMetadata, ZeroCostRequest, ZeroCostSystem,
+    ZeroCostSystemBuilder,
+};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -242,6 +246,7 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
     }
 
     /// Verify sovereignty compliance
+    #[must_use]
     pub fn verify_sovereignty_compliance(&self) -> bool {
         self.sovereignty_layer.compliance_status
     }
@@ -356,6 +361,7 @@ pub struct Connection {
 
 impl SovereigntyLayer {
     /// Validate capability against human dignity rules
+    #[must_use]
     pub fn validate_capability(&self, capability: &CapabilityDescriptor) -> bool {
         if !self.compliance_status {
             return false;
@@ -373,6 +379,9 @@ impl<const MAX_CAPABILITIES: usize> Default for InfantDiscoverySystem<MAX_CAPABI
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod comprehensive_tests;
 
 #[cfg(test)]
 mod tests {

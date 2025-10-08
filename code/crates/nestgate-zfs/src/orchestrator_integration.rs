@@ -92,6 +92,7 @@ pub struct ZfsHealthStatus {
 
 impl ZfsService {
     /// Create a new ZFS service
+    #[must_use]
     pub fn new(config: ZfsServiceConfig) -> Self {
         Self {
             config,
@@ -103,6 +104,7 @@ impl ZfsService {
     }
 
     /// Get service information for orchestration module registration
+    #[must_use]
     pub fn get_service_info(&self) -> ServiceRegistration {
         ServiceRegistration {
             service_id: self.node_id.clone(),
@@ -170,7 +172,6 @@ impl ZfsService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn register_with_orchestrator(&mut self, _orchestrator_url: &str) -> Result<()> {
         info!("🔗 Registering with orchestration module");
 

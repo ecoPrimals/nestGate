@@ -28,6 +28,7 @@ pub struct ZfsCommandResult {
 }
 impl NativeZfsCommandExecutor {
     /// Create a new command executor
+    #[must_use]
     pub fn new() -> Self {
         Self {
             timeout_seconds: 300, // 5 minutes default timeout
@@ -36,6 +37,7 @@ impl NativeZfsCommandExecutor {
     }
 
     /// Create with custom timeout
+    #[must_use]
     pub fn with_timeout(timeout_seconds: u64) -> Self {
         Self {
             timeout_seconds,
@@ -51,8 +53,7 @@ impl NativeZfsCommandExecutor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn execute_command(&self, args: &[&str]) -> Result<ZfsCommandResult> {
+    pub async fn execute_command(&self, args: &[&str]) -> Result<ZfsCommandResult> {
         if self.verbose_logging {
             debug!("🔧 Executing ZFS command: zfs {}", args.join(" "));
         }
@@ -175,7 +176,7 @@ impl NativeZfsCommandExecutor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn create_dataset(
+    pub async fn create_dataset(
         &self,
         dataset: &str,
         properties: &HashMap<String, String>,
@@ -185,7 +186,7 @@ impl NativeZfsCommandExecutor {
         // Collect property strings to avoid borrowing issues
         let mut property_strings = Vec::new();
         for (key, value) in properties {
-            property_strings.push(format!("{key}={"actual_error_details"}"));
+            property_strings.push(format!("{key}={value}"));
         }
 
         // Add properties
@@ -210,9 +211,8 @@ impl NativeZfsCommandExecutor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn create_snapshot(&self, dataset: &str, _snapshot_name: &str) -> Result<()> {
-        let snapshot_full = format!("{dataset}@{"actual_error_details"}");
+    pub async fn create_snapshot(&self, dataset: &str, snapshot_name: &str) -> Result<()> {
+        let snapshot_full = format!("{dataset}@{snapshot_name}");
         self.execute_command_expect_success(&["snapshot", &snapshot_full])
             .await?;
 
@@ -239,8 +239,7 @@ impl NativeZfsCommandExecutor {
                 }
                 _ => {
                     return Err(NestGateError::security(&format!(
-                        "Unsafe ZFS command: {}",
-                        command
+                        "Unsafe ZFS command: {command}"
                     )));
                 }
             }

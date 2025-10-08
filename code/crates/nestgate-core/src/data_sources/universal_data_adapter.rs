@@ -50,8 +50,7 @@ impl UniversalDataAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn execute_request(&self, request: &DataRequest) -> Result<DataResponse>  {
+                pub fn execute_request(&self, request: &DataRequest) -> Result<DataResponse>  {
         debug!("🔍 Executing data request for capability: {}", request.capability_type);
         
         // Try primary provider first

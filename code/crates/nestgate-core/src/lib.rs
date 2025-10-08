@@ -119,8 +119,8 @@ pub use config::canonical_master::NestGateCanonicalConfig;
 /// **CANONICAL CONSTANTS** - Single source for all constants
 pub use constants::*;
 /// **DOMAIN-SPECIFIC RESULT TYPES** - Rich error context
-/// Note: Error type aliases removed to avoid conflicts with legacy domain_errors.rs
-/// Use NestGateUnifiedError::network_connection_failed() and similar helper constructors
+/// Note: Error type aliases removed to avoid conflicts with legacy `domain_errors.rs`
+/// Use `NestGateUnifiedError::network_connection_failed()` and similar helper constructors
 pub use error::{
     ApiResult, ConfigResult, McpResult, NetworkResult, SecurityResult, StorageResult,
     ValidationResult, ZfsResult,
@@ -147,6 +147,15 @@ pub use error::NestGateError as Error;
 // pub mod memory_optimization;
 // /// String pooling for memory efficiency - temporarily disabled due to import issues
 // pub mod string_pool;
+
+// ==================== UTILITY MODULES ====================
+
+/// Cache-related mathematical utilities
+pub mod cache_math;
+/// Consensus algorithm mathematics  
+pub mod consensus_math;
+/// Validation predicate functions
+pub mod validation_predicates;
 // /// Zero-copy optimization patterns - temporarily disabled due to syntax errors
 // pub mod zero_copy_optimization;
 

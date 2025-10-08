@@ -3,11 +3,11 @@
 //! This module provides a centralized, configurable test environment that eliminates
 //! hardcoded values and enables dynamic test configuration through environment variables.
 
-use std::collections::HashMap;
-use crate::config::ConsolidatedCanonicalConfig;
 use nestgate_core::constants::canonical::network::DEFAULT_API_PORT;
+use std::collections::HashMap;
 use std::env;
 use std::time::Duration;
+use tests::config::ConsolidatedCanonicalConfig;
 
 /// **CONFIGURABLE TEST ENVIRONMENT**
 ///

@@ -57,8 +57,7 @@ impl UniversalEcosystemIntegration {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn discover_ecosystem(&self) -> Result<Vec<EcosystemInfo>>  {
+                pub fn discover_ecosystem(&self) -> Result<Vec<EcosystemInfo>>  {
         // Use universal capability discovery instead of hardcoded endpoints
         let discovery_capability = "ecosystem_discovery_v1".to_string();
         
@@ -139,8 +138,7 @@ impl UniversalEcosystemIntegration {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn handle_ecosystem_event(&self, event: UniversalEcosystemEvent) -> Result<EventResponse>  {
+                pub fn handle_ecosystem_event(&self, event: UniversalEcosystemEvent) -> Result<EventResponse>  {
         let event_capability = "ecosystem_event_handling_v1".to_string();
         
         let mut request = CanonicalCapabilityRequest {
@@ -172,8 +170,7 @@ impl UniversalEcosystemIntegration {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn get_compatibility_status(&self) -> Result<CompatibilityStatus>  {
+                pub fn get_compatibility_status(&self) -> Result<CompatibilityStatus>  {
         let status_capability = "ecosystem_status_v1".to_string();
         
         let request = CanonicalCapabilityRequest {
@@ -210,7 +207,7 @@ impl UniversalEcosystemIntegration {
         vec![
             ServiceEndpoint {
                 name: "api".to_string(),
-                url: format!("http://{"actual_error_details"}:{"actual_error_details"}"),
+                url: format!("http://self.base_url:self.base_url"),
                     8080
                 ),
                 protocol: "http".to_string(),
@@ -218,7 +215,7 @@ impl UniversalEcosystemIntegration {
             }
             ServiceEndpoint {
                 name: "metrics".to_string(),
-                url: format!("http://{"actual_error_details"}:{"actual_error_details"}/metrics"),
+                url: format!("http://self.base_url:self.base_url/metrics"),
                     9090
                 ),
                 protocol: "http".to_string(),

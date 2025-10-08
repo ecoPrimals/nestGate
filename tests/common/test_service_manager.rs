@@ -1,11 +1,11 @@
 use std::collections::HashMap;
-use crate::config::ConsolidatedCanonicalConfig;
 use std::net::TcpListener;
-use crate::config::ConsolidatedCanonicalConfig;
 use std::sync::Arc;
-use crate::config::ConsolidatedCanonicalConfig;
+use tests::config::ConsolidatedCanonicalConfig;
+use tests::config::ConsolidatedCanonicalConfig;
+use tests::config::ConsolidatedCanonicalConfig;
+use tests::config::ConsolidatedCanonicalConfig;
 use tokio::sync::RwLock;
-use crate::config::ConsolidatedCanonicalConfig;
 
 /// Test service manager for dynamic port allocation
 /// Eliminates hardcoded localhost endpoints in tests
@@ -145,7 +145,10 @@ pub async fn get_test_api_endpoint(service: &str, path: &str) -> String {
 }
 
 /// Test configuration builder
-#[deprecated(since = "0.6.0", note = "Use ConsolidatedCanonicalConfig::test_config() instead")]
+#[deprecated(
+    since = "0.6.0",
+    note = "Use ConsolidatedCanonicalConfig::test_config() instead"
+)]
 pub struct LegacyTestConfig {
     services: HashMap<String, String>,
 }

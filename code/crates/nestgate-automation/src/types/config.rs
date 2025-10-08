@@ -1,8 +1,7 @@
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::env;
 use std::time::Duration;
-
 
 /// **AUTOMATION CONFIG TYPES**
 /// Configuration type definitions for the automation system
@@ -29,7 +28,8 @@ pub struct AutomationConfig {
     pub _orchestration_endpoint: Option<String>,
 }
 impl Default for AutomationConfig {
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             analysis: AnalysisConfig::default(),
             prediction: PredictionConfig::default(),
             lifecycle: LifecycleConfig::default(),
@@ -39,12 +39,15 @@ impl Default for AutomationConfig {
             enable_automatic_optimization: true,
             min_confidence_threshold: 0.7,
             _orchestration_endpoint: None,
-         }
+        }
+    }
 }
 
 impl AutomationConfig {
     /// Create production configuration
-    pub fn production() -> Self { Self {
+    #[must_use]
+    pub fn production() -> Self {
+        Self {
             analysis: AnalysisConfig::default(),
             prediction: PredictionConfig::default(),
             lifecycle: LifecycleConfig::default(),
@@ -53,11 +56,19 @@ impl AutomationConfig {
             enable_intelligent_tier_assignment: true,
             enable_automatic_optimization: true,
             min_confidence_threshold: 0.8, // Higher confidence for production
-            _orchestration_endpoint: Some("http://localhost:".to_string() + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()).to_string()),
-         }
+            _orchestration_endpoint: Some(
+                "http://localhost:".to_string()
+                    + &env::var("NESTGATE_API_PORT")
+                        .unwrap_or_else(|_| "8080".to_string())
+                        .to_string(),
+            ),
+        }
+    }
 
     /// Create development configuration
-    pub fn development() -> Self { Self {
+    #[must_use]
+    pub fn development() -> Self {
+        Self {
             analysis: AnalysisConfig::default(),
             prediction: PredictionConfig::default(),
             lifecycle: LifecycleConfig::default(),
@@ -66,8 +77,14 @@ impl AutomationConfig {
             enable_intelligent_tier_assignment: true,
             enable_automatic_optimization: false, // Disable auto-optimization in dev
             min_confidence_threshold: 0.5,        // Lower confidence for development
-            _orchestration_endpoint: Some("http://localhost:".to_string() + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()).to_string()),
-         }
+            _orchestration_endpoint: Some(
+                "http://localhost:".to_string()
+                    + &env::var("NESTGATE_API_PORT")
+                        .unwrap_or_else(|_| "8080".to_string())
+                        .to_string(),
+            ),
+        }
+    }
 }
 
 /// Analysis configuration
@@ -83,12 +100,14 @@ pub struct AnalysisConfig {
     pub exclude_extensions: Vec<String>,
 }
 impl Default for AnalysisConfig {
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             scan_interval: Duration::from_secs(3600), // 1 hour
             max_file_size: 1024 * 1024 * 1024,        // 1GB
             include_extensions: vec!["*".to_string()],
             exclude_extensions: vec![".tmp".to_string(), ".log".to_string()],
-         }
+        }
+    }
 }
 
 /// Prediction configuration
@@ -102,11 +121,13 @@ pub struct PredictionConfig {
     pub model_params: HashMap<String, f64>,
 }
 impl Default for PredictionConfig {
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             prediction_window_days: 30,
             min_confidence: 0.7,
             model_params: HashMap::new(),
-         }
+        }
+    }
 }
 
 /// Lifecycle configuration
@@ -122,12 +143,14 @@ pub struct LifecycleConfig {
     pub auto_migration: bool,
 }
 impl Default for LifecycleConfig {
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             hot_retention_days: 30,
             warm_retention_days: 90,
             cold_retention_days: 365,
             auto_migration: true,
-         }
+        }
+    }
 }
 
 /// Discovery configuration for ecosystem services
@@ -140,13 +163,14 @@ pub struct DiscoveryConfig {
     pub multicast_enabled: bool,
     pub mdns_enabled: bool,
 }
-    #[cfg(feature = "network-integration")]
+#[cfg(feature = "network-integration")]
 impl DiscoveryConfig {
+    #[must_use]
     pub fn from_automation_config(config: &AutomationConfig) -> Self {
         Self {
             known_orchestration_endpoints: vec![
                 config
-                    .orchestration_endpoint
+                    ._orchestration_endpoint
                     .clone()
                     .unwrap_or_else(|| "http://localhost:".to_string() + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()).to_string()),
                 std::env::var("NESTGATE_ORCHESTRATION_BACKUP_ENDPOINT_1").unwrap_or_else(|_| {

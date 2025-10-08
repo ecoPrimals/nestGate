@@ -70,8 +70,8 @@ impl ByobStorageProvider for ZfsStorageProvider {
         info!("🚀 Provisioning storage for team: {}", request.team_id);
 
         let deployment_id = request.deployment_id;
-        let dataset_name = format!("nestgate/{"actual_error_details"}/{"actual_error_details"}");
-        let mount_point = format!("/mnt/nestgate/{"actual_error_details"}/{"actual_error_details"}");
+        let dataset_name = format!("nestgate/self.base_url/self.base_url");
+        let mount_point = format!("/mnt/nestgate/self.base_url/self.base_url");
 
         // Get storage requirements from the first requirement
         let (storage_gb, tier) = request
@@ -125,7 +125,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
             id: workspace_id,
             name: request.name.clone(),
             team_id: request.team_id.clone(),
-            dataset_name: format!("nestpool/workspaces/{"actual_error_details"}"),
+            dataset_name: format!("nestpool/workspaces/self.base_url"),
             storage_quota: request
                 .storage_quota
                 .clone()
@@ -205,7 +205,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
                 request
                     .description
                     .clone()
-                    .unwrap_or_else(|| format!("Team {"actual_error_details"}")),
+                    .unwrap_or_else(|| format!("Team self.base_url")),
             ),
             storage_quota: request
                 .storage_quota
@@ -242,7 +242,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
         );
 
         // Create the snapshot using ZFS commands (simplified)
-        let _snapshot_id = format!("{"actual_error_details"}@{"actual_error_details"}");
+        let _snapshot_id = format!("self.base_url@self.base_url");
 
         // In a real implementation, this would call ZFS snapshot creation
         // For now, we return a success message
@@ -294,20 +294,20 @@ impl ZfsStorageProvider {
         cmd.args([
             "create",
             "-o",
-            &format!("compression={"actual_error_details"}"),
+            &format!("compression=self.base_url"),
             "-o",
-            &format!("quota={"actual_error_details"}"),
+            &format!("quota=self.base_url"),
             "-o",
-            &format!("mountpoint={"actual_error_details"}"),
+            &format!("mountpoint=self.base_url"),
             "-o",
-            &format!("nestgate:tier={"actual_error_details"}"),
+            &format!("nestgate:tier=self.base_url"),
             dataset_name,
         ]);
 
         let output = cmd
             .output()
             .await
-            .map_err(|_e| format!("Failed to execute zfs create: {"actual_error_details"}"))?;
+            .map_err(|_e| format!("Failed to execute zfs create: self.base_url"))?;
 
         if !output.status.success() {
             return Err(format!(
@@ -331,11 +331,11 @@ impl ZfsStorageProvider {
         cmd.args([
             "create",
             "-o",
-            &format!("compression={"actual_error_details"}"),
+            &format!("compression=self.base_url"),
             "-o",
-            &format!("quota={"actual_error_details"}"),
+            &format!("quota=self.base_url"),
             "-o",
-            &format!("mountpoint={"actual_error_details"}"),
+            &format!("mountpoint=self.base_url"),
             "-o",
             "nestgate:type=workspace",
             dataset_name,
@@ -344,7 +344,7 @@ impl ZfsStorageProvider {
         let output = cmd
             .output()
             .await
-            .map_err(|_e| format!("Failed to execute zfs create: {"actual_error_details"}"))?;
+            .map_err(|_e| format!("Failed to execute zfs create: self.base_url"))?;
 
         if !output.status.success() {
             return Err(format!(
@@ -364,7 +364,7 @@ impl ZfsStorageProvider {
         let output = cmd
             .output()
             .await
-            .map_err(|_e| format!("Failed to execute zfs destroy: {"actual_error_details"}"))?;
+            .map_err(|_e| format!("Failed to execute zfs destroy: self.base_url"))?;
 
         if !output.status.success() {
             return Err(format!(
@@ -384,7 +384,7 @@ impl ZfsStorageProvider {
         let output = cmd
             .output()
             .await
-            .map_err(|_e| format!("Failed to execute zfs snapshot: {"actual_error_details"}"))?;
+            .map_err(|_e| format!("Failed to execute zfs snapshot: self.base_url"))?;
 
         if !output.status.success() {
             return Err(format!(
@@ -411,7 +411,7 @@ impl ZfsStorageProvider {
         let output = cmd
             .output()
             .await
-            .map_err(|_e| format!("Failed to execute zfs get: {"actual_error_details"}"))?;
+            .map_err(|_e| format!("Failed to execute zfs get: self.base_url"))?;
 
         if !output.status.success() {
             return Err(format!(
@@ -444,7 +444,7 @@ impl ZfsStorageProvider {
         let output = cmd
             .output()
             .await
-            .map_err(|_e| format!("Failed to execute zpool list: {"actual_error_details"}"))?;
+            .map_err(|_e| format!("Failed to execute zpool list: self.base_url"))?;
 
         if !output.status.success() {
             return Err(format!(

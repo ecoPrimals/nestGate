@@ -65,8 +65,7 @@ impl EndpointManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn health_check(&self, name: &str) -> Result<bool, String>  {
+                pub fn health_check(&self, name: &str) -> Result<bool, String>  {
         if let Some(endpoint) = self.endpoints.get(name) {
             // Simplified health check - would make actual HTTP request
             Ok(true)

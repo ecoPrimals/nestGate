@@ -102,8 +102,7 @@ impl ZfsFallbackProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn create_pool_fallback(&self, config: &PoolConfig) -> Result<serde_json::Value>  {
+        pub async fn create_pool_fallback(&self, config: &PoolConfig) -> Result<serde_json::Value> {
         if !self.config.enabled {
             return Err(NestGateError::storage_error(
                 "ZFS fallback provider is disabled"
@@ -138,8 +137,7 @@ impl ZfsFallbackProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn list_pools_fallback(&self) -> Result<Vec<PoolInfo>>  {
+        pub async fn list_pools_fallback(&self) -> Result<Vec<PoolInfo>> {
         if !self.config.enabled {
             return Ok(vec![]);
         }
@@ -156,8 +154,7 @@ impl ZfsFallbackProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn pool_status_fallback(&self, pool_name: &str) -> Result<PoolInfo>  {
+        pub async fn pool_status_fallback(&self, pool_name: &str) -> Result<PoolInfo> {
         if !self.config.enabled {
             return Err(NestGateError::storage_error(
                 "ZFS fallback provider is disabled"
@@ -181,8 +178,7 @@ impl ZfsFallbackProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn create_dataset_fallback(&self, dataset_name: &str) -> Result<serde_json::Value>  {
+        pub async fn create_dataset_fallback(&self, dataset_name: &str) -> Result<serde_json::Value> {
         if !self.config.enabled {
             return Err(NestGateError::storage_error(
                 "ZFS fallback provider is disabled"
@@ -209,8 +205,7 @@ impl ZfsFallbackProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn list_datasets_fallback(&self, pool_name: &str) -> Result<Vec<serde_json::Value>>  {
+        pub async fn list_datasets_fallback(&self, pool_name: &str) -> Result<Vec<serde_json::Value>> {
         if !self.config.enabled {
             return Err(NestGateError::storage_error(
                 "ZFS fallback provider is disabled"
@@ -250,8 +245,7 @@ impl ZfsFallbackProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn create_snapshot_fallback(&self, dataset_name: &str, snapshot_name: &str) -> Result<serde_json::Value>  {
+        pub async fn create_snapshot_fallback(&self, dataset_name: &str, snapshot_name: &str) -> Result<serde_json::Value> {
         if !self.config.enabled {
             return Err(NestGateError::storage_error(
                 "ZFS fallback provider is disabled"
@@ -277,8 +271,7 @@ impl ZfsFallbackProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn list_snapshots_fallback(&self, dataset_name: &str) -> Result<Vec<serde_json::Value>>  {
+        pub async fn list_snapshots_fallback(&self, dataset_name: &str) -> Result<Vec<serde_json::Value>> {
         if !self.config.enabled {
             return Err(NestGateError::storage_error(
                 "ZFS fallback provider is disabled"
@@ -310,8 +303,7 @@ impl ZfsFallbackProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn destroy_dataset_fallback(&self, dataset_name: &str) -> Result<serde_json::Value>  {
+        pub async fn destroy_dataset_fallback(&self, dataset_name: &str) -> Result<serde_json::Value> {
         if !self.config.enabled {
             return Err(NestGateError::storage_error(
                 "ZFS fallback provider is disabled"
@@ -335,8 +327,7 @@ impl ZfsFallbackProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn get_dataset_properties_fallback(&self, dataset_name: &str) -> Result<serde_json::Value>  {
+        pub async fn get_dataset_properties_fallback(&self, dataset_name: &str) -> Result<serde_json::Value> {
         if !self.config.enabled {
             return Err(NestGateError::storage_error(
                 "ZFS fallback provider is disabled"
@@ -352,7 +343,7 @@ impl ZfsFallbackProvider {
             "referenced": "10.5G",
             "compressratio": "1.00x",
             "mounted": "yes",
-            "mountpoint": format!("/mnt/{dataset_name.split('/'}").last().unwrap_or(dataset_name))
+            "mountpoint": format!("/mnt/{}", dataset_name.split('/').last().unwrap_or(dataset_name))
         });
 
         Ok(properties)
@@ -366,8 +357,7 @@ impl ZfsFallbackProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn execute(&self, operation: &str, params: serde_json::Value) -> Result<serde_json::Value>  {
+        pub async fn execute(&self, operation: &str, params: serde_json::Value) -> Result<serde_json::Value> {
         match operation {
             "create_pool" => {
                 // Extract pool config from params
@@ -472,8 +462,7 @@ impl ZfsFallbackProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn health_check(&self) -> Result<serde_json::Value>  {
+        pub async fn health_check(&self) -> Result<serde_json::Value> {
         let health_status = serde_json::json!({
             "provider": "zfs_fallback",
             "enabled": self.config.enabled,

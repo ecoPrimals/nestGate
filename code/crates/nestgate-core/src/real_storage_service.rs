@@ -66,8 +66,7 @@ impl RealStorageService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn new(config: StorageConfig) -> Result<Self>  {
+                pub fn new(config: StorageConfig) -> Result<Self>  {
         info!(
             "Initializing real storage service with root: {}",
             config.root_directory

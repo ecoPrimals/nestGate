@@ -319,7 +319,7 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
         );
         println!("    -H 'Content-Type: application/json' \\");
         println!(
-            "    -d '{{\"id\":\"123\",\"source\":\"test\",\"target\":\"security\",\"method\":\"encrypt_data\",\"_params\":{{\"data\":\"secret\"},\"timestamp\":\"2025-01-30T10:00:00Z\",\"streaming\":false,\"_metadata\":{{}}'"
+            "    -d '{{\"id\":\"123\",\"source\":\"test\",\"target\":\"security\",\"method\":\"encrypt_data\",\"_params\":{{\"data\":\"secret\"}},\"timestamp\":\"2025-01-30T10:00:00Z\",\"streaming\":false,\"_metadata\":{{}}}}''"
         );
         println!(
             "  🎼 Orchestration RPC: curl -X POST http://localhost:{}/api/v1/rpc/call \\",
@@ -327,7 +327,7 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
         );
         println!("    -H 'Content-Type: application/json' \\");
         println!(
-            "    -d '{{\"id\":\"456\",\"source\":\"test\",\"target\":\"orchestration\",\"method\":\"discover_services\",\"_params\":{{\"service_type\":\"storage\"},\"timestamp\":\"2025-01-30T10:00:00Z\",\"streaming\":false,\"_metadata\":{{}}'"
+            "    -d '{{\"id\":\"456\",\"source\":\"test\",\"target\":\"orchestration\",\"method\":\"discover_services\",\"_params\":{{\"service_type\":\"storage\"}},\"timestamp\":\"2025-01-30T10:00:00Z\",\"streaming\":false,\"_metadata\":{{}}}}''"
         );
     }
 

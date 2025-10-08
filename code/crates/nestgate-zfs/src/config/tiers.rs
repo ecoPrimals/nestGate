@@ -17,6 +17,7 @@ pub struct CapacityLimits {
 }
 
 impl CapacityLimits {
+    #[must_use]
     pub fn hot_tier_defaults() -> Self {
         Self {
             max_size_gb: 1000,
@@ -25,6 +26,7 @@ impl CapacityLimits {
         }
     }
 
+    #[must_use]
     pub fn warm_tier_defaults() -> Self {
         Self {
             max_size_gb: 10000,
@@ -33,6 +35,7 @@ impl CapacityLimits {
         }
     }
 
+    #[must_use]
     pub fn cold_tier_defaults() -> Self {
         Self {
             max_size_gb: 100000,
@@ -124,6 +127,7 @@ impl Default for TierConfigurations {
 
 impl TierConfigurations {
     /// Create production-optimized tier configurations
+    #[must_use]
     pub fn production_tiers() -> Self {
         Self {
             hot: TierConfig::hot_tier_production(),
@@ -133,6 +137,7 @@ impl TierConfigurations {
     }
 
     /// Auto-detect tier configurations for a given pool
+    #[must_use]
     pub fn auto_detect_tiers(pool_name: &str) -> Self {
         Self {
             hot: TierConfig::auto_detect_hot(pool_name),

@@ -91,14 +91,16 @@ pub struct ServiceDependency {
     pub health_endpoint: Option<String>,
 }
 impl SmartDefault for LifecycleSettings {
-    fn smart_default() -> Self { Self {
+    fn smart_default() -> Self {
+        Self {
             enabled: true,
             startup: StartupSettings::smart_default(),
             shutdown: ShutdownSettings::smart_default(),
             health_checks: HealthCheckSettings::smart_default(),
             recovery: RecoverySettings::smart_default(),
             dependencies: DependencySettings::smart_default(),
-         }
+        }
+    }
 }
 
 impl Default for LifecycleSettings {
@@ -108,13 +110,15 @@ impl Default for LifecycleSettings {
 }
 
 impl SmartDefault for StartupSettings {
-    fn smart_default() -> Self { Self {
+    fn smart_default() -> Self {
+        Self {
             auto_start: true,
             timeout: Duration::from_secs(60),
             retry_attempts: 3,
             delay: Duration::from_secs(1),
             parallel: true,
-         }
+        }
+    }
 }
 
 impl Default for StartupSettings {
@@ -124,12 +128,14 @@ impl Default for StartupSettings {
 }
 
 impl SmartDefault for ShutdownSettings {
-    fn smart_default() -> Self { Self {
+    fn smart_default() -> Self {
+        Self {
             graceful: true,
             timeout: Duration::from_secs(30),
             force_after_timeout: true,
             cleanup: true,
-         }
+        }
+    }
 }
 
 impl Default for ShutdownSettings {
@@ -139,13 +145,15 @@ impl Default for ShutdownSettings {
 }
 
 impl SmartDefault for HealthCheckSettings {
-    fn smart_default() -> Self { Self {
+    fn smart_default() -> Self {
+        Self {
             enabled: true,
             interval: Duration::from_secs(30),
             timeout: Duration::from_secs(10),
             failure_threshold: 3,
             recovery_threshold: 2,
-         }
+        }
+    }
 }
 
 impl Default for HealthCheckSettings {
@@ -155,13 +163,15 @@ impl Default for HealthCheckSettings {
 }
 
 impl SmartDefault for RecoverySettings {
-    fn smart_default() -> Self { Self {
+    fn smart_default() -> Self {
+        Self {
             enabled: true,
             strategy: "restart".to_string(),
             timeout: Duration::from_secs(60),
             max_attempts: 3,
             delay: Duration::from_secs(5),
-         }
+        }
+    }
 }
 
 impl Default for RecoverySettings {
@@ -171,11 +181,13 @@ impl Default for RecoverySettings {
 }
 
 impl SmartDefault for DependencySettings {
-    fn smart_default() -> Self { Self {
+    fn smart_default() -> Self {
+        Self {
             services: HashMap::default(),
             timeout: Duration::from_secs(30),
             wait_on_startup: true,
-         }
+        }
+    }
 }
 
 impl Default for DependencySettings {

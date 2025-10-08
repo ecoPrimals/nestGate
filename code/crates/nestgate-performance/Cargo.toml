@@ -12,6 +12,9 @@ readme = "README.md"
 
 [dependencies]
 tracing = "0.1"
+# Safe concurrent collections - ZERO unsafe code
+crossbeam = "0.8"
+dashmap = "6.1"
 
 [features]
 default = [ "simd", "zero-copy", "lock-free", "adaptive",]

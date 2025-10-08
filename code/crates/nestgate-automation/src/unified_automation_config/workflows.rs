@@ -27,12 +27,14 @@ pub struct WorkflowDefinition {
     pub timeout: Duration,
 }
 impl SmartDefault for WorkflowSettings {
-    fn smart_default() -> Self { Self {
+    fn smart_default() -> Self {
+        Self {
             enabled: true,
             workflows: HashMap::default(),
             default_timeout: Duration::from_secs(300),
             max_concurrent: 10,
-         }
+        }
+    }
 }
 
 impl Default for WorkflowSettings {

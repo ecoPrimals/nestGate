@@ -2,7 +2,7 @@
 //
 // Analysis tools and reporting functionality for storage systems.
 
-use super::types::*;
+use super::types::{DetectedStorage, StorageAnalysisReport};
 use crate::unified_enums::storage_types::{UnifiedStorageCapability, UnifiedStorageType};
 
 /// Storage analyzer for generating insights and recommendations
@@ -178,7 +178,7 @@ impl StorageAnalyzer {
                 score += storage.performance_profile.read_throughput_mbps / 1000.0; // Max 1.0 point
                 score +=
                     (10000.0 - storage.performance_profile.read_latency_us.min(10000.0)) / 10000.0; // Max 1.0 point
-                score += storage.performance_profile.iops as f64 / 50000.0; // Max 1.0 point for 50k IOPS
+                score += f64::from(storage.performance_profile.iops) / 50000.0; // Max 1.0 point for 50k IOPS
             }
             StorageUseCase::LowCost => {
                 // Prioritize low cost

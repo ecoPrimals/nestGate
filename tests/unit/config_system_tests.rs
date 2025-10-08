@@ -17,7 +17,7 @@ mod canonical_config_tests {
 
     #[test]
     fn test_canonical_config_creation() -> Result<(), Box<dyn std::error::Error>> {
-        let config = NestGateCanonicalConfig::default();
+        let config = NestGateNestGateCanonicalConfig::default();
         assert!(!config.system.instance_name.is_empty());
         assert!(config.system.version.major > 0);
     Ok(())
@@ -35,7 +35,7 @@ mod canonical_config_tests {
 
     #[test]
     fn test_config_validation() -> Result<(), Box<dyn std::error::Error>> {
-        let config = NestGateCanonicalConfig::default();
+        let config = NestGateNestGateCanonicalConfig::default();
         let validation_result = config.validate();
         assert!(validation_result.is_ok(), "Default config should be valid");
     Ok(())
@@ -43,7 +43,7 @@ mod canonical_config_tests {
 
     #[test]
     fn test_config_serialization() -> Result<(), Box<dyn std::error::Error>> {
-        let config = NestGateCanonicalConfig::default();
+        let config = NestGateNestGateCanonicalConfig::default();
         
         // Test TOML serialization
         let toml_str = toml::to_string(&config)?;
@@ -183,7 +183,7 @@ mod config_merge_tests {
 
     #[test]
     fn test_config_merge_operation() -> Result<(), Box<dyn std::error::Error>> {
-        let mut base_config = NestGateCanonicalConfig::default();
+        let mut base_config = NestGateNestGateCanonicalConfig::default();
         let override_config = NestGateCanonicalConfig {
             system: nestgate_core::config::canonical_master::SystemConfig {
                 instance_name: "test-override".to_string(),
@@ -211,7 +211,7 @@ mod config_merge_tests {
 
     #[test]
     fn test_config_partial_merge() -> Result<(), Box<dyn std::error::Error>> {
-        let mut config = NestGateCanonicalConfig::default();
+        let mut config = NestGateNestGateCanonicalConfig::default();
         let original_port = config.network.port;
         
         // Create partial override
@@ -232,7 +232,7 @@ mod config_validation_tests {
 
     #[test]
     fn test_config_validation_rules() -> Result<(), Box<dyn std::error::Error>> {
-        let mut config = NestGateCanonicalConfig::default();
+        let mut config = NestGateNestGateCanonicalConfig::default();
         
         // Test valid configuration
         assert!(config.validate().is_ok());
@@ -250,7 +250,7 @@ mod config_validation_tests {
 
     #[test]
     fn test_config_dependency_validation() -> Result<(), Box<dyn std::error::Error>> {
-        let mut config = NestGateCanonicalConfig::default();
+        let mut config = NestGateNestGateCanonicalConfig::default();
         
         // Test TLS dependency validation
         config.network.tls_enabled = true;
@@ -266,7 +266,7 @@ mod config_validation_tests {
 
     #[test]
     fn test_config_range_validation() -> Result<(), Box<dyn std::error::Error>> {
-        let mut config = NestGateCanonicalConfig::default();
+        let mut config = NestGateNestGateCanonicalConfig::default();
         
         // Test port range validation
         config.network.port = 70000; // Invalid port

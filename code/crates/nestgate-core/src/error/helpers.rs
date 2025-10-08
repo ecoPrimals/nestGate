@@ -17,6 +17,7 @@ pub fn safe_env_var(key: &str) -> Result<String, NestGateError> {
 }
 
 /// Safe environment variable access with default
+#[must_use]
 pub fn safe_env_var_or_default(key: &str, default: &str) -> String {
     std::env::var(key).unwrap_or_else(|_| default.to_string())
 }

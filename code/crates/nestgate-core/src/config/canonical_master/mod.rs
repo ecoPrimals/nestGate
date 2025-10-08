@@ -34,7 +34,8 @@ pub mod monitoring;
 pub mod performance_config;
 // Handler-specific configuration types (NEW - consolidates scattered handler configs)
 pub mod handler_config;
-// Test and validation configuration types (NEW - consolidates scattered test configs)
+// Test and validation configuration types (NEW - consolidates scattered test configs) (dev-stubs only)
+#[cfg(feature = "dev-stubs")]
 pub mod test_config;
 // Supporting types and enums
 pub mod supporting_types;
@@ -57,13 +58,16 @@ pub use security_config::*;
 pub use storage_config::*;
 pub use supporting_types::*;
 pub use system_config::*;
+#[cfg(feature = "dev-stubs")]
 pub use test_config::*;
 
 // **NEW**: Re-export consolidated domain configurations
+#[cfg(feature = "dev-stubs")]
+pub use domains::CanonicalTestConfigs;
 pub use domains::{
     CanonicalHandlerConfigs, CanonicalNetworkConfig, CanonicalPerformanceConfig,
-    CanonicalSecurityConfig, CanonicalStorageConfig, CanonicalTestConfigs,
-    ConsolidatedDomainConfigs, ConsolidatedIntegrationConfigs, DomainConfigValidation,
+    CanonicalSecurityConfig, CanonicalStorageConfig, ConsolidatedDomainConfigs,
+    ConsolidatedIntegrationConfigs, DomainConfigValidation,
 };
 // **PHASE 2C**: Migration framework exports
 pub use migration_framework::{
@@ -79,6 +83,7 @@ pub use phase2c_types::{
 
 // **THE** canonical configuration for the entire NestGate ecosystem
 // This replaces ALL other configuration structures
+#[allow(deprecated)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NestGateCanonicalConfig<
     const MAX_CONNECTIONS: usize = 1000,
@@ -90,7 +95,7 @@ pub struct NestGateCanonicalConfig<
     pub system: SystemConfig<MAX_CONNECTIONS, BUFFER_SIZE>,
 
     /// Network and connectivity configuration
-    pub network: NetworkConfig<API_PORT, TIMEOUT_MS>,
+    pub network: CanonicalNetworkConfig,
 
     /// Storage and ZFS configuration
     pub storage: StorageConfig,
@@ -105,6 +110,8 @@ pub struct NestGateCanonicalConfig<
     pub handlers: CanonicalHandlerConfigs,
 
     /// Test and validation configurations (NEW - consolidates 40+ scattered test configs)
+    /// **⚠️ DEV/TEST ONLY**: Only available with `dev-stubs` feature
+    #[cfg(feature = "dev-stubs")]
     pub testing: CanonicalTestConfigs,
 
     /// Monitoring and observability configuration
@@ -208,12 +215,16 @@ impl<
         match self.environment {
             Environment::Production => {
                 // Stricter validation for production
-                if self.network.port == 8080 {
-                    warnings.push("Port 8080 not recommended for production".to_string());
-                }
+                #[allow(deprecated)] // Accessing deprecated NetworkConfig fields during migration
+                {
+                    if self.network.api.port == 8080 {
+                        warnings.push("Port 8080 not recommended for production".to_string());
+                    }
 
-                if !self.network.tls_enabled {
-                    warnings.push("TLS should be enabled in production".to_string());
+                    // TLS validation moved to API config
+                    if !self.network.security.firewall_enabled {
+                        warnings.push("Firewall should be enabled in production".to_string());
+                    }
                 }
             }
             Environment::Development => {
@@ -232,8 +243,9 @@ impl<
     }
 
     /// **PHASE 2C**: Validate for specific environment
+    #[allow(deprecated)] // Accessing deprecated NetworkConfig fields during migration
     pub fn validate_for_environment(&self, env: Environment) -> crate::error::Result<()> {
-        if env == Environment::Production && self.network.port == 8080 {
+        if env == Environment::Production && self.network.api.port == 8080 {
             return Err(crate::error::NestGateError::configuration_error_detailed(
                 "network.port".to_string(),
                 "Port 8080 not allowed in production".to_string(),
@@ -261,14 +273,16 @@ impl<
         const API_PORT: u16,
     > Default for NestGateCanonicalConfig<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT>
 {
+    #[allow(deprecated)]
     fn default() -> Self {
         Self {
             system: SystemConfig::default(),
-            network: NetworkConfig::default(),
+            network: CanonicalNetworkConfig::default(),
             storage: StorageConfig::default(),
             security: SecurityConfig::default(),
             api: ApiConfig::default(),
             handlers: CanonicalHandlerConfigs::default(),
+            #[cfg(feature = "dev-stubs")]
             testing: CanonicalTestConfigs::default(),
             monitoring: MonitoringConfig::default(),
             performance: PerformanceConfig::default(),

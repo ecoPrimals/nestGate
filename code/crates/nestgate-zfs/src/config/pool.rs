@@ -34,6 +34,7 @@ impl Default for PoolDiscoveryConfig {
 
 impl PoolDiscoveryConfig {
     /// Create production-optimized pool discovery configuration
+    #[must_use]
     pub fn production() -> Self {
         Self {
             auto_discovery: true,

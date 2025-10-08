@@ -210,10 +210,12 @@ impl RealNetworkService {
         let stats = self.get_network_statistics().await?;
 
         // Consider healthy if we have reasonable resource usage
-        let healthy = (stats.active_connections as usize) < self.config.network.api.max_connections as usize
+        let healthy = (stats.active_connections as usize)
+            < self.config.network.api.max_connections as usize
             && stats.allocated_ports
-                < (self.config.extensions.port_range_end - self.config.extensions.port_range_start)
-                    as u32;
+                < u32::from(
+                    self.config.extensions.port_range_end - self.config.extensions.port_range_start,
+                );
 
         if healthy {
             debug!("Network service health check: OK");

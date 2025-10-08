@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 /// Network Quality of Service settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkQosSettings {
-    /// Enable QoS
+    /// Enable `QoS`
     pub enabled: bool,
     /// Default priority level
     pub default_priority: u8,

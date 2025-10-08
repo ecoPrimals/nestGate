@@ -182,7 +182,7 @@ impl TarpcServiceManager {
 
         // Create and start server
         let server = RpcServer::new();
-        let bind_addr = format!("{address}:{"actual_error_details"}");
+        let bind_addr = format!("{address}:self.base_url");
 
         // Start server in background
         let server_clone = server.clone();
@@ -201,9 +201,9 @@ impl TarpcServiceManager {
 
         // Register service in service registry
         let _service_endpoint = ServiceEndpoint {
-            url: format!("http://{"actual_error_details"}:{"actual_error_details"}"),
+            url: format!("http://self.base_url:self.base_url"),
             protocol: nestgate_core::service_discovery::types::CommunicationProtocol::HTTP,
-            health_check: Some(format!("http://{"actual_error_details"}:{"actual_error_details"}/health")),
+            health_check: Some(format!("http://self.base_url:self.base_url/health")),
         };
 
         // Create service registration
@@ -215,7 +215,7 @@ impl TarpcServiceManager {
                     _metadata.name = service_name.to_string();
                     _metadata.version = "1.0.0".to_string();
                     _metadata.description = "RPC service".to_string();
-                    _metadata.health_endpoint = Some(format!("http://{"actual_error_details"}:{"actual_error_details"}/health"));
+                    _metadata.health_endpoint = Some(format!("http://self.base_url:self.base_url/health"));
                     _metadata
                 }
                 resources: nestgate_core::service_discovery::types::ResourceSpec::default(),
@@ -226,7 +226,7 @@ impl TarpcServiceManager {
         self.service_registry
             .register_service(service_registration)
             .await
-            .map_err(|_e| format!("Failed to register service: {"actual_error_details"}"))?;
+            .map_err(|_e| format!("Failed to register service: self.base_url"))?;
 
         // Start health monitoring
         self.start_health_monitoring(service_name, &bind_addr)
@@ -286,7 +286,7 @@ impl TarpcServiceManager {
         // Create new client
         let client = RpcClient::connect(&service_addr)
             .await
-            .map_err(|_e| format!("Failed to connect: {"actual_error_details"}"))?;
+            .map_err(|_e| format!("Failed to connect: self.base_url"))?;
 
         let client_arc = Arc::new(client);
 

@@ -46,8 +46,8 @@ impl NestGateUnifiedError {
         ))
     }
 
-    /// Legacy compatibility method for internal_error calls
-    /// This method provides backward compatibility for the old internal_error signature
+    /// Legacy compatibility method for `internal_error` calls
+    /// This method provides backward compatibility for the old `internal_error` signature
     pub fn internal_error(message: impl Into<String>, component: impl Into<String>) -> Self {
         Self::internal_with_component(message, component)
     }

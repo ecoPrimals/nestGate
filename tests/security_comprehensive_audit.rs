@@ -5,7 +5,7 @@
 
 use nestgate_core::{
     canonical_modernization::unified_enums::{UnifiedServiceState, UnifiedServiceType},
-    config::unified::NestGateUnifiedConfig,
+    config::canonical_master::NestGateUnifiedConfig,
     error::{NestGateError, Result},
     zero_cost_security_provider::{
         ZeroCostAuthenticationResult, ZeroCostCredentials, ZeroCostSecurityProvider,
@@ -87,7 +87,7 @@ pub enum SecurityPriority {
 impl SecurityAuditFramework {
     /// Create new security audit framework
     pub async fn new() -> Result<Self> {
-        let config = CanonicalConfig::default();
+        let config = NestGateCanonicalConfig::default();
         let security_provider = Arc::new(MockSecurityProvider::new());
         let audit_results = Arc::new(RwLock::new(SecurityAuditResults::default()));
 

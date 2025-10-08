@@ -54,8 +54,7 @@ impl RateLimiter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn check_rate_limit(&mut self, client_id: &str) -> Result<bool>  {
+                pub fn check_rate_limit(&mut self, client_id: &str) -> Result<bool>  {
         let now = SystemTime::now();
 
         // Periodic cleanup of expired entries

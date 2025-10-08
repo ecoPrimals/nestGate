@@ -1,6 +1,6 @@
 //! **NESTGATE ZFS CRATE**
 //!
-//! This crate provides ZFS storage management functionality for NestGate,
+//! This crate provides ZFS storage management functionality for `NestGate`,
 //! with canonical configuration integration and zero-cost abstractions.
 
 // Core modules

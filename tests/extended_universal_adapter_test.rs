@@ -7,11 +7,11 @@
 //! - Performance under load
 //! - Error handling across adapters
 
-use crate::canonical_modernization::{UnifiedHealthStatus, UnifiedServiceType};
-use nestgate_core::config::unified::types::CanonicalConfig;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
 use nestgate_core::error::{NestGateError, Result};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
+use tests::canonical_modernization::{UnifiedHealthStatus, UnifiedServiceType};
 
 /// Test universal adapter configuration consistency
 
@@ -21,7 +21,7 @@ async fn test_universal_adapter_config_consistency() -> Result<()> {
 
     // Create configurations for different adapter types
     let storage_config = CanonicalConfig {
-        storage: nestgate_core::config::unified::types::StorageConfig {
+        storage: nestgate_core::config::StorageConfig {
             backend_type: "universal".to_string(),
             ..Default::default()
         },
@@ -29,8 +29,8 @@ async fn test_universal_adapter_config_consistency() -> Result<()> {
     };
 
     let network_config = CanonicalConfig {
-        network: nestgate_core::config::unified::types::NetworkConfig {
-            api: nestgate_core::config::unified::types::ApiServerConfig {
+        network: nestgate_core::config::NetworkConfig {
+            api: nestgate_core::config::ApiServerConfig {
                 port: nestgate_core::constants::DEFAULT_API_PORT,
                 host: "0.0.0.0".parse()?,
                 ..Default::default()
@@ -295,8 +295,8 @@ async fn test_adapter_concurrent_performance() -> Result<()> {
                 for op_id in 0..operations_per_adapter {
                     // Simulate adapter operations
                     let config = CanonicalConfig {
-                        network: nestgate_core::config::unified::types::NetworkConfig {
-                            api: nestgate_core::config::unified::types::ApiServerConfig {
+                        network: nestgate_core::config::NetworkConfig {
+                            api: nestgate_core::config::ApiServerConfig {
                                 port: 8000 + adapter_id as u16,
                                 ..Default::default()
                             },
@@ -354,21 +354,21 @@ async fn test_adapter_configuration_validation() -> Result<()> {
     // Test valid configurations
     let valid_configs = vec![
         CanonicalConfig {
-            storage: nestgate_core::config::unified::types::StorageConfig {
+            storage: nestgate_core::config::StorageConfig {
                 backend_type: "memory".to_string(),
                 ..Default::default()
             },
             ..Default::default()
         },
         CanonicalConfig {
-            storage: nestgate_core::config::unified::types::StorageConfig {
+            storage: nestgate_core::config::StorageConfig {
                 backend_type: "filesystem".to_string(),
                 ..Default::default()
             },
             ..Default::default()
         },
         CanonicalConfig {
-            storage: nestgate_core::config::unified::types::StorageConfig {
+            storage: nestgate_core::config::StorageConfig {
                 backend_type: "hybrid".to_string(),
                 ..Default::default()
             },

@@ -2,7 +2,7 @@
 //! Evolution functionality and utilities.
 // Systems for tracking evolution progress and managing modernization
 
-use super::metadata::*;
+use super::metadata::EvolutionMetadata;
 use std::collections::HashMap;
 
 /// Evolution tracker for monitoring progress
